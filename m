@@ -4,70 +4,70 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C41C433E7
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:15:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 195F0C433E5
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:17:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 914612080D
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:15:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E629820717
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:17:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YcUfABZ+";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="LdgrahiG"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="axq/HKL0";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="LYGxL/t+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729311AbgGULPz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 07:15:55 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:32630 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728159AbgGULPz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 07:15:55 -0400
+        id S1729499AbgGULRG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 07:17:06 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:29555 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728159AbgGULRF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 07:17:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1595330155; x=1626866155;
+  t=1595330224; x=1626866224;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=Zx6Ii2KS8rsaZutsZNeQFW3MmzvXoX0RRsCGUgnINug=;
-  b=YcUfABZ+y4pmvAHymnqasOOcgC8Ml9JOPZc5cqBGRL5x7XmxBiX3Qufz
-   RJso5DOX44mGmZo4P4BlxXpeTDi5zLgx7ZcPO1/sxUbIP9HVNYHh4TvXw
-   N4z6frhx4st2K9Tlac+Pw/Nt2FmQl7zkDZXoyBLVhySa70sFU9nwgOPCl
-   2jUcJ/9C8/teLfWVLXznd7094Nq7D37vaHMc8+me2r2dyVst+miB9B+4P
-   8X5d62XmpiCdVqaKw/Aqq0fdA2+RNPvkAB+qlbC2rV67pZCa/GRR07Oxa
-   LKo1y/wOkkkmrQCl12Ry/eb+3J2vgQgMG4XniKELUWZ6NQs/ZgWxVq37q
-   g==;
-IronPort-SDR: Z7/KiS9Ox2HFjDsLLEjeiXJIly2FNDj9j6IPAK+YJKygL3U/bN22DK7Nx2U5WXkdeEYR3ZcOvF
- LAhRZcLbQWQ1n2vcHVs9qXj14AidpDdpF+2KeEFC6x7mayGvjaHcDNIgYHzb08Qvuii4DgqPOo
- NrspC0gYgEYjoaXaNmoh+geKaJ58If3UCIxR6Q/nN/8UAwQmOVcOnPQCezfpVR1cEUzKUtp33i
- /V+sB+Ma5jtD9AMQWoUc4Dfj26IGQ6KSw17DZRp+GJkH10zdcgl5YPDADWgBp5zXM8CnpPw/Nf
- AkM=
+  bh=StP94OLHh+PDzMOB64OOhcKXVzzBMnsSj5AyHnxySEg=;
+  b=axq/HKL0F7j2mY/MOQKKFawOCHczhGoUDaw4p5zL14MWF7EuRWer4Hn5
+   ds19eZC47CBxoBlRFD1BO2Q+4tIxxvVdL54q1UbF9WSvZr4sm/j9klLY+
+   sOCkMUwRnH3NsOOErGym38Xv8EW/R0E2oVJNUAMkxjsE24UPc1qTB3yQk
+   M2uaw9kLzEvCHNlZKpI8FBR315ci8LB74Fa6eMh4sLqaF6E30lztJrT71
+   9QCVfZQzR0rJP/FmVJm/zEdQ+nopGZgIKg66ZKFS1GCkOCjcLno7dFKaN
+   /IfXhuIL3kcZbadUD2wwoBjWrWKHq9U7lYlsoUNNCw9C6hlrLSD3gAcAY
+   w==;
+IronPort-SDR: reEsHghl/F31AXlteyNCYMjQ5zx97sDuWeIMzp+BFL8jRZQP15aj6c22zPEUqOYHgW2kyqrVFi
+ GooVKRHEiC8iyWovYYdxzqJPRaNSZuyyL6FzMmJ9I1DT+zLIreG22+WWTp+kZGDchs7TQMNdah
+ 3AEeFg9KqkHxChyuS7aQ7/+3Yd6KxIRpnM8dOwpaNKXW30ay/Hgw8QQ51H7cUCPiXijFncEwLR
+ AszeJKeshTGc8rc4Gg1kepnK04bJbu1p9uenor73X1HQJvRL3GcScYqC4o3uP8M/W23L/6Dv1p
+ IhU=
 X-IronPort-AV: E=Sophos;i="5.75,378,1589212800"; 
-   d="scan'208";a="144276373"
-Received: from mail-mw2nam10lp2100.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.100])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Jul 2020 19:15:52 +0800
+   d="scan'208";a="143010668"
+Received: from mail-cys01nam02lp2057.outbound.protection.outlook.com (HELO NAM02-CY1-obe.outbound.protection.outlook.com) ([104.47.37.57])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Jul 2020 19:17:03 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=a6WFNB8MGHeaavQELzQE5Fypgbu0KG4f45hOrDv/QbVzZiPGHHZ9UdDs3lP9pn6iQoDeG5jcA7MVmgK1+y/ErsWInbRNXTIDoMIcFnYp0uY5SIBEiqMnzq325gFDNfrmocrXd8j/NY3tNWOac1pB6WgUDZwwGXre+mS+xZYVoJ/gqQA1hIbN4RiNBX40CsaxU++FJ2SReAnG75qnx0xZAgIgqlOqFtpi4oEixJ+p+/HxragDUHex6SqSVR/xuMOEm6g7lbE0n7ujxSDa3uQ+SWcAWfJUVQBKsIrnTKLFgnbOXdFTebMwCW5aZUsNq6jHE+p7NzwP363Im9SB0MIIlw==
+ b=Bf27J8OWW3xDLczbMegQkbQ9spSuISkuJRea/tqP4X9eP/S8sBg4xn5wZEjb0OISqpDTD+QZcfMcjPihFWSWgU53YTkp6kTqX+c/oelQjWKsMkPdtsw2vAXTGo9CjpTmPlLE+SlACUJATAXGFuYJwdr2KNZg3lP7Vd3lp/ZyTyFoBQERn2/ptNO4hbHYQgrQsGFOIX1KgaJIFf2nsZC9RGT1bx9ZNcP3+oeDTCT3WkAAGgGvWU9w8sx44TscN9WLt5Xa011vtMmt4m/SKlnncrVaMOn8LlFI7NjzPbcfkzTwDxQcFI3OCvSn/YEbpmHk5057CN6ZjlBOfF/VfA0BfA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VVZfXO9rM2yBDtJXvxSBOeJf3P2o9DP9XWZSD0j35wQ=;
- b=Pt3PbIyQdVn1WTAvlMwyC+4339I+A2scOF3wi/sreBNWM/vLURVAKWAf94GIB8yLObpGZFuIhKATR87wsYBGTcro26W3er3x8BoBmVlVL0T7h9sO+aRlwZ18IPTEW5YV6jewrPXQL3uWLvIE841oY67zTuE9iDCZhZRz3NppiJnwwL8XuHdH1zcnSGlzk9yBwcyH15R+JmU/Fef9BVrrPWrefTwj23p9vDc3owSIOT+QSB/P85iD9kKCg34Y3YLKRqdvQJNbnaYC+BI4upudOYz9YyE4ixdlUZtQmF1sShfWnriTRIHEuIYX+m1M5+ZWX/XEs7ZH74NSC7MpzgVDow==
+ bh=PvaOanothsTScmhIuzPqJODx/+D/AFeIGd2YRAHJTus=;
+ b=Z1TlvrbXxnmwJrTV6WU1favhjUbyNS5V3Cyi2eghAm1yHETeCnnL597+I2MCVPLefoaYYezajiU17hEo+0mSmQRAhfohJ/WSur9ORmoSKj3qWEVsJHkkQ7RtHsTzh0a+8tHiN/PwrzPJT6rcSmwtgXFTVwUWrX0xD3thEoImuRRcmk6N75JdwCBpj4Wbb67O9xBSp4BMnbGb6DOXs/NC/SaUnHZpkOczaMdnty4qJbQ0ZquJAoZTWYiCgnXu/rMJ+Tiv0ncbNMJYin1e6CVYfk9BcJ64ZfdLSJ70JWz7BB2CZejzPS6QLMIVmM6QUITf3pRVjZWZiYT3F99pLcyJCw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VVZfXO9rM2yBDtJXvxSBOeJf3P2o9DP9XWZSD0j35wQ=;
- b=LdgrahiGTqXLHcj7bUiTqleRjN7+gpiS6QRuggHMJ7gp47afuBwgR2z0a1E8+2fz/bTHMdThZG/4I7Omrn1WE/Mo9YbUk11WIqrdlN7JsFqWsYMGSSt6Ty1vsZwIZNIlzbY+ChiyuYC6uR7wsQ2NY8cV2egmGR7vBw5NctT2lOc=
+ bh=PvaOanothsTScmhIuzPqJODx/+D/AFeIGd2YRAHJTus=;
+ b=LYGxL/t+R3V9yVEXjuD/qzrWontbqW004qXfNyGpwfWS8HSHTKc2URd+V58nNljBZReaXr1Wwb0Urv+ntyo3SemIZW8bCqhRPu4XrJ2UsvEThEWZl2YmILcq3FQwFrI6HSSy1tj2v2neej65s/kcgYhP2BQ0WK4J6+CeqILfzQM=
 Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
  by CY4PR04MB0969.namprd04.prod.outlook.com (2603:10b6:910:55::25) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3195.23; Tue, 21 Jul
- 2020 11:15:51 +0000
+ 2020 11:17:01 +0000
 Received: from CY4PR04MB3751.namprd04.prod.outlook.com
  ([fe80::d9e5:135e:cfd9:4de0]) by CY4PR04MB3751.namprd04.prod.outlook.com
  ([fe80::d9e5:135e:cfd9:4de0%7]) with mapi id 15.20.3195.025; Tue, 21 Jul 2020
- 11:15:51 +0000
+ 11:17:01 +0000
 From:   Damien Le Moal <Damien.LeMoal@wdc.com>
 To:     Maxim Levitsky <mlevitsk@redhat.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -98,13 +98,15 @@ CC:     Keith Busch <kbusch@kernel.org>,
         <virtualization@lists.linux-foundation.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Alex Dubov <oakad@yahoo.com>
-Subject: Re: [PATCH 05/10] block: null: use blk_is_valid_logical_block_size
-Thread-Topic: [PATCH 05/10] block: null: use blk_is_valid_logical_block_size
-Thread-Index: AQHWX01Yw77hI9ihkECd8bf86hXuBg==
-Date:   Tue, 21 Jul 2020 11:15:51 +0000
-Message-ID: <CY4PR04MB3751882A6BDF7C073D6ECF88E7780@CY4PR04MB3751.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 06/10] block: ms_block: use
+ blk_is_valid_logical_block_size
+Thread-Topic: [PATCH 06/10] block: ms_block: use
+ blk_is_valid_logical_block_size
+Thread-Index: AQHWX01g75TdosEsGkWUbpiStX7SFw==
+Date:   Tue, 21 Jul 2020 11:17:01 +0000
+Message-ID: <CY4PR04MB37515103AF92B1BB196ED494E7780@CY4PR04MB3751.namprd04.prod.outlook.com>
 References: <20200721105239.8270-1-mlevitsk@redhat.com>
- <20200721105239.8270-6-mlevitsk@redhat.com>
+ <20200721105239.8270-7-mlevitsk@redhat.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -114,30 +116,30 @@ authentication-results: redhat.com; dkim=none (message not signed)
 x-originating-ip: [129.253.182.57]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: afc79abe-6a75-4fc3-f163-08d82d676d79
+x-ms-office365-filtering-correlation-id: 0ef6f962-47ab-4516-44b9-08d82d679771
 x-ms-traffictypediagnostic: CY4PR04MB0969:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR04MB09692931FB39FFDB52AF9B34E7780@CY4PR04MB0969.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <CY4PR04MB0969403535D65234DAED6997E7780@CY4PR04MB0969.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:3826;
+x-ms-oob-tlc-oobclassifiers: OLM:2043;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: kLnbJ8Ru8UyXyV2/SvIgpCeNGEjiTp1Xq88c70hXMv7sDWMu83psr4iuQIYYdIFtJQ4e3YJWhvgNMifD6HGoBSE5wrJ6mYsOv1oC/vfakuc4o6VDg6R+3dEenQcQCuDwPRjzibZsAJjbGiMw9RNjD7XaWbK86b32nGQ5Oj2KvfxUS9jW3T18wfD0A6IjB/F3nlJxPNA3OOrjcw1hIjgMZ2lA6HwL6iMIAL2ikv4wLNccP/DZOLAxmfpAmMh+A6Hwo8rARnM6QV/3sjr2QGcXYxtpiZ9MY6iaNanvs7X3bzgFeROg23XrtesivAX8ZpMDFP/ck8A5DMIC7KUlLgXCiw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(346002)(136003)(366004)(376002)(396003)(54906003)(316002)(110136005)(66476007)(9686003)(4326008)(186003)(26005)(71200400001)(76116006)(91956017)(66446008)(64756008)(66556008)(66946007)(52536014)(2906002)(6506007)(8676002)(55016002)(83380400001)(33656002)(5660300002)(478600001)(86362001)(7416002)(53546011)(8936002)(7696005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: GaPGQGDdib8G8c3JdLvgWdsUoaJDWQYPni9GIcbRnCR8j4rUxXimTFJiQd3irrRL9pBbbgt0KjR92LCzyKTaXJC3p+fQqIi0kB2T6nQ+KAcapiVwhxplBMf2xtpxs3ObAUnwc17OwciittGpPgW4XOFgUk91IBDKuzLGhEgI9H/2l+wHbHG/3zHm0e10XVR+l5nZ0iRccpLonEje7yiI7jg9/tsLaLCsxh4xc9mXFrwglI4jbjZVY32ENrJ5+HHRSQFquCybd82aLSgPlkmXfCryd5ZzkrQClYHsJ5oymllGOr52uOXf957r+/TLBmhxqYSbN68UIHQwEtXJyQxXvydm2dRegbBt8cxG2oPYlm2LkogUp6d0qTkfO1/x4GwDoS9eL8W9aigz1MG0EUKGkELxYozoTpw1Elj48MpnQIQWFH59V5szJYJ2Tf0dyzSS7VewD8hkzJz7rTc9q1h6LqetB6ViDy+dwy5ogNmQl+DVVslw/xmkkSZ7O7ZlKGbL
+x-microsoft-antispam-message-info: 0MZ/LL1yI7MjrpdwTVATMoUBe+PwN0uPuTUOQS2CEaCAxg/XvxdI84bk+tFNo3FNjrvWYLzZKsN26Jx1bdWfriWp4dphKcV6YFCBFLA1oAADZc8aKaKWf22XKUEShjakBpTDeqT6Mhk37xtUKLnmDMCksxoffxgru1hSP2ABCmnDbq/duANzgof28MKJzIHS+Jt1zxwUQrWiCsIY1RoKL8iVRHGtEHGYxBzHa7ngumBU2AxUUgW/+3zLb5/9LHc0I3UjZpb4siWBOsFmfTYQaE78nYW3xoThlooontALCOw4uczDO1RkfH5b05JyKu843a7X+8bcdDOieBjVxWU0wQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(346002)(136003)(366004)(376002)(396003)(54906003)(316002)(110136005)(66476007)(9686003)(4326008)(186003)(26005)(71200400001)(76116006)(91956017)(66446008)(64756008)(66556008)(66946007)(52536014)(2906002)(6506007)(8676002)(55016002)(83380400001)(33656002)(5660300002)(478600001)(4744005)(86362001)(7416002)(53546011)(8936002)(7696005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: TPGTHYmJXG1kHOFtFPGDS/UwDnJ/TxNRUnVpbLzl7L+dZinbvHjABnqFG0KpmHaVZLVp5Zy1Xpuh9VLGP++S5RE2MDK8JYA/J2XFO1F2DVygWN1G9bzidhXtDGMXGVI3Mz700d81JKwbKOHNC3TgjauAn5adczivriC33QTmjLGgh7wosZXdv4aRvylhtw3vMq0e/6Gz68lJyi3sOjPkZdUv2P0KabJkUqXJcTl6kilE5IU3OBScdjZmmeMqEVUON6zS9zG9fp9zYdBNEEsApzaWpJCt7ly+ltysfl9acq6dYCaYGZ7glBs82GQ3R5Lu42/HMvjsxT1s1SwziptFZjxiIMyU4HztrRVWV1FAsL/Yt2/CQbsECS1WRxyDwKewVtQ0PWKv3iFfCKmmmMRWuwsvfxDe67TicGgqfYVac6u4jEQqlAHDACEn1ly2QTqn5qVDgshSzFIsRZF4iFWtumxeE4E24ihzyxfTjNSP3o6Bt1O/Eg4Fx1bdz9adk7oY
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: afc79abe-6a75-4fc3-f163-08d82d676d79
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jul 2020 11:15:51.2365
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0ef6f962-47ab-4516-44b9-08d82d679771
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jul 2020 11:17:01.6380
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: +u7VYWbUdOY2dzOt08hBMUAqqwn0bPnpGlZFX6nFC3QNsmVRmhJrfSW6EUFmEHQli485XiQ3KH6d2WVF0sj3LQ==
+X-MS-Exchange-CrossTenant-userprincipalname: 0RX/r26b2DneM+l0Evdbfr4LLXOUXFGC+xfIj3TmpzCzA5dss9pFwKdCjh8ROzjAUX9L8waPQiOTAID4JHNZZg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0969
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -145,49 +147,31 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020/07/21 19:54, Maxim Levitsky wrote:=0A=
-> This slightly changes the behavier of the driver,=0A=
-=0A=
-s/behavier/behavior=0A=
-=0A=
-> when given invalid block size (non power of two, or below 512 bytes),=0A=
-> but shoudn't matter.=0A=
-> =0A=
 > Signed-off-by: Maxim Levitsky <mlevitsk@redhat.com>=0A=
 > ---=0A=
->  drivers/block/null_blk_main.c | 6 +++---=0A=
->  1 file changed, 3 insertions(+), 3 deletions(-)=0A=
+>  drivers/memstick/core/ms_block.c | 2 +-=0A=
+>  1 file changed, 1 insertion(+), 1 deletion(-)=0A=
 > =0A=
-> diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.=
-c=0A=
-> index 87b31f9ca362e..e4df4b903b90b 100644=0A=
-> --- a/drivers/block/null_blk_main.c=0A=
-> +++ b/drivers/block/null_blk_main.c=0A=
-> @@ -1684,8 +1684,8 @@ static int null_init_tag_set(struct nullb *nullb, s=
-truct blk_mq_tag_set *set)=0A=
->  =0A=
->  static int null_validate_conf(struct nullb_device *dev)=0A=
->  {=0A=
-> -	dev->blocksize =3D round_down(dev->blocksize, 512);=0A=
-> -	dev->blocksize =3D clamp_t(unsigned int, dev->blocksize, 512, 4096);=0A=
-> +	if (!blk_is_valid_logical_block_size(dev->blocksize))=0A=
-> +		return -ENODEV;=0A=
->  =0A=
->  	if (dev->queue_mode =3D=3D NULL_Q_MQ && dev->use_per_node_hctx) {=0A=
->  		if (dev->submit_queues !=3D nr_online_nodes)=0A=
-> @@ -1865,7 +1865,7 @@ static int __init null_init(void)=0A=
->  	struct nullb *nullb;=0A=
->  	struct nullb_device *dev;=0A=
->  =0A=
-> -	if (g_bs > PAGE_SIZE) {=0A=
-> +	if (!blk_is_valid_logical_block_size(g_bs)) {=0A=
->  		pr_warn("invalid block size\n");=0A=
->  		pr_warn("defaults block size to %lu\n", PAGE_SIZE);=0A=
->  		g_bs =3D PAGE_SIZE;=0A=
+> diff --git a/drivers/memstick/core/ms_block.c b/drivers/memstick/core/ms_=
+block.c=0A=
+> index d9ee8e3dc72da..e4df03e10fb46 100644=0A=
+> --- a/drivers/memstick/core/ms_block.c=0A=
+> +++ b/drivers/memstick/core/ms_block.c=0A=
+> @@ -1727,7 +1727,7 @@ static int msb_init_card(struct memstick_dev *card)=
 =0A=
-Not sure if this change is OK. Shouldn't the if here be kept as is and=0A=
-blk_is_valid_logical_block_size() called after it to check values lower tha=
-n 4K ?=0A=
+>  	msb->pages_in_block =3D boot_block->attr.block_size * 2;=0A=
+>  	msb->block_size =3D msb->page_size * msb->pages_in_block;=0A=
+>  =0A=
+> -	if (msb->page_size > PAGE_SIZE) {=0A=
+> +	if (!(blk_is_valid_logical_block_size(msb->page_size))) {=0A=
+>  		/* this isn't supported by linux at all, anyway*/=0A=
+>  		dbg("device page %d size isn't supported", msb->page_size);=0A=
+>  		return -EINVAL;=0A=
+> =0A=
 =0A=
+Looks good to me.=0A=
+=0A=
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
 =0A=
 -- =0A=
 Damien Le Moal=0A=
