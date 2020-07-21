@@ -2,87 +2,89 @@ Return-Path: <SRS0=19hD=BA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 555DBC433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 14:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE5D1C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 15:13:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A50820714
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 14:31:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rv7teYKT"
+	by mail.kernel.org (Postfix) with ESMTP id BD2A8206E3
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 15:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728800AbgGUObj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 10:31:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54650 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727038AbgGUObi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 10:31:38 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0641C061794;
-        Tue, 21 Jul 2020 07:31:38 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id o22so1768240pjw.2;
-        Tue, 21 Jul 2020 07:31:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=eoQ/LwxD/ih1GkSzZAuNDCG4MFgTBugN1T3/2DGPiZs=;
-        b=rv7teYKT4HHE+hRheeUMz7kFEVy/2FYAFPFyJ6DTsr8qA90Sqj/xBO5qcgaUtnUDvi
-         Rv86a654zaXEffQPbUFs1rZrshA+3BvCOkRCRN6YaF79kELJMnzI9mUXYbM5lgmnIM08
-         ZyWJt7Ifd1VkkXyHhuAuwnJLoLekleV3w0m/Utq2eDVXteX3AV3usu5pIldXV44peA4v
-         VaOuEuwXpmVMYve1kLJP4NHz7dzIShIqiqtgke+77R9j3jxIZREMsqM6IP4PHhtMTBe5
-         JQajMLneYsAzcaPCAB1ZE9Yp7dgj/n2hn88z3PP4KOIzR1ISSADxFb090PuzQjyk6wdb
-         kSmA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=eoQ/LwxD/ih1GkSzZAuNDCG4MFgTBugN1T3/2DGPiZs=;
-        b=I9SVn1esEhvjDQ5DOsG2TIx1amxbdUi454RvSUjZXVl2Unliu8CvmoZqbfcL8UdQvg
-         g11tkKMoTtTXXx5ofjnlKG5fhwJ9ks/Zyutg+obm82gN1EwptDtXMXLZfnWr1VSUWPl3
-         mWzTphitIMvAp23GFNrPwXHUkNlKJ6NWLd3ujbNI3nO5B2oSjp3AhPAtFkjLlvivOsmL
-         1hiN1PGHGW3M7KLIA6FE4i6/pDxJnImLXbDgjkYVERC+5GQzXtBvTReGpaQxVFsfQ+Iu
-         Bu+Bk9wS2FrM0Uvg/gs0TIa1IxUivsDL1IKaJuTUyUAft3Jyeay8MJ1QxcK9tVZRXUDV
-         9K6A==
-X-Gm-Message-State: AOAM530GjO/014dRkn22tp7CzUPv+J9oI+BTzwdNRtZpf1KnngLN5ko4
-        DC34Ul6OCKa5/Fv6Hi/+TKem9pIquVZ1cw==
-X-Google-Smtp-Source: ABdhPJyyVBc9dQXHdc+5lLNWNkeC/7Y3foGXFsBMmQ+uwmlFrHQSa2Q6C+IdC0ODHYc721agO4tx5g==
-X-Received: by 2002:a17:90b:1a8d:: with SMTP id ng13mr4045580pjb.24.1595341898367;
-        Tue, 21 Jul 2020 07:31:38 -0700 (PDT)
-Received: from gmail.com ([103.105.153.67])
-        by smtp.gmail.com with ESMTPSA id u26sm18940457pgo.71.2020.07.21.07.31.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 07:31:37 -0700 (PDT)
-Date:   Tue, 21 Jul 2020 20:00:16 +0530
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Shuah Khan <skhan@linuxfoundation.org>
-Subject: Re: [PATCH v1] mptfusion: use generic power management
-Message-ID: <20200721143016.GA304517@gmail.com>
-References: <20200721142423.304231-1-vaibhavgupta40@gmail.com>
+        id S1728600AbgGUPNT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 11:13:19 -0400
+Received: from verein.lst.de ([213.95.11.211]:52598 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726436AbgGUPNT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Jul 2020 11:13:19 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1B92268AFE; Tue, 21 Jul 2020 17:13:14 +0200 (CEST)
+Date:   Tue, 21 Jul 2020 17:13:13 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Maxim Levitsky <mlevitsk@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
+        Josef Bacik <josef@toxicpanda.com>,
+        "open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@kernel.dk>,
+        "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>,
+        "open list:SCSI CDROM DRIVER" <linux-scsi@vger.kernel.org>,
+        Tejun Heo <tj@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Ajay Joshi <ajay.joshi@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "open list:SONY MEMORYSTICK SUBSYSTEM" <linux-mmc@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Satya Tangirala <satyat@google.com>,
+        "open list:NETWORK BLOCK DEVICE (NBD)" <nbd@other.debian.org>,
+        Hou Tao <houtao1@huawei.com>, Jens Axboe <axboe@fb.com>,
+        "open list:VIRTIO CORE AND NET DRIVERS" 
+        <virtualization@lists.linux-foundation.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Alex Dubov <oakad@yahoo.com>
+Subject: Re: [PATCH 01/10] block: introduce blk_is_valid_logical_block_size
+Message-ID: <20200721151313.GA10620@lst.de>
+References: <20200721105239.8270-1-mlevitsk@redhat.com> <20200721105239.8270-2-mlevitsk@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200721142423.304231-1-vaibhavgupta40@gmail.com>
+In-Reply-To: <20200721105239.8270-2-mlevitsk@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch is compile-tested only.
+> +/**
+> + * blk_check_logical_block_size - check if logical block size is supported
+> + * by the kernel
+> + * @size:  the logical block size, in bytes
+> + *
+> + * Description:
+> + *   This function checks if the block layers supports given block size
+> + **/
+> +bool blk_is_valid_logical_block_size(unsigned int size)
+> +{
+> +	return size >= SECTOR_SIZE && size <= PAGE_SIZE && !is_power_of_2(size);
 
---Vaibhav Gupta
+Shouldn't this be a ... && is_power_of_2(size)?
+
+>  	if (q->limits.io_min < q->limits.physical_block_size)
+>  		q->limits.io_min = q->limits.physical_block_size;
+> +
+>  }
+
+This adds a pointless empty line.
+
+> +extern bool blk_is_valid_logical_block_size(unsigned int size);
+
+No need for externs on function declarations.
