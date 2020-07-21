@@ -7,154 +7,144 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE4EC433F1
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C35C433E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:42:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E3B3207BB
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:42:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2313207BB
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:42:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xL1cP30E"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="LwF/uDv9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730567AbgGUQmP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:42:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46860 "EHLO
+        id S1730550AbgGUQmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 12:42:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728827AbgGUQmO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:42:14 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0559FC061794
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:14 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id 88so11571780wrh.3
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:13 -0700 (PDT)
+        with ESMTP id S1730541AbgGUQmK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:42:10 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3190BC0619DA
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:10 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id z2so21895121wrp.2
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=5j6RcNPu58XwWQQgxDOv1ZbcxCrsGooexxZ/gmLrlrM=;
-        b=xL1cP30EALt5ZNjGYk9G+OFcXwArn2GZgrWng0gu+6zPVwjVRoxUrja42IAnVkTwpn
-         XgHDeMJ/PRQwBHuxfsY3yyT69VS8CxkCMgsadN8ErJxzHVsPDPfVb+flOZyFoanJCgXt
-         rX44gEWaqbtAFMVL2PY1WdOn7ilFpaC2JZnVvJ8jvfY3znZ0sCChXTYk0WWE+o41Y97b
-         HonuCXScVeteCYAxZVDplvS3rgNuFfeVELv0gc6by0zNYXcNCdewzbRrT9cvxHMeTVpv
-         Q9KFeQTyT3fB5Roojibh6MsDv+ezIity22XlyGSF6RA2lY2zy0WBgLAY7wGfZ7AJ/jhC
-         MsHg==
+        bh=Mle0K9iX1gOzfM2GRPPq3JQOM3T1CbFjbMy5ihSTAjg=;
+        b=LwF/uDv9JjgJ6tOJDx9S19wxQq0K6WzNDZpCbUVAZqOOS4y3+/5IW8fzBsD9ffptOr
+         araaDs712E4vRx4iVqouJIqbT0hz8TmRmJFwDH6WUhlb2lhB+qBVJrpFGTxYqoriFtY7
+         sdTVukS7onnFT5Dutv6rIEaRH96jGqfuZtG8d4MaMQGdDiTEjckB+NEZGn2rVqBjLwK9
+         IO7zAAtGbAhX6FSwfcC43CZxI1pKxJsEuxAn/U67EpRRrAw4JaioxOqiv1YkXSt395xz
+         AtSn3vm150mDHFLZUFql5vPIx787guBzfBPvxl9e6b75Av29txcSzx9LQLc8zADJSRZ5
+         uTvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5j6RcNPu58XwWQQgxDOv1ZbcxCrsGooexxZ/gmLrlrM=;
-        b=pROqVwMf4Jgj81cCbevPH9xoeZEAnVf0MncyKcQffIUiPs4utY5sFX5G6MnP5j/DvL
-         1l7f77pIfsGHtfEheOUJRw/39KVoTdCGo285BltdP2XLJLT+MUQoE9hLhW8yDA9HGU0M
-         kmDd84raJEc+LiygGtiJ7OLPDmdQZwQpRh00zrBCQ4+MaO102zoqpTkki9VDdH7y438j
-         AlCfZzAbH0yiORLHz49ZXrI8tU2mJQ6oYxKHtx+LKVLsy8unhpJqEVgVVXTH2ra/eJTr
-         DXXOYGGlWnQbJpbYBzki3z0Uxquf91soVJN7PqzIYFWr9EKQUL2C09Ed7b01KlEw7Fyy
-         TqyQ==
-X-Gm-Message-State: AOAM533ZxLxXT1G2SfIT1LjaKxVUNh2AjN6NMtOC2wGZ672E0Jms6Poy
-        XWfabvEmFT9sDgiVhHNgy6HvHg==
-X-Google-Smtp-Source: ABdhPJxoVR+411rKfG1YcD3RdRPEBW1F7W9EGimiXdm8hjq2fA/pEmXZ8bo9WCWYWP/gIPxshF4eVw==
-X-Received: by 2002:adf:9e8b:: with SMTP id a11mr4950480wrf.309.1595349732713;
-        Tue, 21 Jul 2020 09:42:12 -0700 (PDT)
+        bh=Mle0K9iX1gOzfM2GRPPq3JQOM3T1CbFjbMy5ihSTAjg=;
+        b=eOiaVQq148pIjDwDuXoppk2D+e7DIiZeuflrTu+6A+EKwwgoJj4eeVSTJpFoBlaZzH
+         rWc46YavJfDwrGMyqeWslO6hW611FkQbuwOSU6TlkD0WwGnL4UjRELgOxhXrAjzNZAYh
+         1Y5K6my3FQq9WXnGqZAR1kh1YmD8nN127BxPwYcF2TInpY3rkauu8blhzmPwEFIE63pZ
+         iLA5anwIBGBYI43Hxue9EURfZui/7huW3vpf/Z/cF3xYf8vlS5QELhTkpHxIgwCeic/a
+         ePNv1F2Ymz2+eAzcduvadrrN1ES/MAZbG+0y6fyRXSfR+CVCP+y0kPDALgUYJODJZiSs
+         Uz4w==
+X-Gm-Message-State: AOAM531/aK3GyQmONf9RbnaGQlSTS6Jyw/bIZqaQJKUZ+nhWjAysGgf8
+        c4c+y4bBUAGcI4rLh043scJwQg==
+X-Google-Smtp-Source: ABdhPJzSwRhnH3gmodgCQ9XqPBRP74SZfFE69iCmRfmpUeEdOUcZLk5iKSqwTxLYt3eTZxT+rj5U5Q==
+X-Received: by 2002:a5d:6651:: with SMTP id f17mr29595659wrw.29.1595349728890;
+        Tue, 21 Jul 2020 09:42:08 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.94])
-        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.42.11
+        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.42.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 09:42:12 -0700 (PDT)
+        Tue, 21 Jul 2020 09:42:08 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
         Jack Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH 11/40] scsi: pm8001: pm8001_ctl: Add descriptions for unused 'attr' function parameters
-Date:   Tue, 21 Jul 2020 17:41:19 +0100
-Message-Id: <20200721164148.2617584-12-lee.jones@linaro.org>
+Subject: [PATCH 10/40] scsi: pm8001: pm8001_sas: Mover function header and supply some missing parameter descriptions
+Date:   Tue, 21 Jul 2020 17:41:18 +0100
+Message-Id: <20200721164148.2617584-11-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200721164148.2617584-1-lee.jones@linaro.org>
 References: <20200721164148.2617584-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Clean-up some whitespace issues too whilst we're here.
+Functions must follow directly after the header that documents them.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/pm8001/pm8001_ctl.c:102: warning: Function parameter or member 'attr' not described in 'pm8001_ctl_fw_version_show'
- drivers/scsi/pm8001/pm8001_ctl.c:331: warning: Function parameter or member 'attr' not described in 'pm8001_ctl_logging_level_show'
- drivers/scsi/pm8001/pm8001_ctl.c:400: warning: Function parameter or member 'attr' not described in 'pm8001_ctl_ib_queue_log_show'
- drivers/scsi/pm8001/pm8001_ctl.c:433: warning: Function parameter or member 'attr' not described in 'pm8001_ctl_ob_queue_log_show'
- drivers/scsi/pm8001/pm8001_ctl.c:464: warning: Function parameter or member 'attr' not described in 'pm8001_ctl_bios_version_show'
- drivers/scsi/pm8001/pm8001_ctl.c:623: warning: Function parameter or member 'attr' not described in 'pm8001_ctl_gsm_log_show'
+from  drivers/scsi/pm8001/pm8001_sas.c:41:
+inlined from ‘pm8001_issue_ssp_tmf’ at  drivers/scsi/pm8001/pm8001_sas.c:919:2:
+ drivers/scsi/pm8001/pm8001_sas.c:379: warning: Function parameter or member 'pm8001_dev' not described in 'DEV_IS_GONE'
+ drivers/scsi/pm8001/pm8001_sas.c:379: warning: Excess function parameter 'task' description in 'DEV_IS_GONE'
+ drivers/scsi/pm8001/pm8001_sas.c:379: warning: Excess function parameter 'num' description in 'DEV_IS_GONE'
+ drivers/scsi/pm8001/pm8001_sas.c:379: warning: Excess function parameter 'gfp_flags' description in 'DEV_IS_GONE'
+ drivers/scsi/pm8001/pm8001_sas.c:379: warning: Excess function parameter 'is_tmf' description in 'DEV_IS_GONE'
+ drivers/scsi/pm8001/pm8001_sas.c:379: warning: Excess function parameter 'tmf' description in 'DEV_IS_GONE'
+ drivers/scsi/pm8001/pm8001_sas.c:583: warning: Function parameter or member 'device_id' not described in 'pm8001_find_dev'
+ drivers/scsi/pm8001/pm8001_sas.c:1000: warning: Function parameter or member 'dev' not described in 'pm8001_I_T_nexus_reset'
 
 Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_sas.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index a5f3c702ada9f..77c805db27242 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -93,6 +93,7 @@ static DEVICE_ATTR_RO(controller_fatal_error);
- /**
-  * pm8001_ctl_fw_version_show - firmware version
-  * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  *
-  * A sysfs 'read-only' shost attribute.
-@@ -322,6 +323,7 @@ static DEVICE_ATTR(host_sas_address, S_IRUGO,
- /**
-  * pm8001_ctl_logging_level_show - logging level
-  * @cdev: pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  *
-  * A sysfs 'read/write' shost attribute.
-@@ -335,6 +337,7 @@ static ssize_t pm8001_ctl_logging_level_show(struct device *cdev,
- 
- 	return snprintf(buf, PAGE_SIZE, "%08xh\n", pm8001_ha->logging_level);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 941f783897d8e..bcf169b26e31a 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -129,6 +129,7 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void **virt_addr,
+ 	*pphys_addr_lo = lower_32_bits(phys_align);
+ 	return 0;
  }
 +
- static ssize_t pm8001_ctl_logging_level_store(struct device *cdev,
- 	struct device_attribute *attr, const char *buf, size_t count)
+ /**
+   * pm8001_find_ha_by_dev - from domain device which come from sas layer to
+   * find out our hba struct.
+@@ -366,17 +367,15 @@ static int sas_find_local_port_id(struct domain_device *dev)
+ 	return 0;
+ }
+ 
++#define DEV_IS_GONE(pm8001_dev)	\
++	((!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED)))
+ /**
+   * pm8001_task_exec - queue the task(ssp, smp && ata) to the hardware.
+   * @task: the task to be execute.
+-  * @num: if can_queue great than 1, the task can be queued up. for SMP task,
+-  * we always execute one one time.
+   * @gfp_flags: gfp_flags.
+   * @is_tmf: if it is task management task.
+   * @tmf: the task management IU
+   */
+-#define DEV_IS_GONE(pm8001_dev)	\
+-	((!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED)))
+ static int pm8001_task_exec(struct sas_task *task,
+ 	gfp_t gfp_flags, int is_tmf, struct pm8001_tmf_task *tmf)
  {
-@@ -392,6 +395,7 @@ static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
+@@ -577,6 +576,7 @@ static struct pm8001_device *pm8001_alloc_dev(struct pm8001_hba_info *pm8001_ha)
  /**
-  * pm8001_ctl_ib_queue_log_show - Out bound Queue log
-  * @cdev:pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  * A sysfs 'read-only' shost attribute.
-  */
-@@ -424,6 +428,7 @@ static DEVICE_ATTR(ib_log, S_IRUGO, pm8001_ctl_ib_queue_log_show, NULL);
+   * pm8001_find_dev - find a matching pm8001_device
+   * @pm8001_ha: our hba card information
++  * @device_id: device ID to match against
+   */
+ struct pm8001_device *pm8001_find_dev(struct pm8001_hba_info *pm8001_ha,
+ 					u32 device_id)
+@@ -995,6 +995,7 @@ void pm8001_open_reject_retry(
  /**
-  * pm8001_ctl_ob_queue_log_show - Out bound Queue log
-  * @cdev:pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  * A sysfs 'read-only' shost attribute.
-  */
-@@ -456,6 +461,7 @@ static DEVICE_ATTR(ob_log, S_IRUGO, pm8001_ctl_ob_queue_log_show, NULL);
- /**
-  * pm8001_ctl_bios_version_show - Bios version Display
-  * @cdev:pointer to embedded class device
-+ * @attr: device attribute (unused)
-  * @buf:the buffer returned
-  * A sysfs 'read-only' shost attribute.
-  */
-@@ -615,8 +621,9 @@ static DEVICE_ATTR_RW(non_fatal_count);
- /**
-  ** pm8001_ctl_gsm_log_show - gsm dump collection
-  ** @cdev:pointer to embedded class device
-+ ** @attr: device attribute (unused)
-  ** @buf: the buffer returned
-- **A sysfs 'read-only' shost attribute.
-+ ** A sysfs 'read-only' shost attribute.
-  **/
- static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
+   * Standard mandates link reset for ATA  (type 0) and hard reset for
+   * SSP (type 1) , only for RECOVERY
++  * @dev: the device structure for the device to reset.
+   */
+ int pm8001_I_T_nexus_reset(struct domain_device *dev)
+ {
 -- 
 2.25.1
 
