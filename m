@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BA4CC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 12:47:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10FF1C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 13:32:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26CE9206E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 12:47:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E20C920709
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 13:32:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JuNcAjzl"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M17jaN2x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726768AbgGVMrE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jul 2020 08:47:04 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33536 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726161AbgGVMrE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2020 08:47:04 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06MCVYxW015144;
-        Wed, 22 Jul 2020 12:46:48 GMT
+        id S1732180AbgGVNcg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jul 2020 09:32:36 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:45358 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726539AbgGVNcf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2020 09:32:35 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06MDBLs6026245;
+        Wed, 22 Jul 2020 13:27:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=TMwc7BGRAH4UXd6M43+Uicp5h4KfH7HOJGlypIEIzX0=;
- b=JuNcAjzlmL596wb9P1bqu0R42HNl1ikC7YCzopRH0jYf5QfpVKNWi+SmnmqaGyQb0beY
- yz6Spti13GXea3RufhIBjuBk9SifaR3wChgAYnR4Ym0K4me9Tw49X+5Mvock4QSmQ91T
- KIRc2xyWlW713Zc+4GQLYZOjT5ncu50ceddOxwlcR9fuws+L8xdyFzvfJ2r1jvmN0AE/
- HrPvzi6bemjaUAA+N3DfqjZ0BLke5xq1t94Nljjc8E+h1RnbzqC/8XoydjkSZcT51VLF
- +u46n+6tBiIeyXEKZhGtynMtbOwElgrFIwneBhcuYkfjNLScFYGLw+9y7lkf5z7AURPD NQ== 
+ bh=SGDxiMkv+K/gRs79Axes9Aq4nm/uxe/9Z6BhER1gB0Q=;
+ b=M17jaN2xoPQjyzcbNIh3EyAt4L6vYmmCoIqfNEMXNxXt0vzVBRus39mqoBEim2QS4gl0
+ ZEADhZS2JBt2F7fKfyR+8i2sOHwxVi7BaCCMheuAGRRXQqWB1nWcDgM5X14uo35sG05r
+ zlijQgQbwaef/JC4O3F/g7yEqPNfaQNKx2aCWkHFu1gDe7esOn1Gkr3dq25D71GBzEPQ
+ 6KS+bJgLAQJnq85Fp3AC5Jeo7nvKeGNeWXiAf1kbeFGXNrLprBeiotYq1hiftxnJR1QC
+ wkrlIGy9zAxq9hiRWdKeuXUijIaHYeH2b6QaPXkn5408mQU4LsrY4KDUVXU+jmFwIFfa Ug== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 32d6ksq8jy-1
+        by aserp2120.oracle.com with ESMTP id 32bs1mk8c3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 22 Jul 2020 12:46:48 +0000
+        Wed, 22 Jul 2020 13:27:16 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06MChYMw125098;
-        Wed, 22 Jul 2020 12:46:48 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 32ehx0ddpj-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06MDPlCB151849;
+        Wed, 22 Jul 2020 13:27:16 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 32epb584vv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Jul 2020 12:46:48 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06MCkgJY001307;
-        Wed, 22 Jul 2020 12:46:43 GMT
+        Wed, 22 Jul 2020 13:27:16 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06MDRBYJ029023;
+        Wed, 22 Jul 2020 13:27:11 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jul 2020 05:46:42 -0700
+        with ESMTP ; Wed, 22 Jul 2020 13:27:11 +0000
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     Daejun Park <daejun7.park@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
@@ -70,31 +70,29 @@ Cc:     Daejun Park <daejun7.park@samsung.com>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Adel Choi <adel.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-Subject: Re: [PATCH v6 2/5] scsi: ufs: Add UFS-feature layer
+Subject: Re: [PATCH v6 0/5] scsi: ufs: Add Host Performance Booster Support
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1h7tzg1lb.fsf@ca-mkp.ca.oracle.com>
-References: <231786897.01594636801601.JavaMail.epsvc@epcpadp1>
+Message-ID: <yq1blk7g1jd.fsf@ca-mkp.ca.oracle.com>
+References: <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p8>
         <963815509.21594636682161.JavaMail.epsvc@epcpadp2>
-        <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p4>
-        <231786897.01594637401708.JavaMail.epsvc@epcpadp1>
-        <20200722064112.GB21117@infradead.org>
-Date:   Wed, 22 Jul 2020 08:46:38 -0400
-In-Reply-To: <20200722064112.GB21117@infradead.org> (Christoph Hellwig's
-        message of "Wed, 22 Jul 2020 07:41:12 +0100")
+        <20200722063937.GA21117@infradead.org>
+Date:   Wed, 22 Jul 2020 09:27:07 -0400
+In-Reply-To: <20200722063937.GA21117@infradead.org> (Christoph Hellwig's
+        message of "Wed, 22 Jul 2020 07:39:37 +0100")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9689 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=786 adultscore=0
- phishscore=0 bulkscore=0 spamscore=0 suspectscore=1 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007220094
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
+ suspectscore=1 spamscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007220097
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9689 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=1
- bulkscore=0 mlxscore=0 mlxlogscore=776 impostorscore=0 priorityscore=1501
- lowpriorityscore=0 phishscore=0 spamscore=0 adultscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0 adultscore=0
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
+ spamscore=0 mlxscore=0 impostorscore=0 phishscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007220094
+ definitions=main-2007220097
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -103,11 +101,24 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Christoph,
 
-> Independent of the problems with the concept of HPB, this patch is
-> just really bad software architecture.  Don't just add random
-> indirection layers that do represent an actual real abstraction.
+> As this monster seesm to come back again and again let me re-iterate
+> my statement:
+>
+> I do not think Linux should support a broken standards extensions that
+> creates a huge share state between the Linux initator and the target
+> device like this with all its associated problems.
 
-I am also not sold on the whole "bus" thing.
+I spent a couple of hours looking at this series again last night. And
+while the code has improved, I do remain concerned about the general
+concept.
+
+I understand how caching the FTL in host memory can improve performance
+from a theoretical perspective. However, I am not sure how much a
+difference this is going to make outside of synthetic benchmarks. What
+are the workloads that keep reading the same blocks from media? Or does
+the performance improvement exclusively come from the second order
+pre-fetching effect for larger I/Os? If so, why is the device's internal
+L2P SRAM cache ineffective at handling that case?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
