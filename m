@@ -2,77 +2,58 @@ Return-Path: <SRS0=Rfh9=BB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_96_XX,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B63C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 14:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48CDDC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 15:06:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2111520771
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 14:59:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e7uwKCVt"
+	by mail.kernel.org (Postfix) with ESMTP id 2C5BB20709
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 15:06:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732775AbgGVO7o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jul 2020 10:59:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56506 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730870AbgGVO7o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2020 10:59:44 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD99C0619DC;
-        Wed, 22 Jul 2020 07:59:44 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id a21so2526029ejj.10;
-        Wed, 22 Jul 2020 07:59:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:in-reply-to:references:mime-version
-         :date:content-transfer-encoding;
-        bh=URRzOHpgQhWz8k04t/0LNtBaTy9pE9Bui1vrbzjXhfI=;
-        b=e7uwKCVt6D3jSem4PO+P9pzhJVScJ7gidvn9qlcv2TgMZh4TtkZ2Nlxv2iZbVr0QT1
-         I5ur5Gxim9UapTLNIomFJ53fYjqFeqf7cVoEkGCCz2PUynwz/5jhzyz3QA7xIRbSVXyl
-         ZugspPMGasrEZvItvBiZbvc7XTZT4L4d2cfXcjb4Wu8KMTfHa7tN7Q9ht4xyj42HkOXO
-         gjoMQr4yNH3A0fQo3VOqyOw+EYiS38uvxBMKG0ttAiURk/pOZda47DLf3uTs8mfK6Mw6
-         fTo6nt5bF0U/obvwSAH8K2NRoRdtXnnOalZIevQDaiKHtbFeyBiA4yenH1ELOoAPA07i
-         XdIw==
+        id S1730382AbgGVPG0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jul 2020 11:06:26 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42346 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727810AbgGVPG0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2020 11:06:26 -0400
+Received: by mail-pg1-f195.google.com with SMTP id m22so1408797pgv.9;
+        Wed, 22 Jul 2020 08:06:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:in-reply-to
-         :references:mime-version:date:content-transfer-encoding;
-        bh=URRzOHpgQhWz8k04t/0LNtBaTy9pE9Bui1vrbzjXhfI=;
-        b=NbSLniTT6GqokBzY66UQ9cF1YWZsQR6TmhGD+MrRdVlzXfoMTEdLRsOK3gVyMDjJku
-         caYBCJXtxUDsUl541g77DYjqsbFnGbia+qxkHKSYFpTbNIc7XjGJHC9KAnUAQNzeFBgC
-         XlxXvzbQc47ZHzkexShveqkeqiYlVwmbvxGOY3tOPtUVpK3HWZt3iabF5RVIjynAJi5a
-         Mfbq0XBy1b4Gpu/6cx2DgVEP7csiC9ewXhqvZnTRMWYhEQEfYm9Mz5yUEICMp6foJVal
-         ldoQEq+PT21LIS3EKO0bTfUgu3HqNDDr+Ji7NlLQ+OVgZl1Y+dr+OpScRHOtQFuWrUi8
-         vXpA==
-X-Gm-Message-State: AOAM532dITZ14N9J8d8gt1/nnaQYT1r7XGasm6V8sP6+ABp8f4UDoXNe
-        ba702ivP1m5T7JP2x4Ma820=
-X-Google-Smtp-Source: ABdhPJy7OGFfe2ZmIbIPJgSKdIxz7vpB5TeN9Z25EU/fegE+4BuZZsw1np3Tb5T0TkZ8dgiUZTy26A==
-X-Received: by 2002:a17:906:6558:: with SMTP id u24mr26724151ejn.364.1595429982763;
-        Wed, 22 Jul 2020 07:59:42 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bee3d.dynamic.kabel-deutschland.de. [95.91.238.61])
-        by smtp.googlemail.com with ESMTPSA id d12sm65543edx.80.2020.07.22.07.59.41
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 22 Jul 2020 07:59:42 -0700 (PDT)
-Message-ID: <c2450609677d4b3df172545a9aaad5373402e23c.camel@gmail.com>
-Subject: Re: [PATCH v6 0/5] scsi: ufs: Add Host Performance Booster Support
-From:   Bean Huo <huobean@gmail.com>
-To:     Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=FwaDxs5hHwFUWBxX5yteAR0SP9cCbD/rh8EcnRE2k5c=;
+        b=m5+iO2b67PjpPlTZuOTwOHYmEbwcf2/SxZGIweUvPEexCoC8GAcBqIOs91OGeNxe//
+         PEA+kdMagzKApwlkcDdG0Fjtl6eZyXmXUnb7AnCGWX+r3N6dsTxfPc648KJNItEhnt4I
+         aIGqcQG6sPvoYc++imR+cG3tgBPRVCf6IGeN+arQ8ToN38uCpisvFb0UtVVFkKUG5y54
+         XtepwEgTHvaCTNvECcpRIbyOjvdMTZvwS4HZQ0Ri1SrmT/J/7Lf8FUiRaPLuhxN+ZDHm
+         WsjxYiMuIy4MmesVeFEACO3ndCjDfXzHPpQSMvRvet3oHQim2AVKfhn9DHyxFE/ZH5V+
+         fbzg==
+X-Gm-Message-State: AOAM531ua/cEoEAafCCR16Gd0Lp0m5WBlG8U/saecW1vVoaL0n16Ku85
+        FtvGWfIKoT0CBEE0RhRVkMA=
+X-Google-Smtp-Source: ABdhPJyEf5xrAPUVnM9Bpao7ccVZGkuHPxozBUZU3wh9vQ7HV5Rckfj8WjEkknUSFj7gyU/bYxFcag==
+X-Received: by 2002:a65:620e:: with SMTP id d14mr258723pgv.360.1595430385070;
+        Wed, 22 Jul 2020 08:06:25 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id q5sm131957pfc.130.2020.07.22.08.06.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Jul 2020 08:06:24 -0700 (PDT)
+Subject: Re: [PATCH v6 2/5] scsi: ufs: Add UFS-feature layer
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     Daejun Park <daejun7.park@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         "beanhuo@micron.com" <beanhuo@micron.com>,
         "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
         "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
         "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Sang-yoon Oh <sangyoon.oh@samsung.com>,
         Sung-Jun Park <sungjun07.park@samsung.com>,
@@ -80,52 +61,56 @@ Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Adel Choi <adel.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-In-Reply-To: <SN6PR04MB38720C3D8FC176C3C7FB51B89A7E0@SN6PR04MB3872.namprd04.prod.outlook.com>
-References: <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p8>
-         <963815509.21594636682161.JavaMail.epsvc@epcpadp2>
-         <SN6PR04MB38720C3D8FC176C3C7FB51B89A7E0@SN6PR04MB3872.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Date:   Thu, 16 Jul 2020 10:13:33 +0200
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+References: <231786897.01594636801601.JavaMail.epsvc@epcpadp1>
+ <963815509.21594636682161.JavaMail.epsvc@epcpadp2>
+ <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p4>
+ <231786897.01594637401708.JavaMail.epsvc@epcpadp1>
+ <20200722064112.GB21117@infradead.org> <yq1h7tzg1lb.fsf@ca-mkp.ca.oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <7bcf45da-233b-0c38-b93a-99d205603e63@acm.org>
+Date:   Wed, 22 Jul 2020 08:06:22 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <yq1h7tzg1lb.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-07-15 at 18:34 +0000, Avi Shchislowski wrote:
-> Hello All,
-> My name is Avi Shchislowski, I am managing the WDC's Linux Host R&D
-> team in which Avri is a member of.
-> As the review process of HPB is progressing very constructively, we
-> are getting more and more requests from OEMs, Inquiring about HPB in
-> general, and host control mode in particular.
-> 
-> Their main concern is that HPB will make it to 5.9 merge window, but
-> the host control mode patches will not.
-> Thus, because of recent Google's GKI, the next Android LTS might not
-> include HPB with host control mode.
-> 
-> Aside of those requests, initial host control mode testing are
-> showing promising prospective with respect of performance gain.
-> 
-> What would be, in your opinion, the best policy that host control
-> mode is included in next Android LTS?
-> 
-> Thanks,
-> Avi
-> 
+On 2020-07-22 05:46, Martin K. Petersen wrote:
+> I am also not sold on the whole "bus" thing.
 
-Hi Avi
-IMO, no matter how did the driver implement, if you truly want the HPB
-host mode driver you mentioned to be mainlined in the upstream Linux,
-the best policy is that you should first post the driver in the SCSI
-maillist community, let us firstly review here. I didn't see your
-driver, I don't know how to provide the correct answer.
+How about implementing HPB as a kernel module that calls the functions
+in the UFS core directly, or in other words, get rid completely of the
+new ufsf_bus introduced by this patch?
 
 Thanks,
-Bean
 
-
-
+Bart.
