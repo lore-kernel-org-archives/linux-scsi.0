@@ -2,133 +2,106 @@ Return-Path: <SRS0=Rfh9=BB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E727C433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 09:11:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F353AC433E2
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 09:14:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37892207BB
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 09:11:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5F4720729
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 09:14:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fWBMyPlR"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="LCFJjpAc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbgGVJLk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jul 2020 05:11:40 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:59595 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726153AbgGVJLk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Jul 2020 05:11:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595409098;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NzcEIWaSLdd63tVnMlQ4l8CfKkfEyUhff3HORkpk1pw=;
-        b=fWBMyPlRDhIAecMVGL2N/+KSSTRK5Ro71VRtwtJIUNKumjGaWLLbh+1i3U1xkIYIebGCeN
-        WxfCzWwwbQdAglKpfa+eIkwriW/VP1cAW4RfX21ZTtkbztXt0ukQxSO59JKryVg0YuR+ZX
-        bmuMQyhMNyF8xMjXoJJwOBTFpiLk+f8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-318-W9xiyZCdNjaZWfNh6eB9Eg-1; Wed, 22 Jul 2020 05:11:36 -0400
-X-MC-Unique: W9xiyZCdNjaZWfNh6eB9Eg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C1173C746E;
-        Wed, 22 Jul 2020 09:11:33 +0000 (UTC)
-Received: from fedora-32-enviroment (unknown [10.35.206.213])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 477AC5C1C3;
-        Wed, 22 Jul 2020 09:11:18 +0000 (UTC)
-Message-ID: <f16aba1020019530564f0869a67951282104a5d2.camel@redhat.com>
-Subject: Re: [PATCH 02/10] block: virtio-blk: check logical block size
-From:   Maxim Levitsky <mlevitsk@redhat.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     linux-kernel@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@kernel.dk>,
-        "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>,
-        "open list:SCSI CDROM DRIVER" <linux-scsi@vger.kernel.org>,
-        Tejun Heo <tj@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Ajay Joshi <ajay.joshi@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "open list:SONY MEMORYSTICK SUBSYSTEM" <linux-mmc@vger.kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        "open list:NETWORK BLOCK DEVICE (NBD)" <nbd@other.debian.org>,
-        Hou Tao <houtao1@huawei.com>, Jens Axboe <axboe@fb.com>,
-        "open list:VIRTIO CORE AND NET DRIVERS" 
-        <virtualization@lists.linux-foundation.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alex Dubov <oakad@yahoo.com>
-Date:   Wed, 22 Jul 2020 12:11:17 +0300
-In-Reply-To: <yq1zh7sfedj.fsf@ca-mkp.ca.oracle.com>
-References: <20200721105239.8270-1-mlevitsk@redhat.com>
-         <20200721105239.8270-3-mlevitsk@redhat.com> <20200721151437.GB10620@lst.de>
-         <yq1zh7sfedj.fsf@ca-mkp.ca.oracle.com>
+        id S1731332AbgGVJOU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jul 2020 05:14:20 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:29411 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728173AbgGVJOU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2020 05:14:20 -0400
+X-UUID: 7f02d7a8c336470a87bf5af2ae3b8f85-20200722
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=2v60ka6tTKHrTmYtX4f8Rm7FOuVYTW2hvwiG+u0x8wQ=;
+        b=LCFJjpAclwZmc5PktJvHINCoPnxnH04QOOGxijuIfP8zjUw55bV6lcDmwSJxlMDniKi+Bc1/EP7FMzitEeYmDOu/di0CNM0lROdMNbPw+sPm2YioI7HQKHREynVjYfekEqvQFGk9z74Rw5HLIsm0shPdwqqcj6O9aDsZ5MWcSuk=;
+X-UUID: 7f02d7a8c336470a87bf5af2ae3b8f85-20200722
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1435178830; Wed, 22 Jul 2020 17:14:18 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 22 Jul 2020 17:14:14 +0800
+Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 22 Jul 2020 17:14:15 +0800
+Message-ID: <1595409255.27178.17.camel@mtkswgap22>
+Subject: Re: [RESEND RFC PATCH v1] scsi: ufs: add retries for SSU
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     Lee Sang Hyun <sh425.lee@samsung.com>,
+        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
+        <grant.jung@samsung.com>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <kwmad.kim@samsung.com>
+Date:   Wed, 22 Jul 2020 17:14:15 +0800
+In-Reply-To: <6ac05df5-71ff-e71d-a4df-94118f67caf1@acm.org>
+References: <CGME20200717074740epcas2p2b1c8e7bf7dc28f13c5a9999373f4601b@epcas2p2.samsung.com>
+         <1594971576-40264-1-git-send-email-sh425.lee@samsung.com>
+         <6ac05df5-71ff-e71d-a4df-94118f67caf1@acm.org>
 Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-TM-SNTS-SMTP: 0DACB1621FB87BE6B0743621F188702504DEEFE7B97F089E1E8F60C089218FAB2000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-07-21 at 22:55 -0400, Martin K. Petersen wrote:
-> Christoph,
-> 
-> > Hmm, I wonder if we should simply add the check and warning to
-> > blk_queue_logical_block_size and add an error in that case.  Then
-> > drivers only have to check the error return, which might add a lot
-> > less boiler plate code.
-> 
-> Yep, I agree.
-> 
-
-I also agree that this would be cleaner (I actually tried to implement
-this the way you suggest), but let me explain my reasoning for doing it
-this way.
-
-The problem is that most current users of blk_queue_logical_block_size
-(43 uses in the tree, out of which only 9 use constant block size) check
-for the block size relatively early, often store it in some internal
-struct etc, prior to calling blk_queue_logical_block_size thus making
-them only to rely on blk_queue_logical_block_size as the check for 
-block size validity will need non-trivial changes in their code.
-
-Instead of this adding blk_is_valid_logical_block_size allowed me
-to trivially convert most of the uses.
-
-For RFC I converted only some drivers that I am more familiar with
-and/or can test but I can remove the driver's own checks in most other
-drivers with low chance of introducing a bug, even if I can't test the
-driver.
-
-What do you think?
-
-I can also both make blk_queue_logical_block_size return an error value,
-and have blk_is_valid_logical_block_size and use either of these checks,
-depending on the driver with eventual goal of un-exporting
-blk_is_valid_logical_block_size.
-
-Also note that I did add WARN_ON to blk_queue_logical_block_size.
-
-Best regards,
-	Maxim Levitsky
+SGkgQmFydCwNCg0KT24gU2F0LCAyMDIwLTA3LTE4IGF0IDEzOjMwIC0wNzAwLCBCYXJ0IFZhbiBB
+c3NjaGUgd3JvdGU6DQo+IE9uIDIwMjAtMDctMTcgMDA6MzksIExlZSBTYW5nIEh5dW4gd3JvdGU6
+DQo+ID4gLQlyZXQgPSBzY3NpX2V4ZWN1dGUoc2RwLCBjbWQsIERNQV9OT05FLCBOVUxMLCAwLCBO
+VUxMLCAmc3NoZHIsDQo+ID4gLQkJCVNUQVJUX1NUT1BfVElNRU9VVCwgMCwgMCwgUlFGX1BNLCBO
+VUxMKTsNCj4gPiAtCWlmIChyZXQpIHsNCj4gPiAtCQlzZGV2X3ByaW50ayhLRVJOX1dBUk5JTkcs
+IHNkcCwNCj4gPiAtCQkJICAgICJTVEFSVF9TVE9QIGZhaWxlZCBmb3IgcG93ZXIgbW9kZTogJWQs
+IHJlc3VsdCAleFxuIiwNCj4gPiAtCQkJICAgIHB3cl9tb2RlLCByZXQpOw0KPiA+IC0JCWlmIChk
+cml2ZXJfYnl0ZShyZXQpID09IERSSVZFUl9TRU5TRSkNCj4gPiAtCQkJc2NzaV9wcmludF9zZW5z
+ZV9oZHIoc2RwLCBOVUxMLCAmc3NoZHIpOw0KPiA+ICsJZm9yIChyZXRyaWVzID0gMDsgcmV0cmll
+cyA8IFNTVV9SRVRSSUVTOyByZXRyaWVzKyspIHsNCj4gPiArCQlyZXQgPSBzY3NpX2V4ZWN1dGUo
+c2RwLCBjbWQsIERNQV9OT05FLCBOVUxMLCAwLCBOVUxMLCAmc3NoZHIsDQo+ID4gKwkJCQlTVEFS
+VF9TVE9QX1RJTUVPVVQsIDAsIDAsIFJRRl9QTSwgTlVMTCk7DQo+ID4gKwkJaWYgKHJldCkgew0K
+PiA+ICsJCQlzZGV2X3ByaW50ayhLRVJOX1dBUk5JTkcsIHNkcCwNCj4gPiArCQkJCSAgICAiU1RB
+UlRfU1RPUCBmYWlsZWQgZm9yIHBvd2VyIG1vZGU6ICVkLCByZXN1bHQgJXhcbiIsDQo+ID4gKwkJ
+CQkgICAgcHdyX21vZGUsIHJldCk7DQo+ID4gKwkJCWlmIChkcml2ZXJfYnl0ZShyZXQpID09IERS
+SVZFUl9TRU5TRSkNCj4gPiArCQkJCXNjc2lfcHJpbnRfc2Vuc2VfaGRyKHNkcCwgTlVMTCwgJnNz
+aGRyKTsNCj4gPiArCQl9IGVsc2Ugew0KPiA+ICsJCQlicmVhazsNCj4gPiArCQl9DQo+IA0KPiBU
+aGUgbmludGggYXJndW1lbnQgb2Ygc2NzaV9leGVjdXRlKCkgaXMgY2FsbGVkICdyZXRyaWVzJy4g
+V291bGRuJ3QgaXQgYmUNCj4gYmV0dGVyIHRvIHBhc3MgYSBub256ZXJvIHZhbHVlIGFzIHRoZSAn
+cmV0cmllcycgYXJndW1lbnQgb2YNCj4gc2NzaV9leGVjdXRlKCkgaW5zdGVhZCBvZiBhZGRpbmcg
+YSBsb29wIGFyb3VuZCB0aGUgc2NzaV9leGVjdXRlKCkgY2FsbD8NCg0KSWYgYSBTQ1NJIGNvbW1h
+bmQgaXNzdWVkIHZpYSBzY3NpX2V4ZWN1dGUoKSBlbmNvdW50ZXJzICJ0aW1lb3V0IiBvcg0KImNo
+ZWNrIGNvbmRpdGlvbiIsIHNjc2lfbm9yZXRyeV9jbWQoKSB3aWxsIHJldHVybiAxICh0cnVlKSBi
+ZWNhdXNlDQpibGtfcnFfaXNfcGFzc3Rocm91Z2goKSBpcyB0cnVlIGR1ZSB0byBSRVFfT1BfU0NT
+SV9JTiBvciBSRVFfT1BfU0NTSV9PVVQNCmZsYWcgd2FzIHNldCB0byB0aGlzIFNDU0kgY29tbWFu
+ZCBieSBzY3NpX2V4ZWN1dGUoKS4gVGhlcmVmb3JlIGV2ZW4gYQ0Kbm9uLXplcm8gJ3JldHJpZXMn
+IHZhbHVlIGlzIGFzc2lnbmVkIHdoaWxlIGNhbGxpbmcgc2NzaV9leGVjdXRlKCksIHRoZQ0KZmFp
+bGVkIGNvbW1hbmQgaGFzIG5vIGNoYW5jZSB0byBiZSByZXRyaWVkIHNpbmNlIHRoZSBkZWNpc2lv
+biB3aWxsIGJlDQpuby1yZXRyeSBieSBzY3NpX25vcmV0cnlfY21kKCkuDQoNCihUYWtlIGNvbW1h
+bmQgdGltZW91dCBhcyBleGFtcGxlKQ0Kc2NzaV90aW1lc19vdXQoKS0+c2NzaV9hYm9ydF9jb21t
+YW5kKCktPnNjbWRfZWhfYWJvcnRfaGFuZGxlcigpLCBoZXJlDQpzY3NpX25vcmV0cnlfY21kKCkg
+cmV0dXJucyAxLCBhbmQgdGhlbiBjb21tYW5kIHdpbGwgYmUgZmluaXNoZWQgKHdpdGgNCmVycm9y
+IGNvZGUpIHdpdGhvdXQgcmV0cnkuDQoNCkluIHNjc2lfbm9yZXRyeV9jbWQoKSwgdGhlcmUgaXMg
+YSBjb21tZW50IG1lc3NhZ2UgaW4gc2VjdGlvbg0KImNoZWNrX3R5cGUiIGFzIGJlbG93DQoNCgkv
+Kg0KCSAqIGFzc3VtZSBjYWxsZXIgaGFzIGNoZWNrZWQgc2Vuc2UgYW5kIGRldGVybWluZWQNCgkg
+KiB0aGUgY2hlY2sgY29uZGl0aW9uIHdhcyByZXRyeWFibGUuDQoJICovDQoNCkkgYW0gbm90IHN1
+cmUgaWYgInRpbWVvdXQiIGFuZCAiY2hlY2sgY29uZGl0aW9uIiBjYXNlcyBpbiBzdWNoIFNDU0kN
+CmNvbW1hbmRzIGlzc3VlZCB2aWEgc2NzaV9leGVjdXRlKCkgYXJlIHNwZWNpYWxseSBkZXNpZ25l
+ZCB0byBiZSB1bmFibGUNCnRvIHJldHJ5Lg0KDQpXb3VsZCB5b3UgaGF2ZSBhbnkgc3VnZ2VzdGlv
+bnMgaWYgTExEIGRyaXZlcnMgd291bGQgbGlrZSB0byByZXRyeSB0aGVzZQ0Ka2luZHMgb2YgU0NT
+SSBjb21tYW5kcz8NCg0KVGhhbmtzIGEgbG90LA0KU3RhbmxleSBDaHUNCg0K
 
