@@ -2,120 +2,148 @@ Return-Path: <SRS0=Rfh9=BB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C232C433E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 03:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 490A2C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 04:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 796B9207D0
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 03:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F1B7207CD
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 04:12:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ert4ww4q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="a3V6BD0D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731877AbgGVDF4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 23:05:56 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:35800 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731837AbgGVDF4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 23:05:56 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06M2kTjo191446;
-        Wed, 22 Jul 2020 02:55:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=01BXubBTTggiGme5bAGTUB+IF85y9Gt5mJRvOB950ac=;
- b=Ert4ww4qHWKQEvayACm71Ls9WksxesZoOaQuXn1rooMPeky0Jrb3Txsjhfab7151opH+
- +ba9k2HaDjO+952t0cWNI9dQ5WIUYlfWf21ewpsJhWYjcp3N0pcTJv58VOOiL/rw4ZJ6
- iz8Tt3rOrUGPL774E+aOOMdpr1AJ4rPAQVYkJ8tuwulHR8WsPhlqGNhCTMtVwJGZI8Su
- HIBl9tQrmPPnenq/MvlY3LRHb4yzdgqsGtAjLjY176yMEaePZyb/9GiUf2AUdZxzL18+
- SsUZlrUq97Om51YkiNCIV1uh+Ie3EhzxivvOSUhEO/vIHZqNevq4QRm6YstexeMtuoCD CA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 32brgrgmt4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 22 Jul 2020 02:55:24 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06M2m6rK048369;
-        Wed, 22 Jul 2020 02:55:24 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 32e9usdjva-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Jul 2020 02:55:23 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06M2tDDp005896;
-        Wed, 22 Jul 2020 02:55:13 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Jul 2020 02:55:13 +0000
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Maxim Levitsky <mlevitsk@redhat.com>, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@kernel.dk>,
-        "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>,
-        "open list:SCSI CDROM DRIVER" <linux-scsi@vger.kernel.org>,
-        Tejun Heo <tj@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Ajay Joshi <ajay.joshi@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "open list:SONY MEMORYSTICK SUBSYSTEM" <linux-mmc@vger.kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        "open list:NETWORK BLOCK DEVICE (NBD)" <nbd@other.debian.org>,
-        Hou Tao <houtao1@huawei.com>, Jens Axboe <axboe@fb.com>,
-        "open list:VIRTIO CORE AND NET DRIVERS" 
-        <virtualization@lists.linux-foundation.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alex Dubov <oakad@yahoo.com>
-Subject: Re: [PATCH 02/10] block: virtio-blk: check logical block size
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1zh7sfedj.fsf@ca-mkp.ca.oracle.com>
-References: <20200721105239.8270-1-mlevitsk@redhat.com>
-        <20200721105239.8270-3-mlevitsk@redhat.com>
-        <20200721151437.GB10620@lst.de>
-Date:   Tue, 21 Jul 2020 22:55:07 -0400
-In-Reply-To: <20200721151437.GB10620@lst.de> (Christoph Hellwig's message of
-        "Tue, 21 Jul 2020 17:14:37 +0200")
+        id S1725843AbgGVEMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jul 2020 00:12:25 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:56132 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725710AbgGVEMZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Jul 2020 00:12:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595391143;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gX7hhPPMl6PUYDZGTJg81HfIVXLJNVGUO6Jmi9LuBtw=;
+        b=a3V6BD0DAy9uqPz3fE+AsRK8euEkLcwqwlW0lpHLzABEJQ8akfkny7PMJQGZR8A5IMxdyS
+        cKq84OXEcr9SNw+31CMG8Oq2T198sOleFwio2pp/9yhv9hSnW0LENcTkdz+xBntQPsoLvr
+        aS90gg+UO7AZzBEwt5QVr0zbgilvA+I=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-227-yDLXea0aMr6C4cwss17B9Q-1; Wed, 22 Jul 2020 00:12:18 -0400
+X-MC-Unique: yDLXea0aMr6C4cwss17B9Q-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 171E380183C;
+        Wed, 22 Jul 2020 04:12:16 +0000 (UTC)
+Received: from T590 (ovpn-13-96.pek2.redhat.com [10.72.13.96])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9705A10027A5;
+        Wed, 22 Jul 2020 04:12:05 +0000 (UTC)
+Date:   Wed, 22 Jul 2020 12:12:01 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
+Message-ID: <20200722041201.GA912316@T590>
+References: <10d36c09-9d5b-92e9-23ac-ea1a2628e7d9@huawei.com>
+ <0563e53f843c97de1a5a035fae892bf8@mail.gmail.com>
+ <61299951-97dc-b2be-c66c-024dfbd3a1cb@huawei.com>
+ <b49c33ebda36b8f116a51bc5c430eb9d@mail.gmail.com>
+ <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
+ <34a832717fef4702b143ea21aa12b79e@mail.gmail.com>
+ <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
+ <e69dc243174664efd414a4cd0176e59d@mail.gmail.com>
+ <20200721011323.GA833377@T590>
+ <c71bbdf2607a8183926430b5f4aa1ae1@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9689 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- bulkscore=0 malwarescore=0 suspectscore=1 mlxlogscore=999 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007220017
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9689 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 spamscore=0
- impostorscore=0 suspectscore=1 adultscore=0 clxscore=1011 mlxlogscore=999
- priorityscore=1501 phishscore=0 lowpriorityscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007220017
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c71bbdf2607a8183926430b5f4aa1ae1@mail.gmail.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, Jul 21, 2020 at 12:23:39PM +0530, Kashyap Desai wrote:
+> > > >
+> > > > Perf top (shared host tag. IOPS = 230K)
+> > > >
+> > > > 13.98%  [kernel]        [k] sbitmap_any_bit_set
+> > > >      6.43%  [kernel]        [k] blk_mq_run_hw_queue
+> > >
+> > > blk_mq_run_hw_queue function take more CPU which is called from "
+> > > scsi_end_request"
+> >
+> > The problem could be that nr_hw_queues is increased a lot so that sample
+> on
+> > blk_mq_run_hw_queue() can be observed now.
+> 
+> Yes. That is correct.
+> 
+> >
+> > > It looks like " blk_mq_hctx_has_pending" handles only elevator
+> > > (scheduler) case. If  queue has ioscheduler=none, we can skip. I case
+> > > of scheduler=none, IO will be pushed to hardware queue and it by pass
+> > software queue.
+> > > Based on above understanding, I added below patch and I can see
+> > > performance scale back to expectation.
+> > >
+> > > Ming mentioned that - we cannot remove blk_mq_run_hw_queues() from IO
+> > > completion path otherwise we may see IO hang. So I have just modified
+> > > completion path assuming it is only required for IO scheduler case.
+> > > https://www.spinics.net/lists/linux-block/msg55049.html
+> > >
+> > > Please review and let me know if this is good or we have to address
+> > > with proper fix.
+> > >
+> > > diff --git a/block/blk-mq.c b/block/blk-mq.c index
+> > > 1be7ac5a4040..b6a5b41b7fc2 100644
+> > > --- a/block/blk-mq.c
+> > > +++ b/block/blk-mq.c
+> > > @@ -1559,6 +1559,9 @@ void blk_mq_run_hw_queues(struct
+> > request_queue
+> > > *q, bool async)
+> > >         struct blk_mq_hw_ctx *hctx;
+> > >         int i;
+> > >
+> > > +       if (!q->elevator)
+> > > +               return;
+> > > +
+> >
+> > This way shouldn't be correct, blk_mq_run_hw_queues() is still needed
+> for
+> > none because request may not be dispatched successfully by direct issue.
+> 
+> When block layer attempt posting request to h/w queue directly (for
+> ioscheduler=none) and if it fails, it is calling
+> blk_mq_request_bypass_insert().
+> blk_mq_request_bypass_insert function will start the h/w queue from
+> submission context. Do we still have an issue if we skip running hw queue
+> from completion ?
 
-Christoph,
+The thing is that we can't guarantee that direct issue or adding request into
+hctx->dispatch is always done for MQ/none, for example, request still
+can be added to sw queue from blk_mq_flush_plug_list() when mq plug is
+applied.
 
-> Hmm, I wonder if we should simply add the check and warning to
-> blk_queue_logical_block_size and add an error in that case.  Then
-> drivers only have to check the error return, which might add a lot
-> less boiler plate code.
+Also, I am not sure it is a good idea to add request into hctx->dispatch
+via blk_mq_request_bypass_insert() in __blk_mq_try_issue_directly() in
+case of running out of budget, because this way may hurt sequential IO
+performance.
 
-Yep, I agree.
+Thanks,
+Ming
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
