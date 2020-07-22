@@ -2,282 +2,316 @@ Return-Path: <SRS0=Rfh9=BB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A547C43445
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 16:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA5DC433E7
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 18:11:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34D46206F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 16:45:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A95CC20787
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jul 2020 18:11:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BrA2elsW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730591AbgGVQpu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jul 2020 12:45:50 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:49912 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729493AbgGVQpu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Jul 2020 12:45:50 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5102720418F;
-        Wed, 22 Jul 2020 18:45:47 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 48vJG-jHBRTf; Wed, 22 Jul 2020 18:45:47 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (vpn.infotech.no [82.134.31.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 055D2204162;
-        Wed, 22 Jul 2020 18:45:45 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH] scsi_debug: tur_ms_to_ready parameter
-Date:   Wed, 22 Jul 2020 12:45:43 -0400
-Message-Id: <20200722164543.524931-1-dgilbert@interlog.com>
+        id S1732055AbgGVSK7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jul 2020 14:10:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58200 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732022AbgGVSK4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jul 2020 14:10:56 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B87EC0619DC;
+        Wed, 22 Jul 2020 11:10:56 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id x9so1397610plr.2;
+        Wed, 22 Jul 2020 11:10:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:reply-to:content-transfer-encoding;
+        bh=zgKuJs+4X33VdYbTckInU5SpEss9UWXP5O5bZYHhfd4=;
+        b=BrA2elsWUmARbwgBVhlTw49agCfnEpxiVbS6cUfLoKBs4bD+wKxY89jhKbYujYSrTW
+         8LeIQp3hcCMxI2+PqIbfCFtDk+fk58mqCrexYebs17LRBrQi2nLP9wYO7WkaXd+3mSLz
+         CB/xb2hFIkzqK+zbFm2IDA9HX8bH2nLm+GeTif4LSMPFSzWz5GhBqk97uNP//QJjjr4E
+         C/3fVllb0KegvMwhjE0hFEjmXx9FGB8Zj65Do5Nb7fXZhn3IsjLIKPqG/no3OLldeeD2
+         sKJFx2kjaZkCHlPRBCluQStm/bTK7GolWO296o2Dt0A8CVBJkDJu3mOVBQlbZZcYJ6mL
+         sURA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:reply-to:content-transfer-encoding;
+        bh=zgKuJs+4X33VdYbTckInU5SpEss9UWXP5O5bZYHhfd4=;
+        b=hy0WPM6lG+HNG5bU6QvAaBq3FoiRH0QEp1iyh7AvpPWqS0RBg7iqN7Jp4U5EgZ6O5o
+         S4gPF0d2m7/NXjzx0LdRrdJMGrQxvZ6voRxAy5dbAo5+oZOwk+LWP2FIjsTDS7rK+Fvq
+         pWBLbAbj8XAc+6IutsTbsehBWoM7eeaUy4r4QEOTuGkvSFRh/jMJA8zFVf2DY8QbtXM+
+         opqzXaKN23Gp/KjNEJMbrJeyHfFnau6hOkSO6XaOmbrqUlsCveFTWcGRQnyHdEcKO4WX
+         E82o/AxVDlN83etBWaa6UhrXzUXQW7G7FXu8CE5w9jG6yJTRMUudovlAyS5jRcAwlL7h
+         PF0g==
+X-Gm-Message-State: AOAM5314fh0ukOO/kCi9dQ/+2BwPl84GnYjTh+49CaT8uIHAX0EqE6cG
+        +4boXAamG709bTBhJj4fMkE=
+X-Google-Smtp-Source: ABdhPJw9YVxq/SMEhGDo8JZF5jRPm+0JdarKDkC2Jp27DtXEvgCh4aWkAi78kgft53d1Qs3xtDtF5Q==
+X-Received: by 2002:a17:902:7441:: with SMTP id e1mr550114plt.71.1595441455562;
+        Wed, 22 Jul 2020 11:10:55 -0700 (PDT)
+Received: from localhost.localdomain ([131.107.159.194])
+        by smtp.gmail.com with ESMTPSA id y80sm259958pfb.165.2020.07.22.11.10.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2020 11:10:55 -0700 (PDT)
+From:   Andres Beltran <lkmlabelt@gmail.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org
+Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikelley@microsoft.com, parri.andrea@gmail.com,
+        Andres Beltran <lkmlabelt@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v5 2/3] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
+Date:   Wed, 22 Jul 2020 14:10:50 -0400
+Message-Id: <20200722181051.2688-3-lkmlabelt@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200722181051.2688-1-lkmlabelt@gmail.com>
+References: <20200722181051.2688-1-lkmlabelt@gmail.com>
 MIME-Version: 1.0
+Reply-To: t-mabelt@microsoft.com
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The current driver responds to TEST UNIT READY (TUR) with a GOOD
-status immediately after a scsi_debug device (LU) is created. This is
-unrealistic as even SSDs take some time after power-on before
-accepting media access commands.
+Currently, pointers to guest memory are passed to Hyper-V as
+transaction IDs in storvsc. In the face of errors or malicious
+behavior in Hyper-V, storvsc should not expose or trust the transaction
+IDs returned by Hyper-V to be valid guest memory addresses. Instead,
+use small integers generated by vmbus_requestor as requests
+(transaction) IDs.
 
-Add the tur_ms_to_ready parameter whose unit is milliseconds (default
-0) and is the period before which a TUR (or any media access command)
-will set the CHECK CONDITION status with a sense key of NOT READY and
-an additional sense of "Logical unit is in process of becoming ready".
-The period starts when each scsi_debug device is created.
-
-This patch was prompted by T10 proposal 20-061r2 which was accepted on
-2020716. It adds that a TUR in the situation described in the previous
-paragraph may set the INFO field (or descriptor) in the sense data to
-the estimated number in milliseconds before a subsequent TUR will
-yield a GOOD status. This patch follows that advice.
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Tested-by: Andrea Parri <parri.andrea@gmail.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Link: https://lore.kernel.org/r/20200701001221.2540-3-lkmlabelt@gmail.com
+Signed-off-by: Wei Liu <wei.liu@kernel.org>
 ---
- drivers/scsi/scsi_debug.c | 109 ++++++++++++++++++++++++++++++++------
- 1 file changed, 92 insertions(+), 17 deletions(-)
+Changes in v2:
+        - Add casts to unsigned long to fix warnings on 32bit.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 01d40f6eec20..50b29b898db8 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -151,6 +151,7 @@ static const char *sdebug_version_date = "20200710";
- #define DEF_STRICT 0
- #define DEF_STATISTICS false
- #define DEF_SUBMIT_QUEUES 1
-+#define DEF_TUR_MS_TO_READY 0
- #define DEF_UUID_CTL 0
- #define JDELAY_OVERRIDDEN -9999
+ drivers/scsi/storvsc_drv.c | 85 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 74 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 624467e2590a..6d2df1f0fe6d 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -399,6 +399,7 @@ static int storvsc_timeout = 180;
+ static struct scsi_transport_template *fc_transport_template;
+ #endif
  
-@@ -288,7 +289,7 @@ struct sdebug_dev_info {
- 	struct sdebug_host_info *sdbg_host;
- 	unsigned long uas_bm[1];
- 	atomic_t num_in_q;
--	atomic_t stopped;
-+	atomic_t stopped;	/* 1: by SSU, 2: device start */
- 	bool used;
++static struct scsi_host_template scsi_driver;
+ static void storvsc_on_channel_callback(void *context);
  
- 	/* For ZBC devices */
-@@ -301,6 +302,7 @@ struct sdebug_dev_info {
- 	unsigned int nr_exp_open;
- 	unsigned int nr_closed;
- 	unsigned int max_open;
-+	ktime_t create_ts;	/* time since bootup that this device was created */
- 	struct sdeb_zone_state *zstate;
- };
+ #define STORVSC_MAX_LUNS_PER_TARGET			255
+@@ -698,6 +699,12 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
  
-@@ -758,6 +760,7 @@ static int sdebug_opt_xferlen_exp = DEF_OPT_XFERLEN_EXP;
- static int sdebug_ptype = DEF_PTYPE; /* SCSI peripheral device type */
- static int sdebug_scsi_level = DEF_SCSI_LEVEL;
- static int sdebug_sector_size = DEF_SECTOR_SIZE;
-+static int sdeb_tur_ms_to_ready = DEF_TUR_MS_TO_READY;
- static int sdebug_virtual_gb = DEF_VIRTUAL_GB;
- static int sdebug_vpd_use_hostno = DEF_VPD_USE_HOSTNO;
- static unsigned int sdebug_lbpu = DEF_LBPU;
-@@ -1774,11 +1777,10 @@ static int resp_requests(struct scsi_cmnd *scp,
- 	return fill_from_dev_buffer(scp, arr, len);
- }
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
  
--static int resp_start_stop(struct scsi_cmnd *scp,
--			   struct sdebug_dev_info *devip)
-+static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- {
- 	unsigned char *cmd = scp->cmnd;
--	int power_cond, stop;
-+	int power_cond, want_stop, stopped_state;
- 	bool changing;
- 
- 	power_cond = (cmd[4] & 0xf0) >> 4;
-@@ -1786,10 +1788,33 @@ static int resp_start_stop(struct scsi_cmnd *scp,
- 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 7);
- 		return check_condition_result;
- 	}
--	stop = !(cmd[4] & 1);
--	changing = atomic_read(&devip->stopped) == !stop;
--	atomic_xchg(&devip->stopped, stop);
--	if (!changing || cmd[1] & 0x1)  /* state unchanged or IMMED set */
-+	want_stop = !(cmd[4] & 1);
-+	stopped_state = atomic_read(&devip->stopped);
-+	if (stopped_state == 2) {
-+		ktime_t now_ts = ktime_get_boottime();
++	/*
++	 * The size of vmbus_requestor is an upper bound on the number of requests
++	 * that can be in-progress at any one time across all channels.
++	 */
++	new_sc->rqstor_size = scsi_driver.can_queue;
 +
-+		if (ktime_to_ns(now_ts) > ktime_to_ns(devip->create_ts)) {
-+			u64 diff_ns = ktime_to_ns(ktime_sub(now_ts, devip->create_ts));
-+
-+			if (diff_ns >= ((u64)sdeb_tur_ms_to_ready * 1000000)) {
-+				/* tur_ms_to_ready timer extinguished */
-+				atomic_set(&devip->stopped, 0);
-+				stopped_state = 0;
-+			}
-+		}
-+		if (stopped_state == 2) {
-+			if (want_stop) {
-+				stopped_state = 1;	/* dummy up success */
-+			} else {	/* Disallow tur_ms_to_ready delay to be overridden */
-+				mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 0 /* START bit */);
-+				return check_condition_result;
-+			}
-+		}
+ 	ret = vmbus_open(new_sc,
+ 			 storvsc_ringbuffer_size,
+ 			 storvsc_ringbuffer_size,
+@@ -726,6 +733,7 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
++	u64 rqst_id;
+ 
+ 	/*
+ 	 * If the number of CPUs is artificially restricted, such as
+@@ -760,14 +768,23 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 	vstor_packet->sub_channel_count = num_sc;
+ 
++	rqst_id = vmbus_next_request_id(&device->channel->requestor,
++					(unsigned long)request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(dev, "No request id available\n");
++		return;
 +	}
-+	changing = (stopped_state != want_stop);
-+	if (changing)
-+		atomic_xchg(&devip->stopped, want_stop);
-+	if (!changing || (cmd[1] & 0x1))  /* state unchanged or IMMED bit set in cdb */
- 		return SDEG_RES_IMMED_MASK;
- 	else
- 		return 0;
-@@ -4018,7 +4043,7 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
- 		return check_condition_result;
- 	}
--	if (!write_since_sync || cmd[1] & 0x2)
-+	if (!write_since_sync || (cmd[1] & 0x2))
- 		res = SDEG_RES_IMMED_MASK;
- 	else		/* delay if write_since_sync and IMMED clear */
- 		write_since_sync = false;
-@@ -4894,6 +4919,8 @@ static struct sdebug_dev_info *sdebug_device_create(
- 			devip->zmodel = BLK_ZONED_NONE;
- 		}
- 		devip->sdbg_host = sdbg_host;
-+		devip->create_ts = ktime_get_boottime();
-+		atomic_set(&devip->stopped, (sdeb_tur_ms_to_ready > 0 ? 2 : 0));
- 		list_add_tail(&devip->dev_list, &sdbg_host->dev_info_list);
- 	}
- 	return devip;
-@@ -5568,6 +5595,7 @@ module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
- module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
- module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
- module_param_named(submit_queues, submit_queues, int, S_IRUGO);
-+module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
- module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
- module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
- module_param_named(unmap_max_blocks, sdebug_unmap_max_blocks, int, S_IRUGO);
-@@ -5634,6 +5662,7 @@ MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
- MODULE_PARM_DESC(statistics, "collect statistics on commands, queues (def=0)");
- MODULE_PARM_DESC(strict, "stricter checks: reserved field in cdb (def=0)");
- MODULE_PARM_DESC(submit_queues, "support for block multi-queue (def=1)");
-+MODULE_PARM_DESC(tur_ms_to_ready, "TEST UNIT READY millisecs before initial good status (def=0)");
- MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
- MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=1)");
- MODULE_PARM_DESC(unmap_max_blocks, "max # of blocks can be unmapped in one cmd (def=0xffffffff)");
-@@ -6460,6 +6489,12 @@ static ssize_t zbc_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(zbc);
++
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 			       vmscsi_size_delta),
+-			       (unsigned long)request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
  
-+static ssize_t tur_ms_to_ready_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", sdeb_tur_ms_to_ready);
-+}
-+static DRIVER_ATTR_RO(tur_ms_to_ready);
-+
- /* Note: The following array creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -6501,6 +6536,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_strict.attr,
- 	&driver_attr_uuid_ctl.attr,
- 	&driver_attr_cdb_len.attr,
-+	&driver_attr_tur_ms_to_ready.attr,
- 	&driver_attr_zbc.attr,
- 	NULL,
- };
-@@ -7017,6 +7053,48 @@ static bool fake_timeout(struct scsi_cmnd *scp)
- 	return false;
- }
- 
-+/* Response to TUR or media access command when device stopped */
-+static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-+{
-+	int stopped_state;
-+	u64 diff_ns = 0;
-+	ktime_t now_ts = ktime_get_boottime();
-+	struct scsi_device *sdp = scp->device;
-+
-+	stopped_state = atomic_read(&devip->stopped);
-+	if (stopped_state == 2) {
-+		if (ktime_to_ns(now_ts) > ktime_to_ns(devip->create_ts)) {
-+			diff_ns = ktime_to_ns(ktime_sub(now_ts, devip->create_ts));
-+			if (diff_ns >= ((u64)sdeb_tur_ms_to_ready * 1000000)) {
-+				/* tur_ms_to_ready timer extinguished */
-+				atomic_set(&devip->stopped, 0);
-+				return 0;
-+			}
-+		}
-+		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x1);
-+		if (sdebug_verbose)
-+			sdev_printk(KERN_INFO, sdp,
-+				    "%s: Not ready: in process of becoming ready\n", my_name);
-+		if (scp->cmnd[0] == TEST_UNIT_READY) {
-+			u64 tur_nanosecs_to_ready = (u64)sdeb_tur_ms_to_ready * 1000000;
-+
-+			if (diff_ns <= tur_nanosecs_to_ready)
-+				diff_ns = tur_nanosecs_to_ready - diff_ns;
-+			else
-+				diff_ns = tur_nanosecs_to_ready;
-+			/* As per 20-061r2 approved for spc6 by T10 on 20200716 */
-+			scsi_set_sense_information(scp->sense_buffer, SCSI_SENSE_BUFFERSIZE,
-+						   diff_ns / 1000000);
-+			return check_condition_result;
-+		}
-+	}
-+	mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
-+	if (sdebug_verbose)
-+		sdev_printk(KERN_INFO, sdp, "%s: Not ready: initializing command required\n",
-+			    my_name);
-+	return check_condition_result;
-+}
-+
- static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 				   struct scsi_cmnd *scp)
+ 	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&device->channel->requestor, rqst_id);
+ 		dev_err(dev, "Failed to create sub-channel: err=%d\n", ret);
+ 		return;
+ 	}
+@@ -818,20 +835,31 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
  {
-@@ -7141,14 +7219,11 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		if (errsts)
- 			goto check_cond;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
++	u64 rqst_id;
+ 
+ 	vstor_packet = &request->vstor_packet;
+ 
+ 	init_completion(&request->wait_event);
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
++	rqst_id = vmbus_next_request_id(&device->channel->requestor,
++					(unsigned long)request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(&device->device, "No request id available\n");
++		return -EAGAIN;
++	}
++
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 			       vmscsi_size_delta),
+-			       (unsigned long)request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+-	if (ret != 0)
++	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&device->channel->requestor, rqst_id);
+ 		return ret;
++	}
+ 
+ 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
+ 	if (t == 0)
+@@ -1233,9 +1261,17 @@ static void storvsc_on_channel_callback(void *context)
+ 	foreach_vmbus_pkt(desc, channel) {
+ 		void *packet = hv_pkt_data(desc);
+ 		struct storvsc_cmd_request *request;
++		u64 cmd_rqst;
+ 
+-		request = (struct storvsc_cmd_request *)
+-			((unsigned long)desc->trans_id);
++		cmd_rqst = vmbus_request_addr(&channel->requestor,
++					      desc->trans_id);
++		if (cmd_rqst == VMBUS_RQST_ERROR) {
++			dev_err(&device->device,
++				"Incorrect transaction id\n");
++			continue;
++		}
++
++		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
+ 
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+@@ -1256,6 +1292,12 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
+ 
++	/*
++	 * The size of vmbus_requestor is an upper bound on the number of requests
++	 * that can be in-progress at any one time across all channels.
++	 */
++	device->channel->rqstor_size = scsi_driver.can_queue;
++
+ 	ret = vmbus_open(device->channel,
+ 			 ring_size,
+ 			 ring_size,
+@@ -1369,6 +1411,7 @@ static int storvsc_do_io(struct hv_device *device,
+ 	int ret = 0;
+ 	const struct cpumask *node_mask;
+ 	int tgt_cpu;
++	u64 rqst_id;
+ 
+ 	vstor_packet = &request->vstor_packet;
+ 	stor_device = get_out_stor_device(device);
+@@ -1463,6 +1506,13 @@ static int storvsc_do_io(struct hv_device *device,
+ 
+ 	vstor_packet->operation = VSTOR_OPERATION_EXECUTE_SRB;
+ 
++	rqst_id = vmbus_next_request_id(&outgoing_channel->requestor,
++					(unsigned long)request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(&device->device, "No request id available\n");
++		return -EAGAIN;
++	}
++
+ 	if (request->payload->range.len) {
+ 
+ 		ret = vmbus_sendpacket_mpb_desc(outgoing_channel,
+@@ -1470,18 +1520,21 @@ static int storvsc_do_io(struct hv_device *device,
+ 				vstor_packet,
+ 				(sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+-				(unsigned long)request);
++				rqst_id);
+ 	} else {
+ 		ret = vmbus_sendpacket(outgoing_channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+-			       (unsigned long)request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
  	}
--	if (unlikely((F_M_ACCESS & flags) && atomic_read(&devip->stopped))) {
--		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
--		if (sdebug_verbose)
--			sdev_printk(KERN_INFO, sdp, "%s reports: Not ready: "
--				    "%s\n", my_name, "initializing command "
--				    "required");
--		errsts = check_condition_result;
--		goto fini;
-+	if (unlikely(((F_M_ACCESS & flags) || scp->cmnd[0] == TEST_UNIT_READY) &&
-+		     atomic_read(&devip->stopped))) {
-+		errsts = resp_not_ready(scp, devip);
-+		if (errsts)
-+			goto fini;
- 	}
- 	if (sdebug_fake_rw && (F_FAKE_RW & flags))
- 		goto fini;
+ 
+-	if (ret != 0)
++	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&outgoing_channel->requestor, rqst_id);
+ 		return ret;
++	}
+ 
+ 	atomic_inc(&stor_device->num_outstanding_req);
+ 
+@@ -1562,7 +1615,7 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
+-
++	u64 rqst_id;
+ 
+ 	stor_device = get_out_stor_device(device);
+ 	if (!stor_device)
+@@ -1577,14 +1630,24 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 	vstor_packet->vm_srb.path_id = stor_device->path_id;
+ 
++	rqst_id = vmbus_next_request_id(&device->channel->requestor,
++					(unsigned long)&stor_device->reset_request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(&device->device, "No request id available\n");
++		return FAILED;
++	}
++
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+-			       (unsigned long)&stor_device->reset_request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+-	if (ret != 0)
++	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&device->channel->requestor, rqst_id);
+ 		return FAILED;
++	}
+ 
+ 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
+ 	if (t == 0)
 -- 
 2.25.1
 
