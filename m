@@ -7,68 +7,69 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B27B4C4345A
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C3DC433EA
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E261206D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12E3622BEA
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ASk1pLpm"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GrbtluSJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728974AbgGWMZQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:25:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58180 "EHLO
+        id S1728987AbgGWM0f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:26:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728959AbgGWMZN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:13 -0400
+        with ESMTP id S1728971AbgGWMZQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:16 -0400
 Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D00C0619E7
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:11 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id f18so5010114wml.3
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8E5FC0619DC
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:15 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id o8so4783277wmh.4
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=vvVihUnRFqMdxGLBXS9BPHUYjIV5Tt/WnThdFe3tGqE=;
-        b=ASk1pLpmZPrxFOz/aAoD/Ta392mN6iPzej/2OLBJcHirDz4m4DiqrW5Rz8pnvQCg3b
-         4v1g2OLLCe8FpjQJnZbAmPuD2pF1PSDJsZK514iZvhY8Z6kiTMAG/BH9ixrHk6waYQzx
-         ggrEIo1zyDBRcLeIGpoY2MvSAUuRDyZmxGPDMWr3jLGah+qTy04BkMCb6LVokUZaZ56L
-         My+BJAHs3hylLRjrKDjgrECQ9WsWKYatXeURswCgJiF/6C4uEhK1mX6ODqqF4pv6hNWE
-         DrdDaaHD92YqGw+fv5ny+LnMAm5fSxmOYdbY5EDb73V86wYzvhFb6GT8ElCfzuLgCQsW
-         /nnw==
+        bh=Va/Ff5G2hEmAhvKYYGy2WjvjWoULU+Qfw6mOj+wkLgk=;
+        b=GrbtluSJbKvXB3XVk94LANq0j8olHPMHyQJC8heK46kTGaizDW8xkyyCRV2sy9pwlO
+         NasEXqqYQqCkCgZO0ZucEKCaIWJnxD/tqbrOLCncdpe4cvDbP7k6BQRTtUbG/NSQe+oT
+         L83Mn0nJOjCPAmTCkeQMCxWoiPpP8Inh6/UGZZpWCOy25u2GUSx2WhoqplwC6orcnj0M
+         aM9oFpQj+subQFcUjh2krxgDuvQf1dbVE6y1/+jQjR2YEbKkQoRikCw/CEL3QFjkPURz
+         0o1bHAHoxtzm8Huk5Gx3SI+LnKiR0z+DwrgcwFjez73AGGZ15h7Vy8jhvbTFO18BKka1
+         xTIQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vvVihUnRFqMdxGLBXS9BPHUYjIV5Tt/WnThdFe3tGqE=;
-        b=F0YnvI3mDIaUV5gHGc+CcbUICdR3CXHnV4QHrgG5/+NS7NL0Umw5OhVRWH2VfJBz7x
-         x7GI2oqOjNV5T9xuUPa5uHkPAObnM2z5q7GSglVqgDWVKR3y0OztTMyCAF2ddCRpXEud
-         TEbZKA1tcbpeP9Xq18v0VJCvPy1VgkWgttezDD2IQ9b8lUGrzToA1I1/aqmn6rBbTWhq
-         FeoQH9s1QF2B+iBjK7xH0hKJzzfR5I9g6mYMO+qH+rDJ11wuBn7Uq7NKBSa31DduKHiT
-         FXj1RZjx/YTDIewxGTcjFgJWkCTd1PgaoL9JPzjEGhIOrMCyoUgnoIjVXNMf5rEYNTnp
-         TsAA==
-X-Gm-Message-State: AOAM530Y22Vo6F8id5ZaDgKp+pjzzcJF3BXY5TGES0b5kHIxtN/D5Kv+
-        YjLXxTAs24PuNfRCAlNWBlp2vw==
-X-Google-Smtp-Source: ABdhPJyKG4U0JmHyOzcwDHBhbjxqAF1cbPfZqUXMamtCsYAkdrJV/XwgD9FSh+MCWccrwNnLa0xp2A==
-X-Received: by 2002:a1c:a757:: with SMTP id q84mr1700943wme.1.1595507109953;
-        Thu, 23 Jul 2020 05:25:09 -0700 (PDT)
+        bh=Va/Ff5G2hEmAhvKYYGy2WjvjWoULU+Qfw6mOj+wkLgk=;
+        b=ebU6l5Li/u6jHU9TvFQVeQOw2QjrCU8zzMSqXyDEEp6YTq19DALsUYXT9mRhfDEh75
+         fYLYhvKcJLLUPXTbQLd9in+prrv0b+L+pCxNFLZwHbLLEU2OY3AmjHZNjsySd56kLQyQ
+         i6h1pM14XvkbHhCZh7Q9zcWg6wYkppwMT7scXOGbxQgai9L4H9H3pKQPqD8I+CZxU1Qa
+         z2sWc0X/XCEngGcDST23sRroK7FJHcHocoW2TeFvBirlWhv1Y47YcfO60rksqpw1saJD
+         A5VKvUGYUGWbPjbpqZ0x2xCnL7a4AcEDrwvnQnTeQtkKOfoCYaoNjVyVEL7Ua9T0JlC8
+         wRoA==
+X-Gm-Message-State: AOAM531bpDhNYt6WDZeNwAy+NFRt5Zd2EVt6S2Nirhu9ejj7hzaBAD3U
+        v6hnzxPwC60GuE3ILQ3SWR596Q==
+X-Google-Smtp-Source: ABdhPJxYMy4WI54kPr1zV3EGU+isVVMYiwRBNr7dqikp5ChiLWLv5GhFemXzv/nugVl78RxJzX5jXg==
+X-Received: by 2002:a1c:790c:: with SMTP id l12mr3922082wme.50.1595507114637;
+        Thu, 23 Jul 2020 05:25:14 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.09
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:09 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:14 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        QLogic-Storage-Upstream@qlogic.com
-Subject: [PATCH 17/40] scsi: qla4xxx: ql4_bsg: Rename function parameter descriptions
-Date:   Thu, 23 Jul 2020 13:24:23 +0100
-Message-Id: <20200723122446.1329773-18-lee.jones@linaro.org>
+        Arkadiusz Drabczyk <arkadiusz@drabczyk.org>
+Subject: [PATCH 21/40] scsi: csiostor: csio_hw: Mark known unused variable as __always_unused
+Date:   Thu, 23 Jul 2020 13:24:27 +0100
+Message-Id: <20200723122446.1329773-22-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -77,39 +78,28 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/qla4xxx/ql4_bsg.c:811: warning: Function parameter or member 'bsg_job' not described in 'qla4xxx_process_vendor_specific'
- drivers/scsi/qla4xxx/ql4_bsg.c:811: warning: Excess function parameter 'job' description in 'qla4xxx_process_vendor_specific'
- drivers/scsi/qla4xxx/ql4_bsg.c:858: warning: Function parameter or member 'bsg_job' not described in 'qla4xxx_bsg_request'
- drivers/scsi/qla4xxx/ql4_bsg.c:858: warning: Excess function parameter 'job' description in 'qla4xxx_bsg_request'
+ drivers/scsi/csiostor/csio_hw.c: In function ‘csio_hw_get_vpd_params’:
+ drivers/scsi/csiostor/csio_hw.c:309:8: warning: variable ‘s’ set but not used [-Wunused-but-set-variable]
 
-Cc: QLogic-Storage-Upstream@qlogic.com
+Cc: Arkadiusz Drabczyk <arkadiusz@drabczyk.org>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/qla4xxx/ql4_bsg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/csiostor/csio_hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
-index 415ee5eb3fc7e..9231917066d3e 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.c
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-@@ -805,7 +805,7 @@ static int qla4xxx_execute_diag_test(struct bsg_job *bsg_job)
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 950f9cdf0577f..98d4d39aaa572 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -306,7 +306,7 @@ csio_hw_get_vpd_params(struct csio_hw *hw, struct csio_vpd *p)
+ 	uint8_t *vpd, csum;
+ 	const struct t4_vpd_hdr *v;
+ 	/* To get around compilation warning from strstrip */
+-	char *s;
++	char __always_unused *s;
  
- /**
-  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
-- * @job: iscsi_bsg_job to handle
-+ * @bsg_job: iscsi_bsg_job to handle
-  **/
- int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
- {
-@@ -852,7 +852,7 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
- 
- /**
-  * qla4xxx_bsg_request - handle bsg request from ISCSI transport
-- * @job: iscsi_bsg_job to handle
-+ * @bsg_job: iscsi_bsg_job to handle
-  */
- int qla4xxx_bsg_request(struct bsg_job *bsg_job)
- {
+ 	if (csio_is_valid_vpd(hw))
+ 		return 0;
 -- 
 2.25.1
 
