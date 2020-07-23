@@ -7,70 +7,68 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2850C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B27B4C4345A
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEBE0206D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E261206D7
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NgTx2AQ5"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ASk1pLpm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729239AbgGWM01 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:26:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58216 "EHLO
+        id S1728974AbgGWMZQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:25:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728992AbgGWMZT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:19 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA1C1C0619E3
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:18 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id r12so4939087wrj.13
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:18 -0700 (PDT)
+        with ESMTP id S1728959AbgGWMZN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:13 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D00C0619E7
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:11 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id f18so5010114wml.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=g7HEL4xrEwuTkMeUXu16IXZ1qnXvn6HqyFPGQLsjThQ=;
-        b=NgTx2AQ5OQPVWBHc7CmEJc5GGfGEO/5DyHik2uTF6EgETZV6AdtbtCDj0FSiyR51Cn
-         tTyhu3J3XVFcqJss3c0b5hiXkqP5m1YVDeNPujGQynIqxmFBRhI6h8LdSboYukfZS/4O
-         yO3mINgrz51r4097D6OtYhLHPuZgvb0LTUwVhV2LxObdnlvyW5aivwp3UwkGe2+ABYEF
-         1mBn5mdSXsnfjbrrJwde9b2Kwxb2BhEtuXksHiDJEyJ1/xjjHtjuTOsKe4Q5EVcUqw7q
-         Na8B/5PpPocWEXF2vzj/SYjLgRQaGXekwdU6mU2hYIRu1E4HPiOaVH/jyrKDjbjzTcZO
-         m4Sg==
+        bh=vvVihUnRFqMdxGLBXS9BPHUYjIV5Tt/WnThdFe3tGqE=;
+        b=ASk1pLpmZPrxFOz/aAoD/Ta392mN6iPzej/2OLBJcHirDz4m4DiqrW5Rz8pnvQCg3b
+         4v1g2OLLCe8FpjQJnZbAmPuD2pF1PSDJsZK514iZvhY8Z6kiTMAG/BH9ixrHk6waYQzx
+         ggrEIo1zyDBRcLeIGpoY2MvSAUuRDyZmxGPDMWr3jLGah+qTy04BkMCb6LVokUZaZ56L
+         My+BJAHs3hylLRjrKDjgrECQ9WsWKYatXeURswCgJiF/6C4uEhK1mX6ODqqF4pv6hNWE
+         DrdDaaHD92YqGw+fv5ny+LnMAm5fSxmOYdbY5EDb73V86wYzvhFb6GT8ElCfzuLgCQsW
+         /nnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=g7HEL4xrEwuTkMeUXu16IXZ1qnXvn6HqyFPGQLsjThQ=;
-        b=rL0U+h7orsJc2qNKYJFajbdJCVkjBKIrH4delLpYI5vsTDMnqLtc6V6mFbaLluTsLw
-         TU3brbK9h9FeSy9+RACAPjOYJiJEFznRLrwHawbPMeaJTqy/gb6Qp/ggXMCx7vIB3/Tv
-         J8Ns69ZxwS2YWSV5XGWWtAbp16SaDkluZERA5zR9DfeazrEMLluF64tSHTcWWUvSI5lp
-         QqN5d5y7AFw8SIrxIhxhH2VOSpU5Am53WYhBp+NubGmSEQimXPgPXq0On8oHwX6BbXN1
-         RvkQgxPbAcFh/EiYNkpZF/4/9nTYVqo319V33UyfYM8s5LLbUfwlFjg1nqcnu7TGBVj+
-         NjqA==
-X-Gm-Message-State: AOAM5331UJWGP3/Hin2zRYhuouAXQ3drSIlScuzCKjuOYFAJvOxacohR
-        Q/GE1atYUjNVPdQF+4YeN4sY7A==
-X-Google-Smtp-Source: ABdhPJyh4nBcbknxwuqgi6BDewjRtpccybnkpPvqru8OaJoltE93qD4sMfXoKyIid7IznS1CwxsnqA==
-X-Received: by 2002:adf:bc54:: with SMTP id a20mr3827338wrh.227.1595507117476;
-        Thu, 23 Jul 2020 05:25:17 -0700 (PDT)
+        bh=vvVihUnRFqMdxGLBXS9BPHUYjIV5Tt/WnThdFe3tGqE=;
+        b=F0YnvI3mDIaUV5gHGc+CcbUICdR3CXHnV4QHrgG5/+NS7NL0Umw5OhVRWH2VfJBz7x
+         x7GI2oqOjNV5T9xuUPa5uHkPAObnM2z5q7GSglVqgDWVKR3y0OztTMyCAF2ddCRpXEud
+         TEbZKA1tcbpeP9Xq18v0VJCvPy1VgkWgttezDD2IQ9b8lUGrzToA1I1/aqmn6rBbTWhq
+         FeoQH9s1QF2B+iBjK7xH0hKJzzfR5I9g6mYMO+qH+rDJ11wuBn7Uq7NKBSa31DduKHiT
+         FXj1RZjx/YTDIewxGTcjFgJWkCTd1PgaoL9JPzjEGhIOrMCyoUgnoIjVXNMf5rEYNTnp
+         TsAA==
+X-Gm-Message-State: AOAM530Y22Vo6F8id5ZaDgKp+pjzzcJF3BXY5TGES0b5kHIxtN/D5Kv+
+        YjLXxTAs24PuNfRCAlNWBlp2vw==
+X-Google-Smtp-Source: ABdhPJyKG4U0JmHyOzcwDHBhbjxqAF1cbPfZqUXMamtCsYAkdrJV/XwgD9FSh+MCWccrwNnLa0xp2A==
+X-Received: by 2002:a1c:a757:: with SMTP id q84mr1700943wme.1.1595507109953;
+        Thu, 23 Jul 2020 05:25:09 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.15
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:16 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:09 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Subject: [PATCH 23/40] scsi: bfa: bfa_ioc: Staticify non-external functions
-Date:   Thu, 23 Jul 2020 13:24:29 +0100
-Message-Id: <20200723122446.1329773-24-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@qlogic.com
+Subject: [PATCH 17/40] scsi: qla4xxx: ql4_bsg: Rename function parameter descriptions
+Date:   Thu, 23 Jul 2020 13:24:23 +0100
+Message-Id: <20200723122446.1329773-18-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -79,54 +77,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/bfa/bfa_ioc.c:5023:1: warning: no previous prototype for ‘bfa_diag_intr’ [-Wmissing-prototypes]
- 5023 | bfa_diag_intr(void *diagarg, struct bfi_mbmsg_s *msg)
- | ^~~~~~~~~~~~~
- drivers/scsi/bfa/bfa_ioc.c:6966:1: warning: no previous prototype for ‘bfa_flash_sem_get’ [-Wmissing-prototypes]
- 6966 | bfa_flash_sem_get(void __iomem *bar)
- | ^~~~~~~~~~~~~~~~~
- drivers/scsi/bfa/bfa_ioc.c:6979:1: warning: no previous prototype for ‘bfa_flash_sem_put’ [-Wmissing-prototypes]
- 6979 | bfa_flash_sem_put(void __iomem *bar)
- | ^~~~~~~~~~~~~~~~~
+ drivers/scsi/qla4xxx/ql4_bsg.c:811: warning: Function parameter or member 'bsg_job' not described in 'qla4xxx_process_vendor_specific'
+ drivers/scsi/qla4xxx/ql4_bsg.c:811: warning: Excess function parameter 'job' description in 'qla4xxx_process_vendor_specific'
+ drivers/scsi/qla4xxx/ql4_bsg.c:858: warning: Function parameter or member 'bsg_job' not described in 'qla4xxx_bsg_request'
+ drivers/scsi/qla4xxx/ql4_bsg.c:858: warning: Excess function parameter 'job' description in 'qla4xxx_bsg_request'
 
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: QLogic-Storage-Upstream@qlogic.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/bfa/bfa_ioc.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla4xxx/ql4_bsg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 3ce281a02d5bb..10c12b5a36b84 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -5019,7 +5019,7 @@ diag_portbeacon_comp(struct bfa_diag_s *diag)
- /*
-  *	Diag hmbox handler
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
+index 415ee5eb3fc7e..9231917066d3e 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.c
++++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+@@ -805,7 +805,7 @@ static int qla4xxx_execute_diag_test(struct bsg_job *bsg_job)
+ 
+ /**
+  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
+- * @job: iscsi_bsg_job to handle
++ * @bsg_job: iscsi_bsg_job to handle
+  **/
+ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
+ {
+@@ -852,7 +852,7 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
+ 
+ /**
+  * qla4xxx_bsg_request - handle bsg request from ISCSI transport
+- * @job: iscsi_bsg_job to handle
++ * @bsg_job: iscsi_bsg_job to handle
   */
--void
-+static void
- bfa_diag_intr(void *diagarg, struct bfi_mbmsg_s *msg)
+ int qla4xxx_bsg_request(struct bsg_job *bsg_job)
  {
- 	struct bfa_diag_s *diag = diagarg;
-@@ -6962,7 +6962,7 @@ bfa_raw_sem_get(void __iomem *bar)
- 
- }
- 
--bfa_status_t
-+static bfa_status_t
- bfa_flash_sem_get(void __iomem *bar)
- {
- 	u32 n = FLASH_BLOCKING_OP_MAX;
-@@ -6975,7 +6975,7 @@ bfa_flash_sem_get(void __iomem *bar)
- 	return BFA_STATUS_OK;
- }
- 
--void
-+static void
- bfa_flash_sem_put(void __iomem *bar)
- {
- 	writel(0, (bar + FLASH_SEM_LOCK_REG));
 -- 
 2.25.1
 
