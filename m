@@ -7,127 +7,116 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0112CC433E5
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF724C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D339A208E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB8F320792
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BB8oAg6w"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xaBW4zXU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729369AbgGWM12 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:27:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58114 "EHLO
+        id S1728946AbgGWM1d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:27:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728888AbgGWMZB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:01 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6CFCC0619DC
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:00 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id 88so4977414wrh.3
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:00 -0700 (PDT)
+        with ESMTP id S1728874AbgGWMY7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:24:59 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CC9FC0619DC
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:24:59 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id f2so4964622wrp.7
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:24:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=OWikrHcjIEL13jknWWaUiCgmVBPYjsVQNgOhFstQ6kk=;
-        b=BB8oAg6wAh/txP2Zw6XlLsdMIMjiFCw3n8QNnz+5qnf/iAGYJvKlY8VFgS75Q/OPnW
-         0lhnnWlp8LgvU4zRh+u6mSS8gdNbN/fCyK6UC8LFWS7mC8bAJQ90U4rhEUTHLZr37zWY
-         0LQ7Es10351jkZU5W0m83pqKwZU8zj6e56ek1R76wpC9wa8HJAvrtfwDKeVOnnpTxNXz
-         HOVQ8iAivYVb0FCcO0xMuA1T1bWbgrn4SuB2fqgWspRAVWfknGcxyy8wcH8zCM4XzHbk
-         jxQfWwJXpOcAnH04XdrVg2G7KnMLip7J+DCE7A6Mutm9VOZ6qWqcdEd9957uDxpVIqGn
-         AtAA==
+        bh=80v1DBRW/qsu59LvyeMIeuQFI8l1Hk1nu3w4AijohsI=;
+        b=xaBW4zXUzVy6HWSnFb8niReGfzTgkh/3kLRCus5uoYeWHhRGske4Gp63MyS/UpkOHr
+         psb63W7tbz5Y4zOZD89k51FPGLkAaRW563Uayx4efO7OrzyZf/0G5CAL/LdlOpGNvUiI
+         c7K6A6r3Nu+hwe7BJCJ21MZvB1Bcu7KJNPQzZqTHinItMf6ooHtSuANOGHy99tSDOlBA
+         CwAVQJ5DJ9eNb4lyARBB3mNT2C+ZiTIJXgd0vxfit4c7uzWNEejenJAzHvRSr1sC77rh
+         kDF8VKXBJ/LbcIn3jDun8mS2RKYuk2C7xGAB7f7byAhsRtYuX9ok27Oj+H3v47XO4lcS
+         Dogw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=OWikrHcjIEL13jknWWaUiCgmVBPYjsVQNgOhFstQ6kk=;
-        b=f72zkOSCwCGn6NuGBc7dr6nMO7DF1fyOjwqsNN/P8E4lR/T3EsmHEtwR9uTt+AIt9T
-         9250leGG3SzZyvwLcpab4I0h5xjs6SaJXdxNYmcJMpQD4x9RYO3yFs/1xhpQzAG3B0Ts
-         XkhQHs86fjVk07KrHqmo8UITrkJgXm0HPWJc8dZWP5q5A86xYXOnBhaTWzV/PaH1DDAR
-         GV8a6+dPfKvIxSjCgT/4vAZ2GaOlTefdKLETTnTSp+owQg2pNx/ODva35ndmhjv/VFII
-         /u9bInYzGUaSZ6wub+yTlgpdB6DyfdCPMam1S7jJCN5PjtnCIfX+1oJCFIhdn/l8O8ax
-         NOMg==
-X-Gm-Message-State: AOAM532A57CzTGWzYHHYyLa12S643CO8X2bfkDQkk28mQMqwZWcuw3ED
-        XEQ/8J3FqlSU/MwS378dZq+tgg==
-X-Google-Smtp-Source: ABdhPJxhEY7+qPHjPhuX5V9UXTKocEiF3ZgSgjLNy48r0c8fWe4GAkvPRAdVDSpqXvIYiB7pHa/2iw==
-X-Received: by 2002:adf:b34a:: with SMTP id k10mr3801954wrd.402.1595507099540;
-        Thu, 23 Jul 2020 05:24:59 -0700 (PDT)
-Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.24.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=80v1DBRW/qsu59LvyeMIeuQFI8l1Hk1nu3w4AijohsI=;
+        b=DFxYwJeS6m8mxGdFl3MX+DA5EP1X25VzAJ/7LvliA8Cp2JMYvG4LWqAvv1DIj2CouG
+         1OzlzYCXK0sUVuaWdubOi7ZF7WqQYy91YcChMoIGGOsP550htmVzcWn9Fc66BYL/xE2C
+         J3WrD2CMCVEqH/zonGe2A1HZ2i4EwyzsN4kQHMxQkYsJAh/nwOIz6nz4Dh7P/I0VbSmp
+         AtSFcuc8Kb85Vii+Cy/Wn7eYW8vQztwvM15imkiBIskgrFKwJLisO+jUqrjeKc835V8u
+         HNR208Hlqu10Ldmd0u0k56bMARd53kysU1fnFA70CDFcdo68h4Vy01gIJGTfB5Agrl+r
+         n9Ug==
+X-Gm-Message-State: AOAM530o+2M0LtdqGiYy9dg5BJwiyGPJ7ebBvq7w6LKr8qHXgJI1CB9s
+        VIvYzJ+6PQPf5DNpHG9KRCbj0Q==
+X-Google-Smtp-Source: ABdhPJzKG1wmpdPfaLhJeYXeq9QB31CvRZqPSXRE5D6MdiQRM6Z5f3c5+XeahU4Q+ztWHyM9SxlqWA==
+X-Received: by 2002:adf:ec8b:: with SMTP id z11mr3735247wrn.51.1595507098335;
         Thu, 23 Jul 2020 05:24:58 -0700 (PDT)
+Received: from localhost.localdomain ([2.27.167.73])
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.24.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jul 2020 05:24:57 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        QLogic-Storage-Upstream@qlogic.com,
-        Anil Veerabhadrappa <anilgv@broadcom.com>,
-        Eddie Wai <eddie.wai@broadcom.com>
-Subject: [PATCH 08/40] scsi: bnx2i: bnx2i_sysfs: Add missing descriptions for 'attr' parameter
-Date:   Thu, 23 Jul 2020 13:24:14 +0100
-Message-Id: <20200723122446.1329773-9-lee.jones@linaro.org>
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Subject: [PATCH 07/40] scsi: bfa: bfa_port: Staticify local functions
+Date:   Thu, 23 Jul 2020 13:24:13 +0100
+Message-Id: <20200723122446.1329773-8-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+These calls are not invoked externally.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/bnx2i/bnx2i_sysfs.c:40: warning: Function parameter or member 'attr' not described in 'bnx2i_show_sq_info'
- drivers/scsi/bnx2i/bnx2i_sysfs.c:60: warning: Function parameter or member 'attr' not described in 'bnx2i_set_sq_info'
- drivers/scsi/bnx2i/bnx2i_sysfs.c:96: warning: Function parameter or member 'attr' not described in 'bnx2i_show_ccell_info'
- drivers/scsi/bnx2i/bnx2i_sysfs.c:114: warning: Function parameter or member 'attr' not described in 'bnx2i_set_ccell_info'
+ drivers/scsi/bfa/bfa_port.c:760:1: warning: no previous prototype for ‘bfa_cee_isr’ [-Wmissing-prototypes]
+ 760 | bfa_cee_isr(void *cbarg, struct bfi_mbmsg_s *m)
+ | ^~~~~~~~~~~
+ drivers/scsi/bfa/bfa_port.c:796:1: warning: no previous prototype for ‘bfa_cee_notify’ [-Wmissing-prototypes]
+ 796 | bfa_cee_notify(void *arg, enum bfa_ioc_event_e event)
+ | ^~~~~~~~~~~~~~
 
-Cc: QLogic-Storage-Upstream@qlogic.com
-Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: Eddie Wai <eddie.wai@broadcom.com>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/bnx2i/bnx2i_sysfs.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/bfa/bfa_port.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_sysfs.c b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-index 6d56fd60cb2b2..3dc790089f0fc 100644
---- a/drivers/scsi/bnx2i/bnx2i_sysfs.c
-+++ b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-@@ -30,6 +30,7 @@ static inline struct bnx2i_hba *bnx2i_dev_to_hba(struct device *dev)
- /**
-  * bnx2i_show_sq_info - return(s currently configured send queue (SQ) size
-  * @dev:	device pointer
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer to return current SQ size parameter
-  *
-  * Returns current SQ size parameter, this paramater determines the number
-@@ -47,6 +48,7 @@ static ssize_t bnx2i_show_sq_info(struct device *dev,
- /**
-  * bnx2i_set_sq_info - update send queue (SQ) size parameter
-  * @dev:	device pointer
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer to return current SQ size parameter
-  * @count:	parameter buffer size
-  *
-@@ -87,6 +89,7 @@ static ssize_t bnx2i_set_sq_info(struct device *dev,
- /**
-  * bnx2i_show_ccell_info - returns command cell (HQ) size
-  * @dev:	device pointer
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer to return current SQ size parameter
-  *
-  * returns per-connection TCP history queue size parameter
-@@ -103,6 +106,7 @@ static ssize_t bnx2i_show_ccell_info(struct device *dev,
- /**
-  * bnx2i_get_link_state - set command cell (HQ) size
-  * @dev:	device pointer
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer to return current SQ size parameter
-  * @count:	parameter buffer size
-  *
+diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
+index 4511ec865f06a..cfe2c9c336bfd 100644
+--- a/drivers/scsi/bfa/bfa_port.c
++++ b/drivers/scsi/bfa/bfa_port.c
+@@ -756,7 +756,7 @@ bfa_cee_reset_stats(struct bfa_cee_s *cee,
+  * @return void
+  */
+ 
+-void
++static void
+ bfa_cee_isr(void *cbarg, struct bfi_mbmsg_s *m)
+ {
+ 	union bfi_cee_i2h_msg_u *msg;
+@@ -792,7 +792,7 @@ bfa_cee_isr(void *cbarg, struct bfi_mbmsg_s *m)
+  * @return void
+  */
+ 
+-void
++static void
+ bfa_cee_notify(void *arg, enum bfa_ioc_event_e event)
+ {
+ 	struct bfa_cee_s *cee = (struct bfa_cee_s *) arg;
 -- 
 2.25.1
 
