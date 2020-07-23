@@ -4,101 +4,106 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 497BEC433E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68966C433F8
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22D652086A
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4528C208E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cF/qDwLu"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EnCu+Wb3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729123AbgGWMZi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:25:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58316 "EHLO
+        id S1728574AbgGWM0D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:26:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729115AbgGWMZh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:37 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6E1AC0619DC
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:36 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id c80so4796473wme.0
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:36 -0700 (PDT)
+        with ESMTP id S1729085AbgGWMZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:32 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57C8CC0619E6
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:32 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id x5so4225555wmi.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=lILTThezBBjt1SaEOrJ5cCFNVhfL0JgzA9PlnOUOSZ0=;
-        b=cF/qDwLuZ3kSlDgfOjMgsjZ/zgg8VcNgh/irkdLg65eI4YGX/EJnsb6zFuWrudDys/
-         M+Qps5AKnfK3YYlKDNS+VwBMfIQr0SwE5OjAdl1Fql26eTQnrAJHSYv1V2OtKIMEvO4g
-         q1p08Gl13ghVrzSOqppm1PkM0dWYOMdlvJyfaGZ7jobCoY7kFFT1Lxy2Jf7U/vmuB5Ge
-         6KK19t9Lyk8EnqbB9JQbR0ttlRt/4cXQfQn0l3Nw9VhS8hrciqJCSsFxnnCyXVJehcU6
-         Cez5bfFb7D8LD7OCQcmbjnMSqFcyHSczjFuITPE6ZISp99ig2Tcsug4kQ5rhA6Vp2Q8B
-         7qjQ==
+        bh=zeBAm1L7XVJ6IVI2TzsfeuXstruzEbtoUmoVsIn2ru8=;
+        b=EnCu+Wb38b4dsqdsV/NDDN7jk4P11BTBfwFzIGhJwSa5HDLOreoGHFr+sZSji+0tgd
+         +NcBdAvxWhDLzfVnrObozeGKSeU7mTKiRnnJx6DsiHNXmPxrR2yhvd86qUAPaio5LN+e
+         R+Ug97vVFL4qvD8LKtWxN0JBVCS6yOl9exg04OsMljHZzlVq53mrlQRDuvffpYagfurV
+         9a6Ydcr1LePnkVSPYyAmqWQ0sSzGXxKkhOfL4Smnlbeif+OrtsW64tk+1WO1YaB60ec9
+         Vj7I/M0od+PGt3AUpVR+97u9fyO45j2/qXByvA0nfOepgtcgBBMM65/YXMh5iQ6VVpRU
+         HLvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=lILTThezBBjt1SaEOrJ5cCFNVhfL0JgzA9PlnOUOSZ0=;
-        b=IkK/PausApbTmt5RI9MvghrImTA99zTk8TVhJY4OAl4HQi0nWVTdoktQL8k5g77jGo
-         g7Zu6kD6CqoIyKHLkW6Rjv6/fyYA9JwPm+yDZc8Q2h3PMI3Pu/AmR8x13eTUEnZmLFk/
-         pFFxgbtCbHD+OuZK6UEmNempgTDVuqwMJofE7E1IsIyK8EkmQGD27Tdtf66zO3BlOZoK
-         oh2+sChD9eJx5X4Fn6ob+UHzcEfPggaP16+e7Ne8fZoqADP8BLgGFCJa1ppY2r43JD0o
-         lNaKOkiYip/MuqucbS78k89buDcSr21eEfHh5LKJBICVEDVPRJ2wRN/GvbctVg7GBciX
-         Yxkw==
-X-Gm-Message-State: AOAM533Dsw0wMwz1EmoXEW7zQM6tydSww4cAqBmUdB43aK0zRcynk5TN
-        GDhaGwO2UR6A0TfakeOvrPLbfg==
-X-Google-Smtp-Source: ABdhPJzgV5ygX039Y+Z439kdkBvpBcmVfcgyvPkdOSIQ9k2En1wPFl5q+32hVNnRToBdO79SrD6qVA==
-X-Received: by 2002:a1c:750a:: with SMTP id o10mr4120800wmc.165.1595507135701;
-        Thu, 23 Jul 2020 05:25:35 -0700 (PDT)
+        bh=zeBAm1L7XVJ6IVI2TzsfeuXstruzEbtoUmoVsIn2ru8=;
+        b=oOa7QCmin/tv1cAjDilGZdnxNF+zqV+BXX394PvCdsKVGB/QDM9Mj5/RgcHZi/wg76
+         XJldO1Iz5MLYQ+0TZhATXdVR5xhxmHclGVPDCMYQzR3nHzJt/x/88b8FLdYZm4wz0VdI
+         NV0IouaLT61n+6Zs8evUIKy7joPlX2KlOqSTG79ZNWqwKFQmMdCgJSX4pxnenbwH9GRI
+         +DKLMTYDpypa50GnT21q1jcpCU2BtRx1oQxWqdcMo+QZuVYIQAD1lNX5GtwAvATXM+/C
+         FMTZIwGcFlRmEJpdU5qRZ4OwFc7D5VRjU8qkgSVaKLs9E9CLKIt9+QRHIqhXiZ0ayHS3
+         25eQ==
+X-Gm-Message-State: AOAM532Na/4XA3BAgQGsBUff2gxcWF8zN181zr2qJm8CWJcTjtxYF8FQ
+        We30xRmq82eLkK0E7x/enjuoUA==
+X-Google-Smtp-Source: ABdhPJzLU3UY01dM0brcV0HKbf0KdBIOoTZNeWuxveErkT/5gB9xuWssPL6fEMHzlDUDTgRNjN48zA==
+X-Received: by 2002:a1c:68c2:: with SMTP id d185mr3847154wmc.24.1595507131102;
+        Thu, 23 Jul 2020 05:25:31 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.33
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:35 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:30 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        QLogic-Storage-Upstream@cavium.com
-Subject: [PATCH 37/40] scsi: qedi: qedi_iscsi: Staticify non-external function 'qedi_get_iscsi_error'
-Date:   Thu, 23 Jul 2020 13:24:43 +0100
-Message-Id: <20200723122446.1329773-38-lee.jones@linaro.org>
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Subject: [PATCH 34/40] scsi: bfa: bfa_core: Demote seemingly unintentional kerneldoc header
+Date:   Thu, 23 Jul 2020 13:24:40 +0100
+Message-Id: <20200723122446.1329773-35-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This is the only use of kerneldoc in the source file and no
+descriptions are provided.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/qedi/qedi_iscsi.c:1549:7: warning: no previous prototype for ‘qedi_get_iscsi_error’ [-Wmissing-prototypes]
+ drivers/scsi/bfa/bfa_core.c:1245: warning: Function parameter or member 'bfa' not described in 'bfa_iocfc_qreg'
+ drivers/scsi/bfa/bfa_core.c:1245: warning: Function parameter or member 'qreg' not described in 'bfa_iocfc_qreg'
 
-Cc: QLogic-Storage-Upstream@cavium.com
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 2 +-
+ drivers/scsi/bfa/bfa_core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 425e665ec08b2..c14ac7882afac 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -1546,7 +1546,7 @@ static const struct {
- 	},
- };
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index fb4c469bd89fc..6846ca8f7313c 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -1237,7 +1237,7 @@ bfa_iocfc_disable_cb(void *bfa_arg, bfa_boolean_t compl)
+ 		complete(&bfad->disable_comp);
+ }
  
--char *qedi_get_iscsi_error(enum iscsi_error_types err_code)
-+static char *qedi_get_iscsi_error(enum iscsi_error_types err_code)
- {
- 	int i;
- 	char *msg = NULL;
+-/**
++/*
+  * configure queue registers from firmware response
+  */
+ static void
 -- 
 2.25.1
 
