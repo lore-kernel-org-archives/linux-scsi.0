@@ -7,66 +7,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A51EC433E8
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CDCC433EA
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED7422080D
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:24:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 268532080D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Qy0EsRHg"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="m9JWVP+m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728828AbgGWMY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:24:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58082 "EHLO
+        id S1728911AbgGWMZE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:25:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728824AbgGWMY4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:24:56 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E231CC0619E2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:24:55 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id f1so4425834wro.2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:24:55 -0700 (PDT)
+        with ESMTP id S1728898AbgGWMZD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:03 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E36CEC0619DC
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:02 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id f139so4997922wmf.5
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7dnMCO3O7GWoEhpbi22iSF6SZebDl2BeuDMdc7cp9fI=;
-        b=Qy0EsRHgGsQAG/Sjohwyb0UEINUjI26GTuGt0maBG/rSohVeuyGgXngFFOxD+uDcc9
-         JpUn/jP6ivol2esKfmNSeEMEbPDORThVBi6ZKA2DE1zm/mvjL3MYceytPPf9asN/ZsBt
-         md9wB/BQrFkmcZh7pRodZLkBY80Vgl9dvoQCJa/h66Ug+75oTzYeZkPPcfUEirU1YkqR
-         KFyGEC59BcksYRSYONQPHiW7dPaiMxEKHSphQ1yymwqvv5CsSGpfy2vBWi9bwncRoZsV
-         IzCRABJPY/jfBK0N5GAfoTqF0I+RxdsRuU8uHwucusH1A5f+NUonnZor48KRQE0fDcWq
-         A7WA==
+        bh=RyWxawKp9Typ2OK2kYwM9lNUQGGOHxUK9uVUiznh4iw=;
+        b=m9JWVP+mBsEvLIFtV/f+vnUB7TStzaLFXhdln3XW9MyO5nMKj0mhqVrEsOr3/72ZOg
+         D/gGVJfmAT1LBe8gluCI9Rj5JyMXIy/ch7m3aFLuSg8qzbymEE8ZtshvIfPebbZmdVzH
+         Guu3lK4HK0mbufcMXCqgHPttP6wxh6tQAxmyzvhsjKYcqx0zCuQppXVov3h8yhGIz0s4
+         9oZKNeheT38TzMxfXcm3DNYW2m010bQqp55Nz+KfdC2YevYApztjwcNRhISXpj+aNryK
+         b8B4XTvhcKZF8wa8WHDgpqZ7eCVDFiIqlx/dKmcvgw3hk2PrgHXI7egNAByIHcbGXRwK
+         zASw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7dnMCO3O7GWoEhpbi22iSF6SZebDl2BeuDMdc7cp9fI=;
-        b=XaNTbAt1zA2g57YMQIrH172yg3QkZP0EZsVCaMThLgsvMUKQ/AofyI5Y2ifme14Opi
-         nHrzXjYU8+DDLV2mtV3oCYwZVcDTEBUW2Ip/59i9pV4sdmdzF1HR96eKUCE/P+XK13mp
-         +7FSIVpxa2ioxyfi6d5RV6dwILRMSHSV7U8kcwnbwU5VCMY6Ysy9HmwFrgGIxoJ+HS/D
-         072QtipI21OwS9sMf2elU3zS3nUOEMKxyfM1/UdfTPVpUbHym2JCxG99QQtlih0PA3bE
-         Y+vXsijm7oKrEELnTWCqRx8wcLjc37tMQsyjtm47zpJ9aym3LZDC0Y8zwjU0/EUrNzt5
-         qFag==
-X-Gm-Message-State: AOAM533d7lv6nVgIv4EmnZfzLUTq89cY4gU39d6ysRNycfrb5UEYd5ud
-        0XKIJcJDksPuuZwcIFzBtu55jg==
-X-Google-Smtp-Source: ABdhPJxvJtb9jfW8iP6bc5G3PPp6fA3LbXTfHuuM3/YmpiAPWdEPQQh60ILfJ1qd8H/5g1F7ndgHxw==
-X-Received: by 2002:adf:8b1a:: with SMTP id n26mr4102997wra.182.1595507094598;
-        Thu, 23 Jul 2020 05:24:54 -0700 (PDT)
+        bh=RyWxawKp9Typ2OK2kYwM9lNUQGGOHxUK9uVUiznh4iw=;
+        b=ttjYQiOuHeh4JkN1BZmpoReL/MiR/gwlpZz5Be1gQdfDTn18tKEL6pNlLUZutpQzlx
+         4yQ34Vi8tJ5UsdHHOHjm/ZXxaC2QephWQ2OlDZ+/ZE6arN2yiDcI5u11BzUUjJViGf3k
+         W3eQXjTRmoZZmNAoAVoUBuD3oCRDzGRBUZh4bICV698hObCVmUdEj+pMQVMocvk6RYIn
+         QNIGz+Gxld74FjPzA01j0GJN4+kU/wiMCy3bkqN9i65YJhLs0dJiaH4MWZmYR5qwZ0eH
+         8Yde28WtBdfoJQnLrlE8nyVC7wD0FgvtDNHDcrUnA4TWr4jW9nlpkzfn62Acg11fJSeg
+         iDNQ==
+X-Gm-Message-State: AOAM531fK96LU7KE66zYgdoLdMYJikmSKDKHCM0qBHqGo+5crDXnBlGL
+        Nqw6BKkl5no4DHggFpkNImD0fA==
+X-Google-Smtp-Source: ABdhPJyWYbvequ+SPWxMPfV21jB7z9+Xdz0970BgnkdBLiAkCSe0A8XOOpulClfgQGvnYSA5HZfnow==
+X-Received: by 2002:a1c:14e:: with SMTP id 75mr4153379wmb.151.1595507101637;
+        Thu, 23 Jul 2020 05:25:01 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.24.53
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:24:53 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:01 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        QLogic-Storage-Upstream@qlogic.com,
-        Anil Veerabhadrappa <anilgv@broadcom.com>,
-        Eddie Wai <eddie.wai@broadcom.com>
-Subject: [PATCH 04/40] scsi: bnx2i: bnx2i_init: Fix parameter misnaming in function header
-Date:   Thu, 23 Jul 2020 13:24:10 +0100
-Message-Id: <20200723122446.1329773-5-lee.jones@linaro.org>
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Subject: [PATCH 10/40] scsi: bfa: bfa_fcpim: Demote seemingly unintentional kerneldoc header
+Date:   Thu, 23 Jul 2020 13:24:16 +0100
+Message-Id: <20200723122446.1329773-11-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
@@ -77,32 +76,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This is the only use of kerneldoc in the source file and no
+descriptions are provided.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/bnx2i/bnx2i_init.c:83: warning: Function parameter or member 'dev' not described in 'bnx2i_identify_device'
- drivers/scsi/bnx2i/bnx2i_init.c:83: warning: Excess function parameter 'cnic' description in 'bnx2i_identify_device'
+ drivers/scsi/bfa/bfa_fcpim.c:3829: warning: Function parameter or member 'bfa' not described in 'bfa_fcpim_get_throttle_cfg'
+ drivers/scsi/bfa/bfa_fcpim.c:3829: warning: Function parameter or member 'drv_cfg_param' not described in 'bfa_fcpim_get_throttle_cfg'
 
-Cc: QLogic-Storage-Upstream@qlogic.com
-Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: Eddie Wai <eddie.wai@broadcom.com>
+Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/bnx2i/bnx2i_init.c | 2 +-
+ drivers/scsi/bfa/bfa_fcpim.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 4ebcda8d95004..6018cdd177022 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -73,7 +73,7 @@ DEFINE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
- /**
-  * bnx2i_identify_device - identifies NetXtreme II device type
-  * @hba: 		Adapter structure pointer
-- * @cnic:		Corresponding cnic device
-+ * @dev:		Corresponding cnic device
-  *
-  * This function identifies the NX2 device type and sets appropriate
-  *	queue mailbox register access method, 5709 requires driver to
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index f6bf24084a47a..29f99561dfc3a 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -3812,7 +3812,7 @@ bfa_iotag_attach(struct bfa_fcp_mod_s *fcp)
+ }
+ 
+ 
+-/**
++/*
+  * To send config req, first try to use throttle value from flash
+  * If 0, then use driver parameter
+  * We need to use min(flash_val, drv_val) because
 -- 
 2.25.1
 
