@@ -7,67 +7,68 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F01B4C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81912C433EC
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CAD30206D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 627A122B43
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JuFdS5y7"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xFC5+L6q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729010AbgGWMZX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:25:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58220 "EHLO
+        id S1728989AbgGWMZS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:25:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728985AbgGWMZU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:20 -0400
+        with ESMTP id S1728960AbgGWMZR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:17 -0400
 Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2675C0619DC
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:19 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id f7so4995154wrw.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2D32C0619DC
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:16 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id 88so4978210wrh.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=euKwHTd5nmGQirdNec0wmJhbD/rOPWNyEyTyNJ+qI+A=;
-        b=JuFdS5y710xg7RFc7xoZiCn3DzeYwplfD9eeT3fvU2DpPlQMshxBMlcev/VDriTtJJ
-         lKufu0zDWWI/ezb59IYeT/E+7wBz15on/r6th+k5L/Za/YFBwe9mI6wtT3PSaU+s2T4G
-         myg2wIS9618YPDyhloZNL2Shbjd+1eEqJswxvbHS0/zjY7xN5toWF1RZNhmbgURGYfQx
-         kw6ANS46TLW3b31RdSdoX6gKzbPQ0T0n4/1CWWeM9GPx31A5eNNnvRyK+AHP8ml3YamA
-         6yAD7+vqbH+BOwdtHWk3Jbm36PhITyiTmBYNHVleZfKr/ZjjTHFRPNqhR1fS3xHhDtm/
-         pvLQ==
+        bh=KuXFDEYVsnsDfXIKt9wKPHYtC5k1C4IDk7HQmnmIHX4=;
+        b=xFC5+L6qTksxCecGRt3nk4ZWSrIfiJ5KB8fRopA2KjkpV8FmkuJa0jtIZRe/PclS1a
+         /4M87SpuupjQwVaqi01RBVgXJOs5dZDHD7Uuik52ZLmXYonwu+Hr2hgN20b8+D66Bqxh
+         2Zesy56tksWGu5NWopASjeu6yF+zoGxk0PRr5O6eYmqqGpl0i02ozM/sLvikCsSdKJ3K
+         SNtVxe9K8vzqtiJRA595fYK+tDZ5N95wcXGNptCKciO7aSs34z5mGknLQAKaJ/T33nr+
+         QYSatN0QX3DXlIcbKV+D/IeXyMfxhJCd0e30ZyyDCJJu/v/tyMvmpnW706QoSu9E1XSu
+         823A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=euKwHTd5nmGQirdNec0wmJhbD/rOPWNyEyTyNJ+qI+A=;
-        b=skdbGjxnmBZrqSzMGJahbDLyCl0zUs1qd0piR99LfWffVL2pOPJK3XF+phwH3QxlNl
-         QRa0RL0qwALAApkfY+C3QH4Edwto/OzKdMO84H0u4kob49uvhmDaSJTL7p41O/jMDslV
-         ZxBVWT4co65WDSejL2GHwJBnTpD/Y50Y8EPdnzzADo9SlcCdyU+I7Yx4EwEynaJwtrkK
-         ai8ctxIziR8DGs4yPpeCOhF3TA18aNeG/QJ+A4FBtk+OMzMEaleAdIMVrAE9OIZjx7iM
-         /RvsaPSIGWqjy7mGpbW9nShC6rhZ8GVz5K9FRzmpKiJC5PUEdGc8c3p+LMetzwtE5Wpg
-         iPVQ==
-X-Gm-Message-State: AOAM5316Y92LMYZaJL2xWyvK5sVeTLdum1FW5RP9frrfVFCGryBK6PO/
-        lbOsUbi1/DtjORGz5PscyYtoUg==
-X-Google-Smtp-Source: ABdhPJzSBVHJ88f6m8bQEuFIRyRwgvryu7g4a5wAFl3g7lEWHef74sdfGzIDj1FOc+h2tgj3hX3Itg==
-X-Received: by 2002:adf:ec8b:: with SMTP id z11mr3736372wrn.51.1595507118682;
-        Thu, 23 Jul 2020 05:25:18 -0700 (PDT)
+        bh=KuXFDEYVsnsDfXIKt9wKPHYtC5k1C4IDk7HQmnmIHX4=;
+        b=Xvs2n3nOCFmZqu029Am//koTFr0uwUUJijC4xQGVjRIdlFaEoY5sLGeNCu9ugGZun8
+         19lrGxjm3GSkklebiHmM36/FYc9jmrL1nkI/etv7g9uFdE5y/Nyd0T7QhCTjsJWl5NT4
+         WT/4Mvgp8NVdcXJPyBNrsrebuwj1nv9pMRpxFn1d3HrNl12drzJ4VJQp1gMRvkZ9Utg+
+         xQOWGK6BFhIqDEY68RbW874WXX4RAOSkjzUnyXEWiDvFC8iVDRLfvz8uB1t41zU0S+lK
+         UY9TJllBIO0+FVgnA20fBWXx/QnBu3b6aOnKXmF0VJUmQdtvj0E0mHHqkiXWnOxuEpK6
+         RO5g==
+X-Gm-Message-State: AOAM531FhhW+3hEcwSRCsKacHFCQET1j28VueJhbq4w5X1eENx6YWJM9
+        /GOQWZVKHBsofStwEbCvbo/Nkg==
+X-Google-Smtp-Source: ABdhPJxCnxCGnN7MmoQVRH8Z3jCjXBAJHu7Hl1DfZ7kT2ofsa6YfNX2BVf1YuitsN9T7DAfEI8Gn7w==
+X-Received: by 2002:adf:df06:: with SMTP id y6mr3706057wrl.89.1595507115674;
+        Thu, 23 Jul 2020 05:25:15 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.17
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:18 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:15 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 24/40] scsi: csiostor: csio_rnode: Add missing description for csio_rnode_fwevt_handler()'s 'fwevt' param
-Date:   Thu, 23 Jul 2020 13:24:30 +0100
-Message-Id: <20200723122446.1329773-25-lee.jones@linaro.org>
+Subject: [PATCH 22/40] scsi: csiostor: csio_hw_t5: Remove 2 unused variables {mc,edc}_bist_status_rdata_reg
+Date:   Thu, 23 Jul 2020 13:24:28 +0100
+Message-Id: <20200723122446.1329773-23-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -76,26 +77,55 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/csiostor/csio_rnode.c:869: warning: Function parameter or member 'fwevt' not described in 'csio_rnode_fwevt_handler'
+ drivers/scsi/csiostor/csio_hw_t5.c: In function ‘csio_t5_mc_read’:
+ drivers/scsi/csiostor/csio_hw_t5.c:151:11: warning: variable ‘mc_bist_status_rdata_reg’ set but not used [-Wunused-but-set-variable]
+ 151 | uint32_t mc_bist_status_rdata_reg, mc_bist_data_pattern_reg;
+ | ^~~~~~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/csiostor/csio_hw_t5.c: In function ‘csio_t5_edc_read’:
+ drivers/scsi/csiostor/csio_hw_t5.c:199:38: warning: variable ‘edc_bist_status_rdata_reg’ set but not used [-Wunused-but-set-variable]
+ 199 | uint32_t edc_bist_cmd_data_pattern, edc_bist_status_rdata_reg;
+ | ^~~~~~~~~~~~~~~~~~~~~~~~~
 
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/csiostor/csio_rnode.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/csiostor/csio_hw_t5.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/csio_rnode.c
-index e9c3b045f5875..713e13adf4dcc 100644
---- a/drivers/scsi/csiostor/csio_rnode.c
-+++ b/drivers/scsi/csiostor/csio_rnode.c
-@@ -862,7 +862,7 @@ csio_rnode_devloss_handler(struct csio_rnode *rn)
- /**
-  * csio_rnode_fwevt_handler - Event handler for firmware rnode events.
-  * @rn:		rnode
-- *
-+ * @fwevt:	firmware event to handle
-  */
- void
- csio_rnode_fwevt_handler(struct csio_rnode *rn, uint8_t fwevt)
+diff --git a/drivers/scsi/csiostor/csio_hw_t5.c b/drivers/scsi/csiostor/csio_hw_t5.c
+index f24def6c6fd1e..1df8891d37251 100644
+--- a/drivers/scsi/csiostor/csio_hw_t5.c
++++ b/drivers/scsi/csiostor/csio_hw_t5.c
+@@ -148,12 +148,11 @@ csio_t5_mc_read(struct csio_hw *hw, int idx, uint32_t addr, __be32 *data,
+ {
+ 	int i;
+ 	uint32_t mc_bist_cmd_reg, mc_bist_cmd_addr_reg, mc_bist_cmd_len_reg;
+-	uint32_t mc_bist_status_rdata_reg, mc_bist_data_pattern_reg;
++	uint32_t mc_bist_data_pattern_reg;
+ 
+ 	mc_bist_cmd_reg = MC_REG(MC_P_BIST_CMD_A, idx);
+ 	mc_bist_cmd_addr_reg = MC_REG(MC_P_BIST_CMD_ADDR_A, idx);
+ 	mc_bist_cmd_len_reg = MC_REG(MC_P_BIST_CMD_LEN_A, idx);
+-	mc_bist_status_rdata_reg = MC_REG(MC_P_BIST_STATUS_RDATA_A, idx);
+ 	mc_bist_data_pattern_reg = MC_REG(MC_P_BIST_DATA_PATTERN_A, idx);
+ 
+ 	if (csio_rd_reg32(hw, mc_bist_cmd_reg) & START_BIST_F)
+@@ -196,7 +195,7 @@ csio_t5_edc_read(struct csio_hw *hw, int idx, uint32_t addr, __be32 *data,
+ {
+ 	int i;
+ 	uint32_t edc_bist_cmd_reg, edc_bist_cmd_addr_reg, edc_bist_cmd_len_reg;
+-	uint32_t edc_bist_cmd_data_pattern, edc_bist_status_rdata_reg;
++	uint32_t edc_bist_cmd_data_pattern;
+ 
+ /*
+  * These macro are missing in t4_regs.h file.
+@@ -208,7 +207,6 @@ csio_t5_edc_read(struct csio_hw *hw, int idx, uint32_t addr, __be32 *data,
+ 	edc_bist_cmd_addr_reg = EDC_REG_T5(EDC_H_BIST_CMD_ADDR_A, idx);
+ 	edc_bist_cmd_len_reg = EDC_REG_T5(EDC_H_BIST_CMD_LEN_A, idx);
+ 	edc_bist_cmd_data_pattern = EDC_REG_T5(EDC_H_BIST_DATA_PATTERN_A, idx);
+-	edc_bist_status_rdata_reg = EDC_REG_T5(EDC_H_BIST_STATUS_RDATA_A, idx);
+ #undef EDC_REG_T5
+ #undef EDC_STRIDE_T5
+ 
 -- 
 2.25.1
 
