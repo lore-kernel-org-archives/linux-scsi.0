@@ -2,119 +2,162 @@ Return-Path: <SRS0=JunS=BC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 037E9C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 17:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D75C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 19:48:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E112F20714
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 17:31:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E0152065F
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 19:48:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730193AbgGWRbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 13:31:01 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2520 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726666AbgGWRbA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Jul 2020 13:31:00 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id EF7F6F2591D64059E490;
-        Thu, 23 Jul 2020 18:30:58 +0100 (IST)
-Received: from [127.0.0.1] (10.47.9.108) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 23 Jul
- 2020 18:30:57 +0100
-Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     Kashyap Desai <kashyap.desai@broadcom.com>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <don.brace@microsemi.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>, <bvanassche@acm.org>,
-        <hare@suse.com>, <hch@lst.de>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-References: <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
- <34a832717fef4702b143ea21aa12b79e@mail.gmail.com>
- <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
- <e69dc243174664efd414a4cd0176e59d@mail.gmail.com>
- <20200721011323.GA833377@T590>
- <c71bbdf2607a8183926430b5f4aa1ae1@mail.gmail.com>
- <20200722041201.GA912316@T590>
- <f6f05483491c391ce79486b8fb78cb2e@mail.gmail.com>
- <20200722080409.GB912316@T590>
- <fe7a7acf-d62b-d541-4203-29c1d0403c2a@huawei.com>
- <20200723140758.GA957464@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <f4a896a3-756e-68bb-7700-cab1e5523c81@huawei.com>
-Date:   Thu, 23 Jul 2020 18:29:01 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726010AbgGWTsY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 15:48:24 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:52944 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725894AbgGWTsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Jul 2020 15:48:24 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 537B920418F;
+        Thu, 23 Jul 2020 21:48:22 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id noWfMkg0ODmR; Thu, 23 Jul 2020 21:48:22 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (vpn.infotech.no [82.134.31.155])
+        by smtp.infotech.no (Postfix) with ESMTPA id 63AE6204164;
+        Thu, 23 Jul 2020 21:48:21 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
+Subject: [PATCH] scsi_debug: fix request sense
+Date:   Thu, 23 Jul 2020 15:48:19 -0400
+Message-Id: <20200723194819.545573-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20200723140758.GA957464@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.9.108]
-X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->> As I see, since megaraid will have 1:1 mapping of CPU to hw queue, will
->> there only ever possibly a single bit set in ctx_map? If so, it seems a
->> waste to always check every sbitmap map. But adding logic for this may
->> negate any possible gains.
-> 
-> It really depends on min and max cpu id in the map, then sbitmap
-> depth can be reduced to (max - min + 1). I'd suggest to double check that
-> cost of sbitmap_any_bit_set() really matters.
+The SCSI REQUEST SENSE command emulation was found to be broken.
+It is a quite complex command so try and make it do a subset of
+what it should do. Remove the attempt to mimic SCSI-1 REQUEST
+SENSE (i.e. return the sense data for the previous failed
+command). Add some reporting of "pollable" sense data [see
+spc6r02: 5.12.2]. Keep the IEC mode page MRIE=6 TEST=1
+predictive failure reporting.
 
-Hi Ming,
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 64 ++++++++++++++++++---------------------
+ 1 file changed, 29 insertions(+), 35 deletions(-)
 
-I'm not sure that reducing the search range would help much, as we still 
-need to load some indexes of map[], and at best this may be reduced from 
-2/3 -> 1 elements, depending on nr_cpus.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 50b29b898db8..074d58dc8b5c 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1713,68 +1713,62 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	return ret;
+ }
+ 
++/* See resp_iec_m_pg() for how this data is manipulated */
+ static unsigned char iec_m_pg[] = {0x1c, 0xa, 0x08, 0, 0, 0, 0, 0,
+ 				   0, 0, 0x0, 0x0};
+ 
+ static int resp_requests(struct scsi_cmnd *scp,
+ 			 struct sdebug_dev_info *devip)
+ {
+-	unsigned char *sbuff;
+ 	unsigned char *cmd = scp->cmnd;
+-	unsigned char arr[SCSI_SENSE_BUFFERSIZE];
+-	bool dsense;
++	unsigned char arr[SCSI_SENSE_BUFFERSIZE];	/* assume >= 18 bytes */
++	bool dsense = !!(cmd[1] & 1);
++	int alloc_len = cmd[4];
+ 	int len = 18;
++	int stopped_state = atomic_read(&devip->stopped);
+ 
+ 	memset(arr, 0, sizeof(arr));
+-	dsense = !!(cmd[1] & 1);
+-	sbuff = scp->sense_buffer;
+-	if ((iec_m_pg[2] & 0x4) && (6 == (iec_m_pg[3] & 0xf))) {
++	if (stopped_state > 0) {	/* some "pollable" data [spc6r02: 5.12.2] */
++		if (dsense) {
++			arr[0] = 0x72;
++			arr[1] = NOT_READY;
++			arr[2] = LOGICAL_UNIT_NOT_READY;
++			arr[3] = (stopped_state == 2) ? 0x1 : 0x2;
++			len = 8;
++		} else {
++			arr[0] = 0x70;
++			arr[2] = NOT_READY;		/* NO_SENSE in sense_key */
++			arr[7] = 0xa;			/* 18 byte sense buffer */
++			arr[12] = LOGICAL_UNIT_NOT_READY;
++			arr[13] = (stopped_state == 2) ? 0x1 : 0x2;
++		}
++	} else if ((iec_m_pg[2] & 0x4) && (6 == (iec_m_pg[3] & 0xf))) {
++		/* Information exceptions control mode page: TEST=1, MRIE=6 */
+ 		if (dsense) {
+ 			arr[0] = 0x72;
+ 			arr[1] = 0x0;		/* NO_SENSE in sense_key */
+ 			arr[2] = THRESHOLD_EXCEEDED;
+-			arr[3] = 0xff;		/* TEST set and MRIE==6 */
++			arr[3] = 0xff;		/* Failure prediction(false) */
+ 			len = 8;
+ 		} else {
+ 			arr[0] = 0x70;
+ 			arr[2] = 0x0;		/* NO_SENSE in sense_key */
+ 			arr[7] = 0xa;   	/* 18 byte sense buffer */
+ 			arr[12] = THRESHOLD_EXCEEDED;
+-			arr[13] = 0xff;		/* TEST set and MRIE==6 */
++			arr[13] = 0xff;		/* Failure prediction(false) */
+ 		}
+-	} else {
+-		memcpy(arr, sbuff, SCSI_SENSE_BUFFERSIZE);
+-		if (arr[0] >= 0x70 && dsense == sdebug_dsense)
+-			;	/* have sense and formats match */
+-		else if (arr[0] <= 0x70) {
+-			if (dsense) {
+-				memset(arr, 0, 8);
+-				arr[0] = 0x72;
+-				len = 8;
+-			} else {
+-				memset(arr, 0, 18);
+-				arr[0] = 0x70;
+-				arr[7] = 0xa;
+-			}
+-		} else if (dsense) {
+-			memset(arr, 0, 8);
+-			arr[0] = 0x72;
+-			arr[1] = sbuff[2];     /* sense key */
+-			arr[2] = sbuff[12];    /* asc */
+-			arr[3] = sbuff[13];    /* ascq */
++	} else {	/* nothing to report */
++		if (dsense) {
+ 			len = 8;
++			memset(arr, 0, len);
++			arr[0] = 0x72;
+ 		} else {
+-			memset(arr, 0, 18);
++			memset(arr, 0, len);
+ 			arr[0] = 0x70;
+-			arr[2] = sbuff[1];
+ 			arr[7] = 0xa;
+-			arr[12] = sbuff[1];
+-			arr[13] = sbuff[3];
+ 		}
+-
+ 	}
+-	mk_sense_buffer(scp, 0, NO_ADDITIONAL_SENSE, 0);
+-	return fill_from_dev_buffer(scp, arr, len);
++	return fill_from_dev_buffer(scp, arr, min_t(int, len, alloc_len));
+ }
+ 
+ static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+-- 
+2.25.1
 
-> 
->>
->>>>>> for
->>>>>>> none because request may not be dispatched successfully by direct
->>>> issue.
->>>>>> When block layer attempt posting request to h/w queue directly (for
->>>>>> ioscheduler=none) and if it fails, it is calling
->>>>>> blk_mq_request_bypass_insert().
->>>>>> blk_mq_request_bypass_insert function will start the h/w queue from
->>>>>> submission context. Do we still have an issue if we skip running hw
->>>>>> queue from completion ?
->>>>> The thing is that we can't guarantee that direct issue or adding request
->>>> into
->>>>> hctx->dispatch is always done for MQ/none, for example, request still
->>>>> can be added to sw queue from blk_mq_flush_plug_list() when mq plug is
->>>>> applied.
->>>> I see even blk_mq_sched_insert_requests() from blk_mq_flush_plug_list make
->>>> sure it run the h/w queue. If all the submission path which deals with s/w
->>>> queue make sure they run h/w queue, can't we remove blk_mq_run_hw_queues()
->>>> from scsi_end_request ?
->>> No, one purpose of blk_mq_run_hw_queues() is for rerun queue in case that
->>> dispatch budget is running out of in submission path, and sdev->device_busy is
->>> shared by all hw queues on this scsi device.
->>>
->>> I posted one patch for avoiding it in scsi_end_request() before, looks it
->>> never lands upstream:
->>>
->>
->> I saw that you actually posted the v3:
->> https://lore.kernel.org/linux-scsi/BL0PR2101MB11230C5F70151037B23C0C35CE2D0@BL0PR2101MB1123.namprd21.prod.outlook.com/
->> And it no longer applies, due to the changes in scsi_mq_get_budget(), I
->> think, which look non-trivial. Any chance to repost?
-> 
-> OK, will post V4.
-
-Thanks!
