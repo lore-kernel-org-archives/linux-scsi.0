@@ -2,109 +2,146 @@ Return-Path: <SRS0=JunS=BC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B715C433E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 14:01:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9784BC433EB
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 14:08:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73020207BB
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 14:01:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76F0D20709
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 14:08:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fCUdGbqd"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RV5IftjS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729388AbgGWOB6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 10:01:58 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:25627 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728002AbgGWOB6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 10:01:58 -0400
+        id S1727111AbgGWOIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 10:08:23 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:58615 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727068AbgGWOIV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Jul 2020 10:08:21 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595512917;
+        s=mimecast20190719; t=1595513300;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=FNrI3J22ipRhrW25TFVKILW4WyC6tvsphPA0SNAITiY=;
-        b=fCUdGbqdMELt11S6ZNezOB8epB5kWmuw96xhiOXdjYILe6JnIgpN7119UqV5Os1UCjsWNv
-        veKxIPgqDmDUvcBVD//8/xLd3DTEMJLW7w4Dr+jgneOBhTIrAafmWjbeCfUgpuOymCSm3G
-        e3n3B6HFXEpFQVVdGxV7NUEoc+z480s=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-458-CBy3nl1cP1GAwPiBJIfuRA-1; Thu, 23 Jul 2020 10:01:54 -0400
-X-MC-Unique: CBy3nl1cP1GAwPiBJIfuRA-1
-Received: by mail-qv1-f70.google.com with SMTP id y7so923778qvj.11
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 07:01:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FNrI3J22ipRhrW25TFVKILW4WyC6tvsphPA0SNAITiY=;
-        b=lJhawoL2ahQDd3M2GmRX1F/2u1kQtox1Apb3PS88rW0xg7xpci9fFG8lz5YU5LM68a
-         YhtjdBv8ospbDLb/MBDCZculmRpnumEKbgZ3QI6suh+TN3b6uJ5kGcyPdAtN0/VbCWiK
-         IQRnM3/pRxMC27ApoFbW4csamIdFCgy0d+rdUE+HxocFjUUQ7SPuVdStR8GJWuoSYJRj
-         yD6g9BOwJ/qucklTV+mhe8Na8pknup3gPYq2sDREGvrZXi0qaEgnLQ/39TOzaHDlb5ve
-         K5sXipCpJBK/s47pjGNlyWbGMD7wD8lx+tUShtxuBEEQWHx2U/n6HeeMMddI+dFVDGBx
-         QqXw==
-X-Gm-Message-State: AOAM5327R5O154ED6idnC859r8BnPZ6u/bbwGkQMqOwaTDK271K0UhuD
-        F2alEE6WiJd9D+KAB5dZAice8DqlXCtJTNLmPKOLTppvjk+IvoO0t5+rMF/4LiZM+aBjQ39b6Ra
-        OJ2knHxe1XBD5FBVKFrxkuA==
-X-Received: by 2002:a0c:8583:: with SMTP id o3mr5013026qva.108.1595512914215;
-        Thu, 23 Jul 2020 07:01:54 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJy4KIDq8nFjc8M+Ayc6oKKZhshXVGfh68xoXhfmaMHK6Mfi6bMcdpiPnoy+C+NIwEpmBPfoig==
-X-Received: by 2002:a0c:8583:: with SMTP id o3mr5013000qva.108.1595512913943;
-        Thu, 23 Jul 2020 07:01:53 -0700 (PDT)
-Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
-        by smtp.gmail.com with ESMTPSA id z60sm2534085qtc.30.2020.07.23.07.01.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 07:01:53 -0700 (PDT)
-From:   trix@redhat.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tom Rix <trix@redhat.com>
-Subject: [PATCH] scsi: lpfc: add depends CPU_FREQ to SCSI_LPFC configury
-Date:   Thu, 23 Jul 2020 07:01:36 -0700
-Message-Id: <20200723140136.18367-1-trix@redhat.com>
-X-Mailer: git-send-email 2.18.1
+         in-reply-to:in-reply-to:references:references;
+        bh=I5n8E5gVkq3FpDbwVRFSVKWJp9frt3XcECN0GmaJ+xc=;
+        b=RV5IftjS6z66c0tjmyzRZQQZPufocAUMdazkUkS1skQv4Op569WAjVFihgsdyTX5WxA6D3
+        TBqEP11s3AifYVBgbnfi916+oWRlyzuFCZ9Hxf3X69rL/tREwtlp4DVfz3TnWYY0bUbwGb
+        q+j8yy1e71dbdFVufpwsL2qIPgvoHms=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-218-MmFmJrbxOra8_vMTHKD_jg-1; Thu, 23 Jul 2020 10:08:17 -0400
+X-MC-Unique: MmFmJrbxOra8_vMTHKD_jg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 03F5080046D;
+        Thu, 23 Jul 2020 14:08:15 +0000 (UTC)
+Received: from T590 (ovpn-13-27.pek2.redhat.com [10.72.13.27])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A05EE10013C0;
+        Thu, 23 Jul 2020 14:08:02 +0000 (UTC)
+Date:   Thu, 23 Jul 2020 22:07:58 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
+Message-ID: <20200723140758.GA957464@T590>
+References: <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
+ <34a832717fef4702b143ea21aa12b79e@mail.gmail.com>
+ <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
+ <e69dc243174664efd414a4cd0176e59d@mail.gmail.com>
+ <20200721011323.GA833377@T590>
+ <c71bbdf2607a8183926430b5f4aa1ae1@mail.gmail.com>
+ <20200722041201.GA912316@T590>
+ <f6f05483491c391ce79486b8fb78cb2e@mail.gmail.com>
+ <20200722080409.GB912316@T590>
+ <fe7a7acf-d62b-d541-4203-29c1d0403c2a@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fe7a7acf-d62b-d541-4203-29c1d0403c2a@huawei.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tom Rix <trix@redhat.com>
+On Wed, Jul 22, 2020 at 10:32:41AM +0100, John Garry wrote:
+> > > > > > > 
+> > > > > > > diff --git a/block/blk-mq.c b/block/blk-mq.c index
+> > > > > > > 1be7ac5a4040..b6a5b41b7fc2 100644
+> > > > > > > --- a/block/blk-mq.c
+> > > > > > > +++ b/block/blk-mq.c
+> > > > > > > @@ -1559,6 +1559,9 @@ void blk_mq_run_hw_queues(struct
+> > > > > > request_queue
+> > > > > > > *q, bool async)
+> > > > > > >          struct blk_mq_hw_ctx *hctx;
+> > > > > > >          int i;
+> > > > > > > 
+> > > > > > > +       if (!q->elevator)
+> > > > > > > +               return;
+> > > > > > > +
+> > > > > > This way shouldn't be correct, blk_mq_run_hw_queues() is still
+> > > > > > needed
+> 
+> Could the logic of blk_mq_run_hw_queue() -> blk_mq_hctx_has_pending() ->
+> sbitmap_any_bit_set(&hctx->ctx_map) be optimised for megaraid scenario?
+> 
+> As I see, since megaraid will have 1:1 mapping of CPU to hw queue, will
+> there only ever possibly a single bit set in ctx_map? If so, it seems a
+> waste to always check every sbitmap map. But adding logic for this may
+> negate any possible gains.
 
-A compile error
+It really depends on min and max cpu id in the map, then sbitmap
+depth can be reduced to (max - min + 1). I'd suggest to double check that
+cost of sbitmap_any_bit_set() really matters.
 
-drivers/scsi/lpfc/lpfc_sli.c:7329:26: error: implicit
-  declaration of function ‘get_cpu_idle_time’; did you
-  mean ‘set_cpu_active’? [-Werror=implicit-function-declaration]
-   idle_stat->prev_idle = get_cpu_idle_time(i, &wall, 1);
+> 
+> > > > > for
+> > > > > > none because request may not be dispatched successfully by direct
+> > > issue.
+> > > > > When block layer attempt posting request to h/w queue directly (for
+> > > > > ioscheduler=none) and if it fails, it is calling
+> > > > > blk_mq_request_bypass_insert().
+> > > > > blk_mq_request_bypass_insert function will start the h/w queue from
+> > > > > submission context. Do we still have an issue if we skip running hw
+> > > > > queue from completion ?
+> > > > The thing is that we can't guarantee that direct issue or adding request
+> > > into
+> > > > hctx->dispatch is always done for MQ/none, for example, request still
+> > > > can be added to sw queue from blk_mq_flush_plug_list() when mq plug is
+> > > > applied.
+> > > I see even blk_mq_sched_insert_requests() from blk_mq_flush_plug_list make
+> > > sure it run the h/w queue. If all the submission path which deals with s/w
+> > > queue make sure they run h/w queue, can't we remove blk_mq_run_hw_queues()
+> > > from scsi_end_request ?
+> > No, one purpose of blk_mq_run_hw_queues() is for rerun queue in case that
+> > dispatch budget is running out of in submission path, and sdev->device_busy is
+> > shared by all hw queues on this scsi device.
+> > 
+> > I posted one patch for avoiding it in scsi_end_request() before, looks it
+> > never lands upstream:
+> > 
+> 
+> I saw that you actually posted the v3:
+> https://lore.kernel.org/linux-scsi/BL0PR2101MB11230C5F70151037B23C0C35CE2D0@BL0PR2101MB1123.namprd21.prod.outlook.com/
+> And it no longer applies, due to the changes in scsi_mq_get_budget(), I
+> think, which look non-trivial. Any chance to repost?
 
-lpfc_init_idle_stat_hb depends on CPU_FREQ
+OK, will post V4.
 
-So add depends CPU_FREQ to the configury.
 
-Signed-off-by: Tom Rix <trix@redhat.com>
----
- drivers/scsi/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 571473a58f98..004dcda07d49 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1157,6 +1157,7 @@ config SCSI_LPFC
- 	depends on SCSI_FC_ATTRS
- 	depends on NVME_TARGET_FC || NVME_TARGET_FC=n
- 	depends on NVME_FC || NVME_FC=n
-+	depends on CPU_FREQ
- 	select CRC_T10DIF
- 	help
-           This lpfc driver supports the Emulex LightPulse
--- 
-2.18.1
+thanks,
+Ming
 
