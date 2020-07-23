@@ -7,69 +7,70 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB32C433FC
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0112CC433E5
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 053A520792
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D339A208E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:27:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WJkfBBhh"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BB8oAg6w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729354AbgGWM1T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:27:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58132 "EHLO
+        id S1729369AbgGWM12 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:27:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728909AbgGWMZE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:04 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22F54C0619DC
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:04 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id 9so4773072wmj.5
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:04 -0700 (PDT)
+        with ESMTP id S1728888AbgGWMZB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:01 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6CFCC0619DC
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:00 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id 88so4977414wrh.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7GXuG63I+zXiW2iHeDq1l75A8cqfuCvVf5oH88+KFWQ=;
-        b=WJkfBBhhXpIiweagpu7YHnZJQkDUqh5Kgxr7h0JfR09J0THKrxTwLrDPG3qNeBF5+H
-         IaYyNQ+m00fhuxZF5R+FcPBCB3ZWObUSnW1x2IULVBmAVFECIsnDSGhXgbhmeFicpqtj
-         98A2/p6zqBusuPVpMN9EC4INcbiKmdJ47v2tSIcD5J6CG6zypzMfufnW5GyLfasRvmD7
-         NTUHAV7TswgxUNokIWKvumdbieEcOx+3b2DVzGxhsFaVzu4l3ZSBqzJeKjnVcAl6Spjc
-         JRaSp8E7RRxrEfLZYQ71AYXu6ZDcZNGloGlVcQI85RQ36CByWCmWbnBjZZ6obrfSJZK6
-         6Ang==
+        bh=OWikrHcjIEL13jknWWaUiCgmVBPYjsVQNgOhFstQ6kk=;
+        b=BB8oAg6wAh/txP2Zw6XlLsdMIMjiFCw3n8QNnz+5qnf/iAGYJvKlY8VFgS75Q/OPnW
+         0lhnnWlp8LgvU4zRh+u6mSS8gdNbN/fCyK6UC8LFWS7mC8bAJQ90U4rhEUTHLZr37zWY
+         0LQ7Es10351jkZU5W0m83pqKwZU8zj6e56ek1R76wpC9wa8HJAvrtfwDKeVOnnpTxNXz
+         HOVQ8iAivYVb0FCcO0xMuA1T1bWbgrn4SuB2fqgWspRAVWfknGcxyy8wcH8zCM4XzHbk
+         jxQfWwJXpOcAnH04XdrVg2G7KnMLip7J+DCE7A6Mutm9VOZ6qWqcdEd9957uDxpVIqGn
+         AtAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7GXuG63I+zXiW2iHeDq1l75A8cqfuCvVf5oH88+KFWQ=;
-        b=PshFnbDL0uOxjqcsmoKP+TFl94pnELo6DdFKhXDCe+WImqB66Mu5awypt0Arf6/l2M
-         CeVilshi759WJy6iAkOJdkf04e/Shqibijbxt1oTC89xs7v8t0ng63MuenE8agOgFJqb
-         N39qDq4Zodx/eb7zsspMbw0VLmyjnAHlDIoNfi4ivua38sXMhtihARddx9BSig5v+gu4
-         ezRmT1Wmgb2VBjQVin5uUNCioh759IpUZJSHuCI714TNshZZhuJsIr8zCHcIgv9ebE39
-         Qyy+DthEnkkrCz7qQllZHo6X6yUxaUyfD4k7+pCxT3b9VkxhRHnOCu/jEAli4T9IOToE
-         2BIg==
-X-Gm-Message-State: AOAM530rQjMAONIU4c3/02es5QMIz9lP5+zk75QzagPkWrn54n60mneG
-        +q+mw3juSB2IRiZXuijvu1hxF5RfmH8=
-X-Google-Smtp-Source: ABdhPJxU96+k6AAXNc4TzOnx/0IOTErBWda93TNlxgsOHGe2FcOFrrlYZvW48DUn0NkMAUlVtbl3AQ==
-X-Received: by 2002:a1c:2041:: with SMTP id g62mr3919099wmg.172.1595507102891;
-        Thu, 23 Jul 2020 05:25:02 -0700 (PDT)
+        bh=OWikrHcjIEL13jknWWaUiCgmVBPYjsVQNgOhFstQ6kk=;
+        b=f72zkOSCwCGn6NuGBc7dr6nMO7DF1fyOjwqsNN/P8E4lR/T3EsmHEtwR9uTt+AIt9T
+         9250leGG3SzZyvwLcpab4I0h5xjs6SaJXdxNYmcJMpQD4x9RYO3yFs/1xhpQzAG3B0Ts
+         XkhQHs86fjVk07KrHqmo8UITrkJgXm0HPWJc8dZWP5q5A86xYXOnBhaTWzV/PaH1DDAR
+         GV8a6+dPfKvIxSjCgT/4vAZ2GaOlTefdKLETTnTSp+owQg2pNx/ODva35ndmhjv/VFII
+         /u9bInYzGUaSZ6wub+yTlgpdB6DyfdCPMam1S7jJCN5PjtnCIfX+1oJCFIhdn/l8O8ax
+         NOMg==
+X-Gm-Message-State: AOAM532A57CzTGWzYHHYyLa12S643CO8X2bfkDQkk28mQMqwZWcuw3ED
+        XEQ/8J3FqlSU/MwS378dZq+tgg==
+X-Google-Smtp-Source: ABdhPJxhEY7+qPHjPhuX5V9UXTKocEiF3ZgSgjLNy48r0c8fWe4GAkvPRAdVDSpqXvIYiB7pHa/2iw==
+X-Received: by 2002:adf:b34a:: with SMTP id k10mr3801954wrd.402.1595507099540;
+        Thu, 23 Jul 2020 05:24:59 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.01
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.24.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:02 -0700 (PDT)
+        Thu, 23 Jul 2020 05:24:58 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        QLogic-Storage-Upstream@cavium.com
-Subject: [PATCH 11/40] scsi: qedi: qedi_main: Remove 2 set but unused variables
-Date:   Thu, 23 Jul 2020 13:24:17 +0100
-Message-Id: <20200723122446.1329773-12-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@qlogic.com,
+        Anil Veerabhadrappa <anilgv@broadcom.com>,
+        Eddie Wai <eddie.wai@broadcom.com>
+Subject: [PATCH 08/40] scsi: bnx2i: bnx2i_sysfs: Add missing descriptions for 'attr' parameter
+Date:   Thu, 23 Jul 2020 13:24:14 +0100
+Message-Id: <20200723122446.1329773-9-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -78,61 +79,55 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/qedi/qedi_main.c: In function ‘qedi_queue_cqe’:
- drivers/scsi/qedi/qedi_main.c:1158:21: warning: variable ‘conn’ set but not used [-Wunused-but-set-variable]
- 1158 | struct iscsi_conn *conn;
- | ^~~~
- drivers/scsi/qedi/qedi_main.c: In function ‘__qedi_probe’:
- drivers/scsi/qedi/qedi_main.c:2432:6: warning: variable ‘tmp’ set but not used [-Wunused-but-set-variable]
- 2432 | u16 tmp;
- | ^~~
+ drivers/scsi/bnx2i/bnx2i_sysfs.c:40: warning: Function parameter or member 'attr' not described in 'bnx2i_show_sq_info'
+ drivers/scsi/bnx2i/bnx2i_sysfs.c:60: warning: Function parameter or member 'attr' not described in 'bnx2i_set_sq_info'
+ drivers/scsi/bnx2i/bnx2i_sysfs.c:96: warning: Function parameter or member 'attr' not described in 'bnx2i_show_ccell_info'
+ drivers/scsi/bnx2i/bnx2i_sysfs.c:114: warning: Function parameter or member 'attr' not described in 'bnx2i_set_ccell_info'
 
-Cc: QLogic-Storage-Upstream@cavium.com
+Cc: QLogic-Storage-Upstream@qlogic.com
+Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
+Cc: Eddie Wai <eddie.wai@broadcom.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/qedi/qedi_main.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_sysfs.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 81a307695cc91..1a7791164de8c 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1155,7 +1155,6 @@ static int qedi_queue_cqe(struct qedi_ctx *qedi, union iscsi_cqe *cqe,
- {
- 	struct qedi_work *qedi_work;
- 	struct qedi_conn *q_conn;
--	struct iscsi_conn *conn;
- 	struct qedi_cmd *qedi_cmd;
- 	u32 iscsi_cid;
- 	int rc = 0;
-@@ -1168,7 +1167,6 @@ static int qedi_queue_cqe(struct qedi_ctx *qedi, union iscsi_cqe *cqe,
- 			  iscsi_cid);
- 		return -1;
- 	}
--	conn = q_conn->cls_conn->dd_data;
- 
- 	switch (cqe->cqe_common.cqe_type) {
- 	case ISCSI_CQE_TYPE_SOLICITED:
-@@ -2429,7 +2427,6 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 	struct qed_probe_params qed_params;
- 	void *task_start, *task_end;
- 	int rc;
--	u16 tmp;
- 
- 	if (mode != QEDI_MODE_RECOVERY) {
- 		qedi = qedi_host_alloc(pdev);
-@@ -2528,9 +2525,9 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 		  "Writing %d to primary and secondary BDQ doorbell registers.\n",
- 		  qedi->bdq_prod_idx);
- 	writew(qedi->bdq_prod_idx, qedi->bdq_primary_prod);
--	tmp = readw(qedi->bdq_primary_prod);
-+	readw(qedi->bdq_primary_prod);
- 	writew(qedi->bdq_prod_idx, qedi->bdq_secondary_prod);
--	tmp = readw(qedi->bdq_secondary_prod);
-+	readw(qedi->bdq_secondary_prod);
- 
- 	ether_addr_copy(qedi->mac, qedi->dev_info.common.hw_mac);
- 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_DISC, "MAC address is %pM.\n",
+diff --git a/drivers/scsi/bnx2i/bnx2i_sysfs.c b/drivers/scsi/bnx2i/bnx2i_sysfs.c
+index 6d56fd60cb2b2..3dc790089f0fc 100644
+--- a/drivers/scsi/bnx2i/bnx2i_sysfs.c
++++ b/drivers/scsi/bnx2i/bnx2i_sysfs.c
+@@ -30,6 +30,7 @@ static inline struct bnx2i_hba *bnx2i_dev_to_hba(struct device *dev)
+ /**
+  * bnx2i_show_sq_info - return(s currently configured send queue (SQ) size
+  * @dev:	device pointer
++ * @attr:	device attribute (unused)
+  * @buf:	buffer to return current SQ size parameter
+  *
+  * Returns current SQ size parameter, this paramater determines the number
+@@ -47,6 +48,7 @@ static ssize_t bnx2i_show_sq_info(struct device *dev,
+ /**
+  * bnx2i_set_sq_info - update send queue (SQ) size parameter
+  * @dev:	device pointer
++ * @attr:	device attribute (unused)
+  * @buf:	buffer to return current SQ size parameter
+  * @count:	parameter buffer size
+  *
+@@ -87,6 +89,7 @@ static ssize_t bnx2i_set_sq_info(struct device *dev,
+ /**
+  * bnx2i_show_ccell_info - returns command cell (HQ) size
+  * @dev:	device pointer
++ * @attr:	device attribute (unused)
+  * @buf:	buffer to return current SQ size parameter
+  *
+  * returns per-connection TCP history queue size parameter
+@@ -103,6 +106,7 @@ static ssize_t bnx2i_show_ccell_info(struct device *dev,
+ /**
+  * bnx2i_get_link_state - set command cell (HQ) size
+  * @dev:	device pointer
++ * @attr:	device attribute (unused)
+  * @buf:	buffer to return current SQ size parameter
+  * @count:	parameter buffer size
+  *
 -- 
 2.25.1
 
