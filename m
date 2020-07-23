@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E1EC433EC
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96027C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D437E2080D
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75E642086A
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:25:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="U90SFM2X"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RJaDEqfJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729083AbgGWMZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:25:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58342 "EHLO
+        id S1729108AbgGWMZg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:25:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729139AbgGWMZl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:41 -0400
-Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DFBCC0619E3
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:41 -0700 (PDT)
-Received: by mail-wr1-x441.google.com with SMTP id y3so4978952wrl.4
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:40 -0700 (PDT)
+        with ESMTP id S1729097AbgGWMZf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:35 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFA3AC0619DC
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:34 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id c80so4796396wme.0
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=e/a+n7xeT+4IypaMdZEOHPtxjDCXYhdWbia6WF8lJXM=;
-        b=U90SFM2XfntMbbnKnpL8NIcPeMt35ipcq6Dn11/o5syJemNsgkTGwnAef33kj+uNTc
-         DriqRPXhk78sPhGfpXjcZZS0kOou3ET6f+Fg46iKHmQFE6TldgHGr3BZLU39n7/6axET
-         occ6OmfpC459wp/wuL3KZveW9siDSXs9DeDZDtxDAHdaPC+LA5Rk10BtDHusbCXXJD9N
-         5wyAabHHnCEHOtiq7veQY85rYVYHMf6M384luLNiB4AwwZVbh7zSDXTXY0KmshygRX4v
-         b7QeGD4rVWoFSZZ/zITPdb8scodvtQdKCCVCQxmRvSru02xmEIUJRWhbH7lMrRH800as
-         zh2Q==
+        bh=EOTsXsVyK9wcmeKRIO3GiUTJmLIvxWZfHkJHDdHCUzM=;
+        b=RJaDEqfJS1fB0dS69jVVhKLiuoW/IXNro/szq1C73p+C7xny14Y60D1Eh50KTX2/OF
+         I2GnpTiTJMsGomuvsmzlMSJgC8hokp26aKtPna/LTpvVFrD2h2zbzbizu5czgWUjlQt5
+         0Yu2BL1gOQNsr6+AhW/wKNTZKNexnJUoouybRMgbFtUKNInQS1RZDDCXPlHlyNu2a3FV
+         7gCWWU0dYqosFtOZAnZBlxVrqBmAqy7ZZ6uymz8MFo2kKqMfg+YZIPh5+MfZfMMYJxHY
+         LAhK49eVMWDVugGh0rpeAojCA5T8BJMa3j+yawPQomQZ1xAtdD3Wa8QDFx0ujm+mD9Q2
+         9wFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=e/a+n7xeT+4IypaMdZEOHPtxjDCXYhdWbia6WF8lJXM=;
-        b=BmDNLFE2jywRgsG9AeC0s7MubJzwv0mDORCKvmiDEGqj2yFtup5vRnSKc4n4+cEFws
-         TCX1yi7ol4mQQsC7dqdrsLM7Xp8je8iZozi2ZbqD2KqKTGGBumtOMQQtiobHItW1thIH
-         hH535KqYEdBS+X8ybr14H9oj8YEJfFWEu1Yri/Qi8IhFYAV7OTnOJfj55hXv7TVQMqaT
-         IOQyempvc5tNI4V28MKTuKTW5zsjATj0HGUy3PfgcISyp+svhvOPj0syzS87yPto8MK8
-         xDlc+9GkexV4QGqkLum4bGeANuJoNvpiWNiqbHuzPBPYqqteOm5RoP64cULUZg2MhH11
-         3CtQ==
-X-Gm-Message-State: AOAM53145jeqPKtBZsBQqaCf6vXmsdIFriFfQ7WptRwdnNy+KwevllqK
-        4w5YFTq4p3OvYEEfyzPQFNty4w==
-X-Google-Smtp-Source: ABdhPJy4d9ZY4EAHaWXH/a0t/Z9kXHv2xcUkY8FSTT7ZehgX4cv+QGUBUbgxKGPINTm00P6AAbNzyA==
-X-Received: by 2002:adf:e704:: with SMTP id c4mr4196356wrm.81.1595507139735;
-        Thu, 23 Jul 2020 05:25:39 -0700 (PDT)
+        bh=EOTsXsVyK9wcmeKRIO3GiUTJmLIvxWZfHkJHDdHCUzM=;
+        b=O3ow9cNCCU5cTVKgSnc/hGzRiH5uvFbJYIBvKlETeBcElpsLanacJOblAJyQ8hih2m
+         vvxmJzsgoTQqg2o25jG+3f+/HOm8nm/22zWO+FKgBo5+860aBbitJa52A/XXAl6gPCgD
+         rZrBHmn3lt/xLMAOZh3Bx00XQwyyPIfvT4Ll3KHMzAjRjGPf5BEL9hIe+QZ9SWK3bAsF
+         do8+vthS2YqAqOthtjxVvU3UukW+fcV7J5keI9v7AWHVI/8vHtnbO0uyr+Cnt9FMc+oB
+         URFcT8k0+sIYws6BxTMOwmGYo3Aj6QmA5YNH6dP/jRZdr3M+juLBOvwHTuCJkLsqsB6B
+         26ZQ==
+X-Gm-Message-State: AOAM5333WlS06S5WTMbDNPamQ2j1VlXQwd40Zs+g9Xrzuc5ct30sdgUa
+        0ttkb+VzYjHtuVN5vBg696oHKg==
+X-Google-Smtp-Source: ABdhPJwm1gFat1cUxTpp/ybspw0TU+G9ZDroDChK3K2K67K1pObv8zSnaL9bnABnPw+0YmQQxUANaA==
+X-Received: by 2002:a7b:c8c8:: with SMTP id f8mr4133869wml.142.1595507133733;
+        Thu, 23 Jul 2020 05:25:33 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.38
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:39 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:33 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Bradley Grove <linuxdrivers@attotech.com>
-Subject: [PATCH 40/40] scsi: esas2r: esas2r_log: Demote a few non-conformant kerneldoc headers
-Date:   Thu, 23 Jul 2020 13:24:46 +0100
-Message-Id: <20200723122446.1329773-41-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@cavium.com
+Subject: [PATCH 36/40] scsi: qedi: qedi_main: Demote seemingly unintentional kerneldoc header
+Date:   Thu, 23 Jul 2020 13:24:42 +0100
+Message-Id: <20200723122446.1329773-37-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
@@ -75,77 +75,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This is the only use of kerneldoc in the source file and no
+descriptions are provided.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/esas2r/esas2r_log.c:86: warning: Function parameter or member 'level' not described in 'translate_esas2r_event_level_to_kernel'
- drivers/scsi/esas2r/esas2r_log.c:120: warning: Function parameter or member 'level' not described in 'esas2r_log_master'
- drivers/scsi/esas2r/esas2r_log.c:120: warning: Function parameter or member 'dev' not described in 'esas2r_log_master'
- drivers/scsi/esas2r/esas2r_log.c:120: warning: Function parameter or member 'format' not described in 'esas2r_log_master'
- drivers/scsi/esas2r/esas2r_log.c:120: warning: Function parameter or member 'args' not described in 'esas2r_log_master'
- drivers/scsi/esas2r/esas2r_log.c:183: warning: Function parameter or member 'level' not described in 'esas2r_log'
- drivers/scsi/esas2r/esas2r_log.c:183: warning: Function parameter or member 'format' not described in 'esas2r_log'
- drivers/scsi/esas2r/esas2r_log.c:211: warning: Function parameter or member 'level' not described in 'esas2r_log_dev'
- drivers/scsi/esas2r/esas2r_log.c:211: warning: Function parameter or member 'dev' not described in 'esas2r_log_dev'
- drivers/scsi/esas2r/esas2r_log.c:211: warning: Function parameter or member 'format' not described in 'esas2r_log_dev'
- drivers/scsi/esas2r/esas2r_log.c:237: warning: Function parameter or member 'level' not described in 'esas2r_log_hexdump'
- drivers/scsi/esas2r/esas2r_log.c:237: warning: Function parameter or member 'buf' not described in 'esas2r_log_hexdump'
- drivers/scsi/esas2r/esas2r_log.c:237: warning: Function parameter or member 'len' not described in 'esas2r_log_hexdump'
+ drivers/scsi/qedi/qedi_main.c:1969: warning: Function parameter or member 'qedi' not described in 'qedi_get_nvram_block'
 
-Cc: Bradley Grove <linuxdrivers@attotech.com>
+Cc: QLogic-Storage-Upstream@cavium.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/esas2r/esas2r_log.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/qedi/qedi_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_log.c b/drivers/scsi/esas2r/esas2r_log.c
-index 65fdf22b0ba9a..b545798e400c4 100644
---- a/drivers/scsi/esas2r/esas2r_log.c
-+++ b/drivers/scsi/esas2r/esas2r_log.c
-@@ -75,7 +75,7 @@ static char event_buffer[EVENT_LOG_BUFF_SIZE];
- /* A lock to protect the shared buffer used for formatting messages. */
- static DEFINE_SPINLOCK(event_buffer_lock);
- 
--/**
-+/*
-  * translates an esas2r-defined logging event level to a kernel logging level.
-  *
-  * @param [in] level the esas2r-defined logging event level to translate
-@@ -101,7 +101,7 @@ static const char *translate_esas2r_event_level_to_kernel(const long level)
- 	}
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 1a7791164de8c..6f038ae5efcaf 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1960,7 +1960,7 @@ void qedi_reset_host_mtu(struct qedi_ctx *qedi, u16 mtu)
+ 	qedi_ops->ll2->start(qedi->cdev, &params);
  }
  
 -/**
 +/*
-  * the master logging function.  this function will format the message as
-  * outlined by the formatting string, the input device information and the
-  * substitution arguments and output the resulting string to the system log.
-@@ -170,7 +170,7 @@ static int esas2r_log_master(const long level,
- 	return 0;
- }
- 
--/**
-+/*
-  * formats and logs a message to the system log.
-  *
-  * @param [in] level  the event level of the message
-@@ -193,7 +193,7 @@ int esas2r_log(const long level, const char *format, ...)
- 	return retval;
- }
- 
--/**
-+/*
-  * formats and logs a message to the system log.  this message will include
-  * device information.
-  *
-@@ -221,7 +221,7 @@ int esas2r_log_dev(const long level,
- 	return retval;
- }
- 
--/**
-+/*
-  * formats and logs a message to the system log.  this message will include
-  * device information.
-  *
+  * qedi_get_nvram_block: - Scan through the iSCSI NVRAM block (while accounting
+  * for gaps) for the matching absolute-pf-id of the QEDI device.
+  */
 -- 
 2.25.1
 
