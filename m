@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B70C433F2
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C96EC433FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1F3F22B43
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AF5F206D7
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 12:26:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bW8Vzj2E"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="S7iTBu6T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729264AbgGWM0j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 08:26:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58178 "EHLO
+        id S1729128AbgGWM0r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 08:26:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728967AbgGWMZP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:15 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E65C5C0619E2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:14 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id y24so830460wma.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:14 -0700 (PDT)
+        with ESMTP id S1728919AbgGWMZJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 08:25:09 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EF6DC0619E4
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:09 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id z15so4955758wrl.8
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2020 05:25:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Cf+NSCEl4l8fm6ZX+HEQTyPPFg3UkwN755ooy1CCQaI=;
-        b=bW8Vzj2EJhdja/ubPDqRLsVuqa538TxXzPjSDWyOLPJlJlKHSuLh0e8AQTVjAQOsWj
-         5iY5rXElIn/muLPp4tHPfoqmOi7EMVbreljiZjBCUM0G8aeiKacpa3jkFA/pydW+IbP8
-         ihoL5Oih3uKUPrfWJo8Yb+dhthAzlM2nNUJlV0kogpD9ZPBThJV2+5S/uhGFAW8e6rvM
-         drfBYTLbauHSb/LyA5UqaSOFajg5EzUiRifrWDiTxOJrqPUz04zLbLgoQVdmhmyL77Lh
-         6BpAfFg72ip+akmWhstJvvvQJ3KnRqXZzTHmcVh92g8GSSYz9hfEmtoOMikayWkuv6BD
-         GrTg==
+        bh=EocuI/v8dMGAgziexe3ETAgpgON59vWZbZOU+TdWcao=;
+        b=S7iTBu6TIjSJT9lhyIg+YJr8IZo3qTqoKB4l1HwFH6Yxl5aaRRU4n+oBwQu130P2Ks
+         sq2howsZNiIYBIUOPdPJjji/uqA574RfrXiW+g3GQgpongvY0tmmZ5j9GDJO5IP8N0sf
+         aI+l6KjfNk3Yp+P6QIMHWINQKS94OLgynWUI4uLFXCwoovOEmUs+kLgPBMENG4jxPOQ2
+         3CMxtks+EOf+T7KV/anCeQJt+/p4LoiNftuqImi2Ua9LeFcD+rx96t2pCu5DOlD1Lkeg
+         WuUvgX3aTE+a2OETnGp4WsXka1VhtlCAK8zisNcSsoNizljQjq4qG9Jp8RYPPBb2rn5a
+         oX4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Cf+NSCEl4l8fm6ZX+HEQTyPPFg3UkwN755ooy1CCQaI=;
-        b=kOQSHsCeeh5e1kCmGckNB0fQSUSYXUr5StcOa/lj8o9rtw8ASR37yYgQ+E8rMmJfBV
-         BbDsX1WIQiz2H29dLW9ktCeEnkZ2uaStVeD/ScflSp6RnBqwZAOYEL1hJYebidUlR5OD
-         K1Bp77aYPToZSaIz4qtuxZ5nYiSZrQnmuunNXtyKI25HfPYvSqRpX3kDxIqNnZQrM325
-         Ka5yck7FXEYhTIfgoGJzCOd9dTrlc+N9nMWcgQa6FreYMlXJBMeR+dIm0Wi3/6RLLimh
-         hEqHa2gOlgfug2cZ7STZvKNkQWXY5bWNkT/m9pNatoiEK23+2zQFcO0aKIbZS9pFsxzi
-         7DZA==
-X-Gm-Message-State: AOAM533+mC4sKkjctIlS6RWCjmCvlehNK0ZUGYB5gyW0yCiryoWB8baF
-        a33gxBOeJTtVxPAQ1ftzoLcr+Q==
-X-Google-Smtp-Source: ABdhPJxsnzHZiVUbnFjEJ5JYLdPuSU74e+dTLAPlg1MC2TgRbgk9mlshAJM1+n1kD9SuPzUxOE43SQ==
-X-Received: by 2002:a7b:cb46:: with SMTP id v6mr4176892wmj.73.1595507113681;
-        Thu, 23 Jul 2020 05:25:13 -0700 (PDT)
+        bh=EocuI/v8dMGAgziexe3ETAgpgON59vWZbZOU+TdWcao=;
+        b=OUKEvzkkQpDOTYN2GiqESfd1/lBoq+yO7FexGM9rhKdjhX65sdzyjKG0XV+USilyPs
+         c/yRiK+P6xjmp5XHt7MZ5w67HCqxmSPkxpCzo4wvXDhDiEtu9Wxh8CP3xgXyXT4r9kXw
+         0bJnVwWSLUpHFlAgakUuuLry3UCK3fxzRd3hqe/Kzysa1KHrlm+4FuwxSrWZxG347dZY
+         l8f6CzY8Sg9agx/pHa4gTQDjQUf4+poPe35OZrGqkRln2pVpw3sZuADaZI6vQpEmKoWY
+         HlxDzB1D/u7t8URPjKtnssnIqPlfLfDLFp+Pvq94EKGBef/02uYqV37g6fDiba1ikipG
+         p27Q==
+X-Gm-Message-State: AOAM533X4u1wSBNuExHlCjz5TQVc6cYtQQKD1dG+o9JcMWWWEmxvt7W7
+        Ds6f1SWwDw9uQzd9Yb2sskusow==
+X-Google-Smtp-Source: ABdhPJyJvzXQnTwZ1RNq92ZfHV+XpgztidF3x8njT7epkUJHrqMDSd6v6B+D1Xc4vP1zy5QOwPXs6w==
+X-Received: by 2002:adf:c401:: with SMTP id v1mr3678093wrf.379.1595507107890;
+        Thu, 23 Jul 2020 05:25:07 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.73])
-        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.12
+        by smtp.gmail.com with ESMTPSA id j5sm3510651wma.45.2020.07.23.05.25.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2020 05:25:13 -0700 (PDT)
+        Thu, 23 Jul 2020 05:25:07 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Subject: [PATCH 20/40] scsi: bfa: bfa_ioc: Remove a few unused variables 'pgoff' and 't'
-Date:   Thu, 23 Jul 2020 13:24:26 +0100
-Message-Id: <20200723122446.1329773-21-lee.jones@linaro.org>
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH 15/40] scsi: lpfc: lpfc_init: Use __printf() format notation
+Date:   Thu, 23 Jul 2020 13:24:21 +0100
+Message-Id: <20200723122446.1329773-16-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
 References: <20200723122446.1329773-1-lee.jones@linaro.org>
@@ -79,127 +79,30 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/bfa/bfa_ioc.c: In function ‘bfa_iocpf_sm_fwcheck_entry’:
- drivers/scsi/bfa/bfa_ioc.c:704:27: warning: variable ‘pgoff’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/bfa/bfa_ioc.c: In function ‘bfa_ioc_fwver_get’:
- drivers/scsi/bfa/bfa_ioc.c:1443:13: warning: variable ‘pgoff’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/bfa/bfa_ioc.c: In function ‘bfa_ioc_fwsig_invalidate’:
- drivers/scsi/bfa/bfa_ioc.c:1665:13: warning: variable ‘pgoff’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/bfa/bfa_ioc.c: In function ‘bfa_ioc_download_fw’:
- drivers/scsi/bfa/bfa_ioc.c:1866:13: warning: variable ‘pgoff’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/bfa/bfa_ioc.c: In function ‘bfa_diag_memtest_done’:
- drivers/scsi/bfa/bfa_ioc.c:4766:13: warning: variable ‘pgoff’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/bfa/bfa_ioc.c: In function ‘bfa_flash_fifo_flush’:
- drivers/scsi/bfa/bfa_ioc.c:6787:6: warning: variable ‘t’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/lpfc/lpfc_init.c: In function ‘lpfc_dbg_print’:
+ drivers/scsi/lpfc/lpfc_init.c:14212:6: warning: function ‘lpfc_dbg_print’ might be a candidate for ‘gnu_printf’ format attribute [-Wsuggest-attribute=format]
+ 14212 | sizeof(phba->dbg_log[idx].log), fmt, args);
+ | ^~~~~~
 
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/bfa/bfa_ioc.c | 20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 93471d7c61d05..3ce281a02d5bb 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -701,7 +701,7 @@ static void
- bfa_iocpf_sm_fwcheck_entry(struct bfa_iocpf_s *iocpf)
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 20edf001fdd97..ccfae1c0c0963 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -14187,6 +14187,7 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
+ 	atomic_set(&phba->dbg_log_dmping, 0);
+ }
+ 
++__printf(2, 3)
+ void lpfc_dbg_print(struct lpfc_hba *phba, const char *fmt, ...)
  {
- 	struct bfi_ioc_image_hdr_s	fwhdr;
--	u32	r32, fwstate, pgnum, pgoff, loff = 0;
-+	u32	r32, fwstate, pgnum, loff = 0;
- 	int	i;
- 
- 	/*
-@@ -731,7 +731,6 @@ bfa_iocpf_sm_fwcheck_entry(struct bfa_iocpf_s *iocpf)
- 	 * Clear fwver hdr
- 	 */
- 	pgnum = PSS_SMEM_PGNUM(iocpf->ioc->ioc_regs.smem_pg0, loff);
--	pgoff = PSS_SMEM_PGOFF(loff);
- 	writel(pgnum, iocpf->ioc->ioc_regs.host_page_num_fn);
- 
- 	for (i = 0; i < sizeof(struct bfi_ioc_image_hdr_s) / sizeof(u32); i++) {
-@@ -1440,13 +1439,12 @@ bfa_ioc_lpu_stop(struct bfa_ioc_s *ioc)
- void
- bfa_ioc_fwver_get(struct bfa_ioc_s *ioc, struct bfi_ioc_image_hdr_s *fwhdr)
- {
--	u32	pgnum, pgoff;
-+	u32	pgnum;
- 	u32	loff = 0;
- 	int		i;
- 	u32	*fwsig = (u32 *) fwhdr;
- 
- 	pgnum = PSS_SMEM_PGNUM(ioc->ioc_regs.smem_pg0, loff);
--	pgoff = PSS_SMEM_PGOFF(loff);
- 	writel(pgnum, ioc->ioc_regs.host_page_num_fn);
- 
- 	for (i = 0; i < (sizeof(struct bfi_ioc_image_hdr_s) / sizeof(u32));
-@@ -1662,7 +1660,7 @@ bfa_status_t
- bfa_ioc_fwsig_invalidate(struct bfa_ioc_s *ioc)
- {
- 
--	u32	pgnum, pgoff;
-+	u32	pgnum;
- 	u32	loff = 0;
- 	enum bfi_ioc_state ioc_fwstate;
- 
-@@ -1671,7 +1669,6 @@ bfa_ioc_fwsig_invalidate(struct bfa_ioc_s *ioc)
- 		return BFA_STATUS_ADAPTER_ENABLED;
- 
- 	pgnum = PSS_SMEM_PGNUM(ioc->ioc_regs.smem_pg0, loff);
--	pgoff = PSS_SMEM_PGOFF(loff);
- 	writel(pgnum, ioc->ioc_regs.host_page_num_fn);
- 	bfa_mem_write(ioc->ioc_regs.smem_page_start, loff, BFA_IOC_FW_INV_SIGN);
- 
-@@ -1863,7 +1860,7 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
- 		    u32 boot_env)
- {
- 	u32 *fwimg;
--	u32 pgnum, pgoff;
-+	u32 pgnum;
- 	u32 loff = 0;
- 	u32 chunkno = 0;
- 	u32 i;
-@@ -1892,8 +1889,6 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
- 
- 
- 	pgnum = PSS_SMEM_PGNUM(ioc->ioc_regs.smem_pg0, loff);
--	pgoff = PSS_SMEM_PGOFF(loff);
--
- 	writel(pgnum, ioc->ioc_regs.host_page_num_fn);
- 
- 	for (i = 0; i < fwimg_size; i++) {
-@@ -4763,11 +4758,9 @@ bfa_diag_memtest_done(void *cbarg)
- 	struct bfa_ioc_s  *ioc = diag->ioc;
- 	struct bfa_diag_memtest_result *res = diag->result;
- 	u32	loff = BFI_BOOT_MEMTEST_RES_ADDR;
--	u32	pgnum, pgoff, i;
-+	u32	pgnum, i;
- 
- 	pgnum = PSS_SMEM_PGNUM(ioc->ioc_regs.smem_pg0, loff);
--	pgoff = PSS_SMEM_PGOFF(loff);
--
- 	writel(pgnum, ioc->ioc_regs.host_page_num_fn);
- 
- 	for (i = 0; i < (sizeof(struct bfa_diag_memtest_result) /
-@@ -6784,7 +6777,6 @@ static u32
- bfa_flash_fifo_flush(void __iomem *pci_bar)
- {
- 	u32 i;
--	u32 t;
- 	union bfa_flash_dev_status_reg_u dev_status;
- 
- 	dev_status.i = readl(pci_bar + FLI_DEV_STATUS_REG);
-@@ -6794,7 +6786,7 @@ bfa_flash_fifo_flush(void __iomem *pci_bar)
- 
- 	/* fifo counter in terms of words */
- 	for (i = 0; i < dev_status.r.fifo_cnt; i++)
--		t = readl(pci_bar + FLI_RDDATA_REG);
-+		readl(pci_bar + FLI_RDDATA_REG);
- 
- 	/*
- 	 * Check the device status. It may take some time.
+ 	unsigned int idx;
 -- 
 2.25.1
 
