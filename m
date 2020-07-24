@@ -2,150 +2,289 @@ Return-Path: <SRS0=9S6W=BD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46EF0C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A294C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBCBE20714
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:07:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VZgwM8m9"
+	by mail.kernel.org (Postfix) with ESMTP id 66F432064B
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbgGXPHk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jul 2020 11:07:40 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:60288 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726381AbgGXPHj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2020 11:07:39 -0400
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200724150736epoutp04fb8385a06e20136ce7be61a58f82cf46~kuLUdDr9_1741717417epoutp04W
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2020 15:07:36 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200724150736epoutp04fb8385a06e20136ce7be61a58f82cf46~kuLUdDr9_1741717417epoutp04W
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1595603256;
-        bh=Z7FqLb5JFyxfxbp/Hxal9fNVJmmYiBZ4bqgmC5eyhbI=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=VZgwM8m9omh7yoz12zRTp6mvIEIl2NeqqaE5rbAeIztdL2P6TBtkphs4vaboA32UU
-         dxQYoZ6afLO3G4fHrAJ3t7/FtcbHwn9D3fJzklg1byz8bG1OxQqn/iUNLll35eyUWQ
-         3Jae10y14BzZHKxDc2cura9r3ql8OBRMqzVEGk8k=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20200724150734epcas2p4955ea4dc4c9d5f5e0ea68f755255eeac~kuLTGFu1c1846118461epcas2p4s;
-        Fri, 24 Jul 2020 15:07:34 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.191]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4BCsxw45GdzMqYkZ; Fri, 24 Jul
-        2020 15:07:32 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        92.DE.27441.439FA1F5; Sat, 25 Jul 2020 00:07:32 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200724150731epcas2p3dabaca859355cb02100f5addcd5eb7df~kuLQob01c3188531885epcas2p3S;
-        Fri, 24 Jul 2020 15:07:31 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200724150731epsmtrp2432bce4cea81a002800cc2e690c0ac3b~kuLQnnyC20978309783epsmtrp2c;
-        Fri, 24 Jul 2020 15:07:31 +0000 (GMT)
-X-AuditID: b6c32a47-fafff70000006b31-13-5f1af9341d13
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        34.E0.08382.339FA1F5; Sat, 25 Jul 2020 00:07:31 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200724150731epsmtip23a2393021b92efbd70330dddf5b07a2d~kuLQZq6rA1765517655epsmtip2S;
-        Fri, 24 Jul 2020 15:07:31 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
-        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1] ufs: fix warnings for module build
-Date:   Fri, 24 Jul 2020 23:59:21 +0900
-Message-Id: <1595602761-189235-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpgk+LIzCtJLcpLzFFi42LZdljTQtfkp1S8wakWOYsH87axWextO8Fu
-        8fLnVTaLgw87WSymffjJbPFp/TJWi19/17NbrF78gMVi0Y1tTBY3txxlsei+voPNYvnxf0wW
-        XXdvMFos/feWxYHP4/IVb4/Lfb1MHhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfRfqCbKYAj
-        KscmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0zB+huJYWy
-        xJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BoWGBXnFibnFpXrpecn6ulaGBgZEpUGVC
-        Tsb8LxfYC6ZwVzR33mBrYPzK2cXIySEhYCIx49sMNhBbSGAHo8ThR94Q9idGiVetYV2MXED2
-        N0aJcyceM3cxcoA1XPvrBxHfyyjxbP86RgjnB6PE7ssTGUG62QQ0JZ7enMoEkhAR2Mwk8WrB
-        fWaQBLOAusSuCSeYQGxhATOJnqUvwRpYBFQlfh7vZQWxeQXcJPrbT7NAnCcncfNcJzPIIAmB
-        n+wSd5a8YINIuEjMmNjKBGELS7w6voUdwpaS+PxuL1RNvcS+qQ2sEM09jBJP9/1jhEgYS8x6
-        1s4I8g8z0Knrd+lDvKYsceQWC8SdfBIdh/+yQ4R5JTrahCAalSV+TZoMNURSYubNO1BbPSQ+
-        n3vGCAm5WIk79/4yTWCUnYUwfwEj4ypGsdSC4tz01GKjAmPkONrECE6KWu47GGe8/aB3iJGJ
-        g/EQowQHs5II74pvUvFCvCmJlVWpRfnxRaU5qcWHGE2B4TWRWUo0OR+YlvNK4g1NjczMDCxN
-        LUzNjCyUxHmLrS7ECQmkJ5akZqemFqQWwfQxcXBKNTC1bpgnlP2mSVto2fuFnUlW6pmWUruV
-        Nq+6uU5L4sqpirZGdlG9skYJlnn5ps8kAu9/2W7UsaI6d/e2lPVHxX9O0X0SYfJU9rTtHfV9
-        8UcYL16rXnPztv2nybJt0zWDZx+6q5AnH/7/tlBYQuU6YdPlV7dPKipjkH2oteR/kOXK8rjZ
-        b+dx/dRVEW3ZcXah6I314apzJKfK8L+R19z+V//uoqgbwilC7xQWXe/Y0Tb3UHTIY48/r8zD
-        Wk78v5JXWzL987G0OrOk5jg1uX9Rck/3uebfLZ/zc7lQivy9o1enz9GYF8dTVyk+vyXhwebe
-        bce9v9bL1Wa77rqb8nTJTWljnfcL8rOTrVonyhg8i09RYinOSDTUYi4qTgQAviXXwRMEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrALMWRmVeSWpSXmKPExsWy7bCSvK7xT6l4g4fNhhYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCxubjnKYtF9fQebxfLj/5gs
-        uu7eYLRY+u8tiwOfx+Ur3h6X+3qZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBH
-        FJdNSmpOZllqkb5dAlfG/C8X2AumcFc0d95ga2D8ytnFyMEhIWAice2vXxcjF4eQwG5GiV9r
-        G5i6GDmB4pISJ3Y+Z4SwhSXutxxhhSj6xiixddJMsCI2AU2JpzenMoEkRAQOM0n83/qcHSTB
-        LKAusWvCCbAiYQEziZ6lL8EmsQioSvw83ssKYvMKuEn0t59mgdggJ3HzXCfzBEaeBYwMqxgl
-        UwuKc9Nziw0LDPNSy/WKE3OLS/PS9ZLzczcxggNVS3MH4/ZVH/QOMTJxMB5ilOBgVhLhXfFN
-        Kl6INyWxsiq1KD++qDQntfgQozQHi5I4743ChXFCAumJJanZqakFqUUwWSYOTqkGJlMWNXPv
-        9EbTd2vPOPD8/RV45rr7iffBW5ZfXj5n6ToZoX+Cuz1/s7/eNHdWdqLLuyPr7sXu0ii9e+Nl
-        k3ndvK6bPinsPWfsdt0wvyeQweS27dKtiuoD/k4PPss96N+gOumiS+XnNT28l11F+tfIyjq9
-        52rb1ay/YRVLwTxLN9U1S//m1Ytd9Hx0uleBpcZQ/bF8fs6iSQ8Whv5QXJc0l/H82luL907s
-        cakWTu/8+jZjD0vA/VmRO0WrLn6+xzB/r9PrhHkW/ce1Dt0Ibd4dsPiqyqlrAfecKjr5rWtl
-        Tp++rrvrYMUG5dTETh/D3GPvCt02yheVZqXUBrTmO217J79UVE2k5XXzx/wJ13MDwpVYijMS
-        DbWYi4oTAZ6CrJPDAgAA
-X-CMS-MailID: 20200724150731epcas2p3dabaca859355cb02100f5addcd5eb7df
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200724150731epcas2p3dabaca859355cb02100f5addcd5eb7df
-References: <CGME20200724150731epcas2p3dabaca859355cb02100f5addcd5eb7df@epcas2p3.samsung.com>
+        id S1726639AbgGXPzh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jul 2020 11:55:37 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:55111 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726381AbgGXPzg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jul 2020 11:55:36 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 34A08204190;
+        Fri, 24 Jul 2020 17:55:35 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id llmETjHueHtl; Fri, 24 Jul 2020 17:55:35 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (vpn.infotech.no [82.134.31.155])
+        by smtp.infotech.no (Postfix) with ESMTPA id 2277F204170;
+        Fri, 24 Jul 2020 17:55:33 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        kernel test robot <lkp@intel.com>
+Subject: [PATCH v2] scsi_debug: tur_ms_to_ready parameter
+Date:   Fri, 24 Jul 2020 11:55:31 -0400
+Message-Id: <20200724155531.668144-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufs-exynos.ko didn't see the symbols in ufs-exynos-dbg.o.
-I merged two object into one symbol.
+The current driver responds to TEST UNIT READY (TUR) with a GOOD
+status immediately after a scsi_debug device (LU) is created. This is
+unrealistic as even SSDs take some time after power-on before
+accepting media access commands.
 
->> ERROR: modpost: "exynos_ufs_dump_info" [drivers/scsi/ufs/ufs-exynos.ko] undefined!
->> ERROR: modpost: "exynos_ufs_init_dbg" [drivers/scsi/ufs/ufs-exynos.ko] undefined!
->> ERROR: modpost: "exynos_ufs_cmd_log_start" [drivers/scsi/ufs/ufs-exynos.ko] undefined!
+Add the tur_ms_to_ready parameter whose unit is milliseconds (default
+0) and is the period before which a TUR (or any media access command)
+will set the CHECK CONDITION status with a sense key of NOT READY and
+an additional sense of "Logical unit is in process of becoming ready".
+The period starts when each scsi_debug device is created.
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+This patch was prompted by T10 proposal 20-061r2 which was accepted on
+2020716. It adds that a TUR in the situation described in the previous
+paragraph may set the INFO field (or descriptor) in the sense data to
+the estimated number in milliseconds before a subsequent TUR will
+yield a GOOD status. This patch follows that advice.
+
+Changes since version 1:
+  - change 64 bit division into call to do_div() per kbuild robot
+    report
+
 Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/ufs/Makefile | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_debug.c | 110 ++++++++++++++++++++++++++++++++------
+ 1 file changed, 93 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index ee09961..535d027 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -4,8 +4,9 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
--obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
--obj-$(CONFIG_SCSI_UFS_EXYNOS_DBG) += ufs-exynos-dbg.o
-+obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos-core.o
-+ufs-exynos-core-y += ufs-exynos.o
-+ufs-exynos-core-$(CONFIG_SCSI_UFS_EXYNOS_DBG) += ufs-exynos-dbg.o
- obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
- ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 01d40f6eec20..dd3da268e2fd 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -151,6 +151,7 @@ static const char *sdebug_version_date = "20200710";
+ #define DEF_STRICT 0
+ #define DEF_STATISTICS false
+ #define DEF_SUBMIT_QUEUES 1
++#define DEF_TUR_MS_TO_READY 0
+ #define DEF_UUID_CTL 0
+ #define JDELAY_OVERRIDDEN -9999
+ 
+@@ -288,7 +289,7 @@ struct sdebug_dev_info {
+ 	struct sdebug_host_info *sdbg_host;
+ 	unsigned long uas_bm[1];
+ 	atomic_t num_in_q;
+-	atomic_t stopped;
++	atomic_t stopped;	/* 1: by SSU, 2: device start */
+ 	bool used;
+ 
+ 	/* For ZBC devices */
+@@ -301,6 +302,7 @@ struct sdebug_dev_info {
+ 	unsigned int nr_exp_open;
+ 	unsigned int nr_closed;
+ 	unsigned int max_open;
++	ktime_t create_ts;	/* time since bootup that this device was created */
+ 	struct sdeb_zone_state *zstate;
+ };
+ 
+@@ -758,6 +760,7 @@ static int sdebug_opt_xferlen_exp = DEF_OPT_XFERLEN_EXP;
+ static int sdebug_ptype = DEF_PTYPE; /* SCSI peripheral device type */
+ static int sdebug_scsi_level = DEF_SCSI_LEVEL;
+ static int sdebug_sector_size = DEF_SECTOR_SIZE;
++static int sdeb_tur_ms_to_ready = DEF_TUR_MS_TO_READY;
+ static int sdebug_virtual_gb = DEF_VIRTUAL_GB;
+ static int sdebug_vpd_use_hostno = DEF_VPD_USE_HOSTNO;
+ static unsigned int sdebug_lbpu = DEF_LBPU;
+@@ -1774,11 +1777,10 @@ static int resp_requests(struct scsi_cmnd *scp,
+ 	return fill_from_dev_buffer(scp, arr, len);
+ }
+ 
+-static int resp_start_stop(struct scsi_cmnd *scp,
+-			   struct sdebug_dev_info *devip)
++static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ {
+ 	unsigned char *cmd = scp->cmnd;
+-	int power_cond, stop;
++	int power_cond, want_stop, stopped_state;
+ 	bool changing;
+ 
+ 	power_cond = (cmd[4] & 0xf0) >> 4;
+@@ -1786,10 +1788,33 @@ static int resp_start_stop(struct scsi_cmnd *scp,
+ 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 7);
+ 		return check_condition_result;
+ 	}
+-	stop = !(cmd[4] & 1);
+-	changing = atomic_read(&devip->stopped) == !stop;
+-	atomic_xchg(&devip->stopped, stop);
+-	if (!changing || cmd[1] & 0x1)  /* state unchanged or IMMED set */
++	want_stop = !(cmd[4] & 1);
++	stopped_state = atomic_read(&devip->stopped);
++	if (stopped_state == 2) {
++		ktime_t now_ts = ktime_get_boottime();
++
++		if (ktime_to_ns(now_ts) > ktime_to_ns(devip->create_ts)) {
++			u64 diff_ns = ktime_to_ns(ktime_sub(now_ts, devip->create_ts));
++
++			if (diff_ns >= ((u64)sdeb_tur_ms_to_ready * 1000000)) {
++				/* tur_ms_to_ready timer extinguished */
++				atomic_set(&devip->stopped, 0);
++				stopped_state = 0;
++			}
++		}
++		if (stopped_state == 2) {
++			if (want_stop) {
++				stopped_state = 1;	/* dummy up success */
++			} else {	/* Disallow tur_ms_to_ready delay to be overridden */
++				mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 0 /* START bit */);
++				return check_condition_result;
++			}
++		}
++	}
++	changing = (stopped_state != want_stop);
++	if (changing)
++		atomic_xchg(&devip->stopped, want_stop);
++	if (!changing || (cmd[1] & 0x1))  /* state unchanged or IMMED bit set in cdb */
+ 		return SDEG_RES_IMMED_MASK;
+ 	else
+ 		return 0;
+@@ -4018,7 +4043,7 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
+ 		return check_condition_result;
+ 	}
+-	if (!write_since_sync || cmd[1] & 0x2)
++	if (!write_since_sync || (cmd[1] & 0x2))
+ 		res = SDEG_RES_IMMED_MASK;
+ 	else		/* delay if write_since_sync and IMMED clear */
+ 		write_since_sync = false;
+@@ -4894,6 +4919,8 @@ static struct sdebug_dev_info *sdebug_device_create(
+ 			devip->zmodel = BLK_ZONED_NONE;
+ 		}
+ 		devip->sdbg_host = sdbg_host;
++		devip->create_ts = ktime_get_boottime();
++		atomic_set(&devip->stopped, (sdeb_tur_ms_to_ready > 0 ? 2 : 0));
+ 		list_add_tail(&devip->dev_list, &sdbg_host->dev_info_list);
+ 	}
+ 	return devip;
+@@ -5568,6 +5595,7 @@ module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
+ module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
+ module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
+ module_param_named(submit_queues, submit_queues, int, S_IRUGO);
++module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
+ module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
+ module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
+ module_param_named(unmap_max_blocks, sdebug_unmap_max_blocks, int, S_IRUGO);
+@@ -5634,6 +5662,7 @@ MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
+ MODULE_PARM_DESC(statistics, "collect statistics on commands, queues (def=0)");
+ MODULE_PARM_DESC(strict, "stricter checks: reserved field in cdb (def=0)");
+ MODULE_PARM_DESC(submit_queues, "support for block multi-queue (def=1)");
++MODULE_PARM_DESC(tur_ms_to_ready, "TEST UNIT READY millisecs before initial good status (def=0)");
+ MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
+ MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=1)");
+ MODULE_PARM_DESC(unmap_max_blocks, "max # of blocks can be unmapped in one cmd (def=0xffffffff)");
+@@ -6460,6 +6489,12 @@ static ssize_t zbc_show(struct device_driver *ddp, char *buf)
+ }
+ static DRIVER_ATTR_RO(zbc);
+ 
++static ssize_t tur_ms_to_ready_show(struct device_driver *ddp, char *buf)
++{
++	return scnprintf(buf, PAGE_SIZE, "%d\n", sdeb_tur_ms_to_ready);
++}
++static DRIVER_ATTR_RO(tur_ms_to_ready);
++
+ /* Note: The following array creates attribute files in the
+    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+    files (over those found in the /sys/module/scsi_debug/parameters
+@@ -6501,6 +6536,7 @@ static struct attribute *sdebug_drv_attrs[] = {
+ 	&driver_attr_strict.attr,
+ 	&driver_attr_uuid_ctl.attr,
+ 	&driver_attr_cdb_len.attr,
++	&driver_attr_tur_ms_to_ready.attr,
+ 	&driver_attr_zbc.attr,
+ 	NULL,
+ };
+@@ -7017,6 +7053,49 @@ static bool fake_timeout(struct scsi_cmnd *scp)
+ 	return false;
+ }
+ 
++/* Response to TUR or media access command when device stopped */
++static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
++{
++	int stopped_state;
++	u64 diff_ns = 0;
++	ktime_t now_ts = ktime_get_boottime();
++	struct scsi_device *sdp = scp->device;
++
++	stopped_state = atomic_read(&devip->stopped);
++	if (stopped_state == 2) {
++		if (ktime_to_ns(now_ts) > ktime_to_ns(devip->create_ts)) {
++			diff_ns = ktime_to_ns(ktime_sub(now_ts, devip->create_ts));
++			if (diff_ns >= ((u64)sdeb_tur_ms_to_ready * 1000000)) {
++				/* tur_ms_to_ready timer extinguished */
++				atomic_set(&devip->stopped, 0);
++				return 0;
++			}
++		}
++		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x1);
++		if (sdebug_verbose)
++			sdev_printk(KERN_INFO, sdp,
++				    "%s: Not ready: in process of becoming ready\n", my_name);
++		if (scp->cmnd[0] == TEST_UNIT_READY) {
++			u64 tur_nanosecs_to_ready = (u64)sdeb_tur_ms_to_ready * 1000000;
++
++			if (diff_ns <= tur_nanosecs_to_ready)
++				diff_ns = tur_nanosecs_to_ready - diff_ns;
++			else
++				diff_ns = tur_nanosecs_to_ready;
++			/* As per 20-061r2 approved for spc6 by T10 on 20200716 */
++			do_div(diff_ns, 1000000);	/* diff_ns becomes milliseconds */
++			scsi_set_sense_information(scp->sense_buffer, SCSI_SENSE_BUFFERSIZE,
++						   diff_ns);
++			return check_condition_result;
++		}
++	}
++	mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
++	if (sdebug_verbose)
++		sdev_printk(KERN_INFO, sdp, "%s: Not ready: initializing command required\n",
++			    my_name);
++	return check_condition_result;
++}
++
+ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 				   struct scsi_cmnd *scp)
+ {
+@@ -7141,14 +7220,11 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		if (errsts)
+ 			goto check_cond;
+ 	}
+-	if (unlikely((F_M_ACCESS & flags) && atomic_read(&devip->stopped))) {
+-		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
+-		if (sdebug_verbose)
+-			sdev_printk(KERN_INFO, sdp, "%s reports: Not ready: "
+-				    "%s\n", my_name, "initializing command "
+-				    "required");
+-		errsts = check_condition_result;
+-		goto fini;
++	if (unlikely(((F_M_ACCESS & flags) || scp->cmnd[0] == TEST_UNIT_READY) &&
++		     atomic_read(&devip->stopped))) {
++		errsts = resp_not_ready(scp, devip);
++		if (errsts)
++			goto fini;
+ 	}
+ 	if (sdebug_fake_rw && (F_FAKE_RW & flags))
+ 		goto fini;
 -- 
-2.7.4
+2.25.1
 
