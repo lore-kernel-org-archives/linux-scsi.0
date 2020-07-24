@@ -2,289 +2,519 @@ Return-Path: <SRS0=9S6W=BD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A294C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C19C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:57:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66F432064B
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:55:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF5732064B
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 15:57:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="GtmftF6o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726639AbgGXPzh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jul 2020 11:55:37 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:55111 "EHLO smtp.infotech.no"
+        id S1726797AbgGXP52 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jul 2020 11:57:28 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:27526 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726381AbgGXPzg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Jul 2020 11:55:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 34A08204190;
-        Fri, 24 Jul 2020 17:55:35 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id llmETjHueHtl; Fri, 24 Jul 2020 17:55:35 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (vpn.infotech.no [82.134.31.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 2277F204170;
-        Fri, 24 Jul 2020 17:55:33 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH v2] scsi_debug: tur_ms_to_ready parameter
-Date:   Fri, 24 Jul 2020 11:55:31 -0400
-Message-Id: <20200724155531.668144-1-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
+        id S1726381AbgGXP52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jul 2020 11:57:28 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1595606246; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: To:
+ Subject: Sender; bh=1SHhegvX9/EvRC7Oq62Z8w+rzUJQB510+Xsj+/2rMlo=; b=GtmftF6oe7HuBWBGdY/p2qHLjuBokiR7wk++sgnzhzzYpwSPSIyQcYeklf+eyhpfHF2GdBer
+ e3G8EgOSmV0gaIPnhCI1HyYV3g5D9GeXxtX9S9ixR8jem5aGAFOzWF8AuHE1HvOoiDJZbMNM
+ rSMpWLtj7vjMSsYzMH/AnxGv1wc=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 5f1b04e5aa44a6db055d55f7 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 24 Jul 2020 15:57:25
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E722EC433CA; Fri, 24 Jul 2020 15:57:24 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 898E5C433C9;
+        Fri, 24 Jul 2020 15:57:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 898E5C433C9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [RFC PATCH v2 3/3] scsi: ufs: add vendor specific write booster
+ To support the fuction of writebooster by vendor. The WB behavior that the
+ vendor wants is slightly different. But we have to support it
+To:     =?UTF-8?B?7ISc7Zi47JiB?= <hy50.seo@samsung.com>,
+        linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, bvanassche@acm.org, grant.jung@samsung.com
+References: <cover.1595240433.git.hy50.seo@samsung.com>
+ <CGME20200720103951epcas2p246072985a70a459f0acb31d339298a47@epcas2p2.samsung.com>
+ <5be595eb83365ec97a8ee0ddafb748029ee8cdf9.1595240433.git.hy50.seo@samsung.com>
+ <588c1a29-38b9-8c5f-d9c5-899272b9f3a3@codeaurora.org>
+ <02dd01d65f43$fc837710$f58a6530$@samsung.com>
+ <91b86407-c9ee-9d3a-c01c-654deba72e75@codeaurora.org>
+ <05cc01d6619e$c2695ba0$473c12e0$@samsung.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <e8aa0cfa-f126-b5e5-ec64-a8c24896fc85@codeaurora.org>
+Date:   Fri, 24 Jul 2020 08:57:21 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <05cc01d6619e$c2695ba0$473c12e0$@samsung.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The current driver responds to TEST UNIT READY (TUR) with a GOOD
-status immediately after a scsi_debug device (LU) is created. This is
-unrealistic as even SSDs take some time after power-on before
-accepting media access commands.
+On 7/24/2020 2:42 AM, 서호영 wrote:
+>>>> On 7/20/2020 3:40 AM, SEO HOYOUNG wrote:
+>>>>> Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+>>>>> ---
+>>>>>     drivers/scsi/ufs/Makefile     |   1 +
+>>>>>     drivers/scsi/ufs/ufs-exynos.c |   6 +
+>>>>>     drivers/scsi/ufs/ufs_ctmwb.c  | 279
+>> ++++++++++++++++++++++++++++++++++
+>>>>>     drivers/scsi/ufs/ufs_ctmwb.h  |  27 ++++
+>>>>>     4 files changed, 313 insertions(+)
+>>>>>     create mode 100644 drivers/scsi/ufs/ufs_ctmwb.c
+>>>>>     create mode 100644 drivers/scsi/ufs/ufs_ctmwb.h
+>>>>>
+>>>>> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+>>>>> index 9810963bc049..b1ba36c7d66f 100644
+>>>>> --- a/drivers/scsi/ufs/Makefile
+>>>>> +++ b/drivers/scsi/ufs/Makefile
+>>>>> @@ -5,6 +5,7 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=
+>>>>> tc-dwc-g210-
+>>>> pltfrm.o ufshcd-dwc.o tc-d
+>>>>>     obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
+>>>>>     obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+>>>>>     obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
+>>>>> +obj-$(CONFIG_SCSI_UFS_VENDOR_WB) += ufs_ctmwb.o
+>>>>>     obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+>>>>>     ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+>>>>>     ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+>>>>> diff --git a/drivers/scsi/ufs/ufs-exynos.c
+>>>>> b/drivers/scsi/ufs/ufs-exynos.c index 32b61ba77241..f127f5f2bf36
+>>>>> 100644
+>>>>> --- a/drivers/scsi/ufs/ufs-exynos.c
+>>>>> +++ b/drivers/scsi/ufs/ufs-exynos.c
+>>>>> @@ -22,6 +22,9 @@
+>>>>>
+>>>>
+>>>> To me it looks like, you want to have your own flush policy &
+>>>> initializations etc, is that understanding correct?
+>>>> I don't understand why though. The current implementation is spec
+>>>> compliant. If there're benefits that you see in this implementation,
+>>>> please highlight those. It'd be interesting to see that.
+>>>
+>>> Yes. I want to own flush policy, initialization..
+>>> I already know current implementation is spec compliant.
+>>> But some vendor want to change flush policy.
+>> Ok. It'd be interesting to know the benefits of your flush policy over the
+>> current one. If it's better, we can replace the current policy, perhaps?
+>> So please can you highlight those benefits.
+> At first, our vendor device did not support gear scaling. So we can't use gear scaling code at mainline.
+Fair enough.
+> And we want to WB disable after probe. If IO state busy, then we will enable WB with IO monitoring.
+> I think always enable WB, then maybe occur power related problems.
+> So we want to modify those.
+FWIW - I'd done power profiling of WB but didn't see any worrisome 
+power-impact.
+>>> So we modify below code.
+>>> Additionally when use below code, we can use WB without UFS 3.1
+>>> devices
+>> I guess non-standard stuff should be kept out of ufshcd.c to vendor
+>> specific files, which I guess you're doing.
+>>>>
+>>>>
+>>>>>     #include "ufs-exynos.h"
+>>>>>
+>>>>> +#ifdef CONFIG_SCSI_UFS_VENDOR_WB
+>>>>> +#include "ufs_ctmwb.h"
+>>>>> +#endif
+>>>>>     /*
+>>>>>      * Exynos's Vendor specific registers for UFSHCI
+>>>>>      */
+>>>>> @@ -989,6 +992,9 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+>>>>>     		goto phy_off;
+>>>>>
+>>>>>     	ufs->hba = hba;
+>>>>> +#ifdef CONFIG_SCSI_UFS_VENDOR_WB
+>>>>> +	ufs->hba->wb_ops = ufshcd_ctmwb_init(); #endif
+>>>>>     	ufs->opts = ufs->drv_data->opts;
+>>>>>     	ufs->rx_sel_idx = PA_MAXDATALANES;
+>>>>>     	if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX) diff --git
+>>>>> a/drivers/scsi/ufs/ufs_ctmwb.c b/drivers/scsi/ufs/ufs_ctmwb.c new
+>>>>> file mode 100644 index 000000000000..ab39f40721ae
+>>>>> --- /dev/null
+>>>>> +++ b/drivers/scsi/ufs/ufs_ctmwb.c
+>>>>> @@ -0,0 +1,279 @@
+>>>>> +#include "ufshcd.h"
+>>>>> +#include "ufshci.h"
+>>>>> +#include "ufs_ctmwb.h"
+>>>>> +
+>>>>> +static struct ufshba_ctmwb hba_ctmwb;
+>>>>> +
+>>>>> +/* Query request retries */
+>>>>> +#define QUERY_REQ_RETRIES 3
+>>>>> +
+>>>>> +static int ufshcd_query_attr_retry(struct ufs_hba *hba,
+>>>>> +	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
+>>>>> +	u32 *attr_val)
+>>>>> +{
+>>>>> +	int ret = 0;
+>>>>> +	u32 retries;
+>>>>> +
+>>>>> +	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+>>>>> +		ret = ufshcd_query_attr(hba, opcode, idn, index,
+>>>>> +						selector, attr_val);
+>>>>> +		if (ret)
+>>>>> +			dev_dbg(hba->dev, "%s: failed with error %d,
+>>>> retries %d\n",
+>>>>> +				__func__, ret, retries);
+>>>>> +		else
+>>>>> +			break;
+>>>>> +	}
+>>>>> +
+>>>>> +	if (ret)
+>>>>> +		dev_err(hba->dev,
+>>>>> +			"%s: query attribute, idn %d, failed with error %d
+>>>> after %d retires\n",
+>>>>> +			__func__, idn, ret, QUERY_REQ_RETRIES);
+>>>>> +	return ret;
+>>>>> +}
+>>>>> +
+>>>>> +static int ufshcd_query_flag_retry(struct ufs_hba *hba,
+>>>>> +	enum query_opcode opcode, enum flag_idn idn, bool *flag_res) {
+>>>>> +	int ret;
+>>>>> +	int retries;
+>>>>> +
+>>>>> +	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
+>>>>> +		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
+>>>>> +		if (ret)
+>>>>> +			dev_dbg(hba->dev,
+>>>>> +				"%s: failed with error %d, retries %d\n",
+>>>>> +				__func__, ret, retries);
+>>>>> +		else
+>>>>> +			break;
+>>>>> +	}
+>>>>> +
+>>>>> +	if (ret)
+>>>>> +		dev_err(hba->dev,
+>>>>> +			"%s: query attribute, opcode %d, idn %d, failed with
+>>>> error %d after %d retries\n",
+>>>>> +			__func__, (int)opcode, (int)idn, ret, retries);
+>>>>> +	return ret;
+>>>>> +}
+>>>>> +
+>>>>> +static int ufshcd_reset_ctmwb(struct ufs_hba *hba, bool force) {
+>>>>> +	int err = 0;
+>>>>> +
+>>>>> +	if (!hba_ctmwb.support_ctmwb)
+>>>>> +		return 0;
+>>>>> +
+>>>>> +	if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
+>>>>> +		dev_info(hba->dev, "%s: turbo write already disabled.
+>>>> ctmwb_state = %d\n",
+>>>>> +			__func__, hba_ctmwb.ufs_ctmwb_state);
+>>>>> +		return 0;
+>>>>> +	}
+>>>>> +
+>>>>> +	if (ufshcd_is_ctmwb_err(hba_ctmwb))
+>>>>> +		dev_err(hba->dev, "%s: previous turbo write control was
+>>>> failed.\n",
+>>>>> +			__func__);
+>>>>> +
+>>>>> +	if (force)
+>>>>> +		err = ufshcd_query_flag_retry(hba,
+>>>> UPIU_QUERY_OPCODE_CLEAR_FLAG,
+>>>>> +				QUERY_FLAG_IDN_WB_EN, NULL);
+>>>>> +
+>>>>> +	if (err) {
+>>>>> +		ufshcd_set_ctmwb_err(hba_ctmwb);
+>>>>> +		dev_err(hba->dev, "%s: disable turbo write failed. err
+>>>> = %d\n",
+>>>>> +			__func__, err);
+>>>>> +	} else {
+>>>>> +		ufshcd_set_ctmwb_off(hba_ctmwb);
+>>>>> +		dev_info(hba->dev, "%s: ufs turbo write disabled \n",
+>>>> __func__);
+>>>>> +	}
+>>>>> +
+>>>>> +	return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static int ufshcd_get_ctmwb_buf_status(struct ufs_hba *hba, u32
+>>>>> +*status) {
+>>>>> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+>>>>> +			QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE, 0, 0, status); }
+>>>>> +
+>>>>> +static int ufshcd_ctmwb_manual_flush_ctrl(struct ufs_hba *hba, int
+>>>>> +en) {
+>>>>> +	int err = 0;
+>>>>> +
+>>>>> +	dev_info(hba->dev, "%s: %sable turbo write manual flush\n",
+>>>>> +				__func__, en ? "en" : "dis");
+>>>>> +	if (en) {
+>>>>> +		err = ufshcd_query_flag_retry(hba,
+>>>> UPIU_QUERY_OPCODE_SET_FLAG,
+>>>>> +					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
+>>>>> +		if (err)
+>>>>> +			dev_err(hba->dev, "%s: enable turbo write failed. err
+>>>> = %d\n",
+>>>>> +				__func__, err);
+>>>>> +	} else {
+>>>>> +		err = ufshcd_query_flag_retry(hba,
+>>>> UPIU_QUERY_OPCODE_CLEAR_FLAG,
+>>>>> +					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
+>>>>> +		if (err)
+>>>>> +			dev_err(hba->dev, "%s: disable turbo write failed. err
+>>>> = %d\n",
+>>>>> +				__func__, err);
+>>>>> +	}
+>>>>> +
+>>>>> +	return err;
+>>>>> +}
+>>>>> +
+>>>>> +static int ufshcd_ctmwb_flush_ctrl(struct ufs_hba *hba) {
+>>>>> +	int err = 0;
+>>>>> +	u32 curr_status = 0;
+>>>>> +
+>>>>> +	err = ufshcd_get_ctmwb_buf_status(hba, &curr_status);
+>>>>> +
+>>>>> +	if (!err && (curr_status <= UFS_WB_MANUAL_FLUSH_THRESHOLD)) {
+>>>>> +		dev_info(hba->dev, "%s: enable ctmwb manual flush, buf
+>>>> status : %d\n",
+>>>>> +				__func__, curr_status);
+>>>>> +		scsi_block_requests(hba->host);
+>>>>> +		err = ufshcd_ctmwb_manual_flush_ctrl(hba, 1);
+>>>>> +		if (!err) {
+>>>>> +			mdelay(100);
+>>>>> +			err = ufshcd_ctmwb_manual_flush_ctrl(hba, 0);
+>>>>> +			if (err)
+>>>>> +				dev_err(hba->dev, "%s: disable ctmwb manual
+>>>> flush failed. err = %d\n",
+>>>>> +						__func__, err);
+>>>>> +		} else
+>>>>> +			dev_err(hba->dev, "%s: enable ctmwb manual flush
+>>>> failed. err = %d\n",
+>>>>> +					__func__, err);
+>>>>> +		scsi_unblock_requests(hba->host);
+>>>>> +	}
+>>>>> +	return err;
+>>>>> +}
+>>>>> +
+>>>>> +static int ufshcd_ctmwb_ctrl(struct ufs_hba *hba, bool enable) {
+>>>>> +	int err;
+>>>>> +#if 0
+>>>> Did you miss removing these #if 0?
+>>> I will modify this code.
+>>>>
+>>>>> +	if (!hba->support_ctmwb)
+>>>>> +		return;
+>>>>> +
+>>>>> +	if (hba->pm_op_in_progress) {
+>>>>> +		dev_err(hba->dev, "%s: ctmwb ctrl during pm operation is not
+>>>> allowed.\n",
+>>>>> +			__func__);
+>>>>> +		return;
+>>>>> +	}
+>>>>> +
+>>>>> +	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+>>>>> +		dev_err(hba->dev, "%s: ufs host is not available.\n",
+>>>>> +			__func__);
+>>>>> +		return;
+>>>>> +	}
+>>>>> +	if (ufshcd_is_ctmwb_err(hba_ctmwb))
+>>>>> +		dev_err(hba->dev, "%s: previous turbo write control was
+>>>> failed.\n",
+>>>>> +			__func__);
+>>>>> +#endif
+>>>>> +	if (enable) {
+>>>>> +		if (ufshcd_is_ctmwb_on(hba_ctmwb)) {
+>>>>> +			dev_err(hba->dev, "%s: turbo write already enabled.
+>>>> ctmwb_state = %d\n",
+>>>>> +				__func__, hba_ctmwb.ufs_ctmwb_state);
+>>>>> +			return 0;
+>>>>> +		}
+>>>>> +		pm_runtime_get_sync(hba->dev);
+>>>>> +		err = ufshcd_query_flag_retry(hba,
+>>>> UPIU_QUERY_OPCODE_SET_FLAG,
+>>>>> +					QUERY_FLAG_IDN_WB_EN, NULL);
+>>>>> +		if (err) {
+>>>>> +			ufshcd_set_ctmwb_err(hba_ctmwb);
+>>>>> +			dev_err(hba->dev, "%s: enable turbo write failed. err
+>>>> = %d\n",
+>>>>> +				__func__, err);
+>>>>> +		} else {
+>>>>> +			ufshcd_set_ctmwb_on(hba_ctmwb);
+>>>>> +			dev_info(hba->dev, "%s: ufs turbo write enabled \n",
+>>>> __func__);
+>>>>> +		}
+>>>>> +	} else {
+>>>>> +		if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
+>>>>> +			dev_err(hba->dev, "%s: turbo write already disabled.
+>>>> ctmwb_state = %d\n",
+>>>>> +				__func__, hba_ctmwb.ufs_ctmwb_state);
+>>>>> +			return 0;
+>>>>> +		}
+>>>>> +		pm_runtime_get_sync(hba->dev);
+>>>>> +		err = ufshcd_query_flag_retry(hba,
+>>>> UPIU_QUERY_OPCODE_CLEAR_FLAG,
+>>>>> +					QUERY_FLAG_IDN_WB_EN, NULL);
+>>>>> +		if (err) {
+>>>>> +			ufshcd_set_ctmwb_err(hba_ctmwb);
+>>>>> +			dev_err(hba->dev, "%s: disable turbo write failed. err
+>>>> = %d\n",
+>>>>> +				__func__, err);
+>>>>> +		} else {
+>>>>> +			ufshcd_set_ctmwb_off(hba_ctmwb);
+>>>>> +			dev_info(hba->dev, "%s: ufs turbo write disabled \n",
+>>>> __func__);
+>>>> What is 'turbo write'?
+>>> I wrote it wrong. I will collect it.
+>>>
+>>>>> +		}
+>>>>> +	}
+>>>>> +
+>>>>> +	pm_runtime_put_sync(hba->dev);
+>>>>> +
+>>>>> +	return 0;
+>>>>> +}
+>>>>> +
+>>>>> +/**
+>>>>> + * ufshcd_get_ctmwbbuf_unit - get ctmwb buffer alloc units
+>>>>> + * @sdev: pointer to SCSI device
+>>>>> + *
+>>>>> + * Read dLUNumTurboWriteBufferAllocUnits in UNIT Descriptor
+>>>>> + * to check if LU supports turbo write feature  */ static int
+>>>>> +ufshcd_get_ctmwbbuf_unit(struct ufs_hba *hba) {
+>>>>> +	struct scsi_device *sdev = hba->sdev_ufs_device;
+>>>>> +	struct ufshba_ctmwb *hba_ctmwb = (struct ufshba_ctmwb *)hba->wb_ops;
+>>>>> +	int ret = 0;
+>>>>> +
+>>>>> +	u32 dLUNumTurboWriteBufferAllocUnits = 0;
+>>>>> +	u8 desc_buf[4];
+>>>>> +
+>>>>> +	if (!hba_ctmwb->support_ctmwb)
+>>>>> +		return 0;
+>>>>> +
+>>>>> +	ret = ufshcd_read_unit_desc_param(hba,
+>>>>> +			ufshcd_scsi_to_upiu_lun(sdev->lun),
+>>>>> +			UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS,
+>>>>> +			desc_buf,
+>>>>> +			sizeof(dLUNumTurboWriteBufferAllocUnits));
+>>>>> +
+>>>>> +	/* Some WLUN doesn't support unit descriptor */
+>>>>> +	if ((ret == -EOPNOTSUPP) || scsi_is_wlun(sdev->lun)){
+>>>>> +		hba_ctmwb->support_ctmwb_lu = false;
+>>>>> +		dev_info(hba->dev,"%s: do not support WB\n", __func__);
+>>>>> +		return 0;
+>>>>> +	}
+>>>>> +
+>>>>> +	dLUNumTurboWriteBufferAllocUnits = ((desc_buf[0] << 24)|
+>>>>> +			(desc_buf[1] << 16) |
+>>>>> +			(desc_buf[2] << 8) |
+>>>>> +			desc_buf[3]);
+>>>>> +
+>>>>> +	if (dLUNumTurboWriteBufferAllocUnits) {
+>>>>> +		hba_ctmwb->support_ctmwb_lu = true;
+>>>>> +		dev_info(hba->dev, "%s: LU %d supports ctmwb, ctmwbbuf unit :
+>>>> 0x%x\n",
+>>>>> +				__func__, (int)sdev->lun,
+>>>> dLUNumTurboWriteBufferAllocUnits);
+>>>>> +	} else
+>>>>> +		hba_ctmwb->support_ctmwb_lu = false;
+>>>>> +
+>>>>> +	return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static inline int ufshcd_ctmwb_toggle_flush(struct ufs_hba *hba,
+>>>>> +enum ufs_pm_op pm_op) {
+>>>>> +	ufshcd_ctmwb_flush_ctrl(hba);
+>>>>> +
+>>>>> +	if (ufshcd_is_system_pm(pm_op))
+>>>>> +		ufshcd_reset_ctmwb(hba, true);
+>>>>> +
+>>>>> +	return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static struct ufs_wb_ops exynos_ctmwb_ops = {
+>>>>> +	.wb_toggle_flush_vendor = ufshcd_ctmwb_toggle_flush,
+>>>>> +	.wb_alloc_units_vendor = ufshcd_get_ctmwbbuf_unit,
+>>>>> +	.wb_ctrl_vendor = ufshcd_ctmwb_ctrl,
+>>>>> +	.wb_reset_vendor = ufshcd_reset_ctmwb, };
+>>>>> +
+>>>>> +struct ufs_wb_ops *ufshcd_ctmwb_init(void) {
+>>>>> +	hba_ctmwb.support_ctmwb = 1;
+>>>>> +
+>>>>> +	return &exynos_ctmwb_ops;
+>>>>> +}
+>>>>> +EXPORT_SYMBOL_GPL(ufshcd_ctmwb_init);
+>>>>> +
+>>>>> diff --git a/drivers/scsi/ufs/ufs_ctmwb.h
+>>>>> b/drivers/scsi/ufs/ufs_ctmwb.h new file mode 100644 index
+>>>>> 000000000000..073e21a4900b
+>>>>> --- /dev/null
+>>>>> +++ b/drivers/scsi/ufs/ufs_ctmwb.h
+>>>>> @@ -0,0 +1,27 @@
+>>>>> +#ifndef _UFS_CTMWB_H_
+>>>>> +#define _UFS_CTMWB_H_
+>>>>> +
+>>>>> +enum ufs_ctmwb_state {
+>>>>> +       UFS_WB_OFF_STATE	= 0,    /* turbo write disabled state */
+>>>>> +       UFS_WB_ON_STATE	= 1,            /* turbo write enabled state */
+>>>>> +       UFS_WB_ERR_STATE	= 2,            /* turbo write error state */
+>>>>> +};
+>>>>> +
+>>>>> +#define ufshcd_is_ctmwb_off(hba) ((hba).ufs_ctmwb_state ==
+>>>>> +UFS_WB_OFF_STATE) #define ufshcd_is_ctmwb_on(hba)
+>>>>> +((hba).ufs_ctmwb_state == UFS_WB_ON_STATE) #define
+>>>>> +ufshcd_is_ctmwb_err(hba) ((hba).ufs_ctmwb_state ==
+>>>>> +UFS_WB_ERR_STATE) #define ufshcd_set_ctmwb_off(hba)
+>>>>> +((hba).ufs_ctmwb_state =
+>>>>> +UFS_WB_OFF_STATE) #define ufshcd_set_ctmwb_on(hba)
+>>>>> +((hba).ufs_ctmwb_state = UFS_WB_ON_STATE) #define
+>>>>> +ufshcd_set_ctmwb_err(hba) ((hba).ufs_ctmwb_state =
+>>>>> +UFS_WB_ERR_STATE)
+>>>>> +
+>>>>> +#define UFS_WB_MANUAL_FLUSH_THRESHOLD	5
+>>>>> +
+>>>>> +struct ufshba_ctmwb {
+>>>>> +	enum ufs_ctmwb_state ufs_ctmwb_state;
+>>>>> +	bool support_ctmwb;
+>>>>> +
+>>>>> +	bool support_ctmwb_lu;
+>>>>> +};
+>>>>> +
+>>>>> +struct ufs_wb_ops *ufshcd_ctmwb_init(void); #endif
+>>>>>
+>>>>
+>>>> -Asutosh
+>>>>
+>>>> --
+>>>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+>>>> Forum, Linux Foundation Collaborative Project
+>>>
+>>
+>> -Asutosh
+>>
+>> --
+>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+>> Linux Foundation Collaborative Project
+> 
 
-Add the tur_ms_to_ready parameter whose unit is milliseconds (default
-0) and is the period before which a TUR (or any media access command)
-will set the CHECK CONDITION status with a sense key of NOT READY and
-an additional sense of "Logical unit is in process of becoming ready".
-The period starts when each scsi_debug device is created.
 
-This patch was prompted by T10 proposal 20-061r2 which was accepted on
-2020716. It adds that a TUR in the situation described in the previous
-paragraph may set the INFO field (or descriptor) in the sense data to
-the estimated number in milliseconds before a subsequent TUR will
-yield a GOOD status. This patch follows that advice.
-
-Changes since version 1:
-  - change 64 bit division into call to do_div() per kbuild robot
-    report
-
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 110 ++++++++++++++++++++++++++++++++------
- 1 file changed, 93 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 01d40f6eec20..dd3da268e2fd 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -151,6 +151,7 @@ static const char *sdebug_version_date = "20200710";
- #define DEF_STRICT 0
- #define DEF_STATISTICS false
- #define DEF_SUBMIT_QUEUES 1
-+#define DEF_TUR_MS_TO_READY 0
- #define DEF_UUID_CTL 0
- #define JDELAY_OVERRIDDEN -9999
- 
-@@ -288,7 +289,7 @@ struct sdebug_dev_info {
- 	struct sdebug_host_info *sdbg_host;
- 	unsigned long uas_bm[1];
- 	atomic_t num_in_q;
--	atomic_t stopped;
-+	atomic_t stopped;	/* 1: by SSU, 2: device start */
- 	bool used;
- 
- 	/* For ZBC devices */
-@@ -301,6 +302,7 @@ struct sdebug_dev_info {
- 	unsigned int nr_exp_open;
- 	unsigned int nr_closed;
- 	unsigned int max_open;
-+	ktime_t create_ts;	/* time since bootup that this device was created */
- 	struct sdeb_zone_state *zstate;
- };
- 
-@@ -758,6 +760,7 @@ static int sdebug_opt_xferlen_exp = DEF_OPT_XFERLEN_EXP;
- static int sdebug_ptype = DEF_PTYPE; /* SCSI peripheral device type */
- static int sdebug_scsi_level = DEF_SCSI_LEVEL;
- static int sdebug_sector_size = DEF_SECTOR_SIZE;
-+static int sdeb_tur_ms_to_ready = DEF_TUR_MS_TO_READY;
- static int sdebug_virtual_gb = DEF_VIRTUAL_GB;
- static int sdebug_vpd_use_hostno = DEF_VPD_USE_HOSTNO;
- static unsigned int sdebug_lbpu = DEF_LBPU;
-@@ -1774,11 +1777,10 @@ static int resp_requests(struct scsi_cmnd *scp,
- 	return fill_from_dev_buffer(scp, arr, len);
- }
- 
--static int resp_start_stop(struct scsi_cmnd *scp,
--			   struct sdebug_dev_info *devip)
-+static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- {
- 	unsigned char *cmd = scp->cmnd;
--	int power_cond, stop;
-+	int power_cond, want_stop, stopped_state;
- 	bool changing;
- 
- 	power_cond = (cmd[4] & 0xf0) >> 4;
-@@ -1786,10 +1788,33 @@ static int resp_start_stop(struct scsi_cmnd *scp,
- 		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 7);
- 		return check_condition_result;
- 	}
--	stop = !(cmd[4] & 1);
--	changing = atomic_read(&devip->stopped) == !stop;
--	atomic_xchg(&devip->stopped, stop);
--	if (!changing || cmd[1] & 0x1)  /* state unchanged or IMMED set */
-+	want_stop = !(cmd[4] & 1);
-+	stopped_state = atomic_read(&devip->stopped);
-+	if (stopped_state == 2) {
-+		ktime_t now_ts = ktime_get_boottime();
-+
-+		if (ktime_to_ns(now_ts) > ktime_to_ns(devip->create_ts)) {
-+			u64 diff_ns = ktime_to_ns(ktime_sub(now_ts, devip->create_ts));
-+
-+			if (diff_ns >= ((u64)sdeb_tur_ms_to_ready * 1000000)) {
-+				/* tur_ms_to_ready timer extinguished */
-+				atomic_set(&devip->stopped, 0);
-+				stopped_state = 0;
-+			}
-+		}
-+		if (stopped_state == 2) {
-+			if (want_stop) {
-+				stopped_state = 1;	/* dummy up success */
-+			} else {	/* Disallow tur_ms_to_ready delay to be overridden */
-+				mk_sense_invalid_fld(scp, SDEB_IN_CDB, 4, 0 /* START bit */);
-+				return check_condition_result;
-+			}
-+		}
-+	}
-+	changing = (stopped_state != want_stop);
-+	if (changing)
-+		atomic_xchg(&devip->stopped, want_stop);
-+	if (!changing || (cmd[1] & 0x1))  /* state unchanged or IMMED bit set in cdb */
- 		return SDEG_RES_IMMED_MASK;
- 	else
- 		return 0;
-@@ -4018,7 +4043,7 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
- 		return check_condition_result;
- 	}
--	if (!write_since_sync || cmd[1] & 0x2)
-+	if (!write_since_sync || (cmd[1] & 0x2))
- 		res = SDEG_RES_IMMED_MASK;
- 	else		/* delay if write_since_sync and IMMED clear */
- 		write_since_sync = false;
-@@ -4894,6 +4919,8 @@ static struct sdebug_dev_info *sdebug_device_create(
- 			devip->zmodel = BLK_ZONED_NONE;
- 		}
- 		devip->sdbg_host = sdbg_host;
-+		devip->create_ts = ktime_get_boottime();
-+		atomic_set(&devip->stopped, (sdeb_tur_ms_to_ready > 0 ? 2 : 0));
- 		list_add_tail(&devip->dev_list, &sdbg_host->dev_info_list);
- 	}
- 	return devip;
-@@ -5568,6 +5595,7 @@ module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
- module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
- module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
- module_param_named(submit_queues, submit_queues, int, S_IRUGO);
-+module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
- module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
- module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
- module_param_named(unmap_max_blocks, sdebug_unmap_max_blocks, int, S_IRUGO);
-@@ -5634,6 +5662,7 @@ MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
- MODULE_PARM_DESC(statistics, "collect statistics on commands, queues (def=0)");
- MODULE_PARM_DESC(strict, "stricter checks: reserved field in cdb (def=0)");
- MODULE_PARM_DESC(submit_queues, "support for block multi-queue (def=1)");
-+MODULE_PARM_DESC(tur_ms_to_ready, "TEST UNIT READY millisecs before initial good status (def=0)");
- MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
- MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=1)");
- MODULE_PARM_DESC(unmap_max_blocks, "max # of blocks can be unmapped in one cmd (def=0xffffffff)");
-@@ -6460,6 +6489,12 @@ static ssize_t zbc_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(zbc);
- 
-+static ssize_t tur_ms_to_ready_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", sdeb_tur_ms_to_ready);
-+}
-+static DRIVER_ATTR_RO(tur_ms_to_ready);
-+
- /* Note: The following array creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -6501,6 +6536,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_strict.attr,
- 	&driver_attr_uuid_ctl.attr,
- 	&driver_attr_cdb_len.attr,
-+	&driver_attr_tur_ms_to_ready.attr,
- 	&driver_attr_zbc.attr,
- 	NULL,
- };
-@@ -7017,6 +7053,49 @@ static bool fake_timeout(struct scsi_cmnd *scp)
- 	return false;
- }
- 
-+/* Response to TUR or media access command when device stopped */
-+static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-+{
-+	int stopped_state;
-+	u64 diff_ns = 0;
-+	ktime_t now_ts = ktime_get_boottime();
-+	struct scsi_device *sdp = scp->device;
-+
-+	stopped_state = atomic_read(&devip->stopped);
-+	if (stopped_state == 2) {
-+		if (ktime_to_ns(now_ts) > ktime_to_ns(devip->create_ts)) {
-+			diff_ns = ktime_to_ns(ktime_sub(now_ts, devip->create_ts));
-+			if (diff_ns >= ((u64)sdeb_tur_ms_to_ready * 1000000)) {
-+				/* tur_ms_to_ready timer extinguished */
-+				atomic_set(&devip->stopped, 0);
-+				return 0;
-+			}
-+		}
-+		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x1);
-+		if (sdebug_verbose)
-+			sdev_printk(KERN_INFO, sdp,
-+				    "%s: Not ready: in process of becoming ready\n", my_name);
-+		if (scp->cmnd[0] == TEST_UNIT_READY) {
-+			u64 tur_nanosecs_to_ready = (u64)sdeb_tur_ms_to_ready * 1000000;
-+
-+			if (diff_ns <= tur_nanosecs_to_ready)
-+				diff_ns = tur_nanosecs_to_ready - diff_ns;
-+			else
-+				diff_ns = tur_nanosecs_to_ready;
-+			/* As per 20-061r2 approved for spc6 by T10 on 20200716 */
-+			do_div(diff_ns, 1000000);	/* diff_ns becomes milliseconds */
-+			scsi_set_sense_information(scp->sense_buffer, SCSI_SENSE_BUFFERSIZE,
-+						   diff_ns);
-+			return check_condition_result;
-+		}
-+	}
-+	mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
-+	if (sdebug_verbose)
-+		sdev_printk(KERN_INFO, sdp, "%s: Not ready: initializing command required\n",
-+			    my_name);
-+	return check_condition_result;
-+}
-+
- static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 				   struct scsi_cmnd *scp)
- {
-@@ -7141,14 +7220,11 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
- 		if (errsts)
- 			goto check_cond;
- 	}
--	if (unlikely((F_M_ACCESS & flags) && atomic_read(&devip->stopped))) {
--		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
--		if (sdebug_verbose)
--			sdev_printk(KERN_INFO, sdp, "%s reports: Not ready: "
--				    "%s\n", my_name, "initializing command "
--				    "required");
--		errsts = check_condition_result;
--		goto fini;
-+	if (unlikely(((F_M_ACCESS & flags) || scp->cmnd[0] == TEST_UNIT_READY) &&
-+		     atomic_read(&devip->stopped))) {
-+		errsts = resp_not_ready(scp, devip);
-+		if (errsts)
-+			goto fini;
- 	}
- 	if (sdebug_fake_rw && (F_FAKE_RW & flags))
- 		goto fini;
 -- 
-2.25.1
-
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
