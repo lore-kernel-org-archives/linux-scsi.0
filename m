@@ -1,163 +1,110 @@
-Return-Path: <SRS0=JunS=BC=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=9S6W=BD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D75C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 19:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C29ACC433E4
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 02:47:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E0152065F
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jul 2020 19:48:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1CBF20714
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 02:47:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gnuebQSg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726010AbgGWTsY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jul 2020 15:48:24 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:52944 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725894AbgGWTsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Jul 2020 15:48:24 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 537B920418F;
-        Thu, 23 Jul 2020 21:48:22 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id noWfMkg0ODmR; Thu, 23 Jul 2020 21:48:22 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (vpn.infotech.no [82.134.31.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 63AE6204164;
-        Thu, 23 Jul 2020 21:48:21 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH] scsi_debug: fix request sense
-Date:   Thu, 23 Jul 2020 15:48:19 -0400
-Message-Id: <20200723194819.545573-1-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
+        id S1726726AbgGXCrb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jul 2020 22:47:31 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:30121 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726381AbgGXCrb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jul 2020 22:47:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595558849;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=CzMPykDfok16xigTP1nHT3zsso91EXAM32oQ8gcfF5I=;
+        b=gnuebQSgG6CCQlcGuiCeML8IvQYFEb61rEl+ByfnLxsPwNjnwOlY3wxqpKBsnaabJGywMh
+        7UfVQKXXL0Vqnxd9P3jJHI577DLcWgXZO9RE7HH+NVMyUF3mvNs7I/kiThmHRwjQpy4M9I
+        dZNW0q6dwGrawz51aI3BUE+h67VlBXY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-33-g6IrjqCMO_K7UztKXG9DBg-1; Thu, 23 Jul 2020 22:47:24 -0400
+X-MC-Unique: g6IrjqCMO_K7UztKXG9DBg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9BCD7100AA24;
+        Fri, 24 Jul 2020 02:47:21 +0000 (UTC)
+Received: from T590 (ovpn-13-27.pek2.redhat.com [10.72.13.27])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F118279310;
+        Fri, 24 Jul 2020 02:47:08 +0000 (UTC)
+Date:   Fri, 24 Jul 2020 10:47:04 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
+Message-ID: <20200724024704.GB957464@T590>
+References: <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
+ <e69dc243174664efd414a4cd0176e59d@mail.gmail.com>
+ <20200721011323.GA833377@T590>
+ <c71bbdf2607a8183926430b5f4aa1ae1@mail.gmail.com>
+ <20200722041201.GA912316@T590>
+ <f6f05483491c391ce79486b8fb78cb2e@mail.gmail.com>
+ <20200722080409.GB912316@T590>
+ <fe7a7acf-d62b-d541-4203-29c1d0403c2a@huawei.com>
+ <20200723140758.GA957464@T590>
+ <f4a896a3-756e-68bb-7700-cab1e5523c81@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f4a896a3-756e-68bb-7700-cab1e5523c81@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI REQUEST SENSE command emulation was found to be broken.
-It is a quite complex command so try and make it do a subset of
-what it should do. Remove the attempt to mimic SCSI-1 REQUEST
-SENSE (i.e. return the sense data for the previous failed
-command). Add some reporting of "pollable" sense data [see
-spc6r02: 5.12.2]. Keep the IEC mode page MRIE=6 TEST=1
-predictive failure reporting.
+On Thu, Jul 23, 2020 at 06:29:01PM +0100, John Garry wrote:
+> > > As I see, since megaraid will have 1:1 mapping of CPU to hw queue, will
+> > > there only ever possibly a single bit set in ctx_map? If so, it seems a
+> > > waste to always check every sbitmap map. But adding logic for this may
+> > > negate any possible gains.
+> > 
+> > It really depends on min and max cpu id in the map, then sbitmap
+> > depth can be reduced to (max - min + 1). I'd suggest to double check that
+> > cost of sbitmap_any_bit_set() really matters.
+> 
+> Hi Ming,
+> 
+> I'm not sure that reducing the search range would help much, as we still
+> need to load some indexes of map[], and at best this may be reduced from 2/3
+> -> 1 elements, depending on nr_cpus.
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 64 ++++++++++++++++++---------------------
- 1 file changed, 29 insertions(+), 35 deletions(-)
+I believe you misunderstood my idea, and you have to think it from implementation
+viewpoint.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 50b29b898db8..074d58dc8b5c 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -1713,68 +1713,62 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	return ret;
- }
- 
-+/* See resp_iec_m_pg() for how this data is manipulated */
- static unsigned char iec_m_pg[] = {0x1c, 0xa, 0x08, 0, 0, 0, 0, 0,
- 				   0, 0, 0x0, 0x0};
- 
- static int resp_requests(struct scsi_cmnd *scp,
- 			 struct sdebug_dev_info *devip)
- {
--	unsigned char *sbuff;
- 	unsigned char *cmd = scp->cmnd;
--	unsigned char arr[SCSI_SENSE_BUFFERSIZE];
--	bool dsense;
-+	unsigned char arr[SCSI_SENSE_BUFFERSIZE];	/* assume >= 18 bytes */
-+	bool dsense = !!(cmd[1] & 1);
-+	int alloc_len = cmd[4];
- 	int len = 18;
-+	int stopped_state = atomic_read(&devip->stopped);
- 
- 	memset(arr, 0, sizeof(arr));
--	dsense = !!(cmd[1] & 1);
--	sbuff = scp->sense_buffer;
--	if ((iec_m_pg[2] & 0x4) && (6 == (iec_m_pg[3] & 0xf))) {
-+	if (stopped_state > 0) {	/* some "pollable" data [spc6r02: 5.12.2] */
-+		if (dsense) {
-+			arr[0] = 0x72;
-+			arr[1] = NOT_READY;
-+			arr[2] = LOGICAL_UNIT_NOT_READY;
-+			arr[3] = (stopped_state == 2) ? 0x1 : 0x2;
-+			len = 8;
-+		} else {
-+			arr[0] = 0x70;
-+			arr[2] = NOT_READY;		/* NO_SENSE in sense_key */
-+			arr[7] = 0xa;			/* 18 byte sense buffer */
-+			arr[12] = LOGICAL_UNIT_NOT_READY;
-+			arr[13] = (stopped_state == 2) ? 0x1 : 0x2;
-+		}
-+	} else if ((iec_m_pg[2] & 0x4) && (6 == (iec_m_pg[3] & 0xf))) {
-+		/* Information exceptions control mode page: TEST=1, MRIE=6 */
- 		if (dsense) {
- 			arr[0] = 0x72;
- 			arr[1] = 0x0;		/* NO_SENSE in sense_key */
- 			arr[2] = THRESHOLD_EXCEEDED;
--			arr[3] = 0xff;		/* TEST set and MRIE==6 */
-+			arr[3] = 0xff;		/* Failure prediction(false) */
- 			len = 8;
- 		} else {
- 			arr[0] = 0x70;
- 			arr[2] = 0x0;		/* NO_SENSE in sense_key */
- 			arr[7] = 0xa;   	/* 18 byte sense buffer */
- 			arr[12] = THRESHOLD_EXCEEDED;
--			arr[13] = 0xff;		/* TEST set and MRIE==6 */
-+			arr[13] = 0xff;		/* Failure prediction(false) */
- 		}
--	} else {
--		memcpy(arr, sbuff, SCSI_SENSE_BUFFERSIZE);
--		if (arr[0] >= 0x70 && dsense == sdebug_dsense)
--			;	/* have sense and formats match */
--		else if (arr[0] <= 0x70) {
--			if (dsense) {
--				memset(arr, 0, 8);
--				arr[0] = 0x72;
--				len = 8;
--			} else {
--				memset(arr, 0, 18);
--				arr[0] = 0x70;
--				arr[7] = 0xa;
--			}
--		} else if (dsense) {
--			memset(arr, 0, 8);
--			arr[0] = 0x72;
--			arr[1] = sbuff[2];     /* sense key */
--			arr[2] = sbuff[12];    /* asc */
--			arr[3] = sbuff[13];    /* ascq */
-+	} else {	/* nothing to report */
-+		if (dsense) {
- 			len = 8;
-+			memset(arr, 0, len);
-+			arr[0] = 0x72;
- 		} else {
--			memset(arr, 0, 18);
-+			memset(arr, 0, len);
- 			arr[0] = 0x70;
--			arr[2] = sbuff[1];
- 			arr[7] = 0xa;
--			arr[12] = sbuff[1];
--			arr[13] = sbuff[3];
- 		}
--
- 	}
--	mk_sense_buffer(scp, 0, NO_ADDITIONAL_SENSE, 0);
--	return fill_from_dev_buffer(scp, arr, len);
-+	return fill_from_dev_buffer(scp, arr, min_t(int, len, alloc_len));
- }
- 
- static int resp_start_stop(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
--- 
-2.25.1
+The only workable way is to store the min cpu id as 'offset' and set the sbitmap
+depth as (max - min + 1), isn't it? Then the actual cpu id can be figured out via
+'offset' + nr_bit. And the whole indexes are just spread on the actual depth. BTW,
+max & min is the max / min cpu id in hctx->cpu_map. So we can improve not only on 1:1,
+and I guess most of MQ cases can benefit from the change, since it shouldn't be usual
+for one ctx_map to cover both 0 & nr_cpu_id - 1.
+
+Meantime, we need to allocate the sbitmap dynamically.
+
+
+Thanks,
+Ming
 
