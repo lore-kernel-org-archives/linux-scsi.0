@@ -1,99 +1,79 @@
-Return-Path: <SRS0=9S6W=BD=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=zQak=BE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE2BBC433E8
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 21:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 260B0C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 01:07:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B6FD2070B
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jul 2020 21:25:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04C622070B
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 01:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726730AbgGXVZK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jul 2020 17:25:10 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:59044 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726411AbgGXVZJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2020 17:25:09 -0400
-IronPort-SDR: iZJxTCb2ZEuI+BCLQYiniDLpqYTB7mc+iBx63L9IwAUNTojlg+ZFyLGrig8CMd+pl9SH2TS1mL
- FKsMqmEjqX5udD0iqSOrwLTOw5J4iLzuhWDuRXk7LuOSyBazl10MEbwYUMoKnT3KEBZaJn/vv5
- RBsCH4hccToPraBnqGfunqQ8+gEbIbMWl+ZZIZl3No28RWRg6BF7KuN+Vz/bCyy73Zz8y/rQmF
- c+HjkE8yj/mjI2W9hb/CecBjEltbwioha/JcD6SRTc5Hh2ytuUdVPq5AynQoLf7OtpJo8bMcZd
- oCA=
+        id S1726841AbgGYBHl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jul 2020 21:07:41 -0400
+Received: from mga11.intel.com ([192.55.52.93]:56027 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726701AbgGYBHl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jul 2020 21:07:41 -0400
+IronPort-SDR: 0RuhHarvhRq/lhzfIWMC57ag0gjYLUwu+pLdkrF2WapXR6eJPl4ILTaDOq4CU+mb8bxxRGGvhe
+ LreK8BuYtx1w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9692"; a="148710764"
 X-IronPort-AV: E=Sophos;i="5.75,392,1589266800"; 
-   d="scan'208";a="83218266"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 Jul 2020 14:25:09 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 24 Jul 2020 14:25:08 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
- (10.10.85.151) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Fri, 24 Jul 2020 14:25:08 -0700
-Subject: [PATCH] hpsa: correct ctrl queue depth
-From:   Don Brace <don.brace@microsemi.com>
-To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
-        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
-        <bader.alisaleh@microchip.com>, <gerry.morong@microchip.com>,
-        <mahesh.rajashekhara@microchip.com>, <hch@infradead.org>,
-        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
-        <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 24 Jul 2020 16:25:08 -0500
-Message-ID: <159562590819.17915.12766718094041027754.stgit@brunhilda>
-User-Agent: StGit/0.23-dirty
+   d="scan'208";a="148710764"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2020 18:07:40 -0700
+IronPort-SDR: RTMVBkwE67+RVtcBG2WdGoC8MsYYoHoDsmV8A3T3ZD8gDp/Vu8+g1QiypZjE9PndVTWCujQxEw
+ f6CCqhLL+Ljg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,392,1589266800"; 
+   d="scan'208";a="285098476"
+Received: from lkp-server01.sh.intel.com (HELO df0563f96c37) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 24 Jul 2020 18:07:38 -0700
+Received: from kbuild by df0563f96c37 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1jz8f3-0000fe-S0; Sat, 25 Jul 2020 01:07:37 +0000
+Date:   Sat, 25 Jul 2020 09:07:02 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Tony Asleson <tasleson@redhat.com>, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        b.zolnierkie@samsung.com, axboe@kernel.dk
+Cc:     kbuild-all@lists.01.org
+Subject: [RFC PATCH] libata: ata_scsi_durable_name() can be static
+Message-ID: <20200725010702.GA6833@e0d222d6d31e>
+References: <20200724171706.1550403-7-tasleson@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200724171706.1550403-7-tasleson@redhat.com>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- - need to set queue depth for controller devices.
- - corrects compiler warning in patch:
-   hpsa-increase-ctlr-eh-timeout
 
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+Signed-off-by: kernel test robot <lkp@intel.com>
 ---
- drivers/scsi/hpsa.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ libata-scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 90c36d75bf92..91794a50b31f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2145,20 +2145,21 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index ec1f6e406ceb2..32bd2426ca4f5 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1091,7 +1091,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 	return 0;
+ }
  
- 	if (sd) {
- 		sd->was_removed = 0;
-+		queue_depth = sd->queue_depth != 0 ?
-+				sd->queue_depth : sdev->host->can_queue;
- 		if (sd->external) {
- 			queue_depth = EXTERNAL_QD;
- 			sdev->eh_timeout = HPSA_EH_PTRAID_TIMEOUT;
- 			blk_queue_rq_timeout(sdev->request_queue,
- 						HPSA_EH_PTRAID_TIMEOUT);
--		} else if (is_hba_lunid(sd->scsi3addr)) {
-+		}
-+		if (is_hba_lunid(sd->scsi3addr)) {
- 			sdev->eh_timeout = CTLR_TIMEOUT;
- 			blk_queue_rq_timeout(sdev->request_queue, CTLR_TIMEOUT);
--		} else {
--			queue_depth = sd->queue_depth != 0 ?
--					sd->queue_depth : sdev->host->can_queue;
- 		}
--	} else
-+	} else {
- 		queue_depth = sdev->host->can_queue;
-+	}
+-int ata_scsi_durable_name(const struct device *dev, char *buf, size_t len)
++static int ata_scsi_durable_name(const struct device *dev, char *buf, size_t len)
+ {
+ 	struct ata_device *ata_dev = container_of(dev, struct ata_device, tdev);
  
- 	scsi_change_queue_depth(sdev, queue_depth);
- 
-
