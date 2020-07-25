@@ -2,226 +2,165 @@ Return-Path: <SRS0=zQak=BE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A6AC433DF
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 02:58:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD7DC433E1
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 03:10:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23AE6206EB
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 02:58:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77D5F2070E
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 03:10:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jvnjhRSl"
+	dkim=pass (2048-bit key) header.d=gapp-nthu-edu-tw.20150623.gappssmtp.com header.i=@gapp-nthu-edu-tw.20150623.gappssmtp.com header.b="uSMKiSqQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726643AbgGYC6d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jul 2020 22:58:33 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:60500 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726572AbgGYC6d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2020 22:58:33 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06P2wUNB064659;
-        Sat, 25 Jul 2020 02:58:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=xj/8F4x/iEzJT9D158eIp0s9RyEpFQjy84gxVqz6rDk=;
- b=jvnjhRSl9vR/LySeDuBkCGMcO+9+sz6f3nqSnq+ld7XfBU5jMFUOFmPG4FkwFwuZcNkq
- C5kioWnOjDiGpkw8Y5DcFxGU007XTeFrWV49+erAsPcCo2tsnDt72oHIrzCzUzBPzsd6
- eTztXatP9fYvJkZ9qCR4Se5tZMBOx8ETMpzZyQeHXWiR/Hn9lcYDkXs5WiRKXOwTBF1o
- RzvQ3GO2+qpZEzsQMTwOkaIvATMC9VYeMzhXuGzZM129dqyhwmKBoP8tw8z20VtLoiM6
- Q2AvieauPKOdT+rwJ7GtggIbQa1eNAxV8LKAcRR6W46TVkE8tO88Ubq9J/21SIKYBZII IQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 32bs1n1v6m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 25 Jul 2020 02:58:29 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06P2rB3W031953;
-        Sat, 25 Jul 2020 02:58:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 32g9uu7a4d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 25 Jul 2020 02:58:29 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06P2wSRt006780;
-        Sat, 25 Jul 2020 02:58:28 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 25 Jul 2020 02:58:28 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Lee Jones <lee.jones@linaro.org>, jejb@linux.ibm.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 00/40] Set 5: Penultimate set of SCSI related W=1 warnings
-Date:   Fri, 24 Jul 2020 22:58:27 -0400
-Message-Id: <159564578046.20494.3980136879548068325.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200723122446.1329773-1-lee.jones@linaro.org>
-References: <20200723122446.1329773-1-lee.jones@linaro.org>
+        id S1726592AbgGYDKX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jul 2020 23:10:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52864 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726572AbgGYDKW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jul 2020 23:10:22 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86B66C0619D3
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2020 20:10:22 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id e8so6435493pgc.5
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2020 20:10:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gapp-nthu-edu-tw.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=NtJvGAFAv7OtdJZPqygN758uG41MdXEaE+G2Ed35ZD8=;
+        b=uSMKiSqQWzxOnVBO5CJKg4OSRpSBTpWNZYUJPreWSjcK3ceDIfJv70VpMxCa+rTON2
+         MZatWln+JvwEiZlG/6bmR5Rl12RsXs0ez4u1HMsKt3YRjgDfU9h2v3/cmOvRpBuuZ8O3
+         ZiqDW14h66eR6UuIUQLDPYjNpHP4c1IXNb7dpf4Aee+7mzVdxF3Q6oHcuQp1Wz+aAndW
+         f2YgWTHQHLJJL+IjaZuDNDSzkX7eKAdciJ1Ar7j3fb7dW/EmLErwI9nsp8nEE/fsMLI8
+         X66w/Lsk442hdBxyjlZtgfcNfLGcYMuvRiBeKz//C0lqjoP5FUkUTwd07ZeCYQAj+Gv0
+         ba1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=NtJvGAFAv7OtdJZPqygN758uG41MdXEaE+G2Ed35ZD8=;
+        b=TeyU79bZvXRKsepNv7sH0zY0RU6PS51QIgZyHpsUm/jGUy2zhQUrQPgoDD6+P7330D
+         hOoErjEVVoe0emODeAUlbq+sCzNwLCseXNRla+vFF3zT3sgRTBAy+63l1/nYpkwIxIsB
+         flK5WCBN3pXoYde8oGFbppBKgWhnqFXlCVtDa1/9jOA1W3AThV5tah7oZftyO49OBTrC
+         q9VMuYGi7jAmxWrWTHyUXJr3AjpZlvuiGFJAxbwEUKOE6meyS91F/0qLaGfPheAQat6L
+         UQb0nFnaA4KFqUjQF2MBNsd57Ery+pghnOoPulGMsiJvHiHhNHWYQmx4wVJLmMQpJ9zQ
+         jXlg==
+X-Gm-Message-State: AOAM5325IImZODKCuNGb2cE4VDKIC98m6B6l8RuUMeHObA413x0swzv3
+        umagTriXA/77BuJn+qiNnwFm8f6xDva76jY3+fDzXA==
+X-Google-Smtp-Source: ABdhPJzn6qIJWefh+34jgoJwl+XENAdpIFsJrAsdskoOXaAGhVG6PXdQyMNEbv1xM9zPORsm14KArwlCSArJakqT5hw=
+X-Received: by 2002:a62:ce83:: with SMTP id y125mr11053990pfg.181.1595646621877;
+ Fri, 24 Jul 2020 20:10:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9692 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
- adultscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007250021
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9692 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0 adultscore=0
- lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
- spamscore=0 mlxscore=0 impostorscore=0 phishscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007250021
+References: <CGME20200717074740epcas2p2b1c8e7bf7dc28f13c5a9999373f4601b@epcas2p2.samsung.com>
+ <1594971576-40264-1-git-send-email-sh425.lee@samsung.com> <6ac05df5-71ff-e71d-a4df-94118f67caf1@acm.org>
+ <1595409255.27178.17.camel@mtkswgap22> <893ed1a8-504f-ae87-f5e4-4c1dbc3607a7@acm.org>
+In-Reply-To: <893ed1a8-504f-ae87-f5e4-4c1dbc3607a7@acm.org>
+From:   Stanley Chu <chu.stanley@gapp.nthu.edu.tw>
+Date:   Sat, 25 Jul 2020 11:10:10 +0800
+Message-ID: <CAOBeenaq0V3X_JCCceduVYe7gGAq7V0VOW05hHhNyaMwsO+e6A@mail.gmail.com>
+Subject: Re: [RESEND RFC PATCH v1] scsi: ufs: add retries for SSU
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Lee Sang Hyun <sh425.lee@samsung.com>,
+        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        Kiwoong Kim <kwmad.kim@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 23 Jul 2020 13:24:06 +0100, Lee Jones wrote:
+Hi Bart,
 
-> This set is part of a larger effort attempting to clean-up W=1
-> kernel builds, which are currently overwhelmingly riddled with
-> niggly little warnings.
-> 
-> Hopefully this is the penultimate set.
-> 
-> Lee Jones (40):
->   scsi: lpfc: lpfc_els: Fix some function parameter descriptions
->   scsi: lpfc: lpfc_hbadisc: Fix kerneldoc parameter
->     formatting/misnaming/missing issues
->   scsi: ufs: ufs-qcom: Demote nonconformant kerneldoc headers
->   scsi: bnx2i: bnx2i_init: Fix parameter misnaming in function header
->   scsi: ufs: ufs-exynos: Make stubs 'static inline'
->   scsi: ufs: ufs-exynos: Demote seemingly unintentional kerneldoc header
->   scsi: bfa: bfa_port: Staticify local functions
->   scsi: bnx2i: bnx2i_sysfs: Add missing descriptions for 'attr'
->     parameter
->   scsi: bfa: bfa_fcpim: Remove set but unused variable 'rp'
->   scsi: bfa: bfa_fcpim: Demote seemingly unintentional kerneldoc header
->   scsi: qedi: qedi_main: Remove 2 set but unused variables
->   scsi: ips: Remove some set but unused variables
->   scsi: ips: Convert strnlen() to memcpy() since result should not be
->     NUL terminated
->   scsi: qla4xxx: ql4_83xx: Remove set but unused variable 'status'
->   scsi: lpfc: lpfc_init: Use __printf() format notation
->   scsi: lpfc: lpfc_init: Add and rename a whole bunch of function
->     parameter descriptions
->   scsi: qla4xxx: ql4_bsg: Rename function parameter descriptions
->   scsi: lpfc: lpfc_mbox: Fix a bunch of kerneldoc misdemeanours
->   scsi: lpfc: lpfc_nportdisc: Add description for lpfc_release_rpi()'s
->     'ndlpl param
->   scsi: bfa: bfa_ioc: Remove a few unused variables 'pgoff' and 't'
->   scsi: csiostor: csio_hw: Mark known unused variable as __always_unused
->   scsi: csiostor: csio_hw_t5: Remove 2 unused variables
->     {mc,edc}_bist_status_rdata_reg
->   scsi: bfa: bfa_ioc: Staticify non-external functions
->   scsi: csiostor: csio_rnode: Add missing description for
->     csio_rnode_fwevt_handler()'s 'fwevt' param
->   scsi: bfa: bfa_ioc_ct: Demote non-compliant kerneldoc headers to
->     standard comments
->   scsi: mvsas: mv_init: Place 'core_nr' inside correct clause
->   scsi: bfa: bfa_fcs_rport: Remove unused variable 'adisc'
->   scsi: bnx2i: bnx2i_hwi: Fix a whole host of kerneldoc issues
->   scsi: bnx2i: bnx2i_iscsi: Add, remove and edit some function parameter
->     descriptions
->   scsi: be2iscsi: be_iscsi: Correct misdocumentation of function param
->     'ep'
->   scsi: qedi: qedi_fw: Remove set but unused variable 'tmp'
->   scsi: esas2r: esas2r: Add braces around the one-line if()
->   scsi: bfa: bfa_ioc: Demote non-kerneldoc headers down to standard
->     comment blocks
->   scsi: bfa: bfa_core: Demote seemingly unintentional kerneldoc header
->   scsi: bfa: bfa_svc: Demote seemingly unintentional kerneldoc header
->   scsi: qedi: qedi_main: Demote seemingly unintentional kerneldoc header
->   scsi: qedi: qedi_iscsi: Staticify non-external function
->     'qedi_get_iscsi_error'
->   scsi: bfa: bfa_ioc: Ensure a blank line precedes next function/header
->   scsi: bnx2i: bnx2i_iscsi: Add parameter description and rename another
->   scsi: esas2r: esas2r_log: Demote a few non-conformant kerneldoc
->     headers
-> 
-> [...]
+Thanks for your suggestions.
 
-Applied to 5.9/scsi-next, thanks!
+Hi Sang Hyun,
 
-[01/40] scsi: lpfc: Fix some function parameter descriptions
-        https://git.kernel.org/mkp/scsi/c/a0e4a64f8650
-[02/40] scsi: lpfc: Fix kerneldoc parameter formatting/misnaming/missing issues
-        https://git.kernel.org/mkp/scsi/c/e415f2a2acd9
-[03/40] scsi: ufs: ufs-qcom: Demote nonconformant kerneldoc headers
-        https://git.kernel.org/mkp/scsi/c/bc5b681614cc
-[04/40] scsi: bnx2i: Fix parameter misnaming in function header
-        https://git.kernel.org/mkp/scsi/c/b4688a7e01e5
-[06/40] scsi: ufs: ufs-exynos: Demote seemingly unintentional kerneldoc header
-        https://git.kernel.org/mkp/scsi/c/b44cc4a40bd6
-[07/40] scsi: bfa: Staticify local functions
-        https://git.kernel.org/mkp/scsi/c/0aaaa04a7a79
-[08/40] scsi: bnx2i: Add missing descriptions for 'attr' parameter
-        https://git.kernel.org/mkp/scsi/c/2ad6e0c339d2
-[09/40] scsi: bfa: Remove set but unused variable 'rp'
-        https://git.kernel.org/mkp/scsi/c/70b4de0bb928
-[10/40] scsi: bfa: Demote seemingly unintentional kerneldoc header
-        https://git.kernel.org/mkp/scsi/c/7106de1d8a75
-[11/40] scsi: qedi: Remove 2 set but unused variables
-        https://git.kernel.org/mkp/scsi/c/e4020e0835ed
-[12/40] scsi: ips: Remove some set but unused variables
-        https://git.kernel.org/mkp/scsi/c/ffe1757e45aa
-[13/40] scsi: ips: Convert strnlen() to memcpy() since result should not be NUL terminated
-        https://git.kernel.org/mkp/scsi/c/00e245655e75
-[14/40] scsi: qla4xxx: Remove set but unused variable 'status'
-        https://git.kernel.org/mkp/scsi/c/6e3f4f68821b
-[15/40] scsi: lpfc: Use __printf() format notation
-        https://git.kernel.org/mkp/scsi/c/7fa03c77cd54
-[16/40] scsi: lpfc: Add and rename a whole bunch of function parameter descriptions
-        https://git.kernel.org/mkp/scsi/c/fe614acd583f
-[17/40] scsi: qla4xxx: Rename function parameter descriptions
-        https://git.kernel.org/mkp/scsi/c/d10d1df6301d
-[18/40] scsi: lpfc: Fix a bunch of kerneldoc misdemeanors
-        https://git.kernel.org/mkp/scsi/c/012d019f5a50
-[19/40] scsi: lpfc: Add description for lpfc_release_rpi()'s 'ndlpl param
-        https://git.kernel.org/mkp/scsi/c/22f8c077411b
-[20/40] scsi: bfa: Remove a few unused variables 'pgoff' and 't'
-        https://git.kernel.org/mkp/scsi/c/c7ccd038b729
-[21/40] scsi: csiostor: Mark known unused variable as __always_unused
-        https://git.kernel.org/mkp/scsi/c/085d46fd2202
-[22/40] scsi: csiostor: Remove 2 unused variables {mc,edc}_bist_status_rdata_reg
-        https://git.kernel.org/mkp/scsi/c/f11106c93fc9
-[23/40] scsi: bfa: Staticify non-external functions
-        https://git.kernel.org/mkp/scsi/c/00025fc7e676
-[24/40] scsi: csiostor: Add missing description for csio_rnode_fwevt_handler()'s 'fwevt' param
-        https://git.kernel.org/mkp/scsi/c/f5816509a2f2
-[25/40] scsi: bfa: Demote non-compliant kerneldoc headers to standard comments
-        https://git.kernel.org/mkp/scsi/c/eaefa33014bf
-[27/40] scsi: bfa: Remove unused variable 'adisc'
-        https://git.kernel.org/mkp/scsi/c/e95fcb77921c
-[28/40] scsi: bnx2i: Fix a whole host of kerneldoc issues
-        https://git.kernel.org/mkp/scsi/c/dd3273c9b10f
-[29/40] scsi: bnx2i: Add, remove and edit some function parameter descriptions
-        https://git.kernel.org/mkp/scsi/c/89c19a8e5ec3
-[30/40] scsi: be2iscsi: Correct misdocumentation of function param 'ep'
-        https://git.kernel.org/mkp/scsi/c/c4b68559edf5
-[31/40] scsi: qedi: Remove set but unused variable 'tmp'
-        https://git.kernel.org/mkp/scsi/c/56d244fe89c9
-[32/40] scsi: esas2r: Add braces around the one-line if()
-        https://git.kernel.org/mkp/scsi/c/e36e0427a46a
-[33/40] scsi: bfa: Demote non-kerneldoc headers down to standard comment blocks
-        https://git.kernel.org/mkp/scsi/c/b1a187f2615a
-[34/40] scsi: bfa: Demote seemingly unintentional kerneldoc header
-        https://git.kernel.org/mkp/scsi/c/310531ffc3c8
-[35/40] scsi: bfa: Demote seemingly unintentional kerneldoc header
-        https://git.kernel.org/mkp/scsi/c/20e73cb1d03c
-[36/40] scsi: qedi: Demote seemingly unintentional kerneldoc header
-        https://git.kernel.org/mkp/scsi/c/3db05fed8b58
-[37/40] scsi: qedi: Staticify non-external function 'qedi_get_iscsi_error'
-        https://git.kernel.org/mkp/scsi/c/010f7c2ab4ad
-[38/40] scsi: bfa: Ensure a blank line precedes next function/header
-        https://git.kernel.org/mkp/scsi/c/64332c13d0d1
-[39/40] scsi: bnx2i: Add parameter description and rename another
-        https://git.kernel.org/mkp/scsi/c/a8b6d0ee6e9e
-[40/40] scsi: esas2r: Demote a few non-conformant kerneldoc headers
-        https://git.kernel.org/mkp/scsi/c/e3903d31826f
+Bart Van Assche <bvanassche@acm.org> =E6=96=BC 2020=E5=B9=B47=E6=9C=8822=E6=
+=97=A5 =E9=80=B1=E4=B8=89 =E4=B8=8B=E5=8D=8811:11=E5=AF=AB=E9=81=93=EF=BC=
+=9A
+>
+> On 2020-07-22 02:14, Stanley Chu wrote:
+> > Hi Bart,
+> >
+> > On Sat, 2020-07-18 at 13:30 -0700, Bart Van Assche wrote:
+> >> On 2020-07-17 00:39, Lee Sang Hyun wrote:
+> >>> -   ret =3D scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+> >>> -                   START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
+> >>> -   if (ret) {
+> >>> -           sdev_printk(KERN_WARNING, sdp,
+> >>> -                       "START_STOP failed for power mode: %d, result=
+ %x\n",
+> >>> -                       pwr_mode, ret);
+> >>> -           if (driver_byte(ret) =3D=3D DRIVER_SENSE)
+> >>> -                   scsi_print_sense_hdr(sdp, NULL, &sshdr);
+> >>> +   for (retries =3D 0; retries < SSU_RETRIES; retries++) {
+> >>> +           ret =3D scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &=
+sshdr,
+> >>> +                           START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
+> >>> +           if (ret) {
+> >>> +                   sdev_printk(KERN_WARNING, sdp,
+> >>> +                               "START_STOP failed for power mode: %d=
+, result %x\n",
+> >>> +                               pwr_mode, ret);
+> >>> +                   if (driver_byte(ret) =3D=3D DRIVER_SENSE)
+> >>> +                           scsi_print_sense_hdr(sdp, NULL, &sshdr);
+> >>> +           } else {
+> >>> +                   break;
+> >>> +           }
+> >>
+> >> The ninth argument of scsi_execute() is called 'retries'. Wouldn't it =
+be
+> >> better to pass a nonzero value as the 'retries' argument of
+> >> scsi_execute() instead of adding a loop around the scsi_execute() call=
+?
+> >
+> > If a SCSI command issued via scsi_execute() encounters "timeout" or
+> > "check condition", scsi_noretry_cmd() will return 1 (true) because
+> > blk_rq_is_passthrough() is true due to REQ_OP_SCSI_IN or REQ_OP_SCSI_OU=
+T
+> > flag was set to this SCSI command by scsi_execute(). Therefore even a
+> > non-zero 'retries' value is assigned while calling scsi_execute(), the
+> > failed command has no chance to be retried since the decision will be
+> > no-retry by scsi_noretry_cmd().
+> >
+> > (Take command timeout as example)
+> > scsi_times_out()->scsi_abort_command()->scmd_eh_abort_handler(), here
+> > scsi_noretry_cmd() returns 1, and then command will be finished (with
+> > error code) without retry.
+> >
+> > In scsi_noretry_cmd(), there is a comment message in section
+> > "check_type" as below
+> >
+> >       /*
+> >        * assume caller has checked sense and determined
+> >        * the check condition was retryable.
+> >        */
+> >
+> > I am not sure if "timeout" and "check condition" cases in such SCSI
+> > commands issued via scsi_execute() are specially designed to be unable
+> > to retry.
+> >
+> > Would you have any suggestions if LLD drivers would like to retry these
+> > kinds of SCSI commands?
+>
+> How about summarizing the above explanation of why the 'retry' argument
+> of scsi_execute() cannot be used in a two or three line comment and to
+> add that comment above the loop introduced by this patch?
+>
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I like this patch since this could also recover the "SSU timeout" case
+we met before.
+Could you please make this as formal patch with Bart's suggestion?
+
+Thanks,
+Stanley Chu
