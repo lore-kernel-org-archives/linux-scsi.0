@@ -2,114 +2,93 @@ Return-Path: <SRS0=zQak=BE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53526C433E3
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 09:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36DDBC433EA
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 10:06:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32AD3206EB
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 09:15:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C323206F6
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 10:06:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u7hXMJL2"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aJhDGStK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726753AbgGYJP0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jul 2020 05:15:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52784 "EHLO
+        id S1726835AbgGYKGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Jul 2020 06:06:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725944AbgGYJP0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2020 05:15:26 -0400
-Received: from mail-lf1-x144.google.com (mail-lf1-x144.google.com [IPv6:2a00:1450:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA81AC0619D3;
-        Sat, 25 Jul 2020 02:15:24 -0700 (PDT)
-Received: by mail-lf1-x144.google.com with SMTP id i80so6436517lfi.13;
-        Sat, 25 Jul 2020 02:15:24 -0700 (PDT)
+        with ESMTP id S1726572AbgGYKGH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2020 06:06:07 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4972C0619D3;
+        Sat, 25 Jul 2020 03:06:07 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id a23so6568231pfk.13;
+        Sat, 25 Jul 2020 03:06:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:references:from:organization:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Q598yg2m0PUlnILub3Vz8jQxuEisjOi7wdvkLAOFFtk=;
-        b=u7hXMJL2rn5tcuPeUfpXEileV3rCUnwOYEeuEvIfutexcbUJOV9o5oBVLDxs8/VEK5
-         SxeHl6TwFfg5pJ8SQRgjCc8/wnc9BPKHqzDR1VX6z4DvpNlOUkN84AOgAqGjJPpUwoTb
-         OqsIkb7RJ55WRASjz9JC4nKDuhtZCtNK38sz2wok8NtFUyeNQTKgJg/hqwiKM5kvE5G4
-         kenjwAuoHuXX3OhIu1pWb6auQkUUulFT/xe6eBE96RVLhAYa6zox3OtoCHo1Lp/Wpijf
-         7UC+ZTHHLdRinIfhaVZ0fSi8/7lgwQfRGC58BfhmqBgBpdaypZCxcENlweABmZvuTXuR
-         YWdg==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=o4MdyPd4FwJNN1L7gfFEaTU+8yhML1lu+0tVhMhnwAM=;
+        b=aJhDGStKtBwZuMIoYYEPl2TtYY3iIaDNK5pYcDOiJXEuKoA3M9qPzGCHTouPjJc6dz
+         KeIOWbQ/AVt1k0YFLE507+uudo/skz4i689nh/DXNCc1zvmNmYkSx3AG4PsS3Ap0q44v
+         wDjfjFul4flugULbHlymMuj13fzvDUqP1GGWMG0QSAu8FHbM0tnLj9HLL+/JIVYyivQh
+         lajhcnIETPjIuXD09f4BH+kUF1lgcL5UD3bhpCAWu3D0GBV0GOFaB3Sg/Z1u0M5Pxmzh
+         ATJYZE2cqplWfN3mRuokAQr+VS3qVzJ1PwpZzAULSG0j+rxhEhVJqDR1OjzPzGwKREuh
+         AV2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=Q598yg2m0PUlnILub3Vz8jQxuEisjOi7wdvkLAOFFtk=;
-        b=FSO+ulog95U78l0JyEjj8pLjzHh1iBe9sps1aRfVXK29rX5f4N0ROqrfoW7DkfmKDc
-         J5cifyw72aZ7OaMTInviPJ4pp4JQv+pj7a31EPlRgYfpaYVXKRzkOSCjEzmsORIncOub
-         xvHSH8coKi7cP38yQYs8mHqCQGOy50s3SyVrYdHcbFIs+UlT8lCDBONSwHxKdLhctNjQ
-         QW7UWwhuXrQdyRJ/M8XqbodE0UwLlsb7CeB8GCvD2g/gJuOZR5VTAm19sUNRvWZ/zADd
-         gwq8iTQIXhl8mYQt12Y+ldhY5An67oP46aTHqGIcu34yZuiCWru0+IZg+k7LW2brMED/
-         GWDQ==
-X-Gm-Message-State: AOAM531V4sg6NS1sR4ZE9bmVYvZVdBtdeWgjUrC0HtrfYng9GjyZ6YOL
-        ssJkRMh+9CraQLqC5t1IJI8=
-X-Google-Smtp-Source: ABdhPJzSI02+zXkdOzdwxAcWJhjfCwCp9rYtujf5W6t7k/cbJLjFAwQkI1LCmU7RPD8NiMC64aRwpg==
-X-Received: by 2002:a05:6512:3195:: with SMTP id i21mr7175297lfe.131.1595668523342;
-        Sat, 25 Jul 2020 02:15:23 -0700 (PDT)
-Received: from ?IPv6:2a00:1fa0:253:4416:cc94:657b:2972:b01d? ([2a00:1fa0:253:4416:cc94:657b:2972:b01d])
-        by smtp.gmail.com with ESMTPSA id r16sm875637ljn.42.2020.07.25.02.15.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jul 2020 02:15:22 -0700 (PDT)
-Subject: Re: [v4 10/11] print_req_error: Use durable_name_printk_ratelimited
-To:     Tony Asleson <tasleson@redhat.com>, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        b.zolnierkie@samsung.com, axboe@kernel.dk
-References: <20200724171706.1550403-1-tasleson@redhat.com>
- <20200724171706.1550403-11-tasleson@redhat.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Organization: Brain-dead Software
-Message-ID: <7b9b1f8a-2438-2c15-df93-a1e3a57269ac@gmail.com>
-Date:   Sat, 25 Jul 2020 12:15:20 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=o4MdyPd4FwJNN1L7gfFEaTU+8yhML1lu+0tVhMhnwAM=;
+        b=OhzUN6dRzyFs6kwyseAOxn7wWPGwVNzn4EHIUMslphsT3Ff9wL0Fu/sqQ42TSzCUz8
+         s7zZ8sadrHK8iGpR4Id3GwK8xxz1TTukWviJlH2Si8dQLJt2aersEsFrdwRTMkwq+Zjy
+         V9y+IKSa4plasY4BJ3s5arXFZeA4ukpzSKdCMYKohd0fYjNe/2on2OpWjugHOtSZzPvr
+         HfexZrA9gyuqjGQf0BFm6FJNt2BXzBveQhiOkW8R4+u4B2G/UvJn2PJ3w/OWHiqvaUan
+         60CIU+E82dK4CnYmdomAZTuXrfqVRMfkOu9uRoyGXDlLINECo6mL444r6hd4PNVtmk7p
+         T5gw==
+X-Gm-Message-State: AOAM533k6hTP8y96rSfTcIXQQmo0lDL572jjbSR6/O1MCR7eSRcl1+hZ
+        4wjJ8/lxTtJIW0Tyn8Ejlz9mPdkU2WW55dAZqVdb60Sg
+X-Google-Smtp-Source: ABdhPJxxR8K10M6/03HrPBRxVKahwHeFZirVdQwi0NTxs8aZflSh+JYyO6WFwsatB9YsjaAFdxcYLSfUrtgxyIvCcBQ=
+X-Received: by 2002:a62:8ccb:: with SMTP id m194mr12804651pfd.36.1595671567294;
+ Sat, 25 Jul 2020 03:06:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200724171706.1550403-11-tasleson@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20200724171706.1550403-1-tasleson@redhat.com> <20200724171706.1550403-4-tasleson@redhat.com>
+In-Reply-To: <20200724171706.1550403-4-tasleson@redhat.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Sat, 25 Jul 2020 13:05:51 +0300
+Message-ID: <CAHp75VcwDhHmLbOO2WKkShNYAdLawLx6A5O-4newkCe4XEb3LQ@mail.gmail.com>
+Subject: Re: [v4 03/11] dev_vprintk_emit: Increase hdr size
+To:     Tony Asleson <tasleson@redhat.com>
+Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24.07.2020 20:17, Tony Asleson wrote:
+On Fri, Jul 24, 2020 at 8:19 PM Tony Asleson <tasleson@redhat.com> wrote:
+>
+> With the addition of the device persistent id we have the possibility
+> of adding 154 more bytes to the hdr.  Thus if we assume the previous
+> size of 128 was sufficent we can simply add the 2 amounts and round
 
-> Replace printk_ratelimited with one that adds the key/value
-> durable name to log entry.
-> 
-> Signed-off-by: Tony Asleson <tasleson@redhat.com>
-> ---
->   block/blk-core.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 9bfaee050c82..a1f35e3e21d8 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -213,12 +213,15 @@ EXPORT_SYMBOL_GPL(blk_status_to_errno);
->   static void print_req_error(struct request *req, blk_status_t status,
->   		const char *caller)
->   {
-> +	struct device *dev;
->   	int idx = (__force int)status;
->   
->   	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(blk_errors)))
->   		return;
->   
-> -	printk_ratelimited(KERN_ERR
-> +	dev = (req->rq_disk) ? disk_to_dev(req->rq_disk) : NULL;
+sufficient
 
-    The 1st () not necessary, here iand in the next patch...
+> up.
 
-[...]
+...
 
-MBR, Sergei
+> -       char hdr[128];
+> +       char hdr[288];
+
+This is quite a drastic change for the stack.
+Can you refactor to avoid this?
+
+-- 
+With Best Regards,
+Andy Shevchenko
