@@ -2,108 +2,202 @@ Return-Path: <SRS0=zfIH=BF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC8B0C433E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jul 2020 02:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9816C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jul 2020 05:18:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B90D220700
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jul 2020 02:59:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81AEC2076A
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jul 2020 05:18:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eCLS4l25"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YG/I6oCL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727861AbgGZC7F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jul 2020 22:59:05 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:35294 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727803AbgGZC7E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2020 22:59:04 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06Q2x0DM118836;
-        Sun, 26 Jul 2020 02:59:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+        id S1725903AbgGZFSd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Jul 2020 01:18:33 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50988 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725747AbgGZFSc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jul 2020 01:18:32 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06Q5C6WM014638;
+        Sun, 26 Jul 2020 05:18:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=c/0r16exnF4ozU15nfo9XpSx9mGupj9h4yEiGvAZM/Q=;
- b=eCLS4l25FgOtAzibPLi8in9mfgV+vPj53u7AiRJfeiNbv55D+qCcOoqQ+/njlaY5jDEz
- 7Y3X1gxvGQbAY2fy2FCOtHyccT71/y7RGWFLtkSHH2BZ2pW2/FR7kqhc11uNuTc7WAtx
- 0vWhdEqkKfeZsYRkm32NQ7vP4GcdHCNT3W5qmj/2Tew5uByKKJbqz/L7xs0vl2RSSM+d
- zpZ62WyuASgAMroYCfrsydf1YXqN5h+TQ1G/je9kezS5DGIol6vEtEFYVMJMqZv55Sem
- S+jqgXaF60g5nsKHWw8EAVho7TyXbgivY/jSLuaLeW7WB7+xTSitmZ20crN/2GxXF7Mt cA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 32gx4rr70s-1
+ bh=QktKNy7p43bAgE7dQ3QXhm+togrKjiXOhqm7RUv5MUI=;
+ b=YG/I6oCLt4jvGrbHt7h19sL2d5AzscXqnZ6nPD8OSdPOLxlUg37B3aYJmrm1Z9mbcNGJ
+ YhLFC1MqLnWbVSk0HClV5cL0lQt3qxF/QwvJLV0xwC/O4TZ37ruldK5JvjTO302kxN8r
+ dE/HVw/I5ZjcSX7glnX7pjZm27+x+VT5323vsq5dO7yBFqq3MnDiYOXSnn+uonB6GlEM
+ ApvpAZC4F9yLqyLPAt01OKQGRnedGpKo8jdQcKkJTsWnDudAwewivWvV5GxFikotugJr
+ CZDSU+qgZ1D1BZ4N3x4lvo/BLwhdB9UDU5qK+gyRY6uY8D53xhr4yli47TpIojY7S4SD zQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 32gxd3gbvh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 26 Jul 2020 02:59:00 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06Q2wG5n018170;
-        Sun, 26 Jul 2020 02:58:59 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 32gyur5fh0-1
+        Sun, 26 Jul 2020 05:18:28 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06Q5CZZt024547;
+        Sun, 26 Jul 2020 05:16:28 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 32gxajfs4j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 26 Jul 2020 02:58:59 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06Q2wurr025457;
-        Sun, 26 Jul 2020 02:58:57 GMT
+        Sun, 26 Jul 2020 05:16:28 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06Q5GRVs024582;
+        Sun, 26 Jul 2020 05:16:27 GMT
 Received: from [20.15.0.8] (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 25 Jul 2020 19:58:56 -0700
-Subject: Re: [PATCH v4 0/2] iscsi-target: fix login error when receiving is
- too fast
-To:     Hou Pu <houpu@bytedance.com>, martin.petersen@oracle.com,
+        with ESMTP ; Sat, 25 Jul 2020 22:16:27 -0700
+Subject: Re: [PATCH] scsi: target: loop: Fix handling of aborted TMRs
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     mchristi@redhat.com
-References: <20200716100212.4237-1-houpu@bytedance.com>
+References: <20200715160403.12578-1-bstroesser@ts.fujitsu.com>
 From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <a78662d5-0bb4-8b27-125e-b4c2176b70c6@oracle.com>
-Date:   Sat, 25 Jul 2020 21:58:55 -0500
+Message-ID: <795a006d-6d66-a635-7e76-601cb7807f5b@oracle.com>
+Date:   Sun, 26 Jul 2020 00:16:26 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200716100212.4237-1-houpu@bytedance.com>
+In-Reply-To: <20200715160403.12578-1-bstroesser@ts.fujitsu.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9693 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- mlxscore=0 phishscore=0 suspectscore=0 bulkscore=0 adultscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007260022
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=2 mlxscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007260040
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9693 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- lowpriorityscore=0 adultscore=0 mlxscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 impostorscore=0 clxscore=1011 priorityscore=1501
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007260022
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ lowpriorityscore=0 impostorscore=0 clxscore=1015 suspectscore=2
+ bulkscore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007260040
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/16/20 5:02 AM, Hou Pu wrote:
-> Hi,
-> We encountered "iSCSI Login negotiation failed" several times.
-> After enable debug log in iscsi_target_nego.c of iSCSI target.
-> Error shows:
->   "Got LOGIN_FLAGS_READ_ACTIVE=1, conn: xxxxxxxxxx >>>>"
-> 
-> Patch 1 is trying to fix this problem. Please see comment in patch 1
-> for details.
-> 
-> Sorry for delay of v4. Version 3 of this patchset could be found here[1].
-> 
-> Changes from v4:
-> * In iscsi_target_do_login_rx(), call cancel_delayed_work() if it is final
->   login pdu. Also call cancel_delayed_work() if current negotiation is failed.
->   This is advised by Mike Christie. See below[1] for more details.
-> 
-> Changes from v3:
-> * Fix style problem found by checkpatch.pl.
-> 
-Ah sorry, I thought I replied a little later about my concerns being overly paranoid and your patch being ok. I don't see it on the list so not sure what happened.
+On 7/15/20 11:04 AM, Bodo Stroesser wrote:
+> Fix:
+> After calling the aborted_task callback the core immediately
+> releases the se_cmd that represents the ABORT_TASK. The woken
+> up thread (tcm_loop_issue_tmr) therefore must not access se_cmd
+> and tl_cmd in case of aborted TMRs.
 
-If you are still not liking the cancel call, I'm ok with v3. Add my reviewed by to either version you prefer.
+The code and fix description below look ok. I didn't get the above part though. If we have TARGET_SCF_ACK_KREF set then doesn't the se_cmd and tl_cmd stay around until we do the target_put_sess_cmd in tcm_loop_issue_tmr?
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+The way you coded it below so we don't need TARGET_SCF_ACK_KREF seems ok. I was just thinking that the above chunk of patch description could be dropped, or we need to fix some other drivers because they are doing something similar to loop before your patch.
+
+
+> 
+> So I changed aborted_task and queue_tm_rsp to transfer result
+> code from se_cmd to tcm_loop_issue_tmr's stack and added the
+> missing wake_up() to aborted_task.
+> Now tcm_loop_issue_tmr after waking up no longer accesses se_cmd
+> and tl_cmd. Therefore tcm_loop_issue_tmr no longer needs to call
+> target_put_sess_cmd and flag TARGET_SCF_ACK_KREF is no longer
+> needed in se_cmd.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> ---
+>  drivers/target/loopback/tcm_loop.c | 39 ++++++++++++++++++++++----------------
+>  drivers/target/loopback/tcm_loop.h |  4 +++-
+>  2 files changed, 26 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+> index 16d5a4e117a2..0968bc8b6640 100644
+> --- a/drivers/target/loopback/tcm_loop.c
+> +++ b/drivers/target/loopback/tcm_loop.c
+> @@ -199,6 +199,7 @@ static int tcm_loop_issue_tmr(struct tcm_loop_tpg *tl_tpg,
+>  	struct tcm_loop_nexus *tl_nexus;
+>  	struct tcm_loop_cmd *tl_cmd;
+>  	int ret = TMR_FUNCTION_FAILED, rc;
+> +	DECLARE_COMPLETION_ONSTACK(compl);
+>  
+>  	/*
+>  	 * Locate the tl_nexus and se_sess pointers
+> @@ -213,26 +214,23 @@ static int tcm_loop_issue_tmr(struct tcm_loop_tpg *tl_tpg,
+>  	if (!tl_cmd)
+>  		return ret;
+>  
+> -	init_completion(&tl_cmd->tmr_done);
+> +	tl_cmd->is_tmr = true;
+> +	tl_cmd->tmr_done = &compl;
+> +	tl_cmd->tmr_result = &ret;
+>  
+>  	se_cmd = &tl_cmd->tl_se_cmd;
+>  	se_sess = tl_tpg->tl_nexus->se_sess;
+>  
+>  	rc = target_submit_tmr(se_cmd, se_sess, tl_cmd->tl_sense_buf, lun,
+> -			       NULL, tmr, GFP_KERNEL, task,
+> -			       TARGET_SCF_ACK_KREF);
+> -	if (rc < 0)
+> -		goto release;
+> -	wait_for_completion(&tl_cmd->tmr_done);
+> -	ret = se_cmd->se_tmr_req->response;
+> -	target_put_sess_cmd(se_cmd);
+> +			       NULL, tmr, GFP_KERNEL, task, 0);
+> +	if (rc < 0) {
+> +		kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
+> +		return ret;
+> +	}
+>  
+> -out:
+> -	return ret;
+> +	wait_for_completion(tl_cmd->tmr_done);
+>  
+> -release:
+> -	kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
+> -	goto out;
+> +	return ret;
+>  }
+>  
+>  static int tcm_loop_abort_task(struct scsi_cmnd *sc)
+> @@ -590,13 +588,22 @@ static void tcm_loop_queue_tm_rsp(struct se_cmd *se_cmd)
+>  	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
+>  				struct tcm_loop_cmd, tl_se_cmd);
+>  
+> -	/* Wake up tcm_loop_issue_tmr(). */
+> -	complete(&tl_cmd->tmr_done);
+> +	/* Set tmr result and wake up tcm_loop_issue_tmr(). */
+> +	*tl_cmd->tmr_result = se_cmd->se_tmr_req->response;
+> +	complete(tl_cmd->tmr_done);
+>  }
+>  
+>  static void tcm_loop_aborted_task(struct se_cmd *se_cmd)
+>  {
+> -	return;
+> +	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
+> +				struct tcm_loop_cmd, tl_se_cmd);
+> +
+> +	if (!tl_cmd->is_tmr)
+> +		return;
+> +
+> +	/* Set tmr result and wake up tcm_loop_issue_tmr(). */
+> +	*tl_cmd->tmr_result = TMR_FUNCTION_REJECTED;
+> +	complete(tl_cmd->tmr_done);
+>  }
+>  
+>  static char *tcm_loop_dump_proto_id(struct tcm_loop_hba *tl_hba)
+> diff --git a/drivers/target/loopback/tcm_loop.h b/drivers/target/loopback/tcm_loop.h
+> index d3110909a213..e7615b9f5ed1 100644
+> --- a/drivers/target/loopback/tcm_loop.h
+> +++ b/drivers/target/loopback/tcm_loop.h
+> @@ -17,7 +17,9 @@ struct tcm_loop_cmd {
+>  	/* The TCM I/O descriptor that is accessed via container_of() */
+>  	struct se_cmd tl_se_cmd;
+>  	struct work_struct work;
+> -	struct completion tmr_done;
+> +	struct completion *tmr_done;
+> +	bool is_tmr;
+> +	int *tmr_result;
+>  	/* Sense buffer that will be mapped into outgoing status */
+>  	unsigned char tl_sense_buf[TRANSPORT_SENSE_BUFFER];
+>  };
+> 
+
