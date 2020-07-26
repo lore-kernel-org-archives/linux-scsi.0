@@ -1,107 +1,166 @@
-Return-Path: <SRS0=zQak=BE=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=zfIH=BF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBDD0C433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 10:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82067C433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jul 2020 00:03:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AF38206F6
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jul 2020 10:29:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F98E2070C
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jul 2020 00:03:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QrvbgmPC"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tCuOX7he"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726651AbgGYK3q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jul 2020 06:29:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35946 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726572AbgGYK3p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2020 06:29:45 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A29B9C0619D3;
-        Sat, 25 Jul 2020 03:29:45 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id x9so5835484plr.2;
-        Sat, 25 Jul 2020 03:29:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=5iiobHJC3O2IChZKdVtcb9SVSJs7fTb/PaPBRVV381I=;
-        b=QrvbgmPCB44/PtF+dfEMgm6KzsPzjZ4gJzJwcOv/e+Q+kmmqiwku3f5KsveJ6tNkSO
-         iBPd27ixdWLcPUZOj8OPhywq/BYLv1AtMB6mzvdKHC/SJCSOQanYy8qGa1I5AwsYMI0V
-         hqqTpPtUYHkzauLHaCGeizRhwc5PMfBpb+rJzsZ8Rz7BCN6/T7/1AUf1WWBDlFiA2pJX
-         LDwiTp7eYkZp9MiqJjImyPDBFHlk/uNOMAZePvGHoHumZB7Cymup+Y/V4AbS0ClIxvM1
-         qeNp/XE+6bn0Oz8adsCPUVNFEB0vxhvie9O+oJt6BZ7gsu6gJsWew0QOAYnzLO/ILMK4
-         Es9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=5iiobHJC3O2IChZKdVtcb9SVSJs7fTb/PaPBRVV381I=;
-        b=K3dBx9wd1KYEP7Z6DKzGuObt6YnQoZJzMwIehtiXHM64xGwDiQMOoQLrBZLP0Ht28l
-         HXaM8+oYUY0Ybi6B4iIUpLRkqg/0yGqVuTGcHx+MT69czTeHXEdptTps2iyjfQj9hq8j
-         PnMMYX0rrcZvVp/FrV37IogLzBRiQgsbwQBVb0794fqyX9C9+G0EFadNXCA+XCn6JSU9
-         CeGbOnHBKCZjTVmjMXO3HKD3/y+cmV4ytITxqZaLx2umKG89ye12RISOxT+snOpwYJFt
-         fbkzIk0fzSo11z5/BGE5ljeVJAtseB3kGdLcPy2YBcC/6d1eswojqCvOjArNsRQUmrtK
-         xyGg==
-X-Gm-Message-State: AOAM530F9iX688T3nGbqITcoeY+lt7GGcTV8Iko9Ma0KHjUsbmLEXxa4
-        QmJgHQNSRolDJOy2rkwoRjUBrnaHnijDJYcKf1tlDFjF
-X-Google-Smtp-Source: ABdhPJwQV5hQSViTB/TcdBE4vtYE2CsMSC0ic/lA5AGomE7JF336tMBGTG/H4psobnqk+RIgItE7FclooWFBaTTeOuE=
-X-Received: by 2002:a17:902:b098:: with SMTP id p24mr12097167plr.18.1595672984994;
- Sat, 25 Jul 2020 03:29:44 -0700 (PDT)
+        id S1727936AbgGZADa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Jul 2020 20:03:30 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51850 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727869AbgGZADa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jul 2020 20:03:30 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06Q02uuR136951;
+        Sun, 26 Jul 2020 00:03:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=aI6XbBPC92r4CrbMEdC/yTsAkqeGQ8nhgS87n3ecktA=;
+ b=tCuOX7he1ul8rwXMVGd/ROsK7L1PdqHd6EARwGoCvNs4hCvW76hRksSK3wvnXNkAbs3C
+ NOn1ZOZrdXc+9jo419928Giqy21VgPOiNk+FmFdBHe+/UIBPjVhP1PUll8oqjTk6ESph
+ Uck+fSTK6AX0Vl/nj8xYosQqlx1ivElrNkehelWux6ZBN0MGdzjM4DTE5jHAN4Q062Bo
+ YPWf74evNspNaUr7jzUhEbigepUZ6cXjFzIUtRQZVCMq/ovpRJScF17OVZ8TvtPIg0Zw
+ z36raitbBLHfiwLQhbgBVAc+P6UUdD9VzIQ716X1OBes+KFr18kZDYmtIhDZQw5Y54Yu ag== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 32gxd3g10p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 26 Jul 2020 00:03:24 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06PNwE57194651;
+        Sun, 26 Jul 2020 00:03:24 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 32gxmx0r8x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 26 Jul 2020 00:03:23 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06Q03MQK028733;
+        Sun, 26 Jul 2020 00:03:22 GMT
+Received: from [20.15.0.8] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 25 Jul 2020 17:03:22 -0700
+Subject: Re: [PATCH v2 1/8] scsi: target: Modify core_tmr_abort_task()
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20200717161212.10731-1-bstroesser@ts.fujitsu.com>
+ <20200717161212.10731-2-bstroesser@ts.fujitsu.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <12707afb-4821-f0d9-baff-4078b599a5ea@oracle.com>
+Date:   Sat, 25 Jul 2020 19:03:21 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <20200724171706.1550403-1-tasleson@redhat.com> <20200724171706.1550403-12-tasleson@redhat.com>
-In-Reply-To: <20200724171706.1550403-12-tasleson@redhat.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Sat, 25 Jul 2020 13:29:28 +0300
-Message-ID: <CAHp75VeRzY9wrLpEgi73p=7PEaG9N5iiBAuuys1nY6n4_arFCQ@mail.gmail.com>
-Subject: Re: [v4 11/11] buffer_io_error: Use durable_name_printk_ratelimited
-To:     Tony Asleson <tasleson@redhat.com>
-Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20200717161212.10731-2-bstroesser@ts.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9693 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ suspectscore=0 phishscore=0 spamscore=0 malwarescore=0 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007250200
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9693 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ lowpriorityscore=0 impostorscore=0 clxscore=1015 suspectscore=0
+ bulkscore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007250200
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jul 24, 2020 at 8:19 PM Tony Asleson <tasleson@redhat.com> wrote:
->
-> Replace printk_ratelimited with one that adds the key/value
-> durable name to log entry.
-
->  static void buffer_io_error(struct buffer_head *bh, char *msg)
+On 7/17/20 11:12 AM, Bodo Stroesser wrote:
+> This patch modifies core_tmr_abort_task() to use same looping
+> and locking scheme as core_tmr_drain_state_list() does.
+> 
+> This frees the state_list element in se_cmd for later use
+> by tmr notification handling.
+> 
+> Note: __target_check_io_state() now is called with param 0
+> instead of dev->dev_attrib.emulate_tas, because tas is not
+> relevant since we always get ABRT on same session like the
+> aborted command.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> ---
+>  drivers/target/target_core_tmr.c | 22 ++++++++++++++--------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+> index 89c84d472cd7..b65d7a0a5df1 100644
+> --- a/drivers/target/target_core_tmr.c
+> +++ b/drivers/target/target_core_tmr.c
+> @@ -116,14 +116,15 @@ void core_tmr_abort_task(
+>  	struct se_tmr_req *tmr,
+>  	struct se_session *se_sess)
 >  {
-> -       if (!test_bit(BH_Quiet, &bh->b_state))
-> -               printk_ratelimited(KERN_ERR
-> +       if (!test_bit(BH_Quiet, &bh->b_state)) {
-> +               struct device *gendev;
+> -	struct se_cmd *se_cmd;
+> +	struct se_cmd *se_cmd, *next;
+>  	unsigned long flags;
+> +	bool rc;
+>  	u64 ref_tag;
+>  
+> -	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+> -	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
+> +	spin_lock_irqsave(&dev->execute_task_lock, flags);
+> +	list_for_each_entry_safe(se_cmd, next, &dev->state_list, state_list) {
+>  
+> -		if (dev != se_cmd->se_dev)
+> +		if (se_sess != se_cmd->se_sess)
+>  			continue;
+>  
+>  		/* skip task management functions, including tmr->task_cmd */
+> @@ -137,11 +138,16 @@ void core_tmr_abort_task(
+>  		printk("ABORT_TASK: Found referenced %s task_tag: %llu\n",
+>  			se_cmd->se_tfo->fabric_name, ref_tag);
+>  
+> -		if (!__target_check_io_state(se_cmd, se_sess,
+> -					     dev->dev_attrib.emulate_tas))
+> +		spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+
+I don't think you can use flags twice. This call seems to be overwriting the outer spin lock caller's value, and I'm seeing a lot of warnings.
+
+
+> +		rc = __target_check_io_state(se_cmd, se_sess, 0);
+> +		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+
+
+Use spin_lock/spin_unlock since we know above we have disabled irqs right above. Or make the drain users work like above.
+
+Just make it consistent so future devs don't have to wonder why we use different calls.
+
+> +		if (!rc)
+>  			continue;
+>  
+> -		spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);> +		list_del_init(&se_cmd->state_list);
+> +		se_cmd->state_active = false;
 > +
-> +               gendev = (bh->b_bdev->bd_disk) ?
-> +                       disk_to_dev(bh->b_bdev->bd_disk) : NULL;
+> +		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+>  
+>  		/*
+>  		 * Ensure that this ABORT request is visible to the LU RESET
+> @@ -159,7 +165,7 @@ void core_tmr_abort_task(
+>  		atomic_long_inc(&dev->aborts_complete);
+>  		return;
+>  	}
+> -	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
+> +	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+>  
+>  	printk("ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for ref_tag: %lld\n",
+>  			tmr->ref_task_tag);
+> 
 
-Besides unneeded parentheses as Sergey noticed...
-
-> +
-> +               durable_name_printk_ratelimited(KERN_ERR, gendev,
->                         "Buffer I/O error on dev %pg, logical block %llu%s\n",
->                         bh->b_bdev, (unsigned long long)bh->b_blocknr, msg);
-> +       }
-
-...can we drop indentation level?
-
-  if (test_bit(...))
-   return;
-  ...
-
->  }
-
--- 
-With Best Regards,
-Andy Shevchenko
