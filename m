@@ -2,112 +2,160 @@ Return-Path: <SRS0=pIAL=BG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA64DC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 21:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97200C4345C
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:24:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFBC820729
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 21:04:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c0dl7GcE"
+	by mail.kernel.org (Postfix) with ESMTP id 75C59208E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:24:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1595892273;
+	bh=fli9BB9wXWbNaizd57fZ7B9u6zDs9BY1kleIiBJzss0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Jiz+2nPWaws+dEkBf6pPkIXUTmDkMJTtkP8mJWilfUMH8TBJgKsmlYO/22UUPYL24
+	 Nlo+D94AyVPTcKAD2m9KaZcgYtKLjI8FBhH25K02dk5wtWq+B8LMWX+ll1rDuSiZAR
+	 oKwrN0lsQXLXSgkd1O82AHtNQGD5kJreA131gTr4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726283AbgG0VEe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 17:04:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43624 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726139AbgG0VEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 17:04:34 -0400
-Received: from mail-qk1-x742.google.com (mail-qk1-x742.google.com [IPv6:2607:f8b0:4864:20::742])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDA6CC061794;
-        Mon, 27 Jul 2020 14:04:33 -0700 (PDT)
-Received: by mail-qk1-x742.google.com with SMTP id 11so16723008qkn.2;
-        Mon, 27 Jul 2020 14:04:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=fmK6L/0QiUgIiYwBxTGcL+joJ1wkGcxNcczqzti8GgY=;
-        b=c0dl7GcE3qXrMwLhOyjCKdHyJDcA7m5LeZ3ATOvuptnRH+viC3uFNrauwRs93IgcOo
-         P4UOGQvq9tIWAxrDwItERdsK410OCjjyclMBJFN+cgOk0VnLVwcQW2Hh5oEE5mqvr/sy
-         Wp2YwKveou+lupv1qxLro38uV9x6lR7/iDOKfz5rfHmJ9xNmzjrCVvCtMeOZW6J+gq9/
-         Mdz0yl3w6rZhpQRZyDKvcG+pfgBvm3EoYzycuT5KMx63zKkwwfyCQeBuPVVZcxpVrDXm
-         W0lNdPqNBv+aT8T1t/pPhrftQIrYQ9BA9OHHIOw+bdlCQre/JI9Ds/Lit7p0ipW0aN3z
-         kvbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=fmK6L/0QiUgIiYwBxTGcL+joJ1wkGcxNcczqzti8GgY=;
-        b=hEMiLRaSTC8md+GNMR6Z1+gJBxcyQPYQovqjvEj9DrkuVJMQzhII2S4BEhT93maIW5
-         mk63hzUvmc+N1Fz2/MKCBrlz7OhaVWwfroIVoIooVxbhLNgby5XlIcpjIzKi03gUPpT/
-         1UjjNNocxFpYE+ANm8fdxjlwEkVyNf1Nxkdihhpas3hmOYBhTekFYHbC7eRe/uJXgnCc
-         6DcUuJUdvqiHCUo3C92EQgM1qd/JkeolDyNbfTlWB2/Gi/qifcIf+wBwsmlUmnXvgHoc
-         u4hy/nQi0CcHPY1t9efW3z0kMLl3UPJ+ByW5wKRNTYnjwNZ06/s0f1vWeJ6z+E+81NZI
-         /LAA==
-X-Gm-Message-State: AOAM531OvMSGN5egsnSc9CI93Hj6xtE0hJwvyyAxjI4Bt5osFzDm5Lh2
-        Xv1iYPQjhDJbbJkHUFU0iYbUsWApGQ==
-X-Google-Smtp-Source: ABdhPJwB0/ozeneo/2CVyhyaxpaK56OJSASvgnRELqqALjaQFssdkweq7IKzB/8rlXefcfcoKqrb/w==
-X-Received: by 2002:ae9:ef8d:: with SMTP id d135mr24189692qkg.109.1595883873133;
-        Mon, 27 Jul 2020 14:04:33 -0700 (PDT)
-Received: from localhost.localdomain ([209.94.141.207])
-        by smtp.gmail.com with ESMTPSA id k2sm20964994qkf.127.2020.07.27.14.04.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2020 14:04:32 -0700 (PDT)
-From:   Peilin Ye <yepeilin.cs@gmail.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>
-Cc:     Peilin Ye <yepeilin.cs@gmail.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [Linux-kernel-mentees] [PATCH] scsi/megaraid: Prevent kernel-infoleak in kioc_to_mimd()
-Date:   Mon, 27 Jul 2020 17:02:35 -0400
-Message-Id: <20200727210235.327835-1-yepeilin.cs@gmail.com>
+        id S1728269AbgG0XYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 19:24:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35526 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728258AbgG0XYb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Jul 2020 19:24:31 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F140B22B40;
+        Mon, 27 Jul 2020 23:24:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1595892269;
+        bh=fli9BB9wXWbNaizd57fZ7B9u6zDs9BY1kleIiBJzss0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=abIFjlywKqxecxQsd2dGFPr/9+rRLnkjSbqe1fuDmQktwqtRYhyJ2b8EPAMkDjpGH
+         vBi43GXhXIvqAMFEaWC3PG7LOpRyIj6i5w8rBfuRLJUnQr5MIo5bFA/bqw8rFiqr3D
+         JjtDgL3t8RVir2fIkmALZRoj2Fz6VdQMj8W8LncM=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 07/17] scsi: core: Run queue in case of I/O resource contention failure
+Date:   Mon, 27 Jul 2020 19:24:10 -0400
+Message-Id: <20200727232420.717684-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200727232420.717684-1-sashal@kernel.org>
+References: <20200727232420.717684-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hinfo_to_cinfo() does no operation on `cinfo` when `hinfo` is NULL,
-causing kioc_to_mimd() to copy uninitialized stack memory to userspace.
-Fix it by initializing `cinfo` with memset().
+From: Ming Lei <ming.lei@redhat.com>
 
-Cc: stable@vger.kernel.org
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Suggested-by: Dan Carpenter <dan.carpenter@oracle.com>
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Peilin Ye <yepeilin.cs@gmail.com>
+[ Upstream commit 3f0dcfbcd2e162fc0a11c1f59b7acd42ee45f126 ]
+
+I/O requests may be held in scheduler queue because of resource contention.
+The starvation scenario was handled properly in the regular completion
+path but we failed to account for it during I/O submission. This lead to
+the hang captured below. Make sure we run the queue when resource
+contention is encountered in the submission path.
+
+[   39.054963] scsi 13:0:0:0: rejecting I/O to dead device
+[   39.058700] scsi 13:0:0:0: rejecting I/O to dead device
+[   39.087855] sd 13:0:0:1: [sdd] Synchronizing SCSI cache
+[   39.088909] scsi 13:0:0:1: rejecting I/O to dead device
+[   39.095351] scsi 13:0:0:1: rejecting I/O to dead device
+[   39.096962] scsi 13:0:0:1: rejecting I/O to dead device
+[  247.021859] INFO: task scsi-stress-rem:813 blocked for more than 122 seconds.
+[  247.023258]       Not tainted 5.8.0-rc2 #8
+[  247.024069] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  247.025331] scsi-stress-rem D    0   813    802 0x00004000
+[  247.025334] Call Trace:
+[  247.025354]  __schedule+0x504/0x55f
+[  247.027987]  schedule+0x72/0xa8
+[  247.027991]  blk_mq_freeze_queue_wait+0x63/0x8c
+[  247.027994]  ? do_wait_intr_irq+0x7a/0x7a
+[  247.027996]  blk_cleanup_queue+0x4b/0xc9
+[  247.028000]  __scsi_remove_device+0xf6/0x14e
+[  247.028002]  scsi_remove_device+0x21/0x2b
+[  247.029037]  sdev_store_delete+0x58/0x7c
+[  247.029041]  kernfs_fop_write+0x10d/0x14f
+[  247.031281]  vfs_write+0xa2/0xdf
+[  247.032670]  ksys_write+0x6b/0xb3
+[  247.032673]  do_syscall_64+0x56/0x82
+[  247.034053]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[  247.034059] RIP: 0033:0x7f69f39e9008
+[  247.036330] Code: Bad RIP value.
+[  247.036331] RSP: 002b:00007ffdd8116498 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[  247.037613] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f69f39e9008
+[  247.039714] RDX: 0000000000000002 RSI: 000055cde92a0ab0 RDI: 0000000000000001
+[  247.039715] RBP: 000055cde92a0ab0 R08: 000000000000000a R09: 00007f69f3a79e80
+[  247.039716] R10: 000000000000000a R11: 0000000000000246 R12: 00007f69f3abb780
+[  247.039717] R13: 0000000000000002 R14: 00007f69f3ab6740 R15: 0000000000000002
+
+Link: https://lore.kernel.org/r/20200720025435.812030-1-ming.lei@redhat.com
+Cc: linux-block@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_mm.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/scsi_lib.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
-index 8df53446641a..9df0e6b253a8 100644
---- a/drivers/scsi/megaraid/megaraid_mm.c
-+++ b/drivers/scsi/megaraid/megaraid_mm.c
-@@ -816,6 +816,8 @@ kioc_to_mimd(uioc_t *kioc, mimd_t __user *mimd)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 206c9f53e9e7a..e6944e1cba2ba 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -568,6 +568,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ 	scsi_del_cmd_from_list(cmd);
+ }
  
- 		case MEGAIOC_QADAPINFO:
- 
-+			memset(&cinfo, 0, sizeof(cinfo));
++static void scsi_run_queue_async(struct scsi_device *sdev)
++{
++	if (scsi_target(sdev)->single_lun ||
++	    !list_empty(&sdev->host->starved_list))
++		kblockd_schedule_work(&sdev->requeue_work);
++	else
++		blk_mq_run_hw_queues(sdev->request_queue, true);
++}
 +
- 			hinfo = (mraid_hba_info_t *)(unsigned long)
- 					kioc->buf_vaddr;
+ /* Returns false when no more bytes to process, true if there are more */
+ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 		unsigned int bytes)
+@@ -612,11 +621,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
  
+ 	__blk_mq_end_request(req, error);
+ 
+-	if (scsi_target(sdev)->single_lun ||
+-	    !list_empty(&sdev->host->starved_list))
+-		kblockd_schedule_work(&sdev->requeue_work);
+-	else
+-		blk_mq_run_hw_queues(q, true);
++	scsi_run_queue_async(sdev);
+ 
+ 	percpu_ref_put(&q->q_usage_counter);
+ 	return false;
+@@ -1729,6 +1734,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		 */
+ 		if (req->rq_flags & RQF_DONTPREP)
+ 			scsi_mq_uninit_cmd(cmd);
++		scsi_run_queue_async(sdev);
+ 		break;
+ 	}
+ 	return ret;
 -- 
 2.25.1
 
