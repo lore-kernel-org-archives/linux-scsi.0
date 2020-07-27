@@ -2,140 +2,113 @@ Return-Path: <SRS0=pIAL=BG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE416C433EA
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 02:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31C47C433E3
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 02:40:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFFB520715
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 02:34:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YrbfJ+vh"
+	by mail.kernel.org (Postfix) with ESMTP id 1691020715
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 02:40:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727783AbgG0CeJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Jul 2020 22:34:09 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:53595 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726841AbgG0CeI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jul 2020 22:34:08 -0400
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200727023405epoutp02386b7be709f8be38c95fee435b2953e4~le1RmjBap0509105091epoutp02L
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2020 02:34:05 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200727023405epoutp02386b7be709f8be38c95fee435b2953e4~le1RmjBap0509105091epoutp02L
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1595817245;
-        bh=tWOuKy5Cr18AsEZybZANyovRETBpjFxw2jUNOKvwofQ=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=YrbfJ+vhJDwbI/vWqb/c0QKThJHeYwxxBhz86NfeyswCUPiOPrDPEhKsi3Ot0THen
-         4QKdzuaEGT1OBxUsmrmPNdMRuu3rJCqXgaGUqYJ57+nczTTAyHpojOUgdzxtOFVg0l
-         kcF6By40W9nOE2KQKf5jQ99N30F9FpO01vWJgn1k=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20200727023404epcas2p1dd304198b7b418ab229467e2fe0cd784~le1Q7_WjF0997609976epcas2p1U;
-        Mon, 27 Jul 2020 02:34:04 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.40.190]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4BFP572TJxzMqYkj; Mon, 27 Jul
-        2020 02:34:03 +0000 (GMT)
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        74.E4.18874.A1D3E1F5; Mon, 27 Jul 2020 11:34:02 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200727023402epcas2p2722148df6f3e24533f09381dc47aa906~le1Of3XXl0695406954epcas2p2X;
-        Mon, 27 Jul 2020 02:34:02 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200727023402epsmtrp2d65fc975e00bac390c85a27cde30dad4~le1OeuunE0048300483epsmtrp2y;
-        Mon, 27 Jul 2020 02:34:02 +0000 (GMT)
-X-AuditID: b6c32a46-503ff700000049ba-9d-5f1e3d1a33e7
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        6D.2B.08303.91D3E1F5; Mon, 27 Jul 2020 11:34:01 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200727023401epsmtip258589bc570814383b66139442472e3c5~le1ON_V8r2856028560epsmtip2k;
-        Mon, 27 Jul 2020 02:34:01 +0000 (GMT)
-From:   Kiwoong Kim <kwmad.kim@samsung.com>
-To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
-        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1] ufs: fix a bug of wrong usage of test_and_set_bit
-Date:   Mon, 27 Jul 2020 11:25:49 +0900
-Message-Id: <1595816749-108744-1-git-send-email-kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpkk+LIzCtJLcpLzFFi42LZdljTXFfKVi7eoOWyhMWDedvYLPa2nWC3
-        ePnzKpvFwYedLBbTPvxktvi0fhmrxa+/69ktVi9+wGKx6MY2JoubW46yWHRf38Fmsfz4PyaL
-        rrs3GC2W/nvL4sDncfmKt8flvl4mjwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMAR
-        lWOTkZqYklqkkJqXnJ+SmZduq+QdHO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3S3kkJZ
-        Yk4pUCggsbhYSd/Opii/tCRVISO/uMRWKbUgJafA0LBArzgxt7g0L10vOT/XytDAwMgUqDIh
-        J2PxSeWC/ywV7ef+sTYwTmHpYuTkkBAwkXjx+h8TiC0ksINRYu2B0i5GLiD7E6PEzEM7mSCc
-        z4wSM9bOZoXp6LhxjhEisYtR4vumPqiqH4wSH5fNYAOpYhPQlHh6cypYQkRgM5PEqwX3mUES
-        zALqErsmnABbKCzgKjFzwUpGEJtFQFXi7I4vYHFeATeJ3u51jBDr5CRunutkBhkkIfCVHWjd
-        LKg7XCT6Pl5mh7CFJV4d3wJlS0l8freXDcKul9g3tYEVormHUeLpvn9QU40lZj1rB7I5gC7S
-        lFi/Sx/ElBBQljhyiwXiTj6JjsN/2SHCvBIdbUIQjcoSvyZNhhoiKTHz5h2orR4Sp+9tZ4eE
-        Y6zEixvHWCYwys5CmL+AkXEVo1hqQXFuemqxUYERciRtYgSnRS23HYxT3n7QO8TIxMF4iFGC
-        g1lJhJdbVCZeiDclsbIqtSg/vqg0J7X4EKMpMLwmMkuJJucDE3NeSbyhqZGZmYGlqYWpmZGF
-        kjhvveKFOCGB9MSS1OzU1ILUIpg+Jg5OqQamxvhHefoKWsfje567TMk7eXNqyUfdu3IJ706c
-        DrXS4qk8K37/YOf82NgpRsGn695HrVw1bX0W4/sy/7ka1qemfGCNeHjmaW/UmYvh/3W+RKy2
-        Mbvb8a3aeJ/vEu/T7Pa1M1VP3Vys2xDFoOmtJBeUJHgp8srNe8fTNAv5t1ZY1Nqu2JL/48Sp
-        RcXKN+u//5joxzjZa2dwt+CFc6Ib5vh0yF7NNC1c71H45F+VeDzDQuOqeCWTx0pJ9mndnmu2
-        KqTkfP5kv21T8+KM69efp/+ZL+RQ//6T8+vZiZNUXnA7zbH+5vXjSv6susjottnZWx8L8Syu
-        /ru7yOXMTfUS6T61r9ILrikxeq+Zf/f1DFcOJZbijERDLeai4kQA4eMPXBQEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrALMWRmVeSWpSXmKPExsWy7bCSvK6krVy8wawrFhYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCxubjnKYtF9fQebxfLj/5gs
-        uu7eYLRY+u8tiwOfx+Ur3h6X+3qZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBH
-        FJdNSmpOZllqkb5dAlfG4pPKBf9ZKtrP/WNtYJzC0sXIySEhYCLRceMcYxcjF4eQwA5GiW8b
-        fkIlJCVO7HzOCGELS9xvOcIKUfSNUeLInRZ2kASbgKbE05tTmUASIgKHmST+b30OlmAWUJfY
-        NeEEE4gtLOAqMXPBSrBJLAKqEmd3fAGL8wq4SfR2r4PaICdx81wn8wRGngWMDKsYJVMLinPT
-        c4sNC4zyUsv1ihNzi0vz0vWS83M3MYIDVUtrB+OeVR/0DjEycTAeYpTgYFYS4eUWlYkX4k1J
-        rKxKLcqPLyrNSS0+xCjNwaIkzvt11sI4IYH0xJLU7NTUgtQimCwTB6dUA9MC8dJl8kGy0j93
-        39mhcsGsILy9uTWl/dWn/Nd3tc1CBA5dv93JlPJ5W7RpLsvNFN27ZxMWKUQtOuwQL+99iVtB
-        8fv1H8uuTBA0+3BluraRV42fQscOH5ZpjJMcOdXXm26S4T2j6/5J5E7u1qeZ3M9XalasrNZn
-        /NpUuq/yzKfXVdI6CqyW3Mqat1ZI54ubusadT0v7arfhV7lW9PzphkxcFxIeXZDV2ef2blNI
-        RMPpR5YsS2f+2/bi9Z6oN7cO8q//+eBwpfDutJjfpowLljWL3TnOXfrmWKCJ8eLQdesiI8te
-        Wn3dNfGwm8HUvwf5T0QETfdene++INHty5bmt9N3asya+fG5r1mrwC+L2j9KLMUZiYZazEXF
-        iQDA9ZxbwwIAAA==
-X-CMS-MailID: 20200727023402epcas2p2722148df6f3e24533f09381dc47aa906
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
+        id S1727050AbgG0Ckq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Jul 2020 22:40:46 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:8827 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726044AbgG0Ckq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 26 Jul 2020 22:40:46 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 13534F58F6CB3CE6DC4E;
+        Mon, 27 Jul 2020 10:40:44 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.487.0; Mon, 27 Jul 2020 10:40:35 +0800
+From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
+To:     <lduncan@suse.com>, <cleech@redhat.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <michael.christie@oracle.com>
+CC:     <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jingxiangfeng@huawei.com>
+Subject: [PATCH] scsi: iscsi: jump to correct label in an error path
+Date:   Mon, 27 Jul 2020 10:43:40 +0800
+Message-ID: <20200727024340.163937-1-jingxiangfeng@huawei.com>
+X-Mailer: git-send-email 2.20.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200727023402epcas2p2722148df6f3e24533f09381dc47aa906
-References: <CGME20200727023402epcas2p2722148df6f3e24533f09381dc47aa906@epcas2p2.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Just a number should have been used, not a shifted value.
+In current code, it jumps to put_host() when scsi_host_lookup()
+failes to get host. Jump to correct label to fix it.
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 ---
- drivers/scsi/ufs/ufs-exynos.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_transport_iscsi.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
-index a91656c..032bb50 100644
---- a/drivers/scsi/ufs/ufs-exynos.h
-+++ b/drivers/scsi/ufs/ufs-exynos.h
-@@ -216,7 +216,7 @@ struct exynos_ufs {
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 7ae5024..5984596 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -3341,7 +3341,7 @@ static int iscsi_new_flashnode(struct iscsi_transport *transport,
+ 		pr_err("%s could not find host no %u\n",
+ 		       __func__, ev->u.new_flashnode.host_no);
+ 		err = -ENODEV;
+-		goto put_host;
++		goto exit_new_fnode;
+ 	}
  
- 	struct ufs_exynos_handle handle;
- 	unsigned long dbg_flag;
--#define EXYNOS_UFS_DBG_DUMP_CXT			BIT(0)
-+#define EXYNOS_UFS_DBG_DUMP_CXT			0
- };
+ 	index = transport->new_flashnode(shost, data, len);
+@@ -3351,7 +3351,6 @@ static int iscsi_new_flashnode(struct iscsi_transport *transport,
+ 	else
+ 		err = -EIO;
  
- #define for_each_ufs_rx_lane(ufs, i) \
+-put_host:
+ 	scsi_host_put(shost);
+ 
+ exit_new_fnode:
+@@ -3376,7 +3375,7 @@ static int iscsi_del_flashnode(struct iscsi_transport *transport,
+ 		pr_err("%s could not find host no %u\n",
+ 		       __func__, ev->u.del_flashnode.host_no);
+ 		err = -ENODEV;
+-		goto put_host;
++		goto exit_del_fnode;
+ 	}
+ 
+ 	idx = ev->u.del_flashnode.flashnode_idx;
+@@ -3418,7 +3417,7 @@ static int iscsi_login_flashnode(struct iscsi_transport *transport,
+ 		pr_err("%s could not find host no %u\n",
+ 		       __func__, ev->u.login_flashnode.host_no);
+ 		err = -ENODEV;
+-		goto put_host;
++		goto exit_login_fnode;
+ 	}
+ 
+ 	idx = ev->u.login_flashnode.flashnode_idx;
+@@ -3470,7 +3469,7 @@ static int iscsi_logout_flashnode(struct iscsi_transport *transport,
+ 		pr_err("%s could not find host no %u\n",
+ 		       __func__, ev->u.logout_flashnode.host_no);
+ 		err = -ENODEV;
+-		goto put_host;
++		goto exit_logout_fnode;
+ 	}
+ 
+ 	idx = ev->u.logout_flashnode.flashnode_idx;
+@@ -3520,7 +3519,7 @@ static int iscsi_logout_flashnode_sid(struct iscsi_transport *transport,
+ 		pr_err("%s could not find host no %u\n",
+ 		       __func__, ev->u.logout_flashnode.host_no);
+ 		err = -ENODEV;
+-		goto put_host;
++		goto exit_logout_sid;
+ 	}
+ 
+ 	session = iscsi_session_lookup(ev->u.logout_flashnode_sid.sid);
 -- 
-2.7.4
+1.8.3.1
 
