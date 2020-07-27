@@ -4,123 +4,143 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A857C433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 11:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B4AC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 11:27:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E978A2078A
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 11:19:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A093F2072E
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 11:27:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ADy5gNMg"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="hBen2JLB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728222AbgG0LTc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 07:19:32 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:37092 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726269AbgG0LTa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 07:19:30 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06RBCjHk079728;
-        Mon, 27 Jul 2020 11:19:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=mUE8Kqn82x7K5jXb1sLaucmtLSAtAtmz1DPQYU4LCE8=;
- b=ADy5gNMg0gJJ/HRQPVnH3PKgK+3LYuimC3y0Q3KUJBxUrEv5esophDz5jvHkSyKMNk0r
- UNXnydHzDmiMlQy01gLDNLIYcUnCXLa41k4rt8NZunoTWvrXTs5NqNq0oe4NQNLBMPLc
- J/aal2o/5n8jx+jLOwzvfN06EmGzJTSLpyxR2hL/Wb7wbC4epcfeSWEb3D/VAXLv2Iba
- ktCjQ9sTigk4wJByI0vXemi9euuy34GGLQ7IGnHf5Rp/D9XPiL0A7mDBA/MJlUbYe59B
- 2h3Jl453lpZlbgITn2WeiwTMe3morBsLbyCmljam6HEAkf2Ptfr3Srt2Gq0lShG7iXSO PQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 32hu1j0xcc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 27 Jul 2020 11:19:27 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06RBEI5v045398;
-        Mon, 27 Jul 2020 11:19:26 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 32hu5qgqrm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Jul 2020 11:19:26 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06RBJO03002530;
-        Mon, 27 Jul 2020 11:19:25 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 27 Jul 2020 04:19:23 -0700
-Date:   Mon, 27 Jul 2020 14:19:16 +0300
-From:   <dan.carpenter@oracle.com>
-To:     don.brace@microsemi.com
-Cc:     esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: hpsa: Increase controller error handling timeout
-Message-ID: <20200727111916.GC389488@mwanda>
+        id S1726984AbgG0L1t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 07:27:49 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:43705 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726744AbgG0L1r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 07:27:47 -0400
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200727112744epoutp03eae4289a9c8cc7b69e397199ea7e157f~lmHNyv6tK1108011080epoutp03U
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2020 11:27:44 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200727112744epoutp03eae4289a9c8cc7b69e397199ea7e157f~lmHNyv6tK1108011080epoutp03U
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1595849264;
+        bh=l+gAf2yh/db6/nIT0i89yLN+pjxdyNdP4q2SLtd27Oc=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=hBen2JLBVKN2feRSiiL2TlbT+5WAQHEI+bZ7X+8ZXgm2fQBgWDe7cLjKc8Qt3U2Bh
+         sCAFHhyrg3wFAPzZVeui1jLfTxq7hBPeLpwOC0Rpzg7QkGMlLho0jn6TtjFaxpMcmP
+         j+zWrxt/becQMFbOtqqqcCr3u4SPG2EJS3ZfNI1E=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20200727112743epcas2p3f30eb3c971475d4cd5c4308884d238fb~lmHM4jQZc2505125051epcas2p33;
+        Mon, 27 Jul 2020 11:27:43 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.183]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4BFcwr62GCzMqYkX; Mon, 27 Jul
+        2020 11:27:40 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3C.BB.19322.C2ABE1F5; Mon, 27 Jul 2020 20:27:40 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200727112740epcas2p35921d787697f93ca6e2c6760c112c724~lmHJxCjz32505125051epcas2p3x;
+        Mon, 27 Jul 2020 11:27:40 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200727112740epsmtrp2f276d593e7316b124c002fb056696dd3~lmHJwSONY2041020410epsmtrp2P;
+        Mon, 27 Jul 2020 11:27:40 +0000 (GMT)
+X-AuditID: b6c32a45-797ff70000004b7a-20-5f1eba2cc917
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4C.D0.08303.C2ABE1F5; Mon, 27 Jul 2020 20:27:40 +0900 (KST)
+Received: from KORDO040863 (unknown [12.36.185.126]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20200727112740epsmtip24cecd9cf7b5126ea290c13b561e879b4~lmHJhfEY_2543425434epsmtip2N;
+        Mon, 27 Jul 2020 11:27:39 +0000 (GMT)
+From:   =?UTF-8?B?7ISc7Zi47JiB?= <hy50.seo@samsung.com>
+To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
+        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <bvanassche@acm.org>,
+        <grant.jung@samsung.com>
+In-Reply-To: <SN6PR04MB4640B30915D3D402B3B47F79FC720@SN6PR04MB4640.namprd04.prod.outlook.com>
+Subject: RE: [RFC PATCH v3 2/3] scsi: ufs: modify function call name When
+ ufs reset and restore, need to disable write booster
+Date:   Mon, 27 Jul 2020 20:27:39 +0900
+Message-ID: <074001d66408$efdc5a80$cf950f80$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9694 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
- suspectscore=3 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007270083
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9694 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1011
- malwarescore=0 spamscore=0 suspectscore=3 bulkscore=0 priorityscore=1501
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 impostorscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007270083
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 14.0
+Thread-Index: AQHLP/cB05Q6MF8BaP7+redz0q/FGgLfFFEPASU1gksBdMSJPAFM0QFRAfHkSm+o69LYYA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrKJsWRmVeSWpSXmKPExsWy7bCmha7OLrl4g3lTDSwezNvGZrG37QS7
+        xcufV9ksDj7sZLGY9uEns8Wn9ctYLX79Xc9usejGNiaL7us72CyWH//H5MDlcfmKt8flvl4m
+        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMARlWOTkZqYklqkkJqXnJ+SmZduq+Qd
+        HO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3SjkkJZYk4pUCggsbhYSd/Opii/tCRVISO/
+        uMRWKbUgJafA0LBArzgxt7g0L10vOT/XytDAwMgUqDIhJ2PFjFPMBRtZKpad3cbawLiNuYuR
+        k0NCwETi9t0DTF2MXBxCAjsYJfZu/csI4XxilJhz+S0rhPOZUeL0pr/sMC1nf/WyQCR2MUrM
+        2/MBqv8lo8SmbwdYQarYBEwl+ratAGsXEZjGJLH71yImkASnQKzE/E1nwIqEBRqA5j636WLk
+        4GARUJVYeDYeJMwrYClx4ncrK4QtKHFy5hMWEJtZQF5i+9s5UIcrSOw4+5oRxBYRCJP4PucT
+        O0SNiMTszjZmkL0SAjs4JNYsmccG0eAiMeVvAxOELSzx6vgWqHekJD6/2wtVUy8x5d4qFojm
+        HkaJPStOQDUYS8x61s4IciizgKbE+l36IKaEgLLEkVtQt/FJdBwGhRBImFeio00IolFJ4szc
+        21BhCYmDs3Mgwh4S/5e9ZpnAqDgLyZOzkDw5C8kzsxDWLmBkWcUollpQnJueWmxUYIgc2ZsY
+        welXy3UH4+S3H/QOMTJxMB5ilOBgVhLh5RaViRfiTUmsrEotyo8vKs1JLT7EaAoM9YnMUqLJ
+        +cAMkFcSb2hqZGZmYGlqYWpmZKEkzpureCFOSCA9sSQ1OzW1ILUIpo+Jg1OqgWl2lsBBloLa
+        nbpHZZu4FgWtYC4OWRP9cb2s+003Vz/hWwceTV6wer5hnZvk5/uic8yuGyk0PVBf7DdPdEuS
+        v4u8RMwuJcYdi7a1Gvn0M71teZXBeuvfpzNfdX2j04K/C502fubhzPSvoG3CwT9Gr8LsuJYe
+        2+/+/Jha8KQXIjz9JkVJD6NjwpZ++Pdj2xanySdP8mt/mqnv8ffW/Wes/SL5gn3G8ecV7uhf
+        eXxUVkhB+cyiK02bhO6bMwSU23PoN1oov36yb/FiJ+3WrbvatmaxZ7xXn7Vvy1suqc3PzI8m
+        fLP6572KJ2DzrA1/C+TKvnhb+8x/8MTt8RkOHdfujQ4HGernvEh4/KXyuMqVY9lKLMUZiYZa
+        zEXFiQCNOOGmSAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKIsWRmVeSWpSXmKPExsWy7bCSvK7OLrl4g0O97BYP5m1js9jbdoLd
+        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WHRjG5NF9/UdbBbLj/9jcuDyuHzF2+NyXy+T
+        x4RFBxg9vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCuCI4rJJSc3JLEst0rdL4MpYMeMUc8FG
+        loplZ7exNjBuY+5i5OSQEDCROPurl6WLkYtDSGAHo8TkVZcYIRISEv8XNzFB2MIS91uOsEIU
+        PWeUOLbmEStIgk3AVKJv2wqwhIjAAiaJR6v3M0FUrWCW2L5jIVgVp0CsxPxNZ8BsYYE6ia5f
+        zUD7ODhYBFQlFp6NBwnzClhKnPjdygphC0qcnPmEBcRmFtCW6H3Yyghhy0tsfzsH6mwFiR1n
+        X4PFRQTCJL7P+cQOUSMiMbuzjXkCo9AsJKNmIRk1C8moWUhaFjCyrGKUTC0ozk3PLTYsMMpL
+        LdcrTswtLs1L10vOz93ECI45La0djHtWfdA7xMjEwXiIUYKDWUmEl1tUJl6INyWxsiq1KD++
+        qDQntfgQozQHi5I479dZC+OEBNITS1KzU1MLUotgskwcnFINTDNZbwn/CTjCHdit+IH9IPPT
+        LQUC5/c/TlxXl/47p8B4056sL2mZr0Xf5E28/X5GWsz+i98Ou7jWLm1T83oV7qX5S9Dt4Zx1
+        NyrXhU2qbcqYk2gqZPT0vH0f/7bQH1x/FRv85MPW9SnJnrpQc0Ym1kDjt2hfX2LE1Px1dvMO
+        iKzeGf4vhSGx6zzvkQXuosZhs/buz/u0MV7uinXjlb3zNyn0T3+j2JiZd33V34sv7nWkv53G
+        vE07o3TPm4+1H/JesDsV7xacP7tlZfmJfU2G8yUWR86VDIu/sVI97ELprwNPc53eVh9UnX3v
+        iHnzFElbriTF83MrbrdPuR6avPPI83nuL95z3b/ySrvtk8HKXDElluKMREMt5qLiRADuKxgU
+        KAMAAA==
+X-CMS-MailID: 20200727112740epcas2p35921d787697f93ca6e2c6760c112c724
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200721095653epcas2p4575db5cbcd8897662ad19465339128b2
+References: <cover.1595325064.git.hy50.seo@samsung.com>
+        <CGME20200721095653epcas2p4575db5cbcd8897662ad19465339128b2@epcas2p4.samsung.com>
+        <52e4453499a65ad276df5af9a0f057e960704f93.1595325064.git.hy50.seo@samsung.com>
+        <SN6PR04MB4640E7CB5A7F2E406323CFBAFC750@SN6PR04MB4640.namprd04.prod.outlook.com>
+        <071e01d663fc$f6bce010$e436a030$@samsung.com>
+        <SN6PR04MB4640B30915D3D402B3B47F79FC720@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Don Brace,
+> 
+> >
+> > > This patch is not really needed - just squash it to the previous one.
+> > Why you said this patch is not really needed?
+> > I don't understand
+> > Our WB device need to disable WB when called
+> > ufshcd_reset_and_restore() func.
+> > Please explain reason.
+> This patch only change the names of some functions defined in the first
+> patch.
+> Squash it to the first one.
 
-The patch c73deaf3b001: "scsi: hpsa: Increase controller error
-handling timeout" from Jul 20, 2020, leads to the following static
-checker warning:
+"Asutosh Das (asd) <asutoshd@codeaurora.org>" said this function not clearly.
+So I modify this function name.
+I think this name is clear than the previous name.
 
-	drivers/scsi/hpsa.c:2163 hpsa_slave_configure()
-	error: uninitialized symbol 'queue_depth'.
-
-drivers/scsi/hpsa.c
-  2136  /* configure scsi device based on internal per-device structure */
-  2137  #define CTLR_TIMEOUT (120 * HZ)
-  2138  static int hpsa_slave_configure(struct scsi_device *sdev)
-  2139  {
-  2140          struct hpsa_scsi_dev_t *sd;
-  2141          int queue_depth;
-                ^^^^^^^^^^^^^^^
-
-  2142  
-  2143          sd = sdev->hostdata;
-  2144          sdev->no_uld_attach = !sd || !sd->expose_device;
-  2145  
-  2146          if (sd) {
-  2147                  sd->was_removed = 0;
-  2148                  if (sd->external) {
-  2149                          queue_depth = EXTERNAL_QD;
-  2150                          sdev->eh_timeout = HPSA_EH_PTRAID_TIMEOUT;
-  2151                          blk_queue_rq_timeout(sdev->request_queue,
-  2152                                                  HPSA_EH_PTRAID_TIMEOUT);
-  2153                  } else if (is_hba_lunid(sd->scsi3addr)) {
-  2154                          sdev->eh_timeout = CTLR_TIMEOUT;
-  2155                          blk_queue_rq_timeout(sdev->request_queue, CTLR_TIMEOUT);
-
-Not set on this path.
-
-  2156                  } else {
-  2157                          queue_depth = sd->queue_depth != 0 ?
-  2158                                          sd->queue_depth : sdev->host->can_queue;
-  2159                  }
-  2160          } else
-  2161                  queue_depth = sdev->host->can_queue;
-  2162  
-  2163          scsi_change_queue_depth(sdev, queue_depth);
-                                              ^^^^^^^^^^^
-  2164  
-  2165          return 0;
-  2166  }
-
-regards,
-dan carpenter
