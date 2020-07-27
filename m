@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43AA6C433E8
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78368C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F07820719
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F6682074F
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728098AbgG0TBS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 15:01:18 -0400
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:46521 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727038AbgG0TBR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 15:01:17 -0400
-IronPort-SDR: wrxnDl2RFkIkULauy/m3AXYHR69EH5nj8kuulxEEkkaC6goPymKCfPX8Wek1jD7UKXlu+SV1RW
- z2HCccHV9iqX/NRyJmwavbKDZ5080afuwtBooNGeg5awxKyvtSXYmz6zY00/hhOnlIt9Q6Pz+G
- 9Qj3munFBEQPtsJig6bjeYNpKHOMkfEFUhw9gc0NIRSuPgDCSl4Fkzu0Cb3lt50GuqO7Q8imPf
- eCVM8SFmYej0hjM4Jc1d9gXGr1WgluTwHNdR1fnBkWwxIYNZVXKI3PcdWzN4DSXN0zAWcUKXbi
- 644=
+        id S1728124AbgG0TBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 15:01:42 -0400
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:40782 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726897AbgG0TBl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 15:01:41 -0400
+IronPort-SDR: dUQHGQGcx3fbnf008J3fJr4hrKz0FgCuQLNO/+yCcayw0aK+KtdsNI9FRqtw/EaypJDmNNRDyl
+ 0SMjbzVWL5neyid2CQ20NBcAGXVLZlCyM/3Yey10IE8Kf0j9zzzoVGRmvGfLOezujLUPwDUQv9
+ V2pwv+r1u70Ci7IyJAsKOV6W0Ncx3g3LIKRz42La5egMIyHSW8nNfYdt5XIN8Y8tbFgjtjCEPE
+ 3wZcVLFWSIG9lylxGD1nJ+tw2To1JOaHYAksqSnC7uV7buNSb8YhWPq62hSdrLWQo8P1pfUZ7b
+ 1tk=
 X-IronPort-AV: E=Sophos;i="5.75,403,1589266800"; 
-   d="scan'208";a="89292297"
+   d="scan'208";a="81443407"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 27 Jul 2020 12:01:16 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 27 Jul 2020 12:01:41 -0700
 Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 27 Jul 2020 12:01:15 -0700
+ 15.1.1979.3; Mon, 27 Jul 2020 12:01:38 -0700
 Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
  (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Mon, 27 Jul 2020 12:00:30 -0700
-Subject: [PATCH 1/4] hpsa: correct rare oob condition
+ Transport; Mon, 27 Jul 2020 12:00:53 -0700
+Subject: [PATCH 4/4] hpsa: bump version
 From:   Don Brace <don.brace@microsemi.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -43,8 +43,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Mon, 27 Jul 2020 14:01:16 -0500
-Message-ID: <159587647598.27787.15511745962413099922.stgit@brunhilda>
+Date:   Mon, 27 Jul 2020 14:01:39 -0500
+Message-ID: <159587649899.27787.7507027995418595584.stgit@brunhilda>
 In-Reply-To: <159587636236.27787.16970342225988726638.stgit@brunhilda>
 References: <159587636236.27787.16970342225988726638.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -56,70 +56,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are some rare conditions where a spare
-is first in the device list causing an array
-out-of-bounds condition.
-
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Reviewed-off-by: Gerry Morong <gerry.morong@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 81d0414e2117..9b1edc541ed0 100644
+index 9286e60b8cc4..91794a50b31f 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3443,9 +3443,14 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
- 	struct ErrorInfo *ei = NULL;
- 	struct bmic_sense_storage_box_params *bssbp = NULL;
- 	struct bmic_identify_physical_device *id_phys = NULL;
--	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-+	struct ext_report_lun_entry *rle;
- 	u16 bmic_device_index = 0;
+@@ -59,7 +59,7 @@
+  * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
+  * with an optional trailing '-' followed by a byte value (0-255).
+  */
+-#define HPSA_DRIVER_VERSION "3.4.20-170"
++#define HPSA_DRIVER_VERSION "3.4.20-200"
+ #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
+ #define HPSA "hpsa"
  
-+	if (rle_index < 0 || rle_index >= HPSA_MAX_PHYS_LUN)
-+		return;
-+
-+	rle = &rlep->LUN[rle_index];
-+
- 	encl_dev->eli =
- 		hpsa_get_enclosure_logical_identifier(h, scsi3addr);
- 
-@@ -4174,6 +4179,9 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
- 	int rc;
- 	struct ext_report_lun_entry *rle;
- 
-+	if (rle_index < 0 || rle_index >= HPSA_MAX_PHYS_LUN)
-+		return;
-+
- 	rle = &rlep->LUN[rle_index];
- 
- 	dev->ioaccel_handle = rle->ioaccel_handle;
-@@ -4198,7 +4206,12 @@ static void hpsa_get_path_info(struct hpsa_scsi_dev_t *this_device,
- 	struct ReportExtendedLUNdata *rlep, int rle_index,
- 	struct bmic_identify_physical_device *id_phys)
- {
--	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-+	struct ext_report_lun_entry *rle;
-+
-+	if (rle_index < 0 || rle_index >= HPSA_MAX_PHYS_LUN)
-+		return;
-+
-+	rle = &rlep->LUN[rle_index];
- 
- 	if ((rle->device_flags & 0x08) && this_device->ioaccel_handle)
- 		this_device->hba_ioaccel_enabled = 1;
-@@ -4420,7 +4433,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		/*
- 		 * Skip over some devices such as a spare.
- 		 */
--		if (!tmpdevice->external && physical_device) {
-+		if (phys_dev_index >= 0 && !tmpdevice->external &&
-+			physical_device) {
- 			skip_device = hpsa_skip_device(h, lunaddrbytes,
- 					&physdev_list->LUN[phys_dev_index]);
- 			if (skip_device)
 
