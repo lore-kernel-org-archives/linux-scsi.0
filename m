@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78368C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53734C433E3
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F6682074F
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AA6E2074F
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:01:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728124AbgG0TBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 15:01:42 -0400
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:40782 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726897AbgG0TBl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 15:01:41 -0400
-IronPort-SDR: dUQHGQGcx3fbnf008J3fJr4hrKz0FgCuQLNO/+yCcayw0aK+KtdsNI9FRqtw/EaypJDmNNRDyl
- 0SMjbzVWL5neyid2CQ20NBcAGXVLZlCyM/3Yey10IE8Kf0j9zzzoVGRmvGfLOezujLUPwDUQv9
- V2pwv+r1u70Ci7IyJAsKOV6W0Ncx3g3LIKRz42La5egMIyHSW8nNfYdt5XIN8Y8tbFgjtjCEPE
- 3wZcVLFWSIG9lylxGD1nJ+tw2To1JOaHYAksqSnC7uV7buNSb8YhWPq62hSdrLWQo8P1pfUZ7b
- 1tk=
+        id S1728079AbgG0TBv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 15:01:51 -0400
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:46966 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726897AbgG0TBu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 15:01:50 -0400
+IronPort-SDR: 5K/4ulH65MVllY/URDBcD24nitCdwxuF0bozNlXs6+EIwzLzqZvJrdUdcaS3zhFYsoQO6RWfvw
+ UtPZjdKbq7nXYS/SXDihiMYihQ76g3eiUb/N6N0NDCQO6jfRFkDLUUeXSMT2gMsCIs8NoO/ohc
+ BnrS/v+qO3x8UuTTzlhuyISWoGYboKqMd/InyW1LNNAcG+aagqT4Bdpj5j/sX+zlN4wfomuOHA
+ brSJ2b0du0jmLB31SpJjjbAGDK6T9dM100PuAxrgXy20cuSdlFad/8JvJCdL9gC14TYHCiNWai
+ waU=
 X-IronPort-AV: E=Sophos;i="5.75,403,1589266800"; 
-   d="scan'208";a="81443407"
+   d="scan'208";a="89294021"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 27 Jul 2020 12:01:41 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 27 Jul 2020 12:01:49 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 27 Jul 2020 12:01:38 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Mon, 27 Jul 2020 12:00:53 -0700
-Subject: [PATCH 4/4] hpsa: bump version
+ 15.1.1979.3; Mon, 27 Jul 2020 12:01:32 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Mon, 27 Jul 2020 12:01:32 -0700
+Subject: [PATCH 3/4] hpsa: increase ctlr eh timeout
 From:   Don Brace <don.brace@microsemi.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -43,8 +43,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Mon, 27 Jul 2020 14:01:39 -0500
-Message-ID: <159587649899.27787.7507027995418595584.stgit@brunhilda>
+Date:   Mon, 27 Jul 2020 14:01:33 -0500
+Message-ID: <159587649303.27787.8370512556225680281.stgit@brunhilda>
 In-Reply-To: <159587636236.27787.16970342225988726638.stgit@brunhilda>
 References: <159587636236.27787.16970342225988726638.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -56,23 +56,62 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reviewed-off-by: Gerry Morong <gerry.morong@microsemi.com>
+Increase the timeout value for commands sent to
+the controller device.
+
+- controller can become slow to respond to INQUIRIES
+  resulting in the SML off-lining the controller
+  device.
+- when large RAID volumes are created along with
+  I/O stress, the controller can be slow to respond
+  to INQUIRIES.
+  - set/sense config along with device resets
+    can delay controller responses.
+
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9286e60b8cc4..91794a50b31f 100644
+index 9b1edc541ed0..9286e60b8cc4 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -59,7 +59,7 @@
-  * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
-  * with an optional trailing '-' followed by a byte value (0-255).
-  */
--#define HPSA_DRIVER_VERSION "3.4.20-170"
-+#define HPSA_DRIVER_VERSION "3.4.20-200"
- #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
- #define HPSA "hpsa"
+@@ -2134,6 +2134,7 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
+ }
+ 
+ /* configure scsi device based on internal per-device structure */
++#define CTLR_TIMEOUT (120 * HZ)
+ static int hpsa_slave_configure(struct scsi_device *sdev)
+ {
+ 	struct hpsa_scsi_dev_t *sd;
+@@ -2144,17 +2145,21 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
+ 
+ 	if (sd) {
+ 		sd->was_removed = 0;
++		queue_depth = sd->queue_depth != 0 ?
++				sd->queue_depth : sdev->host->can_queue;
+ 		if (sd->external) {
+ 			queue_depth = EXTERNAL_QD;
+ 			sdev->eh_timeout = HPSA_EH_PTRAID_TIMEOUT;
+ 			blk_queue_rq_timeout(sdev->request_queue,
+ 						HPSA_EH_PTRAID_TIMEOUT);
+-		} else {
+-			queue_depth = sd->queue_depth != 0 ?
+-					sd->queue_depth : sdev->host->can_queue;
+ 		}
+-	} else
++		if (is_hba_lunid(sd->scsi3addr)) {
++			sdev->eh_timeout = CTLR_TIMEOUT;
++			blk_queue_rq_timeout(sdev->request_queue, CTLR_TIMEOUT);
++		}
++	} else {
+ 		queue_depth = sdev->host->can_queue;
++	}
+ 
+ 	scsi_change_queue_depth(sdev, queue_depth);
  
 
