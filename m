@@ -2,173 +2,138 @@ Return-Path: <SRS0=pIAL=BG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB5B7C433E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 10:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AE7AC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 10:10:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5D7A20672
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 10:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 503242070B
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 10:10:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="NlaQKc2o"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="KPTZqZ0Q";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Jb7Hwsdu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726846AbgG0KCH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 06:02:07 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:23927 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726139AbgG0KCF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 06:02:05 -0400
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200727100202epoutp01da45f9a694e9565ebc1069c0e5036ae6~lk8YgHU7V1041710417epoutp01f
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2020 10:02:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200727100202epoutp01da45f9a694e9565ebc1069c0e5036ae6~lk8YgHU7V1041710417epoutp01f
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1595844122;
-        bh=+em7/DZRZwFlu9EgF7wiFFdw0IX3nurMIFe5dPpF/TA=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=NlaQKc2oQYgCh4jmjI5OatLjYyY61KXbGSuTrlZ7IZi5wqEGDwH081Nd3lXTpZ2QI
-         SZaVZpDt9V3VgqulM7fzjNva/Rn0khcxUijhwY+te9VY13LfZYhOLAn5nbvf9+KtvR
-         ScxHVNr6qIK1GP1cTApfQ8+MZ0tG+ENcinrje9Ys=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20200727100201epcas2p40c201323c9151b24f6dd25d679f680ed~lk8YHUdde3156831568epcas2p4c;
-        Mon, 27 Jul 2020 10:02:01 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.189]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4BFb1y4vSszMqYm0; Mon, 27 Jul
-        2020 10:01:58 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D3.F0.27441.616AE1F5; Mon, 27 Jul 2020 19:01:58 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200727100157epcas2p10c4a73894a510e6bb8011b86b9acb8be~lk8UhriG20670106701epcas2p1H;
-        Mon, 27 Jul 2020 10:01:57 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200727100157epsmtrp27e575c4e06fc68044b9ccfbd8ebf4136~lk8Ug6V-30840008400epsmtrp2N;
-        Mon, 27 Jul 2020 10:01:57 +0000 (GMT)
-X-AuditID: b6c32a47-fafff70000006b31-5f-5f1ea616a5b0
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        7E.83.08382.516AE1F5; Mon, 27 Jul 2020 19:01:57 +0900 (KST)
-Received: from KORDO040863 (unknown [12.36.185.126]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20200727100157epsmtip2febd12fc0bbab437785e239f8a5d82f4~lk8URv-Q11745317453epsmtip2f;
-        Mon, 27 Jul 2020 10:01:57 +0000 (GMT)
-From:   =?UTF-8?B?7ISc7Zi47JiB?= <hy50.seo@samsung.com>
-To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
-        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <bvanassche@acm.org>,
-        <grant.jung@samsung.com>
-In-Reply-To: <SN6PR04MB4640E7CB5A7F2E406323CFBAFC750@SN6PR04MB4640.namprd04.prod.outlook.com>
-Subject: RE: [RFC PATCH v3 2/3] scsi: ufs: modify function call name When
- ufs reset and restore, need to disable write booster
-Date:   Mon, 27 Jul 2020 19:01:57 +0900
-Message-ID: <071e01d663fc$f6bce010$e436a030$@samsung.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 14.0
-Thread-Index: AQHLP/cB05Q6MF8BaP7+redz0q/FGgLfFFEPASU1gksBdMSJPKkFsOPg
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCJsWRmVeSWpSXmKPExsWy7bCmma7YMrl4g429ShYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WHRjG5NF9/UdbBbLj/9jcuDyuHzF2+NyXy+T
-        x4RFBxg9vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCuCIyrHJSE1MSS1SSM1Lzk/JzEu3VfIO
-        jneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMAbpRSaEsMacUKBSQWFyspG9nU5RfWpKqkJFf
-        XGKrlFqQklNgaFigV5yYW1yal66XnJ9rZWhgYGQKVJmQk3H+9x3Wgm08FS/u3mFrYDzL2cXI
-        ySEhYCKxruE+axcjF4eQwA5GiRtHXrFBOJ8YJWb8/MUI4XxjlOiduZkNpuXlxddQib2MEo/b
-        vrKAJIQEXjJK9DxJBLHZBEwl+ratAJsrIjCNSWL3r0VMIAlOgViJd/NOsIPYwgINjBKnn9uA
-        2CwCqhLr3x5nBrF5BSwlvh24yg5hC0qcnPkEbAGzgLzE9rdzmCGuUJDYcRbkCk6gBW4SW5/N
-        Y4SoEZGY3dkGVbOFQ2JHpw+E7SIxbfIbVghbWOLV8S3sELaUxOd3e6E+q5eYcm8VC8jREgI9
-        jBJ7VpxggkgYS8x61g60gANogabE+l36IKaEgLLEkVtQp/FJdBz+yw4R5pXoaBOCaFSSODP3
-        NlRYQuLg7ByIsIfE/2WvWSYwKs5C8uMsJD/OQvLLLIS1CxhZVjGKpRYU56anFhsVGCPH9SZG
-        cPLVct/BOOPtB71DjEwcjIcYJTiYlUR4uUVl4oV4UxIrq1KL8uOLSnNSiw8xmgJDfSKzlGhy
-        PjD955XEG5oamZkZWJpamJoZWSiJ8xZbXYgTEkhPLEnNTk0tSC2C6WPi4JRqYOrfbrn5vvPS
-        Up6Jl/3/tf5J0X3zRcnxyyXfddKn0o8dP7Zp85MYfZcKtqJ+yxa3uZ8T2rjYd+/cwBZjytf6
-        WZzPSO/qHbPfe9i5XRf5LSm84fen5p7ZvMSihtLJXw5Nevc//dOWlJ4AdcfF804d1WP9/F3v
-        3JyYKqW8OKkJ/F/rH+/UL2y68P5elIQGu/05BqPsm375e2R3TQxpmSfD8jfk04tvn+9u4wnR
-        ncvRa+J6JIhRL2bBde8El21r6o/HZ56W3vn459EZ4Xp7tcUP/OK8UVfFEKPzRPiE7kJee2PO
-        83/LPI6zndx4fa1ktWX6/Zk6MqH2W88uemJ59WWhxZ4rghXCWwQvChg6fb3XbKPEUpyRaKjF
-        XFScCABpMUVTRwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprGIsWRmVeSWpSXmKPExsWy7bCSvK7oMrl4gzUftSwezNvGZrG37QS7
-        xcufV9ksDj7sZLGY9uEns8Wn9ctYLX79Xc9usejGNiaL7us72CyWH//H5MDlcfmKt8flvl4m
-        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMARxWWTkpqTWZZapG+XwJVx/vcd1oJt
-        PBUv7t5ha2A8y9nFyMkhIWAi8fLia8YuRi4OIYHdjBLN8z4zQiQkJP4vbmKCsIUl7rccYYUo
-        es4o0fmyAayITcBUom/bCrCEiMACJolHq/czQVStZJK4+/wfC0gVp0CsxLt5J9hBbGGBOomu
-        X81gcRYBVYn1b48zg9i8ApYS3w5cZYewBSVOznwCVsMsoC3R+7CVEcKWl9j+dg4zxEkKEjvO
-        vgaLiwi4SWx9Ng+qRkRidmcb8wRGoVlIRs1CMmoWklGzkLQsYGRZxSiZWlCcm55bbFhgmJda
-        rlecmFtcmpeul5yfu4kRHHVamjsYt6/6oHeIkYmD8RCjBAezkggvt6hMvBBvSmJlVWpRfnxR
-        aU5q8SFGaQ4WJXHeG4UL44QE0hNLUrNTUwtSi2CyTBycUg1Mc/ZfntehJHkqxI+ZMVYsJe72
-        bGt39/afG2qfLj974shekY774aff7b+3wqF6hXLoYZeSuT92LfqrtEKt+G+12kvbhAALkZ9C
-        vZnJS9wenfHUm5l6663Zyl8n1hU3mBz0b2c+81tcsTyroj7/y4zd3zL41jr/qLH669s0fdbv
-        rQwPV+zNYFeaHybcefxu0tnH3nPtK6Vm7ePbaskpFst/UKpavnLv6QXPrl9k+5S90c2m6LBY
-        1sVFQVt7Bd9/mPBxy7Vjm0v+NLYJbeZdLsX3bXuZUoT4g5KEv5uXTfnrkvCsYQXH7N773+Zq
-        /lgpLz5F+kbiywCF4lVWy79dBCYN58M3DS++5Li4zf0cL0ddlBJLcUaioRZzUXEiAKJ0PdYp
-        AwAA
-X-CMS-MailID: 20200727100157epcas2p10c4a73894a510e6bb8011b86b9acb8be
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200721095653epcas2p4575db5cbcd8897662ad19465339128b2
+        id S1726846AbgG0KKq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 06:10:46 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:4216 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726139AbgG0KKq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 06:10:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1595844645; x=1627380645;
+  h=from:to:subject:date:message-id:references:in-reply-to:
+   content-transfer-encoding:mime-version;
+  bh=w34RqWVcNdJNWHLJW4m0U5vhjLmKubjlslWTosfOb2k=;
+  b=KPTZqZ0QOft1tZZdsWLXjO80M0oojGJb4imf7W3w4MPPBX4by8n9js2R
+   I44rkSFvf2ngPYq7TiVJUDdG+eYo8gyRfhQPXWJLhNag/mL2Rl1/eiWv2
+   olRz4HiqOfMxYj6mhwnbGqQuwa2l2ebEZGqROFDPGmmycpfKEIJ1ZoFcT
+   qSBnt729pEnwVDySng5n99MCQdR59XskiaRY/c2+AsIAYAkA3sAilK98I
+   MjDV+bJNhnMetXvdRcJJND3t0iMICiAdFFtWj7+Qed1f6aBr4UiOYkki6
+   +Ozmf3ROw0fnYrBcfIjNu8I7nufWqKztHUQB96E4wdakWprlJUzIORe+N
+   Q==;
+IronPort-SDR: jSMbwqA0R5zY3UZTcdj/Odiv+kLkhVfa5fWa+izsTns/ntoqPWuFf3OBCcwNcx/d0bj0rQuLeX
+ fn5qx8mfjDNxqqa00npUw+4EMm2ZVDtNUbt3nG6zNG1UsjDUOjz9H7raMivNFlhn/LCCgLgdrU
+ X4zpqg693Jy49iJwSBu0PNN5ntz0RDY9v/zKp13lYqzXcaV/HpPFiyxyyqlsMF4xKxSVVpZLH9
+ Nwn1SLN4cBopHTyvM7XFopXZNcSRW/ekzMeJZL3906o/hUswMoC53o9Bl2VPR5RE7INkriDE0o
+ eFQ=
+X-IronPort-AV: E=Sophos;i="5.75,402,1589212800"; 
+   d="scan'208";a="147761471"
+Received: from mail-mw2nam12lp2040.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.40])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Jul 2020 18:10:44 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Szlp55eTWAzTbheM1GxXLn0PEaK8VPzZOcwgM/fIRcmkvb2TcSCUmjwT7bQhgiPtRbh638oFBG7I209espNtYAC2cT2iiGMZXT3r1cpv0kzxxp5FC3PKS5wQyCbJwuiyHmCp1ej26WaLQAknZmS32zSh/EKzGUinZ2L/oEDrn4K12HfVZ/VuS4pfh8UxnSOr3NGZjnJlQodpYnIbFgNsQlMlxxQbs7zqBGGPdxRau1yzN3JfMUUPn00ZOUsu4Ad0McTyPp89nYBEJyeJH/cosznykLU4Cl42ATlv8XAjwRvLcR4BMr/aZyrhM9yTqix7PNZjTFcHXVs7BGVLcwtQFA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=w34RqWVcNdJNWHLJW4m0U5vhjLmKubjlslWTosfOb2k=;
+ b=PQUJMJKEQXpDq9rXZLPjjUONLGaPOmbncb0a4WshEqGQEN0NA+4X4vjhsGMXNsaTaIaZsXP0z9o5Rj91RlIu04xYftY8Dy1trNiYYyrU+/2P0XnU/48ybh9Wpbw20hVmopZGGzERbj3okBluSaRr9L2wLD0Z4+ahqEDN2RheaGGl3UyA1jN5RcA5I88lSYAflu8J2g5pb3/32Pj8Nnu31wDrzRmP6bMEEvI3ZPtsauTo2CeUXV7WZoPHkAT3GzVVrNGBJuopSk+rwVOzhgcUS7PrTLzIo5VLqSw0lCjVlxnkEY6FdIep2tJXvwYFtBssoz7uBdjOAehiO80D8ayOZg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=w34RqWVcNdJNWHLJW4m0U5vhjLmKubjlslWTosfOb2k=;
+ b=Jb7HwsduEoa9eEj9yhmNGS4n2T762XPcG3a/UHL+xFaxpn/fyt+8a1W/4SgX5dvPSZsfg3A+Lnz7zHfnVb8RjOzW7L6yVaUryAPMT8AQ5yYGx2NRKPDVCzyc7ltTfHIPjz2tk7Qsren5uYI2BpAJNpW28Syz5VIvQBFQcOLr3kA=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB4192.namprd04.prod.outlook.com (2603:10b6:805:3a::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3216.23; Mon, 27 Jul
+ 2020 10:10:43 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::1c80:dad0:4a83:2ef2]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::1c80:dad0:4a83:2ef2%4]) with mapi id 15.20.3216.033; Mon, 27 Jul 2020
+ 10:10:43 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     =?utf-8?B?7ISc7Zi47JiB?= <hy50.seo@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "grant.jung@samsung.com" <grant.jung@samsung.com>
+Subject: RE: [RFC PATCH v3 1/3] scsi: ufs: modify write booster
+Thread-Topic: [RFC PATCH v3 1/3] scsi: ufs: modify write booster
+Thread-Index: AQHWX0VHDp/H9W3ONkKVkhESMJIZA6kZbLvggAHNSICAAAMrIA==
+Date:   Mon, 27 Jul 2020 10:10:43 +0000
+Message-ID: <SN6PR04MB4640AC885D7E57D6FB4A9994FC720@SN6PR04MB4640.namprd04.prod.outlook.com>
 References: <cover.1595325064.git.hy50.seo@samsung.com>
-        <CGME20200721095653epcas2p4575db5cbcd8897662ad19465339128b2@epcas2p4.samsung.com>
-        <52e4453499a65ad276df5af9a0f057e960704f93.1595325064.git.hy50.seo@samsung.com>
-        <SN6PR04MB4640E7CB5A7F2E406323CFBAFC750@SN6PR04MB4640.namprd04.prod.outlook.com>
+        <CGME20200721095648epcas2p18c3d496076ecd1537e47081c19dbb97e@epcas2p1.samsung.com>
+        <90ad671ed4a2b4f6035e9858153a13f7c00a1904.1595325064.git.hy50.seo@samsung.com>
+        <SN6PR04MB46406E701D8571E3A1EB5FDFFC750@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <071d01d663fc$4782ef40$d688cdc0$@samsung.com>
+In-Reply-To: <071d01d663fc$4782ef40$d688cdc0$@samsung.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: samsung.com; dkim=none (message not signed)
+ header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: a1b615a3-c15c-460c-6716-08d8321552b5
+x-ms-traffictypediagnostic: SN6PR04MB4192:
+x-microsoft-antispam-prvs: <SN6PR04MB41925A393996278B615CDED8FC720@SN6PR04MB4192.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: WIEuvd/egosN2+NjLigWEaWHIlWLzsFmQJbHKoMdlQyPSQsKK0lskYz761UL6BMbcRqoFljJY63QzcPIK3rXrnhUbrFuKyUOKNqprV0kXeVQcxkStSavZVvVred1kDvf0nXnejL3HbugOQrJ5gB0G8wTsa8UqDBBNxU8pvRVtp8CHvByqqt52lo2+aeYUym2NZi+vfW4aTDPlnCspYWg9siw2VEa2+bb0gXFPkku2C3kZJI2X5sS7s5ZK/F9MjUnIgBCDBwfz8vWHlZGHEWW7AsJQKmbXx/DmH0VO9oAsewQWOi0b7PHVsrDJcGweTDosVaAhoJRghoK9PEb4UFZLg/wVv1MOS6JXeELZgnd1r+8AcBF93PwhkHWqOXuz5iW
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(376002)(396003)(136003)(39860400002)(366004)(346002)(33656002)(71200400001)(7696005)(26005)(9686003)(5660300002)(7416002)(6506007)(186003)(4744005)(76116006)(66446008)(64756008)(66556008)(66476007)(86362001)(478600001)(66946007)(110136005)(52536014)(8936002)(8676002)(316002)(55016002)(83380400001)(2906002)(921003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: nYzTf6vojnUKqV5bZHq6VoDwgIdImy18Vtv9VNdhtqoI5RMhxOu45KDzpW69gIFU8mw71hMJxapQYrfWwNA7J2BxkEseY3Hlrdo/hR8OdW3xq0Rx1pmCh2tzTJKUI/2dLvdmERScQVxss6IM46lu0TTv7KiqmRZ16wk12tgLdkl8qKvf8jL118Xdto3mFsUSZbGovXJm5ufg23ZlRgIIpR/fTvgX7VPHHXZn2Okp51rXuMBFRBBPAB72k2PUROZlpvVSuomSc2OhjtwnO39G+7zjUynImgNpQMSgSHpt/fDwqQJJ5eHjcoan7uBVx62mH2mYCedMkVVfZj/p38DI0I/zmxyfTSv6siuTPgUwCKb+i9KeFt+2QAiDa3X1ATz3KwG+WbasZI7wVaDCkk/uWjqfqLbrTe8+5qEclIASoMg1lEWaIEI/EKHUaWkPUefQL6HpqwU1nj5vYq6OS3NVPDVR82f45b7TCz7J2BoppWzU1m1Tz2VIsNs2709VJ4jM
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1b615a3-c15c-460c-6716-08d8321552b5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jul 2020 10:10:43.4808
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ksHxTiFiTsA25Hi+SENEBk+6kSoBjyFqnlfd5bPQX79Blx7fkX10r8HFX+lokOxb7LE1UCeHwzCGXaySxjehJA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4192
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> This patch is not really needed - just squash it to the previous one.
-Why you said this patch is not really needed?
-I don't understand
-Our WB device need to disable WB when called ufshcd_reset_and_restore() func.
-Please explain reason.
-> 
-> >
-> >
-> > Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 2 +-
-> >  drivers/scsi/ufs/ufshcd.h | 2 +-
-> >  2 files changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 9261519e7e9a..3eb139406a7c 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -6615,7 +6615,7 @@ static int ufshcd_reset_and_restore(struct
-> > ufs_hba
-> > *hba)
-> >         int err = 0;
-> >         int retries = MAX_HOST_RESET_RETRIES;
-> >
-> > -       ufshcd_reset_vendor(hba);
-> > +       ufshcd_wb_reset_vendor(hba);
-> >
-> >         do {
-> >                 /* Reset the attached device */ diff --git
-> > a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
-> > deb9577e0eaa..61ae5259c62a 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -1217,7 +1217,7 @@ static int ufshcd_wb_ctrl_vendor(struct ufs_hba
-> > *hba, bool enable)
-> >         return hba->wb_ops->wb_ctrl_vendor(hba, enable);  }
-> >
-> > -static int ufshcd_reset_vendor(struct ufs_hba *hba)
-> > +static int ufshcd_wb_reset_vendor(struct ufs_hba *hba)
-> >  {
-> >         if (!hba->wb_ops || !hba->wb_ops->wb_reset_vendor)
-> >                 return -1;
-> > --
-> > 2.26.0
-
-
+PiA+IExpa2UgSSBhbHJlYWR5IHRvbGQgeW91IGluIHlvdXIgdjE6DQo+ID4gSWYgeW91IGFyZSBy
+ZWxheWluZyBvbiB1ZnNmZWF0dXJlcyAtIHlvdSBuZWVkIHRvIHdhaXQgZm9yIGl0IHRvIGJlIG1l
+cmdlZC4NCj4gPiBNZWFud2hpbGUsIGl0IGdvdCBuYWNrZWQgKG5hY2teMiBhY3R1YWxseSksIHNv
+IHlvdSBuZWVkIHRvIHRha2UgdGhpcyBpbnRvDQo+ID4gYWNjb3VudC4NCj4gDQo+IFNvcnJ5LCBm
+b3Igbm90IGNhdGNoaW5nIHRoaXMuDQo+IFRoZW4gY2FuIEkga25vdyB3aGVuIHRoZSBjb2RlIHdh
+cyBtZXJnZWQ/DQo+IEkgd2lsbCByZW1vdmUgdGhpcyBmdW5jdGlvbi4NCllvdSBjYW4gZm9sbG93
+ICJzY3NpOiB1ZnM6IEFkZCBIb3N0IFBlcmZvcm1hbmNlIEJvb3N0ZXIgU3VwcG9ydCIgLSANCk9u
+bHkgaWYgeW91IGFyZSBub3QgcmVtb3ZpbmcgdGhlIGRlcGVuZGVuY3kgaW4gdWZzZmVhdHVyZXMu
+DQo=
