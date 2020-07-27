@@ -8,68 +8,65 @@ X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 139AEC433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 14:42:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43C3EC43459
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 14:42:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD57720719
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 14:42:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 234A420714
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 14:42:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="peHWGC30"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="llKbCc1J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730238AbgG0OmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 10:42:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34506 "EHLO
+        id S1729022AbgG0OGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 10:06:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729232AbgG0OHZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 10:07:25 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B98C061794;
-        Mon, 27 Jul 2020 07:07:25 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id l2so2788348pff.0;
-        Mon, 27 Jul 2020 07:07:25 -0700 (PDT)
+        with ESMTP id S1729005AbgG0OGx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 10:06:53 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48261C0619D2;
+        Mon, 27 Jul 2020 07:06:53 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id c6so2812845pje.1;
+        Mon, 27 Jul 2020 07:06:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:mime-version:content-disposition
          :user-agent;
-        bh=rRa+fNv/h1FLu+e0oE4gptqf0fEaL6gJEA3JJuU10DI=;
-        b=peHWGC30Cc4mA3aNsP0q1simXnVE+JXDG/VGM4rr2LjgWNKoOR7WolOdacYFzdz6bU
-         Iue6nCpY7k7ThnLX3f2gtK1eVj27P5VSL4dXkrDAvRQBgl8SgaNxxv/D4Eds4TXdqYmg
-         jbrRzyRDLN8JUq4CD9qD9ja7U8+wZWQwybqxr+yYtV4ZcXdr8xrPnGBitLIoeGGB/X+v
-         9nqpEItJUw5nWDi4Z3mCh35jqpRjjlPFatlFkicfeHbjbqiVObU1UyYfG6YAHf4GUj9t
-         vojKLcNOOV+Whq2u7UWhAzh9+8iyAB/daxYBQH6hJTgCSnBCZnAdlfbZriKVkn1pzoKr
-         oqww==
+        bh=/dlgd3xXF2wViyMH4/dVOyKUUCfyX+RzmgXdSrfRYJs=;
+        b=llKbCc1Jzqqo+R2xnbeoSk/TDJIw41decVAgoX43zZVyuP/6dBJRdvVkOESBSZdY3L
+         A96qMW2LreOn6cizUXAumgXb4phDCe+3Wmp0SCjIhtrMbZc9/XlXNsuZ42Mkxi9onWUN
+         e/kI4+z14oylOT5JCyzHeS2a6YKqMRmH64petkoLdwnt4KWGFluP0k0YrufbbbybYjjW
+         v5/tH2Z311vFwPIgGNRMCNKM9yR9GKhUEmjyiPAtXXp2VBPT9GelUDEFlRgNgWDpxgrC
+         jgiGlAuMF/8reRfi4rxL91Xiz0S4wZvgvqDfkIyyLp3PWYjaVoEGxqU3u7qlC5u448EM
+         KVWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
          :content-disposition:user-agent;
-        bh=rRa+fNv/h1FLu+e0oE4gptqf0fEaL6gJEA3JJuU10DI=;
-        b=I7IoomyFVkzi7fwzg2rCnKM6srqnetTQuNsaSowOXBopEeFLDdgmPJC8HoAX4GqRWu
-         3rBXxmU+tDuoZktNL1uy18w3VfupdJVga68utFv8O9NLXq6k5LYGzCZOa3k/SHVKTa42
-         hdB+c/BhqRZPUV9qoWQxnG/V8X6u7bFiHCTS1vxprTaX/FMe8prKuMFRyhqVdla0LYqp
-         LlUukqOLDeIu3INxghEPTU/9KXalgimjIti4ty9/usglZbT0B+JJ5IIYJoW/sHRJdUnF
-         FH+w3z+2wZsx3JiOXrKdMEMAun3mN5vspZLrd/gYMa0NolyUn4jeI0qrQa0D88upj2qm
-         ZIzQ==
-X-Gm-Message-State: AOAM530o/rTFUAFbO2DrICdBlylIZlZlccyQ4lVzL5rkHyBFG28XX00F
-        gb4hraNtJ5HSxT+BSox8Gk7xaT3+8oQ=
-X-Google-Smtp-Source: ABdhPJwyQG7PnT2nCaXWxsHbL2qpIG3kNtO1WyEmRdXQAB+5YOW+5gNsYZR0JpVmHGErRsOzZv3g7w==
-X-Received: by 2002:a62:164a:: with SMTP id 71mr20981392pfw.266.1595858844659;
-        Mon, 27 Jul 2020 07:07:24 -0700 (PDT)
+        bh=/dlgd3xXF2wViyMH4/dVOyKUUCfyX+RzmgXdSrfRYJs=;
+        b=fwcOMntVLKtYfuIQN39cugOgI9Sl8ZrPUU2VxdvMk8f+PzqUkaZHdWnVN8iJOiJ48i
+         SWirCozrdo/XcxeTcZ08Sj0HHqW01Xe4IdAIMB1FX6vuBYGoacBIEtYWE4ajB8qZx2j+
+         fvClJ/gJCoZu+TFuI3mqU+q0VebrM9fNBGTk7mQGIeIwvg/U93u1ElhuLZJ+hcFxqFd9
+         Hoh1nIPwhRvr0RMKiX13rx2WpyqdQJnohVsECFuNXXXuLfR7CHn0QuCrnWjH1mXUmdLB
+         7PlKdxX9L6/r9Mn39Xc7Onb/7TlkTRa+MI33wZbWd44yGeCg9Z/SE3HVbPwqK1OCg0Sg
+         /oJw==
+X-Gm-Message-State: AOAM532gr8j+dFs7miW1gU70ENr0+MMMati3d4R9GlBpoAJTJ2AJWyUo
+        thdE0iNNqDDX/6R8BsgMaS0PL/QR+j4=
+X-Google-Smtp-Source: ABdhPJyNjZQimFQYsPZZojsGgdduUxnpmtCXQWSqh9MJ9HkwSZ8ELCmS6a/9rrVk9cGhiLpy+DgT6A==
+X-Received: by 2002:a17:90a:2d8b:: with SMTP id p11mr13163026pjd.10.1595858812742;
+        Mon, 27 Jul 2020 07:06:52 -0700 (PDT)
 Received: from blackclown ([103.88.82.91])
-        by smtp.gmail.com with ESMTPSA id n137sm15266576pfd.194.2020.07.27.07.07.21
+        by smtp.gmail.com with ESMTPSA id y18sm15372647pff.10.2020.07.27.07.06.50
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 27 Jul 2020 07:07:23 -0700 (PDT)
-Date:   Mon, 27 Jul 2020 19:37:18 +0530
+        Mon, 27 Jul 2020 07:06:51 -0700 (PDT)
+Date:   Mon, 27 Jul 2020 19:36:40 +0530
 From:   Suraj Upadhyay <usuraj35@gmail.com>
-To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org,
-        jejb@linux.ibm.com, don.brace@microsemi.com
-Cc:     dc395x@twibble.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, esc.storagedev@microsemi.com
-Subject: [PATCH RESEND] scsi: hpsa and dc395x: Remove pci_dma_compat wrapper
- APIs.
-Message-ID: <20200727140718.GB14759@blackclown>
+To:     hare@suse.com, jejb@linux.ibm.com, martin.peterson@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH RESEND] scsi: aic7xxx: Remove pci-dma-compat wrapper APIs.
+Message-ID: <20200727140640.GA14759@blackclown>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="pvezYHf7grwyp3Bc"
+        protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
 Content-Disposition: inline
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
@@ -78,7 +75,7 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---pvezYHf7grwyp3Bc
+--UugvWAfsgieZRqgk
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -89,7 +86,9 @@ for include/linux/dma-mapping.h APIs, instead use dma-mapping.h
 APIs directly.
 
 The patch has been generated with the coccinelle script below
-and compile-tested.
+and has been hand modified to replace GFP_ with correct flag.
+
+Compile-tested only.
 
 @@@@
 - PCI_DMA_BIDIRECTIONAL
@@ -173,102 +172,57 @@ and compile-tested.
 
 Signed-off-by: Suraj Upadhyay <usuraj35@gmail.com>
 ---
- drivers/scsi/dc395x.c |  6 +++---
- drivers/scsi/hpsa.c   | 16 ++++++++--------
- 2 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 37c6cc374079..58d4acdb0447 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -902,7 +902,7 @@ static void build_srb(struct scsi_cmnd *cmd, struct Dev=
-iceCtlBlk *dcb,
- 	nseg =3D scsi_dma_map(cmd);
- 	BUG_ON(nseg < 0);
-=20
--	if (dir =3D=3D PCI_DMA_NONE || !nseg) {
-+	if (dir =3D=3D DMA_NONE || !nseg) {
- 		dprintkdbg(DBG_0,
- 			"build_srb: [0] len=3D%d buf=3D%p use_sg=3D%d !MAP=3D%08x\n",
- 			   cmd->bufflen, scsi_sglist(cmd), scsi_sg_count(cmd),
-@@ -3135,7 +3135,7 @@ static void pci_unmap_srb(struct AdapterCtlBlk *acb, =
-struct ScsiReqBlk *srb)
- 	struct scsi_cmnd *cmd =3D srb->cmd;
- 	enum dma_data_direction dir =3D cmd->sc_data_direction;
-=20
--	if (scsi_sg_count(cmd) && dir !=3D PCI_DMA_NONE) {
-+	if (scsi_sg_count(cmd) && dir !=3D DMA_NONE) {
- 		/* unmap DC395x SG list */
- 		dprintkdbg(DBG_SG, "pci_unmap_srb: list=3D%08x(%05x)\n",
- 			srb->sg_bus_addr, SEGMENTX_LEN);
-@@ -3333,7 +3333,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struc=
-t DeviceCtlBlk *dcb,
-=20
- 		if (!ckc_only && (cmd->result & RES_DID) =3D=3D 0
- 		    && cmd->cmnd[2] =3D=3D 0 && scsi_bufflen(cmd) >=3D 8
--		    && dir !=3D PCI_DMA_NONE && ptr && (ptr->Vers & 0x07) >=3D 2)
-+		    && dir !=3D DMA_NONE && ptr && (ptr->Vers & 0x07) >=3D 2)
- 			dcb->inquiry7 =3D ptr->Flags;
-=20
- 	/*if( srb->cmd->cmnd[0] =3D=3D INQUIRY && */
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 81d0414e2117..ef90391a0269 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -9310,10 +9310,10 @@ static int hpsa_enter_performant_mode(struct ctlr_i=
-nfo *h, u32 trans_support)
- static void hpsa_free_ioaccel1_cmd_and_bft(struct ctlr_info *h)
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic7=
+9xx_osm.c
+index 3782a20d5888..2998d70e1987 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -952,8 +952,8 @@ int
+ ahd_dmamem_alloc(struct ahd_softc *ahd, bus_dma_tag_t dmat, void** vaddr,
+ 		 int flags, bus_dmamap_t *mapp)
  {
- 	if (h->ioaccel_cmd_pool) {
--		pci_free_consistent(h->pdev,
--			h->nr_cmds * sizeof(*h->ioaccel_cmd_pool),
--			h->ioaccel_cmd_pool,
--			h->ioaccel_cmd_pool_dhandle);
-+		dma_free_coherent(&h->pdev->dev,
-+				  h->nr_cmds * sizeof(*h->ioaccel_cmd_pool),
-+				  h->ioaccel_cmd_pool,
-+				  h->ioaccel_cmd_pool_dhandle);
- 		h->ioaccel_cmd_pool =3D NULL;
- 		h->ioaccel_cmd_pool_dhandle =3D 0;
- 	}
-@@ -9363,10 +9363,10 @@ static void hpsa_free_ioaccel2_cmd_and_bft(struct c=
-tlr_info *h)
- 	hpsa_free_ioaccel2_sg_chain_blocks(h);
+-	*vaddr =3D pci_alloc_consistent(ahd->dev_softc,
+-				      dmat->maxsize, mapp);
++	*vaddr =3D dma_alloc_coherent(&ahd->dev_softc->dev, dmat->maxsize, mapp,
++				    GFP_ATOMIC);
+ 	if (*vaddr =3D=3D NULL)
+ 		return (ENOMEM);
+ 	return(0);
+@@ -963,8 +963,7 @@ void
+ ahd_dmamem_free(struct ahd_softc *ahd, bus_dma_tag_t dmat,
+ 		void* vaddr, bus_dmamap_t map)
+ {
+-	pci_free_consistent(ahd->dev_softc, dmat->maxsize,
+-			    vaddr, map);
++	dma_free_coherent(&ahd->dev_softc->dev, dmat->maxsize, vaddr, map);
+ }
 =20
- 	if (h->ioaccel2_cmd_pool) {
--		pci_free_consistent(h->pdev,
--			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
--			h->ioaccel2_cmd_pool,
--			h->ioaccel2_cmd_pool_dhandle);
-+		dma_free_coherent(&h->pdev->dev,
-+				  h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
-+				  h->ioaccel2_cmd_pool,
-+				  h->ioaccel2_cmd_pool_dhandle);
- 		h->ioaccel2_cmd_pool =3D NULL;
- 		h->ioaccel2_cmd_pool_dhandle =3D 0;
- 	}
+ int
 --=20
 2.17.1
 
 
---pvezYHf7grwyp3Bc
+--UugvWAfsgieZRqgk
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8e35YACgkQ+gRsbIfe
-745LERAArCx2Ge07lVIKLK0+ZHYsHsU+GUJH4CMIJ6cWPDmY3kPrWA68T9/RwPhv
-T39sW+NRyr4qrQL15WFOST8/x1xXIZKh76wGu8LMsan+UFwzxN57cAq2dzCQJ7Cp
-o55GkPNParldjorb4EcE3lKHIG2Yx1O05kUJ4WV/Zfllq0L2cT7BFYf0ggqFmnLo
-0pqh6TPH+yP8DdeADX0fe99/wLHr9jZSy/DnwNkfS4fU5VyAIUcDjdlDTX8gQ72r
-m8etjUazpEhWQK5rDP1vX0QOY2RM7g1gunAKR3J0x+/5shEmWFnkkfJrrCcAz37R
-JZMG4mXA1Tgb2bFtYtRo2bZgJlyPtDGr+LegnW5TiWLUGhTOXx+z282mids0P65E
-tsdel8P3gHgRuYrp7rC4a+QVqhJLEDLYB8Tfj3T3j46tykf3CA5nLZoJ12uJGxRK
-CgPyYNtt0r0YHEGvgEBnRrO06jc8e5Of+mGCFGQYtc+FNXOHmE8C/A0u8b2hqPeE
-03IAkIhCLTqefsGn+fFkIraZtTiA7Et81znkBh0bY5W5loYWUTl3agGgJ+rv/VpM
-v1nwVCu3jwvOoPOHVzfELC8pu/rpgkrO/36XEbjMbQ8eIMDh/4036yGiBjx+Cw+/
-EXpiQQQ7wo8+OvvWg9x050ql4JxGq0h36KrBLLnxhGqGWxwRCxQ=
-=myJW
+iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8e32UACgkQ+gRsbIfe
+744KDw/7BpO7VI4xx9d2wmnGAwifaIX6neKoXzHs8RxWHssVDdZHn0PVd07wcNTZ
+2GYQ3gr9HVZJKe3GGwLY1naLzK2Ee28bHvfUro/DEdcJHjF5oyVgCwYEJT5vxdrU
+0wO2SvP3uUha3INyogAqUecWIdhqo6sGJ4LPnoeu93vp/RIK81CELKebxP9vkY9s
+Lq2l+BxeXyMMTxxfUWNMRTurf3FqqOnmRuN9uqM9hH+wMmM6WgY0BYDKam4fVecw
+/AwSrHQVyDzRle/zMnGUgJhV50KPwJbkmm2de2aqAUkwwrYYpOan5VgU5A+hRQJO
+7ry9jBXRxZn1rBz8T/v9IXD2UZ705/o6tDm51YrUrNY+Kk7JOI1rp2pTHV2ITpIQ
+aGp7SBUSEeXELdjrkgD/BSC0iopZ+apeiIh87qZEJ3VqS7xvrB05b8xm0XPKXDNy
+i3O3Vc5aOAypnb7GhBWxvKaM962WGhnH2AvRvxrPDbFRycsafwnkVa7QPU4P1Xs4
+xZG8HYg8SSJ3uLLpxb00SrtvDL9lyzR1cMWVU42eEDUeB0W9N/fY3rPvpB28iJ37
+CeAaJu8purH1u/+2B80S/p0933lWpih07cmnIx12q3R1MiFY2z5PlyJDiUGxeIbq
+YGsKrIMLMgPAHmNt5/I9LyAyoA1TaVsgiHwRKOY2jHFOWCHc+n0=
+=yJ/4
 -----END PGP SIGNATURE-----
 
---pvezYHf7grwyp3Bc--
+--UugvWAfsgieZRqgk--
