@@ -2,135 +2,132 @@ Return-Path: <SRS0=pIAL=BG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7C6C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:18:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CCECC433F8
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:18:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5E2B2073E
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:18:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3F1120719
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 19:18:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728641AbgG0TSM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 15:18:12 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:34887 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728059AbgG0TSL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Jul 2020 15:18:11 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 68FF3204255;
-        Mon, 27 Jul 2020 21:18:09 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 3R-2pdETWCgn; Mon, 27 Jul 2020 21:18:02 +0200 (CEST)
-Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id 27CFF20415B;
-        Mon, 27 Jul 2020 21:18:00 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [v4 00/11] Add persistent durable identifier to storage log
- messages
-To:     tasleson@redhat.com, Hannes Reinecke <hare@suse.de>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, b.zolnierkie@samsung.com,
-        axboe@kernel.dk
-References: <20200724171706.1550403-1-tasleson@redhat.com>
- <20200726151035.GC20628@infradead.org>
- <e3184753-bda1-fcfd-5cc2-7aa865d420fd@redhat.com>
- <bd1fb6dc-9fc1-0ee2-13a4-d221f28442c6@suse.de>
- <a67a11dc-1a5a-648a-7ef1-cf36d3a56518@redhat.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <90798655-0ee1-330f-cae4-937c4981563a@interlog.com>
-Date:   Mon, 27 Jul 2020 15:17:58 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1728686AbgG0TSh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 15:18:37 -0400
+Received: from mout.kundenserver.de ([212.227.126.133]:38247 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728107AbgG0TSh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jul 2020 15:18:37 -0400
+Received: from mail-qk1-f172.google.com ([209.85.222.172]) by
+ mrelayeu.kundenserver.de (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1N4yuK-1kyoJi1ap2-010reW; Mon, 27 Jul 2020 21:18:34 +0200
+Received: by mail-qk1-f172.google.com with SMTP id b14so14647372qkn.4;
+        Mon, 27 Jul 2020 12:18:34 -0700 (PDT)
+X-Gm-Message-State: AOAM5315TarJ964jIzA0jkckVQjgHvwvmD9Z6JJjIamE3Zd6/6EMrXDy
+        B+Jc0wRqz2acYj+Cqi5OsE8WNaqqNhDvKkMTfUA=
+X-Google-Smtp-Source: ABdhPJyPyuOhSSKcN3s0PoPWgWpIsASyjJkBJWTfjnn06ZQrJGvrqqFPGvwBi9CaJlGj78PTXJEf6kW9xdQMA/GJnj4=
+X-Received: by 2002:a05:620a:2444:: with SMTP id h4mr25459006qkn.352.1595877513159;
+ Mon, 27 Jul 2020 12:18:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <a67a11dc-1a5a-648a-7ef1-cf36d3a56518@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+References: <20200726191428.26767-1-samuel@sholland.org>
+In-Reply-To: <20200726191428.26767-1-samuel@sholland.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Mon, 27 Jul 2020 21:18:17 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3yj=ySNCn7YtEXxWiRK0FtG+5ftkV+vb3s82yRi7cdLw@mail.gmail.com>
+Message-ID: <CAK8P3a3yj=ySNCn7YtEXxWiRK0FtG+5ftkV+vb3s82yRi7cdLw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: 3w-9xxx: Fix endianness issues found by sparse
+To:     Samuel Holland <samuel@sholland.org>
+Cc:     Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:UTGN9kH981sad+tzK2dGq9L2NaYVeEeMZy6v6a2LlDQ9ci+Wn6/
+ YTtyH2IsyOhjgLd4lo8vq1iZPrOC0Q4APJAJVDAO/S1p5vV+hxLsyP51feGlHi81GSSON12
+ NhchqazUdiae6HxhWyxO7odDe+aKGwc5avTQIQi/stGOfLxkmcMn0foU1FHE6dTkoYHUaOx
+ m8hi0FJHBEifpYx38s6AQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:WY/a3fnxwng=:NU9/9WsxwVggoUJLyMB5bi
+ QOoRm9smivL+qrAIICUGoNBwgRs21vTHrL1pETKVrwTVpViLiFmeCEyNCpS6WxP77m6YQmwIf
+ VMPuTNJBa6HH2jPIAIo77ijtBRFtkbqXY6s/lS8ha+cauuoFyz4tP6caPCNMuJdOEFOySLH/M
+ H9VGZzB8uhJyecBa5WS2JHkGixmw7sqFszZwaFr24LXXrsq1z+O+vJPxydeuYv3d5hK/bsN7t
+ v1xqFg9rKpHsSiSE2g904eg/UpRAvXRE5Y0t6atgwx2jXssHGB/D8jkv9qrKAUzbgO/zq6yuD
+ u76deoNWur84eZO4/hG8L4mrrojdUdSAjfXjH8qN0UtWMfZLPydYYCrWcF7G50KEf5+5VUUe/
+ Eiit7CZFHyDGALJoQ9ScP7TogOd3eEYk0qUWZLHY73sKpjNGWVtJa0mnomrFvpv8/zFe3Y5Zd
+ 7nR0NG3MYrmwTvCleAqG5rkq0XxUjKhHbf6UzBaMbSASY+9JsG+yVZRWCX/iLzLv67ZO426Qm
+ C79g0SVeUVa9Uh0Dujkas8L4AUn4LgD48dZhypnOUQfTtKhg/Xju0jr6Igxp4tj521PNtpYxo
+ 7nalHVUA5JQyE0MxvKqQbl/zSvIpByu6Cq0QtccTHwlPWs2o9FrDg1ipPTpE/hJwoM1HoPBEn
+ 9n+DLs1Iy1aczVcYqkn72613nCV0BwSgLgptmuMCVEd3I7HlR7zaClxyxSKPyiqXPX0mb8Ucc
+ QEA1BKCU32gfir6xjpD2pTa+yc7PXTmkHEfezBj45ImLrXnAhYYkns+rHiCdBu+fT1E8zHaJi
+ TecCER1YaldxTx1IGFwEIU06szaryIxK/dOq5OxDYFqqtADCCWDMntA9cxT2vx0clGuBoML
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-27 1:42 p.m., Tony Asleson wrote:
-> On 7/27/20 11:46 AM, Hannes Reinecke wrote:
->> On 7/27/20 5:45 PM, Tony Asleson wrote:
->>> On 7/26/20 10:10 AM, Christoph Hellwig wrote:
->>>> FYI, I think these identifiers are absolutely horrible and have no
->>>> business in dmesg:
->>>
->>> The identifiers are structured data, they're not visible unless you go
->>> looking for them.
->>>
->>> I'm open to other suggestions on how we can positively identify storage
->>> devices over time, across reboots, replacement, and dynamic
->>> reconfiguration.
->>>
->>> My home system has 4 disks, 2 are identical except for serial number.
->>> Even with this simple configuration, it's not trivial to identify which
->>> message goes with which disk across reboots.
->>>
->> Well; the more important bits would be to identify the physical location
->> where these disks reside.
->> If one goes bad it doesn't really help you if have a persistent
->> identification in the OS; what you really need is a physical indicator
->> or a physical location allowing you to identify which disk to pull.
-> 
-> In my use case I have no slot information.  I have no SCSI enclosure
-> services to toggle identification LEDs or fault LEDs for the drive sled.
->   For some users the device might be a virtual one in a storage server,
-> vpd helps.
-> 
-> In my case the in kernel vpd (WWN) data can be used to correlate with
-> the sticker on the disk as the disks have the WWN printed on them.  I
-> would think this is true for most disks/storage devices, but obviously I
-> can't make that statement with 100% certainty as I have a small sample size.
-> 
->> Which isn't addressed at all with this patchset (nor should it; the
->> physical location it typically found via other means).
->>
->> And for the other use-cases: We do have persistent device links, do we
->> not?
-> 
-> How does /dev/disk/by-* help when you are looking at the journal from 1
-> or more reboots ago and the only thing you have in your journal is
-> something like:
-> 
-> blk_update_request: critical medium error, dev sde, sector 43578 op
-> 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-> 
-> The links are only valid for right now.
+On Sun, Jul 26, 2020 at 9:15 PM Samuel Holland <samuel@sholland.org> wrote:
+>
+> The main issue observed was at the call to scsi_set_resid, where the
+> byteswapped parameter would eventually trigger the alignment check at
+> drivers/scsi/sd.c:2009. At that point, the kernel would continuously
+> complain about an "Unaligned partial completion", and no further I/O
+> could occur.
+>
+> This gets the controller working on big endian powerpc64.
+>
+> Signed-off-by: Samuel Holland <samuel@sholland.org>
+> ---
+>  drivers/scsi/3w-9xxx.c | 35 +++++++++++++++++------------------
+>  drivers/scsi/3w-9xxx.h |  6 +++++-
+>  2 files changed, 22 insertions(+), 19 deletions(-)
+>
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index 3337b1e80412..95e25fda1f90 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+> @@ -303,10 +303,10 @@ static int twa_aen_drain_queue(TW_Device_Extension *tw_dev, int no_check_reset)
+>
+>         /* Initialize sglist */
+>         memset(&sglist, 0, sizeof(TW_SG_Entry));
+> -       sglist[0].length = TW_SECTOR_SIZE;
+> -       sglist[0].address = tw_dev->generic_buffer_phys[request_id];
+> +       sglist[0].length = cpu_to_le32(TW_SECTOR_SIZE);
+> +       sglist[0].address = TW_CPU_TO_SGL(tw_dev->generic_buffer_phys[request_id]);
 
-Does:
-    lsscsi -U
-or
-    lsscsi -UU
+This looks like it would add a sparse warning, not fix one, unless you also
+change the types of the target structure.
 
-solve your problem, or come close?
+> @@ -501,7 +501,7 @@ static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
+>             Sunday 12:00AM */
+>         local_time = (ktime_get_real_seconds() - (sys_tz.tz_minuteswest * 60));
+>         div_u64_rem(local_time - (3 * 86400), 604800, &schedulertime);
+> -       schedulertime = cpu_to_le32(schedulertime % 604800);
+> +       cpu_to_le32p(&schedulertime);
+>
+>         memcpy(param->data, &schedulertime, sizeof(u32));
 
-Example:
-# lsscsi -UU
-[1:0:0:0]    disk    naa.5000cca02b38d0b8  /dev/sda
-[1:0:1:0]    disk    naa.5000c5003011cb2b  /dev/sdb
-[1:0:2:0]    enclosu naa.5001b4d516ecc03f  -
-[N:0:1:1]    disk    eui.e8238fa6bf530001001b448b46bd5525    /dev/nvme0n1
+You dropped the '%' operation, and the result of the byteswap?
 
-The first two (SAS SSDs) NAAs are printed on the disk labels. I don't
-think either that enclosure or the M2 NVMe SSD have their numbers
-visible (i.e. the last two lines of output).
+> @@ -1004,7 +1004,7 @@ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_
+>                                full_command_packet->header.status_block.error,
+>                                error_str[0] == '\0' ?
+>                                twa_string_lookup(twa_error_table,
+> -                                                full_command_packet->header.status_block.error) : error_str,
+> +                                                le16_to_cpu(full_command_packet->header.status_block.error)) : error_str,
+>                                full_command_packet->header.err_specific_desc);
+>                 else
 
-If it is what you want, then perhaps you could arrange for its output
-to be sent to the log when the system has stabilized after a reboot. That
-would only leave disk hotplug events exposed.
+This looks correct, but the error value has already been copied into the local
+'error' variable, which you could use for simplification. As 'status_block' is
+defined as a native_endian structure, this also introduced a sparse warning.
 
-Faced with the above medium error I would try:
-    dd if=<all_possibles> bs=512 skip=43578 iflag=direct of=/dev/null count=1
-and look for noise in the logs. Change 'bs=512' up to 4096 if that is
-the logical block size. For <all_possibles> use /dev/sde (and /dev/sdf and
-/dev/dev/sdg or whatever) IOWs the _whole_ disk device name.
+> @@ -1012,7 +1012,7 @@ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_
+>                                full_command_packet->header.status_block.error,
+>                                error_str[0] == '\0' ?
+>                                twa_string_lookup(twa_error_table,
+> -                                                full_command_packet->header.status_block.error) : error_str,
+> +                                                le16_to_cpu(full_command_packet->header.status_block.error)) : error_str,
 
-Doug Gilbert
+Same here
+
+       Arnd
