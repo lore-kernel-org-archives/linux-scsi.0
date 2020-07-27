@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97200C4345C
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:24:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BD8C433ED
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:29:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75C59208E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:24:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2AA7208E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:29:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595892273;
-	bh=fli9BB9wXWbNaizd57fZ7B9u6zDs9BY1kleIiBJzss0=;
+	s=default; t=1595892592;
+	bh=Pitj1+H31x7T5ROVJY7sUuEMZ1mCzpxT52kpfNBExEo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Jiz+2nPWaws+dEkBf6pPkIXUTmDkMJTtkP8mJWilfUMH8TBJgKsmlYO/22UUPYL24
-	 Nlo+D94AyVPTcKAD2m9KaZcgYtKLjI8FBhH25K02dk5wtWq+B8LMWX+ll1rDuSiZAR
-	 oKwrN0lsQXLXSgkd1O82AHtNQGD5kJreA131gTr4=
+	b=RlXD3w6MyorpQuRsZYTyhU9GzIYhiTaDL0JxjF8HWbGOAR5cIlSwwtVHazlZf4JMa
+	 H3lRbvOT++IqqBhj5IDZQxyhqguMMhZkGlmDJeC8PNFvKr9//1ItNqcDa6W8pwgs7b
+	 8qdOul6aHE6UFLyKM8HIdvze58Z2r5t/BSWHdjpo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728269AbgG0XYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 19:24:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35526 "EHLO mail.kernel.org"
+        id S1728174AbgG0X3u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 19:29:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34868 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728258AbgG0XYb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Jul 2020 19:24:31 -0400
+        id S1727986AbgG0XYB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Jul 2020 19:24:01 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F140B22B40;
-        Mon, 27 Jul 2020 23:24:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3436121744;
+        Mon, 27 Jul 2020 23:23:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595892269;
-        bh=fli9BB9wXWbNaizd57fZ7B9u6zDs9BY1kleIiBJzss0=;
+        s=default; t=1595892240;
+        bh=Pitj1+H31x7T5ROVJY7sUuEMZ1mCzpxT52kpfNBExEo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=abIFjlywKqxecxQsd2dGFPr/9+rRLnkjSbqe1fuDmQktwqtRYhyJ2b8EPAMkDjpGH
-         vBi43GXhXIvqAMFEaWC3PG7LOpRyIj6i5w8rBfuRLJUnQr5MIo5bFA/bqw8rFiqr3D
-         JjtDgL3t8RVir2fIkmALZRoj2Fz6VdQMj8W8LncM=
+        b=nRiX0JkGB+dS8Odu/gjABSVGTp+N/jlYzXvOZ/+Ks8LrpSgNuHDNhx06tHznRZlQX
+         64Tsdf/jVFarbv0q+//65dMqUMchChsceaz6vv+c3/5n221PcigoAdzFT9UyQP8mJI
+         nWb4ZEuePTvMJlRZSbg5hTn93aVQbz4G4poKZ8ls=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
@@ -45,12 +45,12 @@ Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 07/17] scsi: core: Run queue in case of I/O resource contention failure
-Date:   Mon, 27 Jul 2020 19:24:10 -0400
-Message-Id: <20200727232420.717684-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 10/25] scsi: core: Run queue in case of I/O resource contention failure
+Date:   Mon, 27 Jul 2020 19:23:30 -0400
+Message-Id: <20200727232345.717432-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200727232420.717684-1-sashal@kernel.org>
-References: <20200727232420.717684-1-sashal@kernel.org>
+In-Reply-To: <20200727232345.717432-1-sashal@kernel.org>
+References: <20200727232345.717432-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -116,11 +116,11 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 11 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 206c9f53e9e7a..e6944e1cba2ba 100644
+index b8b4366f12001..887b6a47f5dac 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -568,6 +568,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- 	scsi_del_cmd_from_list(cmd);
+@@ -564,6 +564,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ 	scsi_uninit_cmd(cmd);
  }
  
 +static void scsi_run_queue_async(struct scsi_device *sdev)
@@ -135,7 +135,7 @@ index 206c9f53e9e7a..e6944e1cba2ba 100644
  /* Returns false when no more bytes to process, true if there are more */
  static bool scsi_end_request(struct request *req, blk_status_t error,
  		unsigned int bytes)
-@@ -612,11 +621,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+@@ -608,11 +617,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
  
  	__blk_mq_end_request(req, error);
  
@@ -148,7 +148,7 @@ index 206c9f53e9e7a..e6944e1cba2ba 100644
  
  	percpu_ref_put(&q->q_usage_counter);
  	return false;
-@@ -1729,6 +1734,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+@@ -1706,6 +1711,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
  		 */
  		if (req->rq_flags & RQF_DONTPREP)
  			scsi_mq_uninit_cmd(cmd);
