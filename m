@@ -2,190 +2,183 @@ Return-Path: <SRS0=RyiH=BH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C7EC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 08:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D84F3C433E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 08:24:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDF3E2177B
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 08:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF3682075D
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 08:24:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KjwxtEMA"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="KNilb2ZR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727864AbgG1IB2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jul 2020 04:01:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60320 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726990AbgG1IB1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2020 04:01:27 -0400
-Received: from mail-qk1-x743.google.com (mail-qk1-x743.google.com [IPv6:2607:f8b0:4864:20::743])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFD0BC061794
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2020 01:01:27 -0700 (PDT)
-Received: by mail-qk1-x743.google.com with SMTP id x69so17871159qkb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2020 01:01:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=o7IdoU3GthtJkfIpVkjeEL5SahC9gpK+nOKCUdtMyLA=;
-        b=KjwxtEMA9I7JUPYRUD4voCkD5N/T88FB5uYhvp80eZM5TeofA1tbo+WN+19ZrRdeUk
-         ilGFOGzz9WxqdsLXw3AyXzUD0rY+GNi2PJh0C7dyDWuxH0DFBZ5wDD9zg5zKGqwfP//b
-         omkODedxdxISuIQEyh54T5Gh0RH80qTqlF+8A=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=o7IdoU3GthtJkfIpVkjeEL5SahC9gpK+nOKCUdtMyLA=;
-        b=slY28eqg+CVPCZsH4t3eFLrm0/DH0Z6j4CEffCmHrH4KmSJMhrSRPRmIKa8GZtiTnm
-         odMAaDweDezHvzVQZ5HX7k5AUNqZNMie92CJm+2JU50aLyaehBjJGxdzUxVpnaC9bcDu
-         3ppYw7Td2h+YsSiCmZrDmdUvzxeZy33Zi+jHxeztlHJUU1ZrPoo9DGeX/bJYkwuQkzYY
-         1iKDZTawEQf6zUzPx1D0ko0C0a13DojkKTenc7SYlJK82M4W3hzfVC3r76eVWGRFIVEO
-         h2v2t0gjWjlTRMLGtCYBAsKWhP52Y4pQ4jx+83QHBts/EVZeuOW9zMFLQ3ewaVSaNb21
-         GIzw==
-X-Gm-Message-State: AOAM532sjLbuJ8gCsQLDmKiowo+OI3O1GcKk4CLpQjNYtRRteOBybNmZ
-        Y2Si3XpN7wFYk/9u2nV0rofPeHxitQ0pmArxoS2ZPA==
-X-Google-Smtp-Source: ABdhPJw2OmXGrJ6ZFDe0WzmPpXDjucVRdGY9T7sWAlVhud6PWKwelDeoOmTHqUPRT1QWJyFuLkKQ0wLY7Vq20AbXHwo=
-X-Received: by 2002:a37:70c1:: with SMTP id l184mr23039981qkc.70.1595923286478;
- Tue, 28 Jul 2020 01:01:26 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <61299951-97dc-b2be-c66c-024dfbd3a1cb@huawei.com>
- <b49c33ebda36b8f116a51bc5c430eb9d@mail.gmail.com> <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
- <34a832717fef4702b143ea21aa12b79e@mail.gmail.com> <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
- <e69dc243174664efd414a4cd0176e59d@mail.gmail.com> <20200721011323.GA833377@T590>
- <c71bbdf2607a8183926430b5f4aa1ae1@mail.gmail.com> <20200722041201.GA912316@T590>
- <f6f05483491c391ce79486b8fb78cb2e@mail.gmail.com> <20200722080409.GB912316@T590>
-In-Reply-To: <20200722080409.GB912316@T590>
+        id S1728181AbgG1IYJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jul 2020 04:24:09 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:48747 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728176AbgG1IYH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2020 04:24:07 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200728082403epoutp0128c4ca4153513350e436a086723e941d~l3QHiwndH0730507305epoutp01V
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2020 08:24:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200728082403epoutp0128c4ca4153513350e436a086723e941d~l3QHiwndH0730507305epoutp01V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1595924643;
+        bh=lffFS9Qk7KyQhIt5idZnIw+cL7XP2ngNX4A36tfUE/E=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=KNilb2ZR8+G/UcIymCi8skSL8P3o0uPtosfBmyHGC+EIen5Tt8k7rW1yu6Nnemgz4
+         uitykU3XG1dQKOZu53XrClZ417uTq4baeg3eJ4KtnpCGS0uOptsKUsB7yRY6pdFNUf
+         oedzPBvuDWiIfoKXuBdinYxRSRHOD5nmf1wyzT8k=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20200728082402epcas5p28795d7bdd17e9f01703f028ca02ee1a8~l3QHKB8JP2028320283epcas5p2P;
+        Tue, 28 Jul 2020 08:24:02 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        31.96.09475.2A0EF1F5; Tue, 28 Jul 2020 17:24:02 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200728082402epcas5p333b3017f433ad9998564fbb8f3816f30~l3QGfRnz32645526455epcas5p3_;
+        Tue, 28 Jul 2020 08:24:02 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200728082401epsmtrp26ec2661f02fd4598740d88b635619f6c~l3QGeXCrz2759827598epsmtrp2h;
+        Tue, 28 Jul 2020 08:24:01 +0000 (GMT)
+X-AuditID: b6c32a4b-389ff70000002503-36-5f1fe0a2901b
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D3.C1.08303.1A0EF1F5; Tue, 28 Jul 2020 17:24:01 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.111.84.49]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200728082400epsmtip2aeb1eebe4e35d5115587fdb564990b7b~l3QEpektJ1407014070epsmtip2O;
+        Tue, 28 Jul 2020 08:23:59 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Randy Dunlap'" <rdunlap@infradead.org>,
+        "'Andrew Morton'" <akpm@linux-foundation.org>,
+        <broonie@kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
+        <linux-next@vger.kernel.org>, <mhocko@suse.cz>,
+        <mm-commits@vger.kernel.org>, <sfr@canb.auug.org.au>,
+        "'linux-scsi'" <linux-scsi@vger.kernel.org>,
+        "'Seungwon Jeon'" <essuuj@gmail.com>
+In-Reply-To: <c99c3cef-1b03-0adf-62a6-373e692425b5@infradead.org>
+Subject: RE: mmotm 2020-07-27-18-18 uploaded (drivers/scsi/ufs/:
+ SCSI_UFS_EXYNOS)
+Date:   Tue, 28 Jul 2020 13:53:58 +0530
+Message-ID: <000001d664b8$72cbd790$586386b0$@samsung.com>
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQG4aoXNvN1oD1R4AnS848tUiuVMpAL7B1DGAnlvVUMB+lqyDgMys1vsAqc0OTgDU1/61AGRP9A4AkK8P+ECUfpMjQJmEWWiqIX8AyA=
-Date:   Tue, 28 Jul 2020 13:31:23 +0530
-Message-ID: <ce3f1daa9f7399071b801f2ffd3f7ab3@mail.gmail.com>
-Subject: RE: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQH6RHqNssVmezboDnOhfcuciV9AnAIQbK05Ag8N1j2os+oSEA==
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrOKsWRmVeSWpSXmKPExsWy7bCmlu6iB/LxBvMvKFvMWb+GzWLqwyds
+        FssvLGGy2LP3JIvF5V1z2CzurfnPanFwYRujRff1HWwWr5q/s1q8nniB1eLtneksFlv3XmV3
+        4PFovHGDzWPnrLvsHptXaHlsWtXJ5rHp0yR2jxMzfrN4nFlwhN3j8ya5AI4oLpuU1JzMstQi
+        fbsErowv+z+zFVzkr7jS18zWwPiPp4uRk0NCwESi4ec1FhBbSGA3o8TXv7xdjFxA9idGiS0T
+        zjJCOJ8ZJS6ceMwE03FsXS9UYhejxJOVr1khnFeMEh+eHGUHqWIT0JXYsbiNDSQhItDNLPH5
+        YwsbSIJTwFHi2LVNYKOEBYIl9s4+zwxiswioSkzc+xPM5hWwlHg8eSsjhC0ocXLmE7ADmQW0
+        JZYtfM0McYaCxM+ny1hBbBEBJ4nnS0+wQ9SISxz92cMMslhC4AiHxK75ExkhGlwk3vR2skLY
+        whKvjm9hh7ClJD6/2wt0HAeQnS3Rs8sYIlwjsXTeMRYI217iwJU5LCAlzAKaEut36UOs4pPo
+        /f2ECaKTV6KjTQiiWlWi+d1VqE5piYnd3VBLPSR6evugYXWaUWJ6SzPjBEaFWUi+nIXky1lI
+        vpmFsHkBI8sqRsnUguLc9NRi0wLjvNRyveLE3OLSvHS95PzcTYzgtKblvYPx0YMPeocYmTgY
+        DzFKcDArifByi8rEC/GmJFZWpRblxxeV5qQWH2KU5mBREudV+nEmTkggPbEkNTs1tSC1CCbL
+        xMEp1cDkoBKWt9yjoVpCRTJjLsvXGzeTmc9rNZ/7UmbwQ6nL02nDto6in8liF+8r6jKnfpjZ
+        aCt+tbJH6/uH65ETWlqWzC6f8T3FcqpF2lIRTwGvA37KE7n+euyfOvvAaaPFTD/a0s39Eiz1
+        +i6/ygrYm9PBvjvrwULp/cJmzHMyDjhfsLr75lRliEzir+ZXDK/sVmYVJQtHdGmfPDzfvN3u
+        +ww25y0cvWJ3JixbHm147+nnQ1ZHex6orXybc4DNL3HvDi9n7t02s2IX5Zs6NP4qUM28GmN9
+        tbalbcc67RlnzDoTxM+1bHBX+MfXsm9KlWTYTpfNv36wWYjYPHmb/fje6kutri7P6iOU7H6L
+        l/g2dSmxFGckGmoxFxUnAgChHnJk2gMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPIsWRmVeSWpSXmKPExsWy7bCSvO7CB/LxBmtvGlvMWb+GzWLqwyds
+        FssvLGGy2LP3JIvF5V1z2CzurfnPanFwYRujRff1HWwWr5q/s1q8nniB1eLtneksFlv3XmV3
+        4PFovHGDzWPnrLvsHptXaHlsWtXJ5rHp0yR2jxMzfrN4nFlwhN3j8ya5AI4oLpuU1JzMstQi
+        fbsErox9D/rZC97zVaz4sYmpgXEBTxcjJ4eEgInEsXW9jF2MXBxCAjsYJRYu62KCSEhLXN84
+        gR3CFpZY+e85O0TRC0aJ8/u3soAk2AR0JXYsbmMDSYgITGeW+DHpOjNE1XFGiWmv1oCN4hRw
+        lDh2bROQzcEhLBAosWqnK0iYRUBVYuLen8wgNq+ApcTjyVsZIWxBiZMzn4AtYBbQlnh68ymc
+        vWzha2aIixQkfj5dxgpiiwg4STxfeoIdokZc4ujPHuYJjEKzkIyahWTULCSjZiFpWcDIsopR
+        MrWgODc9t9iwwCgvtVyvODG3uDQvXS85P3cTIzgOtbR2MO5Z9UHvECMTB+MhRgkOZiURXm5R
+        mXgh3pTEyqrUovz4otKc1OJDjNIcLErivF9nLYwTEkhPLEnNTk0tSC2CyTJxcEo1MLXOk19S
+        IlLVqlhmdz3GobpbUWr9or+ij643Kr24u8LJaZ/MCr0fNYn+P4M8BfZHO4Xs8T7u9J77/Wff
+        Rfckph3byNAvNZu7b97MipeZhkKKFt+2iJ7sjijl+e/GlLN6stavI8tOtOdwbbb+nxrTv/9k
+        vod74ZslN3tlb51zuNKW/yVN8lx7iYSRptzqi0GvotqkuiXmPGJrtDziJLTGb8KPjRbvojqK
+        8gstLa984J7E86NSsbg/MylH/6jt5u/7ll072HXJ/rm4y6x3rdIbf9XtiJFt7Dy30Tl/zb0T
+        91wKPT+2Kj78FDllvtlkDfO3zXI/Das7OyrZGcXnNhV+nWPT+fvJRq+epA8eJU/WK7EUZyQa
+        ajEXFScCAH7AEroyAwAA
+X-CMS-MailID: 20200728082402epcas5p333b3017f433ad9998564fbb8f3816f30
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200728032310epcas5p27226ae967b93325ca145e70a14a8bdf8
+References: <20200728011914.S-8vAYUK0%akpm@linux-foundation.org>
+        <CGME20200728032310epcas5p27226ae967b93325ca145e70a14a8bdf8@epcas5p2.samsung.com>
+        <c99c3cef-1b03-0adf-62a6-373e692425b5@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> On Wed, Jul 22, 2020 at 11:00:45AM +0530, Kashyap Desai wrote:
-> > > On Tue, Jul 21, 2020 at 12:23:39PM +0530, Kashyap Desai wrote:
-> > > > > > >
-> > > > > > > Perf top (shared host tag. IOPS = 230K)
-> > > > > > >
-> > > > > > > 13.98%  [kernel]        [k] sbitmap_any_bit_set
-> > > > > > >      6.43%  [kernel]        [k] blk_mq_run_hw_queue
-> > > > > >
-> > > > > > blk_mq_run_hw_queue function take more CPU which is called
-from
-> "
-> > > > > > scsi_end_request"
-> > > > >
-> > > > > The problem could be that nr_hw_queues is increased a lot so
-> > > > > that sample
-> > > > on
-> > > > > blk_mq_run_hw_queue() can be observed now.
-> > > >
-> > > > Yes. That is correct.
-> > > >
-> > > > >
-> > > > > > It looks like " blk_mq_hctx_has_pending" handles only elevator
-> > > > > > (scheduler) case. If  queue has ioscheduler=none, we can skip.
-> > > > > > I case of scheduler=none, IO will be pushed to hardware queue
-> > > > > > and it by pass
-> > > > > software queue.
-> > > > > > Based on above understanding, I added below patch and I can
-> > > > > > see performance scale back to expectation.
-> > > > > >
-> > > > > > Ming mentioned that - we cannot remove blk_mq_run_hw_queues()
-> > > from
-> > > > > > IO completion path otherwise we may see IO hang. So I have
-> > > > > > just modified completion path assuming it is only required for
-> > > > > > IO
-> > scheduler
-> > > case.
-> > > > > > https://www.spinics.net/lists/linux-block/msg55049.html
-> > > > > >
-> > > > > > Please review and let me know if this is good or we have to
-> > > > > > address with proper fix.
-> > > > > >
-> > > > > > diff --git a/block/blk-mq.c b/block/blk-mq.c index
-> > > > > > 1be7ac5a4040..b6a5b41b7fc2 100644
-> > > > > > --- a/block/blk-mq.c
-> > > > > > +++ b/block/blk-mq.c
-> > > > > > @@ -1559,6 +1559,9 @@ void blk_mq_run_hw_queues(struct
-> > > > > request_queue
-> > > > > > *q, bool async)
-> > > > > >         struct blk_mq_hw_ctx *hctx;
-> > > > > >         int i;
-> > > > > >
-> > > > > > +       if (!q->elevator)
-> > > > > > +               return;
-> > > > > > +
-> > > > >
-> > > > > This way shouldn't be correct, blk_mq_run_hw_queues() is still
-> > > > > needed
-> > > > for
-> > > > > none because request may not be dispatched successfully by
-> > > > > direct
-> > issue.
-> > > >
-> > > > When block layer attempt posting request to h/w queue directly
-> > > > (for
-> > > > ioscheduler=none) and if it fails, it is calling
-> > > > blk_mq_request_bypass_insert().
-> > > > blk_mq_request_bypass_insert function will start the h/w queue
-> > > > from submission context. Do we still have an issue if we skip
-> > > > running hw queue from completion ?
-> > >
-> > > The thing is that we can't guarantee that direct issue or adding
-> > > request
-> > into
-> > > hctx->dispatch is always done for MQ/none, for example, request
-> > > hctx->still
-> > > can be added to sw queue from blk_mq_flush_plug_list() when mq plug
-> > > is applied.
+Hi Randy,
+
+> -----Original Message-----
+> From: Randy Dunlap <rdunlap=40infradead.org>
+> Sent: 28 July 2020 08:53
+> To: Andrew Morton <akpm=40linux-foundation.org>; broonie=40kernel.org; li=
+nux-
+> fsdevel=40vger.kernel.org; linux-kernel=40vger.kernel.org; linux-mm=40kva=
+ck.org;
+> linux-next=40vger.kernel.org; mhocko=40suse.cz; mm-commits=40vger.kernel.=
+org;
+> sfr=40canb.auug.org.au; linux-scsi <linux-scsi=40vger.kernel.org>; Alim A=
+khtar
+> <alim.akhtar=40samsung.com>; Seungwon Jeon <essuuj=40gmail.com>
+> Subject: Re: mmotm 2020-07-27-18-18 uploaded (drivers/scsi/ufs/:
+> SCSI_UFS_EXYNOS)
+>=20
+> On 7/27/20 6:19 PM, Andrew Morton wrote:
+> > The mm-of-the-moment snapshot 2020-07-27-18-18 has been uploaded to
 > >
-> > I see even blk_mq_sched_insert_requests() from blk_mq_flush_plug_list
-> > make sure it run the h/w queue. If all the submission path which deals
-> > with s/w queue make sure they run h/w queue, can't we remove
-> > blk_mq_run_hw_queues() from scsi_end_request ?
->
-> No, one purpose of blk_mq_run_hw_queues() is for rerun queue in case
-that
-> dispatch budget is running out of in submission path, and
-sdev->device_busy
-> is shared by all hw queues on this scsi device.
->
-> I posted one patch for avoiding it in scsi_end_request() before, looks
-it never
-> lands upstream:
->
-> https://lore.kernel.org/linux-block/20191118100640.3673-1-
-> ming.lei@redhat.com/
+> >    http://www.ozlabs.org/=7Eakpm/mmotm/
+> >
+> > mmotm-readme.txt says
+> >
+> > README for mm-of-the-moment:
+> >
+> > http://www.ozlabs.org/=7Eakpm/mmotm/
+> >
+> > This is a snapshot of my -mm patch queue.  Uploaded at random
+> > hopefully more than once a week.
+> >
+> > You will need quilt to apply these patches to the latest Linus release
+> > (5.x or 5.x-rcY).  The series file is in broken-out.tar.gz and is
+> > duplicated in http://ozlabs.org/=7Eakpm/mmotm/series
+> >
+>=20
+> on i386:
+>=20
+> when CONFIG_OF is not set/enabled:
+>=20
+> WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
+>   Depends on =5Bn=5D: OF =5B=3Dn=5D && (ARCH_EXYNOS =7C=7C COMPILE_TEST =
+=5B=3Dy=5D)
+>   Selected by =5Bm=5D:
+>   - SCSI_UFS_EXYNOS =5B=3Dm=5D && SCSI_LOWLEVEL =5B=3Dy=5D && SCSI =5B=3D=
+y=5D &&
+> SCSI_UFSHCD_PLATFORM =5B=3Dm=5D && (ARCH_EXYNOS =7C=7C COMPILE_TEST =5B=
+=3Dy=5D)
+>=20
+Have already posted a fix for this =5B1=5D
+=5B1=5D https://www.spinics.net/lists/linux-scsi/msg144970.html
 
-Ming - I think above patch will fix the issue of performance on VD.
-I fix some hunk failure and ported to 5.8 kernel -
-I am testing this patch on my setup. If you post V4, I will use that.
+>=20
+> Full randconfig file is attached.
+>=20
+Thanks for config file, I can reproduce it and confirm that =5B1=5D above f=
+ixes this Warning.
 
-So far looks good.  I have reduced device queue depth so that I hit budget
-busy code path frequently.
+>=20
+> --
+> =7ERandy
+> Reported-by: Randy Dunlap <rdunlap=40infradead.org>
 
-Kashyap
-
-
->
-> Thanks,
-> Ming
