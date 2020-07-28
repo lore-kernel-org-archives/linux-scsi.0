@@ -1,161 +1,130 @@
-Return-Path: <SRS0=pIAL=BG=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=RyiH=BH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BD8C433ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:29:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8870EC433E3
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 02:21:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2AA7208E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jul 2020 23:29:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595892592;
-	bh=Pitj1+H31x7T5ROVJY7sUuEMZ1mCzpxT52kpfNBExEo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RlXD3w6MyorpQuRsZYTyhU9GzIYhiTaDL0JxjF8HWbGOAR5cIlSwwtVHazlZf4JMa
-	 H3lRbvOT++IqqBhj5IDZQxyhqguMMhZkGlmDJeC8PNFvKr9//1ItNqcDa6W8pwgs7b
-	 8qdOul6aHE6UFLyKM8HIdvze58Z2r5t/BSWHdjpo=
+	by mail.kernel.org (Postfix) with ESMTP id 60C342075A
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 02:21:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AdRDJTwd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728174AbgG0X3u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jul 2020 19:29:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34868 "EHLO mail.kernel.org"
+        id S1726800AbgG1CVu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jul 2020 22:21:50 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:27044 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727986AbgG0XYB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Jul 2020 19:24:01 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726269AbgG1CVt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Jul 2020 22:21:49 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1595902909; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Nd3Ki8cCx7FejuxD0mDfmmNE6PX98h/D7XuxA2n5jFE=;
+ b=AdRDJTwd+J1ZJSuJm7GL7ctQcrtDkUbQ8W8Kr40JM0sBDR9lEwsMoGql+T8UBWhbwhbr7vVL
+ pxl83Ye9J1rEpe/E5VbJIsJgzAP7UGULrf5pxscp+TwnN7AJif0Y4PZh8lHIggUNuJl41ylq
+ XhV0yTyv8jVPehvY0fRImOdrg9Q=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5f1f8bb536e6de324e42f612 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Jul 2020 02:21:41
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D132FC433CB; Tue, 28 Jul 2020 02:21:40 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3436121744;
-        Mon, 27 Jul 2020 23:23:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595892240;
-        bh=Pitj1+H31x7T5ROVJY7sUuEMZ1mCzpxT52kpfNBExEo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nRiX0JkGB+dS8Odu/gjABSVGTp+N/jlYzXvOZ/+Ks8LrpSgNuHDNhx06tHznRZlQX
-         64Tsdf/jVFarbv0q+//65dMqUMchChsceaz6vv+c3/5n221PcigoAdzFT9UyQP8mJI
-         nWb4ZEuePTvMJlRZSbg5hTn93aVQbz4G4poKZ8ls=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 10/25] scsi: core: Run queue in case of I/O resource contention failure
-Date:   Mon, 27 Jul 2020 19:23:30 -0400
-Message-Id: <20200727232345.717432-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200727232345.717432-1-sashal@kernel.org>
-References: <20200727232345.717432-1-sashal@kernel.org>
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B9333C433C6;
+        Tue, 28 Jul 2020 02:21:38 +0000 (UTC)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 28 Jul 2020 10:21:38 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        sh425.lee@samsung.com, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 3/8] scsi: ufs-qcom: Fix schedule while atomic error in
+ ufs_qcom_dump_dbg_regs
+In-Reply-To: <SN6PR04MB4640F4CEAB7F5FFA51648B6CFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <1595504787-19429-1-git-send-email-cang@codeaurora.org>
+ <1595504787-19429-4-git-send-email-cang@codeaurora.org>
+ <SN6PR04MB4640F4CEAB7F5FFA51648B6CFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
+Message-ID: <e828fd80f3fe9d0f64a5629eebd5a345@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+Hi Avri,
 
-[ Upstream commit 3f0dcfbcd2e162fc0a11c1f59b7acd42ee45f126 ]
+On 2020-07-27 21:05, Avri Altman wrote:
+>> Dumping testbus registers needs to sleep a bit intermittently as there 
+>> are
+>> too many of them. Skip them for those contexts where sleep is not 
+>> allowed.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/ufs-qcom.c | 15 +++++++++------
+>>  1 file changed, 9 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+>> index 7da27ee..7831b2b 100644
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>> @@ -1651,13 +1651,16 @@ static void ufs_qcom_dump_dbg_regs(struct
+>> ufs_hba *hba)
+>>         ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
+>>                          "HCI Vendor Specific Registers ");
+>> 
+>> -       /* sleep a bit intermittently as we are dumping too much data 
+>> */
+>>         ufs_qcom_print_hw_debug_reg_all(hba, NULL,
+>> ufs_qcom_dump_regs_wrapper);
+>> -       udelay(1000);
+>> -       ufs_qcom_testbus_read(hba);
+>> -       udelay(1000);
+>> -       ufs_qcom_print_unipro_testbus(hba);
+>> -       udelay(1000);
+>> +
+>> +       if (in_task()) {
+>> +               /* sleep a bit intermittently as we are dumping too 
+>> much data */
+>> +               usleep_range(1000, 1100);
+>> +               ufs_qcom_testbus_read(hba);
+>> +               usleep_range(1000, 1100);
+>> +               ufs_qcom_print_unipro_testbus(hba);
+>> +               usleep_range(1000, 1100);
+>> +       }
+>>  }
+> How about moving the intermittent sleep out of the check if preemption
+> is disabled?
+> And maybe then you need to switch back to uedlay?
 
-I/O requests may be held in scheduler queue because of resource contention.
-The starvation scenario was handled properly in the regular completion
-path but we failed to account for it during I/O submission. This lead to
-the hang captured below. Make sure we run the queue when resource
-contention is encountered in the submission path.
+I will just remove all the testbus prints in next version to save us 
+time here.
 
-[   39.054963] scsi 13:0:0:0: rejecting I/O to dead device
-[   39.058700] scsi 13:0:0:0: rejecting I/O to dead device
-[   39.087855] sd 13:0:0:1: [sdd] Synchronizing SCSI cache
-[   39.088909] scsi 13:0:0:1: rejecting I/O to dead device
-[   39.095351] scsi 13:0:0:1: rejecting I/O to dead device
-[   39.096962] scsi 13:0:0:1: rejecting I/O to dead device
-[  247.021859] INFO: task scsi-stress-rem:813 blocked for more than 122 seconds.
-[  247.023258]       Not tainted 5.8.0-rc2 #8
-[  247.024069] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  247.025331] scsi-stress-rem D    0   813    802 0x00004000
-[  247.025334] Call Trace:
-[  247.025354]  __schedule+0x504/0x55f
-[  247.027987]  schedule+0x72/0xa8
-[  247.027991]  blk_mq_freeze_queue_wait+0x63/0x8c
-[  247.027994]  ? do_wait_intr_irq+0x7a/0x7a
-[  247.027996]  blk_cleanup_queue+0x4b/0xc9
-[  247.028000]  __scsi_remove_device+0xf6/0x14e
-[  247.028002]  scsi_remove_device+0x21/0x2b
-[  247.029037]  sdev_store_delete+0x58/0x7c
-[  247.029041]  kernfs_fop_write+0x10d/0x14f
-[  247.031281]  vfs_write+0xa2/0xdf
-[  247.032670]  ksys_write+0x6b/0xb3
-[  247.032673]  do_syscall_64+0x56/0x82
-[  247.034053]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[  247.034059] RIP: 0033:0x7f69f39e9008
-[  247.036330] Code: Bad RIP value.
-[  247.036331] RSP: 002b:00007ffdd8116498 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-[  247.037613] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f69f39e9008
-[  247.039714] RDX: 0000000000000002 RSI: 000055cde92a0ab0 RDI: 0000000000000001
-[  247.039715] RBP: 000055cde92a0ab0 R08: 000000000000000a R09: 00007f69f3a79e80
-[  247.039716] R10: 000000000000000a R11: 0000000000000246 R12: 00007f69f3abb780
-[  247.039717] R13: 0000000000000002 R14: 00007f69f3ab6740 R15: 0000000000000002
+Thanks,
 
-Link: https://lore.kernel.org/r/20200720025435.812030-1-ming.lei@redhat.com
-Cc: linux-block@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/scsi_lib.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b8b4366f12001..887b6a47f5dac 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -564,6 +564,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- 	scsi_uninit_cmd(cmd);
- }
- 
-+static void scsi_run_queue_async(struct scsi_device *sdev)
-+{
-+	if (scsi_target(sdev)->single_lun ||
-+	    !list_empty(&sdev->host->starved_list))
-+		kblockd_schedule_work(&sdev->requeue_work);
-+	else
-+		blk_mq_run_hw_queues(sdev->request_queue, true);
-+}
-+
- /* Returns false when no more bytes to process, true if there are more */
- static bool scsi_end_request(struct request *req, blk_status_t error,
- 		unsigned int bytes)
-@@ -608,11 +617,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
- 
- 	__blk_mq_end_request(req, error);
- 
--	if (scsi_target(sdev)->single_lun ||
--	    !list_empty(&sdev->host->starved_list))
--		kblockd_schedule_work(&sdev->requeue_work);
--	else
--		blk_mq_run_hw_queues(q, true);
-+	scsi_run_queue_async(sdev);
- 
- 	percpu_ref_put(&q->q_usage_counter);
- 	return false;
-@@ -1706,6 +1711,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		 */
- 		if (req->rq_flags & RQF_DONTPREP)
- 			scsi_mq_uninit_cmd(cmd);
-+		scsi_run_queue_async(sdev);
- 		break;
- 	}
- 	return ret;
--- 
-2.25.1
-
+Can Guo.
