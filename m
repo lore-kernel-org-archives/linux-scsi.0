@@ -2,161 +2,142 @@ Return-Path: <SRS0=RyiH=BH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93189C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 07:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E2CC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 07:53:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7589820829
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 07:03:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3F0F22CAE
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 07:53:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="n3Kesn6r";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="GsWS1ctU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726994AbgG1HDW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jul 2020 03:03:22 -0400
-Received: from comms.puri.sm ([159.203.221.185]:56120 "EHLO comms.puri.sm"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726314AbgG1HDV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Jul 2020 03:03:21 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 923BBDF2A2;
-        Tue, 28 Jul 2020 00:02:50 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Ky3JeSyyrzhr; Tue, 28 Jul 2020 00:02:49 -0700 (PDT)
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     jejb@linux.ibm.com, Can Guo <cang@codeaurora.org>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@puri.sm
-References: <20200706164135.GE704149@rowland.harvard.edu>
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
- 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
- ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
-Message-ID: <d0ed766b-88b0-5ad5-9c10-a4c3b2f994e3@puri.sm>
-Date:   Tue, 28 Jul 2020 09:02:44 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-In-Reply-To: <20200706164135.GE704149@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8
+        id S1728078AbgG1Hxq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jul 2020 03:53:46 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:41614 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727962AbgG1Hxo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2020 03:53:44 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1595922823; x=1627458823;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=oU9Z3Gg9K/Z//5uorPXkS15/0a3y53KaU97klfMCIts=;
+  b=n3Kesn6rJds10U9L0noNDj0nIA9gpZM3Md5PyXXkN7IHX16ru7MHLWfM
+   c5UYTQwvP0nisLJBvg136ES/OV5EW4t8OUk0B/PWiKEXA93aUG9M3Zuf2
+   mWvME0EzipOB9UCMtmfZ2YVKq8FjnMtmCw0UbYXYjLAp52kbPVOhaEfXz
+   wBZLZnD44GUQ2gh/Vv9Sy5KXJ3cwIzZ+H7S9trzW0YlcsTjc4wS4sIQ4G
+   cKDP5YKyUEnctdfnicX1TG6fDW39YJmACTl4YlI4eRTgFT9D/0KDC4CI6
+   XRAmYArrMmkQX/rlEXs22ckrQDK50/Ktt+hbrZeC/ub+tZapIqk/fBOuR
+   Q==;
+IronPort-SDR: fIr0L7QG3yaCRnvxQg/Mx6Q/IE50WieoWnMNSRQz8UpDp4UYzbcidiqGO2t8FIfCNQaG/Rdsfv
+ 3UapWYDcmBiztFlesj7hzaLBP5GxTrwiugr1unckcsFt9nrTOtY7hlrctjRxeVVaTkHvfAG1/6
+ srNsodIdJZUX0VMveErHwLlOD4qZ+1/s9XDyfNJtvAUTrFOZBessJpF+XNEe+NF3dpA6NvKQz2
+ YyKJ3oEKXXxqS/6FeystMjprfOywJFz0pAMaemU7rEpMTVvdEDchNfUaYSk1Q5+6RJ7zlinTbD
+ W4o=
+X-IronPort-AV: E=Sophos;i="5.75,405,1589212800"; 
+   d="scan'208";a="143534148"
+Received: from mail-bn8nam11lp2174.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.174])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Jul 2020 15:53:41 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hsfshJ76Tos4dpBb2Tik8Psnw50IkssinFoYXvBDGBGlplce7yaaM8yDfO9NfA5f9yGUyKKo5t0ir9bkowVf3NCVmxihvNmpPy1Cky01cSCYc7xk+xu6per2GW7MSPqx03jm97TlOJdM4mxrQ+/kkFJsWDZugAcz7oUR6xPVYNg2Fz0n2DUCZH0XUYZxc/E4xj7ncHGI0ozEppsqQ9mj5Vxub/Gc0TxuQbIMUU0UStklwUFwTogxqJeF+DAD44fkMNyRMUPWrj7Kb8jAz8avZl43TtKyWnf0xSn/q1/Dur/inQJwSTYwH7w7LxqU9tr8NR7pYdjmPjneFLmH4vrY2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oU9Z3Gg9K/Z//5uorPXkS15/0a3y53KaU97klfMCIts=;
+ b=loiKL7jRRLgrlLAGFxQMDxF9WionaE5mTQn42Wz+1XddNqoz1HSixTJ+oUMmcozyXnUQaoLzASAQ6d1eHQ5LcKhxk6ef5QO3K0HbcQycQxhIcXuPRYDvgjt8La6Ya1t1Mi5RVpz5yncUxScNAfTSQgYLdLuKPjcvewWkoE9MoT7JeTLVd5s7DzoWN8KMRZW9AlxjIkhnGDBOm+hMCxq/izQ8Y1wFP80r4awJCjEaE7Bk42u1pIRsHlmQpcUTcKP2ABnsW3IveiaZU5rZxRpNDM4qHc2vlftckq9KwxmegikdzyDlKbVQJvy6WresFhT+gg/h+t2kaClY2xhRyHsWxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oU9Z3Gg9K/Z//5uorPXkS15/0a3y53KaU97klfMCIts=;
+ b=GsWS1ctUIvgQW31/rZfjW3b0NF+oAn0B/3FRrmD9Z1AtLOnymk9MwCse/rdZElNpDcAzdSadg9oVmknNSbPH71VGx79OLBHEBScbDb1Wfa4kOOIAxq+Z2TNTUjvs4BjWcZMvNnhdoHAZQ8D59hnCHAaJnf2MILO9yZlk9oI4aBc=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB4638.namprd04.prod.outlook.com (2603:10b6:805:ab::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3216.25; Tue, 28 Jul
+ 2020 07:53:40 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::1c80:dad0:4a83:2ef2]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::1c80:dad0:4a83:2ef2%4]) with mapi id 15.20.3216.033; Tue, 28 Jul 2020
+ 07:53:39 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Can Guo <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "hongwus@codeaurora.org" <hongwus@codeaurora.org>,
+        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
+        "sh425.lee@samsung.com" <sh425.lee@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        "saravanak@google.com" <saravanak@google.com>,
+        "salyzyn@google.com" <salyzyn@google.com>
+CC:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v7 3/8] scsi: ufs-qcom: Remove testbus dump in
+ ufs_qcom_dump_dbg_regs
+Thread-Topic: [PATCH v7 3/8] scsi: ufs-qcom: Remove testbus dump in
+ ufs_qcom_dump_dbg_regs
+Thread-Index: AQHWZJw8tDsfFHqTOkWsg2EI4/HQvakcnwNg
+Date:   Tue, 28 Jul 2020 07:53:39 +0000
+Message-ID: <SN6PR04MB464084A3D22DD5546399A9F5FC730@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <1595912460-8860-1-git-send-email-cang@codeaurora.org>
+ <1595912460-8860-4-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1595912460-8860-4-git-send-email-cang@codeaurora.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 66f00031-5575-4577-6e8a-08d832cb576a
+x-ms-traffictypediagnostic: SN6PR04MB4638:
+x-microsoft-antispam-prvs: <SN6PR04MB4638472AD0209EE9E29C523EFC730@SN6PR04MB4638.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:644;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: N7Y37qKN2DnML8mJTVCuXz4+PFPpr99RdJlhltBQSy2thR/yd1/jR641RvomWHJ8DFhTzpw2KqOf5JdVnNzjYBezF9YKLN2jMOmNIcOdrg/nVUQPLNCoYp4+cEMZMwusWWMLCXGMsS63dJdjKf/qcPYiGCWSl0idIwvT7gBLuphFxkeLFjYox148VpNME43vbhqabFro/HJYvV/qqSyjIaq2qV6fo86zHU77MS07l84cebPJs7oqQEIv6LJV4gFgeYXkQF9xjFYtfBqcNiGa9ujLjK+cAnWIkXYyOlgcx4m7ThNJdGJsKMD0+mqRhiUtaML6dhrh7t0PXAVLEkzcf9pNIU1e2bdAx0BFOEUOG8LhTR6wAeWwYmXGNhXHzdLW
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(39860400002)(396003)(346002)(366004)(376002)(66446008)(66946007)(86362001)(66556008)(64756008)(26005)(110136005)(8676002)(186003)(2906002)(33656002)(558084003)(478600001)(66476007)(4326008)(6506007)(76116006)(7696005)(9686003)(5660300002)(71200400001)(8936002)(7416002)(55016002)(54906003)(52536014)(316002)(921003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: bd9ioSIwlVm3DYunLgzVmyKngnK3FlnQXP8hjyoT3uw0R8JJIybc8E04BqIgf6NfDQo4fdNgk4p7ELTiaLIGC5lLy4WvJ2mV5eDOLg89WuavB+k+wTOVUodCiIHYMWHE19EFGjc0v7myv/ZpYbW1e3/IXdNrwSiNUQUxcXsIYUkNDhDBdR7z/sr/xHNK+6kt9WwVwoGdvje51TOc7tvdB68UOXo7Yer3BIm3BJmjm/ovYo0hjTOToO6civ8wSiuWipHE+m5rBtYmdisCatIelsttolJ9fS39oaP5VFITq5e/l3OGR6AoCqStKcUtEfKCqz5WxNzOPJdBfs+p0D8uF9TjOtE8JVhbUv5yvl/zHwlRUmhimR9dnsVsx60P15FlOaS02QB8TMWSkIh7+f95W4dTZ8R4gl49u6sEYR9CnJMLMvzVcGoRaE3RG1BZlAhOZCqFEcs7SW47/hgqqj0AGt+wNtTXjzyHt5BbBJuM0dcDZz9WjS4NRMQ03pTi64pW
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 66f00031-5575-4577-6e8a-08d832cb576a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jul 2020 07:53:39.7498
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: +KTnSxvzo1RrQBBKnUm4wPlqnoGPdRwRV1NxPg0OmmTS1UlGgtqfDXTyd7BEa9fj0jc43vMkNr+qVUoQin65RA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4638
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 06.07.20 18:41, Alan Stern wrote:
-> On Tue, Jun 30, 2020 at 20:49:58PM -0400, Alan Stern wrote:
->> On Tue, Jun 30, 2020 at 04:31:58PM -0700, Bart Van Assche wrote:
->>> On 2020-06-30 12:38, Alan Stern wrote:
->>>> Assume that BLK_MQ_REQ_PREEMPT is set in flags.  Then where exactly 
->>>> does blk_queue_enter(q, flags) call blk_pm_request_resume(q)?
->>>
->>> Please take a look at how the *current* implementation of runtime power
->>> management works. Your question is relevant for the old implementation
->>> of runtime power management but not for the current implementation.
->>
->> What do you mean by "current"?  I have been looking at the implementation 
->> in 5.8-rc3 from Linus's tree.  Should I look somewhere else?
-> 
-> Any reply to this, or further concerns about the proposed patch?
-> 
-> I'd like to fix up this API, and it appears that you are the only
-> person to have worked on it significantly in the last two years.
-> 
-> Alan Stern
-> 
-
-Hi Alan,
-
-Any API cleanup is of course welcome. I just wanted to remind you that
-the underlying problem: broken block device runtime pm. Your initial
-proposed fix "almost" did it and mounting works but during file access,
-it still just looks like a runtime_resume is missing somewhere.
-
-As we need to have that working at some point, I might look into it, but
-someone who has experience in the block layer can surely do it more
-efficiently.
-
-to test, turn off polling:
-echo 0 > /sys/module/block/parameters/events_dfl_poll_msecs
-
-and enable runtime pm in your (scsi) device: power/autosuspend_delay_ms
-and of course power/control (set to auto).
-
-thanks,
-                              martin
+>=20
+> Dumping testbus registers is heavy enough to cause stability issues
+> sometime, just remove them as of now.
+>=20
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
