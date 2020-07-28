@@ -2,145 +2,145 @@ Return-Path: <SRS0=RyiH=BH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E90B8C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 18:07:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 521CAC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 18:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA4B62078E
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 18:07:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E4FE207F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jul 2020 18:43:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="dFGrte3x"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G4QaABg+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732155AbgG1SHH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jul 2020 14:07:07 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:48028 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728681AbgG1SHE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Jul 2020 14:07:04 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595959623; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=wH1XeUIpKUi87lDduI+MZ/7qwzN50GTis63htVEvvHE=; b=dFGrte3xus0xcv+60DZWTkS0HfaaP6PfNsUWdhbgOTBT35TFU0coiyYqVpPTZTq4KKi5Oif3
- QFNWq+rMomdEGn65NjzdPAuwsGtkBzAUtpqi4jndofkT3LSZh+JzEZoPSEbbBG5b/f+uDG67
- sGe/ZCqsVwca05aWUlmJYYUiwb4=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
- 5f206935c7e7bf09e06380a3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Jul 2020 18:06:45
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 563CAC433A0; Tue, 28 Jul 2020 18:06:45 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8BA89C433C6;
-        Tue, 28 Jul 2020 18:06:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8BA89C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v7 7/8] scsi: ufs: Move dumps in IRQ handler to error
- handler
-To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        sh425.lee@samsung.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1595912460-8860-1-git-send-email-cang@codeaurora.org>
- <1595912460-8860-8-git-send-email-cang@codeaurora.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <7e5e942d-449b-bd52-32da-7f5beed116b7@codeaurora.org>
-Date:   Tue, 28 Jul 2020 11:06:42 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <1595912460-8860-8-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+        id S1732453AbgG1SnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jul 2020 14:43:21 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:38798 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729591AbgG1SnU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2020 14:43:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595961797;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rCxPwUVvYI5o95/fP/7NQlsxudfNHqvls2BKBz4S0eM=;
+        b=G4QaABg+TNjWyrAN+vGdMNL9f+FxD4GxLfFpL11nrRux102kI4NZnm7kQGs2St5wFZ+Bkd
+        GFh4AsmKk97naE8ItQkAyOeMJRxjEyKmcMlmdPNfEHKMmzZG7jo+XNr8SwX5rwwsEYRyNm
+        +rzv2V5gKSQGwEz6qzQYqHiWiGVTsNI=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-81-ekDa02hzNGy8zyHTc4ndJg-1; Tue, 28 Jul 2020 14:43:15 -0400
+X-MC-Unique: ekDa02hzNGy8zyHTc4ndJg-1
+Received: by mail-qv1-f71.google.com with SMTP id l14so5394049qvz.16
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2020 11:43:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=rCxPwUVvYI5o95/fP/7NQlsxudfNHqvls2BKBz4S0eM=;
+        b=NXVDihLMb7qBW6M9YHWx2O6ttvcadAKMN5fTYQ6RTbmrlbGJJ9ykO5GLQZAdkwGYCr
+         qByy48N4sTr1ml9gEsMU/3hFFgyNNtw0+O6YzC0URSgrPzyt4xXmPpbBhX6LevVCquGq
+         A7eSm4oH8SccXJS/mcgUBabSY3QBWIC0oJRNsTp7Cn57cDd9XhTy6S11ba/SlA+BZhiK
+         +lknr/1WjZZXMSxdMkdBquMH5DAVlJf0M5NuzKmnWeR9adZXWP0ezMed0cxXdwQsAmHb
+         aYuG5bSrkfzFuCH7o9TlVh+8YwStOXGD0TEf2Ht3ICzQ7rpQf+uuvtsXuuevGgO6sDsh
+         DFTg==
+X-Gm-Message-State: AOAM530S7cfwMmCCewCYWZOlOpmoZnLKITNekG6TkI0RYFrdzGxaiTu9
+        SMQrly3lGnWqNGz15pchw5+Qg8W6NSSxvcJkfl1SEND26goGmAXDEcDuMBQp/kDY05ITU5m/p9g
+        w4j+GoZJTo+8jzzl1qGaDtA==
+X-Received: by 2002:ad4:4c09:: with SMTP id bz9mr27396362qvb.210.1595961795303;
+        Tue, 28 Jul 2020 11:43:15 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzGDST4w1ueiDW8RjT0ado54QBAPIjhROzYB8y7zuzxf+hex3sPRKQ2IixZ32VL41l33BnafA==
+X-Received: by 2002:ad4:4c09:: with SMTP id bz9mr27396343qvb.210.1595961795053;
+        Tue, 28 Jul 2020 11:43:15 -0700 (PDT)
+Received: from loberhel7laptop ([2600:6c64:4e80:f1:4a17:2cf9:6a8a:f150])
+        by smtp.gmail.com with ESMTPSA id z17sm20521413qki.95.2020.07.28.11.43.14
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 28 Jul 2020 11:43:14 -0700 (PDT)
+Message-ID: <d8c4f8e27ff77b85588ee237b2b3e408c91839c7.camel@redhat.com>
+Subject: Re: [PATCH] scsi_transport_srp: sanitize scsi_target_block/unblock
+ sequences
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+Date:   Tue, 28 Jul 2020 14:43:13 -0400
+In-Reply-To: <20200728134833.42547-1-hare@suse.de>
+References: <20200728134833.42547-1-hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/27/2020 10:00 PM, Can Guo wrote:
-> Sometime dumps in IRQ handler are heavy enough to cause system stability
-> issues, move them to error handler.
+On Tue, 2020-07-28 at 15:48 +0200, Hannes Reinecke wrote:
+> The SCSI midlayer does not allow state transitions from SDEV_BLOCK
+> to SDEV_BLOCK, so calling scsi_target_block() from
+> __rport_fast_io_fail()
+> is wrong as the port is already blocked.
+> Similarly we don't need to call scsi_target_unblock() afterwards as
+> the
+> function has already done this.
 > 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->   drivers/scsi/ufs/ufshcd.c | 31 +++++++++++++++----------------
->   1 file changed, 15 insertions(+), 16 deletions(-)
+>  drivers/scsi/scsi_transport_srp.c | 12 +++++-------
+>  1 file changed, 5 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c480823..b2bafa3 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5682,6 +5682,21 @@ static void ufshcd_err_handler(struct work_struct *work)
->   				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
->   		needs_reset = true;
->   
-> +	if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR |
-> +			      UFSHCD_UIC_HIBERN8_MASK)) {
-> +		bool pr_prdt = !!(hba->saved_err & SYSTEM_BUS_FATAL_ERROR);
+> diff --git a/drivers/scsi/scsi_transport_srp.c
+> b/drivers/scsi/scsi_transport_srp.c
+> index d4d1104fac99..cba1cf6a1c12 100644
+> --- a/drivers/scsi/scsi_transport_srp.c
+> +++ b/drivers/scsi/scsi_transport_srp.c
+> @@ -395,6 +395,10 @@ static void srp_reconnect_work(struct
+> work_struct *work)
+>  	}
+>  }
+>  
+> +/*
+> + * scsi_target_block() must have been called before this function is
+> + * called to guarantee that no .queuecommand() calls are in
+> progress.
+> + */
+>  static void __rport_fail_io_fast(struct srp_rport *rport)
+>  {
+>  	struct Scsi_Host *shost = rport_to_shost(rport);
+> @@ -404,11 +408,7 @@ static void __rport_fail_io_fast(struct
+> srp_rport *rport)
+>  
+>  	if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
+>  		return;
+> -	/*
+> -	 * Call scsi_target_block() to wait for ongoing shost-
+> >queuecommand()
+> -	 * calls before invoking i->f->terminate_rport_io().
+> -	 */
+> -	scsi_target_block(rport->dev.parent);
 > +
-> +		dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 0x%x\n",
-> +				__func__, hba->saved_err, hba->saved_uic_err);
-> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		ufshcd_print_host_state(hba);
-> +		ufshcd_print_pwr_info(hba);
-> +		ufshcd_print_host_regs(hba);
-> +		ufshcd_print_tmrs(hba, hba->outstanding_tasks);
-> +		ufshcd_print_trs(hba, hba->outstanding_reqs, pr_prdt);
-> +		spin_lock_irqsave(hba->host->host_lock, flags);
-> +	}
-> +
->   	/*
->   	 * if host reset is required then skip clearing the pending
->   	 * transfers forcefully because they will get cleared during
-> @@ -5900,22 +5915,6 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
->   
->   		/* block commands from scsi mid-layer */
->   		ufshcd_scsi_block_requests(hba);
-> -
-> -		/* dump controller state before resetting */
-> -		if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR)) {
-> -			bool pr_prdt = !!(hba->saved_err &
-> -					SYSTEM_BUS_FATAL_ERROR);
-> -
-> -			dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 0x%x\n",
-> -					__func__, hba->saved_err,
-> -					hba->saved_uic_err);
-> -
-> -			ufshcd_print_host_regs(hba);
-> -			ufshcd_print_pwr_info(hba);
-How about keep the above prints and move the tmrs and trs to eh?
-Sometimes in system instability, the eh may not get a chance to run 
-even. Still the above prints would provide some clues.
-> -			ufshcd_print_tmrs(hba, hba->outstanding_tasks);
-> -			ufshcd_print_trs(hba, hba->outstanding_reqs,
-> -					pr_prdt);
-> -		}
->   		ufshcd_schedule_eh_work(hba);
->   		retval |= IRQ_HANDLED;
->   	}
-> 
+>  	scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
+>  
+>  	/* Involve the LLD if possible to terminate all I/O on the
+> rport. */
+> @@ -570,8 +570,6 @@ int srp_reconnect_rport(struct srp_rport *rport)
+>  		 * failure timers if these had not yet been started.
+>  		 */
+>  		__rport_fail_io_fast(rport);
+> -		scsi_target_unblock(&shost->shost_gendev,
+> -				    SDEV_TRANSPORT_OFFLINE);
+>  		__srp_start_tl_fail_timers(rport);
+>  	} else if (rport->state != SRP_RPORT_BLOCKED) {
+>  		scsi_target_unblock(&shost->shost_gendev,
 
+This looks OK to me but I guess its alwasy worked by just ignoring it
+being called or IU would have seenm issues.
+I etest that stuff pretty heavily.
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
