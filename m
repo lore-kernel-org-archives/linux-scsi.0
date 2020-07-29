@@ -8,68 +8,68 @@ X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F83FC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:11:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 909F8C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:12:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C7EB2083B
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:11:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72AD7207F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:12:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ogl5axki"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="maKKlbaG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727005AbgG2SLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jul 2020 14:11:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37674 "EHLO
+        id S1727116AbgG2SMy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jul 2020 14:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726509AbgG2SLc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2020 14:11:32 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49074C061794;
-        Wed, 29 Jul 2020 11:11:32 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id s15so3158805pgc.8;
-        Wed, 29 Jul 2020 11:11:32 -0700 (PDT)
+        with ESMTP id S1726615AbgG2SMy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2020 14:12:54 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EE28C061794;
+        Wed, 29 Jul 2020 11:12:54 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id t1so3010337plq.0;
+        Wed, 29 Jul 2020 11:12:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=yAh8owI2oyYhWMiiYjqiiKpF84ZnFMNUd5g3cqXC4rI=;
-        b=ogl5axkiIz3HPEN20QlCfE/JGHFxAnZNXwOU9qkakFUBeM/QyrUEusIaXCWY3XzuCm
-         wsZHbKEicdMrABMsVEVP2Z9ZXPLTX7dySW1UqQQjwTjrPn0j6LsdZDh7maylM+nbs9vg
-         SDjmWEQ6O4eAJdN9rHReKpZ9CUycOzVTIvRgurj4QCbdj70/9MT4kt6i8+t2qql17Cng
-         BRyAR7PN3YxCWEzrCkQM5VlYqy/VfE16AeoqMDm0rLVacf0xgddOVQXWNMINGqtslnni
-         JwHxbc9+xgOpzOLuKL/yjJ6/E7NBKwiXDWpFEjo9Ss0UpbJgfyIDgPSFDZzWQxNXSEUg
-         Phnw==
+        bh=Bxde798Da17MibNZCXMF9ILk7ca0H7ApvtwlWCaWKSQ=;
+        b=maKKlbaG5VFgu7Rg5G3DhsRQc+y0Unw1JLBNKKgdxAVsGPgbYMQXSxJanb7Jgw24+D
+         br4TQGyvgVIm6EjQEs/wUPNcxMY6hQTMcxIX4kisrgkhT/dfvIoBFo3+pPT6vNaSH9et
+         rG+tCyv52E886dbeDLWhhIz6mDaYuN1pboi8sP4aRWB/aIDUWQvAYMrxlbQT29hvpsWy
+         vrdDmeGzY2+HXlsBNaccayLqo11GtaW+hrWXRFZolMneMwyS/9eEd/P3iWOtz5CJrXgw
+         0eWRhq4ELVhOHkicKoCEPpgRWwxifiiD7sNJ12yRyTaFsp9OsXQM1li26uM6hMV2CJ/w
+         8rBA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=yAh8owI2oyYhWMiiYjqiiKpF84ZnFMNUd5g3cqXC4rI=;
-        b=CbQd1WYoGcEl7yTFVMgCTuR/1gkVR5Nmipi/ty/Xl1/xgSSG3/0fD6EuwDac/tyz1K
-         W6Y7jJnFgPL0IjC3BNExoLYTWLZz6/bbzSZp/UIY7nfTgDOgUBSCKzgOsmUKY9zonXce
-         FhwriGg1eIaVLMlmM/hxuTYWa/oL3Uck4fmiAAv0TPtp9I6nH8llz68HYLGU0fsnLfUo
-         mgvILPD2sAAf0+smdhLLjBTNGIJUM9SWnDeQi9sqh9y74v27MikI/4Tf0tyGTJO/cr8t
-         8cZT7SqjS0JjZyNX96pavGCGPTqES/7sVdzpbq/iem/fOIUPAgYf3Aw035p2YbEnS7xl
-         StPg==
-X-Gm-Message-State: AOAM530L14Hq4uGSpIA/AmH1TX7oNxBoP531ZRDRYGsu7ybh6Wei7qe1
-        HZ8heFF0HbqXfHzRxDf4gVc=
-X-Google-Smtp-Source: ABdhPJzvtgmTo0z3FZ3NyMDyA2YjIhB1CeoA4/NV96oGLrmTpE/VmRO4iR3Pp4UIEOLiq3vWT+UqGw==
-X-Received: by 2002:a63:5619:: with SMTP id k25mr30129698pgb.139.1596046291556;
-        Wed, 29 Jul 2020 11:11:31 -0700 (PDT)
+        bh=Bxde798Da17MibNZCXMF9ILk7ca0H7ApvtwlWCaWKSQ=;
+        b=N+9J92ghUKiHCLsLxZdn1vbA5L43hd/3fuyTB28zOwryXYwGNCV1JXsJatboSxuLQH
+         TGvmRu5TeqKYZwUhCDUHfYJ216canv92N0G78e6gKXKBHnFxQKXvSkcqEMgEgTp+9O/c
+         SzU7cvBIAfiekLwF/NXjYh2oYRXon/qvQV439i394YB1pvbBHb924KA6n0MRP1mte9a0
+         /TdrhgM5CeOIujZ5ou41nSc29+nIZhcfwsyJlFlBGi6TuvGRiPpQ14frSZhYDhHSA8kc
+         ditbi4yBSW4ba56zezPB4lsTo1KfmH1I8dwGRhVhRBRH9vtBA0vsnO6CtsefHmQ+4Cko
+         mmww==
+X-Gm-Message-State: AOAM531oPV8GSFaCKRFlfLodqpoodIgNHbMZi4aUGDmeaHjgWEXSYuUw
+        qdPkC88bwFs7ZNJnNX45pcE=
+X-Google-Smtp-Source: ABdhPJwgv0sCQXA3N945OqAaEE7bT3TACCbGLa9TwPpyR9KfigEa+syfRsyCFP74S1bdvXE1oiGCMg==
+X-Received: by 2002:a17:902:9009:: with SMTP id a9mr26826174plp.252.1596046373656;
+        Wed, 29 Jul 2020 11:12:53 -0700 (PDT)
 Received: from blackclown ([103.88.82.91])
-        by smtp.gmail.com with ESMTPSA id x9sm3321612pfq.11.2020.07.29.11.11.28
+        by smtp.gmail.com with ESMTPSA id f3sm3009696pju.54.2020.07.29.11.12.50
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 29 Jul 2020 11:11:30 -0700 (PDT)
-Date:   Wed, 29 Jul 2020 23:41:18 +0530
+        Wed, 29 Jul 2020 11:12:52 -0700 (PDT)
+Date:   Wed, 29 Jul 2020 23:42:40 +0530
 From:   Suraj Upadhyay <usuraj35@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, esc.storagedev@microsemi.com
+        njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         kernel-janitors@linux-kernel.org
-Subject: [PATCH 5/7] scsi: hpsa: Remove pci-dma-compat wrapper APIs.
-Message-ID: <37154a4efe82a58b9bad143608dd9fd37a2c94e5.1596045683.git.usuraj35@gmail.com>
+Subject: [PATCH 6/7] scsi: qla2xxx: Remove pci-dma-compat wrapper APIs.
+Message-ID: <24627a86cf1e67fd229bc323316523d1ba0811f9.1596045683.git.usuraj35@gmail.com>
 References: <cover.1596045683.git.usuraj35@gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
+        protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
 Content-Disposition: inline
 In-Reply-To: <cover.1596045683.git.usuraj35@gmail.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
@@ -79,7 +79,7 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---YiEDa0DAkWCtVeE4
+--d6Gm4EdcadzBjdND
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -174,67 +174,53 @@ Compile tested.
 
 Signed-off-by: Suraj Upadhyay <usuraj35@gmail.com>
 ---
- drivers/scsi/hpsa.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 90c36d75bf92..6be850de6f62 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -9328,10 +9328,10 @@ static int hpsa_enter_performant_mode(struct ctlr_i=
-nfo *h, u32 trans_support)
- static void hpsa_free_ioaccel1_cmd_and_bft(struct ctlr_info *h)
- {
- 	if (h->ioaccel_cmd_pool) {
--		pci_free_consistent(h->pdev,
--			h->nr_cmds * sizeof(*h->ioaccel_cmd_pool),
--			h->ioaccel_cmd_pool,
--			h->ioaccel_cmd_pool_dhandle);
-+		dma_free_coherent(&h->pdev->dev,
-+				  h->nr_cmds * sizeof(*h->ioaccel_cmd_pool),
-+				  h->ioaccel_cmd_pool,
-+				  h->ioaccel_cmd_pool_dhandle);
- 		h->ioaccel_cmd_pool =3D NULL;
- 		h->ioaccel_cmd_pool_dhandle =3D 0;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 9b59f032a569..8b4e3da1de5a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1885,7 +1885,7 @@ qla2x00_config_dma_addressing(struct qla_hw_data *ha)
+ 	if (!dma_set_mask(&ha->pdev->dev, DMA_BIT_MASK(64))) {
+ 		/* Any upper-dword bits set? */
+ 		if (MSD(dma_get_required_mask(&ha->pdev->dev)) &&
+-		    !pci_set_consistent_dma_mask(ha->pdev, DMA_BIT_MASK(64))) {
++		    !dma_set_coherent_mask(&ha->pdev->dev, DMA_BIT_MASK(64))) {
+ 			/* Ok, a 64bit DMA mask is applicable. */
+ 			ha->flags.enable_64bit_addressing =3D 1;
+ 			ha->isp_ops->calc_req_entries =3D qla2x00_calc_iocbs_64;
+@@ -1895,7 +1895,7 @@ qla2x00_config_dma_addressing(struct qla_hw_data *ha)
  	}
-@@ -9381,10 +9381,10 @@ static void hpsa_free_ioaccel2_cmd_and_bft(struct c=
-tlr_info *h)
- 	hpsa_free_ioaccel2_sg_chain_blocks(h);
 =20
- 	if (h->ioaccel2_cmd_pool) {
--		pci_free_consistent(h->pdev,
--			h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
--			h->ioaccel2_cmd_pool,
--			h->ioaccel2_cmd_pool_dhandle);
-+		dma_free_coherent(&h->pdev->dev,
-+				  h->nr_cmds * sizeof(*h->ioaccel2_cmd_pool),
-+				  h->ioaccel2_cmd_pool,
-+				  h->ioaccel2_cmd_pool_dhandle);
- 		h->ioaccel2_cmd_pool =3D NULL;
- 		h->ioaccel2_cmd_pool_dhandle =3D 0;
- 	}
+ 	dma_set_mask(&ha->pdev->dev, DMA_BIT_MASK(32));
+-	pci_set_consistent_dma_mask(ha->pdev, DMA_BIT_MASK(32));
++	dma_set_coherent_mask(&ha->pdev->dev, DMA_BIT_MASK(32));
+ }
+=20
+ static void
 --=20
 2.17.1
 
 
---YiEDa0DAkWCtVeE4
+--d6Gm4EdcadzBjdND
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8hu8UACgkQ+gRsbIfe
-747WJQ//WJ543pOY2T9drubHzvRC4T95JyVGnSvtgZVBA7fLNXr/xdz9q9r94msv
-zo2zBctKZcnqx7KeI1TC1WkjRzcMADaugp47O+LI4KoteMPxvQm11fJ4MUNNavDy
-CNZhwSGCbybKyFWmsv2l42BDXzOTvX08ghN4db3XI0h64dyjXmli0M3CL/1R1fv9
-wWoT3lCvrr0PIoNy0cTtdsqMK6WELvN6nc3H7+Kwb3fbqrKd2aruYtOi3ScWF1i0
-rH1H/tOtRS/PPRRNvjFaj4i2zyVzaknG5WPIm7DhmlKUmNpNFjSdz0EhDuQOR5M3
-WQBxy7z7jvJQ+aktiL+O3mA9Q2LfD/i7nK3FV+x3QjAlpIVM2HZr/nwD9KScLjxS
-MWOILO0g8GO/lEr95EBTG18l1JAVRFQir1CJaqx1EDmBTJU8lFvVAfdeiVOjTRum
-koTU9JuJoCWgy/ZtwBHvX2cU1nrP+xURpN+H8ri75DSNdzEytRqVeZNf7CJP8T6w
-cou2rtx+cFjaRnz86KH/DBK2EfsQ6lqBSyYNESJYAsfuLpNghPq6DCBst07LFrfU
-ljMtlbbSub39BGr1a6aIJnStLoi3hAw/0QbJMI8+4ySJ8W7krLwWzLqiTH+Mlfpr
-mwdYEDOY20LrX8647FN9VZ1SWmxhBLXt37uXOzMELhGPbgSw4BU=
-=g1Ai
+iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8hvBcACgkQ+gRsbIfe
+746ogQ/+JqVb6wHACgUNPcI6r3aTAyFkghwuP08zFo4FNRJx9HFrEgg0YEhZWqpv
+CM+ccp58pCJhTdLdarLYnL1+uVWAjiMtPZu4/MkGKJ0XAXm9pFUm+xdc8fmC7IJN
+Tq/lBZhFyJ/8pZR4qBrpoUDlnyt+Bod8C+YG7sl687utX2OMHao8mK8inJaGm6di
+4E0raYJJwiWU55wTzXXy0Y5fr7LVDM6TCETp7BEK5Aln5FCCtluIhNlA5Tomkdya
+TBpN/ZlDN0CwLvVjAn6J/+t/gOgh8iqVqKrHLHcrAZ1jqFz4Yqb3wmfNBv+ghCSa
+dDXndEZzJ+OE1nNTu4cjW11XNacCc94he0nho7CAwO/cCBLTg0TBaR/1x8aXLZ7/
+NuFCsY2OcINAol6/QjNahNCuo6PVOfbh3q6PLWLnTx/HCrFDsKaVh+lp1lciR1FW
+i1xRGRWvLh8ClfB7TSGnrQ0ZaoqmBNjWJZrQjQ742ZWkvH+/nbonl15aGIgVuJ16
+T9OtviEcV8BK5HUy00rk8kgOWJaJULP+fYRqQWv/ro0cTuBCFehO7cfwQWTZIvOm
+3konfJtxJpKv5JZlrTlbIKTmyJl7A+/RddyBrgtewJS4rck/fJrCR0jdo+SA4jVL
+I5iDhr46srEdq6IKXvpVUAKeDcFFU63zkyXKOlVpx42V47dDgf0=
+=of8U
 -----END PGP SIGNATURE-----
 
---YiEDa0DAkWCtVeE4--
+--d6Gm4EdcadzBjdND--
