@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82031C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 08:19:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E9CC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 08:20:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60D0C2076E
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 08:19:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 744412076E
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 08:20:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="nJT+HD4R"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="HyViG4JV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727777AbgG2ITt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jul 2020 04:19:49 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50606 "EHLO
+        id S1727885AbgG2IUC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jul 2020 04:20:02 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48542 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726536AbgG2ITs (ORCPT
+        by vger.kernel.org with ESMTP id S1726710AbgG2IUC (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Jul 2020 04:19:48 -0400
+        Wed, 29 Jul 2020 04:20:02 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06T8HWX4008335
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2020 01:19:47 -0700
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06T8GcnZ007285
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2020 01:20:00 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=QZPoenThHSmsvX6eH8+s3G9JJmzuqZ57CzrwOUKH2oo=;
- b=nJT+HD4RjF3IHQgfKXfjP4f2Q2Rps7clFs2IXFqb71I9d6BcVupnaccuBQJcXIvZpLWv
- /dCUO4yEML99qm1UZ/3b77YRbUblKIB1cswwrHXEg8KRULvadBT0f6loULLwsgnRO60m
- +3t2oFGI+B1V3lUlkJjqRcry+089Hu3Ley2lUEn34MxyanSsznZQC+xdH8ldkSVK1jIl
- A32WaIzyV+EgM5stnDzDPP9Mq1hhQbRDKI/wCORGY5wbjzGk9OqdJ6dZtFhB9A4BE5Xz
- rqJPRiFJU3O9nW5YIEg0cTShCUORpgROiFEyT/w9U17/GK7RU+dEWs40qHNJghRuaKF9 MA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 32jt0stem5-1
+ content-type; s=pfpt0818; bh=2foszxqJUB0Q4GOXZSwKVp6GNJkQFW9l+5HvgO7tQxI=;
+ b=HyViG4JVAe314KbgqMSq85DVDTrvF2jNfcxckNDkZPnNjepKpyMt8f47rCJi+38y9Kqe
+ Hnj3Cf+DxRrJprEdNDVuVqvLLL8n5UY91AD3L4km0Hr+cUh5P1Ac41qqCNKjl9oo6hU6
+ UHiItd/QoCSyIWpFfv7cc3bf1kBcbK9efSswc/TSJKI4C68rM1v1L6ZfwOiPTWAAbCwP
+ Ng/4Rz8OmAWMS6IYUXIFLPRp8rndMSqFL1feHI3MfAgLMCX0EOfTG+UCKdZbUwf1spu3
+ biMdT+jv+TaEx0kmhBf1RtkhlfrHxfgEsGXP4m9B16kjyKjTs7OeRTb1GZcXkANDklNJ Dw== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 32jt0stenn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2020 01:19:47 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 29 Jul
- 2020 01:19:45 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 29 Jul 2020 01:19:46 -0700
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2020 01:20:00 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 29 Jul
+ 2020 01:19:59 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 29 Jul 2020 01:19:59 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id D7BDE3F703F;
-        Wed, 29 Jul 2020 01:19:45 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 00A843F703F;
+        Wed, 29 Jul 2020 01:19:58 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 06T8JY8J031043;
-        Wed, 29 Jul 2020 01:19:34 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 06T8Jwjq031047;
+        Wed, 29 Jul 2020 01:19:58 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 06T8JYK1031034;
-        Wed, 29 Jul 2020 01:19:34 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 06T8Jwm3031046;
+        Wed, 29 Jul 2020 01:19:58 -0700
 From:   Javed Hasan <jhasan@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH 1/2] scsi: libfc: free skb in fc_disc_gpn_id_resp() for valid cases.
-Date:   Wed, 29 Jul 2020 01:18:23 -0700
-Message-ID: <20200729081824.30996-2-jhasan@marvell.com>
+Subject: [PATCH 2/2] scsi: fcoe: memory leak fix in fcoe_sysfs_fcf_del().
+Date:   Wed, 29 Jul 2020 01:18:24 -0700
+Message-ID: <20200729081824.30996-3-jhasan@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200729081824.30996-1-jhasan@marvell.com>
 References: <20200729081824.30996-1-jhasan@marvell.com>
@@ -71,11 +71,11 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- In fc_disc_gpn_id_resp(), skb is supposed to get free for all the cases (excluding PTR_ERR).
- But it wasn't get free in all the cases, leading to memory leak.
+ In fcoe_sysfs_fcf_del(), we first deleted the fcf from the list and
+ free it if ctlr_dev is not NULL.
+ This was causing the memory leak for fcf.
 
- This fix is  to  execute `fc_frame_free(fp)` before function returns.
-
+ This fix is just to free the fcf even if ctlr_dev is NULL or not.
 
 Reviewed-by: Girish Basrur <gbasrur@marvell.com>
 Reviewed-by: Santosh Vernekar <svernekar@marvell.com>
@@ -83,48 +83,24 @@ Reviewed-by: Saurav Kashyap <skashyap@marvell.com>
 Reviewed-by: Shyam Sundar <ssundar@marvell.com>
 Signed-off-by: Javed Hasan <jhasan@marvell.com>
 ---
- drivers/scsi/libfc/fc_disc.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 9c5f7c9..11d4350 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -581,9 +581,13 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 
- 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
- 		goto out;
--	if (IS_ERR(fp))
--		goto redisc;
--
-+	if (IS_ERR(fp)) {
-+		mutex_lock(&disc->disc_mutex);
-+		fc_disc_restart(disc);
-+		mutex_unlock(&disc->disc_mutex);
-+		goto out;
-+	}
-+		
- 	cp = fc_frame_payload_get(fp, sizeof(*cp));
- 	if (!cp)
- 		goto redisc;
-@@ -609,7 +613,7 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 				new_rdata->disc_id = disc->disc_id;
- 				fc_rport_login(new_rdata);
- 			}
--			goto out;
-+			goto free_fp;
- 		}
- 		rdata->disc_id = disc->disc_id;
- 		mutex_unlock(&rdata->rp_mutex);
-@@ -626,6 +630,8 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		fc_disc_restart(disc);
- 		mutex_unlock(&disc->disc_mutex);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 1791a39..d2f5c6f 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -255,9 +255,9 @@ static void fcoe_sysfs_fcf_del(struct fcoe_fcf *new)
+ 		WARN_ON(!fcf_dev);
+ 		new->fcf_dev = NULL;
+ 		fcoe_fcf_device_delete(fcf_dev);
+-		kfree(new);
+ 		mutex_unlock(&cdev->lock);
  	}
-+free_fp:
-+	fc_frame_free(fp);
- out:
- 	kref_put(&rdata->kref, fc_rport_destroy);
++kfree(new);
  }
+ 
+ /**
 -- 
 1.8.3.1
 
