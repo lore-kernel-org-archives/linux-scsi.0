@@ -2,124 +2,142 @@ Return-Path: <SRS0=wj+1=BI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29EFBC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 16:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31C3AC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:05:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 101E42082E
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 16:44:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16DA3207F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:05:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E5dcDswT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726839AbgG2QoZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jul 2020 12:44:25 -0400
-Received: from comms.puri.sm ([159.203.221.185]:54404 "EHLO comms.puri.sm"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726496AbgG2QoZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Jul 2020 12:44:25 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id B78D1E044E;
-        Wed, 29 Jul 2020 09:43:54 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id TegbL7tiphgE; Wed, 29 Jul 2020 09:43:53 -0700 (PDT)
-Date:   Wed, 29 Jul 2020 18:43:48 +0200
-In-Reply-To: <1596037482.4356.37.camel@HansenPartnership.com>
-References: <20200706164135.GE704149@rowland.harvard.edu> <d0ed766b-88b0-5ad5-9c10-a4c3b2f994e3@puri.sm> <20200728200243.GA1511887@rowland.harvard.edu> <f3958758-afce-8add-1692-2a3bbcc49f73@puri.sm> <20200729143213.GC1530967@rowland.harvard.edu> <1596033995.4356.15.camel@linux.ibm.com> <1596034432.4356.19.camel@HansenPartnership.com> <d9bb92e9-23fa-306f-c7f2-71a81ab28811@puri.sm> <1596037482.4356.37.camel@HansenPartnership.com>
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel@puri.sm
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-Message-ID: <A1653792-B7E5-46A9-835B-7FA85FCD0378@puri.sm>
+        id S1726825AbgG2SFn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jul 2020 14:05:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726336AbgG2SFn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2020 14:05:43 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F09A9C061794;
+        Wed, 29 Jul 2020 11:05:42 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id w126so13165633pfw.8;
+        Wed, 29 Jul 2020 11:05:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=o4rHFcSX18taIt22ICNbpXYlTpfl8WXy430SyBBEUAM=;
+        b=E5dcDswTV0bghO/zuaUaa+n4pmPDRrS+T8PGxl0a+f0/jTptmvCZU0D771HXDXsIJ3
+         VyRQvKsc0WpS0ECJruR89RbMsdAneUM7D+QpNx+NjZBF7QIwR2ENKBNuuh8atw/Pxscp
+         hHQRJ1/+9WDb75HnKnCtBNU6lmeFrRYPHCE3tRDgijlQVTnkS/MJHnrirfEFiXw3GMhs
+         idt/Y6zTbS2T8stdWNrubVRtimexORKSQtjMJtchUdxHJnHmJDUDIU9y2ogW7pgbr7cV
+         lxFqD7UxsHmVKDSysSEDTjwsiUUVfmqdCSDpUBq3/qpdUPJWZNLVUhOrnYKPbKLirO2Q
+         bpRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=o4rHFcSX18taIt22ICNbpXYlTpfl8WXy430SyBBEUAM=;
+        b=eVpoFj9OUa6mJPM8bkkr/vEKBObVsxbIppMptd82AUESo0TDRGbzEn2/GGUwIDE+FO
+         kpcKGkljDZLTVSil5IE0Ghx8PPEZ1RshocVwFCYGuZHQyMhUuh9/H4bZmllCeTXVb1Q/
+         RrCZBAvd2xO4XKfBjaWrAZ0T0vkKFTlvW9WEvJcTAUtWgLOThJlnV5UdKpv9UzcDosWV
+         gq3s5Tk6/qoG3RSIK4mWdpdRH2IFG+T/im9TUuQYG75IYt7PTLNgiXuLv6XN+muCV+rU
+         rLv6k1ePWLhGLf6jX1gkbm75HOf80JJs0reQ/7RCwfVlmkM1VD3IGyAp22Sp2EFfyGWx
+         W2Bw==
+X-Gm-Message-State: AOAM532c1wQJO/eBlvw4Yx33cnQMnoDBMtjn1XId8EgrSzZqH5HrX5rU
+        hEWZTVukepvghC/I8aAsYJc=
+X-Google-Smtp-Source: ABdhPJyP7hgMODXN5GM7qlOwF3ltPEqxc6RD0cHdnqEcvogvzbLG7VXgfylJKoEdbBzKyVlK2oAvqg==
+X-Received: by 2002:a63:db46:: with SMTP id x6mr29413959pgi.265.1596045942478;
+        Wed, 29 Jul 2020 11:05:42 -0700 (PDT)
+Received: from blackclown ([103.88.82.91])
+        by smtp.gmail.com with ESMTPSA id d9sm3089514pgv.45.2020.07.29.11.05.39
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 29 Jul 2020 11:05:41 -0700 (PDT)
+Date:   Wed, 29 Jul 2020 23:35:29 +0530
+From:   Suraj Upadhyay <usuraj35@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/7] scsi: Remove pci-dma-compat wrapper APIs.
+Message-ID: <cover.1596045683.git.usuraj35@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="oyUTqETQ0mS9luUI"
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Am 29=2E Juli 2020 17:44:42 MESZ schrieb James Bottomley <James=2EBottomle=
-y@HansenPartnership=2Ecom>:
->On Wed, 2020-07-29 at 17:40 +0200, Martin Kepplinger wrote:
->> On 29=2E07=2E20 16:53, James Bottomley wrote:
->> > On Wed, 2020-07-29 at 07:46 -0700, James Bottomley wrote:
->> > > On Wed, 2020-07-29 at 10:32 -0400, Alan Stern wrote:
->[=2E=2E=2E]
->> > > > This error report comes from the SCSI layer, not the block
->> > > > layer=2E
->> > >=20
->> > > That sense code means "NOT READY TO READY CHANGE, MEDIUM MAY HAVE
->> > > CHANGED" so it sounds like it something we should be
->> > > ignoring=2E  Usually this signals a problem, like you changed the
->> > > medium manually (ejected the CD)=2E  But in this case you can tell
->> > > us to expect this by setting
->> > >=20
->> > > sdev->expecting_cc_ua
->> > >=20
->> > > And we'll retry=2E  I think you need to set this on all resumed
->> > > devices=2E
->> >=20
->> > Actually, it's not quite that easy, we filter out this ASC/ASCQ
->> > combination from the check because we should never ignore medium
->> > might have changed events on running devices=2E  We could ignore it
->> > if we had a flag to say the power has been yanked (perhaps an
->> > additional sdev flag you set on resume) but we would still miss the
->> > case where you really had powered off the drive and then changed
->> > the media =2E=2E=2E if you can regard this as the user's problem, the=
-n we
->> > might have a solution=2E
->> >=20
->> > James
->> > =20
->>=20
->> oh I see what you mean now, thanks for the ellaboration=2E
->>=20
->> if I do the following change, things all look normal and runtime pm
->> works=2E I'm not 100% sure if just setting expecting_cc_ua in resume()
->> is "correct" but that looks like it is what you're talking about:
->>=20
->> (note that this is of course with the one block layer diff applied
->> that Alan posted a few emails back)
->>=20
->>=20
->> --- a/drivers/scsi/scsi_error=2Ec
->> +++ b/drivers/scsi/scsi_error=2Ec
->> @@ -554,16 +554,8 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
->>                  * so that we can deal with it there=2E
->>                  */
->>                 if (scmd->device->expecting_cc_ua) {
->> -                       /*
->> -                        * Because some device does not queue unit
->> -                        * attentions correctly, we carefully check
->> -                        * additional sense code and qualifier so as
->> -                        * not to squash media change unit attention=2E
->> -                        */
->> -                       if (sshdr=2Easc !=3D 0x28 || sshdr=2Eascq !=3D =
-0x00)
->> {
->> -                               scmd->device->expecting_cc_ua =3D 0;
->> -                               return NEEDS_RETRY;
->> -                       }
->> +                       scmd->device->expecting_cc_ua =3D 0;
->> +                       return NEEDS_RETRY;
->
->Well, yes, but you can't do this because it would lose us media change
->events in the non-suspend/resume case which we really don't want=2E=20
->That's why I was suggesting a new flag=2E
->
->James
+Hii Maintainers,
+        This patchset replaces the pci-dma-compat wrappers with their
+dma-mapping counterparts. Thus, removing possible midlayering and
+unnecessary legacy code and API.
 
-also if I set expecting_cc_ua in resume() only, like I did?
+Most of the task is fairly trivially scriptable and done with
+coccinelle. But the handling of pci_z/alloc_consistent needed
+some hand modification in replacing the flag GFP_ATOMIC with
+a proper flag depending upon the context.
+
+I would be glad to receive any feedbacks.
+
+Thanks,
+
+Suraj Upadhyay.
+
+Suraj Upadhyay (7):
+  scsi: aacraid: Remove pci-dma-compat wrapper APIs
+  scsi: aic7xxx: Remove pci-dma-compat wrapper APIs.
+  scsi: dc395x: Remove pci-dma-compat wrapper APIs.
+  scsi: mpt3sas: Remove pci-dma-compat wrapper APIs.
+  scsi: hpsa: Remove pci-dma-compat wrapper APIs.
+  scsi: qla2xxx: Remove pci-dma-compat wrapper APIs.
+  scsi: megaraid: Remove pci-dma-compat wrapper APIs
+
+ drivers/scsi/aacraid/aachba.c      |   4 +-
+ drivers/scsi/aacraid/commctrl.c    |  20 +--
+ drivers/scsi/aacraid/commsup.c     |   8 +-
+ drivers/scsi/aacraid/linit.c       |   4 +-
+ drivers/scsi/aic7xxx/aic79xx_osm.c |   7 +-
+ drivers/scsi/dc395x.c              |   6 +-
+ drivers/scsi/hpsa.c                |  16 +--
+ drivers/scsi/megaraid.c            | 192 +++++++++++++++--------------
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c |  10 +-
+ drivers/scsi/qla2xxx/qla_os.c      |   4 +-
+ 10 files changed, 141 insertions(+), 130 deletions(-)
 
 --=20
-Martin Kepplinger
-xmpp: martink@jabber=2Eat
-Sent from mobile=2E
+2.17.1
+
+
+--oyUTqETQ0mS9luUI
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8hul8ACgkQ+gRsbIfe
+745yWg/8CeOWFmcv9+wzPrfH02Fq11gXeVjZLQryrC0ks9fqo7DFuGSNZ1KI34Tu
+7paRWyZNFU/LPSd9TmqnTUKDafICDEXSzsAEC14wgDqFojS/VR9F5iY069SabcUO
+AWaFJBZ9Oe3qDQ3cD52vtWm3I2nwGP1njiOjQB3tc3qCEC4aIkEYNXY3S3bfe91X
+8yK+r44sf6CIBNj5HXBqMlNVdrNUThzWGmBDVfwL6GK57rqgVUzCUVic///TbEiS
+2AGk1DSUvzuJ46iqUU6VPodV/OiZlUZKBhdBa7LHGe5GE8jHBtMmWKgOzwTHpUZi
+WOxaYbBuTPGHWzlX/XOdcbqB6t/N28eBMxxFZ4MSv04U0Bpg7A1wH/QJmJnKmHIO
+FxwcRmCjbY8d4mdQeUjQjL4Oefevg4t4dziI1Zk7XwatgNnzL4+8iBYtOxzdEZEI
+YKzw2ncN0cuuB/nxKdoKaCV3L87JbRPYp3JKXh288v16czfOYzlPVkzNduTKvN6i
+j5ZGUg4nb4wtXUxyZ8VU3skGrK+8Pik85Gwt+ZlLlyKMHn101lE4M2izsPM+8lNP
+MNjCwQUk7/W3ZhfePaAxsD0LDkvNRDoFt4FVRDCcyhrHAHbrk1qx/G1ETAv1cmSi
+D6nE89UniN/XjP2SZWWHhatR0LnSbsRxbOKtgvYdflIvogGkMpY=
+=1Cx6
+-----END PGP SIGNATURE-----
+
+--oyUTqETQ0mS9luUI--
