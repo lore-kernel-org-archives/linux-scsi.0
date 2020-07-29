@@ -2,160 +2,227 @@ Return-Path: <SRS0=wj+1=BI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D52C1C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C7EC433E3
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEE6C2075D
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:10:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A94132075D
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 18:10:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3aw98rP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726533AbgG2SKR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jul 2020 14:10:17 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:40297 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726336AbgG2SKR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Jul 2020 14:10:17 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id B4EC320418F;
-        Wed, 29 Jul 2020 20:10:14 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id DvU0RtaqVit3; Wed, 29 Jul 2020 20:10:07 +0200 (CEST)
-Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id 67F42204158;
-        Wed, 29 Jul 2020 20:10:06 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Cc:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
-        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel@puri.sm
-References: <20200706164135.GE704149@rowland.harvard.edu>
- <d0ed766b-88b0-5ad5-9c10-a4c3b2f994e3@puri.sm>
- <20200728200243.GA1511887@rowland.harvard.edu>
- <f3958758-afce-8add-1692-2a3bbcc49f73@puri.sm>
- <20200729143213.GC1530967@rowland.harvard.edu>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <31f1ec62-7047-a34b-fdcb-5ea2a2104292@interlog.com>
-Date:   Wed, 29 Jul 2020 14:10:04 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1727884AbgG2SKi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jul 2020 14:10:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37518 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727866AbgG2SKg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2020 14:10:36 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C3AC061794;
+        Wed, 29 Jul 2020 11:10:36 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id w126so13174165pfw.8;
+        Wed, 29 Jul 2020 11:10:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=FjVLtakLnkTChcyRfYnpNb/VSLaNgBesDn6ACtOCpfA=;
+        b=Z3aw98rPf2c2EdoB8RwBsFO0TgAEQ1qheF+QYl7XJ77U5H4WeC2uHZ5lXbEngQr3vq
+         1SnRyQkmviqW7mJjaXZ0UHdaqgNjyX+7CIN5DIwQT+vH1l5X9vQIGlFufr7cnAtQdtge
+         LkJkAueCZpW3eMIM8GVg9NmPuX9yc6uZYsNzcQzfyWyoNrfNUYsU9UnHM5YZDTCv+7u8
+         SG7iGE8qokUOsKVC94Df2l4z4kFg7n4WDDuCHutISnMJPC5OGT9wCoLFgGCBB7BUN+qN
+         MY1rC20niX8qO1FhgfbxNcO7ky3VTVS715gsv8qD2X+2S+6IHPlelwxI9qOK6zmEaFQN
+         J0/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=FjVLtakLnkTChcyRfYnpNb/VSLaNgBesDn6ACtOCpfA=;
+        b=h21v3dKb/5ehC056kFWSg7E4jmjMWvOBu3eOKK7dZo2TjZtzLCcK7SSYhuJLzwyfmV
+         yzUFeQ7ylguJ/n/kamy9Pq75UtVlNPhINWLGFlNh0WUyQwuTH9OqVFgRUxq86TO6Y0/C
+         We2LYN0AarMpZ+eQQ+Y3Lu3KWDf7Iz7npiadqBJYPEQkMuut9oDMGD3uMhfeErurf6M3
+         JfIXoZqaaK0qPabPH9f0hd+KgpKXXA2nVda8vrCcJsUNdggYVMBijGzvTXYJ/to0a7++
+         g8HB++1K8de0hdN0ccFczCESedh5rnmpfmNvFHcgjxSlozX3K3PGBcLo5/AGfl1aRA0h
+         BAjw==
+X-Gm-Message-State: AOAM531aaTgfxr4A+YzUOF3dLCM4wWcWIVzGaa1oBOWn8gwGtHHZSz6Q
+        Q/9KtJN2YflP9reorPbiG4Y=
+X-Google-Smtp-Source: ABdhPJzRQqOo8JlwItJuw9aDoVwtbmxErFCN6sNMOPtjtpha/JtV8hDF5HHWGqNc7F1KBc6q5P6GUw==
+X-Received: by 2002:a62:1dc3:: with SMTP id d186mr15379797pfd.93.1596046235902;
+        Wed, 29 Jul 2020 11:10:35 -0700 (PDT)
+Received: from blackclown ([103.88.82.91])
+        by smtp.gmail.com with ESMTPSA id f131sm3146938pgc.14.2020.07.29.11.10.31
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 29 Jul 2020 11:10:35 -0700 (PDT)
+Date:   Wed, 29 Jul 2020 23:40:21 +0530
+From:   Suraj Upadhyay <usuraj35@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@linux-kernel.org
+Subject: [PATCH 4/7] scsi: mpt3sas: Remove pci-dma-compat wrapper APIs.
+Message-ID: <e825ac7108092cc8fa8d462dc702098ef10fc6a2.1596045683.git.usuraj35@gmail.com>
+References: <cover.1596045683.git.usuraj35@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20200729143213.GC1530967@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
+Content-Disposition: inline
+In-Reply-To: <cover.1596045683.git.usuraj35@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-29 10:32 a.m., Alan Stern wrote:
-> On Wed, Jul 29, 2020 at 04:12:22PM +0200, Martin Kepplinger wrote:
->> On 28.07.20 22:02, Alan Stern wrote:
->>> On Tue, Jul 28, 2020 at 09:02:44AM +0200, Martin Kepplinger wrote:
->>>> Hi Alan,
->>>>
->>>> Any API cleanup is of course welcome. I just wanted to remind you that
->>>> the underlying problem: broken block device runtime pm. Your initial
->>>> proposed fix "almost" did it and mounting works but during file access,
->>>> it still just looks like a runtime_resume is missing somewhere.
->>>
->>> Well, I have tested that proposed fix several times, and on my system
->>> it's working perfectly.  When I stop accessing a drive it autosuspends,
->>> and when I access it again it gets resumed and works -- as you would
->>> expect.
->>
->> that's weird. when I mount, everything looks good, "sda1". But as soon
->> as I cd to the mountpoint and do "ls" (on another SD card "ls" works but
->> actual file reading leads to the exact same errors), I get:
->>
->> [   77.474632] sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result:
->> hostbyte=0x00 driverbyte=0x08 cmd_age=0s
->> [   77.474647] sd 0:0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
->> [   77.474655] sd 0:0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
->> [   77.474667] sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 00 60
->> 40 00 00 01 00
-> 
-> This error report comes from the SCSI layer, not the block layer.
 
-SCSI's first 11 byte command! I'm guessing the first byte is being
-repeated and it's actually:
-     28 00 00 00 60 40 00 00 01 00  [READ(10)]
+--sdtB3X0nJg68CQEu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-That should be fixed. It should be something like: "...CDB in hex: 28 00 ...".
+The legacy API wrappers in include/linux/pci-dma-compat.h
+should go away as it creates unnecessary midlayering
+for include/linux/dma-mapping.h APIs.
+Instead use dma-mapping.h APIs directly.
 
-Doug Gilbert
+The patch has been generated with the coccinelle script below.
+Compile tested.
 
->> [   77.474678] blk_update_request: I/O error, dev sda, sector 24640 op
->> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
->> [   77.485836] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [   77.491628] blk_update_request: I/O error, dev sda, sector 24641 op
->> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
->> [   77.502275] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [   77.508051] blk_update_request: I/O error, dev sda, sector 24642 op
->> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
->> [   77.518651] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> (...)
->> [   77.947653] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [   77.953434] FAT-fs (sda1): Directory bread(block 16448) failed
->> [   77.959333] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [   77.965118] FAT-fs (sda1): Directory bread(block 16449) failed
->> [   77.971014] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [   77.976802] FAT-fs (sda1): Directory bread(block 16450) failed
->> [   77.982698] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> (...)
->> [   78.384929] FAT-fs (sda1): Filesystem has been set read-only
->> [  103.070973] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [  103.076751] print_req_error: 118 callbacks suppressed
->> [  103.076760] blk_update_request: I/O error, dev sda, sector 9748 op
->> 0x1:(WRITE) flags 0x100000 phys_seg 1 prio class 0
->> [  103.087428] Buffer I/O error on dev sda1, logical block 1556, lost
->> async page write
->> [  103.095309] sd 0:0:0:0: [sda] tag#0 device offline or changed
->> [  103.101123] blk_update_request: I/O error, dev sda, sector 17162 op
->> 0x1:(WRITE) flags 0x100000 phys_seg 1 prio class 0
->> [  103.111883] Buffer I/O error on dev sda1, logical block 8970, lost
->> async page write
-> 
-> I can't tell why you're getting that error.  In one of my tests the
-> device returned the same kind of error status (Sense Key = 6, ASC =
-> 0x28) but the operation was then retried successfully.  Perhaps the
-> problem lies in the device you are testing.
-> 
->>>> As we need to have that working at some point, I might look into it, but
->>>> someone who has experience in the block layer can surely do it more
->>>> efficiently.
->>>
->>> I suspect that any problems you still face are caused by something else.
->>>
->>
->> I then formatted sda1 to ext2 (on the runtime suspend system testing
->> your patch) and that seems to have worked!
->>
->> Again accessing the mountpoint then yield the very same "device offline
->> or changed" errors.
->>
->> What kind of device are you testing? You should be easily able to
->> reproduce this using an "sd" device.
-> 
-> I tested two devices: a SanDisk Cruzer USB flash drive and a
-> g-mass-storage gadget running under dummy-hcd.  They each showed up as
-> /dev/sdb on my system.
-> 
-> I haven't tried testing with an SD card.  If you have any specific
-> sequence of commands you would like me to run, let me know.
-> 
->> The problems must lie in the different other drivers we use I guess.
-> 
-> Or the devices.  Have you tried testing with a USB flash drive?
-> 
-> Alan Stern
-> 
+@@@@
+- PCI_DMA_BIDIRECTIONAL
++ DMA_BIDIRECTIONAL
 
+@@@@
+- PCI_DMA_TODEVICE
++ DMA_TO_DEVICE
+
+@@@@
+- PCI_DMA_FROMDEVICE
++ DMA_FROM_DEVICE
+
+@@@@
+- PCI_DMA_NONE
++ DMA_NONE
+
+@@ expression E1, E2, E3; @@
+- pci_alloc_consistent(E1, E2, E3)
++ dma_alloc_coherent(&E1->dev, E2, E3, GFP_)
+
+@@ expression E1, E2, E3; @@
+- pci_zalloc_consistent(E1, E2, E3)
++ dma_alloc_coherent(&E1->dev, E2, E3, GFP_)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_free_consistent(E1, E2, E3, E4)
++ dma_free_coherent(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_map_single(E1, E2, E3, E4)
++ dma_map_single(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_unmap_single(E1, E2, E3, E4)
++ dma_unmap_single(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4, E5; @@
+- pci_map_page(E1, E2, E3, E4, E5)
++ dma_map_page(&E1->dev, E2, E3, E4, E5)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_unmap_page(E1, E2, E3, E4)
++ dma_unmap_page(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_map_sg(E1, E2, E3, E4)
++ dma_map_sg(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_unmap_sg(E1, E2, E3, E4)
++ dma_unmap_sg(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_dma_sync_single_for_cpu(E1, E2, E3, E4)
++ dma_sync_single_for_cpu(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_dma_sync_single_for_device(E1, E2, E3, E4)
++ dma_sync_single_for_device(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_dma_sync_sg_for_cpu(E1, E2, E3, E4)
++ dma_sync_sg_for_cpu(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2, E3, E4; @@
+- pci_dma_sync_sg_for_device(E1, E2, E3, E4)
++ dma_sync_sg_for_device(&E1->dev, E2, E3, E4)
+
+@@ expression E1, E2; @@
+- pci_dma_mapping_error(E1, E2)
++ dma_mapping_error(&E1->dev, E2)
+
+@@ expression E1, E2; @@
+- pci_set_consistent_dma_mask(E1, E2)
++ dma_set_coherent_mask(&E1->dev, E2)
+
+@@ expression E1, E2; @@
+- pci_set_dma_mask(E1, E2)
++ dma_set_mask(&E1->dev, E2)
+
+Signed-off-by: Suraj Upadhyay <usuraj35@gmail.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3=
+sas_ctl.c
+index 43260306668c..94698ad1cad7 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3384,12 +3384,10 @@ host_trace_buffer_enable_store(struct device *cdev,
+ 			    &&
+ 			    (ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 			    MPT3_DIAG_BUFFER_IS_APP_OWNED)) {
+-				pci_free_consistent(ioc->pdev,
+-				    ioc->diag_buffer_sz[
+-				    MPI2_DIAG_BUF_TYPE_TRACE],
+-				    ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE],
+-				    ioc->diag_buffer_dma[
+-				    MPI2_DIAG_BUF_TYPE_TRACE]);
++				dma_free_coherent(&ioc->pdev->dev,
++						  ioc->diag_buffer_sz[MPI2_DIAG_BUF_TYPE_TRACE],
++						  ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE],
++						  ioc->diag_buffer_dma[MPI2_DIAG_BUF_TYPE_TRACE]);
+ 				ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE] =3D
+ 				    NULL;
+ 			}
+--=20
+2.17.1
+
+
+--sdtB3X0nJg68CQEu
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8hu4wACgkQ+gRsbIfe
+744pnQ/+L1/0iu3tEgfAUIuv1dK2wl3gSobE6p6zDAYTZKmFqCGuedXizHG1HCc4
+LEnwZ8bBm8WGSC9AEzJEgpvxCKCLQDIrSGa11E4QShNJdx1tl689CdTMAwob2YVJ
+F4SJJFDeRf7BbGROlUVV+Vdpg3e0G+HXIYtlPM31pCsV1tboAjNRPz6IgVXwWJwW
+ylgmj1GZbJAXa8OnJZ1BVc+lebwxgJnPrCUjR5oFd0Z230ymZY6XM4iCRVKeIDaZ
+uPhfjjR7b4ECIS2ZeYtvXLNb54t0wSXByMc2aeLhdTxCS2XruTL+PTsyDmnTSgF2
+Jxl9KjF4JxoOU5JCi3Df++PpHFH2lbezOhVauGz1EBex6jtBuhVRxADjfp8+oRAM
+ULpcGJ3ipGCh6OoeWPt4Ge3bpfUQmibnHxaDsxxEibtWZ4tbhxPE+yvfBWbrYu+U
+3L9nUFDUhjHHSFdfEI2AfBgo0wzGOoNt1t2SWNE8xJPwAActVxk6rNFjlj3WgzEd
+N4ibYk1K3TdC9cx4z8MpQaP1W1C0cJk4qJ7QVO8OzLC20LTN8CpSRoIKylwJbDNe
+NM08fSaum+XzVTHTcBIRQhVwgKFRKnxTtt7xs4Y2AXGyKp/HvGptTG/PbJqJhwC7
+jsGh7y1Uue0+bxEYAngEDUIieVd9BVdRRJYAMrnDwwrcv+AX1qU=
+=b4xk
+-----END PGP SIGNATURE-----
+
+--sdtB3X0nJg68CQEu--
