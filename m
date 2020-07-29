@@ -2,97 +2,104 @@ Return-Path: <SRS0=wj+1=BI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8769AC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 02:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE29C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 02:57:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66D242078E
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 02:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99A3D2076E
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 02:57:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="b8+a7zcp"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uVB76GCz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731080AbgG2Ckn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Jul 2020 22:40:43 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:53663 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730407AbgG2Ckn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2020 22:40:43 -0400
-X-UUID: d0e9ccca0dd34c9398f8429e711107a5-20200729
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=bsmSl6GhvNafW+/QxrJVytLlWNDF54Z01VPoq2J5LuA=;
-        b=b8+a7zcpU/1y3tgBJKc203MtEZGFdOe7ADIeUvjKRASg9p5lbb8SRMfSP7rEukGyFjhNnN1fdgpCwXhnHA5v7DO0Bs1o+zi9y5mDhQtzlkH5IJa49waHaGUv6+SKG+9LPR8ga+xZoDIOr3nm5LSozKbgofO9dcj/GYxVbCZ0XTg=;
-X-UUID: d0e9ccca0dd34c9398f8429e711107a5-20200729
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1933251817; Wed, 29 Jul 2020 10:40:40 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 29 Jul 2020 10:40:37 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 29 Jul 2020 10:40:38 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <bvanassche@acm.org>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2] scsi: ufs: Fix possible infinite loop in ufshcd_hold
-Date:   Wed, 29 Jul 2020 10:40:37 +0800
-Message-ID: <20200729024037.23105-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1731094AbgG2C5B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Jul 2020 22:57:01 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:60458 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728401AbgG2C5B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jul 2020 22:57:01 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06T2pdck042038;
+        Wed, 29 Jul 2020 02:56:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=l2kXAdb76YJBg92wlJCFLdCdhunbu3WRu16ip+b7LWw=;
+ b=uVB76GCzhO3iWLrtPlYzUMfAGpZ9VODk2VnTcEE4b05D8u30EKTUjLv5hjkdzppZNT52
+ MzTOdhy/XWl3pS+6wd8ho9t5H3s99bXKJUNTDH/mpXvnoCIZza06HQ3kit4Ke9/ITKU9
+ /dLhWS10CikhZvm/mEOMhNtbOGG2iX8ZjPrKQqnTfKsKqj1h1Vyol8dEnNn4iy/w4fUO
+ hfhF2JgqH/DwOWmRFf0AjJYBwvcIG3fuWs1RN/LsHY6aNx+GG8qgERNMuYC2023JlKGn
+ +453ZI6shrrlFCPmBjoZMD7DLTjw4RiF/fUwRma+O6kOZ7xiX8aygAnUiUAVibthlj2/ 6Q== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 32hu1jayst-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 29 Jul 2020 02:56:37 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06T2ma1K002337;
+        Wed, 29 Jul 2020 02:54:37 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 32hu5ty3xd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jul 2020 02:54:36 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06T2sWif025344;
+        Wed, 29 Jul 2020 02:54:32 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 28 Jul 2020 19:54:32 -0700
+To:     Don Brace <don.brace@microsemi.com>
+Cc:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <bader.alisaleh@microchip.com>, <gerry.morong@microchip.com>,
+        <mahesh.rajashekhara@microchip.com>, <hch@infradead.org>,
+        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
+        <POSWALD@suse.com>, <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH V3 0/4] hpsa updates
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1mu3j829w.fsf@ca-mkp.ca.oracle.com>
+References: <159587987792.28270.15427178888235104199.stgit@brunhilda>
+Date:   Tue, 28 Jul 2020 22:54:29 -0400
+In-Reply-To: <159587987792.28270.15427178888235104199.stgit@brunhilda> (Don
+        Brace's message of "Mon, 27 Jul 2020 14:58:22 -0500")
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 6DB1F27E1A9D8E1C51B5FB23D8BB069EFE1E31E88C79BDBB30C332B2C85C741A2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9696 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 suspectscore=1 spamscore=0 mlxlogscore=999 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007290020
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9696 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxscore=0 impostorscore=0
+ phishscore=0 adultscore=0 suspectscore=1 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007290020
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SW4gdWZzaGNkX3N1c3BlbmQoKSwgYWZ0ZXIgY2xrLWdhdGluZyBpcyBzdXNwZW5kZWQgYW5kIGxp
-bmsgaXMgc2V0DQphcyBIaWJlcm44IHN0YXRlLCB1ZnNoY2RfaG9sZCgpIGlzIHN0aWxsIHBvc3Np
-Ymx5IGludm9rZWQgYmVmb3JlDQp1ZnNoY2Rfc3VzcGVuZCgpIHJldHVybnMuIEZvciBleGFtcGxl
-LCBNZWRpYVRlaydzIHN1c3BlbmQgdm9wcyBtYXkNCmlzc3VlIFVJQyBjb21tYW5kcyB3aGljaCB3
-b3VsZCBjYWxsIHVmc2hjZF9ob2xkKCkgZHVyaW5nIHRoZSBjb21tYW5kDQppc3N1aW5nIGZsb3cu
-DQoNCk5vdyBpZiBVRlNIQ0RfQ0FQX0hJQkVSTjhfV0lUSF9DTEtfR0FUSU5HIGNhcGFiaWxpdHkg
-aXMgZW5hYmxlZCwNCnRoZW4gdWZzaGNkX2hvbGQoKSBtYXkgZW50ZXIgaW5maW5pdGUgbG9vcHMg
-YmVjYXVzZSB0aGVyZSBpcyBubw0KY2xrLXVuZ2F0aW5nIHdvcmsgc2NoZWR1bGVkIG9yIHBlbmRp
-bmcuIEluIHRoaXMgY2FzZSwgdWZzaGNkX2hvbGQoKQ0Kc2hhbGwganVzdCBieXBhc3MsIGFuZCBr
-ZWVwIHRoZSBsaW5rIGFzIEhpYmVybjggc3RhdGUuDQoNClNpZ25lZC1vZmYtYnk6IFN0YW5sZXkg
-Q2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQpTaWduZWQtb2ZmLWJ5OiBBbmR5IFRlbmcg
-PGFuZHkudGVuZ0BtZWRpYXRlay5jb20+DQoNCi0tLQ0KDQpDaGFuZ2VzIHNpbmNlIHYxOg0KLSBG
-aXggcmV0dXJuIHZhbHVlOiBVc2UgdW5pcXVlIGJvb2wgdmFyaWFibGUgdG8gZ2V0IHRoZSByZXN1
-bHQgb2YgZmx1c2hfd29yaygpLiBUaGNhbiBwcmV2ZW50IGluY29ycmVjdCByZXR1cm5lZCB2YWx1
-ZSwgaS5lLiwgcmMsIGlmIGZsdXNoX3dvcmsoKSByZXR1cm5zIHRydWUNCi0gRml4IGNvbW1pdCBt
-ZXNzYWdlDQoNCi0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCA1ICsrKystDQogMSBm
-aWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMN
-CmluZGV4IDU3N2NjMGQ3NDg3Zi4uYWNiYTIyNzFjNWQzIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnNoY2QuYw0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KQEAgLTE1
-NjEsNiArMTU2MSw3IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF91bmdhdGVfd29yayhzdHJ1Y3Qgd29y
-a19zdHJ1Y3QgKndvcmspDQogaW50IHVmc2hjZF9ob2xkKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJv
-b2wgYXN5bmMpDQogew0KIAlpbnQgcmMgPSAwOw0KKwlib29sIGZsdXNoX3Jlc3VsdDsNCiAJdW5z
-aWduZWQgbG9uZyBmbGFnczsNCiANCiAJaWYgKCF1ZnNoY2RfaXNfY2xrZ2F0aW5nX2FsbG93ZWQo
-aGJhKSkNCkBAIC0xNTkyLDcgKzE1OTMsOSBAQCBpbnQgdWZzaGNkX2hvbGQoc3RydWN0IHVmc19o
-YmEgKmhiYSwgYm9vbCBhc3luYykNCiAJCQkJYnJlYWs7DQogCQkJfQ0KIAkJCXNwaW5fdW5sb2Nr
-X2lycXJlc3RvcmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCi0JCQlmbHVzaF93b3Jr
-KCZoYmEtPmNsa19nYXRpbmcudW5nYXRlX3dvcmspOw0KKwkJCWZsdXNoX3Jlc3VsdCA9IGZsdXNo
-X3dvcmsoJmhiYS0+Y2xrX2dhdGluZy51bmdhdGVfd29yayk7DQorCQkJaWYgKGhiYS0+Y2xrX2dh
-dGluZy5pc19zdXNwZW5kZWQgJiYgIWZsdXNoX3Jlc3VsdCkNCisJCQkJZ290byBvdXQ7DQogCQkJ
-c3Bpbl9sb2NrX2lycXNhdmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCiAJCQlnb3Rv
-IHN0YXJ0Ow0KIAkJfQ0KLS0gDQoyLjE4LjANCg==
 
+Don,
+
+> These patches are based on Linus's tree
+
+... and therefore they don't apply. Mainly because I already merged an
+earlier version of these.
+
+ - Always submit your patches against my queue branch
+
+ - If there are changes in v3 compared to what I have already merged,
+   please submit incremental patches
+
+ - Please work on your commit messages. See section 2 in
+   Documentation/process/submitting-patches.rst.
+
+Thank you!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
