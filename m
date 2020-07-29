@@ -2,142 +2,173 @@ Return-Path: <SRS0=wj+1=BI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B06BC433E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 04:34:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05338C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 04:50:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE7622074B
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 04:34:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0E1420786
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 04:50:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MUANNLB3"
+	dkim=pass (2048-bit key) header.d=sholland.org header.i=@sholland.org header.b="efUcfZmT";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="E6HEgKua"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726606AbgG2EeJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jul 2020 00:34:09 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:56020 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726220AbgG2EeI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2020 00:34:08 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06T4X5NE120312;
-        Wed, 29 Jul 2020 04:33:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=h53xFNPOnAu2za+HlgzOC+33Caul8s3PIGMAjL9zqYc=;
- b=MUANNLB3paLQES1ITCwvWFQWzJZAFz7rsJkF3D6lhZO3wRENywTiG0r+5okWKkGJ2N2M
- DaGTv20AHMYg355l9ym2tW1wVzEVZfTRSL7rjD5IUZkPYC+JW5RHvEwNR6deIoJMP3fE
- vm85fX/uL2WSTVv4X7PydVVBu8Ij9SyFYxJzsk/Qrysb8Kw0RNxxwExX7tquU7glJRud
- mp56sD5XgSnc/DW+CDlCnIO0jaY7bONl+rx5yQx/tL6inf/00RKjw65HiJjYXxY21VPd
- VcHpdd/DrGG4sD2M3hwfszIYUQymWQs2xeIiKfHeKOQGZZsJ/pBsWvVANuIeFNVm/GlP 7Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 32hu1jb81y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 29 Jul 2020 04:33:22 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06T4XMJD078386;
-        Wed, 29 Jul 2020 04:33:22 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 32hu5u1w9x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 29 Jul 2020 04:33:11 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06T4X32F028038;
-        Wed, 29 Jul 2020 04:33:03 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Jul 2020 21:33:03 -0700
-To:     Maxim Levitsky <mlevitsk@redhat.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "open list:BLOCK LAYER" <linux-block@vger.kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@kernel.dk>,
-        "open list:NVM EXPRESS DRIVER" <linux-nvme@lists.infradead.org>,
-        "open list:SCSI CDROM DRIVER" <linux-scsi@vger.kernel.org>,
-        Tejun Heo <tj@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Ajay Joshi <ajay.joshi@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "open list:SONY MEMORYSTICK SUBSYSTEM" <linux-mmc@vger.kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        "open list:NETWORK BLOCK DEVICE (NBD)" <nbd@other.debian.org>,
-        Hou Tao <houtao1@huawei.com>, Jens Axboe <axboe@fb.com>,
-        "open list:VIRTIO CORE AND NET DRIVERS" 
-        <virtualization@lists.linux-foundation.org>,
+        id S1726560AbgG2Eum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jul 2020 00:50:42 -0400
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:35205 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726203AbgG2Eul (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Jul 2020 00:50:41 -0400
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailout.nyi.internal (Postfix) with ESMTP id 577015C0144;
+        Wed, 29 Jul 2020 00:50:40 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute3.internal (MEProxy); Wed, 29 Jul 2020 00:50:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sholland.org; h=
+        subject:to:cc:references:from:message-id:date:mime-version
+        :in-reply-to:content-type:content-transfer-encoding; s=fm3; bh=0
+        +i4N+QEtcyehcuM/VlfuAk7ughsQ44fkbwCF4dCToE=; b=efUcfZmTRoQsI57xe
+        o6ytKCadtnu/KvMc28Bxh0g7qqIwyzGLPt2MGnVEguFYMK1dXF+2AtKivSm3zFTH
+        qCP+psYx8UZ6BL4lzvhas8vE6U/eeWXngc8QMgLrudfUdhvoT5plb+0kXwcpW8dH
+        r/SstsQ0cs3vuMaXhV8O8khPDEtB3Dqc/otM+vyMLtNwYRfnbYEfZV+5rOqhvjzQ
+        lvps7UEbpEVZLXlzWcd8mVjBiISCgzrCLk581WUdloFfYXo54iMALplOM6YodFpw
+        2plRQPEtLNpf2g2MMQ3PU0G7INSfh/73mYoNqy/hOzykcNKT1bANUzsVoaQk4V8h
+        pe+ig==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; bh=0+i4N+QEtcyehcuM/VlfuAk7ughsQ44fkbwCF4dCT
+        oE=; b=E6HEgKua8ZonGzH70XUNJjaPm2+w+1aH3ZQ4ldCNHMg8JUZDQu98jy/j7
+        dobUQFzpCiwiUcR4Rt8rxnNkPsmHBS6qU5O8X5XVTphjYbSxzh60/nAG/mEnQd1z
+        7xGCXGTtW/H0g06NnWWEncuc8QG6/aQD4v9T2A1LUaWUbMFc+L4YFgPT6Nh4ipe4
+        U1MKyKAQ9RGa/PNxRJXnbrxL6u8mm2dXav9d8EM39aAmsJ/n/JRO1fMaMlvjZTAq
+        sax4ytLzeJGqLVitlOLx8dywNqa7fX0brKHASxO4EqERTWUntHurAF2dGaOYVjq0
+        M3kLAR9HDn8qINGIhBVltXo6y7CeQ==
+X-ME-Sender: <xms:HwAhX5R5GThthn1NgdpSoQQVGOEwUKbdyNMV6wKa92FOGE1PIJ_3lw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrieefgdekkecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefuvfhfhffkffgfgggjtgfgsehtjeertddtfeejnecuhfhrohhmpefurghmuhgv
+    lhcujfholhhlrghnugcuoehsrghmuhgvlhesshhhohhllhgrnhgurdhorhhgqeenucggtf
+    frrghtthgvrhhnpefgveffteelheffjeeukedvkedviedtheevgeefkeehueeiieeuteeu
+    gfettdeggeenucfkphepjedtrddufeehrddugeekrdduhedunecuvehluhhsthgvrhfuih
+    iivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrmhhuvghlsehshhholhhlrghn
+    ugdrohhrgh
+X-ME-Proxy: <xmx:HwAhXyzYeXpNwIgpsigN28agLXcQH_Ht_EJaAzCQNlykFfg5_STfZQ>
+    <xmx:HwAhX-3qCAaBrybvxpWTnf7R3FKH993ESmZJ3eHkiie_hLpoTz8b-w>
+    <xmx:HwAhXxBhPPJcK7PFqd5uyXy9VM8-ae47pGMXO1T9UwbcqfAikmqpKw>
+    <xmx:IAAhX1ti0Kd6eSccrx2DTQhLd8iYeCw9m9Jwbf0fiK6QeCYWI3IDyA>
+Received: from [192.168.50.169] (70-135-148-151.lightspeed.stlsmo.sbcglobal.net [70.135.148.151])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 59331328005A;
+        Wed, 29 Jul 2020 00:50:39 -0400 (EDT)
+Subject: Re: [PATCH] scsi: 3w-9xxx: Fix endianness issues found by sparse
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Adam Radford <aradford@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Alex Dubov <oakad@yahoo.com>
-Subject: Re: [PATCH 02/10] block: virtio-blk: check logical block size
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1bljz7y9q.fsf@ca-mkp.ca.oracle.com>
-References: <20200721105239.8270-1-mlevitsk@redhat.com>
-        <20200721105239.8270-3-mlevitsk@redhat.com>
-        <20200721151437.GB10620@lst.de> <yq1zh7sfedj.fsf@ca-mkp.ca.oracle.com>
-        <f16aba1020019530564f0869a67951282104a5d2.camel@redhat.com>
-Date:   Wed, 29 Jul 2020 00:32:55 -0400
-In-Reply-To: <f16aba1020019530564f0869a67951282104a5d2.camel@redhat.com>
-        (Maxim Levitsky's message of "Wed, 22 Jul 2020 12:11:17 +0300")
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20200726191428.26767-1-samuel@sholland.org>
+ <CAK8P3a3yj=ySNCn7YtEXxWiRK0FtG+5ftkV+vb3s82yRi7cdLw@mail.gmail.com>
+From:   Samuel Holland <samuel@sholland.org>
+Message-ID: <351cf74c-1b82-1acf-26c5-682ac4c3fb90@sholland.org>
+Date:   Tue, 28 Jul 2020 23:50:38 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9696 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
- suspectscore=1 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007290031
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9696 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1015
- malwarescore=0 spamscore=0 suspectscore=1 bulkscore=0 priorityscore=1501
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 impostorscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007290031
+In-Reply-To: <CAK8P3a3yj=ySNCn7YtEXxWiRK0FtG+5ftkV+vb3s82yRi7cdLw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 7/27/20 2:18 PM, Arnd Bergmann wrote:
+> On Sun, Jul 26, 2020 at 9:15 PM Samuel Holland <samuel@sholland.org> wrote:
+>>
+>> The main issue observed was at the call to scsi_set_resid, where the
+>> byteswapped parameter would eventually trigger the alignment check at
+>> drivers/scsi/sd.c:2009. At that point, the kernel would continuously
+>> complain about an "Unaligned partial completion", and no further I/O
+>> could occur.
+>>
+>> This gets the controller working on big endian powerpc64.
+>>
+>> Signed-off-by: Samuel Holland <samuel@sholland.org>
+>> ---
+>>  drivers/scsi/3w-9xxx.c | 35 +++++++++++++++++------------------
+>>  drivers/scsi/3w-9xxx.h |  6 +++++-
+>>  2 files changed, 22 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+>> index 3337b1e80412..95e25fda1f90 100644
+>> --- a/drivers/scsi/3w-9xxx.c
+>> +++ b/drivers/scsi/3w-9xxx.c
+>> @@ -303,10 +303,10 @@ static int twa_aen_drain_queue(TW_Device_Extension *tw_dev, int no_check_reset)
+>>
+>>         /* Initialize sglist */
+>>         memset(&sglist, 0, sizeof(TW_SG_Entry));
+>> -       sglist[0].length = TW_SECTOR_SIZE;
+>> -       sglist[0].address = tw_dev->generic_buffer_phys[request_id];
+>> +       sglist[0].length = cpu_to_le32(TW_SECTOR_SIZE);
+>> +       sglist[0].address = TW_CPU_TO_SGL(tw_dev->generic_buffer_phys[request_id]);
+> 
+> This looks like it would add a sparse warning, not fix one, unless you also
+> change the types of the target structure.
 
-Hi Maxim,
+Yes, I meant to change the structure types as well. All of the command
+structures sent to the card are little-endian. I pulled this bugfix patch out of
+a series of unrelated changes, and I missed the header changes. I'll send a v2.
 
-> Instead of this adding blk_is_valid_logical_block_size allowed me to
-> trivially convert most of the uses.
->
-> For RFC I converted only some drivers that I am more familiar with
-> and/or can test but I can remove the driver's own checks in most other
-> drivers with low chance of introducing a bug, even if I can't test the
-> driver.
->
-> What do you think?
->
-> I can also both make blk_queue_logical_block_size return an error
-> value, and have blk_is_valid_logical_block_size and use either of
-> these checks, depending on the driver with eventual goal of
-> un-exporting blk_is_valid_logical_block_size.
+>> @@ -501,7 +501,7 @@ static void twa_aen_sync_time(TW_Device_Extension *tw_dev, int request_id)
+>>             Sunday 12:00AM */
+>>         local_time = (ktime_get_real_seconds() - (sys_tz.tz_minuteswest * 60));
+>>         div_u64_rem(local_time - (3 * 86400), 604800, &schedulertime);
+>> -       schedulertime = cpu_to_le32(schedulertime % 604800);
+>> +       cpu_to_le32p(&schedulertime);
+>>
+>>         memcpy(param->data, &schedulertime, sizeof(u32));
+> 
+> You dropped the '%' operation, and the result of the byteswap?
 
-My concern is that blk_is_valid_logical_block_size() deviates from the
-regular block layer convention where the function to set a given queue
-limit will either adjust the passed value or print a warning.
+schedulertime is the remainder from the previous line, so it is <604800 already.
+You're right about that being the wrong function -- I meant to use cpu_to_le32s
+to swap it in place, to avoid needing a second variable.
 
-I guess I won't entirely object to having the actual check in a helper
-function that drivers with a peculiar initialization pattern can
-use. And then make blk_queue_logical_block_size() call that helper as
-well to validate the lbs.
+>> @@ -1004,7 +1004,7 @@ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_
+>>                                full_command_packet->header.status_block.error,
+>>                                error_str[0] == '\0' ?
+>>                                twa_string_lookup(twa_error_table,
+>> -                                                full_command_packet->header.status_block.error) : error_str,
+>> +                                                le16_to_cpu(full_command_packet->header.status_block.error)) : error_str,
+>>                                full_command_packet->header.err_specific_desc);
+>>                 else
+> 
+> This looks correct, but the error value has already been copied into the local
+> 'error' variable, which you could use for simplification. As 'status_block' is
+> defined as a native_endian structure, this also introduced a sparse warning.
 
-But I do think that blk_queue_logical_block_size() should be the
-preferred interface and that, where possible, drivers should be updated
-to check the return value of that.
+I'll use 'error' in v2, thanks for the hint.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>> @@ -1012,7 +1012,7 @@ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_
+>>                                full_command_packet->header.status_block.error,
+>>                                error_str[0] == '\0' ?
+>>                                twa_string_lookup(twa_error_table,
+>> -                                                full_command_packet->header.status_block.error) : error_str,
+>> +                                                le16_to_cpu(full_command_packet->header.status_block.error)) : error_str,
+> 
+> Same here
+> 
+>        Arnd
+> 
+
+Cheers,
+Samuel
