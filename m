@@ -2,169 +2,89 @@ Return-Path: <SRS0=wj+1=BI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D1AC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 22:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60BB7C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 23:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA7B92053B
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 22:46:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F26A2067D
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Jul 2020 23:10:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="VhI2/KLt"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OlhESj0u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727947AbgG2WqJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Jul 2020 18:46:09 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:50246 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726628AbgG2WqJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 29 Jul 2020 18:46:09 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1596062768; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=DNhClZ5F3J2ftESrdBiYlqeVHdgvkBigRNnujyyth30=; b=VhI2/KLtruBVyyP7QVx1OqQTMjchV8u4gyaaKAX9Uqf4w0C94l/wTffvoRBVlTzkayegVCNI
- mdr79qH2BQWNqfKSFH7vMzHU4O4qjtPXwwpfpGioqmbs67R6e63U2oC4PaTSGQGCzMD9XBzA
- CfDcJiwpq/JCDdH0a8hnyVYOygA=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5f21fc11634c4259e3526bb0 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 29 Jul 2020 22:45:37
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5C0E1C43391; Wed, 29 Jul 2020 22:45:37 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727896AbgG2XKR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Jul 2020 19:10:17 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:50769 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727083AbgG2XKQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Jul 2020 19:10:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596064215;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=l32mWubXGRR/Zng5Gr0kfCxTExssTQX+E6N7LsbyXH0=;
+        b=OlhESj0ubZ9URoamcseZ8ES4rcnO3Dp5AkEcPFEKLp5/k1WO519fPUQkJhz88ANBPjmtNf
+        kX/eYMztMCnj7azxcacNWw4yScW7ozOD4ku/l4GwBzvLb18H81dJAS3+2MENdhNjFA+slk
+        8CXryxFPdETHGNb37aUbfjAsoHRNUfE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-40-fTk2GrWSPZmm4Ol_zaETvQ-1; Wed, 29 Jul 2020 19:10:13 -0400
+X-MC-Unique: fTk2GrWSPZmm4Ol_zaETvQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D62B4C433C9;
-        Wed, 29 Jul 2020 22:45:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D62B4C433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v7 7/8] scsi: ufs: Move dumps in IRQ handler to error
- handler
-To:     Can Guo <cang@codeaurora.org>
-Cc:     nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        rnayak@codeaurora.org, sh425.lee@samsung.com,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1595912460-8860-1-git-send-email-cang@codeaurora.org>
- <1595912460-8860-8-git-send-email-cang@codeaurora.org>
- <7e5e942d-449b-bd52-32da-7f5beed116b7@codeaurora.org>
- <dff9541177ebf68950ca13d2f13d88ba@codeaurora.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <d66389fa-4ca2-bf7e-6b3d-d77eada4eb0e@codeaurora.org>
-Date:   Wed, 29 Jul 2020 15:45:31 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7B04A1B18BC0;
+        Wed, 29 Jul 2020 23:10:12 +0000 (UTC)
+Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3BBA771925;
+        Wed, 29 Jul 2020 23:10:12 +0000 (UTC)
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     james.smart@broadcom.com
+Subject: [PATCH] scsi: lpfc: nvmet: avoid hang / use-after-free again when destroying targetport
+Date:   Wed, 29 Jul 2020 19:10:11 -0400
+Message-Id: <20200729231011.13240-1-emilne@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <dff9541177ebf68950ca13d2f13d88ba@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/29/2020 6:02 AM, Can Guo wrote:
-> Hi Asutosh,
-> 
-> On 2020-07-29 02:06, Asutosh Das (asd) wrote:
->> On 7/27/2020 10:00 PM, Can Guo wrote:
->>> Sometime dumps in IRQ handler are heavy enough to cause system stability
->>> issues, move them to error handler.
->>>
->>> Signed-off-by: Can Guo <cang@codeaurora.org>
->>> ---
->>>   drivers/scsi/ufs/ufshcd.c | 31 +++++++++++++++----------------
->>>   1 file changed, 15 insertions(+), 16 deletions(-)
->>>
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index c480823..b2bafa3 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -5682,6 +5682,21 @@ static void ufshcd_err_handler(struct 
->>> work_struct *work)
->>>                       UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
->>>           needs_reset = true;
->>>   +    if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR |
->>> +                  UFSHCD_UIC_HIBERN8_MASK)) {
->>> +        bool pr_prdt = !!(hba->saved_err & SYSTEM_BUS_FATAL_ERROR);
->>> +
->>> +        dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 0x%x\n",
->>> +                __func__, hba->saved_err, hba->saved_uic_err);
->>> +        spin_unlock_irqrestore(hba->host->host_lock, flags);
->>> +        ufshcd_print_host_state(hba);
->>> +        ufshcd_print_pwr_info(hba);
->>> +        ufshcd_print_host_regs(hba);
->>> +        ufshcd_print_tmrs(hba, hba->outstanding_tasks);
->>> +        ufshcd_print_trs(hba, hba->outstanding_reqs, pr_prdt);
->>> +        spin_lock_irqsave(hba->host->host_lock, flags);
->>> +    }
->>> +
->>>       /*
->>>        * if host reset is required then skip clearing the pending
->>>        * transfers forcefully because they will get cleared during
->>> @@ -5900,22 +5915,6 @@ static irqreturn_t ufshcd_check_errors(struct 
->>> ufs_hba *hba)
->>>             /* block commands from scsi mid-layer */
->>>           ufshcd_scsi_block_requests(hba);
->>> -
->>> -        /* dump controller state before resetting */
->>> -        if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR)) {
->>> -            bool pr_prdt = !!(hba->saved_err &
->>> -                    SYSTEM_BUS_FATAL_ERROR);
->>> -
->>> -            dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 
->>> 0x%x\n",
->>> -                    __func__, hba->saved_err,
->>> -                    hba->saved_uic_err);
->>> -
->>> -            ufshcd_print_host_regs(hba);
->>> -            ufshcd_print_pwr_info(hba);
->> How about keep the above prints and move the tmrs and trs to eh?
->> Sometimes in system instability, the eh may not get a chance to run
->> even. Still the above prints would provide some clues.
-> 
-> Here is the IRQ handler, ufshcd_print_host_regs() is sometime heavy
-> enough to cause stability issues during my fault injection test, since
-> it prints host regs, reg's history, crypto debug infos plus prints
-> from vops_dump.
-> 
-> How about just printing host regs and reg history here? Most time, these
-> infos are enough.
-> 
-That'd work too.
+We cannot wait on a completion object in the lpfc_nvme_targetport structure
+in the _destroy_targetport() code path because the NVMe/fc transport will
+free that structure immediately after the .targetport_delete() callback.
+This results in a use-after-free, and a crash if slub_debug=FZPU is enabled.
 
-> Thanks,
-> 
-> Can Guo.
-> 
->>> -            ufshcd_print_tmrs(hba, hba->outstanding_tasks);
->>> -            ufshcd_print_trs(hba, hba->outstanding_reqs,
->>> -                    pr_prdt);
->>> -        }
->>>           ufshcd_schedule_eh_work(hba);
->>>           retval |= IRQ_HANDLED;
->>>       }
->>>
+An earlier fix put put the completion on the stack, but commit 2a0fb340fcc8
+("scsi: lpfc: Correct localport timeout duration error") subsequently changed
+the code to reference the completion through a pointer in the object rather
+than the local stack variable.  Fix this by using the stack variable directly.
 
+Fixes: 2a0fb340fcc8 ("scsi: lpfc: Correct localport timeout duration error")
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 88760416a8cb..fcd9d4c2f1ee 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -2112,7 +2112,7 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
+ 		}
+ 		tgtp->tport_unreg_cmp = &tport_unreg_cmp;
+ 		nvmet_fc_unregister_targetport(phba->targetport);
+-		if (!wait_for_completion_timeout(tgtp->tport_unreg_cmp,
++		if (!wait_for_completion_timeout(&tport_unreg_cmp,
+ 					msecs_to_jiffies(LPFC_NVMET_WAIT_TMO)))
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
+ 					"6179 Unreg targetport x%px timeout "
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.18.1
+
