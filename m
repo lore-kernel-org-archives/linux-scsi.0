@@ -2,62 +2,62 @@ Return-Path: <SRS0=dYxQ=BJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31D20C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 11:11:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06982C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 11:13:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D8E02075F
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 11:11:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DACB22075F
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 11:13:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vVwDjUUI"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bGqPRCfw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726799AbgG3LLD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 07:11:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52842 "EHLO
+        id S1727775AbgG3LNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 07:13:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726367AbgG3LLC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 07:11:02 -0400
+        with ESMTP id S1726287AbgG3LNB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 07:13:01 -0400
 Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D518BC061794;
-        Thu, 30 Jul 2020 04:11:02 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id g19so1200690plq.0;
-        Thu, 30 Jul 2020 04:11:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45BE9C061794;
+        Thu, 30 Jul 2020 04:13:01 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id g19so1205174plq.0;
+        Thu, 30 Jul 2020 04:13:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ae96SR23iZeBLSBCoLIaAGm/kTSoCvrW0+UYQgfK9PA=;
-        b=vVwDjUUI8QVtGmGOzrkxP9OugoCgdsctYMdsbBmFGJLK1yMhi9zeY5aH3Vy6IEtcqF
-         VaqmPddg6vM9AtB69G34lkcF5WbPBB5WJWPLS6PYB6/rIGXgeSavm2/RA+QxzJ5kH26E
-         wcd7Dw8pYssor/HcG6JZYfYdBbyua0Zd4fg8flNkOgTXe22Tqqm0Ubdi7F1+iu2m++1i
-         KqBhxTzsLNYuokT0vh/X7SeOMlbLflLZ9vl7kl78wwzImunjjjjb/8lrvBvDfGR52kRH
-         jvwBrq1JGyAzmMnYruGdOMR4ge8kfTS3k/ZPPwpsA2MQ+w4XLW5JeTj5ieoSrnb5l4YW
-         zcRw==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=1RXnzFUlUte9x0aeJ24tzi69Ln5Qow4Xgrtr1s2D2+Y=;
+        b=bGqPRCfwJh32n0ixyAQlu/+W8RkMxXAMkLIbTqG7XWvHkybwKzU3zATxpYQpWS3q3t
+         Jefpph3Mq216BB65Xyap1Uo9SWnnJVGSLledPKNBq4gdgB4bk5cpe7drQttmZc7+E3aI
+         5Kq+D2cRfqbq9EKzL4tLMf5bBPtZrd4dqr9PeHOLlZxWCyyIldCF6REaXnTLH6Mk/7IA
+         fIXqCKEAR88vDcTG7rgCa6FPHSVO5vsM4ohbC0sTX27JFHd+3hhYz28rmuO9ZN6tsDmT
+         4q4osJT2gdkmu8XaYtbe7hCv5lxinWWlWTxcKvMl3e3g37zlhkZgMcQEQUJwkeNLSwO2
+         YTGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ae96SR23iZeBLSBCoLIaAGm/kTSoCvrW0+UYQgfK9PA=;
-        b=brz8eqvoxBQCZSyaTpVAT93I4eythYtQxsb3V7Ag4L/W141MCX8fJx/38RDy3aAvab
-         B8jj4VHT1MroEojdWs2vxvB3yUG71E9CJnDIuf40nhj2TX54kVNk+JqIdOsTP5611FgJ
-         VQD6ZG6d4gi23SvqMNmhYHj4vEMy5I3tMW474EAmeOpgu0i7QiORgjV3y+kcKqFcOvDm
-         0ooarLNhXZU240JahOipmcC7pxZwx451nTkireXvvX67+ahHZdbCnF9gZcs+b/Tzr+pd
-         BTukHFBWVjPc4NIj3xLVJ8sTTvc95ctlKibBMRMhZ5uj7lqpNjt68Jqoraz5fa5lmE9y
-         eOKA==
-X-Gm-Message-State: AOAM532dLgNrbMKfejYdmXIuao68pjWJDfGy854TeSeuVtRW3ROESUli
-        ar/Gcp5m14RGSPNjHSh/o+w=
-X-Google-Smtp-Source: ABdhPJyu9imbhe+saOmZcAMN5MLeoXerEyGeCx7iwEx2yngQKrOHY5GyuhjSg8RAG0NjyyViO3LBQw==
-X-Received: by 2002:a63:1406:: with SMTP id u6mr33350183pgl.108.1596107462192;
-        Thu, 30 Jul 2020 04:11:02 -0700 (PDT)
-Received: from varodek.iballbatonwifi.com ([103.105.152.86])
-        by smtp.gmail.com with ESMTPSA id i67sm5888019pfg.13.2020.07.30.04.10.55
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=1RXnzFUlUte9x0aeJ24tzi69Ln5Qow4Xgrtr1s2D2+Y=;
+        b=m6sWEMtN7cMt70xZ48RZp3EEujTtaqJLw2KNkMqAMYmlMRtxwrxhB+7N1GGk3SotaU
+         GmBI/X+OB09UJu824fKex1Th3u+2xJpUfOKmjcHO1SHQ9CmOBZjGScC5bRyMvEeirlcw
+         Cfrzjb+5vbnBaLAHcqGcUZ3mgRkoqAU7eHwuZ0kNbR239pvoSJNbZ97corSZzoExCCfh
+         +v5aOCMZU0gXBEXOirRArD2/Uiqniku6qHyH03VCM8NzNe+4gg3oHZU9zMAQN+iuKbNx
+         Hyb6AQWaK8w/hBEfBIYVt7zXQb+PsqjlA+I+x/NEn5pYjD8oAVTZun51v+Sr84Oba+kF
+         MD2Q==
+X-Gm-Message-State: AOAM531D+7oaGfbqqbpadC/Gal3QQuD4BAZKpQnjrFqiqX+hpXil9j2A
+        oeSt9B4a51BXA14cuOWW5v0=
+X-Google-Smtp-Source: ABdhPJw7ZezaIvMMg31YdupCrrfa8QNNWsgbqtE4ABRHJ28thJ5mdhBmLm8+vddePpaUrATms/nDjg==
+X-Received: by 2002:aa7:9468:: with SMTP id t8mr1634918pfq.182.1596107580795;
+        Thu, 30 Jul 2020 04:13:00 -0700 (PDT)
+Received: from gmail.com ([103.105.152.86])
+        by smtp.gmail.com with ESMTPSA id n25sm5812460pff.51.2020.07.30.04.12.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2020 04:11:01 -0700 (PDT)
+        Thu, 30 Jul 2020 04:13:00 -0700 (PDT)
+Date:   Thu, 30 Jul 2020 16:41:19 +0530
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -66,135 +66,24 @@ To:     Bjorn Helgaas <helgaas@kernel.org>,
         Don Brace <don.brace@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
+Cc:     esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         Shuah Khan <skhan@linuxfoundation.org>
-Subject: [PATCH v2] scsi: smartpqi: use generic power management
-Date:   Thu, 30 Jul 2020 16:39:30 +0530
-Message-Id: <20200730110930.664486-1-vaibhavgupta40@gmail.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200730070233.221488-1-vaibhavgupta40@gmail.com>
+Subject: Re: [PATCH v2] scsi: smartpqi: use generic power management
+Message-ID: <20200730111119.GA664614@gmail.com>
 References: <20200730070233.221488-1-vaibhavgupta40@gmail.com>
+ <20200730110930.664486-1-vaibhavgupta40@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20200730110930.664486-1-vaibhavgupta40@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drivers using legacy power management .suspen()/.resume() callbacks
-have to manage PCI states and device's PM states themselves. They also
-need to take care of standard configuration registers.
+This patch is compile tested only.
 
-Switch to generic power management framework using a single
-"struct dev_pm_ops" variable to take the unnecessary load from the driver.
-This also avoids the need for the driver to directly call most of the PCI
-helper functions and device power state control functions, as through
-the generic framework PCI Core takes care of the necessary operations,
-and drivers are required to do only device-specific jobs.
-
-Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 44 +++++++++++++++++++--------
- 1 file changed, 31 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index cd157f11eb22..7061bd26897a 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -8059,11 +8059,11 @@ static void pqi_process_module_params(void)
- 	pqi_process_lockup_action_param();
- }
- 
--static __maybe_unused int pqi_suspend(struct pci_dev *pci_dev, pm_message_t state)
-+static int pqi_suspend_late(struct device *dev, pm_message_t state)
- {
- 	struct pqi_ctrl_info *ctrl_info;
- 
--	ctrl_info = pci_get_drvdata(pci_dev);
-+	ctrl_info = dev_get_drvdata(dev);
- 
- 	pqi_disable_events(ctrl_info);
- 	pqi_cancel_update_time_worker(ctrl_info);
-@@ -8081,20 +8081,33 @@ static __maybe_unused int pqi_suspend(struct pci_dev *pci_dev, pm_message_t stat
- 	if (state.event == PM_EVENT_FREEZE)
- 		return 0;
- 
--	pci_save_state(pci_dev);
--	pci_set_power_state(pci_dev, pci_choose_state(pci_dev, state));
--
- 	ctrl_info->controller_online = false;
- 	ctrl_info->pqi_mode_enabled = false;
- 
- 	return 0;
- }
- 
--static __maybe_unused int pqi_resume(struct pci_dev *pci_dev)
-+static __maybe_unused int pqi_suspend(struct device *dev)
-+{
-+	return pqi_suspend_late(dev, PMSG_SUSPEND);
-+}
-+
-+static __maybe_unused int pqi_hibernate(struct device *dev)
-+{
-+	return pqi_suspend_late(dev, PMSG_HIBERNATE);
-+}
-+
-+static __maybe_unused int pqi_freeze(struct device *dev)
-+{
-+	return pqi_suspend_late(dev, PMSG_FREEZE);
-+}
-+
-+static __maybe_unused int pqi_resume(struct device *dev)
- {
- 	int rc;
- 	struct pqi_ctrl_info *ctrl_info;
- 
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	ctrl_info = pci_get_drvdata(pci_dev);
- 
- 	if (pci_dev->current_state != PCI_D0) {
-@@ -8115,9 +8128,6 @@ static __maybe_unused int pqi_resume(struct pci_dev *pci_dev)
- 		return 0;
- 	}
- 
--	pci_set_power_state(pci_dev, PCI_D0);
--	pci_restore_state(pci_dev);
--
- 	return pqi_ctrl_init_resume(ctrl_info);
- }
- 
-@@ -8480,16 +8490,24 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 
- MODULE_DEVICE_TABLE(pci, pqi_pci_id_table);
- 
-+static const struct dev_pm_ops pqi_pm_ops = {
-+#ifdef CONFIG_PM_SLEEP
-+	.suspend = pqi_suspend,
-+	.resume = pqi_resume,
-+	.freeze = pqi_freeze,
-+	.thaw = pqi_resume,
-+	.poweroff = pqi_hibernate,
-+	.restore = pqi_resume,
-+#endif
-+};
-+
- static struct pci_driver pqi_pci_driver = {
- 	.name = DRIVER_NAME_SHORT,
- 	.id_table = pqi_pci_id_table,
- 	.probe = pqi_pci_probe,
- 	.remove = pqi_pci_remove,
- 	.shutdown = pqi_shutdown,
--#if defined(CONFIG_PM)
--	.suspend = pqi_suspend,
--	.resume = pqi_resume,
--#endif
-+	.driver.pm = &pqi_pm_ops
- };
- 
- static int __init pqi_init(void)
--- 
-2.27.0
-
+Thanks
+Vaibhav Gupta
