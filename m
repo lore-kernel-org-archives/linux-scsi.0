@@ -2,147 +2,155 @@ Return-Path: <SRS0=dYxQ=BJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43BA3C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 14:41:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47AABC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 15:10:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2140820829
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 14:41:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3130620838
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 15:10:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729668AbgG3OlN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 10:41:13 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:40929 "HELO
+        id S1729387AbgG3PKc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 11:10:32 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:60279 "HELO
         netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1729092AbgG3OlN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 10:41:13 -0400
-Received: (qmail 1607017 invoked by uid 1000); 30 Jul 2020 10:41:12 -0400
-Date:   Thu, 30 Jul 2020 10:41:12 -0400
+        with SMTP id S1727966AbgG3PKb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 11:10:31 -0400
+Received: (qmail 6777 invoked by uid 1000); 30 Jul 2020 11:10:30 -0400
+Date:   Thu, 30 Jul 2020 11:10:30 -0400
 From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     SCSI development list <linux-scsi@vger.kernel.org>
-Subject: Re: UAS-3 and the removable bit (RMB)
-Message-ID: <20200730144112.GA1604718@rowland.harvard.edu>
-References: <74a8caf7-710c-45f1-5b9d-3661ccc50815@interlog.com>
+To:     Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+Message-ID: <20200730151030.GB6332@rowland.harvard.edu>
+References: <f3958758-afce-8add-1692-2a3bbcc49f73@puri.sm>
+ <20200729143213.GC1530967@rowland.harvard.edu>
+ <1596033995.4356.15.camel@linux.ibm.com>
+ <1596034432.4356.19.camel@HansenPartnership.com>
+ <d9bb92e9-23fa-306f-c7f2-71a81ab28811@puri.sm>
+ <1596037482.4356.37.camel@HansenPartnership.com>
+ <A1653792-B7E5-46A9-835B-7FA85FCD0378@puri.sm>
+ <20200729182515.GB1580638@rowland.harvard.edu>
+ <1596047349.4356.84.camel@HansenPartnership.com>
+ <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <74a8caf7-710c-45f1-5b9d-3661ccc50815@interlog.com>
+In-Reply-To: <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 29, 2020 at 10:10:40PM -0400, Douglas Gilbert wrote:
-> Hi,
-> T10 are working on a new UAS-3 standard. It is not that ambitious
-> with no ability to exploit USB4 capabilities (e.g. 40 Gbps (for
-> a few inches)). They are setting the bar at about the USB-3
-> level (i.e. about 10 years old). One thing that has been discussed
-> recently on the T10 reflector is the RMB (removable device) bit in
-> the INQUIRY response of USB devices.
+On Thu, Jul 30, 2020 at 10:52:14AM +0200, Martin Kepplinger wrote:
+> Maybe I should just start a new discussion with a patch, but the below
+> is what makes sense to me (when I understand you correctly) and seems to
+> work. I basically add a new flag, so that the old flags behave unchanged
+> and only call it during *runtime* resume for SD cards:
 > 
-> There is agreement of what RMB means in the case of tape systems:
-> it has a tape cartridge that can be removed _and_ the tape _drive_
-> can still respond to SCSI commands. So it can set RMB=1 .
 > 
-> So what about USB memory keys? Well the USB mass storage default
-> seems to be to set it.
-
-This is very much _not_ the default.  The US_FL_FIX_INQUIRY flag is set 
-only for the small percentage of USB mass-storage devices that can't 
-handle the INQUIRY command themselves; the default is to use the data 
-provided by the device.
-
->                 /*
->                  * Handle those devices which need us to fake
->                  * their inquiry data
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -553,15 +553,21 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+>                  * information that we should pass up to the upper-level
+> driver
+>                  * so that we can deal with it there.
 >                  */
->                 else if ((srb->cmnd[0] == INQUIRY) &&
->                             (us->fflags & US_FL_FIX_INQUIRY)) {
->                         unsigned char data_ptr[36] = {
->                             0x00, 0x80, 0x02, 0x02,
->                             0x1F, 0x00, 0x00, 0x00};
-> 
->                         usb_stor_dbg(us, "Faking INQUIRY command\n");
->                         fill_inquiry_response(us, data_ptr, 36);
->                         srb->result = SAM_STAT_GOOD;
+> -               if (scmd->device->expecting_cc_ua) {
+> +               if (scmd->device->expecting_cc_ua ||
+> +                   scmd->device->expecting_media_change) {
+>                         /*
+>                          * Because some device does not queue unit
+>                          * attentions correctly, we carefully check
+>                          * additional sense code and qualifier so as
+> -                        * not to squash media change unit attention.
+> +                        * not to squash media change unit attention;
+> +                        * unless expecting_media_change is set, indicating
+> +                        * that the media (most likely) didn't change
+> +                        * but a device only believes so (for example
+> +                        * because of suspend/resume).
+>                          */
+> -                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
+> -                               scmd->device->expecting_cc_ua = 0;
+> +                       if ((sshdr.asc != 0x28 || sshdr.ascq != 0x00) ||
+> +                           scmd->device->expecting_media_change) {
+> +                               scmd->device->expecting_media_change = 0;
+>                                 return NEEDS_RETRY;
+>                         }
 >                 }
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index d90fefffe31b..b647fab2b663 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -114,6 +114,7 @@ static void sd_shutdown(struct device *);
+>  static int sd_suspend_system(struct device *);
+>  static int sd_suspend_runtime(struct device *);
+>  static int sd_resume(struct device *);
+> +static int sd_resume_runtime(struct device *);
+>  static void sd_rescan(struct device *);
+>  static blk_status_t sd_init_command(struct scsi_cmnd *SCpnt);
+>  static void sd_uninit_command(struct scsi_cmnd *SCpnt);
+> @@ -574,7 +575,7 @@ static const struct dev_pm_ops sd_pm_ops = {
+>         .poweroff               = sd_suspend_system,
+>         .restore                = sd_resume,
+>         .runtime_suspend        = sd_suspend_runtime,
+> -       .runtime_resume         = sd_resume,
+> +       .runtime_resume         = sd_resume_runtime,
+>  };
 > 
-> That is from usb_stor_control_thread() in drivers/usb/storage/usb.c .
-> That seems to be for the case in which the USB storage device doesn't
-> supply any INQUIRY response data.
-
-Correct.
-
-> Grabbing the nearest USB stick on my desk I see:
+>  static struct scsi_driver sd_template = {
+> @@ -3652,6 +3653,21 @@ static int sd_resume(struct device *dev)
+>         return ret;
+>  }
 > 
-> # sg_inq /dev/sg4
-> invalid VPD response; probably a STANDARD INQUIRY response
-> standard INQUIRY:
->   PQual=0  Device_type=0  RMB=1  LU_CONG=0  version=0x00  [no conformance claimed]
->   [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=1
->   SCCS=0  ACC=1  TPGS=3  3PC=0  Protect=1  [BQue=0]
->   EncServ=1  MultiP=0  [MChngr=1]  [ACKREQQ=1]  Addr16=1
->   [RelAdr=0]  WBus16=1  Sync=0  [Linked=1]  [TranDis=0]  CmdQue=0
->     length=36 (0x24)   Peripheral device type: disk
->  Vendor identification: Lexar
->  Product identification: JD FireFly
->  Product revision level: 1100
+> +static int sd_resume_runtime(struct device *dev)
+> +{
+> +       struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> +
+> +       /* Some SD cardreaders report media change when resuming from
+> suspend
+> +        * because they can't keep track during suspend. */
+> +
+> +       /* XXX This is not unproblematic though: We won't notice when a card
+> +        * was really changed during runtime suspend! We basically rely
+> on users
+> +        * to unmount or suspend before doing so. */
+> +       sdkp->device->expecting_media_change = 1;
+> +
+> +       return sd_resume(dev);
+> +}
+> +
+>  /**
+>   *     init_sd - entry point for this driver (both when built in or when
+>   *     a module).
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index bc5909033d13..8c8f053f71c8 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -169,6 +169,8 @@ struct scsi_device {
+>                                  * this device */
+>         unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+>                                      * because we did a bus reset. */
+> +       unsigned expecting_media_change:1; /* Expecting media change
+> ASC/ASCQ
+> +                                             when it actually doesn't
+> change */
+>         unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+>         unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+>         unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
 
-Looks like this reply was generated by the USB stick and not by the 
-driver (none of the unusual*.h files in the source directory include 
-the string "JD Firefly").
-
-There's nothing really wrong with setting the RMB bit for devices that 
-don't have removable media, is there?  They will simply act as though 
-the medium is always present.
-
-> There was a T10 proposal today (20-082r0) saying that if a device
-> server in the target (i.e. logic in the USB storage device) can't
-> answer a TEST UNIT READY (TUR) appropriately when the "medium" is
-> absent then that device should _not_ be setting the RMB bit.
-> 
-> If that gets approved, what are the ramifications in changing USB
-> mass storage, UAS(-1) and UAS-3 code be to RMB=0 for most of its
-> cases? A USB SD card reader might validly set RMB=1 as it
-> could (should) respond with NOT READY, MEDIUM NOT PRESENT to TUR
-> when there is no SD card in the addressed slot.
-
-I don't know of any cases where a USB mass-storage device fails to 
-handle TUR correctly when the medium is absent.  This isn't to say there 
-are none at all, but there can't be very many.
-
-In any case, it seems unlikely that this change will have any impact on 
-the drivers.  Perhaps some of the sub-drivers for usb-storage (files 
-like jumpshot.c or sddr09.c) might need to be adjusted a little, but the 
-devices that these files were meant for are becoming less and less 
-common.
-
-Furthermore, in all cases where usb-storage manufactures INQUIRY 
-information for devices that can't provide it, the ANSI-approved version 
-number field is set to 2, meaning that we claim to be conformant only 
-with a very early version of the spec.  Changes made in newer versions 
-are therefore irrelevant.  The uas driver doesn't manufacture INQUIRY 
-responses at all.
-
-> Thoughts?
-
-In the vast majority of cases, usb-storage and uas just return the 
-INQUIRY data that was sent by the device.  Surely that wouldn't need to 
-change (any more than some other SCSI host adapter driver would need to 
-change), even if the devices themselves are rendered non-compliant by a 
-change to the spec.
+That's pretty much what James was suggesting, except for one thing: You 
+must not set sdkp->device->expecting_media_change to 1 for all devices 
+in sd_runtime_resume().  Only for devices which may generate a spurious 
+Unit Attention following runtime resume -- and maybe not even for all of 
+them, depending on what the user wants.
 
 Alan Stern
-
-> Doug Gilbert
-> 
-> 
-> BTW A recent approved addition to SPC-6 is to allow a device (disk)
-> that responds to a TUR with NOT READY, "in process of becoming ready",
-> to place an estimate (in milliseconds) in the INFO field of how
-> long before it will first respond to a TUR with GOOD status.
