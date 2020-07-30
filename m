@@ -2,100 +2,87 @@ Return-Path: <SRS0=dYxQ=BJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28126C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 15:14:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6EEBC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 15:35:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11E7B207F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 15:14:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9121F2082E
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 15:35:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729612AbgG3POG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 11:14:06 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:38007 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1726275AbgG3POG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 11:14:06 -0400
-Received: (qmail 6915 invoked by uid 1000); 30 Jul 2020 11:14:05 -0400
-Date:   Thu, 30 Jul 2020 11:14:05 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Martin Kepplinger <martin.kepplinger@puri.sm>
-Cc:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
-        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel@puri.sm
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-Message-ID: <20200730151405.GC6332@rowland.harvard.edu>
-References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
- <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
- <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
- <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
- <20200626154441.GA296771@rowland.harvard.edu>
- <c19f1938-ae47-2357-669d-5b4021aec154@puri.sm>
- <20200629161536.GA405175@rowland.harvard.edu>
- <c253dde7-9347-b3dc-9c91-65d685793b29@puri.sm>
+        id S1729874AbgG3Pfl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 11:35:41 -0400
+Received: from mga11.intel.com ([192.55.52.93]:20441 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729861AbgG3Pfk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Jul 2020 11:35:40 -0400
+IronPort-SDR: NtRe7DdtQiQbVsH4J5hymtmHiLAk2XfcS/GpWSPGbIdjDP+m+e9I2gKzW7ojG/j4U1rleXGmwP
+ 0b0SU52/gHxA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9698"; a="149454071"
+X-IronPort-AV: E=Sophos;i="5.75,414,1589266800"; 
+   d="scan'208";a="149454071"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2020 08:35:39 -0700
+IronPort-SDR: IkXGFx8stSsDUm1kUQOOF/WOn4jgxX32ltl7N/vBBLc/py/KDpcaVbzqJ7B7rvJ/M68b/JISiQ
+ zNtR9q+a/94g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,414,1589266800"; 
+   d="scan'208";a="395017700"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga001.fm.intel.com with ESMTP; 30 Jul 2020 08:35:37 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 4D851119; Thu, 30 Jul 2020 18:35:36 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>, dc395x@twibble.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] scsi: dc395x: use %*ph to print small buffer
+Date:   Thu, 30 Jul 2020 18:35:35 +0300
+Message-Id: <20200730153535.39691-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c253dde7-9347-b3dc-9c91-65d685793b29@puri.sm>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 10:05:50AM +0200, Martin Kepplinger wrote:
-> On 29.06.20 18:15, Alan Stern wrote:
-> > On Mon, Jun 29, 2020 at 11:42:59AM +0200, Martin Kepplinger wrote:
-> >>
-> >>
-> >> On 26.06.20 17:44, Alan Stern wrote:
-> >>> Martin's best approach would be to add some debugging code to find out why 
-> >>> blk_queue_enter() isn't calling bkl_pm_request_resume(), or why that call 
-> >>> doesn't lead to pm_request_resume().
-> >>>
-> >>> Alan Stern
-> >>>
-> >>
-> >> Hi Alan,
-> >>
-> >> blk_queue_enter() always - especially when sd is runtime suspended and I
-> >> try to mount as above - sets success to be true for me, so never
-> >> continues down to bkl_pm_request_resume(). All I see is "PM: Removing
-> >> info for No Bus:sda1".
-> > 
-> > Aha.  Looking at this more closely, it's apparent that the code in 
-> > blk-core.c contains a logic bug: It assumes that if the BLK_MQ_REQ_PREEMPT 
-> > flag is set then the request can be issued regardless of the queue's 
-> > runtime status.  That is not correct when the queue is suspended.
-> > 
-> > Below is my attempt to fix this up.  I'm not sure that the patch is 
-> > entirely correct, but it should fix this logic bug.  I would appreciate a 
-> > critical review.
-> > 
-> > Martin, does this fix the problem?
-> > 
-> > Alan Stern
-> 
-> Hi Alan,
-> 
-> So in the block layer your change below indeed fixes the problem and if
-> you want to submit that 1:1 feel free to add
-> 
-> Tested-by: Martin Kepplinger <martin.kepplinger@puri.sm>
-> 
-> thanks for your help in this!
+Use %*ph format to print small buffer as hex string.
 
-Thank you for _your_ help!
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/scsi/dc395x.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-The next merge window is coming up soon.  I think I'll wait until it is 
-over before submitting the patch (maintainers tend to be too busy to 
-consider new patches during a merge window).
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 37c6cc374079..434758dde9b4 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -4504,14 +4504,8 @@ static int dc395x_show_info(struct seq_file *m, struct Scsi_Host *host)
+ 	/*seq_printf(m, "\n"); */
+ 
+ 	seq_printf(m, "Nr of DCBs: %i\n", list_size(&acb->dcb_list));
+-	seq_printf(m, "Map of attached LUNs: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+-	     acb->dcb_map[0], acb->dcb_map[1], acb->dcb_map[2],
+-	     acb->dcb_map[3], acb->dcb_map[4], acb->dcb_map[5],
+-	     acb->dcb_map[6], acb->dcb_map[7]);
+-	seq_printf(m, "                      %02x %02x %02x %02x %02x %02x %02x %02x\n",
+-	     acb->dcb_map[8], acb->dcb_map[9], acb->dcb_map[10],
+-	     acb->dcb_map[11], acb->dcb_map[12], acb->dcb_map[13],
+-	     acb->dcb_map[14], acb->dcb_map[15]);
++	seq_printf(m, "Map of attached LUNs: %8ph\n", &acb->dcb_map[0]);
++	seq_printf(m, "                      %8ph\n", &acb->dcb_map[8]);
+ 
+ 	seq_puts(m,
+ 		 "Un ID LUN Prty Sync Wide DsCn SndS TagQ nego_period SyncFreq SyncOffs MaxCmd\n");
+-- 
+2.27.0
 
-But I am still open to comments or criticism of the patch in the 
-meantime.  There hasn't been any feedback since Bart's initial set of 
-questions.
-
-Alan Stern
