@@ -7,25 +7,26 @@ X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D3BEC433E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:52:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E575BC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECA3C21744
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:52:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C76BD20809
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728732AbgG3Iwx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 04:52:53 -0400
-Received: from comms.puri.sm ([159.203.221.185]:54804 "EHLO comms.puri.sm"
+        id S1729010AbgG3IzJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 04:55:09 -0400
+Received: from comms.puri.sm ([159.203.221.185]:54954 "EHLO comms.puri.sm"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726273AbgG3Iwv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Jul 2020 04:52:51 -0400
+        id S1726287AbgG3IzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Jul 2020 04:55:08 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id D98EFE03D2;
-        Thu, 30 Jul 2020 01:52:20 -0700 (PDT)
+        by comms.puri.sm (Postfix) with ESMTP id E5603E03D2;
+        Thu, 30 Jul 2020 01:54:37 -0700 (PDT)
 Received: from comms.puri.sm ([127.0.0.1])
         by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 3-zm5usp4V4V; Thu, 30 Jul 2020 01:52:20 -0700 (PDT)
+        with ESMTP id htW7hdhwFi6C; Thu, 30 Jul 2020 01:54:37 -0700 (PDT)
 Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
 To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         Alan Stern <stern@rowland.harvard.edu>
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -44,7 +45,7 @@ References: <20200706164135.GE704149@rowland.harvard.edu>
  <A1653792-B7E5-46A9-835B-7FA85FCD0378@puri.sm>
  <20200729182515.GB1580638@rowland.harvard.edu>
  <1596047349.4356.84.camel@HansenPartnership.com>
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+ <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
 Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
  mQINBFULfZABEADRxJqDOYAHfrp1w8Egcv88qoru37k1x0Ugy8S6qYtKLAAt7boZW+q5gPv3
  Sj2KjfkWA7gotXpASN21OIfE/puKGwhDLAySY1DGNMQ0gIVakUO0ji5GJPjeB9JlmN5hbA87
@@ -119,11 +120,11 @@ Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
  uV2Xzgbi3VEbw3GZr+EnDC7XNE2wUrnlD/w2W6RzVYjVT6IX4SamNlV+MWX0/1fYCutfqZl8
  6BSKmJjlWpfkPKzyzjhGQVZrTZYnKAu471hRv8/6Dx5JuZJgDCnYanNx3DDreRMu/nq6TfaO
  ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
-Message-ID: <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
-Date:   Thu, 30 Jul 2020 10:52:14 +0200
+Message-ID: <0400a693-a6ce-fdc1-d3d0-f2d87a62f098@puri.sm>
+Date:   Thu, 30 Jul 2020 10:54:32 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
-In-Reply-To: <1596047349.4356.84.camel@HansenPartnership.com>
+In-Reply-To: <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -132,154 +133,159 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29.07.20 20:29, James Bottomley wrote:
-> On Wed, 2020-07-29 at 14:25 -0400, Alan Stern wrote:
->> On Wed, Jul 29, 2020 at 06:43:48PM +0200, Martin Kepplinger wrote:
-> [...]
->>>>> --- a/drivers/scsi/scsi_error.c
->>>>> +++ b/drivers/scsi/scsi_error.c
->>>>> @@ -554,16 +554,8 @@ int scsi_check_sense(struct scsi_cmnd
->>>>> *scmd)
->>>>>                  * so that we can deal with it there.
->>>>>                  */
->>>>>                 if (scmd->device->expecting_cc_ua) {
->>>>> -                       /*
->>>>> -                        * Because some device does not queue
->>>>> unit
->>>>> -                        * attentions correctly, we carefully
->>>>> check
->>>>> -                        * additional sense code and qualifier
->>>>> so as
->>>>> -                        * not to squash media change unit
->>>>> attention.
->>>>> -                        */
->>>>> -                       if (sshdr.asc != 0x28 || sshdr.ascq !=
->>>>> 0x00)
->>>>> {
->>>>> -                               scmd->device->expecting_cc_ua =
->>>>> 0;
->>>>> -                               return NEEDS_RETRY;
->>>>> -                       }
->>>>> +                       scmd->device->expecting_cc_ua = 0;
->>>>> +                       return NEEDS_RETRY;
+On 30.07.20 10:52, Martin Kepplinger wrote:
+> On 29.07.20 20:29, James Bottomley wrote:
+>> On Wed, 2020-07-29 at 14:25 -0400, Alan Stern wrote:
+>>> On Wed, Jul 29, 2020 at 06:43:48PM +0200, Martin Kepplinger wrote:
+>> [...]
+>>>>>> --- a/drivers/scsi/scsi_error.c
+>>>>>> +++ b/drivers/scsi/scsi_error.c
+>>>>>> @@ -554,16 +554,8 @@ int scsi_check_sense(struct scsi_cmnd
+>>>>>> *scmd)
+>>>>>>                  * so that we can deal with it there.
+>>>>>>                  */
+>>>>>>                 if (scmd->device->expecting_cc_ua) {
+>>>>>> -                       /*
+>>>>>> -                        * Because some device does not queue
+>>>>>> unit
+>>>>>> -                        * attentions correctly, we carefully
+>>>>>> check
+>>>>>> -                        * additional sense code and qualifier
+>>>>>> so as
+>>>>>> -                        * not to squash media change unit
+>>>>>> attention.
+>>>>>> -                        */
+>>>>>> -                       if (sshdr.asc != 0x28 || sshdr.ascq !=
+>>>>>> 0x00)
+>>>>>> {
+>>>>>> -                               scmd->device->expecting_cc_ua =
+>>>>>> 0;
+>>>>>> -                               return NEEDS_RETRY;
+>>>>>> -                       }
+>>>>>> +                       scmd->device->expecting_cc_ua = 0;
+>>>>>> +                       return NEEDS_RETRY;
+>>>>>
+>>>>> Well, yes, but you can't do this because it would lose us media
+>>>>> change events in the non-suspend/resume case which we really
+>>>>> don't want.  That's why I was suggesting a new flag.
+>>>>>
+>>>>> James
 >>>>
->>>> Well, yes, but you can't do this because it would lose us media
->>>> change events in the non-suspend/resume case which we really
->>>> don't want.  That's why I was suggesting a new flag.
->>>>
->>>> James
+>>>> also if I set expecting_cc_ua in resume() only, like I did?
 >>>
->>> also if I set expecting_cc_ua in resume() only, like I did?
+>>> That wouldn't make any difference.  The information sent by your
+>>> card reader has sshdr.asc == 0x28 and sshdr.ascq == 0x00 (you can see
+>>> it in the log).  So because of the code here in scsi_check_sense(),
+>>> which you can't change, the Unit Attention sent by the card reader
+>>> would not be  retried even if you do set the flag in resume().
 >>
->> That wouldn't make any difference.  The information sent by your
->> card reader has sshdr.asc == 0x28 and sshdr.ascq == 0x00 (you can see
->> it in the log).  So because of the code here in scsi_check_sense(),
->> which you can't change, the Unit Attention sent by the card reader
->> would not be  retried even if you do set the flag in resume().
+>> But if we had a new flag, like expecting_media_change, you could set
+>> that in resume and we could condition the above test in the code on it
+>> and reset it and do a retry if it gets set.  I'm not saying we have to
+>> do it this way, but it sounds like we have to do something in the
+>> kernel, so I think the flag will become necessary but there might be a
+>> bit of policy based dance around how it gets set in the kernel (to
+>> avoid losing accurate media change events).
+>>
+>> James
+>>
 > 
-> But if we had a new flag, like expecting_media_change, you could set
-> that in resume and we could condition the above test in the code on it
-> and reset it and do a retry if it gets set.  I'm not saying we have to
-> do it this way, but it sounds like we have to do something in the
-> kernel, so I think the flag will become necessary but there might be a
-> bit of policy based dance around how it gets set in the kernel (to
-> avoid losing accurate media change events).
+> Maybe I should just start a new discussion with a patch, but the below
+> is what makes sense to me (when I understand you correctly) and seems to
+> work. I basically add a new flag, so that the old flags behave unchanged
+> and only call it during *runtime* resume for SD cards:
 > 
-> James
 > 
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -553,15 +553,21 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+>                  * information that we should pass up to the upper-level
+> driver
+>                  * so that we can deal with it there.
+>                  */
+> -               if (scmd->device->expecting_cc_ua) {
+> +               if (scmd->device->expecting_cc_ua ||
+> +                   scmd->device->expecting_media_change) {
+>                         /*
+>                          * Because some device does not queue unit
+>                          * attentions correctly, we carefully check
+>                          * additional sense code and qualifier so as
+> -                        * not to squash media change unit attention.
+> +                        * not to squash media change unit attention;
+> +                        * unless expecting_media_change is set, indicating
+> +                        * that the media (most likely) didn't change
+> +                        * but a device only believes so (for example
+> +                        * because of suspend/resume).
+>                          */
+> -                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
+> -                               scmd->device->expecting_cc_ua = 0;
+> +                       if ((sshdr.asc != 0x28 || sshdr.ascq != 0x00) ||
+> +                           scmd->device->expecting_media_change) {
+> +                               scmd->device->expecting_media_change = 0;
 
-Maybe I should just start a new discussion with a patch, but the below
-is what makes sense to me (when I understand you correctly) and seems to
-work. I basically add a new flag, so that the old flags behave unchanged
-and only call it during *runtime* resume for SD cards:
+oops, I missed expecting_cc_ua here, but you get the idea.
 
-
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -553,15 +553,21 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
-                 * information that we should pass up to the upper-level
-driver
-                 * so that we can deal with it there.
-                 */
--               if (scmd->device->expecting_cc_ua) {
-+               if (scmd->device->expecting_cc_ua ||
-+                   scmd->device->expecting_media_change) {
-                        /*
-                         * Because some device does not queue unit
-                         * attentions correctly, we carefully check
-                         * additional sense code and qualifier so as
--                        * not to squash media change unit attention.
-+                        * not to squash media change unit attention;
-+                        * unless expecting_media_change is set, indicating
-+                        * that the media (most likely) didn't change
-+                        * but a device only believes so (for example
-+                        * because of suspend/resume).
-                         */
--                       if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
--                               scmd->device->expecting_cc_ua = 0;
-+                       if ((sshdr.asc != 0x28 || sshdr.ascq != 0x00) ||
-+                           scmd->device->expecting_media_change) {
-+                               scmd->device->expecting_media_change = 0;
-                                return NEEDS_RETRY;
-                        }
-                }
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d90fefffe31b..b647fab2b663 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -114,6 +114,7 @@ static void sd_shutdown(struct device *);
- static int sd_suspend_system(struct device *);
- static int sd_suspend_runtime(struct device *);
- static int sd_resume(struct device *);
-+static int sd_resume_runtime(struct device *);
- static void sd_rescan(struct device *);
- static blk_status_t sd_init_command(struct scsi_cmnd *SCpnt);
- static void sd_uninit_command(struct scsi_cmnd *SCpnt);
-@@ -574,7 +575,7 @@ static const struct dev_pm_ops sd_pm_ops = {
-        .poweroff               = sd_suspend_system,
-        .restore                = sd_resume,
-        .runtime_suspend        = sd_suspend_runtime,
--       .runtime_resume         = sd_resume,
-+       .runtime_resume         = sd_resume_runtime,
- };
-
- static struct scsi_driver sd_template = {
-@@ -3652,6 +3653,21 @@ static int sd_resume(struct device *dev)
-        return ret;
- }
-
-+static int sd_resume_runtime(struct device *dev)
-+{
-+       struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+
-+       /* Some SD cardreaders report media change when resuming from
-suspend
-+        * because they can't keep track during suspend. */
-+
-+       /* XXX This is not unproblematic though: We won't notice when a card
-+        * was really changed during runtime suspend! We basically rely
-on users
-+        * to unmount or suspend before doing so. */
-+       sdkp->device->expecting_media_change = 1;
-+
-+       return sd_resume(dev);
-+}
-+
- /**
-  *     init_sd - entry point for this driver (both when built in or when
-  *     a module).
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index bc5909033d13..8c8f053f71c8 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -169,6 +169,8 @@ struct scsi_device {
-                                 * this device */
-        unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
-                                     * because we did a bus reset. */
-+       unsigned expecting_media_change:1; /* Expecting media change
-ASC/ASCQ
-+                                             when it actually doesn't
-change */
-        unsigned use_10_for_rw:1; /* first try 10-byte read / write */
-        unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
-        unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
+>                                 return NEEDS_RETRY;
+>                         }
+>                 }
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index d90fefffe31b..b647fab2b663 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -114,6 +114,7 @@ static void sd_shutdown(struct device *);
+>  static int sd_suspend_system(struct device *);
+>  static int sd_suspend_runtime(struct device *);
+>  static int sd_resume(struct device *);
+> +static int sd_resume_runtime(struct device *);
+>  static void sd_rescan(struct device *);
+>  static blk_status_t sd_init_command(struct scsi_cmnd *SCpnt);
+>  static void sd_uninit_command(struct scsi_cmnd *SCpnt);
+> @@ -574,7 +575,7 @@ static const struct dev_pm_ops sd_pm_ops = {
+>         .poweroff               = sd_suspend_system,
+>         .restore                = sd_resume,
+>         .runtime_suspend        = sd_suspend_runtime,
+> -       .runtime_resume         = sd_resume,
+> +       .runtime_resume         = sd_resume_runtime,
+>  };
+> 
+>  static struct scsi_driver sd_template = {
+> @@ -3652,6 +3653,21 @@ static int sd_resume(struct device *dev)
+>         return ret;
+>  }
+> 
+> +static int sd_resume_runtime(struct device *dev)
+> +{
+> +       struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> +
+> +       /* Some SD cardreaders report media change when resuming from
+> suspend
+> +        * because they can't keep track during suspend. */
+> +
+> +       /* XXX This is not unproblematic though: We won't notice when a card
+> +        * was really changed during runtime suspend! We basically rely
+> on users
+> +        * to unmount or suspend before doing so. */
+> +       sdkp->device->expecting_media_change = 1;
+> +
+> +       return sd_resume(dev);
+> +}
+> +
+>  /**
+>   *     init_sd - entry point for this driver (both when built in or when
+>   *     a module).
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index bc5909033d13..8c8f053f71c8 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -169,6 +169,8 @@ struct scsi_device {
+>                                  * this device */
+>         unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+>                                      * because we did a bus reset. */
+> +       unsigned expecting_media_change:1; /* Expecting media change
+> ASC/ASCQ
+> +                                             when it actually doesn't
+> change */
+>         unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+>         unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+>         unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
+> 
