@@ -7,286 +7,307 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF3FAC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98080C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:04:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A24720672
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:04:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D42420809
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 08:04:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Rb+7lX/6"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="IC6Clc4x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728980AbgG3IEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 04:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52252 "EHLO
+        id S1729000AbgG3IEj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 04:04:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728758AbgG3IEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 04:04:34 -0400
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC37CC061794
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2020 01:04:33 -0700 (PDT)
-Received: by mail-pl1-x644.google.com with SMTP id q17so13313517pls.9
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2020 01:04:33 -0700 (PDT)
+        with ESMTP id S1728758AbgG3IEh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 04:04:37 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74D15C061794
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2020 01:04:37 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id c6so3465541pje.1
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2020 01:04:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=4n7bJyoN6kqIWp0KEEEyHDEQfGv8rWiSooGpu41nJNQ=;
-        b=Rb+7lX/6FvzlDu+07rsC+f2i7qkcRcn2rsJMRzXC+DbLRxWTgjAw/jZSOrYrrAxEL6
-         CJuPdFGJqGXXlxh4gsZSDZTWePDN8B+jPAoKeDbEre4ynSQI5GFZVYJBWUtdDde9Hh4H
-         pJ8VtdPeEd0fi3lSwnc5uadie6/T2b3tJCFNs=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=J2vxRaLJbYjx/WNOq6int4KscmiEZcRt7XXwFnk3Mks=;
+        b=IC6Clc4xyccSKV+LpJY7v/+PK45i+uhp0VR4mj9u14VbY3MSecZsgVUt6yNmPp33Tr
+         2IkLmd0dmFnriydNpPWc4QxMcr83o9sLMrdTWRvmth+/4JHTGtfATwCSBKPExwU9UAP7
+         wTTFymb/ZcQLBH+VWMPT2uqaKRvATYvnfouYk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=4n7bJyoN6kqIWp0KEEEyHDEQfGv8rWiSooGpu41nJNQ=;
-        b=eUEEYSrOH6uNf1X/z5BOAVQS8JDQi5L3gMEEeSWYYE2cFjlOhBnfuean1lExY5d9T5
-         RaONcmHAx7R2oB8wC4ImcX7SKCDuaX35+NhetN57epQYJbXQhb5nydHmFkvSiRgNj+gz
-         UCzsJOtzQTfkS2lAELb0vRBdigidGTsWdRY5qjfiB1vgScMOm6w1P+GQt0PXm4H4X6yt
-         +zOtdNyQFw0S72aCHcOmOEJZKGCSxlYxgCKUNzuRb5DlLGPqtWkOXQYU2U5ZiWdNZEZt
-         R6M2kf2L1zWk1FZZ+B+drIqvJY/1RfQOAuuZ5xEcF6lmbAIvaTT4MA03Pa+Q/37uODQ5
-         c+Ng==
-X-Gm-Message-State: AOAM532XACsKofoHTpJEjP52IyC+VEEhMzCsMNHwHDtoTGWhaS1kONTZ
-        UdlNvm5M5OmsOeN/KdhzW81EFYVRK4y1EQ==
-X-Google-Smtp-Source: ABdhPJzIttO4BL8RRusG2ZoZrmpc9hnTrq1YLjsPo550SuRDLkiQEGujV10kK3rkgkqsvBSdRU7Hug==
-X-Received: by 2002:a17:90a:2e85:: with SMTP id r5mr1965212pjd.232.1596096273317;
-        Thu, 30 Jul 2020 01:04:33 -0700 (PDT)
+         :references:mime-version:content-transfer-encoding;
+        bh=J2vxRaLJbYjx/WNOq6int4KscmiEZcRt7XXwFnk3Mks=;
+        b=fI0zaHYjUus2IGVcJErnnm9R/YNTBKTTlvSpjr6bigK9w/xB39eqTwFuhmG5fembS0
+         LLiqNGI1En667BNfci/9RdjcFwHlii4KMcrzL2VQojlUK7vY6XGATjlk1Y/uYhwLXHVv
+         KizTCsqyj6X/XbcQlombtU7TAWgIhCAbd2Se/NdCrWMJI6n7JZxnsDWxPkus5f046nFR
+         IICqIs1nKowY2EpP8R/JruVjRQF2nrbzERAYZZEOlt1aHmpYhf9eQGBtpkKR+6ZlFCS9
+         1oW7iDb8xY76cGgiD23n1szlXwoT2kEOXD9qEMf3SLQEtqSM41CbnpYRSRk4i2LvakL+
+         p27g==
+X-Gm-Message-State: AOAM530pHARx59xG86Rrkm1DIRdd6+E1yckPwwzBq5kS04XpyuTy3fIN
+        m77uCvhGVrHkmYGbOFTAolrGFaCD6ErFEQ==
+X-Google-Smtp-Source: ABdhPJwTjyxFCIspYNXfle/828JsRphDudS9wgDq0JsOn5iNww7XRD5XSV5jOUWeNmnxTkANo8FykQ==
+X-Received: by 2002:a17:90a:fd82:: with SMTP id cx2mr5585011pjb.67.1596096276844;
+        Thu, 30 Jul 2020 01:04:36 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.212.250])
-        by smtp.gmail.com with ESMTPSA id d13sm5051412pfq.118.2020.07.30.01.04.30
+        by smtp.gmail.com with ESMTPSA id d13sm5051412pfq.118.2020.07.30.01.04.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 30 Jul 2020 01:04:32 -0700 (PDT)
+        Thu, 30 Jul 2020 01:04:36 -0700 (PDT)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sreekanth.reddy@broadcom.com,
         sathya.prakash@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 5/7] mpt3sas: Added helper functions to check any cmd is outstanding on Target and LUN.
-Date:   Thu, 30 Jul 2020 13:33:47 +0530
-Message-Id: <1596096229-3341-6-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 6/7] mpt3sas: Postprocessing of target and LUN reset.
+Date:   Thu, 30 Jul 2020 13:33:48 +0530
+Message-Id: <1596096229-3341-7-git-send-email-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1596096229-3341-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1596096229-3341-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Added helper functions to check whether any SCSI command  is
-outstanding on particular Target, LUN device,
-* Added addition function parameters 'channel', 'id' to function
-mpt3sas_scsih_issue_tm().
+If driver has not received the interrupt for the aborted SCSI command
+before processing the TM reply, Driver polls all the reply descriptor
+pools looking for the reply for the aborted SCSI command before marking
+TM as FAILED. If it finds the reply then mark the TM as SUCCESS
+otherwise mark as FAILED.
+scsih_tm_cmd_map_status() -> Checks whether TM has aborted
+the timed out SCSI command or not, if TM has aborted the IO
+then returns SUCCESS else returns FAILED.
+scsih_tm_post_processing() -> Post proceesing of target &
+LUN reset
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  9 +--
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  6 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 92 ++++++++++++++++++++++++----
- 3 files changed, 88 insertions(+), 19 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |   6 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 136 ++++++++++++++++++++++++++-
+ 3 files changed, 139 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 2ffdbbb..3606676 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1784,12 +1784,14 @@ _base_is_controller_msix_enabled(struct MPT3SAS_ADAPTER *ioc)
+ /**
+  * mpt3sas_base_sync_reply_irqs - flush pending MSIX interrupts
+  * @ioc: per adapter object
++ * @poll: poll over reply descriptor pools incase interrupt for
++ *		timed-out SCSI command got delayed
+  * Context: non ISR conext
+  *
+  * Called when a Task Management request has completed.
+  */
+ void
+-mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc)
++mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc, u8 poll)
+ {
+ 	struct adapter_reply_queue *reply_q;
+ 
+@@ -1819,6 +1821,8 @@ mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc)
+ 		}
+ 		synchronize_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index));
+ 	}
++	if (poll)
++		_base_process_reply_queue(reply_q);
+ }
+ 
+ /**
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 9da7265..fd61deb 100644
+index fd61deb..feb8328 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1610,11 +1610,12 @@ void mpt3sas_scsih_clear_outstanding_scsi_tm_commands(
- 	struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_scsih_reset_done_handler(struct MPT3SAS_ADAPTER *ioc);
+@@ -1528,7 +1528,7 @@ __le32 mpt3sas_base_get_sense_buffer_dma(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 smid);
+ void *mpt3sas_base_get_pcie_sgl(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+ dma_addr_t mpt3sas_base_get_pcie_sgl_dma(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+-void mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc);
++void mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc, u8 poll);
+ void mpt3sas_base_mask_interrupts(struct MPT3SAS_ADAPTER *ioc);
+ void mpt3sas_base_unmask_interrupts(struct MPT3SAS_ADAPTER *ioc);
  
--int mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, u64 lun,
--	u8 type, u16 smid_task, u16 msix_task, u8 timeout, u8 tr_method);
-+int mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
-+	uint channel, uint id, u64 lun, u8 type, u16 smid_task,
-+	u16 msix_task, u8 timeout, u8 tr_method);
- int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
--	u64 lun, u8 type, u16 smid_task, u16 msix_task,
--	u8 timeout, u8 tr_method);
-+	uint channel, uint id, u64 lun, u8 type, u16 smid_task,
-+	u16 msix_task, u8 timeout, u8 tr_method);
- 
- void mpt3sas_scsih_set_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle);
- void mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 62e5528..98d6b9c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1109,13 +1109,15 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 			    pcie_device->device_info))))
- 				mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
--				  0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
-+				  0, 0, 0,
-+				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, pcie_device->reset_timeout,
- 			MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE);
- 			else
- 				mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
--				  0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
-+				  0, 0, 0,
-+				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, 30, MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET);
- 		} else
- 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 66b29d4..ce12253 100644
+index ce12253..67270e0 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1512,6 +1512,66 @@ _scsih_is_nvme_pciescsi_device(u32 device_info)
- 		return 0;
+@@ -2760,6 +2760,96 @@ mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	}
  }
  
 +/**
-+ * _scsih_scsi_lookup_find_by_target - search for matching channel:id
-+ * @ioc: per adapter object
-+ * @id: target id
-+ * @channel: channel
-+ * Context: This function will acquire ioc->scsi_lookup_lock.
++ * scsih_tm_cmd_map_status - map the target reset & LUN reset TM status
++ * @ioc - per adapter object
++ * @channel - the channel assigned by the OS
++ * @id: the id assigned by the OS
++ * @lun: lun number
++ * @type: MPI2_SCSITASKMGMT_TASKTYPE__XXX (defined in mpi2_init.h)
++ * @smid_task: smid assigned to the task
 + *
-+ * This will search for a matching channel:id in the scsi_lookup array,
-+ * returning 1 if found.
++ * Look whether TM has aborted the timed out SCSI command, if
++ * TM has aborted the IO then return SUCCESS else return FAILED.
 + */
-+static u8
-+_scsih_scsi_lookup_find_by_target(struct MPT3SAS_ADAPTER *ioc, int id,
-+	int channel)
++int
++scsih_tm_cmd_map_status(struct MPT3SAS_ADAPTER *ioc, uint channel,
++	uint id, uint lun, u8 type, u16 smid_task)
 +{
-+	int smid;
-+	struct scsi_cmnd *scmd;
 +
-+	for (smid = 1;
-+	     smid <= ioc->shost->can_queue; smid++) {
-+		scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
-+		if (!scmd)
-+			continue;
-+		if (scmd->device->id == id &&
-+		    scmd->device->channel == channel)
-+			return 1;
++	if (smid_task <= ioc->shost->can_queue) {
++		switch (type) {
++		case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
++			if (!(_scsih_scsi_lookup_find_by_target(ioc,
++			    id, channel)))
++				return SUCCESS;
++			break;
++		case MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET:
++		case MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET:
++			if (!(_scsih_scsi_lookup_find_by_lun(ioc, id,
++			    lun, channel)))
++				return SUCCESS;
++			break;
++		default:
++			return SUCCESS;
++		}
++	} else if (smid_task == ioc->scsih_cmds.smid) {
++		if ((ioc->scsih_cmds.status & MPT3_CMD_COMPLETE) ||
++		    (ioc->scsih_cmds.status & MPT3_CMD_NOT_USED))
++			return SUCCESS;
++	} else if (smid_task == ioc->ctl_cmds.smid) {
++		if ((ioc->ctl_cmds.status & MPT3_CMD_COMPLETE) ||
++		    (ioc->ctl_cmds.status & MPT3_CMD_NOT_USED))
++			return SUCCESS;
 +	}
-+	return 0;
++
++	return FAILED;
 +}
 +
 +/**
-+ * _scsih_scsi_lookup_find_by_lun - search for matching channel:id:lun
-+ * @ioc: per adapter object
-+ * @id: target id
++ * scsih_tm_post_processing - post proceesing of target & LUN reset
++ * @ioc - per adapter object
++ * @handle: device handle
++ * @channel - the channel assigned by the OS
++ * @id: the id assigned by the OS
 + * @lun: lun number
-+ * @channel: channel
-+ * Context: This function will acquire ioc->scsi_lookup_lock.
++ * @type: MPI2_SCSITASKMGMT_TASKTYPE__XXX (defined in mpi2_init.h)
++ * @smid_task: smid assigned to the task
 + *
-+ * This will search for a matching channel:id:lun in the scsi_lookup array,
-+ * returning 1 if found.
++ * Post processing of target & LUN reset. Due to interrupt latency
++ * issue it possible that interrupt for aborted IO might not
++ * received yet. So before returning failure status poll the
++ * reply descriptor pools for the reply of timed out SCSI command.
++ * Return FAILED status if reply for timed out is not received
++ * otherwise return SUCCESS.
 + */
-+static u8
-+_scsih_scsi_lookup_find_by_lun(struct MPT3SAS_ADAPTER *ioc, int id,
-+	unsigned int lun, int channel)
++int
++scsih_tm_post_processing(struct MPT3SAS_ADAPTER *ioc, u16 handle,
++	uint channel, uint id, uint lun, u8 type, u16 smid_task)
 +{
-+	int smid;
-+	struct scsi_cmnd *scmd;
++	int rc;
 +
-+	for (smid = 1; smid <= ioc->shost->can_queue; smid++) {
++	rc = scsih_tm_cmd_map_status(ioc, channel, id, lun, type, smid_task);
++	if (rc == SUCCESS)
++		return rc;
 +
-+		scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
-+		if (!scmd)
-+			continue;
-+		if (scmd->device->id == id &&
-+		    scmd->device->channel == channel &&
-+		    scmd->device->lun == lun)
-+			return 1;
-+	}
-+	return 0;
++	ioc_info(ioc,
++	    "Poll ReplyDescriptor queues for completion of"
++	    " smid(%d), task_type(0x%02x), handle(0x%04x)\n",
++	    smid_task, type, handle);
++
++	/*
++	 * Due to interrupt latency issues, driver may receive interrupt for
++	 * TM first and then for aborted SCSI IO command. So, poll all the
++	 * ReplyDescriptor pools before returning the FAILED status to SML.
++	 */
++	mpt3sas_base_mask_interrupts(ioc);
++	mpt3sas_base_sync_reply_irqs(ioc, 1);
++	mpt3sas_base_unmask_interrupts(ioc);
++
++	return scsih_tm_cmd_map_status(ioc, channel, id, lun, type, smid_task);
 +}
 +
  /**
-  * mpt3sas_scsih_scsi_lookup_get - returns scmd entry
-  * @ioc: per adapter object
-@@ -2704,6 +2764,8 @@ mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle)
   * mpt3sas_scsih_issue_tm - main routine for sending tm requests
   * @ioc: per adapter struct
-  * @handle: device handle
-+ * @channel: the channel assigned by the OS
-+ * @id: the id assigned by the OS
-  * @lun: lun number
-  * @type: MPI2_SCSITASKMGMT_TASKTYPE__XXX (defined in mpi2_init.h)
-  * @smid_task: smid assigned to the task
-@@ -2720,8 +2782,9 @@ mpt3sas_scsih_clear_tm_flag(struct MPT3SAS_ADAPTER *ioc, u16 handle)
-  * Return: SUCCESS or FAILED.
-  */
- int
--mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, u64 lun,
--	u8 type, u16 smid_task, u16 msix_task, u8 timeout, u8 tr_method)
-+mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
-+	uint id, u64 lun, u8 type, u16 smid_task, u16 msix_task,
-+	u8 timeout, u8 tr_method)
+@@ -2788,6 +2878,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
  {
  	Mpi2SCSITaskManagementRequest_t *mpi_request;
  	Mpi2SCSITaskManagementReply_t *mpi_reply;
-@@ -2826,14 +2889,14 @@ out:
- }
++	Mpi25SCSIIORequest_t *request;
+ 	u16 smid = 0;
+ 	u32 ioc_state;
+ 	int rc;
+@@ -2843,7 +2934,9 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
+ 	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpi_request->TaskType = type;
+-	mpi_request->MsgFlags = tr_method;
++	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK ||
++	    type == MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK)
++		mpi_request->MsgFlags = tr_method;
+ 	mpi_request->TaskMID = cpu_to_le16(smid_task);
+ 	int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
+ 	mpt3sas_scsih_set_tm_flag(ioc, handle);
+@@ -2863,7 +2956,7 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	}
  
- int mpt3sas_scsih_issue_locked_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle,
--		u64 lun, u8 type, u16 smid_task, u16 msix_task,
--		u8 timeout, u8 tr_method)
-+		uint channel, uint id, u64 lun, u8 type, u16 smid_task,
-+		u16 msix_task, u8 timeout, u8 tr_method)
- {
- 	int ret;
+ 	/* sync IRQs in case those were busy during flush. */
+-	mpt3sas_base_sync_reply_irqs(ioc);
++	mpt3sas_base_sync_reply_irqs(ioc, 0);
  
- 	mutex_lock(&ioc->tm_cmds.mutex);
--	ret = mpt3sas_scsih_issue_tm(ioc, handle, lun, type, smid_task,
--			msix_task, timeout, tr_method);
-+	ret = mpt3sas_scsih_issue_tm(ioc, handle, channel, id, lun, type,
-+			smid_task, msix_task, timeout, tr_method);
- 	mutex_unlock(&ioc->tm_cmds.mutex);
+ 	if (ioc->tm_cmds.status & MPT3_CMD_REPLY_VALID) {
+ 		mpt3sas_trigger_master(ioc, MASTER_TRIGGER_TASK_MANAGMENT);
+@@ -2880,7 +2973,44 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 				    sizeof(Mpi2SCSITaskManagementRequest_t)/4);
+ 		}
+ 	}
+-	rc = SUCCESS;
++
++	switch (type) {
++	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
++		rc = SUCCESS;
++		/*
++		 * If DevHandle filed in smid_task's entry of request pool
++		 * doesn't matches with device handle on which this task abort
++		 * TM is received then it means that TM has successfully
++		 * aborted the timed out command. Since smid_task's entry in
++		 * request pool will be memset to zero once the timed out
++		 * command is returned to the SML. If the command is not
++		 * aborted then smid_task’s entry won’t be cleared and it
++		 * will have same DevHandle value on which this task abort TM
++		 * is received and driver will return the TM status as FAILED.
++		 */
++		request = mpt3sas_base_get_msg_frame(ioc, smid_task);
++		if (le16_to_cpu(request->DevHandle) != handle)
++			break;
++
++		ioc_info(ioc, "Task abort tm failed: handle(0x%04x),"
++		    "timeout(%d) tr_method(0x%x) smid(%d) msix_index(%d)\n",
++		    handle, timeout, tr_method, smid_task, msix_task);
++		rc = FAILED;
++		break;
++
++	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
++	case MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET:
++	case MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET:
++		rc = scsih_tm_post_processing(ioc, handle, channel, id, lun,
++		    type, smid_task);
++		break;
++	case MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK:
++		rc = SUCCESS;
++		break;
++	default:
++		rc = FAILED;
++		break;
++	}
  
- 	return ret;
-@@ -2980,7 +3043,8 @@ scsih_abort(struct scsi_cmnd *scmd)
- 	if (pcie_device && (!ioc->tm_custom_handling) &&
- 	    (!(mpt3sas_scsih_is_pcie_scsi_device(pcie_device->device_info))))
- 		timeout = ioc->nvme_abort_timeout;
--	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->lun,
-+	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
-+		scmd->device->id, scmd->device->lun,
- 		MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK,
- 		st->smid, st->msix_io, timeout, 0);
- 	/* Command must be cleared after abort */
-@@ -3056,7 +3120,8 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
- 	} else
- 		tr_method = MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET;
- 
--	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->lun,
-+	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
-+		scmd->device->id, scmd->device->lun,
- 		MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 0,
- 		tr_timeout, tr_method);
- 	/* Check for busy commands after reset */
-@@ -3134,7 +3199,8 @@ scsih_target_reset(struct scsi_cmnd *scmd)
- 		tr_method = MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE;
- 	} else
- 		tr_method = MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET;
--	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, 0,
-+	r = mpt3sas_scsih_issue_locked_tm(ioc, handle, scmd->device->channel,
-+		scmd->device->id, 0,
- 		MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 0,
- 	    tr_timeout, tr_method);
- 	/* Check for busy commands after reset */
-@@ -7530,7 +7596,7 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
- 			goto out;
- 
- 		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
--		r = mpt3sas_scsih_issue_tm(ioc, handle, lun,
-+		r = mpt3sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
- 			MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, st->smid,
- 			st->msix_io, 30, 0);
- 		if (r == FAILED) {
-@@ -7571,9 +7637,9 @@ _scsih_sas_broadcast_primitive_event(struct MPT3SAS_ADAPTER *ioc,
- 		if (ioc->shost_recovery)
- 			goto out_no_lock;
- 
--		r = mpt3sas_scsih_issue_tm(ioc, handle, sdev->lun,
--			MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, st->smid,
--			st->msix_io, 30, 0);
-+		r = mpt3sas_scsih_issue_tm(ioc, handle, sdev->channel, sdev->id,
-+			sdev->lun, MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK,
-+			st->smid, st->msix_io, 30, 0);
- 		if (r == FAILED || st->cb_idx != 0xFF) {
- 			sdev_printk(KERN_WARNING, sdev,
- 			    "mpt3sas_scsih_issue_tm: ABORT_TASK: FAILED : "
+ out:
+ 	mpt3sas_scsih_clear_tm_flag(ioc, handle);
 -- 
 2.26.2
 
