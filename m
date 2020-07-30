@@ -2,168 +2,100 @@ Return-Path: <SRS0=dYxQ=BJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C561C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 05:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03554C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 06:11:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 755922083B
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 05:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC7F920656
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 06:11:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CNYeSPa5"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="odvx/sXg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728640AbgG3FTk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 01:19:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55334 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727838AbgG3FTj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 01:19:39 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC975C061794;
-        Wed, 29 Jul 2020 22:19:39 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id u10so3655203plr.7;
-        Wed, 29 Jul 2020 22:19:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EnGXeNbQwuYNZ4/SgA8a2g0/K9Xn2zkd8XxAO1wpPBE=;
-        b=CNYeSPa5UHoQU/zAXoMxTvIy8LM9ZnpBrUa+u5uUMyQdzorRKQusWkM0WWRphxi5ru
-         p/FmoF5qPGgJNNY0+EDETyed1MxEEDnBRCn9/qFltha0m+8igcWmCh9nFCRh3mRLf5qE
-         oXYFuLxMrynBJjPTQ7xkCv/VoWYHHQ2CxG1MYDb+mDbsqpKjABOqr2615HF+D0k0Y0bq
-         hwvXDejkhM7UM6Kq06SzRnTtf4aB1nJ4vOVO7tFo3BKYD0PajnvSPrWUBK29IIfPQCAQ
-         blSwhF47KNibbIJ0e+vT7gwNsoX4dZds4/os/tKEW05Jbq9BhC9BWwcZUM8GY/o0iiOY
-         5Fpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EnGXeNbQwuYNZ4/SgA8a2g0/K9Xn2zkd8XxAO1wpPBE=;
-        b=ZpvvJcx1L6B6EVe5tw0dnjBR5DrHJlZZrXLfE7E/t8FhC1ixH4/O4ECQ70BxzuF8z1
-         oUCQ6lEitwFG9xR9wFBlenq8V0iVcHCLw5k3sO6uLdj0q16um5Isx6VPHqmh8R2PyTPL
-         Jos1Gc//WtjkpbOJaBleR4ROf+YVF2O+OUIulCnNEy4wNn4YNldfaM4c1HyzSm++oc9j
-         NeV7/WyJPHlNWdm8cMYQcjyMH2GD1pSsCxj1S7aMc2oqSpG+3N+6dBaYJC7TCM8zNnSV
-         w38UOojlPlzFl95beAFYXZJOkmd8R7gGasap+CQ2zsUUrk8e6xS/wC206+xe6PXcDik6
-         m2kQ==
-X-Gm-Message-State: AOAM5323x6vWTIReWcWarTVeRKGubv1IC3brQBmDrVegkYNqtwI3vmtm
-        mYkLh0/8Xr69ATGg6k7hPeY=
-X-Google-Smtp-Source: ABdhPJwjUlYjYmMWc8AL8fvrnaAOvzZZqXAtYVN5Q/5zg1fY1zOc8Bo7eLrzwvyLF10mdRA/NCC5WA==
-X-Received: by 2002:a17:902:103:: with SMTP id 3mr31556502plb.195.1596086379202;
-        Wed, 29 Jul 2020 22:19:39 -0700 (PDT)
-Received: from varodek.iballbatonwifi.com ([103.105.152.86])
-        by smtp.gmail.com with ESMTPSA id 9sm4224025pfx.131.2020.07.29.22.19.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2020 22:19:38 -0700 (PDT)
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Shuah Khan <skhan@linuxfoundation.org>
-Subject: [PATCH v1] scsi: stex: use generic power management
-Date:   Thu, 30 Jul 2020 10:47:33 +0530
-Message-Id: <20200730051733.113652-1-vaibhavgupta40@gmail.com>
-X-Mailer: git-send-email 2.27.0
+        id S1728548AbgG3GLn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 02:11:43 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37616 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726261AbgG3GLn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Jul 2020 02:11:43 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06U66C5b002028
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2020 23:11:42 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=TPlRPrA8zS8yFpS46VW0DVx4lJSx+HTskeuQDXFcak4=;
+ b=odvx/sXgt8j6lvdL/Sk/JMKWPX48QQ31gsS+49PtlFCbGWsXoPZ71VEpDXQxDKDq/ASp
+ DFtVGyH68thNva7BpYFs22qzoaCzgScc0oIRD03GwqcWZgRFUZ99RcxhsXN5n2ipQHrs
+ ZfKJuQGn6P7BPdepz7NS8AZDDa+5tkHWM9EH6EJweB8qc5cwbSQ+PIBKDbb/IMXhxdBK
+ jEnHivid9dJgFMPtjB1OeyTTlsjV6FH/ugTaVDbcgWV8mQXA4QPZXKjhoT4ytlqlpofb
+ YWnwdWFOySv7cDE72S6ADNiUWIaaX6TEw5SN5yBhIkp/0Kz2ACTtwMjehvw/qLOw8RfB ZA== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 32gj3r4k85-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2020 23:11:42 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 29 Jul
+ 2020 23:11:41 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 29 Jul
+ 2020 23:11:40 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 29 Jul 2020 23:11:40 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 8DB423F703F;
+        Wed, 29 Jul 2020 23:11:40 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 06U6BeqU020154;
+        Wed, 29 Jul 2020 23:11:40 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 06U6BeEJ020145;
+        Wed, 29 Jul 2020 23:11:40 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH 0/2] SAN Congestion Management (SCM) statistics
+Date:   Wed, 29 Jul 2020 23:11:14 -0700
+Message-ID: <20200730061116.20111-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-30_04:2020-07-29,2020-07-30 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drivers using legacy power management .suspen()/.resume() callbacks
-have to manage PCI states and device's PM states themselves. They also
-need to take care of standard configuration registers.
+Martin,
 
-Switch to generic power management framework using a single
-"struct dev_pm_ops" variable to take the unnecessary load from the driver.
-This also avoids the need for the driver to directly call most of the PCI
-helper functions and device power state control functions, as through
-the generic framework PCI Core takes care of the necessary operations,
-and drivers are required to do only device-specific jobs.
+Please apply the attached patchset implementing the SAN Congestion
+Management (SCM) statistics to the scsi tree at your earliest convenience.
 
-Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
----
- drivers/scsi/stex.c | 35 +++++++++++++++++++++++++++++------
- 1 file changed, 29 insertions(+), 6 deletions(-)
+Thanks,
+Nilesh
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index d4f10c0d813c..9500666b521a 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -1972,9 +1972,9 @@ static int stex_choice_sleep_mic(struct st_hba *hba, pm_message_t state)
- 	}
- }
- 
--static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int stex_suspend_late(struct device *dev, pm_message_t state)
- {
--	struct st_hba *hba = pci_get_drvdata(pdev);
-+	struct st_hba *hba = dev_get_drvdata(dev);
- 
- 	if ((hba->cardtype == st_yel || hba->cardtype == st_P3)
- 		&& hba->supports_pm == 1)
-@@ -1984,9 +1984,24 @@ static int stex_suspend(struct pci_dev *pdev, pm_message_t state)
- 	return 0;
- }
- 
--static int stex_resume(struct pci_dev *pdev)
-+static int stex_suspend(struct device *dev)
- {
--	struct st_hba *hba = pci_get_drvdata(pdev);
-+	return stex_suspend_late(dev, PMSG_SUSPEND);
-+}
-+
-+static int stex_hibernate(struct device *dev)
-+{
-+	return stex_suspend_late(dev, PMSG_HIBERNATE);
-+}
-+
-+static int stex_freeze(struct device *dev)
-+{
-+	return stex_suspend_late(dev, PMSG_FREEZE);
-+}
-+
-+static int stex_resume(struct device *dev)
-+{
-+	struct st_hba *hba = dev_get_drvdata(dev);
- 
- 	hba->mu_status = MU_STATE_STARTING;
- 	stex_handshake(hba);
-@@ -2000,14 +2015,22 @@ static int stex_halt(struct notifier_block *nb, unsigned long event, void *buf)
- }
- MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
- 
-+static const struct dev_pm_ops stex_pm_ops = {
-+	.suspend	= stex_suspend,
-+	.resume		= stex_resume,
-+	.freeze		= stex_freeze,
-+	.thaw		= stex_resume,
-+	.poweroff	= stex_hibernate,
-+	.restore	= stex_resume,
-+};
-+
- static struct pci_driver stex_pci_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= stex_pci_tbl,
- 	.probe		= stex_probe,
- 	.remove		= stex_remove,
- 	.shutdown	= stex_shutdown,
--	.suspend	= stex_suspend,
--	.resume		= stex_resume,
-+	.driver.pm	= &stex_pm_ops,
- };
- 
- static int __init stex_init(void)
+Shyam Sundar (2):
+  scsi: fc: Update statistics for host and rport on FPIN reception.
+  scsi: fc: Update documentation of sysfs nodes for FPIN stats
+
+ Documentation/ABI/testing/sysfs-class-fc_host |  23 +
+ .../ABI/testing/sysfs-class-fc_remote_ports   |  23 +
+ drivers/scsi/lpfc/lpfc_attr.c                 |   2 +
+ drivers/scsi/qla2xxx/qla_attr.c               |   2 +
+ drivers/scsi/scsi_transport_fc.c              | 411 +++++++++++++++++-
+ include/scsi/scsi_transport_fc.h              |  34 +-
+ include/uapi/scsi/fc/fc_els.h                 | 114 +++++
+ 7 files changed, 606 insertions(+), 3 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-fc_host
+ create mode 100644 Documentation/ABI/testing/sysfs-class-fc_remote_ports
+
+
+base-commit: 3c330f187ea84b13a0c66311115c8fd449dd25a1
 -- 
-2.27.0
+2.19.0.rc0
 
