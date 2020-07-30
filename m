@@ -2,246 +2,322 @@ Return-Path: <SRS0=dYxQ=BJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 924A7C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 12:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D91C1C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 13:40:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46C4E2074B
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 12:33:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD8BD20829
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Jul 2020 13:40:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="T3LJdarr";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="hF3RuTxN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YI6QIzFr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727776AbgG3MdD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 08:33:03 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:12962 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726615AbgG3MdC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 08:33:02 -0400
+        id S1726794AbgG3Nkr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 09:40:47 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:62532 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726353AbgG3Nkq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 09:40:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1596112381; x=1627648381;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=NgNZbG7n+J7DYWOlOFf3A6UhADCJ3m0aySZZEiDZnrk=;
-  b=T3LJdarrejW0B9pEmyjDW9NjJj7NKmLxDdsga6s15mU26Hju7LJMTqDp
-   g5vXheaA6cGnQ4GYDcTsdF/oCdIn+OJVQ0/7A6B2YCaLLCtCwaMfAGXP2
-   32jqKZwhnWhBamwBkNLRXOgnogN62tJzAVG63nTiYnD9EF+vuwRS7XOSk
-   qZwBHDegBlacjpnmqub6jhDF2EXkq5YlEgXc2DUsi/9rCUNXvU6zBwkC/
-   hGY+sJ1jfRAr9hxPtr9uDNdDIgW1+HIFQFcgtAzh3F5KBRJJecjs8RnYu
-   PS32nsSLoKQXtkjrcOFa1YJ1iKDNIBHqrRDCyTWPmfOJGgpLj3OAeqKYw
+  t=1596116448; x=1627652448;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=lKgsD/xtnQZR3fT+uRmL+f+UOf/3nK3XjoXs7CyMIcM=;
+  b=YI6QIzFrrTXFnytZgQDHzUiUaCw/lKDi3yvgDQC8UvYs6i4S9IpTJmYk
+   gRUwxom4ITUt1zFQxVyku5tRtRusX2jgYJ3DA1ZAcAfnzkXOP1mRDSGao
+   5p1Y/uXHWEGp2hjPzIqu+PN2VIvchr0sYI44DUgFfMkoIAS6xk3PYm8at
+   ZXfd+1xRXBoWzY4+SzJ05y5Vh7JR5bSsCRd1odDjKbbDNeKV+1/G7PYJ7
+   HlLxTSfZoOZ+bejyyEMZGBprCwc8qZiCmSaZKJyO0zZIBmbVRjDuygiOf
+   MZxc/46oUm7rGva2PO6nrwbi70frsw4r9abLtA7eCfvzFMx9u9xiy9ALD
    A==;
-IronPort-SDR: GOZAsH8DYs2wXKpFomUnsRvaXFR+xyzTgOaQ0oKY5f1402x9J8EawrXDh6WsbXlP8ao5MiQcVP
- 9e7dhGlzWQyEhNVlt1vPg22+a6tjA27tha48vvia6MJ6/9ER/Fi+GEq7hcwqiJ8u6fbcYfPGmm
- D50d7vZcm3IZTz5pXwKksQ0mikLEKQ7X0GoD/uPpE0cn8Lsr87z4GVgqKjvRHJYh2jv1daLswG
- LgGl+ph+AiF1fcffWvjfT0RBkq5vauiWYlh6rHhr+3PQ3MNnvo4S5EfQs2SLM1DrIlbs846r8t
- f7g=
+IronPort-SDR: PD3ehwftW1RD2TIkI5W0GjgxsTpxIRhUavNPBFs0ZZm0H6sg0IR16LNH1xAgFcpdQZB5uRD8a/
+ yGzms8kZ0NlWJ3QQRm7CpnIkqoUSVWcdEwxmhSukkTHnHH+0Mea9w5cIa0OXImRpU0/khvgIah
+ WsNyB7cnKoOTrVnLRtvIbiOED9FTsZenVcRnz0aKutXa2yYhFXGAkbN1uaqnMEJPSMk9lX/obX
+ xjCjH0yyPQLy3DgrJLHf2WzWGVLEfDV/6rB4pQYE62cxEHffTeVCKh7cSOX5hqiezE8Dw2phxy
+ 4c8=
 X-IronPort-AV: E=Sophos;i="5.75,414,1589212800"; 
-   d="scan'208";a="145000386"
-Received: from mail-bn7nam10lp2102.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.102])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Jul 2020 20:33:00 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gVLu9lCneY74iGFoBzKVm55vpvtZdZSljjN784mcmuE031AJ5ER8pNBdLm1zMP2KQrkh3J+x8h4dwXh6jTo8MjiN7c7OHWLuW9o+U2vJxfJP6v0e3MPKEyLBgeS6r+yj8+cYchiuduZm+YFV9gex0zhZDCcEWJ/WLoiXirWyWX7blFPPJaiPaozd1/0JajISZRb9dTIlfSv160F+19nY0vneNONBlnUg4m7dptaoZkrUlDcU4brYYxIGAMupLO375t2jkiP4zWniHhKCSAgpayp/gFj31p/gEOwUvHp9d+nWq7cFvAlqQsy7DJc5Fl23CcEfUxefysecU3lbiEEQvQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pxufhMVOX0jtBd7o2hTUO1zPYVazeUZrQho1IxR9Xys=;
- b=Wl2ql4wnLE5HEbH3/dvTGzR4DizJWUZAz4hNDOQ7eEJaPpdszX83whkN+g3vHBaiRQ/J3odVjq8cClMccgJmAD/Sp07952xCCLe7KefUCxH2JVkf4q1GoyLVpEhhrDcoKP9svvu6guwpX9u12uqqMvjJshHubrPp9MoxFWbmbanemeUoLzfLulnsngp8LF8mKDQ5i51QQbZNN16N8f2R+ODSm0FCXHH0CFUz4vGWCZ0mslamVxBhBbGy7JJ81oWiOJba/DImgXLI+7NTJ5Voq17n4NcFhpabBDLtK3oep8221sZDXAk/JcM4u8T5esdlobACripQFVpETJahCizukA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pxufhMVOX0jtBd7o2hTUO1zPYVazeUZrQho1IxR9Xys=;
- b=hF3RuTxNB37Itoh4oMRayli9dUDb3H176nmUNVdpWuUWYIy6dfPbftnvCoq1+T7NRjhLYYZ6j2y0R2881ma1/eunMtrsWrp1OgzXgFDV7TBZsYv/xi1NNYVdk6o5/1Gpy/FGZblA8mJPt8rIDa4G02uZjqJBEMgRlG3mxq1eDCU=
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
- by CY4PR04MB1257.namprd04.prod.outlook.com (2603:10b6:910:53::34) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3216.23; Thu, 30 Jul
- 2020 12:32:57 +0000
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::d9e5:135e:cfd9:4de0]) by CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::d9e5:135e:cfd9:4de0%7]) with mapi id 15.20.3216.026; Thu, 30 Jul 2020
- 12:32:57 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH] block: don't do revalidate zones on invalid devices
-Thread-Topic: [PATCH] block: don't do revalidate zones on invalid devices
-Thread-Index: AQHWZmQfso33Lb4oTE6/FvtKreElsw==
-Date:   Thu, 30 Jul 2020 12:32:57 +0000
-Message-ID: <CY4PR04MB3751A56EDE1C372CB7531EE0E7710@CY4PR04MB3751.namprd04.prod.outlook.com>
-References: <20200730112517.12816-1-johannes.thumshirn@wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: wdc.com; dkim=none (message not signed)
- header.d=none;wdc.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [129.253.182.57]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 3f1a20ce-8475-48f0-0ced-08d83484b0cc
-x-ms-traffictypediagnostic: CY4PR04MB1257:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR04MB12578555361CA29D876B0FACE7710@CY4PR04MB1257.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: M4TkD9380B/YFMDSmexWbxEGy2F7uNfcO1t0mmppGlwRsM1aXhgB8OVdR54dAeONp2OzyvVW0PU2pfkmGE9QOvpK/dTxcplX70Qoy0HnsvONE+J78NTTZfTTKYO2S1W0J61I7OH2QkL6BCUY3aoTggbvnxxqTXa0SdJ6Wo9sZW9dFRDXD5lx7G7gxq5PCSU1IARnW5eeihuLM2ufIkrJyssrx3C5ehS3tCg7AY8WNF00bmZ8oiwiFUbdSVhUnzrJYIEZrsJIejh/v9baHgn9qZJSZ2G6+IygIWoIHcT5ZYHmyoPI0uDRuCm9uUfPXg6ZHDMpN9gwZaDLrEim8cJTXQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(346002)(136003)(376002)(396003)(39860400002)(366004)(26005)(6506007)(478600001)(53546011)(52536014)(33656002)(5660300002)(186003)(8936002)(7696005)(4326008)(8676002)(66556008)(54906003)(316002)(2906002)(66476007)(71200400001)(83380400001)(55016002)(86362001)(66946007)(9686003)(110136005)(91956017)(76116006)(64756008)(66446008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: 2+F0B+8DgLTkwgxktaYTC1QtBtOgY4D3l9Kyn+HTi1BHR5kLIV6l/4gCstDYJsxOxAHAC6MLqBX57JsdG025StJX2f7T4ilsVjqUw5BAmLHAlYq5fF1b00C58nPFLH5P6c4XXUQa6nMbKh8kpcES3LwD9Y+5aCwrTRpULHmwgQBHK9jXFig+TQItinFc2kIHQAPdRObS4ex1y/EX54A3cHVYhNUB4co+Wmw7bThaVxCbJpPRYfMtDJXkWdP/MkwqR+0G5vwUASpssUaNYH4VYXpJJFarA+RT/OSNN4uLVo7AJNt6KMigzGVOd3cVcbobFIxkKR2vpLHknYfr866dWJr7cFqM5djF+URkEZu8IdNuNa5dmjcxl/u2hxNRj0pxAPpL6IzESmVelM89jt/rWRNZr31ktBqsdA6Oo5VClqVcPqelgIrnGXbkw1BzhXQtoIqAEAy7kKYM7jzqnfp5/yRmGiTCwZdBLjIMPie/DcZjl8/pxLEHxfd5JZGCOXRn
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+   d="scan'208";a="246843123"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 30 Jul 2020 21:40:46 +0800
+IronPort-SDR: knZ7lNlkPJV5l5/khzVyoMm6P1fkMIiT8s7Y9bymEDbeEGdn05UbuLaCV7l3WjUAKJbk7VWBVK
+ zpP+E9UMDACK+vyPkFO0gCQ66sJxWrWlY=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2020 06:27:56 -0700
+IronPort-SDR: 3EhTUqGRR6TlS4t4GDYRtkA5EYnmKklq80V6xstSwZ49Xzjkn6YtIGBSddKUMw2Is1zDcdU9WX
+ oiPct5TlKT5Q==
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 30 Jul 2020 06:40:28 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH] scsi: sd_zbc: Improve zone revalidation
+Date:   Thu, 30 Jul 2020 22:40:24 +0900
+Message-Id: <20200730134024.548177-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f1a20ce-8475-48f0-0ced-08d83484b0cc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jul 2020 12:32:57.7646
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: f94pp1AYFi7Rvydc8sKArPl7D/aL7gUJdL/8Nnke/pgoT8e5mBy2TjcFQuEv/26KtfVEGRrnYoiKXzofP0AYVQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB1257
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020/07/30 20:25, Johannes Thumshirn wrote:=0A=
-> When we loose a device for whatever reason while (re)scanning zones, we=
-=0A=
-> trip over a NULL pointer in blk_revalidate_zone_cb, like in the following=
-=0A=
-> log:=0A=
-> =0A=
-> sd 0:0:0:0: [sda] 3418095616 4096-byte logical blocks: (14.0 TB/12.7 TiB)=
-=0A=
-> sd 0:0:0:0: [sda] 52156 zones of 65536 logical blocks=0A=
-> sd 0:0:0:0: [sda] Write Protect is off=0A=
-> sd 0:0:0:0: [sda] Mode Sense: 37 00 00 08=0A=
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't supp=
-ort DPO or FUA=0A=
-> sd 0:0:0:0: [sda] REPORT ZONES start lba 1065287680 failed=0A=
-> sd 0:0:0:0: [sda] REPORT ZONES: Result: hostbyte=3D0x00 driverbyte=3D0x08=
-=0A=
-> sd 0:0:0:0: [sda] Sense Key : 0xb [current]=0A=
-> sd 0:0:0:0: [sda] ASC=3D0x0 ASCQ=3D0x6=0A=
-> sda: failed to revalidate zones=0A=
-> sd 0:0:0:0: [sda] 0 4096-byte logical blocks: (0 B/0 B)=0A=
-> sda: detected capacity change from 14000519643136 to 0=0A=
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
-> BUG: KASAN: null-ptr-deref in blk_revalidate_zone_cb+0x1b7/0x550=0A=
-> Write of size 8 at addr 0000000000000010 by task kworker/u4:1/58=0A=
-> =0A=
-> CPU: 1 PID: 58 Comm: kworker/u4:1 Not tainted 5.8.0-rc1 #692=0A=
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.13.0-0-=
-gf21b5a4-rebuilt.opensuse.org 04/01/2014=0A=
-> Workqueue: events_unbound async_run_entry_fn=0A=
-> Call Trace:=0A=
->  dump_stack+0x7d/0xb0=0A=
->  ? blk_revalidate_zone_cb+0x1b7/0x550=0A=
->  kasan_report.cold+0x5/0x37=0A=
->  ? blk_revalidate_zone_cb+0x1b7/0x550=0A=
->  check_memory_region+0x145/0x1a0=0A=
->  blk_revalidate_zone_cb+0x1b7/0x550=0A=
->  sd_zbc_parse_report+0x1f1/0x370=0A=
->  ? blk_req_zone_write_trylock+0x200/0x200=0A=
->  ? sectors_to_logical+0x60/0x60=0A=
->  ? blk_req_zone_write_trylock+0x200/0x200=0A=
->  ? blk_req_zone_write_trylock+0x200/0x200=0A=
->  sd_zbc_report_zones+0x3c4/0x5e0=0A=
->  ? sd_dif_config_host+0x500/0x500=0A=
->  blk_revalidate_disk_zones+0x231/0x44d=0A=
->  ? _raw_write_lock_irqsave+0xb0/0xb0=0A=
->  ? blk_queue_free_zone_bitmaps+0xd0/0xd0=0A=
->  sd_zbc_read_zones+0x8cf/0x11a0=0A=
->  sd_revalidate_disk+0x305c/0x64e0=0A=
->  ? __device_add_disk+0x776/0xf20=0A=
->  ? read_capacity_16.part.0+0x1080/0x1080=0A=
->  ? blk_alloc_devt+0x250/0x250=0A=
->  ? create_object.isra.0+0x595/0xa20=0A=
->  ? kasan_unpoison_shadow+0x33/0x40=0A=
->  sd_probe+0x8dc/0xcd2=0A=
->  really_probe+0x20e/0xaf0=0A=
->  __driver_attach_async_helper+0x249/0x2d0=0A=
->  async_run_entry_fn+0xbe/0x560=0A=
->  process_one_work+0x764/0x1290=0A=
->  ? _raw_read_unlock_irqrestore+0x30/0x30=0A=
->  worker_thread+0x598/0x12f0=0A=
->  ? __kthread_parkme+0xc6/0x1b0=0A=
->  ? schedule+0xed/0x2c0=0A=
->  ? process_one_work+0x1290/0x1290=0A=
->  kthread+0x36b/0x440=0A=
->  ? kthread_create_worker_on_cpu+0xa0/0xa0=0A=
->  ret_from_fork+0x22/0x30=0A=
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
-> =0A=
-> When the device is already gone we end up with the following scenario:=0A=
-> The device's capacity is 0 and thus the number of zones will be 0 as well=
-. When=0A=
-> allocating the bitmap for the conventional zones, we then trip over a NUL=
-L=0A=
-> pointer.=0A=
-> =0A=
-> So if we encounter a zoned block device with a 0 capacity, don't dare to=
-=0A=
-> revalidate the zones sizes.=0A=
-> =0A=
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
-> ---=0A=
-> =0A=
-> Note: This is a hot-fix for 5.8, we're working on something to make a=0A=
-> recoverable error recoverable.=0A=
-> =0A=
-> =0A=
->  block/blk-zoned.c | 3 +++=0A=
->  1 file changed, 3 insertions(+)=0A=
-> =0A=
-> diff --git a/block/blk-zoned.c b/block/blk-zoned.c=0A=
-> index 23831fa8701d..480dfff69a00 100644=0A=
-> --- a/block/blk-zoned.c=0A=
-> +++ b/block/blk-zoned.c=0A=
-> @@ -497,6 +497,9 @@ int blk_revalidate_disk_zones(struct gendisk *disk,=
-=0A=
->  	if (WARN_ON_ONCE(!queue_is_mq(q)))=0A=
->  		return -EIO;=0A=
->  =0A=
-> +	if (!get_capacity(disk))=0A=
-> +		return -EIO;=0A=
-> +=0A=
->  	/*=0A=
->  	 * Ensure that all memory allocations in this context are done as if=0A=
->  	 * GFP_NOIO was specified.=0A=
-> =0A=
-=0A=
-I reworked sd_zbc_read_zones() and sd_zbc_revalidate_zones() to allow recov=
-ering=0A=
-from simple temporary errors and avoid this problem. Will send the patch=0A=
-tomorrow or so after some more testing.=0A=
-=0A=
-But even with that patch applied, I think this patch makes the generic bloc=
-k=0A=
-code more solid. So:=0A=
-=0A=
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+Currently, for zoned disks, since blk_revalidate_disk_zones() requires
+the disk capacity to be set already to operate correctly, zones
+revalidation can only be done on the second revalidate scan once the
+gendisk capacity is set at the end of the first scan. As a result, if
+zones revalidation fails, there is no second chance to recover from the
+failure and the disk capacity is changed to 0, with the disk left
+unusable.
+
+This can be improved by shuffling around code, specifically, by moving
+the call to sd_zbc_revalidate_zones() from sd_zbc_read_zones() to the
+end of sd_revalidate_disk(), after set_capacity_revalidate_and_notify()
+is called to set the gendisk capacity. With this change, if
+sd_zbc_revalidate_zones() fails on the first scan, the second scan will
+call it again to recover, if possible.
+
+Using the new struct scsi_disk fields rev_nr_zones and rev_zone_blocks,
+sd_zbc_revalidate_zones() does actual work only if it detects a change
+with the disk zone configuration. This means that for a successful
+zones revalidation on the first scan, the second scan will not cause
+another heavy full check.
+
+While at it, remove the unecesary "extern" declaration of
+sd_zbc_read_zones().
+
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/sd.c     | 10 ++++-
+ drivers/scsi/sd.h     | 11 +++--
+ drivers/scsi/sd_zbc.c | 95 ++++++++++++++++++++-----------------------
+ 3 files changed, 61 insertions(+), 55 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index acde0ca35769..95018e650f2d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2578,8 +2578,6 @@ sd_print_capacity(struct scsi_disk *sdkp,
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "%u-byte physical blocks\n",
+ 			  sdkp->physical_block_size);
+-
+-	sd_zbc_print_zones(sdkp);
+ }
+ 
+ /* called with buffer of length 512 */
+@@ -3220,6 +3218,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	sd_config_write_same(sdkp);
+ 	kfree(buffer);
+ 
++	/*
++	 * For a zoned drive, revalidating the zones can be done only once
++	 * the gendisk capacity is set. So if this fails, set back the gendisk
++	 * capacity to 0.
++	 */
++	if (sd_zbc_revalidate_zones(sdkp))
++		set_capacity_revalidate_and_notify(disk, 0, false);
++
+  out:
+ 	return 0;
+ }
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 27c0f4e9b1d4..4933e7daf17d 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -75,7 +75,9 @@ struct scsi_disk {
+ 	struct opal_dev *opal_dev;
+ #ifdef CONFIG_BLK_DEV_ZONED
+ 	u32		nr_zones;
++	u32		rev_nr_zones;
+ 	u32		zone_blocks;
++	u32		rev_zone_blocks;
+ 	u32		zones_optimal_open;
+ 	u32		zones_optimal_nonseq;
+ 	u32		zones_max_open;
+@@ -215,8 +217,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+ 
+ int sd_zbc_init_disk(struct scsi_disk *sdkp);
+ void sd_zbc_release_disk(struct scsi_disk *sdkp);
+-extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
+-extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
++int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
++int sd_zbc_revalidate_zones(struct scsi_disk *sdkp);
+ blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
+ 					 unsigned char op, bool all);
+ unsigned int sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+@@ -242,7 +244,10 @@ static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
+ 	return 0;
+ }
+ 
+-static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
++static inline int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
++{
++	return 0;
++}
+ 
+ static inline blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
+ 						       unsigned char op,
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 35d929b00a0b..6532f3fab4cc 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -633,6 +633,23 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
+ 	return 0;
+ }
+ 
++static void sd_zbc_print_zones(struct scsi_disk *sdkp)
++{
++	if (!sd_is_zoned(sdkp) || !sdkp->capacity)
++		return;
++
++	if (sdkp->capacity & (sdkp->zone_blocks - 1))
++		sd_printk(KERN_NOTICE, sdkp,
++			  "%u zones of %u logical blocks + 1 runt zone\n",
++			  sdkp->nr_zones - 1,
++			  sdkp->zone_blocks);
++	else
++		sd_printk(KERN_NOTICE, sdkp,
++			  "%u zones of %u logical blocks\n",
++			  sdkp->nr_zones,
++			  sdkp->zone_blocks);
++}
++
+ static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
+ {
+ 	struct scsi_disk *sdkp = scsi_disk(disk);
+@@ -640,12 +657,17 @@ static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
+ 	swap(sdkp->zones_wp_offset, sdkp->rev_wp_offset);
+ }
+ 
+-static int sd_zbc_revalidate_zones(struct scsi_disk *sdkp,
+-				   u32 zone_blocks,
+-				   unsigned int nr_zones)
++int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ {
+ 	struct gendisk *disk = sdkp->disk;
+-	int ret = 0;
++	struct request_queue *q = disk->queue;
++	u32 zone_blocks = sdkp->rev_zone_blocks;
++	unsigned int nr_zones = sdkp->rev_nr_zones;
++	u32 max_append;
++	int ret;
++
++	if (!sd_is_zoned(sdkp))
++		return 0;
+ 
+ 	/*
+ 	 * Make sure revalidate zones are serialized to ensure exclusive
+@@ -653,23 +675,13 @@ static int sd_zbc_revalidate_zones(struct scsi_disk *sdkp,
+ 	 */
+ 	mutex_lock(&sdkp->rev_mutex);
+ 
+-	/*
+-	 * Revalidate the disk zones to update the device request queue zone
+-	 * bitmaps and the zone write pointer offset array. Do this only once
+-	 * the device capacity is set on the second revalidate execution for
+-	 * disk scan or if something changed when executing a normal revalidate.
+-	 */
+-	if (sdkp->first_scan) {
+-		sdkp->zone_blocks = zone_blocks;
+-		sdkp->nr_zones = nr_zones;
+-		goto unlock;
+-	}
+-
+ 	if (sdkp->zone_blocks == zone_blocks &&
+ 	    sdkp->nr_zones == nr_zones &&
+ 	    disk->queue->nr_zones == nr_zones)
+ 		goto unlock;
+ 
++	sdkp->zone_blocks = zone_blocks;
++	sdkp->nr_zones = nr_zones;
+ 	sdkp->rev_wp_offset = kvcalloc(nr_zones, sizeof(u32), GFP_NOIO);
+ 	if (!sdkp->rev_wp_offset) {
+ 		ret = -ENOMEM;
+@@ -681,6 +693,21 @@ static int sd_zbc_revalidate_zones(struct scsi_disk *sdkp,
+ 	kvfree(sdkp->rev_wp_offset);
+ 	sdkp->rev_wp_offset = NULL;
+ 
++	if (ret) {
++		sdkp->zone_blocks = 0;
++		sdkp->nr_zones = 0;
++		sdkp->capacity = 0;
++		goto unlock;
++	}
++
++	max_append = min_t(u32, logical_to_sectors(sdkp->device, zone_blocks),
++			   q->limits.max_segments << (PAGE_SHIFT - 9));
++	max_append = min_t(u32, max_append, queue_max_hw_sectors(q));
++
++	blk_queue_max_zone_append_sectors(q, max_append);
++
++	sd_zbc_print_zones(sdkp);
++
+ unlock:
+ 	mutex_unlock(&sdkp->rev_mutex);
+ 
+@@ -693,7 +720,6 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 	struct request_queue *q = disk->queue;
+ 	unsigned int nr_zones;
+ 	u32 zone_blocks = 0;
+-	u32 max_append;
+ 	int ret;
+ 
+ 	if (!sd_is_zoned(sdkp))
+@@ -722,22 +748,8 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 	sdkp->device->use_16_for_rw = 1;
+ 	sdkp->device->use_10_for_rw = 0;
+ 
+-	ret = sd_zbc_revalidate_zones(sdkp, zone_blocks, nr_zones);
+-	if (ret)
+-		goto err;
+-
+-	/*
+-	 * On the first scan 'chunk_sectors' isn't setup yet, so calling
+-	 * blk_queue_max_zone_append_sectors() will result in a WARN(). Defer
+-	 * this setting to the second scan.
+-	 */
+-	if (sdkp->first_scan)
+-		return 0;
+-
+-	max_append = min_t(u32, logical_to_sectors(sdkp->device, zone_blocks),
+-			   q->limits.max_segments << (PAGE_SHIFT - 9));
+-
+-	blk_queue_max_zone_append_sectors(q, max_append);
++	sdkp->rev_nr_zones = nr_zones;
++	sdkp->rev_zone_blocks = zone_blocks;
+ 
+ 	return 0;
+ 
+@@ -747,23 +759,6 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
+ 	return ret;
+ }
+ 
+-void sd_zbc_print_zones(struct scsi_disk *sdkp)
+-{
+-	if (!sd_is_zoned(sdkp) || !sdkp->capacity)
+-		return;
+-
+-	if (sdkp->capacity & (sdkp->zone_blocks - 1))
+-		sd_printk(KERN_NOTICE, sdkp,
+-			  "%u zones of %u logical blocks + 1 runt zone\n",
+-			  sdkp->nr_zones - 1,
+-			  sdkp->zone_blocks);
+-	else
+-		sd_printk(KERN_NOTICE, sdkp,
+-			  "%u zones of %u logical blocks\n",
+-			  sdkp->nr_zones,
+-			  sdkp->zone_blocks);
+-}
+-
+ int sd_zbc_init_disk(struct scsi_disk *sdkp)
+ {
+ 	if (!sd_is_zoned(sdkp))
+-- 
+2.26.2
+
