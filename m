@@ -2,152 +2,102 @@ Return-Path: <SRS0=WBt/=BK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E2DC433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 08:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5EEC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 08:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A46E72250E
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 08:02:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="BytQfYyN"
+	by mail.kernel.org (Postfix) with ESMTP id 2090F2074B
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 08:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731800AbgGaICp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Jul 2020 04:02:45 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:10654 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731479AbgGaICm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 31 Jul 2020 04:02:42 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1596182562; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=MKSQY5RVrXIwpdJw6RKFSgNCGEE7ar+hIe83C8B0HxA=;
- b=BytQfYyNy6LeUGbaHtFI/4GZMIum8cMvldKcm+E82GXM8hnokDjcgZB6B1NuJJqR4vAK/N9Q
- UZnb7d1XeqHiJJuVKCY6Bg+KOyn0/PtEUnV5oDuiEVsP6LHgMYqp5mFiAlRS0nqWf9jHaazg
- SxZJ26Gv/F6FNP7HhR2JHxOyukk=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5f23cfa014acd1952be8fde8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 31 Jul 2020 08:00:32
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DF499C433A1; Fri, 31 Jul 2020 08:00:31 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 881C9C4339C;
-        Fri, 31 Jul 2020 08:00:28 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 31 Jul 2020 16:00:28 +0800
+        id S1731664AbgGaIIN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Jul 2020 04:08:13 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:63244 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731618AbgGaIIN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2020 04:08:13 -0400
+IronPort-SDR: CmslTkees8fJgog7UYekhOsKf0YQbfBCd/5jsAHkwisWmwWAJx0oM5WSIkqHT3hBTBsbwV0zbi
+ +6zPVq6B2jBrI/eQWTVdBsNb2/Q9YGa4ywMxmC+Vj6yxryACR6NHpQScy77WwX82DwV1g2gdK5
+ trIONST84iJjWWIZnz9j4IjxEc9qEWtZA+b0E9Rgl2DkZt9QTwLQSqbIHBefETqflIIiio2Sb9
+ auwo7e2WfrVCQjlaFOEZikCVH6b+8v3H1kt0y3ueJVDrge6gy3iGXPhHzicjz9bKUvl05fyAr1
+ xaE=
+X-IronPort-AV: E=Sophos;i="5.75,417,1589266800"; 
+   d="scan'208";a="47235638"
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by labrats.qualcomm.com with ESMTP; 31 Jul 2020 01:08:13 -0700
+Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
+  by ironmsg01-sd.qualcomm.com with ESMTP; 31 Jul 2020 01:08:12 -0700
+Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
+        id 0E65A22E73; Fri, 31 Jul 2020 01:08:11 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <Avri.Altman@wdc.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, alim.akhtar@samsung.com,
-        jejb@linux.ibm.com, beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com
-Subject: Re: [PATCH v4] scsi: ufs: Cleanup completed request without interrupt
- notification
-In-Reply-To: <97f1dfb0-41b6-0249-3e82-cae480b0efb6@acm.org>
-References: <20200724140246.19434-1-stanley.chu@mediatek.com>
- <SN6PR04MB4640B5FC06968244DDACB8BEFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
- <1596159018.17247.53.camel@mtkswgap22>
- <97f1dfb0-41b6-0249-3e82-cae480b0efb6@acm.org>
-Message-ID: <8b0a158a7c3ee2165e09290996521ffc@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Subject: [PATCH v8 0/8] Fix up and simplify error recovery mechanism
+Date:   Fri, 31 Jul 2020 01:08:00 -0700
+Message-Id: <1596182890-10086-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+The changes have been tested with error injections of multiple error types (and
+all kinds of mixture of them) during runtime, e.g. hibern8 enter/ exit error,
+power mode change error and fatal/non-fatal error from IRQ context. During the
+test, error injections happen randomly across all contexts, e.g. clk scaling,
+clk gate/ungate, runtime suspend/resume and IRQ.
 
-On 2020-07-31 12:06, Bart Van Assche wrote:
-> On 2020-07-30 18:30, Stanley Chu wrote:
->> On Mon, 2020-07-27 at 11:18 +0000, Avri Altman wrote:
->>> Looks good to me.
->>> But better wait and see if Bart have any further reservations.
->> 
->> Would you have any further suggestions?
-> 
-> Today is the first time that I took a look at ufshcd_abort(). The
-> approach of that function looks wrong to me. This is how I think that a
-> SCSI LLD abort handler should work:
-> (1) Serialize against the completion path
-> (__ufshcd_transfer_req_compl()) such that it cannot happen that the
-> abort handler and the regular completion path both call
-> cmd->scsi_done(cmd) at the same time. I'm not sure whether an existing
-> synchronization object can be used for this purpose or whether a new
-> synchronization object has to be introduced to serialize scsi_done()
-> calls from __ufshcd_transfer_req_compl() and ufshcd_abort().
-> (2) While holding that synchronization object, check whether the SCSI
-> command is still outstanding. If so, submit a SCSI abort TMR to the 
-> device.
-> (3) If the command has been aborted, call scsi_done() and return
-> SUCCESS. If aborting failed and the command is still in progress, 
-> return
-> FAILED.
-> 
-> An example is available in srp_abort() in
-> drivers/infiniband/ulp/srp/ib_srp.c.
-> 
-> Bart.
+There are a few more fixes to resolve other minor problems based on the main
+change, such as LINERESET handling and racing btw error handler and system
+suspend/resume/shutdown, but they will be pushed after this series is taken,
+due to there are already too many lines in these changes.
+
+Change since v7:
+- Incorporated Asutosh's comments
+
+Change since v6:
+- Modified change "scsi: ufs-qcom: Fix schedule while atomic error in ufs_qcom_dump_dbg_regs" to "scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs"
+
+Change since v5:
+- Dropped change "scsi: ufs: Fix imbalanced scsi_block_reqs_cnt caused by ufshcd_hold()" as it is not quite related with this series
+- Refined func ufshcd_err_handling_prepare in change "scsi: ufs: Recover hba runtime PM error in error handler"
+
+Change since v4:
+- Split the original change "ufs: ufs-qcom: Fix a few BUGs in func ufs_qcom_dump_dbg_regs()" to 2 small changes
+
+Change since v3:
+- Split the original change "scsi: ufs: Fix up and simplify error recovery mechanism" into 5 changes
+
+Change since v2:
+- Incorporate Bart's comment to change "scsi: ufs: Add checks before setting clk-gating states"
+- Revised the commit msg of change "scsi: ufs: Fix up and simplify error recovery mechanism"
+
+Change since v1:
+- Fixed a compilation error in case that CONFIG_PM is N
 
 
-AFAIK, sychronization of scsi_done is not a problem here, because scsi 
-layer
-use the atomic state, namely SCMD_STATE_COMPLETE, of a scsi cmd to 
-prevent
-the concurrency of abort and real completion of it.
+Can Guo (8):
+  scsi: ufs: Add checks before setting clk-gating states
+  ufs: ufs-qcom: Fix race conditions caused by func
+    ufs_qcom_testbus_config
+  scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
+  scsi: ufs: Add some debug infos to ufshcd_print_host_state
+  scsi: ufs: Fix concurrency of error handler and other error recovery
+    paths
+  scsi: ufs: Recover hba runtime PM error in error handler
+  scsi: ufs: Move dumps in IRQ handler to error handler
+  scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
 
-Check func scsi_times_out(), hope it helps.
+ drivers/scsi/ufs/ufs-qcom.c  |  37 ----
+ drivers/scsi/ufs/ufs-sysfs.c |   1 +
+ drivers/scsi/ufs/ufshcd.c    | 492 +++++++++++++++++++++++++++----------------
+ drivers/scsi/ufs/ufshcd.h    |  14 ++
+ 4 files changed, 323 insertions(+), 221 deletions(-)
 
-enum blk_eh_timer_return scsi_times_out(struct request *req)
-{
-...
-         if (rtn == BLK_EH_DONE) {
-                 /*
-                  * Set the command to complete first in order to prevent 
-a real
-                  * completion from releasing the command while error 
-handling
-                  * is using it. If the command was already completed, 
-then the
-                  * lower level driver beat the timeout handler, and it 
-is safe
-                  * to return without escalating error recovery.
-                  *
-                  * If timeout handling lost the race to a real 
-completion, the
-                  * block layer may ignore that due to a fake timeout 
-injection,
-                  * so return RESET_TIMER to allow error handling another 
-shot
-                  * at this command.
-                  */
-                 if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
-                         return BLK_EH_RESET_TIMER;
-                 if (scsi_abort_command(scmd) != SUCCESS) {
-                         set_host_byte(scmd, DID_TIME_OUT);
-                         scsi_eh_scmd_add(scmd);
-                 }
-         }
-}
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-Thanks,
-
-Can Guo.
