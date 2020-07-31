@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2578C433E3
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 14:08:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E179C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 14:09:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C68BB206DA
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 14:08:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E51E32087C
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 14:09:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387522AbgGaOIZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Jul 2020 10:08:25 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:12145 "EHLO
+        id S1732466AbgGaOJw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Jul 2020 10:09:52 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:1477 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387500AbgGaOIY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2020 10:08:24 -0400
-IronPort-SDR: iQVEfpZRIBlkoH00m3L/8Y1iJtZklA6q1mTseKAT9978u4SRngVmhWoLpL3FFbwrJBgJ23cabH
- 7Mq0/q2B23h+ctXorSFwnpeIXeYEXbNpFagL6yTDhWIwYU9bSc1WmAdgDpIQq9zyayW3wlB/U1
- RkdfeTODK55GN1x2zKxGMxZjclnP3UxfBqwDR8FdDZd2GRAbTfj5jbkRqtgEHpsmLWM4qsNVji
- lxQRfAoqYCBcNxa3PeRclVdA9vwEEP2inC2IvxZiJ0dQEr98+0f2Xdy8soPTqWFpLxllyTYVHX
- xbI=
+        with ESMTP id S1728206AbgGaOJw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2020 10:09:52 -0400
+IronPort-SDR: MbC/qo1nAJk9Oz7dXHoK1/ftNGTZN5n+ukLj+OlUms8iLDuqiMHFA1WAySNBXV4MRlYZBPlkDb
+ jiGjfttCsAjc+kFHHucPFXnRFeqdVrZte+lSRpVIkGM7gjqjluCSTmruznv2pY/lg6PVgvvH1o
+ 7GydXplpcCl7nq0GSzrBF0+u8buGqGDuLldDC/8BgK79vgtBZv4aEMtK8KoYMsb+oP+TasxFop
+ kQMNIfWIftGcIyyIuhcy5xtJsmLHpKHR6DBPFufMNqtgbFIIn0NPnzBWc9ORxyxixlD0Xri+d9
+ ENo=
 X-IronPort-AV: E=Sophos;i="5.75,418,1589266800"; 
-   d="scan'208";a="47235773"
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by labrats.qualcomm.com with ESMTP; 31 Jul 2020 07:08:24 -0700
+   d="scan'208";a="29060266"
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by labrats.qualcomm.com with ESMTP; 31 Jul 2020 07:08:30 -0700
 Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
-  by ironmsg01-sd.qualcomm.com with ESMTP; 31 Jul 2020 07:08:22 -0700
+  by ironmsg02-sd.qualcomm.com with ESMTP; 31 Jul 2020 07:08:29 -0700
 Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
-        id 72DAD22E5A; Fri, 31 Jul 2020 07:08:22 -0700 (PDT)
+        id C4F3E22E5A; Fri, 31 Jul 2020 07:08:29 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
@@ -46,9 +46,9 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Tomas Winkler <tomas.winkler@intel.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 6/8] scsi: ufs: Recover hba runtime PM error in error handler
-Date:   Fri, 31 Jul 2020 07:07:54 -0700
-Message-Id: <1596204478-5420-7-git-send-email-cang@codeaurora.org>
+Subject: [PATCH 8/8] scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
+Date:   Fri, 31 Jul 2020 07:07:56 -0700
+Message-Id: <1596204478-5420-9-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1596204478-5420-1-git-send-email-cang@codeaurora.org>
 References: <1596204478-5420-1-git-send-email-cang@codeaurora.org>
@@ -57,198 +57,155 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current error handler cannot work well or recover hba runtime PM error if
-ufshcd_suspend/resume has failed due to UFS errors, e.g. hibern8 enter/exit
-error or SSU cmd error. When this happens, error handler may fail doing
-full reset and restore because error handler always assumes that powers,
-IRQs and clocks are ready after pm_runtime_get_sync returns, but actually
-they are not if ufshcd_reusme fails [1]. Besides, if ufschd_suspend/resume
-fails due to UFS error, runtime PM framework saves the error value to
-dev.power.runtime_error. After that, hba dev runtime suspend/resume would
-not be invoked anymore unless runtime_error is cleared [2].
+Current IRQ handler blocks scsi requests before scheduling eh_work, when
+error handler calls pm_runtime_get_sync, if ufshcd_suspend/resume sends a
+scsi cmd, most likely the SSU cmd, since scsi requests are blocked,
+pm_runtime_get_sync() will never return because ufshcd_suspend/reusme is
+blocked by the scsi cmd. Some changes and code re-arrangement can be made
+to resolve it.
 
-In case of ufshcd_suspend/resume fails due to UFS errors, for scenario [1],
-error handler cannot assume anything of pm_runtime_get_sync, meaning error
-handler should explicitly turn ON powers, IRQs and clocks again. To get the
-hba runtime PM work as regard for scenario [2], error handler can clear the
-runtime_error by calling pm_runtime_set_active() if full reset and restore
-succeeds. And, more important, if pm_runtime_set_active() returns no error,
-which means runtime_error has been cleared, we also need to resume those
-scsi devices under hba in case any of them has failed to be resumed due to
-hba runtime resume failure. This is to unblock blk_queue_enter in case
-there are bios waiting inside it.
+o In queuecommand path, hba->ufshcd_state check and ufshcd_send_command
+  should stay into the same spin lock. This is to make sure that no more
+  commands leak into doorbell after hba->ufshcd_state is changed.
+o Don't block scsi requests before scheduling eh_work, let error handler
+  block scsi requests when it is ready to start error recovery.
+o Don't let scsi layer keep requeuing the scsi cmds sent from hba runtime
+  PM ops, let them pass or fail them. Let them pass if eh_work is scheduled
+  due to non-fatal errors. Fail them if eh_work is scheduled due to fatal
+  errors, otherwise the cmds may eventually time out since UFS is in bad
+  state, which gets error handler blocked for too long. If we fail the scsi
+  cmds sent from hba runtime PM ops, hba runtime PM ops fails too, but it
+  does not hurt since error handler can recover hba runtime PM error.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b3a2310..6bdf2bf 100644
+index 523b771..d3c679f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -15,6 +15,7 @@
- #include <linux/of.h>
- #include <linux/bitfield.h>
- #include <linux/blk-pm.h>
-+#include <linux/blkdev.h>
- #include "ufshcd.h"
- #include "ufs_quirks.h"
- #include "unipro.h"
-@@ -229,6 +230,10 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
- static void ufshcd_schedule_eh_work(struct ufs_hba *hba);
-+static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
-+static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
-+static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
-+					 struct ufs_vreg *vreg);
- static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
- static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
- static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-@@ -5553,6 +5558,84 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
- 	}
- }
+@@ -126,7 +126,8 @@ enum {
+ 	UFSHCD_STATE_RESET,
+ 	UFSHCD_STATE_ERROR,
+ 	UFSHCD_STATE_OPERATIONAL,
+-	UFSHCD_STATE_EH_SCHEDULED,
++	UFSHCD_STATE_EH_SCHEDULED_FATAL,
++	UFSHCD_STATE_EH_SCHEDULED_NON_FATAL,
+ };
  
-+static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
-+{
-+	pm_runtime_get_sync(hba->dev);
-+	if (pm_runtime_suspended(hba->dev)) {
-+		/*
-+		 * Don't assume anything of pm_runtime_get_sync(), if
-+		 * resume fails, irq and clocks can be OFF, and powers
-+		 * can be OFF or in LPM.
-+		 */
-+		ufshcd_setup_hba_vreg(hba, true);
-+		ufshcd_enable_irq(hba);
-+		ufshcd_setup_vreg(hba, true);
-+		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
-+		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq2);
-+		ufshcd_hold(hba, false);
-+		if (!ufshcd_is_clkgating_allowed(hba))
-+			ufshcd_setup_clocks(hba, true);
-+		ufshcd_release(hba);
-+		ufshcd_vops_resume(hba, UFS_RUNTIME_PM);
-+	} else {
-+		ufshcd_hold(hba, false);
-+	}
-+	if (hba->clk_scaling.is_allowed) {
-+		cancel_work_sync(&hba->clk_scaling.suspend_work);
-+		cancel_work_sync(&hba->clk_scaling.resume_work);
-+		ufshcd_suspend_clkscaling(hba);
-+	}
-+}
-+
-+static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
-+{
-+	ufshcd_release(hba);
-+	if (hba->clk_scaling.is_allowed)
-+		ufshcd_resume_clkscaling(hba);
-+	pm_runtime_put(hba->dev);
-+}
-+
-+static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
-+{
-+	return (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
-+		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset) &&
-+		!ufshcd_is_link_broken(hba)));
-+}
-+
-+#ifdef CONFIG_PM
-+static void ufshcd_recover_pm_error(struct ufs_hba *hba)
-+{
-+	struct Scsi_Host *shost = hba->host;
-+	struct scsi_device *sdev;
-+	struct request_queue *q;
-+	int ret;
-+
-+	/*
-+	 * Set RPM status of hba device to RPM_ACTIVE,
-+	 * this also clears its runtime error.
-+	 */
-+	ret = pm_runtime_set_active(hba->dev);
-+	/*
-+	 * If hba device had runtime error, we also need to resume those
-+	 * scsi devices under hba in case any of them has failed to be
-+	 * resumed due to hba runtime resume failure. This is to unblock
-+	 * blk_queue_enter in case there are bios waiting inside it.
-+	 */
-+	if (!ret) {
-+		list_for_each_entry(sdev, &shost->__devices, siblings) {
-+			q = sdev->request_queue;
-+			if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-+				       q->rpm_status == RPM_SUSPENDING))
-+				pm_request_resume(q->dev);
-+		}
-+	}
-+}
-+#else
-+static inline void ufshcd_recover_pm_error(struct ufs_hba *hba)
-+{
-+}
-+#endif
-+
- /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -5570,9 +5653,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	hba = container_of(work, struct ufs_hba, eh_work);
+ /* UFSHCD error handling flags */
+@@ -2515,34 +2516,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	if (!down_read_trylock(&hba->clk_scaling_lock))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
  
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
--	    (!(hba->saved_err || hba->saved_uic_err || hba->force_reset) &&
--	     !ufshcd_is_link_broken(hba))) {
-+	if (ufshcd_err_handling_should_stop(hba)) {
- 		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
- 			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
-@@ -5581,10 +5662,17 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	}
- 	ufshcd_set_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	pm_runtime_get_sync(hba->dev);
--	ufshcd_hold(hba, false);
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	switch (hba->ufshcd_state) {
+-	case UFSHCD_STATE_OPERATIONAL:
+-		break;
+-	case UFSHCD_STATE_EH_SCHEDULED:
+-	case UFSHCD_STATE_RESET:
+-		err = SCSI_MLQUEUE_HOST_BUSY;
+-		goto out_unlock;
+-	case UFSHCD_STATE_ERROR:
+-		set_host_byte(cmd, DID_ERROR);
+-		cmd->scsi_done(cmd);
+-		goto out_unlock;
+-	default:
+-		dev_WARN_ONCE(hba->dev, 1, "%s: invalid state %d\n",
+-				__func__, hba->ufshcd_state);
+-		set_host_byte(cmd, DID_BAD_TARGET);
+-		cmd->scsi_done(cmd);
+-		goto out_unlock;
+-	}
 -
-+	ufshcd_err_handling_prepare(hba);
+-	/* if error handling is in progress, don't issue commands */
+-	if (ufshcd_eh_in_progress(hba)) {
+-		set_host_byte(cmd, DID_ERROR);
+-		cmd->scsi_done(cmd);
+-		goto out_unlock;
+-	}
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+ 	hba->req_abort_count = 0;
+ 
+ 	err = ufshcd_hold(hba, true);
+@@ -2578,11 +2551,50 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	/* Make sure descriptors are ready before ringing the doorbell */
+ 	wmb();
+ 
+-	/* issue command to the controller */
  	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/*
-+	 * If spm/rpm_lvl = 5, a full reset and restore might have been
-+	 * done by now, double check if this should be stopped.
-+	 */
-+	if (ufshcd_err_handling_should_stop(hba)) {
-+		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-+			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+		goto out;
++	switch (hba->ufshcd_state) {
++	case UFSHCD_STATE_OPERATIONAL:
++	case UFSHCD_STATE_EH_SCHEDULED_NON_FATAL:
++		break;
++	case UFSHCD_STATE_EH_SCHEDULED_FATAL:
++		/*
++		 * If we are here, eh_work is either scheduled or running.
++		 * Before eh_work sets ufshcd_state to STATE_RESET, it flushes
++		 * runtime PM ops by calling pm_runtime_get_sync(). If a scsi
++		 * cmd, e.g. the SSU cmd, is sent by PM ops, it can never be
++		 * finished if we let SCSI layer keep retrying it, which gets
++		 * eh_work stuck forever. Neither can we let it pass, because
++		 * ufs now is not in good status, so the SSU cmd may eventually
++		 * time out, blocking eh_work for too long. So just let it fail.
++		 */
++		if (hba->pm_op_in_progress) {
++			hba->force_reset = true;
++			set_host_byte(cmd, DID_BAD_TARGET);
++			goto out_compl_cmd;
++		}
++	case UFSHCD_STATE_RESET:
++		err = SCSI_MLQUEUE_HOST_BUSY;
++		goto out_compl_cmd;
++	case UFSHCD_STATE_ERROR:
++		set_host_byte(cmd, DID_ERROR);
++		goto out_compl_cmd;
++	default:
++		dev_WARN_ONCE(hba->dev, 1, "%s: invalid state %d\n",
++				__func__, hba->ufshcd_state);
++		set_host_byte(cmd, DID_BAD_TARGET);
++		goto out_compl_cmd;
 +	}
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 
- 	/* Complete requests that have door-bell cleared by h/w */
-@@ -5662,10 +5750,12 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		hba->force_reset = false;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		err = ufshcd_reset_and_restore(hba);
--		spin_lock_irqsave(hba->host->host_lock, flags);
- 		if (err)
- 			dev_err(hba->dev, "%s: reset and restore failed with err %d\n",
- 					__func__, err);
-+		else
-+			ufshcd_recover_pm_error(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 	}
- 
- skip_err_handling:
-@@ -5677,11 +5767,11 @@ static void ufshcd_err_handler(struct work_struct *work)
- 			    __func__, hba->saved_err, hba->saved_uic_err);
- 	}
- 
-+out:
- 	ufshcd_clear_eh_in_progress(hba);
+ 	ufshcd_send_command(hba, tag);
+-out_unlock:
  	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	ufshcd_scsi_unblock_requests(hba);
--	ufshcd_release(hba);
--	pm_runtime_put_sync(hba->dev);
-+	ufshcd_err_handling_unprepare(hba);
++	goto out;
++
++out_compl_cmd:
++	scsi_dma_unmap(lrbp->cmd);
++	lrbp->cmd = NULL;
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ufshcd_release(hba);
++	if (!err)
++		cmd->scsi_done(cmd);
+ out:
+ 	up_read(&hba->clk_scaling_lock);
+ 	return err;
+@@ -5552,9 +5564,12 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+ {
+ 	/* handle fatal errors only when link is not in error state */
+ 	if (hba->ufshcd_state != UFSHCD_STATE_ERROR) {
+-		hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED;
+-		if (queue_work(hba->eh_wq, &hba->eh_work))
+-			ufshcd_scsi_block_requests(hba);
++		if (hba->force_reset || ufshcd_is_link_broken(hba) ||
++		    ufshcd_is_saved_err_fatal(hba))
++			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_FATAL;
++		else
++			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_NON_FATAL;
++		queue_work(hba->eh_wq, &hba->eh_work);
+ 	}
  }
  
- /**
+@@ -5664,6 +5679,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_err_handling_prepare(hba);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	ufshcd_scsi_block_requests(hba);
+ 	/*
+ 	 * If spm/rpm_lvl = 5, a full reset and restore might have been
+ 	 * done by now, double check if this should be stopped.
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
