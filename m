@@ -2,118 +2,96 @@ Return-Path: <SRS0=WBt/=BK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B175AC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 01:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 943F0C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 02:15:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E1602076B
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 01:30:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A9AF20829
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 02:15:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="T9CGKxez"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y6GrT3yG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731016AbgGaBa1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Jul 2020 21:30:27 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:57434 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727039AbgGaBa1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 21:30:27 -0400
-X-UUID: b4b96e76507a494883ded8abae69c6e2-20200731
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=25R/tw9vzd5F5fUTQ5kr+ADS9zBYCPAZwj9/d7vMggQ=;
-        b=T9CGKxezcUwjFFv0w8UR1KW8FDeNUufY6a6WivPAgApqaG8BGbKT8yKZ6dIqbTGUVHqjcNl28GlE/I14Uebl+QRM8gWOlkMNVPPxekbOQGz38CJfXtVPKQYmUuLZDRVCtGgS3/lbq0oaIjiCIuwsab25abEmwhWp1Lgpp3DpSGM=;
-X-UUID: b4b96e76507a494883ded8abae69c6e2-20200731
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1804963979; Fri, 31 Jul 2020 09:30:20 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 31 Jul 2020 09:30:17 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 31 Jul 2020 09:30:17 +0800
-Message-ID: <1596159018.17247.53.camel@mtkswgap22>
-Subject: RE: [PATCH v4] scsi: ufs: Cleanup completed request without
- interrupt notification
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
-Date:   Fri, 31 Jul 2020 09:30:18 +0800
-In-Reply-To: <SN6PR04MB4640B5FC06968244DDACB8BEFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200724140246.19434-1-stanley.chu@mediatek.com>
-         <SN6PR04MB4640B5FC06968244DDACB8BEFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1731072AbgGaCPK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Jul 2020 22:15:10 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38722 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730797AbgGaCPJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jul 2020 22:15:09 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06V2C2JX032158;
+        Fri, 31 Jul 2020 02:15:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=oEkkmZnNd5qB6ufvppE1H4HyGJ4f5J9QoWET7eVTCiY=;
+ b=Y6GrT3yGYZe/2iP/AlZwA6cRx8Av0lq/FgcHNI1evfDYiy40AbjH6uX5/SRHMu5Qbbc3
+ o7Nqjwff36OEavOA2bm3Gi5p4BxrgTiulFt1Z29jBJrWiW8CDo4N6NB8WTNqVmd4kUxA
+ OCqim8QDcvY7E8Xjl8rpbqiaTqh5hJhzqW58z0y/48g5FtZ669DaP9gVejBC35G16i2l
+ 9SqAdW0yrVFVANrtxn5Fx0CWZpZ5W+NWp1THYZSOl6XUBTRL6+bIuOLGAOovlA65XwkC
+ 8zasxNovcZpIljEjlU9u97O0HyErI/L5ppzPhsBBniL8wGCErNnyGRA3A76/Yd3nPtAx 1A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 32hu1jxrc3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 31 Jul 2020 02:15:00 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06V2DTXq094042;
+        Fri, 31 Jul 2020 02:15:00 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 32hu5xrr41-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 31 Jul 2020 02:15:00 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06V2ErPP020118;
+        Fri, 31 Jul 2020 02:14:58 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 30 Jul 2020 19:14:52 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Bart van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi_transport_srp: sanitize scsi_target_block/unblock sequences
+Date:   Thu, 30 Jul 2020 22:14:51 -0400
+Message-Id: <159616168007.12111.12215825242546147499.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200728134833.42547-1-hare@suse.de>
+References: <20200728134833.42547-1-hare@suse.de>
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 71FB6D29D6D2F90D2C8183B6D742B66C6D52B9406A7B5C1C22638F62489F611D2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9698 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007310012
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9698 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 mlxlogscore=999
+ malwarescore=0 impostorscore=0 priorityscore=1501 spamscore=0 phishscore=0
+ suspectscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007310012
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQmFydCwNCg0KT24gTW9uLCAyMDIwLTA3LTI3IGF0IDExOjE4ICswMDAwLCBBdnJpIEFsdG1h
-biB3cm90ZToNCj4gTG9va3MgZ29vZCB0byBtZS4NCj4gQnV0IGJldHRlciB3YWl0IGFuZCBzZWUg
-aWYgQmFydCBoYXZlIGFueSBmdXJ0aGVyIHJlc2VydmF0aW9ucy4NCj4gDQoNCldvdWxkIHlvdSBo
-YXZlIGFueSBmdXJ0aGVyIHN1Z2dlc3Rpb25zPw0KDQpUaGFua3MgYSBsb3QsDQpTdGFubGV5IENo
-dQ0KDQo+IFRoYW5rcywNCj4gQXZyaSANCj4gPiANCj4gPiBJZiBzb21laG93IG5vIGludGVycnVw
-dCBub3RpZmljYXRpb24gaXMgcmFpc2VkIGZvciBhIGNvbXBsZXRlZCByZXF1ZXN0DQo+ID4gYW5k
-IGl0cyBkb29yYmVsbCBiaXQgaXMgY2xlYXJlZCBieSBob3N0LCBVRlMgZHJpdmVyIG5lZWRzIHRv
-IGNsZWFudXANCj4gPiBpdHMgb3V0c3RhbmRpbmcgYml0IGluIHVmc2hjZF9hYm9ydCgpLiBPdGhl
-cndpc2UsIHN5c3RlbSBtYXkgYmVoYXZlDQo+ID4gYWJub3JtYWxseSBieSBiZWxvdyBmbG93Og0K
-PiA+IA0KPiA+IEFmdGVyIHVmc2hjZF9hYm9ydCgpIHJldHVybnMsIHRoaXMgcmVxdWVzdCB3aWxs
-IGJlIHJlcXVldWVkIGJ5IFNDU0kNCj4gPiBsYXllciB3aXRoIGl0cyBvdXRzdGFuZGluZyBiaXQg
-c2V0LiBBbnkgZnV0dXJlIGNvbXBsZXRlZCByZXF1ZXN0DQo+ID4gd2lsbCB0cmlnZ2VyIHVmc2hj
-ZF90cmFuc2Zlcl9yZXFfY29tcGwoKSB0byBoYW5kbGUgYWxsICJjb21wbGV0ZWQNCj4gPiBvdXRz
-dGFuZGluZyBiaXRzIi4gSW4gdGhpcyB0aW1lLCB0aGUgImFibm9ybWFsIG91dHN0YW5kaW5nIGJp
-dCINCj4gPiB3aWxsIGJlIGRldGVjdGVkIGFuZCB0aGUgInJlcXVldWVkIHJlcXVlc3QiIHdpbGwg
-YmUgY2hvc2VuIHRvIGV4ZWN1dGUNCj4gPiByZXF1ZXN0IHBvc3QtcHJvY2Vzc2luZyBmbG93LiBU
-aGlzIGlzIHdyb25nIGJlY2F1c2UgdGhpcyByZXF1ZXN0IGlzDQo+ID4gc3RpbGwgImFsaXZlIi4N
-Cj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0
-ZWsuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIHwgMyArKy0N
-Cj4gPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiA+
-IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnNoY2QuYw0KPiA+IGluZGV4IDU3N2NjMGQ3NDg3Zi4uOWQxODBkYTc3NDg4IDEw
-MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gPiArKysgYi9kcml2
-ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4gQEAgLTY0OTMsNyArNjQ5Myw3IEBAIHN0YXRpYyBp
-bnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gPiAgICAgICAgICAgICAg
-ICAgICAgICAgICAvKiBjb21tYW5kIGNvbXBsZXRlZCBhbHJlYWR5ICovDQo+ID4gICAgICAgICAg
-ICAgICAgICAgICAgICAgZGV2X2VycihoYmEtPmRldiwgIiVzOiBjbWQgYXQgdGFnICVkIHN1Y2Nl
-c3NmdWxseSBjbGVhcmVkIGZyb20NCj4gPiBEQi5cbiIsDQo+ID4gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBfX2Z1bmNfXywgdGFnKTsNCj4gPiAtICAgICAgICAgICAgICAgICAgICAg
-ICBnb3RvIG91dDsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBnb3RvIGNsZWFudXA7DQo+
-ID4gICAgICAgICAgICAgICAgIH0gZWxzZSB7DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAg
-ZGV2X2VycihoYmEtPmRldiwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICIl
-czogbm8gcmVzcG9uc2UgZnJvbSBkZXZpY2UuIHRhZyA9ICVkLCBlcnIgJWRcbiIsDQo+ID4gQEAg
-LTY1MjcsNiArNjUyNyw3IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2Nt
-bmQgKmNtZCkNCj4gPiAgICAgICAgICAgICAgICAgZ290byBvdXQ7DQo+ID4gICAgICAgICB9DQo+
-ID4gDQo+ID4gK2NsZWFudXA6DQo+ID4gICAgICAgICBzY3NpX2RtYV91bm1hcChjbWQpOw0KPiA+
-IA0KPiA+ICAgICAgICAgc3Bpbl9sb2NrX2lycXNhdmUoaG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7
-DQo+ID4gLS0NCj4gPiAyLjE4LjANCg0K
+On Tue, 28 Jul 2020 15:48:33 +0200, Hannes Reinecke wrote:
 
+> The SCSI midlayer does not allow state transitions from SDEV_BLOCK
+> to SDEV_BLOCK, so calling scsi_target_block() from __rport_fast_io_fail()
+> is wrong as the port is already blocked.
+> Similarly we don't need to call scsi_target_unblock() afterwards as the
+> function has already done this.
+
+Applied to 5.9/scsi-queue, thanks!
+
+[1/1] scsi: scsi_transport_srp: Sanitize scsi_target_block/unblock sequences
+      https://git.kernel.org/mkp/scsi/c/bf1a28f92a8b
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
