@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0974C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 21:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 058B8C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 21:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81FC722B42
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 21:01:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8BAD22B3F
+	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 21:01:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729120AbgGaVBl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Jul 2020 17:01:41 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:47361 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729043AbgGaVBl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2020 17:01:41 -0400
-IronPort-SDR: KtPal0viYlcY1nuMZiAo2lHC4792BAD6bUcu2ALM9zXiOuK7ZxYAqj/Y0T634PI38yXhtacBO9
- 50KE49QnWITreEHmARGj0YYVWIe8m9KuP6X7+eH6yHMu1Qha8/9aC+rZe6b/ICBzUYNmo4cO6V
- 3BaftkGCWmejeAUrGg4SrSef7ivq++FXhZfC3hCMgZR+0PDB7+TuJzRP6zfCeNFuQTbfM8+kdP
- MG0dZnEIdbka1OB+Df1p0eRQ1KuBCXTmpPgbR5gsZPPhZOuHWzeKb5MNM5wb+r4XCXZW4ZGkAw
- V5c=
+        id S1729139AbgGaVBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 31 Jul 2020 17:01:46 -0400
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:50866 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729043AbgGaVBq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Jul 2020 17:01:46 -0400
+IronPort-SDR: yPf/agnAjTg7MIgHj84m7Fi5jXddq+twdvupOVuCxiNK86Y+ncUN/URCVFw+qgGbzS1nHVhffs
+ wt1yw7y0axCA34tfVDNEkhFc6BTOpsDAP2cZdiJnVsccseC0748huDX6MMcpUJeLiwG1SzPPlN
+ +XgnUgdiV9RAfhlvMJgBX2fxiQ3bF2fbL1Of6vIb28r7nvQUIjUPOG7evT7GVm8zFyJ5YR/2hW
+ AW7/c2AWWhPabdkwUml1PCObSvUHkA7YQ7Dp+THJhK0RtrK2KBKFj/Fkh8xD7nrU48Cq5pxcI3
+ tKU=
 X-IronPort-AV: E=Sophos;i="5.75,419,1589266800"; 
-   d="scan'208";a="84056422"
+   d="scan'208";a="81993231"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 31 Jul 2020 14:01:39 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 31 Jul 2020 14:01:45 -0700
 Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 31 Jul 2020 14:01:38 -0700
+ 15.1.1979.3; Fri, 31 Jul 2020 14:01:41 -0700
 Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
  (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Fri, 31 Jul 2020 14:01:37 -0700
-Subject: [PATCH 5/7] smartpqi: support device deletion via sysfs
+ Transport; Fri, 31 Jul 2020 14:01:43 -0700
+Subject: [PATCH 6/7] smartpqi: add RAID bypass counter
 From:   Don Brace <don.brace@microsemi.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -43,8 +43,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 31 Jul 2020 16:01:38 -0500
-Message-ID: <159622929885.30579.2727491506675011534.stgit@brunhilda>
+Date:   Fri, 31 Jul 2020 16:01:44 -0500
+Message-ID: <159622930468.30579.13153724465552773544.stgit@brunhilda>
 In-Reply-To: <159622890296.30579.6820363566594432069.stgit@brunhilda>
 References: <159622890296.30579.6820363566594432069.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -58,191 +58,204 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-- Support device deletion via sysfs.
-  I.E: echo 1 > /sys/block/sd<X>/device/delete
+- Add a counter to assist in verifying
+  when RAID bypass is being used.
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   92 +++++++++++++++------------------
- 1 file changed, 43 insertions(+), 49 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |    1 
+ drivers/scsi/smartpqi/smartpqi_init.c |   77 +++++++++++++++++++++++----------
+ 2 files changed, 54 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index d6a92de555c8..059b96ac846b 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1531,11 +1531,10 @@ static inline void pqi_remove_device(struct pqi_ctrl_info *ctrl_info,
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index 631306d347db..d0c635971481 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -963,6 +963,7 @@ struct pqi_scsi_dev {
+ 	struct list_head delete_list_entry;
  
- 	pqi_device_remove_start(device);
- 
--	rc = pqi_device_wait_for_pending_io(ctrl_info, device,
--		PQI_PENDING_IO_TIMEOUT_SECS);
-+	rc = pqi_device_wait_for_pending_io(ctrl_info, device, PQI_PENDING_IO_TIMEOUT_SECS);
- 	if (rc)
- 		dev_err(&ctrl_info->pci_dev->dev,
--			"scsi %d:%d:%d:%d removing device with %d outstanding commands\n",
-+			"scsi %d:%d:%d:%d removing device with %d outstanding command(s)\n",
- 			ctrl_info->scsi_host->host_no, device->bus,
- 			device->target, device->lun,
- 			atomic_read(&device->scsi_cmds_outstanding));
-@@ -1553,10 +1552,8 @@ static struct pqi_scsi_dev *pqi_find_scsi_dev(struct pqi_ctrl_info *ctrl_info,
- {
- 	struct pqi_scsi_dev *device;
- 
--	list_for_each_entry(device, &ctrl_info->scsi_device_list,
--		scsi_device_list_entry)
--		if (device->bus == bus && device->target == target &&
--			device->lun == lun)
-+	list_for_each_entry(device, &ctrl_info->scsi_device_list, scsi_device_list_entry)
-+		if (device->bus == bus && device->target == target && device->lun == lun)
- 			return device;
- 
- 	return NULL;
-@@ -1582,15 +1579,12 @@ enum pqi_find_result {
+ 	atomic_t scsi_cmds_outstanding;
++	atomic_t raid_bypass_cnt;
  };
  
- static enum pqi_find_result pqi_scsi_find_entry(struct pqi_ctrl_info *ctrl_info,
--	struct pqi_scsi_dev *device_to_find,
--	struct pqi_scsi_dev **matching_device)
-+	struct pqi_scsi_dev *device_to_find, struct pqi_scsi_dev **matching_device)
- {
- 	struct pqi_scsi_dev *device;
- 
--	list_for_each_entry(device, &ctrl_info->scsi_device_list,
--		scsi_device_list_entry) {
--		if (pqi_scsi3addr_equal(device_to_find->scsi3addr,
--			device->scsi3addr)) {
-+	list_for_each_entry(device, &ctrl_info->scsi_device_list, scsi_device_list_entry) {
-+		if (pqi_scsi3addr_equal(device_to_find->scsi3addr, device->scsi3addr)) {
- 			*matching_device = device;
- 			if (pqi_device_equal(device_to_find, device)) {
- 				if (device_to_find->volume_offline)
-@@ -1790,8 +1784,7 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
- 
- 	/* Assume that all devices in the existing list have gone away. */
--	list_for_each_entry(device, &ctrl_info->scsi_device_list,
--		scsi_device_list_entry)
-+	list_for_each_entry(device, &ctrl_info->scsi_device_list, scsi_device_list_entry)
- 		device->device_gone = true;
- 
- 	for (i = 0; i < num_new_devices; i++) {
-@@ -1831,7 +1824,7 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 	list_for_each_entry_safe(device, next, &ctrl_info->scsi_device_list,
- 		scsi_device_list_entry) {
- 		if (device->device_gone) {
--			list_del(&device->scsi_device_list_entry);
-+			list_del_init(&device->scsi_device_list_entry);
- 			list_add_tail(&device->delete_list_entry, &delete_list);
+ /* VPD inquiry pages */
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 059b96ac846b..392d00cbef22 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -5377,19 +5377,18 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
+ 			!blk_rq_is_passthrough(scmd->request)) {
+ 			rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device,
+ 				scmd, queue_group);
+-			if (rc == 0 || rc == SCSI_MLQUEUE_HOST_BUSY)
++			if (rc == 0 || rc == SCSI_MLQUEUE_HOST_BUSY) {
+ 				raid_bypassed = true;
++				atomic_inc(&device->raid_bypass_cnt);
++			}
  		}
- 	}
-@@ -1856,18 +1849,19 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 		pqi_ctrl_ofa_done(ctrl_info);
- 
- 	/* Remove all devices that have gone away. */
--	list_for_each_entry_safe(device, next, &delete_list,
--		delete_list_entry) {
-+	list_for_each_entry_safe(device, next, &delete_list, delete_list_entry) {
- 		if (device->volume_offline) {
- 			pqi_dev_info(ctrl_info, "offline", device);
- 			pqi_show_volume_status(ctrl_info, device);
--		} else {
--			pqi_dev_info(ctrl_info, "removed", device);
- 		}
--		if (pqi_is_device_added(device))
--			pqi_remove_device(ctrl_info, device);
- 		list_del(&device->delete_list_entry);
--		pqi_free_device(device);
-+		if (pqi_is_device_added(device)) {
-+			pqi_remove_device(ctrl_info, device);
-+		} else {
-+			if (!device->volume_offline)
-+				pqi_dev_info(ctrl_info, "removed", device);
-+			pqi_free_device(device);
-+		}
+ 		if (!raid_bypassed)
+-			rc = pqi_raid_submit_scsi_cmd(ctrl_info, device, scmd,
+-				queue_group);
++			rc = pqi_raid_submit_scsi_cmd(ctrl_info, device, scmd, queue_group);
+ 	} else {
+ 		if (device->aio_enabled)
+-			rc = pqi_aio_submit_scsi_cmd(ctrl_info, device, scmd,
+-				queue_group);
++			rc = pqi_aio_submit_scsi_cmd(ctrl_info, device, scmd, queue_group);
+ 		else
+-			rc = pqi_raid_submit_scsi_cmd(ctrl_info, device, scmd,
+-				queue_group);
++			rc = pqi_raid_submit_scsi_cmd(ctrl_info, device, scmd, queue_group);
  	}
  
- 	/*
-@@ -2158,31 +2152,6 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 	return rc;
+ out:
+@@ -5867,8 +5866,7 @@ static void pqi_slave_destroy(struct scsi_device *sdev)
+ 	}
  }
  
--static void pqi_remove_all_scsi_devices(struct pqi_ctrl_info *ctrl_info)
--{
--	unsigned long flags;
--	struct pqi_scsi_dev *device;
--
--	while (1) {
--		spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
--
--		device = list_first_entry_or_null(&ctrl_info->scsi_device_list,
--			struct pqi_scsi_dev, scsi_device_list_entry);
--		if (device)
--			list_del(&device->scsi_device_list_entry);
--
+-static int pqi_getpciinfo_ioctl(struct pqi_ctrl_info *ctrl_info,
+-	void __user *arg)
++static int pqi_getpciinfo_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ {
+ 	struct pci_dev *pci_dev;
+ 	u32 subsystem_vendor;
+@@ -5885,8 +5883,7 @@ static int pqi_getpciinfo_ioctl(struct pqi_ctrl_info *ctrl_info,
+ 	pciinfo.dev_fn = pci_dev->devfn;
+ 	subsystem_vendor = pci_dev->subsystem_vendor;
+ 	subsystem_device = pci_dev->subsystem_device;
+-	pciinfo.board_id = ((subsystem_device << 16) & 0xffff0000) |
+-		subsystem_vendor;
++	pciinfo.board_id = ((subsystem_device << 16) & 0xffff0000) | subsystem_vendor;
+ 
+ 	if (copy_to_user(arg, &pciinfo, sizeof(pciinfo)))
+ 		return -EFAULT;
+@@ -6295,8 +6292,7 @@ static ssize_t pqi_unique_id_show(struct device *dev,
+ 
+ 	device = sdev->hostdata;
+ 	if (!device) {
 -		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock,
 -			flags);
--
--		if (!device)
--			break;
--
--		if (pqi_is_device_added(device))
--			pqi_remove_device(ctrl_info, device);
--		pqi_free_device(device);
--	}
--}
--
- static int pqi_scan_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- {
- 	int rc = 0;
-@@ -5873,6 +5842,31 @@ static int pqi_slave_configure(struct scsi_device *sdev)
- 	return 0;
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6333,8 +6329,7 @@ static ssize_t pqi_lunid_show(struct device *dev,
+ 
+ 	device = sdev->hostdata;
+ 	if (!device) {
+-		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock,
+-			flags);
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6369,8 +6364,7 @@ static ssize_t pqi_path_info_show(struct device *dev,
+ 
+ 	device = sdev->hostdata;
+ 	if (!device) {
+-		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock,
+-			flags);
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6446,9 +6440,8 @@ static ssize_t pqi_sas_address_show(struct device *dev,
+ 	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
+ 
+ 	device = sdev->hostdata;
+-	if (pqi_is_logical_device(device)) {
+-		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock,
+-			flags);
++	if (!device || !pqi_is_device_with_sas_address(device)) {
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -6473,6 +6466,11 @@ static ssize_t pqi_ssd_smart_path_enabled_show(struct device *dev,
+ 	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
+ 
+ 	device = sdev->hostdata;
++	if (!device) {
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
++		return -ENODEV;
++	}
++
+ 	buffer[0] = device->raid_bypass_enabled ? '1' : '0';
+ 	buffer[1] = '\n';
+ 	buffer[2] = '\0';
+@@ -6497,6 +6495,10 @@ static ssize_t pqi_raid_level_show(struct device *dev,
+ 	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
+ 
+ 	device = sdev->hostdata;
++	if (!device) {
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
++		return -ENODEV;
++	}
+ 
+ 	if (pqi_is_logical_device(device))
+ 		raid_level = pqi_raid_level_to_string(device->raid_level);
+@@ -6508,13 +6510,40 @@ static ssize_t pqi_raid_level_show(struct device *dev,
+ 	return snprintf(buffer, PAGE_SIZE, "%s\n", raid_level);
  }
  
-+static void pqi_slave_destroy(struct scsi_device *sdev)
++static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
++	struct device_attribute *attr, char *buffer)
 +{
-+	unsigned long flags;
-+	struct pqi_scsi_dev *device;
 +	struct pqi_ctrl_info *ctrl_info;
++	struct scsi_device *sdev;
++	struct pqi_scsi_dev *device;
++	unsigned long flags;
++	int raid_bypass_cnt;
 +
++	sdev = to_scsi_device(dev);
 +	ctrl_info = shost_to_hba(sdev->host);
 +
 +	spin_lock_irqsave(&ctrl_info->scsi_device_list_lock, flags);
 +
 +	device = sdev->hostdata;
-+	if (device) {
-+		sdev->hostdata = NULL;
-+		if (!list_empty(&device->scsi_device_list_entry))
-+			list_del(&device->scsi_device_list_entry);
++	if (!device) {
++		spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
++		return -ENODEV;
 +	}
++
++	raid_bypass_cnt = atomic_read(&device->raid_bypass_cnt);
 +
 +	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
 +
-+	if (device) {
-+		pqi_dev_info(ctrl_info, "removed", device);
-+		pqi_free_device(device);
-+	}
++	return snprintf(buffer, PAGE_SIZE, "0x%x\n", raid_bypass_cnt);
 +}
 +
- static int pqi_getpciinfo_ioctl(struct pqi_ctrl_info *ctrl_info,
- 	void __user *arg)
- {
-@@ -6544,6 +6538,7 @@ static struct scsi_host_template pqi_driver_template = {
- 	.ioctl = pqi_ioctl,
- 	.slave_alloc = pqi_slave_alloc,
- 	.slave_configure = pqi_slave_configure,
-+	.slave_destroy = pqi_slave_destroy,
- 	.map_queues = pqi_map_queues,
- 	.sdev_attrs = pqi_sdev_attrs,
- 	.shost_attrs = pqi_shost_attrs,
-@@ -7630,7 +7625,6 @@ static void pqi_remove_ctrl(struct pqi_ctrl_info *ctrl_info)
- {
- 	pqi_cancel_rescan_worker(ctrl_info);
- 	pqi_cancel_update_time_worker(ctrl_info);
--	pqi_remove_all_scsi_devices(ctrl_info);
- 	pqi_unregister_scsi(ctrl_info);
- 	if (ctrl_info->pqi_mode_enabled)
- 		pqi_revert_to_sis_mode(ctrl_info);
+ static DEVICE_ATTR(lunid, 0444, pqi_lunid_show, NULL);
+ static DEVICE_ATTR(unique_id, 0444, pqi_unique_id_show, NULL);
+ static DEVICE_ATTR(path_info, 0444, pqi_path_info_show, NULL);
+ static DEVICE_ATTR(sas_address, 0444, pqi_sas_address_show, NULL);
+-static DEVICE_ATTR(ssd_smart_path_enabled, 0444,
+-	pqi_ssd_smart_path_enabled_show, NULL);
++static DEVICE_ATTR(ssd_smart_path_enabled, 0444, pqi_ssd_smart_path_enabled_show, NULL);
+ static DEVICE_ATTR(raid_level, 0444, pqi_raid_level_show, NULL);
++static DEVICE_ATTR(raid_bypass_cnt, 0444, pqi_raid_bypass_cnt_show, NULL);
+ 
+ static struct device_attribute *pqi_sdev_attrs[] = {
+ 	&dev_attr_lunid,
+@@ -6523,6 +6552,7 @@ static struct device_attribute *pqi_sdev_attrs[] = {
+ 	&dev_attr_sas_address,
+ 	&dev_attr_ssd_smart_path_enabled,
+ 	&dev_attr_raid_level,
++	&dev_attr_raid_bypass_cnt,
+ 	NULL
+ };
+ 
+@@ -8539,8 +8569,7 @@ static int __init pqi_init(void)
+ 
+ 	pr_info(DRIVER_NAME "\n");
+ 
+-	pqi_sas_transport_template =
+-		sas_attach_transport(&pqi_sas_transport_functions);
++	pqi_sas_transport_template = sas_attach_transport(&pqi_sas_transport_functions);
+ 	if (!pqi_sas_transport_template)
+ 		return -ENODEV;
+ 
 
