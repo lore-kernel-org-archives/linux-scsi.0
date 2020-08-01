@@ -7,41 +7,44 @@ X-Spam-Status: No, score=-9.4 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 561CAC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat,  1 Aug 2020 07:51:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BAE6C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  1 Aug 2020 07:59:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E7542076C
-	for <linux-scsi@archiver.kernel.org>; Sat,  1 Aug 2020 07:51:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7174D2076C
+	for <linux-scsi@archiver.kernel.org>; Sat,  1 Aug 2020 07:59:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727984AbgHAHvq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 1 Aug 2020 03:51:46 -0400
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:33796 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725876AbgHAHvp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2020 03:51:45 -0400
-Received: by mail-lf1-f68.google.com with SMTP id d2so12370360lfj.1;
-        Sat, 01 Aug 2020 00:51:43 -0700 (PDT)
+        id S1726888AbgHAH7C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 1 Aug 2020 03:59:02 -0400
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:41686 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726338AbgHAH7C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2020 03:59:02 -0400
+Received: by mail-lj1-f195.google.com with SMTP id s16so19447266ljc.8;
+        Sat, 01 Aug 2020 00:58:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:references:from:autocrypt:subject
+        h=x-gm-message-state:subject:from:to:cc:references:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=D61n9PHvtCBq5d0zkEOp5P+qElAFgL6TZOSItQN+fNw=;
-        b=unv+3hObHZgB8yP54vrmdlrM5+vvC/+ZSqriaEhK5XwdL1PHyi/b/EHxLpS4kKSKsH
-         UgExMTZIHOICVh78QwCh+nrKWyQAtXhZqciPFsQohnaaRL9Qf4zNW8ldfKIuCvbIS+fn
-         Gki8Q8p3/vLgCDSqxMDvsYrfK5d9VevRKgYQuywiZLqGpXhBykrz5Hz+znPanHrz5faR
-         O0zFSRLF3uHUbhtHvq3Z+6rU3SfZv81aq+z9bs9oZ44rznM0i3PhhzXm+CtIJGamrEu+
-         +bL1dBFj30W4nwbQ3hJyFa3j6E0eNmoQ8YvzR9HaUkFbWQ/1PU2Vw83MoVrGDa2VUfMb
-         0jTg==
-X-Gm-Message-State: AOAM530KuTlQhykItj1h7RihGdN8U8OFdSvwUKbyTBLULou5aZHr0Y9J
-        QymElmSvh9Xodzh2VIXX31B4uB9p1QI=
-X-Google-Smtp-Source: ABdhPJyRt9uBN3vXuSGE3KryvOBUshX9Od19rYUUPa7syKRl0bFLN+nsKTZrr9W3SyBgh2qForVNUg==
-X-Received: by 2002:ac2:4d31:: with SMTP id h17mr3695345lfk.144.1596268301922;
-        Sat, 01 Aug 2020 00:51:41 -0700 (PDT)
+        bh=EFbGqOOdeXwP67nMuLpqONcvXNcyDROXgQaj7SZmhps=;
+        b=ESStQoqU1ajH/dVcA43QAeXriKlUEm5nS+LwdNOS807W1yiuc2PHWthp+ZgLhFAU2n
+         uJjV/9yNnTBpOthnSmQKn+QVMIJTKmivYes47XsRUqOWoKgAWowBBA1hGkwvhRJu5IzH
+         aI/2qEnP+BnqrDcrJdzkHJy2yESa+/NuZZmIfZhUB+/y7WeMWVRaldniHIXe7oA5Vued
+         CNJrXbBtDQ+5qjsH3mZE1k1lsbvubnbrsb/qmSyOw5XMDzBQDT5ZC9fW8vV6S0HRaAs6
+         wmxF8IWtTRXCZR1e7cycz62wtEAFmxHK5+nLZwOH9Y5QdSTUiiWgxMFZKAh8ODT3943+
+         ZhUg==
+X-Gm-Message-State: AOAM533h0dwaUIwpKWuarTKuHidhtp1iVWExYNYj0YiAPuYkfi1FMjW3
+        ISX3wKzzK1vptp4qRPNr4NbhcJXdSoc=
+X-Google-Smtp-Source: ABdhPJyF7h+z1lcy8CIfsddNfsQnYDmk9V6G18KIM38XE6TpPNgkKB9gjRMI9FFEKNrmfMBuwMBfVQ==
+X-Received: by 2002:a2e:9f4e:: with SMTP id v14mr3695470ljk.72.1596268738539;
+        Sat, 01 Aug 2020 00:58:58 -0700 (PDT)
 Received: from [10.68.32.192] (broadband-37-110-38-130.ip.moscow.rt.ru. [37.110.38.130])
-        by smtp.gmail.com with ESMTPSA id t22sm2515675lfr.12.2020.08.01.00.51.41
+        by smtp.gmail.com with ESMTPSA id t18sm2507673lfb.69.2020.08.01.00.58.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 01 Aug 2020 00:51:41 -0700 (PDT)
+        Sat, 01 Aug 2020 00:58:57 -0700 (PDT)
+Subject: Re: [PATCH] scsi: libcxgbi: use kvzalloc instead of opencoded
+ kzalloc/vzalloc
+From:   Denis Efremov <efremov@linux.com>
 To:     Joe Perches <joe@perches.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
@@ -50,7 +53,7 @@ References: <20200731215524.14295-1-efremov@linux.com>
  <33d943d2b83f17371df09b5962c856ea2d894954.camel@perches.com>
  <70fb8220-2102-adb5-bbe6-9c2ea74a0623@linux.com>
  <8638183f559c0f8f8d377bd0a6c91903b2c588df.camel@perches.com>
-From:   Denis Efremov <efremov@linux.com>
+ <c5a18804-3236-9688-2a3c-68184f0dd9e8@linux.com>
 Autocrypt: addr=efremov@linux.com; keydata=
  mQINBFsJUXwBEADDnzbOGE/X5ZdHqpK/kNmR7AY39b/rR+2Wm/VbQHV+jpGk8ZL07iOWnVe1
  ZInSp3Ze+scB4ZK+y48z0YDvKUU3L85Nb31UASB2bgWIV+8tmW4kV8a2PosqIc4wp4/Qa2A/
@@ -94,17 +97,15 @@ Autocrypt: addr=efremov@linux.com; keydata=
  EahrGMfRngbdp/mKs9aBR56ECMfFFUPyI3VJsNbgpcIJjV/0N+JdJKQpJ/4uQ2zNm0wH/RU8
  CRJvEwtKemX6fp/zLI36Gvz8zJIjSBIEqCb7vdgvWarksrhmi6/Jay5zRZ03+k6YwiqgX8t7
  ANwvYa1h1dQ36OiTqm1cIxRCGl4wrypOVGx3OjCar7sBLD+NkwO4RaqFvdv0xuuy4x01VnOF
-Subject: Re: [PATCH] scsi: libcxgbi: use kvzalloc instead of opencoded
- kzalloc/vzalloc
-Message-ID: <c5a18804-3236-9688-2a3c-68184f0dd9e8@linux.com>
-Date:   Sat, 1 Aug 2020 10:51:40 +0300
+Message-ID: <47da22c0-d641-e94f-d38e-8af225ca115a@linux.com>
+Date:   Sat, 1 Aug 2020 10:58:56 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <8638183f559c0f8f8d377bd0a6c91903b2c588df.camel@perches.com>
+In-Reply-To: <c5a18804-3236-9688-2a3c-68184f0dd9e8@linux.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -112,70 +113,76 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-On 8/1/20 1:24 AM, Joe Perches wrote:
-> On Sat, 2020-08-01 at 01:10 +0300, Denis Efremov wrote:
->>
->> On 8/1/20 12:58 AM, Joe Perches wrote:
->>> On Sat, 2020-08-01 at 00:55 +0300, Denis Efremov wrote:
->>>> Remove cxgbi_alloc_big_mem(), cxgbi_free_big_mem() functions
->>>> and use kvzalloc/kvfree instead.
->>>
->>> Sensible, thanks.
->>>
->>>> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
->>> []
->>>> @@ -77,9 +77,9 @@ int cxgbi_device_portmap_create(struct cxgbi_device *cdev, unsigned int base,
->>>>  {
->>>>  	struct cxgbi_ports_map *pmap = &cdev->pmap;
->>>>  
->>>> -	pmap->port_csk = cxgbi_alloc_big_mem(max_conn *
->>>> -					     sizeof(struct cxgbi_sock *),
->>>> -					     GFP_KERNEL);
->>>> +	pmap->port_csk = kvzalloc(array_size(max_conn,
->>>> +					     sizeof(struct cxgbi_sock *)),
->>>> +				  GFP_KERNEL);
->>>
->>> missing __GFP_NOWARN
->>>
->>
->> kvmalloc_node adds __GFP_NOWARN internally to kmalloc call
->> https://elixir.bootlin.com/linux/v5.8-rc4/source/mm/util.c#L568
+On 8/1/20 10:51 AM, Denis Efremov wrote:
 > 
-> Only when there's a fallback, and the fallback does not.
+> 
+> On 8/1/20 1:24 AM, Joe Perches wrote:
+>> On Sat, 2020-08-01 at 01:10 +0300, Denis Efremov wrote:
+>>>
+>>> On 8/1/20 12:58 AM, Joe Perches wrote:
+>>>> On Sat, 2020-08-01 at 00:55 +0300, Denis Efremov wrote:
+>>>>> Remove cxgbi_alloc_big_mem(), cxgbi_free_big_mem() functions
+>>>>> and use kvzalloc/kvfree instead.
+>>>>
+>>>> Sensible, thanks.
+>>>>
+>>>>> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+>>>> []
+>>>>> @@ -77,9 +77,9 @@ int cxgbi_device_portmap_create(struct cxgbi_device *cdev, unsigned int base,
+>>>>>  {
+>>>>>  	struct cxgbi_ports_map *pmap = &cdev->pmap;
+>>>>>  
+>>>>> -	pmap->port_csk = cxgbi_alloc_big_mem(max_conn *
+>>>>> -					     sizeof(struct cxgbi_sock *),
+>>>>> -					     GFP_KERNEL);
+>>>>> +	pmap->port_csk = kvzalloc(array_size(max_conn,
+>>>>> +					     sizeof(struct cxgbi_sock *)),
+>>>>> +				  GFP_KERNEL);
+>>>>
+>>>> missing __GFP_NOWARN
+>>>>
+>>>
+>>> kvmalloc_node adds __GFP_NOWARN internally to kmalloc call
+>>> https://elixir.bootlin.com/linux/v5.8-rc4/source/mm/util.c#L568
+>>
+>> Only when there's a fallback, and the fallback does not.
+>>
+> 
+> Sorry, Joe, I don't understand why do we need to add __GFP_NOWARN here.
+> 
+> We use GFP_KERNEL for allocation. cxgbi_alloc_big_mem adds __GFP_NOWARN only to kzalloc().
+> kvzalloc is: kvmalloc(size, flags | __GFP_ZERO)
+> kvmalloc is: kvmalloc_node(size, flags, NUMA_NO_NODE)
+> kvmalloc_node: 
+> 	if ((flags & GFP_KERNEL) != GFP_KERNEL)           // false, flags == GFP_KERNEL|__GFP_ZERO
+> 		return kmalloc_node(size, flags, node);
+> 
+> 	if (size > PAGE_SIZE) {
+> 		kmalloc_flags |= __GFP_NOWARN;            // add __GFP_NOWARN for "big" allocations
+> 
+> 		if (!(kmalloc_flags & __GFP_RETRY_MAYFAIL))
+> 			kmalloc_flags |= __GFP_NORETRY;
+> 	}
+> 
+> 	// kmalloc_flags == GFP_KERNEL|__GFP_ZERO|__GFP_NOWARN if size > PAGE_SIZE
+> 	ret = kmalloc_node(size, kmalloc_flags, node);    
+> 
+> 	if (ret || size <= PAGE_SIZE)
+> 		return ret;
+> 
+> 	// flags == GFP_KERNEL|__GFP_ZERO
+> 	return __vmalloc_node(size, 1, flags, node,
+> 			__builtin_return_address(0));
+> 
+> So, to my understanding the difference is only that cxgbi_alloc_big_mem adds __GFP_NOWARN
+> to kzalloc unconditionally, kvzalloc adds __GFP_NOWARN to kmalloc_node if size > PAGE_SIZE.
+> We use: max_conn * sizeof(struct cxgbi_sock *) in allocation. max_conn can be either
+> CXGBI_MAX_CONN or CXGB4I_MAX_CONN. CXGBI_MAX_CONN == 16384, CXGB4I_MAX_CONN == 16384.
+> Thus the allocation is bigger than PAGE_SIZE and kvmalloc_node adds __GFP_NOWARN to the
+> kmalloc_node call. Maybe I missed something?
 > 
 
-Sorry, Joe, I don't understand why do we need to add __GFP_NOWARN here.
-
-We use GFP_KERNEL for allocation. cxgbi_alloc_big_mem adds __GFP_NOWARN only to kzalloc().
-kvzalloc is: kvmalloc(size, flags | __GFP_ZERO)
-kvmalloc is: kvmalloc_node(size, flags, NUMA_NO_NODE)
-kvmalloc_node: 
-	if ((flags & GFP_KERNEL) != GFP_KERNEL)           // false, flags == GFP_KERNEL|__GFP_ZERO
-		return kmalloc_node(size, flags, node);
-
-	if (size > PAGE_SIZE) {
-		kmalloc_flags |= __GFP_NOWARN;            // add __GFP_NOWARN for "big" allocations
-
-		if (!(kmalloc_flags & __GFP_RETRY_MAYFAIL))
-			kmalloc_flags |= __GFP_NORETRY;
-	}
-
-	// kmalloc_flags == GFP_KERNEL|__GFP_ZERO|__GFP_NOWARN if size > PAGE_SIZE
-	ret = kmalloc_node(size, kmalloc_flags, node);    
-
-	if (ret || size <= PAGE_SIZE)
-		return ret;
-
-	// flags == GFP_KERNEL|__GFP_ZERO
-	return __vmalloc_node(size, 1, flags, node,
-			__builtin_return_address(0));
-
-So, to my understanding the difference is only that cxgbi_alloc_big_mem adds __GFP_NOWARN
-to kzalloc unconditionally, kvzalloc adds __GFP_NOWARN to kmalloc_node if size > PAGE_SIZE.
-We use: max_conn * sizeof(struct cxgbi_sock *) in allocation. max_conn can be either
-CXGBI_MAX_CONN or CXGB4I_MAX_CONN. CXGBI_MAX_CONN == 16384, CXGB4I_MAX_CONN == 16384.
-Thus the allocation is bigger than PAGE_SIZE and kvmalloc_node adds __GFP_NOWARN to the
-kmalloc_node call. Maybe I missed something?
-
-Thanks,
-Denis
+Of course max_conn can be smaller than CXGBI_MAX_CONN and CXGB4I_MAX_CONN and size < PAGE_SIZE.
+However, it's by design not to warn on "small" allocations in kvmalloc_node and it will not even
+try to call __vmalloc_node if "small" allocation will fail with kmalloc_node. I think that this
+behavior fits the cxgbi_device_portmap_create() context call.
