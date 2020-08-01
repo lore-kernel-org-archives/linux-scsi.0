@@ -1,189 +1,181 @@
-Return-Path: <SRS0=WBt/=BK=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=6ycn=BL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 327DCC433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 23:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 561CAC433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  1 Aug 2020 07:51:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05D9D206DA
-	for <linux-scsi@archiver.kernel.org>; Fri, 31 Jul 2020 23:17:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lz98SC0u"
+	by mail.kernel.org (Postfix) with ESMTP id 3E7542076C
+	for <linux-scsi@archiver.kernel.org>; Sat,  1 Aug 2020 07:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726806AbgGaXRM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 31 Jul 2020 19:17:12 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:63105 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726099AbgGaXRM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 31 Jul 2020 19:17:12 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1596237430; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Type: MIME-Version: Sender;
- bh=1zsJhq/goG5jxNbt1w2QIRo86ReaWeQ6QGLznVlr6Jk=; b=lz98SC0u/J/t0okJYxrcYKTqfSF/zZabwQFLWHF2UIyVrode7uCSfIUS2tsSCtpk/pGqkgAE
- nC4v5Zw4f4bN5nElJFdIFyfWBR/+Qp/ufl3SfTRJIq1jm1o5oTaQryyQJ/VCPEJ/FgUdi3bG
- 4V5mgUeRFBU36UAjcTNBW02t4No=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n19.prod.us-west-2.postgun.com with SMTP id
- 5f24a676e7a13aa2041a72e2 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 31 Jul 2020 23:17:10
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2CA68C433B1; Fri, 31 Jul 2020 23:17:10 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BF5A5C433CA;
-        Fri, 31 Jul 2020 23:17:08 +0000 (UTC)
+        id S1727984AbgHAHvq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 1 Aug 2020 03:51:46 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:33796 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725876AbgHAHvp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Aug 2020 03:51:45 -0400
+Received: by mail-lf1-f68.google.com with SMTP id d2so12370360lfj.1;
+        Sat, 01 Aug 2020 00:51:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:references:from:autocrypt:subject
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=D61n9PHvtCBq5d0zkEOp5P+qElAFgL6TZOSItQN+fNw=;
+        b=unv+3hObHZgB8yP54vrmdlrM5+vvC/+ZSqriaEhK5XwdL1PHyi/b/EHxLpS4kKSKsH
+         UgExMTZIHOICVh78QwCh+nrKWyQAtXhZqciPFsQohnaaRL9Qf4zNW8ldfKIuCvbIS+fn
+         Gki8Q8p3/vLgCDSqxMDvsYrfK5d9VevRKgYQuywiZLqGpXhBykrz5Hz+znPanHrz5faR
+         O0zFSRLF3uHUbhtHvq3Z+6rU3SfZv81aq+z9bs9oZ44rznM0i3PhhzXm+CtIJGamrEu+
+         +bL1dBFj30W4nwbQ3hJyFa3j6E0eNmoQ8YvzR9HaUkFbWQ/1PU2Vw83MoVrGDa2VUfMb
+         0jTg==
+X-Gm-Message-State: AOAM530KuTlQhykItj1h7RihGdN8U8OFdSvwUKbyTBLULou5aZHr0Y9J
+        QymElmSvh9Xodzh2VIXX31B4uB9p1QI=
+X-Google-Smtp-Source: ABdhPJyRt9uBN3vXuSGE3KryvOBUshX9Od19rYUUPa7syKRl0bFLN+nsKTZrr9W3SyBgh2qForVNUg==
+X-Received: by 2002:ac2:4d31:: with SMTP id h17mr3695345lfk.144.1596268301922;
+        Sat, 01 Aug 2020 00:51:41 -0700 (PDT)
+Received: from [10.68.32.192] (broadband-37-110-38-130.ip.moscow.rt.ru. [37.110.38.130])
+        by smtp.gmail.com with ESMTPSA id t22sm2515675lfr.12.2020.08.01.00.51.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 01 Aug 2020 00:51:41 -0700 (PDT)
+To:     Joe Perches <joe@perches.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200731215524.14295-1-efremov@linux.com>
+ <33d943d2b83f17371df09b5962c856ea2d894954.camel@perches.com>
+ <70fb8220-2102-adb5-bbe6-9c2ea74a0623@linux.com>
+ <8638183f559c0f8f8d377bd0a6c91903b2c588df.camel@perches.com>
+From:   Denis Efremov <efremov@linux.com>
+Autocrypt: addr=efremov@linux.com; keydata=
+ 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
+Subject: Re: [PATCH] scsi: libcxgbi: use kvzalloc instead of opencoded
+ kzalloc/vzalloc
+Message-ID: <c5a18804-3236-9688-2a3c-68184f0dd9e8@linux.com>
+Date:   Sat, 1 Aug 2020 10:51:40 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_5c3e63ea4c7ecc7e8e595b7c9d9d7f3e"
-Date:   Sat, 01 Aug 2020 07:17:08 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <Avri.Altman@wdc.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, alim.akhtar@samsung.com,
-        jejb@linux.ibm.com, beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com
-Subject: Re: [PATCH v4] scsi: ufs: Cleanup completed request without interrupt
- notification
-In-Reply-To: <f45c6c47-ffc5-3f8e-3234-9e5989dbf996@acm.org>
-References: <20200724140246.19434-1-stanley.chu@mediatek.com>
- <SN6PR04MB4640B5FC06968244DDACB8BEFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
- <1596159018.17247.53.camel@mtkswgap22>
- <97f1dfb0-41b6-0249-3e82-cae480b0efb6@acm.org>
- <8b0a158a7c3ee2165e09290996521ffc@codeaurora.org>
- <f45c6c47-ffc5-3f8e-3234-9e5989dbf996@acm.org>
-Message-ID: <548b602daa1e15415625cb8d1f81a208@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+In-Reply-To: <8638183f559c0f8f8d377bd0a6c91903b2c588df.camel@perches.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---=_5c3e63ea4c7ecc7e8e595b7c9d9d7f3e
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
 
-Hi Bart,
 
-On 2020-08-01 00:51, Bart Van Assche wrote:
-> On 2020-07-31 01:00, Can Guo wrote:
->> AFAIK, sychronization of scsi_done is not a problem here, because scsi
->> layer
->> use the atomic state, namely SCMD_STATE_COMPLETE, of a scsi cmd to 
->> prevent
->> the concurrency of abort and real completion of it.
->> 
->> Check func scsi_times_out(), hope it helps.
->> 
->> enum blk_eh_timer_return scsi_times_out(struct request *req)
->> {
->> ...
->>         if (rtn == BLK_EH_DONE) {
->>                 /*
->>                  * Set the command to complete first in order to 
->> prevent
->> a real
->>                  * completion from releasing the command while error
->> handling
->>                  * is using it. If the command was already completed,
->> then the
->>                  * lower level driver beat the timeout handler, and it
->> is safe
->>                  * to return without escalating error recovery.
->>                  *
->>                  * If timeout handling lost the race to a real
->> completion, the
->>                  * block layer may ignore that due to a fake timeout
->> injection,
->>                  * so return RESET_TIMER to allow error handling 
->> another
->> shot
->>                  * at this command.
->>                  */
->>                 if (test_and_set_bit(SCMD_STATE_COMPLETE, 
->> &scmd->state))
->>                         return BLK_EH_RESET_TIMER;
->>                 if (scsi_abort_command(scmd) != SUCCESS) {
->>                         set_host_byte(scmd, DID_TIME_OUT);
->>                         scsi_eh_scmd_add(scmd);
->>                 }
->>         }
->> }
+On 8/1/20 1:24 AM, Joe Perches wrote:
+> On Sat, 2020-08-01 at 01:10 +0300, Denis Efremov wrote:
+>>
+>> On 8/1/20 12:58 AM, Joe Perches wrote:
+>>> On Sat, 2020-08-01 at 00:55 +0300, Denis Efremov wrote:
+>>>> Remove cxgbi_alloc_big_mem(), cxgbi_free_big_mem() functions
+>>>> and use kvzalloc/kvfree instead.
+>>>
+>>> Sensible, thanks.
+>>>
+>>>> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+>>> []
+>>>> @@ -77,9 +77,9 @@ int cxgbi_device_portmap_create(struct cxgbi_device *cdev, unsigned int base,
+>>>>  {
+>>>>  	struct cxgbi_ports_map *pmap = &cdev->pmap;
+>>>>  
+>>>> -	pmap->port_csk = cxgbi_alloc_big_mem(max_conn *
+>>>> -					     sizeof(struct cxgbi_sock *),
+>>>> -					     GFP_KERNEL);
+>>>> +	pmap->port_csk = kvzalloc(array_size(max_conn,
+>>>> +					     sizeof(struct cxgbi_sock *)),
+>>>> +				  GFP_KERNEL);
+>>>
+>>> missing __GFP_NOWARN
+>>>
+>>
+>> kvmalloc_node adds __GFP_NOWARN internally to kmalloc call
+>> https://elixir.bootlin.com/linux/v5.8-rc4/source/mm/util.c#L568
 > 
-> I am familiar with this mechanism. My concern is that both the regular
-> completion path and the abort handler must call scsi_dma_unmap() before
-> calling cmd->scsi_done(cmd). I don't see how
-> test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state) could prevent that
-> the regular completion path and the abort handler call scsi_dma_unmap()
-> concurrently since both calls happen before the SCMD_STATE_COMPLETE bit
-> is set?
+> Only when there's a fallback, and the fallback does not.
 > 
-> Thanks,
-> 
-> Bart.
 
-For scsi_dma_unmap() part, that is true - we should make it serialized 
-with
-any other completion paths. I've found it during my fault injection 
-test, so
-I've made a patch to fix it, but it only comes in my next error recovery
-enhancement patch series. Please check the attachment.
+Sorry, Joe, I don't understand why do we need to add __GFP_NOWARN here.
+
+We use GFP_KERNEL for allocation. cxgbi_alloc_big_mem adds __GFP_NOWARN only to kzalloc().
+kvzalloc is: kvmalloc(size, flags | __GFP_ZERO)
+kvmalloc is: kvmalloc_node(size, flags, NUMA_NO_NODE)
+kvmalloc_node: 
+	if ((flags & GFP_KERNEL) != GFP_KERNEL)           // false, flags == GFP_KERNEL|__GFP_ZERO
+		return kmalloc_node(size, flags, node);
+
+	if (size > PAGE_SIZE) {
+		kmalloc_flags |= __GFP_NOWARN;            // add __GFP_NOWARN for "big" allocations
+
+		if (!(kmalloc_flags & __GFP_RETRY_MAYFAIL))
+			kmalloc_flags |= __GFP_NORETRY;
+	}
+
+	// kmalloc_flags == GFP_KERNEL|__GFP_ZERO|__GFP_NOWARN if size > PAGE_SIZE
+	ret = kmalloc_node(size, kmalloc_flags, node);    
+
+	if (ret || size <= PAGE_SIZE)
+		return ret;
+
+	// flags == GFP_KERNEL|__GFP_ZERO
+	return __vmalloc_node(size, 1, flags, node,
+			__builtin_return_address(0));
+
+So, to my understanding the difference is only that cxgbi_alloc_big_mem adds __GFP_NOWARN
+to kzalloc unconditionally, kvzalloc adds __GFP_NOWARN to kmalloc_node if size > PAGE_SIZE.
+We use: max_conn * sizeof(struct cxgbi_sock *) in allocation. max_conn can be either
+CXGBI_MAX_CONN or CXGB4I_MAX_CONN. CXGBI_MAX_CONN == 16384, CXGB4I_MAX_CONN == 16384.
+Thus the allocation is bigger than PAGE_SIZE and kvmalloc_node adds __GFP_NOWARN to the
+kmalloc_node call. Maybe I missed something?
 
 Thanks,
-
-Can Guo.
-
-
---=_5c3e63ea4c7ecc7e8e595b7c9d9d7f3e
-Content-Transfer-Encoding: base64
-Content-Type: text/x-diff;
- name=0005-scsi-ufs-Properly-release-resources-if-a-task-is-abo.patch
-Content-Disposition: attachment;
- filename=0005-scsi-ufs-Properly-release-resources-if-a-task-is-abo.patch;
- size=1473
-
-RnJvbSBlZjg3ODMyYjVmNmZmNmFmMjlhYzliYWM3ZmRlYTFlMjQ1YzgxNjJiIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJvcmEub3JnPgpEYXRlOiBT
-dW4sIDcgSnVuIDIwMjAgMTI6MTY6MDEgKzA4MDAKU3ViamVjdDogW1BBVENIIDUvNl0gc2NzaTog
-dWZzOiBQcm9wZXJseSByZWxlYXNlIHJlc291cmNlcyBpZiBhIHRhc2sgaXMKIGFib3J0ZWQgc3Vj
-Y2Vzc2Z1bGx5CgpJbiBjdXJyZW50IFVGUyB0YXNrIGFib3J0IGhvb2ssIG5hbWVseSB1ZnNoY2Rf
-YWJvcnQoKSwgaWYgYSB0YXNrIGlzCmFib3J0ZWQgc3VjY2Vzc2Z1bGx5LCBjbG9jayBzY2FsaW5n
-IGJ1c3kgdGltZSBzdGF0aXN0aWNzIGlzIG5vdCB1cGRhdGVkCmFuZCwgbW9zdCBpbXBvcnRhbnQs
-IGNsa19nYXRpbmcuYWN0aXZlX3JlcXMgaXMgbm90IGRlY3JlYXNlZCwgd2hpY2ggbWFrZXMKY2xr
-X2dhdGluZy5hY3RpdmVfcmVxcyBzdGF5IGFib3ZlIHplcm8gZm9yZXZlciwgbWVhbmluZyBjbG9j
-ayBnYXRpbmcgd291bGQKbmV2ZXIgaGFwcGVuLiBUbyBmaXggaXQsIGluc3RlYWQgb2YgcmVsZWFz
-aW5nIHJlc291cmNlcyAibWFubnVhbGx5IiwgdXNlCnRoZSBleGlzdGluZyBmdW5jIF9fdWZzaGNk
-X3RyYW5zZmVyX3JlcV9jb21wbCgpLgoKQ2hhbmdlLUlkOiBJYThjYzQ5NmY1M2JiNDI4ZWFjN2Nm
-YTc4NGU0MzFhMmIzN2E0NTM3NQpTaWduZWQtb2ZmLWJ5OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJv
-cmEub3JnPgoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJz
-L3Njc2kvdWZzL3Vmc2hjZC5jCmluZGV4IDNjNDZmNzQuLjg3YjkxMWYgMTAwNjQ0Ci0tLSBhL2Ry
-aXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMKKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYwpA
-QCAtNjg3NiwxNiArNjg3NiwxMCBAQCBzdGF0aWMgaW50IHVmc2hjZF9hYm9ydChzdHJ1Y3Qgc2Nz
-aV9jbW5kICpjbWQpCiAJCWdvdG8gb3V0OwogCX0KIAotCXNjc2lfZG1hX3VubWFwKGNtZCk7Ci0K
-IAlzcGluX2xvY2tfaXJxc2F2ZShob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsKLQl1ZnNoY2Rfb3V0
-c3RhbmRpbmdfcmVxX2NsZWFyKGhiYSwgdGFnKTsKLQloYmEtPmxyYlt0YWddLmNtZCA9IE5VTEw7
-CisJX191ZnNoY2RfdHJhbnNmZXJfcmVxX2NvbXBsKGhiYSwgKDFVTCA8PCB0YWcpKTsKIAlzcGlu
-X3VubG9ja19pcnFyZXN0b3JlKGhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOwogCi0JY2xlYXJfYml0
-X3VubG9jayh0YWcsICZoYmEtPmxyYl9pbl91c2UpOwotCXdha2VfdXAoJmhiYS0+ZGV2X2NtZC50
-YWdfd3EpOwotCiBvdXQ6CiAJaWYgKCFlcnIpIHsKIAkJZXJyID0gU1VDQ0VTUzsKLS0gClF1YWxj
-b21tIElubm92YXRpb24gQ2VudGVyLCBJbmMuIGlzIGEgbWVtYmVyIG9mIENvZGUgQXVyb3JhIEZv
-cnVtLCBhIExpbnV4IEZvdW5kYXRpb24gQ29sbGFib3JhdGl2ZSBQcm9qZWN0LgoK
---=_5c3e63ea4c7ecc7e8e595b7c9d9d7f3e--
+Denis
