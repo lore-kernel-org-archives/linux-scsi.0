@@ -4,85 +4,63 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8727C433E3
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Aug 2020 11:07:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14EA6C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Aug 2020 11:16:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A76EC207DF
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Aug 2020 11:07:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F03B8207DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Aug 2020 11:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727972AbgHBLH1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Aug 2020 07:07:27 -0400
-Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:60691 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726765AbgHBLH0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Aug 2020 07:07:26 -0400
-Received: from localhost.localdomain ([93.22.148.198])
-        by mwinf5d84 with ME
-        id Ab7P230064H42jh03b7PEJ; Sun, 02 Aug 2020 13:07:24 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Sun, 02 Aug 2020 13:07:24 +0200
-X-ME-IP: 93.22.148.198
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     QLogic-Storage-Upstream@qlogic.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, vikas.chaudhary@qlogic.com,
-        lalit.chandivade@qlogic.com, michaelc@cs.wisc.edu,
-        JBottomley@Parallels.com
+        id S1728185AbgHBLPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Aug 2020 07:15:38 -0400
+Received: from out30-42.freemail.mail.aliyun.com ([115.124.30.42]:35906 "EHLO
+        out30-42.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728132AbgHBLPg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Aug 2020 07:15:36 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04407;MF=tianjia.zhang@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0U4TpvXJ_1596366931;
+Received: from localhost(mailfrom:tianjia.zhang@linux.alibaba.com fp:SMTPD_---0U4TpvXJ_1596366931)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Sun, 02 Aug 2020 19:15:32 +0800
+From:   Tianjia Zhang <tianjia.zhang@linux.alibaba.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        tianjia.zhang@linux.alibaba.com, arkadiusz@drabczyk.org,
+        praveenm@chelsio.com, davem@davemloft.net
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: qla2xxx: Fix the size used in a 'dma_free_coherent()' call
-Date:   Sun,  2 Aug 2020 13:07:21 +0200
-Message-Id: <20200802110721.677707-1-christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        tianjia.zhang@alibaba.com
+Subject: [PATCH] scsi: csiostor: Fix wrong return value in csio_hw_prep_fw()
+Date:   Sun,  2 Aug 2020 19:15:31 +0800
+Message-Id: <20200802111531.5065-1-tianjia.zhang@linux.alibaba.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update the size used in 'dma_free_coherent()' in order to match the one
-used in the corresponding 'dma_alloc_coherent()'.
+On an error exit path, a negative error code should be returned
+instead of a positive return value.
 
-While at it, remove a memset after a call to 'dma_alloc_coherent()'.
-This is useless since
-commit 518a2f1925c3 ("dma-mapping: zero memory returned from dma_alloc_*")
-
-Fixes: 4161cee52df8 ("[SCSI] qla4xxx: Add host statistics support")
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Fixes: f40e74ffa3de4 ("csiostor:firmware upgrade fix")
+Cc: Praveen Madhavan <praveenm@chelsio.com>
+Signed-off-by: Tianjia Zhang <tianjia.zhang@linux.alibaba.com>
 ---
-The memset has been added in the same commit, so I think it is ok to
-remove it in the same path.
----
- drivers/scsi/qla2xxx/qla_mbx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/csiostor/csio_hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 73883435ab58..a43d7229f9a1 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4933,8 +4933,6 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
- 		return QLA_MEMORY_ALLOC_FAILED;
+diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
+index 950f9cdf0577..5d0f42031d12 100644
+--- a/drivers/scsi/csiostor/csio_hw.c
++++ b/drivers/scsi/csiostor/csio_hw.c
+@@ -2384,7 +2384,7 @@ static int csio_hw_prep_fw(struct csio_hw *hw, struct fw_info *fw_info,
+ 			FW_HDR_FW_VER_MICRO_G(c), FW_HDR_FW_VER_BUILD_G(c),
+ 			FW_HDR_FW_VER_MAJOR_G(k), FW_HDR_FW_VER_MINOR_G(k),
+ 			FW_HDR_FW_VER_MICRO_G(k), FW_HDR_FW_VER_BUILD_G(k));
+-		ret = EINVAL;
++		ret = -EINVAL;
+ 		goto bye;
  	}
  
--	memset(els_cmd_map, 0, ELS_CMD_MAP_SIZE);
--
- 	/* List of Purex ELS */
- 	cmd_opcode[0] = ELS_FPIN;
- 	cmd_opcode[1] = ELS_RDP;
-@@ -4966,7 +4964,7 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
- 		    "Done %s.\n", __func__);
- 	}
- 
--	dma_free_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
-+	dma_free_coherent(&ha->pdev->dev, ELS_CMD_MAP_SIZE,
- 	   els_cmd_map, els_cmd_map_dma);
- 
- 	return rval;
 -- 
-2.25.1
+2.26.2
 
