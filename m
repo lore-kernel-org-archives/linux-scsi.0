@@ -6,88 +6,111 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63127C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 03:08:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B1DC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 03:12:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5101920775
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 03:08:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFF9020738
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 03:12:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727005AbgHCDIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Aug 2020 23:08:23 -0400
-Received: from zg8tmtm5lju5ljm3lje2naaa.icoremail.net ([139.59.37.164]:55046
-        "HELO zg8tmtm5lju5ljm3lje2naaa.icoremail.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S1725820AbgHCDIW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Aug 2020 23:08:22 -0400
-Received: from [166.111.139.118] (unknown [166.111.139.118])
-        by app-1 (Coremail) with SMTP id DwQGZQDn76OMfydfEpXxAw--.14644S2;
-        Mon, 03 Aug 2020 11:07:58 +0800 (CST)
-Subject: Re: [PATCH] scsi: esas2r: fix possible buffer overflow caused by bad
- DMA value in esas2r_process_fs_ioctl()
-To:     jejb@linux.ibm.com, linuxdrivers@attotech.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200802152145.4387-1-baijiaju@tsinghua.edu.cn>
- <1596383240.4087.8.camel@linux.ibm.com>
-From:   Jia-Ju Bai <baijiaju@tsinghua.edu.cn>
-Message-ID: <81351eab-69c0-89dc-4e58-146a005b5929@tsinghua.edu.cn>
-Date:   Mon, 3 Aug 2020 11:07:57 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1727092AbgHCDMH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Aug 2020 23:12:07 -0400
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:50894 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726497AbgHCDMG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Aug 2020 23:12:06 -0400
+Received: by mail-pj1-f68.google.com with SMTP id e4so6950430pjd.0;
+        Sun, 02 Aug 2020 20:12:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=nf3xdvRmh1qxPw9xaehxZVxmJAEdSCtmDvi8x8RGLZA=;
+        b=qjEKE6sHu829+ot5rhDLdrx3zplfNv5pYUAKVvMCUojkm2VxUT6Paw0hGLGXfKQQEp
+         nZbfkKtQwp+U2iMnHq2E/KZSLnQQrRuj/QeUQGG5rHl0Dd/+xxHKeWSwkYCLTE8TDksm
+         aurEtrMNDqFwAzPfiZbTz7vadtJ2WhriVaFbqpC4iz+HmkIdp/MDkz93/VkK9kZzNI9P
+         bFzVdBniCKZnjdkLyRd07NpFa4VxHm1MyV25nlEIxhzj1ihbi+2KFJelubj5nuIV0P2n
+         3Wgme9wakjOEvWCJfeaZ8f91jqBszWr3qgRdEb7aStPTH9qQTfDUKONIKZUK89+YdeSd
+         D7cA==
+X-Gm-Message-State: AOAM530VeAhM9rtjEi6GU5g12RsNjRRvgsk35k6B36PraRslbtOrOK+K
+        A/yz56SgSM3YwQeeJrn4E8g=
+X-Google-Smtp-Source: ABdhPJywN7xeGc+45Wflkb5T3yOEfJSEcVl2zr7qKaDme2kp5gFS9wAygKUggiTM15WxJAV+n+gG8g==
+X-Received: by 2002:a17:902:6bc2:: with SMTP id m2mr12379497plt.119.1596424325859;
+        Sun, 02 Aug 2020 20:12:05 -0700 (PDT)
+Received: from [192.168.3.219] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id y10sm15060677pjv.55.2020.08.02.20.12.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 02 Aug 2020 20:12:04 -0700 (PDT)
+Subject: Re: [PATCH v4] scsi: ufs: Cleanup completed request without interrupt
+ notification
+To:     Can Guo <cang@codeaurora.org>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <Avri.Altman@wdc.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, alim.akhtar@samsung.com,
+        jejb@linux.ibm.com, beanhuo@micron.com, asutoshd@codeaurora.org,
+        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
+        chaotian.jing@mediatek.com, cc.chou@mediatek.com
+References: <20200724140246.19434-1-stanley.chu@mediatek.com>
+ <SN6PR04MB4640B5FC06968244DDACB8BEFC720@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <1596159018.17247.53.camel@mtkswgap22>
+ <97f1dfb0-41b6-0249-3e82-cae480b0efb6@acm.org>
+ <8b0a158a7c3ee2165e09290996521ffc@codeaurora.org>
+ <f45c6c47-ffc5-3f8e-3234-9e5989dbf996@acm.org>
+ <548b602daa1e15415625cb8d1f81a208@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <80f5e213-502b-3532-e782-6f26a778274e@acm.org>
+Date:   Sun, 2 Aug 2020 20:12:03 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <1596383240.4087.8.camel@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <548b602daa1e15415625cb8d1f81a208@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-CM-TRANSID: DwQGZQDn76OMfydfEpXxAw--.14644S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7AF4DWw1xWF15Cr1DuryDWrg_yoW8Jw1kpr
-        WF93yrKr1qyr1Iqasavw1xXa4rtFZ5tF98GF15XFyv9wn8Cr1fAryrKFs8A34UW3s7Jw45
-        WaykXr97ta9FyFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvIb7Iv0xC_tr1lb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I2
-        0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-        A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xII
-        jxv20xvEc7CjxVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I
-        8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
-        64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8Jw
-        Am72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzVAYIcxG8wCY
-        02Avz4vE14v_Gr4l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-        Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r12
-        6r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-        kF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE
-        14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-        9x07jc6pPUUUUU=
-X-CM-SenderInfo: xedlyxhdmxq3pvlqwxlxdovvfxof0/
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-07-31 16:17, Can Guo wrote:
+> For scsi_dma_unmap() part, that is true - we should make it serialized with
+> any other completion paths. I've found it during my fault injection test, so
+> I've made a patch to fix it, but it only comes in my next error recovery
+> enhancement patch series. Please check the attachment.
 
+Hi Can,
 
-On 2020/8/2 23:47, James Bottomley wrote:
-> On Sun, 2020-08-02 at 23:21 +0800, Jia-Ju Bai wrote:
->> Because "fs" is mapped to DMA, its data can be modified at anytime by
->> malicious or malfunctioning hardware. In this case, the check
->> "if (fsc->command >= cmdcnt)" can be passed, and then "fsc->command"
->> can be modified by hardware to cause buffer overflow.
-> This threat model seems to be completely bogus.  If the device were
-> malicious it would have given the mailbox incorrect values a priori ...
-> it wouldn't give the correct value then update it.  For most systems we
-> do assume correct operation of the device but if there's a worry about
-> incorrect operation, the usual approach is to guard the device with an
-> IOMMU which, again, would make this sort of fix unnecessary because the
-> IOMMU will have removed access to the buffer after the command
-> completed.
+It is not clear to me how that patch serializes scsi_dma_unmap() against
+other completion paths? Doesn't the regular completion path call
+__ufshcd_transfer_req_compl() without holding the host lock?
 
-Thanks for the reply :)
+Thanks,
 
-In my opinion, IOMMU is used to prevent the hardware from accessing 
-arbitrary memory addresses, but it cannot prevent the hardware from 
-writing a bad value into a valid memory address.
-For this reason, I think that the hardware can normally access 
-"fsc->command" and modify it into arbitrary value at any time, because 
-IOMMU considers the address of "fsc->command" is valid for the hardware.
-
-
-Best wishes,
-Jia-Ju Bai
+Bart.
 
