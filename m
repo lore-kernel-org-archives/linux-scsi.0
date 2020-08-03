@@ -2,566 +2,319 @@ Return-Path: <SRS0=9rmj=BN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4458C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 681FEC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:39:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6F19204EC
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:19:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D372207FC
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:39:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="f6Be9sdV"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="UvT6lNMd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726276AbgHCMTz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 08:19:55 -0400
-Received: from esa4.microchip.iphmx.com ([68.232.154.123]:9682 "EHLO
-        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726370AbgHCMTu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 08:19:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1596457187; x=1627993187;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=3qxrhM4iZmlsH3E771Q0lD5fpo9bMdPiU4AkyOrti5U=;
-  b=f6Be9sdVCQmmZtEuotZrAjMVFCeRFb3Q8N5FNfRJA6Ye+bexSSZZj07i
-   xiWinldRZdiVEW/H11sZEn+jjRVerFKBDtPIrYuUSzKmBAPwMQBaN3jzW
-   gcE4Bl93TyzXYgTtFEXPJq58rmdZ65vt2Yeekm6ICZLJu2LEhdolvrURn
-   w4ye3EfF2jmskkVP8uvpMh0QfdvUDzHkbp8NAz2Fa/KlQxPZPwDAHM78M
-   FbKXctCXEkKJTbU9QtRLkonThEM2zk5Syer+QNRQtidJe7cEAeWXz4mrG
-   9DI6SFFdgou1la1oq/FrnjoO7Izu5dPTEWIi9oya5yTQKLHAgVjjqTSN7
-   g==;
-IronPort-SDR: xWJKmXciTq9pZ5uWdEwuok0yXv7FFq+yKQ9jFB6wEo4864xamZL+rF4DZxYl2ASgaY5AYgAmpK
- vyZPFvbu23E50+qK+hhfbFrx6L5rC686P16zDxVw0l5Y6lpJ4NzQb2lSd7o9JOhAIRzvE2y8Ph
- tgdYrhcPYsLHRL1w4EMKbKdKutFTALVs1owD4UKgu+IjheeB2CvjCIAvnLEqgnJUAtRgsbm/QF
- ddkCW3C3SXrcM0jbFyYlg1gVrvRO8oOZ+mWMPsZQbD7b4d1XliFbvfyvHzwyW905ky5ql3FJbP
- fBU=
-X-IronPort-AV: E=Sophos;i="5.75,430,1589266800"; 
-   d="scan'208";a="82175017"
-Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 03 Aug 2020 05:19:47 -0700
-Received: from AVMBX1.microsemi.net (10.100.34.31) by AVMBX3.microsemi.net
- (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3; Mon, 3 Aug 2020
- 05:19:47 -0700
-Received: from localhost (10.41.130.51) by avmbx1.microsemi.net (10.100.34.31)
- with Microsoft SMTP Server id 15.1.1979.3 via Frontend Transport; Mon, 3 Aug
- 2020 05:19:46 -0700
-From:   Deepak Ukey <deepak.ukey@microchip.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <deepak.ukey@microchip.com>,
-        <jinpu.wang@profitbricks.com>, <martin.petersen@oracle.com>,
-        <yuuzheng@google.com>, <auradkar@google.com>,
-        <vishakhavc@google.com>, <bjashnani@google.com>,
-        <radha@google.com>, <akshatzen@google.com>
-Subject: [PATCH V5 2/2] pm80xx : Staggered spin up support.
-Date:   Mon, 3 Aug 2020 17:59:23 +0530
-Message-ID: <20200803122923.6826-3-deepak.ukey@microchip.com>
-X-Mailer: git-send-email 2.19.0-rc1
-In-Reply-To: <20200803122923.6826-1-deepak.ukey@microchip.com>
-References: <20200803122923.6826-1-deepak.ukey@microchip.com>
+        id S1728723AbgHCMjP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 08:39:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43468 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729493AbgHCMdy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 08:33:54 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 599B2C06174A
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2020 05:33:54 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id w9so38405366ejc.8
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2020 05:33:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dQZJ5W1ldTMdGSowwrNj4CzycQueifyNn8gfxnI7lKE=;
+        b=UvT6lNMdaI48JEFe8etrWqlvYFqfDmZlVx89JzbZJQG8LFrQRLukVJO8pesdz5gHK+
+         uL+7PdM71gHz/gJD/FmJqqJdT7GxKY74M9I0Bn127I7dSpviS7IcBOeiQr9e1Em7GJr7
+         1rx4K4rhRBKWJRy6JqYgg7TxrTczJNAjMo9TWzNiiNn+Cy5JMu5K7MDiO/NXzuxoK1qb
+         APKQ5N1LZvDyi8vazxCJRNP4jKnZdtS7VH+wyEuCE15z5NQ4c9ucMkv0pw3t6hCTvvrQ
+         6jAYMrjkRZ/XqhcBsPa8HYphzLc9gWAg2BkrkSiYiNzmJzpl4Hr4/7Eyg7dZ0mKhE53D
+         0xlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dQZJ5W1ldTMdGSowwrNj4CzycQueifyNn8gfxnI7lKE=;
+        b=rkAkRgJxfEfq2or6SgpxLwEKEUdDZnzDI/4KVBgG2NMoMU0gJhPSObF84+VcSSLxcn
+         JfDHt9DOMZW116LudHHHZUm8m/kuycxZRCm4d4szInglJ//GV0PCjfU88pF6kWWz3l+8
+         eUPB4Q6+FSckaeNl4JvgAVeaREJZOEfIfUHR48hNRywDnFoprK8MNrzgoiVBkjiXWDiN
+         yWX8+Uy6gSQM7WbMxkA2YIO0sOr+TNndl0sbd65GWPbsCV10docdCjtUaziyZCh2++Vm
+         WJ7XlIoN4mie+44lyjP1Nxo9vidg3+CgiJRiVgPSdFZOPpp/XQ4WZXQPBDTd3cfYP1rJ
+         rCiw==
+X-Gm-Message-State: AOAM531wEyuO88jvzUDAeQKzLp4FyxaWGrtU2rYK18Gpz1zDqXB3psEI
+        g+6DzLBOmafn0g9t3NRBqZ3FPPNWdcMGXMWCr3NoVQ==
+X-Google-Smtp-Source: ABdhPJyQXal0CkEJfy9mY2hNFvZ2zMM3msGqKf1a4xc4SZZXw0W1ybJGHkuPRZ3I7I4E+qfGCGBVRCo56roRSDC8/fs=
+X-Received: by 2002:a17:906:9399:: with SMTP id l25mr16241672ejx.212.1596458032936;
+ Mon, 03 Aug 2020 05:33:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+References: <20200803122923.6826-1-deepak.ukey@microchip.com> <20200803122923.6826-2-deepak.ukey@microchip.com>
+In-Reply-To: <20200803122923.6826-2-deepak.ukey@microchip.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Mon, 3 Aug 2020 14:33:42 +0200
+Message-ID: <CAMGffE=UO0EABZqO6KqS_GoBD4e2qFq3mDmbGbGHebrECFUuXA@mail.gmail.com>
+Subject: Re: [PATCH V5 1/2] pm80xx : Support for get phy profile functionality.
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>,
+        Jinpu Wang <jinpu.wang@profitbricks.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        yuuzheng@google.com, Vikram Auradkar <auradkar@google.com>,
+        vishakhavc@google.com, bjashnani@google.com,
+        Radha Ramachandran <radha@google.com>, akshatzen@google.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Viswas G <Viswas.G@microchip.com>
-
-As a part of drive discovery, driver will initaite the drive spin up.
-If all drives do spin up together, it will result in large power
-consumption. To reduce the power consumption, driver provide an option
-to make a small group of drives (say 3 or 4 drives together) to do the
-spin up. The delay between two spin up group and no of drives to
-spin up (group) can be programmed by the customer in seeprom and
-driver will use it to control the spinup.
-
-Signed-off-by: Deepak Ukey <Deepak.Ukey@microchip.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
-Signed-off-by: kernel test robot <lkp@intel.com>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
----
- drivers/scsi/pm8001/pm8001_defs.h |   3 +
- drivers/scsi/pm8001/pm8001_hwi.c  |  14 ++++-
- drivers/scsi/pm8001/pm8001_init.c |  53 +++++++++++++++-
- drivers/scsi/pm8001/pm8001_sas.c  |  36 ++++++++++-
- drivers/scsi/pm8001/pm8001_sas.h  |  13 ++++
- drivers/scsi/pm8001/pm80xx_hwi.c  | 125 +++++++++++++++++++++++++++++++++-----
- 6 files changed, 221 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
-index 1c7f15fd69ce..fd700ce5e80c 100644
---- a/drivers/scsi/pm8001/pm8001_defs.h
-+++ b/drivers/scsi/pm8001/pm8001_defs.h
-@@ -101,6 +101,9 @@ enum port_type {
- #define USI_MAX_MEMCNT		(PI + PM8001_MAX_SPCV_OUTB_NUM)
- #define	CONFIG_SCSI_PM8001_MAX_DMA_SG	528
- #define PM8001_MAX_DMA_SG	CONFIG_SCSI_PM8001_MAX_DMA_SG
-+#define SPINUP_DELAY_OFFSET		0x890 /* 0x890 - delay */
-+#define SPINUP_GROUP_OFFSET		0x892 /* 0x892 - group */
-+#define PM80XX_MAX_SPINUP_DELAY	10000 /* 10000 ms */
- enum memory_region_num {
- 	AAP1 = 0x0, /* application acceleration processor */
- 	IOP,	    /* IO processor */
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index fb9848e1d481..6378c8e8d6b2 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3237,7 +3237,7 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		(struct local_phy_ctl_resp *)(piomb + 4);
- 	u32 status = le32_to_cpu(pPayload->status);
- 	u32 phy_id = le32_to_cpu(pPayload->phyop_phyid) & ID_BITS;
--	u32 phy_op = le32_to_cpu(pPayload->phyop_phyid) & OP_BITS;
-+	u32 phy_op = (le32_to_cpu(pPayload->phyop_phyid) & OP_BITS) >> 8;
- 	tag = le32_to_cpu(pPayload->tag);
- 	if (status != 0) {
- 		PM8001_MSG_DBG(pm8001_ha,
-@@ -3248,6 +3248,13 @@ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("%x phy execute %x phy op success!\n",
- 			phy_id, phy_op));
- 		pm8001_ha->phy[phy_id].reset_success = true;
-+		if (phy_op == PHY_NOTIFY_ENABLE_SPINUP &&
-+			!pm8001_ha->reset_in_progress){
-+			/* Notify the sas layer to discover
-+			 * the the whole sas domain
-+			 */
-+			pm8001_bytes_dmaed(pm8001_ha, phy_id);
-+		}
- 	}
- 	if (pm8001_ha->phy[phy_id].enable_completion) {
- 		complete(pm8001_ha->phy[phy_id].enable_completion);
-@@ -3643,7 +3650,10 @@ int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("DEVREG_FAILURE_DEVICE_TYPE_NOT_SUPPORTED\n"));
- 		break;
- 	}
--	complete(pm8001_dev->dcompletion);
-+	if (pm8001_dev->dcompletion) {
-+		complete(pm8001_dev->dcompletion);
-+		pm8001_dev->dcompletion = NULL;
-+	}
- 	ccb->task = NULL;
- 	ccb->ccb_tag = 0xFFFFFFFF;
- 	pm8001_tag_free(pm8001_ha, htag);
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index ff65d6cf6d31..05f1b355d68e 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -55,6 +55,12 @@ MODULE_PARM_DESC(link_rate, "Enable link rate.\n"
- 		" 4: Link rate 6.0G\n"
- 		" 8: Link rate 12.0G\n");
- 
-+bool staggered_spinup;
-+module_param(staggered_spinup, bool, 0644);
-+MODULE_PARM_DESC(staggered_spinup, "enable the staggered spinup feature.\n"
-+		" 0/N: false\n"
-+		" 1/Y: true\n");
-+
- static struct scsi_transport_template *pm8001_stt;
- 
- /**
-@@ -165,7 +171,7 @@ static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
- 
- 	if (!pm8001_ha)
- 		return;
--
-+	del_timer(&pm8001_ha->spinup_timer);
- 	for (i = 0; i < USI_MAX_MEMCNT; i++) {
- 		if (pm8001_ha->memoryMap.region[i].virt_ptr != NULL) {
- 			dma_free_coherent(&pm8001_ha->pdev->dev,
-@@ -489,6 +495,7 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
- 	pm8001_ha->shost = shost;
- 	pm8001_ha->id = pm8001_id++;
- 	pm8001_ha->logging_level = logging_level;
-+	pm8001_ha->staggered_spinup = staggered_spinup;
- 	pm8001_ha->non_fatal_count = 0;
- 	if (link_rate >= 1 && link_rate <= 15)
- 		pm8001_ha->link_rate = (link_rate << 8);
-@@ -622,7 +629,8 @@ static void  pm8001_post_sas_ha_init(struct Scsi_Host *shost,
-  * Currently we just set the fixed SAS address to our HBA,for manufacture,
-  * it should read from the EEPROM
-  */
--static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
-+static void pm8001_init_sas_add_and_spinup_config
-+		(struct pm8001_hba_info *pm8001_ha)
- {
- 	u8 i, j;
- 	u8 sas_add[8];
-@@ -708,6 +716,45 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- 	memcpy(pm8001_ha->sas_addr, &pm8001_ha->phy[0].dev_sas_addr,
- 		SAS_ADDR_SIZE);
- #endif
-+
-+	/* For spinning up drives in group */
-+	pm8001_ha->phy_head = -1;
-+	pm8001_ha->phy_tail = -1;
-+
-+	for (i = 0; i < PM8001_MAX_PHYS; i++)
-+		pm8001_ha->phy_up[i] = 0xff;
-+
-+	timer_setup(&pm8001_ha->spinup_timer,
-+		(void *)pm8001_spinup_timedout, 0);
-+
-+	if (pm8001_ha->staggered_spinup == true) {
-+		/* spinup interval in unit of 100 ms */
-+		pm8001_ha->spinup_interval =
-+			payload.func_specific[SPINUP_DELAY_OFFSET] * 100;
-+		pm8001_ha->spinup_group =
-+			payload.func_specific[SPINUP_GROUP_OFFSET];
-+	} else {
-+		pm8001_ha->spinup_interval = 0;
-+		pm8001_ha->spinup_group = pm8001_ha->chip->n_phy;
-+	}
-+
-+	if (pm8001_ha->spinup_interval > PM80XX_MAX_SPINUP_DELAY) {
-+		PM8001_DISC_DBG(pm8001_ha, pm8001_printk(
-+		"Spinup delay from Seeprom is %d ms, reset to %d ms\n",
-+		pm8001_ha->spinup_interval * 100, PM80XX_MAX_SPINUP_DELAY));
-+		pm8001_ha->spinup_interval = PM80XX_MAX_SPINUP_DELAY;
-+	}
-+
-+	if (pm8001_ha->spinup_group > pm8001_ha->chip->n_phy) {
-+		PM8001_DISC_DBG(pm8001_ha, pm8001_printk(
-+		"Spinup group from Seeprom is %d, reset to %d\n",
-+		pm8001_ha->spinup_group, pm8001_ha->chip->n_phy));
-+		pm8001_ha->spinup_group = pm8001_ha->chip->n_phy;
-+	}
-+
-+	PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
-+		"Spinup interval : %d Spinup group %d\n",
-+		pm8001_ha->spinup_interval, pm8001_ha->spinup_group));
- }
- 
- /*
-@@ -1106,7 +1153,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
- 		pm80xx_set_thermal_config(pm8001_ha);
- 	}
- 
--	pm8001_init_sas_add(pm8001_ha);
-+	pm8001_init_sas_add_and_spinup_config(pm8001_ha);
- 	/* phy setting support for motherboard controller */
- 	if (pm8001_configure_phy_settings(pm8001_ha))
- 		goto err_out_shost;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index b7cbc312843e..cf1c5e68953b 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -265,14 +265,39 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- void pm8001_scan_start(struct Scsi_Host *shost)
- {
- 	int i;
-+	unsigned long lock_flags;
- 	struct pm8001_hba_info *pm8001_ha;
- 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	DECLARE_COMPLETION(comp);
- 	pm8001_ha = sha->lldd_ha;
- 	/* SAS_RE_INITIALIZATION not available in SPCv/ve */
- 	if (pm8001_ha->chip_id == chip_8001)
- 		PM8001_CHIP_DISP->sas_re_init_req(pm8001_ha);
--	for (i = 0; i < pm8001_ha->chip->n_phy; ++i)
--		PM8001_CHIP_DISP->phy_start_req(pm8001_ha, i);
-+
-+	if (pm8001_ha->pdev->device == 0x8001 ||
-+		pm8001_ha->pdev->device == 0x8081 ||
-+		(pm8001_ha->spinup_interval != 0)) {
-+		for (i = 0; i < pm8001_ha->chip->n_phy; ++i)
-+			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, i);
-+	} else {
-+		for (i = 0; i < pm8001_ha->chip->n_phy; ++i) {
-+			spin_lock_irqsave(&pm8001_ha->lock, lock_flags);
-+			pm8001_ha->phy_started = i;
-+			pm8001_ha->scan_completion = &comp;
-+			pm8001_ha->phystart_timedout = 1;
-+			spin_unlock_irqrestore(&pm8001_ha->lock, lock_flags);
-+			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, i);
-+			wait_for_completion_timeout(&comp,
-+				msecs_to_jiffies(500));
-+			if (pm8001_ha->phystart_timedout)
-+				PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
-+				"Timeout happened for phyid = %d\n", i));
-+		}
-+		spin_lock_irqsave(&pm8001_ha->lock, lock_flags);
-+		pm8001_ha->phy_started = -1;
-+		pm8001_ha->scan_completion = NULL;
-+		spin_unlock_irqrestore(&pm8001_ha->lock, lock_flags);
-+	}
- }
- 
- int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
-@@ -662,6 +687,13 @@ static int pm8001_dev_found_notify(struct domain_device *dev)
- 			flag = 1; /* directly sata */
- 		}
- 	} /*register this device to HBA*/
-+
-+	if (pm8001_ha->phy_started == pm8001_device->attached_phy) {
-+		if (pm8001_ha->scan_completion != NULL) {
-+			pm8001_ha->phystart_timedout = 0;
-+			complete(pm8001_ha->scan_completion);
-+		}
-+	}
- 	PM8001_DISC_DBG(pm8001_ha, pm8001_printk("Found device\n"));
- 	PM8001_CHIP_DISP->reg_dev_req(pm8001_ha, pm8001_device, flag);
- 	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 488af79dec47..d2d73cba7f41 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -261,6 +261,7 @@ struct pm8001_port {
- 	u8			port_attached;
- 	u16			wide_port_phymap;
- 	u8			port_state;
-+	u8			port_id;
- 	struct list_head	list;
- };
- 
-@@ -566,6 +567,17 @@ struct pm8001_hba_info {
- 	u32			reset_in_progress;
- 	u32			non_fatal_count;
- 	u32			non_fatal_read_length;
-+	bool			staggered_spinup;
-+	struct completion	*scan_completion;
-+	u32			phy_started;
-+	u16			phystart_timedout;
-+	int			spinup_group;
-+	int			spinup_interval;
-+	int			phy_up[PM8001_MAX_PHYS];
-+	struct timer_list	spinup_timer;
-+	int			phy_head;
-+	int			phy_tail;
-+	spinlock_t		phy_q_lock;
- };
- 
- struct pm8001_work {
-@@ -684,6 +696,7 @@ void pm8001_open_reject_retry(
- int pm8001_mem_alloc(struct pci_dev *pdev, void **virt_addr,
- 	dma_addr_t *pphys_addr, u32 *pphys_addr_hi, u32 *pphys_addr_lo,
- 	u32 mem_size, u32 align);
-+void pm8001_spinup_timedout(struct timer_list *t);
- 
- void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha);
- int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index baccb082e65f..92145109ab4e 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -46,6 +46,72 @@
- #define SMP_DIRECT 1
- #define SMP_INDIRECT 2
- 
-+static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
-+	u32 phyId, u32 phy_op);
-+
-+static void  pm8001_queue_phyup(struct pm8001_hba_info *pm8001_ha, int phy_id)
-+{
-+	int i;
-+
-+	if (pm8001_ha->phy_head == -1) {
-+		pm8001_ha->phy_head = pm8001_ha->phy_tail = 0;
-+	} else {
-+		/* If the phy id is already queued , discard the phy up */
-+		for (i = 0; i < pm8001_ha->chip->n_phy; i++)
-+			if (pm8001_ha->phy_up[i] == phy_id)
-+				return;
-+		pm8001_ha->phy_tail =
-+			(pm8001_ha->phy_tail + 1) % PM8001_MAX_PHYS;
-+	}
-+	pm8001_ha->phy_up[pm8001_ha->phy_tail] = phy_id;
-+}
-+
-+void pm8001_spinup_timedout(struct timer_list *t)
-+{
-+	struct pm8001_hba_info *pm8001_ha =
-+			from_timer(pm8001_ha, t, spinup_timer);
-+	struct pm8001_phy *phy;
-+	unsigned long flags;
-+	int i = 0, phy_id = 0xff;
-+
-+	spin_lock_irqsave(&pm8001_ha->phy_q_lock, flags);
-+
-+	do {
-+		if (i++ >= pm8001_ha->spinup_group && pm8001_ha->spinup_group)
-+			break;
-+
-+		if (pm8001_ha->phy_head == -1 || pm8001_ha->reset_in_progress)
-+			break; /* No phys to spinup */
-+
-+		phy_id = pm8001_ha->phy_up[pm8001_ha->phy_head];
-+		/* Processed phy id, make it invalid 0xff for
-+		 * checking repeated phy ups
-+		 */
-+		pm8001_ha->phy_up[pm8001_ha->phy_head] = 0xff;
-+		if (pm8001_ha->phy_head == pm8001_ha->phy_tail) {
-+			pm8001_ha->phy_head = pm8001_ha->phy_tail = -1;
-+		} else {
-+			pm8001_ha->phy_head =
-+				(pm8001_ha->phy_head+1) % PM8001_MAX_PHYS;
-+		}
-+
-+		if (phy_id == 0xff)
-+			break;
-+		phy = &pm8001_ha->phy[phy_id];
-+		if (phy->phy_type & PORT_TYPE_SAS) {
-+			PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
-+					PHY_NOTIFY_ENABLE_SPINUP);
-+		} else {
-+			PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
-+					PHY_LINK_RESET);
-+		}
-+	} while (1);
-+
-+	if (pm8001_ha->phy_head != -1 && pm8001_ha->spinup_group)
-+		mod_timer(&pm8001_ha->spinup_timer,
-+			jiffies + msecs_to_jiffies(pm8001_ha->spinup_interval));
-+	spin_unlock_irqrestore(&pm8001_ha->phy_q_lock, flags);
-+}
- 
- int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shift_value)
- {
-@@ -3302,11 +3368,12 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	port->port_state = portstate;
- 	port->wide_port_phymap |= (1U << phy_id);
- 	phy->phy_state = PHY_STATE_LINK_UP_SPCV;
-+	phy->port = port;
- 	PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
- 		"portid:%d; phyid:%d; linkrate:%d; "
- 		"portstate:%x; devicetype:%x\n",
- 		port_id, phy_id, link_rate, portstate, deviceType));
--
-+	port->port_id = port_id;
- 	switch (deviceType) {
- 	case SAS_PHY_UNUSED:
- 		PM8001_MSG_DBG(pm8001_ha,
-@@ -3314,8 +3381,12 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		break;
- 	case SAS_END_DEVICE:
- 		PM8001_MSG_DBG(pm8001_ha, pm8001_printk("end device.\n"));
--		pm80xx_chip_phy_ctl_req(pm8001_ha, phy_id,
--			PHY_NOTIFY_ENABLE_SPINUP);
-+		spin_lock_irqsave(&pm8001_ha->phy_q_lock, flags);
-+		pm8001_queue_phyup(pm8001_ha, phy_id);
-+		spin_unlock_irqrestore(&pm8001_ha->phy_q_lock, flags);
-+		if (!timer_pending(&pm8001_ha->spinup_timer))
-+			mod_timer(&pm8001_ha->spinup_timer,
-+			jiffies + msecs_to_jiffies(pm8001_ha->spinup_interval));
- 		port->port_attached = 1;
- 		pm8001_get_lrate_mode(phy, link_rate);
- 		break;
-@@ -3351,9 +3422,10 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	phy->frame_rcvd_size = sizeof(struct sas_identify_frame) - 4;
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
--	if (pm8001_ha->flags == PM8001F_RUN_TIME)
--		msleep(200);/*delay a moment to wait disk to spinup*/
--	pm8001_bytes_dmaed(pm8001_ha, phy_id);
-+	if (!pm8001_ha->reset_in_progress) {
-+		if (deviceType != SAS_END_DEVICE)
-+			pm8001_bytes_dmaed(pm8001_ha, phy_id);
-+	}
- }
- 
- /**
-@@ -3388,11 +3460,17 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	port->port_state = portstate;
- 	phy->phy_state = PHY_STATE_LINK_UP_SPCV;
- 	port->port_attached = 1;
-+	phy->port = port;
-+	port->port_id = port_id;
- 	pm8001_get_lrate_mode(phy, link_rate);
- 	phy->phy_type |= PORT_TYPE_SATA;
- 	phy->phy_attached = 1;
- 	phy->sas_phy.oob_mode = SATA_OOB_MODE;
--	sas_ha->notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE);
-+	if (!pm8001_ha->reset_in_progress) {
-+		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE);
-+	} else
-+		PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
-+			"HW_EVENT_PHY_UP: not notified to host\n"));
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
- 	memcpy(phy->frame_rcvd, ((u8 *)&pPayload->sata_fis - 4),
- 		sizeof(struct dev_to_host_fis));
-@@ -3401,7 +3479,8 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	phy->identify.device_type = SAS_SATA_DEV;
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
--	pm8001_bytes_dmaed(pm8001_ha, phy_id);
-+	if (!pm8001_ha->reset_in_progress)
-+		pm8001_bytes_dmaed(pm8001_ha, phy_id);
- }
- 
- /**
-@@ -3497,12 +3576,14 @@ static int mpi_phy_start_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 				status, phy_id));
- 	if (status == 0) {
- 		phy->phy_state = PHY_LINK_DOWN;
--		if (pm8001_ha->flags == PM8001F_RUN_TIME &&
--				phy->enable_completion != NULL) {
--			complete(phy->enable_completion);
--			phy->enable_completion = NULL;
--		}
- 	}
-+
-+	if (pm8001_ha->flags == PM8001F_RUN_TIME &&
-+		phy->enable_completion != NULL) {
-+		complete(phy->enable_completion);
-+		phy->enable_completion = NULL;
-+	}
-+
- 	return 0;
- 
- }
-@@ -3580,7 +3661,14 @@ static int mpi_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	case HW_EVENT_SATA_SPINUP_HOLD:
- 		PM8001_MSG_DBG(pm8001_ha,
- 			pm8001_printk("HW_EVENT_SATA_SPINUP_HOLD\n"));
--		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_SPINUP_HOLD);
-+		spin_lock_irqsave(&pm8001_ha->phy_q_lock, flags);
-+		pm8001_queue_phyup(pm8001_ha, phy_id);
-+		spin_unlock_irqrestore(&pm8001_ha->phy_q_lock, flags);
-+
-+		/* Start the timer if not started */
-+		if (!timer_pending(&pm8001_ha->spinup_timer))
-+			mod_timer(&pm8001_ha->spinup_timer,
-+			jiffies + msecs_to_jiffies(pm8001_ha->spinup_interval));
- 		break;
- 	case HW_EVENT_PHY_DOWN:
- 		PM8001_MSG_DBG(pm8001_ha,
-@@ -4893,7 +4981,7 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
- 	PM8001_INIT_DBG(pm8001_ha,
- 		pm8001_printk("PHY START REQ for phy_id %d\n", phy_id));
- 
--	payload.ase_sh_lm_slr_phyid = cpu_to_le32(SPINHOLD_DISABLE |
-+	payload.ase_sh_lm_slr_phyid = cpu_to_le32(SPINHOLD_ENABLE |
- 			LINKMODE_AUTO | pm8001_ha->link_rate | phy_id);
- 	/* SSC Disable and SAS Analog ST configuration */
- 	/**
-@@ -4955,6 +5043,8 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 	u16 ITNT = 2000;
- 	struct domain_device *dev = pm8001_dev->sas_device;
- 	struct domain_device *parent_dev = dev->parent;
-+	struct pm8001_phy *phy;
-+	struct pm8001_port *port;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 
- 	memset(&payload, 0, sizeof(payload));
-@@ -4986,8 +5076,11 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 	linkrate = (pm8001_dev->sas_device->linkrate < dev->port->linkrate) ?
- 			pm8001_dev->sas_device->linkrate : dev->port->linkrate;
- 
-+	phy = &pm8001_ha->phy[phy_id];
-+	port = phy->port;
-+
- 	payload.phyid_portid =
--		cpu_to_le32(((pm8001_dev->sas_device->port->id) & 0xFF) |
-+		cpu_to_le32(((port->port_id) & 0xFF) |
- 		((phy_id & 0xFF) << 8));
- 
- 	payload.dtype_dlr_mcn_ir_retry = cpu_to_le32((retryFlag & 0x01) |
--- 
-2.16.3
-
+On Mon, Aug 3, 2020 at 2:19 PM Deepak Ukey <deepak.ukey@microchip.com> wrote:
+>
+> From: Viswas G <Viswas.G@microchip.com>
+>
+> Added the support to get the phy profile which gives information
+> about the phy states, port and errors on phy.
+>
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_ctl.h  | 33 +++++++++++++++
+>  drivers/scsi/pm8001/pm8001_init.c |  2 +
+>  drivers/scsi/pm8001/pm8001_sas.h  |  5 +++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  | 88 ++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/pm8001/pm80xx_hwi.h  |  2 +
+>  5 files changed, 128 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
+> index d0d43a250b9e..29b3852cea2c 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.h
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.h
+> @@ -41,6 +41,39 @@
+>  #ifndef PM8001_CTL_H_INCLUDED
+>  #define PM8001_CTL_H_INCLUDED
+>
+> +#ifdef __LITTLE_ENDIAN_BITFIELD
+> +struct phy_status {
+> +       char            phy_id;
+> +       unsigned int    phy_state:4;
+> +       unsigned int    nlr:4;
+> +       unsigned int    plr:4;
+> +       unsigned int    reserved1:12;
+> +       unsigned char   port_id;
+> +       unsigned int    prts:4;
+> +       unsigned int    reserved2:20;
+> +} __packed;
+> +#else
+> +struct phy_status {
+> +       char            phy_id;
+> +       unsigned int    reserved:12; reserved1?
+> +       unsigned int    plr:4;
+> +       unsigned int    nlr:4;
+> +       unsigned int    phy_state:4;
+> +       unsigned char   port_id;
+> +       unsigned int    reserved:20; reserved2?
+> +       unsigned int    prts:4;
+> +} __packed;
+> +#endif
+> +
+> +struct phy_errcnt {
+> +       unsigned int    InvalidDword;
+> +       unsigned int    runningDisparityError;
+> +       unsigned int    codeViolation;
+> +       unsigned int    LossOfSyncDW;
+> +       unsigned int    phyResetProblem;
+> +       unsigned int    inboundCRCError;
+> +};
+> +
+>  #define IOCTL_BUF_SIZE         4096
+>  #define HEADER_LEN                     28
+>  #define SIZE_OFFSET                    16
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 9e99262a2b9d..ff65d6cf6d31 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -398,6 +398,8 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>                 pm8001_ha->ccb_info[i].task = NULL;
+>                 pm8001_ha->ccb_info[i].ccb_tag = 0xffffffff;
+>                 pm8001_ha->ccb_info[i].device = NULL;
+> +               pm8001_ha->ccb_info[i].completion = NULL;
+> +               pm8001_ha->ccb_info[i].resp_buf = NULL;
+>                 ++pm8001_ha->tags_num;
+>         }
+>         pm8001_ha->flags = PM8001F_INIT_TIME;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index ae7ba9b3c4bc..488af79dec47 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -56,6 +56,7 @@
+>  #include <scsi/sas_ata.h>
+>  #include <linux/atomic.h>
+>  #include "pm8001_defs.h"
+> +#include "pm8001_ctl.h"
+>
+>  #define DRV_NAME               "pm80xx"
+>  #define DRV_VERSION            "0.1.39"
+> @@ -244,6 +245,8 @@ struct pm8001_dispatch {
+>         int (*sas_diag_execute_req)(struct pm8001_hba_info *pm8001_ha,
+>                 u32 state);
+>         int (*sas_re_init_req)(struct pm8001_hba_info *pm8001_ha);
+> +       int (*get_phy_profile_req)(struct pm8001_hba_info *pm8001_ha,
+> +               int phy, int page, struct completion *comp, void *buf);
+>  };
+>
+>  struct pm8001_chip_info {
+> @@ -318,6 +321,8 @@ struct pm8001_ccb_info {
+>         struct pm8001_prd       buf_prd[PM8001_MAX_DMA_SG];
+>         struct fw_control_ex    *fw_control_context;
+>         u8                      open_retry;
+> +       struct completion       *completion;
+> +       void                    *resp_buf;
+>  };
+>
+>  struct mpi_mem {
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 4d205ebaee87..baccb082e65f 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3792,7 +3792,6 @@ static int mpi_set_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
+>         PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
+>                         "SET CONTROLLER RESP: status 0x%x qlfr_pgcd 0x%x\n",
+>                         status, err_qlfr_pgcd));
+> -
+>         return 0;
+>  }
+>
+> @@ -3818,9 +3817,63 @@ static int mpi_get_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
+>  static int mpi_get_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
+>                         void *piomb)
+>  {
+> +       u32 tag, page_code;
+> +       struct phy_status *phy_status, *phy_stat;
+> +       struct phy_errcnt *phy_err, *phy_err_cnt;
+> +       struct pm8001_ccb_info *ccb;
+> +       struct get_phy_profile_resp *pPayload =
+> +               (struct get_phy_profile_resp *)(piomb + 4);
+> +       u32 status = le32_to_cpu(pPayload->status);
+> +
+> +       page_code = (u8)((pPayload->ppc_phyid & 0xFF00) >> 8);
+> +
+>         PM8001_MSG_DBG(pm8001_ha,
+> -                       pm8001_printk(" pm80xx_addition_functionality\n"));
+> +               pm8001_printk(" pm80xx_addition_functionality\n"));
+> +       if (status) {
+> +               /* status is FAILED */
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
+> +                       "mpiGetPhyProfileReq failed  with status 0x%08x\n",
+> +                       status));
+> +       }
+>
+> +       tag = le32_to_cpu(pPayload->tag);
+> +       ccb = &pm8001_ha->ccb_info[tag];
+> +       if (ccb->completion != NULL) {
+> +               if (status) {
+> +                       /* signal fail status */
+> +                       memset(&ccb->resp_buf, 0xff, sizeof(ccb->resp_buf));
+> +               } else if (page_code == SAS_PHY_GENERAL_STATUS_PAGE) {
+> +                       phy_status = (struct phy_status *)ccb->resp_buf;
+> +                       phy_stat =
+> +                       (struct phy_status *)pPayload->ppc_specific_rsp;
+> +                       phy_status->phy_id =
+> +                               le32_to_cpu((__force __le32)phy_stat->phy_id);
+> +                       phy_status->phy_state =
+> +                               le32_to_cpu((__force __le32)phy_stat->phy_state);
+> +                       phy_status->plr =
+> +                               le32_to_cpu((__force __le32)phy_stat->plr);
+> +                       phy_status->nlr =
+> +                               le32_to_cpu((__force __le32)phy_stat->nlr);
+> +                       phy_status->port_id =
+> +                               le32_to_cpu((__force __le32)phy_stat->port_id);
+> +                       phy_status->prts =
+> +                               le32_to_cpu((__force __le32)phy_stat->prts);
+> +               } else if (page_code == SAS_PHY_ERR_COUNTERS_PAGE) {
+> +                       phy_err = (struct phy_errcnt *)ccb->resp_buf;
+> +                       phy_err_cnt =
+> +                       (struct phy_errcnt *)pPayload->ppc_specific_rsp;
+> +                       phy_err->InvalidDword =
+> +                       le32_to_cpu((__force __le32)phy_err_cnt->InvalidDword);
+> +                       phy_err->runningDisparityError = le32_to_cpu
+> +                       ((__force __le32)phy_err_cnt->runningDisparityError);
+> +                       phy_err->LossOfSyncDW = le32_to_cpu
+> +                       ((__force __le32)phy_err_cnt->LossOfSyncDW);
+> +                       phy_err->phyResetProblem = le32_to_cpu
+> +                       ((__force __le32)phy_err_cnt->phyResetProblem);
+> +               }
+> +               complete(ccb->completion);
+> +       }
+> +       pm8001_tag_free(pm8001_ha, tag);
+>         return 0;
+>  }
+>
+> @@ -5013,6 +5066,36 @@ pm80xx_chip_isr(struct pm8001_hba_info *pm8001_ha, u8 vec)
+>         return IRQ_HANDLED;
+>  }
+>
+> +static int pm8001_chip_get_phy_profile(struct pm8001_hba_info *pm8001_ha,
+> +       int phy_id, int page_code, struct completion *comp, void *buf)
+> +{
+> +       u32 tag;
+> +       struct get_phy_profile_req payload;
+> +       struct inbound_queue_table *circularQ;
+> +       struct pm8001_ccb_info *ccb;
+> +       int rc, ppc_phyid;
+> +       u32 opc = OPC_INB_GET_PHY_PROFILE;
+> +
+> +       memset(&payload, 0, sizeof(payload));
+> +
+> +       rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> +       if (rc)
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid tag\n"));
+> +
+> +       ccb = &pm8001_ha->ccb_info[tag];
+> +       ccb->completion = comp;
+> +       ccb->resp_buf = buf;
+> +       circularQ = &pm8001_ha->inbnd_q_tbl[0];
+> +
+> +       payload.tag = cpu_to_le32(tag);
+> +       ppc_phyid = (page_code & 0xFF)  << 8 | (phy_id & 0xFF);
+> +       payload.ppc_phyid = cpu_to_le32(ppc_phyid);
+> +
+> +       pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+> +                       sizeof(payload), 0);
+> +       return rc;
+> +}
+> +
+>  void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
+>         u32 operation, u32 phyid, u32 length, u32 *buf)
+>  {
+> @@ -5113,4 +5196,5 @@ const struct pm8001_dispatch pm8001_80xx_dispatch = {
+>         .set_nvmd_req           = pm8001_chip_set_nvmd_req,
+>         .fw_flash_update_req    = pm8001_chip_fw_flash_update_req,
+>         .set_dev_state_req      = pm8001_chip_set_dev_state_req,
+> +       .get_phy_profile_req    = pm8001_chip_get_phy_profile,
+>  };
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+> index 701951a0f715..b5119c5479da 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+> @@ -175,7 +175,9 @@
+>  #define PHY_STOP_ERR_DEVICE_ATTACHED   0x1046
+>
+>  /* phy_profile */
+> +#define SAS_PHY_ERR_COUNTERS_PAGE      0x01
+>  #define SAS_PHY_ANALOG_SETTINGS_PAGE   0x04
+> +#define SAS_PHY_GENERAL_STATUS_PAGE    0x05
+>  #define PHY_DWORD_LENGTH               0xC
+>
+>  /* Thermal related */
+> --
+> 2.16.3
+>
