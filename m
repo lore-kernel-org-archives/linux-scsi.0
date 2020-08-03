@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E637C433EA
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F8DC433F7
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CA2922BED
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9759722BED
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mcsWAKSq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u+yB2Bpu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729476AbgHCVCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:02:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37342 "EHLO
+        id S1729052AbgHCVCr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729146AbgHCVCm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 17:02:42 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 873F7C061756
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2020 14:02:42 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id x5so800005wmi.2
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2020 14:02:42 -0700 (PDT)
+        with ESMTP id S1729009AbgHCVCq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 17:02:46 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5467DC06174A
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2020 14:02:46 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id c19so784646wmd.1
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2020 14:02:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=uiJ8hbbvoWIZLtDuMURdnNyi1mA+H8kk9tt2C8ROgFM=;
-        b=mcsWAKSq6EnuQjzEobSeDRI97F6ZxDo67E/TbnjV1DSXcBb/MFtDcEt9aZaUesoBo2
-         I37akjuMlRQ3gYTV2kyjPdBti5dpcYrFXAQt1bINMcam/cFHfGzxNBzA9WNHGN+rI4vM
-         xtvH7MHpbMxBpaoRwlR1APuupATZ5sEhddqCey+HVjh46uQqXlWT9QmyW4sXHM/9G7r9
-         PYNgtSRtwGoNkE0zvxzLI/oJ0uTHozCoF1c/tpIIyaFmeGJl3G/PWu9oFh2zon4oDZn2
-         kDTNMu1dvyEow5Q6m9hPxMSol6E5/fiIiXDbaGVR8qoSXB4LPfAOoNGv/m7kY9zKkM6K
-         TdpQ==
+        bh=9gWZ6B+baCzXX0ozkzR1zdM+vYtRLSawroM9ySFBAwM=;
+        b=u+yB2Bpum/JKYUW90+kheoWWCIAGXNQ9B1SnZcfJU9K5mNjv6FRTfOKh1yXwUE4jb0
+         KqgVqDbF+jJm/8i94XVy9915zXB1AttwUuna0mTFK5JH3DPa0kjGDKsnMdPJmkz40MC+
+         64jIcnTXedHoyf8fsxxZCnF6KL9fI71kO34GKo0QUm7tGaqldWtuqW3XGFm0KHcQj6Pq
+         nnYtwEvbaRtw59UxtpPkNsy2MSfoXBJ+ZBuwLH//L+OyTEK678gM8SNrlnjH0LP+pckM
+         LesBD6PtqhRiEbmGT8D5KWGrCS3Jlrd8OdvZGv6r76aYZZBERRU86RKehnMRFqKE/weY
+         n2Mg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=uiJ8hbbvoWIZLtDuMURdnNyi1mA+H8kk9tt2C8ROgFM=;
-        b=ralJGk00nHSw0RUx5YjxpUz1aTURw3phx3fAamgHOfEnAGCud/dELhtmM5/kmA4NIs
-         7FRE1x/RytjknXXRqtx6NIRA2amD7KQqfSTStpcVpYudXIZd6+yrAdBp8dmpyzp9pIOA
-         MZOkWBK396ygNtU6cBQo98yQGuUWgSf2voPlIq2zhb6jmkQ17yafv5/EP4uJ8tTXtNsN
-         Czo77rvKaGSVF87LDNxj3qwBXG5QwLCF/TuDvaYsjW60if80Acy2mWlNPUMyo3c2yNDC
-         CC7Mds/sKoe4KvZRescJkmLaNWZ2cjNHrMZWkAOIUHyI+gAODovX5fvUxVrrHKhjkgjP
-         wYSQ==
-X-Gm-Message-State: AOAM533FbzUcibVfgFKTWZ4R+u08GNbcUFZh2hNAaAcjnFjdt9QEv8Hj
-        xfwx7YfYxlnQ+iHC/BD9CcYbyOHI
-X-Google-Smtp-Source: ABdhPJzDN9hoVVAFLO3RKe+IhKv5ugccm8/Ck12A25kNeysdaDetZy9Icef4nDhvGFetUD/YWEk72w==
-X-Received: by 2002:a1c:7315:: with SMTP id d21mr887175wmb.108.1596488561030;
-        Mon, 03 Aug 2020 14:02:41 -0700 (PDT)
+        bh=9gWZ6B+baCzXX0ozkzR1zdM+vYtRLSawroM9ySFBAwM=;
+        b=Se7lOsbcyvlLN8OMU9n10JsCfEjNXdjhNyzroYSZgLim6gGZ4i3DBy0jBicyHalbde
+         baRghas+QNj4Rmlsjq0kZURtoA4HOQPSn6DFM0QmBNIY8c9aAELU67J8V1H2YcjxfZZu
+         37NJyIZEG/CesEftYQY9xbI/5zsLYN3aRKghqyufSu02xaxgStNWeRUhpInsr8l8JNOP
+         RiKRSFaTKXpueCfEEAhfmlgnW3PMpofAIZPi6jK5JTbpDJczM7cG/KAb9h7qx71UtJi6
+         /qoIk+SnqSlxRtqq1CGdiEQtIASHrlm1RECk9jXAFyaQINyfsanuZORISmVQtVzdis4Z
+         HOgg==
+X-Gm-Message-State: AOAM533+vlJTRuFc3l5WOKgPyfJMeiu/74DThYqqY1f5KNyW4Tard8hv
+        p2pWFTTJejmfon83CLpIgYyMvXJn
+X-Google-Smtp-Source: ABdhPJy+a9FSNCc6fey5XaIs6T8xmVyZrqmrKihWLqBlLK0pufA5ranMD0meK8vQbr0EcKuDVFxO0Q==
+X-Received: by 2002:a1c:a3c4:: with SMTP id m187mr867459wme.43.1596488564754;
+        Mon, 03 Aug 2020 14:02:44 -0700 (PDT)
 Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v15sm26649040wrm.23.2020.08.03.14.02.39
+        by smtp.gmail.com with ESMTPSA id v15sm26649040wrm.23.2020.08.03.14.02.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 14:02:40 -0700 (PDT)
+        Mon, 03 Aug 2020 14:02:44 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 2/8] lpfc: Fix no message shown for lpfc_hdw_queue out of range value
-Date:   Mon,  3 Aug 2020 14:02:23 -0700
-Message-Id: <20200803210229.23063-3-jsmart2021@gmail.com>
+Subject: [PATCH 4/8] lpfc: Fix oops when unloading driver while running mds diags
+Date:   Mon,  3 Aug 2020 14:02:25 -0700
+Message-Id: <20200803210229.23063-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200803210229.23063-1-jsmart2021@gmail.com>
 References: <20200803210229.23063-1-jsmart2021@gmail.com>
@@ -75,67 +75,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If module parameters override the default configuration settings for
-hardware queues or irqs, the driver was not notifying the change from
-defaults.
+While mds diagnostic tests are running, if the driver is requested to be
+unloaded, oops or hangs are observed.  The driver doesn't terminate the
+processing of diag frames when the unload is started. As such: oops may
+be seen for __lpfc_sli_release_iocbq_s4 because ring memory is referenced
+that was already freed; or hangs see in lpfc_nvme_wait_for_io_drain as
+ios no longer complete.
 
-Revise such that any changes will result in a kernel log message.
+If unloading, don't process diag frames. Just clean them up.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 20 +++++++++++++++++---
- drivers/scsi/lpfc/lpfc_init.c |  3 ++-
- 2 files changed, 19 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index cc2c907777d2..ece6c250ebaf 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -7412,12 +7412,26 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- void
- lpfc_nvme_mod_param_dep(struct lpfc_hba *phba)
- {
--	if (phba->cfg_hdw_queue > phba->sli4_hba.num_present_cpu)
-+	int  logit = 0;
-+
-+	if (phba->cfg_hdw_queue > phba->sli4_hba.num_present_cpu) {
- 		phba->cfg_hdw_queue = phba->sli4_hba.num_present_cpu;
--	if (phba->cfg_irq_chann > phba->sli4_hba.num_present_cpu)
-+		logit = 1;
-+	}
-+	if (phba->cfg_irq_chann > phba->sli4_hba.num_present_cpu) {
- 		phba->cfg_irq_chann = phba->sli4_hba.num_present_cpu;
--	if (phba->cfg_irq_chann > phba->cfg_hdw_queue)
-+		logit = 1;
-+	}
-+	if (phba->cfg_irq_chann > phba->cfg_hdw_queue) {
- 		phba->cfg_irq_chann = phba->cfg_hdw_queue;
-+		logit = 1;
-+	}
-+	if (logit)
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"2006 Reducing Queues - CPU limitation: "
-+				"IRQ %d HDWQ %d\n",
-+				phba->cfg_irq_chann,
-+				phba->cfg_hdw_queue);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 8582b51b0613..4cd7ded656b7 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13650,7 +13650,11 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba *phba, struct lpfc_rcqe *rcqe)
+ 		    fc_hdr->fh_r_ctl == FC_RCTL_DD_UNSOL_DATA) {
+ 			spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 			/* Handle MDS Loopback frames */
+-			lpfc_sli4_handle_mds_loopback(phba->pport, dma_buf);
++			if  (!(phba->pport->load_flag & FC_UNLOADING))
++				lpfc_sli4_handle_mds_loopback(phba->pport,
++							      dma_buf);
++			else
++				lpfc_in_buf_free(phba, &dma_buf->dbuf);
+ 			break;
+ 		}
  
- 	if (phba->cfg_enable_fc4_type & LPFC_ENABLE_NVME &&
- 	    phba->nvmet_support) {
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 159afadaea2b..265f2dfa7fb0 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8637,7 +8637,8 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
- 		if ((phba->cfg_irq_chann > qmin) ||
- 		    (phba->cfg_hdw_queue > qmin)) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--					"2005 Reducing Queues: "
-+					"2005 Reducing Queues - "
-+					"FW resource limitation: "
- 					"WQ %d CQ %d EQ %d: min %d: "
- 					"IRQ %d HDWQ %d\n",
- 					phba->sli4_hba.max_cfg_param.max_wq,
+@@ -18363,7 +18367,10 @@ lpfc_sli4_handle_received_buffer(struct lpfc_hba *phba,
+ 	    fc_hdr->fh_r_ctl == FC_RCTL_DD_UNSOL_DATA) {
+ 		vport = phba->pport;
+ 		/* Handle MDS Loopback frames */
+-		lpfc_sli4_handle_mds_loopback(vport, dmabuf);
++		if  (!(phba->pport->load_flag & FC_UNLOADING))
++			lpfc_sli4_handle_mds_loopback(vport, dmabuf);
++		else
++			lpfc_in_buf_free(phba, &dmabuf->dbuf);
+ 		return;
+ 	}
+ 
 -- 
 2.26.2
 
