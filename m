@@ -2,127 +2,102 @@ Return-Path: <SRS0=9rmj=BN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F02FC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 09:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F87C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 09:44:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE7B8206D7
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 09:05:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3108320722
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 09:44:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="dAaHRELa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726160AbgHCJEv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 05:04:51 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:8658 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725806AbgHCJEv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 05:04:51 -0400
-IronPort-SDR: dajFYW/VqHUFnplPAQ6+aKrMR0HZvwvm685X8F5DC/fWctPM/9JsX8kq3BWkU8uY90lAO0mPQx
- nX/XlFF4TI9zd5l8fnJ6LlyY4Z6e1Lbf253DcqQFplP3OHX3TeNC0f5OTOyIbNUEFboLr+YbV0
- bE8ODrWu7SgUzjBLKyJ6qqAGMZ3j/GGTFvNUwSeGzecsW1Vj4Y1zO/4ECpD46yva7VG+NpXc2D
- Q1DjEEg4Zyo20+TFkx2lXuBekaH7NHFL0VHBETRpfK0CY004TdcvRwC3JGY+BDvpM77Sp4ohp4
- 9w4=
-X-IronPort-AV: E=Sophos;i="5.75,429,1589266800"; 
-   d="scan'208";a="47240952"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 03 Aug 2020 02:04:50 -0700
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 03 Aug 2020 02:04:49 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 71C3D214E4; Mon,  3 Aug 2020 02:04:49 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        id S1726218AbgHCJoY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 05:44:24 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:41323 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725968AbgHCJoX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 05:44:23 -0400
+X-UUID: 3ac428711cf848909e39cce4385870c7-20200803
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=ZhKk3+aYfBtmyDfjmtzRdC9n/uCOzIpf/GjJwiyB4Og=;
+        b=dAaHRELah656k8mrFCHfIOihZ5+eBWflnkiktZdcDtNO+x/0h7R+gzMEyhQleGlB4XIhuxUMxJTZMXOxC1Hpm00CQst2EuxseGTHesvJ0uK8waLOXZbXikTFlD9os4UmsNevcFm33nCXMclVjk/c2sFB0dnT+WLlqN2KwuUV7ik=;
+X-UUID: 3ac428711cf848909e39cce4385870c7-20200803
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1170194191; Mon, 03 Aug 2020 17:44:18 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 3 Aug 2020 17:44:15 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkcas08.mediatek.inc
+ (172.21.101.126) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 3 Aug
+ 2020 17:44:15 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 3 Aug 2020 17:44:15 +0800
+Message-ID: <1596447857.32283.24.camel@mtkswgap22>
+Subject: Re: [PATCH v9 9/9] scsi: ufs: Properly release resources if a task
+ is aborted successfully
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
+        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
+        <saravanak@google.com>, <salyzyn@google.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
+        "Bean Huo" <beanhuo@micron.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH v9 1/9] scsi: ufs: Add checks before setting clk-gating states
-Date:   Mon,  3 Aug 2020 02:04:36 -0700
-Message-Id: <1596445485-19834-2-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1596445485-19834-1-git-send-email-cang@codeaurora.org>
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Date:   Mon, 3 Aug 2020 17:44:17 +0800
+In-Reply-To: <1596445485-19834-10-git-send-email-cang@codeaurora.org>
 References: <1596445485-19834-1-git-send-email-cang@codeaurora.org>
+         <1596445485-19834-10-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Clock gating features can be turned on/off selectively which means its
-state information is only important if it is enabled. This change makes
-sure that we only look at state of clk-gating if it is enabled.
-
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshcd.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3076222..5acb38c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1839,6 +1839,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
- 	if (!ufshcd_is_clkgating_allowed(hba))
- 		return;
- 
-+	hba->clk_gating.state = CLKS_ON;
-+
- 	hba->clk_gating.delay_ms = 150;
- 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
- 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
-@@ -2541,7 +2543,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		err = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
- 	}
--	WARN_ON(hba->clk_gating.state != CLKS_ON);
-+	WARN_ON(ufshcd_is_clkgating_allowed(hba) &&
-+		(hba->clk_gating.state != CLKS_ON));
- 
- 	lrbp = &hba->lrb[tag];
- 
-@@ -8326,8 +8329,11 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		/* If link is active, device ref_clk can't be switched off */
- 		__ufshcd_setup_clocks(hba, false, true);
- 
--	hba->clk_gating.state = CLKS_OFF;
--	trace_ufshcd_clk_gating(dev_name(hba->dev), hba->clk_gating.state);
-+	if (ufshcd_is_clkgating_allowed(hba)) {
-+		hba->clk_gating.state = CLKS_OFF;
-+		trace_ufshcd_clk_gating(dev_name(hba->dev),
-+					hba->clk_gating.state);
-+	}
- 
- 	/* Put the host controller in low power mode if possible */
- 	ufshcd_hba_vreg_set_lpm(hba);
-@@ -8467,6 +8473,11 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	if (hba->clk_scaling.is_allowed)
- 		ufshcd_suspend_clkscaling(hba);
- 	ufshcd_setup_clocks(hba, false);
-+	if (ufshcd_is_clkgating_allowed(hba)) {
-+		hba->clk_gating.state = CLKS_OFF;
-+		trace_ufshcd_clk_gating(dev_name(hba->dev),
-+					hba->clk_gating.state);
-+	}
- out:
- 	hba->pm_op_in_progress = 0;
- 	if (ret)
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+T24gTW9uLCAyMDIwLTA4LTAzIGF0IDAyOjA0IC0wNzAwLCBDYW4gR3VvIHdyb3RlOg0KPiBJbiBj
+dXJyZW50IFVGUyB0YXNrIGFib3J0IGhvb2ssIG5hbWVseSB1ZnNoY2RfYWJvcnQoKSwgaWYgYSB0
+YXNrIGlzDQo+IGFib3J0ZWQgc3VjY2Vzc2Z1bGx5LCBjbG9jayBzY2FsaW5nIGJ1c3kgdGltZSBz
+dGF0aXN0aWNzIGlzIG5vdCB1cGRhdGVkDQo+IGFuZCwgbW9zdCBpbXBvcnRhbnQsIGNsa19nYXRp
+bmcuYWN0aXZlX3JlcXMgaXMgbm90IGRlY3JlYXNlZCwgd2hpY2ggbWFrZXMNCj4gY2xrX2dhdGlu
+Zy5hY3RpdmVfcmVxcyBzdGF5IGFib3ZlIHplcm8gZm9yZXZlciwgdGh1cyBjbG9jayBnYXRpbmcg
+d291bGQNCj4gbmV2ZXIgaGFwcGVuLiBUbyBmaXggaXQsIGluc3RlYWQgb2YgcmVsZWFzaW5nIHJl
+c291cmNlcyAibWFubnVhbGx5IiwgdXNlDQo+IHRoZSBleGlzdGluZyBmdW5jIF9fdWZzaGNkX3Ry
+YW5zZmVyX3JlcV9jb21wbCgpLiBUaGlzIGNhbiBhbHNvIGVsaW1pbmF0ZQ0KPiByYWNpbmcgb2Yg
+c2NzaV9kbWFfdW5tYXAoKSBmcm9tIHRoZSByZWFsIGNvbXBsZXRpb24gaW4gSVJRIGhhbmRsZXIg
+cGF0aC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IENhbiBHdW8gPGNhbmdAY29kZWF1cm9yYS5vcmc+
+DQo+IENDOiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KPiAtLS0NCj4g
+IGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCA1ICstLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwg
+MSBpbnNlcnRpb24oKyksIDQgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gaW5kZXgg
+ZDdkMjc1OC4uOWE0ODM4OSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2Qu
+Yw0KPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+IEBAIC02NjM1LDExICs2NjM1
+LDggQEAgc3RhdGljIGludCB1ZnNoY2RfYWJvcnQoc3RydWN0IHNjc2lfY21uZCAqY21kKQ0KPiAg
+CQlnb3RvIG91dDsNCj4gIAl9DQo+ICANCj4gLQlzY3NpX2RtYV91bm1hcChjbWQpOw0KPiAtDQo+
+ICAJc3Bpbl9sb2NrX2lycXNhdmUoaG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+IC0JdWZzaGNk
+X291dHN0YW5kaW5nX3JlcV9jbGVhcihoYmEsIHRhZyk7DQo+IC0JaGJhLT5scmJbdGFnXS5jbWQg
+PSBOVUxMOw0KPiArCV9fdWZzaGNkX3RyYW5zZmVyX3JlcV9jb21wbChoYmEsICgxVUwgPDwgdGFn
+KSk7DQo+ICAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZShob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsN
+Cj4gIA0KPiAgb3V0Og0KDQpSZXZpZXdlZC1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1l
+ZGlhdGVrLmNvbT4NCg0KDQo=
 
