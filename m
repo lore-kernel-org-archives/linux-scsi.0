@@ -2,129 +2,192 @@ Return-Path: <SRS0=9rmj=BN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D2EDC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 04:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEFFAC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 05:03:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEA4E206F6
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 04:25:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 960F8206D7
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 05:03:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="K2nv/3/w"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="whTqEGVe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726231AbgHCEZW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 00:25:22 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:5079 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725908AbgHCEZW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 00:25:22 -0400
-X-UUID: 935cd5e982894f3987c6dea837a63fe8-20200803
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=foqM61TxnesQh6K7W0oXb4VHw0CO+Xro6M9XCSiz5ic=;
-        b=K2nv/3/wKi44tFCZjPN3Nu25xaMZCpHa2j5LHMN56/zhFewTFOq3YXbUUPOqFSakrnfv7qLF8OaajIhc4Sn0MFsVBsHDZYCaBZAmn/iPYWv78ZULYlnkVhg01NDR9bHGpckjZtiZ9Czav556BZm71slUnpJG/MBZyMnUcVm4ppI=;
-X-UUID: 935cd5e982894f3987c6dea837a63fe8-20200803
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 329510588; Mon, 03 Aug 2020 12:25:16 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 3 Aug 2020 12:25:14 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 3 Aug 2020 12:25:14 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <bvanassche@acm.org>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v6] scsi: ufs: Quiesce all scsi devices before shutdown
-Date:   Mon, 3 Aug 2020 12:25:14 +0800
-Message-ID: <20200803042514.7111-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1725926AbgHCFDT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 01:03:19 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:24552 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725268AbgHCFDT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 01:03:19 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1596430998; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=ZEq3dQL1T4rfyaJOBFm/8UoCpiFNlnou1J2+YfKngHo=;
+ b=whTqEGVeCy/7K/yN3Dhc9OPTE87fGLv0ie08jHB8iaWtD6oH/6F+Cwl8i3e9IsCwy3l4q8vt
+ nhTkWmGljjA2Smu6tgHP3f+oZGvtgF4OTxQ8hXCxjf+pYOgFugBwq+TdsDX5omuuARl1QjUi
+ TRx1fprU1HO9uzG0uJ6MKkBlyX8=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n11.prod.us-west-2.postgun.com with SMTP id
+ 5f279a96498d6102394b66a3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 03 Aug 2020 05:03:18
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 733C4C4339C; Mon,  3 Aug 2020 05:03:17 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 198A3C433C6;
+        Mon,  3 Aug 2020 05:03:16 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 03 Aug 2020 13:03:16 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        bvanassche@acm.org, beanhuo@micron.com, asutoshd@codeaurora.org,
+        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
+        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
+        jiajie.hao@mediatek.com
+Subject: Re: [PATCH v6] scsi: ufs: Quiesce all scsi devices before shutdown
+In-Reply-To: <20200803042514.7111-1-stanley.chu@mediatek.com>
+References: <20200803042514.7111-1-stanley.chu@mediatek.com>
+Message-ID: <d85cdb877bced2d6b0a8ba67670271f2@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Q3VycmVudGx5IEkvTyByZXF1ZXN0IGNvdWxkIGJlIHN0aWxsIHN1Ym1pdHRlZCB0byBVRlMgZGV2
-aWNlIHdoaWxlDQpVRlMgaXMgd29ya2luZyBvbiBzaHV0ZG93biBmbG93LiBUaGlzIG1heSBsZWFk
-IHRvIHJhY2luZyBhcyBiZWxvdw0Kc2NlbmFyaW9zIGFuZCBmaW5hbGx5IHN5c3RlbSBtYXkgY3Jh
-c2ggZHVlIHRvIHVuY2xvY2tlZCByZWdpc3Rlcg0KYWNjZXNzZXMuDQoNClRvIGZpeCB0aGlzIGtp
-bmQgb2YgaXNzdWVzLCBpbiB1ZnNoY2Rfc2h1dGRvd24oKSwNCg0KMS4gVXNlIHBtX3J1bnRpbWVf
-Z2V0X3N5bmMoKSBpbnN0ZWFkIG9mIHJlc3VtaW5nIFVGUyBkZXZpY2UgYnkNCiAgIHVmc2hjZF9y
-dW50aW1lX3Jlc3VtZSgpICJpbnRlcm5hbGx5IiB0byBsZXQgcnVudGltZSBQTSBmcmFtZXdvcmsN
-CiAgIG1hbmFnZSBhbmQgcHJldmVudCBjb25jdXJyZW50IHJ1bnRpbWUgb3BlcmF0aW9ucyBieSBp
-bmNvbWluZyBJL08NCiAgIHJlcXVlc3RzLg0KDQoyLiBTcGVjaWZpY2FsbHkgcXVpZXNjZSBhbGwg
-U0NTSSBkZXZpY2VzIHRvIGJsb2NrIGFsbCBJL08gcmVxdWVzdHMNCiAgIGFmdGVyIGRldmljZSBp
-cyByZXN1bWVkLg0KDQpFeGFtcGxlIG9mIHJhY2luZyBzY2VuYXJpbzogV2hpbGUgVUZTIGRldmlj
-ZSBpcyBydW50aW1lLXN1c3BlbmRlZA0KDQpUaHJlYWQgIzE6IEV4ZWN1dGluZyBVRlMgc2h1dGRv
-d24gZmxvdywgZS5nLiwNCiAgICAgICAgICAgdWZzaGNkX3N1c3BlbmQoVUZTX1NIVVRET1dOX1BN
-KQ0KDQpUaHJlYWQgIzI6IEV4ZWN1dGluZyBydW50aW1lIHJlc3VtZSBmbG93IHRyaWdnZXJlZCBi
-eSBJL08gcmVxdWVzdCwNCiAgICAgICAgICAgZS5nLiwgdWZzaGNkX3Jlc3VtZShVRlNfUlVOVElN
-RV9QTSkNCg0KVGhpcyBicmVha3MgdGhlIGFzc3VtcHRpb24gdGhhdCBVRlMgUE0gZmxvd3MgY2Fu
-IG5vdCBiZSBydW5uaW5nDQpjb25jdXJyZW50bHkgYW5kIHNvbWUgdW5leHBlY3RlZCByYWNpbmcg
-YmVoYXZpb3IgbWF5IGhhcHBlbi4NCg0KU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5s
-ZXkuY2h1QG1lZGlhdGVrLmNvbT4NCi0tLQ0KQ2hhbmdlczoNCiAgLSBTaW5jZSB2NDogVXNlIHBt
-X3J1bnRpbWVfZ2V0X3N5bmMoKSBpbnN0ZWFkIG9mIHJlc3VtaW5nIFVGUyBkZXZpY2UgYnkgdWZz
-aGNkX3J1bnRpbWVfcmVzdW1lKCkgImludGVybmFsbHkiLg0KLS0tDQogZHJpdmVycy9zY3NpL3Vm
-cy91ZnNoY2QuYyB8IDM5ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLQ0K
-IDEgZmlsZSBjaGFuZ2VkLCAzNCBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KDQpkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZz
-aGNkLmMNCmluZGV4IDMwNzYyMjI4NDIzOS4uZmMwMTE3MWQxM2IxIDEwMDY0NA0KLS0tIGEvZHJp
-dmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0K
-QEAgLTE1OSw2ICsxNTksMTIgQEAgc3RydWN0IHVmc19wbV9sdmxfc3RhdGVzIHVmc19wbV9sdmxf
-c3RhdGVzW10gPSB7DQogCXtVRlNfUE9XRVJET1dOX1BXUl9NT0RFLCBVSUNfTElOS19PRkZfU1RB
-VEV9LA0KIH07DQogDQorI2RlZmluZSB1ZnNoY2Rfc2NzaV9mb3JfZWFjaF9zZGV2KGZuKSBcDQor
-CWxpc3RfZm9yX2VhY2hfZW50cnkoc3RhcmdldCwgJmhiYS0+aG9zdC0+X190YXJnZXRzLCBzaWJs
-aW5ncykgeyBcDQorCQlfX3N0YXJnZXRfZm9yX2VhY2hfZGV2aWNlKHN0YXJnZXQsIE5VTEwsIFwN
-CisJCQkJCSAgZm4pOyBcDQorCX0NCisNCiBzdGF0aWMgaW5saW5lIGVudW0gdWZzX2Rldl9wd3Jf
-bW9kZQ0KIHVmc19nZXRfcG1fbHZsX3RvX2Rldl9wd3JfbW9kZShlbnVtIHVmc19wbV9sZXZlbCBs
-dmwpDQogew0KQEAgLTg2MjksNiArODYzNSwxMyBAQCBpbnQgdWZzaGNkX3J1bnRpbWVfaWRsZShz
-dHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KIH0NCiBFWFBPUlRfU1lNQk9MKHVmc2hjZF9ydW50aW1lX2lk
-bGUpOw0KIA0KK3N0YXRpYyB2b2lkIHVmc2hjZF9xdWllc2NlX3NkZXYoc3RydWN0IHNjc2lfZGV2
-aWNlICpzZGV2LCB2b2lkICpkYXRhKQ0KK3sNCisJLyogU3VzcGVuZGVkIGRldmljZXMgYXJlIGFs
-cmVhZHkgcXVpZXNjZWQgc28gY2FuIGJlIHNraXBwZWQgKi8NCisJaWYgKCFwbV9ydW50aW1lX3N1
-c3BlbmRlZCgmc2Rldi0+c2Rldl9nZW5kZXYpKQ0KKwkJc2NzaV9kZXZpY2VfcXVpZXNjZShzZGV2
-KTsNCit9DQorDQogLyoqDQogICogdWZzaGNkX3NodXRkb3duIC0gc2h1dGRvd24gcm91dGluZQ0K
-ICAqIEBoYmE6IHBlciBhZGFwdGVyIGluc3RhbmNlDQpAQCAtODY0MCw2ICs4NjUzLDcgQEAgRVhQ
-T1JUX1NZTUJPTCh1ZnNoY2RfcnVudGltZV9pZGxlKTsNCiBpbnQgdWZzaGNkX3NodXRkb3duKHN0
-cnVjdCB1ZnNfaGJhICpoYmEpDQogew0KIAlpbnQgcmV0ID0gMDsNCisJc3RydWN0IHNjc2lfdGFy
-Z2V0ICpzdGFyZ2V0Ow0KIA0KIAlpZiAoIWhiYS0+aXNfcG93ZXJlZCkNCiAJCWdvdG8gb3V0Ow0K
-QEAgLTg2NDcsMTEgKzg2NjEsMjYgQEAgaW50IHVmc2hjZF9zaHV0ZG93bihzdHJ1Y3QgdWZzX2hi
-YSAqaGJhKQ0KIAlpZiAodWZzaGNkX2lzX3Vmc19kZXZfcG93ZXJvZmYoaGJhKSAmJiB1ZnNoY2Rf
-aXNfbGlua19vZmYoaGJhKSkNCiAJCWdvdG8gb3V0Ow0KIA0KLQlpZiAocG1fcnVudGltZV9zdXNw
-ZW5kZWQoaGJhLT5kZXYpKSB7DQotCQlyZXQgPSB1ZnNoY2RfcnVudGltZV9yZXN1bWUoaGJhKTsN
-Ci0JCWlmIChyZXQpDQotCQkJZ290byBvdXQ7DQotCX0NCisJLyoNCisJICogTGV0IHJ1bnRpbWUg
-UE0gZnJhbWV3b3JrIG1hbmFnZSBhbmQgcHJldmVudCBjb25jdXJyZW50IHJ1bnRpbWUNCisJICog
-b3BlcmF0aW9ucyB3aXRoIHNodXRkb3duIGZsb3cuDQorCSAqLw0KKwlwbV9ydW50aW1lX2dldF9z
-eW5jKGhiYS0+ZGV2KTsNCisNCisJLyoNCisJICogUXVpZXNjZSBhbGwgU0NTSSBkZXZpY2VzIHRv
-IHByZXZlbnQgYW55IG5vbi1QTSByZXF1ZXN0cyBzZW5kaW5nDQorCSAqIGZyb20gYmxvY2sgbGF5
-ZXIgZHVyaW5nIGFuZCBhZnRlciBzaHV0ZG93bi4NCisJICoNCisJICogSGVyZSB3ZSBjYW4gbm90
-IHVzZSBibGtfY2xlYW51cF9xdWV1ZSgpIHNpbmNlIFBNIHJlcXVlc3RzDQorCSAqICh3aXRoIEJM
-S19NUV9SRVFfUFJFRU1QVCBmbGFnKSBhcmUgc3RpbGwgcmVxdWlyZWQgdG8gYmUgc2VudA0KKwkg
-KiB0aHJvdWdoIGJsb2NrIGxheWVyLiBUaGVyZWZvcmUgU0NTSSBjb21tYW5kIHF1ZXVlZCBhZnRl
-ciB0aGUNCisJICogc2NzaV90YXJnZXRfcXVpZXNjZSgpIGNhbGwgcmV0dXJuZWQgd2lsbCBibG9j
-ayB1bnRpbA0KKwkgKiBibGtfY2xlYW51cF9xdWV1ZSgpIGlzIGNhbGxlZC4NCisJICoNCisJICog
-QmVzaWRlcywgc2NzaV90YXJnZXRfInVuInF1aWVzY2UgKGUuZy4sIHNjc2lfdGFyZ2V0X3Jlc3Vt
-ZSkgY2FuDQorCSAqIGJlIGlnbm9yZWQgc2luY2Ugc2h1dGRvd24gaXMgb25lLXdheSBmbG93Lg0K
-KwkgKi8NCisJdWZzaGNkX3Njc2lfZm9yX2VhY2hfc2Rldih1ZnNoY2RfcXVpZXNjZV9zZGV2KTsN
-CiANCiAJcmV0ID0gdWZzaGNkX3N1c3BlbmQoaGJhLCBVRlNfU0hVVERPV05fUE0pOw0KIG91dDoN
-Ci0tIA0KMi4xOC4wDQo=
+Hi Stanley,
 
+On 2020-08-03 12:25, Stanley Chu wrote:
+> Currently I/O request could be still submitted to UFS device while
+> UFS is working on shutdown flow. This may lead to racing as below
+> scenarios and finally system may crash due to unclocked register
+> accesses.
+> 
+> To fix this kind of issues, in ufshcd_shutdown(),
+> 
+> 1. Use pm_runtime_get_sync() instead of resuming UFS device by
+>    ufshcd_runtime_resume() "internally" to let runtime PM framework
+>    manage and prevent concurrent runtime operations by incoming I/O
+>    requests.
+> 
+> 2. Specifically quiesce all SCSI devices to block all I/O requests
+>    after device is resumed.
+> 
+> Example of racing scenario: While UFS device is runtime-suspended
+> 
+> Thread #1: Executing UFS shutdown flow, e.g.,
+>            ufshcd_suspend(UFS_SHUTDOWN_PM)
+> 
+> Thread #2: Executing runtime resume flow triggered by I/O request,
+>            e.g., ufshcd_resume(UFS_RUNTIME_PM)
+> 
+> This breaks the assumption that UFS PM flows can not be running
+> concurrently and some unexpected racing behavior may happen.
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+> Changes:
+>   - Since v4: Use pm_runtime_get_sync() instead of resuming UFS device
+> by ufshcd_runtime_resume() "internally".
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 39 ++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 34 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 307622284239..fc01171d13b1 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -159,6 +159,12 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
+>  	{UFS_POWERDOWN_PWR_MODE, UIC_LINK_OFF_STATE},
+>  };
+> 
+> +#define ufshcd_scsi_for_each_sdev(fn) \
+> +	list_for_each_entry(starget, &hba->host->__targets, siblings) { \
+> +		__starget_for_each_device(starget, NULL, \
+> +					  fn); \
+> +	}
+> +
+>  static inline enum ufs_dev_pwr_mode
+>  ufs_get_pm_lvl_to_dev_pwr_mode(enum ufs_pm_level lvl)
+>  {
+> @@ -8629,6 +8635,13 @@ int ufshcd_runtime_idle(struct ufs_hba *hba)
+>  }
+>  EXPORT_SYMBOL(ufshcd_runtime_idle);
+> 
+> +static void ufshcd_quiesce_sdev(struct scsi_device *sdev, void *data)
+> +{
+> +	/* Suspended devices are already quiesced so can be skipped */
+
+Why can runtime suspended sdevs be skipped? Block layer can still resume
+them at any time, no?
+
+> +	if (!pm_runtime_suspended(&sdev->sdev_gendev))
+> +		scsi_device_quiesce(sdev);
+> +}
+> +
+>  /**
+>   * ufshcd_shutdown - shutdown routine
+>   * @hba: per adapter instance
+> @@ -8640,6 +8653,7 @@ EXPORT_SYMBOL(ufshcd_runtime_idle);
+>  int ufshcd_shutdown(struct ufs_hba *hba)
+>  {
+>  	int ret = 0;
+> +	struct scsi_target *starget;
+> 
+>  	if (!hba->is_powered)
+>  		goto out;
+> @@ -8647,11 +8661,26 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+>  	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
+>  		goto out;
+> 
+> -	if (pm_runtime_suspended(hba->dev)) {
+> -		ret = ufshcd_runtime_resume(hba);
+> -		if (ret)
+> -			goto out;
+> -	}
+> +	/*
+> +	 * Let runtime PM framework manage and prevent concurrent runtime
+> +	 * operations with shutdown flow.
+> +	 */
+> +	pm_runtime_get_sync(hba->dev);
+> +
+> +	/*
+> +	 * Quiesce all SCSI devices to prevent any non-PM requests sending
+> +	 * from block layer during and after shutdown.
+> +	 *
+> +	 * Here we can not use blk_cleanup_queue() since PM requests
+> +	 * (with BLK_MQ_REQ_PREEMPT flag) are still required to be sent
+> +	 * through block layer. Therefore SCSI command queued after the
+> +	 * scsi_target_quiesce() call returned will block until
+> +	 * blk_cleanup_queue() is called.
+> +	 *
+> +	 * Besides, scsi_target_"un"quiesce (e.g., scsi_target_resume) can
+> +	 * be ignored since shutdown is one-way flow.
+> +	 */
+> +	ufshcd_scsi_for_each_sdev(ufshcd_quiesce_sdev);
+
+Any reasons why don't use scsi_target_quiesce() here?
+
+Thanks,
+
+Can Guo.
+
+> 
+>  	ret = ufshcd_suspend(hba, UFS_SHUTDOWN_PM);
+>  out:
