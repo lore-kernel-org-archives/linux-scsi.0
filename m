@@ -2,209 +2,149 @@ Return-Path: <SRS0=9rmj=BN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B41ECC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:53:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7E2C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 14:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90BD82064B
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:53:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="onefh8/J"
+	by mail.kernel.org (Postfix) with ESMTP id E5EB8207FC
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 14:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728234AbgHCMvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 08:51:39 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:44599 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729395AbgHCMv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 3 Aug 2020 08:51:26 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1596459077; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=jepPBJzpwNuriMTj33dYfuOkzUu353rrYsvD7FzsN1c=;
- b=onefh8/J05V1Fr7p1QxbPn+0PxBz6lLF2aQLcNuTM7CRNU0zlgNXHUtDDNcc7cB2MbjdLAfh
- eTVCdYeDFiWgOOHw0Cwa86G0jUQr5M7H3tYmO1JmBLfUSAYKxZ0w8mq/sfJi5cs++CZhEhWp
- ApKUKpe3jbVmBvcjLD9jGdyn8xQ=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
- 5f28083a849144fbcbb7ff4e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 03 Aug 2020 12:51:06
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4DF52C433A1; Mon,  3 Aug 2020 12:51:05 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F0205C433C6;
-        Mon,  3 Aug 2020 12:51:03 +0000 (UTC)
+        id S1727920AbgHCODF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 10:03:05 -0400
+Received: from mout.kundenserver.de ([212.227.17.10]:49529 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727792AbgHCODF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 10:03:05 -0400
+Received: from mail-qt1-f182.google.com ([209.85.160.182]) by
+ mrelayeu.kundenserver.de (mreue107 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1MMFdY-1kLv9c1CsA-00JG6n; Mon, 03 Aug 2020 16:03:02 +0200
+Received: by mail-qt1-f182.google.com with SMTP id o22so27993378qtt.13;
+        Mon, 03 Aug 2020 07:03:02 -0700 (PDT)
+X-Gm-Message-State: AOAM531H4Ztsp4lmZHE0hVpE09LjIihZ4anNdOXHKtYz1TkLDiSuprzP
+        Ahwx6nVPpRdzpnzSaHzBySk7+DaSeMqeLeCkz9I=
+X-Google-Smtp-Source: ABdhPJw2zR5rbY5JLrLg+SOnCxoaIDNRbKJLo+/dAo2RT/k0sLgir+vyUo3XbpuGMFZC+KhJcR2YgXGxdxfhSfDd7eY=
+X-Received: by 2002:aed:2946:: with SMTP id s64mr16834134qtd.204.1596463380844;
+ Mon, 03 Aug 2020 07:03:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 03 Aug 2020 20:51:03 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        bvanassche@acm.org, beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
-        jiajie.hao@mediatek.com
-Subject: Re: [PATCH v7] scsi: ufs: Quiesce all scsi devices before shutdown
-In-Reply-To: <20200803100448.2738-1-stanley.chu@mediatek.com>
-References: <20200803100448.2738-1-stanley.chu@mediatek.com>
-Message-ID: <70222bbb82a8b167475189110cf69317@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+References: <20200730220750.18158-1-samuel@sholland.org> <CAK8P3a2p7dWhhCqAYF_Zos-X-zBK+id-xO5hPu2fRTbNyPo9Xg@mail.gmail.com>
+ <29ea8d0f-bcab-9ffd-0e2f-f022911f4bf2@sholland.org>
+In-Reply-To: <29ea8d0f-bcab-9ffd-0e2f-f022911f4bf2@sholland.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Mon, 3 Aug 2020 16:02:44 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a0xSyyaLHziuv4JKimUggF96frwLPKmjQ4G9VBWRW2EMg@mail.gmail.com>
+Message-ID: <CAK8P3a0xSyyaLHziuv4JKimUggF96frwLPKmjQ4G9VBWRW2EMg@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: 3w-9xxx: Fix endianness issues found by sparse
+To:     Samuel Holland <samuel@sholland.org>
+Cc:     Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:e64ezUisEuE9nycpbx8ic+jqdEuyHo7xZIKF0JrUSXVeVXoMr45
+ NxBTI57MF/dEAoJzYSTYmaYXGRGjlXqbukQZmMLBWl/GwgoUqih9hkWgnI2cK2jCsBb226b
+ vX6Euowe8U9ORfwoHT3sQglECKF9zPsJlbju7ApGrltWdaJ9ND8iNY//NyEOBL82SzYkqbm
+ R5MM8KuJMcKWB+Cqr3lyw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:4RmXT1mnDr4=:ch8gWzoUYWnwqpm8+VTY7E
+ 7+zkybGCsDxcgLCQTB1DEl29/K77JSKezwUBB2iXnZx0W0kV2djkaIqnhu1YYj2kRbkEyw/3i
+ ZrRakLKIVlxWIDND2CXciBMdoHN+R9xzgjyL+dmEG5gXEAaT96IprTMa0rU1HHi8SFxso2lpI
+ v2vJCmHfbmX22RAQW7aqE757bshw+JS/y+qf99J6FaYI6KXh/lkP0WcmRjSKEWeDk31Eq7XBV
+ VjJh5qUiPFGpzBJ3qAd+EQIjG4m4sbLVSq3HetAKTUrxn3sCspTsb/R42wF6JWUbcR8M5BjqZ
+ oomSkisD+OsIkrtH843OT30Qde280uRH3bEoTPzgb7h218/KKEJQRX0mzKSDKH/FsA8BoW1a8
+ xQnCGPEgaKcRSuW501XBukP7w4j0PxBIVSwkYouRvbsB3UC0R5evOFzdjj0IZtw+Ws5e1ppD7
+ hURU7doOFii2GeLXTMtpv0Rx5wMETqo98O/8j4Y9o/SRiYgl45T/51ACobVilcyka7b5HszGa
+ C2p46YumFEPPcPb+bVzFhHnm8H6NawNecpWeBANOOYMxmqxz5wyHqS6M8PnNDlQIJfp51/wha
+ J2HTjHfyfmcSZFQyUK9Jcy4ZwHwHZPrzsLQA+LSx4lOa5BIlZtzOiycVwcV1PfkNwNVnOWQbP
+ 3Yxs1QJHVxfJZB+WTxDwCwm61+cI4mHvmmAYuQrBLh1xS4+DroPGgbGxjqJAPN0qIYBPurP2D
+ Y2LfL0heWgGd+inq7izXYY8rOXF0k99sLqywHsbxYPqtFL3gqBkznbIMlyjSMHhJRXGUO//iE
+ NViQHsdkJyDbG7WNVIRRLdvP4UfP7DggJ0lPLBpNyVXPklC9mOhyt/rzFh8ntp2K5QcZHxPUr
+ S0jpJT6d4MXWahOf1W1G7lCrh30xX6DLHsCpomOVljS2mHRx0MXBq445hR06G7Fa+AjGeajht
+ GW0//Dwf2lu+cCNp8by/UULkG9gm1pFojKAT4B80p/J6vgDDelIf5
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
+On Mon, Aug 3, 2020 at 5:42 AM Samuel Holland <samuel@sholland.org> wrote:
+>
+> On 7/31/20 2:29 AM, Arnd Bergmann wrote:
+> > On Fri, Jul 31, 2020 at 12:07 AM Samuel Holland <samuel@sholland.org> wrote:
+> >>
+> >> The main issue observed was at the call to scsi_set_resid, where the
+> >> byteswapped parameter would eventually trigger the alignment check at
+> >> drivers/scsi/sd.c:2009. At that point, the kernel would continuously
+> >> complain about an "Unaligned partial completion", and no further I/O
+> >> could occur.
+> >>
+> >> This gets the controller working on big endian powerpc64.
+> >>
+> >> Signed-off-by: Samuel Holland <samuel@sholland.org>
+> >> ---
+> >>
+> >> Changes since v1:
+> >>  - Include changes to use __le?? types in command structures
+> >>  - Use an object literal for the intermediate "schedulertime" value
+> >>  - Use local "error" variable to avoid repeated byte swapping
+> >>  - Create a local "length" variable to avoid very long lines
+> >>  - Move byte swapping to TW_REQ_LUN_IN/TW_LUN_OUT to avoid long lines
+> >>
+> >
+> > Looks much better, thanks for the update. I see one more issue here
+> >>  /* Command Packet */
+> >>  typedef struct TW_Command {
+> >> -       unsigned char opcode__sgloffset;
+> >> -       unsigned char size;
+> >> -       unsigned char request_id;
+> >> -       unsigned char unit__hostid;
+> >> +       u8      opcode__sgloffset;
+> >> +       u8      size;
+> >> +       u8      request_id;
+> >> +       u8      unit__hostid;
+> >>         /* Second DWORD */
+> >> -       unsigned char status;
+> >> -       unsigned char flags;
+> >> +       u8      status;
+> >> +       u8      flags;
+> >>         union {
+> >> -               unsigned short block_count;
+> >> -               unsigned short parameter_count;
+> >> +               __le16  block_count;
+> >> +               __le16  parameter_count;
+> >>         } byte6_offset;
+> >>         union {
+> >>                 struct {
+> >> -                       u32 lba;
+> >> -                       TW_SG_Entry sgl[TW_ESCALADE_MAX_SGL_LENGTH];
+> >> -                       dma_addr_t padding;
+> >> +                       __le32          lba;
+> >> +                       TW_SG_Entry     sgl[TW_ESCALADE_MAX_SGL_LENGTH];
+> >> +                       dma_addr_t      padding;
+> >
+> >
+> > The use of dma_addr_t here seems odd, since this is neither endian-safe nor
+> > fixed-length. I see you replaced the dma_addr_t in TW_SG_Entry with
+> > a variable-length fixed-endian word. I guess there is a chance that this is
+> > correct, but it is really confusing. On top of that, it seems that there is
+> > implied padding in the structure when built with a 64-bit dma_addr_t
+> > on most architectures but not on x86-32 (which uses 32-bit alignment for
+> > 64-bit integers). I don't know what the hardware definition is for TW_Command,
+> > but ideally this would be expressed using only fixed-endian fixed-length
+> > members and explicit padding.
+>
+> All of the command structures are packed, due to the "#pragma pack(1)" earlier
+> in the file. So alignment is not an issue. This dma_addr_t member _is_ the
+> explicit padding to make sizeof(TW_Command) -
+> sizeof(TW_Command.byte8_offset.{io,param}.sgl) equal TW_COMMAND_SIZE * 4. And
+> indeed the structure is expected to be a different size depending on
+> sizeof(dma_addr_t).
 
-Sorry for the noises, please ignore my previous 2 mails and let's
-focus on this one.
+Ah, so only the first few members are accessed by hardware and the
+last union is only accessed by the OS then? In that case I suppose it is
+all fine, but I would also suggest removing the "#pragma packed"
+to get somewhat more efficient access on systems that have  problems
+with misaligned accesses.
 
-On 2020-08-03 18:04, Stanley Chu wrote:
-> Currently I/O request could be still submitted to UFS device while
-> UFS is working on shutdown flow. This may lead to racing as below
-> scenarios and finally system may crash due to unclocked register
-> accesses.
-> 
-> To fix this kind of issues, in ufshcd_shutdown(),
-> 
-> 1. Use pm_runtime_get_sync() instead of resuming UFS device by
->    ufshcd_runtime_resume() "internally" to let runtime PM framework
->    manage and prevent concurrent runtime operations by incoming I/O
->    requests.
-> 
-> 2. Specifically quiesce all SCSI devices to block all I/O requests
->    after device is resumed.
-> 
-> Example of racing scenario: While UFS device is runtime-suspended
-> 
-> Thread #1: Executing UFS shutdown flow, e.g.,
->            ufshcd_suspend(UFS_SHUTDOWN_PM)
-> 
-> Thread #2: Executing runtime resume flow triggered by I/O request,
->            e.g., ufshcd_resume(UFS_RUNTIME_PM)
-> 
-> This breaks the assumption that UFS PM flows can not be running
-> concurrently and some unexpected racing behavior may happen.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
-> Changes:
->   - Since v6:
-> 	- Do quiesce to all SCSI devices.
->   - Since v4:
-> 	- Use pm_runtime_get_sync() instead of resuming UFS device by
-> ufshcd_runtime_resume() "internally".
-> ---
->  drivers/scsi/ufs/ufshcd.c | 27 ++++++++++++++++++++++-----
->  1 file changed, 22 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 307622284239..7cb220b3fde0 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8640,6 +8640,7 @@ EXPORT_SYMBOL(ufshcd_runtime_idle);
->  int ufshcd_shutdown(struct ufs_hba *hba)
->  {
->  	int ret = 0;
-> +	struct scsi_target *starget;
-> 
->  	if (!hba->is_powered)
->  		goto out;
-> @@ -8647,11 +8648,27 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->  	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
->  		goto out;
-> 
-> -	if (pm_runtime_suspended(hba->dev)) {
-> -		ret = ufshcd_runtime_resume(hba);
-> -		if (ret)
-> -			goto out;
-> -	}
-> +	/*
-> +	 * Let runtime PM framework manage and prevent concurrent runtime
-> +	 * operations with shutdown flow.
-> +	 */
-> +	pm_runtime_get_sync(hba->dev);
-> +
-> +	/*
-> +	 * Quiesce all SCSI devices to prevent any non-PM requests sending
-> +	 * from block layer during and after shutdown.
-> +	 *
-> +	 * Here we can not use blk_cleanup_queue() since PM requests
-> +	 * (with BLK_MQ_REQ_PREEMPT flag) are still required to be sent
-> +	 * through block layer. Therefore SCSI command queued after the
-> +	 * scsi_target_quiesce() call returned will block until
-> +	 * blk_cleanup_queue() is called.
-> +	 *
-> +	 * Besides, scsi_target_"un"quiesce (e.g., scsi_target_resume) can
-> +	 * be ignored since shutdown is one-way flow.
-> +	 */
-> +	list_for_each_entry(starget, &hba->host->__targets, siblings)
-> +		scsi_target_quiesce(starget);
-> 
-
-Sorry for misleading you to scsi_target_quiesce(), maybe below is 
-better.
-
-     shost_for_each_device(sdev, hba->host)
-         scsi_device_quiesce(sdev);
-
-We may need to discuss more about this quiesce part since I missed 
-something.
-
-After we quiesce the scsi devices, only PM requests are allowed, but it
-is still not safe - PM requests can still pass through.
-
-How about only quiescing the UFS device well known scsi device but using
-freeze_queue to the other scsi devices? blk_mq_freeze_queue can 
-eliminate
-the risk.
-
-      shost_for_each_device(sdev, hba->host) {
-          if (sdev == hba->sdev_ufs_device)
-               scsi_device_quiesce(sdev);
-          else
-               blk_mq_freeze_queue(sdev->request_queue);
-      }
-
-IF blk_mq_freeze_queue is not allowed to be used by LLD (I think we can
-use it as I recalled Bart used to use it in one of his changes to UFS 
-scaling),
-we can use scsi_remove_device instead, it changes scsi device's state to
-SDEV_DEL and calls blk_cleanup_queue.
-
-We can also use scsi_autopm_get_device like below. It is to make sure
-no more PM requests sent to scsi devices (since PM requests are only 
-sent
-during PM ops).
-
-     shost_for_each_device(sdev, hba->host) {
-         scsi_autopm_get_device(sdev);
-         scsi_device_quiesce(sdev);
-     }
-
-Please let me know which one do you prefer or if you have better ideas, 
-thanks!
-
-Regards,
-
-Can Guo.
-
->  	ret = ufshcd_suspend(hba, UFS_SHUTDOWN_PM);
->  out:
+      Arnd
