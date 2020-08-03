@@ -2,70 +2,209 @@ Return-Path: <SRS0=9rmj=BN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B219CC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:46:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41ECC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:53:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8463E206D4
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:46:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90BD82064B
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 12:53:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CIJOM8H2"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="onefh8/J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728537AbgHCMqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 08:46:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45346 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729060AbgHCMp4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 08:45:56 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B6F4C06179F
-        for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2020 05:45:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=492MNrBqydj+qwahaphzXy6n4DDjKuX2fhC6YH3TFgI=; b=CIJOM8H2Hx3K7K51fpsYG4tgEB
-        TE7OfwFxRB/+M5Ehkfs3UQumEQCLRWv60Z7Jc6dsDYIVCoHgXD6iER1/YLSPLH1l+i0Zrffv7NCXO
-        FQrwBEftQRzj4vuL56FxVOkj8ojeeEJuz07ig/i58nhvaf+viz+aNBguczMnZyiKDiajAz9Iqy4e4
-        KgRiP7EHTsMXESzWd/2vAhUDWM8xFhLcjMZaejvBFIB9DZCo5oI+WrnBHvZ3Q3zWEbu2ipnlX/k/F
-        NEZ526zI7Fu6qs1m+/vzYlso2cAXevtdjx/dqwtb8CxCGMutBbFofYob6u9laeNvHBb1dBCXzo9/N
-        eTGqGRVw==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k2Zqh-0007EI-8v; Mon, 03 Aug 2020 12:45:51 +0000
-Date:   Mon, 3 Aug 2020 13:45:51 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Deepak Ukey <deepak.ukey@microchip.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
-        jinpu.wang@profitbricks.com, martin.petersen@oracle.com,
-        yuuzheng@google.com, auradkar@google.com, vishakhavc@google.com,
-        bjashnani@google.com, radha@google.com, akshatzen@google.com
-Subject: Re: [PATCH V5 2/2] pm80xx : Staggered spin up support.
-Message-ID: <20200803124551.GA26520@infradead.org>
-References: <20200803122923.6826-1-deepak.ukey@microchip.com>
- <20200803122923.6826-3-deepak.ukey@microchip.com>
+        id S1728234AbgHCMvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 08:51:39 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:44599 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729395AbgHCMv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 Aug 2020 08:51:26 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1596459077; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=jepPBJzpwNuriMTj33dYfuOkzUu353rrYsvD7FzsN1c=;
+ b=onefh8/J05V1Fr7p1QxbPn+0PxBz6lLF2aQLcNuTM7CRNU0zlgNXHUtDDNcc7cB2MbjdLAfh
+ eTVCdYeDFiWgOOHw0Cwa86G0jUQr5M7H3tYmO1JmBLfUSAYKxZ0w8mq/sfJi5cs++CZhEhWp
+ ApKUKpe3jbVmBvcjLD9jGdyn8xQ=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
+ 5f28083a849144fbcbb7ff4e (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 03 Aug 2020 12:51:06
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4DF52C433A1; Mon,  3 Aug 2020 12:51:05 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F0205C433C6;
+        Mon,  3 Aug 2020 12:51:03 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200803122923.6826-3-deepak.ukey@microchip.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 03 Aug 2020 20:51:03 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        bvanassche@acm.org, beanhuo@micron.com, asutoshd@codeaurora.org,
+        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
+        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
+        jiajie.hao@mediatek.com
+Subject: Re: [PATCH v7] scsi: ufs: Quiesce all scsi devices before shutdown
+In-Reply-To: <20200803100448.2738-1-stanley.chu@mediatek.com>
+References: <20200803100448.2738-1-stanley.chu@mediatek.com>
+Message-ID: <70222bbb82a8b167475189110cf69317@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 03, 2020 at 05:59:23PM +0530, Deepak Ukey wrote:
-> From: Viswas G <Viswas.G@microchip.com>
-> 
-> As a part of drive discovery, driver will initaite the drive spin up.
-> If all drives do spin up together, it will result in large power
-> consumption. To reduce the power consumption, driver provide an option
-> to make a small group of drives (say 3 or 4 drives together) to do the
-> spin up. The delay between two spin up group and no of drives to
-> spin up (group) can be programmed by the customer in seeprom and
-> driver will use it to control the spinup.
+Hi Stanley,
 
-Isn't this something we should implement in libsas instead?
+Sorry for the noises, please ignore my previous 2 mails and let's
+focus on this one.
+
+On 2020-08-03 18:04, Stanley Chu wrote:
+> Currently I/O request could be still submitted to UFS device while
+> UFS is working on shutdown flow. This may lead to racing as below
+> scenarios and finally system may crash due to unclocked register
+> accesses.
+> 
+> To fix this kind of issues, in ufshcd_shutdown(),
+> 
+> 1. Use pm_runtime_get_sync() instead of resuming UFS device by
+>    ufshcd_runtime_resume() "internally" to let runtime PM framework
+>    manage and prevent concurrent runtime operations by incoming I/O
+>    requests.
+> 
+> 2. Specifically quiesce all SCSI devices to block all I/O requests
+>    after device is resumed.
+> 
+> Example of racing scenario: While UFS device is runtime-suspended
+> 
+> Thread #1: Executing UFS shutdown flow, e.g.,
+>            ufshcd_suspend(UFS_SHUTDOWN_PM)
+> 
+> Thread #2: Executing runtime resume flow triggered by I/O request,
+>            e.g., ufshcd_resume(UFS_RUNTIME_PM)
+> 
+> This breaks the assumption that UFS PM flows can not be running
+> concurrently and some unexpected racing behavior may happen.
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+> Changes:
+>   - Since v6:
+> 	- Do quiesce to all SCSI devices.
+>   - Since v4:
+> 	- Use pm_runtime_get_sync() instead of resuming UFS device by
+> ufshcd_runtime_resume() "internally".
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 27 ++++++++++++++++++++++-----
+>  1 file changed, 22 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 307622284239..7cb220b3fde0 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8640,6 +8640,7 @@ EXPORT_SYMBOL(ufshcd_runtime_idle);
+>  int ufshcd_shutdown(struct ufs_hba *hba)
+>  {
+>  	int ret = 0;
+> +	struct scsi_target *starget;
+> 
+>  	if (!hba->is_powered)
+>  		goto out;
+> @@ -8647,11 +8648,27 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+>  	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
+>  		goto out;
+> 
+> -	if (pm_runtime_suspended(hba->dev)) {
+> -		ret = ufshcd_runtime_resume(hba);
+> -		if (ret)
+> -			goto out;
+> -	}
+> +	/*
+> +	 * Let runtime PM framework manage and prevent concurrent runtime
+> +	 * operations with shutdown flow.
+> +	 */
+> +	pm_runtime_get_sync(hba->dev);
+> +
+> +	/*
+> +	 * Quiesce all SCSI devices to prevent any non-PM requests sending
+> +	 * from block layer during and after shutdown.
+> +	 *
+> +	 * Here we can not use blk_cleanup_queue() since PM requests
+> +	 * (with BLK_MQ_REQ_PREEMPT flag) are still required to be sent
+> +	 * through block layer. Therefore SCSI command queued after the
+> +	 * scsi_target_quiesce() call returned will block until
+> +	 * blk_cleanup_queue() is called.
+> +	 *
+> +	 * Besides, scsi_target_"un"quiesce (e.g., scsi_target_resume) can
+> +	 * be ignored since shutdown is one-way flow.
+> +	 */
+> +	list_for_each_entry(starget, &hba->host->__targets, siblings)
+> +		scsi_target_quiesce(starget);
+> 
+
+Sorry for misleading you to scsi_target_quiesce(), maybe below is 
+better.
+
+     shost_for_each_device(sdev, hba->host)
+         scsi_device_quiesce(sdev);
+
+We may need to discuss more about this quiesce part since I missed 
+something.
+
+After we quiesce the scsi devices, only PM requests are allowed, but it
+is still not safe - PM requests can still pass through.
+
+How about only quiescing the UFS device well known scsi device but using
+freeze_queue to the other scsi devices? blk_mq_freeze_queue can 
+eliminate
+the risk.
+
+      shost_for_each_device(sdev, hba->host) {
+          if (sdev == hba->sdev_ufs_device)
+               scsi_device_quiesce(sdev);
+          else
+               blk_mq_freeze_queue(sdev->request_queue);
+      }
+
+IF blk_mq_freeze_queue is not allowed to be used by LLD (I think we can
+use it as I recalled Bart used to use it in one of his changes to UFS 
+scaling),
+we can use scsi_remove_device instead, it changes scsi device's state to
+SDEV_DEL and calls blk_cleanup_queue.
+
+We can also use scsi_autopm_get_device like below. It is to make sure
+no more PM requests sent to scsi devices (since PM requests are only 
+sent
+during PM ops).
+
+     shost_for_each_device(sdev, hba->host) {
+         scsi_autopm_get_device(sdev);
+         scsi_device_quiesce(sdev);
+     }
+
+Please let me know which one do you prefer or if you have better ideas, 
+thanks!
+
+Regards,
+
+Can Guo.
+
+>  	ret = ufshcd_suspend(hba, UFS_SHUTDOWN_PM);
+>  out:
