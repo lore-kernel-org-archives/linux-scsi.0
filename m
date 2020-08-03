@@ -2,147 +2,166 @@ Return-Path: <SRS0=9rmj=BN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1035C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF3CC433E4
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0973D22C9F
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:00:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BE0822BED
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Aug 2020 21:02:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cEf53UHT"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kvNt0xLj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729165AbgHCVAB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Aug 2020 17:00:01 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:25990 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729079AbgHCVAB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 17:00:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1596488399;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=I+p73nl+scMLErwVWZPy2fCb3efmQTrWaZiPCg4cXlI=;
-        b=cEf53UHT3GKUxVhfpKHJT50GKHBZJg60hN5262GybkCP0ks+sPqttGiHvfn84Fj5WDAkBR
-        YeV12yxDdDEggXANEPLRq1B1heN6xlo6apMRWpvG3BnOXu+wtPnIqj7ctPevGTfethJdYC
-        U2y6mawvL0BUu8VgVCnL6fvaOPO/xJU=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-416-D_U91VqRMSayS4guMEitKA-1; Mon, 03 Aug 2020 16:59:58 -0400
-X-MC-Unique: D_U91VqRMSayS4guMEitKA-1
-Received: by mail-qt1-f199.google.com with SMTP id n12so9786580qtr.6
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2020 13:59:58 -0700 (PDT)
+        id S1729136AbgHCVCl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Aug 2020 17:02:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37332 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728570AbgHCVCl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Aug 2020 17:02:41 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3C73C06174A
+        for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2020 14:02:40 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id d190so789198wmd.4
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2020 14:02:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=vAzd1Rs6kPJC0+xwhesVCGthy6geg8aulcpmBjUNiXU=;
+        b=kvNt0xLjhDfar8IwyN2Y6VSyNCJXOWo7k9XnnVxNU4SbExaJ/Z7Y4PxCphtIujfPGB
+         Qj/xmzXUwMOT6k2sf79ujimFVNODlpVm1QsPAKnPNilt4/ZnuCrBMu6HcncZHwqADVkI
+         r9AbwMYBydCK3QgLP/pTxX69jSHl84Jmkq9zj07eeQynFx5OscVPWLliAoer0Wexlp5F
+         QrQdNWOdlY3cdjlnEcnL5AdPI+3S43ignKIAa7KNdXdTW63dHQWL7qmznmEQlTnfl1Kv
+         hI09uYoEOb2SpHDDRNidfDQwyQNWTNOGeswu/yFJFB0sn+jMMVmyDKzgltMlRYtlTsvF
+         Hhqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=I+p73nl+scMLErwVWZPy2fCb3efmQTrWaZiPCg4cXlI=;
-        b=UJC2POhfmVL8tQri3mxPc0YAVx5SOsmz1y4nIPLQDf+R7fiqLeeVkMhv1xDTsm/Cgq
-         5SbyITLZv11xwcxyx3O4b22NjxJ+3DmhbL1Xzkmu4XXhFCEJqiLXPILkLje5a5U8diPo
-         4vwSuBn+yHlSXW7hyCM9t7z6MiML7BmzGw3sn6DcJvIehOJTzRzwIUJiGYXskjN+sOVx
-         JYtkju7spjnm4JIfDCUnipeGo4xFt+7akv4kPq8ZLNUNDD1rJqAZeuGH+bShgrKIJneb
-         pbPpEDWW2+AwM7+J3fmcBkT3RQAAtPZqs+GIUQsw4Q8OzxSquSfabJt+bEXGk7OAhubD
-         shqA==
-X-Gm-Message-State: AOAM533lHqQ8mjTyVos6Euxomh48e63AuC4zUNlafmXHLofDrcvCrUtS
-        xL2IM/Q21WhAOZkzBtvrCZvKNE+j51VXfTCEiJStueY1vUPsr4bkN0CiKREcwsznoPUMH8c2yn0
-        7SIfIxXyyVjq7qT4He2GSXA==
-X-Received: by 2002:a37:8a06:: with SMTP id m6mr17949037qkd.191.1596488397673;
-        Mon, 03 Aug 2020 13:59:57 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJz+kFhyjENOmK99izI/iD0vLcf7qIDUTr7k6L/7ugA+5BkNdYKwj7GdM+Gahf0BqUL5tx7Xeg==
-X-Received: by 2002:a37:8a06:: with SMTP id m6mr17949024qkd.191.1596488397469;
-        Mon, 03 Aug 2020 13:59:57 -0700 (PDT)
-Received: from redhat.com (bzq-79-177-102-128.red.bezeqint.net. [79.177.102.128])
-        by smtp.gmail.com with ESMTPSA id t35sm23436618qth.79.2020.08.03.13.59.47
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=vAzd1Rs6kPJC0+xwhesVCGthy6geg8aulcpmBjUNiXU=;
+        b=LN6wZkXDml8oMmZTlujwj9WmgTwjFxt7kMzfSEHRxJxS1cgAqsx7ZK6a/Si3wDvlMD
+         Esx4wDuTFTXx24Tdh4m82gmqSjPFFxqjqgPuqrDL8BdEj/NuOT1/iq8ePGv6LuddC1SO
+         IXLJuS6F1s3Cyla9rwls6VQIHgBz7liDiLzchPoUerh9cB6D8kj+X+u2Dj9qS7Llq+7R
+         I0jUTI2In/ObgzulXXk3AyAXW2h5bfHeiNLSBPUA/VzbOKFnCGMGdTrfXQdBhTzwqWMH
+         EKJuEgMRiFT5CNI1oVczVYXtDdUxfkBbJDsJ0iQRYuvS00in3LLXTbp763C8KG5qvVUP
+         TfKw==
+X-Gm-Message-State: AOAM53154QPnoGIQfjDb8pJ9s4PVXTGQpyq/6nxSLeCUGVFW7t1ICzO+
+        38J+nN2dEe6jVRANTaZRzTdWu9nX
+X-Google-Smtp-Source: ABdhPJxWbJDpilWh/Yn4Ka01/YBXPmdbv2YrWRRHL2ebg6l69lr/b/0mvBHLAxYWOW1NW/Ypdv0lgg==
+X-Received: by 2002:a1c:283:: with SMTP id 125mr993946wmc.12.1596488559291;
+        Mon, 03 Aug 2020 14:02:39 -0700 (PDT)
+Received: from localhost.localdomain.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id v15sm26649040wrm.23.2020.08.03.14.02.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Aug 2020 13:59:56 -0700 (PDT)
-Date:   Mon, 3 Aug 2020 16:59:45 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     virtualization@lists.linux-foundation.org,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH v2 16/24] virtio_scsi: correct tags for config space fields
-Message-ID: <20200803205814.540410-17-mst@redhat.com>
-References: <20200803205814.540410-1-mst@redhat.com>
+        Mon, 03 Aug 2020 14:02:38 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH 1/8] lpfc: Fix FCoE speed reporting
+Date:   Mon,  3 Aug 2020 14:02:22 -0700
+Message-Id: <20200803210229.23063-2-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200803210229.23063-1-jsmart2021@gmail.com>
+References: <20200803210229.23063-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200803205814.540410-1-mst@redhat.com>
-X-Mailer: git-send-email 2.27.0.106.g8ac3dc51b1
-X-Mutt-Fcc: =sent
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Tag config space fields as having virtio endian-ness.
+Current Link speed was shown as "unknown" in sysfs for FCoE ports
+In this scenario, the port was working in 20G speed, which happens to
+not be a speed handled by the driver.
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Add support for all possible link speeds that could get reported from
+port_speed field in link state ACQE.
+
+Additionally, as supported_speeds can't be manipulated via the fcoe driver
+on a converged ethernet port (it must be managed by the nic function),
+don't fill out the supported_speeds field for the fc host object in sysfs.
+
+Revise debug logging to report Link speed mgmt valuess.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/virtio_scsi.c       |  4 ++--
- include/uapi/linux/virtio_scsi.h | 20 ++++++++++----------
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c |  6 ++++++
+ drivers/scsi/lpfc/lpfc_init.c | 15 +++++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 0e0910c5b942..c36aeb9a1330 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -746,14 +746,14 @@ static struct scsi_host_template virtscsi_host_template = {
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index a62c60ca6477..cc2c907777d2 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -6679,9 +6679,15 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ 		}
+ 	} else if (lpfc_is_link_up(phba) && (phba->hba_flag & HBA_FCOE_MODE)) {
+ 		switch (phba->fc_linkspeed) {
++		case LPFC_ASYNC_LINK_SPEED_1GBPS:
++			fc_host_speed(shost) = FC_PORTSPEED_1GBIT;
++			break;
+ 		case LPFC_ASYNC_LINK_SPEED_10GBPS:
+ 			fc_host_speed(shost) = FC_PORTSPEED_10GBIT;
+ 			break;
++		case LPFC_ASYNC_LINK_SPEED_20GBPS:
++			fc_host_speed(shost) = FC_PORTSPEED_20GBIT;
++			break;
+ 		case LPFC_ASYNC_LINK_SPEED_25GBPS:
+ 			fc_host_speed(shost) = FC_PORTSPEED_25GBIT;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index db768e28d3f9..159afadaea2b 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4577,6 +4577,13 @@ static void lpfc_host_supported_speeds_set(struct Scsi_Host *shost)
+ 	struct lpfc_hba   *phba = vport->phba;
  
- #define virtscsi_config_get(vdev, fld) \
- 	({ \
--		typeof(((struct virtio_scsi_config *)0)->fld) __val; \
-+		__virtio_native_type(struct virtio_scsi_config, fld) __val; \
- 		virtio_cread(vdev, struct virtio_scsi_config, fld, &__val); \
- 		__val; \
- 	})
+ 	fc_host_supported_speeds(shost) = 0;
++	/*
++	 * Avoid reporting supported link speed for FCoE as it can't be
++	 * controlled via FCoE.
++	 */
++	if (phba->hba_flag & HBA_FCOE_MODE)
++		return;
++
+ 	if (phba->lmt & LMT_128Gb)
+ 		fc_host_supported_speeds(shost) |= FC_PORTSPEED_128GBIT;
+ 	if (phba->lmt & LMT_64Gb)
+@@ -4910,6 +4917,9 @@ lpfc_sli4_port_speed_parse(struct lpfc_hba *phba, uint32_t evt_code,
+ 		case LPFC_ASYNC_LINK_SPEED_40GBPS:
+ 			port_speed = 40000;
+ 			break;
++		case LPFC_ASYNC_LINK_SPEED_100GBPS:
++			port_speed = 100000;
++			break;
+ 		default:
+ 			port_speed = 0;
+ 		}
+@@ -8589,7 +8599,7 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
+ 				"VPI(B:%d M:%d) "
+ 				"VFI(B:%d M:%d) "
+ 				"RPI(B:%d M:%d) "
+-				"FCFI:%d EQ:%d CQ:%d WQ:%d RQ:%d\n",
++				"FCFI:%d EQ:%d CQ:%d WQ:%d RQ:%d lmt:x%x\n",
+ 				phba->sli4_hba.extents_in_use,
+ 				phba->sli4_hba.max_cfg_param.xri_base,
+ 				phba->sli4_hba.max_cfg_param.max_xri,
+@@ -8603,7 +8613,8 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
+ 				phba->sli4_hba.max_cfg_param.max_eq,
+ 				phba->sli4_hba.max_cfg_param.max_cq,
+ 				phba->sli4_hba.max_cfg_param.max_wq,
+-				phba->sli4_hba.max_cfg_param.max_rq);
++				phba->sli4_hba.max_cfg_param.max_rq,
++				phba->lmt);
  
- #define virtscsi_config_set(vdev, fld, val) \
- 	do { \
--		typeof(((struct virtio_scsi_config *)0)->fld) __val = (val); \
-+		__virtio_native_type(struct virtio_scsi_config, fld) __val = (val); \
- 		virtio_cwrite(vdev, struct virtio_scsi_config, fld, &__val); \
- 	} while(0)
- 
-diff --git a/include/uapi/linux/virtio_scsi.h b/include/uapi/linux/virtio_scsi.h
-index cc18ef8825c0..0abaae4027c0 100644
---- a/include/uapi/linux/virtio_scsi.h
-+++ b/include/uapi/linux/virtio_scsi.h
-@@ -103,16 +103,16 @@ struct virtio_scsi_event {
- } __attribute__((packed));
- 
- struct virtio_scsi_config {
--	__u32 num_queues;
--	__u32 seg_max;
--	__u32 max_sectors;
--	__u32 cmd_per_lun;
--	__u32 event_info_size;
--	__u32 sense_size;
--	__u32 cdb_size;
--	__u16 max_channel;
--	__u16 max_target;
--	__u32 max_lun;
-+	__virtio32 num_queues;
-+	__virtio32 seg_max;
-+	__virtio32 max_sectors;
-+	__virtio32 cmd_per_lun;
-+	__virtio32 event_info_size;
-+	__virtio32 sense_size;
-+	__virtio32 cdb_size;
-+	__virtio16 max_channel;
-+	__virtio16 max_target;
-+	__virtio32 max_lun;
- } __attribute__((packed));
- 
- /* Feature Bits */
+ 		/*
+ 		 * Calculate queue resources based on how
 -- 
-MST
+2.26.2
 
