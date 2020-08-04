@@ -2,159 +2,395 @@ Return-Path: <SRS0=m56l=BO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BE6C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 15:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 912C4C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 16:11:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 989C4208A9
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 15:19:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 728A32086A
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 16:11:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="t83x2I9S";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="YmLWd1Vo"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="i9+9MadU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729460AbgHDPTH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Aug 2020 11:19:07 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:39121 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728586AbgHDPTG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2020 11:19:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1596554346; x=1628090346;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=/XiJigC+V+poB1DJy6GqtVSUeGS4164elRNRC/6JcTA=;
-  b=t83x2I9SO8yDXn2OQlpR8FdEDRYoq8aTcctsACPyfuUNUhSAFXp4HxD+
-   VIA7USkm0y9lizygNSyeVNyDoD0U5CtBY1l/E+xGtlMd9Un8orE4QXFmd
-   Th0N/b3lvpNxaF1cn8KiEv3JuDU2U1kTBt9UGSIcmoK6qow/WMHJofg9j
-   nMLiG8daiW9Bz/wK1wvOvWEJMrMVwE1PR65xupoBVsjwlqFTVrMIMes9r
-   WJ/oxOIEhDIH30gD0ZMjT2R1R5jM6HwXY9pjQXrUhiQ226KFAH3J4MYf2
-   gi3S5ufpbg57Vqx7tqoJcebOjcuu0R0D3jkux2Qw6MRQ6SKzODfHIVAn7
-   A==;
-IronPort-SDR: VyCGxXDsfjtZYC5JsLLYazezB8tBXzxaporNGffEyVd5y+W9cdcOmImyP2VgzeNw2OgyXiYCX8
- igcUYCfQq0SXGWExdf6dVbn6rSKtSfwBCkzXXxMtdUVStVlA9/MsZhmpAHjmRlECLiq9od5PFE
- aze5+mqS7yk8uzGn6CllOi+GQcrvDZuzuYCR+aYx1PL5WgmD3LueIsF20TtNnXRVb+0AHVhucq
- wn3EVdj5jYeaGWsvCMlcCfEKKgn5FxmG7tVaQQ/+P3ru14IqOSSLEihaA3UWW7nurtTdvRELe+
- +fk=
-X-IronPort-AV: E=Sophos;i="5.75,434,1589266800"; 
-   d="scan'208";a="84385571"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 04 Aug 2020 08:18:49 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 4 Aug 2020 08:18:45 -0700
-Received: from NAM02-BL2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
- via Frontend Transport; Tue, 4 Aug 2020 08:18:45 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NPCNgYvclkgkngoAAE+xINm126kAUpqSkanopId+sDOW2/C2nMIDvNvJqs/gzE8xQivn7dCPFwWQQLt3BBrNz557Rk9pYnCNGTfeRg3juf/LhdAXNsm6Jh0zz0m1ayrTt3nEEQtkUubU53k3krbVYjBL3ASKqZVn3lcp30pZmG+zRT4Q58uTKxtdQIg0fCreZ6D6uO2DbUEPW2YcCvP5NmTg8JNFQaV7Mcnmf6/vLGPYbZIzl7Q3+AuKJlZ2gYixOGD4WgMgBrxtC5kA55+o0sZvp3I7rdFsKA3l3cA95SHr3mlQcYNnwWQG4rPk1ymMM+NdUMfHczssNCBD2uU+kQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/XiJigC+V+poB1DJy6GqtVSUeGS4164elRNRC/6JcTA=;
- b=FlIOmWBq5REDwpQ9fHcpfk/MEhP1xOer/ceC+/12FMLPsn1EHFZaEgO4tFDIFp4DDBpWbtw1P8IctVdxS5ApWoUWIqmLDcgCaIZEDnsSU74jeGzC8Lw3tm3vCh8K8ZRS9WQyjpxbccUeUEdZ4VVT6EIe0WxShZ7lMhIA7A2e1KBVaDQtpyEX9jpB48iaF/0pbj/0Gus8h6jMKxD9+Op1uhK1T27sRTSMzncCba+5OGdJwginbIDATRfaO8qSRRBBaAClknfvzJ2FREZK9v5aOfF1pu5h38jVg4ZGmX35+YBIAXE1EkUJqumC1VC1Cr1Pax5294x1OhyD00oEeDWwiA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/XiJigC+V+poB1DJy6GqtVSUeGS4164elRNRC/6JcTA=;
- b=YmLWd1Vo9j+qOqSO1wziaoGpcsfFCFRdoDR/vm3qU+LaLTq8e6gaNBP4rMNUwolKilsE9Pf+OGpj81uDGeUNo8kb+qfHgbdq7eYSFbCiWHIlTAkO4ToCEbmg9cRmmHJYvzZ/3tp4n4rAd4871y0cbDorNjhqpsSTCkehQOVvDzY=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB2749.namprd11.prod.outlook.com (2603:10b6:805:5f::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3239.18; Tue, 4 Aug
- 2020 15:18:47 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::14d2:e9a7:be92:6dbb]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::14d2:e9a7:be92:6dbb%7]) with mapi id 15.20.3239.022; Tue, 4 Aug 2020
- 15:18:46 +0000
-From:   <Don.Brace@microchip.com>
-To:     <john.garry@huawei.com>, <hare@suse.de>, <don.brace@microsemi.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
-        <sumit.saxena@broadcom.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <hare@suse.com>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>
-Subject: RE: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-Thread-Topic: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-Thread-Index: AQHWP01RAs2BRuCN0k+i3rLwgMsJTKkG5J+AgAABKwCAAAMVAIAgQ/rQgADXkYCAAGEqcA==
-Date:   Tue, 4 Aug 2020 15:18:46 +0000
-Message-ID: <SN6PR11MB2848F0DD0CB3357541DBDAA9E14A0@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-13-git-send-email-john.garry@huawei.com>
- <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
- <3b3ead84-5d2f-dcf2-33d5-6aa12d5d9f7e@suse.de>
- <4319615a-220b-3629-3bf4-1e7fd2d27b92@huawei.com>
- <SN6PR11MB28489516D2F4E7631A921BD9E14D0@SN6PR11MB2848.namprd11.prod.outlook.com>
- <ccc119c8-4774-2603-fb79-e8c31a1476c6@huawei.com>
-In-Reply-To: <ccc119c8-4774-2603-fb79-e8c31a1476c6@huawei.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.208.15]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 8e2a0fc7-097b-4552-1c16-08d83889aedd
-x-ms-traffictypediagnostic: SN6PR11MB2749:
-x-microsoft-antispam-prvs: <SN6PR11MB274978FB0964DD96D0C5EFABE14A0@SN6PR11MB2749.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: xwcDIWBItWuSFgyhKi7g+0Ut39PrDqoNe0Sui9USpFPNOUWQCbnfsefuXDPaWeBNAJwBJ5i+ixXO1KtmvKMXqJBdDp2bw02TcQrgYKWTBf8fY89eijcAjEU1TZTINL14ElEAD3tZ1OE33xzBIQNeOUTBWejEssOA6Zn6clcoEipO3zkWPAZrssfzUy1tQdFQbjld0kDZk5YoS0qeYA8HDsnGLc4nT+7eafQJ+R0K7gNG+90j2EiDgpZGzPJCVH9Jmq7FMosmJ4wgf/S11tmSCeFCmNZtDVvyu6yqMSA6ZtSWZ4uMEFff6Y35FM+We15PkesdUCjmEeoMkEHlTtA1LYpoaoplmQ6pzcGX6kMHqROCDWphNraPXyRXoGWfhSzVqq4QCBy88IGNta1F/A61fQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(8676002)(66476007)(8936002)(498600001)(2906002)(66556008)(7416002)(4326008)(76116006)(66446008)(64756008)(9686003)(71200400001)(5660300002)(55016002)(7696005)(110136005)(6506007)(186003)(54906003)(33656002)(86362001)(52536014)(26005)(66946007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: AK0gMwruNVd1cxLydle3tf2W7GD0FFu4wj93LUitd+oT/TTLdUfZ4rpFdkM3JISONv+5PsH2BqKcQa74cN61eNV4jHDKyg41RyqebW8zEuLgV2/qIEHZ1i5EwJrV1TCrNN7sOwjjxhO9Zc7cID7schL3X74T/xW2QcklVEHNHZBXWa2/FXOD5FNXuhYiVZqQw1eyF2N8YU991QbiUpoXbyMslvNSyeM5xiNiGImU/RT7APNqb3ZivSyysWG3W2w/IGz1FYntK1TDlI9/tE0llDLzV4Dlaa4J7P0kNE/xmtXVdHti3c0RUcpv2ux2cLZa7d1HcKFZoqGyxxkY3JoiVlateRtbUhnpm4gsVYpDkvqTsuTWQeeqzLYjec7sgX7gkT/mX9FORbZuUV/GNUrg0wj8/VzetAvMNBs7iDHGG1rdvU/MmS9qB3IGj5MDMlLUZxdeUCyJQmc+H/Nw0uHgoUArTwl7GYU8E/PK/8Y6Nhgmk5/cgQmW/aguELKbzF+b3e6/QKsSl+FeHq6mIPJ7lOIz9yIAEKOAICOQoWhH/cm240zdrKJrI65TPVxGPM6m2TGca4fAKKorpHAQy6RQhOrnUAdz35YZCZ5eFn2eQn7BL+nU6aV1oGhEIgsQOSn4CI8LQ9twIwt9QLLb0advig==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1729745AbgHDQLV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Aug 2020 12:11:21 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:43658 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729746AbgHDQLM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2020 12:11:12 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1596557463; h=Content-Transfer-Encoding: MIME-Version:
+ Message-Id: Date: Subject: Cc: To: From: Sender;
+ bh=8y0jLshA9qpRvTkRjJMpImoGmv56AYBmPOWWXjPR3Lw=; b=i9+9MadUif8elTZ2uLiXyJQyh/+kXBb+o6u6dZ6mkx1OaVJful3YC1EAmUkXh+akUCqKts6o
+ DRLZJrqh1QAsSMt4FtrN4gF5faT3nZOUfd8+zksfPJNcP2/i1mo2AE8n7pBjLUAeHIq5BSWU
+ +uc+fFMtCr12msCDN6RfJRT2tdA=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5f298888781ba1c5e2a3e47a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 04 Aug 2020 16:10:48
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DD412C4339C; Tue,  4 Aug 2020 16:10:47 +0000 (UTC)
+Received: from blr-ubuntu-253.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: saiprakash.ranjan)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7EC43C433C6;
+        Tue,  4 Aug 2020 16:10:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7EC43C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=saiprakash.ranjan@codeaurora.org
+From:   Sai Prakash Ranjan <saiprakash.ranjan@codeaurora.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Asutosh Das <asutoshd@codeaurora.org>,
+        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Sai Prakash Ranjan <saiprakash.ranjan@codeaurora.org>
+Subject: [PATCH] scsi: ufs-qcom: Remove unused msm bus scaling apis
+Date:   Tue,  4 Aug 2020 21:40:33 +0530
+Message-Id: <20200804161033.15586-1-saiprakash.ranjan@codeaurora.org>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8e2a0fc7-097b-4552-1c16-08d83889aedd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Aug 2020 15:18:46.5707
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vZgtpWnjLYuulV7qdCmSwT2WFymrFeWFQ6t3qsN9OMIqvdwMHeRAAt55xc4IL9Qg6SvoG9khQxSWrema+MRtCQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2749
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-U3ViamVjdDogUmU6IFtQQVRDSCBSRkMgdjcgMTIvMTJdIGhwc2E6IGVuYWJsZSBob3N0X3RhZ3Nl
-dCBhbmQgc3dpdGNoIHRvIE1RDQoNCkhpIERvbiwNCg0KPj4+IGF0IHNob3VsZCBiZSBnb29kIHRv
-IHRlc3Qgd2l0aCBmb3Igbm93Lg0KPiBjbG9uZWRodHRwczovL2dpdGh1Yi5jb20vaGlzaWxpY29u
-L2tlcm5lbC1kZXYNCj4gICAgICAgYnJhbmNoIG9yaWdpbi9wcml2YXRlLXRvcGljLWJsay1tcS1z
-aGFyZWQtdGFncy1yZmMtdjcNCj4NCj4gVGhlIGRyaXZlciBkaWQgbm90IGxvYWQsIHNvIEkgY2hl
-cnJ5LXBpY2tlZCBmcm9tDQo+DQo+IGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgv
-a2VybmVsL2dpdC9oYXJlL3Njc2ktZGV2ZWwuZ2l0DQo+ICAgICAgIGJyYW5jaCBvcmlnaW4vcmVz
-ZXJ2ZWQtdGFncy52Ng0Kb2ssIGdyZWF0DQoNCj4gYnV0IEkgYW0gZ2V0dGluZyBhbiBleHRyYSBk
-ZXZpY2VzIGluIHRoZSBsaXN0IHdoaWNoIGRvZXMgbm90IHNlZW0gdG8gDQo+IGJlIGNvbWluZyBm
-cm9tIGhwc2EgZHJpdmVyLg0KPg0KPj5JIGFzc3VtZSB0aGF0IHlvdSBhcmUgbWlzc2luZyBzb21l
-IG90aGVyIHBhdGNoZXMgZnJvbSA+PnRoYXQgYnJhbmNoLCBsaWtlDQo+PnRoZXNlOg0KDQo+Pjc3
-ZGNiOTJjMzFhZSBzY3NpOiByZXZhbXAgaG9zdCBkZXZpY2UgaGFuZGxpbmcNCj4+NmU5ODg0YWVm
-ZTY2IHNjc2k6IFVzZSBkdW1teSBpbnF1aXJ5IGRhdGEgZm9yIHRoZSBob3N0ID4+ZGV2aWNlIGEz
-ODE2MzdmOGE2ZSBzY3NpOiB1c2UgcmVhbCBpbnF1aXJ5IGRhdGEgd2hlbiA+PmluaXRpYWxpc2lu
-ZyBkZXZpY2VzDQoNCj4+QEhhbm5lcywgQW55IHBsYW5zIHRvIGdldCB0aGlzIHNlcmllcyBnb2lu
-ZyBhZ2Fpbj8NCg0KSSBjaGVycnktcGlja2VkIHRoZSBmb2xsb3dpbmcgYW5kIHRoaXMgcmVzb2x2
-ZXMgdGhlIGlzc3VlLg0KNzdkY2I5MmMzMWFlIHNjc2k6IHJldmFtcCBob3N0IGRldmljZSBoYW5k
-bGluZw0KNmU5ODg0YWVmZTY2IHNjc2k6IFVzZSBkdW1teSBpbnF1aXJ5IGRhdGEgZm9yIHRoZSBo
-b3N0IGRldmljZQ0KYTM4MTYzN2Y4YTZlIHNjc2k6IHVzZSByZWFsIGlucXVpcnkgZGF0YSB3aGVu
-IGluaXRpYWxpc2luZyBkZXZpY2VzDQpJJ2xsIGNvbnRpbnVlIHdpdGggbW9yZSBJL08gc3RyZXNz
-IHRlc3RpbmcuDQoNClRoYW5rcyBmb3IgdGhlIHBhdGNoIHN1Z2dlc3Rpb25zLA0KRG9uDQo=
+MSM bus scaling has moved on to use interconnect framework
+and downstream bus scaling apis like msm_bus_scale*() does
+not exist anymore in the kernel. Currently they are guarded
+by a config which also does not exist and hence there are no
+build failures reported. Remove these unused apis as they
+are currently no-op anyways and the scaling support that may
+be added in future will use interconnect apis.
+
+Signed-off-by: Sai Prakash Ranjan <saiprakash.ranjan@codeaurora.org>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 225 +-----------------------------------
+ drivers/scsi/ufs/ufs-qcom.h |  11 --
+ 2 files changed, 1 insertion(+), 235 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index d0d75527830e..d78f2f8181e8 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -621,218 +621,6 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_MSM_BUS_SCALING
+-static int ufs_qcom_get_bus_vote(struct ufs_qcom_host *host,
+-		const char *speed_mode)
+-{
+-	struct device *dev = host->hba->dev;
+-	struct device_node *np = dev->of_node;
+-	int err;
+-	const char *key = "qcom,bus-vector-names";
+-
+-	if (!speed_mode) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+-	if (host->bus_vote.is_max_bw_needed && !!strcmp(speed_mode, "MIN"))
+-		err = of_property_match_string(np, key, "MAX");
+-	else
+-		err = of_property_match_string(np, key, speed_mode);
+-
+-out:
+-	if (err < 0)
+-		dev_err(dev, "%s: Invalid %s mode %d\n",
+-				__func__, speed_mode, err);
+-	return err;
+-}
+-
+-static void ufs_qcom_get_speed_mode(struct ufs_pa_layer_attr *p, char *result)
+-{
+-	int gear = max_t(u32, p->gear_rx, p->gear_tx);
+-	int lanes = max_t(u32, p->lane_rx, p->lane_tx);
+-	int pwr;
+-
+-	/* default to PWM Gear 1, Lane 1 if power mode is not initialized */
+-	if (!gear)
+-		gear = 1;
+-
+-	if (!lanes)
+-		lanes = 1;
+-
+-	if (!p->pwr_rx && !p->pwr_tx) {
+-		pwr = SLOWAUTO_MODE;
+-		snprintf(result, BUS_VECTOR_NAME_LEN, "MIN");
+-	} else if (p->pwr_rx == FAST_MODE || p->pwr_rx == FASTAUTO_MODE ||
+-		 p->pwr_tx == FAST_MODE || p->pwr_tx == FASTAUTO_MODE) {
+-		pwr = FAST_MODE;
+-		snprintf(result, BUS_VECTOR_NAME_LEN, "%s_R%s_G%d_L%d", "HS",
+-			 p->hs_rate == PA_HS_MODE_B ? "B" : "A", gear, lanes);
+-	} else {
+-		pwr = SLOW_MODE;
+-		snprintf(result, BUS_VECTOR_NAME_LEN, "%s_G%d_L%d",
+-			 "PWM", gear, lanes);
+-	}
+-}
+-
+-static int __ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
+-{
+-	int err = 0;
+-
+-	if (vote != host->bus_vote.curr_vote) {
+-		err = msm_bus_scale_client_update_request(
+-				host->bus_vote.client_handle, vote);
+-		if (err) {
+-			dev_err(host->hba->dev,
+-				"%s: msm_bus_scale_client_update_request() failed: bus_client_handle=0x%x, vote=%d, err=%d\n",
+-				__func__, host->bus_vote.client_handle,
+-				vote, err);
+-			goto out;
+-		}
+-
+-		host->bus_vote.curr_vote = vote;
+-	}
+-out:
+-	return err;
+-}
+-
+-static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+-{
+-	int vote;
+-	int err = 0;
+-	char mode[BUS_VECTOR_NAME_LEN];
+-
+-	ufs_qcom_get_speed_mode(&host->dev_req_params, mode);
+-
+-	vote = ufs_qcom_get_bus_vote(host, mode);
+-	if (vote >= 0)
+-		err = __ufs_qcom_set_bus_vote(host, vote);
+-	else
+-		err = vote;
+-
+-	if (err)
+-		dev_err(host->hba->dev, "%s: failed %d\n", __func__, err);
+-	else
+-		host->bus_vote.saved_vote = vote;
+-	return err;
+-}
+-
+-static int ufs_qcom_set_bus_vote(struct ufs_hba *hba, bool on)
+-{
+-	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	int vote, err;
+-
+-	/*
+-	 * In case ufs_qcom_init() is not yet done, simply ignore.
+-	 * This ufs_qcom_set_bus_vote() shall be called from
+-	 * ufs_qcom_init() after init is done.
+-	 */
+-	if (!host)
+-		return 0;
+-
+-	if (on) {
+-		vote = host->bus_vote.saved_vote;
+-		if (vote == host->bus_vote.min_bw_vote)
+-			ufs_qcom_update_bus_bw_vote(host);
+-	} else {
+-		vote = host->bus_vote.min_bw_vote;
+-	}
+-
+-	err = __ufs_qcom_set_bus_vote(host, vote);
+-	if (err)
+-		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+-				 __func__, err);
+-
+-	return err;
+-}
+-
+-static ssize_t
+-show_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
+-			char *buf)
+-{
+-	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-
+-	return snprintf(buf, PAGE_SIZE, "%u\n",
+-			host->bus_vote.is_max_bw_needed);
+-}
+-
+-static ssize_t
+-store_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
+-		const char *buf, size_t count)
+-{
+-	struct ufs_hba *hba = dev_get_drvdata(dev);
+-	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	uint32_t value;
+-
+-	if (!kstrtou32(buf, 0, &value)) {
+-		host->bus_vote.is_max_bw_needed = !!value;
+-		ufs_qcom_update_bus_bw_vote(host);
+-	}
+-
+-	return count;
+-}
+-
+-static int ufs_qcom_bus_register(struct ufs_qcom_host *host)
+-{
+-	int err;
+-	struct msm_bus_scale_pdata *bus_pdata;
+-	struct device *dev = host->hba->dev;
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct device_node *np = dev->of_node;
+-
+-	bus_pdata = msm_bus_cl_get_pdata(pdev);
+-	if (!bus_pdata) {
+-		dev_err(dev, "%s: failed to get bus vectors\n", __func__);
+-		err = -ENODATA;
+-		goto out;
+-	}
+-
+-	err = of_property_count_strings(np, "qcom,bus-vector-names");
+-	if (err < 0 || err != bus_pdata->num_usecases) {
+-		dev_err(dev, "%s: qcom,bus-vector-names not specified correctly %d\n",
+-				__func__, err);
+-		goto out;
+-	}
+-
+-	host->bus_vote.client_handle = msm_bus_scale_register_client(bus_pdata);
+-	if (!host->bus_vote.client_handle) {
+-		dev_err(dev, "%s: msm_bus_scale_register_client failed\n",
+-				__func__);
+-		err = -EFAULT;
+-		goto out;
+-	}
+-
+-	/* cache the vote index for minimum and maximum bandwidth */
+-	host->bus_vote.min_bw_vote = ufs_qcom_get_bus_vote(host, "MIN");
+-	host->bus_vote.max_bw_vote = ufs_qcom_get_bus_vote(host, "MAX");
+-
+-	host->bus_vote.max_bus_bw.show = show_ufs_to_mem_max_bus_bw;
+-	host->bus_vote.max_bus_bw.store = store_ufs_to_mem_max_bus_bw;
+-	sysfs_attr_init(&host->bus_vote.max_bus_bw.attr);
+-	host->bus_vote.max_bus_bw.attr.name = "max_bus_bw";
+-	host->bus_vote.max_bus_bw.attr.mode = S_IRUGO | S_IWUSR;
+-	err = device_create_file(dev, &host->bus_vote.max_bus_bw);
+-out:
+-	return err;
+-}
+-#else /* CONFIG_MSM_BUS_SCALING */
+-static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+-{
+-	return 0;
+-}
+-
+-static int ufs_qcom_set_bus_vote(struct ufs_hba *host, bool on)
+-{
+-	return 0;
+-}
+-
+-static int ufs_qcom_bus_register(struct ufs_qcom_host *host)
+-{
+-	return 0;
+-}
+-#endif /* CONFIG_MSM_BUS_SCALING */
+-
+ static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+ {
+ 	if (host->dev_ref_clk_ctrl_mmio &&
+@@ -976,7 +764,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 		/* cache the power mode parameters to use internally */
+ 		memcpy(&host->dev_req_params,
+ 				dev_req_params, sizeof(*dev_req_params));
+-		ufs_qcom_update_bus_bw_vote(host);
+ 
+ 		/* disable the device ref clock if entered PWM mode */
+ 		if (ufshcd_is_hs_mode(&hba->pwr_info) &&
+@@ -1107,9 +894,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		if (on) {
+-			err = ufs_qcom_set_bus_vote(hba, true);
+-		} else {
++		if (!on) {
+ 			if (!ufs_qcom_is_link_active(hba)) {
+ 				/* disable device ref_clk */
+ 				ufs_qcom_dev_ref_clk_ctrl(host, false);
+@@ -1121,8 +906,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+ 			/* enable the device ref clock for HS mode*/
+ 			if (ufshcd_is_hs_mode(&hba->pwr_info))
+ 				ufs_qcom_dev_ref_clk_ctrl(host, true);
+-		} else {
+-			err = ufs_qcom_set_bus_vote(hba, false);
+ 		}
+ 		break;
+ 	}
+@@ -1264,10 +1047,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 		goto out_variant_clear;
+ 	}
+ 
+-	err = ufs_qcom_bus_register(host);
+-	if (err)
+-		goto out_variant_clear;
+-
+ 	ufs_qcom_get_controller_revision(hba, &host->hw_ver.major,
+ 		&host->hw_ver.minor, &host->hw_ver.step);
+ 
+@@ -1307,7 +1086,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	if (err)
+ 		goto out_variant_clear;
+ 
+-	ufs_qcom_set_bus_vote(hba, true);
+ 	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
+ 
+ 	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+@@ -1446,7 +1224,6 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 				    dev_req_params->pwr_rx,
+ 				    dev_req_params->hs_rate,
+ 				    false);
+-		ufs_qcom_update_bus_bw_vote(host);
+ 	}
+ 
+ out:
+diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
+index 97247d17e258..3f4922743b3e 100644
+--- a/drivers/scsi/ufs/ufs-qcom.h
++++ b/drivers/scsi/ufs/ufs-qcom.h
+@@ -174,16 +174,6 @@ static inline void ufs_qcom_deassert_reset(struct ufs_hba *hba)
+ 	mb();
+ }
+ 
+-struct ufs_qcom_bus_vote {
+-	uint32_t client_handle;
+-	uint32_t curr_vote;
+-	int min_bw_vote;
+-	int max_bw_vote;
+-	int saved_vote;
+-	bool is_max_bw_needed;
+-	struct device_attribute max_bus_bw;
+-};
+-
+ /* Host controller hardware version: major.minor.step */
+ struct ufs_hw_version {
+ 	u16 step;
+@@ -216,7 +206,6 @@ struct ufs_qcom_host {
+ 
+ 	struct phy *generic_phy;
+ 	struct ufs_hba *hba;
+-	struct ufs_qcom_bus_vote bus_vote;
+ 	struct ufs_pa_layer_attr dev_req_params;
+ 	struct clk *rx_l0_sync_clk;
+ 	struct clk *tx_l0_sync_clk;
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
+
