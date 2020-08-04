@@ -2,207 +2,153 @@ Return-Path: <SRS0=m56l=BO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4ABBC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 08:36:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C29C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 09:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBBBB22C9F
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 08:36:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00DF622B40
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Aug 2020 09:07:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="I+5f3Yiz"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BtYnWEZv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728603AbgHDIgs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Aug 2020 04:36:48 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:34865 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726058AbgHDIgs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2020 04:36:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1596530207;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PvHLEyqPF58gllxf68+mp7qSyk5x+qOWpmVkDZ2ceKE=;
-        b=I+5f3YizZPH+smQau5I6pF7nEMyCAXPhFmDfR/q8D9O0uEcm+/JBQYZVHB2mO6gbaf9lC9
-        /nhnn3TcOPCXKw2WfNCabzphyW9hYIdI+H+79nNshtCP7k3TGH3kqsLV1daBqXj/NoiCGF
-        6vwx5E7EGjsdy/473NKG+ckxo+RmOQw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-353-24c-b3JnOYGWCBJH_-k3Tg-1; Tue, 04 Aug 2020 04:36:43 -0400
-X-MC-Unique: 24c-b3JnOYGWCBJH_-k3Tg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BB94C8017FB;
-        Tue,  4 Aug 2020 08:36:40 +0000 (UTC)
-Received: from T590 (ovpn-13-169.pek2.redhat.com [10.72.13.169])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2FB2410013C4;
-        Tue,  4 Aug 2020 08:36:29 +0000 (UTC)
-Date:   Tue, 4 Aug 2020 16:36:25 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-Message-ID: <20200804083625.GA1958244@T590>
-References: <20200722080409.GB912316@T590>
- <fe7a7acf-d62b-d541-4203-29c1d0403c2a@huawei.com>
- <20200723140758.GA957464@T590>
- <f4a896a3-756e-68bb-7700-cab1e5523c81@huawei.com>
- <20200724024704.GB957464@T590>
- <6531e06c-9ce2-73e6-46fc-8e97400f07b2@huawei.com>
- <20200728084511.GA1326626@T590>
- <965cf22eea98c00618570da8424d0d94@mail.gmail.com>
- <20200729153648.GA1698748@T590>
- <7f94eaf2318cc26ceb64bde88d59d5e2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7f94eaf2318cc26ceb64bde88d59d5e2@mail.gmail.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+        id S1730013AbgHDJHE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Aug 2020 05:07:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35948 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729985AbgHDJHE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2020 05:07:04 -0400
+Received: from mail-qt1-x841.google.com (mail-qt1-x841.google.com [IPv6:2607:f8b0:4864:20::841])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD72C06174A
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2020 02:07:04 -0700 (PDT)
+Received: by mail-qt1-x841.google.com with SMTP id t23so27218864qto.3
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2020 02:07:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=bTdvrExZaKC0j2udF1+3J/5he8xgyaRLwD31+bm6mBU=;
+        b=BtYnWEZvV5QydwmBf4vShTH4BVIhpUq0Y5OfmB8V9HV4RMN8zPhlJ7JjZ3NoN9dHLm
+         WcLmpRYtRpcC8a2mUSOUB1QO/FodjFDDTHX7pv6VLpDOJeJm0psvkbNvrhdXP2IaQTn4
+         tmx2zRLbREgNZT27RwG6ThCPv9CxLc/DTRwiI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=bTdvrExZaKC0j2udF1+3J/5he8xgyaRLwD31+bm6mBU=;
+        b=lmJpOxp9LDdppko1qB117Dlte661TBEQgHtjyrksNwxB9ARq43w42WDrmTP+iSkYsV
+         UXe7a9SMseiXHAyiAqonSMfvFwQNU7JtRoNclvq0apNSJ837Yw2+w6THTC74smLxsan2
+         vmgGWNyJVWVTjvZpgsyIrQ73GmYXZXYNdl/A/i6rRTq+ny0TWIZXRL9RyA98IiG/PqGp
+         bKnrZ/jypFB12IAk2MASCSDb3FjF4j1bqtvUu+Hw0cJFejINCdzAcuG4+R4DkzZhwd0i
+         7W2XKx6BO5Vnzl9l6Gr3fvcT5wK/R0Ofuxtm60KTPASeh4YQzJsyZBCD/aNBIWJ7GySA
+         JaCg==
+X-Gm-Message-State: AOAM533Iud6SYdbdtX8496PqAGpWriVcZfpF6EfGM+/oQZhWE0KgncAu
+        5jHWbAa7F0NJ2LvWMJy/q6L9sA==
+X-Google-Smtp-Source: ABdhPJwo2uH9VpJCRm6pE7ZNfdhwgQ5tK4MKfwp0Z6PsaOaPQVY1Ke+PjNulKHLbrKoK46IEXBVeSg==
+X-Received: by 2002:ac8:e89:: with SMTP id v9mr20938810qti.100.1596532023161;
+        Tue, 04 Aug 2020 02:07:03 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 65sm19989407qkn.103.2020.08.04.02.07.00
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 04 Aug 2020 02:07:02 -0700 (PDT)
+From:   Muneendra <muneendra.kumar@broadcom.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     pbonzini@redhat.com, emilne@redhat.com, mkumar@redhat.com,
+        Muneendra <muneendra.kumar@broadcom.com>
+Subject: [RFC 00/16] Application specific identification support
+Date:   Tue,  4 Aug 2020 07:43:00 +0530
+Message-Id: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 12:01:22AM +0530, Kashyap Desai wrote:
-> > > >
-> > > > Another update is that V4 of 'scsi: core: only re-run queue in
-> > > > scsi_end_request() if device queue is busy' is quite hard to
-> > > > implement
-> > > since
-> > > > commit b4fd63f42647110c9 ("Revert "scsi: core: run queue if SCSI
-> > > > device queue isn't ready and queue is idle").
-> > >
-> > > Ming -
-> > >
-> > > Update from my testing. I found only one case of IO stall. I can
-> > > discuss this specific topic if you like to send separate patch. It is
-> > > too much interleaved discussion in this thread.
-> > >
-> > > I noted you mentioned that V4 of 'scsi: core: only re-run queue in
-> > > scsi_end_request() if device queue is busy' need underlying support of
-> > > "scsi: core: run queue if SCSI device queue isn't ready and queue is
-> idle"
-> > > patch which is already reverted in mainline.
-> >
-> > Right.
-> >
-> > > Overall idea of running h/w queues conditionally in your patch " scsi:
-> > > core: only re-run queue in scsi_end_request" is still worth. There can
-> > > be
-> >
-> > I agree.
-> >
-> > > some race if we use this patch and for that you have concern. Am I
-> > > correct. ?
-> >
-> > If the patch of "scsi: core: run queue if SCSI device queue isn't ready
-> and queue
-> > is idle" is re-added, the approach should work.
-> I could not find issue in " scsi: core: only re-run queue in
-> scsi_end_request" even though above mentioned patch is reverted.
-> There may be some corner cases/race condition in submission path which can
-> be fixed doing self-restart of h/w queue.
+Various virtualization technologies used in Fibre Channel
+SAN deployments have created the opportunity to identify
+and associate traffic with specific virtualized applications.
+ 
+The concepts behind the T11 Application Services standard is
+to provide the general mechanisms needed to identify
+virtualized services.
+ 
+This patch set enables the Fabric and the storage targets to
+identify, monitor, and handle FC traffic
+based on VMID .
+ 
+It added a new knob app_identifier in blkio controller
+and also provides a mechanism for inserting UUID info.
+ 
+ 
+It also provides a mechanism
+for inserting application specific identification into the FC frame.
+ 
+The HBA driver(lpfc) retrieves the UUID when the first IO is initiated
+and registers it with the Fabric.
+The Fabric assigns an VMID which is unique within the fabric. The
+resulting VMID is stored against the UUID/per-port. The VMID is inserted
+in all the subsequent FC frames that are originating from the UUID, and
+egressing the specific port through which the fabric is connected.
+HBA maintains mapping of fabric associated IDs (VMID) to compute associated IDs (UUID).
 
-It is because two corner cases are handled in other ways:
-
-    Now that we have the patches ("blk-mq: In blk_mq_dispatch_rq_list()
-    "no budget" is a reason to kick") and ("blk-mq: Rerun dispatching in
-    the case of budget contention") we should no longer need the fix in
-    the SCSI code.  Revert it, resolving conflicts with other patches that
-    have touched this code.
-
-> 
-> > However, it looks a bit
-> > complicated, and I was thinking if one simpler approach can be figured
-> out.
-> 
-> I was thinking your original approach is simple, but if you think some
-> other simple approach I can test as part of these series.
-> BTW, I am still not getting why you think your original approach is not
-> good design.
-
-It is still not straightforward enough or simple enough for proving its
-correctness, even though the implementation isn't complicated.
-
-> 
-> >
-> > >
-> > > One of the race I found in my testing is fixed by below patch -
-> > >
-> > > diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c index
-> > > 54f9015..bcfd33a 100644
-> > > --- a/block/blk-mq-sched.c
-> > > +++ b/block/blk-mq-sched.c
-> > > @@ -173,8 +173,10 @@ static int blk_mq_do_dispatch_ctx(struct
-> > > blk_mq_hw_ctx *hctx)
-> > >                 if (!sbitmap_any_bit_set(&hctx->ctx_map))
-> > >                         break;
-> > >
-> > > -               if (!blk_mq_get_dispatch_budget(hctx))
-> > > +               if (!blk_mq_get_dispatch_budget(hctx)) {
-> > > +                       blk_mq_delay_run_hw_queue(hctx,
-> > > BLK_MQ_BUDGET_DELAY);
-> > >                         break;
-> > > +               }
-> >
-> > Actually all hw queues need to be run, instead of this hctx, cause the
-> budget
-> > stuff is request queue wide.
-> 
-> 
-> OK. But I thought all the hctx will see issue independently, if they are
-> active and they will restart its own hctx queue.
-> BTW, do you think above handling in block layer code make sense
-> irrespective of current h/w queue restart logic OR it is just relative
-> stuffs ?
-
-You are right, it is correct to just run this hctx.
-
-> 
-> >
-> > >
-> > >                 rq = blk_mq_dequeue_from_ctx(hctx, ctx);
-> > >                 if (!rq) {
-> > >
-> > >
-> > > In my test setup, I have your V3 'scsi: core: only re-run queue in
-> > > scsi_end_request() if device queue is busy' rebased on 5.8 which does
-> > > not have
-> > > "scsi: core: run queue if SCSI device queue isn't ready and queue is
-> idle"
-> > > since it is already reverted in mainline.
-> >
-> > If you added the above patch, I believe you can remove the run queue in
-> > scsi_end_request() unconditionally. However, the delay run queue may
-> > degrade io performance.
-> 
-> I understood.  But that performance issue is due to budget contention and
-> may impact some old HBA(less queue depth) or emulation HBA.
-
-Your patch for delay running hw queue causes delay once one request
-is completed, and the queue should have been run immediately after one
-request is finished.
-
-> That is why I thought your patch of conditional h/w run from completion
-> would improve performance.
-
-Yeah, we all think that way is correct thing to do, and now the problem
-is how to run hw queue just in case of budget contention.
+The HBA changes currently supports only for scsi.
+For VM this patch currently supports for
+virtio device(device type:Disk Device and BUS type :VIRTIO)
 
 
-thanks, 
-Ming
+Tests done:
+We have tested this patch by attaching the device to
+a KVM as a virtio device and added UUID to blkio cgroup as shown below.
+ 
+echo "UUID" >
+/sys/fs/cgroup/blkio/machine.slice/machine-qemu\\x2d<ID>\\
+x2d<VMNAME>.scope/blkio.app_identifier
+ 
+Then from the guest we run couple of io tests and checked
+the VMID are passed to the fabric to identify,monitor the fc frames.
+
+The patches were cut against  5.9/scsi-queue tree
+
+
+Gaurav Srivastava (15):
+  lpfc: vmid: Add the datastructure for supporting VMID in lpfc
+  lpfc: vmid: API to check if VMID is enabled.
+  lpfc: vmid: Supplementary data structures for vmid
+  lpfc: vmid: Forward declarations for APIs
+  lpfc: vmid: Add support for vmid in mailbox command
+  lpfc: vmid: VMID params initialization
+  lpfc: vmid: vmid resource allocation
+  lpfc: vmid: cleanup vmid resources
+  lpfc: vmid: Implements ELS commands for appid patch
+  lpfc: vmid: Functions to manage vmids
+  lpfc: vmid: Implements CT commands for appid.
+  lpfc: vmid: Appends the vmid in the wqe before sending request
+  lpfc: vmid: Timeout implementation for vmid
+  lpfc: vmid: Adding qfpa and vmid timeout check in worker thread
+  lpfc: vmid: Introducing vmid in io path.
+
+Muneendra (1):
+  blkcg:Introduce blkio.app_identifier knob to blkio controller
+
+ block/blk-cgroup.c               |  32 +++
+ drivers/scsi/lpfc/lpfc.h         | 122 +++++++++++
+ drivers/scsi/lpfc/lpfc_attr.c    |  47 ++++
+ drivers/scsi/lpfc/lpfc_crtn.h    |  11 +
+ drivers/scsi/lpfc/lpfc_ct.c      | 256 +++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_disc.h    |   1 +
+ drivers/scsi/lpfc/lpfc_els.c     | 356 ++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 151 +++++++++++++
+ drivers/scsi/lpfc/lpfc_hw.h      | 124 ++++++++++-
+ drivers/scsi/lpfc/lpfc_hw4.h     |  12 ++
+ drivers/scsi/lpfc/lpfc_init.c    | 108 ++++++++++
+ drivers/scsi/lpfc/lpfc_mbox.c    |   6 +
+ drivers/scsi/lpfc/lpfc_scsi.c    | 323 ++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c     |  65 +++++-
+ drivers/scsi/lpfc/lpfc_sli.h     |   8 +
+ include/linux/blk-cgroup.h       |  19 ++
+ 16 files changed, 1618 insertions(+), 23 deletions(-)
+
+-- 
+2.18.2
 
