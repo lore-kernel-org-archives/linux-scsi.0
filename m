@@ -2,139 +2,149 @@ Return-Path: <SRS0=g50V=BP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E66F1C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:26:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 556F1C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:30:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE122206F6
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:26:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13CDF20842
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:30:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Uf8WjI/A"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BdzJi/1q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728708AbgHETZ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 15:25:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51238 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728715AbgHERPB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 13:15:01 -0400
-Received: from mail-oi1-x233.google.com (mail-oi1-x233.google.com [IPv6:2607:f8b0:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08307C061757
-        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 10:15:01 -0700 (PDT)
-Received: by mail-oi1-x233.google.com with SMTP id j7so23880277oij.9
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2020 10:15:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=jWQQ0cQXaDFSwdvPuv1NHdKGXywtUA2kO7hM0wR/9SI=;
-        b=Uf8WjI/AL0juCYG3MrhkVy1QGS7Yeq11AIhtf9OD3jjDIw/LrH6sMOKctAmvMyPQkk
-         m5Z+OH4gvZfUvpzfaoDMxN2y7JWSX5JlJ4rTVzfvk9DCrh0LvOx0svQrIsMLTw3QioEi
-         zNBBavkTkluAKNfqrCJjB5ZO0BypJ6dYyYJUw=
+        id S1728401AbgHET3x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Aug 2020 15:29:53 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:59287 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728555AbgHERKL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 13:10:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596647407;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=XBRZHl7JCJFhcfupZL8iAhY/apUMRtB5oC1LWGAgU4A=;
+        b=BdzJi/1qxsjYplX9UHJnssT/2ipPnfKLyXNtuqAX0EdvC5yBvGeOWH0tkFtWUfQZRVCCP7
+        t4glj4Ud13UVyITwsXvJLny6e170e6e9PebDU5jGr+Qi+T1Y/H0X2Zm0Ty6w90ouiGlr+H
+        UgNupPu+ZtSu7YxmEUkQp5NZPSsBQx0=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-206-BLY19M1LO4-lPDkv-Pp1VQ-1; Wed, 05 Aug 2020 09:44:03 -0400
+X-MC-Unique: BLY19M1LO4-lPDkv-Pp1VQ-1
+Received: by mail-wm1-f71.google.com with SMTP id z10so2725745wmi.8
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2020 06:44:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=jWQQ0cQXaDFSwdvPuv1NHdKGXywtUA2kO7hM0wR/9SI=;
-        b=MJNHkYrKLYJuJX10a6QL/B7np+SEf1STl7zxTXHRnNIDqDRFu0rwAeVmX/zXvFtPPM
-         rrQwxU/nBbOiWGBJ5GHufCulXAkpbU89lsYo952WmEOKtcKDVJpsLy9vjQ55f1u8QwMs
-         P/dpI6mnvO9+75k7q3fAKmtm71KnfnyYjiuoBMcex4IPyNprHzpWjXEPPPblZumAR9NB
-         h9CsgTSSnWSk2JcD+6mlYrTFforn4QVnuRsun35AGNpC2jRRFvsu2yzV0iR20E799YLT
-         V2t+02FX7K8Q4m3myyALJbN5MwUU0g+YFGkBUvgtIukab1EbsfNuHWQTheAmGyXvoStM
-         sWWQ==
-X-Gm-Message-State: AOAM5326zdwGuTI1KStnAhAjDSrar6SL6tI+yhArSGWi9kjx7S9Hx3fA
-        5a/j2/gX/tqARFCENvRq3HZyZnmB3Q2+76jQAO5xiQ==
-X-Google-Smtp-Source: ABdhPJzLZdo8qY74/MuhM/+FSNWx/NNtopPEtpMZtcAHj+8nS6gaQUzZcd/IdoV0AZ96iiYdKi1Rm1aHAQIJkKQ5bdE=
-X-Received: by 2002:a54:478f:: with SMTP id o15mr3658717oic.77.1596647700338;
- Wed, 05 Aug 2020 10:15:00 -0700 (PDT)
-From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
-References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596507196-27417-2-git-send-email-muneendra.kumar@broadcom.com>
- <20200804113130.qfi5agzilso3mlbp@beryllium.lan> <20200804142123.GA4819@mtj.thefacebook.com>
- <b35e0e83-eb6c-4282-5142-22d9a996d260@broadcom.com> <CACVXFVPVM-xU0d2nETztPrS_EpacMy8A4x8FbShhLYt2iV_ouw@mail.gmail.com>
- <227c7f27-c6c7-5db1-59ac-2dd428f5a42a@suse.de> <20200805143913.GC4819@mtj.thefacebook.com>
-In-Reply-To: <20200805143913.GC4819@mtj.thefacebook.com>
-MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-thread-index: AQIDyhmBPqdmqCKUdNTZliBUbPkt/AIVs741AOV8stoBvB2xRwGs7Aj/AfU+Z6cCXn8lCgHQWH25qGqsWhA=
-Date:   Wed, 5 Aug 2020 22:44:56 +0530
-Message-ID: <c40bc34840566366177a84b0d8b7ae90@mail.gmail.com>
-Subject: RE: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to blkio controller
-To:     Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>
-Cc:     Ming Lei <tom.leiming@gmail.com>,
-        James Smart <james.smart@broadcom.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=XBRZHl7JCJFhcfupZL8iAhY/apUMRtB5oC1LWGAgU4A=;
+        b=WzKCKukKVA0qwL/sCxuBg41e9ndgVU1kLaW4b2w9PQjVhYxSa8LxdVD/K2TQ/1t3xa
+         X0AUh+bieYsn8HsOhEhARClUmB6cboUVCRiEFLYDBMyQMhCIy4cAPSNFfTa6OaLT14HZ
+         BLPwp1m1PfsesceiQXznZbJ+ysmPsRL4QQMUWJXecGOz/fs2CVXD6wzpSdeQgI3j+o7k
+         ANEY5IeR2+6ugJbD9/v6B2mfhsd1lqhf6eaZ/8iJj2hC3AZRD3YFVGDrdxuI7aPNeQAx
+         zJG04BZqLlOrt+hnBq2Fuxw5GyWjAAgV1Q5wUDWjqUDWIzkQePhJEJQJTC6skKLJS3dh
+         X+LA==
+X-Gm-Message-State: AOAM532AxB7fugUP2/Ntq3xFZQOHJTX+LqINxtrDr9ryB6Nt4R46HVsV
+        tfNenfDhOQYYV7vuqGSVsvA1W7NxSFXqvtGwtY+s77npeB3sjhCtgYUQ5rVUA1UQZUQ+nfQ0YoW
+        lqkBb9Rzrg1SWyGfqn4VuDg==
+X-Received: by 2002:a7b:ca57:: with SMTP id m23mr3291805wml.35.1596635042169;
+        Wed, 05 Aug 2020 06:44:02 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxDiytpas+5HWe7CFND1zqnudLwtNEfOy8SdQ5eObOxwbDWWrns+xYAUPDW5UZJfGlbiTGXfw==
+X-Received: by 2002:a7b:ca57:: with SMTP id m23mr3291789wml.35.1596635041995;
+        Wed, 05 Aug 2020 06:44:01 -0700 (PDT)
+Received: from redhat.com (bzq-79-180-0-181.red.bezeqint.net. [79.180.0.181])
+        by smtp.gmail.com with ESMTPSA id x2sm3035450wrg.73.2020.08.05.06.44.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Aug 2020 06:44:01 -0700 (PDT)
+Date:   Wed, 5 Aug 2020 09:43:59 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Cornelia Huck <cohuck@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
         Paolo Bonzini <pbonzini@redhat.com>,
-        Ewan Milne <emilne@redhat.com>, mkumar@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        virtualization@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v3 16/38] virtio_scsi: correct tags for config space fields
+Message-ID: <20200805134226.1106164-17-mst@redhat.com>
+References: <20200805134226.1106164-1-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200805134226.1106164-1-mst@redhat.com>
+X-Mailer: git-send-email 2.27.0.106.g8ac3dc51b1
+X-Mutt-Fcc: =sent
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Tejun,
-Our main requirement is to track the bio requests coming from different VM
-/container applications  at the blk device layer(fc,scsi,nvme).
-By the time IO request comes to the blk device layer, the context of the
-application is lost and we can't track whose IO this belongs.
+Tag config space fields as having virtio endian-ness.
 
-In our approach we used the block cgroup to achieve this requirement.
-Since Requests also have access to the block cgroup via
-bio->bi_blkg->blkcg, and from there we can get the VM UUID.
-Therefore we added the VM UUID(app_identifier) to struct blkcg and define
-the accessors in blkcg_files and blkcg_legacy_files.
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Reviewed-by: Cornelia Huck <cohuck@redhat.com>
+---
+ drivers/scsi/virtio_scsi.c       |  4 ++--
+ include/uapi/linux/virtio_scsi.h | 20 ++++++++++----------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-Could you please let me know is there any another way where we can get the
-VM UUID info with the help of blkcg.
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 0e0910c5b942..c36aeb9a1330 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -746,14 +746,14 @@ static struct scsi_host_template virtscsi_host_template = {
+ 
+ #define virtscsi_config_get(vdev, fld) \
+ 	({ \
+-		typeof(((struct virtio_scsi_config *)0)->fld) __val; \
++		__virtio_native_type(struct virtio_scsi_config, fld) __val; \
+ 		virtio_cread(vdev, struct virtio_scsi_config, fld, &__val); \
+ 		__val; \
+ 	})
+ 
+ #define virtscsi_config_set(vdev, fld, val) \
+ 	do { \
+-		typeof(((struct virtio_scsi_config *)0)->fld) __val = (val); \
++		__virtio_native_type(struct virtio_scsi_config, fld) __val = (val); \
+ 		virtio_cwrite(vdev, struct virtio_scsi_config, fld, &__val); \
+ 	} while(0)
+ 
+diff --git a/include/uapi/linux/virtio_scsi.h b/include/uapi/linux/virtio_scsi.h
+index cc18ef8825c0..0abaae4027c0 100644
+--- a/include/uapi/linux/virtio_scsi.h
++++ b/include/uapi/linux/virtio_scsi.h
+@@ -103,16 +103,16 @@ struct virtio_scsi_event {
+ } __attribute__((packed));
+ 
+ struct virtio_scsi_config {
+-	__u32 num_queues;
+-	__u32 seg_max;
+-	__u32 max_sectors;
+-	__u32 cmd_per_lun;
+-	__u32 event_info_size;
+-	__u32 sense_size;
+-	__u32 cdb_size;
+-	__u16 max_channel;
+-	__u16 max_target;
+-	__u32 max_lun;
++	__virtio32 num_queues;
++	__virtio32 seg_max;
++	__virtio32 max_sectors;
++	__virtio32 cmd_per_lun;
++	__virtio32 event_info_size;
++	__virtio32 sense_size;
++	__virtio32 cdb_size;
++	__virtio16 max_channel;
++	__virtio16 max_target;
++	__virtio32 max_lun;
+ } __attribute__((packed));
+ 
+ /* Feature Bits */
+-- 
+MST
 
-Regards,
-Muneendra.
-
-
-
-
-
-
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-Sent: Wednesday, August 5, 2020 8:09 PM
-To: Hannes Reinecke <hare@suse.de>
-Cc: Ming Lei <tom.leiming@gmail.com>; James Smart
-<james.smart@broadcom.com>; Daniel Wagner <dwagner@suse.de>; Muneendra
-<muneendra.kumar@broadcom.com>; linux-block <linux-block@vger.kernel.org>;
-Linux SCSI List <linux-scsi@vger.kernel.org>; Paolo Bonzini
-<pbonzini@redhat.com>; Ewan Milne <emilne@redhat.com>; mkumar@redhat.com
-Subject: Re: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to
-blkio controller
-
-Hello,
-
-On Wed, Aug 05, 2020 at 08:33:19AM +0200, Hannes Reinecke wrote:
-> None of these are guaranteed to be either present or unique.
-> It's not uncommon to have VMs with more than one MAC address, and any
-> other unique identifier like system UUID is not required to be present.
-
-I have a really hard time seeing how this fits into block cgroup
-interface.
-The last time we did something similar (tagging from cgroup interface
-side) was for netcls and it ended poorly. There are basic problems with
-e.g.
-delegation as these things are at odds with everything else sharing the
-interface.
-
-My not-too-well informed suggestions are either building mapping somewhere
-in the stack or at least implement the interface where it fits better so
-that people who don't need app_identifier don't see them and preferably
-can disable them. I don't mind cgroup data structs carrying extra bits for
-stuff which want to make use of the cgroup tree but I'm a pretty firm nack
-on the proposed interface.
-
-Thanks.
-
---
-tejun
