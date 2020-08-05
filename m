@@ -2,104 +2,109 @@ Return-Path: <SRS0=g50V=BP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5E7C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 00:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93507C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 00:40:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99C5320842
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 00:23:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74F2320792
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 00:40:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="E6oxyEIm"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aYjVfEoM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726210AbgHEAXF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Aug 2020 20:23:05 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:59941 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726101AbgHEAXF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2020 20:23:05 -0400
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200805002301epoutp04fc02cc417392efca97d10bf183d41754~oN2aqozDL1047810478epoutp04X
-        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 00:23:01 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200805002301epoutp04fc02cc417392efca97d10bf183d41754~oN2aqozDL1047810478epoutp04X
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1596586982;
-        bh=qlNdJKxS6vjRNEiMmu428ar6fswYmiSCm+c/7glGFUc=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=E6oxyEImGOCEmwvFkNP+WDq6o4Wg2m9tfMl8jKsUYo8Ce2RfhFM9Yr/5Q740qa+yT
-         PX+Pq7ANbScCy3ERYJ//Z/ffnc7pXst307ZILFouAt1P67vOeoGh9PbeHq7SjXNcVy
-         AnHtjk+MhNZRsdJ2nfZOm4VbQJ9J8HcTZ8Mh3PAI=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p4.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200805002301epcas1p4bd83ad50725ee1ba24824c5ff429a42c~oN2aOGZ3c1926719267epcas1p4a;
-        Wed,  5 Aug 2020 00:23:01 +0000 (GMT)
-Mime-Version: 1.0
-Subject: RE: Re: [PATCH v6 2/5] scsi: ufs: Add UFS-feature layer
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <8d0fe031-e941-1b4e-7596-301ebd36f06d@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <231786897.01596586981491.JavaMail.epsvc@epcpadp2>
-Date:   Wed, 05 Aug 2020 08:33:04 +0900
-X-CMS-MailID: 20200804233304epcms2p1a36cc6f2726b091573bb592e261a7961
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8
-References: <8d0fe031-e941-1b4e-7596-301ebd36f06d@acm.org>
-        <7bcf45da-233b-0c38-b93a-99d205603e63@acm.org>
-        <231786897.01594636801601.JavaMail.epsvc@epcpadp1>
-        <963815509.21594636682161.JavaMail.epsvc@epcpadp2>
-        <231786897.01594637401708.JavaMail.epsvc@epcpadp1>
-        <20200722064112.GB21117@infradead.org>
-        <yq1h7tzg1lb.fsf@ca-mkp.ca.oracle.com>
-        <963815509.21595830981720.JavaMail.epsvc@epcpadp2>
-        <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p1>
+        id S1726489AbgHEAkF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Aug 2020 20:40:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38264 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725950AbgHEAkE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Aug 2020 20:40:04 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E456C06174A
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2020 17:40:04 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id p20so4112556wrf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2020 17:40:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=hJW6wAkuoQDVAepJ5Cv3gWI6qzML2AhmW89J2ZpCvBI=;
+        b=aYjVfEoMZdXH24qlnS3M7VKdM/4CrIuQbZ1Ctm3utrbCjdxibrVgB9Re+wkQQ6Yag3
+         ZE4EkRYx0N2q4Y3A9/bPb9KlY3FK71K9PU7gQgvT1OqdIe57mYFjilbUb0ZM6N4yIUBL
+         O0QRk6O7dPBVXkYu8ztrFsUD2ZboBTjeJ+SAk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=hJW6wAkuoQDVAepJ5Cv3gWI6qzML2AhmW89J2ZpCvBI=;
+        b=bm8HNsrB+exc3xp2zyrVlInobjhAspyHLsO6CVBPIF8S9Ynlvl5H0Fa+dkKBJHoRAx
+         3xoHfgfVFZCKtvycsKabHPX6E3iSxkBlPw4dYA4CC0a0jMKUjUo91oq+EAkXeDqB5Xss
+         6zXHOPT1vPiFrsCkemnFsM8uhjCD/fbW7RhaPNbF1NmVCIJ0508VYntgl8Mbt2koXV0D
+         /orPZtAzGCWdwNkh0kqZg/LsMZVM+etVDaQvQRXiOPcLeR4TV6/aQsp8Vbb8DVn6C0VV
+         Q3bpuj/WPFZszIrC8SjIqLu1zB7SpMNB3TlHHpq7QaBNjHG6RqQ3r+SeNZr1ituIIhJd
+         2h3A==
+X-Gm-Message-State: AOAM530MRh8tcUKWljlfTyNgcOpG5NS7LGH0Hcq/uPdkFe/Z5DRs3zCv
+        MFIgX/kfvH2QFI7WBJamClcqBA==
+X-Google-Smtp-Source: ABdhPJxKkNX69AKXiUthEHMB6Dol3OWroWIMuU5IyuxNcQhTiTyAkCPxkDdFLyDUt8qOnMHGouuU0A==
+X-Received: by 2002:adf:efcc:: with SMTP id i12mr411064wrp.308.1596588002977;
+        Tue, 04 Aug 2020 17:40:02 -0700 (PDT)
+Received: from [10.230.185.151] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id g188sm608229wma.5.2020.08.04.17.40.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Aug 2020 17:40:02 -0700 (PDT)
+Subject: Re: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to blkio
+ controller
+To:     Tejun Heo <tj@kernel.org>, Daniel Wagner <dwagner@suse.de>
+Cc:     Muneendra <muneendra.kumar@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        pbonzini@redhat.com, emilne@redhat.com, mkumar@redhat.com
+References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1596507196-27417-2-git-send-email-muneendra.kumar@broadcom.com>
+ <20200804113130.qfi5agzilso3mlbp@beryllium.lan>
+ <20200804142123.GA4819@mtj.thefacebook.com>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <b35e0e83-eb6c-4282-5142-22d9a996d260@broadcom.com>
+Date:   Tue, 4 Aug 2020 17:39:57 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <20200804142123.GA4819@mtj.thefacebook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+On 8/4/2020 7:21 AM, Tejun Heo wrote:
+> Hello,
+>
+> On Tue, Aug 04, 2020 at 01:31:30PM +0200, Daniel Wagner wrote:
+>> Hi,
+>>
+>> [cc Tejun]
+>>
+>> On Tue, Aug 04, 2020 at 07:43:01AM +0530, Muneendra wrote:
+>>> This Patch added a unique application identifier i.e
+>>> blkio.app_identifier knob to  blkio controller which
+>>> allows identification of traffic sources at an
+>>> individual cgroup based Applications
+>>> (ex:virtual machine (VM))level in both host and
+>>> fabric infrastructure.
+> I'm not sure it makes sense to introduce custom IDs for these given that
+> there already are unique per-host cgroup IDs which aren't recycled.
+>
+> Thanks.
+>
 
-> Any idea how much time this work will take and when a new version will be
-> posted?
+If the VM moves to a different host, does the per-host cgroup IDs 
+migrate with the VM ?   If not, we need to have an identifier that moves 
+with the VM and which is independent of what host the VM is residing on.
 
-I have plan to patch new version in this week.
+-- james
 
-Thanks,
-
-Daejun
 
