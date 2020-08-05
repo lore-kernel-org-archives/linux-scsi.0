@@ -2,270 +2,115 @@ Return-Path: <SRS0=g50V=BP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8734BC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 07:16:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76703C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 07:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D28121744
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 07:16:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5268621744
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 07:17:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725981AbgHEHQP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 03:16:15 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34370 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725920AbgHEHQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Aug 2020 03:16:14 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 55F7DB5E6;
-        Wed,  5 Aug 2020 07:16:28 +0000 (UTC)
-Subject: Re: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
-To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     pbonzini@redhat.com, emilne@redhat.com, mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
-        James Smart <jsmart2021@gmail.com>
-References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596507196-27417-17-git-send-email-muneendra.kumar@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <61d2fd75-84ea-798b-aee9-b07957ac8f1b@suse.de>
-Date:   Wed, 5 Aug 2020 09:16:09 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726207AbgHEHRx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Aug 2020 03:17:53 -0400
+Received: from mout.kundenserver.de ([212.227.126.133]:35755 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726008AbgHEHRu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 03:17:50 -0400
+Received: from mail-qk1-f174.google.com ([209.85.222.174]) by
+ mrelayeu.kundenserver.de (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1M7sYM-1k73Qk3Kmw-00540k; Wed, 05 Aug 2020 09:17:49 +0200
+Received: by mail-qk1-f174.google.com with SMTP id j187so40765678qke.11;
+        Wed, 05 Aug 2020 00:17:48 -0700 (PDT)
+X-Gm-Message-State: AOAM530WfHW5CLKTo4yzxsctC6QH7r7wv8QCakmW3YlJo1SswawijSZk
+        gL9qO9i8tQBaUEUtV0Q2+/7pX9BJSz5f8WdIZJQ=
+X-Google-Smtp-Source: ABdhPJwc875ta9ExZX1/DvTUle7thiMXYwYloLV2Wm+kT3X53apLGCRcK45f+YRn0Oge+DYC3vh8PRvw9l2wpIgcNzM=
+X-Received: by 2002:a37:6351:: with SMTP id x78mr1971924qkb.394.1596611867220;
+ Wed, 05 Aug 2020 00:17:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1596507196-27417-17-git-send-email-muneendra.kumar@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20200730220750.18158-1-samuel@sholland.org> <CAK8P3a2p7dWhhCqAYF_Zos-X-zBK+id-xO5hPu2fRTbNyPo9Xg@mail.gmail.com>
+ <29ea8d0f-bcab-9ffd-0e2f-f022911f4bf2@sholland.org> <CAK8P3a0xSyyaLHziuv4JKimUggF96frwLPKmjQ4G9VBWRW2EMg@mail.gmail.com>
+ <0bd43d61-4d9a-40cb-27c6-18aaf7f58b48@sholland.org>
+In-Reply-To: <0bd43d61-4d9a-40cb-27c6-18aaf7f58b48@sholland.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 5 Aug 2020 09:17:31 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3bPb+-i2YbHmn84MEuCe4xG_BKP15vNO1B1kTkYZ+=pg@mail.gmail.com>
+Message-ID: <CAK8P3a3bPb+-i2YbHmn84MEuCe4xG_BKP15vNO1B1kTkYZ+=pg@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: 3w-9xxx: Fix endianness issues found by sparse
+To:     Samuel Holland <samuel@sholland.org>
+Cc:     Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:sEjRjQxm9xe+XM3h7HubnfCYIZJq2EXLky7dI8JeDP3M7YTvX9J
+ C/ih5HqEv1L0Uo5TfklkVi3joITnvMp333UU8vtykpYsRQy23jOh+Os86cMVO+hk3hr4gBW
+ XQQxLZmmjfpa3w4RnBpX9Ik9UBLm+Qn04ZtjTjjcZX6/TW7/Lu1k1ZZ4FF/g3l/GM/a1QTB
+ +Csbf1YFThT5RvGt9PPaQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:fQj30KgxVak=:ZGrI8ZUqpNLw6CyceElaEI
+ pYwgZQlt5P8rnBDmJ1IoTVgNG7I0qA2zYy7tB4pxKs+0Weqh2/0W14iPMgxaNKzubgWVqYxap
+ Re8DVWb7O/e2no1ql8mzPyNghsvP2eckx9epOgKR72cr62LJfxm/4EJSrsrMcq1MXcXNEyp/Z
+ iyS64Irfcnt/ecFmbTyBXRrn3FOASnBc99me18kx2XMme67oD4EjpPnOwEZCR06xB7WmpnBDQ
+ 1A1yTUWzvF7sBIVZvp6Myz5jZo4YGE7RorYfPdi8R3Gkn1d+r4WOO/QpLxWAWi6EVRQryLQhx
+ vyt85V1Ffx6VndRoCMiBXpGVWV4dm2RudZyvKSLT4UU61aNZ55f0WKKLOYTxdUGzL8JGotgJt
+ VueqDVM3+fBKVUt5OcCpgu5qIEz3P+y8/VklDh2y0xroq6is3q1KuIB4JfefYzFcSztKeKb6J
+ F1LN8YZoxVTZsVmIVMwT4ErWcXsvAzJKTE2P/YEbCGBwUEtBcmS/YcvTphfu4kODVgU1V5ypH
+ hmxEGhcbq5eGc0zFu0LoYXm9k9ogDej5ubqrQQVB2qZ8JUGCpZDXMyW45Mx9InU77eXE0q2mA
+ pgPsgNdc5HFXvXZtOUogfUH6hz11mrsxI5/pztJG5w4/P7hy9/1kI3lqrHdNsUc5HtwV3sgyE
+ Tc86gPpiCrjTPO+F4fVyK6394cM/OrdTTEtLlpgpNvI/5zRKX669aK9UJS95g0r+H2pYyUZH6
+ sfk6bBuwLxfvogoHytUNYOD6D2kgfW+PlTD23dO0ZzLaOifcAR43jl18bTJ5INbp+/FcOIDMm
+ t9dC/XTvPhESq1JgiAxggkFgQph9YyByVWQ2AoMueLbAF5OYipXoTXZZ6Ta7apqFsa8WNqR
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/4/20 4:13 AM, Muneendra wrote:
-> From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-> 
-> The patch introduces the vmid in the io path. It checks if the vmid is
-> enabled and if io belongs to a vm or not and acts accordingly. Other
-> supporing APIs are also included in the patch.
-> 
-> Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
-> ---
->   drivers/scsi/lpfc/lpfc_scsi.c | 163 ++++++++++++++++++++++++++++++++++
->   1 file changed, 163 insertions(+)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index e5a1056cc575..3c7af8064b12 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -4624,6 +4624,149 @@ void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport, struct lpfc_vmid *vmid)
->   	}
->   }
->   
-> +/*
-> + * lpfc_vmid_get_appid- get the vmid associated with the uuid
-> + * @vport: The virtual port for which this call is being executed.
-> + * @uuid: uuid associated with the VE
-> + * @cmd: address of scsi cmmd descriptor
-> + * @tag: VMID tag
-> + * Returns status of the function
-> + */
-> +static int lpfc_vmid_get_appid(struct lpfc_vport *vport, char *uuid, struct
-> +			       scsi_cmnd * cmd, union lpfc_vmid_io_tag *tag)
-> +{
-> +	struct lpfc_vmid *vmp = NULL;
-> +	int hash, len, rc = 1, i;
-> +	u8 pending = 0;
-> +
-> +	/* check if QFPA is complete */
-> +	if (lpfc_vmid_is_type_priority_tag(vport) && !(vport->vmid_flag &
-> +	      LPFC_VMID_QFPA_CMPL))
-> +		return 1;
-> +
-> +	/* search if the uuid has already been mapped to the vmid */
-> +	len = strlen(uuid);
-> +	hash = lpfc_vmid_hash_fn(uuid, len);
-> +
-> +	/* search for the VMID in the table */
-> +	read_lock(&vport->vmid_lock);
-> +	vmp = lpfc_get_vmid_from_hastable(vport, hash, uuid);
-> +	read_unlock(&vport->vmid_lock);
-> +
-> +	/* if found, check if its already registered  */
-> +	if (vmp  && vmp->flag & LPFC_VMID_REGISTERED) {
-> +		lpfc_vmid_update_entry(vport, cmd, vmp, tag);
-> +		rc = 0;
-> +	} else if (vmp && (vmp->flag & LPFC_VMID_REQ_REGISTER ||
-> +			   vmp->flag & LPFC_VMID_DE_REGISTER)) {
-> +		/* else if register or dereg request has already been sent */
-> +		/* Hence vmid tag will not be added for this IO */
-> +		rc = 1;
-> +	} else {
-> +		/* else, start the process to obtain one as per the */
-> +		/* switch connected */
-> +		write_lock(&vport->vmid_lock);
-> +		vmp = lpfc_get_vmid_from_hastable(vport, hash, uuid);
-> +
-> +		/* while the read lock was released, in case the entry was */
-> +		/* added by other context or is in process of being added */
-> +		if (vmp && vmp->flag & LPFC_VMID_REGISTERED) {
-> +			lpfc_vmid_update_entry(vport, cmd, vmp, tag);
-> +			write_unlock(&vport->vmid_lock);
-> +			return 0;
-> +		} else if (vmp && vmp->flag & LPFC_VMID_REQ_REGISTER) {
-> +			write_unlock(&vport->vmid_lock);
-> +			return 1;
-> +		}
-> +
-> +		/* else search and allocate a free slot in the hash table */
-> +		if (vport->cur_vmid_cnt < vport->max_vmid) {
-> +			for (i = 0; i < vport->max_vmid; ++i) {
-> +				vmp = vport->vmid + i;
-> +				if (vmp->flag == LPFC_VMID_SLOT_FREE) {
-> +					vmp = vport->vmid + i;
-> +					break;
-> +				}
-> +			}
-> +		} else {
-> +			write_unlock(&vport->vmid_lock);
-> +			return 1;
-> +		}
-> +
-> +		if (vmp && (vmp->flag == LPFC_VMID_SLOT_FREE)) {
-> +			vmp->vmid_len = len;
-> +
-> +			/* Add the vmid and register  */
-> +			memcpy(vmp->host_vmid, uuid, vmp->vmid_len);
-> +			vmp->io_rd_cnt = 0;
-> +			vmp->io_wr_cnt = 0;
-> +			vmp->flag = LPFC_VMID_SLOT_USED;
-> +			lpfc_put_vmid_in_hashtable(vport, hash, vmp);
-> +
-> +			vmp->delete_inactive =
-> +			    vport->vmid_inactivity_timeout ? 1 : 0;
-> +
-> +			/* if type priority tag, get next available vmid */
-> +			if (lpfc_vmid_is_type_priority_tag(vport))
-> +				lpfc_vmid_assign_cs_ctl(vport, vmp);
-> +
-> +			/* allocate the per cpu variable for holding */
-> +			/* the last access time stamp only if vmid is enabled */
-> +			if (!vmp->last_io_time)
-> +				vmp->last_io_time =
-> +				    __alloc_percpu(sizeof(u64),
-> +						   __alignof__(struct
-> +							       lpfc_vmid));
-> +
-> +			/* registration pending */
-> +			pending = 1;
-> +			rc = 1;
-> +		}
-> +		write_unlock(&vport->vmid_lock);
-> +
-> +		/* complete transaction with switch */
-> +		if (pending) {
-> +			if (lpfc_vmid_is_type_priority_tag(vport))
-> +				rc = lpfc_vmid_uvem(vport, vmp, true);
-> +			else
-> +				rc = lpfc_vmid_cmd(vport,
-> +						   SLI_CTAS_RAPP_IDENT,
-> +						   vmp);
-> +			if (!rc) {
-> +				write_lock(&vport->vmid_lock);
-> +				vport->cur_vmid_cnt++;
-> +				vmp->flag |= LPFC_VMID_REQ_REGISTER;
-> +				write_unlock(&vport->vmid_lock);
-> +			}
-> +		}
-> +
-> +		/* finally, enable the idle timer once */
-> +		if (!(vport->phba->pport->vmid_flag & LPFC_VMID_TIMER_ENBLD)) {
-> +			mod_timer(&vport->phba->inactive_vmid_poll,
-> +				  jiffies +
-> +				  msecs_to_jiffies(1000 * LPFC_VMID_TIMER));
-> +			vport->phba->pport->vmid_flag |= LPFC_VMID_TIMER_ENBLD;
-> +		}
-> +	}
-> +	return rc;
-> +}
-> +
-> +/*
-> + * lpfc_is_command_vm_io - get the uuid from blk cgroup
-> + * @cmd:Pointer to scsi_cmnd data structure
-> + * Returns uuid if present if not null
-> + */
-> +static char *lpfc_is_command_vm_io(struct scsi_cmnd *cmd)
-> +{
-> +	char *uuid = NULL;
-> +
-> +	if (cmd->request) {
-> +		if (cmd->request->bio)
-> +			uuid = blkcg_get_app_identifier(cmd->request->bio);
-> +	}
-> +	return uuid;
-> +}
-> +
->   /**
->    * lpfc_queuecommand - scsi_host_template queuecommand entry point
->    * @cmnd: Pointer to scsi_cmnd data structure.
-> @@ -4649,6 +4792,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
->   	int err, idx;
->   #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
->   	uint64_t start = 0L;
-> +	u8 *uuid = NULL;
->   
->   	if (phba->ktime_on)
->   		start = ktime_get_ns();
-> @@ -4772,6 +4916,25 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
->   
->   	lpfc_scsi_prep_cmnd(vport, lpfc_cmd, ndlp);
->   
-> +	/* check the necessary and sufficient condition to support VMID */
-> +	if (lpfc_is_vmid_enabled(phba) &&
-> +	    (ndlp->vmid_support ||
-> +	     phba->pport->vmid_priority_tagging ==
-> +	     LPFC_VMID_PRIO_TAG_ALL_TARGETS)) {
-> +		/* is the IO generated by a VM, get the associated virtual */
-> +		/* entity id */
-> +		uuid = lpfc_is_command_vm_io(cmnd);
-> +
-> +		if (uuid) {
-> +			err = lpfc_vmid_get_appid(vport, uuid, cmnd,
-> +				(union lpfc_vmid_io_tag *)
-> +					&lpfc_cmd->cur_iocbq.vmid_tag);
-> +			if (!err)
-> +				lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_VMID;
-> +		}
-> +	}
-> +
-> +	atomic_inc(&ndlp->cmd_pending);
->   #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
->   	if (unlikely(phba->hdwqstat_on & LPFC_CHECK_SCSI_IO))
->   		this_cpu_inc(phba->sli4_hba.c_stat->xmt_io);
-> 
-Well.
+On Wed, Aug 5, 2020 at 3:44 AM Samuel Holland <samuel@sholland.org> wrote:
+> On 8/3/20 9:02 AM, Arnd Bergmann wrote:
+> > On Mon, Aug 3, 2020 at 5:42 AM Samuel Holland <samuel@sholland.org> wrote:
+> >> All of the command structures are packed, due to the "#pragma pack(1)" earlier
+> >> in the file. So alignment is not an issue. This dma_addr_t member _is_ the
+> >> explicit padding to make sizeof(TW_Command) -
+> >> sizeof(TW_Command.byte8_offset.{io,param}.sgl) equal TW_COMMAND_SIZE * 4. And
+> >> indeed the structure is expected to be a different size depending on
+> >> sizeof(dma_addr_t).
+> >
+> > Ah, so only the first few members are accessed by hardware and the
+> > last union is only accessed by the OS then? In that case I suppose it is
+> > all fine, but I would also suggest removing the "#pragma packed"
+> > to get somewhat more efficient access on systems that have  problems
+> > with misaligned accesses.
+>
+> I don't know what part the hardware accesses; everything I know about the
+> hardware comes from reading the driver.
 
-Creating a VMID in the hotpath with a while() loop will be bogging down 
-performance to no end.
-I'd rather have restricted the ->queuecommand() function to a direct lookup.
-If that fails (as the VMID isn't registered) we should kicking of a 
-workqueue for registering the VMID and return BUSY.
-Or tweak blkcg to register the VMID directly, and reject the command if 
-the VMID isn't registered :-)
+I see now from your explanation below that this is a hardware-defined
+structure. I was confused by how it can be either 32 or 64 bits wide but
+found the
 
-Cheers,
+tw_initconnect->features |= sizeof(dma_addr_t) > 4 ? 1 : 0;
 
-Hannes
+line now that tells the hardware about which format is used.
 
+> The problem with removing the "#pragma pack(1)" is that the structure is
+> inherently misaligned: byte8_offset.io.sgl starts at offset 12, but it may begin
+> with a __le64.
 
--- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+I think a fairly clean way to handle this would be to remove the pragma
+and instead define a local type like
+
+#if IS_ENABLED(CONFIG_ARCH_DMA_ADDR_T_64BIT)
+typedef  __le64 twa_address_t __packed;
+#else
+typedef __le32 twa_addr_t;
+#endif
+
+The problem with marking the entire structure as packed, rather than
+just individual members is that you end up with very inefficient bytewise
+access on some architectures (especially those without cache-coherent
+DMA or hardware unaligned access in the CPU), so I would recommend
+avoiding that in portable driver code.
+
+      Arnd
