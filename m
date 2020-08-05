@@ -3,126 +3,138 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF402C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E66F1C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:26:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 817162084D
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:23:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596655412;
-	bh=/ZuawsNQY0tX3YVgdA0aqZY5ulz2qgAadTz05jYIb4g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=wuJamtwkSqTUzimSD4mBN/+coJ7yPvJ45Tpq5D84rJX88Cy7pjoKL9746U5m5VwFN
-	 m7Cn0zKYAUqfXp3DRjIBkTQZCP180eti5z0v18BXzgVk9r1lOX4jcUCQRd6npAx50i
-	 Uz0SGaBZ1Pd3mn/eNOxCWJ8RsKHfmWp9vT29124A=
+	by mail.kernel.org (Postfix) with ESMTP id AE122206F6
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 19:26:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Uf8WjI/A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726386AbgHETXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 15:23:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53908 "EHLO
+        id S1728708AbgHETZ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Aug 2020 15:25:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728829AbgHERcA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 13:32:00 -0400
-Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28FBAC061756;
-        Wed,  5 Aug 2020 10:31:34 -0700 (PDT)
-Received: by mail-qk1-x72b.google.com with SMTP id m7so10271855qki.12;
-        Wed, 05 Aug 2020 10:31:34 -0700 (PDT)
+        with ESMTP id S1728715AbgHERPB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 13:15:01 -0400
+Received: from mail-oi1-x233.google.com (mail-oi1-x233.google.com [IPv6:2607:f8b0:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08307C061757
+        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 10:15:01 -0700 (PDT)
+Received: by mail-oi1-x233.google.com with SMTP id j7so23880277oij.9
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2020 10:15:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=UWGxhCjzBeMfhRrfiK9S51lUCP77PLbSWogi2fzaHnM=;
-        b=byBRoafuwLO4EDZyjJNZQXUe955RCe3v3sOOfAj5eM/IzaVZIWingJqcIMWKy9U1bq
-         SP7+bDE8NIJMLU/IWu5+JJv6RLBHGwBC8bZ/tTYdBioZa+gn7yTlIjttYSjBtp4gM4kn
-         5j6a6cQlQD0PEvlChyqlW6GnrzGYjHunfVUdKqjOcTR02LRHFljeEi6I8k330r8Mjq4S
-         nGJzrrsabDfD6vX9I5bOx7T9dyXd117onufo4VUfLKGmaPLPwyhWHAh3ghTzSsmCYJE7
-         ER7F+xJW0HCBNSfT0GciMAXwgvlOfqNy9DKLZ5NWX2A7gVJnRoTbX1TqVNK0YilPWQKZ
-         bLNg==
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=jWQQ0cQXaDFSwdvPuv1NHdKGXywtUA2kO7hM0wR/9SI=;
+        b=Uf8WjI/AL0juCYG3MrhkVy1QGS7Yeq11AIhtf9OD3jjDIw/LrH6sMOKctAmvMyPQkk
+         m5Z+OH4gvZfUvpzfaoDMxN2y7JWSX5JlJ4rTVzfvk9DCrh0LvOx0svQrIsMLTw3QioEi
+         zNBBavkTkluAKNfqrCJjB5ZO0BypJ6dYyYJUw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=UWGxhCjzBeMfhRrfiK9S51lUCP77PLbSWogi2fzaHnM=;
-        b=FTn4vg7KHrxU/HWrikQZtbQ+fB4A63LA8SjuvlQiFO4+B7x3sU9CIG6Q0VR/f3oJ2o
-         fQEZQTRU2+WFZJzn+VBi2Uf24/hCs2iZW4bvZGjjXeNCbYsJ1jLOEaYbXB/DY1ydC6G9
-         8poXkcg3za1wwIYITdwRmCnbhthEmUxGMd59lDqsY682zXOg2W5m0K6dVPtsx4nlC/JQ
-         TjOjUBtYq5YYCOifZtggUIQelwT/VfJFN3pQNT59Cpu24QDGO4jKc6+W71B9Ce5lxtFY
-         OtpSikQLQXq2ikoDCa0WOVjJxvXejUc/OujIc9ml9JsVP15XzLVjbdCc/iFd7b3UWxZ3
-         LVTQ==
-X-Gm-Message-State: AOAM530X2vVwBjqDDlwiLWucQgfSmRqpKQK9K01Jykxgx2Nae9erXO/u
-        Iw88RHLK1TuwDh52YOgcbLg=
-X-Google-Smtp-Source: ABdhPJwQtX8amUfGESNn3AgNmOlCCqSoI8O3N89faUpmUuDzoHBrEJXl4JoMuhQobp9YpfbhkJhQ0A==
-X-Received: by 2002:a37:434a:: with SMTP id q71mr4044575qka.363.1596648692748;
-        Wed, 05 Aug 2020 10:31:32 -0700 (PDT)
-Received: from localhost ([2620:10d:c091:480::1:2e8b])
-        by smtp.gmail.com with ESMTPSA id 84sm2118251qkl.11.2020.08.05.10.31.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2020 10:31:31 -0700 (PDT)
-Date:   Wed, 5 Aug 2020 13:31:30 -0400
-From:   Tejun Heo <tj@kernel.org>
-To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>
-Cc:     Hannes Reinecke <hare@suse.de>, Ming Lei <tom.leiming@gmail.com>,
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=jWQQ0cQXaDFSwdvPuv1NHdKGXywtUA2kO7hM0wR/9SI=;
+        b=MJNHkYrKLYJuJX10a6QL/B7np+SEf1STl7zxTXHRnNIDqDRFu0rwAeVmX/zXvFtPPM
+         rrQwxU/nBbOiWGBJ5GHufCulXAkpbU89lsYo952WmEOKtcKDVJpsLy9vjQ55f1u8QwMs
+         P/dpI6mnvO9+75k7q3fAKmtm71KnfnyYjiuoBMcex4IPyNprHzpWjXEPPPblZumAR9NB
+         h9CsgTSSnWSk2JcD+6mlYrTFforn4QVnuRsun35AGNpC2jRRFvsu2yzV0iR20E799YLT
+         V2t+02FX7K8Q4m3myyALJbN5MwUU0g+YFGkBUvgtIukab1EbsfNuHWQTheAmGyXvoStM
+         sWWQ==
+X-Gm-Message-State: AOAM5326zdwGuTI1KStnAhAjDSrar6SL6tI+yhArSGWi9kjx7S9Hx3fA
+        5a/j2/gX/tqARFCENvRq3HZyZnmB3Q2+76jQAO5xiQ==
+X-Google-Smtp-Source: ABdhPJzLZdo8qY74/MuhM/+FSNWx/NNtopPEtpMZtcAHj+8nS6gaQUzZcd/IdoV0AZ96iiYdKi1Rm1aHAQIJkKQ5bdE=
+X-Received: by 2002:a54:478f:: with SMTP id o15mr3658717oic.77.1596647700338;
+ Wed, 05 Aug 2020 10:15:00 -0700 (PDT)
+From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
+References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1596507196-27417-2-git-send-email-muneendra.kumar@broadcom.com>
+ <20200804113130.qfi5agzilso3mlbp@beryllium.lan> <20200804142123.GA4819@mtj.thefacebook.com>
+ <b35e0e83-eb6c-4282-5142-22d9a996d260@broadcom.com> <CACVXFVPVM-xU0d2nETztPrS_EpacMy8A4x8FbShhLYt2iV_ouw@mail.gmail.com>
+ <227c7f27-c6c7-5db1-59ac-2dd428f5a42a@suse.de> <20200805143913.GC4819@mtj.thefacebook.com>
+In-Reply-To: <20200805143913.GC4819@mtj.thefacebook.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+thread-index: AQIDyhmBPqdmqCKUdNTZliBUbPkt/AIVs741AOV8stoBvB2xRwGs7Aj/AfU+Z6cCXn8lCgHQWH25qGqsWhA=
+Date:   Wed, 5 Aug 2020 22:44:56 +0530
+Message-ID: <c40bc34840566366177a84b0d8b7ae90@mail.gmail.com>
+Subject: RE: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to blkio controller
+To:     Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>
+Cc:     Ming Lei <tom.leiming@gmail.com>,
         James Smart <james.smart@broadcom.com>,
         Daniel Wagner <dwagner@suse.de>,
         linux-block <linux-block@vger.kernel.org>,
         Linux SCSI List <linux-scsi@vger.kernel.org>,
         Paolo Bonzini <pbonzini@redhat.com>,
         Ewan Milne <emilne@redhat.com>, mkumar@redhat.com
-Subject: Re: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to blkio
- controller
-Message-ID: <20200805173130.GA4520@mtj.thefacebook.com>
-References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596507196-27417-2-git-send-email-muneendra.kumar@broadcom.com>
- <20200804113130.qfi5agzilso3mlbp@beryllium.lan>
- <20200804142123.GA4819@mtj.thefacebook.com>
- <b35e0e83-eb6c-4282-5142-22d9a996d260@broadcom.com>
- <CACVXFVPVM-xU0d2nETztPrS_EpacMy8A4x8FbShhLYt2iV_ouw@mail.gmail.com>
- <227c7f27-c6c7-5db1-59ac-2dd428f5a42a@suse.de>
- <20200805143913.GC4819@mtj.thefacebook.com>
- <c40bc34840566366177a84b0d8b7ae90@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c40bc34840566366177a84b0d8b7ae90@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Tejun,
+Our main requirement is to track the bio requests coming from different VM
+/container applications  at the blk device layer(fc,scsi,nvme).
+By the time IO request comes to the blk device layer, the context of the
+application is lost and we can't track whose IO this belongs.
+
+In our approach we used the block cgroup to achieve this requirement.
+Since Requests also have access to the block cgroup via
+bio->bi_blkg->blkcg, and from there we can get the VM UUID.
+Therefore we added the VM UUID(app_identifier) to struct blkcg and define
+the accessors in blkcg_files and blkcg_legacy_files.
+
+Could you please let me know is there any another way where we can get the
+VM UUID info with the help of blkcg.
+
+Regards,
+Muneendra.
+
+
+
+
+
+
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+Sent: Wednesday, August 5, 2020 8:09 PM
+To: Hannes Reinecke <hare@suse.de>
+Cc: Ming Lei <tom.leiming@gmail.com>; James Smart
+<james.smart@broadcom.com>; Daniel Wagner <dwagner@suse.de>; Muneendra
+<muneendra.kumar@broadcom.com>; linux-block <linux-block@vger.kernel.org>;
+Linux SCSI List <linux-scsi@vger.kernel.org>; Paolo Bonzini
+<pbonzini@redhat.com>; Ewan Milne <emilne@redhat.com>; mkumar@redhat.com
+Subject: Re: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to
+blkio controller
+
 Hello,
 
-On Wed, Aug 05, 2020 at 10:44:56PM +0530, Muneendra Kumar M wrote:
-> Our main requirement is to track the bio requests coming from different VM
-> /container applications  at the blk device layer(fc,scsi,nvme).
-> By the time IO request comes to the blk device layer, the context of the
-> application is lost and we can't track whose IO this belongs.
+On Wed, Aug 05, 2020 at 08:33:19AM +0200, Hannes Reinecke wrote:
+> None of these are guaranteed to be either present or unique.
+> It's not uncommon to have VMs with more than one MAC address, and any
+> other unique identifier like system UUID is not required to be present.
 
-I see.
+I have a really hard time seeing how this fits into block cgroup
+interface.
+The last time we did something similar (tagging from cgroup interface
+side) was for netcls and it ended poorly. There are basic problems with
+e.g.
+delegation as these things are at odds with everything else sharing the
+interface.
 
-> In our approach we used the block cgroup to achieve this requirement.
-> Since Requests also have access to the block cgroup via
-> bio->bi_blkg->blkcg, and from there we can get the VM UUID.
-> Therefore we added the VM UUID(app_identifier) to struct blkcg and define
-> the accessors in blkcg_files and blkcg_legacy_files.
->
-> Could you please let me know is there any another way where we can get the
-> VM UUID info with the help of blkcg.
-
-Using blkcg for identification does make sense given that that's the finest
-granularity which also covers buffered writes. However, the proposed is akin
-to adding per-thread application ID to procfs if it were per-thread instead
-of per-cgroup, which wouldn't fly well either given the specialized and (at
-least for now) niche nature of the feature.
-
-So, my vague suggestion is putting the interface so that it fits the usage
-scope and is close to whatever ultimate feature you wanna expose. I don't
-think I'm the right person to make concrete recommendations here given the
-lack of detailed context.
+My not-too-well informed suggestions are either building mapping somewhere
+in the stack or at least implement the interface where it fits better so
+that people who don't need app_identifier don't see them and preferably
+can disable them. I don't mind cgroup data structs carrying extra bits for
+stuff which want to make use of the cgroup tree but I'm a pretty firm nack
+on the proposed interface.
 
 Thanks.
 
--- 
+--
 tejun
