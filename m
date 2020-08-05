@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C71D7C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 09:45:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 496EEC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 09:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8BED2173E
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 09:45:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 281C022CA1
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 09:46:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iAtIDBuB"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GJo6qLO2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727972AbgHEJpu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 05:45:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37512 "EHLO
+        id S1728182AbgHEJp5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Aug 2020 05:45:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727982AbgHEJpT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 05:45:19 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6BA4C06174A
-        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 02:45:19 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id p8so8019409pgn.13
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2020 02:45:19 -0700 (PDT)
+        with ESMTP id S1728030AbgHEJpX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 05:45:23 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1E37C06179F
+        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 02:45:22 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id d19so566666pgl.10
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2020 02:45:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=jZ7zBAmaLTbB7ZI7UK6uP32mQ4MxQ7D03hfaE9GRXSs=;
-        b=iAtIDBuB4LCaHZkty6Oo33MbxRRjP/d6KzD3Yu5QX4NjwpY53HaAaQM2zmswmk4Pdi
-         WdBtF7U/AwSmQ23pUbASK7E8LCVI1m0hED7uJocwj78mi4AG+10utBFovxyeSrSEah0n
-         J+qjeaJ3x0rBIExnJbwxKZPBP5HuMDpO/q6co=
+        bh=frtssFZl2k+0RW8Ck7DYyWzCIdpJFd7XWZU4HUn8FDM=;
+        b=GJo6qLO2DueEWHf/94R5+/cCa4AVCNBDq3GR5hJT13yWVC9MBQLlIqfjLwdIX1IJMg
+         vPGqfSBI6DrK9+a/rCxMrwgCEb+gL9DVOA/zArSFaDK9TVI6o3agt24tkYZeLA3eE9M2
+         xgv1sy4S2L5TpkbOO87OaVIeLidoXEA3B+r3o=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=jZ7zBAmaLTbB7ZI7UK6uP32mQ4MxQ7D03hfaE9GRXSs=;
-        b=NS/gNfFHBcpEnTFglBCFElcbg4JykUr9A+3A3pDaxRwOUrpXmy3JlHMWm71RukNdRI
-         bLCNYuxCt6qlPpbrJkBQQqu0OTjf0DbZbGzIOVIVRajmA1OlmVqzAn0KRtpjcUY3tmF3
-         vhImNPg9AHzBkG8LxFWL0LYzUdqR6ltmM+BXOaG7zI8f9je840RtTJ9dRBgZ/Uo3ECbV
-         wt3kgPPO3SyVsN6hwDQ69+7ntaxVSnUJEfovr9kk617SgdBVFQlYO8qKjUfSbrE6f0Ok
-         BqJxywvuU6r/C1fmeeBHS3oCt9UzchOlGD5qezKkpCl7rnAxarF2y4iVamV/QN+QcMxn
-         a3IQ==
-X-Gm-Message-State: AOAM531fIgM1431gBPWegFciB1ozGadAkAQr0G+J6rQ8tKoqxaxZ5nL+
-        cl96bY1wGXUScQz57+BuGhjVBkyWTNGTWxR6IV+wqgBNUcQ0ArQCKyLHy68vXeHn5gr3qf80FvH
-        Vxwe++V0YurseurDzvitfECm0C5AAvezn9bC8dOfByCP8+R8cqMgN0JXRp7DF/+s7Pa0BvdMEww
-        c7Tr4DfQ==
-X-Google-Smtp-Source: ABdhPJxnM4Oq4U58Z/1FpDbdrc1HB69X3JD9kba2w3o6Vr0YuvAMgBo9WzrU25Czdl8E/TPGH1QPRQ==
-X-Received: by 2002:aa7:9314:: with SMTP id 20mr2415977pfj.65.1596620718358;
-        Wed, 05 Aug 2020 02:45:18 -0700 (PDT)
+        bh=frtssFZl2k+0RW8Ck7DYyWzCIdpJFd7XWZU4HUn8FDM=;
+        b=TgnOg8xYezR6qyO8Ory19wtQ+dXnc28q/sjyqWR/xQLiSnPmFPkVAS+goBkHxeNUEN
+         kPjyn9BXttLYroDKIjnJhr/3F4uqsBbQFof0zeIP0n02yRez8wdoGN2Y1Pkf7ZXcPvkv
+         VbycE73JSIjLaByuz3k3c7SekUAPWLztE/7OkKhyhu0jlOpD9hdIMHS8vjagDYcBIfJg
+         jIZKwF3jTgIrLgBn28N3Ivyeda7Td2qXCLX3wifEpyxXFvpxizF7nNEdeUbSf6U1rfIR
+         TrqsyJhGz73PyDge2d98c8ckyFhzBWwjRMtI3zQ/c+4n7KtSYuQSPOpUXk3tUBh9R436
+         3bTg==
+X-Gm-Message-State: AOAM532UgU82kEx11M4FNrrpVt3po1fhcNP2RjY9QiNn2+fdwy0O9SNu
+        Kw3JV1TG1UfSc0R3HhtJ5GxurKfWh29ya3SUqbpdsV7xH8uHGU2h2TUa4/nHbHNd4vp5mv+k0Um
+        fXg+8wXb7Dny8zPBJiVCtTQ1rn6QM1Iu+3Il2LzutqRcEYlTurdABHgy2glr75Q9QgGfHXqPmhx
+        QMAr4/Jg==
+X-Google-Smtp-Source: ABdhPJzuziSQVUqzqGRsjKsr59dJcNgZ+r23cQ3ozntBCTV3D3tCEHSMtWjyqh2aNgnUVyDlRywEjw==
+X-Received: by 2002:aa7:96e5:: with SMTP id i5mr2512780pfq.108.1596620721137;
+        Wed, 05 Aug 2020 02:45:21 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id e9sm2632346pfh.151.2020.08.05.02.45.16
+        by smtp.gmail.com with ESMTPSA id e9sm2632346pfh.151.2020.08.05.02.45.18
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 05 Aug 2020 02:45:17 -0700 (PDT)
+        Wed, 05 Aug 2020 02:45:20 -0700 (PDT)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     hare@suse.de, jsmart2021@gmail.com, emilne@redhat.com,
         mkumar@redhat.com, Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH 2/5] scsi: Clear state bit SCMD_NORETRIES_ABORT of scsi_cmd before start request
-Date:   Wed,  5 Aug 2020 08:20:59 +0530
-Message-Id: <1596595862-11075-3-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH 3/5] scsi: No retries on abort success
+Date:   Wed,  5 Aug 2020 08:21:00 +0530
+Message-Id: <1596595862-11075-4-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1596595862-11075-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1596595862-11075-1-git-send-email-muneendra.kumar@broadcom.com>
@@ -71,47 +71,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Clearing the SCMD_NORETRIES_ABORT bit in state flag of scsi_cmd if the
-block layer didn't complete the request due to a timeout injection so that
-the timeout handler will see it needs to escalate its own error recovery.
-Also clearing the SCMD_NORETRIES_ABORT bit in state flag before
-blk_mq_start_request.
+Made an additional check in scsi_noretry_cmd to verify whether user has
+decided not to do retries on abort(issued on scsi timeouts) success  by
+checking the SCMD_NORETRIES_ABORT bit
+
+If SCMD_NORETRIES_ABORT bit is set we are making sure there won't be any
+retries done on the same path and also setting the host byte as
+DID_TRANSPORT_FAILFAST so that the error can be propogated as recoverable
+transport error to the blk layers.
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 ---
- drivers/scsi/scsi_lib.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_error.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 27b52fc..3da6402 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1594,12 +1594,15 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 927b1e6..3222496 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1749,6 +1749,16 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
  
+ check_type:
  	/*
- 	 * If the block layer didn't complete the request due to a timeout
--	 * injection, scsi must clear its internal completed state so that the
-+	 * injection, scsi must clear its internal completed state and
-+	 * SCMD_NORETRIES_ABORT bit in state field  so that the
- 	 * timeout handler will see it needs to escalate its own error
- 	 * recovery.
- 	 */
--	if (unlikely(!blk_mq_complete_request(cmd->request)))
-+	if (unlikely(!blk_mq_complete_request(cmd->request))) {
- 		clear_bit(SCMD_STATE_COMPLETE, &cmd->state);
-+		clear_bit(SCMD_NORETRIES_ABORT, &cmd->state);
++	 * Check whether caller has decided not to do retries on
++	 * abort success by setting the SCMD_NORETRIES_ABORT bit
++	 */
++	if ((test_bit(SCMD_NORETRIES_ABORT, &scmd->state)) &&
++		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
++		set_host_byte(scmd, DID_TRANSPORT_FAILFAST);
++		return 1;
 +	}
- }
- 
- static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
-@@ -1652,6 +1655,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		req->rq_flags |= RQF_DONTPREP;
- 	} else {
- 		clear_bit(SCMD_STATE_COMPLETE, &cmd->state);
-+		clear_bit(SCMD_NORETRIES_ABORT, &cmd->state);
- 		blk_mq_start_request(req);
- 	}
- 
++
++	/*
+ 	 * assume caller has checked sense and determined
+ 	 * the check condition was retryable.
+ 	 */
 -- 
 1.8.3.1
 
