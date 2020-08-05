@@ -2,103 +2,158 @@ Return-Path: <SRS0=g50V=BP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UPPERCASE_50_75,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C332BC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 04:48:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B60AFC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 05:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97D322177B
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 04:48:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 987B521744
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 05:23:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="jthK7xWl"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ddFRLq8L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726256AbgHEEsb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 00:48:31 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40084 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725920AbgHEEsa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 00:48:30 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0754lqAp007252
-        for <linux-scsi@vger.kernel.org>; Tue, 4 Aug 2020 21:48:30 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=BX99jQrXhv7ip7IPsuey4HBNZzFoQRcaxUPdXDDEp9s=;
- b=jthK7xWlAxbjWk1eaYgGVm8vIQLdsIXbmHVRp6jyPeAxkCN7xxpPwKXWiLBPc0FV65nf
- LwvDX+4PZgI+oSjStwdGZ3+pIWbBY87vn+PDS0LeKzyiZ6hhSwYMggX5JorSFsv2V6b2
- QZD1ccPTkrn9c1W7WPDhXZ5FBPRplm28nrarBz3spRipaLzhxChzDlUa1Ctv2plK/1xh
- m4acBhWKFqi1+F8sUPbXRUpaeuu1J74bNifvVpf2+MSPI5VriqwaTPO88vEyfvMJRoyz
- L73lm3yZdU0W0+rYR913yx+UY4cwXmEJ9+wFErGNArOriZsMhzWk4vqdPmooOd4t3gj8 uQ== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 32n8fex8nn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2020 21:48:30 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 4 Aug
- 2020 21:48:28 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 4 Aug 2020 21:48:28 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 64FE53F703F;
-        Tue,  4 Aug 2020 21:48:28 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0754mSmn030652;
-        Tue, 4 Aug 2020 21:48:28 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0754mS9r030651;
-        Tue, 4 Aug 2020 21:48:28 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 10/10] Revert "scsi: qla2xxx: Fix crash on qla2x00_mailbox_command"
-Date:   Tue, 4 Aug 2020 21:44:02 -0700
-Message-ID: <20200805044402.30543-11-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200805044402.30543-1-njavali@marvell.com>
-References: <20200805044402.30543-1-njavali@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-05_03:2020-08-03,2020-08-05 signatures=0
+        id S1725950AbgHEFXG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Aug 2020 01:23:06 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:63954 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725868AbgHEFXG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 01:23:06 -0400
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200805052302epoutp0408754bac87893b4ae85aeda2ddec9ca1~oR8XDdFZa1752217522epoutp04a
+        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 05:23:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200805052302epoutp0408754bac87893b4ae85aeda2ddec9ca1~oR8XDdFZa1752217522epoutp04a
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1596604982;
+        bh=Vv6SM1wYGRvFEWv4+K3CiduycYOby04MPbyseFMmwbw=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=ddFRLq8Lp6CitecZFJDlsijZNyYSXaWrX4RQQqXTqix3DSLC3Hp63oDdEHN28YHmt
+         MubRmbQCCd9kNkvjQA0ArSLb3H6FeWnBxVH5D+xDVF2vG64V8EV5R2++vbjkjeMZ6f
+         6vyle+W3KwCLfhK7vSGz7KqaiWZnDcJauDemm2hM=
+Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p4.samsung.com
+        (KnoxPortal) with ESMTP id
+        20200805052302epcas1p415ad979a6bba89eeb879f1a386352722~oR8WgAHpN0237402374epcas1p49;
+        Wed,  5 Aug 2020 05:23:02 +0000 (GMT)
+Mime-Version: 1.0
+Subject: [PATCH v7 1/4] scsi: ufs: Add UFS feature related parameter
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Daejun Park <daejun7.park@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <231786897.01596600181895.JavaMail.epsvc@epcpadp2>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <231786897.01596604981993.JavaMail.epsvc@epcpadp2>
+Date:   Wed, 05 Aug 2020 13:58:48 +0900
+X-CMS-MailID: 20200805045848epcms2p57f67844bf334f1b3a5014ec0d98fddf0
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20200805033750epcms2p3fd74b94500593df38d50e1bf426c2347
+References: <231786897.01596600181895.JavaMail.epsvc@epcpadp2>
+        <CGME20200805033750epcms2p3fd74b94500593df38d50e1bf426c2347@epcms2p5>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-FCoE adapter initialization failed for ISP8021.
+This is a patch for parameters to be used for UFS features layer and HPB
+module.
 
-This reverts commit 3cb182b3fa8b7a61f05c671525494697cba39c6a.
-
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Reviewed-by: Can Guo <cang@codeaurora.org>
+Tested-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/scsi/ufs/ufs.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 73883435ab58..93aafef7f21c 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -334,14 +334,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 			if (time_after(jiffies, wait_time))
- 				break;
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index f8ab16f30fdc..ae557b8d3eba 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -122,6 +122,7 @@ enum flag_idn {
+ 	QUERY_FLAG_IDN_WB_EN                            = 0x0E,
+ 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN                 = 0x0F,
+ 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
++	QUERY_FLAG_IDN_HPB_RESET                        = 0x11,
+ };
  
--			/*
--			 * Check if it's UNLOADING, cause we cannot poll in
--			 * this case, or else a NULL pointer dereference
--			 * is triggered.
--			 */
--			if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
--				return QLA_FUNCTION_TIMEOUT;
--
- 			/* Check for pending interrupts. */
- 			qla2x00_poll(ha->rsp_q_map[0]);
+ /* Attribute idn for Query requests */
+@@ -195,6 +196,9 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
+ 	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
++	UNIT_DESC_HPB_LU_MAX_ACTIVE_REGIONS	= 0x23,
++	UNIT_DESC_HPB_LU_PIN_REGION_START_OFFSET	= 0x25,
++	UNIT_DESC_HPB_LU_NUM_PIN_REGIONS	= 0x27,
+ 	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
+ };
  
+@@ -235,6 +239,8 @@ enum device_desc_param {
+ 	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
+ 	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
+ 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
++	DEVICE_DESC_PARAM_HPB_VER		= 0x40,
++	DEVICE_DESC_PARAM_HPB_CONTROL		= 0x42,
+ 	DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP	= 0x4F,
+ 	DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN	= 0x53,
+ 	DEVICE_DESC_PARAM_WB_TYPE		= 0x54,
+@@ -283,6 +289,10 @@ enum geometry_desc_param {
+ 	GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS	= 0x3E,
+ 	GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR	= 0x42,
+ 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
++	GEOMETRY_DESC_HPB_REGION_SIZE		= 0x48,
++	GEOMETRY_DESC_HPB_NUMBER_LU		= 0x49,
++	GEOMETRY_DESC_HPB_SUBREGION_SIZE	= 0x4A,
++	GEOMETRY_DESC_HPB_DEVICE_MAX_ACTIVE_REGIONS	= 0x4B,
+ 	GEOMETRY_DESC_PARAM_WB_MAX_ALLOC_UNITS	= 0x4F,
+ 	GEOMETRY_DESC_PARAM_WB_MAX_WB_LUNS	= 0x53,
+ 	GEOMETRY_DESC_PARAM_WB_BUFF_CAP_ADJ	= 0x54,
+@@ -327,6 +337,7 @@ enum {
+ 
+ /* Possible values for dExtendedUFSFeaturesSupport */
+ enum {
++	UFS_DEV_HPB_SUPPORT		= BIT(7),
+ 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+ };
+ 
+@@ -537,6 +548,7 @@ struct ufs_dev_info {
+ 	u8 *model;
+ 	u16 wspecversion;
+ 	u32 clk_gating_wait_us;
++	u8 b_ufs_feature_sup;
+ 	u32 d_ext_ufs_feature_sup;
+ 	u8 b_wb_buffer_type;
+ 	u32 d_wb_alloc_units;
 -- 
-2.19.0.rc0
+2.17.1
+
 
