@@ -2,164 +2,322 @@ Return-Path: <SRS0=g50V=BP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 068FDC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 04:03:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4432DC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 04:41:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C743C20842
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 04:03:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12CAB20842
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Aug 2020 04:41:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="TZ6inYmW"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="IVWBvYaE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725963AbgHEEDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 00:03:06 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:64415 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725372AbgHEEDF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 00:03:05 -0400
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200805040302epoutp0377accc58be85604133bc93b9f0c59c62~oQ2gYW7hI1324613246epoutp03c
-        for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2020 04:03:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200805040302epoutp0377accc58be85604133bc93b9f0c59c62~oQ2gYW7hI1324613246epoutp03c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1596600182;
-        bh=2lWhxzwGGTTGMdNZBQVYEmhIYU2GD+fuPMlM4zehPBA=;
-        h=Subject:Reply-To:From:To:CC:Date:References:From;
-        b=TZ6inYmWmz6axF230BTqReBu5p099UBMNvj6sabppNOaQr3eFgIPYQTwp4Dmq7c3+
-         2VPoyt8jPucfB1I9CWpm5mZzNZSKr7f1TFdAwvOnRh00uoLcAbnK2NTi211nuGEad7
-         flycDVKYs8FEIS/O3W37XRsVvPN3YZIWZA+vvT3o=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p3.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200805040301epcas1p309eacba65cd2b1d96caeaa7e773259f2~oQ2gEAsXm2044420444epcas1p3Q;
-        Wed,  5 Aug 2020 04:03:01 +0000 (GMT)
-Mime-Version: 1.0
-Subject: [PATCH v7 0/4] scsi: ufs: Add Host Performance Booster Support
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <231786897.01596600181895.JavaMail.epsvc@epcpadp2>
-Date:   Wed, 05 Aug 2020 12:37:50 +0900
-X-CMS-MailID: 20200805033750epcms2p3fd74b94500593df38d50e1bf426c2347
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200805033750epcms2p3fd74b94500593df38d50e1bf426c2347
-References: <CGME20200805033750epcms2p3fd74b94500593df38d50e1bf426c2347@epcms2p3>
+        id S1725887AbgHEEl2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Aug 2020 00:41:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46958 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725372AbgHEEl2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Aug 2020 00:41:28 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A96A5C06174A
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2020 21:41:27 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id jp10so18324300ejb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2020 21:41:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=fTKaqOx2msHZCyWsM8+kgLu05HXsN8y3eifrw51nfV8=;
+        b=IVWBvYaEYNfhtQGPqYqEMe8JgGV/ErhLpli6uH45m8p1uT6CLFrhqnu/3lQSvEr7ms
+         0kej/CNR5mHW3FugRrgx/sdMiztPMBSJtWDRamfhadkEvWfC9rtRrodrCRs44YNWQ3tI
+         S6LWH4YoHxDTPyYQjqtkQIuNxVCF17sTp9diIihP5xkVYlwfARXuDhkf05b3jrkDsvM6
+         AMCVSwNtilpRLzqfS7d5iX/gm6Pzho5nGv2PuEC+FZUUa77WBc/eEFOYZyh/YWbVD/NA
+         hUMA+MjRNbHuSC/aKGWcklqzUjuuc8VC2AmFwp7geYULs8d3O1xzOgyBoPNoyglt230l
+         ChHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=fTKaqOx2msHZCyWsM8+kgLu05HXsN8y3eifrw51nfV8=;
+        b=ePb9zF2eimerD0vOreHcOZKtGQZ4/bKkpZQNnxRe2P6bYEEWndoaOMKhlMXFe3hknn
+         n2LbfHLj4WlEp7y1MhpTNTjf4QuYyYJtNRojhMXQuOrnsY+iK5zTwp/M/Kf/Dw0BIrfm
+         H1PbCFWeqG3s1Me43TFCC7fUz9jZ/cHHokKYV16vGejtHpdKMPLsLssMfDabz675sKMV
+         1K3l2ATD9CJmCJUgm0Ul4kspuJoN7pOtPqBT6iZzIC+FgX6m3/vw0yWt0F/+UNbyiCPR
+         KTKtecYtccaOc7hpATijPLP5VniCeQsCGOVGZpXfDjHIqTAoQotuiBDhYjT2/9zX7VGr
+         FPsw==
+X-Gm-Message-State: AOAM533BbLDEtzYYg3yspE4okQ6TfdNTF4xwBejUCR6ZSWgLMNTV+SUr
+        ZzHFRD4ENefgIjeydpwF/dP7pR0YaKtjJ7LrBuxO7g==
+X-Google-Smtp-Source: ABdhPJyG5bZa5/hDJryi/KLgPvqKrgyCo/FyPVpydQZ6ZZaorcrRRhn0AVxsMrpM2Yjhlmc92otTqvgikJA8Q1voJTE=
+X-Received: by 2002:a17:906:ca5a:: with SMTP id jx26mr1367734ejb.62.1596602485213;
+ Tue, 04 Aug 2020 21:41:25 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200804045628.6590-1-deepak.ukey@microchip.com> <20200804045628.6590-2-deepak.ukey@microchip.com>
+In-Reply-To: <20200804045628.6590-2-deepak.ukey@microchip.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Wed, 5 Aug 2020 06:41:14 +0200
+Message-ID: <CAMGffEk+ax0eKvFKyuxpKerLCf-no3pVjPXWQA2GgS+Mw7Ow2A@mail.gmail.com>
+Subject: Re: [PATCH V6 1/2] pm80xx : Support for get phy profile functionality.
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>,
+        Jinpu Wang <jinpu.wang@profitbricks.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        yuuzheng@google.com, Vikram Auradkar <auradkar@google.com>,
+        vishakhavc@google.com, bjashnani@google.com,
+        Radha Ramachandran <radha@google.com>, akshatzen@google.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Changelog:
+On Tue, Aug 4, 2020 at 6:46 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
+>
+> From: Viswas G <Viswas.G@microchip.com>
+>
+> Added the support to get the phy profile which gives information
+> about the phy states, port and errors on phy.
+>
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Thanks!
 
-v6 -> v7
-1. Remove UFS feature layer.
-2. Cleanup for sparse error.
-
-v5 -> v6
-Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
-
-v4 -> v5
-Delete unused macro define.
-
-v3 -> v4
-1. Cleanup.
-
-v2 -> v3
-1. Add checking input module parameter value.
-2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
-3. Cleanup for unused variables and label.
-
-v1 -> v2
-1. Change the full boilerplate text to SPDX style.
-2. Adopt dynamic allocation for sub-region data structure.
-3. Cleanup.
-
-NAND flash memory-based storage devices use Flash Translation Layer (FTL)
-to translate logical addresses of I/O requests to corresponding flash
-memory addresses. Mobile storage devices typically have RAM with
-constrained size, thus lack in memory to keep the whole mapping table.
-Therefore, mapping tables are partially retrieved from NAND flash on
-demand, causing random-read performance degradation.
-
-To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
-(Host Performance Booster) which uses host system memory as a cache for the
-FTL mapping table. By using HPB, FTL data can be read from host memory
-faster than from NAND flash memory. 
-
-The current version only supports the DCM (device control mode).
-This patch consists of 3 parts to support HPB feature.
-
-1) HPB probe and initialization process
-2) READ -> HPB READ using cached map information
-3) L2P (logical to physical) map management
-
-In the HPB probe and init process, the device information of the UFS is
-queried. After checking supported features, the data structure for the HPB
-is initialized according to the device information.
-
-A read I/O in the active sub-region where the map is cached is changed to
-HPB READ by the HPB.
-
-The HPB manages the L2P map using information received from the
-device. For active sub-region, the HPB caches through ufshpb_map
-request. For the in-active region, the HPB discards the L2P map.
-When a write I/O occurs in an active sub-region area, associated dirty
-bitmap checked as dirty for preventing stale read.
-
-HPB is shown to have a performance improvement of 58 - 67% for random read
-workload. [1]
-
-This series patches are based on the 5.9/scsi-queue branch.
-
-[1]:
-https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
-
-Daejun park (4):
- scsi: ufs: Add UFS feature related parameter
- scsi: ufs: Introduce HPB feature
- scsi: ufs: L2P map management for HPB read
- scsi: ufs: Prepare HPB read for cached sub-region
- 
- drivers/scsi/ufs/Kconfig  |   18 +
- drivers/scsi/ufs/Makefile |    1 +
- drivers/scsi/ufs/ufs.h    |   12 +
- drivers/scsi/ufs/ufshcd.c |   42 +
- drivers/scsi/ufs/ufshcd.h |    9 +
- drivers/scsi/ufs/ufshpb.c | 1926 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshpb.h |  241 +++++
- 7 files changed, 2249 insertions(+)
- created mode 100644 drivers/scsi/ufs/ufshpb.c
- created mode 100644 drivers/scsi/ufs/ufshpb.h
+> ---
+>  drivers/scsi/pm8001/pm8001_ctl.h  | 33 +++++++++++++++
+>  drivers/scsi/pm8001/pm8001_init.c |  2 +
+>  drivers/scsi/pm8001/pm8001_sas.h  |  5 +++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  | 88 ++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/pm8001/pm80xx_hwi.h  |  2 +
+>  5 files changed, 128 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
+> index d0d43a250b9e..f7aadaf5c6aa 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.h
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.h
+> @@ -41,6 +41,39 @@
+>  #ifndef PM8001_CTL_H_INCLUDED
+>  #define PM8001_CTL_H_INCLUDED
+>
+> +#ifdef __LITTLE_ENDIAN_BITFIELD
+> +struct phy_status {
+> +       char            phy_id;
+> +       unsigned int    phy_state:4;
+> +       unsigned int    nlr:4;
+> +       unsigned int    plr:4;
+> +       unsigned int    reserved1:12;
+> +       unsigned char   port_id;
+> +       unsigned int    prts:4;
+> +       unsigned int    reserved2:20;
+> +} __packed;
+> +#else
+> +struct phy_status {
+> +       char            phy_id;
+> +       unsigned int    reserved1:12;
+> +       unsigned int    plr:4;
+> +       unsigned int    nlr:4;
+> +       unsigned int    phy_state:4;
+> +       unsigned char   port_id;
+> +       unsigned int    reserved2:20;
+> +       unsigned int    prts:4;
+> +} __packed;
+> +#endif
+> +
+> +struct phy_errcnt {
+> +       unsigned int    InvalidDword;
+> +       unsigned int    runningDisparityError;
+> +       unsigned int    codeViolation;
+> +       unsigned int    LossOfSyncDW;
+> +       unsigned int    phyResetProblem;
+> +       unsigned int    inboundCRCError;
+> +};
+> +
+>  #define IOCTL_BUF_SIZE         4096
+>  #define HEADER_LEN                     28
+>  #define SIZE_OFFSET                    16
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 9e99262a2b9d..ff65d6cf6d31 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -398,6 +398,8 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>                 pm8001_ha->ccb_info[i].task = NULL;
+>                 pm8001_ha->ccb_info[i].ccb_tag = 0xffffffff;
+>                 pm8001_ha->ccb_info[i].device = NULL;
+> +               pm8001_ha->ccb_info[i].completion = NULL;
+> +               pm8001_ha->ccb_info[i].resp_buf = NULL;
+>                 ++pm8001_ha->tags_num;
+>         }
+>         pm8001_ha->flags = PM8001F_INIT_TIME;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index ae7ba9b3c4bc..488af79dec47 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -56,6 +56,7 @@
+>  #include <scsi/sas_ata.h>
+>  #include <linux/atomic.h>
+>  #include "pm8001_defs.h"
+> +#include "pm8001_ctl.h"
+>
+>  #define DRV_NAME               "pm80xx"
+>  #define DRV_VERSION            "0.1.39"
+> @@ -244,6 +245,8 @@ struct pm8001_dispatch {
+>         int (*sas_diag_execute_req)(struct pm8001_hba_info *pm8001_ha,
+>                 u32 state);
+>         int (*sas_re_init_req)(struct pm8001_hba_info *pm8001_ha);
+> +       int (*get_phy_profile_req)(struct pm8001_hba_info *pm8001_ha,
+> +               int phy, int page, struct completion *comp, void *buf);
+>  };
+>
+>  struct pm8001_chip_info {
+> @@ -318,6 +321,8 @@ struct pm8001_ccb_info {
+>         struct pm8001_prd       buf_prd[PM8001_MAX_DMA_SG];
+>         struct fw_control_ex    *fw_control_context;
+>         u8                      open_retry;
+> +       struct completion       *completion;
+> +       void                    *resp_buf;
+>  };
+>
+>  struct mpi_mem {
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 4d205ebaee87..baccb082e65f 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3792,7 +3792,6 @@ static int mpi_set_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
+>         PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
+>                         "SET CONTROLLER RESP: status 0x%x qlfr_pgcd 0x%x\n",
+>                         status, err_qlfr_pgcd));
+> -
+>         return 0;
+>  }
+>
+> @@ -3818,9 +3817,63 @@ static int mpi_get_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
+>  static int mpi_get_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
+>                         void *piomb)
+>  {
+> +       u32 tag, page_code;
+> +       struct phy_status *phy_status, *phy_stat;
+> +       struct phy_errcnt *phy_err, *phy_err_cnt;
+> +       struct pm8001_ccb_info *ccb;
+> +       struct get_phy_profile_resp *pPayload =
+> +               (struct get_phy_profile_resp *)(piomb + 4);
+> +       u32 status = le32_to_cpu(pPayload->status);
+> +
+> +       page_code = (u8)((pPayload->ppc_phyid & 0xFF00) >> 8);
+> +
+>         PM8001_MSG_DBG(pm8001_ha,
+> -                       pm8001_printk(" pm80xx_addition_functionality\n"));
+> +               pm8001_printk(" pm80xx_addition_functionality\n"));
+> +       if (status) {
+> +               /* status is FAILED */
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
+> +                       "mpiGetPhyProfileReq failed  with status 0x%08x\n",
+> +                       status));
+> +       }
+>
+> +       tag = le32_to_cpu(pPayload->tag);
+> +       ccb = &pm8001_ha->ccb_info[tag];
+> +       if (ccb->completion != NULL) {
+> +               if (status) {
+> +                       /* signal fail status */
+> +                       memset(&ccb->resp_buf, 0xff, sizeof(ccb->resp_buf));
+> +               } else if (page_code == SAS_PHY_GENERAL_STATUS_PAGE) {
+> +                       phy_status = (struct phy_status *)ccb->resp_buf;
+> +                       phy_stat =
+> +                       (struct phy_status *)pPayload->ppc_specific_rsp;
+> +                       phy_status->phy_id =
+> +                               le32_to_cpu((__force __le32)phy_stat->phy_id);
+> +                       phy_status->phy_state =
+> +                               le32_to_cpu((__force __le32)phy_stat->phy_state);
+> +                       phy_status->plr =
+> +                               le32_to_cpu((__force __le32)phy_stat->plr);
+> +                       phy_status->nlr =
+> +                               le32_to_cpu((__force __le32)phy_stat->nlr);
+> +                       phy_status->port_id =
+> +                               le32_to_cpu((__force __le32)phy_stat->port_id);
+> +                       phy_status->prts =
+> +                               le32_to_cpu((__force __le32)phy_stat->prts);
+> +               } else if (page_code == SAS_PHY_ERR_COUNTERS_PAGE) {
+> +                       phy_err = (struct phy_errcnt *)ccb->resp_buf;
+> +                       phy_err_cnt =
+> +                       (struct phy_errcnt *)pPayload->ppc_specific_rsp;
+> +                       phy_err->InvalidDword =
+> +                       le32_to_cpu((__force __le32)phy_err_cnt->InvalidDword);
+> +                       phy_err->runningDisparityError = le32_to_cpu
+> +                       ((__force __le32)phy_err_cnt->runningDisparityError);
+> +                       phy_err->LossOfSyncDW = le32_to_cpu
+> +                       ((__force __le32)phy_err_cnt->LossOfSyncDW);
+> +                       phy_err->phyResetProblem = le32_to_cpu
+> +                       ((__force __le32)phy_err_cnt->phyResetProblem);
+> +               }
+> +               complete(ccb->completion);
+> +       }
+> +       pm8001_tag_free(pm8001_ha, tag);
+>         return 0;
+>  }
+>
+> @@ -5013,6 +5066,36 @@ pm80xx_chip_isr(struct pm8001_hba_info *pm8001_ha, u8 vec)
+>         return IRQ_HANDLED;
+>  }
+>
+> +static int pm8001_chip_get_phy_profile(struct pm8001_hba_info *pm8001_ha,
+> +       int phy_id, int page_code, struct completion *comp, void *buf)
+> +{
+> +       u32 tag;
+> +       struct get_phy_profile_req payload;
+> +       struct inbound_queue_table *circularQ;
+> +       struct pm8001_ccb_info *ccb;
+> +       int rc, ppc_phyid;
+> +       u32 opc = OPC_INB_GET_PHY_PROFILE;
+> +
+> +       memset(&payload, 0, sizeof(payload));
+> +
+> +       rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> +       if (rc)
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid tag\n"));
+> +
+> +       ccb = &pm8001_ha->ccb_info[tag];
+> +       ccb->completion = comp;
+> +       ccb->resp_buf = buf;
+> +       circularQ = &pm8001_ha->inbnd_q_tbl[0];
+> +
+> +       payload.tag = cpu_to_le32(tag);
+> +       ppc_phyid = (page_code & 0xFF)  << 8 | (phy_id & 0xFF);
+> +       payload.ppc_phyid = cpu_to_le32(ppc_phyid);
+> +
+> +       pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+> +                       sizeof(payload), 0);
+> +       return rc;
+> +}
+> +
+>  void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
+>         u32 operation, u32 phyid, u32 length, u32 *buf)
+>  {
+> @@ -5113,4 +5196,5 @@ const struct pm8001_dispatch pm8001_80xx_dispatch = {
+>         .set_nvmd_req           = pm8001_chip_set_nvmd_req,
+>         .fw_flash_update_req    = pm8001_chip_fw_flash_update_req,
+>         .set_dev_state_req      = pm8001_chip_set_dev_state_req,
+> +       .get_phy_profile_req    = pm8001_chip_get_phy_profile,
+>  };
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+> index 701951a0f715..b5119c5479da 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+> @@ -175,7 +175,9 @@
+>  #define PHY_STOP_ERR_DEVICE_ATTACHED   0x1046
+>
+>  /* phy_profile */
+> +#define SAS_PHY_ERR_COUNTERS_PAGE      0x01
+>  #define SAS_PHY_ANALOG_SETTINGS_PAGE   0x04
+> +#define SAS_PHY_GENERAL_STATUS_PAGE    0x05
+>  #define PHY_DWORD_LENGTH               0xC
+>
+>  /* Thermal related */
+> --
+> 2.16.3
+>
