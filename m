@@ -2,89 +2,105 @@ Return-Path: <SRS0=JvOq=BQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19375C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 03:37:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 348CAC433EB
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 11:00:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E296A2177B
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 03:37:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA4D822D01
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 11:00:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="fH8+1DZY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731739AbgHFDhN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Aug 2020 23:37:13 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2585 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731730AbgHFDhL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Aug 2020 23:37:11 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 76D9B13C12B98849F609;
-        Wed,  5 Aug 2020 12:23:36 +0100 (IST)
-Received: from [127.0.0.1] (10.210.168.153) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Wed, 5 Aug 2020
- 12:23:35 +0100
-Subject: Re: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-To:     <Don.Brace@microchip.com>, <hare@suse.de>,
-        <don.brace@microsemi.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
-        <sumit.saxena@broadcom.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <hare@suse.com>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-13-git-send-email-john.garry@huawei.com>
- <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
- <3b3ead84-5d2f-dcf2-33d5-6aa12d5d9f7e@suse.de>
- <4319615a-220b-3629-3bf4-1e7fd2d27b92@huawei.com>
- <SN6PR11MB28489516D2F4E7631A921BD9E14D0@SN6PR11MB2848.namprd11.prod.outlook.com>
- <ccc119c8-4774-2603-fb79-e8c31a1476c6@huawei.com>
- <SN6PR11MB2848F0DD0CB3357541DBDAA9E14A0@SN6PR11MB2848.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <013d4ba6-9173-e791-8e36-8393bde73588@huawei.com>
-Date:   Wed, 5 Aug 2020 12:21:29 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727831AbgHFEx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Aug 2020 00:53:59 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:26790 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727118AbgHFEx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 6 Aug 2020 00:53:58 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1596689637; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=OsZPoBJQJp6PSyMnKPpLTNg227XLM8APZn+rJSU8syY=;
+ b=fH8+1DZYHIZ/5MB7zOXtEaPi1Dr+lwgnsulKQ6Ev/pK8v/+JLpnpRZvIzTLPk3k7x7CpnbDG
+ VXPEHuojP15DuEIb72veqNY7bPSorrc7nQGrZFmc4obTL/TLlnjqSxjnNXFv0XIo8cyFDtyz
+ 7OUtHfs2KJcUJy7iBtNqB+RS77A=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5f2b8ce5725833be3066a6b1 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 06 Aug 2020 04:53:57
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E4599C433AF; Thu,  6 Aug 2020 04:53:55 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 22634C433C6;
+        Thu,  6 Aug 2020 04:53:55 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <SN6PR11MB2848F0DD0CB3357541DBDAA9E14A0@SN6PR11MB2848.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.168.153]
-X-ClientProxiedBy: lhreml733-chm.china.huawei.com (10.201.108.84) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Thu, 06 Aug 2020 12:53:55 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v9 8/9] scsi: ufs: Fix a racing problem btw error handler
+ and runtime PM ops
+In-Reply-To: <yq1r1slzxoh.fsf@ca-mkp.ca.oracle.com>
+References: <1596445485-19834-1-git-send-email-cang@codeaurora.org>
+ <1596445485-19834-9-git-send-email-cang@codeaurora.org>
+ <yq1r1slzxoh.fsf@ca-mkp.ca.oracle.com>
+Message-ID: <f6a49b77e381c274e1a4cfd11e088304@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/08/2020 16:18, Don.Brace@microchip.com wrote:
->> git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
->>        branch origin/reserved-tags.v6
-> ok, great
+On 2020-08-05 09:31, Martin K. Petersen wrote:
+> Can,
 > 
->> but I am getting an extra devices in the list which does not seem to
->> be coming from hpsa driver.
->>
->>> I assume that you are missing some other patches from >>that branch, like
->>> these:
->>> 77dcb92c31ae scsi: revamp host device handling
->>> 6e9884aefe66 scsi: Use dummy inquiry data for the host >>device a381637f8a6e scsi: use real inquiry data when >>initialising devices
->>> @Hannes, Any plans to get this series going again?
-> I cherry-picked the following and this resolves the issue.
-> 77dcb92c31ae scsi: revamp host device handling
-> 6e9884aefe66 scsi: Use dummy inquiry data for the host device
-> a381637f8a6e scsi: use real inquiry data when initialising devices
-> I'll continue with more I/O stress testing.
+>> Current IRQ handler blocks scsi requests before scheduling eh_work,
+>> when error handler calls pm_runtime_get_sync, if ufshcd_suspend/resume
+>> sends a scsi cmd, most likely the SSU cmd, since scsi requests are
+>> blocked, pm_runtime_get_sync() will never return because
+>> ufshcd_suspend/reusme is blocked by the scsi cmd. Some changes and
+>> code re-arrangement can be made to resolve it.
+> 
+>   CC [M]  drivers/scsi/ufs/ufshcd.o
+> drivers/scsi/ufs/ufshcd.c: In function ‘ufshcd_queuecommand’:
+> drivers/scsi/ufs/ufshcd.c:2570:6: error: this statement may fall
+> through [-Werror=implicit-fallthrough=]
+>  2570 |   if (hba->pm_op_in_progress) {
+>       |      ^
+> drivers/scsi/ufs/ufshcd.c:2575:2: note: here
+>  2575 |  case UFSHCD_STATE_RESET:
+>       |  ^~~~
+> cc1: all warnings being treated as errors
+> make[3]: *** [scripts/Makefile.build:280: drivers/scsi/ufs/ufshcd.o] 
+> Error 1
+> make[2]: *** [scripts/Makefile.build:497: drivers/scsi/ufs] Error 2
+> make[1]: *** [scripts/Makefile.build:497: drivers/scsi] Error 2
+> make: *** [Makefile:1764: drivers] Error 2
 
-ok, great. Please let me know about your testing, as I might just add 
-that series to the v8 branch.
+Thanks Martin, will fix it in next version.
 
-Cheers,
-John
+Can Guo.
