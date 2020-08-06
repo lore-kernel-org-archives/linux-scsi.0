@@ -2,112 +2,149 @@ Return-Path: <SRS0=JvOq=BQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 994F9C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:27:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17687C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:28:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04C5623120
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:27:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1596734865;
-	bh=VvUA6rJhbUih/gowdSUfSL8B1gmDjmzSGJaDRpCAUXg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=qN/iWQZbqZN1AmyUtKxmx6r/gYEst6bv3KQnxM95XUvlytYOhWTd2oSq16zmM7mhw
-	 ucHcYBqyas5IKPEaeJ9eJwcX7+ABc5uf+TjPkIbYTTQoeMVZHvLXcxixmPwgbb1Diu
-	 xPYv7yz9ECIFGtkqCK7vzI3rkRyfOC+VpsN6+qI4=
+	by mail.kernel.org (Postfix) with ESMTP id 72BEA22DCC
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:28:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FHoOBE7o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729952AbgHFR1W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Aug 2020 13:27:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44964 "EHLO
+        id S1729812AbgHFR2n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Aug 2020 13:28:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729547AbgHFRBd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:01:33 -0400
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 261C5C0A888E;
-        Thu,  6 Aug 2020 07:41:39 -0700 (PDT)
-Received: by mail-qk1-x744.google.com with SMTP id l64so38319254qkb.8;
-        Thu, 06 Aug 2020 07:41:39 -0700 (PDT)
+        with ESMTP id S1729549AbgHFRBB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:01:01 -0400
+Received: from mail-qk1-x743.google.com (mail-qk1-x743.google.com [IPv6:2607:f8b0:4864:20::743])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9192DC0A888B
+        for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2020 07:37:43 -0700 (PDT)
+Received: by mail-qk1-x743.google.com with SMTP id p4so1310758qkf.0
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2020 07:37:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=+JOavwuu2af6Eh0MFH0vO7WhBEI3v+aXxyBlp4DnUwo=;
-        b=in0QYmMWivT+TgpmxfP9EOitkGBUTODZQATNpwhGG4ifZpOUcaESDr6A+rH/1QzzwS
-         Ikqq8LC3/LG0mgkiG0pPe7R9xt0zAOGQpp+txt+VT16mZXyGVk1H+DE1pj2P4743umYh
-         KeRxJi4q30q20bpr1fWvn4ZFhmf1qks87ZJnaF0L7GPmW8hSkTcuTnenvbdSRdqcacas
-         cEdW4/oj656K4z6Zfkh2zYwulgPuM5+onO9Nk5kr6QWmFIdIOKDB6v/0oTHGuFMilmsS
-         eLLLNfuz0Cu+5ZCzIglQc/PXlnQjGJ53caoAcydM1r/q1W7uOmNO92EnvZvQVgsmHemM
-         22gA==
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=uofPzPo8/gz5keGiK/hNj2Xy1wAVilpSBR98FKRPkhY=;
+        b=FHoOBE7obGEB61oBI5zKOHvyR/Tx13CR6Xl6YoQBzDOScOx6dS3ZZgpkLm6xhEy9lX
+         oHkqhzTq8LKg0oGXWQSGbz3iUT77UIupmbyJhj/l6TsylziXPT8Z/NpUTLrelfsfBt1u
+         6G6hlEBkxoFVTcb8Obe/9E45WlL/xECEI38Lc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition
-         :content-transfer-encoding:in-reply-to;
-        bh=+JOavwuu2af6Eh0MFH0vO7WhBEI3v+aXxyBlp4DnUwo=;
-        b=UkOFVcDWsIvhff51mn2MR7jr1Ftx0kRZDCpdAdrhuTjucXdKosLMxXM8aLazT1gdQs
-         ma5tT7F0poZODRJo4Xbh2lr0vXGL/WeiJT6PG0/ETkTAUyL6tw3pe2JxcpX5pPQnUFMJ
-         1H3cP4EAaQKPmMx+LCUnVr+OihtrzJ6IJPhuD/k0hexM45TVZYHg8L+quz3KNbhVZJ8+
-         g9M3Llor7j+vKFSpbtY0hL+r/ZEcK+oDMvZ0dRLpMToCyLh8xkC5qJn9nltiWKQsSu7p
-         fG8d6do44YPv7+MB0K5R2JQl+izSCBAsfjtk4DWKVe1HXd/9+ye3cg9rCxXrIn0i/Q4c
-         gq5g==
-X-Gm-Message-State: AOAM5313+HZfhglDUw6VOVdKaRF1tlVnXvZsqP10SxtrrlSJ85Fx1eI1
-        h91FmzuhHEjqXYFapDpCeR4=
-X-Google-Smtp-Source: ABdhPJzDB6bJdLBN/WCp6ELbFInICLymDe2gzcRSha7BfKUQ/cSXwh1jexiUQjiELqjeywwQn4kWGg==
-X-Received: by 2002:a05:620a:b8d:: with SMTP id k13mr9094494qkh.450.1596724897903;
-        Thu, 06 Aug 2020 07:41:37 -0700 (PDT)
-Received: from localhost ([2620:10d:c091:480::1:2e8b])
-        by smtp.gmail.com with ESMTPSA id r6sm4821874qtu.93.2020.08.06.07.41.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Aug 2020 07:41:36 -0700 (PDT)
-Date:   Thu, 6 Aug 2020 10:41:35 -0400
-From:   Tejun Heo <tj@kernel.org>
-To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>
-Cc:     James Smart <james.smart@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, pbonzini@redhat.com, emilne@redhat.com,
-        mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
-        James Smart <jsmart2021@gmail.com>,
-        Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
-Message-ID: <20200806144135.GC4520@mtj.thefacebook.com>
-References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596507196-27417-17-git-send-email-muneendra.kumar@broadcom.com>
- <61d2fd75-84ea-798b-aee9-b07957ac8f1b@suse.de>
- <08b9825b-6abb-c077-ac0d-bd63f10f2ac2@broadcom.com>
- <aa595605c2f776148e03a8e5dd69168a@mail.gmail.com>
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=uofPzPo8/gz5keGiK/hNj2Xy1wAVilpSBR98FKRPkhY=;
+        b=m9QXypATLm2nLO9KHu3LvNktFMiHDWWXX97oITEA1fk0SjRwYZX02DQRT4XZI+hSpS
+         zj7txF9Nwz7zM8EWYzzirSJa207f6KM11LzrUPLGlthpaRieb4aYrtLo4Ht36p8dG9y7
+         e5t6P52hAAOVhJWOI2VW4ZbUN8E5JQaY23LZJ8uFr43FQdI6yQO4iEISA5uef+e7qfkV
+         8rC7AOvOmTUoED95LVq1zmRi8u/N2AG9fsu+4ZBUMrUylWFeKnUrYK8onk54pwR6xudN
+         iGA8UYxJG+F8BlIDWiHiZzFOyxvyFW4bO3Nft0kdLqj5zgLwXMs68SJUXitYCr/GYQst
+         241Q==
+X-Gm-Message-State: AOAM532wBIgxpKO44Aeh0/uExIEZ7KT3eJBj9avxc6xX0pnyspcCnWfp
+        lp3eApR5x5wCVm/mqxxLEgxe5hfGcKc7V/+hMUICYw==
+X-Google-Smtp-Source: ABdhPJx2s3aCngtA0GA62InvUK4OfjmKQBTtkFInH2OLtfXpz9p9YQ34+Dg8V2LS++ho9T+hfOYkenONUXxzKMkfob4=
+X-Received: by 2002:ae9:e507:: with SMTP id w7mr8719554qkf.264.1596724661604;
+ Thu, 06 Aug 2020 07:37:41 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20200724024704.GB957464@T590> <6531e06c-9ce2-73e6-46fc-8e97400f07b2@huawei.com>
+ <20200728084511.GA1326626@T590> <965cf22eea98c00618570da8424d0d94@mail.gmail.com>
+ <20200729153648.GA1698748@T590> <7f94eaf2318cc26ceb64bde88d59d5e2@mail.gmail.com>
+ <20200804083625.GA1958244@T590> <afe5eb1be7f416a48d7b5d473f3053d0@mail.gmail.com>
+ <20200805084031.GA1995289@T590> <5adffdf805179428bdd0dd6c293a4f7d@mail.gmail.com>
+ <20200806133819.GA2046861@T590>
+In-Reply-To: <20200806133819.GA2046861@T590>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aa595605c2f776148e03a8e5dd69168a@mail.gmail.com>
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQE/+OJyWFKAouEWqnJEgB8EdgAUOQD9MwXwAyMjvw0CEOgTfwH/A0ecAffP3/8CJdMLTAMjpyDDAVIktm0BrCL65wHaXRyJqbWyCAA=
+Date:   Thu, 6 Aug 2020 20:07:38 +0530
+Message-ID: <f1ac35dfca34193e6c9bcedbc11911d2@mail.gmail.com>
+Subject: RE: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+> > Hi Ming -
+> >
+> > There is still some race which is not handled.  Take a case of IO is
+> > not able to get budget and it has already marked <restarts> flag.
+> > <restarts> flag will be seen non-zero in completion path and
+> > completion path will attempt h/w queue run. (But this particular IO is
+> > still not in s/w queue.).
+> > Attempt of running h/w queue from completion path will not flush any
+> > IO since there is no IO in s/w queue.
+>
+> Then where is the IO to be submitted in case of running out of budget?
 
-On Thu, Aug 06, 2020 at 06:04:36PM +0530, Muneendra Kumar M wrote:
-> 1)	blkcg will have a new field to store driver specific information as
-> "blkio_cg_ priv_data"(in the current patch it is app_identifier) as Tejun
-> said he doesn’t mind cgroup data structs carrying extra bits for stuff.
+Typical race in your latest patch is - (Lets consider command A,B and C)
+Command A did not receive budget. Command B completed  (which was already
+submitted earlier) at the same time and it make sdev->device_busy = 0 from
+" scsi_finish_command".
+Command B has still not called "scsi_end_request". Command C get the
+budget and it will make sdev->device_busy = 1. Now, Command A set  set
+sdev->restarts flags but will not run h/w queue since sdev->device_busy =
+1.
+Command B run h/w queue (make sdev->restart = 0) from completion path, but
+command -A is still not in the s/w queue. Command-A is in now in s/w
+queue. Command-C completed but it will not run h/w queue because
+sdev->restarts = 0.
 
-I'd make it something more specific - lpfc_app_id or something along that
-line.
 
-> 2)	scsi transport will provide a new interface(sysfs) as register_vm_fabric
-> 3)	As part of this interface user/deamon will provide the details of VM such
-> as UUID,PID on VM creation to the transport .
-> 4)	With VM PID information we need to find the associated blkcg and needs to
-> update the UUID info in blkio_cg_ priv_data.
+>
+> Any IO request which is going to be added to hctx->dispatch, the queue
+will be
+> re-run via blk-mq core.
+>
+> Any IO request being issued directly when running out of budget will be
+insert
+> to hctx->dispatch or sw/scheduler queue, will be run in the submission
+path.
 
-You can pass in cgroup ID or open fd to uniquely identify a cgroup.
+I have *not* included below changes we discussed in my testing - If I
+include below patch, it is correct that queue will be run in submission
+path (at least the path which is impacted in my testing). You have already
+mentioned that most of the submission path has fix now in latest kernel
+w.r.t running h/w queue from submission path.  Below path is missing for
+running h/w queue from submission path.
 
-Thanks.
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c index
+54f9015..bcfd33a 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -173,8 +173,10 @@ static int blk_mq_do_dispatch_ctx(struct
+blk_mq_hw_ctx *hctx)
+                if (!sbitmap_any_bit_set(&hctx->ctx_map))
+                        break;
 
--- 
-tejun
+-               if (!blk_mq_get_dispatch_budget(hctx))
++               if (!blk_mq_get_dispatch_budget(hctx)) {
++                       blk_mq_delay_run_hw_queue(hctx,
++ BLK_MQ_BUDGET_DELAY);
+                        break;
++               }
+
+                rq = blk_mq_dequeue_from_ctx(hctx, ctx);
+                if (!rq) {
+
+Are you saying above fix should be included along with your latest patch ?
+
+>
+>
+> Thanks,
+> Ming
