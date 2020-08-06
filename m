@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C786EC43457
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 11:01:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF23C4345C
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 11:01:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADF1D2250E
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 11:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59D4A23331
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 11:01:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728024AbgHFFGk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Aug 2020 01:06:40 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:1224 "EHLO
+        id S1728165AbgHFFG6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Aug 2020 01:06:58 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:27913 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726093AbgHFFGi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 01:06:38 -0400
-IronPort-SDR: /LbLMqAkbayAgFHHSiWiFLUCIzCsXkSoguRdrRXl7WC8SDprWjcBK9o/7buzJRoeuNxJFalKJB
- W721WzZEk0IrP6jJo42hZTpjwXo2iNkNMHC5Avf4dD5QnTYJE0+41hBXqIgQ8toaiByfGtRof4
- l4m0RtB7iiPo8ZCL1yd/HuWanc5QIVNjLeIDrSBqoRBaQ+8YlLjNMJUA3uhqVNmCnTdgrlnKD1
- hBrB4VVcAp2lrOXTktN92p9Etj8YorUtVXXnZI/lbZSUQX3r0M5JwG/fj9Jr2c1C4Dzjj5PAgq
- +Y8=
+        with ESMTP id S1728137AbgHFFG4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 01:06:56 -0400
+IronPort-SDR: 9sJWW2Fy+8CXbrGuLIsVwQzJufuXnmMm+dsw/WVIDhEhPYnSthF3s4uhq7nePqvl0NQTefQmEU
+ fZMhIbMoC7mdS7UCUFc/iHnPnzT2QNuLGZa4ovlcwVHHYmz8tiM7I910QkH9NUe6N+4cMoCzed
+ Z/Ov7rhHSR653FbZXCuHuAqwoIBxIovuDxsGDBGaDceLXyebU+SvTQh7dqn7KMiPStdD/ZWxl9
+ veHKnQ7w9++pqKug7no2TjB8bPgjCeXqgfDBqLVZC5AswNS6ltQAp5WRVFo/aUEvoW1qgURXwA
+ Kjc=
 X-IronPort-AV: E=Sophos;i="5.75,440,1589266800"; 
-   d="scan'208";a="29068256"
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by labrats.qualcomm.com with ESMTP; 05 Aug 2020 22:06:37 -0700
+   d="scan'208";a="47243585"
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by labrats.qualcomm.com with ESMTP; 05 Aug 2020 22:06:56 -0700
 Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 05 Aug 2020 22:06:36 -0700
+  by ironmsg04-sd.qualcomm.com with ESMTP; 05 Aug 2020 22:06:55 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id A8DF721562; Wed,  5 Aug 2020 22:06:36 -0700 (PDT)
+        id 3171E21562; Wed,  5 Aug 2020 22:06:55 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
@@ -41,19 +41,13 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH 4/9] scsi: ufs: Add some debug infos to ufshcd_print_host_state
-Date:   Wed,  5 Aug 2020 22:06:15 -0700
-Message-Id: <1596690383-16438-5-git-send-email-cang@codeaurora.org>
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 8/9] scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
+Date:   Wed,  5 Aug 2020 22:06:19 -0700
+Message-Id: <1596690383-16438-9-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1596690383-16438-1-git-send-email-cang@codeaurora.org>
 References: <1596690383-16438-1-git-send-email-cang@codeaurora.org>
@@ -62,117 +56,156 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The infos of the last interrupt status and its timestamp are very helpful
-when debug system stability issues, e.g. IRQ starvation, so add them to
-ufshcd_print_host_state. Meanwhile, UFS device infos like model name and
-its FW version also come in handy during debug. In addition, this change
-makes cleanup to some prints in ufshcd_print_host_regs as similar prints
-are already available in ufshcd_print_host_state.
+Current IRQ handler blocks scsi requests before scheduling eh_work, when
+error handler calls pm_runtime_get_sync, if ufshcd_suspend/resume sends a
+scsi cmd, most likely the SSU cmd, since scsi requests are blocked,
+pm_runtime_get_sync() will never return because ufshcd_suspend/reusme is
+blocked by the scsi cmd. Some changes and code re-arrangement can be made
+to resolve it.
+
+o In queuecommand path, hba->ufshcd_state check and ufshcd_send_command
+  should stay into the same spin lock. This is to make sure that no more
+  commands leak into doorbell after hba->ufshcd_state is changed.
+o Don't block scsi requests before error handler starts to run, let error
+  handler block scsi requests when it is ready to start error recovery.
+o Don't let scsi layer keep requeuing the scsi cmds sent from hba runtime
+  PM ops, let them pass or fail them. Let them pass if eh_work is scheduled
+  due to non-fatal errors. Fail them if eh_work is scheduled due to fatal
+  errors, otherwise the cmds may eventually time out since UFS is in bad
+  state, which gets error handler blocked for too long. If we fail the scsi
+  cmds sent from hba runtime PM ops, hba runtime PM ops fails too, but it
+  does not hurt since error handler can recover hba runtime PM error.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5acb38c..71c650f 100644
+index a79fbbd..b2947ab 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -411,15 +411,6 @@ static void ufshcd_print_err_hist(struct ufs_hba *hba,
- static void ufshcd_print_host_regs(struct ufs_hba *hba)
- {
- 	ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
--	dev_err(hba->dev, "hba->ufs_version = 0x%x, hba->capabilities = 0x%x\n",
--		hba->ufs_version, hba->capabilities);
--	dev_err(hba->dev,
--		"hba->outstanding_reqs = 0x%x, hba->outstanding_tasks = 0x%x\n",
--		(u32)hba->outstanding_reqs, (u32)hba->outstanding_tasks);
--	dev_err(hba->dev,
--		"last_hibern8_exit_tstamp at %lld us, hibern8_exit_cnt = %d\n",
--		ktime_to_us(hba->ufs_stats.last_hibern8_exit_tstamp),
--		hba->ufs_stats.hibern8_exit_cnt);
+@@ -126,7 +126,8 @@ enum {
+ 	UFSHCD_STATE_RESET,
+ 	UFSHCD_STATE_ERROR,
+ 	UFSHCD_STATE_OPERATIONAL,
+-	UFSHCD_STATE_EH_SCHEDULED,
++	UFSHCD_STATE_EH_SCHEDULED_FATAL,
++	UFSHCD_STATE_EH_SCHEDULED_NON_FATAL,
+ };
  
- 	ufshcd_print_err_hist(hba, &hba->ufs_stats.pa_err, "pa_err");
- 	ufshcd_print_err_hist(hba, &hba->ufs_stats.dl_err, "dl_err");
-@@ -438,8 +429,6 @@ static void ufshcd_print_host_regs(struct ufs_hba *hba)
- 	ufshcd_print_err_hist(hba, &hba->ufs_stats.host_reset, "host_reset");
- 	ufshcd_print_err_hist(hba, &hba->ufs_stats.task_abort, "task_abort");
+ /* UFSHCD error handling flags */
+@@ -2515,34 +2516,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	if (!down_read_trylock(&hba->clk_scaling_lock))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
  
--	ufshcd_print_clk_freqs(hba);
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	switch (hba->ufshcd_state) {
+-	case UFSHCD_STATE_OPERATIONAL:
+-		break;
+-	case UFSHCD_STATE_EH_SCHEDULED:
+-	case UFSHCD_STATE_RESET:
+-		err = SCSI_MLQUEUE_HOST_BUSY;
+-		goto out_unlock;
+-	case UFSHCD_STATE_ERROR:
+-		set_host_byte(cmd, DID_ERROR);
+-		cmd->scsi_done(cmd);
+-		goto out_unlock;
+-	default:
+-		dev_WARN_ONCE(hba->dev, 1, "%s: invalid state %d\n",
+-				__func__, hba->ufshcd_state);
+-		set_host_byte(cmd, DID_BAD_TARGET);
+-		cmd->scsi_done(cmd);
+-		goto out_unlock;
+-	}
 -
- 	ufshcd_vops_dbg_register_dump(hba);
- }
+-	/* if error handling is in progress, don't issue commands */
+-	if (ufshcd_eh_in_progress(hba)) {
+-		set_host_byte(cmd, DID_ERROR);
+-		cmd->scsi_done(cmd);
+-		goto out_unlock;
+-	}
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+ 	hba->req_abort_count = 0;
  
-@@ -499,6 +488,8 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
+ 	err = ufshcd_hold(hba, true);
+@@ -2578,11 +2551,51 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	/* Make sure descriptors are ready before ringing the doorbell */
+ 	wmb();
  
- static void ufshcd_print_host_state(struct ufs_hba *hba)
+-	/* issue command to the controller */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	switch (hba->ufshcd_state) {
++	case UFSHCD_STATE_OPERATIONAL:
++	case UFSHCD_STATE_EH_SCHEDULED_NON_FATAL:
++		break;
++	case UFSHCD_STATE_EH_SCHEDULED_FATAL:
++		/*
++		 * pm_runtime_get_sync() is used at error handling preparation
++		 * stage. If a scsi cmd, e.g. the SSU cmd, is sent from hba's
++		 * PM ops, it can never be finished if we let SCSI layer keep
++		 * retrying it, which gets err handler stuck forever. Neither
++		 * can we let the scsi cmd pass through, because UFS is in bad
++		 * state, the scsi cmd may eventually time out, which will get
++		 * err handler blocked for too long. So, just fail the scsi cmd
++		 * sent from PM ops, err handler can recover PM error anyways.
++		 */
++		if (hba->pm_op_in_progress) {
++			hba->force_reset = true;
++			set_host_byte(cmd, DID_BAD_TARGET);
++			goto out_compl_cmd;
++		}
++		fallthrough;
++	case UFSHCD_STATE_RESET:
++		err = SCSI_MLQUEUE_HOST_BUSY;
++		goto out_compl_cmd;
++	case UFSHCD_STATE_ERROR:
++		set_host_byte(cmd, DID_ERROR);
++		goto out_compl_cmd;
++	default:
++		dev_WARN_ONCE(hba->dev, 1, "%s: invalid state %d\n",
++				__func__, hba->ufshcd_state);
++		set_host_byte(cmd, DID_BAD_TARGET);
++		goto out_compl_cmd;
++	}
+ 	ufshcd_send_command(hba, tag);
+-out_unlock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	goto out;
++
++out_compl_cmd:
++	scsi_dma_unmap(lrbp->cmd);
++	lrbp->cmd = NULL;
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ufshcd_release(hba);
++	if (!err)
++		cmd->scsi_done(cmd);
+ out:
+ 	up_read(&hba->clk_scaling_lock);
+ 	return err;
+@@ -5552,9 +5565,12 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
  {
-+	struct scsi_device *sdev_ufs = hba->sdev_ufs_device;
-+
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
- 	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
- 		hba->outstanding_reqs, hba->outstanding_tasks);
-@@ -511,12 +502,24 @@ static void ufshcd_print_host_state(struct ufs_hba *hba)
- 	dev_err(hba->dev, "Auto BKOPS=%d, Host self-block=%d\n",
- 		hba->auto_bkops_enabled, hba->host->host_self_blocked);
- 	dev_err(hba->dev, "Clk gate=%d\n", hba->clk_gating.state);
-+	dev_err(hba->dev,
-+		"last_hibern8_exit_tstamp at %lld us, hibern8_exit_cnt=%d\n",
-+		ktime_to_us(hba->ufs_stats.last_hibern8_exit_tstamp),
-+		hba->ufs_stats.hibern8_exit_cnt);
-+	dev_err(hba->dev, "last intr at %lld us, last intr status=0x%x\n",
-+		ktime_to_us(hba->ufs_stats.last_intr_ts),
-+		hba->ufs_stats.last_intr_status);
- 	dev_err(hba->dev, "error handling flags=0x%x, req. abort count=%d\n",
- 		hba->eh_flags, hba->req_abort_count);
--	dev_err(hba->dev, "Host capabilities=0x%x, caps=0x%x\n",
--		hba->capabilities, hba->caps);
-+	dev_err(hba->dev, "hba->ufs_version=0x%x, Host capabilities=0x%x, caps=0x%x\n",
-+		hba->ufs_version, hba->capabilities, hba->caps);
- 	dev_err(hba->dev, "quirks=0x%x, dev. quirks=0x%x\n", hba->quirks,
- 		hba->dev_quirks);
-+	if (sdev_ufs)
-+		dev_err(hba->dev, "UFS dev info: %.8s %.16s rev %.4s\n",
-+			sdev_ufs->vendor, sdev_ufs->model, sdev_ufs->rev);
-+
-+	ufshcd_print_clk_freqs(hba);
+ 	/* handle fatal errors only when link is not in error state */
+ 	if (hba->ufshcd_state != UFSHCD_STATE_ERROR) {
+-		hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED;
+-		if (queue_work(hba->eh_wq, &hba->eh_work))
+-			ufshcd_scsi_block_requests(hba);
++		if (hba->force_reset || ufshcd_is_link_broken(hba) ||
++		    ufshcd_is_saved_err_fatal(hba))
++			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_FATAL;
++		else
++			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_NON_FATAL;
++		queue_work(hba->eh_wq, &hba->eh_work);
+ 	}
  }
  
- /**
-@@ -5951,6 +5954,8 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 
- 	spin_lock(hba->host->host_lock);
- 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-+	hba->ufs_stats.last_intr_status = intr_status;
-+	hba->ufs_stats.last_intr_ts = ktime_get();
- 
+@@ -5664,6 +5680,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_err_handling_prepare(hba);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	ufshcd_scsi_block_requests(hba);
  	/*
- 	 * There could be max of hba->nutrs reqs in flight and in worst case
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index b2ef18f..b7f54af 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -409,6 +409,8 @@ struct ufs_err_reg_hist {
- 
- /**
-  * struct ufs_stats - keeps usage/err statistics
-+ * @last_intr_status: record the last interrupt status.
-+ * @last_intr_ts: record the last interrupt timestamp.
-  * @hibern8_exit_cnt: Counter to keep track of number of exits,
-  *		reset this after link-startup.
-  * @last_hibern8_exit_tstamp: Set time after the hibern8 exit.
-@@ -428,6 +430,9 @@ struct ufs_err_reg_hist {
-  * @tsk_abort: tracks task abort events
-  */
- struct ufs_stats {
-+	u32 last_intr_status;
-+	ktime_t last_intr_ts;
-+
- 	u32 hibern8_exit_cnt;
- 	ktime_t last_hibern8_exit_tstamp;
- 
+ 	 * A full reset and restore might have happened after preparation
+ 	 * is finished, double check whether we should stop.
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
