@@ -2,125 +2,104 @@ Return-Path: <SRS0=JvOq=BQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AB5C433E3
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:21:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A6CAC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:22:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B66F92312B
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:21:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78DE02311A
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:22:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="qq8k2ZQH"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MKDegik7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729805AbgHFRVR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Aug 2020 13:21:17 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18198 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729376AbgHFRVN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:21:13 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 076BAGGj021394
-        for <linux-scsi@vger.kernel.org>; Thu, 6 Aug 2020 04:12:00 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=QU1riLo7tCDR2VuVGws1O5nRrxFfOCClgqgKHPL8tic=;
- b=qq8k2ZQHBn0L0wpAY8g4dPjgsjkO6VqiWuqrVkfgAzNdyi6uDa5ygpblCIpsSZHotPAX
- aPqhDKZNkViIcsGlt8pm9nqTrnVb+zhJOaePNLKS3SdPwAobHUz6V7VSFHHLlLPoKEwD
- LtupzuaKvLsXE1ah3xoxfLzDq+LZ9aniM8tP75JNl1Gly76XxbaplP/PJqvETucHSYN+
- CgMlGwXE2RMSENUrwnor429O3tBK2PcVel43u/WqAD7evPjwrTIBqe9FeXEltt4dMp5i
- qWlpRPJvVPlfNZ91CFTMMkd/nLfCanYgH/TBrV8tlSouVPvaFZDSyy/vYKqo4kwELqqX Jg== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 32n8ff3x6t-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2020 04:12:00 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 6 Aug
- 2020 04:11:52 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 6 Aug
- 2020 04:11:51 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 6 Aug 2020 04:11:51 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 2798C3F703F;
-        Thu,  6 Aug 2020 04:11:51 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 076BBpbf028490;
-        Thu, 6 Aug 2020 04:11:51 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 076BBoO6028489;
-        Thu, 6 Aug 2020 04:11:50 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 03/11] qla2xxx: Indicate correct supported speeds for Mezz card
-Date:   Thu, 6 Aug 2020 04:10:06 -0700
-Message-ID: <20200806111014.28434-4-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200806111014.28434-1-njavali@marvell.com>
-References: <20200806111014.28434-1-njavali@marvell.com>
+        id S1730004AbgHFRP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Aug 2020 13:15:28 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:23101 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730003AbgHFRPO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:15:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596734113;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0c1/Bp7ocDdt7QI3/o/M8hE809LAqDVMjlZbaureeIM=;
+        b=MKDegik76yyiNGG6MA2l3+Kmr9KZeq6u495om6zAE440852XlNVKZL+CLNH0i7uECtXjbJ
+        xHJG1eaKh4RO3OUe1BcZXlUNHZvY3wB5nBESe9GfLCwL029rx0tD6f4Ol9Y0CVXKOfzqMF
+        v6OE+4MmoAXO1bQgdFyGgMfw6i3QQZY=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-360-eiYz7o0xNSuW2Saq1O_loA-1; Thu, 06 Aug 2020 10:46:49 -0400
+X-MC-Unique: eiYz7o0xNSuW2Saq1O_loA-1
+Received: by mail-wr1-f72.google.com with SMTP id f7so14873921wrs.8
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2020 07:46:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0c1/Bp7ocDdt7QI3/o/M8hE809LAqDVMjlZbaureeIM=;
+        b=tTc3YeEeAPetZqiAJe4tmFl0yTI3aEIk54michkYuNXRs8twTYtIhY0Z7rXg8QE1kd
+         iMjBWfV4PPmqam3vnxms+ayZza54Idqq6fr9xWH7qyPqqpQnUmg2z6waNpWzRuxomTZ9
+         7ktaYSkHguwHY+6VCd5m9nQzdfuSKVzb7UrF+2DDfCjRXgBe7ul68+8pT+2P65w4WeGk
+         UP/8YIolLWFzOXSiui1EFINmZaerwcAySWP9wISVMNvpAs2AIwMCqXJBp/uh8/+V0whm
+         jhdJIr4Ns/zDtwfI4ByerF/5T/55mgE3LR2JrEeo8BrjKYWVwG7/bhHcW2+0VqLs0LhE
+         KNnA==
+X-Gm-Message-State: AOAM532o+Cm413OA7D6WLkxAIwjbB2E7/QQSTkQzja4FrTj+Ru55O0f6
+        pVMJPXuLyOIeV1NtnUwZk9yu3+rc+UP/mY/3frvJiedt+6QcHnLwu1kU6BCDLFlpO1tSaKauX1x
+        MKzDPUJ4QH1pvoJTHA7Jqqw==
+X-Received: by 2002:a7b:c5d8:: with SMTP id n24mr8442424wmk.153.1596725207728;
+        Thu, 06 Aug 2020 07:46:47 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJylL3roPS5v+IqXA0mUMSU8r5ytNbRCIB5DavoUedvjg0VapQysCXkty8XEJjSczhb154Tyvg==
+X-Received: by 2002:a7b:c5d8:: with SMTP id n24mr8442408wmk.153.1596725207529;
+        Thu, 06 Aug 2020 07:46:47 -0700 (PDT)
+Received: from ?IPv6:2001:b07:6468:f312:7841:78cc:18c6:1e20? ([2001:b07:6468:f312:7841:78cc:18c6:1e20])
+        by smtp.gmail.com with ESMTPSA id a22sm6461054wmb.4.2020.08.06.07.46.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 06 Aug 2020 07:46:47 -0700 (PDT)
+Subject: Re: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
+To:     Tejun Heo <tj@kernel.org>,
+        Muneendra Kumar M <muneendra.kumar@broadcom.com>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, emilne@redhat.com, mkumar@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
+        James Smart <jsmart2021@gmail.com>,
+        Ming Lei <tom.leiming@gmail.com>
+References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1596507196-27417-17-git-send-email-muneendra.kumar@broadcom.com>
+ <61d2fd75-84ea-798b-aee9-b07957ac8f1b@suse.de>
+ <08b9825b-6abb-c077-ac0d-bd63f10f2ac2@broadcom.com>
+ <aa595605c2f776148e03a8e5dd69168a@mail.gmail.com>
+ <20200806144135.GC4520@mtj.thefacebook.com>
+From:   Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <96930d0f-cb4d-94f4-9cbb-c82d2f0c3840@redhat.com>
+Date:   Thu, 6 Aug 2020 16:46:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-06_06:2020-08-06,2020-08-06 signatures=0
+In-Reply-To: <20200806144135.GC4520@mtj.thefacebook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+On 06/08/20 16:41, Tejun Heo wrote:
+>> 1)	blkcg will have a new field to store driver specific information as
+>> "blkio_cg_ priv_data"(in the current patch it is app_identifier) as Tejun
+>> said he doesn’t mind cgroup data structs carrying extra bits for stuff.
+> 
+> I'd make it something more specific - lpfc_app_id or something along that
+> line.
 
-Correct the supported speeds for 16G Mezz card.
+Note that there will be support in other drivers in all likelihood.
 
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_gs.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index d9ce8d31457a..8c30d9dbb48c 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1505,11 +1505,11 @@ qla2x00_prep_ct_fdmi_req(struct ct_sns_pkt *p, uint16_t cmd,
- static uint
- qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
- {
-+	uint speeds = 0;
-+
- 	if (IS_CNA_CAPABLE(ha))
- 		return FDMI_PORT_SPEED_10GB;
- 	if (IS_QLA28XX(ha) || IS_QLA27XX(ha)) {
--		uint speeds = 0;
--
- 		if (ha->max_supported_speed == 2) {
- 			if (ha->min_supported_speed <= 6)
- 				speeds |= FDMI_PORT_SPEED_64GB;
-@@ -1536,9 +1536,16 @@ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
- 		}
- 		return speeds;
- 	}
--	if (IS_QLA2031(ha))
--		return FDMI_PORT_SPEED_16GB|FDMI_PORT_SPEED_8GB|
--			FDMI_PORT_SPEED_4GB;
-+	if (IS_QLA2031(ha)) {
-+		if ((ha->pdev->subsystem_vendor == 0x103C) &&
-+		    (ha->pdev->subsystem_device == 0x8002)) {
-+			speeds = FDMI_PORT_SPEED_16GB;
-+		} else {
-+			speeds = FDMI_PORT_SPEED_16GB|FDMI_PORT_SPEED_8GB|
-+				FDMI_PORT_SPEED_4GB;
-+		}
-+		return speeds;
-+	}
- 	if (IS_QLA25XX(ha))
- 		return FDMI_PORT_SPEED_8GB|FDMI_PORT_SPEED_4GB|
- 			FDMI_PORT_SPEED_2GB|FDMI_PORT_SPEED_1GB;
--- 
-2.19.0.rc0
+Paolo
 
