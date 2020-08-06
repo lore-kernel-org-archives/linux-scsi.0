@@ -2,111 +2,112 @@ Return-Path: <SRS0=JvOq=BQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68A04C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:05:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A0AC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:09:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6FF020786
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:05:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7890C20786
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:09:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="XRLGg6g/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q9+fMkL2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728507AbgHFRFD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Aug 2020 13:05:03 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24472 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729780AbgHFREO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:04:14 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 076BAHjY021401
-        for <linux-scsi@vger.kernel.org>; Thu, 6 Aug 2020 04:11:04 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=keO6RQE7AHicSzwC/28V3NU5LTL/X5A7fx69ZebubgQ=;
- b=XRLGg6g/zgCAIq3MK1aWPgoBZP54IjRnGjutGTB3Kq4vjMxtifWEyOsjO9oKioEExxbj
- lyVuQM3JKjyX5SZ7wB2MXDDDvRl1GaegVVjhpjml2YhpPhHBS7x4IXFgdtjsDE5fxD3W
- lLRjI11XSC4GFlrSAlb+ED0+rNvrOl4sqWbUOiJM/O6z9TWzCCkP4D1dgHTiUQM/1DJ2
- ibHuqVQnyFq5RfCSxIjfakdsJ//AuVzricLXsXh5AO+nJA0+G8k/bOpFIHmuU0VWetc2
- 6AxpbXzxb7bCbipozI8Xl9oqaanBC9oLiUT3/4ftXAYcforJTc7FKlzeL3BBcTDe6GQT Iw== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 32n8ff3x59-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2020 04:11:04 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 6 Aug
- 2020 04:11:02 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 6 Aug 2020 04:11:03 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id E19233F7043;
-        Thu,  6 Aug 2020 04:11:02 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 076BB2Rh028474;
-        Thu, 6 Aug 2020 04:11:02 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 076BB2Sr028472;
-        Thu, 6 Aug 2020 04:11:02 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 01/11] qla2xxx: flush all sessions on zone disable
-Date:   Thu, 6 Aug 2020 04:10:04 -0700
-Message-ID: <20200806111014.28434-2-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200806111014.28434-1-njavali@marvell.com>
-References: <20200806111014.28434-1-njavali@marvell.com>
+        id S1729967AbgHFRI5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Aug 2020 13:08:57 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:44115 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729434AbgHFRIp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:08:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596733724;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=sjJhCuPta4WpVmZKxG0yo8dqBNBcHGQL4Ez+gkydzN0=;
+        b=Q9+fMkL2u5ciXmqpconF7+52mmBvmjuMnzabTlpMuPorWYzkAnuwGeiTSAEmuXkdK+s3v0
+        UoXhzQstW8oav02uxAKR7DfxchnaRERHuCe0KqBUxPuFazICnGJUbMuoROibtddJjHjSs/
+        vk0GK76CLOs4TJ6jqijRr+GnARmRZoo=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-344-fqMP13lROEq6vsLckP2yxA-1; Thu, 06 Aug 2020 09:41:08 -0400
+X-MC-Unique: fqMP13lROEq6vsLckP2yxA-1
+Received: by mail-wr1-f71.google.com with SMTP id 5so14750944wrc.17
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2020 06:41:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=sjJhCuPta4WpVmZKxG0yo8dqBNBcHGQL4Ez+gkydzN0=;
+        b=dd4SgyXOWDdzrKSfQJoAsqzVcdpka/pfl88LlAcSt0uelD9rcg/n3UbwyrubioO1D2
+         rU8FzKjEwrh+ilokqurYvRAYSHvgN4w+CZaubdT9zcK8e+fFCTQ0AzjcvaZ8tf7SqUhh
+         YJqhahu4V7hDOlQEvM3W3NeYf7X+22K9Fs2ucCZ7OkZoXeiN2WDlDKS2x2OylFrZnMG0
+         HlGvMaoHMf9LhiPPu0KKjrMXXW7i4n3lX3FZEqskjDeuhuYbhBoItLpgp5Or/ZDWpzyn
+         w6tv7TrgIM6GMr5KezjIFW3IRqosWFduerUzK4k1+6aYg522xG3WE+IfVZSzCtKdQ6Q+
+         cdYg==
+X-Gm-Message-State: AOAM532R2+xTbpGLJYCMao2tSuX557KceuPvgnxzeKh2wrCwEkOchEBu
+        Y+7SFL3j9DTP6V4UW1vlaEXlHu90JvtlpxrhPlwpLl5kO3uTszEH0qp89jyXSQmfLnEUvK9L/m1
+        5A3gNjZmedVhHnuIRGGCr6w==
+X-Received: by 2002:a1c:c913:: with SMTP id f19mr7777445wmb.173.1596721267518;
+        Thu, 06 Aug 2020 06:41:07 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyvp1W4XiDKNSf4N+cwMgbUHVygTtIjEkDlFD8MnUk4aTeuitV8JS5C+MnEveTJ1uyh+qNg6g==
+X-Received: by 2002:a1c:c913:: with SMTP id f19mr7777420wmb.173.1596721267269;
+        Thu, 06 Aug 2020 06:41:07 -0700 (PDT)
+Received: from ?IPv6:2001:b07:6468:f312:7841:78cc:18c6:1e20? ([2001:b07:6468:f312:7841:78cc:18c6:1e20])
+        by smtp.gmail.com with ESMTPSA id i4sm6702440wrw.26.2020.08.06.06.41.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 06 Aug 2020 06:41:06 -0700 (PDT)
+Subject: Re: [RFC 01/16] blkcg:Introduce blkio.app_identifier knob to blkio
+ controller
+To:     Ming Lei <tom.leiming@gmail.com>,
+        Muneendra Kumar M <muneendra.kumar@broadcom.com>
+Cc:     Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>,
+        James Smart <james.smart@broadcom.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Ewan Milne <emilne@redhat.com>, mkumar@redhat.com
+References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1596507196-27417-2-git-send-email-muneendra.kumar@broadcom.com>
+ <20200804113130.qfi5agzilso3mlbp@beryllium.lan>
+ <20200804142123.GA4819@mtj.thefacebook.com>
+ <b35e0e83-eb6c-4282-5142-22d9a996d260@broadcom.com>
+ <CACVXFVPVM-xU0d2nETztPrS_EpacMy8A4x8FbShhLYt2iV_ouw@mail.gmail.com>
+ <227c7f27-c6c7-5db1-59ac-2dd428f5a42a@suse.de>
+ <20200805143913.GC4819@mtj.thefacebook.com>
+ <c40bc34840566366177a84b0d8b7ae90@mail.gmail.com>
+ <CACVXFVOYc9KAaLsQ1kPa_bW_MsUgcxhqec45f24pB62=r-KXPg@mail.gmail.com>
+From:   Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <3d48f9fd-9793-453d-1a17-61d25ea2f678@redhat.com>
+Date:   Thu, 6 Aug 2020 15:41:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-06_06:2020-08-06,2020-08-06 signatures=0
+In-Reply-To: <CACVXFVOYc9KAaLsQ1kPa_bW_MsUgcxhqec45f24pB62=r-KXPg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+On 06/08/20 04:22, Ming Lei wrote:
+>> Could you please let me know is there any another way where we can get the
+>> VM UUID info with the help of blkcg.
+> As Tejun suggested, the mapping between bio->bi_blkg->blkcg and the
+> unique ID could be built in usage scope, such as fabric
+> infrastructure, something like
+> xarray/hash may help to do that without much difficulty.
 
-On Zone Disable, certain switch would ignore all
-commands. This cause timeout for both switch
-scan command and abort of that command. On detection
-of this condition, all sessions will be shutdown.
+So do you suggest adding one (or actually many) driver-specific files in
+/sys/bus/pci/drivers/lpfc or something like that?  That seems very much
+inferior to just sticking it into blkcg.  Even though this is only
+implemented by lpfc, other FC drivers will follow suit.
 
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_gs.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 42c3ad27f1cb..c5529da1df59 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3734,6 +3734,18 @@ static void qla2x00_async_gpnft_gnnft_sp_done(srb_t *sp, int res)
- 		unsigned long flags;
- 		const char *name = sp->name;
- 
-+		if (res == QLA_OS_TIMER_EXPIRED) {
-+			/* switch is ignoring all commands.
-+			 * This might be a zone disable behavior.
-+			 * This means we hit 64s timeout.
-+			 * 22s GPNFT + 44s Abort = 64s
-+			 */
-+			ql_dbg(ql_dbg_disc, vha, 0xffff,
-+			       "%s: Switch Zone check please .\n",
-+			       name);
-+			qla2x00_mark_all_devices_lost(vha);
-+		}
-+
- 		/*
- 		 * We are in an Interrupt context, queue up this
- 		 * sp for GNNFT_DONE work. This will allow all
--- 
-2.19.0.rc0
+Paolo
 
