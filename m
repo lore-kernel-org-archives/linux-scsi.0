@@ -2,139 +2,198 @@ Return-Path: <SRS0=JvOq=BQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4365C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:10:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AA2C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:11:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FE852311B
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:10:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68CC623119
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Aug 2020 17:11:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="dW8PU+sM"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fc820Ka6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730185AbgHFRJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Aug 2020 13:09:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45796 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730026AbgHFRGB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:06:01 -0400
-Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0A39C034608
-        for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2020 05:34:43 -0700 (PDT)
-Received: by mail-ot1-x32d.google.com with SMTP id x24so11884621otp.3
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2020 05:34:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=DQzpnS8fr6jm2iRUKTT+8uPER0rWAMgK1qYP0hO2mN8=;
-        b=dW8PU+sMZlFCQuye9xK/etp27hrc0yDNj1O/ibFjFd0u91P8MsMMs1wSYbUrwyAP2D
-         pwe1nCpAHeVLOkg+ls7rg2iQStVrgE5cX0R05E42xPEZ580r3kOxBi2xUJfqxMZaCNqg
-         4xMjk70WinlhmepCCePSxNp766We+DQyLO0Zg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=DQzpnS8fr6jm2iRUKTT+8uPER0rWAMgK1qYP0hO2mN8=;
-        b=sKp3wI667URoxT3N+2gZIFRLNZFndiYyBWMQhmF/xZgcUuf018vj1JRkskDzo3pdAv
-         I/Kp5lMasuNZwotg3YDfSTRx2n3PImoBtGGDL5kqjkwHw3zC/gl/PIGLTpcwXeUKtiDV
-         KZRjyL8YbaGtkhHLRHCeVqWq2OrQjvcTtnBIvWG82Ms6yIcF/Ueo9tj2+I7golw6RdS7
-         D3QJqACYCPYYpV1jfzhO6Uj6QzgaqnsTj9rmpCcjdxhbTJ7OPMIXnSZm3mDL1c9iTFni
-         kbhRZfbsdzoojgoiARwKzO5l6odR7+b7APSaEUBJEnGLCT33wukviossCnlcBpTqd9AE
-         A4aQ==
-X-Gm-Message-State: AOAM531EBnSuFs4oX4nsnIELVfczCQGGDRuoMl/HxPdRuI+jY3vam5Le
-        fcq37AN8dWQk7iJlqjge9vgYzV3QvPruZZcagakpnRmIfC0=
-X-Google-Smtp-Source: ABdhPJwp+H41ENza8xFswVq6f+iz+1qozZ8ksWJ66+CB+SLCktL6wADXXlTKvVI0+u8Nft5hLxnaiVYRwju+2IseuAs=
-X-Received: by 2002:a05:6830:1e71:: with SMTP id m17mr7323482otr.188.1596717279387;
- Thu, 06 Aug 2020 05:34:39 -0700 (PDT)
-From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
-References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596507196-27417-17-git-send-email-muneendra.kumar@broadcom.com>
- <61d2fd75-84ea-798b-aee9-b07957ac8f1b@suse.de> <08b9825b-6abb-c077-ac0d-bd63f10f2ac2@broadcom.com>
-In-Reply-To: <08b9825b-6abb-c077-ac0d-bd63f10f2ac2@broadcom.com>
+        id S1730134AbgHFRLP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Aug 2020 13:11:15 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:55156 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730229AbgHFRKP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Aug 2020 13:10:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596733813;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=cl9dqFTVPcEMBvYqHZhhtle9pFIJZ5lHoW6WicsKYD8=;
+        b=Fc820Ka63cB3PdJsPB1OxoApUWMwQxLAa3YoxdHvlo0jXaojQKjMv2dW0lrPta7AHUwZza
+        /ShWW00WxWHS0Ip9rNImYGsdkp/xVYLywLqILrw5V7FWZOiQepoyX7/A8gV5mlKBECPRp1
+        QVDe7i2OFjox9cpEHi2g6y9NomZyIDs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-159-jL2iVwcbM8qIB6ugPhwK4A-1; Thu, 06 Aug 2020 09:38:37 -0400
+X-MC-Unique: jL2iVwcbM8qIB6ugPhwK4A-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1A6A5800470;
+        Thu,  6 Aug 2020 13:38:35 +0000 (UTC)
+Received: from T590 (ovpn-13-169.pek2.redhat.com [10.72.13.169])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2C3DB5F1EF;
+        Thu,  6 Aug 2020 13:38:23 +0000 (UTC)
+Date:   Thu, 6 Aug 2020 21:38:19 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
+Message-ID: <20200806133819.GA2046861@T590>
+References: <20200724024704.GB957464@T590>
+ <6531e06c-9ce2-73e6-46fc-8e97400f07b2@huawei.com>
+ <20200728084511.GA1326626@T590>
+ <965cf22eea98c00618570da8424d0d94@mail.gmail.com>
+ <20200729153648.GA1698748@T590>
+ <7f94eaf2318cc26ceb64bde88d59d5e2@mail.gmail.com>
+ <20200804083625.GA1958244@T590>
+ <afe5eb1be7f416a48d7b5d473f3053d0@mail.gmail.com>
+ <20200805084031.GA1995289@T590>
+ <5adffdf805179428bdd0dd6c293a4f7d@mail.gmail.com>
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-thread-index: AQIDyhmBPqdmqCKUdNTZliBUbPkt/AI5BKetAom9APICL6c0jKiYs6nw
-Date:   Thu, 6 Aug 2020 18:04:36 +0530
-Message-ID: <aa595605c2f776148e03a8e5dd69168a@mail.gmail.com>
-Subject: RE: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
-To:     James Smart <james.smart@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     pbonzini@redhat.com, emilne@redhat.com, mkumar@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
-        James Smart <jsmart2021@gmail.com>,
-        Ming Lei <tom.leiming@gmail.com>, Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5adffdf805179428bdd0dd6c293a4f7d@mail.gmail.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi James,
+On Thu, Aug 06, 2020 at 03:55:50PM +0530, Kashyap Desai wrote:
+> > > Ming -
+> > >
+> > > I noted your comments.
+> > >
+> > > I have completed testing and this particular latest performance issue
+> > > on Volume is outstanding.
+> > > Currently it is 20-25% performance drop in IOPs and we want that to be
+> > > closed before shared host tag is enabled for <megaraid_sas> driver.
+> > > Just for my understanding - What will be the next steps on this ?
+> > >
+> > > I can validate any new approach/patch for this issue.
+> > >
+> >
+> > Hello,
+> >
+> > What do you think of the following patch?
+> 
+> I tested this patch. I still see IO hang.
+> 
+> >
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c index
+> > c866a4f33871..49f0fc5c7a63 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -552,8 +552,24 @@ static void scsi_run_queue_async(struct scsi_device
+> > *sdev)
+> >  	if (scsi_target(sdev)->single_lun ||
+> >  	    !list_empty(&sdev->host->starved_list))
+> >  		kblockd_schedule_work(&sdev->requeue_work);
+> > -	else
+> > -		blk_mq_run_hw_queues(sdev->request_queue, true);
+> > +	else {
+> > +		/*
+> > +		 * smp_mb() implied in either rq->end_io or
+> > blk_mq_free_request
+> > +		 * is for ordering writing .device_busy in
+> scsi_device_unbusy()
+> > +		 * and reading sdev->restarts.
+> > +		 */
+> > +		int old = atomic_read(&sdev->restarts);
+> > +
+> > +		if (old) {
+> > +			blk_mq_run_hw_queues(sdev->request_queue, true);
+> > +
+> > +			/*
+> > +			 * ->restarts has to be kept as non-zero if there
+> is
+> > +			 *  new budget contention comes.
+> > +			 */
+> > +			atomic_cmpxchg(&sdev->restarts, old, 0);
+> > +		}
+> > +	}
+> >  }
+> >
+> >  /* Returns false when no more bytes to process, true if there are more
+> */
+> > @@ -1612,8 +1628,34 @@ static void scsi_mq_put_budget(struct
+> > request_queue *q)  static bool scsi_mq_get_budget(struct request_queue
+> *q)
+> > {
+> >  	struct scsi_device *sdev = q->queuedata;
+> > +	int ret = scsi_dev_queue_ready(q, sdev);
+> >
+> > -	return scsi_dev_queue_ready(q, sdev);
+> > +	if (ret)
+> > +		return true;
+> > +
+> > +	/*
+> > +	 * If all in-flight requests originated from this LUN are
+> completed
+> > +	 * before setting .restarts, sdev->device_busy will be observed as
+> > +	 * zero, then blk_mq_delay_run_hw_queue() will dispatch this
+> request
+> > +	 * soon. Otherwise, completion of one of these request will
+> observe
+> > +	 * the .restarts flag, and the request queue will be run for
+> handling
+> > +	 * this request, see scsi_end_request().
+> > +	 */
+> > +	atomic_inc(&sdev->restarts);
+> > +
+> > +	/*
+> > +	 * Order writing .restarts and reading .device_busy, and make sure
+> > +	 * .restarts is visible to scsi_end_request(). Its pair is implied
+> by
+> > +	 * __blk_mq_end_request() in scsi_end_request() for ordering
+> > +	 * writing .device_busy in scsi_device_unbusy() and reading
+> .restarts.
+> > +	 *
+> > +	 */
+> > +	smp_mb__after_atomic();
+> > +
+> > +	if (unlikely(atomic_read(&sdev->device_busy) == 0 &&
+> > +				!scsi_device_blocked(sdev)))
+> > +		blk_mq_delay_run_hw_queues(sdev->request_queue,
+> > SCSI_QUEUE_DELAY);
+> 
+> Hi Ming -
+> 
+> There is still some race which is not handled.  Take a case of IO is not
+> able to get budget and it has already marked <restarts> flag.
+> <restarts> flag will be seen non-zero in completion path and completion
+> path will attempt h/w queue run. (But this particular IO is still not in
+> s/w queue.).
+> Attempt of running h/w queue from completion path will not flush any IO
+> since there is no IO in s/w queue.
 
-As Tejun and Ming is suggesting to have interface close to the usage as
-fabric infrasture I was thinking of this approach from the inputs provided
-by you in the below mail.
-Please provide your inputs on this approach.
+Then where is the IO to be submitted in case of running out of budget?
 
-1)	blkcg will have a new field to store driver specific information as
-"blkio_cg_ priv_data"(in the current patch it is app_identifier) as Tejun
-said he doesn=E2=80=99t mind cgroup data structs carrying extra bits for st=
-uff.
-2)	scsi transport will provide a new interface(sysfs) as register_vm_fabric
-3)	As part of this interface user/deamon will provide the details of VM suc=
-h
-as UUID,PID on VM creation to the transport .
-4)	With VM PID information we need to find the associated blkcg and needs t=
-o
-update the UUID info in blkio_cg_ priv_data.
-5)	Once we update the blkio_cg_ priv_data with vmid all the io=E2=80=99s is=
-sued from
-VM will have the UUID info as part of blkcg.
+Any IO request which is going to be added to hctx->dispatch, the queue will be
+re-run via blk-mq core.
 
-With this  we can also address the concerns raised by Tejun and the
-existing lpfc patches still holds good.
-
-Regards,
-Muneendra.
-
------Original Message-----
-From: James Smart [mailto:james.smart@broadcom.com]
-Sent: Thursday, August 6, 2020 5:08 AM
-To: Hannes Reinecke <hare@suse.de>; Muneendra
-<muneendra.kumar@broadcom.com>; linux-block@vger.kernel.org;
-linux-scsi@vger.kernel.org
-Cc: pbonzini@redhat.com; emilne@redhat.com; mkumar@redhat.com; Gaurav
-Srivastava <gaurav.srivastava@broadcom.com>; James Smart
-<jsmart2021@gmail.com>
-Subject: Re: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
+Any IO request being issued directly when running out of budget will be
+insert to hctx->dispatch or sw/scheduler queue, will be run in the
+submission path.
 
 
-That's actually what's supposed to be happening. fastpath uses the uuid to
-look up a vmid tag. If no vmid tag, kick off the fabric traffic that will
-get one but don't wait for it to complete. Any io issued while that process
-is occurring will be not be vmid tagged.    I'll circle back on lpfc to mak=
-e
-sure this is happening.
+Thanks, 
+Ming
 
-In the mean time - the most important patch to review is the cgroup patch -
-patch1.
-
-If we wanted to speed the driver's io path up, one thing to consider is
-adding a driver-settable value on the blkcg structure.  Once the fabric
-traffic obtained the vmid, the driver would set the blkcg structure with th=
-e
-value.  In this scenario though, as the vmid is destroyed as of link down,
-the driver needs a way, independent of an io, to reach into the blkcg struc=
-t
-to clear the vmid value.  We also need to be sure the blkcg struct won't be
-on top of a multipath device or something such that the blkcg struct may be
-referenced by a different scsi host - I assume we're good in that area.
-
--- james
