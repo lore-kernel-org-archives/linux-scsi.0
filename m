@@ -1,65 +1,129 @@
-Return-Path: <SRS0=GwgI=BR=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=ejtk=BS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B7D8C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Aug 2020 23:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2E9CC433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 06:59:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 053EA2075A
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Aug 2020 23:51:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="dAYg0dk7"
+	by mail.kernel.org (Postfix) with ESMTP id CD5D720866
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 06:59:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726448AbgHGXvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Aug 2020 19:51:07 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:15035 "EHLO m43-7.mailgun.net"
+        id S1726190AbgHHG7V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Aug 2020 02:59:21 -0400
+Received: from comms.puri.sm ([159.203.221.185]:46128 "EHLO comms.puri.sm"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726066AbgHGXvH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 7 Aug 2020 19:51:07 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1596844266; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: To:
- Subject: Sender; bh=/wOK4MvxcpZbK21ac4Gn0EAHD/IEcIttoKtPO34+rps=; b=dAYg0dk76YJ92qLOoSZcfM63c7O+DlfTx/v69zYWu05zY1nlnDz0PobWF9z55s88wKEy5t8w
- WoU5lexKRpFkb/egfZoW488vTta8+vTCamlRmmZzm4sUpA7zYwjZqxhZTRa7WA0jUmPy443e
- dwF/MwA/3xhuIXFJPNTnkbPiP00=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
- 5f2de8cad96d28d61e8e6ca8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 07 Aug 2020 23:50:34
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 927A3C433CB; Fri,  7 Aug 2020 23:50:34 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6A5BDC433C6;
-        Fri,  7 Aug 2020 23:50:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6A5BDC433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v9 0/9] Fix up and simplify error recovery mechanism
-To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com
-References: <1596445485-19834-1-git-send-email-cang@codeaurora.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <ac862463-7009-719d-7373-7b5f308ed45b@codeaurora.org>
-Date:   Fri, 7 Aug 2020 16:50:32 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <1596445485-19834-1-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1725786AbgHHG7V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 8 Aug 2020 02:59:21 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id C65CADFE40;
+        Fri,  7 Aug 2020 23:59:17 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id iDrctBS22Urf; Fri,  7 Aug 2020 23:59:16 -0700 (PDT)
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+References: <1596034432.4356.19.camel@HansenPartnership.com>
+ <d9bb92e9-23fa-306f-c7f2-71a81ab28811@puri.sm>
+ <1596037482.4356.37.camel@HansenPartnership.com>
+ <A1653792-B7E5-46A9-835B-7FA85FCD0378@puri.sm>
+ <20200729182515.GB1580638@rowland.harvard.edu>
+ <1596047349.4356.84.camel@HansenPartnership.com>
+ <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
+ <20200730151030.GB6332@rowland.harvard.edu>
+ <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
+ <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
+ <20200807143002.GE226516@rowland.harvard.edu>
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
+ 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
+ ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
+Message-ID: <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
+Date:   Sat, 8 Aug 2020 08:59:09 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
+In-Reply-To: <20200807143002.GE226516@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -67,70 +131,116 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/3/2020 2:04 AM, Can Guo wrote:
-> The changes have been tested with error injections of multiple error types (and
-> all kinds of mixture of them) during runtime, e.g. hibern8 enter/ exit error,
-> power mode change error and fatal/non-fatal error from IRQ context. During the
-> test, error injections happen randomly across all contexts, e.g. clk scaling,
-> clk gate/ungate, runtime suspend/resume and IRQ.
+On 07.08.20 16:30, Alan Stern wrote:
+> On Fri, Aug 07, 2020 at 11:51:21AM +0200, Martin Kepplinger wrote:
+>> it's really strange: below is the change I'm trying. Of course that's
+>> only for testing the functionality, nothing how a patch could look like.
+>>
+>> While I remember it had worked, now (weirdly since I tried that mounting
+>> via fstab) it doesn't anymore!
+>>
+>> What I understand (not much): I handle the error with "retry" via the
+>> new flag, but scsi_decide_disposition() returns SUCCESS because of "no
+>> more retries"; but it's the first and only time it's called.
 > 
-> There are a few more fixes to resolve other minor problems based on the main
-> change, such as LINERESET handling and racing btw error handler and system
-> suspend/resume/shutdown, but they will be pushed after this series is taken,
-> due to there are already too many lines in these changes.
-> 
-> Change since v8:
-> - Added one more fix to ufshcd_abort as requested by Stanley Chu
-> 
-> Change since v7:
-> - Incorporated Asutosh's comments
-> - Refined patch "scsi: ufs: Recover hba runtime PM error in error handler"
-> 
-> Change since v6:
-> - Modified change "scsi: ufs-qcom: Fix schedule while atomic error in ufs_qcom_dump_dbg_regs" to "scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs"
-> 
-> Change since v5:
-> - Dropped change "scsi: ufs: Fix imbalanced scsi_block_reqs_cnt caused by ufshcd_hold()" as it is not quite related with this series
-> - Refined func ufshcd_err_handling_prepare in change "scsi: ufs: Recover hba runtime PM error in error handler"
-> 
-> Change since v4:
-> - Split the original change "ufs: ufs-qcom: Fix a few BUGs in func ufs_qcom_dump_dbg_regs()" to 2 small changes
-> 
-> Change since v3:
-> - Split the original change "scsi: ufs: Fix up and simplify error recovery mechanism" into 5 changes
-> 
-> Change since v2:
-> - Incorporate Bart's comment to change "scsi: ufs: Add checks before setting clk-gating states"
-> - Revised the commit msg of change "scsi: ufs: Fix up and simplify error recovery mechanism"
-> 
-> Change since v1:
-> - Fixed a compilation error in case that CONFIG_PM is N
-> 
-> Can Guo (9):
->    scsi: ufs: Add checks before setting clk-gating states
->    ufs: ufs-qcom: Fix race conditions caused by func
->      ufs_qcom_testbus_config
->    scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
->    scsi: ufs: Add some debug infos to ufshcd_print_host_state
->    scsi: ufs: Fix concurrency of error handler and other error recovery
->      paths
->    scsi: ufs: Recover hba runtime PM error in error handler
->    scsi: ufs: Move dumps in IRQ handler to error handler
->    scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
->    scsi: ufs: Properly release resources if a task is aborted
->      successfully
-> 
->   drivers/scsi/ufs/ufs-qcom.c  |  37 ----
->   drivers/scsi/ufs/ufs-sysfs.c |   1 +
->   drivers/scsi/ufs/ufshcd.c    | 508 +++++++++++++++++++++++++++----------------
->   drivers/scsi/ufs/ufshcd.h    |  14 ++
->   4 files changed, 338 insertions(+), 222 deletions(-)
-> 
+> Are you saying that scmd->allowed is set to 0?  Or is scsi_notry_cmd() 
+> returning a nonzero value?  Whichever is true, why does it happen that 
+> way?
 
-Please add my ack to the series.
+scsi_notry_cmd() is returning 1. (it's retry 1 of 5 allowed).
 
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+why is it returning 1? REQ_FAILFAST_DEV is set. It's DID_OK, then "if
+(status_byte(scmd->result) != CHECK_CONDITION)" appearently is not true,
+then at the end it returns 1 because of REQ_FAILFAST_DEV.
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+that seems to come from the block layer. why and when? could I change
+that so that the scsi error handling stays in control?
+
+> 
+> What is the failing command?  Is it a READ(10)?
+
+Not sure how I'd answer that, but here's the test to trigger the error:
+
+mount /dev/sda1 /mnt
+cd /mnt
+ls
+cp file ~/ (if ls "works" and doesn't yet trigger the error)
+
+and that's the (familiar looking) logs when doing so. again: despite the
+mentioned workaround in scsi_error and the new expected_media_change
+flag *is* set and gets cleared, as it should be. REQ_FAILFAST_DEV seems
+to override what I want to do is scsi_error:
+
+[   55.557629] sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result:
+hostbyte=0x00 driverbyte=0x08 cmd_age=0s
+[   55.557639] sd 0:0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
+[   55.557646] sd 0:0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
+[   55.557657] sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 08 fc
+e0 00 00 01 00
+[   55.557666] blk_update_request: I/O error, dev sda, sector 589024 op
+0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+[   55.568899] sd 0:0:0:0: [sda] tag#0 device offline or changed
+[   55.574691] blk_update_request: I/O error, dev sda, sector 589025 op
+0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+[   55.585756] sd 0:0:0:0: [sda] tag#0 device offline or changed
+[   55.591562] blk_update_request: I/O error, dev sda, sector 589026 op
+0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+[   55.602274] sd 0:0:0:0: [sda] tag#0 device offline or changed
+(... goes on with the same)
+
+
+> 
+>> How can this be? What am I missing?
+> 
+> It's kind of hard to tell without seeing the error messages or system 
+> log or any debugging information.
+
+thanks a lot for getting back to me,
+
+                           martin
+
+
+> 
+> Alan Stern
+> 
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -565,6 +565,13 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+>>  				return NEEDS_RETRY;
+>>  			}
+>>  		}
+>> +		if (scmd->device->expecting_media_change) {
+>> +			if (sshdr.asc == 0x28 && sshdr.ascq == 0x00) {
+>> +				scmd->device->expecting_media_change = 0;
+>> +				return NEEDS_RETRY;
+>> +			}
+>> +		}
+>> +
+>>  		/*
+>>  		 * we might also expect a cc/ua if another LUN on the target
+>>  		 * reported a UA with an ASC/ASCQ of 3F 0E -
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index d90fefffe31b..bb583e403b81 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -3642,6 +3642,8 @@ static int sd_resume(struct device *dev)
+>>  	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+>>  		return 0;
+>>
+>> +	sdkp->device->expecting_media_change = 1;
+>> +
+>>  	if (!sdkp->device->manage_start_stop)
+>>  		return 0;
+>>
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index bc5909033d13..f5fc1af68e00 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -169,6 +169,7 @@ struct scsi_device {
+>>  				 * this device */
+>>  	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+>>  				     * because we did a bus reset. */
+>> +	unsigned expecting_media_change:1;
+>>  	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+>>  	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+>>  	unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
