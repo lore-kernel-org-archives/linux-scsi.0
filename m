@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC01C433DF
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 22:57:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE075C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 23:00:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1CD2206CD
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 22:57:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2B91206B5
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 23:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726049AbgHHW46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Aug 2020 18:56:58 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35193 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725988AbgHHW46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2020 18:56:58 -0400
-Received: by mail-pg1-f194.google.com with SMTP id o5so2869102pgb.2;
-        Sat, 08 Aug 2020 15:56:57 -0700 (PDT)
+        id S1726058AbgHHXAW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Aug 2020 19:00:22 -0400
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:35551 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725988AbgHHXAW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2020 19:00:22 -0400
+Received: by mail-pj1-f68.google.com with SMTP id t6so2845133pjr.0;
+        Sat, 08 Aug 2020 16:00:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=Y9u9uwtjB5Nk/16KFaUQYZf5pTJjEDM6b10S2jbbdP0=;
-        b=kn/3rvbR4fhXcba7taj0xoAa4GargvzYUAQObhalb3ZxJYtvdbGzjlSeTpkgDNs6z1
-         24QnT8KBFAZxIHlxe0h8WxaFXXgEppuns0mmdv/akoCobafJhqVUeoUzNfD+yphEnzci
-         nxyPuNjF6ws2FTRgkNhHmax+BmQaQJZBo7zWza/SxgfSH3fRleBla2Ia5YkpiPpomTuP
-         usFLfZ3s2R0mxrpRY/4s9LpJrHH/sgPa9xOr6yUE7W/hCdcmtu1T3qQmcxeGMGdote81
-         Zp96IvwyQjUpn24ceq4IpvNRgI6goAu2AHMG4PE7FsNzTGRpIuyKtbsD0KYUGP7yY/Cf
-         dJ5A==
-X-Gm-Message-State: AOAM531DqmPZggpKKbtdEloHnq9+IIs/iFdIwWhuqUBVLBbLZkf1xaN3
-        JbrJDxCWYXHq9BtrByO/vCc=
-X-Google-Smtp-Source: ABdhPJwIPSSunfCDcRthsG/Gzbl9acijXbEwF1QpT09f6ZKgqS9EzbDBzo7x/iFOFC9pjk2e1zfm1A==
-X-Received: by 2002:a63:df01:: with SMTP id u1mr15310304pgg.401.1596927416923;
-        Sat, 08 Aug 2020 15:56:56 -0700 (PDT)
+        bh=03s0FrguY+5Vsw5VcUN9hRTd+zm+8TlvlWIEd814HQA=;
+        b=jDuY4fCSEWSXhrCCZsIAceb+ZjKs2VlVYFXjuEGnMIoiAOQIlITfuGeBYCh+fzfmFB
+         Bxq4kVZjzEU9wHWzXyUiUDEeEVLdJQ/fK8f8oxX0pOpdhybjqb9abF720i2XFUsj/GRV
+         t+cPv9xo0F7lvdOlziU+F2HofnbBPRJzMBswFbTtCfPUu0fWUTHU7CniFroeu8sfD8dq
+         PDjnSKlAE6OdnYc6Qt8SDu2tJ9N/NrQLBIldOLQyAfMkfuv5OhKHwc85U3v81SqSTsbO
+         8oXQHtN2O8Yb+FRXykR9MMwyn7sOL+8QBkJdVXvxvo9LheLK352K0IorHqAC2SFGN6M/
+         lpWA==
+X-Gm-Message-State: AOAM531FywZkdPT3C93Vge9YHbBpW0Lc+XL5Kp15UKumIw8hF92bJfDS
+        i4XameItQHQn2tkeYEoyV5k=
+X-Google-Smtp-Source: ABdhPJwbpBTfg2/oaWQvHBKZvsf3ofbIA43CMdwToZX9yxA8hK4yDqzAFXPE9qWHYhgJNDNbN/gOWw==
+X-Received: by 2002:a17:90b:a45:: with SMTP id gw5mr19388020pjb.80.1596927621388;
+        Sat, 08 Aug 2020 16:00:21 -0700 (PDT)
 Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id f89sm15830883pje.11.2020.08.08.15.56.54
+        by smtp.gmail.com with ESMTPSA id n18sm15064408pgd.91.2020.08.08.16.00.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 08 Aug 2020 15:56:55 -0700 (PDT)
-Subject: Re: [PATCH v8 2/4] scsi: ufs: Introduce HPB feature
+        Sat, 08 Aug 2020 16:00:20 -0700 (PDT)
+Subject: Re: [PATCH v8 1/4] scsi: ufs: Add UFS feature related parameter
 To:     daejun7.park@samsung.com,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
@@ -60,10 +60,9 @@ Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Adel Choi <adel.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-References: <231786897.01596705001840.JavaMail.epsvc@epcpadp1>
- <231786897.01596704281715.JavaMail.epsvc@epcpadp2>
+References: <231786897.01596704281715.JavaMail.epsvc@epcpadp2>
  <CGME20200806073257epcms2p61564ed62e02fc42fc3c2b18fa92a038d@epcms2p6>
- <231786897.01596705302142.JavaMail.epsvc@epcpadp1>
+ <231786897.01596705001840.JavaMail.epsvc@epcpadp1>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -88,12 +87,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <4a91d02c-488c-86cd-325c-5e0ad9addd0b@acm.org>
-Date:   Sat, 8 Aug 2020 15:56:53 -0700
+Message-ID: <adb044b2-67e0-b451-332c-37789ded99f9@acm.org>
+Date:   Sat, 8 Aug 2020 16:00:18 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <231786897.01596705302142.JavaMail.epsvc@epcpadp1>
+In-Reply-To: <231786897.01596705001840.JavaMail.epsvc@epcpadp1>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -102,80 +101,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-06 02:11, Daejun Park wrote:
-> +static void ufshpb_issue_hpb_reset_query(struct ufs_hba *hba)
-> +{
-> +	int err;
-> +	int retries;
-> +
-> +	for (retries = 0; retries < HPB_RESET_REQ_RETRIES; retries++) {
-> +		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-> +				QUERY_FLAG_IDN_HPB_RESET, 0, NULL);
-> +		if (err)
-> +			dev_dbg(hba->dev,
-> +				"%s: failed with error %d, retries %d\n",
-> +				__func__, err, retries);
-> +		else
-> +			break;
-> +	}
-> +
-> +	if (err) {
-> +		dev_err(hba->dev,
-> +			"%s setting fHpbReset flag failed with error %d\n",
-> +			__func__, err);
-> +		return;
-> +	}
-> +}
+On 2020-08-06 02:02, Daejun Park wrote:
+> @@ -537,6 +548,7 @@ struct ufs_dev_info {
+>  	u8 *model;
+>  	u16 wspecversion;
+>  	u32 clk_gating_wait_us;
+> +	u8 b_ufs_feature_sup;
+>  	u32 d_ext_ufs_feature_sup;
+>  	u8 b_wb_buffer_type;
+>  	u32 d_wb_alloc_units;
+> 
 
-Please change the "break" into an early return, remove the last
-occurrence "if (err)" and remove the final return statement.
+Hmm ... shouldn't this variable be introduced in the patch that introduces
+the code that sets and uses this variable?
 
-> +static void ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
-> +{
-> +	int err;
-> +	bool flag_res = true;
-> +	int try = 0;
-> +
-> +	/* wait for the device to complete HPB reset query */
-> +	do {
-> +		if (++try == HPB_RESET_REQ_RETRIES)
-> +			break;
-> +
-> +		dev_info(hba->dev,
-> +			"%s start flag reset polling %d times\n",
-> +			__func__, try);
-> +
-> +		/* Poll fHpbReset flag to be cleared */
-> +		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-> +				QUERY_FLAG_IDN_HPB_RESET, 0, &flag_res);
-> +		usleep_range(1000, 1100);
-> +	} while (flag_res);
-> +
-> +	if (err) {
-> +		dev_err(hba->dev,
-> +			"%s reading fHpbReset flag failed with error %d\n",
-> +			__func__, err);
-> +		return;
-> +	}
-> +
-> +	if (flag_res) {
-> +		dev_err(hba->dev,
-> +			"%s fHpbReset was not cleared by the device\n",
-> +			__func__);
-> +	}
-> +}
+How about making it clear in the patch subject that this patch adds protocol
+constants related to HPB?
 
-Should "polling %d times" perhaps be changed into "attempt %d"?
-
-The "if (err)" statement may be reached without "err" having been
-initialized. Please fix.
-
-Additionally, please change the do-while loop into a for-loop, e.g. as
-follows:
-
-	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++)
-		...
-
-Thanks,
+Otherwise this patch looks good to me.
 
 Bart.
