@@ -2,177 +2,180 @@ Return-Path: <SRS0=ejtk=BS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE3AC433DF
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 19:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC01C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 22:57:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBFEF20678
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 19:05:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="W7+tfcNT"
+	by mail.kernel.org (Postfix) with ESMTP id D1CD2206CD
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 22:57:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726536AbgHHTF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Aug 2020 15:05:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53860 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726346AbgHHTF0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2020 15:05:26 -0400
-Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 851B6C061A27
-        for <linux-scsi@vger.kernel.org>; Sat,  8 Aug 2020 12:05:26 -0700 (PDT)
-Received: by mail-qt1-x82f.google.com with SMTP id s16so3845968qtn.7
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Aug 2020 12:05:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=yL2/UZwpI1fKUgMiVTUcG0n2gTeUCe4ep7Qh3IOPQe4=;
-        b=W7+tfcNTadux9ZruydDOwvn25cK3jUiSZFc16ccW/MZfXQpxkZu851dMozMIgBCpXo
-         SmNST2s9nIRlDyg7rGsxUPTOfuPq2hE2FLOc0fQsRwH9eHM67asHmjHVQ0T9eap+rZ33
-         w/F/xIOUjLN1FFkegvRY5W5xjA2N/wZWaQt5E=
+        id S1726049AbgHHW46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Aug 2020 18:56:58 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:35193 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725988AbgHHW46 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2020 18:56:58 -0400
+Received: by mail-pg1-f194.google.com with SMTP id o5so2869102pgb.2;
+        Sat, 08 Aug 2020 15:56:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=yL2/UZwpI1fKUgMiVTUcG0n2gTeUCe4ep7Qh3IOPQe4=;
-        b=oB5dFJk9/L9jDXLhqqSVwiNRU1RefRVftHxC3J+8HN+Z+SFYwUn1VpiuRgy6Clf3BN
-         zj28Nddck7dDzDVf0oBrLNRWLNljnVncNbazC0HYL6d7xfRctrDRsA4VzPG6Lvl7Lnk9
-         7hIlVS77Qcb0tIbgEXSOFkLaWfAYqKnyoWcXvGcg8hms26ATO6bxN5mBIhxlb4cA62S+
-         GaUUN4p6gQoGWTWMYzMpIbqw13C3UFmEy26Ar1RtvKLyv1lZMCTtS6FNQZM7CZ9p+VRv
-         EBo42U1eYAUgm9LobDANnFHXddm+R8OQ5nZz9hXSDg3b65ak5ewm/G0ICLt2lGcuDmjE
-         IEHA==
-X-Gm-Message-State: AOAM531Q8TT3PQJwmD9AvcdUCdS6IYKN3iF6aU2R/C+02Q1vxUIoZKc2
-        9bADqZkvvnuAihakt7VEZh0deYircWuZOd7mj2TDyA==
-X-Google-Smtp-Source: ABdhPJxSDSvoxmQ/18LDhxUUacOJwztXKNmzsKQZ9/amd5uvd5KoQ8N7La375Ji8nJ7hS9NO5RxU4crYPZSEmZV/AoU=
-X-Received: by 2002:ac8:faf:: with SMTP id b44mr20343687qtk.190.1596913524420;
- Sat, 08 Aug 2020 12:05:24 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20200728084511.GA1326626@T590> <965cf22eea98c00618570da8424d0d94@mail.gmail.com>
- <20200729153648.GA1698748@T590> <7f94eaf2318cc26ceb64bde88d59d5e2@mail.gmail.com>
- <20200804083625.GA1958244@T590> <afe5eb1be7f416a48d7b5d473f3053d0@mail.gmail.com>
- <20200805084031.GA1995289@T590> <5adffdf805179428bdd0dd6c293a4f7d@mail.gmail.com>
- <20200806133819.GA2046861@T590> <f1ac35dfca34193e6c9bcedbc11911d2@mail.gmail.com>
- <20200806152939.GA2062348@T590>
-In-Reply-To: <20200806152939.GA2062348@T590>
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=Y9u9uwtjB5Nk/16KFaUQYZf5pTJjEDM6b10S2jbbdP0=;
+        b=kn/3rvbR4fhXcba7taj0xoAa4GargvzYUAQObhalb3ZxJYtvdbGzjlSeTpkgDNs6z1
+         24QnT8KBFAZxIHlxe0h8WxaFXXgEppuns0mmdv/akoCobafJhqVUeoUzNfD+yphEnzci
+         nxyPuNjF6ws2FTRgkNhHmax+BmQaQJZBo7zWza/SxgfSH3fRleBla2Ia5YkpiPpomTuP
+         usFLfZ3s2R0mxrpRY/4s9LpJrHH/sgPa9xOr6yUE7W/hCdcmtu1T3qQmcxeGMGdote81
+         Zp96IvwyQjUpn24ceq4IpvNRgI6goAu2AHMG4PE7FsNzTGRpIuyKtbsD0KYUGP7yY/Cf
+         dJ5A==
+X-Gm-Message-State: AOAM531DqmPZggpKKbtdEloHnq9+IIs/iFdIwWhuqUBVLBbLZkf1xaN3
+        JbrJDxCWYXHq9BtrByO/vCc=
+X-Google-Smtp-Source: ABdhPJwIPSSunfCDcRthsG/Gzbl9acijXbEwF1QpT09f6ZKgqS9EzbDBzo7x/iFOFC9pjk2e1zfm1A==
+X-Received: by 2002:a63:df01:: with SMTP id u1mr15310304pgg.401.1596927416923;
+        Sat, 08 Aug 2020 15:56:56 -0700 (PDT)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id f89sm15830883pje.11.2020.08.08.15.56.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 08 Aug 2020 15:56:55 -0700 (PDT)
+Subject: Re: [PATCH v8 2/4] scsi: ufs: Introduce HPB feature
+To:     daejun7.park@samsung.com,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+References: <231786897.01596705001840.JavaMail.epsvc@epcpadp1>
+ <231786897.01596704281715.JavaMail.epsvc@epcpadp2>
+ <CGME20200806073257epcms2p61564ed62e02fc42fc3c2b18fa92a038d@epcms2p6>
+ <231786897.01596705302142.JavaMail.epsvc@epcpadp1>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <4a91d02c-488c-86cd-325c-5e0ad9addd0b@acm.org>
+Date:   Sat, 8 Aug 2020 15:56:53 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQMjI78N3hI4nYPl7m+8RPNdz72u+AIQ6BN/Af8DR5wB98/f/wIl0wtMAyOnIMMBUiS2bQGsIvrnAdpdHIkCtpqGHQEvo/4KpfSfM2A=
-Date:   Sun, 9 Aug 2020 00:35:21 +0530
-Message-ID: <3f35b0f67c73c8c4996fdad80eb6d963@mail.gmail.com>
-Subject: RE: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <231786897.01596705302142.JavaMail.epsvc@epcpadp1>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> On Thu, Aug 06, 2020 at 08:07:38PM +0530, Kashyap Desai wrote:
-> > > > Hi Ming -
-> > > >
-> > > > There is still some race which is not handled.  Take a case of IO
-> > > > is not able to get budget and it has already marked <restarts>
-flag.
-> > > > <restarts> flag will be seen non-zero in completion path and
-> > > > completion path will attempt h/w queue run. (But this particular
-> > > > IO is still not in s/w queue.).
-> > > > Attempt of running h/w queue from completion path will not flush
-> > > > any IO since there is no IO in s/w queue.
-> > >
-> > > Then where is the IO to be submitted in case of running out of
-budget?
-> >
-> > Typical race in your latest patch is - (Lets consider command A,B and
-> > C) Command A did not receive budget. Command B completed  (which was
-> > already
->
-> Command A doesn't get budget, and A is still in sw/scheduler queue
-because
-> we try to acquire budget before dequeuing request from sw/scheduler
-queue,
-> see __blk_mq_do_dispatch_sched() and blk_mq_do_dispatch_ctx().
->
-> Not consider direct issue, because the hw queue will be run explicitly
-when
-> not getting budget, see __blk_mq_try_issue_directly.
->
-> Not consider command A being added to hctx->dispatch too, because blk-mq
-> will re-run the queue, see blk_mq_dispatch_rq_list().
+On 2020-08-06 02:11, Daejun Park wrote:
+> +static void ufshpb_issue_hpb_reset_query(struct ufs_hba *hba)
+> +{
+> +	int err;
+> +	int retries;
+> +
+> +	for (retries = 0; retries < HPB_RESET_REQ_RETRIES; retries++) {
+> +		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+> +				QUERY_FLAG_IDN_HPB_RESET, 0, NULL);
+> +		if (err)
+> +			dev_dbg(hba->dev,
+> +				"%s: failed with error %d, retries %d\n",
+> +				__func__, err, retries);
+> +		else
+> +			break;
+> +	}
+> +
+> +	if (err) {
+> +		dev_err(hba->dev,
+> +			"%s setting fHpbReset flag failed with error %d\n",
+> +			__func__, err);
+> +		return;
+> +	}
+> +}
 
-Ming -
+Please change the "break" into an early return, remove the last
+occurrence "if (err)" and remove the final return statement.
 
-After going through your comment (I noted your comment and thanks for
-correcting my understanding.) and block layer code, I realize that it is a
-different race condition. My previous explanation was not accurate.
-I debug further and figure out what is actually happening - Consider below
-scenario/sequence -
+> +static void ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+> +{
+> +	int err;
+> +	bool flag_res = true;
+> +	int try = 0;
+> +
+> +	/* wait for the device to complete HPB reset query */
+> +	do {
+> +		if (++try == HPB_RESET_REQ_RETRIES)
+> +			break;
+> +
+> +		dev_info(hba->dev,
+> +			"%s start flag reset polling %d times\n",
+> +			__func__, try);
+> +
+> +		/* Poll fHpbReset flag to be cleared */
+> +		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+> +				QUERY_FLAG_IDN_HPB_RESET, 0, &flag_res);
+> +		usleep_range(1000, 1100);
+> +	} while (flag_res);
+> +
+> +	if (err) {
+> +		dev_err(hba->dev,
+> +			"%s reading fHpbReset flag failed with error %d\n",
+> +			__func__, err);
+> +		return;
+> +	}
+> +
+> +	if (flag_res) {
+> +		dev_err(hba->dev,
+> +			"%s fHpbReset was not cleared by the device\n",
+> +			__func__);
+> +	}
+> +}
 
-Thread -1 - Detected budget contention. Set restarts = 1.
-Thread -2 - old restarts = 1. start hw queue.
-Thread -3 - old restarts = 1. start hw queue.
-Thread -2 - move restarts = 0.
-In my testing, I noticed that both thread-2 and thread-3 started h/w queue
-but there was no work for them to do. It is possible because some other
-context of h/w queue run might have done that job.
-It means, IO of thread-1 is already posted.
-Thread -4 - Detected budget contention. Set restart = 1 (because thread-2
-has move restarts=0).
-Thread -3 - move restarts = 0 (because this thread see old value = 1 but
-that is actually updated one more time by thread-4 and theread-4 actually
-wanted to run h/w queues). IO of Thread-4 will not be scheduled.
+Should "polling %d times" perhaps be changed into "attempt %d"?
 
-We have to make sure that completion IO path do atomic_cmpxchng of
-restarts flag before running the h/w queue.  Below code change - (main fix
-is sequence of atomic_cmpxchg and blk_mq_run_hw_queues) fix the issue.
+The "if (err)" statement may be reached without "err" having been
+initialized. Please fix.
 
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -594,8 +594,27 @@ static bool scsi_end_request(struct request *req,
-blk_status_t error,
-        if (scsi_target(sdev)->single_lun ||
-            !list_empty(&sdev->host->starved_list))
-                kblockd_schedule_work(&sdev->requeue_work);
--       else
--               blk_mq_run_hw_queues(q, true);
-+       else {
-+               /*
-+                * smp_mb() implied in either rq->end_io or
-blk_mq_free_request
-+                * is for ordering writing .device_busy in
-scsi_device_unbusy()
-+                * and reading sdev->restarts.
-+                */
-+               int old = atomic_read(&sdev->restarts);
-+
-+               if (old) {
-+                       /*
-+                        * ->restarts has to be kept as non-zero if there
-is
-+                        *  new budget contention comes.
-+                        */
-+                       atomic_cmpxchg(&sdev->restarts, old, 0);
-+
-+                       /* run the queue after restarts flag is updated
-+                        * to avoid race condition with .get_budget
-+                        */
-+                       blk_mq_run_hw_queues(sdev->request_queue, true);
-+               }
-+       }
+Additionally, please change the do-while loop into a for-loop, e.g. as
+follows:
 
-        percpu_ref_put(&q->q_usage_counter);
-        return false;
+	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++)
+		...
 
-Kashyap
+Thanks,
+
+Bart.
