@@ -2,100 +2,133 @@ Return-Path: <SRS0=ejtk=BS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB0C0C433DF
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 11:32:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23874C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 15:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC7F22065E
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 11:32:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S8PQscwt"
+	by mail.kernel.org (Postfix) with ESMTP id 0CFAC20748
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Aug 2020 15:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726202AbgHHLcB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 8 Aug 2020 07:32:01 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:42918 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726125AbgHHLb7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2020 07:31:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1596886317;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=khr56tqitgbpYsYTYM2VRcEiOVSL+m4Xi7+Cn3YoZgI=;
-        b=S8PQscwt9nL0dCFECQp6cpvfjrIzmFNtPsnYuBQA1P9WQg4D5Mi2rJxcd0jJU20Wf1GFkw
-        Fg0yU7r8a3mQ0AUNJUOwoPLnX9AYq54Qosh31QGFwFdKn0FU2QhrnNVOcXc59YIvqYb9J0
-        IydWaM98oe+PzDDi2X6JoZTBH+wdGUE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-435-ERh1RUInOA29DD9j-xkHBg-1; Sat, 08 Aug 2020 07:31:54 -0400
-X-MC-Unique: ERh1RUInOA29DD9j-xkHBg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C35201DE0;
-        Sat,  8 Aug 2020 11:31:40 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5C7038AC2C;
-        Sat,  8 Aug 2020 11:31:40 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 078BVdX0010897;
-        Sat, 8 Aug 2020 07:31:39 -0400
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 078BVdQg010893;
-        Sat, 8 Aug 2020 07:31:39 -0400
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Sat, 8 Aug 2020 07:31:39 -0400 (EDT)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Christoph Hellwig <hch@lst.de>
-cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: target core warning
-Message-ID: <alpine.LRH.2.02.2008080725350.10490@file01.intranet.prod.int.rdu2.redhat.com>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+        id S1726370AbgHHPFo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 8 Aug 2020 11:05:44 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:45107 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726238AbgHHPFo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Aug 2020 11:05:44 -0400
+Received: (qmail 257140 invoked by uid 1000); 8 Aug 2020 11:05:42 -0400
+Date:   Sat, 8 Aug 2020 11:05:42 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+Message-ID: <20200808150542.GB256751@rowland.harvard.edu>
+References: <1596037482.4356.37.camel@HansenPartnership.com>
+ <A1653792-B7E5-46A9-835B-7FA85FCD0378@puri.sm>
+ <20200729182515.GB1580638@rowland.harvard.edu>
+ <1596047349.4356.84.camel@HansenPartnership.com>
+ <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
+ <20200730151030.GB6332@rowland.harvard.edu>
+ <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
+ <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
+ <20200807143002.GE226516@rowland.harvard.edu>
+ <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi
+On Sat, Aug 08, 2020 at 08:59:09AM +0200, Martin Kepplinger wrote:
+> On 07.08.20 16:30, Alan Stern wrote:
+> > On Fri, Aug 07, 2020 at 11:51:21AM +0200, Martin Kepplinger wrote:
+> >> it's really strange: below is the change I'm trying. Of course that's
+> >> only for testing the functionality, nothing how a patch could look like.
+> >>
+> >> While I remember it had worked, now (weirdly since I tried that mounting
+> >> via fstab) it doesn't anymore!
+> >>
+> >> What I understand (not much): I handle the error with "retry" via the
+> >> new flag, but scsi_decide_disposition() returns SUCCESS because of "no
+> >> more retries"; but it's the first and only time it's called.
+> > 
+> > Are you saying that scmd->allowed is set to 0?  Or is scsi_notry_cmd() 
+> > returning a nonzero value?  Whichever is true, why does it happen that 
+> > way?
+> 
+> scsi_notry_cmd() is returning 1. (it's retry 1 of 5 allowed).
+> 
+> why is it returning 1? REQ_FAILFAST_DEV is set. It's DID_OK, then "if
+> (status_byte(scmd->result) != CHECK_CONDITION)" appearently is not true,
+> then at the end it returns 1 because of REQ_FAILFAST_DEV.
+> 
+> that seems to come from the block layer. why and when? could I change
+> that so that the scsi error handling stays in control?
 
-I report that I get this warning on shutdown with the kernel 5.8. The 
-warning is 100% reproducible.
+The only place I see where that flag might get set is in 
+blk_mq_bio_to_request() in block/blk-mq.c, which does:
 
-Is it a known problem? Should I bisect it?
+	if (bio->bi_opf & REQ_RAHEAD)
+		rq->cmd_flags |= REQ_FAILFAST_MASK;
 
-Mikulas
+So apparently read-ahead reads are supposed to fail fast (i.e., without 
+retries), presumably because they are optional after all.
 
-------------[ cut here ]------------
-refcount_t: underflow; use-after-free.
-WARNING: CPU: 0 PID: 2777 at lib/refcount.c:28 refcount_warn_saturate+0xe1/0x100
-Modules linked in: sha256_generic libsha256 blowfish_generic blowfish_common cbc essiv authenc dm_crypt dm_loop dm_mod dax msr iscsi_target_mod target_core_pscsi target_core_file target_core_mod configfs cpufreq_userspace cpufreq_powersave cpufreq_ondemand cpufreq_conservative autofs4 ipv6 ext4 crc32c_generic crc16 mbcache jbd2 hpfs nls_cp852 msdos fat snd_pcm_oss snd_mixer_oss snd_pcm snd_timer snd soundcore matroxfb_base matroxfb_g450 matroxfb_accel cfbfillrect cfbimgblt cfbcopyarea matroxfb_DAC1064 g450_pll matroxfb_misc floppy fuse powernow_k6 pcspkr evdev via_agp agpgart pata_it821x hid_generic usbhid hid sg e1000 ehci_pci pata_via uhci_hcd ehci_hcd libata usbcore usb_common unix
-CPU: 0 PID: 2777 Comm: rmdir Not tainted 5.8.0 #1
-Hardware name: System Manufacturer Product Name/VA-503, BIOS 4.51 PG 01/11/01
-EIP: refcount_warn_saturate+0xe1/0x100
-Code: 56 40 c1 c6 05 42 5f 47 c1 01 e8 fa 2d e4 ff 0f 0b 58 c3 8d b6 00 00 00 00 68 98 56 40 c1 c6 05 44 5f 47 c1 01 e8 df 2d e4 ff <0f> 0b 59 c3 eb 19 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
-EAX: 00000026 EBX: deb83238 ECX: c145f08c EDX: c145f088
-ESI: deb83098 EDI: e0a6d950 EBP: 00000000 ESP: de371ed0
-DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068 EFLAGS: 00010286
-CR0: 80050033 CR2: 082d6dfc CR3: 1e901000 CR4: 00000090
-Call Trace:
- ? configfs_remove_default_groups+0x33/0x60 [configfs]
- ? target_fabric_drop_tpg+0xa/0x20 [target_core_mod]
- ? configfs_rmdir+0x193/0x2e0 [configfs]
- ? vfs_rmdir+0x53/0x160
- ? do_rmdir+0x144/0x180
- ? do_syscall_32_irqs_on+0x34/0x1a0
- ? exc_page_fault+0x183/0x3e0
- ? do_int80_syscall_32+0x6/0x20
- ? entry_INT80_32+0xf1/0xf1
----[ end trace 59dc38640589748b ]---
+> > What is the failing command?  Is it a READ(10)?
+> 
+> Not sure how I'd answer that, but here's the test to trigger the error:
+> 
+> mount /dev/sda1 /mnt
+> cd /mnt
+> ls
+> cp file ~/ (if ls "works" and doesn't yet trigger the error)
+> 
+> and that's the (familiar looking) logs when doing so. again: despite the
+> mentioned workaround in scsi_error and the new expected_media_change
+> flag *is* set and gets cleared, as it should be. REQ_FAILFAST_DEV seems
+> to override what I want to do is scsi_error:
+> 
+> [   55.557629] sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result:
+> hostbyte=0x00 driverbyte=0x08 cmd_age=0s
+> [   55.557639] sd 0:0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
+> [   55.557646] sd 0:0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
+> [   55.557657] sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 08 fc
+> e0 00 00 01 00
 
+Yes, 0x28 is READ(10).  Likely this is a read-ahead request, although I 
+don't know how we can tell for sure.
+
+> [   55.557666] blk_update_request: I/O error, dev sda, sector 589024 op
+> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+> [   55.568899] sd 0:0:0:0: [sda] tag#0 device offline or changed
+> [   55.574691] blk_update_request: I/O error, dev sda, sector 589025 op
+> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+> [   55.585756] sd 0:0:0:0: [sda] tag#0 device offline or changed
+> [   55.591562] blk_update_request: I/O error, dev sda, sector 589026 op
+> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+> [   55.602274] sd 0:0:0:0: [sda] tag#0 device offline or changed
+> (... goes on with the same)
+
+Is such a drastic response really appropriate for the failure of a 
+read-ahead request?  It seems like a more logical response would be to 
+let the request fail but keep the device online.
+
+Of course, that would only solve part of your problem -- your log would 
+still get filled with those "I/O error" messages even though they 
+wouldn't be fatal.  Probably a better approach would be to make the new 
+expecting_media_change flag override scsi_no_retry_cmd().
+
+But this is not my area of expertise.  Maybe someone else will have more 
+to say.
+
+Alan Stern
