@@ -2,80 +2,113 @@ Return-Path: <SRS0=1wnw=BT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1A2C433E1
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 09:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5648C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:16:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 525A42065E
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 09:55:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b="e8/u2cnL"
+	by mail.kernel.org (Postfix) with ESMTP id 8D8A8206A2
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:16:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726120AbgHIJzW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Aug 2020 05:55:22 -0400
-Received: from forwardcorp1o.mail.yandex.net ([95.108.205.193]:33270 "EHLO
-        forwardcorp1o.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725710AbgHIJzV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 05:55:21 -0400
-Received: from vla1-fdfb804fb3f3.qloud-c.yandex.net (vla1-fdfb804fb3f3.qloud-c.yandex.net [IPv6:2a02:6b8:c0d:3199:0:640:fdfb:804f])
-        by forwardcorp1o.mail.yandex.net (Yandex) with ESMTP id A552F2E148C;
-        Sun,  9 Aug 2020 12:55:17 +0300 (MSK)
-Received: from vla1-81430ab5870b.qloud-c.yandex.net (vla1-81430ab5870b.qloud-c.yandex.net [2a02:6b8:c0d:35a1:0:640:8143:ab5])
-        by vla1-fdfb804fb3f3.qloud-c.yandex.net (mxbackcorp/Yandex) with ESMTP id n4xIVkYFrT-tGwaAA4Z;
-        Sun, 09 Aug 2020 12:55:17 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1596966917; bh=E8e4oWgiV1+dwdEtUwikqO1aLyiC9ELfVoNgv/deRlw=;
-        h=Message-Id:Date:Subject:To:From:Cc;
-        b=e8/u2cnLG/CXeaCG6Ld2vPogpmbRd+hJ4m3yFBrQogDycI0EaWohpldpUWds4CXRa
-         P4Y0rhQ3+F+0WpkOVyP6F4BIOwo5aWcSmtkB6NmVYs+OjKQMhTJ343xRdp2vL6YZCw
-         NHdUXu7If2IZKt8/VKGoWDIDzYUmwfCsgbZqEHAo=
-Authentication-Results: vla1-fdfb804fb3f3.qloud-c.yandex.net; dkim=pass header.i=@yandex-team.ru
-Received: from 95.108.174.193-red.dhcp.yndx.net (95.108.174.193-red.dhcp.yndx.net [95.108.174.193])
-        by vla1-81430ab5870b.qloud-c.yandex.net (smtpcorp/Yandex) with ESMTPSA id EZfCPIauMW-tGmOrI3v;
-        Sun, 09 Aug 2020 12:55:16 +0300
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (Client certificate not present)
-From:   Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
-To:     linux-scsi@vger.kernel.org
-Cc:     linux-block@vger.kernel.org, jejb@linux.ibm.com,
-        Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
-Subject: [PATCH] scsi_debugfs: dump allocted field in more convenient format
-Date:   Sun,  9 Aug 2020 09:55:01 +0000
-Message-Id: <20200809095501.23166-1-dmtrmonakhov@yandex-team.ru>
-X-Mailer: git-send-email 2.18.0
+        id S1726207AbgHIMQB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Aug 2020 08:16:01 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:11462 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbgHIMP7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 08:15:59 -0400
+IronPort-SDR: w12gPCdTfhwdzh23iOhC6Rz+8O/khwZSBmWdX5jI/fdga5mcMp4UvsIx/u99tKoXk+CT5mPUQf
+ bvDd8PMWJnqejJLBo7R3JCyNCUEpC8JHFsrspMGeXAxSAWr7HU61L7T/H0Kauk4FQivnd6kcZ3
+ AGSEZbuotUw5X4VLsjIhnrJgkdrtrP2x8qCkwMCwvtaP30HagLI25w1RdEECudfiqibXOROQ8n
+ jhubUXfvuhN94p5acViid5kmANikyMTBFzm6Oo8dGKmMUJHbvt3e61w/Ro4BYCN4PrurO4pjwx
+ 9M0=
+X-IronPort-AV: E=Sophos;i="5.75,453,1589266800"; 
+   d="scan'208";a="47246497"
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by labrats.qualcomm.com with ESMTP; 09 Aug 2020 05:15:58 -0700
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg05-sd.qualcomm.com with ESMTP; 09 Aug 2020 05:15:56 -0700
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id 7DF002156E; Sun,  9 Aug 2020 05:15:56 -0700 (PDT)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Subject: [PATCH v11 0/9] Fix up and simplify error recovery mechanism
+Date:   Sun,  9 Aug 2020 05:15:46 -0700
+Message-Id: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All request's data fields are formatted as key=val, the only exception is
-allocated field, which complicates parsing.
+The changes have been tested with error injections of multiple error types (and
+all kinds of mixture of them) during runtime, e.g. hibern8 enter/ exit error,
+power mode change error and fatal/non-fatal error from IRQ context. During the
+test, error injections happen randomly across all contexts, e.g. clk scaling,
+clk gate/ungate, runtime suspend/resume and IRQ.
 
-With that patch request looks like follows:
-0000000012a51451 {.op=WRITE, .cmd_flags=SYNC|IDLE, .rq_flags=STARTED|DONTPREP|ELVPRIV|IO_STAT, .state=in_flight, .tag=137, .internal_tag=188, .cmd=opcode=0x2a 2a 00 00 00 45 18 00 00 08 00, .retries=0, .result = 0x0, .flags=TAGGED|INITIALIZED|3, .timeout=30.000, .alloc_age=0.004}
+There are a few more fixes to resolve other minor problems based on the main
+change, such as LINERESET handling and racing btw error handler and system
+suspend/resume/shutdown, but they will be pushed after this series is taken,
+due to there are already too many lines in these changes.
 
-Signed-off-by: Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
----
- drivers/scsi/scsi_debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Change since v10:
+- Incorporated Markus Elfring's comments
 
-diff --git a/drivers/scsi/scsi_debugfs.c b/drivers/scsi/scsi_debugfs.c
-index c19ea7a..6ce22b1 100644
---- a/drivers/scsi/scsi_debugfs.c
-+++ b/drivers/scsi/scsi_debugfs.c
-@@ -45,7 +45,7 @@ void scsi_show_rq(struct seq_file *m, struct request *rq)
- 		   cmd->retries, cmd->result);
- 	scsi_flags_show(m, cmd->flags, scsi_cmd_flags,
- 			ARRAY_SIZE(scsi_cmd_flags));
--	seq_printf(m, ", .timeout=%d.%03d, allocated %d.%03d s ago",
-+	seq_printf(m, ", .timeout=%d.%03d, .alloc_age=%d.%03d",
- 		   timeout_ms / 1000, timeout_ms % 1000,
- 		   alloc_ms / 1000, alloc_ms % 1000);
- }
+Change since v9:
+- Fixed compilation warning from option [-Werror=implicit-fallthrough=] in patch "scsi: ufs: Fix a racing problem btw error handler and runtime PM ops"
+
+Change since v8:
+- Added one more fix to ufshcd_abort as requested by Stanley Chu
+
+Change since v7:
+- Incorporated Asutosh's comments
+- Refined patch "scsi: ufs: Recover hba runtime PM error in error handler"
+
+Change since v6:
+- Modified change "scsi: ufs-qcom: Fix schedule while atomic error in ufs_qcom_dump_dbg_regs" to "scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs"
+
+Change since v5:
+- Dropped change "scsi: ufs: Fix imbalanced scsi_block_reqs_cnt caused by ufshcd_hold()" as it is not quite related with this series
+- Refined func ufshcd_err_handling_prepare in change "scsi: ufs: Recover hba runtime PM error in error handler"
+
+Change since v4:
+- Split the original change "ufs: ufs-qcom: Fix a few BUGs in func ufs_qcom_dump_dbg_regs()" to 2 small changes
+
+Change since v3:
+- Split the original change "scsi: ufs: Fix up and simplify error recovery mechanism" into 5 changes
+
+Change since v2:
+- Incorporate Bart's comment to change "scsi: ufs: Add checks before setting clk-gating states"
+- Revised the commit msg of change "scsi: ufs: Fix up and simplify error recovery mechanism"
+
+Change since v1:
+- Fixed a compilation error in case that CONFIG_PM is N
+
+Can Guo (9):
+  scsi: ufs: Add checks before setting clk-gating states
+  ufs: ufs-qcom: Fix race conditions caused by func
+    ufs_qcom_testbus_config
+  scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
+  scsi: ufs: Add some debug infos to ufshcd_print_host_state
+  scsi: ufs: Fix concurrency of error handler and other error recovery
+    paths
+  scsi: ufs: Recover hba runtime PM error in error handler
+  scsi: ufs: Move dumps in IRQ handler to error handler
+  scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
+  scsi: ufs: Properly release resources if a task is aborted
+    successfully
+
+ drivers/scsi/ufs/ufs-qcom.c  |  37 ----
+ drivers/scsi/ufs/ufs-sysfs.c |   1 +
+ drivers/scsi/ufs/ufshcd.c    | 509 +++++++++++++++++++++++++++----------------
+ drivers/scsi/ufs/ufshcd.h    |  14 ++
+ 4 files changed, 339 insertions(+), 222 deletions(-)
+
 -- 
-2.7.4
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
