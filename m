@@ -2,113 +2,94 @@ Return-Path: <SRS0=1wnw=BT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5648C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:16:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB94C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D8A8206A2
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:16:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8EF1206A2
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726207AbgHIMQB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Aug 2020 08:16:01 -0400
+        id S1726322AbgHIMQ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Aug 2020 08:16:28 -0400
 Received: from labrats.qualcomm.com ([199.106.110.90]:11462 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726120AbgHIMP7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 08:15:59 -0400
-IronPort-SDR: w12gPCdTfhwdzh23iOhC6Rz+8O/khwZSBmWdX5jI/fdga5mcMp4UvsIx/u99tKoXk+CT5mPUQf
- bvDd8PMWJnqejJLBo7R3JCyNCUEpC8JHFsrspMGeXAxSAWr7HU61L7T/H0Kauk4FQivnd6kcZ3
- AGSEZbuotUw5X4VLsjIhnrJgkdrtrP2x8qCkwMCwvtaP30HagLI25w1RdEECudfiqibXOROQ8n
- jhubUXfvuhN94p5acViid5kmANikyMTBFzm6Oo8dGKmMUJHbvt3e61w/Ro4BYCN4PrurO4pjwx
- 9M0=
+        with ESMTP id S1726120AbgHIMQS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 08:16:18 -0400
+IronPort-SDR: CTO+rrLecow/2EGmT11P2EhNW5sCylJEbG2R7mqzG9VnT1USWkD1s1DAdASKPb5UUx80GL+rNP
+ e1SOnmKN+NBwmY/oz5IZoanGIpJ3tYyVl1FuWcYX/4znjmJGgli69lKaAI+yQ27KA+Q0MeW7F0
+ JwaRnGVRzT9la0942Q/9kcUbqNgvxqmfckXh/CJs2ahnaJBkYwZ2bnVCTqyqTIlYKTyXYXfQtb
+ MCXRFMSNgiEE6V6igiDgynSqXUSP2Rww2i8ogSaWsBb/Z+CIiXNb9bmKgoWQFGn+pGbWoTnY8N
+ vpc=
 X-IronPort-AV: E=Sophos;i="5.75,453,1589266800"; 
-   d="scan'208";a="47246497"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 09 Aug 2020 05:15:58 -0700
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 09 Aug 2020 05:15:56 -0700
+   d="scan'208";a="47246498"
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by labrats.qualcomm.com with ESMTP; 09 Aug 2020 05:16:05 -0700
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg01-sd.qualcomm.com with ESMTP; 09 Aug 2020 05:16:03 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 7DF002156E; Sun,  9 Aug 2020 05:15:56 -0700 (PDT)
+        id 7F1DC2156E; Sun,  9 Aug 2020 05:16:03 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Subject: [PATCH v11 0/9] Fix up and simplify error recovery mechanism
-Date:   Sun,  9 Aug 2020 05:15:46 -0700
-Message-Id: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 2/9] ufs: ufs-qcom: Fix race conditions caused by func ufs_qcom_testbus_config
+Date:   Sun,  9 Aug 2020 05:15:48 -0700
+Message-Id: <1596975355-39813-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+References: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The changes have been tested with error injections of multiple error types (and
-all kinds of mixture of them) during runtime, e.g. hibern8 enter/ exit error,
-power mode change error and fatal/non-fatal error from IRQ context. During the
-test, error injections happen randomly across all contexts, e.g. clk scaling,
-clk gate/ungate, runtime suspend/resume and IRQ.
+If ufs_qcom_dump_dbg_regs() calls ufs_qcom_testbus_config() from
+ufshcd_suspend/resume and/or clk gate/ungate context, pm_runtime_get_sync()
+and ufshcd_hold() will cause racing problems. Fix this by removing the
+unnecessary calls of pm_runtime_get_sync() and ufshcd_hold().
 
-There are a few more fixes to resolve other minor problems based on the main
-change, such as LINERESET handling and racing btw error handler and system
-suspend/resume/shutdown, but they will be pushed after this series is taken,
-due to there are already too many lines in these changes.
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-Change since v10:
-- Incorporated Markus Elfring's comments
-
-Change since v9:
-- Fixed compilation warning from option [-Werror=implicit-fallthrough=] in patch "scsi: ufs: Fix a racing problem btw error handler and runtime PM ops"
-
-Change since v8:
-- Added one more fix to ufshcd_abort as requested by Stanley Chu
-
-Change since v7:
-- Incorporated Asutosh's comments
-- Refined patch "scsi: ufs: Recover hba runtime PM error in error handler"
-
-Change since v6:
-- Modified change "scsi: ufs-qcom: Fix schedule while atomic error in ufs_qcom_dump_dbg_regs" to "scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs"
-
-Change since v5:
-- Dropped change "scsi: ufs: Fix imbalanced scsi_block_reqs_cnt caused by ufshcd_hold()" as it is not quite related with this series
-- Refined func ufshcd_err_handling_prepare in change "scsi: ufs: Recover hba runtime PM error in error handler"
-
-Change since v4:
-- Split the original change "ufs: ufs-qcom: Fix a few BUGs in func ufs_qcom_dump_dbg_regs()" to 2 small changes
-
-Change since v3:
-- Split the original change "scsi: ufs: Fix up and simplify error recovery mechanism" into 5 changes
-
-Change since v2:
-- Incorporate Bart's comment to change "scsi: ufs: Add checks before setting clk-gating states"
-- Revised the commit msg of change "scsi: ufs: Fix up and simplify error recovery mechanism"
-
-Change since v1:
-- Fixed a compilation error in case that CONFIG_PM is N
-
-Can Guo (9):
-  scsi: ufs: Add checks before setting clk-gating states
-  ufs: ufs-qcom: Fix race conditions caused by func
-    ufs_qcom_testbus_config
-  scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
-  scsi: ufs: Add some debug infos to ufshcd_print_host_state
-  scsi: ufs: Fix concurrency of error handler and other error recovery
-    paths
-  scsi: ufs: Recover hba runtime PM error in error handler
-  scsi: ufs: Move dumps in IRQ handler to error handler
-  scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
-  scsi: ufs: Properly release resources if a task is aborted
-    successfully
-
- drivers/scsi/ufs/ufs-qcom.c  |  37 ----
- drivers/scsi/ufs/ufs-sysfs.c |   1 +
- drivers/scsi/ufs/ufshcd.c    | 509 +++++++++++++++++++++++++++----------------
- drivers/scsi/ufs/ufshcd.h    |  14 ++
- 4 files changed, 339 insertions(+), 222 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index d0d7552..823eccf 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1614,9 +1614,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 	 */
+ 	}
+ 	mask <<= offset;
+-
+-	pm_runtime_get_sync(host->hba->dev);
+-	ufshcd_hold(host->hba, false);
+ 	ufshcd_rmwl(host->hba, TEST_BUS_SEL,
+ 		    (u32)host->testbus.select_major << 19,
+ 		    REG_UFS_CFG1);
+@@ -1629,8 +1626,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 	 * committed before returning.
+ 	 */
+ 	mb();
+-	ufshcd_release(host->hba);
+-	pm_runtime_put_sync(host->hba->dev);
+ 
+ 	return 0;
+ }
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
