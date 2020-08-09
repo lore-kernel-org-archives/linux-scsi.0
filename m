@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07ED6C433E0
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:20:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18088C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:21:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D81F7206A2
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:20:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDF30206A2
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:21:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726412AbgHIMQo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Aug 2020 08:16:44 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:31382 "EHLO
+        id S1726395AbgHIMQi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Aug 2020 08:16:38 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:19764 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbgHIMQj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 08:16:39 -0400
-IronPort-SDR: dm7IZg+RYaz4Cwxikti2GnvOT38ydrP1XMeMTmo9wB9V7fVqNxV7M2GO/WcA+mM8j1xMNzypl/
- Vys7fmtAO7qbu4V0LzwF3sQIYHvl+Xek/8Se++LDIQNrbQ996YMcBFz5U5SYlzq/atOh0bAVes
- uPynYkON48FC9YVvS/yYfgcpO5soa8ZQumPi5ZPbavNOrjxuzMZEkg3vxtBKIiB5z43fLx9tT3
- bd21ziI+iWLJopgM4fx2W9Uh5q6TbpeTyjHZMgvfDRzQK2e0bs249vjbSurE0tjxgA/S/ZFK0K
- Euk=
+        with ESMTP id S1726210AbgHIMQU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 08:16:20 -0400
+IronPort-SDR: 92jKMmQlN7NLWOviB47xxBHdJPo1Qfzrcjb9k76EApeNJxsJbjh671BckgoRNKwMFNf0jxFmUx
+ R7/Hh6CYBVwzvir+aA9p7IwfZbZXKdmb+W4foMK3OX0wMAuvVE5eBn+1ZtDAwKSW3S2qh2v5MN
+ IRlmlxi+0OYJWfLUzFZK3DMfPMOxaUNHxZaD2IOzmiuA0Xq4FRz/ujBBH87AqE/S6lBlceYmsx
+ qFlmHazaJTguduaTe7EyK2ACWY5ZqGY9LYakmeonmCR46Onmk0g95McIPJWYK7bCAncg+DlVFz
+ NRs=
 X-IronPort-AV: E=Sophos;i="5.75,453,1589266800"; 
-   d="scan'208";a="29073793"
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by labrats.qualcomm.com with ESMTP; 09 Aug 2020 05:16:25 -0700
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg03-sd.qualcomm.com with ESMTP; 09 Aug 2020 05:16:25 -0700
+   d="scan'208";a="47246499"
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by labrats.qualcomm.com with ESMTP; 09 Aug 2020 05:16:06 -0700
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg04-sd.qualcomm.com with ESMTP; 09 Aug 2020 05:16:04 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 473252156E; Sun,  9 Aug 2020 05:16:25 -0700 (PDT)
+        id C864B2156E; Sun,  9 Aug 2020 05:16:04 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 6/9] scsi: ufs: Recover hba runtime PM error in error handler
-Date:   Sun,  9 Aug 2020 05:15:52 -0700
-Message-Id: <1596975355-39813-7-git-send-email-cang@codeaurora.org>
+Subject: [PATCH 3/9] scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
+Date:   Sun,  9 Aug 2020 05:15:49 -0700
+Message-Id: <1596975355-39813-4-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
 References: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
@@ -56,196 +56,61 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current error handler cannot work well or recover hba runtime PM error if
-ufshcd_suspend/resume has failed due to UFS errors, e.g. hibern8 enter/exit
-error or SSU cmd error. When this happens, error handler may fail doing
-full reset and restore because error handler always assumes that powers,
-IRQs and clocks are ready after pm_runtime_get_sync returns, but actually
-they are not if ufshcd_reusme fails [1]. Besides, if ufschd_suspend/resume
-fails due to UFS error, runtime PM framework saves the error value to
-dev.power.runtime_error. After that, hba dev runtime suspend/resume would
-not be invoked anymore unless runtime_error is cleared [2].
-
-In case of ufshcd_suspend/resume fails due to UFS errors, for scenario [1],
-error handler cannot assume anything of pm_runtime_get_sync, meaning error
-handler should explicitly turn ON powers, IRQs and clocks again. To get the
-hba runtime PM work as regard for scenario [2], error handler can clear the
-runtime_error by calling pm_runtime_set_active() if full reset and restore
-succeeds. And, more important, if pm_runtime_set_active() returns no error,
-which means runtime_error has been cleared, we also need to resume those
-scsi devices under hba in case any of them has failed to be resumed due to
-hba runtime resume failure. This is to unblock blk_queue_enter in case
-there are bios waiting inside it.
+Dumping testbus registers is heavy enough to cause stability issues
+sometime, just remove them as of now.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2604016..ed24582 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -15,6 +15,7 @@
- #include <linux/of.h>
- #include <linux/bitfield.h>
- #include <linux/blk-pm.h>
-+#include <linux/blkdev.h>
- #include "ufshcd.h"
- #include "ufs_quirks.h"
- #include "unipro.h"
-@@ -229,6 +230,10 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
- static void ufshcd_schedule_eh_work(struct ufs_hba *hba);
-+static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
-+static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
-+static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
-+					 struct ufs_vreg *vreg);
- static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
- static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
- static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-@@ -5553,6 +5558,84 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
- 	}
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 823eccf..6b75338 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1630,44 +1630,12 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+ 	return 0;
  }
  
-+static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
-+{
-+	pm_runtime_get_sync(hba->dev);
-+	if (pm_runtime_suspended(hba->dev)) {
-+		/*
-+		 * Don't assume anything of pm_runtime_get_sync(), if
-+		 * resume fails, irq and clocks can be OFF, and powers
-+		 * can be OFF or in LPM.
-+		 */
-+		ufshcd_setup_hba_vreg(hba, true);
-+		ufshcd_enable_irq(hba);
-+		ufshcd_setup_vreg(hba, true);
-+		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
-+		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq2);
-+		ufshcd_hold(hba, false);
-+		if (!ufshcd_is_clkgating_allowed(hba))
-+			ufshcd_setup_clocks(hba, true);
-+		ufshcd_release(hba);
-+		ufshcd_vops_resume(hba, UFS_RUNTIME_PM);
-+	} else {
-+		ufshcd_hold(hba, false);
-+		if (hba->clk_scaling.is_allowed) {
-+			cancel_work_sync(&hba->clk_scaling.suspend_work);
-+			cancel_work_sync(&hba->clk_scaling.resume_work);
-+			ufshcd_suspend_clkscaling(hba);
-+		}
-+	}
-+}
-+
-+static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
-+{
-+	ufshcd_release(hba);
-+	if (hba->clk_scaling.is_allowed)
-+		ufshcd_resume_clkscaling(hba);
-+	pm_runtime_put(hba->dev);
-+}
-+
-+static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
-+{
-+	return (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
-+		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
-+			ufshcd_is_link_broken(hba))));
-+}
-+
-+#ifdef CONFIG_PM
-+static void ufshcd_recover_pm_error(struct ufs_hba *hba)
-+{
-+	struct Scsi_Host *shost = hba->host;
-+	struct scsi_device *sdev;
-+	struct request_queue *q;
-+	int ret;
-+
-+	/*
-+	 * Set RPM status of hba device to RPM_ACTIVE,
-+	 * this also clears its runtime error.
-+	 */
-+	ret = pm_runtime_set_active(hba->dev);
-+	/*
-+	 * If hba device had runtime error, we also need to resume those
-+	 * scsi devices under hba in case any of them has failed to be
-+	 * resumed due to hba runtime resume failure. This is to unblock
-+	 * blk_queue_enter in case there are bios waiting inside it.
-+	 */
-+	if (!ret) {
-+		shost_for_each_device(sdev, shost) {
-+			q = sdev->request_queue;
-+			if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-+				       q->rpm_status == RPM_SUSPENDING))
-+				pm_request_resume(q->dev);
-+		}
-+	}
-+}
-+#else
-+static inline void ufshcd_recover_pm_error(struct ufs_hba *hba)
-+{
-+}
-+#endif
-+
- /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -5570,9 +5653,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	hba = container_of(work, struct ufs_hba, eh_work);
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
--	    (!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
--		ufshcd_is_link_broken(hba)))) {
-+	if (ufshcd_err_handling_should_stop(hba)) {
- 		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
- 			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
-@@ -5581,10 +5662,17 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	}
- 	ufshcd_set_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	pm_runtime_get_sync(hba->dev);
--	ufshcd_hold(hba, false);
+-static void ufs_qcom_testbus_read(struct ufs_hba *hba)
+-{
+-	ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
+-}
 -
-+	ufshcd_err_handling_prepare(hba);
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-+	/*
-+	 * A full reset and restore might have happened after preparation
-+	 * is finished, double check whether we should stop.
-+	 */
-+	if (ufshcd_err_handling_should_stop(hba)) {
-+		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-+			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-+		goto out;
-+	}
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+-static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
+-{
+-	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	u32 *testbus = NULL;
+-	int i, nminor = 256, testbus_len = nminor * sizeof(u32);
+-
+-	testbus = kmalloc(testbus_len, GFP_KERNEL);
+-	if (!testbus)
+-		return;
+-
+-	host->testbus.select_major = TSTBUS_UNIPRO;
+-	for (i = 0; i < nminor; i++) {
+-		host->testbus.select_minor = i;
+-		ufs_qcom_testbus_config(host);
+-		testbus[i] = ufshcd_readl(hba, UFS_TEST_BUS);
+-	}
+-	print_hex_dump(KERN_ERR, "UNIPRO_TEST_BUS ", DUMP_PREFIX_OFFSET,
+-			16, 4, testbus, testbus_len, false);
+-	kfree(testbus);
+-}
+-
+ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ {
+ 	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
+ 			 "HCI Vendor Specific Registers ");
  
- 	/* Complete requests that have door-bell cleared by h/w */
-@@ -5662,10 +5750,12 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		hba->force_reset = false;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		err = ufshcd_reset_and_restore(hba);
--		spin_lock_irqsave(hba->host->host_lock, flags);
- 		if (err)
- 			dev_err(hba->dev, "%s: reset and restore failed with err %d\n",
- 					__func__, err);
-+		else
-+			ufshcd_recover_pm_error(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 	}
- 
- skip_err_handling:
-@@ -5677,11 +5767,11 @@ static void ufshcd_err_handler(struct work_struct *work)
- 			    __func__, hba->saved_err, hba->saved_uic_err);
- 	}
- 
-+out:
- 	ufshcd_clear_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	ufshcd_scsi_unblock_requests(hba);
--	ufshcd_release(hba);
--	pm_runtime_put_sync(hba->dev);
-+	ufshcd_err_handling_unprepare(hba);
+-	/* sleep a bit intermittently as we are dumping too much data */
+ 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+-	udelay(1000);
+-	ufs_qcom_testbus_read(hba);
+-	udelay(1000);
+-	ufs_qcom_print_unipro_testbus(hba);
+-	udelay(1000);
  }
  
  /**
