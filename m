@@ -2,183 +2,291 @@ Return-Path: <SRS0=1wnw=BT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B7CC433E0
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 07:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B8E4C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 09:21:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A1F0206C3
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 07:52:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="A1drjCBM";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Ixq9ZY7m"
+	by mail.kernel.org (Postfix) with ESMTP id 75DAE20729
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 09:21:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726200AbgHIHwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Aug 2020 03:52:05 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:23273 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725710AbgHIHwF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 03:52:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1596959526; x=1628495526;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=WzUJzcp51244/gktFqGxdvz7y89813lY6SSLbkgLd98=;
-  b=A1drjCBM1dJ2yVDZGUcYhqQjVIDL5G1AGqJtQXvs4WDmNpU0kaX9ZEKf
-   VGSnr1B+uWphefJGAJ4xbtEJ/Rqdn4Osr0CIXxu7ydE/9zJnah5BwugIl
-   DuwRD7eevzpzy2sEBKcKDzC6YGEsJc9qL8rjfUm1uiDw2vrp12KddG+H3
-   JCwrdOCp4YBMogcSyMG/+Kvjosac+/u0TvbAdFntDz8XRFcY2StQXtnBN
-   PvLJWhTDmm5Z2ZLOS+0QziBvDaFtreN3jMJS1lbATI680G0BVSzCKJ+Vi
-   ijN7+5cILdDz5WXVYWfk/yubgoFDG4GXh45jKAdZbenx6EyteWafu2mZW
-   A==;
-IronPort-SDR: U8EssqN8RdLCNCICwxRZHQKDo+9aikzZl/GKkZ840yWQMLCNZJtmy8yzL5u2qZjt2OeIE1SbL0
- yTuSew2x+gY89siuBci5C9tY7pztF+0HVf/cc819wgBh7xmfIEtNzRpiUsPygqIADfu9v1gB4p
- fiLSbxF2fao1mzvs56aRSIpvlRbsn9lh8roXAbR7bEs49WehtdckaAIpk/QxCWLJ6R8zJY5xMW
- aRWsx2Be2NXigXlWzQnythHa3UU2D6Bik8KNTbMWZL19xReDHDOGPdZEwxytzZ/sZKk6vAwq1R
- 1+k=
-X-IronPort-AV: E=Sophos;i="5.75,452,1589212800"; 
-   d="scan'208";a="148817517"
-Received: from mail-dm6nam12lp2173.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.173])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Aug 2020 15:52:05 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Nl02CGhr2q8iHqg72ijvRi4hhWGmsRXwMaLTz4G2fJ8rw3HKqrSqXtQ0jShZVkhUK2+Dz6JH7ZbEU3pIbK/9/gOzNtwxTAhoFXQ2r+59Io/oNow9qS6RycEHfpB4oF8gGOCShPhdk5UM2cp9H7APl+E8aEdQRju8pYSR5u1VztPHGgxS8xnd7GX2bDu9JbMScx5RhTF+8sRQWsJcW6aZFHy7CZ9WoPDENgfNMhQoiNVSsMx2mkN0n6lfddtXLaDDql3R/eJpEu+tee/VtwFVco3OsUKQTfDc2HiBdI/hTcJ0ohP3PeTH6oYtX6ui6geoFn/4f8M0y24HaEc2fQN5ZA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WzUJzcp51244/gktFqGxdvz7y89813lY6SSLbkgLd98=;
- b=TASk5WOCD7I6x+c9o2UJO+UhaueF+kyllbShLy2Yzqf8EnkrPFmn8+YlOyb/OKOXwNKagrPh7Fmyo3BVZoDgosdkkFvAitSn5VjnEdunuCGsBlUbpz0VhEHSgw8b+xt+GgJXH0MGxJsW2OCxy8gpYFDu85WaG1FPuZrAZ5JenD9+WzykCWouhfmhzelm15OQO+3FCeHfKLppKBPIGv3g3b3S9TqyBuT6lccqOeX/XEQ83K2Z6c+3H1rGmlQCB82Y4Kwilt0a958z/Qq181hLfvpb1aZKhtv91MNAJxiG6jLpbyQfbp9FHqIqbrfUf0kvt7DdAI/usEzzHt+NkB7whw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WzUJzcp51244/gktFqGxdvz7y89813lY6SSLbkgLd98=;
- b=Ixq9ZY7mqndOWcjfK3TJYVe/H4pMntkNLpt6Sopc5WwtsCUtL+7V1Rt9u7mylneDKjXznf0KlT6qIDudHzw13OKw8ESEtFqRie6urMEO6BVARseO3DwXba8sfk3vkrnf34idOrjCUNb+Ojq0ACojE6nG9Pk2vyN22IswI8A6wRY=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4189.namprd04.prod.outlook.com (2603:10b6:805:30::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3261.20; Sun, 9 Aug
- 2020 07:52:01 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::c86c:8b99:3242:2c68]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::c86c:8b99:3242:2c68%7]) with mapi id 15.20.3261.022; Sun, 9 Aug 2020
- 07:52:01 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "grant.jung@samsung.com" <grant.jung@samsung.com>,
-        "sc.suh@samsung.com" <sc.suh@samsung.com>,
-        "hy50.seo@samsung.com" <hy50.seo@samsung.com>,
-        "sh425.lee@samsung.com" <sh425.lee@samsung.com>
-Subject: RE: [PATCH v1] ufs: change the way to complete fDeviceInit
-Thread-Topic: [PATCH v1] ufs: change the way to complete fDeviceInit
-Thread-Index: AQHWbIiZHP99j6WE0U6Jw6pHGTSjh6kvaG/w
-Date:   Sun, 9 Aug 2020 07:52:01 +0000
-Message-ID: <SN6PR04MB4640CCC89B4DE5F019145933FC470@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <CGME20200807070119epcas2p198639f0b065c97baf2b9bae231ec137b@epcas2p1.samsung.com>
- <1596783176-183741-1-git-send-email-kwmad.kim@samsung.com>
-In-Reply-To: <1596783176-183741-1-git-send-email-kwmad.kim@samsung.com>
-Accept-Language: en-US
+        id S1726200AbgHIJU7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Aug 2020 05:20:59 -0400
+Received: from comms.puri.sm ([159.203.221.185]:42294 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726009AbgHIJU7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 9 Aug 2020 05:20:59 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id 3FCFFE039C;
+        Sun,  9 Aug 2020 02:20:28 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 50z1enKKyXPh; Sun,  9 Aug 2020 02:20:27 -0700 (PDT)
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+References: <1596037482.4356.37.camel@HansenPartnership.com>
+ <A1653792-B7E5-46A9-835B-7FA85FCD0378@puri.sm>
+ <20200729182515.GB1580638@rowland.harvard.edu>
+ <1596047349.4356.84.camel@HansenPartnership.com>
+ <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
+ <20200730151030.GB6332@rowland.harvard.edu>
+ <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
+ <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
+ <20200807143002.GE226516@rowland.harvard.edu>
+ <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
+ <20200808150542.GB256751@rowland.harvard.edu>
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
+ 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
+ ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
+Message-ID: <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
+Date:   Sun, 9 Aug 2020 11:20:22 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
+In-Reply-To: <20200808150542.GB256751@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 003027be-84b7-4951-218f-08d83c3919d9
-x-ms-traffictypediagnostic: SN6PR04MB4189:
-x-microsoft-antispam-prvs: <SN6PR04MB41890922CBD45C4ABEA12696FC470@SN6PR04MB4189.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4303;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: QpmuAMdAdBnE68s4ygs9A6+2q3+j4uj92db5tqXewaJs+jVE1i0glcaADMC2C36ZF+qIuuCHQ7nI62lKMIBe3pOwAzq+eqkr5KHiFZkolah608/3ehvOCBXUR+VmOwVW4qgOxXbCP6jUu10pLHIvr592NFb+3g7VS9JOUhnEKGDvE1qb8RbrmcezzRs4ZMZs9eJ+rU+T7WlM+iMR6ttrZupBY+orcwB9Jm6/plfeHsWGMDNGgrTcINKFOLpNuPky5mHH44fKUPeqeIL+fuRChSGQxWhYgHeRh3gg0Dl6lYmOro9F+vK4iVwKrnencBZyoxpdH7q4wCWsh27KjE7TYr1oj+ziA6rLhBo4k7aNZ3h4CgWgPeDNE/nlhN3hgM7Zah1rc3UdwX+imKrOjolUuw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(39850400004)(366004)(396003)(346002)(376002)(5660300002)(55016002)(9686003)(83380400001)(8936002)(8676002)(2906002)(86362001)(478600001)(7416002)(66556008)(66446008)(6506007)(7696005)(71200400001)(66476007)(64756008)(186003)(76116006)(26005)(66946007)(52536014)(316002)(33656002)(110136005)(921003)(43043002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: tEB3Afd+8J0/SrI7JEmLTatDmIcl+2TK7rN7s8kiXoVKNz4mVqhZ3IOxRHufMULVqFOMbXirddCNX9OalGQ4j8v6Z6gB8ltdHZJrX6ssl7JDywbkTTuCiFOWqxfQ1ju7jRuy5i2n2Ta1UbsVSdCpym1xjqzBr6rWS1aridrCwJZJM7P4GGWg0m0Ph8llq8JOqnByyuUkDUSFbtVFejb/XUHqShMpIsQiEhwenwW7pUhk9lktlUqma5B0AbBmKkid+ZQt3F+qHqklWIgbzElghEr6BUWqoC4bO6Z8uB4FCZs+QgiSH7ad4ROzkClG8qkhIm36R1YilrLy7Kl6WY5+27GrvBvrWtnatiors8aS5yNQZmvyLd18vf5j6MQ1XCiGrAmmgY/RMWBrOZQhvYQwrQ96PWU/djmKqDdt2dWUa3UQjGyWCPE/KN5w31bSyruj5T1kZBXUd6cAwnYqE+kuBF1vxzhtip6NvCrOvJG5Rqok0jYZS8naOHTaW5fMpazvFGH/xG1EOuUoTZAhDqHsCcfW087gw/faGjkYsIctW+yICTXN3xrJxNh88AqZnuVri9ly+BLA3Hy71nzktCNRKGAO0JB3Fcl+Nja6pfWKfUYNR9UOXdzdn1npmQDc+Cy70p6I0pku8MeEupXIUeC+lA==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 003027be-84b7-4951-218f-08d83c3919d9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Aug 2020 07:52:01.4069
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 6fEMGPlvKkVJSEyO2lAKStobwdYBplqpS4xHyMu6GVppU4ef1u0IiYKgL+dJThk5wR53xKK3ate9FzrBA8DN4A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4189
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-IA0KPiANCj4gQ3VycmVudGx5LCBVRlMgZHJpdmVyIGNoZWNrcyBpZiBmRGV2aWNlSW5pdA0KPiBp
-cyBjbGVhcmVkIGF0IHNldmVyYWwgdGltZXMsIG5vdCBwZXJpb2QuIFRoaXMgcGF0Y2gNCj4gaXMg
-dG8gd2FpdCBpdHMgY29tcGxldGlvbiB3aXRoIHRoZSBwZXJpb2QsIG5vdCByZXRyeWluZy4NCj4g
-TWFueSBkZXZpY2UgdmVuZG9ycyB1c3VhbGx5IHByb3ZpZGVzIHRoZSBzcGVjaWZpY2F0aW9uIG9u
-DQo+IGl0IHdpdGgganVzdCBwZXJpb2QsIG5vdCBhIGNvbWJpbmF0aW9uIG9mIGEgbnVtYmVyIG9m
-IHJldHJ5aW5nDQo+IGFuZCBwZXJpb2QuIFNvIGl0IGNvdWxkIGJlIHByb3BlciB0byByZWdhcmQg
-dG8gdGhlIGluZm9ybWF0aW9uDQo+IGNvbWluZyBmcm9tIGRldmljZSB2ZW5kb3JzLg0KPiANCj4g
-U2lnbmVkLW9mZi1ieTogS2l3b29uZyBLaW0gPGt3bWFkLmtpbUBzYW1zdW5nLmNvbT4NCj4gLS0t
-DQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIHwgMzEgKysrKysrKysrKysrKysrKysrKy0t
-LS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDE5IGluc2VydGlvbnMoKyksIDEyIGRlbGV0
-aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9k
-cml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+IGluZGV4IDA5MjQ4MGEuLmM1MDg5MzEgMTAwNjQ0
-DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gKysrIGIvZHJpdmVycy9zY3Np
-L3Vmcy91ZnNoY2QuYw0KPiBAQCAtNDE0OCw3ICs0MTQ4LDggQEAgRVhQT1JUX1NZTUJPTF9HUEwo
-dWZzaGNkX2NvbmZpZ19wd3JfbW9kZSk7DQo+ICAgKi8NCj4gIHN0YXRpYyBpbnQgdWZzaGNkX2Nv
-bXBsZXRlX2Rldl9pbml0KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICB7DQo+IC0gICAgICAgaW50
-IGk7DQo+ICsgICAgICAgdTMyIGRldl9pbml0X2NvbXBsX2luX21zID0gMTUwMDsNClBsZWFzZSBt
-YWtlIHRoZSB0aHJlc2hvbGQgYSBkZWZpbmUuICBPdGhlcndpc2UsIHlvdXIgY29kZSBsb29rcyBm
-aW5lLg0KUmVjZW50bHkgd2Ugc3RhcnRlZCB0byBpbnRyb2R1Y2UgdGhlIHVzZSBvZiBrdGltZSBj
-b252ZW50aW9uIGFuZCBvcGVyYXRvcnMgZm9yIHN1Y2ggdXNlIGNhc2VzLg0KV291bGQgeW91IGNv
-bnNpZGVyIHVzaW5nIGl0IGFzIHdlbGw/DQoNClRoYW5rcywNCkF2cmkNCg0KPiArICAgICAgIHVu
-c2lnbmVkIGxvbmcgdGltZW91dDsNCj4gICAgICAgICBpbnQgZXJyOw0KPiAgICAgICAgIGJvb2wg
-ZmxhZ19yZXMgPSB0cnVlOw0KPiANCj4gQEAgLTQxNjEsMjAgKzQxNjIsMjYgQEAgc3RhdGljIGlu
-dCB1ZnNoY2RfY29tcGxldGVfZGV2X2luaXQoc3RydWN0IHVmc19oYmENCj4gKmhiYSkNCj4gICAg
-ICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiAgICAgICAgIH0NCj4gDQo+IC0gICAgICAgLyogcG9s
-bCBmb3IgbWF4LiAxMDAwIGl0ZXJhdGlvbnMgZm9yIGZEZXZpY2VJbml0IGZsYWcgdG8gY2xlYXIg
-Ki8NCj4gLSAgICAgICBmb3IgKGkgPSAwOyBpIDwgMTAwMCAmJiAhZXJyICYmIGZsYWdfcmVzOyBp
-KyspDQo+IC0gICAgICAgICAgICAgICBlcnIgPSB1ZnNoY2RfcXVlcnlfZmxhZ19yZXRyeShoYmEs
-DQo+IFVQSVVfUVVFUllfT1BDT0RFX1JFQURfRkxBRywNCj4gLSAgICAgICAgICAgICAgICAgICAg
-ICAgUVVFUllfRkxBR19JRE5fRkRFVklDRUlOSVQsIDAsICZmbGFnX3Jlcyk7DQo+ICsgICAgICAg
-LyogUG9sbCBmRGV2aWNlSW5pdCBmbGFnIHRvIGJlIGNsZWFyZWQgKi8NCj4gKyAgICAgICB0aW1l
-b3V0ID0gamlmZmllcyArIG1zZWNzX3RvX2ppZmZpZXMoZGV2X2luaXRfY29tcGxfaW5fbXMpOw0K
-PiArICAgICAgIGRvIHsNCj4gKyAgICAgICAgICAgICAgIGVyciA9IHVmc2hjZF9xdWVyeV9mbGFn
-KGhiYSwgVVBJVV9RVUVSWV9PUENPREVfUkVBRF9GTEFHLA0KPiArICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgUVVFUllfRkxBR19JRE5fRkRFVklDRUlOSVQsIDAsICZmbGFn
-X3Jlcyk7DQo+ICsgICAgICAgICAgICAgICBpZiAoIWZsYWdfcmVzKQ0KPiArICAgICAgICAgICAg
-ICAgICAgICAgICBicmVhazsNCj4gKyAgICAgICAgICAgICAgIHVzbGVlcF9yYW5nZSg1MDAwLCAx
-MDAwMCk7DQo+ICsgICAgICAgfSB3aGlsZSAodGltZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkp
-Ow0KPiANCj4gLSAgICAgICBpZiAoZXJyKQ0KPiArICAgICAgIGlmIChlcnIpIHsNCj4gICAgICAg
-ICAgICAgICAgIGRldl9lcnIoaGJhLT5kZXYsDQo+IC0gICAgICAgICAgICAgICAgICAgICAgICIl
-cyByZWFkaW5nIGZEZXZpY2VJbml0IGZsYWcgZmFpbGVkIHdpdGggZXJyb3IgJWRcbiIsDQo+IC0g
-ICAgICAgICAgICAgICAgICAgICAgIF9fZnVuY19fLCBlcnIpOw0KPiAtICAgICAgIGVsc2UgaWYg
-KGZsYWdfcmVzKQ0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICIlcyByZWFkaW5n
-IGZEZXZpY2VJbml0IGZsYWcgZmFpbGVkIHdpdGggZXJyb3IgJWRcbiIsDQo+ICsgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgX19mdW5jX18sIGVycik7DQo+ICsgICAgICAgfSBlbHNlIGlm
-IChmbGFnX3Jlcykgew0KPiAgICAgICAgICAgICAgICAgZGV2X2VycihoYmEtPmRldiwNCj4gLSAg
-ICAgICAgICAgICAgICAgICAgICAgIiVzIGZEZXZpY2VJbml0IHdhcyBub3QgY2xlYXJlZCBieSB0
-aGUgZGV2aWNlXG4iLA0KPiAtICAgICAgICAgICAgICAgICAgICAgICBfX2Z1bmNfXyk7DQo+IC0N
-Cj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiJXMgZkRldmljZUluaXQgd2FzIG5v
-dCBjbGVhcmVkIGJ5IHRoZSBkZXZpY2VcbiIsDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgX19mdW5jX18pOw0KPiArICAgICAgICAgICAgICAgZXJyID0gLUVCVVNZOw0KPiArICAg
-ICAgIH0NCj4gIG91dDoNCj4gICAgICAgICByZXR1cm4gZXJyOw0KPiAgfQ0KPiAtLQ0KPiAyLjcu
-NA0KDQo=
+On 08.08.20 17:05, Alan Stern wrote:
+> On Sat, Aug 08, 2020 at 08:59:09AM +0200, Martin Kepplinger wrote:
+>> On 07.08.20 16:30, Alan Stern wrote:
+>>> On Fri, Aug 07, 2020 at 11:51:21AM +0200, Martin Kepplinger wrote:
+>>>> it's really strange: below is the change I'm trying. Of course that's
+>>>> only for testing the functionality, nothing how a patch could look like.
+>>>>
+>>>> While I remember it had worked, now (weirdly since I tried that mounting
+>>>> via fstab) it doesn't anymore!
+>>>>
+>>>> What I understand (not much): I handle the error with "retry" via the
+>>>> new flag, but scsi_decide_disposition() returns SUCCESS because of "no
+>>>> more retries"; but it's the first and only time it's called.
+>>>
+>>> Are you saying that scmd->allowed is set to 0?  Or is scsi_notry_cmd() 
+>>> returning a nonzero value?  Whichever is true, why does it happen that 
+>>> way?
+>>
+>> scsi_notry_cmd() is returning 1. (it's retry 1 of 5 allowed).
+>>
+>> why is it returning 1? REQ_FAILFAST_DEV is set. It's DID_OK, then "if
+>> (status_byte(scmd->result) != CHECK_CONDITION)" appearently is not true,
+>> then at the end it returns 1 because of REQ_FAILFAST_DEV.
+>>
+>> that seems to come from the block layer. why and when? could I change
+>> that so that the scsi error handling stays in control?
+> 
+> The only place I see where that flag might get set is in 
+> blk_mq_bio_to_request() in block/blk-mq.c, which does:
+> 
+> 	if (bio->bi_opf & REQ_RAHEAD)
+> 		rq->cmd_flags |= REQ_FAILFAST_MASK;
+> 
+> So apparently read-ahead reads are supposed to fail fast (i.e., without 
+> retries), presumably because they are optional after all.
+> 
+>>> What is the failing command?  Is it a READ(10)?
+>>
+>> Not sure how I'd answer that, but here's the test to trigger the error:
+>>
+>> mount /dev/sda1 /mnt
+>> cd /mnt
+>> ls
+>> cp file ~/ (if ls "works" and doesn't yet trigger the error)
+>>
+>> and that's the (familiar looking) logs when doing so. again: despite the
+>> mentioned workaround in scsi_error and the new expected_media_change
+>> flag *is* set and gets cleared, as it should be. REQ_FAILFAST_DEV seems
+>> to override what I want to do is scsi_error:
+>>
+>> [   55.557629] sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result:
+>> hostbyte=0x00 driverbyte=0x08 cmd_age=0s
+>> [   55.557639] sd 0:0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
+>> [   55.557646] sd 0:0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
+>> [   55.557657] sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 08 fc
+>> e0 00 00 01 00
+> 
+> Yes, 0x28 is READ(10).  Likely this is a read-ahead request, although I 
+> don't know how we can tell for sure.
+> 
+>> [   55.557666] blk_update_request: I/O error, dev sda, sector 589024 op
+>> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+>> [   55.568899] sd 0:0:0:0: [sda] tag#0 device offline or changed
+>> [   55.574691] blk_update_request: I/O error, dev sda, sector 589025 op
+>> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+>> [   55.585756] sd 0:0:0:0: [sda] tag#0 device offline or changed
+>> [   55.591562] blk_update_request: I/O error, dev sda, sector 589026 op
+>> 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+>> [   55.602274] sd 0:0:0:0: [sda] tag#0 device offline or changed
+>> (... goes on with the same)
+> 
+> Is such a drastic response really appropriate for the failure of a 
+> read-ahead request?  It seems like a more logical response would be to 
+> let the request fail but keep the device online.
+> 
+> Of course, that would only solve part of your problem -- your log would 
+> still get filled with those "I/O error" messages even though they 
+> wouldn't be fatal.  Probably a better approach would be to make the new 
+> expecting_media_change flag override scsi_no_retry_cmd().
+> 
+> But this is not my area of expertise.  Maybe someone else will have more 
+> to say.
+> 
+> Alan Stern
+> 
+
+Hey Alan, I'm really glad for that, I suspected some of this but I have
+little experience in scsi/block layers, so that is super helpful.
+
+I'd appreciate an opinion on the below workaround that *seems* to work
+now (let's see, I had thought so before :)
+
+Whether or not this helps to find a real solution, let's see. But
+integration of such a flag in the error handling paths is what's
+interesting for now:
+
+
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -565,6 +565,17 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+ 				return NEEDS_RETRY;
+ 			}
+ 		}
++		if (scmd->device->expecting_media_change) {
++			if (sshdr.asc == 0x28 && sshdr.ascq == 0x00) {
++				/* clear expecting_media_change in
++				 * scsi_noretry_cmd() because we need
++				 * to override possible "failfast" overrides
++				 * that block readahead can cause.
++				 */
++				return NEEDS_RETRY;
++			}
++		}
++
+ 		/*
+ 		 * we might also expect a cc/ua if another LUN on the target
+ 		 * reported a UA with an ASC/ASCQ of 3F 0E -
+@@ -1744,6 +1755,15 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+ 		return (scmd->request->cmd_flags & REQ_FAILFAST_DRIVER);
+ 	}
+
++	/*
++	 * We need to have retries when expecting_media_change is set.
++	 * So we need to return success and clear the flag here.
++	 */
++	if (scmd->device->expecting_media_change) {
++		scmd->device->expecting_media_change = 0;
++		return 0;
++	}
++
+ 	if (status_byte(scmd->result) != CHECK_CONDITION)
+ 		return 0;
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d90fefffe31b..bb583e403b81 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3642,6 +3642,8 @@ static int sd_resume(struct device *dev)
+ 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+ 		return 0;
+
++	sdkp->device->expecting_media_change = 1;
++
+ 	if (!sdkp->device->manage_start_stop)
+ 		return 0;
+
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index bc5909033d13..f5fc1af68e00 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -169,6 +169,7 @@ struct scsi_device {
+ 				 * this device */
+ 	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+ 				     * because we did a bus reset. */
++	unsigned expecting_media_change:1;
+ 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+ 	unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
+--
