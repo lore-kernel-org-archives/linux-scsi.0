@@ -2,118 +2,86 @@ Return-Path: <SRS0=1wnw=BT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18088C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5388C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 15:27:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDF30206A2
-	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 12:21:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAFE6206B5
+	for <linux-scsi@archiver.kernel.org>; Sun,  9 Aug 2020 15:27:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726395AbgHIMQi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 9 Aug 2020 08:16:38 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:19764 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726210AbgHIMQU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 08:16:20 -0400
-IronPort-SDR: 92jKMmQlN7NLWOviB47xxBHdJPo1Qfzrcjb9k76EApeNJxsJbjh671BckgoRNKwMFNf0jxFmUx
- R7/Hh6CYBVwzvir+aA9p7IwfZbZXKdmb+W4foMK3OX0wMAuvVE5eBn+1ZtDAwKSW3S2qh2v5MN
- IRlmlxi+0OYJWfLUzFZK3DMfPMOxaUNHxZaD2IOzmiuA0Xq4FRz/ujBBH87AqE/S6lBlceYmsx
- qFlmHazaJTguduaTe7EyK2ACWY5ZqGY9LYakmeonmCR46Onmk0g95McIPJWYK7bCAncg+DlVFz
- NRs=
-X-IronPort-AV: E=Sophos;i="5.75,453,1589266800"; 
-   d="scan'208";a="47246499"
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by labrats.qualcomm.com with ESMTP; 09 Aug 2020 05:16:06 -0700
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 09 Aug 2020 05:16:04 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id C864B2156E; Sun,  9 Aug 2020 05:16:04 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 3/9] scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
-Date:   Sun,  9 Aug 2020 05:15:49 -0700
-Message-Id: <1596975355-39813-4-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
-References: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+        id S1726241AbgHIP0p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 9 Aug 2020 11:26:45 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:37029 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726175AbgHIP0o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Aug 2020 11:26:44 -0400
+Received: (qmail 277409 invoked by uid 1000); 9 Aug 2020 11:26:43 -0400
+Date:   Sun, 9 Aug 2020 11:26:43 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+Message-ID: <20200809152643.GA277165@rowland.harvard.edu>
+References: <20200729182515.GB1580638@rowland.harvard.edu>
+ <1596047349.4356.84.camel@HansenPartnership.com>
+ <d3fe36a9-b785-a5c4-c90d-b8fa10f4272f@puri.sm>
+ <20200730151030.GB6332@rowland.harvard.edu>
+ <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
+ <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
+ <20200807143002.GE226516@rowland.harvard.edu>
+ <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
+ <20200808150542.GB256751@rowland.harvard.edu>
+ <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dumping testbus registers is heavy enough to cause stability issues
-sometime, just remove them as of now.
+On Sun, Aug 09, 2020 at 11:20:22AM +0200, Martin Kepplinger wrote:
+> Hey Alan, I'm really glad for that, I suspected some of this but I have
+> little experience in scsi/block layers, so that is super helpful.
+> 
+> I'd appreciate an opinion on the below workaround that *seems* to work
+> now (let's see, I had thought so before :)
+> 
+> Whether or not this helps to find a real solution, let's see. But
+> integration of such a flag in the error handling paths is what's
+> interesting for now:
+> 
+> 
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -565,6 +565,17 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+>  				return NEEDS_RETRY;
+>  			}
+>  		}
+> +		if (scmd->device->expecting_media_change) {
+> +			if (sshdr.asc == 0x28 && sshdr.ascq == 0x00) {
+> +				/* clear expecting_media_change in
+> +				 * scsi_noretry_cmd() because we need
+> +				 * to override possible "failfast" overrides
+> +				 * that block readahead can cause.
+> +				 */
+> +				return NEEDS_RETRY;
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+This is a somewhat fragile approach.  You don't know for certain that 
+scsi_noretry_cmd will be called.  Also, scsi_noretry_cmd can be called 
+from other places.
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 823eccf..6b75338 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1630,44 +1630,12 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	return 0;
- }
- 
--static void ufs_qcom_testbus_read(struct ufs_hba *hba)
--{
--	ufshcd_dump_regs(hba, UFS_TEST_BUS, 4, "UFS_TEST_BUS ");
--}
--
--static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
--{
--	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
--	u32 *testbus = NULL;
--	int i, nminor = 256, testbus_len = nminor * sizeof(u32);
--
--	testbus = kmalloc(testbus_len, GFP_KERNEL);
--	if (!testbus)
--		return;
--
--	host->testbus.select_major = TSTBUS_UNIPRO;
--	for (i = 0; i < nminor; i++) {
--		host->testbus.select_minor = i;
--		ufs_qcom_testbus_config(host);
--		testbus[i] = ufshcd_readl(hba, UFS_TEST_BUS);
--	}
--	print_hex_dump(KERN_ERR, "UNIPRO_TEST_BUS ", DUMP_PREFIX_OFFSET,
--			16, 4, testbus, testbus_len, false);
--	kfree(testbus);
--}
--
- static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
- {
- 	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
- 			 "HCI Vendor Specific Registers ");
- 
--	/* sleep a bit intermittently as we are dumping too much data */
- 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
--	udelay(1000);
--	ufs_qcom_testbus_read(hba);
--	udelay(1000);
--	ufs_qcom_print_unipro_testbus(hba);
--	udelay(1000);
- }
- 
- /**
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+It would be better to clear the expecting_media_change flag just before 
+returning from scsi_decide_disposition.  That way its use is localized 
+to one routine, not spread out between two.
 
+Alan Stern
