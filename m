@@ -2,192 +2,146 @@ Return-Path: <SRS0=QZQu=BU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91DACC433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 16:52:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6893DC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 20:59:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23F872083B
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 16:52:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3248C20716
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 20:59:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="KT+6HWuP"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QZ2JaXJp";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ZxOYay2L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727121AbgHJQw5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Aug 2020 12:52:57 -0400
-Received: from mail-eopbgr1400093.outbound.protection.outlook.com ([40.107.140.93]:63840
-        "EHLO JPN01-TY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726720AbgHJQw4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Aug 2020 12:52:56 -0400
+        id S1726474AbgHJU7C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Aug 2020 16:59:02 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:37291 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725985AbgHJU7B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2020 16:59:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1597093141; x=1628629141;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=0FohuZoPBfwK4Oz+oXKhchVmpsOsG84ZbQ/rE1JNQvw=;
+  b=QZ2JaXJpP0xhb1flozAh5LSPCiCps/FTOUro1u88TmckIk+gGCOGwx/S
+   N7u3H5F65ixlVUzPs+NpjWoZAnhPbnswp2dVUYosMOr8XO3raBY+ZJU1P
+   9+1xTovQu34rJk6yfv1iFkv066m/36TuTxol1UfBMPbn7j3nubPa0A/lC
+   NGOrO01lUIdI/sndrAdvPdOTE+7SitaDFBDNTzPX/yWHR75VYrn4txHHE
+   pewW69kYthfHEPuMut8860ccqazPF3F30rG0Q8vogMEdYR0EIoe+1JG5n
+   8zOsTiFz7qxT5qRQqLnEYBYn8tMUQKQA42MrrURyPvPl0/ivW3Ec9Y1rT
+   g==;
+IronPort-SDR: xEQXW6nFhxVE10SdrZVyjXdxoLjPq5F33p22FgfNhJuFfhYuMAi//WPF8eyXDRqwIAUlGr7YLw
+ px0Ez9HckPRKfW24y12qk1I58+dXVZAjAvQGfGdXY/0guOu0PnzEwzR0w7UCZsgS8nkHxTs2eU
+ h7zEI+vpDxbNqbv3RITn/X1HQrlcEzjzvszWNJcaSK/qnMVeLUdokoPMWXUqD/EwFHkS4Vqkr4
+ 2KpsTin4Ef4r3Z4/VCr84rMyE7WysVbl7G8o6T43ajM4nav2pR7zQ5uWoWscInaDPnFiTWUGZf
+ gBk=
+X-IronPort-AV: E=Sophos;i="5.75,458,1589212800"; 
+   d="scan'208";a="144657934"
+Received: from mail-bn3nam04lp2059.outbound.protection.outlook.com (HELO NAM04-BN3-obe.outbound.protection.outlook.com) ([104.47.46.59])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Aug 2020 04:58:59 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fjC8SSiHMYuoLUYY6h5RSuzDmL0CG2/gW2SKGfj8DGnfPotzoGR4imD3QXcR05mp4TQm5K1OLWMPVv/6xqC4vJY4lEmtBM/IZvKW1LBa0UA4WwNsITcewRylpcfBskH8vur0xYu9aUjoUs/mDc9Zh5drI6BBqUwgGQxaUlDgq7QORCiv5Kn4bvRaw/jGKLSGv6MkHbz9OULRPfUzFo0rQEKF+QO992If7b3qgBJBE7lCRTIksb6QSIFqqiqEGSNYhEM5WAcL06A1RmbRF3DTT/QwDE8T5G7Svp5uxxjhoDSE91s0n1Y8tuUM5lGG5gk+9xbOBmjcWY3SNnEX3vZL8w==
+ b=UxtFvqYCOi57m1fnYZJ+0hQZ5YBct0lkAjFkC/MITcSNjZ08EVE2O6Sgl9VkEEis3ZYVZl99hXD6hsRWP5NFpEy1oLrnM+uORumBxuAU6rJF0C0OYnxZIwgMpNUDPCdW+bR6XyeXLs5cKKSyyJRMf14YAW3YL6tEkyRMJOKKIBEPVOe0qWKqpnITVhv7n2YbNOWbqCrpUiY1tx/YESRCVmQCMpX89zwvFgkt/i1zl/TDR/f97t3RuRXaTLQtH7+0uabUXxkHKACMmps0nLehaabiUzHrHC+dxqc9glgDiatjs1HmeUK6163w9XVOUfB9Y+7vimz2Wjjt/GFXmdVA7g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WvVbWXw9plxDSSP2AabnReitHuwCz47hLCdapWLejdY=;
- b=oFa28jJhsPrbl7T5WPb4mrEBpDOixr8HX5vsCwzUMUQb6KdNn2dmqJeWEmq6F0d/PNEab+GQa8lOAnffmshnUIUIOB9xRb1rSwEE7UJTykEeY1T1TLCw/cfG0vORmX8PEcIxjqX9H4Q0x63Yjqzsmu9XzI2Hk5zev0yiykHZElpAmOEle4zWVrS3r4pKE49Xay1Xj3voKaYMKHlgQ6b5k61f01zLwItyEto5d5Ky49ta+dy8cl/WU7zjfjcDAWDTjjFcQtORZJPBcPUiafrcVyMoikwyo6Qdtu2VMgps+IIErZLRa9/yH2LzdbCVTq+tp+tMLIa1B+UZxoUBPDC5/g==
+ bh=0FohuZoPBfwK4Oz+oXKhchVmpsOsG84ZbQ/rE1JNQvw=;
+ b=gvBj/nej6jJnFlDJi2CHY/5tIDbw6hIguXO8k8FoDudYsOsQZ5yEDv/WxwM9ClGmPLNArW6RZaQDeosGGr2AQogcnL4EWqLLeX1qx49hEhRfSjLs/HdCKWK0BzNHGipHiLz1qXzJSxQ4dFiX0PqUU3pERRQNw63I1LRFhRXa8xDNvqBTPGngZfdoxP5TYVdwdZswP0wtDjG1EZFOJ7num5U5LRYj39mia71XeNMVc2cPCAbLxPqzw//cdhGb5yw7hnmfJJNs2qtHBE+zx+8/EPBC036NPo+j8YzYKqi42wXX5Hanelke4X/PIdkgsllnBPsE9gCvt7bENrmGs8ztug==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=renesasgroup.onmicrosoft.com; s=selector2-renesasgroup-onmicrosoft-com;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WvVbWXw9plxDSSP2AabnReitHuwCz47hLCdapWLejdY=;
- b=KT+6HWuPS1mgL3xRMd8Mj6kF5zsWQRQryo/3JG2wvxQjmU0HEcbWuD9/QF0OFPG0RCJaAvnl0eoVrJjQtBZj+8lxOXCHWwgbtDEki66vUusfpkI9pF3CrzROByJ5xjpllKJSwLUnd8nEFLEsY5FhEd/EqGkLNi1gjVZ1Ew5DRaU=
-Received: from OSBPR01MB5048.jpnprd01.prod.outlook.com (2603:1096:604:38::10)
- by OSAPR01MB2098.jpnprd01.prod.outlook.com (2603:1096:603:15::18) with
+ bh=0FohuZoPBfwK4Oz+oXKhchVmpsOsG84ZbQ/rE1JNQvw=;
+ b=ZxOYay2LfX87Dz9398rBZd5/+Q8CadxQ5Y+TEEhDPtcN3BldjBhX4/Qs1qT6ocy1QyoO3bxFyY7qlUR9+CVWlsr7yG2Jf/dzvO/R0xXc3PWuACpEHKXEcsVIs95vRFrXc5l34OTYRgTh3m663gXpPY6Bw35/VJNdwPy5oW+q9TY=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN4PR0401MB3551.namprd04.prod.outlook.com (2603:10b6:803:45::24) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3261.22; Mon, 10 Aug
- 2020 16:52:52 +0000
-Received: from OSBPR01MB5048.jpnprd01.prod.outlook.com
- ([fe80::3c9a:53d7:17c4:4ce9]) by OSBPR01MB5048.jpnprd01.prod.outlook.com
- ([fe80::3c9a:53d7:17c4:4ce9%3]) with mapi id 15.20.3261.025; Mon, 10 Aug 2020
- 16:52:52 +0000
-From:   Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jens Axboe <axboe@kernel.dk>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Christoph Hellwig <hch@lst.de>
-CC:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org" 
-        <linux-renesas-soc@vger.kernel.org>,
+ 2020 20:58:57 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::c86c:8b99:3242:2c68]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::c86c:8b99:3242:2c68%7]) with mapi id 15.20.3261.024; Mon, 10 Aug 2020
+ 20:58:57 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] ata: sata_rcar: Fix DMA boundary mask
-Thread-Topic: [PATCH] ata: sata_rcar: Fix DMA boundary mask
-Thread-Index: AdZvNo0I59aeI/qARpyePnhfE1hBEw==
-Date:   Mon, 10 Aug 2020 16:52:52 +0000
-Message-ID: <OSBPR01MB5048293919411E2B5498EC9CAA440@OSBPR01MB5048.jpnprd01.prod.outlook.com>
-Accept-Language: en-GB, en-US
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+CC:     "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
+        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
+        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
+Subject: RE: [PATCH v1] scsi: ufs-mediatek: Fix incorrect time to wait link
+ status
+Thread-Topic: [PATCH v1] scsi: ufs-mediatek: Fix incorrect time to wait link
+ status
+Thread-Index: AQHWbhHwgR3BsHpWkEyhFBMFuXwxrKkx1cJA
+Date:   Mon, 10 Aug 2020 20:58:57 +0000
+Message-ID: <SN6PR04MB464019F00686A7F82547E99EFC440@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200809055702.20140-1-stanley.chu@mediatek.com>
+In-Reply-To: <20200809055702.20140-1-stanley.chu@mediatek.com>
+Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: glider.be; dkim=none (message not signed)
- header.d=none;glider.be; dmarc=none action=none header.from=bp.renesas.com;
-x-originating-ip: [193.141.220.21]
+authentication-results: mediatek.com; dkim=none (message not signed)
+ header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [77.138.4.172]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 44bd2269-4d3f-4b4a-150c-08d83d4dd2b0
-x-ms-traffictypediagnostic: OSAPR01MB2098:
-x-microsoft-antispam-prvs: <OSAPR01MB20989AD7618F7AFAA6F5BE20AA440@OSAPR01MB2098.jpnprd01.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:4941;
+x-ms-office365-filtering-correlation-id: 3f1fca3f-1ec1-41c7-c2e8-08d83d70332d
+x-ms-traffictypediagnostic: SN4PR0401MB3551:
+x-microsoft-antispam-prvs: <SN4PR0401MB3551D7B6AF4C4AFC2F2F1C8DFC440@SN4PR0401MB3551.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:2958;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: KSgwBra6fuM8X6SoTyaOwXcTG9Wlvhx86vvfjUUifR5bh5x2vItVpjkiSxt00+FDDSDo8G+0yRPu+NdIy/ZomL252OLw0bdne+KybzkZyQVH0hF439RherxeNPWVAde+Ws5vy5QTIK5JWiJW2y4ioWnfyngsEIVgbDoBEsNqqA3aQpgm6Uv1+svT7WOFnNimCD1siQs8oKgFfCqs8Cz0qi6DJDnfy066MQOGcoAVy8Keek7fWLiT8J56HKJCvWkCBQi6L6IM0iptC/tuAbGwwc/fgQePkLnRzq025JatNS9zu8yKNP6gImQDEEQF2pf9NWdmCaDHiKhHKYpfCjNkkA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB5048.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(346002)(366004)(136003)(396003)(376002)(2906002)(186003)(83380400001)(52536014)(4326008)(86362001)(26005)(5660300002)(66476007)(66946007)(66446008)(7696005)(53546011)(6506007)(8936002)(64756008)(66556008)(33656002)(478600001)(316002)(8676002)(76116006)(54906003)(55016002)(7416002)(9686003)(110136005)(71200400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: uKsRNvy+KLRNvoGwrmBvesspvqTtcCw+P2oLuzmE64VoxeZkdI/QmTSJAoAQ+vhnWEHHE7YHepZPNbFcVjjaq7aMs2TuoExMiXGXWKl0Q5qJG3m8zOXMfWs5+Y45L1SyFAa+w/72vcFlYy3i+ZBLtpQmkF0lNMZ29HVIgn0C2wT58tlkMFD36VqzSfWBBNAzLl6TcoeDzV0mqMq52kXwK6KaloorX3mNQvCrTPUT+TTEqi/pla6UdrWvtCESmcb3ZsCffvTtgVJu8F8nJYXvrbul3+fDLB7jXbyao5RHbiUrFv4WDx9Sx/1nuXDaOwofPhJBJmcj203Pu1pjfImg/nkWz3HICZ3DIhNUiPyFdikKF/VYG38a5OyTVJs5d07QiUgY4uFlPWKb32PHVqv/laM3ff8eKNT9A703UzCtwOFCsy+965od0GYk4RBfAVB+AjTONmmfxMIBEo0mlIP0wj3w2nlj+eT789aMPMFZKxBg5qZxGi5CxpB87q6A/7aF4p9ESDzoZmIuXPl+gW3L94EGfFPHxzWcm42esi8mNYUP3/ULP9sEgs0Lg84gZqSwskt6Clb+DdPbkj0cmC/BFefmIA4SemCvjil1PFOCW+MRhLVtyIfjJuGdxqc/O0UKi4AsfhuWnlBB822MM1tPZQ==
+x-microsoft-antispam-message-info: Q9cz6l5XtBu/cVAcgu5E+6iroukpH4zZrlS/jyKzEXiK4pu9W6lB2X9WoFSzuvFbue0BWgnjVE0noa4A9lgwygglikzjjxXvCvRgpuf0SJOFjA+sU2Lotd8AG1HGg8MPjEm2jRS00Ng5vP63SOfcACOSX8iYhcYpClSy7mFNoqorOKliHdh9ohXC+hsQaKWYJPGCFoceB3uEq7SF+dTbGYmj3Vm1GXeOjtzeJva1x3Ok0ehkWB3QzuD6xkcn9IUuKQwsurVMnJxtj7DeziHVSiKfvJi4jSLoHKvmLPKK8eg9WeF68XsFeaQbWITrXAv02KLkGBVacZNLHgoxfZQyOA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(136003)(396003)(346002)(376002)(39860400002)(8936002)(8676002)(52536014)(4326008)(64756008)(478600001)(5660300002)(66946007)(76116006)(66446008)(66556008)(66476007)(110136005)(316002)(54906003)(9686003)(2906002)(55016002)(83380400001)(33656002)(7696005)(7416002)(86362001)(558084003)(26005)(71200400001)(186003)(6506007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: kNnqc5MvNwsS8gcLMdmx7c/i4nQ5HAsVEiEqImLcoJ+ID0iGJjt29V2xyN9RDxkI6blz6tiuEqUaTl3b7TXYqsWuOrSkB9HoOs2lUNrPVzEPDCuElwjKUKyfdEtt8WDlnkkAkxFI81fhXAL1hG1wEXmjJrOM1XTmEodVNvoFqhkqAknvq5FuPvWWlUvO0axR2r21sOIlNczdpKXwTCZZkIuBZwgiFaQfmNDNlXex30KKEs7vikfvDSGMp8vaPIm+4G7tQemnrVAqButDmpNOdDU7PZfH3OGFjwt6OSGKbRU+byKYioyq0PUPZVrPq+dyi197sGgB/tUknxYJLRkjUGx/i9kikfesqHvnRE3CgtXgq6NHraHsnI0Yo5vypzjuvpxvY9xUbpH3YPHiLKtUY5tTFduU7MdMm1ZsUdML4zhlLorPTuKEDnvEzU9G11ludK0B4DLm89YziFWq3ON0BXoy0A/IeYjB6Xep+3O/B5qSJJffoLEqYcVFoq4Njx6SSg4/5uAiD+ggTJY5HK2ElxHMpi6B4kIwosX4XnhVY5+rhWLCdgF0AZ8tHZ02N7kpy5/jj0rbGViYlZ+KjfzmA36PnHK4/U3GRoWjGjNxxImeBPcvHc3aKYg/hIDcqU4jgFtLT3TH9CXcIct3E3Gp3A==
 x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
+X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB5048.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 44bd2269-4d3f-4b4a-150c-08d83d4dd2b0
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Aug 2020 16:52:52.7577
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3f1fca3f-1ec1-41c7-c2e8-08d83d70332d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Aug 2020 20:58:57.5784
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: v3rmp7ZcYtKAdG45Rp3KYUUfZj6LeMS+TqiFgB/7WTC/h6CVzMwAKya1YaSlO1x1LJ9HknAnpI0oK7DuiDW7yWqOHC46pO+5Cj7mx0/rta0Fwpmu+o6f/IxYhI12bh4Q
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSAPR01MB2098
+X-MS-Exchange-CrossTenant-userprincipalname: g4jG0ej/nNGObeumoWDC+XQeG9FoBYGloT+2VPxFRMce/W55J+Fck5y7MKlNZEYDim6thtj8ePSV5QGIbOFd3w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3551
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Geert,
-
-Thank you for the patch.
-
-> -----Original Message-----
-> From: linux-ide-owner@vger.kernel.org <linux-ide-owner@vger.kernel.org> O=
-n Behalf Of Geert Uytterhoeven <geert+renesas@glider.be>
-> Sent: 13 May 2020 12:04
-> To: Jens Axboe <axboe@kernel.dk>; Ulf Hansson <ulf.hansson@linaro.org>; G=
-reg Kroah-Hartman <gregkh@linuxfoundation.org>;
-> Christoph Hellwig <hch@lst.de>
-> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>; linux-ide@vger.=
-kernel.org; linux-renesas-soc@vger.kernel.org; linux-
-> scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Geert Uytterhoeven <g=
-eert+renesas@glider.be>
-> Subject: [PATCH] ata: sata_rcar: Fix DMA boundary mask
->
-> Before commit 9495b7e92f716ab2 ("driver core: platform: Initialize
-> dma_parms for platform devices"), the R-Car SATA device didn't have DMA
-> parameters.  Hence the DMA boundary mask supplied by its driver was
-> silently ignored, as __scsi_init_queue() doesn't check the return value
-> of dma_set_seg_boundary(), and the default value of 0xffffffff was used.
->
-> Now the device has gained DMA parameters, the driver-supplied value is
-> used, and the following warning is printed on Salvator-XS:
->
->     DMA-API: sata_rcar ee300000.sata: mapping sg segment across boundary =
-[start=3D0x00000000ffffe000] [end=3D0x00000000ffffefff]
-> [boundary=3D0x000000001ffffffe]
->     WARNING: CPU: 5 PID: 38 at kernel/dma/debug.c:1233 debug_dma_map_sg+0=
-x298/0x300
->
-> (the range of start/end values depend on whether IOMMU support is
->  enabled or not)
->
-> The issue here is that SATA_RCAR_DMA_BOUNDARY doesn't have bit 0 set, so
-> any typical end value, which is odd, will trigger the check.
->
-> Fix this by increasing the DMA boundary value by 1.
->
-> Fixes: 8bfbeed58665dbbf ("sata_rcar: correct 'sata_rcar_sht'")
-> Fixes: 9495b7e92f716ab2 ("driver core: platform: Initialize dma_parms for=
- platform devices")
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
-> As by default the DMA debug code prints the first error only, this issue
-> may be hidden on plain v5.7-rc5, where the FCP driver triggers a similar
-> warning.  Merging commit dd844fb8e50b12e6 ("media: platform: fcp: Set
-> appropriate DMA parameters") from the media tree fixes the FCP issue,
-> and exposes the SATA issue.
->
-> I added the second fixes tag because that commit is already being
-> backported to stable kernels, and this patch thus needs backporting,
-> too.
-> ---
->  drivers/ata/sata_rcar.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-Without this patch I see SATA link being reset while doing a dd (dd if=3D/d=
-ev/urandom of=3Drandom-data bs=3D1M count=3D1000)
-
-Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-
-Cheers,
-Prabhakar
-
-> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-> index 980aacdbcf3b42b9..752db75b611e8f8a 100644
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -120,7 +120,7 @@
->  /* Descriptor table word 0 bit (when DTA32M =3D 1) */
->  #define SATA_RCAR_DTENDBIT(0)
->
-> -#define SATA_RCAR_DMA_BOUNDARY0x1FFFFFFEUL
-> +#define SATA_RCAR_DMA_BOUNDARY0x1FFFFFFFUL
->
->  /* Gen2 Physical Layer Control Registers */
->  #define RCAR_GEN2_PHY_CTL1_REG0x1704
-> --
-> 2.17.1
->
-
-
-
-Renesas Electronics Europe GmbH, Geschaeftsfuehrer/President: Carsten Jauch=
-, Sitz der Gesellschaft/Registered office: Duesseldorf, Arcadiastrasse 10, =
-40472 Duesseldorf, Germany, Handelsregister/Commercial Register: Duesseldor=
-f, HRB 3708 USt-IDNr./Tax identification no.: DE 119353406 WEEE-Reg.-Nr./WE=
-EE reg. no.: DE 14978647
+=20
+>=20
+> Fix incorrect calculation of "ms" based waiting time in
+> function ufs_mtk_setup_clocks().
+>=20
+> Fixes: 9006e3986f66 ("scsi: ufs-mediatek: Do not gate clocks if auto-hibe=
+rn8 is
+> not entered yet")
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
