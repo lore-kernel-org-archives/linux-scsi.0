@@ -2,148 +2,212 @@ Return-Path: <SRS0=QZQu=BU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A27DC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 15:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3818C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 15:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0935023135
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 15:38:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597073929;
-	bh=ymggXvQMYTuMlvb7REMGaGjoHB0LOXnlg1VMPd0fUPA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=aSSwIDZYMviD9GrB1fLGdN5SK0+2W0S8d/VXwBbSJ1NnNL1Q6qEk8LjEP9EnN77ur
-	 d1/T17d3UXVeFTRZxoZ1ORJHQUIKkGQyZ/zp6LG2EiFYNECfxq0WYtpvC3LIKCDlMC
-	 HnuYxR3mueb2ASlZeRrvGa/UPQSk7j+qqfzKu+k4=
+	by mail.kernel.org (Postfix) with ESMTP id A6CE520825
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 15:41:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FeaZuKWK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728649AbgHJPiq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Aug 2020 11:38:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51074 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728101AbgHJPin (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Aug 2020 11:38:43 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7FA4D22D6F;
-        Mon, 10 Aug 2020 15:38:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597073923;
-        bh=ymggXvQMYTuMlvb7REMGaGjoHB0LOXnlg1VMPd0fUPA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gqSdXHM81gwbzXzR3XVYr5Cv+R1XKxsB0Haq0sLcU11okQ/SfDFLepmttZBjNBRI2
-         sJqCnW2gXGPrpEQeQ4uA6hzCEITw02Wz/B5xg8mRxj58Gcj49fcoo4GoZDCWd6aA+G
-         RTRqaZuEkc70RUANlwkxqSbzHWGUoSIzKPAJXLxE=
-Date:   Mon, 10 Aug 2020 17:38:35 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Avi Shchislowski <Avi.Shchislowski@wdc.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Subject: Re: [PATCH v6 0/5] scsi: ufs: Add Host Performance Booster Support
-Message-ID: <20200810153835.GA4169109@kroah.com>
-References: <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p8>
- <963815509.21594636682161.JavaMail.epsvc@epcpadp2>
- <SN6PR04MB38720C3D8FC176C3C7FB51B89A7E0@SN6PR04MB3872.namprd04.prod.outlook.com>
- <4174fcf4-73ec-8e3f-90a5-1e7584e3e2d0@acm.org>
- <SN6PR04MB3872FBE1EAE3578BFD2601189A7F0@SN6PR04MB3872.namprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SN6PR04MB3872FBE1EAE3578BFD2601189A7F0@SN6PR04MB3872.namprd04.prod.outlook.com>
+        id S1728881AbgHJPlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Aug 2020 11:41:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38248 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728072AbgHJPlb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Aug 2020 11:41:31 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B194C061756;
+        Mon, 10 Aug 2020 08:41:31 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id a26so9866333ejc.2;
+        Mon, 10 Aug 2020 08:41:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=pmIlVpEUwH8Ra61hHTKQjyHUWPaGv/XKB/OaiPGgml4=;
+        b=FeaZuKWKfrsCbBnngc7meGA/8HmsVAKD53q8Cyo7sFBt9PJTPl3GoJl5pmkzy6Nic4
+         COLehlC1DOXZihm0cyjNp0dJzMlc3w6cQ3YohWSQRrx7zaLPeiYgYXX0gqKXlZhP4Hze
+         YEy8O3pOI10tKs3sxEmdupl5nvp2SXyGqUa8IBQTRkTj17mDWfU/odz8fVaQ1dognjwr
+         w/5Nrg1dUcCbYMrXEkUFoeM+XrqcNCaPE0PVJJ/DF5CDcvN6JOxhh34sCgAdr+k/ldJB
+         L0PJkrORF8pmA5EhHEk2iPHGy9Rlfel3eGhJI7I/biwTyR5teXs0X0HNiO2nRrxVs3Hw
+         z/XQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=pmIlVpEUwH8Ra61hHTKQjyHUWPaGv/XKB/OaiPGgml4=;
+        b=CpdBNo5T79PKmpzUZs121612OdHmNh+koFMndk+UqSdMcRCmWAbpM6IE8qIbp99Sd5
+         yXS5uXCUNJwJKgJGvgNHTF93IZjmnHW/yumXCvpA8Bwm5mik48BDmT2mKuVV7XWjJX1F
+         INbZUIhO5dE39sAjWhgcepO9Yr5fWOtYUux10cBU2Bxz02UOqAIXVkvG4gYcoMFcJwGG
+         sZ78WSG25QUxDdiwEoR5lpDLSV8wFwmMd327UkyCzspE+prLrQkTgKVsX/nLr/LSCOrh
+         cD97kCFtfrRhmtFzDoeFGFzeph2zL7nzlb4NGfPwGKNsgNoK1PW/T0WlTUfeleKwlvxK
+         rJZw==
+X-Gm-Message-State: AOAM531bdee6FjwOXkZXhx7C3P+YkENxeTrhiM0t08BVty/1V5LP0ctt
+        bvjZyroNRB4KIiDAKLfeaP4=
+X-Google-Smtp-Source: ABdhPJx3hPXMNA7+TIBef0DKRduc+Z/07rybRf6TJvgPkMjKHWwkyw+Cbxcj18RFU0SwpdYFllAyoA==
+X-Received: by 2002:a17:906:1cd3:: with SMTP id i19mr7158892ejh.552.1597074089772;
+        Mon, 10 Aug 2020 08:41:29 -0700 (PDT)
+Received: from ubuntu-laptop ([2a01:598:b910:3189:44c:d55b:5f94:2fc4])
+        by smtp.googlemail.com with ESMTPSA id b13sm12551297edw.69.2020.08.10.08.41.27
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 10 Aug 2020 08:41:29 -0700 (PDT)
+Message-ID: <5c6f1ad9f703cc5721e081452e869a9ee6bc4ab6.camel@gmail.com>
+Subject: Re: [PATCH v1] scsi: ufs: no need to send one Abort Task TM in case
+ the task in DB was cleared
+From:   Bean Huo <huobean@gmail.com>
+To:     Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Mon, 10 Aug 2020 17:41:22 +0200
+In-Reply-To: <5ad1dbd76a0d5d476641a01bfb8bd435@codeaurora.org>
+References: <20200804123534.29104-1-huobean@gmail.com>
+         <a68a1bdf74bdf8ada29808537290b35b@codeaurora.org>
+         <871fdbc1719d7a3c469bf857071aa2c6bd71ddaf.camel@gmail.com>
+         <5ad1dbd76a0d5d476641a01bfb8bd435@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 16, 2020 at 10:00:57AM +0000, Avi Shchislowski wrote:
+On Thu, 2020-08-06 at 18:07 +0800, Can Guo wrote:
+> Hi Bean,
+> 
+> On 2020-08-06 17:50, Bean Huo wrote:
+> > > 
+> > > Please check Stanley's recent change to ufshcd_abort, you may
+> > > want to rebase your change on his and do goto cleanup here.
+> > > @Stanley correct me if I am wrong.
+> > > 
+> > > But even if you do a goto cleanup here, we still lost the
+> > > chances to dump host infos/regs like it does in the old code.
+> > > If a cmd was completed but without a notifying intr, this is
+> > > kind of a problem that we/host should look into, because it's
+> > > pasted at least 30 sec since the cmd was sent, so those dumps
+> > > are necessary to debug the problem. How about moving blow prints
+> > > in front of this part?
+> > > 
+> > > Thanks,
+> > > 
+> > > Can Guo.
+> > > 
+> > > >  	}
+> > > > 
+> > > >  	/* Print Transfer Request of aborted task */
+> > 
+> > Hi Can
+> > 
+> > Thanks, do you mean that change to like this:
+> > 
+> > 
+> > Author: Bean Huo <beanhuo@micron.com>
+> > Date:   Thu Aug 6 11:34:45 2020 +0200
+> > 
+> >     scsi: ufs: no need to send one Abort Task TM in case the task
+> > in
+> >   was cleared
+> > 
+> >     If the bit corresponds to a task in the Doorbell register has
+> > been
+> >     cleared, no need to poll the status of the task on the device
+> > side
+> >     and to send an Abort Task TM.
+> >     This patch also deletes dispensable dev_err() in case of the
+> > task
+> >     already completed.
+> > 
+> >     Signed-off-by: Bean Huo <beanhuo@micron.com>
+> > 
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 307622284239..f7c91ce9e294 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -6425,23 +6425,9 @@ static int ufshcd_abort(struct scsi_cmnd
+> > *cmd)
+> >                 return ufshcd_eh_host_reset_handler(cmd);
+> > 
+> >         ufshcd_hold(hba, false);
+> > -       reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> >         /* If command is already aborted/completed, return SUCCESS
+> > */
+> > -       if (!(test_bit(tag, &hba->outstanding_reqs))) {
+> > -               dev_err(hba->dev,
+> > -                       "%s: cmd at tag %d already completed,
+> > outstanding=0x%lx, doorbell=0x%x\n",
+> > -                       __func__, tag, hba->outstanding_reqs, reg);
+> > +       if (!(test_bit(tag, &hba->outstanding_reqs)))
+> >                 goto out;
+> > -       }
+> > -
+> > -       if (!(reg & (1 << tag))) {
+> > -               dev_err(hba->dev,
+> > -               "%s: cmd was completed, but without a notifying
+> > intr,
+> > tag = %d",
+> > -               __func__, tag);
+> > -       }
+> > -
+> > -       /* Print Transfer Request of aborted task */
+> > -       dev_err(hba->dev, "%s: Device abort task at tag %d\n",
+> > __func__, tag);
+> > 
+> >         /*
+> >          * Print detailed info about aborted request.
+> > @@ -6462,6 +6448,17 @@ static int ufshcd_abort(struct scsi_cmnd
+> > *cmd)
+> >         }
+> >         hba->req_abort_count++;
+> > 
+> > +       reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> > +       if (!(reg & (1 << tag))) {
+> > +               dev_err(hba->dev,
+> > +               "%s: cmd was completed, but without a notifying
+> > intr,
+> > tag = %d",
+> > +               __func__, tag);
+> > +               goto cleanup;
+> > +       }
+> > +
+> > +       /* Print Transfer Request of aborted task */
+> > +       dev_err(hba->dev, "%s: Device abort task at tag %d\n",
+> > __func__, tag);
+> > +
+> 
+> The rest looks good but let below two lines stay where they were.
+> 
+>         /* Print Transfer Request of aborted task */
+>         dev_err(hba->dev, "%s: Device abort task at tag %d\n",
+> __func__, tag);
 > 
 > 
-> > -----Original Message-----
-> > From: Bart Van Assche <bvanassche@acm.org>
-> > Sent: Thursday, July 16, 2020 4:42 AM
-> > To: Avi Shchislowski <Avi.Shchislowski@wdc.com>;
-> > daejun7.park@samsung.com; Avri Altman <Avri.Altman@wdc.com>;
-> > jejb@linux.ibm.com; martin.petersen@oracle.com; asutoshd@codeaurora.org;
-> > beanhuo@micron.com; stanley.chu@mediatek.com; cang@codeaurora.org;
-> > tomas.winkler@intel.com; ALIM AKHTAR <alim.akhtar@samsung.com>
-> > Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Sang-yoon Oh
-> > <sangyoon.oh@samsung.com>; Sung-Jun Park
-> > <sungjun07.park@samsung.com>; yongmyung lee
-> > <ymhungry.lee@samsung.com>; Jinyoung CHOI <j-
-> > young.choi@samsung.com>; Adel Choi <adel.choi@samsung.com>; BoRam
-> > Shin <boram.shin@samsung.com>
-> > Subject: Re: [PATCH v6 0/5] scsi: ufs: Add Host Performance Booster Support
-> > 
-> > CAUTION: This email originated from outside of Western Digital. Do not click on
-> > links or open attachments unless you recognize the sender and know that the
-> > content is safe.
-> > 
-> > 
-> > On 2020-07-15 11:34, Avi Shchislowski wrote:
-> > > My name is Avi Shchislowski, I am managing the WDC's Linux Host R&D team
-> > in which Avri is a member of.
-> > > As the review process of HPB is progressing very constructively, we are getting
-> > more and more requests from OEMs, Inquiring about HPB in general, and host
-> > control mode in particular.
-> > >
-> > > Their main concern is that HPB will make it to 5.9 merge window, but the host
-> > control mode patches will not.
-> > > Thus, because of recent Google's GKI, the next Android LTS might not include
-> > HPB with host control mode.
-> > >
-> > > Aside of those requests, initial host control mode testing are showing
-> > promising prospective with respect of performance gain.
-> > >
-> > > What would be, in your opinion, the best policy that host control mode is
-> > included in next Android LTS?
-> > 
-> > Hi Avi,
-> > 
-> > Are you perhaps referring to the HPB patch series that has already been posted?
-> > Although I'm not sure of this, I think that the SCSI maintainer expects more
-> > Reviewed-by: and Tested-by: tags. Has anyone from WDC already taken the
-> > time to review and/or test this patch series?
-> > 
-> > Thanks,
-> > 
-> > Bart.
+> Thanks,
 > 
-> Yes, I am referring to the current proposal which I am replying to:
-> [PATCH v6 0/5] scsi: ufs: Add Host Performance Booster Support This proposal does not contains host mode, hence our customers concern.
-> What would be, in your opinion, the best policy that host control mode is included in next Android LTS  assuming it will be based on kernel v5.9 ?
+> Can Guo.
+> 
+Hi Can
+I will change it in the next version.
 
-To come back to this statement, as I keep seeing it in odd places...
 
-I have never said that the next LTS kernel would be 5.9, where did you
-get that from?  I am pretty sure that Google is also not saying that
-either.
+Hi Stanly
+would you mind I take your patch into my next version patchset? Since
+we both will add a new same goto label. I will keep your patch
+authorship.
 
-Work to get the feature accepted properly, do not worry about cramming
-anything into any kernel just because it might be a LTS release.  That
-causes problems that we have had in the past, and one would hope that we
-would have learned from our mistakes.
+Thanks,
+Bean
 
-thanks,
 
-greg k-h
