@@ -7,35 +7,36 @@ X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE939C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 06:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59E77C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 06:20:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6D37206B5
-	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 06:19:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 385F6206B5
+	for <linux-scsi@archiver.kernel.org>; Mon, 10 Aug 2020 06:20:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725984AbgHJGTi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Aug 2020 02:19:38 -0400
-Received: from mx2.suse.de ([195.135.220.15]:38472 "EHLO mx2.suse.de"
+        id S1726089AbgHJGUF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Aug 2020 02:20:05 -0400
+Received: from mx2.suse.de ([195.135.220.15]:38578 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725763AbgHJGTi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Aug 2020 02:19:38 -0400
+        id S1725763AbgHJGUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 10 Aug 2020 02:20:04 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 23716B1B1;
-        Mon, 10 Aug 2020 06:19:57 +0000 (UTC)
-Subject: Re: [PATCH 3/5] scsi: No retries on abort success
+        by mx2.suse.de (Postfix) with ESMTP id AE427B1B1;
+        Mon, 10 Aug 2020 06:20:22 +0000 (UTC)
+Subject: Re: [PATCH 4/5] scsi: Added routine to set SCMD_NORETRIES_ABORT bit
+ for outstanding io on scsi_dev
 To:     Muneendra <muneendra.kumar@broadcom.com>,
         linux-scsi@vger.kernel.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
 References: <1596595862-11075-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596595862-11075-4-git-send-email-muneendra.kumar@broadcom.com>
+ <1596595862-11075-5-git-send-email-muneendra.kumar@broadcom.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <b034215e-c106-9e96-9d6b-71e6707f921c@suse.de>
-Date:   Mon, 10 Aug 2020 08:19:35 +0200
+Message-ID: <419ea703-f404-e665-add8-0e6bf7382363@suse.de>
+Date:   Mon, 10 Aug 2020 08:20:02 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <1596595862-11075-4-git-send-email-muneendra.kumar@broadcom.com>
+In-Reply-To: <1596595862-11075-5-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -45,46 +46,98 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 8/5/20 4:51 AM, Muneendra wrote:
-> Made an additional check in scsi_noretry_cmd to verify whether user has
-> decided not to do retries on abort(issued on scsi timeouts) success  by
-> checking the SCMD_NORETRIES_ABORT bit
+> Added a new routine scsi_set_noretries_abort_io_device()to set
+> SCMD_NORETRIES_ABORT for all the inflight/pending IO's on a particular
+> scsi device at that particular instant.
 > 
-> If SCMD_NORETRIES_ABORT bit is set we are making sure there won't be any
-> retries done on the same path and also setting the host byte as
-> DID_TRANSPORT_FAILFAST so that the error can be propogated as recoverable
-> transport error to the blk layers.
+> Export the symbol so the routine can be called by scsi_transport_fc.c
+> 
+> Added new function declaration scsi_set_noretries_abort_io_device in
+> scsi_priv.h
 > 
 > Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 > ---
->   drivers/scsi/scsi_error.c | 10 ++++++++++
->   1 file changed, 10 insertions(+)
+>   drivers/scsi/scsi_error.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/scsi_priv.h  |  1 +
+>   2 files changed, 54 insertions(+)
 > 
 > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 927b1e6..3222496 100644
+> index 3222496..938d770 100644
 > --- a/drivers/scsi/scsi_error.c
 > +++ b/drivers/scsi/scsi_error.c
-> @@ -1749,6 +1749,16 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+> @@ -271,6 +271,59 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+>   	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
+>   }
 >   
->   check_type:
->   	/*
-> +	 * Check whether caller has decided not to do retries on
-> +	 * abort success by setting the SCMD_NORETRIES_ABORT bit
-> +	 */
-> +	if ((test_bit(SCMD_NORETRIES_ABORT, &scmd->state)) &&
-> +		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
-> +		set_host_byte(scmd, DID_TRANSPORT_FAILFAST);
-> +		return 1;
-> +	}
+> +static bool
+> +scsi_set_noretries_abort_io(struct request *rq, void *priv, bool reserved)
+> +{
+> +	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
+> +	struct scsi_device *sdev = scmd->device;
 > +
-> +	/*
->   	 * assume caller has checked sense and determined
->   	 * the check condition was retryable.
->   	 */
+> +	/* only set SCMD_NORETRIES_ABORT on ios on a specific sdev */
+> +	if (sdev != priv)
+> +		return true;
+> +	/* we don't want this command reissued on abort success
+> +	 * so set SCMD_NORETRIES_ABORT bit to ensure it
+> +	 * won't get reissued
+> +	 */
+> +	if (READ_ONCE(rq->state) == MQ_RQ_IN_FLIGHT)
+> +		set_bit(SCMD_NORETRIES_ABORT, &scmd->state);
+> +	return true;
+> +}
+> +
+> +static int
+> +__scsi_set_noretries_abort_io_device(struct scsi_device *sdev)
+> +{
+> +
+> +	if (sdev->sdev_state != SDEV_RUNNING)
+> +		return -EINVAL;
+> +
+> +	if (blk_queue_init_done(sdev->request_queue)) {
+> +
+> +		blk_mq_quiesce_queue(sdev->request_queue);
+> +		blk_mq_tagset_busy_iter(&sdev->host->tag_set,
+> +				scsi_set_noretries_abort_io, sdev);
+> +		blk_mq_unquiesce_queue(sdev->request_queue);
+> +	}
+> +	return 0;
+> +}
+> +
+> +/*
+> + * scsi_set_noretries_abort_io_device - set the SCMD_NORETRIES_ABORT
+> + * bit for all the pending io's on a device
+> + * @sdev:	scsi_device
+> + */
+> +int
+> +scsi_set_noretries_abort_io_device(struct scsi_device *sdev)
+> +{
+> +	struct Scsi_Host *shost = sdev->host;
+> +	int ret  = -EINVAL;
+> +
+> +	mutex_lock(&shost->scan_mutex);
+> +	ret = __scsi_set_noretries_abort_io_device(sdev);
+> +	mutex_unlock(&shost->scan_mutex);
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(scsi_set_noretries_abort_io_device);
+> +
+>   /**
+>    * scsi_times_out - Timeout function for normal scsi commands.
+>    * @req:	request that is timing out.
+> diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+> index d12ada0..1bbffd3 100644
+> --- a/drivers/scsi/scsi_priv.h
+> +++ b/drivers/scsi/scsi_priv.h
+> @@ -81,6 +81,7 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+>   int scsi_eh_get_sense(struct list_head *work_q,
+>   		      struct list_head *done_q);
+>   int scsi_noretry_cmd(struct scsi_cmnd *scmd);
+> +extern int scsi_set_noretries_abort_io_device(struct scsi_device *sdev);
+>   
+>   /* scsi_lib.c */
+>   extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
 > 
-_Actually_ DID_TRANSPORT_FAILFAST is just for transport aborted 
-commands, so maybe we should use a different error code (or add a new one).
-But other than that:
-
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
