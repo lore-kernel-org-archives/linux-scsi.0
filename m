@@ -2,149 +2,93 @@ Return-Path: <SRS0=1zSt=BV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6CF8C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E98A5C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFC3720658
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:00:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8F4A206C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:19:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jcax+9eK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728756AbgHKOAk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Aug 2020 10:00:40 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52490 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728788AbgHKOAj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Aug 2020 10:00:39 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C4DD2B12F;
-        Tue, 11 Aug 2020 14:00:58 +0000 (UTC)
-Subject: Re: [PATCH 5/5] scsi_transport_fc: Added a new sysfs attribute
- noretries_abort
-To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
-References: <1596595862-11075-1-git-send-email-muneendra.kumar@broadcom.com>
- <1596595862-11075-6-git-send-email-muneendra.kumar@broadcom.com>
- <b5469eef-08cf-267a-77e7-5e4a3640f4f3@suse.de>
- <2bab689170901076a118204cf05063d5@mail.gmail.com>
- <b18e3d59-1bf8-ff7d-db81-88f60ef283c1@suse.de>
- <579d6af65acdc2f3cf673d73d00d4694@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <354f6b67-4a54-1807-b205-d3c0b71906b5@suse.de>
-Date:   Tue, 11 Aug 2020 16:00:37 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
-MIME-Version: 1.0
-In-Reply-To: <579d6af65acdc2f3cf673d73d00d4694@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1728709AbgHKOTf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Aug 2020 10:19:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728516AbgHKOTe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2020 10:19:34 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93EF5C06174A;
+        Tue, 11 Aug 2020 07:19:34 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id i26so9213311edv.4;
+        Tue, 11 Aug 2020 07:19:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=sRUO7nqZw8Td1PZj4u/+l9GQRmOqXg8WCKFUvaEDiMI=;
+        b=Jcax+9eKmNuGFrqX1KUGfpVqdzP7oVH+uHXsTNt9QzQyQHQkWPs8JFnzLKk9eoSn6o
+         G5RJFYjh1AzrLkns4IPfULDh19PQ26F/7wE21b4DFbp1N5l712G1YObhNPjjLdTVmpaL
+         l8C9FzIPQBT4rN0dswDy2y+NtpwQOiK3dwRuldpDTqKS8n2hlQJXAw5UfDk1tJwklNV9
+         pILsUtUQBEunS3EwK2m8oeAs8oj/YICZ2oWvsyKkLmA3Acl1/UDGllNulZeblIXlGJXJ
+         qfD2UlIBDdZXL+PdwsWkFWaF0XRIQ7R154XP9CbUTodcvVoiO36wjm7WfC7I0c+se30M
+         YGsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=sRUO7nqZw8Td1PZj4u/+l9GQRmOqXg8WCKFUvaEDiMI=;
+        b=etOisnqNI7sR7mEnvViMsp/p7zU8XeIapNJ356mBnN8oI5ju4ZWMxpGnI1iAEzkO0T
+         AupDe0lfLsI5e+o5YoLoTAN8hr+tot+b/t8EuAHUGJUcG0ZqgEfIaDU3nfnsCmRY82DH
+         gfWgaTdf6nUsXph3OLA1SYLUZczWas0wmLp9vA+KbXl9MOwhsyTrq7q52fzaspymPjDp
+         UgXQrghT6f1y09weDu+LrAPzJTfsxOTfC497jig2w8eQK+sHZxcezEBICXEx3uRPbSrw
+         v9S3lXhrseAZ66FhfOcKDSDJRe+i71J17ma53URxh52LNg8gfL4bJTpj3pBadOQk8DQy
+         ttLQ==
+X-Gm-Message-State: AOAM532yDcwiFpHTeBasjhATWbMjt65oY/46aSLlkbYOBbfmOtdIu9tv
+        hUEXtSZB9jX31kBjWjgSo0E=
+X-Google-Smtp-Source: ABdhPJwTojKvvsHa8ltrgMzjyaSPo572NZ8XaYM13FtE5r6rktPQ89hqILbeOx9BZoq1SVAKFqhjow==
+X-Received: by 2002:a50:e109:: with SMTP id h9mr26461231edl.47.1597155573225;
+        Tue, 11 Aug 2020 07:19:33 -0700 (PDT)
+Received: from localhost.localdomain ([2a01:598:b888:52c9:44c:d55b:5f94:2fc4])
+        by smtp.gmail.com with ESMTPSA id q15sm1467050edc.74.2020.08.11.07.19.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Aug 2020 07:19:32 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/2] scsi: ufs: two fixups of ufshcd_abort()
+Date:   Tue, 11 Aug 2020 16:18:57 +0200
+Message-Id: <20200811141859.27399-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/11/20 9:03 AM, Muneendra Kumar M wrote:
->  Hi Hannes,
->>>
->>> Hmm. Wouldn't it make more sense to introduce a new port state 'marginal'
->>> for this? We might >want/need to introduce additional error recovery
->>> mechanisms here, so having a new state >might be easier in the long run
->>> ...
->>
->>> Additionally, from my understanding the FPIN events will be generated
->>> with a certain >frequency. So we could model the new 'marginal' state
->>> similar to the dev_loss_tmo >mechanism; start a timer whenever the
->>> 'marginal' state is being set, and clear the state back to >'running'
->>> if the state hasn't been refreshed within that timeframe.
->>> That would give us an automatic state reset back to running, and
->>> quite easy to implement from >userland.
->>
->> Thanks for the review.
->> I have a small doubt.
->> When the port state moves from marginal to running state does it mean
->> we expect a traffic from the path ?
->>
->> We don't expect traffic; rather we _allow_ traffic.
->> But moving to from marginal to running means that we didn't receive FPIN
->> events, and the path should be considered healthy again.
->> So from that perspective it should be back to normal operations.
-> 
-> 
-> But this could  apply only to FPIN-Congestion. Only in this case FPIN-CN
-> FPIN events will be generated  with a certain  frequency.
-> But for FPIN-Li this is not the case.
-> FPIN-LI is used to inform about marginal paths, which needs manual
-> intervention to recover.
-> And for FPIN-LI the path should be re-enabled on any link bounce
-> (portdisable followed by portenable) which would correlated to a cable/sfp
-> change.
-> For now, however, we are addressing FPIN-LI primarily.
-> 
-Ah. So that changes things slightly; I had hoped we can address things
-systematically, but with link integrity issues we don't have any other
-choice but to replace the cable (ie wait for user interaction).
+From: Bean Huo <beanhuo@micron.com>
 
-But still I'm in favour of the 'marginal' state; that one could be set
-manually (or by an FPIN LI event), and would need to be reset either
-manually or by link reset.
+Changelog:
 
-And have the advantage of being easier to implement :-)
+v1 - v2:
+    1. add patch [1/2], which is from Stanley Chu <stanley.chu@mediatek.com>
+    2. change goto command in patch [2/2], let it goto cleanup flow
 
-Cheers,
+Bean Huo (1):
+  scsi: ufs: no need to send one Abort Task TM in case the task in DB
+    was cleared
 
-Hannes
+Stanley Chu (1):
+  scsi: ufs: Cleanup completed request without interrupt notification
+
+ drivers/scsi/ufs/ufshcd.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.17.1
+
