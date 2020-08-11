@@ -2,33 +2,32 @@ Return-Path: <SRS0=1zSt=BV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C13C6C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 08:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 387CBC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 08:11:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9F1620656
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 08:03:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DC8C207DE
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 08:11:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728266AbgHKID3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Aug 2020 04:03:29 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2590 "EHLO huawei.com"
+        id S1728326AbgHKIL4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Aug 2020 04:11:56 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2591 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728064AbgHKID3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Aug 2020 04:03:29 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id DC79ED003AA7FBCAF799;
-        Tue, 11 Aug 2020 09:03:27 +0100 (IST)
+        id S1728000AbgHKIL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Aug 2020 04:11:56 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id C21AA217929DB03DA386;
+        Tue, 11 Aug 2020 09:11:54 +0100 (IST)
 Received: from [127.0.0.1] (10.210.168.126) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 11 Aug
- 2020 09:03:26 +0100
-Subject: Re: [PATCH RFC v7 02/12] blk-mq: rename blk_mq_update_tag_set_depth()
+ 2020 09:11:53 +0100
+Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
 To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>
+        Ming Lei <ming.lei@redhat.com>
 CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
         Sumit Saxena <sumit.saxena@broadcom.com>, <bvanassche@acm.org>,
@@ -36,21 +35,27 @@ CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         Shivasharan Srikanteshwara 
         <shivasharan.srikanteshwara@broadcom.com>,
         <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-3-git-send-email-john.garry@huawei.com>
- <20200611025759.GA453671@T590>
- <6ef76cdf-2fb3-0ce8-5b5a-0d7af0145901@huawei.com>
- <8ef58912-d480-a7e1-f04c-da9bd85ea0ae@huawei.com>
- <eaf188d5-dac0-da44-1c83-31ff2860d8fa@suse.de>
- <3b80b46173103c62c2f94e25ff517058@mail.gmail.com>
+        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
+References: <20200729153648.GA1698748@T590>
+ <7f94eaf2318cc26ceb64bde88d59d5e2@mail.gmail.com>
+ <20200804083625.GA1958244@T590>
+ <afe5eb1be7f416a48d7b5d473f3053d0@mail.gmail.com>
+ <20200805084031.GA1995289@T590>
+ <5adffdf805179428bdd0dd6c293a4f7d@mail.gmail.com>
+ <20200806133819.GA2046861@T590>
+ <f1ac35dfca34193e6c9bcedbc11911d2@mail.gmail.com>
+ <20200806152939.GA2062348@T590>
+ <3f35b0f67c73c8c4996fdad80eb6d963@mail.gmail.com>
+ <20200809021633.GA2134904@T590>
+ <6f8790811e7a3238f2b0fa35fbb816bc@mail.gmail.com>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <3742b7d4-df43-58ae-172d-2ff1ae46c33d@huawei.com>
-Date:   Tue, 11 Aug 2020 09:01:14 +0100
+Message-ID: <2e6e63f0-2a05-c29a-e534-3ecf06eff688@huawei.com>
+Date:   Tue, 11 Aug 2020 09:09:41 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <3b80b46173103c62c2f94e25ff517058@mail.gmail.com>
+In-Reply-To: <6f8790811e7a3238f2b0fa35fbb816bc@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -63,58 +68,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/08/2020 17:51, Kashyap Desai wrote:
->> tx context.
-> Hannes/John - We need one more correction for below patch -
+On 10/08/2020 17:38, Kashyap Desai wrote:
 > 
-> https://github.com/hisilicon/kernel-dev/commit/ff631eb80aa0449eaeb78a282fd7eff2a9e42f77
+> Functional Test -
 > 
-> I noticed - that elevator_queued count goes negative mainly because there
-> are some case where IO was submitted from dispatch queue(not scheduler
-> queue) and request still has "RQF_ELVPRIV" flag set.
-> In such cases " dd_finish_request" is called without " dd_insert_request". I
-> think it is better to decrement counter once it is taken out from dispatched
-> queue. (Ming proposed to use dispatch path for decrementing counter, but I
-> somehow did not accounted assuming RQF_ELVPRIV will be set only if IO is
-> submitted from scheduler queue.)
+> I cover overnight IO testing using <fio> script which sends 4K rand read,
+> read, rand write and write IOs to the 24 SAS JBOD drives.
+> Some of the JBOD has ioscheduler=none and some of the JBOD has
+> ioscheduler=mq-deadline
+> I used additional script which change sdev->queue_depth of each device
+> from 2 to 16 range at the interval of 5 seconds.
+> I used additional script which toggle "rq_affinity=1" and "rq_affinity=2"
+> at the interval of 5 seconds.
 > 
-> Below is additional change. Can you merge this ?
+> I did not noticed any IO hang.
 > 
-> diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-> index 9d75374..bc413dd 100644
-> --- a/block/mq-deadline.c
-> +++ b/block/mq-deadline.c
-> @@ -385,6 +385,8 @@ static struct request *dd_dispatch_request(struct
-> blk_mq_hw_ctx *hctx)
+> Thanks, Kashyap
 > 
->          spin_lock(&dd->lock);
->          rq = __dd_dispatch_request(dd);
-> +       if (rq)
-> +               atomic_dec(&rq->mq_hctx->elevator_queued);
 
-Is there any reason why this operation could not be taken outside the 
-spinlock? I assume raciness is not a problem with this patch...
+Nice work. I think v8 series can now be prepared, since this final 
+performance issue reported looks resolved. But I still don't know what's 
+going on for "[PATCHv6 00/21] scsi: enable reserved commands for LLDDs", 
+which current hpsa patch relies on for basic functionality :(
 
->          spin_unlock(&dd->lock);
-> 
->          return rq;
-> @@ -574,7 +576,6 @@ static void dd_finish_request(struct request *rq)
->                          blk_mq_sched_mark_restart_hctx(rq->mq_hctx);
->                  spin_unlock_irqrestore(&dd->zone_lock, flags);
->          }
-> -       atomic_dec(&rq->mq_hctx->elevator_queued);
->   }
-> 
->   static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
-> --
-> 2.9.5
-> 
-> Kashyap
-> .#
+>>
+>>  From 06993ddf5c5dbe0e772cc38342919eb61a57bc50 Mon Sep 17 00:00:00
+>> 2001
+>> From: Ming Lei<ming.lei@redhat.com>
+>> Date: Wed, 5 Aug 2020 16:35:53 +0800
+>> Subject: [PATCH] scsi: core: only re-run queue in scsi_end_request() if
+> device
+>> queue is busy
 
+Ming, I assume that you will send this directly to SCSI maintainers when 
+the merge window closes.
 
-btw, can you provide signed-off-by if you want credit upgraded to 
-Co-developed-by?
+>>
+>> Now the request queue is run in scsi_end_request() unconditionally if
+> both
+>> target queue and host queue is ready. We should have re-run request
+> queue
+>> only after this device queue becomes busy for restarting this LUN only.
+>>
+>> Recently Long Li reported that cost of run queue may be very heavy in
+> case of
+>> high queue depth. So improve this situation by only running the request
+> queue
+>> when this LUN is busy.
 
-Thanks,
-john
