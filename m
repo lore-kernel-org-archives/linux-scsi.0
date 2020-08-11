@@ -2,135 +2,149 @@ Return-Path: <SRS0=1zSt=BV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7B1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 13:50:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6CF8C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DF5E204FD
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 13:50:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="j7rYi59R";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ssik89Rw"
+	by mail.kernel.org (Postfix) with ESMTP id AFC3720658
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:00:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728763AbgHKNuG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Aug 2020 09:50:06 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:12078 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728668AbgHKNt6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2020 09:49:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1597153797; x=1628689797;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=J7eMalLCSqemav9Il1ACGeMYt/uciFTa/olo62DtvUQ=;
-  b=j7rYi59RnOdGWjZCvHcKJvzBOtvrZwCJlqKnUTp8mN39i4zbu3vP25f2
-   Bk9NGDjT4cLfXz87R7jm63zEAPikw7EYmGgfh4D7ZwP8Sc1ai92+jL79v
-   C+J1t80j5nln1AAJf3gDmkpO8LlMmV8xkOJxhck9dLItyamHoJ0R91M3e
-   65yA52AWU+tQurv0mbP5wk0i3fi6XXRa6aQA0996BliJAq08KPMlsPr2H
-   gfNqTUXFYgrmeg19m3jDsfMM7FGHtdS4CIRi6pf478Nqp5bk549dc7yDG
-   6bO1QNVcFzaMItlZVZ1fmLxCcXev9+tzDeKkpf2Jww5/rbI9dDRY4soJ5
-   Q==;
-IronPort-SDR: bjtbXfWEax4gizfGhFEpg3XHnEysj0oAtt/8m88+fMUJREPxc3soqiNZmFHFY2vo/IvJMU/Wwv
- +lw96ayP8Z/n9/iEXNL42k2hn5ChwOLeLGMhlGugcydDal4s+T6gFKfVNytFAf8eg65e1jB6OE
- OCt111qH5L/I0Qcl680RgPKemp8tyr7TKUayaxlzyeGaGe/275G7pf1n6/astWvFXTmcrrASTS
- 4dGt2MwylXhCKP9ftzWPTU+W8xgySMKDdjs+vP7SYaUGV9Tt9Do9jl+MOJqQal3zrZL6SlAlFG
- Nc4=
-X-IronPort-AV: E=Sophos;i="5.75,461,1589212800"; 
-   d="scan'208";a="144670719"
-Received: from mail-dm6nam11lp2170.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.170])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Aug 2020 21:49:53 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ef3vYCrXkosvkBpbjk91queCEemDWiE8PpUFTEVRR4iSSxbcA7wXwxG+V2MImU42KiYnxtUDHyda2j+egdsHLmKhAp3k6QV7hIjvXvuDrk0wdSMDzlLICsOLsS3dwXIKrD8VzDzztytpFmkXzK9i7gGg9EuRsEg1f3Nmj4/F0XPL8wTY8UHIInY3vmiPBYgPqrKKlnsOnFSYRIfsD3uZq5JLFuP/KkNDLG+SnDiJv32vahJW/1/f7UWe26fE6bSFv2Ie8/V+Jxbgj8dVvihEUnuoLOA6gpZyMzSFyFpNtLpAsmfsMQ9lF6Fw4zlQetGgyTcS5M83c8YnRCWQrX/Hfw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J7eMalLCSqemav9Il1ACGeMYt/uciFTa/olo62DtvUQ=;
- b=h13Xk12P70VcGk14Cr7f87xdd1z4tLFnehhK6ddkPLQGnDzZkMy8PKqHtUqV/MRSorpSbGMdaeTdOUeG+yXlDbMTHJbE/VUAX16W6/QElVYb6PnI+At/7JHpJQUNfkk7SmgWexEis+1uZMC6ODtK/snZKJw30GHooiVWUKnwHCYdqGLhs8EBtdoQ0BV23RfrVab10Q4FPLdZc8GzEWC+o6DlEUjS3cGxUOi3cyDrQ0TaRrRVWwtYXSpasD2nR0vRBky/b5h3RGTxmGO1ozV/OrZ9fNinGDJcNid7kSba4+Q0ZGwVE5aHUVDi2uPJYb6SUQlIrv5b/WyRuv8/dAK//g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J7eMalLCSqemav9Il1ACGeMYt/uciFTa/olo62DtvUQ=;
- b=ssik89RwFyL/4rVhl4OztqEDIf9vsnI1guFAAwvuDVrB3Q3OKfhGDCl3MiUnaf/lhyW+GCfUoR4s6BYobVhusETUb7z+ItV79Z1Y9FSG21nqF22YOS36JsE9vDCYUCjzxZAq/CUDBaY46EohvEIYcEGTvzimOdfv8bIThu81750=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4080.namprd04.prod.outlook.com (2603:10b6:805:4a::31) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3261.19; Tue, 11 Aug
- 2020 13:49:50 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::c86c:8b99:3242:2c68]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::c86c:8b99:3242:2c68%7]) with mapi id 15.20.3261.025; Tue, 11 Aug 2020
- 13:49:50 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Can Guo <cang@codeaurora.org>
-Subject: RE: [PATCH V2 1/2] scsi: ufs: Fix interrupt error message for shared
- interrupts
-Thread-Topic: [PATCH V2 1/2] scsi: ufs: Fix interrupt error message for shared
- interrupts
-Thread-Index: AQHWb+Tuoliy5EtvoEOLkrM2do502qky7JeQ
-Date:   Tue, 11 Aug 2020 13:49:50 +0000
-Message-ID: <SN6PR04MB4640D8FA22E983946538388BFC450@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200811133936.19171-1-adrian.hunter@intel.com>
-In-Reply-To: <20200811133936.19171-1-adrian.hunter@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: intel.com; dkim=none (message not signed)
- header.d=none;intel.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: d34fa242-645a-4037-ab67-08d83dfd6b46
-x-ms-traffictypediagnostic: SN6PR04MB4080:
-x-microsoft-antispam-prvs: <SN6PR04MB408025FFE0D1ACAA4A9DE4E3FC450@SN6PR04MB4080.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: NhJVb3+oHNDs8FDgazkvA70Kka/tDd0xTW0sW7TpxUMU3EDB9IZtSpZTbXp7J0INK8aqrhm6MV5kvKBLlydRqYVCR9n+4kLnGq/uvHthkm6Ck0eSaktj7GNwtfBHsfi75DPK0hAvFUquSGjuwdDysMjltRqcWJMiigggvFcaCbQGaEhSXKRRPc3rMEm8AI7rIIm9lbo/94a2D40LxwZVOScSioJo+CrsNbh633EzFaQdQJeh9S0pAQLtKozE9ZlBzCq5up5ihBIabz9DINgm2C2hdVak5LfNUCvGPPBl8sfwa7P/Zut8JZfifnSr46ZnUM826puOH6vXSZOrA+IekA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(5660300002)(498600001)(52536014)(8676002)(83380400001)(4326008)(33656002)(71200400001)(9686003)(2906002)(55016002)(186003)(8936002)(6506007)(7696005)(15650500001)(76116006)(64756008)(66556008)(86362001)(110136005)(54906003)(66946007)(66446008)(26005)(66476007)(4744005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: PjqhVGJr/FXZbh5x7YNQmCMvPOk9Ts9pCFYgUdAdIQpmy1FUPB931HWYrVLo4sMCpqMHDIeLzvlOqjh40K5GwYanNCu09MwW9ngwXehZathvc4SNEHccf1hu413T5o0Ny3NzAUSfn7YFtTV9YmzpcVKrwgWohVV2YwJXkp2Y6/DqQMZEKp+r217mm7s6GHF7qvDRm/Wp1wbVp17Igwz/b+2fiXBZn9tbXJI+kGZZY8KyksP5F5IhIGEl5lSn2kOiBAF6PceZegCc7CxwaXybHNsTT5kxkNa8qeiiJigDDTrqA64GY4mS01pyPkBxu6F0rVqzsEck5vZgqu0m9+ZkYHkM+SC7H6YAIMUZ4vmzP3L8b0WjfQtmteQoHIKysoAokrDSyYMq/63GyTMtqyoFORZIqWnBbmzvSWFhBIHJAreMoccoDUsKNGby62B6VUbdiw14fRQWDl347IZ4r6/en2c0FLdbY5w535ERsv8Mr7KZNliOu4G2WdsqcIXa1yN+7uI517bFL38aZSok7eulvqN3Si5zq+An0n1mftggbRqthYhf8OCZm4i/1UAqdZERB+NcMVic1JGDaV/7BrZWGZuadIcvsh6UbHsg4qwk0miZu8RcTk3Hf+rP+jBxSe4ycTlf6PtODfB4cCy5nsWmyA==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1728756AbgHKOAk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Aug 2020 10:00:40 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52490 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728788AbgHKOAj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Aug 2020 10:00:39 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id C4DD2B12F;
+        Tue, 11 Aug 2020 14:00:58 +0000 (UTC)
+Subject: Re: [PATCH 5/5] scsi_transport_fc: Added a new sysfs attribute
+ noretries_abort
+To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
+References: <1596595862-11075-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1596595862-11075-6-git-send-email-muneendra.kumar@broadcom.com>
+ <b5469eef-08cf-267a-77e7-5e4a3640f4f3@suse.de>
+ <2bab689170901076a118204cf05063d5@mail.gmail.com>
+ <b18e3d59-1bf8-ff7d-db81-88f60ef283c1@suse.de>
+ <579d6af65acdc2f3cf673d73d00d4694@mail.gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <354f6b67-4a54-1807-b205-d3c0b71906b5@suse.de>
+Date:   Tue, 11 Aug 2020 16:00:37 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d34fa242-645a-4037-ab67-08d83dfd6b46
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Aug 2020 13:49:50.7159
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: WcsoalNNb2JcuCjo+7lWuq82XpDK7Kl4q4YuJcgwUozaoO8wgycExEnVRRJYuYJTMHoKQoXYLRssHxnfVPi8mQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4080
+In-Reply-To: <579d6af65acdc2f3cf673d73d00d4694@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=20
->=20
-> The interrupt might be shared, in which case it is not an error for the
-> interrupt handler to be called when the interrupt status is zero, so
-> don't print the message unless there was enabled interrupt status.
->=20
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> Fixes: 9333d77573485 ("scsi: ufs: Fix irq return code")
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+On 8/11/20 9:03 AM, Muneendra Kumar M wrote:
+>  Hi Hannes,
+>>>
+>>> Hmm. Wouldn't it make more sense to introduce a new port state 'marginal'
+>>> for this? We might >want/need to introduce additional error recovery
+>>> mechanisms here, so having a new state >might be easier in the long run
+>>> ...
+>>
+>>> Additionally, from my understanding the FPIN events will be generated
+>>> with a certain >frequency. So we could model the new 'marginal' state
+>>> similar to the dev_loss_tmo >mechanism; start a timer whenever the
+>>> 'marginal' state is being set, and clear the state back to >'running'
+>>> if the state hasn't been refreshed within that timeframe.
+>>> That would give us an automatic state reset back to running, and
+>>> quite easy to implement from >userland.
+>>
+>> Thanks for the review.
+>> I have a small doubt.
+>> When the port state moves from marginal to running state does it mean
+>> we expect a traffic from the path ?
+>>
+>> We don't expect traffic; rather we _allow_ traffic.
+>> But moving to from marginal to running means that we didn't receive FPIN
+>> events, and the path should be considered healthy again.
+>> So from that perspective it should be back to normal operations.
+> 
+> 
+> But this could  apply only to FPIN-Congestion. Only in this case FPIN-CN
+> FPIN events will be generated  with a certain  frequency.
+> But for FPIN-Li this is not the case.
+> FPIN-LI is used to inform about marginal paths, which needs manual
+> intervention to recover.
+> And for FPIN-LI the path should be re-enabled on any link bounce
+> (portdisable followed by portenable) which would correlated to a cable/sfp
+> change.
+> For now, however, we are addressing FPIN-LI primarily.
+> 
+Ah. So that changes things slightly; I had hoped we can address things
+systematically, but with link integrity issues we don't have any other
+choice but to replace the cable (ie wait for user interaction).
+
+But still I'm in favour of the 'marginal' state; that one could be set
+manually (or by an FPIN LI event), and would need to be reset either
+manually or by link reset.
+
+And have the advantage of being easier to implement :-)
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
