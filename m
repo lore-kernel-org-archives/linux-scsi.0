@@ -2,127 +2,125 @@ Return-Path: <SRS0=1zSt=BV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 379EAC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 105A0C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 16:34:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C3EA206C3
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 14:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E39FB22CAF
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Aug 2020 16:34:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UsZATr2c"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hdDBXsoU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728791AbgHKOTq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Aug 2020 10:19:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49260 "EHLO
+        id S1728991AbgHKQeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Aug 2020 12:34:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728516AbgHKOTo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2020 10:19:44 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3273C06174A;
-        Tue, 11 Aug 2020 07:19:43 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id bo3so13254605ejb.11;
-        Tue, 11 Aug 2020 07:19:43 -0700 (PDT)
+        with ESMTP id S1728969AbgHKQea (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Aug 2020 12:34:30 -0400
+Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCD12C061787
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2020 09:34:30 -0700 (PDT)
+Received: by mail-qk1-x744.google.com with SMTP id b79so12190102qkg.9
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2020 09:34:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=YEsfFaQhbNo4Nh7eCvn4HhXSvpFeuv1zORb6ik42jgw=;
-        b=UsZATr2cNAFxqiVxvPOK8ahADy4L1dDNduK7GACjlWsMDN5tCavCLbrwWccj5laels
-         4LF3Y0HrqBHLTow17Q3+C4k0XZPQIOvHsdgOjn0bG6GOXutiI91kMxU6m5wb5wCCvwnh
-         mQASFylYiGrx78sXVASy1jobZxKWsX2jZoixnvnHwNExSwW7ezpU+6IEVUh0+Fg49LSR
-         RKCDtYHTRgWUD0gD+o/mo1+s/LzfcKF7tVr5YZEVMwgI2Qwr1Bj1xgVDZgzfhJY7aXbj
-         mTjbk4cSq+6wW44wOzKpu8ynei0pQlM4yVJlilDZi3N/Qmr5qIC2m35QNCnJo+loQNdK
-         YAbA==
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=GgDm8VbRRTjshsOKjAe5aNqGADx4e2KHBrxxCeHXyho=;
+        b=hdDBXsoU/z/tjrwT/IlpV+QucUDijC/g7pMgFvyO4/nUxlxDWZ2pP//W43hb6u7ZX7
+         Nz3v6aHgwVn5Q/W+KEaidJeKx93Xvso5UhLN1E4jnk0koQVPh56oMDDxwKq5KwGl1mUP
+         W1t66DVoNHl0qc8fFe1S8J8T2p5q/E+ulQndY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=YEsfFaQhbNo4Nh7eCvn4HhXSvpFeuv1zORb6ik42jgw=;
-        b=VrwOzhDJ4ZOyogbNll2UxXlSIcWtD56PSzHnn2ihjAyYOJZ9XEyxK0IH9AwIxZsn7D
-         Wm7RWoQ6lIdNbZyiX+QHY7rk34SbqcX9N6HvYn6pAOj9mx0F0oWHkO5r0A4VNoBBY2ot
-         5Gz0jquGGWd6YX4q0s3QYOGs2wQBY4H3GEvYK4izh1EIp90IshHOW6mYzFeCwL/2wii/
-         Rg6CxnjgrpEFimewwkGsL69yhc7ToebuRg9lwA5ZWFd6r37/CtHc9W4+8L2sUBp2UN8O
-         Q0jjJHyQNZOL34eYJ6O/p3RWuHSM5bcw0SOJAYFGIDDWay8YfGbzs5xwNNYyZdtjEwzk
-         3F2Q==
-X-Gm-Message-State: AOAM530qXFSaLeZGQg8+ujxwFMjOCvayZRPWU1SFYfz9iS2gmaxwnqVO
-        fCBtukkAam7MJoA0l1+G45s=
-X-Google-Smtp-Source: ABdhPJzyb7M7mG3dDtcLnkTiqXUcQEES7gFqcW6KVcEobXEubQ5NScG4FLPERR6RFSxXw5NYrc0idg==
-X-Received: by 2002:a17:906:73d9:: with SMTP id n25mr8793159ejl.412.1597155582400;
-        Tue, 11 Aug 2020 07:19:42 -0700 (PDT)
-Received: from localhost.localdomain ([2a01:598:b888:52c9:44c:d55b:5f94:2fc4])
-        by smtp.gmail.com with ESMTPSA id q15sm1467050edc.74.2020.08.11.07.19.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Aug 2020 07:19:41 -0700 (PDT)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/2] scsi: ufs: no need to send one Abort Task TM in case the task in DB was cleared
-Date:   Tue, 11 Aug 2020 16:18:59 +0200
-Message-Id: <20200811141859.27399-3-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200811141859.27399-1-huobean@gmail.com>
-References: <20200811141859.27399-1-huobean@gmail.com>
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=GgDm8VbRRTjshsOKjAe5aNqGADx4e2KHBrxxCeHXyho=;
+        b=dQbaARWZDoGQnpMEIi99JP0bz5SyToutwNzrbnGd85jI5humgjOFPlXtyC03r6aZRn
+         v46BUKAz/px0odEhMEVje39ahHptYgbGTin6dmH1CYiVBOQVqyZ+q0QyRJCiaKWN0who
+         qmooI168FCiz/wk8wErVx7jLuXmpm/krjhs3wPEVd3Hr0KTcGxNSG8oiXSNcbV8ov46A
+         nn+h6uXsupgcbfvTJ+E3uBooOO7c5ZnM/HH0AHxFO3ZHnRKRP+Z6EA+SgF8bqAEpuXIO
+         3v7HrlOlpY7Dtp+R8pamEyM4UGRtlPfUeldgzWLzlheluwQjUU1LXI3XdmpDjDPeKnNx
+         3+tQ==
+X-Gm-Message-State: AOAM530stgtVilr4AhDKIcyWpOemjemV0n4Dju6FqZjgB8U1BG5kQ4rG
+        dE69MLYMmBAl90VwtzCTDlK59Bp05O3I88yMW8qXEA==
+X-Google-Smtp-Source: ABdhPJy6c8Y3RvSatU61ItN52UoCWo3ul5hI7j8JyZVS/FXnWKOn+y0JXfX6Zhz47q/O52xZiT+9gNgL2nddTW9YsLA=
+X-Received: by 2002:a05:620a:9c6:: with SMTP id y6mr1873831qky.27.1597163668144;
+ Tue, 11 Aug 2020 09:34:28 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
+ <1591810159-240929-3-git-send-email-john.garry@huawei.com>
+ <20200611025759.GA453671@T590> <6ef76cdf-2fb3-0ce8-5b5a-0d7af0145901@huawei.com>
+ <8ef58912-d480-a7e1-f04c-da9bd85ea0ae@huawei.com> <eaf188d5-dac0-da44-1c83-31ff2860d8fa@suse.de>
+ <3b80b46173103c62c2f94e25ff517058@mail.gmail.com> <3742b7d4-df43-58ae-172d-2ff1ae46c33d@huawei.com>
+In-Reply-To: <3742b7d4-df43-58ae-172d-2ff1ae46c33d@huawei.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQBVjmvxAE7FMYb7GtMRWGcwtMcECgJRJzAeAmYD0J0CUmtFnQMQPP3WAliipVQBosZEVwD0GAf5q7yOW6A=
+Date:   Tue, 11 Aug 2020 22:04:25 +0530
+Message-ID: <6a5165c33813676b735cfde06133d03a@mail.gmail.com>
+Subject: RE: [PATCH RFC v7 02/12] blk-mq: rename blk_mq_update_tag_set_depth()
+To:     John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.de>,
+        Ming Lei <ming.lei@redhat.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+> > diff --git a/block/mq-deadline.c b/block/mq-deadline.c index
+> > 9d75374..bc413dd 100644
+> > --- a/block/mq-deadline.c
+> > +++ b/block/mq-deadline.c
+> > @@ -385,6 +385,8 @@ static struct request *dd_dispatch_request(struct
+> > blk_mq_hw_ctx *hctx)
+> >
+> >          spin_lock(&dd->lock);
+> >          rq = __dd_dispatch_request(dd);
+> > +       if (rq)
+> > +               atomic_dec(&rq->mq_hctx->elevator_queued);
+>
+> Is there any reason why this operation could not be taken outside the
+> spinlock? I assume raciness is not a problem with this patch...
 
-If the bit corresponds to a task in the Doorbell register has been
-cleared, no need to poll the status of the task on the device side
-and to send an Abort Task TM. Instead, let it directly goto cleanup.
+No issue if we want to move this outside spinlock.
 
-Meanwhile, to keep original debug print, move this goto below the debug
-print.
+>
+> >          spin_unlock(&dd->lock);
+> >
+> >          return rq;
+> > @@ -574,7 +576,6 @@ static void dd_finish_request(struct request *rq)
+> >                          blk_mq_sched_mark_restart_hctx(rq->mq_hctx);
+> >                  spin_unlock_irqrestore(&dd->zone_lock, flags);
+> >          }
+> > -       atomic_dec(&rq->mq_hctx->elevator_queued);
+> >   }
+> >
+> >   static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
+> > --
+> > 2.9.5
+> >
+> > Kashyap
+> > .#
+>
+>
+> btw, can you provide signed-off-by if you want credit upgraded to Co-
+> developed-by?
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshcd.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+I will send you merged patch which you can push to your git repo.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 66fe814c8725..5f09cda7b21c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6434,14 +6434,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto out;
- 	}
- 
--	if (!(reg & (1 << tag))) {
--		dev_err(hba->dev,
--		"%s: cmd was completed, but without a notifying intr, tag = %d",
--		__func__, tag);
--	}
--
- 	/* Print Transfer Request of aborted task */
--	dev_err(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
-+	dev_info(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
- 
- 	/*
- 	 * Print detailed info about aborted request.
-@@ -6462,6 +6456,13 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	}
- 	hba->req_abort_count++;
- 
-+	if (!(reg & (1 << tag))) {
-+		dev_err(hba->dev,
-+		"%s: cmd was completed, but without a notifying intr, tag = %d",
-+		__func__, tag);
-+		goto cleanup;
-+	}
-+
- 	/* Skip task abort in case previous aborts failed and report failure */
- 	if (lrbp->req_abort_skip) {
- 		err = -EIO;
--- 
-2.17.1
+Kashyap
 
+>
+> Thanks,
+> john
