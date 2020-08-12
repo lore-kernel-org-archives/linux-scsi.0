@@ -2,95 +2,176 @@ Return-Path: <SRS0=c2qj=BW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C5C3C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 20:03:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C06C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 20:54:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 447232080C
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 20:03:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15C182076C
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 20:54:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728107AbgHLUDe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Aug 2020 16:03:34 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48088 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726970AbgHLUDd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Aug 2020 16:03:33 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E46FEAFBA;
-        Wed, 12 Aug 2020 20:03:53 +0000 (UTC)
-Message-ID: <5a9a0ad8432a8e55304b25a472a658b77d377b38.camel@suse.com>
-Subject: Re: [PATCH 0/7] smartpqi updates
-From:   Martin Wilck <mwilck@suse.com>
-To:     Don Brace <don.brace@microsemi.com>, Kevin.Barnett@microchip.com,
-        scott.teel@microchip.com, Justin.Lindley@microchip.com,
-        scott.benesh@microchip.com, bader.alisaleh@microchip.com,
-        gerry.morong@microchip.com, mahesh.rajashekhara@microchip.com,
-        hch@infradead.org, jejb@linux.vnet.ibm.com,
-        joseph.szczypek@hpe.com, POSWALD@suse.com
-Cc:     linux-scsi@vger.kernel.org
-Date:   Wed, 12 Aug 2020 22:03:30 +0200
-In-Reply-To: <159622890296.30579.6820363566594432069.stgit@brunhilda>
-References: <159622890296.30579.6820363566594432069.stgit@brunhilda>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.36.4 
+        id S1726528AbgHLUyF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Aug 2020 16:54:05 -0400
+Received: from ex13-edg-ou-001.vmware.com ([208.91.0.189]:54951 "EHLO
+        EX13-EDG-OU-001.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726282AbgHLUyF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Aug 2020 16:54:05 -0400
+Received: from sc9-mailhost2.vmware.com (10.113.161.72) by
+ EX13-EDG-OU-001.vmware.com (10.113.208.155) with Microsoft SMTP Server id
+ 15.0.1156.6; Wed, 12 Aug 2020 13:54:01 -0700
+Received: from petr-dev3.eng.vmware.com (petr-dev2.eng.vmware.com [10.20.78.5])
+        by sc9-mailhost2.vmware.com (Postfix) with ESMTP id 98D62B24B6;
+        Wed, 12 Aug 2020 16:54:04 -0400 (EDT)
+Received: by petr-dev3.eng.vmware.com (Postfix, from userid 1078)
+        id 9184DA00680; Wed, 12 Aug 2020 13:54:04 -0700 (PDT)
+Date:   Wed, 12 Aug 2020 13:54:04 -0700
+From:   Jim Gill <jgill@vmware.com>
+To:     <pv-drivers@vmware.com>
+CC:     <jgill@vmware.com>, <jejb@linux.ibj.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH 1/3 for-next] pvscsi: Use coherent memory instead of dma
+ mapping sg lists
+Message-ID: <20200812205404.GA17846@petr-dev3.eng.vmware.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+Received-SPF: None (EX13-EDG-OU-001.vmware.com: jgill@vmware.com does not
+ designate permitted sender hosts)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-07-31 at 16:01 -0500, Don Brace wrote:
-> These patches are based on Linus's tree
-> 
-> The changes are:
-> smartpqi-identify-physical-devices-without-issuing-INQUIRY
->  - eliminate sending INQUIRYs to physical devices
-> smartpqi-add-id-support-for-smartRAID-3152-8i
->  - add support for a new controller
-> smartpqi-update-logical-volume-size-after-expansion
->  - update volume size in OS after expansion.
-> smartpqi-avoid-crashing-kernel-for-controller-issues
->  - remove BUG calls for rare cases when controller returns
->    bad responses.
-> smartpqi-support-device-deletion-via-sysfs
->  - handle device removal using sysfs file
->    /sys/block/sd<X>/device/delete where X is device name is a, b, ...
-> smartpqi-add-RAID-bypass-counter
->  - aid to identify when RAID bypass is in use.
-> smartpqi-bump-version-to-1.2.16-010
-> 
-> ---
-> 
-> Don Brace (1):
->       smartpqi: bump version to 1.2.16-010
-> 
-> Kevin Barnett (4):
->       smartpqi identify physical devices without issuing INQUIRY
->       smartpqi: avoid crashing kernel for controller issues
->       smartpqi: support device deletion via sysfs
->       smartpqi: add RAID bypass counter
-> 
-> Mahesh Rajashekhara (2):
->       smartpqi: add id support for SmartRAID 3152-8i
->       smartpqi: update logical volume size after expansion
-> 
-> 
->  drivers/scsi/smartpqi/smartpqi.h      |   4 +-
->  drivers/scsi/smartpqi/smartpqi_init.c | 301 ++++++++++++++++------
-> ----
->  2 files changed, 189 insertions(+), 116 deletions(-)
-> 
-> --
+Use coherent memory instead of dma mapping sg lists each
+time they are used. This becomes important with SEV/swiotlb where
+dma mapping otherwise implies bouncing of the data. It also gets rid
+of a point of potential failure.
 
-For this series:
-Reviewed-by: Martin Wilck <mwilck@suse.com>
+Tested using a "bonnie++" run on an 8GB pvscsi disk on a swiotlb=force
+booted kernel.
 
-Nitpick: It'd be nice to the separate functional changes from
-whitespace and formatting fixes for easier review.
+Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+[jgill@vmware.com: forwarding patch on behalf of thellstrom]
+Acked-by: jgill@vmware.com
+---
+ drivers/scsi/vmw_pvscsi.c | 48 +++++++++++++++++++++++------------------------
+ 1 file changed, 23 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 8dbb4db..0573e94 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -27,6 +27,7 @@
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ #include <linux/pci.h>
++#include <linux/dmapool.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -98,6 +99,8 @@ struct pvscsi_adapter {
+ 
+ 	struct list_head		cmd_pool;
+ 	struct pvscsi_ctx		*cmd_map;
++
++	struct dma_pool                 *sg_pool;
+ };
+ 
+ 
+@@ -372,15 +375,6 @@ static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+ 			pvscsi_create_sg(ctx, sg, segs);
+ 
+ 			e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
+-			ctx->sglPA = dma_map_single(&adapter->dev->dev,
+-					ctx->sgl, SGL_SIZE, DMA_TO_DEVICE);
+-			if (dma_mapping_error(&adapter->dev->dev, ctx->sglPA)) {
+-				scmd_printk(KERN_ERR, cmd,
+-					    "vmw_pvscsi: Failed to map ctx sglist for DMA.\n");
+-				scsi_dma_unmap(cmd);
+-				ctx->sglPA = 0;
+-				return -ENOMEM;
+-			}
+ 			e->dataAddr = ctx->sglPA;
+ 		} else
+ 			e->dataAddr = sg_dma_address(sg);
+@@ -425,14 +419,9 @@ static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
+ 	if (bufflen != 0) {
+ 		unsigned count = scsi_sg_count(cmd);
+ 
+-		if (count != 0) {
++		if (count != 0)
+ 			scsi_dma_unmap(cmd);
+-			if (ctx->sglPA) {
+-				dma_unmap_single(&adapter->dev->dev, ctx->sglPA,
+-						 SGL_SIZE, DMA_TO_DEVICE);
+-				ctx->sglPA = 0;
+-			}
+-		} else
++		else
+ 			dma_unmap_single(&adapter->dev->dev, ctx->dataPA,
+ 					 bufflen, cmd->sc_data_direction);
+ 	}
+@@ -1206,7 +1195,9 @@ static void pvscsi_free_sgls(const struct pvscsi_adapter *adapter)
+ 	unsigned i;
+ 
+ 	for (i = 0; i < adapter->req_depth; ++i, ++ctx)
+-		free_pages((unsigned long)ctx->sgl, get_order(SGL_SIZE));
++		dma_pool_free(adapter->sg_pool, ctx->sgl, ctx->sglPA);
++
++	dma_pool_destroy(adapter->sg_pool);
+ }
+ 
+ static void pvscsi_shutdown_intr(struct pvscsi_adapter *adapter)
+@@ -1225,10 +1216,11 @@ static void pvscsi_release_resources(struct pvscsi_adapter *adapter)
+ 
+ 	pci_release_regions(adapter->dev);
+ 
+-	if (adapter->cmd_map) {
++	if (adapter->sg_pool)
+ 		pvscsi_free_sgls(adapter);
++
++	if (adapter->cmd_map)
+ 		kfree(adapter->cmd_map);
+-	}
+ 
+ 	if (adapter->rings_state)
+ 		dma_free_coherent(&adapter->dev->dev, PAGE_SIZE,
+@@ -1268,20 +1260,26 @@ static int pvscsi_allocate_sg(struct pvscsi_adapter *adapter)
+ 	struct pvscsi_ctx *ctx;
+ 	int i;
+ 
++	/* Use a dma pool so that we can impose alignment constraints. */
++	adapter->sg_pool = dma_pool_create("pvscsi_sg", pvscsi_dev(adapter),
++					   SGL_SIZE, PAGE_SIZE, 0);
++	if (!adapter->sg_pool)
++		return -ENOMEM;
++
+ 	ctx = adapter->cmd_map;
+ 	BUILD_BUG_ON(sizeof(struct pvscsi_sg_list) > SGL_SIZE);
+ 
+ 	for (i = 0; i < adapter->req_depth; ++i, ++ctx) {
+-		ctx->sgl = (void *)__get_free_pages(GFP_KERNEL,
+-						    get_order(SGL_SIZE));
+-		ctx->sglPA = 0;
+-		BUG_ON(!IS_ALIGNED(((unsigned long)ctx->sgl), PAGE_SIZE));
++		ctx->sgl = dma_pool_alloc(adapter->sg_pool, GFP_KERNEL,
++					  &ctx->sglPA);
+ 		if (!ctx->sgl) {
+ 			for (; i >= 0; --i, --ctx) {
+-				free_pages((unsigned long)ctx->sgl,
+-					   get_order(SGL_SIZE));
++				dma_pool_free(adapter->sg_pool, ctx->sgl,
++					      ctx->sglPA);
+ 				ctx->sgl = NULL;
+ 			}
++			dma_pool_destroy(adapter->sg_pool);
++			adapter->sg_pool = NULL;
+ 			return -ENOMEM;
+ 		}
+ 	}
+-- 
+2.7.4
 
