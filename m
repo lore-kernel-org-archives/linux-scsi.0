@@ -2,103 +2,171 @@ Return-Path: <SRS0=c2qj=BW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBA3C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 12:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B16C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 14:37:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48D002065C
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 12:48:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C7FC2078B
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 14:37:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="r+ciiD/G"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nNIGnlJ4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727977AbgHLMr7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Aug 2020 08:47:59 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:33523 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727885AbgHLMr6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 08:47:58 -0400
-X-UUID: 0b668b7f44ec4903bd54273e02aa5c5b-20200812
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=bT/jAjwepiqYg+UqK+VnkcQWqBcqzhsrRXln3mLJ3OA=;
-        b=r+ciiD/GnTii08JDaHVytZ8jM8vU17/HHu/lSqiaPu0oCZj9D9FFAqcVV2tLqEkAEz8gS6t/MN1j8+V4I4dIMJTejjmY/46EdMPDXOEuQ/lwsh98AZNzJGRAmHmcqRStbuTF/F+r62oz9todaJRZw8h9CKLktJbLHx+G5MupRT4=;
-X-UUID: 0b668b7f44ec4903bd54273e02aa5c5b-20200812
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1794925368; Wed, 12 Aug 2020 20:47:54 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 12 Aug 2020 20:47:51 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by mtkcas07.mediatek.inc
- (172.21.101.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 12 Aug
- 2020 20:47:51 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 12 Aug 2020 20:47:50 +0800
-Message-ID: <1597236472.26065.9.camel@mtkswgap22>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Cleanup completed request without
- interrupt notification
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Bean Huo <huobean@gmail.com>, <avri.altman@wdc.com>
-CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <asutoshd@codeaurora.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <bvanassche@acm.org>, <tomas.winkler@intel.com>,
-        <cang@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Date:   Wed, 12 Aug 2020 20:47:52 +0800
-In-Reply-To: <20200811141859.27399-2-huobean@gmail.com>
-References: <20200811141859.27399-1-huobean@gmail.com>
-         <20200811141859.27399-2-huobean@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1726690AbgHLOhU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Aug 2020 10:37:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47702 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726678AbgHLOhT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 10:37:19 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85502C061383;
+        Wed, 12 Aug 2020 07:37:18 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id kq25so2525248ejb.3;
+        Wed, 12 Aug 2020 07:37:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=k0jt6enCU+k6/1ZLIPsFzlCB9yQOeFwEasaJxWTCsu4=;
+        b=nNIGnlJ4cxzSXBBlnAdU22ZeY2sWhmhZUfKtM9/2nnn/li9/ertILnExUwm/EVvs49
+         hh/q/fu++uLyx/Ja+S57sIDuOpttKx0bRe0QiHnIBzDIQsVOfO0fcSrmCNpx6b+e8YL4
+         sqVdm/Bg3+0dtjyY/jiCan59vHfcakWNTZHQfTl0/SQOaL7TPRqzL8DHA/vrSYjtsyAa
+         lMLCr4f0S97Yxm4Nye0p5C8ZiEHcoSs91dx9TINFHH7TE/8EamhqG7Zpiy0mgzQFfPuw
+         ZU24VJRRRVRC1jHws2TWXqoLky473FUA6synd04/H7lop1nP35s/hEli0SKieJGTJBN8
+         I72A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=k0jt6enCU+k6/1ZLIPsFzlCB9yQOeFwEasaJxWTCsu4=;
+        b=a3QHIXw6wiI71e4H4zMSAeDxAXgR9HHXToebiJXbvBfM05npOmpRaqMykzixO2AhPT
+         dTw6KjgGtEVq56Ud1O2xROmxA2LDSZLNhpioqK8/mL8vVAHYxyeVYkm3Wl3q9fE/bHAd
+         ZFEYDFvcMHJZ4OH/Br+TUVMLkGBpaeO6N1+V8TWMs01v36KEE1/5aV6jDgnuH5IiTErJ
+         mK/jsJNVj3g/TjXu8XVbAJ+GLGPEGw9otzQyxtvAbCctYxVHxcqVEAdbmHBBMgLue3xW
+         v0dHMoPlp8LkekAEFrXpIU/owlONx5ibQ6FFc9JHrhlijKzJmJ5CZEY2qAVz0d06Tzvl
+         Gsiw==
+X-Gm-Message-State: AOAM532JPXQLLPiXBgtk4SDKNV9qEU1DYav+MpLy70vXiSM0EgfpX4kn
+        RpR7afXBp03JzTgUYbm4c8A=
+X-Google-Smtp-Source: ABdhPJypeCnLUIuX2FrykbNFJM6Kdp/anVO6jkBnXd6M3Oh/7cvrXbhufq6pzC/kcuxFAFjbQVElFA==
+X-Received: by 2002:a17:906:e17:: with SMTP id l23mr79692eji.13.1597243037318;
+        Wed, 12 Aug 2020 07:37:17 -0700 (PDT)
+Received: from localhost.localdomain ([2a01:598:b90f:8e5c:44c:d55b:5f94:2fc4])
+        by smtp.gmail.com with ESMTPSA id d20sm1661179ejj.10.2020.08.12.07.37.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Aug 2020 07:37:16 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/2] scsi: ufs: remove several redundant goto statements
+Date:   Wed, 12 Aug 2020 16:37:04 +0200
+Message-Id: <20200812143704.30245-3-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200812143704.30245-1-huobean@gmail.com>
+References: <20200812143704.30245-1-huobean@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQXZyaSwgQmVhbiwNCg0KT24gVHVlLCAyMDIwLTA4LTExIGF0IDE2OjE4ICswMjAwLCBCZWFu
-IEh1byB3cm90ZToNCj4gRnJvbTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1lZGlhdGVrLmNv
-bT4NCj4gDQo+IElmIHNvbWVob3cgbm8gaW50ZXJydXB0IG5vdGlmaWNhdGlvbiBpcyByYWlzZWQg
-Zm9yIGEgY29tcGxldGVkIHJlcXVlc3QNCj4gYW5kIGl0cyBkb29yYmVsbCBiaXQgaXMgY2xlYXJl
-ZCBieSBob3N0LCBVRlMgZHJpdmVyIG5lZWRzIHRvIGNsZWFudXANCj4gaXRzIG91dHN0YW5kaW5n
-IGJpdCBpbiB1ZnNoY2RfYWJvcnQoKS4gT3RoZXJ3aXNlLCBzeXN0ZW0gbWF5IGJlaGF2ZQ0KPiBh
-Ym5vcm1hbGx5IGJ5IGJlbG93IGZsb3c6DQo+IA0KPiBBZnRlciB1ZnNoY2RfYWJvcnQoKSByZXR1
-cm5zLCB0aGlzIHJlcXVlc3Qgd2lsbCBiZSByZXF1ZXVlZCBieSBTQ1NJDQo+IGxheWVyIHdpdGgg
-aXRzIG91dHN0YW5kaW5nIGJpdCBzZXQuIEFueSBmdXR1cmUgY29tcGxldGVkIHJlcXVlc3QNCj4g
-d2lsbCB0cmlnZ2VyIHVmc2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoKSB0byBoYW5kbGUgYWxsICJj
-b21wbGV0ZWQNCj4gb3V0c3RhbmRpbmcgYml0cyIuIEluIHRoaXMgdGltZSwgdGhlICJhYm5vcm1h
-bCBvdXRzdGFuZGluZyBiaXQiDQo+IHdpbGwgYmUgZGV0ZWN0ZWQgYW5kIHRoZSAicmVxdWV1ZWQg
-cmVxdWVzdCIgd2lsbCBiZSBjaG9zZW4gdG8gZXhlY3V0ZQ0KPiByZXF1ZXN0IHBvc3QtcHJvY2Vz
-c2luZyBmbG93LiBUaGlzIGlzIHdyb25nIGJlY2F1c2UgdGhpcyByZXF1ZXN0IGlzDQo+IHN0aWxs
-ICJhbGl2ZSIuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVA
-bWVkaWF0ZWsuY29tPg0KPiBSZXZpZXdlZC1ieTogQ2FuIEd1byA8Y2FuZ0Bjb2RlYXVyb3JhLm9y
-Zz4NCj4gU2lnbmVkLW9mZi1ieTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCg0KVGhh
-bmtzIEJlYW4ncyBwYXRjaCBpbnRlZ3JhdGlvbi4NCg0KTGlrZSBBdnJpJ3MgY29tbWVudCBpbiBo
-dHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzExNjgzMzgxLw0KSSB0aGluayB5b3Ug
-Y291bGQgYWRkIEFja2VkLWJ5IHRhZyBmcm9tIEF2cmkuDQoNCg0KDQpIaSBBdnJpLA0KDQpQbGVh
-c2UgY29ycmVjdCBhYm92ZSBkZXNjcmlwdGlvbiBpZiByZXF1aXJlZC4NClRoYW5rcyBmb3IgeW91
-ciByZXZpZXchIDogKQ0KDQoNClRoYW5rcywNCg0KU3RhbmxleSBDaHUNCg0KPiAtLS0NCj4gIGRy
-aXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCAzICsrLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5z
-ZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
-aS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+IGluZGV4IDMwNzYy
-MjI4NDIzOS4uNjZmZTgxNGM4NzI1IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vm
-c2hjZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gQEAgLTY0OTIsNyAr
-NjQ5Miw3IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkN
-Cj4gIAkJCS8qIGNvbW1hbmQgY29tcGxldGVkIGFscmVhZHkgKi8NCj4gIAkJCWRldl9lcnIoaGJh
-LT5kZXYsICIlczogY21kIGF0IHRhZyAlZCBzdWNjZXNzZnVsbHkgY2xlYXJlZCBmcm9tIERCLlxu
-IiwNCj4gIAkJCQlfX2Z1bmNfXywgdGFnKTsNCj4gLQkJCWdvdG8gb3V0Ow0KPiArCQkJZ290byBj
-bGVhbnVwOw0KPiAgCQl9IGVsc2Ugew0KPiAgCQkJZGV2X2VycihoYmEtPmRldiwNCj4gIAkJCQki
-JXM6IG5vIHJlc3BvbnNlIGZyb20gZGV2aWNlLiB0YWcgPSAlZCwgZXJyICVkXG4iLA0KPiBAQCAt
-NjUyNiw2ICs2NTI2LDcgQEAgc3RhdGljIGludCB1ZnNoY2RfYWJvcnQoc3RydWN0IHNjc2lfY21u
-ZCAqY21kKQ0KPiAgCQlnb3RvIG91dDsNCj4gIAl9DQo+ICANCj4gK2NsZWFudXA6DQo+ICAJc2Nz
-aV9kbWFfdW5tYXAoY21kKTsNCj4gIA0KPiAgCXNwaW5fbG9ja19pcnFzYXZlKGhvc3QtPmhvc3Rf
-bG9jaywgZmxhZ3MpOw0KDQo=
+From: Bean Huo <beanhuo@micron.com>
+
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 26 +++++---------------------
+ 1 file changed, 5 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e3663b85e8ee..cd742c4f78b6 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4256,10 +4256,8 @@ int ufshcd_make_hba_operational(struct ufs_hba *hba)
+ 		dev_err(hba->dev,
+ 			"Host controller not ready to process requests");
+ 		err = -EIO;
+-		goto out;
+ 	}
+ 
+-out:
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_make_hba_operational);
+@@ -5542,10 +5540,8 @@ static bool ufshcd_quirk_dl_nac_errors(struct ufs_hba *hba)
+ 			hba->saved_err &= ~UIC_ERROR;
+ 		/* clear NAC error */
+ 		hba->saved_uic_err &= ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
+-		if (!hba->saved_uic_err) {
++		if (!hba->saved_uic_err)
+ 			err_handling = false;
+-			goto out;
+-		}
+ 	}
+ out:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+@@ -7604,12 +7600,10 @@ static int ufshcd_config_vreg(struct device *dev,
+ 		if (vreg->min_uV && vreg->max_uV) {
+ 			min_uV = on ? vreg->min_uV : 0;
+ 			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+-			if (ret) {
++			if (ret)
+ 				dev_err(dev,
+ 					"%s: %s set voltage failed, err=%d\n",
+ 					__func__, name, ret);
+-				goto out;
+-			}
+ 		}
+ 	}
+ out:
+@@ -7672,8 +7666,6 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on)
+ 		goto out;
+ 
+ 	ret = ufshcd_toggle_vreg(dev, info->vccq2, on);
+-	if (ret)
+-		goto out;
+ 
+ out:
+ 	if (ret) {
+@@ -7719,10 +7711,8 @@ static int ufshcd_init_vreg(struct ufs_hba *hba)
+ 		goto out;
+ 
+ 	ret = ufshcd_get_vreg(dev, info->vccq);
+-	if (ret)
+-		goto out;
+-
+-	ret = ufshcd_get_vreg(dev, info->vccq2);
++	if (!ret)
++		ret = ufshcd_get_vreg(dev, info->vccq2);
+ out:
+ 	return ret;
+ }
+@@ -7866,12 +7856,7 @@ static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+ 
+ 	err = ufshcd_vops_setup_regulators(hba, true);
+ 	if (err)
+-		goto out_exit;
+-
+-	goto out;
+-
+-out_exit:
+-	ufshcd_vops_exit(hba);
++		ufshcd_vops_exit(hba);
+ out:
+ 	if (err)
+ 		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
+@@ -8036,7 +8021,6 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	}
+ 
+ 	cmd[4] = pwr_mode << 4;
+-
+ 	/*
+ 	 * Current function would be generally called from the power management
+ 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+-- 
+2.17.1
 
