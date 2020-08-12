@@ -2,184 +2,142 @@ Return-Path: <SRS0=c2qj=BW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1220C433E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 09:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 094F8C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 12:16:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79913206C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 09:26:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DECEB20855
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 12:16:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="d20ue8ZG"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LDGeFBnW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727890AbgHLJ01 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Aug 2020 05:26:27 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:29282 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726965AbgHLJ01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Aug 2020 05:26:27 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597224385; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: References: Cc: To: From:
- Subject: Sender; bh=Ut7UsXyyt3w1ZkSYeaLSTk9Ej6vXqnbWm3dpszGQbYk=; b=d20ue8ZG+WnVsgznsTyLSMkrNVmrN1V0RWSyg4BGAZaSVelC/JqE1l1oPQYl4fMcP7yaXcpG
- O1yzklwDHur+sJf1WOxIsi8m2epuw1YGbv8FyM6oWE95msaN3oC3jINQlupT6V7MEda3679e
- AKYhoWosGDgy3YYA5TAXPSQ0k9g=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n13.prod.us-east-1.postgun.com with SMTP id
- 5f33b5c1247ccc308cb56000 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 12 Aug 2020 09:26:25
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9D184C433A0; Wed, 12 Aug 2020 09:26:24 +0000 (UTC)
-Received: from [192.168.1.16] (unknown [61.1.229.169])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: rnayak)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B0A60C433CA;
-        Wed, 12 Aug 2020 09:26:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B0A60C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rnayak@codeaurora.org
-Subject: Re: [RFC v2 03/11] tty: serial: qcom_geni_serial: Use OPP API to set
- clk/perf state
-From:   Rajendra Nayak <rnayak@codeaurora.org>
-To:     Amit Pundir <amit.pundir@linaro.org>
-Cc:     John Stultz <john.stultz@linaro.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-scsi@vger.kernel.org,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Doug Anderson <dianders@chromium.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-References: <20190320094918.20234-1-rnayak@codeaurora.org>
- <20190320094918.20234-4-rnayak@codeaurora.org>
- <CALAqxLV2TBk9ScUM6MeJMCkL8kJnCihjQ7ac5fLzcqOg1rREVQ@mail.gmail.com>
- <CALAqxLWg3jJKJFLnnne-mrQEnH=m7R_9azCGaGnEmFYR4EMh=A@mail.gmail.com>
- <ec5eeb21-48e4-5dcc-583a-ac9419659e44@codeaurora.org>
- <CAMi1Hd1O+3bjQN6c9WQr+t0YXGBAukfFzJWtkgXDp1Zcir-0-w@mail.gmail.com>
- <aab760b8-2a06-ae96-584a-301d5326fc0d@codeaurora.org>
-Message-ID: <fb5b6abf-b26a-5db2-1f8f-23d457c7235e@codeaurora.org>
-Date:   Wed, 12 Aug 2020 14:56:17 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1727871AbgHLMQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Aug 2020 08:16:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54268 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726829AbgHLMQz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 08:16:55 -0400
+Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4603C061787
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2020 05:16:55 -0700 (PDT)
+Received: by mail-ot1-x341.google.com with SMTP id x24so1741158otp.3
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2020 05:16:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=HtTUL4nNsElQLTbbRqmNno/usEQ2WZWXtzv03bulQN8=;
+        b=LDGeFBnW5rdu6GwSJzOWDDfNm6Yf8pJLkrjSBoUNblFidc8r0eo0Ma3zJ5L++HbG1C
+         VI4o6/QZ67SsDXPykr2E3QOfNobVdGXWQG9ARkVrl8+V4HBsYrvQUGbUwbay11PHFUG9
+         NAuS+UlYl6rxBSkGmSlmpsSHnWUK4vaSIChAE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc
+         :content-transfer-encoding;
+        bh=HtTUL4nNsElQLTbbRqmNno/usEQ2WZWXtzv03bulQN8=;
+        b=C0BbP0ufu303mv9cUns51yPw2cpOedo8wcTVKZeyADUWpqB1c25Ot7Toah98JojIjH
+         pOqGp+jpoSAW0IEBBZwsPxrCdBJvn6zqJmhXjtq3byBdj6pAc3iB5Oc6+mXMdTV9yPIC
+         sUG9xcQbzYK1ozwITepj3QWOMRYL/CDlAuoNndoOnnmu7zGTNsJCIgGsyJXxg7gxuPU6
+         Lh+ucB88B4SaJPsyKyAP9cF/PMWuaD+AojbkDfZl/FPv2z2f4vSoFIWueALrmtLprNFM
+         isajMYx+A3CP/14aubs7Dso1FyW42m/3PFR1O4ADxF+p2Muzf2/VREI4Oo3JMeTGd0nO
+         oEpg==
+X-Gm-Message-State: AOAM532RjsqKjMLMvYwV+asGStbnUclgQ3tcgkTAQuGsaKXJeKvs2N6c
+        dJgHdJMHbyMCmPC4oUs4xt6ymlVnuGRgB64AKSY8cg==
+X-Google-Smtp-Source: ABdhPJx46uM94ViEYE8Di9+fo0dpKCwJObkdb91bSAqgqgb3DiFi4jU0ZRPdFIFBl6MIyLIMsZZY91LtZ8UL2AdHmDY=
+X-Received: by 2002:a9d:3c6:: with SMTP id f64mr9234877otf.364.1597234614828;
+ Wed, 12 Aug 2020 05:16:54 -0700 (PDT)
+From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
+References: <1596507196-27417-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1596507196-27417-17-git-send-email-muneendra.kumar@broadcom.com>
+ <61d2fd75-84ea-798b-aee9-b07957ac8f1b@suse.de> <08b9825b-6abb-c077-ac0d-bd63f10f2ac2@broadcom.com>
+ <aa595605c2f776148e03a8e5dd69168a@mail.gmail.com> <227c5ba1-8a9c-3ec9-5a0f-662a4736c66f@redhat.com>
+ <b3350b999d5500ddef49a25aafee2ea6@mail.gmail.com> <eec84df0-1cee-e386-c18e-73ac8e0b89a3@redhat.com>
+ <e76b12c664057adb51c14bf0663bb2f7@mail.gmail.com> <b471b84f-25e9-39cb-41e0-1cc1af409a8a@redhat.com>
+ <7e76e1464e794a79861ea9846e0a5370@mail.gmail.com> <053466c4-7786-38aa-012f-926b68c85c8c@redhat.com>
+ <05697e72c1981838c5471e503b28dfc2@mail.gmail.com> <a4bf914b-c0ff-5876-890d-f1889308f6ea@redhat.com>
+In-Reply-To: <a4bf914b-c0ff-5876-890d-f1889308f6ea@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <aab760b8-2a06-ae96-584a-301d5326fc0d@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQIDyhmBPqdmqCKUdNTZliBUbPkt/AI5BKetAom9APICL6c0jAMHD3TmAjtZC5MBe/Ed2QIv9leoAyMPjxIBrC+2XAGG5LXBAnT4Ng8CRdBEeAH6rm1zp/JJiLA=
+Date:   Wed, 12 Aug 2020 17:46:51 +0530
+Message-ID: <747480d2533f28e44dcd9a02f6398a60@mail.gmail.com>
+Subject: RE: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
+To:     Paolo Bonzini <pbonzini@redhat.com>,
+        James Smart <james.smart@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     emilne@redhat.com, mkumar@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
+        James Smart <jsmart2021@gmail.com>,
+        Ming Lei <tom.leiming@gmail.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Paolo/Tejun,
+From the overall conversation the approach will be as below.
+Please let me know if I miss anything or any issue with the same.
 
-On 8/12/2020 1:09 PM, Rajendra Nayak wrote:
-> 
-> On 8/12/2020 1:05 PM, Amit Pundir wrote:
->> Hi Rajendra,
->>
->> On Wed, 12 Aug 2020 at 11:18, Rajendra Nayak <rnayak@codeaurora.org> wrote:
->>>
->>>
->>> On 8/12/2020 7:03 AM, John Stultz wrote:
->>>> On Tue, Aug 11, 2020 at 4:11 PM John Stultz <john.stultz@linaro.org> wrote:
->>>>>
->>>>> On Wed, Mar 20, 2019 at 2:49 AM Rajendra Nayak <rnayak@codeaurora.org> wrote:
->>>>>>
->>>>>> geni serial needs to express a perforamnce state requirement on CX
->>>>>> depending on the frequency of the clock rates. Use OPP table from
->>>>>> DT to register with OPP framework and use dev_pm_opp_set_rate() to
->>>>>> set the clk/perf state.
->>>>>>
->>>>>> Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
->>>>>> Signed-off-by: Stephen Boyd <swboyd@chromium.org>
->>>>>> ---
->>>>>>    drivers/tty/serial/qcom_geni_serial.c | 15 +++++++++++++--
->>>>>>    1 file changed, 13 insertions(+), 2 deletions(-)
->>>>>>
->>>>>
->>>>> Hey,
->>>>>     I just wanted to follow up on this patch, as I've bisected it
->>>>> (a5819b548af0) down as having broken qca bluetooth on the Dragonboard
->>>>> 845c.
->>>>>
->>>>> I haven't yet had time to debug it yet, but wanted to raise the issue
->>>>> in case anyone else has seen similar trouble.
->>>>
->>>> So I dug in a bit further, and this chunk seems to be causing the issue:
->>>>> @@ -961,7 +963,7 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
->>>>>                   goto out_restart_rx;
->>>>>
->>>>>           uport->uartclk = clk_rate;
->>>>> -       clk_set_rate(port->se.clk, clk_rate);
->>>>> +       dev_pm_opp_set_rate(port->dev, clk_rate);
->>>>>           ser_clk_cfg = SER_CLK_EN;
->>>>>           ser_clk_cfg |= clk_div << CLK_DIV_SHFT;
->>>>>
->>>>
->>>>
->>>> With that applied, I see the following errors in dmesg and bluetooth
->>>> fails to function:
->>>> [    4.763467] qcom_geni_serial 898000.serial: dev_pm_opp_set_rate:
->>>> failed to find OPP for freq 102400000 (-34)
->>>> [    4.773493] qcom_geni_serial 898000.serial: dev_pm_opp_set_rate:
->>>> failed to find OPP for freq 102400000 (-34)
->>>>
->>>> With just that chunk reverted on linus/HEAD, bluetooth seems to work ok.
->>>
->>> This seems like the same issue that was also reported on venus [1] because the
->>> clock frequency tables apparently don;t exactly match the achievable clock
->>> frequencies (which we also used to construct the OPP tables)
->>>
->>> Can you try updating the OPP table for QUP to have 102400000 instead of the
->>> current 100000000 and see if that fixes it?
->>
->> That worked. Thanks.
->>
->> Should this change be common to base sdm845.dtsi or platform specific dts?
->> For what it's worth, we see this BT breakage on PocoF1 phone too.
-> 
-> Thanks for confirming, it will have to be part of the SoC dtsi, and I am
-> guessing a similar change is perhaps also needed on sc7180.
-> I will send a patch out to fix the OPP tables for both.
+1)      blkcg will have a new field fc_app_id to store UUID /driver specifi=
+c
+information.
+2)      scsi transport will provide a new interface(sysfs) as
+register_vm_fabric
+3)      As part of this interface user will provide the details of UUID and
+the  open fd (cgroup associated
+ info with VM) to the new interface.
+4)      With VM provided cgroup info we need to find the associated blkcg
+and needs to
+update the UUID info in the fc_app_id.
+5)      Once we update the fc_app_id  all the io=E2=80=99s issued from VM w=
+ill have
+the UUID info as part of blkcg.
 
-I spent some more time looking at this and it does not look like this is the
-rounding issues with clock FMAX tables. I had these tables picked from downstream
-clock code and it turns out these tables were reworked at clock init based on
-the silicon rev, so I need to fix up the OPP tables accordingly which will add
-a new OPP entry for 102.4Mhz. I'll post a patch shortly.
+If this approach is fine then I will make the necessary changes in my next
+version.
 
-> 
->>
->> Regards,
->> Amit Pundir
->>
->>
->>>
->>> [1] https://lkml.org/lkml/2020/7/27/507
->>>
->>>>
->>>> thanks
->>>> -john
->>>>
->>>
->>> -- 
->>> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
->>> of Code Aurora Forum, hosted by The Linux Foundation
-> 
+Regards,
+Muneendra.
 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
-of Code Aurora Forum, hosted by The Linux Foundation
+
+-----Original Message-----
+From: Paolo Bonzini [mailto:pbonzini@redhat.com]
+Sent: Wednesday, August 12, 2020 1:25 PM
+To: Muneendra Kumar M <muneendra.kumar@broadcom.com>; James Smart
+<james.smart@broadcom.com>; Hannes Reinecke <hare@suse.de>;
+linux-block@vger.kernel.org; linux-scsi@vger.kernel.org
+Cc: emilne@redhat.com; mkumar@redhat.com; Gaurav Srivastava
+<gaurav.srivastava@broadcom.com>; James Smart <jsmart2021@gmail.com>; Ming
+Lei <tom.leiming@gmail.com>; Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC 16/16] lpfc: vmid: Introducing vmid in io path.
+
+
+On 10/08/20 14:13, Muneendra Kumar M wrote:
+> Agreed:
+> So from the user we need to provide UUID and the cgroup associated
+> info with VM to the kernel interface. Is this correct?
+
+Yes.
+
+> There is no issues with UUID  passing as one of the arg.
+> Coming to the other cgroup associated VM here are the options which we
+> can send
+>
+> 1)openfd:
+> We need a utility which opens the cgroup path and pass the fd details
+> to the interface.
+> And we can use the cgroup_get_from_fd() utility to get the associated
+> cgroup in the kernel.
+> Dependent on utilty.
+
+This looks good to me.
+
+Paolo
