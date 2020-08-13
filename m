@@ -7,37 +7,38 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E587C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 03:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE0A4C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 03:18:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A5A520639
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 03:18:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98D4E20639
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 03:18:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="N1re7Zin"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VKqIB/4g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726678AbgHMDSH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726679AbgHMDSH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 12 Aug 2020 23:18:07 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:11541 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726651AbgHMDSG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 23:18:06 -0400
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200813031803epoutp02d5f95cbe2595ff11bf3e95ef3a3d6a1b~qtZhiKagx0591305913epoutp02N
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2020 03:18:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200813031803epoutp02d5f95cbe2595ff11bf3e95ef3a3d6a1b~qtZhiKagx0591305913epoutp02N
+Received: from mailout3.samsung.com ([203.254.224.33]:37726 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726658AbgHMDSH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 23:18:07 -0400
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200813031804epoutp03f4c534e3a7b7e89282a898b811778beb~qtZhuE8LA1508715087epoutp038
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2020 03:18:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200813031804epoutp03f4c534e3a7b7e89282a898b811778beb~qtZhuE8LA1508715087epoutp038
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1597288683;
-        bh=HLhlMCrzJldkYU0pohTAFN2CsR5VsqyD7Nzjck6qsfs=;
+        s=mail20170921; t=1597288684;
+        bh=PbimsoKST2hIlxdVObLAJhxRszolI+mgrlOzs8o6b4g=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=N1re7ZinjFx7TNcq5w/zX2dUiw0FVncK65LwtCf+huXtzaY9QSyafEgJhRTg+j/hA
-         PbvQR2KNke1r6ZBOlPzAypCeFs2YRqR69NKXmKFW/zlWMYwmTMIOBXW8Y5be0S2RHr
-         F7y284za+YdZwLeb4eWKf7Va3HLjUwbIsioVQvdA=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p3.samsung.com
+        b=VKqIB/4g5SmiHIn5pKHW/hP1BEKlkZ95mfd8A0M8Yio9v4ZDqDEAuSRCYGWi4YE87
+         /WMitBDooPf4QVOXcleElil6YWK6YTDvxuEXWgtZrs7dmt//RRmm8oxH6g+mel3jLw
+         3Ztc4bk6teh9xrWs68Pv8/Ftx/EyIcE9PAqLbhQc=
+Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p2.samsung.com
         (KnoxPortal) with ESMTP id
-        20200813031803epcas1p38673e33d4c6fdc05398577e525a77161~qtZhKun-71816918169epcas1p3j;
+        20200813031803epcas1p2f2585f68585a95c2160db0e5ab12d4c4~qtZhVpD301239712397epcas1p22;
         Thu, 13 Aug 2020 03:18:03 +0000 (GMT)
 Mime-Version: 1.0
-Subject: Re: [PATCH v8 3/4] scsi: ufs: L2P map management for HPB read
+Subject: Re: [PATCH v8 4/4] scsi: ufs: Prepare HPB read for cached
+ sub-region
 Reply-To: daejun7.park@samsung.com
 From:   Daejun Park <daejun7.park@samsung.com>
 To:     Bart Van Assche <bvanassche@acm.org>,
@@ -61,15 +62,15 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         BoRam Shin <boram.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <86a04d4f-bb6f-9bc8-cb64-a50b0ed2fdb7@acm.org>
+In-Reply-To: <89f7bd4e-b328-7916-b099-2882d5182236@acm.org>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <336371513.41597288683542.JavaMail.epsvc@epcpadp2>
-Date:   Thu, 13 Aug 2020 12:13:43 +0900
-X-CMS-MailID: 20200813031343epcms2p2dfe9192d11110a80454c6daac69ecdc7
+Message-ID: <1239183618.61597288683730.JavaMail.epsvc@epcpadp2>
+Date:   Thu, 13 Aug 2020 12:15:36 +0900
+X-CMS-MailID: 20200813031536epcms2p2ad6e0310107279aee230e411a4f2d8cf
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
@@ -77,70 +78,45 @@ X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
 X-CMS-RootMailID: 20200806073257epcms2p61564ed62e02fc42fc3c2b18fa92a038d
-References: <86a04d4f-bb6f-9bc8-cb64-a50b0ed2fdb7@acm.org>
+References: <89f7bd4e-b328-7916-b099-2882d5182236@acm.org>
+        <336371513.41596705485601.JavaMail.epsvc@epcpadp2>
         <231786897.01596705302142.JavaMail.epsvc@epcpadp1>
         <231786897.01596705001840.JavaMail.epsvc@epcpadp1>
         <231786897.01596704281715.JavaMail.epsvc@epcpadp2>
-        <336371513.41596705485601.JavaMail.epsvc@epcpadp2>
+        <231786897.01596705781817.JavaMail.epsvc@epcpadp2>
         <CGME20200806073257epcms2p61564ed62e02fc42fc3c2b18fa92a038d@epcms2p2>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-06 02:15, Daejun Park wrote:
-> > +    req->end_io_data = (void *)map_req;
-> 
-> Please leave the (void *) cast out since explicit casts from a non-void
-> to a void pointer are not necessary in C.
-
-OK, I will fix it.
- 
-> > +static inline struct
-> > +ufshpb_rsp_field *ufshpb_get_hpb_rsp(struct ufshcd_lrb *lrbp)
+On 2020-08-06 02:18, Daejun Park wrote:
+> > +static inline u32 ufshpb_get_lpn(struct scsi_cmnd *cmnd)
 > > +{
-> > +    return (struct ufshpb_rsp_field *)&lrbp->ucd_rsp_ptr->sr.sense_data_len;
+> > +    return blk_rq_pos(cmnd->request) >>
+> > +        (ilog2(cmnd->device->sector_size) - 9);
 > > +}
 > 
-> Please introduce a union in struct utp_cmd_rsp instead of using casts
-> to reinterpret a part of a data structure.
+> Please use sectors_to_logical() from drivers/scsi/sd.h instead of open-coding
+> that function.
 
-OK. I will introduce a union in struct utp_cmd_rsp and use it.
+OK, I will.
 
-> > +/* routine : isr (ufs) */
+> > +static inline unsigned int ufshpb_get_len(struct scsi_cmnd *cmnd)
+> > +{
+> > +    return blk_rq_sectors(cmnd->request) >>
+> > +        (ilog2(cmnd->device->sector_size) - 9);
+> > +}
 > 
-> The above comment looks very cryptic. Should it perhaps be expanded?
-> 
-> > +struct ufshpb_active_field {
-> > +    __be16 active_rgn;
-> > +    __be16 active_srgn;
-> > +} __packed;
-> 
-> Since "__packed" is not necessary for the above data structure, please
-> remove it. Note: a typical approach in the Linux kernel to verify that
-> the compiler has not inserted any padding bytes is to add a BUILD_BUG_ON()
-> statement in an initialization function that verifies the size of ABI data
-> structures. See also the output of the following command:
-> 
-> git grep -nH 'BUILD_BUG_ON.sizeof.*!='
+> Same comment here.
 
-OK, I didn't know about it. Thanks.
-
-> > +struct ufshpb_rsp_field {
-> > +    __be16 sense_data_len;
-> > +    u8 desc_type;
-> > +    u8 additional_len;
-> > +    u8 hpb_type;
-> > +    u8 reserved;
-> > +    u8 active_rgn_cnt;
-> > +    u8 inactive_rgn_cnt;
-> > +    struct ufshpb_active_field hpb_active_field[2];
-> > +    __be16 hpb_inactive_field[2];
-> > +} __packed;
+OK
+ 
+> > +/* routine : READ10 -> HPB_READ  */
 > 
-> I think the above __packed statement should also be left out.
+> Please expand this comment.
 
-OK, I will remove it.
+OK
 
 Thanks,
 Daejun
