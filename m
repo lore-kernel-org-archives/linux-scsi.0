@@ -4,116 +4,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5CE1C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 02:25:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0349C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 02:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A55E420829
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 02:25:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8433A208A9
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 02:27:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="DGM41s1V"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="r9Dys0FW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726667AbgHMCZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Aug 2020 22:25:07 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:20083 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726656AbgHMCZH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 22:25:07 -0400
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200813022504epoutp0417d1a4b1579e327c01ffd4d61d9bbb12~qsrQMYcu-2316923169epoutp041
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2020 02:25:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200813022504epoutp0417d1a4b1579e327c01ffd4d61d9bbb12~qsrQMYcu-2316923169epoutp041
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1597285504;
-        bh=6FW9BUn7hT5lceD/kAcb3ERCZXuG0FNm5Vrm1zFkDyQ=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=DGM41s1VNdnTmYzW6lEqmJPqIdQSgDKdMjD9ZeizKfwsPb3npNQxeoUjk9ahIpAO3
-         ICxIFzgOJMKiVvDNh5yaS91uKny6aBlyt1MTyVu6EzZ3+xIVsdEl5StkAwsUTl+te9
-         4z6bEotNUNbp6obR6RgOkE24wkAJutZoLKBAgJhE=
-Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p1.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200813022503epcas1p10f24f43a65a4d4551fb9875850d6c0e7~qsrPzhOjM2360423604epcas1p1G;
-        Thu, 13 Aug 2020 02:25:03 +0000 (GMT)
-Mime-Version: 1.0
-Subject: Re: [PATCH v8 1/4] scsi: ufs: Add UFS feature related parameter
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <adb044b2-67e0-b451-332c-37789ded99f9@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1431530910.81597285503798.JavaMail.epsvc@epcpadp1>
-Date:   Thu, 13 Aug 2020 11:16:25 +0900
-X-CMS-MailID: 20200813021625epcms2p6a4b743bce7ef961ab06d20615293e2f4
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200806073257epcms2p61564ed62e02fc42fc3c2b18fa92a038d
-References: <adb044b2-67e0-b451-332c-37789ded99f9@acm.org>
-        <231786897.01596704281715.JavaMail.epsvc@epcpadp2>
-        <231786897.01596705001840.JavaMail.epsvc@epcpadp1>
-        <CGME20200806073257epcms2p61564ed62e02fc42fc3c2b18fa92a038d@epcms2p6>
+        id S1726574AbgHMC1A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Aug 2020 22:27:00 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37874 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726419AbgHMC1A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Aug 2020 22:27:00 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07D2NSLi115590;
+        Thu, 13 Aug 2020 02:26:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=fFi9BYcRYyg6fOruuniRWLxsNZto2JjicCeax6zPFNs=;
+ b=r9Dys0FWSmLTpF892wABRxbNUX/zRVFyBHnnCEf/L95HQbVG621Z66aEGFAvsWZUviiB
+ 0nB4Mhs86pWlH7gLSGGohD7IqFcXvVgXZ2x1aJdrIPOIzVqOGzyS7rIpMztL+3kvInxX
+ cI/lHmpzte15Et4emDrL32lR1oErrsKS0wOhKvO5CwOt4nYo7XtP4MFvJE9w0Pft2c27
+ 2UVKpBmLySgyiGQ23kvYI/4aJ9y7fKMS73j+cwPH94kx2+b0vZCLX0mFajaNTnO1vfkx
+ JjGngd6wO92EaMMbxnuUf3jDRr46STFqi1zskt7RCpxJ/rT1nL7zXziw6JWSuyAeuH15 aQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 32sm0mx0t3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 13 Aug 2020 02:26:55 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07D2NNkA061924;
+        Thu, 13 Aug 2020 02:26:54 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 32t5y8fmne-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 13 Aug 2020 02:26:54 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07D2Qqh9010389;
+        Thu, 13 Aug 2020 02:26:53 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 13 Aug 2020 02:26:52 +0000
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com
+Subject: Re: [PATCH v11 0/9] Fix up and simplify error recovery mechanism
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq14kp7jnag.fsf@ca-mkp.ca.oracle.com>
+References: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+Date:   Wed, 12 Aug 2020 22:26:50 -0400
+In-Reply-To: <1596975355-39813-1-git-send-email-cang@codeaurora.org> (Can
+        Guo's message of "Sun, 9 Aug 2020 05:15:46 -0700")
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9711 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
+ suspectscore=1 mlxscore=0 adultscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=669 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008130015
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9711 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 clxscore=1015
+ suspectscore=1 mlxlogscore=665 priorityscore=1501 adultscore=0
+ impostorscore=0 spamscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008130015
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
 
-> On 2020-08-06 02:02, Daejun Park wrote:
-> > @@ -537,6 +548,7 @@ struct ufs_dev_info {
-> >      u8 *model;
-> >      u16 wspecversion;
-> >      u32 clk_gating_wait_us;
-> > +    u8 b_ufs_feature_sup;
-> >      u32 d_ext_ufs_feature_sup;
-> >      u8 b_wb_buffer_type;
-> >      u32 d_wb_alloc_units;
-> > 
-> 
-> Hmm ... shouldn't this variable be introduced in the patch that introduces
-> the code that sets and uses this variable?
+Can,
 
-OK, I will move this variable to 2/4 patch.
+> The changes have been tested with error injections of multiple error
+> types (and all kinds of mixture of them) during runtime, e.g. hibern8
+> enter/ exit error, power mode change error and fatal/non-fatal error
+> from IRQ context. During the test, error injections happen randomly
+> across all contexts, e.g. clk scaling, clk gate/ungate, runtime
+> suspend/resume and IRQ.
 
-> How about making it clear in the patch subject that this patch adds protocol
-> constants related to HPB?
+Applied to my staging tree. You'll get a formal merge message once 5.10
+opens.
 
-The subject will be changed :
-"Add UFS feature related parameter -> Adds constants related to HPB"
- 
-> Otherwise this patch looks good to me.
-> 
-> Bart.
+Thanks!
 
-Thanks,
-
-Daejun
+-- 
+Martin K. Petersen	Oracle Linux Engineering
