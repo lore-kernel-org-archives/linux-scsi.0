@@ -2,163 +2,169 @@ Return-Path: <SRS0=CV/f=BX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F94C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 15:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 748EEC433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31D19207DA
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 15:29:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4ECEF20781
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 15:52:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mD8zyB9g"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="cyeuelwJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726669AbgHMP33 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Aug 2020 11:29:29 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:17134 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726249AbgHMP32 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Aug 2020 11:29:28 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07DF5fWu062752;
-        Thu, 13 Aug 2020 11:29:26 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id; s=pp1;
- bh=fEApjQ32ZlCsV+pRD9M5xHULiwiX0puoetNqBdtPEcE=;
- b=mD8zyB9gXYSZW4HuuN/u4nuYL9t7hhb/1OMkIIfaqbiRc76Tu0CWpmwnqVxMB/NFO9cj
- iGGIiHwUuIEszjyn3aRpo7fP9Cro4Ro74Xz7F1hNjAiwMqFDVUEYd32CoWcTU6b6gMVw
- du0Vbszs3be3yPBrgLuj7J1ySUvfwEt29aFAGh6NsxZvQoVgw8W0IUawNm1k9IQ0EcgR
- y5m7qkH0j6ARFnV9YVpu/SI0n73cSS37ULsiuc2uHPB/fHg8WVKb2QnyuigIQvpmQ0rf
- OgaqLbOetiPGPZkvooEsX/03TxEOqZLCWSObi/tpRBhOfxqN+U6Cuc7SEnlqbQcn6PNO Qg== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 32w5mwdt78-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Aug 2020 11:29:25 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07DFOo4H024475;
-        Thu, 13 Aug 2020 15:29:23 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma03ams.nl.ibm.com with ESMTP id 32skp8dpep-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Aug 2020 15:29:23 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07DFTKID27132204
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Aug 2020 15:29:20 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3C717AE05F;
-        Thu, 13 Aug 2020 15:29:20 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D85C6AE057;
-        Thu, 13 Aug 2020 15:29:19 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 13 Aug 2020 15:29:19 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
-Subject: [PATCH] zfcp: fix use-after-free in request timeout handlers
-Date:   Thu, 13 Aug 2020 17:28:56 +0200
-Message-Id: <20200813152856.50088-1-maier@linux.ibm.com>
-X-Mailer: git-send-email 2.17.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-13_14:2020-08-13,2020-08-13 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 adultscore=0
- suspectscore=2 clxscore=1011 impostorscore=0 spamscore=0
- priorityscore=1501 mlxlogscore=999 mlxscore=0 lowpriorityscore=0
- phishscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2006250000 definitions=main-2008130114
+        id S1726676AbgHMPwb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Aug 2020 11:52:31 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:28251 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726305AbgHMPwa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Aug 2020 11:52:30 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1597333950; h=In-Reply-To: Content-Type: MIME-Version:
+ References: Message-ID: Subject: Cc: To: From: Date: Sender;
+ bh=nlXe8blpssYRBGBkCQVSrRhSb3O+xojKAuRLa7+Q7pM=; b=cyeuelwJyf3GVIvHqPy7fnLjclW/sgsI8PBRBmZVvwBzltyxrNCUnQGCTqZ4+H4ePiw2Ba9M
+ 8dtXWPILJUkCdz3x2pTgXCqAJxNGAr7Y8JA7ZdS6dEu8kygSf0e7hXQxHvdqj/r86S4jtBzA
+ vfQwnQFcGEA7KoxJSyTTD1j0C9s=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5f3561adba4c2cd36721f000 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 13 Aug 2020 15:52:13
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6CDA7C43395; Thu, 13 Aug 2020 15:52:11 +0000 (UTC)
+Received: from asutoshd-linux1.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 00551C433C6;
+        Thu, 13 Aug 2020 15:52:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 00551C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Date:   Thu, 13 Aug 2020 08:52:03 -0700
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     Bean Huo <huobean@gmail.com>
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] scsi: ufs: remove several redundant goto
+ statements
+Message-ID: <20200813155203.GA25655@asutoshd-linux1.qualcomm.com>
+References: <20200812143704.30245-1-huobean@gmail.com>
+ <20200812143704.30245-3-huobean@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20200812143704.30245-3-huobean@gmail.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Before v4.15 commit 75492a51568b ("s390/scsi: Convert timers to use
-timer_setup()"), we intentionally only passed zfcp_adapter as context
-argument to zfcp_fsf_request_timeout_handler(). Since we only trigger
-adapter recovery, it was unnecessary to sync against races between timeout
-and (late) completion.
-Likewise, we only passed zfcp_erp_action as context argument to
-zfcp_erp_timeout_handler(). Since we only wakeup an ERP action, it was
-unnecessary to sync against races between timeout and (late) completion.
+On Wed, Aug 12 2020 at 07:37 -0700, Bean Huo wrote:
+>From: Bean Huo <beanhuo@micron.com>
+>
+>Signed-off-by: Bean Huo <beanhuo@micron.com>
+>---
+> drivers/scsi/ufs/ufshcd.c | 26 +++++---------------------
+> 1 file changed, 5 insertions(+), 21 deletions(-)
+>
+>diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>index e3663b85e8ee..cd742c4f78b6 100644
+>--- a/drivers/scsi/ufs/ufshcd.c
+>+++ b/drivers/scsi/ufs/ufshcd.c
+>@@ -4256,10 +4256,8 @@ int ufshcd_make_hba_operational(struct ufs_hba *hba)
+> 		dev_err(hba->dev,
+> 			"Host controller not ready to process requests");
+> 		err = -EIO;
+>-		goto out;
+> 	}
+>
+>-out:
+> 	return err;
+> }
+> EXPORT_SYMBOL_GPL(ufshcd_make_hba_operational);
+>@@ -5542,10 +5540,8 @@ static bool ufshcd_quirk_dl_nac_errors(struct ufs_hba *hba)
+> 			hba->saved_err &= ~UIC_ERROR;
+> 		/* clear NAC error */
+> 		hba->saved_uic_err &= ~UFSHCD_UIC_DL_NAC_RECEIVED_ERROR;
+>-		if (!hba->saved_uic_err) {
+>+		if (!hba->saved_uic_err)
+> 			err_handling = false;
+>-			goto out;
+>-		}
+> 	}
+> out:
+> 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>@@ -7604,12 +7600,10 @@ static int ufshcd_config_vreg(struct device *dev,
+> 		if (vreg->min_uV && vreg->max_uV) {
+> 			min_uV = on ? vreg->min_uV : 0;
+> 			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+>-			if (ret) {
+>+			if (ret)
+> 				dev_err(dev,
+> 					"%s: %s set voltage failed, err=%d\n",
+> 					__func__, name, ret);
+>-				goto out;
+>-			}
+> 		}
+> 	}
+> out:
+>@@ -7672,8 +7666,6 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on)
+> 		goto out;
+>
+> 	ret = ufshcd_toggle_vreg(dev, info->vccq2, on);
+>-	if (ret)
+>-		goto out;
+>
+> out:
+> 	if (ret) {
+>@@ -7719,10 +7711,8 @@ static int ufshcd_init_vreg(struct ufs_hba *hba)
+> 		goto out;
+>
+> 	ret = ufshcd_get_vreg(dev, info->vccq);
+>-	if (ret)
+>-		goto out;
+>-
+>-	ret = ufshcd_get_vreg(dev, info->vccq2);
+>+	if (!ret)
+>+		ret = ufshcd_get_vreg(dev, info->vccq2);
+> out:
+> 	return ret;
+> }
+>@@ -7866,12 +7856,7 @@ static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+>
+> 	err = ufshcd_vops_setup_regulators(hba, true);
+> 	if (err)
+>-		goto out_exit;
+>-
+>-	goto out;
+>-
+>-out_exit:
+>-	ufshcd_vops_exit(hba);
+>+		ufshcd_vops_exit(hba);
+> out:
+> 	if (err)
+> 		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
+>@@ -8036,7 +8021,6 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+> 	}
+>
+> 	cmd[4] = pwr_mode << 4;
+>-
+Change LGTM;
+Nit-pick, line removed here by mistake, perhaps?
 
-Meanwhile the timeout handlers get timer_list as context argument
-and do a timer-specific container-of to zfcp_fsf_req which can have
-been freed.
-
-Fix it by making sure that any request timeout handlers, that might
-just have started before del_timer(), are completed by using
-del_timer_sync() instead. This ensures the request free happens
-afterwards.
-
-Space time diagram of potential use-after-free:
-
-Basic idea is to have 2 or more pending requests whose timeouts run
-out at almost the same time.
-
-req 1 timeout     ERP thread        req 2 timeout
-----------------  ----------------  ---------------------------------------
-zfcp_fsf_request_timeout_handler
-fsf_req = from_timer(fsf_req, t, timer)
-adapter = fsf_req->adapter
-zfcp_qdio_siosl(adapter)
-zfcp_erp_adapter_reopen(adapter,...)
-                  zfcp_erp_strategy
-                  ...
-                  zfcp_fsf_req_dismiss_all
-                  list_for_each_entry_safe
-                    zfcp_fsf_req_complete 1
-                    del_timer 1
-                    zfcp_fsf_req_free 1
-                    zfcp_fsf_req_complete 2
-                                    zfcp_fsf_request_timeout_handler
-                    del_timer 2
-                                    fsf_req = from_timer(fsf_req, t, timer)
-                    zfcp_fsf_req_free 2
-                                    adapter = fsf_req->adapter
-                                              ^^^^^^^ already freed
-
-Suggested-by: Julian Wiedmann <jwi@linux.ibm.com>
-Reviewed-by: Julian Wiedmann <jwi@linux.ibm.com>
-Fixes: 75492a51568b ("s390/scsi: Convert timers to use timer_setup()")
-Cc: <stable@vger.kernel.org> #4.15+
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_fsf.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index c795f22249d8..140186fe1d1e 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -434,7 +434,7 @@ static void zfcp_fsf_req_complete(struct zfcp_fsf_req *req)
- 		return;
- 	}
- 
--	del_timer(&req->timer);
-+	del_timer_sync(&req->timer);
- 	zfcp_fsf_protstatus_eval(req);
- 	zfcp_fsf_fsfstatus_eval(req);
- 	req->handler(req);
-@@ -867,7 +867,7 @@ static int zfcp_fsf_req_send(struct zfcp_fsf_req *req)
- 	req->qdio_req.qdio_outb_usage = atomic_read(&qdio->req_q_free);
- 	req->issued = get_tod_clock();
- 	if (zfcp_qdio_send(qdio, &req->qdio_req)) {
--		del_timer(&req->timer);
-+		del_timer_sync(&req->timer);
- 		/* lookup request again, list might have changed */
- 		zfcp_reqlist_find_rm(adapter->req_list, req_id);
- 		zfcp_erp_adapter_reopen(adapter, 0, "fsrs__1");
--- 
-2.17.1
-
+> 	/*
+> 	 * Current function would be generally called from the power management
+> 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+>-- 
+>2.17.1
+>
