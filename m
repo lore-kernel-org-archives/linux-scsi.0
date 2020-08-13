@@ -1,99 +1,135 @@
-Return-Path: <SRS0=c2qj=BW=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=CV/f=BX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EAF8C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 20:59:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C76C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 00:21:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 196022076C
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Aug 2020 20:59:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Qpb0Yeqm";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="oFVXsMGH"
+	by mail.kernel.org (Postfix) with ESMTP id 0F6C620771
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Aug 2020 00:21:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726542AbgHLU7g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Aug 2020 16:59:36 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60198 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726030AbgHLU7g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Aug 2020 16:59:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id F07128EE1DD;
-        Wed, 12 Aug 2020 13:59:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1597265976;
-        bh=h4YzGSszXeQbBlfJMeRgGO4TecYOwdgHlVfmb2bZH74=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Qpb0Yeqm5b1HbEzAj1cPsDU6uI+/K0ca08j9Fv3XCuSa1OUmlQP+mG77kPjVj3rhb
-         ANpzQNN1iWdlSiAh4v2LB4gvdADUAyRXDcbYgnBvQpe/13xpT3N+LRlaEKF8dO7ebF
-         MXd3KbZqYEmOYvKAtT06WZxhJh9So1PW0v3nsN6o=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id On9qWzP5aks6; Wed, 12 Aug 2020 13:59:35 -0700 (PDT)
-Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 6D0078EE0C7;
-        Wed, 12 Aug 2020 13:59:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1597265975;
-        bh=h4YzGSszXeQbBlfJMeRgGO4TecYOwdgHlVfmb2bZH74=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=oFVXsMGH23dsf1Zko0UzEwuMJ/uGKUE+50mrU16zhZ86hnsD9JabJmokxjmC2ZTRU
-         QD29C3OT7yiIQTH/0AsDiDBOlk+RbEG+MTvuzBT4169QG1+WX9Ewumtc7t0wTLZRBb
-         neSPapb5dH1nUkMkSmluCm2QNjSvWGtxFV99629U=
-Message-ID: <1597265973.7293.50.camel@HansenPartnership.com>
-Subject: Re: [PATCH 1/3 for-next] pvscsi: Use coherent memory instead of dma
- mapping sg lists
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Jim Gill <jgill@vmware.com>, pv-drivers@vmware.com
-Cc:     jejb@linux.ibj.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Date:   Wed, 12 Aug 2020 13:59:33 -0700
-In-Reply-To: <20200812205404.GA17846@petr-dev3.eng.vmware.com>
-References: <20200812205404.GA17846@petr-dev3.eng.vmware.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1726533AbgHMAVr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Aug 2020 20:21:47 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46578 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726518AbgHMAVr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Aug 2020 20:21:47 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id C2B5CADA8;
+        Thu, 13 Aug 2020 00:22:06 +0000 (UTC)
+From:   David Disseldorp <ddiss@suse.de>
+To:     target-devel@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, David Disseldorp <ddiss@suse.de>
+Subject: [RFC PATCH] scsi: target: detect XCOPY NAA descriptor conflicts
+Date:   Thu, 13 Aug 2020 02:21:42 +0200
+Message-Id: <20200813002142.13820-1-ddiss@suse.de>
+X-Mailer: git-send-email 2.26.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is not the correct format for sending on behalf of someone else.
+LIO's XCOPY implementation currently only accepts IEEE NAA 0x83 type
+device descriptors for copy source and destination IDs. These IDs are
+automatically generated by spc_parse_naa_6h_vendor_specific() using
+*only* hexadecimal characters present in the user-configured
+vpd_unit_serial string, and advertised in the Device ID Page INQUIRY
+response.
 
-First there needs to be a from at the beginning separated by a blank
-line identifying the Author:
+spc_parse_naa_6h_vendor_specific() mapping can quite easily result in
+two devices with differing vpd_unit_serial strings sharing the same NAA
+ID. E.g.
+LUN0
+-> backstore device=/dev/sda, vpd_unit_serial=unitserialfirst
+LUN1
+-> backstore device=/dev/sdb, vpd_unit_serial=unitserialforth
 
-From: Thomas Hellstrom <thellstrom@vmware.com>
+In this case, both LUNs would advertise an NAA ID of:
+0x01405eaf0000000000000000...
+Where 0x01405 corresponds to the OpenFabrics IEEE Company ID and 0xeaf
+are hex characters taken from vpd_unit_serial.
 
-On Wed, 2020-08-12 at 13:54 -0700, Jim Gill wrote:
-> Use coherent memory instead of dma mapping sg lists each
-> time they are used. This becomes important with SEV/swiotlb where
-> dma mapping otherwise implies bouncing of the data. It also gets rid
-> of a point of potential failure.
-> 
-> Tested using a "bonnie++" run on an 8GB pvscsi disk on a
-> swiotlb=force
-> booted kernel.
-> 
-> Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
-> [jgill@vmware.com: forwarding patch on behalf of thellstrom]
+With the above example, an initiator wishing to copy data from LUN0 to
+LUN1 may issue an XCOPY request with a copy source and copy dest set
+to 0x01405eaf... and observe that (despite XCOPY success), no data has
+moved from LUN0 to LUN1. Instead LIO has processed the request using
+LUN0 as source and destination.
 
-Then we don't need this because the From: at the beginning both
-preserves the author information and makes it obvious
+This change sees LIO fail XCOPY requests if the copy source or
+destination correspond to a non-unique NAA identifier.
 
-> Acked-by: jgill@vmware.com
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+---
+ drivers/target/target_core_xcopy.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-And finally this needs to be a Signed-off-by: to comply with the DCO
-section (c).
-
-James
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index 44e15d7fb2f0..3ce5da4b3e81 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -68,8 +68,14 @@ static int target_xcopy_locate_se_dev_e4_iter(struct se_device *se_dev,
+ 	if (rc != 0)
+ 		return 0;
+ 
+-	info->found_dev = se_dev;
+ 	pr_debug("XCOPY 0xe4: located se_dev: %p\n", se_dev);
++	if (info->found_dev) {
++		pr_warn("XCOPY 0xe4 descriptor conflict for se_dev %p and %p\n",
++			info->found_dev, se_dev);
++		target_undepend_item(&info->found_dev->dev_group.cg_item);
++		return -ENOTUNIQ;
++	}
++	info->found_dev = se_dev;
+ 
+ 	rc = target_depend_item(&se_dev->dev_group.cg_item);
+ 	if (rc != 0) {
+@@ -80,7 +86,8 @@ static int target_xcopy_locate_se_dev_e4_iter(struct se_device *se_dev,
+ 
+ 	pr_debug("Called configfs_depend_item for se_dev: %p se_dev->se_dev_group: %p\n",
+ 		 se_dev, &se_dev->dev_group);
+-	return 1;
++	/* continue iteration to check for conflicts */
++	return 0;
+ }
+ 
+ static int target_xcopy_locate_se_dev_e4(const unsigned char *dev_wwn,
+@@ -93,13 +100,14 @@ static int target_xcopy_locate_se_dev_e4(const unsigned char *dev_wwn,
+ 	info.dev_wwn = dev_wwn;
+ 
+ 	ret = target_for_each_device(target_xcopy_locate_se_dev_e4_iter, &info);
+-	if (ret == 1) {
+-		*found_dev = info.found_dev;
+-		return 0;
+-	} else {
++	if (ret < 0) {
++		return ret;
++	} else if (!info.found_dev) {
+ 		pr_debug_ratelimited("Unable to locate 0xe4 descriptor for EXTENDED_COPY\n");
+ 		return -EINVAL;
+ 	}
++	*found_dev = info.found_dev;
++	return 0;
+ }
+ 
+ static int target_xcopy_parse_tiddesc_e4(struct se_cmd *se_cmd, struct xcopy_op *xop,
+@@ -264,6 +272,9 @@ static int target_xcopy_parse_target_descriptors(struct se_cmd *se_cmd,
+ 	 * is not located on this node, return COPY_ABORTED with ASQ/ASQC
+ 	 * 0x0d/0x02 - COPY_TARGET_DEVICE_NOT_REACHABLE to request the
+ 	 * initiator to fall back to normal copy method.
++	 * Fall back will also be requested if a IEEE NAA 0x83 descriptor
++	 * is not unique across all devices, which can occur due to suboptimal
++	 * vpd_unit_serial mapping in spc_parse_naa_6h_vendor_specific().
+ 	 */
+ 	if (rc < 0) {
+ 		*sense_ret = TCM_COPY_TARGET_DEVICE_NOT_REACHABLE;
+-- 
+2.26.2
 
