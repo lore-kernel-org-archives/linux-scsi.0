@@ -2,75 +2,107 @@ Return-Path: <SRS0=wEW2=B2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D24D6C433E3
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 Aug 2020 01:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 807E2C433E1
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 Aug 2020 07:03:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9C2120708
-	for <linux-scsi@archiver.kernel.org>; Sun, 16 Aug 2020 01:55:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59DDB20738
+	for <linux-scsi@archiver.kernel.org>; Sun, 16 Aug 2020 07:03:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="mEhHsVis"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AjDLUVVE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729338AbgHPBy7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 15 Aug 2020 21:54:59 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:7195 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726029AbgHPBy7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Aug 2020 21:54:59 -0400
-X-UUID: a88aec36c69d42a0858241179003e869-20200816
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=5WQE4hm6uoTkhZXy+ZrZXgVLjPUWq85sbjRvsVgzz3Q=;
-        b=mEhHsVisNpDbDgwMZ1JwdOzQq2W08jpb8BaWSWg5FtLUXB82B7IyWdlOSq3MMSjE6dnnJsxG5m0mKW4cd+YEg7Achq6NEMGSr7TQmRlSog0oRRwizQ3mUejIHBurGm7a/qGxYlU2AYZJ/JZtua0OlmAMk4Vr3wA6d7FN/rJ5PPI=;
-X-UUID: a88aec36c69d42a0858241179003e869-20200816
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1037489703; Sun, 16 Aug 2020 09:54:55 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sun, 16 Aug 2020 09:54:53 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkcas07.mediatek.inc
- (172.21.101.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 16 Aug
- 2020 09:54:52 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 16 Aug 2020 09:54:52 +0800
-Message-ID: <1597542893.7483.3.camel@mtkswgap22>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: no need to send one Abort Task TM in
- case the task in DB was cleared
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Bean Huo <huobean@gmail.com>
-CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <asutoshd@codeaurora.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <bvanassche@acm.org>, <tomas.winkler@intel.com>,
-        <cang@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Date:   Sun, 16 Aug 2020 09:54:53 +0800
-In-Reply-To: <20200811141859.27399-3-huobean@gmail.com>
-References: <20200811141859.27399-1-huobean@gmail.com>
-         <20200811141859.27399-3-huobean@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1729402AbgHPHCv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 16 Aug 2020 03:02:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45558 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729319AbgHPHCt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Aug 2020 03:02:49 -0400
+Received: from mail-qv1-xf43.google.com (mail-qv1-xf43.google.com [IPv6:2607:f8b0:4864:20::f43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7817BC061786;
+        Sun, 16 Aug 2020 00:02:49 -0700 (PDT)
+Received: by mail-qv1-xf43.google.com with SMTP id b2so6315525qvp.9;
+        Sun, 16 Aug 2020 00:02:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=DNuBQuYyy/AXTOZKEj0w60E3VxqxkDJyVdWryUqF7co=;
+        b=AjDLUVVEvhLzGHIpwd8eN8LmNGftpaISCIyRkl7Ib2doJj485mDPjKO+UW/QIzy/BT
+         tB4w0y0I6ob7ocjMaIxIyGOmEbo04tTt5rUtcRyHvWKjedz4QGNhXCpbc8hANtF9mCps
+         PnW1LmxOo4quxEDLbC2CsYaqeW2inbrxxz3SpaznwWQ5MWk9aldLe3aqyA7jJTBRupaL
+         7HAh43ieYB3PLLi34wSPC4DbvBo74vYSEd2Almu/LkZiMiovqiilCNEU5mPVpF595aBu
+         T2CRgXXL12weS2EUVCgng6DPCZoqAYYZgusQ5jj1zJJWR/C8jUBHimKGsvPsNW6fCOmW
+         AzhA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=DNuBQuYyy/AXTOZKEj0w60E3VxqxkDJyVdWryUqF7co=;
+        b=jPitHsAr2+zsz+w2tymAkJkW4j7hcC18qIkF9ievQkqByN23n2qPnuiJL69btQENxY
+         mFcafbA2AuXkht3HcnWWdWD9oPXTHOoVbLFeIcdJKGXPi0EYXmBteW8DfIAN7PshoaOa
+         ZEFdkQqI4Nipw7/iGMKt9tImvZHrlUSZq2SkpXDb6jtjsibKlm4D1cgK9HC6+dsrSPP7
+         TiogzRTrCHj84E2yolnbGny5ek2gUOOTBZgXGoA1e7NObjn04EbKTBrp/GehRTx8Ykup
+         kodp4soHSQVVBmBlex9BOMVmfy6kZy5ZIbzVKQJyDnJU5eP85Br43r+fE+KRntrOG9hA
+         W26g==
+X-Gm-Message-State: AOAM533II20wLoSgBsCMbq9f8b9Ruwiar97t2BvlgR9u0h0b7xGReSkf
+        y01ICB9aRO1yKIhSGKeT/YbJQ69nnuwsnYlJ
+X-Google-Smtp-Source: ABdhPJwFUWfpXq/DyHLBfaqe3LKnzT9Z0PUTX8oyXWksHGkrvoTsvvrQAoYDwKwMHGoFbVdi5WJZpA==
+X-Received: by 2002:a0c:fdeb:: with SMTP id m11mr9659799qvu.103.1597561368097;
+        Sun, 16 Aug 2020 00:02:48 -0700 (PDT)
+Received: from tong-desktop.local ([2601:5c0:c100:b9d:4032:a79a:238d:9f7a])
+        by smtp.googlemail.com with ESMTPSA id s184sm13737006qkf.50.2020.08.16.00.02.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 Aug 2020 00:02:47 -0700 (PDT)
+From:   Tong Zhang <ztong0001@gmail.com>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.com
+Cc:     ztong0001@gmail.com
+Subject: [PATCH] scsi: aic7xxx: fix error code handling
+Date:   Sun, 16 Aug 2020 03:02:42 -0400
+Message-Id: <20200816070242.978839-1-ztong0001@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDIwLTA4LTExIGF0IDE2OjE4ICswMjAwLCBCZWFuIEh1byB3cm90ZToNCj4gRnJv
-bTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCj4gDQo+IElmIHRoZSBiaXQgY29ycmVz
-cG9uZHMgdG8gYSB0YXNrIGluIHRoZSBEb29yYmVsbCByZWdpc3RlciBoYXMgYmVlbg0KPiBjbGVh
-cmVkLCBubyBuZWVkIHRvIHBvbGwgdGhlIHN0YXR1cyBvZiB0aGUgdGFzayBvbiB0aGUgZGV2aWNl
-IHNpZGUNCj4gYW5kIHRvIHNlbmQgYW4gQWJvcnQgVGFzayBUTS4gSW5zdGVhZCwgbGV0IGl0IGRp
-cmVjdGx5IGdvdG8gY2xlYW51cC4NCj4gDQo+IE1lYW53aGlsZSwgdG8ga2VlcCBvcmlnaW5hbCBk
-ZWJ1ZyBwcmludCwgbW92ZSB0aGlzIGdvdG8gYmVsb3cgdGhlIGRlYnVnDQo+IHByaW50Lg0KPiAN
-Cj4gU2lnbmVkLW9mZi1ieTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCg0KUmV2aWV3
-ZWQtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQoNCg==
+ahc_linux_queue_recovery_cmd returns SUCCESS(0x2002) or FAIL(0x2003),
+but the caller is checking error case using !=0
+
+Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+---
+ drivers/scsi/aic7xxx/aic7xxx_osm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index e7ccb8b80fc1..7bba961d1ae0 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -730,7 +730,7 @@ ahc_linux_abort(struct scsi_cmnd *cmd)
+ 	int error;
+ 
+ 	error = ahc_linux_queue_recovery_cmd(cmd, SCB_ABORT);
+-	if (error != 0)
++	if (error != SUCCESS)
+ 		printk("aic7xxx_abort returns 0x%x\n", error);
+ 	return (error);
+ }
+@@ -744,7 +744,7 @@ ahc_linux_dev_reset(struct scsi_cmnd *cmd)
+ 	int error;
+ 
+ 	error = ahc_linux_queue_recovery_cmd(cmd, SCB_DEVICE_RESET);
+-	if (error != 0)
++	if (error != SUCCESS)
+ 		printk("aic7xxx_dev_reset returns 0x%x\n", error);
+ 	return (error);
+ }
+-- 
+2.25.1
 
