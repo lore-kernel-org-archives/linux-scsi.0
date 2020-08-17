@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FBEC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE5BC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C465920829
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9F212067C
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q2RqlflI"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O1KR3V0x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728646AbgHQIzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 04:55:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57332 "EHLO
+        id S1728640AbgHQIzT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 04:55:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728640AbgHQIzG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:55:06 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4857FC061388;
-        Mon, 17 Aug 2020 01:55:06 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id m71so7911119pfd.1;
-        Mon, 17 Aug 2020 01:55:06 -0700 (PDT)
+        with ESMTP id S1728605AbgHQIy5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:54:57 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFD4CC061388;
+        Mon, 17 Aug 2020 01:54:57 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id t6so7379296pjr.0;
+        Mon, 17 Aug 2020 01:54:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=i3YmxLHQm4C9rpRDNyqYBl1hzYIOBuXCpBG9eSqKocA=;
-        b=q2RqlflIosSWjEW5ihBRffG2ydwOfneUbuVPVIL0V607PveCwS51neeFaDxHEru92A
-         GPu+J3VM9xNFWMCAM/fm74Q9+6JPkYqpWfXkiP8BqUnjWXA1poZxUbd4787LZ0v+Xu3M
-         lvc8qTZTaUaVZ+5Sqsy1CjGA7YLKVsPKqtIzofNCD4pfpT00xOfxiU2tDd4Ye9b1ISOy
-         D+A0zgBsBSwJsoSRKsftsx/X+ATutKj9lwKDgFlDWHsrbwpo9Ajy8eaYBPhWaBMe+oLT
-         ugAKpcR28ytIp/TofY9ZLsjij9EkYWxlgG3Avk39Bd+m1Fr74uMRrmrfU150hk0aS9ij
-         KVzQ==
+        bh=MVeuxsGilJwDL1o41vPJ1mEVYW9QRgNmhG//SeEinm0=;
+        b=O1KR3V0xt4SN/ZoKkNI3dZUiICUjTsddCUbWlu6xJyQX2dkRzE5xFbbKhZZeergtlg
+         63B9sFolljH7d9AXSVyuoNmD9Q8TbIxjlqgVN1gA6PoSC9b9poCTF/1nQqgD8wGFfgqv
+         /rgl9fAJezU0La98PCZfWBtdnG9+7Vm5DcXYbtsUFyNkrx2X3wt3KyyY/h02l1HQOapd
+         s40GTgbKIEbOXV10TZKdgkaJbUNxiL5WwlskC2ReFPqW2G8RzC04aUhYsBr3YD6dtC13
+         KyCNUe1CeZT5tlB06UxZoBocmfFpHearUksDtHK/nURWZ12LzTuMTrPO6Rg1UbAMUl8O
+         ayAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=i3YmxLHQm4C9rpRDNyqYBl1hzYIOBuXCpBG9eSqKocA=;
-        b=KB0n2apoU6MOfGFtxfwgeu2uGz/CP16VAe/yUUd8p33Sqw8IoFQVXZ4yCT5THD14ar
-         eruoqRkYKCVJbpRg7o4coVt33P1iKp2XVm1d9GUQPYSxB2rRfEue8jVMQ5zk24aShnqu
-         7KD2UC/XAVa2tiCmRG59aNaN/d4PnVYLRj9sb/GYMkk2kMGWAinHPL+7NL1lQhZdCL1H
-         c7glL+77hiJqmTSsOmHr5xeWWMe2r7PPbVC+WrZPxUI5UZ2yEopOky5Aps5nqR3VQOTl
-         GquwJLmoTZI/fQmIJiuWcIySND42SQ4J9G5D1j99CalDgKQTdLHvt0972qAPZV7tOl+b
-         4GzA==
-X-Gm-Message-State: AOAM532SNZCDuIkucGMdyszXCeDUoXWPp66QWx/We5NairdR1JOebI/Y
-        gea9H6r9i6hboE4HLcfllX0=
-X-Google-Smtp-Source: ABdhPJwFE528F8McvzPMZNZ9fzvA/dqHQ1qHYLBTKwXGtLq3IheQPon7tMzbcyScOIfbM/xxS7FitA==
-X-Received: by 2002:a63:3d06:: with SMTP id k6mr9544204pga.316.1597654505767;
-        Mon, 17 Aug 2020 01:55:05 -0700 (PDT)
+        bh=MVeuxsGilJwDL1o41vPJ1mEVYW9QRgNmhG//SeEinm0=;
+        b=ZOJIPz0/RYHkmpzFDLayGgqcBoqhMzYsDJEy69ctUf0PoF+wmCCrrDKLjlP4Oq9KN0
+         hzVXAItZmzhAeuc3exzcyT7Rck6Tk8HJWpI2v+Po+yx+SftjXwOlEB8SUMBRxJXC1ujq
+         aveT07z/4TIgTa5usuPXvFb0SJuA+qhkMtma9lAcO9/uOMj6CUPJ9V/rQqwD582p7u7N
+         u4kfV4awJ/Jo5SVzVYTaNfnmKgz2a8/REOqLCyyJD/gb6W9tDcv9uvxkrD9T2iAhozJu
+         8AyuWp87iS9Md3ZPMr8fawYJ3gLsIpVIHdJ7tTmfHXerng/ItwpmQCXIZOotFlpOTRFn
+         V1PA==
+X-Gm-Message-State: AOAM532n7VFh7WgaFu8ZTt+ds0j5lFx6zwDfA3JK/fIIFkgPaEVSxkI9
+        wFzW0NbuCSSQDF1AE8SzSLA=
+X-Google-Smtp-Source: ABdhPJwTYhGdSFSvnvbCYxYT5raIJmcHlwmf7/MdtOZWzcK9+tdf9lhZ8Svj9gLMlxhtozJBDyxnlQ==
+X-Received: by 2002:a17:902:b28b:: with SMTP id u11mr10332716plr.317.1597654497255;
+        Mon, 17 Aug 2020 01:54:57 -0700 (PDT)
 Received: from localhost.localdomain ([49.207.202.98])
-        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.55.01
+        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.54.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2020 01:55:05 -0700 (PDT)
+        Mon, 17 Aug 2020 01:54:56 -0700 (PDT)
 From:   Allen Pais <allen.cryptic@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
@@ -66,9 +66,9 @@ Cc:     keescook@chromium.org, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
         Allen Pais <allen.lkml@gmail.com>,
         Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH 8/8] scsi: pmcraid: convert tasklets to use new tasklet_setup() API
-Date:   Mon, 17 Aug 2020 14:24:09 +0530
-Message-Id: <20200817085409.25268-9-allen.cryptic@gmail.com>
+Subject: [PATCH 6/8] scsi: mvsas: convert tasklets to use new tasklet_setup() API
+Date:   Mon, 17 Aug 2020 14:24:07 +0530
+Message-Id: <20200817085409.25268-7-allen.cryptic@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200817085409.25268-1-allen.cryptic@gmail.com>
 References: <20200817085409.25268-1-allen.cryptic@gmail.com>
@@ -87,112 +87,40 @@ and from_tasklet() to pass the tasklet pointer explicitly.
 Signed-off-by: Romain Perier <romain.perier@gmail.com>
 Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 ---
- drivers/scsi/pmcraid.c | 29 +++++++++++++++--------------
- drivers/scsi/pmcraid.h |  9 +++++++--
- 2 files changed, 22 insertions(+), 16 deletions(-)
+ drivers/scsi/mvsas/mv_init.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index aa9ae2ae8579..b7bbefcbb11d 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4198,7 +4198,7 @@ static irqreturn_t pmcraid_isr_msix(int irq, void *dev_id)
- 		}
- 	}
- 
--	tasklet_schedule(&(pinstance->isr_tasklet[hrrq_id]));
-+	tasklet_schedule(&(pinstance->isr_tasklet[hrrq_id]).tasklet);
- 
- 	return IRQ_HANDLED;
- }
-@@ -4267,7 +4267,7 @@ static irqreturn_t pmcraid_isr(int irq, void *dev_id)
- 				pinstance->int_regs.ioa_host_interrupt_clr_reg);
- 
- 			tasklet_schedule(
--					&(pinstance->isr_tasklet[hrrq_id]));
-+				&(pinstance->isr_tasklet[hrrq_id].tasklet));
- 		}
- 	}
- 
-@@ -4380,20 +4380,20 @@ static void pmcraid_worker_function(struct work_struct *workp)
-  * Return Value
-  *	None
-  */
--static void pmcraid_tasklet_function(unsigned long instance)
-+static void pmcraid_tasklet_function(struct tasklet_struct *t)
- {
--	struct pmcraid_isr_param *hrrq_vector;
--	struct pmcraid_instance *pinstance;
-+	struct pmcraid_tsk_param *tsk_param = from_tasklet(tsk_param, t,
-+							   tasklet);
-+	int id = tsk_param->isr_tasklet_id;
-+	struct pmcraid_instance *pinstance = container_of(tsk_param,
-+							  typeof(*pinstance),
-+							  isr_tasklet[id]);
- 	unsigned long hrrq_lock_flags;
- 	unsigned long pending_lock_flags;
- 	unsigned long host_lock_flags;
- 	spinlock_t *lockp; /* hrrq buffer lock */
--	int id;
- 	u32 resp;
- 
--	hrrq_vector = (struct pmcraid_isr_param *)instance;
--	pinstance = hrrq_vector->drv_inst;
--	id = hrrq_vector->hrrq_id;
- 	lockp = &(pinstance->hrrq_lock[id]);
- 
- 	/* loop through each of the commands responded by IOA. Each HRRQ buf is
-@@ -4882,10 +4882,11 @@ static int pmcraid_allocate_config_buffers(struct pmcraid_instance *pinstance)
- static void pmcraid_init_tasklets(struct pmcraid_instance *pinstance)
- {
- 	int i;
--	for (i = 0; i < pinstance->num_hrrq; i++)
--		tasklet_init(&pinstance->isr_tasklet[i],
--			     pmcraid_tasklet_function,
--			     (unsigned long)&pinstance->hrrq_vector[i]);
-+	for (i = 0; i < pinstance->num_hrrq; i++) {
-+		pinstance->isr_tasklet[i].isr_tasklet_id = i;
-+		tasklet_setup(&pinstance->isr_tasklet[i].tasklet,
-+			     pmcraid_tasklet_function);
-+	}
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 978f5283c883..53b2d463fa13 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -147,13 +147,14 @@ static void mvs_free(struct mvs_info *mvi)
  }
  
- /**
-@@ -4900,7 +4901,7 @@ static void pmcraid_kill_tasklets(struct pmcraid_instance *pinstance)
+ #ifdef CONFIG_SCSI_MVSAS_TASKLET
+-static void mvs_tasklet(unsigned long opaque)
++static void mvs_tasklet(struct tasklet_struct *t)
  {
- 	int i;
- 	for (i = 0; i < pinstance->num_hrrq; i++)
--		tasklet_kill(&pinstance->isr_tasklet[i]);
-+		tasklet_kill(&pinstance->isr_tasklet[i].tasklet);
- }
+ 	u32 stat;
+ 	u16 core_nr, i = 0;
  
- /**
-diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
-index 15c962108075..68dab849d4c1 100644
---- a/drivers/scsi/pmcraid.h
-+++ b/drivers/scsi/pmcraid.h
-@@ -617,6 +617,11 @@ struct pmcraid_isr_param {
- 	u8 hrrq_id;			/* hrrq entry index */
- };
+ 	struct mvs_info *mvi;
+-	struct sas_ha_struct *sha = (struct sas_ha_struct *)opaque;
++	struct mvs_prv_info *mpi = from_tasklet(mpi, t, mv_tasklet);
++	struct sas_ha_struct *sha = pci_get_drvdata(mpi->mvi[0]->pdev);
  
-+/* Tasklet parameters (one for each enabled tasklet) */
-+struct pmcraid_tsk_param {
-+	struct tasklet_struct tasklet;
-+	u8 isr_tasklet_id;              /* isr_tasklet entry index */
-+};
+ 	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
+ 	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
+@@ -564,8 +565,7 @@ static int mvs_pci_init(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	} while (nhost < chip->n_host);
+ 	mpi = (struct mvs_prv_info *)(SHOST_TO_SAS_HA(shost)->lldd_ha);
+ #ifdef CONFIG_SCSI_MVSAS_TASKLET
+-	tasklet_init(&(mpi->mv_tasklet), mvs_tasklet,
+-		     (unsigned long)SHOST_TO_SAS_HA(shost));
++	tasklet_setup(&(mpi->mv_tasklet), mvs_tasklet);
+ #endif
  
- /* AEN message header sent as part of event data to applications */
- struct pmcraid_aen_msg {
-@@ -752,8 +757,8 @@ struct pmcraid_instance {
- 	spinlock_t free_pool_lock;		/* free pool lock */
- 	spinlock_t pending_pool_lock;		/* pending pool lock */
- 
--	/* Tasklet to handle deferred processing */
--	struct tasklet_struct isr_tasklet[PMCRAID_NUM_MSIX_VECTORS];
-+	/* Tasklet parameters and tasklets to handle deferred processing */
-+	struct pmcraid_tsk_param isr_tasklet[PMCRAID_NUM_MSIX_VECTORS];
- 
- 	/* Work-queue (Shared) for deferred reset processing */
- 	struct work_struct worker_q;
+ 	mvs_post_sas_ha_init(shost, chip);
 -- 
 2.17.1
 
