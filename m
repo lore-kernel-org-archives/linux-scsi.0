@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE5BC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 763A6C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9F212067C
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51A252067C
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O1KR3V0x"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="loCQsImr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728640AbgHQIzT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 04:55:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57308 "EHLO
+        id S1728210AbgHQIy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 04:54:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728605AbgHQIy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:54:57 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFD4CC061388;
-        Mon, 17 Aug 2020 01:54:57 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id t6so7379296pjr.0;
-        Mon, 17 Aug 2020 01:54:57 -0700 (PDT)
+        with ESMTP id S1726703AbgHQIyx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:54:53 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C394C061388;
+        Mon, 17 Aug 2020 01:54:53 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id mw10so7378201pjb.2;
+        Mon, 17 Aug 2020 01:54:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=MVeuxsGilJwDL1o41vPJ1mEVYW9QRgNmhG//SeEinm0=;
-        b=O1KR3V0xt4SN/ZoKkNI3dZUiICUjTsddCUbWlu6xJyQX2dkRzE5xFbbKhZZeergtlg
-         63B9sFolljH7d9AXSVyuoNmD9Q8TbIxjlqgVN1gA6PoSC9b9poCTF/1nQqgD8wGFfgqv
-         /rgl9fAJezU0La98PCZfWBtdnG9+7Vm5DcXYbtsUFyNkrx2X3wt3KyyY/h02l1HQOapd
-         s40GTgbKIEbOXV10TZKdgkaJbUNxiL5WwlskC2ReFPqW2G8RzC04aUhYsBr3YD6dtC13
-         KyCNUe1CeZT5tlB06UxZoBocmfFpHearUksDtHK/nURWZ12LzTuMTrPO6Rg1UbAMUl8O
-         ayAQ==
+        bh=yq+b5nPjc4iZMxReL6k7yjDpixSDgaW+QE7HBoO3x5k=;
+        b=loCQsImr30+2ucixIdXtUZyrsxcpF9c9ekbfECYqaiqjPXRc1D2R25LSxmM22pxWyU
+         X8Zpx7DDyKIexKOQEly53OTTQSi4SPuWNa55LAAofpgDunXjZ0ymnlziD86amt6Ya2Ba
+         iG8ecGAB86SnRZndrVePVFVGuxF8qdd1Dt2UHzrm1rG5ZjueLEkZZn9Aggnw3/M+rwbm
+         nFw7IjkjVF9S+Ykiw8Verw6GhxQYJshZGNs4of9Xf6ve+DKzbSiXN4cuurHkXaPL171o
+         USZ1jmPQLZ8cImyN2plZOFXqBAUd0Jc9lca+jZ7MqQ8k25vVEecxfJlEGNgzGFX7uTip
+         h/8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=MVeuxsGilJwDL1o41vPJ1mEVYW9QRgNmhG//SeEinm0=;
-        b=ZOJIPz0/RYHkmpzFDLayGgqcBoqhMzYsDJEy69ctUf0PoF+wmCCrrDKLjlP4Oq9KN0
-         hzVXAItZmzhAeuc3exzcyT7Rck6Tk8HJWpI2v+Po+yx+SftjXwOlEB8SUMBRxJXC1ujq
-         aveT07z/4TIgTa5usuPXvFb0SJuA+qhkMtma9lAcO9/uOMj6CUPJ9V/rQqwD582p7u7N
-         u4kfV4awJ/Jo5SVzVYTaNfnmKgz2a8/REOqLCyyJD/gb6W9tDcv9uvxkrD9T2iAhozJu
-         8AyuWp87iS9Md3ZPMr8fawYJ3gLsIpVIHdJ7tTmfHXerng/ItwpmQCXIZOotFlpOTRFn
-         V1PA==
-X-Gm-Message-State: AOAM532n7VFh7WgaFu8ZTt+ds0j5lFx6zwDfA3JK/fIIFkgPaEVSxkI9
-        wFzW0NbuCSSQDF1AE8SzSLA=
-X-Google-Smtp-Source: ABdhPJwTYhGdSFSvnvbCYxYT5raIJmcHlwmf7/MdtOZWzcK9+tdf9lhZ8Svj9gLMlxhtozJBDyxnlQ==
-X-Received: by 2002:a17:902:b28b:: with SMTP id u11mr10332716plr.317.1597654497255;
-        Mon, 17 Aug 2020 01:54:57 -0700 (PDT)
+        bh=yq+b5nPjc4iZMxReL6k7yjDpixSDgaW+QE7HBoO3x5k=;
+        b=RXXkOeJKRBvJ8MzweQC70lGHo7yKXi58oc0Qazj2bGM4DbYjxqvJs01qEMabc3Di6/
+         WTlOCHOqoGOEJAEAGPZ0HmCemj8G4qjuZIvUe/t4rV2iZsKsC2X8CL1mgWiRqfRH9x6B
+         OPXBOrgpgPw0LtRoAISMrwBZ+NaG3q5NSstI2DNHmHOcpdzgFGBndgjVeV9s3/t0ZM3B
+         gxp3CGAi515t/g0ynE/yo5fTHqlIYZeA4btiwuoRgRT7AW6d6noGnRntdwh2zB94FZt0
+         uCw6kKcqAohqpMgERptzviPK9qGWjMT8vq/p/90tQzMncYv0l3WndQgINVVP9PiUjMRz
+         nFTw==
+X-Gm-Message-State: AOAM533netJkPO4rPIcVy6HjMzzcBMnNC/yRsFnIlrFBwQLjVfFLZqjW
+        VdGcRjEO51V6aQ+lsGifMwM=
+X-Google-Smtp-Source: ABdhPJy8TyZl8UDeVE5PjNQnDPaUpnMNoPVRID812Vgnf927pC7NbQzFDhCan7ziLkYRXhbjzmsnXg==
+X-Received: by 2002:a17:90a:e292:: with SMTP id d18mr11895790pjz.181.1597654493079;
+        Mon, 17 Aug 2020 01:54:53 -0700 (PDT)
 Received: from localhost.localdomain ([49.207.202.98])
-        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.54.53
+        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.54.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2020 01:54:56 -0700 (PDT)
+        Mon, 17 Aug 2020 01:54:52 -0700 (PDT)
 From:   Allen Pais <allen.cryptic@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
@@ -66,9 +66,9 @@ Cc:     keescook@chromium.org, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
         Allen Pais <allen.lkml@gmail.com>,
         Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH 6/8] scsi: mvsas: convert tasklets to use new tasklet_setup() API
-Date:   Mon, 17 Aug 2020 14:24:07 +0530
-Message-Id: <20200817085409.25268-7-allen.cryptic@gmail.com>
+Subject: [PATCH 5/8] scsi: megaraid: convert tasklets to use new tasklet_setup() API
+Date:   Mon, 17 Aug 2020 14:24:06 +0530
+Message-Id: <20200817085409.25268-6-allen.cryptic@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200817085409.25268-1-allen.cryptic@gmail.com>
 References: <20200817085409.25268-1-allen.cryptic@gmail.com>
@@ -87,40 +87,171 @@ and from_tasklet() to pass the tasklet pointer explicitly.
 Signed-off-by: Romain Perier <romain.perier@gmail.com>
 Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 ---
- drivers/scsi/mvsas/mv_init.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c       |  9 ++++-----
+ drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 16 +++++++---------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 14 +++++++-------
+ 4 files changed, 19 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 978f5283c883..53b2d463fa13 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -147,13 +147,14 @@ static void mvs_free(struct mvs_info *mvi)
- }
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 19469a2c0ea3..47b2d8045c9d 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -119,7 +119,7 @@ static void megaraid_mbox_prepare_epthru(adapter_t *, scb_t *,
  
- #ifdef CONFIG_SCSI_MVSAS_TASKLET
--static void mvs_tasklet(unsigned long opaque)
-+static void mvs_tasklet(struct tasklet_struct *t)
+ static irqreturn_t megaraid_isr(int, void *);
+ 
+-static void megaraid_mbox_dpc(unsigned long);
++static void megaraid_mbox_dpc(struct tasklet_struct *t);
+ 
+ static ssize_t megaraid_sysfs_show_app_hndl(struct device *, struct device_attribute *attr, char *);
+ static ssize_t megaraid_sysfs_show_ldnum(struct device *, struct device_attribute *attr, char *);
+@@ -878,8 +878,7 @@ megaraid_init_mbox(adapter_t *adapter)
+ 	}
+ 
+ 	// setup tasklet for DPC
+-	tasklet_init(&adapter->dpc_h, megaraid_mbox_dpc,
+-			(unsigned long)adapter);
++	tasklet_setup(&adapter->dpc_h, megaraid_mbox_dpc);
+ 
+ 	con_log(CL_DLEVEL1, (KERN_INFO
+ 		"megaraid mbox hba successfully initialized\n"));
+@@ -2168,9 +2167,9 @@ megaraid_isr(int irq, void *devp)
+  * it is being called.
+  */
+ static void
+-megaraid_mbox_dpc(unsigned long devp)
++megaraid_mbox_dpc(struct tasklet_struct *t)
  {
- 	u32 stat;
- 	u16 core_nr, i = 0;
+-	adapter_t		*adapter = (adapter_t *)devp;
++	adapter_t		*adapter = from_tasklet(adapter, t, dpc_h);
+ 	mraid_device_t		*raid_dev;
+ 	struct list_head	clist;
+ 	struct scatterlist	*sgl;
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 5e4137f10e0e..ce361b2b9f14 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2531,7 +2531,7 @@ struct megasas_instance_template {
+ 	int (*check_reset)(struct megasas_instance *, \
+ 		struct megasas_register_set __iomem *);
+ 	irqreturn_t (*service_isr)(int irq, void *devp);
+-	void (*tasklet)(unsigned long);
++	void (*tasklet)(struct tasklet_struct *t);
+ 	u32 (*init_adapter)(struct megasas_instance *);
+ 	u32 (*build_and_issue_cmd) (struct megasas_instance *,
+ 				    struct scsi_cmnd *);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 861f7140f52e..dba60cc1cf41 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -217,7 +217,7 @@ megasas_init_adapter_mfi(struct megasas_instance *instance);
+ u32
+ megasas_build_and_issue_cmd(struct megasas_instance *instance,
+ 			    struct scsi_cmnd *scmd);
+-static void megasas_complete_cmd_dpc(unsigned long instance_addr);
++static void megasas_complete_cmd_dpc(struct tasklet_struct *t);
+ int
+ wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 	int seconds);
+@@ -2217,14 +2217,14 @@ megasas_check_and_restore_queue_depth(struct megasas_instance *instance)
+  *
+  * Tasklet to complete cmds
+  */
+-static void megasas_complete_cmd_dpc(unsigned long instance_addr)
++static void megasas_complete_cmd_dpc(struct tasklet_struct *t)
+ {
+ 	u32 producer;
+ 	u32 consumer;
+ 	u32 context;
+ 	struct megasas_cmd *cmd;
+-	struct megasas_instance *instance =
+-				(struct megasas_instance *)instance_addr;
++	struct megasas_instance *instance = from_tasklet(instance, t,
++							 isr_tasklet);
+ 	unsigned long flags;
  
- 	struct mvs_info *mvi;
--	struct sas_ha_struct *sha = (struct sas_ha_struct *)opaque;
-+	struct mvs_prv_info *mpi = from_tasklet(mpi, t, mv_tasklet);
-+	struct sas_ha_struct *sha = pci_get_drvdata(mpi->mvi[0]->pdev);
+ 	/* If we have already declared adapter dead, donot complete cmds */
+@@ -2769,7 +2769,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 			 * Call cmd completion routine. Cmd to be
+ 			 * be completed directly without depending on isr.
+ 			 */
+-			megasas_complete_cmd_dpc((unsigned long)instance);
++			megasas_complete_cmd_dpc(&instance->isr_tasklet);
+ 		}
  
- 	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
- 	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
-@@ -564,8 +565,7 @@ static int mvs_pci_init(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	} while (nhost < chip->n_host);
- 	mpi = (struct mvs_prv_info *)(SHOST_TO_SAS_HA(shost)->lldd_ha);
- #ifdef CONFIG_SCSI_MVSAS_TASKLET
--	tasklet_init(&(mpi->mv_tasklet), mvs_tasklet,
--		     (unsigned long)SHOST_TO_SAS_HA(shost));
-+	tasklet_setup(&(mpi->mv_tasklet), mvs_tasklet);
- #endif
+ 		msleep(1000);
+@@ -6180,8 +6180,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	dev_info(&instance->pdev->dev,
+ 		"RDPQ mode\t: (%s)\n", instance->is_rdpq ? "enabled" : "disabled");
  
- 	mvs_post_sas_ha_init(shost, chip);
+-	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+-		(unsigned long)instance);
++	tasklet_setup(&instance->isr_tasklet, instance->instancet->tasklet);
+ 
+ 	/*
+ 	 * Below are default value for legacy Firmware.
+@@ -7719,8 +7718,7 @@ megasas_resume(struct pci_dev *pdev)
+ 	if (megasas_get_ctrl_info(instance) != DCMD_SUCCESS)
+ 		goto fail_init_mfi;
+ 
+-	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+-		     (unsigned long)instance);
++	tasklet_setup(&instance->isr_tasklet, instance->instancet->tasklet);
+ 
+ 	if (instance->msix_vectors ?
+ 			megasas_setup_irqs_msix(instance, 0) :
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 0824410f78f8..67b07660971a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3705,15 +3705,15 @@ int megasas_irqpoll(struct irq_poll *irqpoll, int budget)
+ 
+ /**
+  * megasas_complete_cmd_dpc_fusion -	Completes command
+- * @instance_addr:			Adapter soft state address
++ * @t:	Instance of the tasklet being run
+  *
+  * Tasklet to complete cmds
+  */
+ static void
+-megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
++megasas_complete_cmd_dpc_fusion(struct tasklet_struct *t)
+ {
+-	struct megasas_instance *instance =
+-		(struct megasas_instance *)instance_addr;
++	struct megasas_instance *instance = from_tasklet(instance, t,
++							 isr_tasklet);
+ 	u32 count, MSIxIndex;
+ 
+ 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
+@@ -4062,7 +4062,7 @@ megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
+ 	if (reason == MFI_IO_TIMEOUT_OCR) {
+ 		dev_info(&instance->pdev->dev,
+ 			"MFI command is timed out\n");
+-		megasas_complete_cmd_dpc_fusion((unsigned long)instance);
++		megasas_complete_cmd_dpc_fusion(&instance->isr_tasklet);
+ 		if (instance->snapdump_wait_time)
+ 			megasas_trigger_snap_dump(instance);
+ 		retval = 1;
+@@ -4078,7 +4078,7 @@ megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
+ 				   "FW in FAULT state Fault code:0x%x subcode:0x%x func:%s\n",
+ 				   abs_state & MFI_STATE_FAULT_CODE,
+ 				   abs_state & MFI_STATE_FAULT_SUBCODE, __func__);
+-			megasas_complete_cmd_dpc_fusion((unsigned long)instance);
++			megasas_complete_cmd_dpc_fusion(&instance->isr_tasklet);
+ 			if (instance->requestorId && reason) {
+ 				dev_warn(&instance->pdev->dev, "SR-IOV Found FW in FAULT"
+ 				" state while polling during"
+@@ -4122,7 +4122,7 @@ megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
+ 			}
+ 		}
+ 
+-		megasas_complete_cmd_dpc_fusion((unsigned long)instance);
++		megasas_complete_cmd_dpc_fusion(&instance->isr_tasklet);
+ 		outstanding = atomic_read(&instance->fw_outstanding);
+ 		if (!outstanding)
+ 			goto out;
 -- 
 2.17.1
 
