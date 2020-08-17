@@ -5,58 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CBB4C433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FBEC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF68E207DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C465920829
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:55:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ofjCFlkN"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q2RqlflI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726837AbgHQIzE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 04:55:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57320 "EHLO
+        id S1728646AbgHQIzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 04:55:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728622AbgHQIzB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:55:01 -0400
+        with ESMTP id S1728640AbgHQIzG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:55:06 -0400
 Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3B29C061388;
-        Mon, 17 Aug 2020 01:55:01 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id f193so7890970pfa.12;
-        Mon, 17 Aug 2020 01:55:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4857FC061388;
+        Mon, 17 Aug 2020 01:55:06 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id m71so7911119pfd.1;
+        Mon, 17 Aug 2020 01:55:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=WjN5WWXKRu0qRTJkEfYiBM+eZY8od27NJFEvfztfXRw=;
-        b=ofjCFlkN/L/yMi6bvgjpuN80ewdc1vauKYTHb0JDCi+gGyAogsMKHoCjWUHna0G0MH
-         ehGBUvt/QDfoWk2Tr8j5kVVTFIgnubDUvC/bIXrkNLZlk0iu7RGcoqeonLQCaMs8Q3oT
-         xVf0I6P/nipMxqUMsl5CU7l+CX0ok6bWA++6o/1CpYI8NR6vnpHQNB59Av0lIn3X1lCr
-         sX61J1nSBD/6eRyCfvzEJVB7wE8w8sbuOsWAu7qQ/pilkE5IkarzBQcCSkG2tvl/CPT9
-         1nMInHgJS6MZkidBJVPE+NpVwtCL5wKq0i5RUuXsaiCPj5qPB9gsukMSkvm696sy7AwN
-         h9dA==
+        bh=i3YmxLHQm4C9rpRDNyqYBl1hzYIOBuXCpBG9eSqKocA=;
+        b=q2RqlflIosSWjEW5ihBRffG2ydwOfneUbuVPVIL0V607PveCwS51neeFaDxHEru92A
+         GPu+J3VM9xNFWMCAM/fm74Q9+6JPkYqpWfXkiP8BqUnjWXA1poZxUbd4787LZ0v+Xu3M
+         lvc8qTZTaUaVZ+5Sqsy1CjGA7YLKVsPKqtIzofNCD4pfpT00xOfxiU2tDd4Ye9b1ISOy
+         D+A0zgBsBSwJsoSRKsftsx/X+ATutKj9lwKDgFlDWHsrbwpo9Ajy8eaYBPhWaBMe+oLT
+         ugAKpcR28ytIp/TofY9ZLsjij9EkYWxlgG3Avk39Bd+m1Fr74uMRrmrfU150hk0aS9ij
+         KVzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=WjN5WWXKRu0qRTJkEfYiBM+eZY8od27NJFEvfztfXRw=;
-        b=XfgNwsVoDMmFT2AqZcngD2uYkL6B5pIzWt8lJ27ZKYaMLY4xwKPeLNYGBHcNZLzZfb
-         SpyPBt6ftaV740F5655N4kQ8kBRMDalVtQeWo7wZgo5M8US1mI3W/jPifxVgY6tst0SB
-         +DTSvvpsml6E3hcwIFA0NJnjYUPH0kcJfDevSNH3SddxcKkByKTovGkjGMsa0OxS2ZHo
-         zu/dZoJg0BZxAj8Jv34kXpTJTtUjjPQtMZIWAO+sHM8B83RY+Tn7bapPZvwPcJ8PQOJ9
-         g0PexIyULQ6wIMNsn6KLG/aBve3+fRJO7ZjBDOdGCcv+sy+KJIYb5aU8nF6ZvhktyeEl
-         czrQ==
-X-Gm-Message-State: AOAM5322M8ood0/U7lxgyjdF+FNN4LLowLxLK8qzfldV9Qycxc+ZCX2y
-        duTgzzqgUvZ7tlEfujgcy8U=
-X-Google-Smtp-Source: ABdhPJySr0zfutgkvfKUUoarg3CG+N1D+i82umIzTCLTVEsE1cA/pi9o2wbaw0OwYm1JnLOMpGUzAw==
-X-Received: by 2002:aa7:959c:: with SMTP id z28mr10771954pfj.223.1597654501440;
-        Mon, 17 Aug 2020 01:55:01 -0700 (PDT)
+        bh=i3YmxLHQm4C9rpRDNyqYBl1hzYIOBuXCpBG9eSqKocA=;
+        b=KB0n2apoU6MOfGFtxfwgeu2uGz/CP16VAe/yUUd8p33Sqw8IoFQVXZ4yCT5THD14ar
+         eruoqRkYKCVJbpRg7o4coVt33P1iKp2XVm1d9GUQPYSxB2rRfEue8jVMQ5zk24aShnqu
+         7KD2UC/XAVa2tiCmRG59aNaN/d4PnVYLRj9sb/GYMkk2kMGWAinHPL+7NL1lQhZdCL1H
+         c7glL+77hiJqmTSsOmHr5xeWWMe2r7PPbVC+WrZPxUI5UZ2yEopOky5Aps5nqR3VQOTl
+         GquwJLmoTZI/fQmIJiuWcIySND42SQ4J9G5D1j99CalDgKQTdLHvt0972qAPZV7tOl+b
+         4GzA==
+X-Gm-Message-State: AOAM532SNZCDuIkucGMdyszXCeDUoXWPp66QWx/We5NairdR1JOebI/Y
+        gea9H6r9i6hboE4HLcfllX0=
+X-Google-Smtp-Source: ABdhPJwFE528F8McvzPMZNZ9fzvA/dqHQ1qHYLBTKwXGtLq3IheQPon7tMzbcyScOIfbM/xxS7FitA==
+X-Received: by 2002:a63:3d06:: with SMTP id k6mr9544204pga.316.1597654505767;
+        Mon, 17 Aug 2020 01:55:05 -0700 (PDT)
 Received: from localhost.localdomain ([49.207.202.98])
-        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.54.57
+        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.55.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2020 01:55:00 -0700 (PDT)
+        Mon, 17 Aug 2020 01:55:05 -0700 (PDT)
 From:   Allen Pais <allen.cryptic@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
@@ -66,9 +66,9 @@ Cc:     keescook@chromium.org, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
         Allen Pais <allen.lkml@gmail.com>,
         Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH 7/8] scsi: pm8001: convert tasklets to use new tasklet_setup() API
-Date:   Mon, 17 Aug 2020 14:24:08 +0530
-Message-Id: <20200817085409.25268-8-allen.cryptic@gmail.com>
+Subject: [PATCH 8/8] scsi: pmcraid: convert tasklets to use new tasklet_setup() API
+Date:   Mon, 17 Aug 2020 14:24:09 +0530
+Message-Id: <20200817085409.25268-9-allen.cryptic@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200817085409.25268-1-allen.cryptic@gmail.com>
 References: <20200817085409.25268-1-allen.cryptic@gmail.com>
@@ -87,149 +87,112 @@ and from_tasklet() to pass the tasklet pointer explicitly.
 Signed-off-by: Romain Perier <romain.perier@gmail.com>
 Signed-off-by: Allen Pais <allen.lkml@gmail.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 55 ++++++++++++++++++-------------
- drivers/scsi/pm8001/pm8001_sas.h  |  6 +++-
- 2 files changed, 37 insertions(+), 24 deletions(-)
+ drivers/scsi/pmcraid.c | 29 +++++++++++++++--------------
+ drivers/scsi/pmcraid.h |  9 +++++++--
+ 2 files changed, 22 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 20fa96cbc9d3..818816c8b295 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -187,12 +187,15 @@ static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
-  * @opaque: the passed general host adapter struct
-  * Note: pm8001_tasklet is common for pm8001 & pm80xx
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index aa9ae2ae8579..b7bbefcbb11d 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4198,7 +4198,7 @@ static irqreturn_t pmcraid_isr_msix(int irq, void *dev_id)
+ 		}
+ 	}
+ 
+-	tasklet_schedule(&(pinstance->isr_tasklet[hrrq_id]));
++	tasklet_schedule(&(pinstance->isr_tasklet[hrrq_id]).tasklet);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -4267,7 +4267,7 @@ static irqreturn_t pmcraid_isr(int irq, void *dev_id)
+ 				pinstance->int_regs.ioa_host_interrupt_clr_reg);
+ 
+ 			tasklet_schedule(
+-					&(pinstance->isr_tasklet[hrrq_id]));
++				&(pinstance->isr_tasklet[hrrq_id].tasklet));
+ 		}
+ 	}
+ 
+@@ -4380,20 +4380,20 @@ static void pmcraid_worker_function(struct work_struct *workp)
+  * Return Value
+  *	None
   */
--static void pm8001_tasklet(unsigned long opaque)
-+static void pm8001_tasklet(struct tasklet_struct *t)
+-static void pmcraid_tasklet_function(unsigned long instance)
++static void pmcraid_tasklet_function(struct tasklet_struct *t)
  {
--	struct pm8001_hba_info *pm8001_ha;
-+	struct tsk_param *tsk_param = from_tasklet(tsk_param, t, tasklet);
-+	struct pm8001_hba_info *pm8001_ha = container_of(tsk_param,
-+						typeof(*pm8001_ha),
-+						tasklet[tsk_param->irq_id]);
- 	struct isr_param *irq_vector;
+-	struct pmcraid_isr_param *hrrq_vector;
+-	struct pmcraid_instance *pinstance;
++	struct pmcraid_tsk_param *tsk_param = from_tasklet(tsk_param, t,
++							   tasklet);
++	int id = tsk_param->isr_tasklet_id;
++	struct pmcraid_instance *pinstance = container_of(tsk_param,
++							  typeof(*pinstance),
++							  isr_tasklet[id]);
+ 	unsigned long hrrq_lock_flags;
+ 	unsigned long pending_lock_flags;
+ 	unsigned long host_lock_flags;
+ 	spinlock_t *lockp; /* hrrq buffer lock */
+-	int id;
+ 	u32 resp;
  
--	irq_vector = (struct isr_param *)opaque;
-+	irq_vector = &pm8001_ha->irq_vector[tsk_param->irq_id];
- 	pm8001_ha = irq_vector->drv_inst;
- 	if (unlikely(!pm8001_ha))
- 		BUG_ON(1);
-@@ -221,7 +224,7 @@ static irqreturn_t pm8001_interrupt_handler_msix(int irq, void *opaque)
- 	if (!PM8001_CHIP_DISP->is_our_interrupt(pm8001_ha))
- 		return IRQ_NONE;
- #ifdef PM8001_USE_TASKLET
--	tasklet_schedule(&pm8001_ha->tasklet[irq_vector->irq_id]);
-+	tasklet_schedule(&pm8001_ha->tasklet[irq_vector->irq_id].tasklet);
- #else
- 	ret = PM8001_CHIP_DISP->isr(pm8001_ha, irq_vector->irq_id);
- #endif
-@@ -246,7 +249,7 @@ static irqreturn_t pm8001_interrupt_handler_intx(int irq, void *dev_id)
- 		return IRQ_NONE;
+-	hrrq_vector = (struct pmcraid_isr_param *)instance;
+-	pinstance = hrrq_vector->drv_inst;
+-	id = hrrq_vector->hrrq_id;
+ 	lockp = &(pinstance->hrrq_lock[id]);
  
- #ifdef PM8001_USE_TASKLET
--	tasklet_schedule(&pm8001_ha->tasklet[0]);
-+	tasklet_schedule(&pm8001_ha->tasklet[0].tasklet);
- #else
- 	ret = PM8001_CHIP_DISP->isr(pm8001_ha, 0);
- #endif
-@@ -507,13 +510,16 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
- #ifdef PM8001_USE_TASKLET
- 	/* Tasklet for non msi-x interrupt handler */
- 	if ((!pdev->msix_cap || !pci_msi_enabled())
--	    || (pm8001_ha->chip_id == chip_8001))
--		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
--			(unsigned long)&(pm8001_ha->irq_vector[0]));
--	else
--		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
--			tasklet_init(&pm8001_ha->tasklet[j], pm8001_tasklet,
--				(unsigned long)&(pm8001_ha->irq_vector[j]));
-+	    || (pm8001_ha->chip_id == chip_8001)) {
-+		pm8001_ha->tasklet[0].irq_id = 0;
-+		tasklet_setup(&pm8001_ha->tasklet[0].tasklet, pm8001_tasklet);
-+	} else {
-+		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++) {
-+			pm8001_ha->tasklet[j].irq_id = j;
-+			tasklet_setup(&pm8001_ha->tasklet[j].tasklet,
-+				      pm8001_tasklet);
-+		}
+ 	/* loop through each of the commands responded by IOA. Each HRRQ buf is
+@@ -4882,10 +4882,11 @@ static int pmcraid_allocate_config_buffers(struct pmcraid_instance *pinstance)
+ static void pmcraid_init_tasklets(struct pmcraid_instance *pinstance)
+ {
+ 	int i;
+-	for (i = 0; i < pinstance->num_hrrq; i++)
+-		tasklet_init(&pinstance->isr_tasklet[i],
+-			     pmcraid_tasklet_function,
+-			     (unsigned long)&pinstance->hrrq_vector[i]);
++	for (i = 0; i < pinstance->num_hrrq; i++) {
++		pinstance->isr_tasklet[i].isr_tasklet_id = i;
++		tasklet_setup(&pinstance->isr_tasklet[i].tasklet,
++			     pmcraid_tasklet_function);
 +	}
- #endif
- 	pm8001_ioremap(pm8001_ha);
- 	if (!pm8001_alloc(pm8001_ha, ent))
-@@ -1162,10 +1168,10 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
- 	/* For non-msix and msix interrupts */
- 	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
- 	    (pm8001_ha->chip_id == chip_8001))
--		tasklet_kill(&pm8001_ha->tasklet[0]);
-+		tasklet_kill(&pm8001_ha->tasklet[0].tasklet);
- 	else
- 		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
--			tasklet_kill(&pm8001_ha->tasklet[j]);
-+			tasklet_kill(&pm8001_ha->tasklet[j].tasklet);
- #endif
- 	scsi_host_put(pm8001_ha->shost);
- 	pm8001_free(pm8001_ha);
-@@ -1212,10 +1218,10 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	/* For non-msix and msix interrupts */
- 	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
- 	    (pm8001_ha->chip_id == chip_8001))
--		tasklet_kill(&pm8001_ha->tasklet[0]);
-+		tasklet_kill(&pm8001_ha->tasklet[0].tasklet);
- 	else
- 		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
--			tasklet_kill(&pm8001_ha->tasklet[j]);
-+			tasklet_kill(&pm8001_ha->tasklet[j].tasklet);
- #endif
- 	device_state = pci_choose_state(pdev, state);
- 	pm8001_printk("pdev=0x%p, slot=%s, entering "
-@@ -1281,13 +1287,16 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- #ifdef PM8001_USE_TASKLET
- 	/*  Tasklet for non msi-x interrupt handler */
- 	if ((!pdev->msix_cap || !pci_msi_enabled()) ||
--	    (pm8001_ha->chip_id == chip_8001))
--		tasklet_init(&pm8001_ha->tasklet[0], pm8001_tasklet,
--			(unsigned long)&(pm8001_ha->irq_vector[0]));
--	else
--		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
--			tasklet_init(&pm8001_ha->tasklet[j], pm8001_tasklet,
--				(unsigned long)&(pm8001_ha->irq_vector[j]));
-+	    (pm8001_ha->chip_id == chip_8001)) {
-+		pm8001_ha->tasklet[0].irq_id = 0;
-+		tasklet_setup(&pm8001_ha->tasklet[0].tasklet, pm8001_tasklet);
-+	} else {
-+		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++) {
-+			pm8001_ha->tasklet[j].irq_id = j;
-+			tasklet_setup(&pm8001_ha->tasklet[j].tasklet,
-+				      pm8001_tasklet);
-+		}
-+	}
- #endif
- 	PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, 0);
- 	if (pm8001_ha->chip_id != chip_8001) {
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index ae7ba9b3c4bc..6dbaa394a08b 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -494,6 +494,10 @@ struct isr_param {
- 	struct pm8001_hba_info *drv_inst;
- 	u32 irq_id;
+ }
+ 
+ /**
+@@ -4900,7 +4901,7 @@ static void pmcraid_kill_tasklets(struct pmcraid_instance *pinstance)
+ {
+ 	int i;
+ 	for (i = 0; i < pinstance->num_hrrq; i++)
+-		tasklet_kill(&pinstance->isr_tasklet[i]);
++		tasklet_kill(&pinstance->isr_tasklet[i].tasklet);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
+index 15c962108075..68dab849d4c1 100644
+--- a/drivers/scsi/pmcraid.h
++++ b/drivers/scsi/pmcraid.h
+@@ -617,6 +617,11 @@ struct pmcraid_isr_param {
+ 	u8 hrrq_id;			/* hrrq entry index */
  };
-+struct tsk_param {
+ 
++/* Tasklet parameters (one for each enabled tasklet) */
++struct pmcraid_tsk_param {
 +	struct tasklet_struct tasklet;
-+	u32 irq_id;
++	u8 isr_tasklet_id;              /* isr_tasklet entry index */
 +};
- struct pm8001_hba_info {
- 	char			name[PM8001_NAME_LENGTH];
- 	struct list_head	list;
-@@ -549,7 +553,7 @@ struct pm8001_hba_info {
- 				[PM8001_NAME_LENGTH+1+3+1];
- #endif
- #ifdef PM8001_USE_TASKLET
--	struct tasklet_struct	tasklet[PM8001_MAX_MSIX_VEC];
-+	struct tsk_param	tasklet[PM8001_MAX_MSIX_VEC];
- #endif
- 	u32			logging_level;
- 	u32			link_rate;
+ 
+ /* AEN message header sent as part of event data to applications */
+ struct pmcraid_aen_msg {
+@@ -752,8 +757,8 @@ struct pmcraid_instance {
+ 	spinlock_t free_pool_lock;		/* free pool lock */
+ 	spinlock_t pending_pool_lock;		/* pending pool lock */
+ 
+-	/* Tasklet to handle deferred processing */
+-	struct tasklet_struct isr_tasklet[PMCRAID_NUM_MSIX_VECTORS];
++	/* Tasklet parameters and tasklets to handle deferred processing */
++	struct pmcraid_tsk_param isr_tasklet[PMCRAID_NUM_MSIX_VECTORS];
+ 
+ 	/* Work-queue (Shared) for deferred reset processing */
+ 	struct work_struct worker_q;
 -- 
 2.17.1
 
