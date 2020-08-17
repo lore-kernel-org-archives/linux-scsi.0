@@ -2,169 +2,113 @@ Return-Path: <SRS0=twx4=B3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C8EC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B46C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:54:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7682D20738
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:18:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3EDF207DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 08:54:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K5XZg9ok"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NYaF30VK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727785AbgHQISV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 04:18:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51376 "EHLO
+        id S1726837AbgHQIy1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 04:54:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726196AbgHQISO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:18:14 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E5B0C061388;
-        Mon, 17 Aug 2020 01:18:14 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id a79so7852400pfa.8;
-        Mon, 17 Aug 2020 01:18:14 -0700 (PDT)
+        with ESMTP id S1726703AbgHQIy0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 04:54:26 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C528C061388;
+        Mon, 17 Aug 2020 01:54:26 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id c10so7666976pjn.1;
+        Mon, 17 Aug 2020 01:54:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=z+N51puImyhHxFx5Dm61lcPlZbEFuwK8jmWOAVp7Ph8=;
-        b=K5XZg9ok4JjG3ct1sm9nhp9P1f1FppDczGCfLdNzfKpPuz++jIfBtakngC7NDdg9SV
-         /0qXDp3CtBQvq2UJOciQrZdnscHe5oVUcB/ha1H9vdV6SmbrYpib1Uy9kgwZui5i+g4Q
-         juHlIW8G1oNmOQrVOrhK7p5P2kcNR8fFqF74H7+zMg6nxLIpWSP5NmJzdq9ViVlyUati
-         g8LB7o2+URT0tBDZsX6uXK/CcMI2/5jO6+J/jcJhVWNG/2gt3E9GAQqsmV5dhV44u93q
-         g7/gWNzluJrxNicWYmCeId492BEGRpw2TeTsktBLONgzIMYqjaBEKQynwuH9wkau0+X6
-         epAQ==
+        h=from:to:cc:subject:date:message-id;
+        bh=bnxXioh0yiQPsqDGs/WZdNyR4Y3nWYKtRgZSCeqOcrI=;
+        b=NYaF30VKVufBHJunHpkSU90tB2On6qnirFVgvJbSy7BWgd5aHOmWhSNBusUaftjnzF
+         IipaRvhNq/zWrI5KO0/2RSyvHozU28KuvPD+9TBIC9XXndXQkk+eE1bklOXbLGGsh0k3
+         X40M2APBFkjc+hTd7qumcLuP7LNbWLM6Pzm7fUdYliDR6j2ThyvyhdPEB69vaWzmnHMu
+         Ww6ExG+c5u10qzr8aepJlYsLL7p8O4Wg+9maVodhR5rFuTgnl36RWHqxjiejnsDvSpsh
+         ArHH0BIStZoxkcd2Qyqr0qxUW0I3bhfY6IWcvZjJk6jjwaacny6Rq9KTn7l7oM8WeO/M
+         lywQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=z+N51puImyhHxFx5Dm61lcPlZbEFuwK8jmWOAVp7Ph8=;
-        b=ZFFDZb1mMzClMW8I15nio6Oqok/PCCC1arwmVFjTA+F0MIaUeZw08XnIh1AJWMYEgc
-         gtBffQYVyunrHiurPQtxBx7kyNxraCIOrbRlksbYievRRyZX2MQjT2srTloD3eohTIyz
-         Lb4WVDYCjXXKZAGhCySWbr2sieMeLEaZh2DWA01SXwQH0HdE0TnBFuh5PL5mwmU+/JF1
-         2KJEpazUYLutAVfPfdw2yuPhr2RFaukabQhKbuZOvAlR/PxK7WtTjmv5vfVuO0YRFWG0
-         vwxVdyRo4ckdDFIsJS/C3CSCvcboHGd4pdqD+mpOPnvI4/AasarTaSXMHSvHrl0am9op
-         UZpQ==
-X-Gm-Message-State: AOAM5322MX9GyZI7LEz28Xc6p3gWxIe/0BEMZmdwW8SVk4VRxeIMkPST
-        AQYFIq0MEaWAbYhyp33nS7g=
-X-Google-Smtp-Source: ABdhPJwaKRxVVpxObpt2jqteoMYfRRZZpAZmMGLvpTaseq2out4O7d+yilUaXa9D5vSOLFl1pRsV3Q==
-X-Received: by 2002:a63:6e01:: with SMTP id j1mr9130334pgc.147.1597652293814;
-        Mon, 17 Aug 2020 01:18:13 -0700 (PDT)
-Received: from gmail.com ([103.105.152.86])
-        by smtp.gmail.com with ESMTPSA id q6sm16833689pjc.47.2020.08.17.01.18.06
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=bnxXioh0yiQPsqDGs/WZdNyR4Y3nWYKtRgZSCeqOcrI=;
+        b=Q1FCnqUmSKpP5lz+QiRHWg2TrAXY5haguT20sQgdh4BmYoDr95elL32VLPcuhJOfmm
+         Brug2RRjCmwA7YlE+k7yOjw3JxNpSKS3y0RG2xUv6roRGXl9PSaw8b+Ps0254YAgRKUB
+         tgYxQGZtzMThw+9gU1Ei7RWCdoAeagNGJfcQsBtHfufRTeVIPTGd1r3yuYo71rS3ddm0
+         745NMf4owLXfFJQ5CnvI8jP7LoooiEgTV+c/I8ZLYmamQ6seQKqleOQphsivX+9D1StO
+         BmrxWRTBF2FrPOs0TSoU6yo2i9KueLGXsYL6Ux0RUku99hqAf51dShfQdzMWBeueOeaB
+         DnKA==
+X-Gm-Message-State: AOAM53237I6D3Bqmc/ruBQb/5B+GJ9u6pvPuk+LbMmVMAhmb5ZoJHv3/
+        xIggWM1OahLFn5rP50kXXSq5MVoAmmYbMQ==
+X-Google-Smtp-Source: ABdhPJwcyGHQv4SvYAxbBC+SLIY12gRvJ0Zhc1zsyNnZoGYYOxMVvqk79RQml5YrTXuVqckLJjf7QA==
+X-Received: by 2002:a17:90a:eb0f:: with SMTP id j15mr11147246pjz.26.1597654466055;
+        Mon, 17 Aug 2020 01:54:26 -0700 (PDT)
+Received: from localhost.localdomain ([49.207.202.98])
+        by smtp.gmail.com with ESMTPSA id x12sm18236990pff.48.2020.08.17.01.54.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2020 01:18:13 -0700 (PDT)
-Date:   Mon, 17 Aug 2020 13:46:32 +0530
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
-        Adam Radford <aradford@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        John Garry <john.garry@huawei.com>,
-        Don Brace <don.brace@microsemi.com>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc:     Shuah Khan <skhan@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
-        megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v2 00/15] scsi: use generic power management
-Message-ID: <20200817081632.GI5869@gmail.com>
-References: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
+        Mon, 17 Aug 2020 01:54:25 -0700 (PDT)
+From:   Allen Pais <allen.cryptic@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com
+Cc:     keescook@chromium.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        target-devel@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
+        Allen Pais <allen.lkml@gmail.com>
+Subject: [PATCH 0/8] scsi: convert tasklets to use new tasklet_setup()
+Date:   Mon, 17 Aug 2020 14:24:01 +0530
+Message-Id: <20200817085409.25268-1-allen.cryptic@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 20, 2020 at 07:04:13PM +0530, Vaibhav Gupta wrote:
-> Linux Kernel Mentee: Remove Legacy Power Management.
-> 
-> The purpose of this patch series is to upgrade power management in scsi
-> drivers. This has been done by upgrading .suspend() and .resume() callbacks.
-> 
-> The upgrade makes sure that the involvement of PCI Core does not change the
-> order of operations executed in a driver. Thus, does not change its behavior.
-> 
-> In general, drivers with legacy PM, .suspend() and .resume() make use of PCI
-> helper functions like pci_request/release_regions(), pci_set_power_state(),
-> pci_save/restore_state(), pci_enable/disable_device(), etc. to complete
-> their job.
-> 
-> The conversion requires the removal of those function calls, change the
-> callbacks' definition accordingly and make use of dev_pm_ops structure.
-> 
-> v2: kbuild error in v1.
-> 
-> All patches are compile-tested only.
-> 
-> Test tools:
->     - Compiler: gcc (GCC) 10.1.0
->     - allmodconfig build: make -j$(nproc) W=1 all
-> 
-> Vaibhav Gupta (15):
->   scsi: megaraid_sas: use generic power management
->   scsi: aacraid: use generic power management
->   scsi: aic7xxx: use generic power management
->   scsi: aic79xx: use generic power management
->   scsi: arcmsr: use generic power management
->   scsi: esas2r: use generic power management
->   scsi: hisi_sas_v3_hw: use generic power management
->   scsi: mpt3sas_scsih: use generic power management
->   scsi: lpfc: use generic power management
->   scsi: pm_8001: use generic power management
->   scsi: hpsa: use generic power management
->   scsi: 3w-9xxx: use generic power management
->   scsi: 3w-sas: use generic power management
->   scsi: mvumi: use generic power management
->   scsi: pmcraid: use generic power management
-> 
->  drivers/scsi/3w-9xxx.c                    |  30 ++-----
->  drivers/scsi/3w-sas.c                     |  31 ++-----
->  drivers/scsi/aacraid/linit.c              |  34 ++------
->  drivers/scsi/aic7xxx/aic79xx.h            |  12 +--
->  drivers/scsi/aic7xxx/aic79xx_core.c       |   8 +-
->  drivers/scsi/aic7xxx/aic79xx_osm_pci.c    |  43 +++-------
->  drivers/scsi/aic7xxx/aic79xx_pci.c        |   6 +-
->  drivers/scsi/aic7xxx/aic7xxx.h            |  10 +--
->  drivers/scsi/aic7xxx/aic7xxx_core.c       |   6 +-
->  drivers/scsi/aic7xxx/aic7xxx_osm_pci.c    |  46 +++-------
->  drivers/scsi/aic7xxx/aic7xxx_pci.c        |   4 +-
->  drivers/scsi/arcmsr/arcmsr_hba.c          |  35 +++-----
->  drivers/scsi/esas2r/esas2r.h              |   5 +-
->  drivers/scsi/esas2r/esas2r_init.c         |  48 +++--------
->  drivers/scsi/esas2r/esas2r_main.c         |   3 +-
->  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  32 +++----
->  drivers/scsi/hpsa.c                       |  12 +--
->  drivers/scsi/lpfc/lpfc_init.c             | 100 +++++++---------------
->  drivers/scsi/megaraid/megaraid_sas_base.c |  61 ++++---------
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  36 +++-----
->  drivers/scsi/mvumi.c                      |  49 +++--------
->  drivers/scsi/pm8001/pm8001_init.c         |  46 ++++------
->  drivers/scsi/pmcraid.c                    |  44 +++-------
->  23 files changed, 212 insertions(+), 489 deletions(-)
-> 
-> -- 
-> 2.27.0
-> 
+From: Allen Pais <allen.lkml@gmail.com>
+
+Commit 12cc923f1ccc ("tasklet: Introduce new initialization API")'
+introduced a new tasklet initialization API. This series converts 
+all the scsi drivers to use the new tasklet_setup() API
+
+Allen Pais (8):
+  scsi: aic94xx: convert tasklets to use new tasklet_setup() API
+  scsi: esas2r: convert tasklets to use new tasklet_setup() API
+  scsi: ibmvscsi: convert tasklets to use new tasklet_setup() API
+  scsi: isci: convert tasklets to use new tasklet_setup() API
+  scsi: megaraid: convert tasklets to use new tasklet_setup() API
+  scsi: mvsas: convert tasklets to use new tasklet_setup() API
+  scsi: pm8001: convert tasklets to use new tasklet_setup() API
+  scsi: pmcraid: convert tasklets to use new tasklet_setup() API
+
+ drivers/scsi/aic94xx/aic94xx_hwi.c          |  9 ++--
+ drivers/scsi/esas2r/esas2r.h                |  2 +-
+ drivers/scsi/esas2r/esas2r_init.c           |  4 +-
+ drivers/scsi/esas2r/esas2r_main.c           |  4 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c              |  6 +--
+ drivers/scsi/ibmvscsi/ibmvscsi.c            |  8 +--
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c    |  7 ++-
+ drivers/scsi/isci/host.c                    |  4 +-
+ drivers/scsi/isci/host.h                    |  2 +-
+ drivers/scsi/isci/init.c                    |  3 +-
+ drivers/scsi/megaraid/megaraid_mbox.c       |  9 ++--
+ drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 16 +++---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 14 +++---
+ drivers/scsi/mvsas/mv_init.c                |  8 +--
+ drivers/scsi/pm8001/pm8001_init.c           | 55 ++++++++++++---------
+ drivers/scsi/pm8001/pm8001_sas.h            |  6 ++-
+ drivers/scsi/pmcraid.c                      | 29 +++++------
+ drivers/scsi/pmcraid.h                      |  9 +++-
+ 19 files changed, 104 insertions(+), 93 deletions(-)
+
+-- 
+2.17.1
+
