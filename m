@@ -5,75 +5,78 @@ X-Spam-Level:
 X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19377C433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E335C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA3922076D
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDD9A206DA
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kjeYL54A"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LgNqzd/w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726403AbgHRDOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 23:14:42 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:35082 "EHLO
+        id S1726650AbgHRDOs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 23:14:48 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:35164 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726328AbgHRDOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 23:14:41 -0400
+        with ESMTP id S1726328AbgHRDOr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 23:14:47 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I37XBM113875;
-        Tue, 18 Aug 2020 03:14:35 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I36sRp113679;
+        Tue, 18 Aug 2020 03:14:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=7QHkV/ES8zH95c7fmkSF5lFXc1zNQSjl4IUT86m6GQU=;
- b=kjeYL54AOhbyFJ20YnaQ1/NBGPn9fBJ1YSqK1yqptWnywqKZQFOWyXapmnST3fPxEQBm
- Vszyl7W1G2WfQzZ1fsU6NQQS/AlQT8yNK2Rj0B336XHNHSfVUJ5T4wA4SI1NEq0grhbw
- E0Vp1Qq2q1UMRIvkdk46GiN1cNOfCCyz+sbIEVGLYVXxwHoxqkLYFUp0TqL668U7OwD1
- 3cLu1MzKesYse4uj/h4Z1olq5bF5Kz0KzL39EKugJqUcgIKe3EHFZbYJuQEEhq7lAFnk
- f6GQ83h7wS+jyrNf59V3oJQS5GXpEZtjIdG8hpb7r8VbDVxLNiclNA2UnjuyrV6njIVg IA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 32x8bn22vh-1
+ bh=bmnFBvbblDd4uPW3ksN/nz/pdXsfQaxSk+bxnq2E9ew=;
+ b=LgNqzd/wJHu3OLRlufLByt3w8VKnFgiMeRzA161fhELQ2qoIsgDb1C0hRP4rsWJq9mTs
+ 6KTSOepjpycLsW5GZeUlYHN0vvvOyG8rvhL6K8IKNz+0d0b/jXxBnQs3MSZgimVpbr4a
+ /10NHzSch2du58PsRCdOT9f71Jev8SxFa9G1Ou/yCKNduqlmDY3EEbglIYmJsrEEm/fh
+ OOQP/g6vjj+U+C5AovGjFIWWAgkXrhtfEpOaI8n0lvuAeHogtwU7EM3mPw0gGa+zSXdn
+ e3rEWwapj0A4bOjEz4BwXTjaR2UVQ3axO6yZh28oWXJnO/d0SKoImLolMgeyNbrP3fW7 Sw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 32x8bn22w1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 18 Aug 2020 03:14:35 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I3863W131255;
-        Tue, 18 Aug 2020 03:12:34 GMT
+        Tue, 18 Aug 2020 03:14:45 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I38BAY104642;
+        Tue, 18 Aug 2020 03:12:44 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 32xs9mf4ab-1
+        by userp3020.oracle.com with ESMTP id 32xsfraxrk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Aug 2020 03:12:34 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07I3CY4o029796;
-        Tue, 18 Aug 2020 03:12:34 GMT
+        Tue, 18 Aug 2020 03:12:44 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07I3ChnW029820;
+        Tue, 18 Aug 2020 03:12:43 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 17 Aug 2020 20:12:33 -0700
+        with ESMTP ; Mon, 17 Aug 2020 20:12:43 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
+To:     Steffen Maier <maier@linux.ibm.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH] scsi: ufs-pci: Add quirk for broken auto-hibernate for Intel EHL
-Date:   Mon, 17 Aug 2020 23:12:22 -0400
-Message-Id: <159772029326.19587.8414026585786255595.b4-ty@oracle.com>
+        Vasily Gorbik <gor@linux.ibm.com>, linux-scsi@vger.kernel.org,
+        linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        stable@vger.kernel.org,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: Re: [PATCH] zfcp: fix use-after-free in request timeout handlers
+Date:   Mon, 17 Aug 2020 23:12:28 -0400
+Message-Id: <159772029326.19587.11457042799649167803.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200810141024.28859-1-adrian.hunter@intel.com>
-References: <20200810141024.28859-1-adrian.hunter@intel.com>
+In-Reply-To: <20200813152856.50088-1-maier@linux.ibm.com>
+References: <20200813152856.50088-1-maier@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 spamscore=0
- mlxscore=0 mlxlogscore=998 suspectscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008180022
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ spamscore=0 suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008180022
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
  impostorscore=0 suspectscore=0 adultscore=0 spamscore=0 malwarescore=0
- mlxlogscore=999 priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 clxscore=1011 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008180022
 Sender: linux-scsi-owner@vger.kernel.org
@@ -81,15 +84,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 10 Aug 2020 17:10:24 +0300, Adrian Hunter wrote:
+On Thu, 13 Aug 2020 17:28:56 +0200, Steffen Maier wrote:
 
-> Intel EHL UFS host controller advertises auto-hibernate capability but it
-> does not work correctly. Add a quirk for that.
+> Before v4.15 commit 75492a51568b ("s390/scsi: Convert timers to use
+> timer_setup()"), we intentionally only passed zfcp_adapter as context
+> argument to zfcp_fsf_request_timeout_handler(). Since we only trigger
+> adapter recovery, it was unnecessary to sync against races between timeout
+> and (late) completion.
+> Likewise, we only passed zfcp_erp_action as context argument to
+> zfcp_erp_timeout_handler(). Since we only wakeup an ERP action, it was
+> unnecessary to sync against races between timeout and (late) completion.
+> 
+> [...]
 
 Applied to 5.9/scsi-fixes, thanks!
 
-[1/1] scsi: ufs-pci: Add quirk for broken auto-hibernate for Intel EHL
-      https://git.kernel.org/mkp/scsi/c/8da76f71fef7
+[1/1] scsi: zfcp: Fix use-after-free in request timeout handlers
+      https://git.kernel.org/mkp/scsi/c/2d9a2c5f581b
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
