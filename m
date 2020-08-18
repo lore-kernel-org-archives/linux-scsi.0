@@ -8,75 +8,71 @@ X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E335C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A65CAC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDD9A206DA
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8381F2076D
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:14:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LgNqzd/w"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ifjF8h10"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726650AbgHRDOs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 23:14:48 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:35164 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726328AbgHRDOr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 23:14:47 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I36sRp113679;
-        Tue, 18 Aug 2020 03:14:45 GMT
+        id S1726690AbgHRDOw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 23:14:52 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:49142 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726328AbgHRDOv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 23:14:51 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I37fba032413;
+        Tue, 18 Aug 2020 03:14:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=bmnFBvbblDd4uPW3ksN/nz/pdXsfQaxSk+bxnq2E9ew=;
- b=LgNqzd/wJHu3OLRlufLByt3w8VKnFgiMeRzA161fhELQ2qoIsgDb1C0hRP4rsWJq9mTs
- 6KTSOepjpycLsW5GZeUlYHN0vvvOyG8rvhL6K8IKNz+0d0b/jXxBnQs3MSZgimVpbr4a
- /10NHzSch2du58PsRCdOT9f71Jev8SxFa9G1Ou/yCKNduqlmDY3EEbglIYmJsrEEm/fh
- OOQP/g6vjj+U+C5AovGjFIWWAgkXrhtfEpOaI8n0lvuAeHogtwU7EM3mPw0gGa+zSXdn
- e3rEWwapj0A4bOjEz4BwXTjaR2UVQ3axO6yZh28oWXJnO/d0SKoImLolMgeyNbrP3fW7 Sw== 
+ bh=9YSiDMj9nir0xfrgRFBBt3TPa+WsRY9VPQ1CpN9Btew=;
+ b=ifjF8h10MYEfrbE9tRIKrFrBhM62Y55YefvgUpdpU+aqNLD6/eGKwDNjQ5gZwznqga9B
+ sS7YVroyWHy83PaPA/EzAgwslPrVqQw76DiPW09WHGdM892rhY4sRMNBl2Jlu+3qmMcI
+ IJ4xGHhuKpdlLZFxb9XKbE3lVA76pmrKHuijSOqE430wUQnKYvtQsijC+wxpeYkFYT59
+ CvsX0V2a+MsLmG9II4Looh3pOTShqzD9DFMhp+jhhyoZq1la4DQITglPgAW7+C1DRpWX
+ Rgnd4r0kuc0jTGUC5gWvFGF8+3KpP9+yWywJsV8uldCCqvQLPALS6hRTSfIgLn5tz0x3 6Q== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 32x8bn22w1-1
+        by aserp2120.oracle.com with ESMTP id 32x7nma5mf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 18 Aug 2020 03:14:45 +0000
+        Tue, 18 Aug 2020 03:14:46 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I38BAY104642;
-        Tue, 18 Aug 2020 03:12:44 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 32xsfraxrk-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I38Aon104586;
+        Tue, 18 Aug 2020 03:12:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 32xsfraxsa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Aug 2020 03:12:44 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07I3ChnW029820;
-        Tue, 18 Aug 2020 03:12:43 GMT
+        Tue, 18 Aug 2020 03:12:45 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07I3CiCo020696;
+        Tue, 18 Aug 2020 03:12:45 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 17 Aug 2020 20:12:43 -0700
+        with ESMTP ; Mon, 17 Aug 2020 20:12:44 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Steffen Maier <maier@linux.ibm.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
+To:     linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
+        Mike Christie <michael.christie@oracle.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Vasily Gorbik <gor@linux.ibm.com>, linux-scsi@vger.kernel.org,
-        linux-s390@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        stable@vger.kernel.org,
-        Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: Re: [PATCH] zfcp: fix use-after-free in request timeout handlers
-Date:   Mon, 17 Aug 2020 23:12:28 -0400
-Message-Id: <159772029326.19587.11457042799649167803.b4-ty@oracle.com>
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] fcoe: fix io path allocation
+Date:   Mon, 17 Aug 2020 23:12:29 -0400
+Message-Id: <159772029325.19587.11765074400059811271.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200813152856.50088-1-maier@linux.ibm.com>
-References: <20200813152856.50088-1-maier@linux.ibm.com>
+In-Reply-To: <1596831813-9839-1-git-send-email-michael.christie@oracle.com>
+References: <1596831813-9839-1-git-send-email-michael.christie@oracle.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=826
  spamscore=0 suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2008180022
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
- impostorscore=0 suspectscore=0 adultscore=0 spamscore=0 malwarescore=0
- mlxlogscore=999 priorityscore=1501 bulkscore=0 clxscore=1011 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+ impostorscore=0 priorityscore=1501 adultscore=0 mlxscore=0 mlxlogscore=837
+ lowpriorityscore=0 bulkscore=0 phishscore=0 malwarescore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008180022
 Sender: linux-scsi-owner@vger.kernel.org
@@ -84,23 +80,16 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 13 Aug 2020 17:28:56 +0200, Steffen Maier wrote:
+On Fri, 7 Aug 2020 15:23:33 -0500, Mike Christie wrote:
 
-> Before v4.15 commit 75492a51568b ("s390/scsi: Convert timers to use
-> timer_setup()"), we intentionally only passed zfcp_adapter as context
-> argument to zfcp_fsf_request_timeout_handler(). Since we only trigger
-> adapter recovery, it was unnecessary to sync against races between timeout
-> and (late) completion.
-> Likewise, we only passed zfcp_erp_action as context argument to
-> zfcp_erp_timeout_handler(). Since we only wakeup an ERP action, it was
-> unnecessary to sync against races between timeout and (late) completion.
-> 
-> [...]
+> ixgbe_fcoe_ddp_setup can be called from the main IO path and is called
+> with a spin_lock held, so we have to use GFP_ATOMIC allocation instead
+> of GFP_KERNEL.
 
 Applied to 5.9/scsi-fixes, thanks!
 
-[1/1] scsi: zfcp: Fix use-after-free in request timeout handlers
-      https://git.kernel.org/mkp/scsi/c/2d9a2c5f581b
+[1/1] scsi: fcoe: Fix I/O path allocation
+      https://git.kernel.org/mkp/scsi/c/fa39ab5184d6
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
