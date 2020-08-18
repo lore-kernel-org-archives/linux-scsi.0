@@ -1,137 +1,122 @@
-Return-Path: <SRS0=twx4=B3=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=TRkT=B4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9305AC433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 19:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0170C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:11:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A40820716
-	for <linux-scsi@archiver.kernel.org>; Mon, 17 Aug 2020 19:58:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 889BF206DA
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 03:11:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="o3bJlhjD"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IKID3jas"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729588AbgHQT56 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 Aug 2020 15:57:58 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:26564 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729118AbgHQT55 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Aug 2020 15:57:57 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07HJVarS069185;
-        Mon, 17 Aug 2020 15:57:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=QXJRfHN9mmsNDk6QsxgcWobeI8TPkD80t9GisADyH1o=;
- b=o3bJlhjDSSSEg4dGq9I4xGGrKMsrAoSBn41x6Llja9uWHRqZro1eS3ir0chvo9yl73GM
- QICyBow0LVqNyrgllx9sZHk4OUUVncBWVBWr6P9tHLQgTOYlkdSi265KWBJLHsEbj3mG
- 7iAEoK6D5aeallb/jHWED5ghWzWHAFlrVH6Lf2QFS5zDEKKOVZadYgBvoZOEzYGjbbqr
- OALsAKxmd3To6cp1GT3u1ktlaefTZ1QmRo9TevoftrOb+qByAmG3x84MnJLU67/sV5ww
- IXpfATGvrAxCKTLUbu2loUgZR7LsSDiJ1PuzTkZViDdUfByh9Ayu4wZhzV9HAI24Lkhy IA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 32y7nhdu77-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Aug 2020 15:57:41 -0400
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 07HJVcGI069350;
-        Mon, 17 Aug 2020 15:57:40 -0400
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 32y7nhdu6v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Aug 2020 15:57:40 -0400
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07HJsWfR004287;
-        Mon, 17 Aug 2020 19:57:39 GMT
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma05wdc.us.ibm.com with ESMTP id 32x7b8ued3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Aug 2020 19:57:39 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07HJvaiW62718344
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 17 Aug 2020 19:57:36 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1676378060;
-        Mon, 17 Aug 2020 19:57:39 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D176F78066;
-        Mon, 17 Aug 2020 19:57:33 +0000 (GMT)
-Received: from [153.66.254.174] (unknown [9.80.233.55])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon, 17 Aug 2020 19:57:33 +0000 (GMT)
-Message-ID: <1597694252.22390.12.camel@linux.ibm.com>
-Subject: Re: [PATCH 0/8] scsi: convert tasklets to use new tasklet_setup()
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Allen Pais <allen.cryptic@gmail.com>, martin.petersen@oracle.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        megaraidlinux.pdl@broadcom.com, Allen Pais <allen.lkml@gmail.com>
-Date:   Mon, 17 Aug 2020 12:57:32 -0700
-In-Reply-To: <202008171227.D3A4F454D8@keescook>
-References: <20200817085409.25268-1-allen.cryptic@gmail.com>
-         <1597675318.4475.11.camel@linux.ibm.com> <202008171227.D3A4F454D8@keescook>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-17_14:2020-08-17,2020-08-17 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- malwarescore=0 mlxscore=0 suspectscore=0 phishscore=0 bulkscore=0
- spamscore=0 adultscore=0 priorityscore=1501 impostorscore=0
- mlxlogscore=999 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2006250000 definitions=main-2008170131
+        id S1726370AbgHRDLZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 17 Aug 2020 23:11:25 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:56768 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726302AbgHRDLW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Aug 2020 23:11:22 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I38Cd8134845;
+        Tue, 18 Aug 2020 03:11:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=I0EZScj58NFxB2rOZIsCaKplUPsEex+PGqpJ94KUQoE=;
+ b=IKID3jas0hbhdUhRWv+fIdsVg70Qcol+y8WkCR+BDM50RnJyx5/VgZul3ijyoGTF/e0Q
+ R8Kl8LO6dmjyVLd3N4aOpy3KfUo/VNNZ2Fl1osBeR3hSdJZZqaGucuvPX+9N6lL56fDa
+ JrWahQ49G+U26eyOtz1GoKU0iB9/AImvJsmSpoLQhg6NYWT1pw/hRMswoGXnwYO2qr4f
+ MLl2b3jAUL5Py1Zv5hwEef80c8QvskXnThLLz7tFdZ/52Nem7/FdcXBRiarV175SzEn2
+ Z4ecd3DrGFsbkkyWOrVzspX2RO44/JkjdDsKoMsO/LyQG5eOkD5YU1+p5o27xm4/9fG0 sQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 32x74r2790-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 18 Aug 2020 03:11:18 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07I38tls134387;
+        Tue, 18 Aug 2020 03:11:18 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 32xsmwp4wj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 18 Aug 2020 03:11:17 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07I3BG1c029250;
+        Tue, 18 Aug 2020 03:11:16 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 17 Aug 2020 20:11:16 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     kernel-team@android.com, nguyenb@codeaurora.org,
+        linux-scsi@vger.kernel.org, hongwus@codeaurora.org,
+        salyzyn@google.com, asutoshd@codeaurora.org,
+        Can Guo <cang@codeaurora.org>, rnayak@codeaurora.org,
+        saravanak@google.com
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v11 0/9] Fix up and simplify error recovery mechanism
+Date:   Mon, 17 Aug 2020 23:11:10 -0400
+Message-Id: <159772022967.19349.17899032606045774294.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+References: <1596975355-39813-1-git-send-email-cang@codeaurora.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
+ mlxlogscore=661 phishscore=0 mlxscore=0 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008180022
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=648
+ priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
+ suspectscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008180022
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-08-17 at 12:28 -0700, Kees Cook wrote:
-> On Mon, Aug 17, 2020 at 07:41:58AM -0700, James Bottomley wrote:
-> > On Mon, 2020-08-17 at 14:24 +0530, Allen Pais wrote:
-> > > From: Allen Pais <allen.lkml@gmail.com>
-> > > 
-> > > Commit 12cc923f1ccc ("tasklet: Introduce new initialization
-> > > API")' introduced a new tasklet initialization API. This series
-> > > converts all the scsi drivers to use the new tasklet_setup() API
-> > 
-> > I've got to say I agree with Jens, this was a silly obfuscation:
-> > 
-> > +#define from_tasklet(var, callback_tasklet, tasklet_fieldname) \
-> > +       container_of(callback_tasklet, typeof(*var),
-> > tasklet_fieldname)
-> > 
-> > Just use container_of directly since we all understand what it
-> > does.
+On Sun, 9 Aug 2020 05:15:46 -0700, Can Guo wrote:
+
+> The changes have been tested with error injections of multiple error types (and
+> all kinds of mixture of them) during runtime, e.g. hibern8 enter/ exit error,
+> power mode change error and fatal/non-fatal error from IRQ context. During the
+> test, error injections happen randomly across all contexts, e.g. clk scaling,
+> clk gate/ungate, runtime suspend/resume and IRQ.
 > 
-> But then the lines get really long, wrapped, etc.
+> There are a few more fixes to resolve other minor problems based on the main
+> change, such as LINERESET handling and racing btw error handler and system
+> suspend/resume/shutdown, but they will be pushed after this series is taken,
+> due to there are already too many lines in these changes.
+> 
+> [...]
 
-I really don't think that's a problem but if you want to add a new
-generic container_of that does typeof instead of insisting on the type,
-I'd be sort of OK with that ... provided you don't gratuitously alter
-the argument order.
+Applied to 5.10/scsi-queue, thanks!
 
-The thing I object to is that this encourages everyone to roll their
-own unnecessary container_of type macros in spite of the fact that it's
-function is wholly generic.  It's fine if you're eliminating one of the
-arguments, or actually making the macro specific to the type, but in
-this case you're not, you're making a completely generic macro where
-the name is the only thing that's specific to this case.
+[1/9] scsi: ufs: Add checks before setting clk-gating states
+      https://git.kernel.org/mkp/scsi/c/2dec9475a402
+[2/9] scsi: ufs: ufs-qcom: Fix race conditions caused by ufs_qcom_testbus_config()
+      https://git.kernel.org/mkp/scsi/c/89dd87acd40a
+[3/9] scsi: ufs-qcom: Remove testbus dump in ufs_qcom_dump_dbg_regs
+      https://git.kernel.org/mkp/scsi/c/423cc66b5152
+[4/9] scsi: ufs: Add some debug information to ufshcd_print_host_state()
+      https://git.kernel.org/mkp/scsi/c/3f8af6044713
+[5/9] scsi: ufs: Fix concurrency of error handler and other error recovery paths
+      https://git.kernel.org/mkp/scsi/c/4db7a2360597
+[6/9] scsi: ufs: Recover HBA runtime PM error in error handler
+      https://git.kernel.org/mkp/scsi/c/c72e79c0ad2b
+[7/9] scsi: ufs: Move dumps in IRQ handler to error handler
+      https://git.kernel.org/mkp/scsi/c/c3be8d1ee1bf
+[8/9] scsi: ufs: Fix a race condition between error handler and runtime PM ops
+      https://git.kernel.org/mkp/scsi/c/5586dd8ea250
+[9/9] scsi: ufs: Properly release resources if a task is aborted successfully
+      https://git.kernel.org/mkp/scsi/c/35afe60929ab
 
->  This is what the timer_struct conversion did too (added a
-> container_of wrapper), so I think it makes sense here too.
-
-I didn't see that one to object to it ...
-
-James
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
