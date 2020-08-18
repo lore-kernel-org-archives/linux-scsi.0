@@ -2,109 +2,106 @@ Return-Path: <SRS0=TRkT=B4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D6D3C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 09:30:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB7DC433E4
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 11:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC39A20639
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 09:30:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="e3wsrlgQ"
+	by mail.kernel.org (Postfix) with ESMTP id D320620786
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 11:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726420AbgHRJaX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Aug 2020 05:30:23 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:35136 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726374AbgHRJaX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Aug 2020 05:30:23 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1597743022; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=AHVbPJFk+TLJWIDMizKenawUcEUUBXKZ1Yv5y2vGNuY=;
- b=e3wsrlgQK0vnvMGk7+sNBpJEh6ofP67nPHDtCYbICIT7eREziohISlIRFX8w5MbDugvCdSBI
- BoG4y5UlBEKZFMsXm5dv9NNdLXhXtVkbmQ0blh+CMST18fY27V4b3TD1ULYQEMh3uh9eAqyC
- jKC3HvCV3JSSNchz9QDUOdiGfQQ=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f3b9f6ef2b697637a220855 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 18 Aug 2020 09:29:18
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id EB685C433A1; Tue, 18 Aug 2020 09:29:16 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: hongwus)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19D12C433CA;
-        Tue, 18 Aug 2020 09:29:16 +0000 (UTC)
+        id S1726645AbgHRLFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Aug 2020 07:05:12 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:51438 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726273AbgHRLFI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Aug 2020 07:05:08 -0400
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 3AD0686DAFEEDC458BC7;
+        Tue, 18 Aug 2020 19:05:01 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by DGGEMS403-HUB.china.huawei.com
+ (10.3.19.203) with Microsoft SMTP Server id 14.3.487.0; Tue, 18 Aug 2020
+ 19:04:50 +0800
+From:   Wu Bo <wubo40@huawei.com>
+To:     <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
+        <bvanassche@acm.org>, <sudhakar.panneerselvam@oracle.com>,
+        <mlombard@redhat.com>, <ddiss@suse.de>
+CC:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
+        <linfeilong@huawei.com>, <liuzhiqiang26@huawei.com>,
+        <wubo40@huawei.com>
+Subject: [PATCH] target:iscsi-target:Fix null pointer access while logout the iscsi session
+Date:   Tue, 18 Aug 2020 19:16:10 +0800
+Message-ID: <1597749370-631500-1-git-send-email-wubo40@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 18 Aug 2020 17:29:16 +0800
-From:   hongwus@codeaurora.org
-To:     Asutosh Das <asutoshd@codeaurora.org>
-Cc:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-scsi-owner@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: Remove an unpaired
- ufshcd_scsi_unblock_requests() in err_handler()
-In-Reply-To: <20200818054237.GA880@asutoshd-linux1.qualcomm.com>
-References: <1597728047-39936-1-git-send-email-cang@codeaurora.org>
- <20200818054237.GA880@asutoshd-linux1.qualcomm.com>
-Message-ID: <72617138cbb0ccd5a50a9b7048251489@codeaurora.org>
-X-Sender: hongwus@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.27]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-18 13:42, Asutosh Das wrote:
-> On Mon, Aug 17 2020 at 22:21 -0700, Can Guo wrote:
->> Commit 5586dd8ea250a ("scsi: ufs: Fix a race condition between error
->> handler and runtime PM ops") moves the ufshcd_scsi_block_requests() 
->> inside
->> err_handler(), but forgets to remove the 
->> ufshcd_scsi_unblock_requests() in
->> the early return path. Correct the coding mistake.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> 
-> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 2b55c2e..b8441ad 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -5670,7 +5670,6 @@ static void ufshcd_err_handler(struct 
->> work_struct *work)
->> 		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
->> 			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
->> 		spin_unlock_irqrestore(hba->host->host_lock, flags);
->> -		ufshcd_scsi_unblock_requests(hba);
->> 		return;
->> 	}
->> 	ufshcd_set_eh_in_progress(hba);
->> -- Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, 
->> a Linux Foundation Collaborative Project.
->> 
+From: Wu Bo <wubo40@huawei.com>
 
-Reviewed-by: Hongwu Su<hongwus@codeaurora.org>
+When I use fio to test the iscsi volumes and logout of the iscsi session
+at the same time, the following crash occurs:
+
+[24912.893443] BUG: unable to handle kernel NULL pointer dereference at 0000000000000140
+[24912.893748] Oops: 0002 [#1] SMP PTI
+[24912.893883] CPU: 3 PID: 239032 Comm: kworker/3:2 Kdump: loaded Tainted:  
+[24912.894316] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996)
+[24912.894773] Workqueue: target_completion target_complete_ok_work [target_core_mod]
+[24912.895065] RIP: 0010:sbitmap_queue_clear+0x2a/0x70
+[24912.895328] Code: 41 54 41 89 f4 55 89 d5 53 48 89 fb 8b 4f 04 89 f0 d3 e8 48 8d 3c
+[24912.895906] RSP: 0018:ffff9eb14129bdf0 EFLAGS: 00010206
+[24912.896268] RAX: 000000000000001b RBX: ffff9065367f23c0 RCX: 0000000000000005
+[24912.896591] RDX: 0000000000000000 RSI: 000000000000003b RDI: 00000000000000c0
+[24912.896919] RBP: 0000000000000000 R08: 0000000000000001 R09: 0000000000000000
+[24912.897556] R10: ffff9064bf6261e0 R11: 0000000000000100 R12: 000000000000003b
+[24912.897913] R13: 0000000000000000 R14: 0000000000000000 R15: ffff906518610c18
+[24912.897916] FS:  0000000000000000(0000) GS:ffff90653ad80000(0000) knlGS:0000000000000000
+[24912.898988] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[24912.899410] CR2: 0000000000000140 CR3: 0000000127c0a004 CR4: 00000000000206e0
+[24912.899830] Call Trace:
+[24912.900278]  target_release_cmd_kref+0x11d/0x2b0 [target_core_mod]
+[24912.900727]  target_put_sess_cmd+0x23/0x30 [target_core_mod]
+[24912.901181]  target_complete_ok_work+0xc2/0x370 [target_core_mod]
+[24912.901649]  ? __schedule+0x304/0x930
+[24912.902921]  process_one_work+0x195/0x390
+[24912.903396]  worker_thread+0x30/0x390
+[24912.903866]  ? process_one_work+0x390/0x390
+[24912.904355]  kthread+0x10d/0x130
+[24912.904835]  ? kthread_flush_work_fn+0x10/0x10
+[24912.905335]  ret_from_fork+0x35/0x40
+
+The iscsi-target thread executes the logout operation, 
+deletes the session,and releases the sess_tag_pool without waiting 
+for all cmds to complete. When the cmds is completed, the target_complete
+worker put the tag to sess_tag_pool, the sess_tag_pool has been released 
+at this time, So accessed the NULL pointer.
+
+Signed-off-by: Wu Bo <wubo40@huawei.com>
+---
+ drivers/target/iscsi/iscsi_target.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index c968961..a8ea4a7 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4387,6 +4387,8 @@ int iscsit_close_session(struct iscsi_session *sess)
+ 		}
+ 	}
+ 
++	target_sess_cmd_list_set_waiting(sess->se_sess);
++	target_wait_for_sess_cmds(sess->se_sess);
+ 	transport_deregister_session(sess->se_sess);
+ 
+ 	if (sess->sess_ops->ErrorRecoveryLevel == 2)
+-- 
+1.8.3.1
+
