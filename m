@@ -7,32 +7,37 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE72C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5FA8C433E5
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:49:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 627B920706
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:49:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E5C820738
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:49:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726952AbgHRMtG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Aug 2020 08:49:06 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49694 "EHLO mx2.suse.de"
+        id S1726847AbgHRMsV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Aug 2020 08:48:21 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49484 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726916AbgHRMse (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Aug 2020 08:48:34 -0400
+        id S1726746AbgHRMsR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Aug 2020 08:48:17 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 62052AF13;
-        Tue, 18 Aug 2020 12:48:58 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 971E6AF57;
+        Tue, 18 Aug 2020 12:48:40 +0000 (UTC)
 From:   Coly Li <colyli@suse.de>
 To:     linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
         netdev@vger.kernel.org, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Coly Li <colyli@suse.de>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v6 6/6] libceph: use sendpage_ok() in ceph_tcp_sendpage()
-Date:   Tue, 18 Aug 2020 20:47:36 +0800
-Message-Id: <20200818124736.5790-7-colyli@suse.de>
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Jan Kara <jack@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        Mikhail Skorzhinskii <mskorzhinskiy@solarflare.com>,
+        Philipp Reisner <philipp.reisner@linbit.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Vlastimil Babka <vbabka@suse.com>, stable@vger.kernel.org
+Subject: [PATCH v6 2/6] nvme-tcp: check page by sendpage_ok() before calling kernel_sendpage()
+Date:   Tue, 18 Aug 2020 20:47:32 +0800
+Message-Id: <20200818124736.5790-3-colyli@suse.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200818124736.5790-1-colyli@suse.de>
 References: <20200818124736.5790-1-colyli@suse.de>
@@ -43,33 +48,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In libceph, ceph_tcp_sendpage() does the following checks before handle
-the page by network layer's zero copy sendpage method,
-	if (page_count(page) >= 1 && !PageSlab(page))
+Currently nvme_tcp_try_send_data() doesn't use kernel_sendpage() to
+send slab pages. But for pages allocated by __get_free_pages() without
+__GFP_COMP, which also have refcount as 0, they are still sent by
+kernel_sendpage() to remote end, this is problematic.
 
-This check is exactly what sendpage_ok() does. This patch replace the
-open coded checks by sendpage_ok() as a code cleanup.
+The new introduced helper sendpage_ok() checks both PageSlab tag and
+page_count counter, and returns true if the checking page is OK to be
+sent by kernel_sendpage().
+
+This patch fixes the page checking issue of nvme_tcp_try_send_data()
+with sendpage_ok(). If sendpage_ok() returns true, send this page by
+kernel_sendpage(), otherwise use sock_no_sendpage to handle this page.
 
 Signed-off-by: Coly Li <colyli@suse.de>
-Cc: Ilya Dryomov <idryomov@gmail.com>
-Cc: Jeff Layton <jlayton@kernel.org>
+Cc: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Jan Kara <jack@suse.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Mikhail Skorzhinskii <mskorzhinskiy@solarflare.com>
+Cc: Philipp Reisner <philipp.reisner@linbit.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Vlastimil Babka <vbabka@suse.com>
+Cc: stable@vger.kernel.org
 ---
- net/ceph/messenger.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/nvme/host/tcp.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/net/ceph/messenger.c b/net/ceph/messenger.c
-index 27d6ab11f9ee..6a349da7f013 100644
---- a/net/ceph/messenger.c
-+++ b/net/ceph/messenger.c
-@@ -575,7 +575,7 @@ static int ceph_tcp_sendpage(struct socket *sock, struct page *page,
- 	 * coalescing neighboring slab objects into a single frag which
- 	 * triggers one of hardened usercopy checks.
- 	 */
--	if (page_count(page) >= 1 && !PageSlab(page))
-+	if (sendpage_ok(page))
- 		sendpage = sock->ops->sendpage;
- 	else
- 		sendpage = sock_no_sendpage;
+diff --git a/drivers/nvme/host/tcp.c b/drivers/nvme/host/tcp.c
+index 62fbaecdc960..902fe742762b 100644
+--- a/drivers/nvme/host/tcp.c
++++ b/drivers/nvme/host/tcp.c
+@@ -912,12 +912,11 @@ static int nvme_tcp_try_send_data(struct nvme_tcp_request *req)
+ 		else
+ 			flags |= MSG_MORE | MSG_SENDPAGE_NOTLAST;
+ 
+-		/* can't zcopy slab pages */
+-		if (unlikely(PageSlab(page))) {
+-			ret = sock_no_sendpage(queue->sock, page, offset, len,
++		if (sendpage_ok(page)) {
++			ret = kernel_sendpage(queue->sock, page, offset, len,
+ 					flags);
+ 		} else {
+-			ret = kernel_sendpage(queue->sock, page, offset, len,
++			ret = sock_no_sendpage(queue->sock, page, offset, len,
+ 					flags);
+ 		}
+ 		if (ret <= 0)
 -- 
 2.26.2
 
