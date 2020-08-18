@@ -7,58 +7,61 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7A6C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF8C5C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:34:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF9862065D
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:34:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCEA32065D
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Aug 2020 12:34:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="JXuI8R1+"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="EbyEIWaf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726780AbgHRMej (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Aug 2020 08:34:39 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25494 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726688AbgHRMec (ORCPT
+        id S1726777AbgHRMez (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Aug 2020 08:34:55 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:57010 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726611AbgHRMey (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Aug 2020 08:34:32 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07ICVcZ5026230
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2020 05:34:29 -0700
+        Tue, 18 Aug 2020 08:34:54 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07ICUB8k028501
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2020 05:34:54 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=VL2A49UFRVNsv+wQt/xYa7TVkN91/ig3tPIRLKkcObg=;
- b=JXuI8R1+UI0oc3+rUMJYSohtDBYCw9jM+qy552FJPtW+az20DBqjANxsMt94zFS4m8T+
- WT9MRhdT6QazWRSD2U3yYLNU+tvJ6S3XvGY0Po/kAUU6aXDM4WiIPJ2Ptaf1UD+VU5J8
- /6MErZwScDm5XyDaiYJS/JCUpR+nYs4kQsaxxk3UnghOtNEwGWBUDZ/xl+Ne2CLE88mI
- 02b4b3NWFkKEqhHnZSusw6K9OU8EnIe9BkZRM/5QtJr7TM0x25Pwd7Dp5WK5LKeT8DI7
- xOI3Xe+DhXRQLb7zty6dS7ICjOmY6K855tfVEqXnr3OY4r8oHybETSUW07Ws8g0XPGJk uQ== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3304hhjcnc-1
+ content-type; s=pfpt0220; bh=xr2ytCTRKfqBC10S38rLdXzAWJ2q+YECSqQ+ewV8ZRY=;
+ b=EbyEIWaf8O+YOTJ2KsQBEQxxye6o/Mnajz3P1Ef2YBgNCjKmSmfzzHH61akI5x24Tri5
+ ZZoKGUAHSopXnT3rgPA2NJY0SOa5VQDVbW0FTCr4cla8dHACdPB3pyC+pMRvYeJ8MggK
+ RLSyp9LXG6BJcvqLVj8zjamiFBXCaGnp1cKaWt+WzNC0RJOEz24VE2MC9KlmD5+jadTq
+ hK/0LB0J4ixIlYYS4UCPvQzwnkqtLyZiWiJ8+IyMuWl0i1nGZgCH5AA+sPoqYxEA+Ma6
+ bF3YLkFDvrkee/s8+oS8L/ilUfJIg0kKHwZx+RD2gQinbPlyqcm3MYe50flCTsxqhFgL GA== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3304fhjene-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2020 05:34:29 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 18 Aug
- 2020 05:34:28 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 18 Aug 2020 05:34:28 -0700
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2020 05:34:54 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 18 Aug
+ 2020 05:34:53 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 18 Aug
+ 2020 05:34:52 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 18 Aug 2020 05:34:52 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id EEEE53F7043;
-        Tue, 18 Aug 2020 05:34:27 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 1D3ED3F7043;
+        Tue, 18 Aug 2020 05:34:52 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 07ICYRJr020434;
-        Tue, 18 Aug 2020 05:34:27 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 07ICYpX9020438;
+        Tue, 18 Aug 2020 05:34:51 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 07ICYRrQ020432;
-        Tue, 18 Aug 2020 05:34:27 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 07ICYpii020437;
+        Tue, 18 Aug 2020 05:34:51 -0700
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 05/12] qla2xxx: Reduce duplicate code in reporting speed
-Date:   Tue, 18 Aug 2020 05:31:56 -0700
-Message-ID: <20200818123203.20361-6-njavali@marvell.com>
+Subject: [PATCH 06/12] qla2xxx: Fix memory size truncation
+Date:   Tue, 18 Aug 2020 05:31:57 -0700
+Message-ID: <20200818123203.20361-7-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200818123203.20361-1-njavali@marvell.com>
 References: <20200818123203.20361-1-njavali@marvell.com>
@@ -73,229 +76,75 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-Indicate correct speed for 16G Mezz card.
+Memory size calculation for Extended Login use in hardware
+offload was truncated when the setting was set with higher
+value.
 
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c | 41 +-------------
- drivers/scsi/qla2xxx/qla_gbl.h  |  2 +
- drivers/scsi/qla2xxx/qla_gs.c   |  7 +--
- drivers/scsi/qla2xxx/qla_os.c   | 96 +--------------------------------
- 4 files changed, 9 insertions(+), 137 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h | 2 +-
+ drivers/scsi/qla2xxx/qla_mbx.c | 7 ++++---
+ drivers/scsi/qla2xxx/qla_os.c  | 5 +++--
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 5d93ccc73153..d006ae193677 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -3214,46 +3214,7 @@ qla2x00_init_host_attr(scsi_qla_host_t *vha)
- 	fc_host_max_npiv_vports(vha->host) = ha->max_npiv_vports;
- 	fc_host_npiv_vports_inuse(vha->host) = ha->cur_vport_count;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 074d8753cfc3..ad4a0ba7203c 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -4216,7 +4216,7 @@ struct qla_hw_data {
+ 	/* Extended Logins  */
+ 	void		*exlogin_buf;
+ 	dma_addr_t	exlogin_buf_dma;
+-	int		exlogin_size;
++	uint32_t	exlogin_size;
  
--	if (IS_CNA_CAPABLE(ha))
--		speeds = FC_PORTSPEED_10GBIT;
--	else if (IS_QLA28XX(ha) || IS_QLA27XX(ha)) {
--		if (ha->max_supported_speed == 2) {
--			if (ha->min_supported_speed <= 6)
--				speeds |= FC_PORTSPEED_64GBIT;
--		}
--		if (ha->max_supported_speed == 2 ||
--		    ha->max_supported_speed == 1) {
--			if (ha->min_supported_speed <= 5)
--				speeds |= FC_PORTSPEED_32GBIT;
--		}
--		if (ha->max_supported_speed == 2 ||
--		    ha->max_supported_speed == 1 ||
--		    ha->max_supported_speed == 0) {
--			if (ha->min_supported_speed <= 4)
--				speeds |= FC_PORTSPEED_16GBIT;
--		}
--		if (ha->max_supported_speed == 1 ||
--		    ha->max_supported_speed == 0) {
--			if (ha->min_supported_speed <= 3)
--				speeds |= FC_PORTSPEED_8GBIT;
--		}
--		if (ha->max_supported_speed == 0) {
--			if (ha->min_supported_speed <= 2)
--				speeds |= FC_PORTSPEED_4GBIT;
--		}
--	} else if (IS_QLA2031(ha))
--		speeds = FC_PORTSPEED_16GBIT|FC_PORTSPEED_8GBIT|
--			FC_PORTSPEED_4GBIT;
--	else if (IS_QLA25XX(ha) || IS_QLAFX00(ha))
--		speeds = FC_PORTSPEED_8GBIT|FC_PORTSPEED_4GBIT|
--			FC_PORTSPEED_2GBIT|FC_PORTSPEED_1GBIT;
--	else if (IS_QLA24XX_TYPE(ha))
--		speeds = FC_PORTSPEED_4GBIT|FC_PORTSPEED_2GBIT|
--			FC_PORTSPEED_1GBIT;
--	else if (IS_QLA23XX(ha))
--		speeds = FC_PORTSPEED_2GBIT|FC_PORTSPEED_1GBIT;
--	else
--		speeds = FC_PORTSPEED_1GBIT;
-+	speeds = qla25xx_fdmi_port_speed_capability(ha);
+ #define ENABLE_EXCHANGE_OFFLD	BIT_2
  
- 	fc_host_supported_speeds(vha->host) = speeds;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 36c210c24f72..3360857c4405 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -704,6 +704,8 @@ int qla24xx_async_gfpnid(scsi_qla_host_t *, fc_port_t *);
- void qla24xx_handle_gfpnid_event(scsi_qla_host_t *, struct event_arg *);
- void qla24xx_sp_unmap(scsi_qla_host_t *, srb_t *);
- void qla_scan_work_fn(struct work_struct *);
-+uint qla25xx_fdmi_port_speed_capability(struct qla_hw_data *);
-+uint qla25xx_fdmi_port_speed_currently(struct qla_hw_data *);
- 
- /*
-  * Global Function Prototypes in qla_attr.c source file.
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index de9fd7f688d0..700d4247a791 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1502,7 +1502,7 @@ qla2x00_prep_ct_fdmi_req(struct ct_sns_pkt *p, uint16_t cmd,
- 	return &p->p.req;
- }
- 
--static uint
-+uint
- qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 226f1428d3e5..6ce106096ecc 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -845,7 +845,7 @@ qla_get_exlogin_status(scsi_qla_host_t *vha, uint16_t *buf_sz,
+  * Context:
+  *	Kernel context.
+  */
+-#define CONFIG_XLOGINS_MEM	0x3
++#define CONFIG_XLOGINS_MEM	0x9
+ int
+ qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr)
  {
- 	uint speeds = 0;
-@@ -1546,7 +1546,7 @@ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
- 		}
- 		return speeds;
- 	}
--	if (IS_QLA25XX(ha))
-+	if (IS_QLA25XX(ha) || IS_QLAFX00(ha))
- 		return FDMI_PORT_SPEED_8GB|FDMI_PORT_SPEED_4GB|
- 			FDMI_PORT_SPEED_2GB|FDMI_PORT_SPEED_1GB;
- 	if (IS_QLA24XX_TYPE(ha))
-@@ -1556,7 +1556,8 @@ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
- 		return FDMI_PORT_SPEED_2GB|FDMI_PORT_SPEED_1GB;
- 	return FDMI_PORT_SPEED_1GB;
- }
--static uint
-+
-+uint
- qla25xx_fdmi_port_speed_currently(struct qla_hw_data *ha)
- {
- 	switch (ha->link_data_rate) {
+@@ -872,8 +872,9 @@ qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr)
+ 	mcp->flags = 0;
+ 	rval = qla2x00_mailbox_command(vha, mcp);
+ 	if (rval != QLA_SUCCESS) {
+-		/*EMPTY*/
+-		ql_dbg(ql_dbg_mbx, vha, 0x111b, "Failed=%x.\n", rval);
++		ql_dbg(ql_dbg_mbx, vha, 0x111b,
++		       "EXlogin Failed=%x. MB0=%x MB11=%x\n",
++		       rval, mcp->mb[0], mcp->mb[11]);
+ 	} else {
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x118c,
+ 		    "Done %s.\n", __func__);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 8da00ba54aec..f10a43ac1ec7 100644
+index f10a43ac1ec7..858549e21aea 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5810,98 +5810,6 @@ qla25xx_rdp_rsp_reduce_size(struct scsi_qla_host *vha,
- 	return true;
- }
+@@ -4379,11 +4379,12 @@ int
+ qla2x00_set_exlogins_buffer(scsi_qla_host_t *vha)
+ {
+ 	int rval;
+-	uint16_t	size, max_cnt, temp;
++	uint16_t	size, max_cnt;
++	uint32_t temp;
+ 	struct qla_hw_data *ha = vha->hw;
  
--static uint
--qla25xx_rdp_port_speed_capability(struct qla_hw_data *ha)
--{
--	if (IS_CNA_CAPABLE(ha))
--		return RDP_PORT_SPEED_10GB;
--
--	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
--		unsigned int speeds = 0;
--
--		if (ha->max_supported_speed == 2) {
--			if (ha->min_supported_speed <= 6)
--				speeds |= RDP_PORT_SPEED_64GB;
--		}
--
--		if (ha->max_supported_speed == 2 ||
--		    ha->max_supported_speed == 1) {
--			if (ha->min_supported_speed <= 5)
--				speeds |= RDP_PORT_SPEED_32GB;
--		}
--
--		if (ha->max_supported_speed == 2 ||
--		    ha->max_supported_speed == 1 ||
--		    ha->max_supported_speed == 0) {
--			if (ha->min_supported_speed <= 4)
--				speeds |= RDP_PORT_SPEED_16GB;
--		}
--
--		if (ha->max_supported_speed == 1 ||
--		    ha->max_supported_speed == 0) {
--			if (ha->min_supported_speed <= 3)
--				speeds |= RDP_PORT_SPEED_8GB;
--		}
--
--		if (ha->max_supported_speed == 0) {
--			if (ha->min_supported_speed <= 2)
--				speeds |= RDP_PORT_SPEED_4GB;
--		}
--
--		return speeds;
--	}
--
--	if (IS_QLA2031(ha))
--		return RDP_PORT_SPEED_16GB|RDP_PORT_SPEED_8GB|
--		       RDP_PORT_SPEED_4GB;
--
--	if (IS_QLA25XX(ha))
--		return RDP_PORT_SPEED_8GB|RDP_PORT_SPEED_4GB|
--		       RDP_PORT_SPEED_2GB|RDP_PORT_SPEED_1GB;
--
--	if (IS_QLA24XX_TYPE(ha))
--		return RDP_PORT_SPEED_4GB|RDP_PORT_SPEED_2GB|
--		       RDP_PORT_SPEED_1GB;
--
--	if (IS_QLA23XX(ha))
--		return RDP_PORT_SPEED_2GB|RDP_PORT_SPEED_1GB;
--
--	return RDP_PORT_SPEED_1GB;
--}
--
--static uint
--qla25xx_rdp_port_speed_currently(struct qla_hw_data *ha)
--{
--	switch (ha->link_data_rate) {
--	case PORT_SPEED_1GB:
--		return RDP_PORT_SPEED_1GB;
--
--	case PORT_SPEED_2GB:
--		return RDP_PORT_SPEED_2GB;
--
--	case PORT_SPEED_4GB:
--		return RDP_PORT_SPEED_4GB;
--
--	case PORT_SPEED_8GB:
--		return RDP_PORT_SPEED_8GB;
--
--	case PORT_SPEED_10GB:
--		return RDP_PORT_SPEED_10GB;
--
--	case PORT_SPEED_16GB:
--		return RDP_PORT_SPEED_16GB;
--
--	case PORT_SPEED_32GB:
--		return RDP_PORT_SPEED_32GB;
--
--	case PORT_SPEED_64GB:
--		return RDP_PORT_SPEED_64GB;
--
--	default:
--		return RDP_PORT_SPEED_UNKNOWN;
--	}
--}
--
- /*
-  * Function Name: qla24xx_process_purex_iocb
-  *
-@@ -6068,9 +5976,9 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha,
- 	rsp_payload->port_speed_desc.desc_len =
- 	    cpu_to_be32(RDP_DESC_LEN(rsp_payload->port_speed_desc));
- 	rsp_payload->port_speed_desc.speed_capab = cpu_to_be16(
--	    qla25xx_rdp_port_speed_capability(ha));
-+	    qla25xx_fdmi_port_speed_capability(ha));
- 	rsp_payload->port_speed_desc.operating_speed = cpu_to_be16(
--	    qla25xx_rdp_port_speed_currently(ha));
-+	    qla25xx_fdmi_port_speed_currently(ha));
+ 	/* Return if we don't need to alloacate any extended logins */
+-	if (!ql2xexlogins)
++	if (ql2xexlogins <= MAX_FIBRE_DEVICES_2400)
+ 		return QLA_SUCCESS;
  
- 	/* Link Error Status Descriptor */
- 	rsp_payload->ls_err_desc.desc_tag = cpu_to_be32(0x10002);
+ 	if (!IS_EXLOGIN_OFFLD_CAPABLE(ha))
 -- 
 2.19.0.rc0
 
