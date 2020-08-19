@@ -2,41 +2,41 @@ Return-Path: <SRS0=XqvZ=B5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 979BBC433EA
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:58:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB3BC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:58:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53FAB207FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:58:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1735C208DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:58:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YH1vT2vq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hvsEVEvL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728113AbgHSG6A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 02:58:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36862 "EHLO
+        id S1728152AbgHSG6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 02:58:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728068AbgHSG5v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2020 02:57:51 -0400
+        with ESMTP id S1728089AbgHSG55 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2020 02:57:57 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 686E9C061389;
-        Tue, 18 Aug 2020 23:57:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A8BEC061389;
+        Tue, 18 Aug 2020 23:57:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=EVErLVnSm6xDRGXKlec15d9C+2x1SE2cMBEl8na4gyI=; b=YH1vT2vqbroAI7tWxwF1l4qzHB
-        D+Ix1eFFcW9uAkmmJy4zI/C6oAh2vLb94DyuUdLxe5tqjPqlCrcTaqshMieySvhtKNH7KUn/RLNIQ
-        ycCZRO3sfH70CL8z3ys27iIDONZZJttrQLNqaYPnCLDsBSHTCfxGC9JtxUGhuw46QKJM7uCusR/jW
-        ENHeTSJmFPyQ6rIMd1AiTRk14IZrs2a3AakwVGE+uY6KzKoQZBXFxlGfZy43I6dPa5H+s3BDRf8p1
-        Bufb4c9jPtmqQD4R1ZHqtRH/4J0u6rxqJby9Ir4tUT35WNtrJHCg9muNdnxhO37F9PxQgjgQmLbbV
-        R7Xq6FZw==;
+        bh=lNMBC694MGzhD+uJcSmWDHi7UPoDvxCv6DsPxBphUDM=; b=hvsEVEvLhFqVJsYwQI9fVfL5lp
+        KW/X5c84TRVEWiCq+JWY6sNEc2oPPEGv+njCJOloQQfIY5LUVW8trunjunigerqOpw/bNuW3d15Nk
+        KgKieclLAYJPG4mvEkrbXHTLSkS3oIM/sohwRcqd7QHlpj3mv/N3/MXfm3eBRP5C0/LNJ5ouorMBE
+        EFFTa7MVts6kBXsmWo/w+5Hd0w5Fe84gvTgCYwvRXDgUbWV9izyuuyq+19e30v6LdcypJRbfFaF/y
+        BVzr8sMb9JqE5r5zxB/kHyoI/WzgowY0Vk+Xyd6UQArjHPMonvBv0ewspWNMbu/2jhayLSYkMZBFZ
+        7BeuNtag==;
 Received: from [2001:4bb8:198:f3b2:86b6:2277:f429:37a1] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k8I1g-0008Vm-R4; Wed, 19 Aug 2020 06:56:50 +0000
+        id 1k8I1v-00007x-Sa; Wed, 19 Aug 2020 06:57:05 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
@@ -57,9 +57,9 @@ Cc:     Tom Lendacky <thomas.lendacky@amd.com>, linux-doc@vger.kernel.org,
         netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-mm@kvack.org,
         alsa-devel@alsa-project.org
-Subject: [PATCH 23/28] lib82596: convert from dma_cache_sync to dma_sync_single_for_device
-Date:   Wed, 19 Aug 2020 08:55:50 +0200
-Message-Id: <20200819065555.1802761-24-hch@lst.de>
+Subject: [PATCH 28/28] nvme-pci: use dma_alloc_pages backed dmapools
+Date:   Wed, 19 Aug 2020 08:55:55 +0200
+Message-Id: <20200819065555.1802761-29-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200819065555.1802761-1-hch@lst.de>
 References: <20200819065555.1802761-1-hch@lst.de>
@@ -71,406 +71,208 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the proper modern API to transfer cache ownership for incoherent DMA.
-Note that this moves the DMA helpers to the main lib82596.c file, so
-that they can use virt_to_dma.
+Switch from coherent DMA pools to those backed by dma_alloc_pages.  This
+helps device with non-coherent DMA to avoid host accesses to uncached
+memory for every submission of a larger than single entry I/O.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/net/ethernet/i825xx/lasi_82596.c |  11 +--
- drivers/net/ethernet/i825xx/lib82596.c   | 114 ++++++++++++++---------
- drivers/net/ethernet/i825xx/sni_82596.c  |   4 -
- 3 files changed, 73 insertions(+), 56 deletions(-)
+ drivers/nvme/host/pci.c | 80 ++++++++++++++++++++---------------------
+ 1 file changed, 40 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/ethernet/i825xx/lasi_82596.c b/drivers/net/ethernet/i825xx/lasi_82596.c
-index 0c493b7237a910..d13b610935bcf3 100644
---- a/drivers/net/ethernet/i825xx/lasi_82596.c
-+++ b/drivers/net/ethernet/i825xx/lasi_82596.c
-@@ -96,21 +96,14 @@
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index a33adab62acbaf..fb34dbcb973673 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -114,8 +114,8 @@ struct nvme_dev {
+ 	struct blk_mq_tag_set admin_tagset;
+ 	u32 __iomem *dbs;
+ 	struct device *dev;
+-	struct dma_pool *prp_page_pool;
+-	struct dma_pool *prp_small_pool;
++	struct dma_pool prp_page_pool;
++	struct dma_pool prp_small_pool;
+ 	unsigned online_queues;
+ 	unsigned max_qid;
+ 	unsigned io_queues[HCTX_MAX_TYPES];
+@@ -536,7 +536,7 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
  
- #define OPT_SWAP_PORT	0x0001	/* Need to wordswp on the MPU port */
  
--#define DMA_WBACK(ndev, addr, len) \
--	do { dma_cache_sync((ndev)->dev.parent, (void *)addr, len, DMA_TO_DEVICE); } while (0)
--
--#define DMA_INV(ndev, addr, len) \
--	do { dma_cache_sync((ndev)->dev.parent, (void *)addr, len, DMA_FROM_DEVICE); } while (0)
--
--#define DMA_WBACK_INV(ndev, addr, len) \
--	do { dma_cache_sync((ndev)->dev.parent, (void *)addr, len, DMA_BIDIRECTIONAL); } while (0)
--
- #define SYSBUS      0x0000006c
+ 	if (iod->npages == 0)
+-		dma_pool_free(dev->prp_small_pool, nvme_pci_iod_list(req)[0],
++		dma_pool_free(&dev->prp_small_pool, nvme_pci_iod_list(req)[0],
+ 			dma_addr);
  
- /* big endian CPU, 82596 "big" endian mode */
- #define SWAP32(x)   (((u32)(x)<<16) | ((((u32)(x)))>>16))
- #define SWAP16(x)   (x)
+ 	for (i = 0; i < iod->npages; i++) {
+@@ -553,7 +553,7 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
+ 			next_dma_addr = le64_to_cpu(prp_list[last_prp]);
+ 		}
  
-+#define NONCOHERENT_DMA 1
-+
- #include "lib82596.c"
- 
- MODULE_AUTHOR("Richard Hirst");
-diff --git a/drivers/net/ethernet/i825xx/lib82596.c b/drivers/net/ethernet/i825xx/lib82596.c
-index b4e4b3eb5758b5..ca2fb303fcc6f6 100644
---- a/drivers/net/ethernet/i825xx/lib82596.c
-+++ b/drivers/net/ethernet/i825xx/lib82596.c
-@@ -365,13 +365,44 @@ static int max_cmd_backlog = TX_RING_SIZE-1;
- static void i596_poll_controller(struct net_device *dev);
- #endif
- 
-+static inline dma_addr_t virt_to_dma(struct i596_private *lp, volatile void *v)
-+{
-+	return lp->dma_addr + ((unsigned long)v - (unsigned long)lp->dma);
-+}
-+
-+#ifdef NONCOHERENT_DMA
-+static inline void dma_sync_dev(struct net_device *ndev, volatile void *addr,
-+		size_t len)
-+{
-+	dma_sync_single_for_device(ndev->dev.parent,
-+			virt_to_dma(netdev_priv(ndev), addr), len,
-+			DMA_BIDIRECTIONAL);
-+}
-+
-+static inline void dma_sync_cpu(struct net_device *ndev, volatile void *addr,
-+		size_t len)
-+{
-+	dma_sync_single_for_cpu(ndev->dev.parent,
-+			virt_to_dma(netdev_priv(ndev), addr), len,
-+			DMA_BIDIRECTIONAL);
-+}
-+#else
-+static inline void dma_sync_dev(struct net_device *ndev, volatile void *addr,
-+		size_t len)
-+{
-+}
-+static inline void dma_sync_cpu(struct net_device *ndev, volatile void *addr,
-+		size_t len)
-+{
-+}
-+#endif /* NONCOHERENT_DMA */
- 
- static inline int wait_istat(struct net_device *dev, struct i596_dma *dma, int delcnt, char *str)
- {
--	DMA_INV(dev, &(dma->iscp), sizeof(struct i596_iscp));
-+	dma_sync_cpu(dev, &(dma->iscp), sizeof(struct i596_iscp));
- 	while (--delcnt && dma->iscp.stat) {
- 		udelay(10);
--		DMA_INV(dev, &(dma->iscp), sizeof(struct i596_iscp));
-+		dma_sync_cpu(dev, &(dma->iscp), sizeof(struct i596_iscp));
+-		dma_pool_free(dev->prp_page_pool, addr, dma_addr);
++		dma_pool_free(&dev->prp_page_pool, addr, dma_addr);
+ 		dma_addr = next_dma_addr;
  	}
- 	if (!delcnt) {
- 		printk(KERN_ERR "%s: %s, iscp.stat %04x, didn't clear\n",
-@@ -384,10 +415,10 @@ static inline int wait_istat(struct net_device *dev, struct i596_dma *dma, int d
  
- static inline int wait_cmd(struct net_device *dev, struct i596_dma *dma, int delcnt, char *str)
- {
--	DMA_INV(dev, &(dma->scb), sizeof(struct i596_scb));
-+	dma_sync_cpu(dev, &(dma->scb), sizeof(struct i596_scb));
- 	while (--delcnt && dma->scb.command) {
- 		udelay(10);
--		DMA_INV(dev, &(dma->scb), sizeof(struct i596_scb));
-+		dma_sync_cpu(dev, &(dma->scb), sizeof(struct i596_scb));
+@@ -611,10 +611,10 @@ static blk_status_t nvme_pci_setup_prps(struct nvme_dev *dev,
+ 
+ 	nprps = DIV_ROUND_UP(length, NVME_CTRL_PAGE_SIZE);
+ 	if (nprps <= (256 / 8)) {
+-		pool = dev->prp_small_pool;
++		pool = &dev->prp_small_pool;
+ 		iod->npages = 0;
+ 	} else {
+-		pool = dev->prp_page_pool;
++		pool = &dev->prp_page_pool;
+ 		iod->npages = 1;
  	}
- 	if (!delcnt) {
- 		printk(KERN_ERR "%s: %s, status %4.4x, cmd %4.4x.\n",
-@@ -451,12 +482,9 @@ static void i596_display_data(struct net_device *dev)
- 		       SWAP32(rbd->b_data), SWAP16(rbd->size));
- 		rbd = rbd->v_next;
- 	} while (rbd != lp->rbd_head);
--	DMA_INV(dev, dma, sizeof(struct i596_dma));
-+	dma_sync_cpu(dev, dma, sizeof(struct i596_dma));
+ 
+@@ -630,6 +630,11 @@ static blk_status_t nvme_pci_setup_prps(struct nvme_dev *dev,
+ 	for (;;) {
+ 		if (i == NVME_CTRL_PAGE_SIZE >> 3) {
+ 			__le64 *old_prp_list = prp_list;
++
++			dma_sync_single_for_device(dev->dev, prp_dma,
++						   i * sizeof(*prp_list),
++						   DMA_TO_DEVICE);
++
+ 			prp_list = dma_pool_alloc(pool, GFP_ATOMIC, &prp_dma);
+ 			if (!prp_list)
+ 				return BLK_STS_RESOURCE;
+@@ -653,6 +658,8 @@ static blk_status_t nvme_pci_setup_prps(struct nvme_dev *dev,
+ 		dma_len = sg_dma_len(sg);
+ 	}
+ 
++	dma_sync_single_for_device(dev->dev, prp_dma, i * sizeof(*prp_list),
++				   DMA_TO_DEVICE);
+ done:
+ 	cmnd->dptr.prp1 = cpu_to_le64(sg_dma_address(iod->sg));
+ 	cmnd->dptr.prp2 = cpu_to_le64(iod->first_dma);
+@@ -706,10 +713,10 @@ static blk_status_t nvme_pci_setup_sgls(struct nvme_dev *dev,
+ 	}
+ 
+ 	if (entries <= (256 / sizeof(struct nvme_sgl_desc))) {
+-		pool = dev->prp_small_pool;
++		pool = &dev->prp_small_pool;
+ 		iod->npages = 0;
+ 	} else {
+-		pool = dev->prp_page_pool;
++		pool = &dev->prp_page_pool;
+ 		iod->npages = 1;
+ 	}
+ 
+@@ -728,6 +735,10 @@ static blk_status_t nvme_pci_setup_sgls(struct nvme_dev *dev,
+ 		if (i == SGES_PER_PAGE) {
+ 			struct nvme_sgl_desc *old_sg_desc = sg_list;
+ 			struct nvme_sgl_desc *link = &old_sg_desc[i - 1];
++	
++			dma_sync_single_for_device(dev->dev, sgl_dma,
++						   i * sizeof(*sg_list),
++						   DMA_TO_DEVICE);
+ 
+ 			sg_list = dma_pool_alloc(pool, GFP_ATOMIC, &sgl_dma);
+ 			if (!sg_list)
+@@ -743,6 +754,8 @@ static blk_status_t nvme_pci_setup_sgls(struct nvme_dev *dev,
+ 		sg = sg_next(sg);
+ 	} while (--entries > 0);
+ 
++	dma_sync_single_for_device(dev->dev, sgl_dma, i * sizeof(*sg_list),
++				   DMA_TO_DEVICE);
+ 	return BLK_STS_OK;
  }
  
--
--#define virt_to_dma(lp, v) ((lp)->dma_addr + (dma_addr_t)((unsigned long)(v)-(unsigned long)((lp)->dma)))
--
- static inline int init_rx_bufs(struct net_device *dev)
- {
- 	struct i596_private *lp = netdev_priv(dev);
-@@ -508,7 +536,7 @@ static inline int init_rx_bufs(struct net_device *dev)
- 	rfd->b_next = SWAP32(virt_to_dma(lp, dma->rfds));
- 	rfd->cmd = SWAP16(CMD_EOL|CMD_FLEX);
- 
--	DMA_WBACK_INV(dev, dma, sizeof(struct i596_dma));
-+	dma_sync_dev(dev, dma, sizeof(struct i596_dma));
+@@ -2457,30 +2470,6 @@ static int nvme_disable_prepare_reset(struct nvme_dev *dev, bool shutdown)
  	return 0;
  }
  
-@@ -547,7 +575,7 @@ static void rebuild_rx_bufs(struct net_device *dev)
- 	lp->rbd_head = dma->rbds;
- 	dma->rfds[0].rbd = SWAP32(virt_to_dma(lp, dma->rbds));
- 
--	DMA_WBACK_INV(dev, dma, sizeof(struct i596_dma));
-+	dma_sync_dev(dev, dma, sizeof(struct i596_dma));
- }
- 
- 
-@@ -575,9 +603,9 @@ static int init_i596_mem(struct net_device *dev)
- 
- 	DEB(DEB_INIT, printk(KERN_DEBUG "%s: starting i82596.\n", dev->name));
- 
--	DMA_WBACK(dev, &(dma->scp), sizeof(struct i596_scp));
--	DMA_WBACK(dev, &(dma->iscp), sizeof(struct i596_iscp));
--	DMA_WBACK(dev, &(dma->scb), sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &(dma->scp), sizeof(struct i596_scp));
-+	dma_sync_dev(dev, &(dma->iscp), sizeof(struct i596_iscp));
-+	dma_sync_dev(dev, &(dma->scb), sizeof(struct i596_scb));
- 
- 	mpu_port(dev, PORT_ALTSCP, virt_to_dma(lp, &dma->scp));
- 	ca(dev);
-@@ -596,24 +624,24 @@ static int init_i596_mem(struct net_device *dev)
- 	rebuild_rx_bufs(dev);
- 
- 	dma->scb.command = 0;
--	DMA_WBACK(dev, &(dma->scb), sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &(dma->scb), sizeof(struct i596_scb));
- 
- 	DEB(DEB_INIT, printk(KERN_DEBUG
- 			     "%s: queuing CmdConfigure\n", dev->name));
- 	memcpy(dma->cf_cmd.i596_config, init_setup, 14);
- 	dma->cf_cmd.cmd.command = SWAP16(CmdConfigure);
--	DMA_WBACK(dev, &(dma->cf_cmd), sizeof(struct cf_cmd));
-+	dma_sync_dev(dev, &(dma->cf_cmd), sizeof(struct cf_cmd));
- 	i596_add_cmd(dev, &dma->cf_cmd.cmd);
- 
- 	DEB(DEB_INIT, printk(KERN_DEBUG "%s: queuing CmdSASetup\n", dev->name));
- 	memcpy(dma->sa_cmd.eth_addr, dev->dev_addr, ETH_ALEN);
- 	dma->sa_cmd.cmd.command = SWAP16(CmdSASetup);
--	DMA_WBACK(dev, &(dma->sa_cmd), sizeof(struct sa_cmd));
-+	dma_sync_dev(dev, &(dma->sa_cmd), sizeof(struct sa_cmd));
- 	i596_add_cmd(dev, &dma->sa_cmd.cmd);
- 
- 	DEB(DEB_INIT, printk(KERN_DEBUG "%s: queuing CmdTDR\n", dev->name));
- 	dma->tdr_cmd.cmd.command = SWAP16(CmdTDR);
--	DMA_WBACK(dev, &(dma->tdr_cmd), sizeof(struct tdr_cmd));
-+	dma_sync_dev(dev, &(dma->tdr_cmd), sizeof(struct tdr_cmd));
- 	i596_add_cmd(dev, &dma->tdr_cmd.cmd);
- 
- 	spin_lock_irqsave (&lp->lock, flags);
-@@ -625,7 +653,7 @@ static int init_i596_mem(struct net_device *dev)
- 	DEB(DEB_INIT, printk(KERN_DEBUG "%s: Issuing RX_START\n", dev->name));
- 	dma->scb.command = SWAP16(RX_START);
- 	dma->scb.rfd = SWAP32(virt_to_dma(lp, dma->rfds));
--	DMA_WBACK(dev, &(dma->scb), sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &(dma->scb), sizeof(struct i596_scb));
- 
- 	ca(dev);
- 
-@@ -659,13 +687,13 @@ static inline int i596_rx(struct net_device *dev)
- 
- 	rfd = lp->rfd_head;		/* Ref next frame to check */
- 
--	DMA_INV(dev, rfd, sizeof(struct i596_rfd));
-+	dma_sync_cpu(dev, rfd, sizeof(struct i596_rfd));
- 	while (rfd->stat & SWAP16(STAT_C)) {	/* Loop while complete frames */
- 		if (rfd->rbd == I596_NULL)
- 			rbd = NULL;
- 		else if (rfd->rbd == lp->rbd_head->b_addr) {
- 			rbd = lp->rbd_head;
--			DMA_INV(dev, rbd, sizeof(struct i596_rbd));
-+			dma_sync_cpu(dev, rbd, sizeof(struct i596_rbd));
- 		} else {
- 			printk(KERN_ERR "%s: rbd chain broken!\n", dev->name);
- 			/* XXX Now what? */
-@@ -713,7 +741,7 @@ static inline int i596_rx(struct net_device *dev)
- 							  DMA_FROM_DEVICE);
- 				rbd->v_data = newskb->data;
- 				rbd->b_data = SWAP32(dma_addr);
--				DMA_WBACK_INV(dev, rbd, sizeof(struct i596_rbd));
-+				dma_sync_dev(dev, rbd, sizeof(struct i596_rbd));
- 			} else {
- 				skb = netdev_alloc_skb_ip_align(dev, pkt_len);
- 			}
-@@ -765,7 +793,7 @@ static inline int i596_rx(struct net_device *dev)
- 		if (rbd != NULL && (rbd->count & SWAP16(0x4000))) {
- 			rbd->count = 0;
- 			lp->rbd_head = rbd->v_next;
--			DMA_WBACK_INV(dev, rbd, sizeof(struct i596_rbd));
-+			dma_sync_dev(dev, rbd, sizeof(struct i596_rbd));
- 		}
- 
- 		/* Tidy the frame descriptor, marking it as end of list */
-@@ -779,14 +807,14 @@ static inline int i596_rx(struct net_device *dev)
- 
- 		lp->dma->scb.rfd = rfd->b_next;
- 		lp->rfd_head = rfd->v_next;
--		DMA_WBACK_INV(dev, rfd, sizeof(struct i596_rfd));
-+		dma_sync_dev(dev, rfd, sizeof(struct i596_rfd));
- 
- 		/* Remove end-of-list from old end descriptor */
- 
- 		rfd->v_prev->cmd = SWAP16(CMD_FLEX);
--		DMA_WBACK_INV(dev, rfd->v_prev, sizeof(struct i596_rfd));
-+		dma_sync_dev(dev, rfd->v_prev, sizeof(struct i596_rfd));
- 		rfd = lp->rfd_head;
--		DMA_INV(dev, rfd, sizeof(struct i596_rfd));
-+		dma_sync_cpu(dev, rfd, sizeof(struct i596_rfd));
- 	}
- 
- 	DEB(DEB_RXFRAME, printk(KERN_DEBUG "frames %d\n", frames));
-@@ -827,12 +855,12 @@ static inline void i596_cleanup_cmd(struct net_device *dev, struct i596_private
- 			ptr->v_next = NULL;
- 			ptr->b_next = I596_NULL;
- 		}
--		DMA_WBACK_INV(dev, ptr, sizeof(struct i596_cmd));
-+		dma_sync_dev(dev, ptr, sizeof(struct i596_cmd));
- 	}
- 
- 	wait_cmd(dev, lp->dma, 100, "i596_cleanup_cmd timed out");
- 	lp->dma->scb.cmd = I596_NULL;
--	DMA_WBACK(dev, &(lp->dma->scb), sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &(lp->dma->scb), sizeof(struct i596_scb));
- }
- 
- 
-@@ -850,7 +878,7 @@ static inline void i596_reset(struct net_device *dev, struct i596_private *lp)
- 
- 	/* FIXME: this command might cause an lpmc */
- 	lp->dma->scb.command = SWAP16(CUC_ABORT | RX_ABORT);
--	DMA_WBACK(dev, &(lp->dma->scb), sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &(lp->dma->scb), sizeof(struct i596_scb));
- 	ca(dev);
- 
- 	/* wait for shutdown */
-@@ -878,20 +906,20 @@ static void i596_add_cmd(struct net_device *dev, struct i596_cmd *cmd)
- 	cmd->command |= SWAP16(CMD_EOL | CMD_INTR);
- 	cmd->v_next = NULL;
- 	cmd->b_next = I596_NULL;
--	DMA_WBACK(dev, cmd, sizeof(struct i596_cmd));
-+	dma_sync_dev(dev, cmd, sizeof(struct i596_cmd));
- 
- 	spin_lock_irqsave (&lp->lock, flags);
- 
- 	if (lp->cmd_head != NULL) {
- 		lp->cmd_tail->v_next = cmd;
- 		lp->cmd_tail->b_next = SWAP32(virt_to_dma(lp, &cmd->status));
--		DMA_WBACK(dev, lp->cmd_tail, sizeof(struct i596_cmd));
-+		dma_sync_dev(dev, lp->cmd_tail, sizeof(struct i596_cmd));
- 	} else {
- 		lp->cmd_head = cmd;
- 		wait_cmd(dev, dma, 100, "i596_add_cmd timed out");
- 		dma->scb.cmd = SWAP32(virt_to_dma(lp, &cmd->status));
- 		dma->scb.command = SWAP16(CUC_START);
--		DMA_WBACK(dev, &(dma->scb), sizeof(struct i596_scb));
-+		dma_sync_dev(dev, &(dma->scb), sizeof(struct i596_scb));
- 		ca(dev);
- 	}
- 	lp->cmd_tail = cmd;
-@@ -956,7 +984,7 @@ static void i596_tx_timeout (struct net_device *dev, unsigned int txqueue)
- 		/* Issue a channel attention signal */
- 		DEB(DEB_ERRORS, printk(KERN_DEBUG "Kicking board.\n"));
- 		lp->dma->scb.command = SWAP16(CUC_START | RX_START);
--		DMA_WBACK_INV(dev, &(lp->dma->scb), sizeof(struct i596_scb));
-+		dma_sync_dev(dev, &(lp->dma->scb), sizeof(struct i596_scb));
- 		ca (dev);
- 		lp->last_restart = dev->stats.tx_packets;
- 	}
-@@ -1014,8 +1042,8 @@ static netdev_tx_t i596_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 		tbd->data = SWAP32(tx_cmd->dma_addr);
- 
- 		DEB(DEB_TXADDR, print_eth(skb->data, "tx-queued"));
--		DMA_WBACK_INV(dev, tx_cmd, sizeof(struct tx_cmd));
--		DMA_WBACK_INV(dev, tbd, sizeof(struct i596_tbd));
-+		dma_sync_dev(dev, tx_cmd, sizeof(struct tx_cmd));
-+		dma_sync_dev(dev, tbd, sizeof(struct i596_tbd));
- 		i596_add_cmd(dev, &tx_cmd->cmd);
- 
- 		dev->stats.tx_packets++;
-@@ -1071,7 +1099,7 @@ static int i82596_probe(struct net_device *dev)
- 	lp->dma->scb.rfd = I596_NULL;
- 	spin_lock_init(&lp->lock);
- 
--	DMA_WBACK_INV(dev, lp->dma, sizeof(struct i596_dma));
-+	dma_sync_dev(dev, lp->dma, sizeof(struct i596_dma));
- 
- 	ret = register_netdev(dev);
- 	if (ret)
-@@ -1141,7 +1169,7 @@ static irqreturn_t i596_interrupt(int irq, void *dev_id)
- 				   dev->name, status & 0x0700));
- 
- 		while (lp->cmd_head != NULL) {
--			DMA_INV(dev, lp->cmd_head, sizeof(struct i596_cmd));
-+			dma_sync_cpu(dev, lp->cmd_head, sizeof(struct i596_cmd));
- 			if (!(lp->cmd_head->status & SWAP16(STAT_C)))
- 				break;
- 
-@@ -1223,7 +1251,7 @@ static irqreturn_t i596_interrupt(int irq, void *dev_id)
- 			}
- 			ptr->v_next = NULL;
- 			ptr->b_next = I596_NULL;
--			DMA_WBACK(dev, ptr, sizeof(struct i596_cmd));
-+			dma_sync_dev(dev, ptr, sizeof(struct i596_cmd));
- 			lp->last_cmd = jiffies;
- 		}
- 
-@@ -1237,13 +1265,13 @@ static irqreturn_t i596_interrupt(int irq, void *dev_id)
- 
- 			ptr->command &= SWAP16(0x1fff);
- 			ptr = ptr->v_next;
--			DMA_WBACK_INV(dev, prev, sizeof(struct i596_cmd));
-+			dma_sync_dev(dev, prev, sizeof(struct i596_cmd));
- 		}
- 
- 		if (lp->cmd_head != NULL)
- 			ack_cmd |= CUC_START;
- 		dma->scb.cmd = SWAP32(virt_to_dma(lp, &lp->cmd_head->status));
--		DMA_WBACK_INV(dev, &dma->scb, sizeof(struct i596_scb));
-+		dma_sync_dev(dev, &dma->scb, sizeof(struct i596_scb));
- 	}
- 	if ((status & 0x1000) || (status & 0x4000)) {
- 		if ((status & 0x4000))
-@@ -1268,7 +1296,7 @@ static irqreturn_t i596_interrupt(int irq, void *dev_id)
- 	}
- 	wait_cmd(dev, dma, 100, "i596 interrupt, timeout");
- 	dma->scb.command = SWAP16(ack_cmd);
--	DMA_WBACK(dev, &dma->scb, sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &dma->scb, sizeof(struct i596_scb));
- 
- 	/* DANGER: I suspect that some kind of interrupt
- 	 acknowledgement aside from acking the 82596 might be needed
-@@ -1299,7 +1327,7 @@ static int i596_close(struct net_device *dev)
- 
- 	wait_cmd(dev, lp->dma, 100, "close1 timed out");
- 	lp->dma->scb.command = SWAP16(CUC_ABORT | RX_ABORT);
--	DMA_WBACK(dev, &lp->dma->scb, sizeof(struct i596_scb));
-+	dma_sync_dev(dev, &lp->dma->scb, sizeof(struct i596_scb));
- 
- 	ca(dev);
- 
-@@ -1358,7 +1386,7 @@ static void set_multicast_list(struct net_device *dev)
- 			       dev->name);
- 		else {
- 			dma->cf_cmd.cmd.command = SWAP16(CmdConfigure);
--			DMA_WBACK_INV(dev, &dma->cf_cmd, sizeof(struct cf_cmd));
-+			dma_sync_dev(dev, &dma->cf_cmd, sizeof(struct cf_cmd));
- 			i596_add_cmd(dev, &dma->cf_cmd.cmd);
- 		}
- 	}
-@@ -1390,7 +1418,7 @@ static void set_multicast_list(struct net_device *dev)
- 					   dev->name, cp));
- 			cp += ETH_ALEN;
- 		}
--		DMA_WBACK_INV(dev, &dma->mc_cmd, sizeof(struct mc_cmd));
-+		dma_sync_dev(dev, &dma->mc_cmd, sizeof(struct mc_cmd));
- 		i596_add_cmd(dev, &cmd->cmd);
- 	}
- }
-diff --git a/drivers/net/ethernet/i825xx/sni_82596.c b/drivers/net/ethernet/i825xx/sni_82596.c
-index e80e790ffbd4d4..507d60cd6f9b33 100644
---- a/drivers/net/ethernet/i825xx/sni_82596.c
-+++ b/drivers/net/ethernet/i825xx/sni_82596.c
-@@ -24,10 +24,6 @@
- 
- static const char sni_82596_string[] = "snirm_82596";
- 
--#define DMA_WBACK(priv, addr, len)     do { } while (0)
--#define DMA_INV(priv, addr, len)       do { } while (0)
--#define DMA_WBACK_INV(priv, addr, len) do { } while (0)
+-static int nvme_setup_prp_pools(struct nvme_dev *dev)
+-{
+-	dev->prp_page_pool = dma_pool_create("prp list page", dev->dev,
+-						NVME_CTRL_PAGE_SIZE,
+-						NVME_CTRL_PAGE_SIZE, 0);
+-	if (!dev->prp_page_pool)
+-		return -ENOMEM;
 -
- #define SYSBUS      0x00004400
+-	/* Optimisation for I/Os between 4k and 128k */
+-	dev->prp_small_pool = dma_pool_create("prp list 256", dev->dev,
+-						256, 256, 0);
+-	if (!dev->prp_small_pool) {
+-		dma_pool_destroy(dev->prp_page_pool);
+-		return -ENOMEM;
+-	}
+-	return 0;
+-}
+-
+-static void nvme_release_prp_pools(struct nvme_dev *dev)
+-{
+-	dma_pool_destroy(dev->prp_page_pool);
+-	dma_pool_destroy(dev->prp_small_pool);
+-}
+-
+ static void nvme_free_tagset(struct nvme_dev *dev)
+ {
+ 	if (dev->tagset.tags)
+@@ -2851,10 +2840,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_WORK(&dev->remove_work, nvme_remove_dead_ctrl_work);
+ 	mutex_init(&dev->shutdown_lock);
  
- /* big endian CPU, 82596 little endian */
+-	result = nvme_setup_prp_pools(dev);
+-	if (result)
+-		goto unmap;
+-
+ 	quirks |= check_vendor_combination_bug(pdev);
+ 
+ 	if (!noacpi && nvme_acpi_storage_d3(pdev)) {
+@@ -2867,6 +2852,18 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		quirks |= NVME_QUIRK_SIMPLE_SUSPEND;
+ 	}
+ 
++	result = dma_pool_init(dev->dev, &dev->prp_page_pool, "prp list page",
++			NVME_CTRL_PAGE_SIZE, NVME_CTRL_PAGE_SIZE, 0,
++			DMA_TO_DEVICE);
++	if (result)
++		goto unmap;
++
++	/* Optimisation for I/Os between 4k and 128k */
++	result = dma_pool_init(dev->dev, &dev->prp_small_pool, "prp list 256",
++			256, 256, 0, DMA_TO_DEVICE);
++	if (result)
++		goto release_prp_page_pool;
++
+ 	/*
+ 	 * Double check that our mempool alloc size will cover the biggest
+ 	 * command we support.
+@@ -2880,7 +2877,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 						GFP_KERNEL, node);
+ 	if (!dev->iod_mempool) {
+ 		result = -ENOMEM;
+-		goto release_pools;
++		goto release_prp_small_pool;
+ 	}
+ 
+ 	result = nvme_init_ctrl(&dev->ctrl, &pdev->dev, &nvme_pci_ctrl_ops,
+@@ -2897,8 +2894,10 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+  release_mempool:
+ 	mempool_destroy(dev->iod_mempool);
+- release_pools:
+-	nvme_release_prp_pools(dev);
++ release_prp_small_pool:
++	dma_pool_exit(&dev->prp_small_pool);
++ release_prp_page_pool:
++	dma_pool_exit(&dev->prp_page_pool);
+  unmap:
+ 	nvme_dev_unmap(dev);
+  put_pci:
+@@ -2963,7 +2962,8 @@ static void nvme_remove(struct pci_dev *pdev)
+ 	nvme_free_host_mem(dev);
+ 	nvme_dev_remove_admin(dev);
+ 	nvme_free_queues(dev, 0);
+-	nvme_release_prp_pools(dev);
++	dma_pool_exit(&dev->prp_small_pool);
++	dma_pool_exit(&dev->prp_page_pool);
+ 	nvme_dev_unmap(dev);
+ 	nvme_uninit_ctrl(&dev->ctrl);
+ }
 -- 
 2.28.0
 
