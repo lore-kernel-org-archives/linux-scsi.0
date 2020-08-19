@@ -2,29 +2,29 @@ Return-Path: <SRS0=XqvZ=B5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F4BC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A497AC433E3
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:25:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3630F208C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:25:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EDCD208A9
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:25:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728764AbgHSPZV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 11:25:21 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:38870 "EHLO huawei.com"
+        id S1728767AbgHSPZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 11:25:29 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:39650 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728212AbgHSPZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 11:25:09 -0400
+        id S1728758AbgHSPZV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Aug 2020 11:25:21 -0400
 Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 88887990BD3CA5378D3B;
+        by Forcepoint Email with ESMTP id E2FC13F36854AB68B766;
         Wed, 19 Aug 2020 23:24:58 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.487.0; Wed, 19 Aug 2020 23:24:47 +0800
+ 14.3.487.0; Wed, 19 Aug 2020 23:24:51 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
@@ -35,11 +35,14 @@ CC:     <sumit.saxena@broadcom.com>, <linux-block@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <esc.storagedev@microsemi.com>, <megaraidlinux.pdl@broadcom.com>,
         <chenxiang66@hisilicon.com>, <luojiaxing@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v8 00/18] blk-mq/scsi: Provide hostwide shared tags for SCSI HBAs
-Date:   Wed, 19 Aug 2020 23:20:18 +0800
-Message-ID: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v8 12/18] scsi: Add host and host template flag 'host_tagset'
+Date:   Wed, 19 Aug 2020 23:20:30 +0800
+Message-ID: <1597850436-116171-13-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -49,129 +52,81 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+From: Hannes Reinecke <hare@suse.com>
 
-Here is v8 of the patchset.
+Add Host and host template flag 'host_tagset' so hostwide tagset can be
+shared on multiple reply queues after the SCSI device's reply queue is
+converted to blk-mq hw queue.
 
-In this version of the series, we keep the shared sbitmap for driver tags,
-and introduce changes to fix up the tag budgeting across request queues.
-We also have a change to count requests per-hctx for when an elevator is
-enabled, as an optimisation. I also dropped the debugfs changes - more on
-that below.
+Tested-by: Don Brace<don.brace@microsemi.com> #SCSI resv cmds patches used
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+[jpg: Update comment on .can_queue and add Scsi_Host.host_tagset]
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hosts.c     | 1 +
+ drivers/scsi/scsi_lib.c  | 2 ++
+ include/scsi/scsi_host.h | 9 ++++++++-
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-Some performance figures:
-
-Using 12x SAS SSDs on hisi_sas v3 hw. mq-deadline results are included,
-but it is not always an appropriate scheduler to use.
-
-Tag depth 		4000 (default)			260**
-
-Baseline (v5.9-rc1):
-none sched:		2094K IOPS			513K
-mq-deadline sched:	2145K IOPS			1336K
-
-Final, host_tagset=0 in LLDD *, ***:
-none sched:		2120K IOPS			550K
-mq-deadline sched:	2121K IOPS			1309K
-
-Final ***:
-none sched:		2132K IOPS			1185			
-mq-deadline sched:	2145K IOPS			2097	
-
-* this is relevant as this is the performance in supporting but not
-  enabling the feature
-** depth=260 is relevant as some point where we are regularly waiting for
-   tags to be available. Figures were are a bit unstable here.
-*** Included "[PATCH V4] scsi: core: only re-run queue in
-    scsi_end_request() if device queue is busy"
-
-A copy of the patches can be found here:
-https://github.com/hisilicon/kernel-dev/tree/private-topic-blk-mq-shared-tags-v8
-
-The hpsa patch depends on:
-https://lore.kernel.org/linux-scsi/20200430131904.5847-1-hare@suse.de/
-
-And the smartpqi patch is not to be accepted.
-
-Comments (and testing) welcome, thanks!
-
-Differences to v7:
-- Add null_blk and scsi_debug support
-- Drop debugfs tags patch - it's too difficult to be the same between
-hostwide and non-hostwide, as discussed:
-https://lore.kernel.org/linux-scsi/1591810159-240929-1-git-send-email-john.garry@huawei.com/T/#mb3eb462d8be40273718505989abd12f8228c15fd
-And from commit 6bf0eb550452 ("sbitmap: Consider cleared bits in
-sbitmap_bitmap_show()"), I guess not many used this anyway...
-- Add elevator per-hctx request count for optimisation
-- Break up "blk-mq: rename blk_mq_update_tag_set_depth()" into 2x patches
-- Pass flags for avoid per-hq queue tags init/free for hostwide tags
-- Add Don's reviewed-tag and tested-by tags to appropiate patches
-	- (@Don, please let me know if issue with how I did this)
-- Add "scsi: core: Show nr_hw_queues in sysfs"
-- Rework megaraid SAS patch to have module param (Kashyap)
-- rebase
-
-V7 is here for more info:
-https://lore.kernel.org/linux-scsi/1591810159-240929-1-git-send-email-john.garry@huawei.com/T/#t
-
-Hannes Reinecke (5):
-  blk-mq: Rename blk_mq_update_tag_set_depth()
-  blk-mq: Free tags in blk_mq_init_tags() upon error
-  scsi: Add host and host template flag 'host_tagset'
-  hpsa: enable host_tagset and switch to MQ
-  smartpqi: enable host tagset
-
-John Garry (10):
-  blk-mq: Pass flags for tag init/free
-  blk-mq: Use pointers for blk_mq_tags bitmap tags
-  blk-mq: Facilitate a shared sbitmap per tagset
-  blk-mq: Relocate hctx_may_queue()
-  blk-mq: Record nr_active_requests per queue for when using shared
-    sbitmap
-  blk-mq: Record active_queues_shared_sbitmap per tag_set for when using
-    shared sbitmap
-  null_blk: Support shared tag bitmap
-  scsi: core: Show nr_hw_queues in sysfs
-  scsi: hisi_sas: Switch v3 hw to MQ
-  scsi: scsi_debug: Support host tagset
-
-Kashyap Desai (2):
-  blk-mq, elevator: Count requests per hctx to improve performance
-  scsi: megaraid_sas: Added support for shared host tagset for
-    cpuhotplug
-
-Ming Lei (1):
-  blk-mq: Rename BLK_MQ_F_TAG_SHARED as BLK_MQ_F_TAG_QUEUE_SHARED
-
- block/bfq-iosched.c                         |   9 +-
- block/blk-core.c                            |   2 +
- block/blk-mq-debugfs.c                      |  10 +-
- block/blk-mq-sched.c                        |  13 +-
- block/blk-mq-tag.c                          | 149 ++++++++++++++------
- block/blk-mq-tag.h                          |  56 +++-----
- block/blk-mq.c                              |  81 +++++++----
- block/blk-mq.h                              |  76 +++++++++-
- block/kyber-iosched.c                       |   4 +-
- block/mq-deadline.c                         |   6 +
- drivers/block/null_blk_main.c               |   6 +
- drivers/block/rnbd/rnbd-clt.c               |   2 +-
- drivers/scsi/hisi_sas/hisi_sas.h            |   3 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c       |  36 ++---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c      |  87 +++++-------
- drivers/scsi/hosts.c                        |   1 +
- drivers/scsi/hpsa.c                         |  44 +-----
- drivers/scsi/hpsa.h                         |   1 -
- drivers/scsi/megaraid/megaraid_sas_base.c   |  39 +++++
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  29 ++--
- drivers/scsi/scsi_debug.c                   |  28 ++--
- drivers/scsi/scsi_lib.c                     |   2 +
- drivers/scsi/scsi_sysfs.c                   |  11 ++
- drivers/scsi/smartpqi/smartpqi_init.c       |  45 ++++--
- include/linux/blk-mq.h                      |  13 +-
- include/linux/blkdev.h                      |   3 +
- include/scsi/scsi_host.h                    |   9 +-
- 27 files changed, 484 insertions(+), 281 deletions(-)
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 37d1c5565d90..2f162603876f 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -421,6 +421,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->cmd_per_lun = sht->cmd_per_lun;
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->no_write_same = sht->no_write_same;
++	shost->host_tagset = sht->host_tagset;
+ 
+ 	if (shost_eh_deadline == -1 || !sht->eh_host_reset_handler)
+ 		shost->eh_deadline = -1;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7c6dd6f75190..cdef5d1777cb 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1891,6 +1891,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	tag_set->flags |=
+ 		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
+ 	tag_set->driver_data = shost;
++	if (shost->host_tagset)
++		tag_set->flags |= BLK_MQ_F_TAG_HCTX_SHARED;
+ 
+ 	return blk_mq_alloc_tag_set(tag_set);
+ }
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 46ef8cccc982..701f178b20ae 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -436,6 +436,9 @@ struct scsi_host_template {
+ 	/* True if the controller does not support WRITE SAME */
+ 	unsigned no_write_same:1;
+ 
++	/* True if the host uses host-wide tagspace */
++	unsigned host_tagset:1;
++
+ 	/*
+ 	 * Countdown for host blocking with no commands outstanding.
+ 	 */
+@@ -603,7 +606,8 @@ struct Scsi_Host {
+ 	 *
+ 	 * Note: it is assumed that each hardware queue has a queue depth of
+ 	 * can_queue. In other words, the total queue depth per host
+-	 * is nr_hw_queues * can_queue.
++	 * is nr_hw_queues * can_queue. However, for when host_tagset is set,
++	 * the total queue depth is can_queue.
+ 	 */
+ 	unsigned nr_hw_queues;
+ 	unsigned active_mode:2;
+@@ -634,6 +638,9 @@ struct Scsi_Host {
+ 	/* The controller does not support WRITE SAME */
+ 	unsigned no_write_same:1;
+ 
++	/* True if the host uses host-wide tagspace */
++	unsigned host_tagset:1;
++
+ 	/* Host responded with short (<36 bytes) INQUIRY result */
+ 	unsigned short_inquiry:1;
+ 
 -- 
 2.26.2
 
