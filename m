@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D57C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72865C433E3
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:27:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 354CA208B3
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:27:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5835420897
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 15:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728341AbgHSP1P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 11:27:15 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:38872 "EHLO huawei.com"
+        id S1728802AbgHSP1W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 11:27:22 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:9783 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728203AbgHSPZM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 11:25:12 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 60254424BC119C6AF290;
-        Wed, 19 Aug 2020 23:24:58 +0800 (CST)
+        id S1726636AbgHSPZI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Aug 2020 11:25:08 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 7F5A234F37896C527B4D;
+        Wed, 19 Aug 2020 23:25:03 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.487.0; Wed, 19 Aug 2020 23:24:51 +0800
+ 14.3.487.0; Wed, 19 Aug 2020 23:24:53 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
@@ -35,10 +35,11 @@ CC:     <sumit.saxena@broadcom.com>, <linux-block@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <esc.storagedev@microsemi.com>, <megaraidlinux.pdl@broadcom.com>,
         <chenxiang66@hisilicon.com>, <luojiaxing@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v8 10/18] blk-mq, elevator: Count requests per hctx to improve performance
-Date:   Wed, 19 Aug 2020 23:20:28 +0800
-Message-ID: <1597850436-116171-11-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v8 17/18] scsi: megaraid_sas: Added support for shared host tagset for cpuhotplug
+Date:   Wed, 19 Aug 2020 23:20:35 +0800
+Message-ID: <1597850436-116171-18-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
 References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
@@ -53,120 +54,177 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Kashyap Desai <kashyap.desai@broadcom.com>
 
-High CPU utilization on "native_queued_spin_lock_slowpath" due to lock
-contention is possible for mq-deadline and bfq IO schedulers
-when nr_hw_queues is more than one.
+Fusion adapters can steer completions to individual queues, and
+we now have support for shared host-wide tags.
+So we can enable multiqueue support for fusion adapters.
 
-It is because kblockd work queue can submit IO from all online CPUs
-(through blk_mq_run_hw_queues()) even though only one hctx has pending
-commands.
+Once driver enable shared host-wide tags, cpu hotplug feature is also
+supported as it was enabled using below patchsets -
+commit bf0beec0607d ("blk-mq: drain I/O when all CPUs in a hctx are
+offline")
 
-The elevator callback .has_work for mq-deadline and bfq scheduler considers
-pending work if there are any IOs on request queue but it does not account
-hctx context.
+Currently driver has provision to disable host-wide tags using
+"host_tagset_enable" module parameter.
 
-Add a per-hctx 'elevator_queued' count to the hctx to avoid triggering
-the elevator even though there are no requests queued.
+Once we do not have any major performance regression using host-wide
+tags, we will drop the hand-crafted interrupt affinity settings.
+
+Performance is also meeting the expecatation - (used both none and
+mq-deadline scheduler)
+24 Drive SSD on Aero with/without this patch can get 3.1M IOPs
+3 VDs consist of 8 SAS SSD on Aero with/without this patch can get 3.1M
+IOPs.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-[jpg: Relocated atomic_dec() in dd_dispatch_request(), update commit message per Kashyap]
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- block/bfq-iosched.c    | 5 +++++
- block/blk-mq.c         | 1 +
- block/mq-deadline.c    | 6 ++++++
- include/linux/blk-mq.h | 4 ++++
- 4 files changed, 16 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 39 +++++++++++++++++++++
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 29 ++++++++-------
+ 2 files changed, 55 insertions(+), 13 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 88f0dfa545d7..4650012f1e55 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -4640,6 +4640,9 @@ static bool bfq_has_work(struct blk_mq_hw_ctx *hctx)
- {
- 	struct bfq_data *bfqd = hctx->queue->elevator->elevator_data;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 861f7140f52e..6960922d0d7f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -37,6 +37,7 @@
+ #include <linux/poll.h>
+ #include <linux/vmalloc.h>
+ #include <linux/irq_poll.h>
++#include <linux/blk-mq-pci.h>
  
-+	if (!atomic_read(&hctx->elevator_queued))
-+		return false;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -113,6 +114,10 @@ unsigned int enable_sdev_max_qd;
+ module_param(enable_sdev_max_qd, int, 0444);
+ MODULE_PARM_DESC(enable_sdev_max_qd, "Enable sdev max qd as can_queue. Default: 0");
+ 
++int host_tagset_enable = 1;
++module_param(host_tagset_enable, int, 0444);
++MODULE_PARM_DESC(host_tagset_enable, "Shared host tagset enable/disable Default: enable(1)");
 +
- 	/*
- 	 * Avoiding lock: a race on bfqd->busy_queues should cause at
- 	 * most a call to dispatch for nothing
-@@ -5554,6 +5557,7 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
- 		rq = list_first_entry(list, struct request, queuelist);
- 		list_del_init(&rq->queuelist);
- 		bfq_insert_request(hctx, rq, at_head);
-+		atomic_inc(&hctx->elevator_queued);
- 	}
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(MEGASAS_VERSION);
+ MODULE_AUTHOR("megaraidlinux.pdl@broadcom.com");
+@@ -3119,6 +3124,19 @@ megasas_bios_param(struct scsi_device *sdev, struct block_device *bdev,
+ 	return 0;
  }
  
-@@ -5933,6 +5937,7 @@ static void bfq_finish_requeue_request(struct request *rq)
- 
- 		bfq_completed_request(bfqq, bfqd);
- 		bfq_finish_requeue_request_body(bfqq);
-+		atomic_dec(&rq->mq_hctx->elevator_queued);
- 
- 		spin_unlock_irqrestore(&bfqd->lock, flags);
- 	} else {
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 457b43829a4f..361fb9fe1dc5 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2649,6 +2649,7 @@ blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
- 		goto free_hctx;
- 
- 	atomic_set(&hctx->nr_active, 0);
-+	atomic_set(&hctx->elevator_queued, 0);
- 	if (node == NUMA_NO_NODE)
- 		node = set->numa_node;
- 	hctx->numa_node = node;
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index b57470e154c8..800ac902809b 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -386,6 +386,8 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	spin_lock(&dd->lock);
- 	rq = __dd_dispatch_request(dd);
- 	spin_unlock(&dd->lock);
-+	if (rq)
-+		atomic_dec(&rq->mq_hctx->elevator_queued);
- 
- 	return rq;
- }
-@@ -533,6 +535,7 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 		rq = list_first_entry(list, struct request, queuelist);
- 		list_del_init(&rq->queuelist);
- 		dd_insert_request(hctx, rq, at_head);
-+		atomic_inc(&hctx->elevator_queued);
- 	}
- 	spin_unlock(&dd->lock);
- }
-@@ -579,6 +582,9 @@ static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
- {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
- 
-+	if (!atomic_read(&hctx->elevator_queued))
-+		return false;
++static int megasas_map_queues(struct Scsi_Host *shost)
++{
++	struct megasas_instance *instance;
 +
- 	return !list_empty_careful(&dd->dispatch) ||
- 		!list_empty_careful(&dd->fifo_list[0]) ||
- 		!list_empty_careful(&dd->fifo_list[1]);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index a4b35ec60faf..2f3ba31a1658 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -139,6 +139,10 @@ struct blk_mq_hw_ctx {
- 	 * shared across request queues.
- 	 */
- 	atomic_t		nr_active;
-+	/**
-+	 * @elevator_queued: Number of queued requests on hctx.
++	instance = (struct megasas_instance *)shost->hostdata;
++
++	if (shost->nr_hw_queues == 1)
++		return 0;
++
++	return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
++			instance->pdev, instance->low_latency_index_start);
++}
++
+ static void megasas_aen_polling(struct work_struct *work);
+ 
+ /**
+@@ -3427,6 +3445,7 @@ static struct scsi_host_template megasas_template = {
+ 	.eh_timed_out = megasas_reset_timer,
+ 	.shost_attrs = megaraid_host_attrs,
+ 	.bios_param = megasas_bios_param,
++	.map_queues = megasas_map_queues,
+ 	.change_queue_depth = scsi_change_queue_depth,
+ 	.max_segment_size = 0xffffffff,
+ };
+@@ -6808,6 +6827,26 @@ static int megasas_io_attach(struct megasas_instance *instance)
+ 	host->max_lun = MEGASAS_MAX_LUN;
+ 	host->max_cmd_len = 16;
+ 
++	/* Use shared host tagset only for fusion adaptors
++	 * if there are managed interrupts (smp affinity enabled case).
++	 * Single msix_vectors in kdump, so shared host tag is also disabled.
 +	 */
-+	atomic_t                elevator_queued;
++
++	host->host_tagset = 0;
++	host->nr_hw_queues = 1;
++
++	if ((instance->adapter_type != MFI_SERIES) &&
++		(instance->msix_vectors > instance->low_latency_index_start) &&
++		host_tagset_enable &&
++		instance->smp_affinity_enable) {
++		host->host_tagset = 1;
++		host->nr_hw_queues = instance->msix_vectors -
++			instance->low_latency_index_start;
++	}
++
++	dev_info(&instance->pdev->dev,
++		"Max firmware commands: %d shared with nr_hw_queues = %d\n",
++		instance->max_fw_cmds, host->nr_hw_queues);
+ 	/*
+ 	 * Notify the mid-layer about the new controller
+ 	 */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 0824410f78f8..a4251121f173 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -359,24 +359,29 @@ megasas_get_msix_index(struct megasas_instance *instance,
+ {
+ 	int sdev_busy;
  
- 	/** @cpuhp_online: List to store request if CPU is going to die */
- 	struct hlist_node	cpuhp_online;
+-	/* nr_hw_queue = 1 for MegaRAID */
+-	struct blk_mq_hw_ctx *hctx =
+-		scmd->device->request_queue->queue_hw_ctx[0];
+-
+-	sdev_busy = atomic_read(&hctx->nr_active);
++	/* TBD - if sml remove device_busy in future, driver
++	 * should track counter in internal structure.
++	 */
++	sdev_busy = atomic_read(&scmd->device->device_busy);
+ 
+ 	if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
+-	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
++	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH)) {
+ 		cmd->request_desc->SCSIIO.MSIxIndex =
+ 			mega_mod64((atomic64_add_return(1, &instance->high_iops_outstanding) /
+ 					MR_HIGH_IOPS_BATCH_COUNT), instance->low_latency_index_start);
+-	else if (instance->msix_load_balance)
++	} else if (instance->msix_load_balance) {
+ 		cmd->request_desc->SCSIIO.MSIxIndex =
+ 			(mega_mod64(atomic64_add_return(1, &instance->total_io_count),
+ 				instance->msix_vectors));
+-	else
++	} else if (instance->host->nr_hw_queues > 1) {
++		u32 tag = blk_mq_unique_tag(scmd->request);
++
++		cmd->request_desc->SCSIIO.MSIxIndex = blk_mq_unique_tag_to_hwq(tag) +
++			instance->low_latency_index_start;
++	} else {
+ 		cmd->request_desc->SCSIIO.MSIxIndex =
+ 			instance->reply_map[raw_smp_processor_id()];
++	}
+ }
+ 
+ /**
+@@ -956,9 +961,6 @@ megasas_alloc_cmds_fusion(struct megasas_instance *instance)
+ 	if (megasas_alloc_cmdlist_fusion(instance))
+ 		goto fail_exit;
+ 
+-	dev_info(&instance->pdev->dev, "Configured max firmware commands: %d\n",
+-		 instance->max_fw_cmds);
+-
+ 	/* The first 256 bytes (SMID 0) is not used. Don't add to the cmd list */
+ 	io_req_base = fusion->io_request_frames + MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
+ 	io_req_base_phys = fusion->io_request_frames_phys + MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
+@@ -1102,8 +1104,9 @@ megasas_ioc_init_fusion(struct megasas_instance *instance)
+ 		MR_HIGH_IOPS_QUEUE_COUNT) && cur_intr_coalescing)
+ 		instance->perf_mode = MR_BALANCED_PERF_MODE;
+ 
+-	dev_info(&instance->pdev->dev, "Performance mode :%s\n",
+-		MEGASAS_PERF_MODE_2STR(instance->perf_mode));
++	dev_info(&instance->pdev->dev, "Performance mode :%s (latency index = %d)\n",
++		MEGASAS_PERF_MODE_2STR(instance->perf_mode),
++		instance->low_latency_index_start);
+ 
+ 	instance->fw_sync_cache_support = (scratch_pad_1 &
+ 		MR_CAN_HANDLE_SYNC_CACHE_OFFSET) ? 1 : 0;
 -- 
 2.26.2
 
