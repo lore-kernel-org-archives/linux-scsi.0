@@ -2,41 +2,41 @@ Return-Path: <SRS0=XqvZ=B5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 931EBC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:56:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8102DC433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C41120825
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:56:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 536A820825
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:56:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uRThKpBV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vH6bxrET"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726938AbgHSG4V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 02:56:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36582 "EHLO
+        id S1727022AbgHSG4s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 02:56:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726697AbgHSG4U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2020 02:56:20 -0400
+        with ESMTP id S1727079AbgHSG4o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2020 02:56:44 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93972C061389;
-        Tue, 18 Aug 2020 23:56:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA911C061389;
+        Tue, 18 Aug 2020 23:56:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=z2KvWaZyjho7ndXMH0ORSIBGMLsoLoOlaFmWAQTQuew=; b=uRThKpBVD38wHW4O1Rw+m7ReIB
-        6g8DAFjC8rOV8slo1/sXfbFmSe2ZQ/D8oXBbMOULOMMqWf/LF2YgmRNBRhy6xw/WNcPfIgir5jkfY
-        jMUBZNOtuPrAml+wEbfI5OBf4FZwNLx4AJ6KLMbazwwdxWKTRuJ8t4QvNBD00a4zi7/l8eeZNVCHo
-        TVip/vAV16StqtD9sSi3vWzGnecdc/pw7stv6o2Z7fnoWC5+a2JoL1fYWc4VJinapBZy26rlLUcYn
-        mtr0U1RQYeE7P0ovTcYzaF9TaQqsHNEEbAFwOJIquRs9u5qnSydzfDIu7+tbwzSbcDpvLkPbTkcNu
-        ySmmqGNA==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=AizzKTdergNVxrKhEOEhnPghjjTSMqeAtkqlKtBp/X0=; b=vH6bxrETaqMxdx4mGW1el0GaJ+
+        NSVeG0+Sh1NWGRby+YHyglVGxyHksQXNJYqQqa9ssWp4C4h3A+SYPLZMdV23zRnCpgPJjJXWg/Lay
+        3Ir0i12xQJQKx7lVNo97rQppxb+/aS4MuRXBMNs7gGALVE09O6cPX3LkEQjclkpmeIpQ/9EXrohw6
+        a3zeu5THytGVk9DlrVgqJzLNHCGD7lD1uWGzwx0UVCF58MT7u8xcpVGUZDh4889T2ZMrTXNwMfMwr
+        bxy2SfXAPCiFeopJuD84TIjMcyqgAV5sWCTNtUbG+Z7AAKkhx870HN70mDO5NY/psIClSv4j5Qpt6
+        Qd6PhpeA==;
 Received: from [2001:4bb8:198:f3b2:86b6:2277:f429:37a1] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k8I0q-0008Kr-1o; Wed, 19 Aug 2020 06:55:57 +0000
+        id 1k8I1E-0008Od-IN; Wed, 19 Aug 2020 06:56:21 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
@@ -57,10 +57,12 @@ Cc:     Tom Lendacky <thomas.lendacky@amd.com>, linux-doc@vger.kernel.org,
         netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-mm@kvack.org,
         alsa-devel@alsa-project.org
-Subject: a saner API for allocating DMA addressable pages
-Date:   Wed, 19 Aug 2020 08:55:27 +0200
-Message-Id: <20200819065555.1802761-1-hch@lst.de>
+Subject: [PATCH 12/28] dma-direct: remove dma_direct_{alloc,free}_pages
+Date:   Wed, 19 Aug 2020 08:55:39 +0200
+Message-Id: <20200819065555.1802761-13-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200819065555.1802761-1-hch@lst.de>
+References: <20200819065555.1802761-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -69,113 +71,149 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+Just merge these helpers into the main dma_direct_{alloc,free} routines,
+as the additional checks are always false for the two callers.
 
-this series replaced the DMA_ATTR_NON_CONSISTENT flag to dma_alloc_attrs
-with a separate new dma_alloc_pages API, which is available on all
-platforms.  In addition to cleaning up the convoluted code path, this
-ensures that other drivers that have asked for better support for
-non-coherent DMA to pages with incurring bounce buffering over can finally
-be properly supported.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/x86/kernel/amd_gart_64.c |  6 +++---
+ include/linux/dma-direct.h    |  4 ----
+ kernel/dma/direct.c           | 39 ++++++++++++++---------------------
+ kernel/dma/pool.c             |  2 +-
+ 4 files changed, 19 insertions(+), 32 deletions(-)
 
-I'm still a little unsure about the API naming, as alloc_pages sort of
-implies a struct page return value, but we return a kernel virtual
-address.  The other alternative would be to name the API
-dma_alloc_noncoherent, but the whole non-coherent naming seems to put
-people off.  As a follow up I plan to move the implementation of the
-DMA_ATTR_NO_KERNEL_MAPPING flag over to this framework as well, given
-that is also is a fundamentally non coherent allocation.  The replacement
-for that flag would then return a struct page, as it is allowed to
-actually return pages without a kernel mapping as the name suggested
-(although most of the time they will actually have a kernel mapping..)
+diff --git a/arch/x86/kernel/amd_gart_64.c b/arch/x86/kernel/amd_gart_64.c
+index e89031e9c84761..adbf616d35d15d 100644
+--- a/arch/x86/kernel/amd_gart_64.c
++++ b/arch/x86/kernel/amd_gart_64.c
+@@ -468,7 +468,7 @@ gart_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dma_addr,
+ {
+ 	void *vaddr;
+ 
+-	vaddr = dma_direct_alloc_pages(dev, size, dma_addr, flag, attrs);
++	vaddr = dma_direct_alloc(dev, size, dma_addr, flag, attrs);
+ 	if (!vaddr ||
+ 	    !force_iommu || dev->coherent_dma_mask <= DMA_BIT_MASK(24))
+ 		return vaddr;
+@@ -480,7 +480,7 @@ gart_alloc_coherent(struct device *dev, size_t size, dma_addr_t *dma_addr,
+ 		goto out_free;
+ 	return vaddr;
+ out_free:
+-	dma_direct_free_pages(dev, size, vaddr, *dma_addr, attrs);
++	dma_direct_free(dev, size, vaddr, *dma_addr, attrs);
+ 	return NULL;
+ }
+ 
+@@ -490,7 +490,7 @@ gart_free_coherent(struct device *dev, size_t size, void *vaddr,
+ 		   dma_addr_t dma_addr, unsigned long attrs)
+ {
+ 	gart_unmap_page(dev, dma_addr, size, DMA_BIDIRECTIONAL, 0);
+-	dma_direct_free_pages(dev, size, vaddr, dma_addr, attrs);
++	dma_direct_free(dev, size, vaddr, dma_addr, attrs);
+ }
+ 
+ static int no_agp;
+diff --git a/include/linux/dma-direct.h b/include/linux/dma-direct.h
+index 738485b3578062..6a96a8ecac7cbc 100644
+--- a/include/linux/dma-direct.h
++++ b/include/linux/dma-direct.h
+@@ -80,10 +80,6 @@ void *dma_direct_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
+ 		gfp_t gfp, unsigned long attrs);
+ void dma_direct_free(struct device *dev, size_t size, void *cpu_addr,
+ 		dma_addr_t dma_addr, unsigned long attrs);
+-void *dma_direct_alloc_pages(struct device *dev, size_t size,
+-		dma_addr_t *dma_handle, gfp_t gfp, unsigned long attrs);
+-void dma_direct_free_pages(struct device *dev, size_t size, void *cpu_addr,
+-		dma_addr_t dma_addr, unsigned long attrs);
+ int dma_direct_get_sgtable(struct device *dev, struct sg_table *sgt,
+ 		void *cpu_addr, dma_addr_t dma_addr, size_t size,
+ 		unsigned long attrs);
+diff --git a/kernel/dma/direct.c b/kernel/dma/direct.c
+index 1123e767f4315f..8da9a62dd9a72c 100644
+--- a/kernel/dma/direct.c
++++ b/kernel/dma/direct.c
+@@ -151,13 +151,18 @@ static struct page *__dma_direct_alloc_pages(struct device *dev, size_t size,
+ 	return page;
+ }
+ 
+-void *dma_direct_alloc_pages(struct device *dev, size_t size,
++void *dma_direct_alloc(struct device *dev, size_t size,
+ 		dma_addr_t *dma_handle, gfp_t gfp, unsigned long attrs)
+ {
+ 	struct page *page;
+ 	void *ret;
+ 	int err;
+ 
++	if (!IS_ENABLED(CONFIG_ARCH_HAS_DMA_SET_UNCACHED) &&
++	    !IS_ENABLED(CONFIG_DMA_DIRECT_REMAP) &&
++	    dma_alloc_need_uncached(dev, attrs))
++		return arch_dma_alloc(dev, size, dma_handle, gfp, attrs);
++
+ 	size = PAGE_ALIGN(size);
+ 
+ 	if (dma_should_alloc_from_pool(dev, gfp, attrs)) {
+@@ -251,11 +256,18 @@ void *dma_direct_alloc_pages(struct device *dev, size_t size,
+ 	return NULL;
+ }
+ 
+-void dma_direct_free_pages(struct device *dev, size_t size, void *cpu_addr,
+-		dma_addr_t dma_addr, unsigned long attrs)
++void dma_direct_free(struct device *dev, size_t size,
++		void *cpu_addr, dma_addr_t dma_addr, unsigned long attrs)
+ {
+ 	unsigned int page_order = get_order(size);
+ 
++	if (!IS_ENABLED(CONFIG_ARCH_HAS_DMA_SET_UNCACHED) &&
++	    !IS_ENABLED(CONFIG_DMA_DIRECT_REMAP) &&
++	    dma_alloc_need_uncached(dev, attrs)) {
++		arch_dma_free(dev, size, cpu_addr, dma_addr, attrs);
++		return;
++	}
++
+ 	/* If cpu_addr is not from an atomic pool, dma_free_from_pool() fails */
+ 	if (dma_should_free_from_pool(dev, attrs) &&
+ 	    dma_free_from_pool(dev, cpu_addr, PAGE_ALIGN(size)))
+@@ -279,27 +291,6 @@ void dma_direct_free_pages(struct device *dev, size_t size, void *cpu_addr,
+ 	dma_free_contiguous(dev, dma_direct_to_page(dev, dma_addr), size);
+ }
+ 
+-void *dma_direct_alloc(struct device *dev, size_t size,
+-		dma_addr_t *dma_handle, gfp_t gfp, unsigned long attrs)
+-{
+-	if (!IS_ENABLED(CONFIG_ARCH_HAS_DMA_SET_UNCACHED) &&
+-	    !IS_ENABLED(CONFIG_DMA_DIRECT_REMAP) &&
+-	    dma_alloc_need_uncached(dev, attrs))
+-		return arch_dma_alloc(dev, size, dma_handle, gfp, attrs);
+-	return dma_direct_alloc_pages(dev, size, dma_handle, gfp, attrs);
+-}
+-
+-void dma_direct_free(struct device *dev, size_t size,
+-		void *cpu_addr, dma_addr_t dma_addr, unsigned long attrs)
+-{
+-	if (!IS_ENABLED(CONFIG_ARCH_HAS_DMA_SET_UNCACHED) &&
+-	    !IS_ENABLED(CONFIG_DMA_DIRECT_REMAP) &&
+-	    dma_alloc_need_uncached(dev, attrs))
+-		arch_dma_free(dev, size, cpu_addr, dma_addr, attrs);
+-	else
+-		dma_direct_free_pages(dev, size, cpu_addr, dma_addr, attrs);
+-}
+-
+ #if defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_DEVICE) || \
+     defined(CONFIG_SWIOTLB)
+ void dma_direct_sync_sg_for_device(struct device *dev,
+diff --git a/kernel/dma/pool.c b/kernel/dma/pool.c
+index 6bc74a2d51273e..222cebf1f10548 100644
+--- a/kernel/dma/pool.c
++++ b/kernel/dma/pool.c
+@@ -86,7 +86,7 @@ static int atomic_pool_expand(struct gen_pool *pool, size_t pool_size,
+ #endif
+ 	/*
+ 	 * Memory in the atomic DMA pools must be unencrypted, the pools do not
+-	 * shrink so no re-encryption occurs in dma_direct_free_pages().
++	 * shrink so no re-encryption occurs in dma_direct_free().
+ 	 */
+ 	ret = set_memory_decrypted((unsigned long)page_to_virt(page),
+ 				   1 << order);
+-- 
+2.28.0
 
-In addition to the conversions of the existing non-coherent DMA users
-the last three patches also convert the DMA coherent allocations in
-the NVMe driver to use this new framework through a dmapool addition.
-This was both to give me a good testing vehicle, but also because it
-should speed up the NVMe driver on platforms with non-coherent DMA
-nicely, without a downside on platforms with cache coherent DMA.
-
-
-A git tree is available here:
-
-    git://git.infradead.org/users/hch/misc.git dma_alloc_pages
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dma_alloc_pages
-
-
-Diffstat:
- Documentation/core-api/dma-api.rst                       |   92 ++----
- Documentation/core-api/dma-attributes.rst                |    8 
- Documentation/userspace-api/media/v4l/buffer.rst         |   17 -
- Documentation/userspace-api/media/v4l/vidioc-reqbufs.rst |    1 
- arch/alpha/kernel/pci_iommu.c                            |    2 
- arch/arm/include/asm/dma-direct.h                        |    4 
- arch/arm/mm/dma-mapping-nommu.c                          |    2 
- arch/arm/mm/dma-mapping.c                                |    4 
- arch/ia64/Kconfig                                        |    3 
- arch/ia64/hp/common/sba_iommu.c                          |    2 
- arch/ia64/kernel/dma-mapping.c                           |   14 
- arch/ia64/mm/init.c                                      |    3 
- arch/mips/Kconfig                                        |    1 
- arch/mips/bmips/dma.c                                    |    4 
- arch/mips/cavium-octeon/dma-octeon.c                     |    4 
- arch/mips/include/asm/dma-direct.h                       |    4 
- arch/mips/include/asm/jazzdma.h                          |    2 
- arch/mips/jazz/jazzdma.c                                 |  102 +------
- arch/mips/loongson2ef/fuloong-2e/dma.c                   |    4 
- arch/mips/loongson2ef/lemote-2f/dma.c                    |    4 
- arch/mips/loongson64/dma.c                               |    4 
- arch/mips/mm/dma-noncoherent.c                           |   48 +--
- arch/mips/pci/pci-ar2315.c                               |    4 
- arch/mips/pci/pci-xtalk-bridge.c                         |    4 
- arch/mips/sgi-ip32/ip32-dma.c                            |    4 
- arch/parisc/Kconfig                                      |    1 
- arch/parisc/kernel/pci-dma.c                             |    6 
- arch/powerpc/include/asm/dma-direct.h                    |    4 
- arch/powerpc/kernel/dma-iommu.c                          |    2 
- arch/powerpc/platforms/ps3/system-bus.c                  |    4 
- arch/powerpc/platforms/pseries/vio.c                     |    2 
- arch/s390/pci/pci_dma.c                                  |    2 
- arch/x86/kernel/amd_gart_64.c                            |    8 
- drivers/gpu/drm/exynos/exynos_drm_gem.c                  |    2 
- drivers/gpu/drm/nouveau/nvkm/subdev/instmem/gk20a.c      |    3 
- drivers/iommu/dma-iommu.c                                |    2 
- drivers/iommu/intel/iommu.c                              |    6 
- drivers/media/common/videobuf2/videobuf2-core.c          |   36 --
- drivers/media/common/videobuf2/videobuf2-dma-contig.c    |   19 -
- drivers/media/common/videobuf2/videobuf2-dma-sg.c        |    3 
- drivers/media/common/videobuf2/videobuf2-v4l2.c          |   12 
- drivers/net/ethernet/amd/au1000_eth.c                    |   15 -
- drivers/net/ethernet/i825xx/lasi_82596.c                 |   36 +-
- drivers/net/ethernet/i825xx/lib82596.c                   |  148 +++++-----
- drivers/net/ethernet/i825xx/sni_82596.c                  |   23 -
- drivers/net/ethernet/seeq/sgiseeq.c                      |   24 -
- drivers/nvme/host/pci.c                                  |   79 ++---
- drivers/parisc/ccio-dma.c                                |    2 
- drivers/parisc/sba_iommu.c                               |    2 
- drivers/scsi/53c700.c                                    |  120 ++++----
- drivers/scsi/53c700.h                                    |    9 
- drivers/scsi/sgiwd93.c                                   |   14 
- drivers/xen/swiotlb-xen.c                                |    2 
- include/linux/dma-direct.h                               |   55 ++-
- include/linux/dma-mapping.h                              |   32 +-
- include/linux/dma-noncoherent.h                          |   21 -
- include/linux/dmapool.h                                  |   23 +
- include/linux/gfp.h                                      |    6 
- include/media/videobuf2-core.h                           |    3 
- include/uapi/linux/videodev2.h                           |    2 
- kernel/dma/Kconfig                                       |    9 
- kernel/dma/Makefile                                      |    1 
- kernel/dma/coherent.c                                    |   17 +
- kernel/dma/direct.c                                      |  112 +++++--
- kernel/dma/mapping.c                                     |  104 ++-----
- kernel/dma/ops_helpers.c                                 |   86 ++++++
- kernel/dma/pool.c                                        |    2 
- kernel/dma/swiotlb.c                                     |    4 
- kernel/dma/virt.c                                        |    2 
- mm/dmapool.c                                             |  211 +++++++++------
- sound/mips/hal2.c                                        |   58 +---
- 71 files changed, 872 insertions(+), 803 deletions(-)
