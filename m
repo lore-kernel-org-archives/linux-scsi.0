@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B75C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:59:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36667C433E4
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:59:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2B2F207FF
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:59:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13C01207FF
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 06:59:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KZRDty0L"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YVejIXY4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727808AbgHSG7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 02:59:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36856 "EHLO
+        id S1728029AbgHSG5s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 02:57:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728050AbgHSG5t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2020 02:57:49 -0400
+        with ESMTP id S1727944AbgHSG5d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Aug 2020 02:57:33 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30CEEC061389;
-        Tue, 18 Aug 2020 23:57:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50BD6C061344;
+        Tue, 18 Aug 2020 23:57:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=n4jQXphtlWRBonOsn2A/IyhKyng5urQ9vpv5ufSXxPk=; b=KZRDty0LVAb6IYb2EgXMMhn/94
-        SNEs4mh9p9rnpC99fbEF92zB0m3D7WvJjRrv50NXQbUGZKAsDefMFkOeLXMlu5DGet/i0Q9+pl76I
-        aaliGVgEvwT5cxt1TbyaDjkrLykaxId7hOxXC+ZOaJy8uANKWgBSuv8uzKG0dIz02N2Wnv5H5ODMi
-        ttApx1YRztY1G2Z8kh2b2znxpwj3fI2l7IbnOPpFlIj5pd/gOp3ou9Ec/tRlwpM24x+nOxNVfmTEW
-        S+hiYJx3yCvEXbP8d1qXwPlzIa+qdIhtu9aJV1TdaM8Wtl9rPhU5pdy8P2ws0LiXUnHKn5IwFwvO7
-        bsGbSO+A==;
+        bh=rHSBc/M4bEuOb9Ey0sWSjsN3haNI1yyBuzSqz9ajJzQ=; b=YVejIXY46cjbXnB7HRS7QdyGN0
+        rzYUMX3LQCwvbmHC6T4MNtkWhsUIW62+JBnb7nbIi53asopN5O5j8LI/TbrhrTaXhtiNUiNct2i3P
+        uk78NGgvVuH/tDXGWfzr1c9ZKALeWVaYgQZxSkrFbZjeARGsdjhRaPBOVTI+9S7YkW4DyKTwu4Eqe
+        ZdL5pVD9fQZA45Mvfyz4KprhJJxEFgphsAyBLur+DYrJO9et6FfP1sA4FfkqSOmHH6fYKJ008ANQP
+        L//Kb+0DzBCMDP/39KncfO9EvWWgJ3EUkh1q6MV+AfG2SnJA6QEX6d4EDY7nkSU2dHdJADBMSZjm1
+        dYYyAX3Q==;
 Received: from [2001:4bb8:198:f3b2:86b6:2277:f429:37a1] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k8I1u-00007J-2i; Wed, 19 Aug 2020 06:57:02 +0000
+        id 1k8I1U-0008Ra-0J; Wed, 19 Aug 2020 06:56:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
@@ -57,9 +57,9 @@ Cc:     Tom Lendacky <thomas.lendacky@amd.com>, linux-doc@vger.kernel.org,
         netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-mm@kvack.org,
         alsa-devel@alsa-project.org
-Subject: [PATCH 27/28] nvme-pci: fix PRP pool size
-Date:   Wed, 19 Aug 2020 08:55:54 +0200
-Message-Id: <20200819065555.1802761-28-hch@lst.de>
+Subject: [PATCH 18/28] dma-mapping: move the dma_declare_coherent_memory documentation
+Date:   Wed, 19 Aug 2020 08:55:45 +0200
+Message-Id: <20200819065555.1802761-19-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200819065555.1802761-1-hch@lst.de>
 References: <20200819065555.1802761-1-hch@lst.de>
@@ -71,29 +71,79 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All operations are based on the controller, not the host page size.
-Switch the dma pool to use the controller page size as well to avoid
-massive overallocations on large page size systems.
+dma_declare_coherent_memory should not be in a DMA API guide aimed
+at driver writers (that is consumers of the API).  Move it to a comment
+near the function instead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/nvme/host/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ Documentation/core-api/dma-api.rst | 24 ------------------------
+ kernel/dma/coherent.c              | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index ba725ae47305ef..a33adab62acbaf 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2460,7 +2460,8 @@ static int nvme_disable_prepare_reset(struct nvme_dev *dev, bool shutdown)
- static int nvme_setup_prp_pools(struct nvme_dev *dev)
- {
- 	dev->prp_page_pool = dma_pool_create("prp list page", dev->dev,
--						PAGE_SIZE, PAGE_SIZE, 0);
-+						NVME_CTRL_PAGE_SIZE,
-+						NVME_CTRL_PAGE_SIZE, 0);
- 	if (!dev->prp_page_pool)
- 		return -ENOMEM;
+diff --git a/Documentation/core-api/dma-api.rst b/Documentation/core-api/dma-api.rst
+index 3b3abbbb4b9a6f..90239348b30f6f 100644
+--- a/Documentation/core-api/dma-api.rst
++++ b/Documentation/core-api/dma-api.rst
+@@ -586,30 +586,6 @@ the DMA_ATTR_NON_CONSISTENT flag starting at virtual address vaddr and
+ continuing on for size.  Again, you *must* observe the cache line
+ boundaries when doing this.
  
+-::
+-
+-	int
+-	dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+-				    dma_addr_t device_addr, size_t size);
+-
+-Declare region of memory to be handed out by dma_alloc_coherent() when
+-it's asked for coherent memory for this device.
+-
+-phys_addr is the CPU physical address to which the memory is currently
+-assigned (this will be ioremapped so the CPU can access the region).
+-
+-device_addr is the DMA address the device needs to be programmed
+-with to actually address this memory (this will be handed out as the
+-dma_addr_t in dma_alloc_coherent()).
+-
+-size is the size of the area (must be multiples of PAGE_SIZE).
+-
+-As a simplification for the platforms, only *one* such region of
+-memory may be declared per device.
+-
+-For reasons of efficiency, most platforms choose to track the declared
+-region only at the granularity of a page.  For smaller allocations,
+-you should use the dma_pool() API.
+ 
+ Part III - Debug drivers use of the DMA-API
+ -------------------------------------------
+diff --git a/kernel/dma/coherent.c b/kernel/dma/coherent.c
+index 2a0c4985f38e41..f85d14bbfcbe03 100644
+--- a/kernel/dma/coherent.c
++++ b/kernel/dma/coherent.c
+@@ -107,6 +107,23 @@ static int dma_assign_coherent_memory(struct device *dev,
+ 	return 0;
+ }
+ 
++/*
++ * Declare a region of memory to be handed out by dma_alloc_coherent() when it
++ * is asked for coherent memory for this device.  This shall only be used
++ * from platform code, usually based on the device tree description.
++ * 
++ * phys_addr is the CPU physical address to which the memory is currently
++ * assigned (this will be ioremapped so the CPU can access the region).
++ *
++ * device_addr is the DMA address the device needs to be programmed with to
++ * actually address this memory (this will be handed out as the dma_addr_t in
++ * dma_alloc_coherent()).
++ *
++ * size is the size of the area (must be a multiple of PAGE_SIZE).
++ *
++ * As a simplification for the platforms, only *one* such region of memory may
++ * be declared per device.
++ */
+ int dma_declare_coherent_memory(struct device *dev, phys_addr_t phys_addr,
+ 				dma_addr_t device_addr, size_t size)
+ {
 -- 
 2.28.0
 
