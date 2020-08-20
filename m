@@ -1,199 +1,153 @@
-Return-Path: <SRS0=XqvZ=B5=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=RSbu=B6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EF8AC433E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 22:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98503C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:01:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 396C62078D
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Aug 2020 22:09:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="EeZ7exKA"
+	by mail.kernel.org (Postfix) with ESMTP id 707DB207FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:01:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1597881686;
+	bh=EwEXR9T8PYmb61a07qPZ7z2yHCtb/PyyLHa5lWg3rCs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=TN6SM3UIDFOWYvAMT+RZrYG3OSlNJBC72lnYkksg+s1XfeIrYZZO6p1OnyGNbREU2
+	 2m/Y7J/S0EpjBR2slwTpCgkNYdniq/o5ACCw3omgMc4FxvyYqHqSBr23fbwEPKmBt/
+	 ns+4iRvTt8OypBML9vloSL8y4sKiqnweL82Xd8+w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727769AbgHSWJy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 18:09:54 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:4582 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726482AbgHSWJy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 18:09:54 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07JLoARX000484;
-        Wed, 19 Aug 2020 15:09:52 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=RsHMlTR0bBQh8CQo7LsgpJOb0UMZAa94ugrr1OJwXGk=;
- b=EeZ7exKAY/HcjrDLLCsgK2PYK8rdQ9YgKAvWpaSAweKDnmCt/B08G4qJQbth0N2GT2Gh
- FRkTW5WftA9g/V93KAukkjf2gZjVQ46Li0sSLntWg5uy+KVLXXU7U4xDOoEGn0mZFoge
- MvdoI8fQgVP3LTVUuihMZW3x5+zVWoGUW3lt330m8q+wH2F4xJkpQ4q92T+brgm0v7nU
- GPZPPxLfh2irKR7kQDcqtIHaeDQElZEDFGWyQaMsexJB2UDrUiCHpajdaTAIBhhq5BbA
- x00holf+BBwku6NWiUEpXklxGVO5CmQrhC23haroiLJ+wtfrJDJDbvuFl9bnNjgjV4DD +A== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3304hhsyy0-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 19 Aug 2020 15:09:52 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 19 Aug
- 2020 15:09:51 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 19 Aug 2020 15:09:51 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 8B5623F703F;
-        Wed, 19 Aug 2020 15:09:51 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 07JM9psq012999;
-        Wed, 19 Aug 2020 15:09:51 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Wed, 19 Aug 2020 15:09:50 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Roman Bolshakov <r.bolshakov@yadro.com>
-CC:     James Smart <james.smart@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: Re: [PATCH 03/12] qla2xxx: Allow dev_loss_tmo setting for FC-NVMe
- devices
-In-Reply-To: <20200818132408.GB74567@SPB-NB-133.local>
-Message-ID: <alpine.LRH.2.21.9999.2008191409410.31539@irv1user01.caveonetworks.com>
-References: <20200818123203.20361-1-njavali@marvell.com>
- <20200818123203.20361-4-njavali@marvell.com>
- <20200818132408.GB74567@SPB-NB-133.local>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        id S1726578AbgHTABY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:01:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57386 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726362AbgHTABV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:01:21 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A1955207FB;
+        Thu, 20 Aug 2020 00:01:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1597881680;
+        bh=EwEXR9T8PYmb61a07qPZ7z2yHCtb/PyyLHa5lWg3rCs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nuQv6eSxOZ5Mp5bo0Qda26yYnSlJXYGKQpQFNI1rIVGu+XfOjQJ5NVK/gNgXLLzPM
+         gHNAAyZKtf2RO1tc7ivBgDGAbShmm34/aYEo0SkKxPQ2J2OnO4As5ccQKvMVP/oKT7
+         49pkFeqOemkMgSahmY0t0EJwwRlftGGYLrUCDDLw=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        JiangYu <lnsyyj@hotmail.com>,
+        Daniel Meyerholt <dxm523@gmail.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 02/27] scsi: target: tcmu: Fix crash in tcmu_flush_dcache_range on ARM
+Date:   Wed, 19 Aug 2020 20:00:51 -0400
+Message-Id: <20200820000116.214821-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200820000116.214821-1-sashal@kernel.org>
+References: <20200820000116.214821-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-19_13:2020-08-19,2020-08-19 signatures=0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+James S.
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-Hi Roman,
+[ Upstream commit 3145550a7f8b08356c8ff29feaa6c56aca12901d ]
 
-On Tue, 18 Aug 2020, 6:24am, Roman Bolshakov wrote:
+This patch fixes the following crash (see
+https://bugzilla.kernel.org/show_bug.cgi?id=208045)
 
-> 
-> On Tue, Aug 18, 2020 at 05:31:54AM -0700, Nilesh Javali wrote:
-> > From: Arun Easi <aeasi@marvell.com>
-> > 
-> > Add a remote port debugfs entry to get/set dev_loss_tmo for NVMe
-> > devices.
-> > 
-> > Signed-off-by: Arun Easi <aeasi@marvell.com>
-> > Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
-> > Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> > ---
-> >  drivers/scsi/qla2xxx/qla_dfs.c | 54 ++++++++++++++++++++++++++++++++++
-> >  1 file changed, 54 insertions(+)
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-> > index 3c4b9b549b17..7482e6bf7f7f 100644
-> > --- a/drivers/scsi/qla2xxx/qla_dfs.c
-> > +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-> > @@ -12,6 +12,57 @@
-> >  static struct dentry *qla2x00_dfs_root;
-> >  static atomic_t qla2x00_dfs_root_count;
-> >  
-> > +#define QLA_DFS_RPORT_DEVLOSS_TMO	1
-> > +
-> > +static int
-> > +qla_dfs_rport_get(struct fc_port *fp, int attr_id, u64 *val)
-> > +{
-> > +	switch (attr_id) {
-> > +	case QLA_DFS_RPORT_DEVLOSS_TMO:
-> > +		/* Only supported for FC-NVMe devices that are registered. */
-> > +		if (!(fp->nvme_flag & NVME_FLAG_REGISTERED))
-> > +			return -EIO;
-> > +		*val = fp->nvme_remote_port->dev_loss_tmo;
-> > +		break;
-> > +	default:
-> > +		return -EINVAL;
-> > +	}
-> > +	return 0;
-> > +}
-> > +
-> > +static int
-> > +qla_dfs_rport_set(struct fc_port *fp, int attr_id, u64 val)
-> > +{
-> > +	switch (attr_id) {
-> > +	case QLA_DFS_RPORT_DEVLOSS_TMO:
-> > +		/* Only supported for FC-NVMe devices that are registered. */
-> > +		if (!(fp->nvme_flag & NVME_FLAG_REGISTERED))
-> > +			return -EIO;
-> > +		return nvme_fc_set_remoteport_devloss(fp->nvme_remote_port,
-> > +						      val);
-> > +	default:
-> > +		return -EINVAL;
-> > +	}
-> > +	return 0;
-> > +}
-> > +
-> > +#define DEFINE_QLA_DFS_RPORT_RW_ATTR(_attr_id, _attr)		\
-> > +static int qla_dfs_rport_##_attr##_get(void *data, u64 *val)	\
-> > +{								\
-> > +	struct fc_port *fp = data;				\
-> > +	return qla_dfs_rport_get(fp, _attr_id, val);		\
-> > +}								\
-> > +static int qla_dfs_rport_##_attr##_set(void *data, u64 val)	\
-> > +{								\
-> > +	struct fc_port *fp = data;				\
-> > +	return qla_dfs_rport_set(fp, _attr_id, val);		\
-> > +}								\
-> > +DEFINE_DEBUGFS_ATTRIBUTE(qla_dfs_rport_##_attr##_fops,		\
-> > +		qla_dfs_rport_##_attr##_get,			\
-> > +		qla_dfs_rport_##_attr##_set, "%llu\n")
-> > +
-> > +DEFINE_QLA_DFS_RPORT_RW_ATTR(QLA_DFS_RPORT_DEVLOSS_TMO, dev_loss_tmo);
-> > +
-> >  void
-> >  qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
-> >  {
-> > @@ -24,6 +75,9 @@ qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
-> >  	fp->dfs_rport_dir = debugfs_create_dir(wwn, vha->dfs_rport_root);
-> >  	if (!fp->dfs_rport_dir)
-> >  		return;
-> > +	if (NVME_TARGET(vha->hw, fp))
-> > +		debugfs_create_file("dev_loss_tmo", 0600, fp->dfs_rport_dir,
-> > +				    fp, &qla_dfs_rport_dev_loss_tmo_fops);
-> >  }
-> >  
-> >  void
-> > -- 
-> > 2.19.0.rc0
-> > 
-> 
-> Hi Arun,
-> 
-> I don't think that the setting should be in debugfs. IMO there should be
-> separate fc_remote_ports entry for FCP and FC-NVMe, one per PRLI for
-> multi-protocol targets.
-> 
-> That'd be consistent with what exists for FCP and would allow
-> similar configuration of dev_loss_tmo from multipath. It'd also provide
-> semantics of per-rport PRLO to allow logout from either of the protocol
-> but leaving second rport/session online.
-> 
+ Process iscsi_trx (pid: 7496, stack limit = 0x0000000010dd111a)
+ CPU: 0 PID: 7496 Comm: iscsi_trx Not tainted 4.19.118-0419118-generic
+        #202004230533
+ Hardware name: Greatwall QingTian DF720/F601, BIOS 601FBE20 Sep 26 2019
+ pstate: 80400005 (Nzcv daif +PAN -UAO)
+ pc : flush_dcache_page+0x18/0x40
+ lr : is_ring_space_avail+0x68/0x2f8 [target_core_user]
+ sp : ffff000015123a80
+ x29: ffff000015123a80 x28: 0000000000000000
+ x27: 0000000000001000 x26: ffff000023ea5000
+ x25: ffffcfa25bbe08b8 x24: 0000000000000078
+ x23: ffff7e0000000000 x22: ffff000023ea5001
+ x21: ffffcfa24b79c000 x20: 0000000000000fff
+ x19: ffff7e00008fa940 x18: 0000000000000000
+ x17: 0000000000000000 x16: ffff2d047e709138
+ x15: 0000000000000000 x14: 0000000000000000
+ x13: 0000000000000000 x12: ffff2d047fbd0a40
+ x11: 0000000000000000 x10: 0000000000000030
+ x9 : 0000000000000000 x8 : ffffc9a254820a00
+ x7 : 00000000000013b0 x6 : 000000000000003f
+ x5 : 0000000000000040 x4 : ffffcfa25bbe08e8
+ x3 : 0000000000001000 x2 : 0000000000000078
+ x1 : ffffcfa25bbe08b8 x0 : ffff2d040bc88a18
+ Call trace:
+  flush_dcache_page+0x18/0x40
+  is_ring_space_avail+0x68/0x2f8 [target_core_user]
+  queue_cmd_ring+0x1f8/0x680 [target_core_user]
+  tcmu_queue_cmd+0xe4/0x158 [target_core_user]
+  __target_execute_cmd+0x30/0xf0 [target_core_mod]
+  target_execute_cmd+0x294/0x390 [target_core_mod]
+  transport_generic_new_cmd+0x1e8/0x358 [target_core_mod]
+  transport_handle_cdb_direct+0x50/0xb0 [target_core_mod]
+  iscsit_execute_cmd+0x2b4/0x350 [iscsi_target_mod]
+  iscsit_sequence_cmd+0xd8/0x1d8 [iscsi_target_mod]
+  iscsit_process_scsi_cmd+0xac/0xf8 [iscsi_target_mod]
+  iscsit_get_rx_pdu+0x404/0xd00 [iscsi_target_mod]
+  iscsi_target_rx_thread+0xb8/0x130 [iscsi_target_mod]
+  kthread+0x130/0x138
+  ret_from_fork+0x10/0x18
+ Code: f9000bf3 aa0003f3 aa1e03e0 d503201f (f9400260)
+ ---[ end trace 1e451c73f4266776 ]---
 
-Thanks for your comments. This debugfs way is sort of a crutch, but that 
-is something a user could use to set for FC-NVME dev_loss_tmo until a 
-FC-NVME sysfs node hierarchy for a FC initiator (similar to FCP) comes 
-into place.
+The solution is based on patch:
 
-BTW, the above setting is specific for FC-NVME, and is separate from FCP; 
-so PRLO semantics can still be met.
+  "scsi: target: tcmu: Optimize use of flush_dcache_page"
 
-Copying James for his thoughts on the topic (on dev_loss_tmo setting). 
-James, would you mind sharing your ideas you'd considered?
+which restricts the use of tcmu_flush_dcache_range() to addresses from
+vmalloc'ed areas only.
 
-Regards,
--Arun
+This patch now replaces the virt_to_page() call in
+tcmu_flush_dcache_range() - which is wrong for vmalloced addrs - by
+vmalloc_to_page().
+
+The patch was tested on ARM with kernel 4.19.118 and 5.7.2
+
+Link: https://lore.kernel.org/r/20200618131632.32748-3-bstroesser@ts.fujitsu.com
+Tested-by: JiangYu <lnsyyj@hotmail.com>
+Tested-by: Daniel Meyerholt <dxm523@gmail.com>
+Acked-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/target/target_core_user.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 560bfec933bc3..63cca0e1e9123 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -601,7 +601,7 @@ static inline void tcmu_flush_dcache_range(void *vaddr, size_t size)
+ 	size = round_up(size+offset, PAGE_SIZE);
+ 
+ 	while (size) {
+-		flush_dcache_page(virt_to_page(start));
++		flush_dcache_page(vmalloc_to_page(start));
+ 		start += PAGE_SIZE;
+ 		size -= PAGE_SIZE;
+ 	}
+-- 
+2.25.1
+
