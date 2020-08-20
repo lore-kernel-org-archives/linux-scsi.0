@@ -7,77 +7,78 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA26C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 17:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA78BC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 17:47:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAC6F208B3
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 17:34:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A806B20885
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 17:47:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="WJVp6uka"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="cAZtzVYP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730653AbgHTRe1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Aug 2020 13:34:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47242 "EHLO
+        id S1726876AbgHTRrR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Aug 2020 13:47:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730610AbgHTReH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2020 13:34:07 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C416C061387
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:34:05 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id di22so2265039edb.12
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:34:05 -0700 (PDT)
+        with ESMTP id S1726745AbgHTRrQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2020 13:47:16 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF58CC061385
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:47:15 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id l23so2294371edv.11
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:47:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=++DU+mGMau0wCVk26WL7BRudLdRoW/TdcNVBaFfSVeo=;
-        b=WJVp6ukadTpNcM9SYJpDROIRN+tD3gRH5NoPQs0+HAsQmLtJTImp5dRFMc7wGC3HgN
-         R/lFt0vUnPt7BGWZ9GyHNRaZ0vNwnvZs2Kqg3u8nexS2ZBfKmw9OlPBaaVZioiS7BHsl
-         YQ4r7w5vrJPUKxgqdugvjbGIbRfRLzSot++CY=
+        bh=TdWdmS9KmpqRDKTTx4ZFKlZV0sk8Q5cLOhIOkZ1gD+w=;
+        b=cAZtzVYP2n3YvXgVkbJ7dbST+g3SP0UPbXQ9iKKyhX4VXr8jHpSYHqZMaG5ucNVipI
+         bzzpnQCIz78GKzn14VpRAj8Y6mpMr87iyH7UMbPsjr5O6z0niDquexdhhjTmn1y5QjQv
+         l8iJOpqbyOslL4LKhF6zS+g3cTQ+z78POnoVc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=++DU+mGMau0wCVk26WL7BRudLdRoW/TdcNVBaFfSVeo=;
-        b=UYGtd1RZt/5kdd9sN1K4Qy8p2/2MNxWpW5kRnx4hnSa5DXexXEoM4GVdcwPzu0MyA0
-         i1LxjTjE6+t5V/znhGvs0yOR97SZsn+pp35HgqFBzwwEY2Ktt/+9weRiqXFJ1pBii/ZM
-         OTVcR1qG1hP26XHB+7t4Koz7/z9iFwIMerMNsJjBoWX3zkW92BNdJsAcoVzrYokIo2Fl
-         jgBfThhowsYZj4QUSsa+2g3MPUAqPpBZElN5XtICKF+I+hB6XBXAOQORt6g0Y9SdndgA
-         S7iUb1McYhMd/6rR4bkSaQEV1XSJwM09SX4WubhsHtvWLGL3oLu4VIGrHZ33arjNQV+X
-         1s+w==
-X-Gm-Message-State: AOAM532fcBKsCMcm5qrSdjiDEhqAcIEg8/eIoRkNFr/LB8+fkDC/mUjE
-        Ne1KP7g7qX4xSPc2niZeaFluDasKFkEUCw==
-X-Google-Smtp-Source: ABdhPJxwRWjRVmaCd8pAHt/9+Aq6Dp6Iod9VQOqZZlWpYZcOHncNe9+9UzhEUNRG2DcswaaEqaj/+w==
-X-Received: by 2002:aa7:c688:: with SMTP id n8mr3987771edq.345.1597944843972;
-        Thu, 20 Aug 2020 10:34:03 -0700 (PDT)
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com. [209.85.221.51])
-        by smtp.gmail.com with ESMTPSA id i35sm1717068edi.41.2020.08.20.10.34.02
+        bh=TdWdmS9KmpqRDKTTx4ZFKlZV0sk8Q5cLOhIOkZ1gD+w=;
+        b=oROa/ESZPfl2bf2Zk6U3H5WL02ji0Al8r18slM3KxpyKJUiCI7VsShBFt9e3Bd0+eP
+         /BcdwmJKy/NCKQaVu4WyScfAlCIZuQhpuVSpCrFjZXOloX3PaqZ2AsOscc8tWYawBttA
+         WedsYNkGr5/h8OwKVLIFgh2IJIxnNAKklWsRCJYD8kWk65z52aSzJbIwYmw01gSxSM+p
+         RB2Fy6x/OMknK2GndhfHZiaWOYeDLSkkuwFVyHLuMvq0kBpmt6sVpWlbyUuLxjUejP7A
+         rSR4XVsA+BOE8stU6IBWlSuy3E8sC7pRTuFHS0T9btvpeYEQEMQQutswy9wJHAfmG6E7
+         wJOw==
+X-Gm-Message-State: AOAM531zOv+Gf40Q5n7dySwce1FtYH327S28eoBm2frkFh5IdpVOYWOG
+        ziTuYFlZm2KPHaaY9h5qz/BoNYVgyvFstg==
+X-Google-Smtp-Source: ABdhPJx4ugdjK4+nZEw/VWqAFanDNjqMbrJgJS853cihXDRQV6Hwj08BnFw1Sz8cBapZLTHr+ZLG7g==
+X-Received: by 2002:a50:c089:: with SMTP id k9mr3864168edf.110.1597945634115;
+        Thu, 20 Aug 2020 10:47:14 -0700 (PDT)
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com. [209.85.128.54])
+        by smtp.gmail.com with ESMTPSA id a16sm1776271ejy.78.2020.08.20.10.47.13
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 20 Aug 2020 10:34:02 -0700 (PDT)
-Received: by mail-wr1-f51.google.com with SMTP id r15so2795092wrp.13
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:34:02 -0700 (PDT)
-X-Received: by 2002:adf:ec4f:: with SMTP id w15mr4013793wrn.385.1597944841643;
- Thu, 20 Aug 2020 10:34:01 -0700 (PDT)
+        Thu, 20 Aug 2020 10:47:13 -0700 (PDT)
+Received: by mail-wm1-f54.google.com with SMTP id 3so2443526wmi.1
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:47:13 -0700 (PDT)
+X-Received: by 2002:a1c:4d12:: with SMTP id o18mr4512279wmh.55.1597945276327;
+ Thu, 20 Aug 2020 10:41:16 -0700 (PDT)
 MIME-Version: 1.0
 References: <20200819065555.1802761-1-hch@lst.de> <20200819065555.1802761-6-hch@lst.de>
  <CAAFQd5COLxjydDYrfx47ht8tj-aNPiaVnC+WyQA7nvpW4gs=ww@mail.gmail.com>
- <20200819135454.GA17098@lst.de> <CAAFQd5BuXP7t3d-Rwft85j=KTyXq7y4s24mQxLr=VoY9krEGZw@mail.gmail.com>
- <20200820044347.GA4533@lst.de> <20200820052004.GA5305@lst.de>
- <CAAFQd5CFiA2WBaaPQ9ezvMjYZfNw37c42UEy9Pk7kJyCi1mLzQ@mail.gmail.com> <20200820165407.GD12693@lst.de>
-In-Reply-To: <20200820165407.GD12693@lst.de>
+ <62e4f4fc-c8a5-3ee8-c576-fe7178cb4356@arm.com> <CAAFQd5AcCTDguB2C9KyDiutXWoEvBL8tL7+a==Uo8vj_8CLOJw@mail.gmail.com>
+ <2b32f1d8-16f7-3352-40a5-420993d52fb5@arm.com> <20200820050214.GA4815@lst.de>
+ <CAAFQd5AknYpP5BamC=wJkEJyO-q47V6Gc+HT65h6B+HyT+-xjQ@mail.gmail.com> <20200820165213.GC12693@lst.de>
+In-Reply-To: <20200820165213.GC12693@lst.de>
 From:   Tomasz Figa <tfiga@chromium.org>
-Date:   Thu, 20 Aug 2020 19:33:48 +0200
-X-Gmail-Original-Message-ID: <CAAFQd5D=NzgjosB51-O_cH27a8V6CPgCfaPSfHHz7nKJPbazgg@mail.gmail.com>
-Message-ID: <CAAFQd5D=NzgjosB51-O_cH27a8V6CPgCfaPSfHHz7nKJPbazgg@mail.gmail.com>
+Date:   Thu, 20 Aug 2020 19:41:03 +0200
+X-Gmail-Original-Message-ID: <CAAFQd5BcH-_S=WDvqYvSPxMvQuN5atO8q=xktbMaPS-DOCAYbw@mail.gmail.com>
+Message-ID: <CAAFQd5BcH-_S=WDvqYvSPxMvQuN5atO8q=xktbMaPS-DOCAYbw@mail.gmail.com>
 Subject: Re: [PATCH 05/28] media/v4l2: remove V4L2-FLAG-MEMORY-NON-CONSISTENT
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     alsa-devel@alsa-project.org, linux-ia64@vger.kernel.org,
+Cc:     Robin Murphy <robin.murphy@arm.com>, alsa-devel@alsa-project.org,
+        linux-ia64@vger.kernel.org,
         Linux Doc Mailing List <linux-doc@vger.kernel.org>,
         nouveau@lists.freedesktop.org, linux-nvme@lists.infradead.org,
-        linux-mips@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        linux-mm@kvack.org,
+        linux-mm@kvack.org, Marek Szyprowski <m.szyprowski@samsung.com>,
         linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
         Joonyoung Shim <jy0922.shim@samsung.com>,
         linux-scsi@vger.kernel.org,
@@ -88,50 +89,45 @@ Cc:     alsa-devel@alsa-project.org, linux-ia64@vger.kernel.org,
         Tom Lendacky <thomas.lendacky@amd.com>,
         Pawel Osciak <pawel@osciak.com>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        Joerg Roedel <joro@8bytes.org>,
         "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
         Roedel <joro@8bytes.org>," <linux-arm-kernel@lists.infradead.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         linux-parisc@vger.kernel.org, netdev@vger.kernel.org,
         Seung-Woo Kim <sw0312.kim@samsung.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
-        Roedel <joro@8bytes.org>," <iommu@lists.linux-foundation.org>
+        linux-mips@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 20, 2020 at 6:54 PM Christoph Hellwig <hch@lst.de> wrote:
+On Thu, Aug 20, 2020 at 6:52 PM Christoph Hellwig <hch@lst.de> wrote:
 >
-> On Thu, Aug 20, 2020 at 12:05:29PM +0200, Tomasz Figa wrote:
-> > The UAPI and V4L2/videobuf2 changes are in good shape and the only
-> > wrong part is the use of DMA API, which was based on an earlier email
-> > guidance anyway, and a change to the synchronization part . I find
-> > conclusions like the above insulting for people who put many hours
-> > into designing and implementing the related functionality, given the
-> > complexity of the videobuf2 framework and how ill-defined the DMA API
-> > was, and would feel better if such could be avoided in future
-> > communication.
+> On Thu, Aug 20, 2020 at 12:24:31PM +0200, Tomasz Figa wrote:
+> > > Of course this still uses the scatterlist structure with its annoying
+> > > mix of input and output parametes, so I'd rather not expose it as
+> > > an official API at the DMA layer.
+> >
+> > The problem with the above open coded approach is that it requires
+> > explicit handling of the non-IOMMU and IOMMU cases and this is exactly
+> > what we don't want to have in vb2 and what was actually the job of the
+> > DMA API to hide. Is the plan to actually move the IOMMU handling out
+> > of the DMA API?
+> >
+> > Do you think we could instead turn it into a dma_alloc_noncoherent()
+> > helper, which has similar semantics as dma_alloc_attrs() and handles
+> > the various corner cases (e.g. invalidate_kernel_vmap_range and
+> > flush_kernel_vmap_range) to achieve the desired functionality without
+> > delegating the "hell", as you called it, to the users?
 >
-> It wasn't meant to be too insulting, but I found this out when trying
-> to figure out how to just disable it.  But it also ends up using
-> the actual dma attr flags for it's own consistency checks, so just
-> not setting the flag did not turn out to work that easily.
->
+> Yes, I guess I could do something in that direction.  At least for
+> dma-iommu, which thanks to Robin should be all you'll need in the
+> foreseeable future.
 
-Yes, sadly the videobuf2 ended up becoming quite counterintuitive
-after growing for the long years and that is reflected in the design
-of this feature as well. I think we need to do something about it.
-
-> But in general it helps to add a few more people to the Cc list for
-> such things that do stranger things.  Especially if you think you did
-> it based on the advice of those people.
-
-Indeed, we should have CCed you and other DMA folks. Sergey who worked
-on this series is quite new to these areas of the kernel (although not
-to the kernel itself) and it's my fault for not explicitly letting him
-know to do that.
+That would be really great. Let me know if we can help by testing with
+V4L2/vb2 or in any other way.
 
 Best regards,
 Tomasz
