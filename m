@@ -2,108 +2,83 @@ Return-Path: <SRS0=RSbu=B6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC3EC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB095C433EB
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 04:43:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22970207FB
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:14:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597882487;
-	bh=s/D/qiAaCF1snixtrG3SCNq7pL3NmmMR9KoywVt2AF0=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=mpfrfbNBds36VI7svP6eRM4Z17HMxDvFQjSa+G4zYG/LCFapEMqZ0MAJ0N+kg9g+R
-	 J69RFyrtBKl/iEaLUL/5L5Q6amq8D2lz1kDAsCUfmnqA4Rd2cGS4dIIrdLTDFVjtJO
-	 6yLsl5q2OsCFFjPR98MeV3WXBOvrq/+gCSnyjRrE=
+	by mail.kernel.org (Postfix) with ESMTP id D157220786
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 04:43:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726697AbgHTABU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:01:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57370 "EHLO mail.kernel.org"
+        id S1726701AbgHTEny (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Aug 2020 00:43:54 -0400
+Received: from verein.lst.de ([213.95.11.211]:40376 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726362AbgHTABT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:01:19 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 282862075E;
-        Thu, 20 Aug 2020 00:01:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881679;
-        bh=s/D/qiAaCF1snixtrG3SCNq7pL3NmmMR9KoywVt2AF0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ImpcUHiS1FuKK5fhxL5XD281QPJdpMWzBhJgiqA4grRQeGAKmdBkOvWuJBnCllOqi
-         SNOrELB8RVxaDF4NPHZmhfXbkigVARTJvY/NsuCB0GsGWaG9S0753YzitsI0Qm/7Rt
-         cRe/2gU5vKL/DDCdvONfEKhfU+0jkNM+QNNzIbOg=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.8 01/27] scsi: ufs: Add DELAY_BEFORE_LPM quirk for Micron devices
-Date:   Wed, 19 Aug 2020 20:00:50 -0400
-Message-Id: <20200820000116.214821-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        id S1725772AbgHTEnx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Aug 2020 00:43:53 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 5BE8868BEB; Thu, 20 Aug 2020 06:43:47 +0200 (CEST)
+Date:   Thu, 20 Aug 2020 06:43:47 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Tomasz Figa <tfiga@chromium.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Pawel Osciak <pawel@osciak.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <iommu@lists.linux-foundation.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        alsa-devel@alsa-project.org,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-parisc@vger.kernel.org,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        nouveau@lists.freedesktop.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-mm@kvack.org, netdev@vger.kernel.org,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <linux-arm-kernel@lists.infradead.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>
+Subject: Re: [PATCH 05/28] media/v4l2: remove
+ V4L2-FLAG-MEMORY-NON-CONSISTENT
+Message-ID: <20200820044347.GA4533@lst.de>
+References: <20200819065555.1802761-1-hch@lst.de> <20200819065555.1802761-6-hch@lst.de> <CAAFQd5COLxjydDYrfx47ht8tj-aNPiaVnC+WyQA7nvpW4gs=ww@mail.gmail.com> <20200819135454.GA17098@lst.de> <CAAFQd5BuXP7t3d-Rwft85j=KTyXq7y4s24mQxLr=VoY9krEGZw@mail.gmail.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAFQd5BuXP7t3d-Rwft85j=KTyXq7y4s24mQxLr=VoY9krEGZw@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+On Wed, Aug 19, 2020 at 03:57:53PM +0200, Tomasz Figa wrote:
+> > > Could you explain what makes you think it's unused? It's a feature of
+> > > the UAPI generally supported by the videobuf2 framework and relied on
+> > > by Chromium OS to get any kind of reasonable performance when
+> > > accessing V4L2 buffers in the userspace.
+> >
+> > Because it doesn't do anything except on PARISC and non-coherent MIPS,
+> > so by definition it isn't used by any of these media drivers.
+> 
+> It's still an UAPI feature, so we can't simply remove the flag, it
+> must stay there as a no-op, until the problem is resolved.
 
-[ Upstream commit c0a18ee0ce78d7957ec1a53be35b1b3beba80668 ]
+Ok, I'll switch to just ignoring it for the next version.
 
-It is confirmed that Micron device needs DELAY_BEFORE_LPM quirk to have a
-delay before VCC is powered off. Sdd Micron vendor ID and this quirk for
-Micron devices.
+> Also, it of course might be disputable as an out-of-tree usage, but
+> selecting CONFIG_DMA_NONCOHERENT_CACHE_SYNC makes the flag actually do
+> something on other platforms, including ARM64.
 
-Link: https://lore.kernel.org/r/20200612012625.6615-2-stanley.chu@mediatek.com
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/ufs/ufs_quirks.h | 1 +
- drivers/scsi/ufs/ufshcd.c     | 2 ++
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index e3175a63c676b..e80d5f26a4424 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -12,6 +12,7 @@
- #define UFS_ANY_VENDOR 0xFFFF
- #define UFS_ANY_MODEL  "ANY_MODEL"
- 
-+#define UFS_VENDOR_MICRON      0x12C
- #define UFS_VENDOR_TOSHIBA     0x198
- #define UFS_VENDOR_SAMSUNG     0x1CE
- #define UFS_VENDOR_SKHYNIX     0x1AD
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a483c0720a0c1..9a692354ee199 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -216,6 +216,8 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
- 
- static struct ufs_dev_fix ufs_fixups[] = {
- 	/* UFS cards deviations table */
-+	UFS_FIX(UFS_VENDOR_MICRON, UFS_ANY_MODEL,
-+		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
- 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
- 		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
- 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
--- 
-2.25.1
-
+It isn't just disputable, but by kernel policies simply is not relevant.
