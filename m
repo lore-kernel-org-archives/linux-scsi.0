@@ -5,51 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B593C433E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:10:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB75C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:12:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 309C92075E
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:10:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A560D208C7
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:12:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597882256;
-	bh=L9I4g9LvrDBDk175qExmnEbSwSIaPxTXwkM12+O7IkE=;
+	s=default; t=1597882322;
+	bh=KGpGAZlvQgPYAhs7AD6Jfe942r91IQpvXBxuiCSx2d8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=n38px4zFv7HBO4jdbobdzmXv2RCQO7HXOyZgxQ7z3ZeYnnTh7/YOIubyr5uU4BdNL
-	 Z5v8Py9QSH2IaBPvX7aOZIQ3101WoDY7ynnkywOfIW9uLUYh0kPUxVVk1VPI05Iolk
-	 17OW5YYCXnw/rEYSKYtNHFWvGZ4FJt0b4yAZ4DHY=
+	b=uQCLwMsb/dKDl1t5S41JSXB1szJFgV9HDjT7OjUlcx95xBigTr22Ar/MYkpbVBBF5
+	 b1NlEt2ofzcTniLYVWsINTrtQgJeAFF19rgRUZ8encVU3DxjB86fnEXj9+wkUqd45C
+	 Zr7AknLTnkonY3QyGLobyE+jkN1q9UkzTXlZ3z+8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728282AbgHTAKq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:10:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59010 "EHLO mail.kernel.org"
+        id S1727053AbgHTAMC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:12:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58336 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727912AbgHTACU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:02:20 -0400
+        id S1727061AbgHTACA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:02:00 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 97EC0207FB;
-        Thu, 20 Aug 2020 00:02:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6296D207FB;
+        Thu, 20 Aug 2020 00:01:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881739;
-        bh=L9I4g9LvrDBDk175qExmnEbSwSIaPxTXwkM12+O7IkE=;
+        s=default; t=1597881719;
+        bh=KGpGAZlvQgPYAhs7AD6Jfe942r91IQpvXBxuiCSx2d8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q0zjU23LbG770OPO5VKoSP794X5LYywmXd/51tySPpj2zn+SEJDiyYB95F4bMLmWS
-         ZNFeZoZf2ApqPRqiuevawrZUC1tdExucdBpIfbna9rWCS+C3B4IXbIhox2PIJWdBOR
-         XT0/vDpOE3PfOtyTQIKF9nJ0ZB5RLg7cicRhfzxQ=
+        b=pYBFOhKxgH65v/hbN4WDiQ8+Qswod1V8tK5GxVOxXT+cBjNnAExCJSdey4QPz3ivx
+         uaEl+OVXIgblpVD+clrFR4XJAPdypeep0XW4UC1N8t/IP+tdqMv+wDtSXVAE7pbGBp
+         xk0JFVX0xWVlTsA92QKJNXGyhx4wGTCPiaoNci4Q=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Girish Basrur <gbasrur@marvell.com>,
-        Santosh Vernekar <svernekar@marvell.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Shyam Sundar <ssundar@marvell.com>,
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        JiangYu <lnsyyj@hotmail.com>,
+        Daniel Meyerholt <dxm523@gmail.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 18/24] scsi: libfc: Free skb in fc_disc_gpn_id_resp() for valid cases
-Date:   Wed, 19 Aug 2020 20:01:49 -0400
-Message-Id: <20200820000155.215089-18-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 02/24] scsi: target: tcmu: Fix crash in tcmu_flush_dcache_range on ARM
+Date:   Wed, 19 Aug 2020 20:01:33 -0400
+Message-Id: <20200820000155.215089-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200820000155.215089-1-sashal@kernel.org>
 References: <20200820000155.215089-1-sashal@kernel.org>
@@ -62,64 +62,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-[ Upstream commit ec007ef40abb6a164d148b0dc19789a7a2de2cc8 ]
+[ Upstream commit 3145550a7f8b08356c8ff29feaa6c56aca12901d ]
 
-In fc_disc_gpn_id_resp(), skb is supposed to get freed in all cases except
-for PTR_ERR. However, in some cases it didn't.
+This patch fixes the following crash (see
+https://bugzilla.kernel.org/show_bug.cgi?id=208045)
 
-This fix is to call fc_frame_free(fp) before function returns.
+ Process iscsi_trx (pid: 7496, stack limit = 0x0000000010dd111a)
+ CPU: 0 PID: 7496 Comm: iscsi_trx Not tainted 4.19.118-0419118-generic
+        #202004230533
+ Hardware name: Greatwall QingTian DF720/F601, BIOS 601FBE20 Sep 26 2019
+ pstate: 80400005 (Nzcv daif +PAN -UAO)
+ pc : flush_dcache_page+0x18/0x40
+ lr : is_ring_space_avail+0x68/0x2f8 [target_core_user]
+ sp : ffff000015123a80
+ x29: ffff000015123a80 x28: 0000000000000000
+ x27: 0000000000001000 x26: ffff000023ea5000
+ x25: ffffcfa25bbe08b8 x24: 0000000000000078
+ x23: ffff7e0000000000 x22: ffff000023ea5001
+ x21: ffffcfa24b79c000 x20: 0000000000000fff
+ x19: ffff7e00008fa940 x18: 0000000000000000
+ x17: 0000000000000000 x16: ffff2d047e709138
+ x15: 0000000000000000 x14: 0000000000000000
+ x13: 0000000000000000 x12: ffff2d047fbd0a40
+ x11: 0000000000000000 x10: 0000000000000030
+ x9 : 0000000000000000 x8 : ffffc9a254820a00
+ x7 : 00000000000013b0 x6 : 000000000000003f
+ x5 : 0000000000000040 x4 : ffffcfa25bbe08e8
+ x3 : 0000000000001000 x2 : 0000000000000078
+ x1 : ffffcfa25bbe08b8 x0 : ffff2d040bc88a18
+ Call trace:
+  flush_dcache_page+0x18/0x40
+  is_ring_space_avail+0x68/0x2f8 [target_core_user]
+  queue_cmd_ring+0x1f8/0x680 [target_core_user]
+  tcmu_queue_cmd+0xe4/0x158 [target_core_user]
+  __target_execute_cmd+0x30/0xf0 [target_core_mod]
+  target_execute_cmd+0x294/0x390 [target_core_mod]
+  transport_generic_new_cmd+0x1e8/0x358 [target_core_mod]
+  transport_handle_cdb_direct+0x50/0xb0 [target_core_mod]
+  iscsit_execute_cmd+0x2b4/0x350 [iscsi_target_mod]
+  iscsit_sequence_cmd+0xd8/0x1d8 [iscsi_target_mod]
+  iscsit_process_scsi_cmd+0xac/0xf8 [iscsi_target_mod]
+  iscsit_get_rx_pdu+0x404/0xd00 [iscsi_target_mod]
+  iscsi_target_rx_thread+0xb8/0x130 [iscsi_target_mod]
+  kthread+0x130/0x138
+  ret_from_fork+0x10/0x18
+ Code: f9000bf3 aa0003f3 aa1e03e0 d503201f (f9400260)
+ ---[ end trace 1e451c73f4266776 ]---
 
-Link: https://lore.kernel.org/r/20200729081824.30996-2-jhasan@marvell.com
-Reviewed-by: Girish Basrur <gbasrur@marvell.com>
-Reviewed-by: Santosh Vernekar <svernekar@marvell.com>
-Reviewed-by: Saurav Kashyap <skashyap@marvell.com>
-Reviewed-by: Shyam Sundar <ssundar@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+The solution is based on patch:
+
+  "scsi: target: tcmu: Optimize use of flush_dcache_page"
+
+which restricts the use of tcmu_flush_dcache_range() to addresses from
+vmalloc'ed areas only.
+
+This patch now replaces the virt_to_page() call in
+tcmu_flush_dcache_range() - which is wrong for vmalloced addrs - by
+vmalloc_to_page().
+
+The patch was tested on ARM with kernel 4.19.118 and 5.7.2
+
+Link: https://lore.kernel.org/r/20200618131632.32748-3-bstroesser@ts.fujitsu.com
+Tested-by: JiangYu <lnsyyj@hotmail.com>
+Tested-by: Daniel Meyerholt <dxm523@gmail.com>
+Acked-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_disc.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/target/target_core_user.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 2b865c6423e29..e00dc4693fcbd 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -581,8 +581,12 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index b63a1e0c4aa6d..a55114975b00d 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -601,7 +601,7 @@ static inline void tcmu_flush_dcache_range(void *vaddr, size_t size)
+ 	size = round_up(size+offset, PAGE_SIZE);
  
- 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
- 		goto out;
--	if (IS_ERR(fp))
--		goto redisc;
-+	if (IS_ERR(fp)) {
-+		mutex_lock(&disc->disc_mutex);
-+		fc_disc_restart(disc);
-+		mutex_unlock(&disc->disc_mutex);
-+		goto out;
-+	}
- 
- 	cp = fc_frame_payload_get(fp, sizeof(*cp));
- 	if (!cp)
-@@ -609,7 +613,7 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 				new_rdata->disc_id = disc->disc_id;
- 				fc_rport_login(new_rdata);
- 			}
--			goto out;
-+			goto free_fp;
- 		}
- 		rdata->disc_id = disc->disc_id;
- 		mutex_unlock(&rdata->rp_mutex);
-@@ -626,6 +630,8 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		fc_disc_restart(disc);
- 		mutex_unlock(&disc->disc_mutex);
+ 	while (size) {
+-		flush_dcache_page(virt_to_page(start));
++		flush_dcache_page(vmalloc_to_page(start));
+ 		start += PAGE_SIZE;
+ 		size -= PAGE_SIZE;
  	}
-+free_fp:
-+	fc_frame_free(fp);
- out:
- 	kref_put(&rdata->kref, fc_rport_destroy);
- 	if (!IS_ERR(fp))
 -- 
 2.25.1
 
