@@ -2,132 +2,173 @@ Return-Path: <SRS0=RSbu=B6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA78BC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 17:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C355C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 18:06:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A806B20885
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 17:47:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62B8C20758
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 18:06:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="cAZtzVYP"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="es3bYe0H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726876AbgHTRrR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Aug 2020 13:47:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49302 "EHLO
+        id S1726990AbgHTSGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Aug 2020 14:06:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726745AbgHTRrQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2020 13:47:16 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF58CC061385
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:47:15 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id l23so2294371edv.11
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:47:15 -0700 (PDT)
+        with ESMTP id S1726863AbgHTSGG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2020 14:06:06 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B785CC061385;
+        Thu, 20 Aug 2020 11:06:05 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id u18so2528059wmc.3;
+        Thu, 20 Aug 2020 11:06:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=TdWdmS9KmpqRDKTTx4ZFKlZV0sk8Q5cLOhIOkZ1gD+w=;
-        b=cAZtzVYP2n3YvXgVkbJ7dbST+g3SP0UPbXQ9iKKyhX4VXr8jHpSYHqZMaG5ucNVipI
-         bzzpnQCIz78GKzn14VpRAj8Y6mpMr87iyH7UMbPsjr5O6z0niDquexdhhjTmn1y5QjQv
-         l8iJOpqbyOslL4LKhF6zS+g3cTQ+z78POnoVc=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=UE8eTpJz5Fvat023BgaJXhjynGfzhEeYBnx8EpQ2OAU=;
+        b=es3bYe0HphdqUCL+9I1d1ALgqNpakWcvQviyZgkpOosoMsnTyYc8sbfdSnxN3ke+8Q
+         zodhNvqFav+IeGS/pSlakqo0BxFXC8fnFI2OnMEF8ablaNavw7Yl5v2JEB4yeLDQi1uo
+         sppEscZnUc5MU8C5R/zNdNgRKvTUWAR5l2xTyYZppzAPlp0OrapKXfU5kooi8IToy7Bv
+         QVYG0Iin/IuRuR1BTATjJH27XRsCX6KKR88LwAVyEgfI0caRIGE17Q2FLgyLsKxvGw0b
+         Ew9Ovr9K2mxABHCtBN3QPPeEwRaQPakVz5Wam9lBqrsy3jcwvA9Q/hJ5jOkTFPyJLREw
+         QJtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=TdWdmS9KmpqRDKTTx4ZFKlZV0sk8Q5cLOhIOkZ1gD+w=;
-        b=oROa/ESZPfl2bf2Zk6U3H5WL02ji0Al8r18slM3KxpyKJUiCI7VsShBFt9e3Bd0+eP
-         /BcdwmJKy/NCKQaVu4WyScfAlCIZuQhpuVSpCrFjZXOloX3PaqZ2AsOscc8tWYawBttA
-         WedsYNkGr5/h8OwKVLIFgh2IJIxnNAKklWsRCJYD8kWk65z52aSzJbIwYmw01gSxSM+p
-         RB2Fy6x/OMknK2GndhfHZiaWOYeDLSkkuwFVyHLuMvq0kBpmt6sVpWlbyUuLxjUejP7A
-         rSR4XVsA+BOE8stU6IBWlSuy3E8sC7pRTuFHS0T9btvpeYEQEMQQutswy9wJHAfmG6E7
-         wJOw==
-X-Gm-Message-State: AOAM531zOv+Gf40Q5n7dySwce1FtYH327S28eoBm2frkFh5IdpVOYWOG
-        ziTuYFlZm2KPHaaY9h5qz/BoNYVgyvFstg==
-X-Google-Smtp-Source: ABdhPJx4ugdjK4+nZEw/VWqAFanDNjqMbrJgJS853cihXDRQV6Hwj08BnFw1Sz8cBapZLTHr+ZLG7g==
-X-Received: by 2002:a50:c089:: with SMTP id k9mr3864168edf.110.1597945634115;
-        Thu, 20 Aug 2020 10:47:14 -0700 (PDT)
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com. [209.85.128.54])
-        by smtp.gmail.com with ESMTPSA id a16sm1776271ejy.78.2020.08.20.10.47.13
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 20 Aug 2020 10:47:13 -0700 (PDT)
-Received: by mail-wm1-f54.google.com with SMTP id 3so2443526wmi.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Aug 2020 10:47:13 -0700 (PDT)
-X-Received: by 2002:a1c:4d12:: with SMTP id o18mr4512279wmh.55.1597945276327;
- Thu, 20 Aug 2020 10:41:16 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=UE8eTpJz5Fvat023BgaJXhjynGfzhEeYBnx8EpQ2OAU=;
+        b=bRa+I4oCjSIEi0m/wnAgsukalCuP+2ep+iGMRnCvIeX1X9f7sx49Tl2/deoZG4QVBM
+         T58Be2luxnEnegkCh+zPc9XVLuGahRkMSQwyaLrc2EdEClHQQGwHre4QmjI3KVrn2yRu
+         rJ3+9rHH3418mlI8o7C9QEnY6x06iIZ/eRENpLn230/DabNx7AMe/kHpjFmMBW3C/2hr
+         RH93G+xGbHk3kMswi1iBBzVNWjiCpnrvPUyrH9PeEw2GTkgaTHEX91vP0skYnk3Ffvct
+         VEZwKpARa7iIQ5KzWSmFg7BWAmXmbVTgdikYqD/28ih4nrQISxRNsOOHvGRCTXWxD+O/
+         D95g==
+X-Gm-Message-State: AOAM531RryLTIXnwGu20d9ru1XRO58hTymhhdCUJ16F3Hw0fdvXgiTj5
+        tID8J5BUQuvP+o54UuMTUtI=
+X-Google-Smtp-Source: ABdhPJxK/9AF8fMdEaGROWuYYTJXhO5IktHXn9xJSM11t5e971s7ZQEXtjTihTp3W8rNZ372Wo7tsw==
+X-Received: by 2002:a1c:f402:: with SMTP id z2mr8573wma.87.1597946764455;
+        Thu, 20 Aug 2020 11:06:04 -0700 (PDT)
+Received: from localhost.localdomain (cpc83661-brig20-2-0-cust443.3-3.cable.virginm.net. [82.28.105.188])
+        by smtp.gmail.com with ESMTPSA id l11sm5265778wme.11.2020.08.20.11.06.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Aug 2020 11:06:03 -0700 (PDT)
+From:   Alex Dewar <alex.dewar90@gmail.com>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Alex Dewar <alex.dewar90@gmail.com>
+Subject: [PATCH] scsi: mptfusion: Remove unnecessarily casts
+Date:   Thu, 20 Aug 2020 19:05:51 +0100
+Message-Id: <20200820180552.853289-1-alex.dewar90@gmail.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-References: <20200819065555.1802761-1-hch@lst.de> <20200819065555.1802761-6-hch@lst.de>
- <CAAFQd5COLxjydDYrfx47ht8tj-aNPiaVnC+WyQA7nvpW4gs=ww@mail.gmail.com>
- <62e4f4fc-c8a5-3ee8-c576-fe7178cb4356@arm.com> <CAAFQd5AcCTDguB2C9KyDiutXWoEvBL8tL7+a==Uo8vj_8CLOJw@mail.gmail.com>
- <2b32f1d8-16f7-3352-40a5-420993d52fb5@arm.com> <20200820050214.GA4815@lst.de>
- <CAAFQd5AknYpP5BamC=wJkEJyO-q47V6Gc+HT65h6B+HyT+-xjQ@mail.gmail.com> <20200820165213.GC12693@lst.de>
-In-Reply-To: <20200820165213.GC12693@lst.de>
-From:   Tomasz Figa <tfiga@chromium.org>
-Date:   Thu, 20 Aug 2020 19:41:03 +0200
-X-Gmail-Original-Message-ID: <CAAFQd5BcH-_S=WDvqYvSPxMvQuN5atO8q=xktbMaPS-DOCAYbw@mail.gmail.com>
-Message-ID: <CAAFQd5BcH-_S=WDvqYvSPxMvQuN5atO8q=xktbMaPS-DOCAYbw@mail.gmail.com>
-Subject: Re: [PATCH 05/28] media/v4l2: remove V4L2-FLAG-MEMORY-NON-CONSISTENT
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Robin Murphy <robin.murphy@arm.com>, alsa-devel@alsa-project.org,
-        linux-ia64@vger.kernel.org,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        nouveau@lists.freedesktop.org, linux-nvme@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        linux-mm@kvack.org, Marek Szyprowski <m.szyprowski@samsung.com>,
-        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-        Joonyoung Shim <jy0922.shim@samsung.com>,
-        linux-scsi@vger.kernel.org,
-        Kyungmin Park <kyungmin.park@samsung.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Pawel Osciak <pawel@osciak.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
-        Roedel <joro@8bytes.org>," <linux-arm-kernel@lists.infradead.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        linux-parisc@vger.kernel.org, netdev@vger.kernel.org,
-        Seung-Woo Kim <sw0312.kim@samsung.com>,
-        linux-mips@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 20, 2020 at 6:52 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> On Thu, Aug 20, 2020 at 12:24:31PM +0200, Tomasz Figa wrote:
-> > > Of course this still uses the scatterlist structure with its annoying
-> > > mix of input and output parametes, so I'd rather not expose it as
-> > > an official API at the DMA layer.
-> >
-> > The problem with the above open coded approach is that it requires
-> > explicit handling of the non-IOMMU and IOMMU cases and this is exactly
-> > what we don't want to have in vb2 and what was actually the job of the
-> > DMA API to hide. Is the plan to actually move the IOMMU handling out
-> > of the DMA API?
-> >
-> > Do you think we could instead turn it into a dma_alloc_noncoherent()
-> > helper, which has similar semantics as dma_alloc_attrs() and handles
-> > the various corner cases (e.g. invalidate_kernel_vmap_range and
-> > flush_kernel_vmap_range) to achieve the desired functionality without
-> > delegating the "hell", as you called it, to the users?
->
-> Yes, I guess I could do something in that direction.  At least for
-> dma-iommu, which thanks to Robin should be all you'll need in the
-> foreseeable future.
+In a number of places, the value returned from pci_alloc_consistent() is
+unnecessarily cast from void*. Remove these casts.
 
-That would be really great. Let me know if we can help by testing with
-V4L2/vb2 or in any other way.
+Issue identified with Coccinelle.
 
-Best regards,
-Tomasz
+Signed-off-by: Alex Dewar <alex.dewar90@gmail.com>
+---
+ drivers/message/fusion/mptbase.c | 6 +++---
+ drivers/message/fusion/mptctl.c  | 5 ++---
+ drivers/message/fusion/mptfc.c   | 8 ++++----
+ 3 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 9903e9660a38..e61f46fbe7f4 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -4975,7 +4975,7 @@ GetLanConfigPages(MPT_ADAPTER *ioc)
+ 
+ 	if (hdr.PageLength > 0) {
+ 		data_sz = hdr.PageLength * 4;
+-		ppage0_alloc = (LANPage0_t *) pci_alloc_consistent(ioc->pcidev, data_sz, &page0_dma);
++		ppage0_alloc = pci_alloc_consistent(ioc->pcidev, data_sz, &page0_dma);
+ 		rc = -ENOMEM;
+ 		if (ppage0_alloc) {
+ 			memset((u8 *)ppage0_alloc, 0, data_sz);
+@@ -5021,7 +5021,7 @@ GetLanConfigPages(MPT_ADAPTER *ioc)
+ 
+ 	data_sz = hdr.PageLength * 4;
+ 	rc = -ENOMEM;
+-	ppage1_alloc = (LANPage1_t *) pci_alloc_consistent(ioc->pcidev, data_sz, &page1_dma);
++	ppage1_alloc = pci_alloc_consistent(ioc->pcidev, data_sz, &page1_dma);
+ 	if (ppage1_alloc) {
+ 		memset((u8 *)ppage1_alloc, 0, data_sz);
+ 		cfg.physAddr = page1_dma;
+@@ -5322,7 +5322,7 @@ GetIoUnitPage2(MPT_ADAPTER *ioc)
+ 	/* Read the config page */
+ 	data_sz = hdr.PageLength * 4;
+ 	rc = -ENOMEM;
+-	ppage_alloc = (IOUnitPage2_t *) pci_alloc_consistent(ioc->pcidev, data_sz, &page_dma);
++	ppage_alloc = pci_alloc_consistent(ioc->pcidev, data_sz, &page_dma);
+ 	if (ppage_alloc) {
+ 		memset((u8 *)ppage_alloc, 0, data_sz);
+ 		cfg.physAddr = page_dma;
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 1074b882c57c..24aebad60366 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -2593,7 +2593,7 @@ mptctl_hp_targetinfo(MPT_ADAPTER *ioc, unsigned long arg)
+        /* Get the data transfer speeds
+         */
+ 	data_sz = ioc->spi_data.sdp0length * 4;
+-	pg0_alloc = (SCSIDevicePage0_t *) pci_alloc_consistent(ioc->pcidev, data_sz, &page_dma);
++	pg0_alloc = pci_alloc_consistent(ioc->pcidev, data_sz, &page_dma);
+ 	if (pg0_alloc) {
+ 		hdr.PageVersion = ioc->spi_data.sdp0version;
+ 		hdr.PageLength = data_sz;
+@@ -2657,8 +2657,7 @@ mptctl_hp_targetinfo(MPT_ADAPTER *ioc, unsigned long arg)
+ 		/* Issue the second config page request */
+ 		cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
+ 		data_sz = (int) cfg.cfghdr.hdr->PageLength * 4;
+-		pg3_alloc = (SCSIDevicePage3_t *) pci_alloc_consistent(
+-							ioc->pcidev, data_sz, &page_dma);
++		pg3_alloc = pci_alloc_consistent(ioc->pcidev, data_sz, &page_dma);
+ 		if (pg3_alloc) {
+ 			cfg.physAddr = page_dma;
+ 			cfg.pageAddr = (karg.hdr.channel << 8) | karg.hdr.id;
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index 4314a3352b96..5abaadc4fc38 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -763,7 +763,7 @@ mptfc_GetFcPortPage0(MPT_ADAPTER *ioc, int portnum)
+ 
+ 	data_sz = hdr.PageLength * 4;
+ 	rc = -ENOMEM;
+-	ppage0_alloc = (FCPortPage0_t *) pci_alloc_consistent(ioc->pcidev, data_sz, &page0_dma);
++	ppage0_alloc = pci_alloc_consistent(ioc->pcidev, data_sz, &page0_dma);
+ 	if (ppage0_alloc) {
+ 
+  try_again:
+@@ -904,9 +904,9 @@ mptfc_GetFcPortPage1(MPT_ADAPTER *ioc, int portnum)
+ 		if (data_sz < sizeof(FCPortPage1_t))
+ 			data_sz = sizeof(FCPortPage1_t);
+ 
+-		page1_alloc = (FCPortPage1_t *) pci_alloc_consistent(ioc->pcidev,
+-						data_sz,
+-						&page1_dma);
++		page1_alloc = pci_alloc_consistent(ioc->pcidev,
++						   data_sz,
++						   &page1_dma);
+ 		if (!page1_alloc)
+ 			return -ENOMEM;
+ 	}
+-- 
+2.28.0
+
