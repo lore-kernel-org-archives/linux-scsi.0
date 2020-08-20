@@ -5,39 +5,39 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06DC9C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26379C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:05:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE996207FB
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:04:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01F53207FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:05:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597881880;
+	s=default; t=1597881935;
 	bh=5nk3NJXNopBSzjnj7Lpg8MhVeJiX9H+Pd26H61xczsw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=meDJjDxcZid+77BluXFjzVEBXUbuixZfThqD8HQoaiC2+awLadROAuQLtQoVlBspf
-	 3MABnTlQzQYQ8I62d87j9sKQ+5aGauZgwlwOmZJ94eOSOmoYg5rWB/4nW/CNQ8FvYn
-	 pGCK83+f94Ep2pFDI+wjNkWXFL6EukTwKtvRfed4=
+	b=e85lLXre+Jdk14i2r8urLDU0Np/s5jH+Wm8ggfc3tYgYMrV1Labg1qslrI26E/TVN
+	 vYtx9q3UPDCRr90s3T4eCTe2S9d42SjhX1cRLP1b1/2EgWZ1IGLKsAwljMvdaidgKv
+	 Ii0BXMCkuZHLNw4MLZowOPr3oR2y2rcJmmt8R3+4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728445AbgHTAET (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:04:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34610 "EHLO mail.kernel.org"
+        id S1727963AbgHTAFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:05:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34128 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728432AbgHTAER (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:04:17 -0400
+        id S1728397AbgHTAEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:04:01 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AEB0522B40;
-        Thu, 20 Aug 2020 00:04:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CE10822B40;
+        Thu, 20 Aug 2020 00:03:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881856;
+        s=default; t=1597881841;
         bh=5nk3NJXNopBSzjnj7Lpg8MhVeJiX9H+Pd26H61xczsw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yxDLCV7nduGMllaRZiPXda5fTOcYEeb525dF1bpAq4GMiZMNYbK15eHxcfHX8Q5QN
-         7/2D7QL4Ebq56Ybwno5Vxh9iGmd9RupcblSI8iZc+EX+YhfZXBELuFzloiFuCzkDPX
-         S+GD5qa6GE8aGI5SzWCjElsRSdWKS9hk0IROjSSI=
+        b=l9XZjSe60iOvlYVnKPakrqqgBQ9scElwkYMusTjzMg5nWdym8jtxDnh4Fw4rPNH0H
+         HZbab7MZmpcK9+gO+S/cqGYwLGGwR6MhphshVDO4Uk8K6lTvshfSPNvQp+ZeA/2Zxr
+         lKFdG0lWMB6qqUF+o9hWunqA6SwKgF64RYecnT/w=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Javed Hasan <jhasan@marvell.com>,
@@ -47,12 +47,12 @@ Cc:     Javed Hasan <jhasan@marvell.com>,
         Shyam Sundar <ssundar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 07/10] scsi: libfc: Free skb in fc_disc_gpn_id_resp() for valid cases
-Date:   Wed, 19 Aug 2020 20:04:03 -0400
-Message-Id: <20200820000406.216050-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 08/11] scsi: libfc: Free skb in fc_disc_gpn_id_resp() for valid cases
+Date:   Wed, 19 Aug 2020 20:03:45 -0400
+Message-Id: <20200820000348.215911-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200820000406.216050-1-sashal@kernel.org>
-References: <20200820000406.216050-1-sashal@kernel.org>
+In-Reply-To: <20200820000348.215911-1-sashal@kernel.org>
+References: <20200820000348.215911-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
