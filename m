@@ -5,54 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26379C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32147C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:05:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01F53207FB
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:05:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 032FC207FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 00:05:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597881935;
-	bh=5nk3NJXNopBSzjnj7Lpg8MhVeJiX9H+Pd26H61xczsw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=e85lLXre+Jdk14i2r8urLDU0Np/s5jH+Wm8ggfc3tYgYMrV1Labg1qslrI26E/TVN
-	 vYtx9q3UPDCRr90s3T4eCTe2S9d42SjhX1cRLP1b1/2EgWZ1IGLKsAwljMvdaidgKv
-	 Ii0BXMCkuZHLNw4MLZowOPr3oR2y2rcJmmt8R3+4=
+	s=default; t=1597881949;
+	bh=ib3ov4ByJ2KzNtKTgGjw5zSsvyIJbB/3U+DgfprOU6E=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=lytstv5iUYoVx7ZM0ZcvyFMWPGH7BLFZjvjICpLawilk7EHOdQXqLpDVmsUNgvvXt
+	 dlPlqxiw0jmxvcXB0PqrmdpUrMKND71LkII4lLhkobd3nHFYPe8VD1fpHyHm+OlFeA
+	 skc0QzaMNcpXllpo75PRfZKUxRTb6KOhOpOMzTnM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727963AbgHTAFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:05:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34128 "EHLO mail.kernel.org"
+        id S1728393AbgHTAEA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:04:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33854 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728397AbgHTAEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:04:01 -0400
+        id S1728377AbgHTADv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:03:51 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CE10822B40;
-        Thu, 20 Aug 2020 00:03:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E574A207FB;
+        Thu, 20 Aug 2020 00:03:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881841;
-        bh=5nk3NJXNopBSzjnj7Lpg8MhVeJiX9H+Pd26H61xczsw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l9XZjSe60iOvlYVnKPakrqqgBQ9scElwkYMusTjzMg5nWdym8jtxDnh4Fw4rPNH0H
-         HZbab7MZmpcK9+gO+S/cqGYwLGGwR6MhphshVDO4Uk8K6lTvshfSPNvQp+ZeA/2Zxr
-         lKFdG0lWMB6qqUF+o9hWunqA6SwKgF64RYecnT/w=
+        s=default; t=1597881831;
+        bh=ib3ov4ByJ2KzNtKTgGjw5zSsvyIJbB/3U+DgfprOU6E=;
+        h=From:To:Cc:Subject:Date:From;
+        b=CI1Ahj85tWmJw8Ef/vEzJyyY1nN8i5ax6po+WWp9a8jSmLGsBqMceWgvDpH+NvoRU
+         0X+qPIovrlVUQwqq+UsNPD3+qibXnoU8pMF3uDh5GzOapV9lf9VUKK5VwOTq3/QBiX
+         RA58F/Ehyyx6hQhEYkTDEZgxowZJu2tutitw7rWY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Girish Basrur <gbasrur@marvell.com>,
-        Santosh Vernekar <svernekar@marvell.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Shyam Sundar <ssundar@marvell.com>,
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 08/11] scsi: libfc: Free skb in fc_disc_gpn_id_resp() for valid cases
-Date:   Wed, 19 Aug 2020 20:03:45 -0400
-Message-Id: <20200820000348.215911-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 4.9 01/11] scsi: ufs: Add DELAY_BEFORE_LPM quirk for Micron devices
+Date:   Wed, 19 Aug 2020 20:03:38 -0400
+Message-Id: <20200820000348.215911-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200820000348.215911-1-sashal@kernel.org>
-References: <20200820000348.215911-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -62,64 +60,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-[ Upstream commit ec007ef40abb6a164d148b0dc19789a7a2de2cc8 ]
+[ Upstream commit c0a18ee0ce78d7957ec1a53be35b1b3beba80668 ]
 
-In fc_disc_gpn_id_resp(), skb is supposed to get freed in all cases except
-for PTR_ERR. However, in some cases it didn't.
+It is confirmed that Micron device needs DELAY_BEFORE_LPM quirk to have a
+delay before VCC is powered off. Sdd Micron vendor ID and this quirk for
+Micron devices.
 
-This fix is to call fc_frame_free(fp) before function returns.
-
-Link: https://lore.kernel.org/r/20200729081824.30996-2-jhasan@marvell.com
-Reviewed-by: Girish Basrur <gbasrur@marvell.com>
-Reviewed-by: Santosh Vernekar <svernekar@marvell.com>
-Reviewed-by: Saurav Kashyap <skashyap@marvell.com>
-Reviewed-by: Shyam Sundar <ssundar@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Link: https://lore.kernel.org/r/20200612012625.6615-2-stanley.chu@mediatek.com
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_disc.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufs_quirks.h | 1 +
+ drivers/scsi/ufs/ufshcd.c     | 2 ++
+ 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 880a9068ca126..ef06af4e3611d 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -595,8 +595,12 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	mutex_lock(&disc->disc_mutex);
- 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
- 		goto out;
--	if (IS_ERR(fp))
--		goto redisc;
-+	if (IS_ERR(fp)) {
-+		mutex_lock(&disc->disc_mutex);
-+		fc_disc_restart(disc);
-+		mutex_unlock(&disc->disc_mutex);
-+		goto out;
-+	}
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 71f73d1d1ad1f..6c944fbefd40a 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -21,6 +21,7 @@
+ #define UFS_ANY_VENDOR 0xFFFF
+ #define UFS_ANY_MODEL  "ANY_MODEL"
  
- 	cp = fc_frame_payload_get(fp, sizeof(*cp));
- 	if (!cp)
-@@ -621,7 +625,7 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 				new_rdata->disc_id = disc->disc_id;
- 				lport->tt.rport_login(new_rdata);
- 			}
--			goto out;
-+			goto free_fp;
- 		}
- 		rdata->disc_id = disc->disc_id;
- 		lport->tt.rport_login(rdata);
-@@ -635,6 +639,8 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- redisc:
- 		fc_disc_restart(disc);
- 	}
-+free_fp:
-+	fc_frame_free(fp);
- out:
- 	mutex_unlock(&disc->disc_mutex);
- 	kref_put(&rdata->kref, lport->tt.rport_destroy);
++#define UFS_VENDOR_MICRON      0x12C
+ #define UFS_VENDOR_TOSHIBA     0x198
+ #define UFS_VENDOR_SAMSUNG     0x1CE
+ #define UFS_VENDOR_SKHYNIX     0x1AD
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index af4b0a2021d6c..a7f520581cb0f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -178,6 +178,8 @@ ufs_get_pm_lvl_to_link_pwr_state(enum ufs_pm_level lvl)
+ 
+ static struct ufs_dev_fix ufs_fixups[] = {
+ 	/* UFS cards deviations table */
++	UFS_FIX(UFS_VENDOR_MICRON, UFS_ANY_MODEL,
++		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
+ 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
+ 		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
+ 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
 -- 
 2.25.1
 
