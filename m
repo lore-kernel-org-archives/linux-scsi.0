@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 176DEC433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0CB0C433E4
 	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E368020748
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B105A20748
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1598029765;
-	bh=wljQwHlpf9bp/QI7uHx7YkLy4gyPMzPnNX2OUYwUAy8=;
+	bh=l8A2krO7X5bmyZWqfJPn18y+U9YtDtgV6LKcbdwCpdQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Xq5OvWOt6luc8d0Y2MvYdqE1kDBj1qgTM+vSsffMPnGem58n/LgRQFJGi7Hndwq9r
-	 3LGyhSTj+G8WyV0yFB5EOG1ziDZBojtWf7ThFva+pnRFwzsx3oicoRidpmzNKNTzh+
-	 xg3CikrNmobxF8DgLr/jM3uNBF87o8vOgBiXSCQQ=
+	b=WkmfoqspVCF3w5tVywHWDm8jFfLE2sA3bsuBdAqZJRkfLZwgHzz9vOfTl2g+VFXKa
+	 VcfAUedWXw9g+vIJ0ZM8WzpTEPUhB144JH32q4cLNiLMzKgiS7do3n3H+c2KTmnbAW
+	 V+EGBdAX5Sn2aIdaor1LIzTsWPZ+NphN7NgpGUd8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728255AbgHURJW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:09:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50258 "EHLO mail.kernel.org"
+        id S1728461AbgHURJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:09:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50060 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728175AbgHUQRi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:17:38 -0400
+        id S1727062AbgHUQRh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:17:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id ADC4722C9F;
-        Fri, 21 Aug 2020 16:17:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1A4A522CA1;
+        Fri, 21 Aug 2020 16:17:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026654;
-        bh=wljQwHlpf9bp/QI7uHx7YkLy4gyPMzPnNX2OUYwUAy8=;
+        s=default; t=1598026651;
+        bh=l8A2krO7X5bmyZWqfJPn18y+U9YtDtgV6LKcbdwCpdQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mA4kdGxh9d7kkSPUrTme4sK21FJsGkX9CI1qS0DIsBBc32WhJghxgPleZDXZLSGfN
-         CLkFO8XB18JGzLQGgNPwAMEOvS7N1MTq2BHYUxEnj8PR4X+D+QlQCjPJ9uDzhTE9Mg
-         s/meq0HzGVllADpwklARU1fBMj3NytZYz/MNrrRU=
+        b=CFTqN7UGYfP6cIWSQyGKrnBDnm9KETlzmF/IjdUC9jVIzuu6Wf8qA2vpCQLEmqg3j
+         0/VVfhI5FaZ5HBlrxNFEBSNfsiYLGU2hbl08iqcbV9CmoogcZeXTdtshkeSxQzcs0k
+         D23lLrykuuyLozKx6wb9SPWkvshPxtyTyZ2v6qKs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
+Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <jsmart2021@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 24/48] scsi: target: Fix xcopy sess release leak
-Date:   Fri, 21 Aug 2020 12:16:40 -0400
-Message-Id: <20200821161704.348164-24-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 22/48] scsi: lpfc: Fix shost refcount mismatch when deleting vport
+Date:   Fri, 21 Aug 2020 12:16:38 -0400
+Message-Id: <20200821161704.348164-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821161704.348164-1-sashal@kernel.org>
 References: <20200821161704.348164-1-sashal@kernel.org>
@@ -59,96 +59,84 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-[ Upstream commit 3c006c7d23aac928279f7cbe83bbac4361255d53 ]
+[ Upstream commit 03dbfe0668e6692917ac278883e0586cd7f7d753 ]
 
-transport_init_session can allocate memory via percpu_ref_init, and
-target_xcopy_release_pt never frees it. This adds a
-transport_uninit_session function to handle cleanup of resources allocated
-in the init function.
+When vports are deleted, it is observed that there is memory/kthread
+leakage as the vport isn't fully being released.
 
-Link: https://lore.kernel.org/r/1593654203-12442-3-git-send-email-michael.christie@oracle.com
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+There is a shost reference taken in scsi_add_host_dma that is not released
+during scsi_remove_host. It was noticed that other drivers resolve this by
+doing a scsi_host_put after calling scsi_remove_host.
+
+The vport_delete routine is taking two references one that corresponds to
+an access to the scsi_host in the vport_delete routine and another that is
+released after the adapter mailbox command completes that destroys the VPI
+that corresponds to the vport.
+
+Remove one of the references taken such that the second reference that is
+put will complete the missing scsi_add_host_dma reference and the shost
+will be terminated.
+
+Link: https://lore.kernel.org/r/20200630215001.70793-8-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_internal.h  |  1 +
- drivers/target/target_core_transport.c |  7 ++++++-
- drivers/target/target_core_xcopy.c     | 11 +++++++++--
- 3 files changed, 16 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c | 26 ++++++++------------------
+ 1 file changed, 8 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index 8533444159635..e7b3c6e5d5744 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -138,6 +138,7 @@ int	init_se_kmem_caches(void);
- void	release_se_kmem_caches(void);
- u32	scsi_get_new_index(scsi_index_t);
- void	transport_subsystem_check_init(void);
-+void	transport_uninit_session(struct se_session *);
- unsigned char *transport_dump_cmd_direction(struct se_cmd *);
- void	transport_dump_dev_state(struct se_device *, char *, int *);
- void	transport_dump_dev_info(struct se_device *, struct se_lun *,
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 7c78a5d02c083..b1f4be055f838 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -236,6 +236,11 @@ int transport_init_session(struct se_session *se_sess)
- }
- EXPORT_SYMBOL(transport_init_session);
- 
-+void transport_uninit_session(struct se_session *se_sess)
-+{
-+	percpu_ref_exit(&se_sess->cmd_count);
-+}
-+
- /**
-  * transport_alloc_session - allocate a session object and initialize it
-  * @sup_prot_ops: bitmask that defines which T10-PI modes are supported.
-@@ -579,7 +584,7 @@ void transport_free_session(struct se_session *se_sess)
- 		sbitmap_queue_free(&se_sess->sess_tag_pool);
- 		kvfree(se_sess->sess_cmd_map);
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index b766463579800..d0296f7cf45fc 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -642,27 +642,16 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 		    vport->port_state < LPFC_VPORT_READY)
+ 			return -EAGAIN;
  	}
--	percpu_ref_exit(&se_sess->cmd_count);
-+	transport_uninit_session(se_sess);
- 	kmem_cache_free(se_sess_cache, se_sess);
- }
- EXPORT_SYMBOL(transport_free_session);
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index b9b1e92c6f8db..9d24e85b08631 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -479,7 +479,7 @@ int target_xcopy_setup_pt(void)
- 	memset(&xcopy_pt_sess, 0, sizeof(struct se_session));
- 	ret = transport_init_session(&xcopy_pt_sess);
- 	if (ret < 0)
--		return ret;
-+		goto destroy_wq;
- 
- 	xcopy_pt_nacl.se_tpg = &xcopy_pt_tpg;
- 	xcopy_pt_nacl.nacl_sess = &xcopy_pt_sess;
-@@ -488,12 +488,19 @@ int target_xcopy_setup_pt(void)
- 	xcopy_pt_sess.se_node_acl = &xcopy_pt_nacl;
- 
- 	return 0;
 +
-+destroy_wq:
-+	destroy_workqueue(xcopy_wq);
-+	xcopy_wq = NULL;
-+	return ret;
- }
+ 	/*
+-	 * This is a bit of a mess.  We want to ensure the shost doesn't get
+-	 * torn down until we're done with the embedded lpfc_vport structure.
+-	 *
+-	 * Beyond holding a reference for this function, we also need a
+-	 * reference for outstanding I/O requests we schedule during delete
+-	 * processing.  But once we scsi_remove_host() we can no longer obtain
+-	 * a reference through scsi_host_get().
+-	 *
+-	 * So we take two references here.  We release one reference at the
+-	 * bottom of the function -- after delinking the vport.  And we
+-	 * release the other at the completion of the unreg_vpi that get's
+-	 * initiated after we've disposed of all other resources associated
+-	 * with the port.
++	 * Take early refcount for outstanding I/O requests we schedule during
++	 * delete processing for unreg_vpi.  Always keep this before
++	 * scsi_remove_host() as we can no longer obtain a reference through
++	 * scsi_host_get() after scsi_host_remove as shost is set to SHOST_DEL.
+ 	 */
+ 	if (!scsi_host_get(shost))
+ 		return VPORT_INVAL;
+-	if (!scsi_host_get(shost)) {
+-		scsi_host_put(shost);
+-		return VPORT_INVAL;
+-	}
++
+ 	lpfc_free_sysfs_attr(vport);
  
- void target_xcopy_release_pt(void)
- {
--	if (xcopy_wq)
-+	if (xcopy_wq) {
- 		destroy_workqueue(xcopy_wq);
-+		transport_uninit_session(&xcopy_pt_sess);
+ 	lpfc_debugfs_terminate(vport);
+@@ -809,8 +798,9 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 		if (!(vport->vpi_state & LPFC_VPI_REGISTERED) ||
+ 				lpfc_mbx_unreg_vpi(vport))
+ 			scsi_host_put(shost);
+-	} else
++	} else {
+ 		scsi_host_put(shost);
 +	}
- }
  
- /*
+ 	lpfc_free_vpi(phba, vport->vpi);
+ 	vport->work_port_events = 0;
 -- 
 2.25.1
 
