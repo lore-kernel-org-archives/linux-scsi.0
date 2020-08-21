@@ -4,50 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82586C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:14:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CC1AC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:19:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4943A20702
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:14:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B4D6207DE
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:19:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598030086;
-	bh=fjc4CIq2kDbcBbNQagMzB04CnvPIblrnK38smOaO7i8=;
+	s=default; t=1598030380;
+	bh=m+1apagXqrqjpioWi5YRjOeRWYJSsRXYy6sL/f44RPk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YDCG7SiIY2IMmZS6RaFR3vEUo8YJMRR0hwDx6rebKLNqNxwyGbBTCtqqOyXJLxm14
-	 NMeIyj4i7DOWMFdMnzFXRTrEJlJwE/hQAtFTs0qTONGRdfbraGJ6/n6Q1LnHZE/4Kh
-	 KnC2MYMREl62Otcy3Tp/HV22L1cggRCdTwHoi7/M=
+	b=rpQOJqokirDHToh3lf7By7JZceSzQYfxtCruHxOeFBkvoGoPE/3JiIc7kP85a21II
+	 DG9yteutEf7oHFFXCdHEMNFPANHwG4RJFNAB2k48Wix8q5ABb0/iN5hjUgzNxY9mK+
+	 lc2KcrBsEUeAdYRVLzSFXbd3MudUhTUVsYpX3uIE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728153AbgHUROY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:14:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50638 "EHLO mail.kernel.org"
+        id S1728892AbgHURTi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:19:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48870 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728135AbgHUQQ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:16:59 -0400
+        id S1728072AbgHUQQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:16:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8D4F722CB3;
-        Fri, 21 Aug 2020 16:16:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5093B22B47;
+        Fri, 21 Aug 2020 16:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026612;
-        bh=fjc4CIq2kDbcBbNQagMzB04CnvPIblrnK38smOaO7i8=;
+        s=default; t=1598026585;
+        bh=m+1apagXqrqjpioWi5YRjOeRWYJSsRXYy6sL/f44RPk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WOJtdxHM8xDNb3RC3W9nIXdmn6PE4GCy0Nvkcdtd8iMr0RnJwp2JSg8daONQhmtVb
-         8f55t+Id4KXtf1xD7zVBdxRIQDBqylTVV4GQVLXAHmkIKPQcT2IwoN4pMKAvpCdiln
-         sgfyh6teBJv+hbJp3keqomYgi589NQcDR6giiznA=
+        b=a6p+94eYrbDv/eceBBWi39sbXG4K3s//0x4om/90U7iPiu12rrMYrQCVAQ0x9I3kr
+         QZ34fhHSgXrIEnlvk03gzA2AVEdxzPvvfiQjBdJ1Ry1tLB8TDfPiZ1c7KKALhac2vg
+         vp35lVBOrKM3dOCQ9IGI5S2VjvR1zgRuzbdnYCFY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 53/61] scsi: iscsi: Do not put host in iscsi_set_flashnode_param()
-Date:   Fri, 21 Aug 2020 12:15:37 -0400
-Message-Id: <20200821161545.347622-53-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 32/61] scsi: target: Fix xcopy sess release leak
+Date:   Fri, 21 Aug 2020 12:15:16 -0400
+Message-Id: <20200821161545.347622-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821161545.347622-1-sashal@kernel.org>
 References: <20200821161545.347622-1-sashal@kernel.org>
@@ -60,35 +59,96 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jing Xiangfeng <jingxiangfeng@huawei.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 68e12e5f61354eb42cfffbc20a693153fc39738e ]
+[ Upstream commit 3c006c7d23aac928279f7cbe83bbac4361255d53 ]
 
-If scsi_host_lookup() fails we will jump to put_host which may cause a
-panic. Jump to exit_set_fnode instead.
+transport_init_session can allocate memory via percpu_ref_init, and
+target_xcopy_release_pt never frees it. This adds a
+transport_uninit_session function to handle cleanup of resources allocated
+in the init function.
 
-Link: https://lore.kernel.org/r/20200615081226.183068-1-jingxiangfeng@huawei.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+Link: https://lore.kernel.org/r/1593654203-12442-3-git-send-email-michael.christie@oracle.com
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_internal.h  |  1 +
+ drivers/target/target_core_transport.c |  7 ++++++-
+ drivers/target/target_core_xcopy.c     | 11 +++++++++--
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index ea6d498fa9232..1d8359cc00e25 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -3291,7 +3291,7 @@ static int iscsi_set_flashnode_param(struct iscsi_transport *transport,
- 		pr_err("%s could not find host no %u\n",
- 		       __func__, ev->u.set_flashnode.host_no);
- 		err = -ENODEV;
--		goto put_host;
-+		goto exit_set_fnode;
- 	}
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 8533444159635..e7b3c6e5d5744 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -138,6 +138,7 @@ int	init_se_kmem_caches(void);
+ void	release_se_kmem_caches(void);
+ u32	scsi_get_new_index(scsi_index_t);
+ void	transport_subsystem_check_init(void);
++void	transport_uninit_session(struct se_session *);
+ unsigned char *transport_dump_cmd_direction(struct se_cmd *);
+ void	transport_dump_dev_state(struct se_device *, char *, int *);
+ void	transport_dump_dev_info(struct se_device *, struct se_lun *,
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 264a822c0bfac..989d5e5924816 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -236,6 +236,11 @@ int transport_init_session(struct se_session *se_sess)
+ }
+ EXPORT_SYMBOL(transport_init_session);
  
- 	idx = ev->u.set_flashnode.flashnode_idx;
++void transport_uninit_session(struct se_session *se_sess)
++{
++	percpu_ref_exit(&se_sess->cmd_count);
++}
++
+ /**
+  * transport_alloc_session - allocate a session object and initialize it
+  * @sup_prot_ops: bitmask that defines which T10-PI modes are supported.
+@@ -579,7 +584,7 @@ void transport_free_session(struct se_session *se_sess)
+ 		sbitmap_queue_free(&se_sess->sess_tag_pool);
+ 		kvfree(se_sess->sess_cmd_map);
+ 	}
+-	percpu_ref_exit(&se_sess->cmd_count);
++	transport_uninit_session(se_sess);
+ 	kmem_cache_free(se_sess_cache, se_sess);
+ }
+ EXPORT_SYMBOL(transport_free_session);
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index bd3ed6ce75719..4a01d7c195da7 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -474,7 +474,7 @@ int target_xcopy_setup_pt(void)
+ 	memset(&xcopy_pt_sess, 0, sizeof(struct se_session));
+ 	ret = transport_init_session(&xcopy_pt_sess);
+ 	if (ret < 0)
+-		return ret;
++		goto destroy_wq;
+ 
+ 	xcopy_pt_nacl.se_tpg = &xcopy_pt_tpg;
+ 	xcopy_pt_nacl.nacl_sess = &xcopy_pt_sess;
+@@ -483,12 +483,19 @@ int target_xcopy_setup_pt(void)
+ 	xcopy_pt_sess.se_node_acl = &xcopy_pt_nacl;
+ 
+ 	return 0;
++
++destroy_wq:
++	destroy_workqueue(xcopy_wq);
++	xcopy_wq = NULL;
++	return ret;
+ }
+ 
+ void target_xcopy_release_pt(void)
+ {
+-	if (xcopy_wq)
++	if (xcopy_wq) {
+ 		destroy_workqueue(xcopy_wq);
++		transport_uninit_session(&xcopy_pt_sess);
++	}
+ }
+ 
+ /*
 -- 
 2.25.1
 
