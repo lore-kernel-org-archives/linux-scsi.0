@@ -2,74 +2,72 @@ Return-Path: <SRS0=brni=B7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.2 required=3.0 tests=BAYES_50,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D5FDC433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 06:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC98C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 11:03:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1628D2075E
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 06:58:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=217software.com header.i=@217software.com header.b="RZgHCg40"
+	by mail.kernel.org (Postfix) with ESMTP id 42BE420738
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 11:03:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727841AbgHUG6Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Aug 2020 02:58:16 -0400
-Received: from e1.217software.com ([102.130.112.140]:36228 "EHLO
-        e1.217software.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726138AbgHUG6Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Aug 2020 02:58:16 -0400
-X-Greylist: delayed 671 seconds by postgrey-1.27 at vger.kernel.org; Fri, 21 Aug 2020 02:58:14 EDT
-DKIM-Filter: OpenDKIM Filter v2.11.0 e1.217software.com 6603024CD0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=217software.com;
-        s=e1; t=1597992421; bh=NeY7dCP1XrhBT3MWtgB7arJ0LETefnqYD3/oyBgRhfs=;
-        h=Date:Subject:From:Reply-To:To:List-Unsubscribe:List-Id:From;
-        b=RZgHCg40nNh5siR7wgkYutJU2YZF3gJgIo3n1xhxiCzLNc093awBPfUlBEU4m7eX5
-         ZarqnIti7jbguKtfznq+s/q5i713LSRF7FaZhVzgi3eobqhklaAgRr0gJ8daXXqjQ5
-         Gx1z6oE0AZQFb8uRITWnuuMhyomwIe/xJ9/xSPsA=
-Message-ID: <6b3d098a66a50e2a40ce0d53155f5a36@217software.com>
-Date:   Fri, 21 Aug 2020 06:46:43 +0000
-Subject: Fwd: Re: Would You please mail us web-hosting compare list?
-From:   John <info@217software.com>
-Reply-To: John <info@217software.com>
-To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+        id S1726872AbgHULDi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Aug 2020 07:03:38 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:10298 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726118AbgHULDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Aug 2020 07:03:35 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 87620D27DD56F785ED2B;
+        Fri, 21 Aug 2020 19:03:32 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.108) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Fri, 21 Aug 2020
+ 19:03:31 +0800
+Subject: Re: [PATCH v2] scsi: libfc: Fix passing zero to 'PTR_ERR' warning
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20200818114235.51052-1-yuehaibing@huawei.com>
+ <20200819020546.59172-1-yuehaibing@huawei.com>
+ <yq1ft8gvje1.fsf@ca-mkp.ca.oracle.com>
+CC:     <hare@suse.de>, <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From:   Yuehaibing <yuehaibing@huawei.com>
+Message-ID: <97fe2241-b814-d756-5e46-3c6bbca5bb76@huawei.com>
+Date:   Fri, 21 Aug 2020 19:03:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Sender: info@217software.com
-X-Receiver: linux-scsi@vger.kernel.org
-X-Fjla-Tracking-Did: 0
-X-Fjla-Subscriber-Uid: gd063v0m2wcf1
-X-Fjla-Mailer: SwiftMailer - 5.4.x
-X-Fjla-Delivery-Sid: 1
-X-Fjla-Customer-Uid: gx0582et0060f
-X-Fjla-Customer-Gid: 0
-X-Fjla-Campaign-Uid: yb0822fonl9c3
-Feedback-ID: yb0822fonl9c3:gd063v0m2wcf1:cs4233gcj53de:gx0582et0060f
+In-Reply-To: <yq1ft8gvje1.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.108]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-12 13:22, John wrote:
-> Great! I will forward it to my webmast=
-er.
->=20
-> On 2020-08-12 13:28, Kris wrote:
->> Good Day John,
->>
->>=
- Of course, there it is- tinylnx.com/hostingcompare
->>=20
->> On 2020-08-1=
-2 13:33, John wrote:
->>> Good Day Kris,
->>>=20
->>> I will launch few ph=
-p websites projects and we're going to need web-hosting, may You please sen=
-d me that web hosting compare website, that You mentioned some time ago?
-=
->>>=20
->>=20
->
+On 2020/8/21 10:21, Martin K. Petersen wrote:
+> 
+> YueHaibing,
+> 
+>> diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+>> index d8cbc9c0e766..574e842cefed 100644
+>> --- a/drivers/scsi/libfc/fc_disc.c
+>> +++ b/drivers/scsi/libfc/fc_disc.c
+>> @@ -302,7 +302,7 @@ static void fc_disc_error(struct fc_disc *disc, struct fc_frame *fp)
+>>  	unsigned long delay = 0;
+>>  
+>>  	FC_DISC_DBG(disc, "Error %ld, retries %d/%d\n",
+>> -		    PTR_ERR(fp), disc->retry_count,
+>> +		    IS_ERR(fp) ? PTR_ERR(fp) : 0, disc->retry_count,
+>>  		    FC_DISC_RETRY_LIMIT);
+>>  
+>>  	if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
+> 
+> Why not PTR_ERR_OR_ZERO()?
+
+Thanks, will respin.
+> 
+
