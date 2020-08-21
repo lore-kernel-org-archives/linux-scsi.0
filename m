@@ -1,166 +1,103 @@
-Return-Path: <SRS0=RSbu=B6=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=brni=B7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3A7C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 23:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD80C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 02:24:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47D8320702
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Aug 2020 23:56:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D75620732
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 02:24:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NQ+o/6YY"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AynTdYUW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727793AbgHTX4y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Aug 2020 19:56:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50004 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727033AbgHTX4Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2020 19:56:16 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5129FC061348;
-        Thu, 20 Aug 2020 16:49:59 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id c15so309001wrs.11;
-        Thu, 20 Aug 2020 16:49:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=swVS7wXP2zSlH4DoWRDX+ErkfgIT7hxKvOrIIG5V9Vk=;
-        b=NQ+o/6YYmM9TXrGVrcg8/ZHwO5GG82G5FVoY5ua24eyWXbWxqKgW2VvNzvKQeKtM6k
-         KcFCJZIgRmw1qlKSlm7yJGGyjcLACcGzEIFA1Co5yl9nzo3dbEF6KMAHYles+gq8/jaS
-         r/RmGx5TQdGB0bcaZdnIeDGbwZNQLONYoG0a3llzAl4+ZduZrDrM+jewmBLW+jgh5BE+
-         JiJHnqAekLukPw0kXueA0O1+MO3BSU+nLeBR+qmhRjV92kebat2XjMXhL5AQ/8rX9Wls
-         5vGMUSXXDsrFxaIT2puCVzbmj59VF/Q5gfx9n48bqj/ITaBdbeaHLJAmpVh/yMgnLUCm
-         KUAw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=swVS7wXP2zSlH4DoWRDX+ErkfgIT7hxKvOrIIG5V9Vk=;
-        b=BXJxcpsn/hqa7BAmdKoUB+pZWZ/+vlUMQCKy1wrf6InQgOYdd7oX0iTLzLvl7Sw26C
-         oBFE6RuM1Vw3DC/21baHZWE1BvPBvDJkA9VUh3ek1Ni8NQcI0Pkez1b5UNpIc8Sl7oeb
-         QTgTG8qnnkOYDlY1JzF6e7ozEallNiZvlzr7S4UYvxkST/GPOJ6P74ARBfKPI5JtyUbJ
-         oE1MrX1AkWsLOQApBDUD1FIZX+flgy8nMxIWIQNZTcIr2NZNqp0FVxF1lLfboQMe7dOX
-         Q+FJH1N1vgqkkFy7wLj0EPEehnQ4rF+KYBVIOqpSf/76mc74EC4Fp3pCJ2kOiuTy3SBH
-         hK3A==
-X-Gm-Message-State: AOAM533s361R/wKI0qNPscR8qZNH2/DfVVzLatlRid7JeXBejf6OEVzv
-        QeBVUqrRRQgPYmSC7acYXB4=
-X-Google-Smtp-Source: ABdhPJwx5z14sg4nUnZDq7QLNLI/SpqBrc49XGsvnUnuqEdQPtptex17XQq05rJTUaJ7q05LzK2X3g==
-X-Received: by 2002:adf:82d5:: with SMTP id 79mr150654wrc.282.1597967397538;
-        Thu, 20 Aug 2020 16:49:57 -0700 (PDT)
-Received: from localhost.localdomain (cpc83661-brig20-2-0-cust443.3-3.cable.virginm.net. [82.28.105.188])
-        by smtp.gmail.com with ESMTPSA id 32sm707449wrh.18.2020.08.20.16.49.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Aug 2020 16:49:56 -0700 (PDT)
-From:   Alex Dewar <alex.dewar90@gmail.com>
-To:     alex.dewar90@gmail.com
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, njavali@marvell.com
-Subject: [PATCH v2] scsi: Don't call memset after dma_alloc_coherent()
-Date:   Fri, 21 Aug 2020 00:49:52 +0100
-Message-Id: <20200820234952.317313-1-alex.dewar90@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200820185149.932178-1-alex.dewar90@gmail.com>
-References: <20200820185149.932178-1-alex.dewar90@gmail.com>
+        id S1727106AbgHUCYF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Aug 2020 22:24:05 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:50802 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727095AbgHUCYE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Aug 2020 22:24:04 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L2MYrv136110;
+        Fri, 21 Aug 2020 02:23:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=1AzXLjEPpnWLYbLoMsSP3jYjnRJgSmcm895+0943qZs=;
+ b=AynTdYUWeQ22HtziZ0LwfvTk6EUpthDT/KNPrM4lE7HlgiwiCWdSLnvec/s979SYvAdz
+ tLbBw8RVNBa41VWQ9sMs5IzANUw4TquXkE2i2MfQvl1WyCYiVon6heGlAizJqPxSH96y
+ nK/NxJAQoyp9fAk+4wtd7LD44POQyCMwbuBVWEwUz+X4EQmj9SvK7xDyPs5W4dC1VJwE
+ t1/E30uOTkQwIJFqFE7TC/FLMniUEFlBD49A/UQXr3tkFUTsggFOku3mektjkRfXMcYm
+ UGiz/Cnf7YduFYi0OSlj3hMCb10/UxuW//FrhGq2VBuj5HZn8CmAHE89OL3zr54pPacl /g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 32x74rkx59-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 21 Aug 2020 02:23:54 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L2IL4h055415;
+        Fri, 21 Aug 2020 02:21:54 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 3325368k5n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 21 Aug 2020 02:21:54 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07L2LpRw000637;
+        Fri, 21 Aug 2020 02:21:51 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 20 Aug 2020 19:21:51 -0700
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     <hare@suse.de>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] scsi: libfc: Fix passing zero to 'PTR_ERR' warning
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1ft8gvje1.fsf@ca-mkp.ca.oracle.com>
+References: <20200818114235.51052-1-yuehaibing@huawei.com>
+        <20200819020546.59172-1-yuehaibing@huawei.com>
+Date:   Thu, 20 Aug 2020 22:21:49 -0400
+In-Reply-To: <20200819020546.59172-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Wed, 19 Aug 2020 10:05:46 +0800")
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0 spamscore=0
+ phishscore=0 malwarescore=0 adultscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008210019
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
+ priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
+ suspectscore=1 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008210020
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-dma_alloc_coherent() already zeroes memory, so the extra call to
-memset() is unnecessary.
 
-Issue identified with Coccinelle.
+YueHaibing,
 
-Signed-off-by: Alex Dewar <alex.dewar90@gmail.com>
----
-v2: I've noticed a few other places in the scsi subsystem with this
-pattern, so lets fix them all with one patch.
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
- drivers/scsi/mvsas/mv_init.c        | 4 ----
- drivers/scsi/pmcraid.c              | 1 -
- drivers/scsi/qla2xxx/qla_mbx.c      | 2 --
- 4 files changed, 8 deletions(-)
+> diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+> index d8cbc9c0e766..574e842cefed 100644
+> --- a/drivers/scsi/libfc/fc_disc.c
+> +++ b/drivers/scsi/libfc/fc_disc.c
+> @@ -302,7 +302,7 @@ static void fc_disc_error(struct fc_disc *disc, struct fc_frame *fp)
+>  	unsigned long delay = 0;
+>  
+>  	FC_DISC_DBG(disc, "Error %ld, retries %d/%d\n",
+> -		    PTR_ERR(fp), disc->retry_count,
+> +		    IS_ERR(fp) ? PTR_ERR(fp) : 0, disc->retry_count,
+>  		    FC_DISC_RETRY_LIMIT);
+>  
+>  	if (!fp || PTR_ERR(fp) == -FC_EX_TIMEOUT) {
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index b66d3f9b717f..36b6c0d67353 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5259,7 +5259,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		_base_release_memory_pools(ioc);
- 		goto retry_allocation;
- 	}
--	memset(ioc->request, 0, sz);
- 
- 	if (retry_sz)
- 		ioc_err(ioc, "request pool: dma_alloc_coherent succeed: hba_depth(%d), chains_per_io(%d), frame_sz(%d), total(%d kb)\n",
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 978f5283c883..6aa2697c4a15 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -246,19 +246,16 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 				     &mvi->tx_dma, GFP_KERNEL);
- 	if (!mvi->tx)
- 		goto err_out;
--	memset(mvi->tx, 0, sizeof(*mvi->tx) * MVS_CHIP_SLOT_SZ);
- 	mvi->rx_fis = dma_alloc_coherent(mvi->dev, MVS_RX_FISL_SZ,
- 					 &mvi->rx_fis_dma, GFP_KERNEL);
- 	if (!mvi->rx_fis)
- 		goto err_out;
--	memset(mvi->rx_fis, 0, MVS_RX_FISL_SZ);
- 
- 	mvi->rx = dma_alloc_coherent(mvi->dev,
- 				     sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1),
- 				     &mvi->rx_dma, GFP_KERNEL);
- 	if (!mvi->rx)
- 		goto err_out;
--	memset(mvi->rx, 0, sizeof(*mvi->rx) * (MVS_RX_RING_SZ + 1));
- 	mvi->rx[0] = cpu_to_le32(0xfff);
- 	mvi->rx_cons = 0xfff;
- 
-@@ -267,7 +264,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
- 				       &mvi->slot_dma, GFP_KERNEL);
- 	if (!mvi->slot)
- 		goto err_out;
--	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
- 
- 	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
- 				       TRASH_BUCKET_SIZE,
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index aa9ae2ae8579..d99568fdf4af 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4716,7 +4716,6 @@ static int pmcraid_allocate_host_rrqs(struct pmcraid_instance *pinstance)
- 			return -ENOMEM;
- 		}
- 
--		memset(pinstance->hrrq_start[i], 0, buffer_size);
- 		pinstance->hrrq_curr[i] = pinstance->hrrq_start[i];
- 		pinstance->hrrq_end[i] =
- 			pinstance->hrrq_start[i] + PMCRAID_MAX_CMD - 1;
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 226f1428d3e5..e00f604bbf7a 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4925,8 +4925,6 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
- 		return QLA_MEMORY_ALLOC_FAILED;
- 	}
- 
--	memset(els_cmd_map, 0, ELS_CMD_MAP_SIZE);
--
- 	/* List of Purex ELS */
- 	cmd_opcode[0] = ELS_FPIN;
- 	cmd_opcode[1] = ELS_RDP;
+Why not PTR_ERR_OR_ZERO()?
+
 -- 
-2.28.0
-
+Martin K. Petersen	Oracle Linux Engineering
