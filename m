@@ -2,87 +2,141 @@ Return-Path: <SRS0=brni=B7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E932C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 15:43:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA82EC433E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 16:16:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58866207DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 15:43:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB48522B4D
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 16:16:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1598026597;
+	bh=l8A2krO7X5bmyZWqfJPn18y+U9YtDtgV6LKcbdwCpdQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=WKYjEHNoih7S3KVbh8/70P0o3VZXnR1jKjE/QgpVcjCbY3fIS3/8xmzjTO3MLIIYm
+	 zUSRA1Paw+CMm+7SA+hvU1FOnPK0toLIdq8jb4/FZ5g2SLvVVCXed1v63mjbiqp1zW
+	 ijlg/E19i1Ox4udnKwRea1G5CrTxNozFIGJ2CaZ8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727123AbgHUPnT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Aug 2020 11:43:19 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:48345 "EHLO smtp.infotech.no"
+        id S1728083AbgHUQQ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Aug 2020 12:16:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728177AbgHUPme (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Aug 2020 11:42:34 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 2D19620425A;
-        Fri, 21 Aug 2020 17:42:18 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Q4tdIIRPFXZh; Fri, 21 Aug 2020 17:42:16 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id D026420426C;
-        Fri, 21 Aug 2020 17:42:15 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        john.garry@huawei.com
-Subject: [PATCH v6 08/10] scsi: simplify scsi_target() inline
-Date:   Fri, 21 Aug 2020 11:42:02 -0400
-Message-Id: <20200821154204.9298-9-dgilbert@interlog.com>
+        id S1728070AbgHUQQX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:16:23 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B0DC622B4E;
+        Fri, 21 Aug 2020 16:16:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1598026582;
+        bh=l8A2krO7X5bmyZWqfJPn18y+U9YtDtgV6LKcbdwCpdQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nEwV7/Axx45dRv17+oOlQM923tlP/gcoQjFO2R559tr2pOEXrwXeV/pgWDc7UkwyG
+         UXaKcnevJ95oZ4Fso0/1loTSNrihgDtkalAvr5sa/8osm9EEqf+f4q6LrwyDAwHfyL
+         s56bqwPC9sFNfS3bRD0+zKfZZJnmlFcTsiPLPipc=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <jsmart2021@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 30/61] scsi: lpfc: Fix shost refcount mismatch when deleting vport
+Date:   Fri, 21 Aug 2020 12:15:14 -0400
+Message-Id: <20200821161545.347622-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821154204.9298-1-dgilbert@interlog.com>
-References: <20200821154204.9298-1-dgilbert@interlog.com>
+In-Reply-To: <20200821161545.347622-1-sashal@kernel.org>
+References: <20200821161545.347622-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A review of the code indicates this scsi_device.h comment for
-a struct scsi_device member is misleading:
-    struct scsi_target *sdev_target; /* used only for single_lun */
+From: Dick Kennedy <dick.kennedy@broadcom.com>
 
-sdev_target is set once in scsi_alloc_sdev() to the new sdev's
-parent and not altered thereafter. This in turn implies that the
-often-used scsi_target(struct scsi_device *sdev) inline function
-is going the long way around finding its parent. Simplify it and
-rework that comment.
+[ Upstream commit 03dbfe0668e6692917ac278883e0586cd7f7d753 ]
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+When vports are deleted, it is observed that there is memory/kthread
+leakage as the vport isn't fully being released.
+
+There is a shost reference taken in scsi_add_host_dma that is not released
+during scsi_remove_host. It was noticed that other drivers resolve this by
+doing a scsi_host_put after calling scsi_remove_host.
+
+The vport_delete routine is taking two references one that corresponds to
+an access to the scsi_host in the vport_delete routine and another that is
+released after the adapter mailbox command completes that destroys the VPI
+that corresponds to the vport.
+
+Remove one of the references taken such that the second reference that is
+put will complete the missing scsi_add_host_dma reference and the shost
+will be terminated.
+
+Link: https://lore.kernel.org/r/20200630215001.70793-8-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/scsi/scsi_device.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c | 26 ++++++++------------------
+ 1 file changed, 8 insertions(+), 18 deletions(-)
 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 5292787246ca..b0ba534b6f06 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -141,7 +141,7 @@ struct scsi_device {
- 	struct scsi_vpd __rcu *vpd_pg80;
- 	struct scsi_vpd __rcu *vpd_pg89;
- 	unsigned char current_tag;	/* current tag */
--	struct scsi_target      *sdev_target;   /* used only for single_lun */
-+	struct scsi_target      *sdev_target;   /* parent of this object */
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index b766463579800..d0296f7cf45fc 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -642,27 +642,16 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 		    vport->port_state < LPFC_VPORT_READY)
+ 			return -EAGAIN;
+ 	}
++
+ 	/*
+-	 * This is a bit of a mess.  We want to ensure the shost doesn't get
+-	 * torn down until we're done with the embedded lpfc_vport structure.
+-	 *
+-	 * Beyond holding a reference for this function, we also need a
+-	 * reference for outstanding I/O requests we schedule during delete
+-	 * processing.  But once we scsi_remove_host() we can no longer obtain
+-	 * a reference through scsi_host_get().
+-	 *
+-	 * So we take two references here.  We release one reference at the
+-	 * bottom of the function -- after delinking the vport.  And we
+-	 * release the other at the completion of the unreg_vpi that get's
+-	 * initiated after we've disposed of all other resources associated
+-	 * with the port.
++	 * Take early refcount for outstanding I/O requests we schedule during
++	 * delete processing for unreg_vpi.  Always keep this before
++	 * scsi_remove_host() as we can no longer obtain a reference through
++	 * scsi_host_get() after scsi_host_remove as shost is set to SHOST_DEL.
+ 	 */
+ 	if (!scsi_host_get(shost))
+ 		return VPORT_INVAL;
+-	if (!scsi_host_get(shost)) {
+-		scsi_host_put(shost);
+-		return VPORT_INVAL;
+-	}
++
+ 	lpfc_free_sysfs_attr(vport);
  
- 	blist_flags_t		sdev_bflags; /* black/white flags as also found in
- 				 * scsi_devinfo.[hc]. For now used only to
-@@ -337,7 +337,7 @@ static inline struct Scsi_Host *starget_to_shost(struct scsi_target *starg)
- #define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
- static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
- {
--	return to_scsi_target(sdev->sdev_gendev.parent);
-+	return sdev->sdev_target;
- }
- #define transport_class_to_starget(class_dev) \
- 	to_scsi_target(class_dev->parent)
+ 	lpfc_debugfs_terminate(vport);
+@@ -809,8 +798,9 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 		if (!(vport->vpi_state & LPFC_VPI_REGISTERED) ||
+ 				lpfc_mbx_unreg_vpi(vport))
+ 			scsi_host_put(shost);
+-	} else
++	} else {
+ 		scsi_host_put(shost);
++	}
+ 
+ 	lpfc_free_vpi(phba, vport->vpi);
+ 	vport->work_port_events = 0;
 -- 
 2.25.1
 
