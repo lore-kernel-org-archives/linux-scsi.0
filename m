@@ -7,37 +7,35 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA176C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 15:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6EBC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 15:42:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA99C2063A
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 15:42:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 891452063A
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 15:42:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728255AbgHUPmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Aug 2020 11:42:50 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:48305 "EHLO smtp.infotech.no"
+        id S1728261AbgHUPmx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Aug 2020 11:42:53 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:48334 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728017AbgHUPmP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Aug 2020 11:42:15 -0400
+        id S1728008AbgHUPmX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Aug 2020 11:42:23 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id D8D9C20415B;
-        Fri, 21 Aug 2020 17:42:10 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id CD249204248;
+        Fri, 21 Aug 2020 17:42:15 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id JANNe20izGW8; Fri, 21 Aug 2020 17:42:09 +0200 (CEST)
+        with ESMTP id F5TEOiLB0ChM; Fri, 21 Aug 2020 17:42:14 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id 299E8204255;
-        Fri, 21 Aug 2020 17:42:08 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 68A9A204155;
+        Fri, 21 Aug 2020 17:42:13 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        john.garry@huawei.com,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Bart van Assche <bvanassche@acm.org>
-Subject: [PATCH v6 02/10] target_core_pscsi: use __scsi_device_lookup()
-Date:   Fri, 21 Aug 2020 11:41:56 -0400
-Message-Id: <20200821154204.9298-3-dgilbert@interlog.com>
+        john.garry@huawei.com
+Subject: [PATCH v6 06/10] scsi: avoid pointless memory allocation in scsi_alloc_target()
+Date:   Fri, 21 Aug 2020 11:42:00 -0400
+Message-Id: <20200821154204.9298-7-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821154204.9298-1-dgilbert@interlog.com>
 References: <20200821154204.9298-1-dgilbert@interlog.com>
@@ -50,36 +48,63 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Hannes Reinecke <hare@suse.de>
 
-Instead of walking the list of devices manually use the helper
-function to return the device directly.
+As we already know the index of the requested target in
+scsi_alloc_target() we can try to fetch it first before trying
+to allocate a new one. This will save us a pointless memory
+allocation in case the target is already present and uncontended.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Bart van Assche <bvanassche@acm.org>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/target/target_core_pscsi.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_scan.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 4e37fa9b409d..38799e47b590 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -496,11 +496,9 @@ static int pscsi_configure_device(struct se_device *dev)
- 	}
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 8afb71c036d5..41818111808e 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -387,7 +387,7 @@ static void scsi_target_reap_ref_put(struct scsi_target *starget)
+  * is responsible for both reaping and doing a last put
+  */
+ static struct scsi_target *scsi_alloc_target(struct device *parent,
+-					     int channel, uint id)
++					     u16 channel, u16 id)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct device *dev = NULL;
+@@ -397,7 +397,23 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	struct scsi_target *starget;
+ 	struct scsi_target *found_target;
+ 	int error, ref_got;
+-	unsigned long tid;
++	unsigned long tid = (channel << 16) | id;
++
++	/*
++	 * Try if the target is already present, and save us
++	 * a pointless memory allocation if so.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	found_target = xa_load(&shost->__targets, tid);
++	if (found_target) {
++		get_device(&found_target->dev);
++		if (kref_get_unless_zero(&found_target->reap_ref)) {
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			return found_target;
++		}
++		put_device(&found_target->dev);
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
  
- 	spin_lock_irq(sh->host_lock);
--	list_for_each_entry(sd, &sh->__devices, siblings) {
--		if ((pdv->pdv_channel_id != sd->channel) ||
--		    (pdv->pdv_target_id != sd->id) ||
--		    (pdv->pdv_lun_id != sd->lun))
--			continue;
-+	sd = __scsi_device_lookup(sh, pdv->pdv_channel_id,
-+				  pdv->pdv_target_id, pdv->pdv_lun_id);
-+	if (sd) {
- 		/*
- 		 * Functions will release the held struct scsi_host->host_lock
- 		 * before calling calling pscsi_add_device_to_list() to register
+ 	starget = kzalloc(size, GFP_KERNEL);
+ 	if (!starget) {
+@@ -418,7 +434,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+-	tid = scsi_target_index(starget);
+  retry:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	found_target = xa_load(&shost->__targets, tid);
 -- 
 2.25.1
 
