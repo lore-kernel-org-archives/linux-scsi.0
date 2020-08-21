@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0CB0C433E4
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4317C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B105A20748
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4E9A21775
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598029765;
-	bh=l8A2krO7X5bmyZWqfJPn18y+U9YtDtgV6LKcbdwCpdQ=;
+	s=default; t=1598029796;
+	bh=cr/3P276TajFgjlHWochPoapZ3OClIaQlPQIS20Tusc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WkmfoqspVCF3w5tVywHWDm8jFfLE2sA3bsuBdAqZJRkfLZwgHzz9vOfTl2g+VFXKa
-	 VcfAUedWXw9g+vIJ0ZM8WzpTEPUhB144JH32q4cLNiLMzKgiS7do3n3H+c2KTmnbAW
-	 V+EGBdAX5Sn2aIdaor1LIzTsWPZ+NphN7NgpGUd8=
+	b=2YhPxK/jflZdoepqUaJZerVJ8d9BL9tmcOrMy2lk5M06pRh2vOtQM5W6nBGExqVy8
+	 fc3wW0Xj1pYxEBvBsOshAGvL0xkExNJNxAAePUPHUpOhaVnPg6A72vn/YlL73K4+2C
+	 ZnIWPNmPRzuSIdGAHk7CVRZ26dPFZoSuckQ0hCRI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728461AbgHURJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:09:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50060 "EHLO mail.kernel.org"
+        id S1728338AbgHURJy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:09:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49958 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727062AbgHUQRh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726548AbgHUQRh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 21 Aug 2020 12:17:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1A4A522CA1;
-        Fri, 21 Aug 2020 16:17:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0F28B22BEF;
+        Fri, 21 Aug 2020 16:17:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026651;
-        bh=l8A2krO7X5bmyZWqfJPn18y+U9YtDtgV6LKcbdwCpdQ=;
+        s=default; t=1598026641;
+        bh=cr/3P276TajFgjlHWochPoapZ3OClIaQlPQIS20Tusc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CFTqN7UGYfP6cIWSQyGKrnBDnm9KETlzmF/IjdUC9jVIzuu6Wf8qA2vpCQLEmqg3j
-         0/VVfhI5FaZ5HBlrxNFEBSNfsiYLGU2hbl08iqcbV9CmoogcZeXTdtshkeSxQzcs0k
-         D23lLrykuuyLozKx6wb9SPWkvshPxtyTyZ2v6qKs=
+        b=MJdm+8KwLQ8fg6kaiqbFjKnMi8QrZRyeSHFkbR9oGTQDE46QiwASxAq24clsb1m9i
+         kqBjYtiZn4SHDZ752NESHEtURc2MYfsAJDwr+nbfnd69khRCV6rTL1kXifs3X+sMUF
+         druQ4d5wg8g/EoJdGYUhXKNh0uAV9I5vby7cOMB0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <jsmart2021@gmail.com>,
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        JiangYu <lnsyyj@hotmail.com>,
+        Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 22/48] scsi: lpfc: Fix shost refcount mismatch when deleting vport
-Date:   Fri, 21 Aug 2020 12:16:38 -0400
-Message-Id: <20200821161704.348164-22-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 13/48] scsi: target: tcmu: Fix crash on ARM during cmd completion
+Date:   Fri, 21 Aug 2020 12:16:29 -0400
+Message-Id: <20200821161704.348164-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200821161704.348164-1-sashal@kernel.org>
 References: <20200821161704.348164-1-sashal@kernel.org>
@@ -59,84 +61,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Dick Kennedy <dick.kennedy@broadcom.com>
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-[ Upstream commit 03dbfe0668e6692917ac278883e0586cd7f7d753 ]
+[ Upstream commit 5a0c256d96f020e4771f6fd5524b80f89a2d3132 ]
 
-When vports are deleted, it is observed that there is memory/kthread
-leakage as the vport isn't fully being released.
+If tcmu_handle_completions() has to process a padding shorter than
+sizeof(struct tcmu_cmd_entry), the current call to
+tcmu_flush_dcache_range() with sizeof(struct tcmu_cmd_entry) as length
+param is wrong and causes crashes on e.g. ARM, because
+tcmu_flush_dcache_range() in this case calls
+flush_dcache_page(vmalloc_to_page(start)); with start being an invalid
+address above the end of the vmalloc'ed area.
 
-There is a shost reference taken in scsi_add_host_dma that is not released
-during scsi_remove_host. It was noticed that other drivers resolve this by
-doing a scsi_host_put after calling scsi_remove_host.
+The fix is to use the minimum of remaining ring space and sizeof(struct
+tcmu_cmd_entry) as the length param.
 
-The vport_delete routine is taking two references one that corresponds to
-an access to the scsi_host in the vport_delete routine and another that is
-released after the adapter mailbox command completes that destroys the VPI
-that corresponds to the vport.
+The patch was tested on kernel 4.19.118.
 
-Remove one of the references taken such that the second reference that is
-put will complete the missing scsi_add_host_dma reference and the shost
-will be terminated.
+See https://bugzilla.kernel.org/show_bug.cgi?id=208045#c10
 
-Link: https://lore.kernel.org/r/20200630215001.70793-8-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20200629093756.8947-1-bstroesser@ts.fujitsu.com
+Tested-by: JiangYu <lnsyyj@hotmail.com>
+Acked-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_vport.c | 26 ++++++++------------------
- 1 file changed, 8 insertions(+), 18 deletions(-)
+ drivers/target/target_core_user.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-index b766463579800..d0296f7cf45fc 100644
---- a/drivers/scsi/lpfc/lpfc_vport.c
-+++ b/drivers/scsi/lpfc/lpfc_vport.c
-@@ -642,27 +642,16 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 		    vport->port_state < LPFC_VPORT_READY)
- 			return -EAGAIN;
- 	}
-+
- 	/*
--	 * This is a bit of a mess.  We want to ensure the shost doesn't get
--	 * torn down until we're done with the embedded lpfc_vport structure.
--	 *
--	 * Beyond holding a reference for this function, we also need a
--	 * reference for outstanding I/O requests we schedule during delete
--	 * processing.  But once we scsi_remove_host() we can no longer obtain
--	 * a reference through scsi_host_get().
--	 *
--	 * So we take two references here.  We release one reference at the
--	 * bottom of the function -- after delinking the vport.  And we
--	 * release the other at the completion of the unreg_vpi that get's
--	 * initiated after we've disposed of all other resources associated
--	 * with the port.
-+	 * Take early refcount for outstanding I/O requests we schedule during
-+	 * delete processing for unreg_vpi.  Always keep this before
-+	 * scsi_remove_host() as we can no longer obtain a reference through
-+	 * scsi_host_get() after scsi_host_remove as shost is set to SHOST_DEL.
- 	 */
- 	if (!scsi_host_get(shost))
- 		return VPORT_INVAL;
--	if (!scsi_host_get(shost)) {
--		scsi_host_put(shost);
--		return VPORT_INVAL;
--	}
-+
- 	lpfc_free_sysfs_attr(vport);
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index a497e7c1f4fcc..1de341a65a18a 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1220,7 +1220,14 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
  
- 	lpfc_debugfs_terminate(vport);
-@@ -809,8 +798,9 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 		if (!(vport->vpi_state & LPFC_VPI_REGISTERED) ||
- 				lpfc_mbx_unreg_vpi(vport))
- 			scsi_host_put(shost);
--	} else
-+	} else {
- 		scsi_host_put(shost);
-+	}
+ 		struct tcmu_cmd_entry *entry = (void *) mb + CMDR_OFF + udev->cmdr_last_cleaned;
  
- 	lpfc_free_vpi(phba, vport->vpi);
- 	vport->work_port_events = 0;
+-		tcmu_flush_dcache_range(entry, sizeof(*entry));
++		/*
++		 * Flush max. up to end of cmd ring since current entry might
++		 * be a padding that is shorter than sizeof(*entry)
++		 */
++		size_t ring_left = head_to_end(udev->cmdr_last_cleaned,
++					       udev->cmdr_size);
++		tcmu_flush_dcache_range(entry, ring_left < sizeof(*entry) ?
++					ring_left : sizeof(*entry));
+ 
+ 		if (tcmu_hdr_get_op(entry->hdr.len_op) == TCMU_OP_PAD) {
+ 			UPDATE_HEAD(udev->cmdr_last_cleaned,
 -- 
 2.25.1
 
