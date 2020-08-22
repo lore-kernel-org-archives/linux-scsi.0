@@ -2,68 +2,86 @@ Return-Path: <SRS0=DDJn=CA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EC5C433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Aug 2020 17:33:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FF6C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Aug 2020 20:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6CED206C0
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Aug 2020 17:33:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598117638;
-	bh=CW0BFa3lqAoKRheOJs8wvJct9GqCYqUGvshYzWb9CQ4=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=rfN0cRnIPAtDU8la2HIoxFIX/wTuxFx29kGUvfB+IclYl92WdUEOv5Xrs9i6jzr0q
-	 0iSLyTORc0okBHOuv6AUoNipxCdAwn6SwPJfiVwGoamJgXqslEt2xY3vg6CTPbNxMC
-	 UrEzA7Dm0iLi0Ei3b6frQqWpRCpY68G1kOpEniHI=
+	by mail.kernel.org (Postfix) with ESMTP id BA43F207CD
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Aug 2020 20:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728381AbgHVRcS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Aug 2020 13:32:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56096 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727945AbgHVRcQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 22 Aug 2020 13:32:16 -0400
-Subject: Re: [GIT PULL] SCSI fixes for 5.9-rc1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598117536;
-        bh=CW0BFa3lqAoKRheOJs8wvJct9GqCYqUGvshYzWb9CQ4=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=RxOCnYR7rAKMRGNcL2eSAiU2co7gK5BUD7k5CCgtlmHOy3JZuH0z74CjQTqtkPzF8
-         wsUn4eGpBwhLZ2NfEo2fsNO50K/GmOQD/602YKDRU2Ms78fS3X5UPWzhBpnJwt4qJ7
-         fdK4OTR5udA06ExUi9U6+d3bV/n+IUi9Xus3x/kQ=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1598075304.3547.4.camel@HansenPartnership.com>
-References: <1598075304.3547.4.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1598075304.3547.4.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: dca93232b361d260413933903cd4bdbd92ebcc7f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 9e574b74b781f14fa7348ba8b980b19a250a9c83
-Message-Id: <159811753625.17427.14465916040387699392.pr-tracker-bot@kernel.org>
-Date:   Sat, 22 Aug 2020 17:32:16 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1726750AbgHVUnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 22 Aug 2020 16:43:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42576 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726036AbgHVUna (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Aug 2020 16:43:30 -0400
+X-Greylist: delayed 1945 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 22 Aug 2020 13:43:28 PDT
+Received: from tartarus.angband.pl (tartarus.angband.pl [IPv6:2001:41d0:602:dbe::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A252C061573
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Aug 2020 13:43:28 -0700 (PDT)
+Received: from kilobyte by tartarus.angband.pl with local (Exim 4.92)
+        (envelope-from <kilobyte@angband.pl>)
+        id 1k9Zqr-0003yX-DW; Sat, 22 Aug 2020 22:10:57 +0200
+Date:   Sat, 22 Aug 2020 22:10:57 +0200
+From:   Adam Borowski <kilobyte@angband.pl>
+To:     Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: build failure: aicasm: renamed yaccage
+Message-ID: <20200822201057.GA14633@angband.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-Junkbait: aaron@angband.pl, zzyx@angband.pl
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: kilobyte@angband.pl
+X-SA-Exim-Scanned: No (on tartarus.angband.pl); SAEximRunCond expanded to false
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 21 Aug 2020 22:48:24 -0700:
+Hi!
+My randconfig builds notoriously fail on this:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+[~/linux/drivers/scsi/aic7xxx/aicasm](vanilla)$ make -j1
+bison -d -b aicasm_gram aicasm_gram.y
+mv aicasm_gram.tab.c .//aicasm_gram.c
+mv aicasm_gram.tab.h .//aicasm_gram.h
+bison -d -b aicasm_macro_gram -p mm aicasm_macro_gram.y
+mv aicasm_macro_gram.tab.c .//aicasm_macro_gram.c
+mv aicasm_macro_gram.tab.h .//aicasm_macro_gram.h
+flex  -o aicasm_scan.c aicasm_scan.l
+flex  -Pmm -o aicasm_macro_scan.c aicasm_macro_scan.l
+cc -I/usr/include -I. -I./ aicasm.c aicasm_symbol.c .//aicasm_gram.c .//aicasm_macro_gram.c .//aicasm_scan.c .//aicasm_macro_scan.c -o .//aicasm -ldb
+aicasm_symbol.c: In function ‘aic_print_reg_dump_end’:
+aicasm_symbol.c:393:13: warning: implicit declaration of function ‘tolower’ [-Wimplicit-function-declaration]
+  393 |   *letter = tolower(*letter);
+      |             ^~~~~~~
+aicasm_gram.tab.c:204:10: fatal error: aicasm_gram.tab.h: No such file or directory
+compilation terminated.
+aicasm_macro_gram.tab.c:167:10: fatal error: aicasm_macro_gram.tab.h: No such file or directory
+compilation terminated.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9e574b74b781f14fa7348ba8b980b19a250a9c83
+And the generated yaccage has:
+#include "aicasm_gram.tab.h"
+which tries to refer to the just renamed file.
 
-Thank you!
+As the files in question are generated, with the filename coming from $YACC
+rather than source, it'd take some after-processing with sed or a similar
+hack.  Thus, instead of sending a patch, I thought it'd better to ask:
+what the renames are for?
 
+
+Meow!
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+⢀⣴⠾⠻⢶⣦⠀
+⣾⠁⢠⠒⠀⣿⡁
+⢿⡄⠘⠷⠚⠋⠀ It's time to migrate your Imaginary Protocol from version 4i to 6i.
+⠈⠳⣄⠀⠀⠀⠀
