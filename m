@@ -2,80 +2,158 @@ Return-Path: <SRS0=1Iot=CB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27278C433E3
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 09:15:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FE3C433E1
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 14:57:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10A2620768
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 09:15:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B72C2078D
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 14:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726059AbgHWJPL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Aug 2020 05:15:11 -0400
-Received: from mail.zju.edu.cn ([61.164.42.155]:24886 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725913AbgHWJPK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 Aug 2020 05:15:10 -0400
-Received: from localhost.localdomain (unknown [210.32.144.184])
-        by mail-app4 (Coremail) with SMTP id cS_KCgBn3nmNM0JfBb47AQ--.54780S4;
-        Sun, 23 Aug 2020 17:14:56 +0800 (CST)
-From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
-To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
-Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: pm8001: Fix memleak in pm8001_exec_internal_task_abort
-Date:   Sun, 23 Aug 2020 17:14:53 +0800
-Message-Id: <20200823091453.4782-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cS_KCgBn3nmNM0JfBb47AQ--.54780S4
-X-Coremail-Antispam: 1UD129KBjvdXoWruFy5WF48tr1UXrWrZF1rCrg_yoW3ArX_Gr
-        4xJFn2gry8GrZ7Ga4UCrs0yr9F9FWrXF1xCF1Yvas3uayrur45WF45ZF45AF1UXw4xG3Wj
-        qw1kGa1fZr13tjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbIkFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
-        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
-        vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E
-        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r4fMxAIw28IcxkI7VAKI48J
-        MxAIw28IcVCjz48v1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-        02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_
-        Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-        CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE
-        14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-        9x0JUhNVgUUUUU=
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgoSBlZdtPnBhABBse
+        id S1726727AbgHWO5h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Aug 2020 10:57:37 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:54133 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1725996AbgHWO5e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Aug 2020 10:57:34 -0400
+Received: (qmail 304437 invoked by uid 1000); 23 Aug 2020 10:57:33 -0400
+Date:   Sun, 23 Aug 2020 10:57:33 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Jens Axboe <axboe@kernel.dk>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, kernel@puri.sm
+Subject: [PATCH] block: Fix bug in runtime-resume handling
+Message-ID: <20200823145733.GC303967@rowland.harvard.edu>
+References: <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
+ <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
+ <20200807143002.GE226516@rowland.harvard.edu>
+ <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
+ <20200808150542.GB256751@rowland.harvard.edu>
+ <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
+ <20200809152643.GA277165@rowland.harvard.edu>
+ <60150284-be13-d373-5448-651b72a7c4c9@puri.sm>
+ <20200810141343.GA299045@rowland.harvard.edu>
+ <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When pm8001_tag_alloc() fails, task should be freed just
-like what we've done in the subsequent error paths.
+Runtime power-management support in the block layer has somehow gotten
+messed up in the past few years.  This area of code has been through a
+lot of churn and it's not easy to track exactly when the bug addressed
+here was introduced; it was present for a while, then fixed for a
+while, and then it returned.
 
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+At any rate, the problem is that the block layer code thinks that it's
+okay to issue a request with the BLK_MQ_REQ_PREEMPT flag set at any
+time, even when the queue and underlying device are runtime suspended.
+This belief is wrong; the flag merely indicates that it's okay to
+issue the request while the queue and device are in the process of
+suspending or resuming.  When they are actually suspended, no requests
+may be issued.
+
+The symptom of this bug is that a runtime-suspended block device
+doesn't resume as it should.  The request which should cause a runtime
+resume instead gets issued directly, without resuming the device
+first.  Of course the device can't handle it properly, the I/O
+fails, and the device remains suspended.
+
+The problem is fixed by checking that the queue's runtime-PM status
+isn't RPM_SUSPENDED before allowing a request to be issued, and
+queuing a runtime-resume request if it is.  In particular, the inline
+blk_pm_request_resume() routine is renamed blk_pm_resume_queue() and
+the code is unified by merging the surrounding checks into the
+routine.  If the queue isn't set up for runtime PM, or there currently
+is no restriction on allowed requests, the request is allowed.
+Likewise if the BLK_MQ_REQ_PREEMPT flag is set and the status isn't
+RPM_SUSPENDED.  Otherwise a runtime resume is queued and the request
+is blocked until conditions are more suitable.
+
+Reported-and-tested-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Bart Van Assche <bvanassche@acm.org>
+CC: <stable@vger.kernel.org> # 5.2
+
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 337e79d6837f..9889bab7d31c 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -818,7 +818,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+The bug goes back way before 5.2, but other changes will prevent the
+patch from applying directly to earlier kernels, so I'm limiting the 
+@stable updates to 5.2 and after.
+
+
+[as1941]
+
+
+ block/blk-core.c |    6 +++---
+ block/blk-pm.h   |   14 +++++++++-----
+ 2 files changed, 12 insertions(+), 8 deletions(-)
+
+Index: usb-devel/block/blk-core.c
+===================================================================
+--- usb-devel.orig/block/blk-core.c
++++ usb-devel/block/blk-core.c
+@@ -423,7 +423,8 @@ int blk_queue_enter(struct request_queue
+ 			 * responsible for ensuring that that counter is
+ 			 * globally visible before the queue is unfrozen.
+ 			 */
+-			if (pm || !blk_queue_pm_only(q)) {
++			if ((pm && q->rpm_status != RPM_SUSPENDED) ||
++			    !blk_queue_pm_only(q)) {
+ 				success = true;
+ 			} else {
+ 				percpu_ref_put(&q->q_usage_counter);
+@@ -448,8 +449,7 @@ int blk_queue_enter(struct request_queue
  
- 		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
- 		if (res)
--			return res;
-+			goto ex_err;
- 		ccb = &pm8001_ha->ccb_info[ccb_tag];
- 		ccb->device = pm8001_dev;
- 		ccb->ccb_tag = ccb_tag;
--- 
-2.17.1
-
+ 		wait_event(q->mq_freeze_wq,
+ 			   (!q->mq_freeze_depth &&
+-			    (pm || (blk_pm_request_resume(q),
+-				    !blk_queue_pm_only(q)))) ||
++			    blk_pm_resume_queue(pm, q)) ||
+ 			   blk_queue_dying(q));
+ 		if (blk_queue_dying(q))
+ 			return -ENODEV;
+Index: usb-devel/block/blk-pm.h
+===================================================================
+--- usb-devel.orig/block/blk-pm.h
++++ usb-devel/block/blk-pm.h
+@@ -6,11 +6,14 @@
+ #include <linux/pm_runtime.h>
+ 
+ #ifdef CONFIG_PM
+-static inline void blk_pm_request_resume(struct request_queue *q)
++static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
+ {
+-	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+-		       q->rpm_status == RPM_SUSPENDING))
+-		pm_request_resume(q->dev);
++	if (!q->dev || !blk_queue_pm_only(q))
++		return 1;	/* Nothing to do */
++	if (pm && q->rpm_status != RPM_SUSPENDED)
++		return 1;	/* Request allowed */
++	pm_request_resume(q->dev);
++	return 0;
+ }
+ 
+ static inline void blk_pm_mark_last_busy(struct request *rq)
+@@ -44,8 +47,9 @@ static inline void blk_pm_put_request(st
+ 		--rq->q->nr_pending;
+ }
+ #else
+-static inline void blk_pm_request_resume(struct request_queue *q)
++static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
+ {
++	return 1;
+ }
+ 
+ static inline void blk_pm_mark_last_busy(struct request *rq)
