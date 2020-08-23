@@ -1,87 +1,81 @@
-Return-Path: <SRS0=DDJn=CA=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=1Iot=CB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FF6C433DF
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Aug 2020 20:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27278C433E3
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 09:15:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA43F207CD
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Aug 2020 20:43:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10A2620768
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 09:15:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726750AbgHVUnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Aug 2020 16:43:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42576 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726036AbgHVUna (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Aug 2020 16:43:30 -0400
-X-Greylist: delayed 1945 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 22 Aug 2020 13:43:28 PDT
-Received: from tartarus.angband.pl (tartarus.angband.pl [IPv6:2001:41d0:602:dbe::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A252C061573
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Aug 2020 13:43:28 -0700 (PDT)
-Received: from kilobyte by tartarus.angband.pl with local (Exim 4.92)
-        (envelope-from <kilobyte@angband.pl>)
-        id 1k9Zqr-0003yX-DW; Sat, 22 Aug 2020 22:10:57 +0200
-Date:   Sat, 22 Aug 2020 22:10:57 +0200
-From:   Adam Borowski <kilobyte@angband.pl>
-To:     Hannes Reinecke <hare@suse.com>,
+        id S1726059AbgHWJPL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Aug 2020 05:15:11 -0400
+Received: from mail.zju.edu.cn ([61.164.42.155]:24886 "EHLO zju.edu.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725913AbgHWJPK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 23 Aug 2020 05:15:10 -0400
+Received: from localhost.localdomain (unknown [210.32.144.184])
+        by mail-app4 (Coremail) with SMTP id cS_KCgBn3nmNM0JfBb47AQ--.54780S4;
+        Sun, 23 Aug 2020 17:14:56 +0800 (CST)
+From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
+To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
+Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: build failure: aicasm: renamed yaccage
-Message-ID: <20200822201057.GA14633@angband.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-X-Junkbait: aaron@angband.pl, zzyx@angband.pl
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-SA-Exim-Connect-IP: <locally generated>
-X-SA-Exim-Mail-From: kilobyte@angband.pl
-X-SA-Exim-Scanned: No (on tartarus.angband.pl); SAEximRunCond expanded to false
+Subject: [PATCH] scsi: pm8001: Fix memleak in pm8001_exec_internal_task_abort
+Date:   Sun, 23 Aug 2020 17:14:53 +0800
+Message-Id: <20200823091453.4782-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: cS_KCgBn3nmNM0JfBb47AQ--.54780S4
+X-Coremail-Antispam: 1UD129KBjvdXoWruFy5WF48tr1UXrWrZF1rCrg_yoW3ArX_Gr
+        4xJFn2gry8GrZ7Ga4UCrs0yr9F9FWrXF1xCF1Yvas3uayrur45WF45ZF45AF1UXw4xG3Wj
+        qw1kGa1fZr13tjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbIkFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
+        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
+        vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E
+        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r4fMxAIw28IcxkI7VAKI48J
+        MxAIw28IcVCjz48v1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+        02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_
+        Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+        CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE
+        14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+        9x0JUhNVgUUUUU=
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgoSBlZdtPnBhABBse
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi!
-My randconfig builds notoriously fail on this:
+When pm8001_tag_alloc() fails, task should be freed just
+like what we've done in the subsequent error paths.
 
-[~/linux/drivers/scsi/aic7xxx/aicasm](vanilla)$ make -j1
-bison -d -b aicasm_gram aicasm_gram.y
-mv aicasm_gram.tab.c .//aicasm_gram.c
-mv aicasm_gram.tab.h .//aicasm_gram.h
-bison -d -b aicasm_macro_gram -p mm aicasm_macro_gram.y
-mv aicasm_macro_gram.tab.c .//aicasm_macro_gram.c
-mv aicasm_macro_gram.tab.h .//aicasm_macro_gram.h
-flex  -o aicasm_scan.c aicasm_scan.l
-flex  -Pmm -o aicasm_macro_scan.c aicasm_macro_scan.l
-cc -I/usr/include -I. -I./ aicasm.c aicasm_symbol.c .//aicasm_gram.c .//aicasm_macro_gram.c .//aicasm_scan.c .//aicasm_macro_scan.c -o .//aicasm -ldb
-aicasm_symbol.c: In function ‘aic_print_reg_dump_end’:
-aicasm_symbol.c:393:13: warning: implicit declaration of function ‘tolower’ [-Wimplicit-function-declaration]
-  393 |   *letter = tolower(*letter);
-      |             ^~~~~~~
-aicasm_gram.tab.c:204:10: fatal error: aicasm_gram.tab.h: No such file or directory
-compilation terminated.
-aicasm_macro_gram.tab.c:167:10: fatal error: aicasm_macro_gram.tab.h: No such file or directory
-compilation terminated.
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/pm8001/pm8001_sas.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-And the generated yaccage has:
-#include "aicasm_gram.tab.h"
-which tries to refer to the just renamed file.
-
-As the files in question are generated, with the filename coming from $YACC
-rather than source, it'd take some after-processing with sed or a similar
-hack.  Thus, instead of sending a patch, I thought it'd better to ask:
-what the renames are for?
-
-
-Meow!
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 337e79d6837f..9889bab7d31c 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -818,7 +818,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+ 
+ 		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+ 		if (res)
+-			return res;
++			goto ex_err;
+ 		ccb = &pm8001_ha->ccb_info[ccb_tag];
+ 		ccb->device = pm8001_dev;
+ 		ccb->ccb_tag = ccb_tag;
 -- 
-⢀⣴⠾⠻⢶⣦⠀
-⣾⠁⢠⠒⠀⣿⡁
-⢿⡄⠘⠷⠚⠋⠀ It's time to migrate your Imaginary Protocol from version 4i to 6i.
-⠈⠳⣄⠀⠀⠀⠀
+2.17.1
+
