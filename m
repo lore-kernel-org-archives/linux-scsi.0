@@ -2,158 +2,266 @@ Return-Path: <SRS0=1Iot=CB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FE3C433E1
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 14:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF656C433E1
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 22:13:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B72C2078D
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 14:57:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9822220724
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Aug 2020 22:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726727AbgHWO5h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Aug 2020 10:57:37 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:54133 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1725996AbgHWO5e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Aug 2020 10:57:34 -0400
-Received: (qmail 304437 invoked by uid 1000); 23 Aug 2020 10:57:33 -0400
-Date:   Sun, 23 Aug 2020 10:57:33 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Jens Axboe <axboe@kernel.dk>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, kernel@puri.sm
-Subject: [PATCH] block: Fix bug in runtime-resume handling
-Message-ID: <20200823145733.GC303967@rowland.harvard.edu>
-References: <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
- <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
- <20200807143002.GE226516@rowland.harvard.edu>
- <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
- <20200808150542.GB256751@rowland.harvard.edu>
- <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
- <20200809152643.GA277165@rowland.harvard.edu>
- <60150284-be13-d373-5448-651b72a7c4c9@puri.sm>
- <20200810141343.GA299045@rowland.harvard.edu>
- <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
+        id S1726858AbgHWWND (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Aug 2020 18:13:03 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:53973 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726752AbgHWWNA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 23 Aug 2020 18:13:00 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 29B4720425B;
+        Mon, 24 Aug 2020 00:12:57 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id q67W0RhFxGJi; Mon, 24 Aug 2020 00:12:53 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-45-78-251-166.dyn.295.ca [45.78.251.166])
+        by smtp.infotech.no (Postfix) with ESMTPA id 280ED204157;
+        Mon, 24 Aug 2020 00:12:51 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
+Subject: [PATCH v10 00/40] sg: add v4 interface
+Date:   Sun, 23 Aug 2020 18:12:08 -0400
+Message-Id: <20200823221248.15678-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Runtime power-management support in the block layer has somehow gotten
-messed up in the past few years.  This area of code has been through a
-lot of churn and it's not easy to track exactly when the bug addressed
-here was introduced; it was present for a while, then fixed for a
-while, and then it returned.
+This patchset is the first stage of a two stage rewrite of the scsi
+generic (sg) driver. The main goal of the first stage is to introduce
+the sg v4 interface that uses 'struct sg_io_v4' as well as keeping and
+modernizing the sg v3 interface (based on 'struct sg_io_hdr'). The
+async interface formerly requiring the use of write() and read()
+system calls now have ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE)
+replacements. See:
+    http://sg.danny.cz/sg/sg_v40.html
+for more details. If accessing http pages is a problem, a temporary
+rendering of this page can be found here:
+    https://doug-gilbert.github.io/sg_v40.html
 
-At any rate, the problem is that the block layer code thinks that it's
-okay to issue a request with the BLK_MQ_REQ_PREEMPT flag set at any
-time, even when the queue and underlying device are runtime suspended.
-This belief is wrong; the flag merely indicates that it's okay to
-issue the request while the queue and device are in the process of
-suspending or resuming.  When they are actually suspended, no requests
-may be issued.
+This patchset is against Martin Petersen's 5.10/scsi-queue branch.
 
-The symptom of this bug is that a runtime-suspended block device
-doesn't resume as it should.  The request which should cause a runtime
-resume instead gets issued directly, without resuming the device
-first.  Of course the device can't handle it properly, the I/O
-fails, and the device remains suspended.
+Changes since v9 (sent to linux-scsi list on 20200421)
+  - rebase on MKP's 5.10/scsi-queue branch
+  - remove some master/slave terminology that had bled in from
+    the part 2 patchset
+  - change sg_request::start_ns type from ktime_t to u64
+  - pick up several error path correction fixes applied to the
+    sg driver by other authors
 
-The problem is fixed by checking that the queue's runtime-PM status
-isn't RPM_SUSPENDED before allowing a request to be issued, and
-queuing a runtime-resume request if it is.  In particular, the inline
-blk_pm_request_resume() routine is renamed blk_pm_resume_queue() and
-the code is unified by merging the surrounding checks into the
-routine.  If the queue isn't set up for runtime PM, or there currently
-is no restriction on allowed requests, the request is allowed.
-Likewise if the BLK_MQ_REQ_PREEMPT flag is set and the status isn't
-RPM_SUSPENDED.  Otherwise a runtime resume is queued and the request
-is blocked until conditions are more suitable.
+Changes since v8 (sent to linux-scsi list on 20200301)
+  - add new patch to ignore the /proc/scsi/sg/allow_dio setting.
+    Now direct IO will be attempted whenever the SG_FLAG_DIRECT_IO
+    flag is given
+  - add new patch to track mmap_sz from previous mmap() call.
+    Allows catching mmap-ed requests that exceed that value
+  - change warning about using the v3 interface with the write()
+    system call from WARN_ONCE() to pr_warn_once()
+  - remove __KERNEL__ conditionals in include/scsi/sg.h
+  - change struct sg_fd::start_ns from u64 to ktime_t type
+  - introduce a new small sg_rq_state_mul2arr array to avoid
+    a multiplication at runtime in the state machine engine
+  - tweak mempool introduced in v7 for sense buffers
+  - rework sg_mk_sgat() to better handle low memory situations;
+    similar work on sg_remove_sgat_helper()
 
-Reported-and-tested-by: Martin Kepplinger <martin.kepplinger@puri.sm>
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: Bart Van Assche <bvanassche@acm.org>
-CC: <stable@vger.kernel.org> # 5.2
+Changes since v7 (sent to linux-scsi list on 20200227)
+  - improve direct IO code, remove the SG_FRQ_DIO_IN_USE
+    sg_request::frq_bm flag as it is no longer needed
+  - simplify state changing code. Many state changes (rq_st) do not
+    need changes to the xarray "marks"; only lock those that do
+    (reviewer queried the locking)
+  - remove some misplaced likely()/unlikely() macros. They are gathered
+    together in a separate patch (in a second patchset)
+  - change a cast that the kbuild robot complained about. It also
+    flagged a stack size problem in sg_ioctl_common() for reasons not
+    given nor obvious. That function (and its parents) declare only
+    simple scalars on the stack.
+  - add 'Reviewed-by' where appropriate
 
----
+Changes since v6 (sent to linux-scsi list on 20200112)
+  - based on Martin Petersen's 5.7/scsi-queue branch in his
+    linux-scsi repository
+  - major work on mmap support: when mmap(2) is used the reserve
+    request scatter gather list is rebuilt to have order=0
+    elements (i.e. each is PAGE_SIZE bytes).
+  - address one kbuild robot issue: add include defining size_t
+  - nearly all patches that have been reviewed have been changed,
+    usually in minor ways. Those patches have "***" before the
+    "Reviewed-by" line.
 
-The bug goes back way before 5.2, but other changes will prevent the
-patch from applying directly to earlier kernels, so I'm limiting the 
-@stable updates to 5.2 and after.
+Changes since v5 (sent to linux-scsi list on 20191008)
+  - replace linked lists with xarray mechanism
+  - use the locking in the xarray implementation to
+    replace several discrete locks
+  - some patches that were previously reviewed by
+    Hannes Reinecke have had small changes made to
+    them usually associated with xarrays. Those have
+    been marked with "***" prepended to the
+    "Reviewed-by" line
+  - bump the driver version number to 4.0.08
 
+Changes since v4 (sent to linux-scsi list on 20190829)
+  - remove much of the logic in the previous patchset
+    series from and including:
+        [PATCH v4 11/22] sg: replace rq array with lists
+    to
+        [PATCH v4 22/22] sg: bump version to 4.0.03
+  - bump the driver version number from 3.5.36 to 3.9.01
+    [20190606] reflecting that the v4 interface has not
+    been implemented (in this patchset)
+  - patches 13/23 through to 22/23 reduce the complexity
+    of "[PATCH v4 11/22] sg: replace rq array with lists"
+    measured in KiloBytes from about 130 KB to 80 KB.
+  - various changes suggested by reviewers of the v4
+    patchset have been implemented
+  - change all %p descriptors (mainly in SG_LOG() macros)
+    to %pK so that the debug output remains useful in
+    recent kernels. Evidently sys admins can selectively
+    turn on pointer obfuscation on %pK as required on
+    secure systems.
 
-[as1941]
+Changes since v3 (sent to linux-scsi list on 20190807):
+  - move __must_hold attributes into separate patch
+  - move procfs and debugfs file scope definitions toward
+    the end of sg.c to avoid forward declarations
+  - move module_param* and MODULE_* macros to end of sg.c
+  - expand debugfs support with snapshot_devs which allows
+    filtering of snapshot output by sg device(s)
+  - add a WARN_ONCE when write(2) is used with the sg v3
+    interface. Suggest using SG_IOSUBMIT_V3 instead.
+  - address more of the review comments from Hannes Reinecke
+    and Christoph Hellwig
+  - add various reviewed-by tags where appropriate
 
+Changes since v2 (sent to linux-scsi list on 20190727):
+  - address issues "Reported-by: kbuild test robot <lkp@intel.com>".
+    The main one was to change the bsg header included to:
+    include/uapi/linux/bsg.h rather than include/linux/bsg.h
+  - address some of the review comments from Hannes Reinecke;
+    email responses have been sent for review comments that
+    did not result in code changes
 
- block/blk-core.c |    6 +++---
- block/blk-pm.h   |   14 +++++++++-----
- 2 files changed, 12 insertions(+), 8 deletions(-)
+Changes since v1 (sent to linux-scsi list on 20190616):
+  - change ktime_get_boot_ns() to ktime_get_boottime_ns() to reflect
+    kernel API change first seen in lk 5.3.0-rc1
 
-Index: usb-devel/block/blk-core.c
-===================================================================
---- usb-devel.orig/block/blk-core.c
-+++ usb-devel/block/blk-core.c
-@@ -423,7 +423,8 @@ int blk_queue_enter(struct request_queue
- 			 * responsible for ensuring that that counter is
- 			 * globally visible before the queue is unfrozen.
- 			 */
--			if (pm || !blk_queue_pm_only(q)) {
-+			if ((pm && q->rpm_status != RPM_SUSPENDED) ||
-+			    !blk_queue_pm_only(q)) {
- 				success = true;
- 			} else {
- 				percpu_ref_put(&q->q_usage_counter);
-@@ -448,8 +449,7 @@ int blk_queue_enter(struct request_queue
- 
- 		wait_event(q->mq_freeze_wq,
- 			   (!q->mq_freeze_depth &&
--			    (pm || (blk_pm_request_resume(q),
--				    !blk_queue_pm_only(q)))) ||
-+			    blk_pm_resume_queue(pm, q)) ||
- 			   blk_queue_dying(q));
- 		if (blk_queue_dying(q))
- 			return -ENODEV;
-Index: usb-devel/block/blk-pm.h
-===================================================================
---- usb-devel.orig/block/blk-pm.h
-+++ usb-devel/block/blk-pm.h
-@@ -6,11 +6,14 @@
- #include <linux/pm_runtime.h>
- 
- #ifdef CONFIG_PM
--static inline void blk_pm_request_resume(struct request_queue *q)
-+static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
- {
--	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
--		       q->rpm_status == RPM_SUSPENDING))
--		pm_request_resume(q->dev);
-+	if (!q->dev || !blk_queue_pm_only(q))
-+		return 1;	/* Nothing to do */
-+	if (pm && q->rpm_status != RPM_SUSPENDED)
-+		return 1;	/* Request allowed */
-+	pm_request_resume(q->dev);
-+	return 0;
- }
- 
- static inline void blk_pm_mark_last_busy(struct request *rq)
-@@ -44,8 +47,9 @@ static inline void blk_pm_put_request(st
- 		--rq->q->nr_pending;
- }
- #else
--static inline void blk_pm_request_resume(struct request_queue *q)
-+static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
- {
-+	return 1;
- }
- 
- static inline void blk_pm_mark_last_busy(struct request *rq)
+Douglas Gilbert (40):
+  sg: move functions around
+  sg: remove typedefs, type+formatting cleanup
+  sg: sg_log and is_enabled
+  sg: rework sg_poll(), minor changes
+  sg: bitops in sg_device
+  sg: make open count an atomic
+  sg: move header to uapi section
+  sg: speed sg_poll and sg_get_num_waiting
+  sg: sg_allow_if_err_recovery and renames
+  sg: improve naming
+  sg: change rwlock to spinlock
+  sg: ioctl handling
+  sg: split sg_read
+  sg: sg_common_write add structure for arguments
+  sg: rework sg_vma_fault
+  sg: rework sg_mmap
+  sg: replace sg_allow_access
+  sg: rework scatter gather handling
+  sg: introduce request state machine
+  sg: sg_find_srp_by_id
+  sg: sg_fill_request_element
+  sg: printk change %p to %pK
+  sg: xarray for fds in device
+  sg: xarray for reqs in fd
+  sg: replace rq array with lists
+  sg: sense buffer rework
+  sg: add sg v4 interface support
+  sg: rework debug info
+  sg: add 8 byte SCSI LUN to sg_scsi_id
+  sg: expand sg_comm_wr_t
+  sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+  sg: add some __must_hold macros
+  sg: move procfs objects to avoid forward decls
+  sg: protect multiple receivers
+  sg: first debugfs support
+  sg: rework mmap support
+  sg: defang allow_dio
+  sg: warn v3 write system call users
+  sg: add mmap_sz tracking
+  sg: bump version to 4.0.09
+
+ drivers/scsi/sg.c      | 5183 +++++++++++++++++++++++++++-------------
+ include/scsi/sg.h      |  273 +--
+ include/uapi/scsi/sg.h |  374 +++
+ 3 files changed, 3917 insertions(+), 1913 deletions(-)
+ create mode 100644 include/uapi/scsi/sg.h
+
+-- 
+2.26.1
+
+*** BLURB HERE ***
+
+Douglas Gilbert (40):
+  sg: move functions around
+  sg: remove typedefs, type+formatting cleanup
+  sg: sg_log and is_enabled
+  sg: rework sg_poll(), minor changes
+  sg: bitops in sg_device
+  sg: make open count an atomic
+  sg: move header to uapi section
+  sg: speed sg_poll and sg_get_num_waiting
+  sg: sg_allow_if_err_recovery and renames
+  sg: improve naming
+  sg: change rwlock to spinlock
+  sg: ioctl handling
+  sg: split sg_read
+  sg: sg_common_write add structure for arguments
+  sg: rework sg_vma_fault
+  sg: rework sg_mmap
+  sg: replace sg_allow_access
+  sg: rework scatter gather handling
+  sg: introduce request state machine
+  sg: sg_find_srp_by_id
+  sg: sg_fill_request_element
+  sg: printk change %p to %pK
+  sg: xarray for fds in device
+  sg: xarray for reqs in fd
+  sg: replace rq array with xarray
+  sg: sense buffer rework
+  sg: add sg v4 interface support
+  sg: rework debug info
+  sg: add 8 byte SCSI LUN to sg_scsi_id
+  sg: expand sg_comm_wr_t
+  sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+  sg: add some __must_hold macros
+  sg: move procfs objects to avoid forward decls
+  sg: protect multiple receivers
+  sg: first debugfs support
+  sg: rework mmap support
+  sg: defang allow_dio
+  sg: warn v3 write system call users
+  sg: add mmap_sz tracking
+  sg: bump version to 4.0.09
+
+ drivers/scsi/sg.c      | 5193 +++++++++++++++++++++++++++-------------
+ include/scsi/sg.h      |  273 +--
+ include/uapi/scsi/sg.h |  374 +++
+ 3 files changed, 3917 insertions(+), 1923 deletions(-)
+ create mode 100644 include/uapi/scsi/sg.h
+
+-- 
+2.25.1
+
