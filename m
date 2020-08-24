@@ -2,305 +2,112 @@ Return-Path: <SRS0=xqUt=CC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA72CC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 09:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFAACC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 10:23:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A50BE20738
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 09:41:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADF3020738
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 10:23:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WxNtDNt3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729374AbgHXJlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 05:41:37 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:22594 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728017AbgHXJlf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2020 05:41:35 -0400
-IronPort-SDR: o9UFXlsJgV6bSrcISw5zUVCOnSyVftiIKGn/qPTB3oYlVSbrPiFvJiBU7nmpSjI5lHAnIU/wtH
- /++MtkqKPVg66K8/y51OQKa217hf6G39oXXcJtEG1aTU65pPlreHjwdFUCvlUiPpF2YRaG+YSz
- Jkj8ldJJNJJ8LRkzKTtZVQG379jE8nF2xyPS42SGkzh3+gnzv2kPiJ5Fsa7APAmuVwQc3JR74x
- r2s/C2iBaUKsfy6G/rcQr3rPx97pm5I1VX4JDZF9LJR6wn5EdKnmM9/8lP1zR1VTam3cQ/0h1X
- 2rs=
-X-IronPort-AV: E=Sophos;i="5.76,348,1592895600"; 
-   d="scan'208";a="29106529"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 24 Aug 2020 02:39:30 -0700
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 24 Aug 2020 02:39:29 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id A16B62121E; Mon, 24 Aug 2020 02:39:29 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 2/2] scsi: ufs: Handle LINERESET indication in err handler
-Date:   Mon, 24 Aug 2020 02:39:11 -0700
-Message-Id: <1598261952-29209-3-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1598261952-29209-1-git-send-email-cang@codeaurora.org>
-References: <1598261952-29209-1-git-send-email-cang@codeaurora.org>
+        id S1725973AbgHXKXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 06:23:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51524 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725906AbgHXKXZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2020 06:23:25 -0400
+Received: from mail-oi1-x242.google.com (mail-oi1-x242.google.com [IPv6:2607:f8b0:4864:20::242])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C610DC061573
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2020 03:23:24 -0700 (PDT)
+Received: by mail-oi1-x242.google.com with SMTP id b9so4343143oiy.3
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2020 03:23:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2IOojcGR9COEVxhDetFIaFroty5bft67wvgXoWgDklM=;
+        b=WxNtDNt3KmHoWg+8PEAhZp4mV1Ah+HG2snG8vW4rXQWu7Iw9Vu73brlXa01rGaJOZJ
+         +5E22/nkqbc8xbPYL+ysTb3CiHKZEMrTDvQhsGJpD0L9+KQMUNdurOlWH8noo8YIRDP/
+         edk6ciVtTfJ7c/TV3CUxY+SkJJ618FTe71tms=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=2IOojcGR9COEVxhDetFIaFroty5bft67wvgXoWgDklM=;
+        b=a5ZQ34Umj+NDnFzbz9Fp38SEdJRtheuUb5/gq4pKlPQ8s6yOsgrgRfHN390FyFBUY8
+         5pd1pGPlK8j4zqIA549LxI5A/yVXxcSCGAbkSxvC/nW6g/SUzSvgYWzBPhHZHhyz6P5L
+         Bj8OLQFxzesCqWakLc8ZTPcrc4rmulIs1AXN1lcHgemeaMIujWs7SKNJQv5X2zlzd5ur
+         ZuEgfZN005okvXaB8DzbRC4HgkfTn22YOAp1Ca/78ozjQo5QSkK4modoI7UwnctU2k2e
+         peMQWStV2EHv7g8zAOzgIp0/k5STS62jCmHFygP/AP/kTXgrCAwsHGW+LYLVQnFoSE+P
+         jiAw==
+X-Gm-Message-State: AOAM532zjZxat3CMvX5JOiFIQQQBVA6e7J/4y3IGGeQWEmFn0ek9tjK8
+        9QDtnTWPMIirXFpKqjQPSSM4hBhyaLKZW4b1jTpJIw==
+X-Google-Smtp-Source: ABdhPJzkpI4vQv1xjEV/oo8g07aVkl7dyZ5OFR2M1/v0x6bPQnmHfh5jqON1/xA2pe6eKTxSoyLui1ohDLXp3RQAQ2c=
+X-Received: by 2002:a05:6808:30f:: with SMTP id i15mr2641898oie.7.1598264602686;
+ Mon, 24 Aug 2020 03:23:22 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200814130426.2741171-1-sreekanth.reddy@broadcom.com> <yq1a6yoviti.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1a6yoviti.fsf@ca-mkp.ca.oracle.com>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Mon, 24 Aug 2020 15:53:10 +0530
+Message-ID: <CAK=zhgq-5CNQObiwDutLPGG3CbmpAbj+RbDGX-xGu6mVP_WZYw@mail.gmail.com>
+Subject: Re: [PATCH v1] mpt3sas: Add support for Non-secure Aero and Sea PCI IDs
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PA Layer issues a LINERESET to the PHY at the recovery step in the Power
-Mode change operation. If it happens during auto or mannual hibern8 enter,
-even if hibern8 enter succeeds, UFS power mode shall be set to PWM-G1 mode
-and kept in that mode after exit from hibern8, leading to bad performance.
-Handle the LINERESET in the eh_work by restoring power mode to HS mode
-after all pending reqs and tasks are cleared from doorbell.
+On Fri, Aug 21, 2020 at 7:57 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Sreekanth,
+>
+> > This patch will add support for Non-secure Aero & Sea adapters' PCI
+> > IDs.
+>
+> That wording is misleading since you're effectively removing support for
+> these controllers.
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 111 ++++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/ufs/ufshcd.h |   2 +
- drivers/scsi/ufs/unipro.h |   3 ++
- 3 files changed, 102 insertions(+), 14 deletions(-)
+Actually we want the driver to claim the non-secure (i.e. invalid &
+tempered) Aero & Sea devices and print the error message to the user
+that he is using invalid/tempered Devices. So that user can change to
+'Hard Secure'/'config secure' cards.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 000895f..8cc127d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -143,6 +143,7 @@ enum {
- 	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
- 	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
- 	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
-+	UFSHCD_UIC_PA_GENERIC_ERROR = (1 << 6), /* Generic PA error */
- };
- 
- #define ufshcd_set_eh_in_progress(h) \
-@@ -4066,7 +4067,8 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 	int ret;
- 
- 	/* if already configured to the requested pwr_mode */
--	if (pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
-+	if (!hba->force_pmc &&
-+	    pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
- 	    pwr_mode->gear_tx == hba->pwr_info.gear_tx &&
- 	    pwr_mode->lane_rx == hba->pwr_info.lane_rx &&
- 	    pwr_mode->lane_tx == hba->pwr_info.lane_tx &&
-@@ -4494,6 +4496,8 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 	if (ret)
- 		goto out;
- 
-+	/* Clear UECPA once due to LINERESET has happened during LINK_STARTUP */
-+	ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
- 	ret = ufshcd_make_hba_operational(hba);
- out:
- 	if (ret) {
-@@ -5650,6 +5654,22 @@ static inline void ufshcd_recover_pm_error(struct ufs_hba *hba)
- }
- #endif
- 
-+static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
-+{
-+	struct ufs_pa_layer_attr *pwr_info = &hba->pwr_info;
-+	u32 mode;
-+
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
-+
-+	if (pwr_info->pwr_rx != ((mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK))
-+		return true;
-+
-+	if (pwr_info->pwr_tx != (mode & PWRMODE_MASK))
-+		return true;
-+
-+	return false;
-+}
-+
- /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -5660,9 +5680,9 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	unsigned long flags;
- 	bool err_xfer = false;
- 	bool err_tm = false;
--	int err = 0;
-+	int err = 0, pmc_err;
- 	int tag;
--	bool needs_reset = false;
-+	bool needs_reset = false, needs_restore = false;
- 
- 	hba = container_of(work, struct ufs_hba, eh_work);
- 
-@@ -5710,8 +5730,9 @@ static void ufshcd_err_handler(struct work_struct *work)
- 				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
- 		needs_reset = true;
- 
--	if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR |
--			      UFSHCD_UIC_HIBERN8_MASK)) {
-+	if ((hba->saved_err & (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) ||
-+	    (hba->saved_uic_err &&
-+	     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
- 		bool pr_prdt = !!(hba->saved_err & SYSTEM_BUS_FATAL_ERROR);
- 
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
-@@ -5729,8 +5750,25 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	 * host reset and restore
- 	 */
- 	if (needs_reset)
--		goto skip_pending_xfer_clear;
-+		goto do_reset;
- 
-+	/*
-+	 * If LINERESET was caught, UFS might have been put to PWM mode,
-+	 * check if power mode restore is needed.
-+	 */
-+	if (hba->saved_uic_err & UFSHCD_UIC_PA_GENERIC_ERROR) {
-+		hba->saved_uic_err &= ~UFSHCD_UIC_PA_GENERIC_ERROR;
-+		if (!hba->saved_uic_err)
-+			hba->saved_err &= ~UIC_ERROR;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		if (ufshcd_is_pwr_mode_restore_needed(hba))
-+			needs_restore = true;
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		if (!hba->saved_err && !needs_restore)
-+			goto skip_err_handling;
-+	}
-+
-+	hba->silence_err_logs = true;
- 	/* release lock as clear command might sleep */
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	/* Clear pending transfer requests */
-@@ -5754,11 +5792,38 @@ static void ufshcd_err_handler(struct work_struct *work)
- 
- 	/* Complete the requests that are cleared by s/w */
- 	ufshcd_complete_requests(hba);
-+	hba->silence_err_logs = false;
- 
--	if (err_xfer || err_tm)
-+	if (err_xfer || err_tm) {
- 		needs_reset = true;
-+		goto do_reset;
-+	}
- 
--skip_pending_xfer_clear:
-+	/*
-+	 * After all reqs and tasks are cleared from doorbell,
-+	 * now it is safe to retore power mode.
-+	 */
-+	if (needs_restore) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		/*
-+		 * Hold the scaling lock just in case dev cmds
-+		 * are sent via bsg and/or sysfs.
-+		 */
-+		down_write(&hba->clk_scaling_lock);
-+		hba->force_pmc = true;
-+		pmc_err = ufshcd_config_pwr_mode(hba, &(hba->pwr_info));
-+		if (pmc_err) {
-+			needs_reset = true;
-+			dev_err(hba->dev, "%s: Failed to restore power mode, err = %d\n",
-+					__func__, pmc_err);
-+		}
-+		hba->force_pmc = false;
-+		ufshcd_print_pwr_info(hba);
-+		up_write(&hba->clk_scaling_lock);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+	}
-+
-+do_reset:
- 	/* Fatal errors need reset */
- 	if (needs_reset) {
- 		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
-@@ -5814,17 +5879,33 @@ static irqreturn_t ufshcd_update_uic_error(struct ufs_hba *hba)
- 	u32 reg;
- 	irqreturn_t retval = IRQ_NONE;
- 
--	/* PHY layer lane error */
-+	/* PHY layer error */
- 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
--	/* Ignore LINERESET indication, as this is not an error */
- 	if ((reg & UIC_PHY_ADAPTER_LAYER_ERROR) &&
--	    (reg & UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK)) {
-+	    (reg & UIC_PHY_ADAPTER_LAYER_ERROR_CODE_MASK)) {
-+		ufshcd_update_reg_hist(&hba->ufs_stats.pa_err, reg);
- 		/*
- 		 * To know whether this error is fatal or not, DB timeout
- 		 * must be checked but this error is handled separately.
- 		 */
--		dev_dbg(hba->dev, "%s: UIC Lane error reported\n", __func__);
--		ufshcd_update_reg_hist(&hba->ufs_stats.pa_err, reg);
-+		if (reg & UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK)
-+			dev_dbg(hba->dev, "%s: UIC Lane error reported\n",
-+					__func__);
-+
-+		/* Got a LINERESET indication. */
-+		if (reg & UIC_PHY_ADAPTER_LAYER_GENERIC_ERROR) {
-+			struct uic_command *cmd = NULL;
-+
-+			hba->uic_error |= UFSHCD_UIC_PA_GENERIC_ERROR;
-+			if (hba->uic_async_done && hba->active_uic_cmd)
-+				cmd = hba->active_uic_cmd;
-+			/*
-+			 * Ignore the LINERESET during power mode change
-+			 * operation via DME_SET command.
-+			 */
-+			if (cmd && (cmd->command == UIC_CMD_DME_SET))
-+				hba->uic_error &= ~UFSHCD_UIC_PA_GENERIC_ERROR;
-+		}
- 		retval |= IRQ_HANDLED;
- 	}
- 
-@@ -5941,7 +6022,9 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
- 		hba->saved_uic_err |= hba->uic_error;
- 
- 		/* dump controller state before resetting */
--		if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR)) {
-+		if ((hba->saved_err & (INT_FATAL_ERRORS)) ||
-+		    (hba->saved_uic_err &&
-+		     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
- 			dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 0x%x\n",
- 					__func__, hba->saved_err,
- 					hba->saved_uic_err);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 618b253..8817103 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -629,6 +629,7 @@ struct ufs_hba_variant_params {
-  * @saved_err: sticky error mask
-  * @saved_uic_err: sticky UIC error mask
-  * @force_reset: flag to force eh_work perform a full reset
-+ * @force_pmc: flag to force a power mode change
-  * @silence_err_logs: flag to silence error logs
-  * @dev_cmd: ufs device management command information
-  * @last_dme_cmd_tstamp: time stamp of the last completed DME command
-@@ -728,6 +729,7 @@ struct ufs_hba {
- 	u32 saved_uic_err;
- 	struct ufs_stats ufs_stats;
- 	bool force_reset;
-+	bool force_pmc;
- 	bool silence_err_logs;
- 
- 	/* Device management request data */
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 4ee6478..f6b52ce 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -205,6 +205,9 @@ enum {
- 	UNCHANGED	= 7,
- };
- 
-+#define PWRMODE_MASK		0xF
-+#define PWRMODE_RX_OFFSET	4
-+
- /* PA TX/RX Frequency Series */
- enum {
- 	PA_HS_MODE_A	= 1,
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+We will rephrase above line as below,
 
+"This patch will claim non-secure Aero & Sea adapter's PCI IDs & quit
+the device initialization (without enabling the HBA firmware) with a
+Error message"
+
+>
+> > Driver will throw an warning message when a non-secure type controller
+> > is detected. Purpose of this interface is to avoid interacting with
+> > any firmware which is not secured/signed by Broadcom.
+>
+> The request was to log a warning. Why would we want to disable support
+> for these devices in the driver?
+
+Actually  the request is to log an error message but I was confused
+with your previous comment and made changes to log a warning message.
+As explained in description the purpose of disabling support for these
+devices in the driver is to avoid interacting with any firmware which
+is not secured/signed by Broadcom.
+
+Thanks,
+Sreekanth
+
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
