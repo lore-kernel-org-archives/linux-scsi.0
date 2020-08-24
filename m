@@ -2,108 +2,154 @@ Return-Path: <SRS0=xqUt=CC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3FFC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 930E6C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 19:05:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98CA420767
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:48:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67EC92078D
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 19:05:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727879AbgHXRsk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:48:40 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:42453 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727841AbgHXRsg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2020 13:48:36 -0400
-Received: by mail-pf1-f195.google.com with SMTP id 17so5199885pfw.9;
-        Mon, 24 Aug 2020 10:48:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=rq5TKAgvRU98SjjkveCy6+ZXF39JNnbfx7EG8ZsPrGA=;
-        b=JUPgIw++a52Sx5xQ19RxppkLhoE3QJYwwE5bNgLvrXXMoQU7k+hWGk2Gs/SWTSdDOV
-         1XTjCjlrVwTbs5lxHTAgdoZUftHCMgz6pZPy7FUWnL7dy4w8rvgMCehBxBb8/To6gn3Q
-         uo9r2olbQ1WBAuIOhYWbppEHDEoa4ggsK+ACDqrK1j+D7AqQxdYOf/LTTvKHUOvvnCY5
-         0A7fd9u3nO8tBdGH5Z/9lg1mIpI04ecfuLKK4+TB9KeUB1TJUkoyNsnSh2G3MN0+2zYY
-         qQIesp9jcTXhL/MFWBeLlfJ6gMPb6iOKRZkd5G778GD/AzWC2B+IudaMoU8tqFYtZgjP
-         GpIg==
-X-Gm-Message-State: AOAM532kaQxYX7Df31e1ysFISEVsih7ABkMSSgOAcOKnM0Cz3Gi42KFz
-        52nK8D3fKBp5eRbMoehkmO+8y/GXww4=
-X-Google-Smtp-Source: ABdhPJwYwPUV3R0AMEbdzYtAUCpWFGOwxGYPK3swn5NtUc6J3LUYLFJiDH42C+rSc9l/dLHFn4P76w==
-X-Received: by 2002:a63:fe49:: with SMTP id x9mr4003407pgj.446.1598291315134;
-        Mon, 24 Aug 2020 10:48:35 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id y196sm12176464pfc.202.2020.08.24.10.48.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Aug 2020 10:48:34 -0700 (PDT)
-Subject: Re: [PATCH] block: Fix bug in runtime-resume handling
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
+        id S1726752AbgHXTE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 15:04:58 -0400
+Received: from comms.puri.sm ([159.203.221.185]:38226 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726413AbgHXTE5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Aug 2020 15:04:57 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id A8C79DFB28;
+        Mon, 24 Aug 2020 12:04:26 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id nZAS46TPgg2p; Mon, 24 Aug 2020 12:04:24 -0700 (PDT)
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+To:     stern@rowland.harvard.edu, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Martin Kepplinger <martin.kepplinger@puri.sm>
-Cc:     Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, kernel@puri.sm
-References: <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
- <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
- <20200807143002.GE226516@rowland.harvard.edu>
- <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
- <20200808150542.GB256751@rowland.harvard.edu>
- <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
- <20200809152643.GA277165@rowland.harvard.edu>
- <60150284-be13-d373-5448-651b72a7c4c9@puri.sm>
- <20200810141343.GA299045@rowland.harvard.edu>
- <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
- <20200823145733.GC303967@rowland.harvard.edu>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <3e5a465e-8fe0-b379-a80e-23e2f588c71a@acm.org>
-Date:   Mon, 24 Aug 2020 10:48:32 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <20200823145733.GC303967@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] scsi: add expecting_media_change flag to error path
+Date:   Mon, 24 Aug 2020 21:04:00 +0200
+Message-Id: <20200824190400.12339-1-martin.kepplinger@puri.sm>
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-23 07:57, Alan Stern wrote:
-> The problem is fixed by checking that the queue's runtime-PM status
-> isn't RPM_SUSPENDED before allowing a request to be issued, [ ... ]
+SD Cardreaders (especially) sometimes lose the state during suspend
+and deliver a "media changed" unit attention when really only a
+(runtime) suspend/resume cycle has been done.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Add a flag for drivers to use when this is expected. It's handled in the
+scsi core error path and allows to use (runtime) PM when it has
+no been possible before on said hardware.
 
-Can, can you help with testing this patch?
+The "downside" is that we rely more on users not to really change
+the medium (SD card) *during* a simple suspend/resume, i.e. when not
+unmounting.
 
-Thanks,
+How to *use* this flag remains an open problem but for testing (if you
+get "media changed" UA errors when runtime PM enabled as described below),
+simply do to /drivers/scsi/sd.c
 
-Bart.
+@@ -3648,6 +3648,8 @@ static int sd_resume(struct device *dev)
+	if (!sdkp)      /* E.g.: runtime resume at the start of sd_probe() */
+		return 0;
+
++       sdkp->device->expecting_media_change = 1;
++
+	if (!sdkp->device->manage_start_stop)
+		return 0;
+
+To enable runtime PM for SD cardreader (here, device number 0:0:0:0),
+do the following:
+
+echo 0 > /sys/module/block/parameters/events_dfl_poll_msecs
+echo 1000 > /sys/bus/scsi/devices/0:0:0:0/power/autosuspend_delay_ms
+echo auto > /sys/bus/scsi/devices/0:0:0:0/power/control
+
+Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+---
+
+
+If you don't want to merge a flag without any user, I understand that
+but we can add a user (sysfs setting to opt-in?) once we agree on
+what it does, right?
+
+Since this patch solves my specific problem, I'd appreciate any more
+feedback and hope we can find a solution that works for everyone.
+
+thanks a lot,
+                               martin
+
+
+ drivers/scsi/scsi_error.c  | 31 ++++++++++++++++++++++++++++---
+ include/scsi/scsi_device.h |  1 +
+ 2 files changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 7d3571a2bd89..c99390a5dc31 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -565,6 +565,18 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
+ 				return NEEDS_RETRY;
+ 			}
+ 		}
++		if (scmd->device->expecting_media_change) {
++			if (sshdr.asc == 0x28 && sshdr.ascq == 0x00) {
++				/*
++				 * clear the expecting_media_change in
++				 * scsi_decide_disposition() because we
++				 * need to catch possible "fail fast" overrides
++				 * that block readahead can cause.
++				 */
++				return NEEDS_RETRY;
++			}
++		}
++
+ 		/*
+ 		 * we might also expect a cc/ua if another LUN on the target
+ 		 * reported a UA with an ASC/ASCQ of 3F 0E -
+@@ -1944,9 +1956,22 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 	 * the request was not marked fast fail.  Note that above,
+ 	 * even if the request is marked fast fail, we still requeue
+ 	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
+-	if ((++scmd->retries) <= scmd->allowed
+-	    && !scsi_noretry_cmd(scmd)) {
+-		return NEEDS_RETRY;
++	if ((++scmd->retries) <= scmd->allowed) {
++		/* but scsi_noretry_cmd() cannot override the
++		 * expecting_media_change flag.
++		 */
++		if (!scsi_noretry_cmd(scmd) ||
++		    scmd->device->expecting_media_change) {
++			scmd->device->expecting_media_change = 0;
++			return NEEDS_RETRY;
++		} else {
++			/* Not marked fail fast, or marked but not expected.
++			 * Clear the flag too because it's meant for the
++			 * next UA only.
++			 */
++			scmd->device->expecting_media_change = 0;
++			return SUCCESS;
++		}
+ 	} else {
+ 		/*
+ 		 * no more retries - report this one back to upper level.
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index bc5909033d13..4a67b06742ba 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -169,6 +169,7 @@ struct scsi_device {
+ 				 * this device */
+ 	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+ 				     * because we did a bus reset. */
++	unsigned expecting_media_change:1; /* Expecting "media changed" UA */
+ 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+ 	unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
+-- 
+2.20.1
+
