@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13BF6C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:04:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9ABC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:05:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E45C9206F0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:04:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7EBF2075B
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:05:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598288690;
-	bh=q3l7jc+zapPFxS8bE4d79iLvbw7yHwayvtwFS0cHIjQ=;
+	s=default; t=1598288703;
+	bh=cwUEubYXyozIkblDt/dZaV/h5IXzRFqz50ycpPTAa74=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=a+ycPaT7Vkf3OG/2ZdXf6BIQnDngKQKwNi9BlTx/5ZdBQUbM2ck5vwNFanoTrluDV
-	 G6R0181QQzCQqWTtFMaOhi+vSzIWl08mLijMeJCJEKyjes4RIy75OIM87OkcogLckN
-	 BgRlY5v6Fog05h+L5q0YmqjRih4K/lU0SNxD+1LI=
+	b=F90ONV3ZSFsK4IYPaAVOG0dsqWTYkJCaZTWF4q32bulKTrrjfToJOkKPk3mdjsLqR
+	 WJ54wFc32U3BFl1dfzP0MMN3bh+M59rRvKJRGsjeSMGB7U5qBGFVAui1WC06nz4vc1
+	 4txFfdw3mX7GYcdktKMLt0BGsFgb3Ohm5X0y2JgQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726820AbgHXRCy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:02:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41064 "EHLO mail.kernel.org"
+        id S1728461AbgHXQie (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 12:38:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728190AbgHXQik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Aug 2020 12:38:40 -0400
+        id S1728421AbgHXQiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Aug 2020 12:38:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A5FE222CBB;
-        Mon, 24 Aug 2020 16:38:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E3F0A22D71;
+        Mon, 24 Aug 2020 16:37:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598287111;
-        bh=q3l7jc+zapPFxS8bE4d79iLvbw7yHwayvtwFS0cHIjQ=;
+        s=default; t=1598287048;
+        bh=cwUEubYXyozIkblDt/dZaV/h5IXzRFqz50ycpPTAa74=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1Mxyh4iJpJ3X6f9tRAe81ivvM/XE/dVP4KPyF4jH3MY1+IdVmskfiTN3pIB4Yms1B
-         LN7H/urKoc1qZu7UZS4OnDXRfOCQSnSX7xfGqGxrYN7uiHn2XFZ4i2wFmrkQYCMOhc
-         05GIF9OmUO2JmgqQVZwgj/Jj2wsylUwpoPhqUrvo=
+        b=QXulA57i3F3dd/EHQpYbFZBPcQMnulK55fWaJmbvg8FRmBwIfEv0KB9KYyio1lIEp
+         z5pW2+tbn780UIppIT3pcACtJQUdCkLJ+RSP43QnJ1oB/jhXJhhyXW/M3+8pmnzAxb
+         iKIEId4nrMNF6/zH+ZQ0a4uEY1qVwmXl0lT6m7cw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 29/38] scsi: qla2xxx: Check if FW supports MQ before enabling
-Date:   Mon, 24 Aug 2020 12:37:41 -0400
-Message-Id: <20200824163751.606577-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 39/54] scsi: qla2xxx: Indicate correct supported speeds for Mezz card
+Date:   Mon, 24 Aug 2020 12:36:18 -0400
+Message-Id: <20200824163634.606093-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200824163751.606577-1-sashal@kernel.org>
-References: <20200824163751.606577-1-sashal@kernel.org>
+In-Reply-To: <20200824163634.606093-1-sashal@kernel.org>
+References: <20200824163634.606093-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,40 +60,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit dffa11453313a115157b19021cc2e27ea98e624c ]
+[ Upstream commit 4709272f6327cc4a8ee1dc55771bcf9718346980 ]
 
-OS boot during Boot from SAN was stuck at dracut emergency shell after
-enabling NVMe driver parameter. For non-MQ support the driver was enabling
-MQ. Add a check to confirm if FW supports MQ.
+Correct the supported speeds for 16G Mezz card.
 
-Link: https://lore.kernel.org/r/20200806111014.28434-9-njavali@marvell.com
+Link: https://lore.kernel.org/r/20200806111014.28434-4-njavali@marvell.com
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/qla2xxx/qla_gs.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d7ec4083a0911..3c0af66e24d65 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1993,6 +1993,11 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
- 	/* Determine queue resources */
- 	ha->max_req_queues = ha->max_rsp_queues = 1;
- 	ha->msix_count = QLA_BASE_VECTORS;
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 7074073446701..3bfb5678f6515 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1505,11 +1505,11 @@ qla2x00_prep_ct_fdmi_req(struct ct_sns_pkt *p, uint16_t cmd,
+ static uint
+ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
+ {
++	uint speeds = 0;
 +
-+	/* Check if FW supports MQ or not */
-+	if (!(ha->fw_attributes & BIT_6))
-+		goto mqiobase_exit;
-+
- 	if (!ql2xmqsupport || !ql2xnvmeenable ||
- 	    (!IS_QLA25XX(ha) && !IS_QLA81XX(ha)))
- 		goto mqiobase_exit;
+ 	if (IS_CNA_CAPABLE(ha))
+ 		return FDMI_PORT_SPEED_10GB;
+ 	if (IS_QLA28XX(ha) || IS_QLA27XX(ha)) {
+-		uint speeds = 0;
+-
+ 		if (ha->max_supported_speed == 2) {
+ 			if (ha->min_supported_speed <= 6)
+ 				speeds |= FDMI_PORT_SPEED_64GB;
+@@ -1536,9 +1536,16 @@ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
+ 		}
+ 		return speeds;
+ 	}
+-	if (IS_QLA2031(ha))
+-		return FDMI_PORT_SPEED_16GB|FDMI_PORT_SPEED_8GB|
+-			FDMI_PORT_SPEED_4GB;
++	if (IS_QLA2031(ha)) {
++		if ((ha->pdev->subsystem_vendor == 0x103C) &&
++		    (ha->pdev->subsystem_device == 0x8002)) {
++			speeds = FDMI_PORT_SPEED_16GB;
++		} else {
++			speeds = FDMI_PORT_SPEED_16GB|FDMI_PORT_SPEED_8GB|
++				FDMI_PORT_SPEED_4GB;
++		}
++		return speeds;
++	}
+ 	if (IS_QLA25XX(ha))
+ 		return FDMI_PORT_SPEED_8GB|FDMI_PORT_SPEED_4GB|
+ 			FDMI_PORT_SPEED_2GB|FDMI_PORT_SPEED_1GB;
 -- 
 2.25.1
 
