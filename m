@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84955C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:44:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A4CFC433E3
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:45:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53C3220738
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:44:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E02092078D
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:45:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598287478;
-	bh=q56wfRmaDrgii/pM7r4PIxb7sgaRtEybihrss19LnZw=;
+	s=default; t=1598287542;
+	bh=RacWlbSMKAJd0bJ0QP8Nbv2sinIB1vEMPGx2J0kjzqs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=c1AWUmtgPGIw5BcHaWWtywke5FVGEI9p0IKN8tlml1ewE1rpeuvGT6yHAWwryc9p4
-	 oDXPJbM42BdEzsYBzslm8X4Y3ye2Bu825jcLfM9jWPMlrKlRu26sj47HYxEPlbHfkd
-	 0VA70dmXZTFWsfT19tmv/IZv1oaYcO4yZ8ms4nzs=
+	b=pUo4Dm7t9WI/bAVjHI1k8Or2AcZE65VQLgU2u7BjKDrYMsJ+SuUc62dUadvQPns6I
+	 KRCNa0RYoMAWH/M3vd/zd+Ca03/vpEMNKQRXJPPwcxlv42SFi5zpVMfflG6biSnXLD
+	 U8nkOWRiUKqSmmOvPCko8Fa6/Yoy1I64Lc6aLIxc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728695AbgHXQnk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 12:43:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47694 "EHLO mail.kernel.org"
+        id S1728590AbgHXQov (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 12:44:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47288 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728602AbgHXQjk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Aug 2020 12:39:40 -0400
+        id S1728589AbgHXQj0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Aug 2020 12:39:26 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2F33122BED;
-        Mon, 24 Aug 2020 16:39:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6214120838;
+        Mon, 24 Aug 2020 16:39:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598287180;
-        bh=q56wfRmaDrgii/pM7r4PIxb7sgaRtEybihrss19LnZw=;
+        s=default; t=1598287166;
+        bh=RacWlbSMKAJd0bJ0QP8Nbv2sinIB1vEMPGx2J0kjzqs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=spWqHx4MmSM6JQC1MW4Q/Vx2HCbRU0x9HZHzZeTHEiaIz2CWllLJVFYOWlr6gLHuF
-         ts+SWZohtPw/1uxSRrPj0nAF33VOFam7HDuDwdZiqr4jrlBOSLi4Q/ebPdRJYfz4TM
-         EKHsSs5iyHry9Wt1a8lgJLMu9J3xMuarUFPvt63A=
+        b=zF5eGdzfoo6QwNVkZk5+2PiK8eeXY9pNEOMIQ5z2xK6DBX87KrgEZOloqY1JJAKm/
+         uCx9Je0v/ugS1aM9IzqUaM0CS/K4O4rtStMpLxJW/AaL9DfylGbLaAGtKuh2tl+ikj
+         6NvY5a7NNnv1ylvjhWSZOsIcFeQ1UPLb6D/tadgk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         Avri Altman <avri.altman@wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 6/8] scsi: ufs: Improve interrupt handling for shared interrupts
-Date:   Mon, 24 Aug 2020 12:39:29 -0400
-Message-Id: <20200824163931.607291-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 08/11] scsi: ufs: Improve interrupt handling for shared interrupts
+Date:   Mon, 24 Aug 2020 12:39:11 -0400
+Message-Id: <20200824163914.607152-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200824163931.607291-1-sashal@kernel.org>
-References: <20200824163931.607291-1-sashal@kernel.org>
+In-Reply-To: <20200824163914.607152-1-sashal@kernel.org>
+References: <20200824163914.607152-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1eee82b18be4e..b0841a3fab522 100644
+index 8144a54371c35..4eaecc3cdebc8 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4398,7 +4398,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+@@ -5371,7 +5371,7 @@ static void ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
   */
  static irqreturn_t ufshcd_intr(int irq, void *__hba)
  {
@@ -88,7 +88,7 @@ index 1eee82b18be4e..b0841a3fab522 100644
  	irqreturn_t retval = IRQ_NONE;
  	struct ufs_hba *hba = __hba;
  	int retries = hba->nutrs;
-@@ -4412,7 +4412,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+@@ -5385,7 +5385,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
  	 * read, make sure we handle them by checking the interrupt status
  	 * again in a loop until we process all of the reqs before returning.
  	 */
@@ -97,7 +97,7 @@ index 1eee82b18be4e..b0841a3fab522 100644
  		enabled_intr_status =
  			intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
  		if (intr_status)
-@@ -4423,7 +4423,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+@@ -5396,7 +5396,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
  		}
  
  		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
