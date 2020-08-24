@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54004C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13BF6C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:04:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27290206F0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E45C9206F0
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:04:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598288681;
-	bh=bK6VGwy7et6t95zLjj/JfjUtlkZSk6+ycR5Hpd9TuF8=;
+	s=default; t=1598288690;
+	bh=q3l7jc+zapPFxS8bE4d79iLvbw7yHwayvtwFS0cHIjQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=O2NXNBLz9khrj4smln2Un7JgEinp4dvMmq1Jju8+/3KFrBcGU95RN5HN7zyLjJhLr
-	 8R6Py+NAdOj1iWxlbgrJPBEuoKTZKeltl+n1SlQ0LYCfrAhhC180y91hYpNHguUqr/
-	 D0RHEO7P8khk1uYd15Wa9gtzqKnpQPRDwS9HM8eo=
+	b=a+ycPaT7Vkf3OG/2ZdXf6BIQnDngKQKwNi9BlTx/5ZdBQUbM2ck5vwNFanoTrluDV
+	 G6R0181QQzCQqWTtFMaOhi+vSzIWl08mLijMeJCJEKyjes4RIy75OIM87OkcogLckN
+	 BgRlY5v6Fog05h+L5q0YmqjRih4K/lU0SNxD+1LI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727093AbgHXRCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:02:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40652 "EHLO mail.kernel.org"
+        id S1726820AbgHXRCy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 13:02:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41064 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728484AbgHXQij (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Aug 2020 12:38:39 -0400
+        id S1728190AbgHXQik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Aug 2020 12:38:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7755D22D6D;
-        Mon, 24 Aug 2020 16:38:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A5FE222CBB;
+        Mon, 24 Aug 2020 16:38:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598287105;
-        bh=bK6VGwy7et6t95zLjj/JfjUtlkZSk6+ycR5Hpd9TuF8=;
+        s=default; t=1598287111;
+        bh=q3l7jc+zapPFxS8bE4d79iLvbw7yHwayvtwFS0cHIjQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VdR/r6FUNo3OSUK75LUc7aoZiHqPPofNSneqKWUhekqG4oJan9vamwna0CZm8B8Mv
-         cfSRQEgVLvBCkG0qOdv9karRXisU/TUN2xqTRsp/1VWFRvVX0Yf5fm3jvbicr2DfbZ
-         rslRcFqoIK7oXI4/xBLVbxgqmExlOS4ixayU077U=
+        b=1Mxyh4iJpJ3X6f9tRAe81ivvM/XE/dVP4KPyF4jH3MY1+IdVmskfiTN3pIB4Yms1B
+         LN7H/urKoc1qZu7UZS4OnDXRfOCQSnSX7xfGqGxrYN7uiHn2XFZ4i2wFmrkQYCMOhc
+         05GIF9OmUO2JmgqQVZwgj/Jj2wsylUwpoPhqUrvo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Andy Teng <andy.teng@mediatek.com>,
+Cc:     Saurav Kashyap <skashyap@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.4 25/38] scsi: ufs: Fix possible infinite loop in ufshcd_hold
-Date:   Mon, 24 Aug 2020 12:37:37 -0400
-Message-Id: <20200824163751.606577-25-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 29/38] scsi: qla2xxx: Check if FW supports MQ before enabling
+Date:   Mon, 24 Aug 2020 12:37:41 -0400
+Message-Id: <20200824163751.606577-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200824163751.606577-1-sashal@kernel.org>
 References: <20200824163751.606577-1-sashal@kernel.org>
@@ -62,55 +60,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit 93b6c5db06028a3b55122bbb74d0715dd8ca4ae0 ]
+[ Upstream commit dffa11453313a115157b19021cc2e27ea98e624c ]
 
-In ufshcd_suspend(), after clk-gating is suspended and link is set
-as Hibern8 state, ufshcd_hold() is still possibly invoked before
-ufshcd_suspend() returns. For example, MediaTek's suspend vops may
-issue UIC commands which would call ufshcd_hold() during the command
-issuing flow.
+OS boot during Boot from SAN was stuck at dracut emergency shell after
+enabling NVMe driver parameter. For non-MQ support the driver was enabling
+MQ. Add a check to confirm if FW supports MQ.
 
-Now if UFSHCD_CAP_HIBERN8_WITH_CLK_GATING capability is enabled,
-then ufshcd_hold() may enter infinite loops because there is no
-clk-ungating work scheduled or pending. In this case, ufshcd_hold()
-shall just bypass, and keep the link as Hibern8 state.
-
-Link: https://lore.kernel.org/r/20200809050734.18740-1-stanley.chu@mediatek.com
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Co-developed-by: Andy Teng <andy.teng@mediatek.com>
-Signed-off-by: Andy Teng <andy.teng@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Link: https://lore.kernel.org/r/20200806111014.28434-9-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2b6853c7375c9..9642e3ab840fa 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1514,6 +1514,7 @@ static void ufshcd_ungate_work(struct work_struct *work)
- int ufshcd_hold(struct ufs_hba *hba, bool async)
- {
- 	int rc = 0;
-+	bool flush_result;
- 	unsigned long flags;
- 
- 	if (!ufshcd_is_clkgating_allowed(hba))
-@@ -1545,7 +1546,9 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- 				break;
- 			}
- 			spin_unlock_irqrestore(hba->host->host_lock, flags);
--			flush_work(&hba->clk_gating.ungate_work);
-+			flush_result = flush_work(&hba->clk_gating.ungate_work);
-+			if (hba->clk_gating.is_suspended && !flush_result)
-+				goto out;
- 			spin_lock_irqsave(hba->host->host_lock, flags);
- 			goto start;
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d7ec4083a0911..3c0af66e24d65 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1993,6 +1993,11 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
+ 	/* Determine queue resources */
+ 	ha->max_req_queues = ha->max_rsp_queues = 1;
+ 	ha->msix_count = QLA_BASE_VECTORS;
++
++	/* Check if FW supports MQ or not */
++	if (!(ha->fw_attributes & BIT_6))
++		goto mqiobase_exit;
++
+ 	if (!ql2xmqsupport || !ql2xnvmeenable ||
+ 	    (!IS_QLA25XX(ha) && !IS_QLA81XX(ha)))
+ 		goto mqiobase_exit;
 -- 
 2.25.1
 
