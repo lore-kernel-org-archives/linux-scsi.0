@@ -2,110 +2,108 @@ Return-Path: <SRS0=xqUt=CC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86DB1C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3FFC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:48:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65A152075B
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:22:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598289756;
-	bh=6r36hEY6KVCIS4W43OoT+UF5SXOmdZCLZhshayaCAfs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=r0eybjuaGWp9RonZn7h5LCab/mF5/ePRSRN2nYLKM8aNIdDs4JDefS6PmCz8zAGo3
-	 jGqr51lJeI7LWdcduyyq20AHpPCpAB7j6RNkahw1SXT90KkXRBjYTOyQYXOtmXdxH4
-	 Eee7kAg1b3d0lgXRn/r3NjHB6EXjZ655XxvWorAw=
+	by mail.kernel.org (Postfix) with ESMTP id 98CA420767
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727961AbgHXRVD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:21:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40658 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728286AbgHXQgH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Aug 2020 12:36:07 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A183022D0B;
-        Mon, 24 Aug 2020 16:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598286958;
-        bh=6r36hEY6KVCIS4W43OoT+UF5SXOmdZCLZhshayaCAfs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YFJArGGEiE4hjhFOLAoVh4XFSxgsh4aHiqU7bfX49HWCp6F48uPcpnDvXmhocLCbB
-         826y1CoreojvNfn41kqk24O2RH4MhzPktaslxNbp1Zf+UNkBSAe5h4ck5c2vYepBdx
-         D2OES2o6in6ssSc4qZMWMPgt7e75/+ifB9rPWqSY=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 40/63] scsi: ufs: Improve interrupt handling for shared interrupts
-Date:   Mon, 24 Aug 2020 12:34:40 -0400
-Message-Id: <20200824163504.605538-40-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200824163504.605538-1-sashal@kernel.org>
-References: <20200824163504.605538-1-sashal@kernel.org>
+        id S1727879AbgHXRsk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 13:48:40 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42453 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727841AbgHXRsg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Aug 2020 13:48:36 -0400
+Received: by mail-pf1-f195.google.com with SMTP id 17so5199885pfw.9;
+        Mon, 24 Aug 2020 10:48:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=rq5TKAgvRU98SjjkveCy6+ZXF39JNnbfx7EG8ZsPrGA=;
+        b=JUPgIw++a52Sx5xQ19RxppkLhoE3QJYwwE5bNgLvrXXMoQU7k+hWGk2Gs/SWTSdDOV
+         1XTjCjlrVwTbs5lxHTAgdoZUftHCMgz6pZPy7FUWnL7dy4w8rvgMCehBxBb8/To6gn3Q
+         uo9r2olbQ1WBAuIOhYWbppEHDEoa4ggsK+ACDqrK1j+D7AqQxdYOf/LTTvKHUOvvnCY5
+         0A7fd9u3nO8tBdGH5Z/9lg1mIpI04ecfuLKK4+TB9KeUB1TJUkoyNsnSh2G3MN0+2zYY
+         qQIesp9jcTXhL/MFWBeLlfJ6gMPb6iOKRZkd5G778GD/AzWC2B+IudaMoU8tqFYtZgjP
+         GpIg==
+X-Gm-Message-State: AOAM532kaQxYX7Df31e1ysFISEVsih7ABkMSSgOAcOKnM0Cz3Gi42KFz
+        52nK8D3fKBp5eRbMoehkmO+8y/GXww4=
+X-Google-Smtp-Source: ABdhPJwYwPUV3R0AMEbdzYtAUCpWFGOwxGYPK3swn5NtUc6J3LUYLFJiDH42C+rSc9l/dLHFn4P76w==
+X-Received: by 2002:a63:fe49:: with SMTP id x9mr4003407pgj.446.1598291315134;
+        Mon, 24 Aug 2020 10:48:35 -0700 (PDT)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id y196sm12176464pfc.202.2020.08.24.10.48.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 24 Aug 2020 10:48:34 -0700 (PDT)
+Subject: Re: [PATCH] block: Fix bug in runtime-resume handling
+To:     Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, kernel@puri.sm
+References: <9b80ca7c-39f8-e52d-2535-8b0baf93c7d1@puri.sm>
+ <425990b3-4b0b-4dcf-24dc-4e7e60d5869d@puri.sm>
+ <20200807143002.GE226516@rowland.harvard.edu>
+ <b0abab28-880e-4b88-eb3c-9ffd927d1ed9@puri.sm>
+ <20200808150542.GB256751@rowland.harvard.edu>
+ <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
+ <20200809152643.GA277165@rowland.harvard.edu>
+ <60150284-be13-d373-5448-651b72a7c4c9@puri.sm>
+ <20200810141343.GA299045@rowland.harvard.edu>
+ <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
+ <20200823145733.GC303967@rowland.harvard.edu>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <3e5a465e-8fe0-b379-a80e-23e2f588c71a@acm.org>
+Date:   Mon, 24 Aug 2020 10:48:32 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200823145733.GC303967@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Adrian Hunter <adrian.hunter@intel.com>
+On 2020-08-23 07:57, Alan Stern wrote:
+> The problem is fixed by checking that the queue's runtime-PM status
+> isn't RPM_SUSPENDED before allowing a request to be issued, [ ... ]
 
-[ Upstream commit 127d5f7c4b653b8be5eb3b2c7bbe13728f9003ff ]
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-For shared interrupts, the interrupt status might be zero, so check that
-first.
+Can, can you help with testing this patch?
 
-Link: https://lore.kernel.org/r/20200811133936.19171-2-adrian.hunter@intel.com
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/ufs/ufshcd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks,
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8185ab3b41c9b..2b449057deb83 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5887,7 +5887,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
-  */
- static irqreturn_t ufshcd_intr(int irq, void *__hba)
- {
--	u32 intr_status, enabled_intr_status;
-+	u32 intr_status, enabled_intr_status = 0;
- 	irqreturn_t retval = IRQ_NONE;
- 	struct ufs_hba *hba = __hba;
- 	int retries = hba->nutrs;
-@@ -5901,7 +5901,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 	 * read, make sure we handle them by checking the interrupt status
- 	 * again in a loop until we process all of the reqs before returning.
- 	 */
--	do {
-+	while (intr_status && retries--) {
- 		enabled_intr_status =
- 			intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
- 		if (intr_status)
-@@ -5910,7 +5910,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 			retval |= ufshcd_sl_intr(hba, enabled_intr_status);
- 
- 		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
--	} while (intr_status && --retries);
-+	}
- 
- 	if (retval == IRQ_NONE) {
- 		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
--- 
-2.25.1
-
+Bart.
