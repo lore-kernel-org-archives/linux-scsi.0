@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C64C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6D59C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:02:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EE40206F0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:02:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75E982074D
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:02:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598288564;
-	bh=qkdyS7d8IfKRt0vPSqX3ghon+iMsNJgrh+HCthJqC/g=;
+	s=default; t=1598288567;
+	bh=Xlt4LANXdOrhRf7zi/oAhoOIZdeFcPS4vzsgy5swhxA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=q47KhMpGORRhwmEI1SIVJVyZb8vmYTXTKQB7WvteEjG8jZuCNTlbsstIUNdQCuJNq
-	 Bz/UJ0me0+KisI+YLIbFiRoJKCO42WnAhAZhHq90HWDznHBHmOvx7JmnRkoj05y/bt
-	 rj85T96TcBCJPnT/tzQ9VdfC++CpoE3SfjZpbFDY=
+	b=GzOCYQxWZEHbPnLYaRTrxKPrkoC5j8HQIWrCgwmHoLV3SBAMCqTLOQ7a2/nOWgi1H
+	 tqVBChXAinpyhtFXYXu9BoIZkXuHlBVz1yWjc9a0a9Z5e4nFzcCz2TLW1DPk8GWfJS
+	 GqSPYdW9KXqtLzbBR/rjzFH13RTdk95nPKSnk8nw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727034AbgHXRB5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:01:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39970 "EHLO mail.kernel.org"
+        id S1726784AbgHXRBz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 13:01:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41428 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728486AbgHXQik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1728493AbgHXQik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 24 Aug 2020 12:38:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 40DA222D71;
-        Mon, 24 Aug 2020 16:38:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B5A7420838;
+        Mon, 24 Aug 2020 16:38:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598287110;
-        bh=qkdyS7d8IfKRt0vPSqX3ghon+iMsNJgrh+HCthJqC/g=;
+        s=default; t=1598287114;
+        bh=Xlt4LANXdOrhRf7zi/oAhoOIZdeFcPS4vzsgy5swhxA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cbsnATCzbuYf74Zru06EGGhLHMzr0sSIdyxoUa99X7+r3JQCCc3lufB99KX/RBy7b
-         UCRUo9PHm8I/yui0yTnLtTcNMmGxR7UNLBXHYeQUZePgX9eN49LfJzUjwNfSXRUIVs
-         BFMciOUN8klPRTx2HXh+8GhGyR35/MQzRL7epPb8=
+        b=eEZqsPw7C8aEvmuWpzaz38rls3TfN4oxdEm/u7rfIFOrO/0g29vFAYmBI7kDvH2WB
+         mKYBHU8rES62htFdLFgo4oI/Od1d+bLUldT+uF/2G+mYTq0Y2Ie6Sl5JWJzS+HRxa7
+         9QYz9p5o94zMfHvyzXYiVPzuo064+UZGKvMrV2yE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
+Cc:     Saurav Kashyap <skashyap@marvell.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 28/38] scsi: qla2xxx: Fix login timeout
-Date:   Mon, 24 Aug 2020 12:37:40 -0400
-Message-Id: <20200824163751.606577-28-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 31/38] Revert "scsi: qla2xxx: Fix crash on qla2x00_mailbox_command"
+Date:   Mon, 24 Aug 2020 12:37:43 -0400
+Message-Id: <20200824163751.606577-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200824163751.606577-1-sashal@kernel.org>
 References: <20200824163751.606577-1-sashal@kernel.org>
@@ -60,70 +60,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit abb31aeaa9b20680b0620b23fea5475ea4591e31 ]
+[ Upstream commit de7e6194301ad31c4ce95395eb678e51a1b907e5 ]
 
-Multipath errors were seen during failback due to login timeout.  The
-remote device sent LOGO, the local host tore down the session and did
-relogin. The RSCN arrived indicates remote device is going through failover
-after which the relogin is in a 20s timeout phase.  At this point the
-driver is stuck in the relogin process.  Add a fix to delete the session as
-part of abort/flush the login.
+FCoE adapter initialization failed for ISP8021 with the following patch
+applied. In addition, reproduction of the issue the patch originally tried
+to address has been unsuccessful.
 
-Link: https://lore.kernel.org/r/20200806111014.28434-5-njavali@marvell.com
+This reverts commit 3cb182b3fa8b7a61f05c671525494697cba39c6a.
+
+Link: https://lore.kernel.org/r/20200806111014.28434-11-njavali@marvell.com
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_gs.c     | 18 +++++++++++++++---
- drivers/scsi/qla2xxx/qla_target.c |  2 +-
- 2 files changed, 16 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index a44de4c5dcf6c..fc6e12fb7d77b 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3673,10 +3673,22 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 62a16463f0254..c1631e42d35d1 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -335,14 +335,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			if (time_after(jiffies, wait_time))
+ 				break;
  
- 		if (fcport->scan_state != QLA_FCPORT_FOUND) {
-+			bool do_delete = false;
-+
-+			if (fcport->scan_needed &&
-+			    fcport->disc_state == DSC_LOGIN_PEND) {
-+				/* Cable got disconnected after we sent
-+				 * a login. Do delete to prevent timeout.
-+				 */
-+				fcport->logout_on_delete = 1;
-+				do_delete = true;
-+			}
-+
- 			fcport->scan_needed = 0;
--			if ((qla_dual_mode_enabled(vha) ||
--				qla_ini_mode_enabled(vha)) &&
--			    atomic_read(&fcport->state) == FCS_ONLINE) {
-+			if (((qla_dual_mode_enabled(vha) ||
-+			      qla_ini_mode_enabled(vha)) &&
-+			    atomic_read(&fcport->state) == FCS_ONLINE) ||
-+				do_delete) {
- 				if (fcport->loop_id != FC_NO_LOOP_ID) {
- 					if (fcport->flags & FCF_FCP2_DEVICE)
- 						fcport->logout_on_delete = 0;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index cb8a892e2d393..b75e6e4d58c06 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1262,7 +1262,7 @@ void qlt_schedule_sess_for_deletion(struct fc_port *sess)
- 
- 	qla24xx_chk_fcp_state(sess);
- 
--	ql_dbg(ql_dbg_tgt, sess->vha, 0xe001,
-+	ql_dbg(ql_dbg_disc, sess->vha, 0xe001,
- 	    "Scheduling sess %p for deletion %8phC\n",
- 	    sess, sess->port_name);
+-			/*
+-			 * Check if it's UNLOADING, cause we cannot poll in
+-			 * this case, or else a NULL pointer dereference
+-			 * is triggered.
+-			 */
+-			if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
+-				return QLA_FUNCTION_TIMEOUT;
+-
+ 			/* Check for pending interrupts. */
+ 			qla2x00_poll(ha->rsp_q_map[0]);
  
 -- 
 2.25.1
