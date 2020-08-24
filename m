@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1F6C433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:09:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48DB7C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:09:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 503C2206F0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:09:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AF1C2074D
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:09:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598288955;
-	bh=XMdVZ2dkxRLkuBAlv9jLdIRDBO/TOplRzASFQpmfhTw=;
+	s=default; t=1598288962;
+	bh=+ncqXkGCjBPaOcgrZsAShwnnH3J/qZFZV7aUyHtXTeo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IDRZtwCEsVcc4uu2tciF/Xpfu48i97d3qvjIiGA2N85AQ7tLC+PEy78xeAY15yQVP
-	 Tt9ckiAR6Z/Q5In1wHEbvgyOVpv3TkDH346nFkNh+ejGmoEA/coVIYRvRPEGr60/ej
-	 WS7DixDVgbLhatlypjJwFOJKVNOJrCl47ak7C6oE=
+	b=ekD0Om/WjCwvI3whYj0OUrPD6HZv0xwIl6y9OQb0h2FSIwmgV/DLaJUW9Lk44Pt+J
+	 jd9N0w6bcy2xRhtXaxdlezWOLNbPmzSaWSyQlPl3yZgyk4ypjmXpRdK9t0lJeFvKvv
+	 jjUNBQ7/BBqxHVBcukfun/t3mqKM3POuJcweLfaU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726995AbgHXRJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:09:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41066 "EHLO mail.kernel.org"
+        id S1726457AbgHXRJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 13:09:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41056 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728426AbgHXQiU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Aug 2020 12:38:20 -0400
+        id S1728422AbgHXQiR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Aug 2020 12:38:17 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 97C6A23101;
-        Mon, 24 Aug 2020 16:37:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D9BFA20838;
+        Mon, 24 Aug 2020 16:37:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598287054;
-        bh=XMdVZ2dkxRLkuBAlv9jLdIRDBO/TOplRzASFQpmfhTw=;
+        s=default; t=1598287051;
+        bh=+ncqXkGCjBPaOcgrZsAShwnnH3J/qZFZV7aUyHtXTeo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=G8ObbwTB3yOiaA7ycB6MDfWOUUg7FA6G6hevWVr57kBvAuRdzp8lps8OOsRrmLSLp
-         dVukZoEhOShvR48XBpjaSHd4aUh9EEFJQT2aLCCIQ2n+9sO6jSbddL1l3iQ7QGrkmJ
-         NAMLyIC140xI4MYJqmJmg27aEGRRu+9wjumXYIgU=
+        b=wv5O7eevw9sIhimB2sunPMf8swjNY42DrHUygc8ahGJe3bSFvgh/ldVkfBMVK05ST
+         lrk+X/N9eU9TvgQfOc4Mka+V85Hqhyn/lhUrqiqrttQjg7RTEXWNYYw0uDllxpfCKk
+         0b1dBuxPussQtb7mq4Cwg/0VIq5uAqG+ggabkgLg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Saurav Kashyap <skashyap@marvell.com>,
@@ -45,9 +45,9 @@ Cc:     Saurav Kashyap <skashyap@marvell.com>,
         Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 43/54] Revert "scsi: qla2xxx: Fix crash on qla2x00_mailbox_command"
-Date:   Mon, 24 Aug 2020 12:36:22 -0400
-Message-Id: <20200824163634.606093-43-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 41/54] scsi: qla2xxx: Check if FW supports MQ before enabling
+Date:   Mon, 24 Aug 2020 12:36:20 -0400
+Message-Id: <20200824163634.606093-41-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200824163634.606093-1-sashal@kernel.org>
 References: <20200824163634.606093-1-sashal@kernel.org>
@@ -62,43 +62,38 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit de7e6194301ad31c4ce95395eb678e51a1b907e5 ]
+[ Upstream commit dffa11453313a115157b19021cc2e27ea98e624c ]
 
-FCoE adapter initialization failed for ISP8021 with the following patch
-applied. In addition, reproduction of the issue the patch originally tried
-to address has been unsuccessful.
+OS boot during Boot from SAN was stuck at dracut emergency shell after
+enabling NVMe driver parameter. For non-MQ support the driver was enabling
+MQ. Add a check to confirm if FW supports MQ.
 
-This reverts commit 3cb182b3fa8b7a61f05c671525494697cba39c6a.
-
-Link: https://lore.kernel.org/r/20200806111014.28434-11-njavali@marvell.com
+Link: https://lore.kernel.org/r/20200806111014.28434-9-njavali@marvell.com
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index d6c991bd1bde9..35720cdfb9c32 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -334,14 +334,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 			if (time_after(jiffies, wait_time))
- 				break;
- 
--			/*
--			 * Check if it's UNLOADING, cause we cannot poll in
--			 * this case, or else a NULL pointer dereference
--			 * is triggered.
--			 */
--			if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
--				return QLA_FUNCTION_TIMEOUT;
--
- 			/* Check for pending interrupts. */
- 			qla2x00_poll(ha->rsp_q_map[0]);
- 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 1120d133204c2..7a4a65a9ba441 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2017,6 +2017,11 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
+ 	/* Determine queue resources */
+ 	ha->max_req_queues = ha->max_rsp_queues = 1;
+ 	ha->msix_count = QLA_BASE_VECTORS;
++
++	/* Check if FW supports MQ or not */
++	if (!(ha->fw_attributes & BIT_6))
++		goto mqiobase_exit;
++
+ 	if (!ql2xmqsupport || !ql2xnvmeenable ||
+ 	    (!IS_QLA25XX(ha) && !IS_QLA81XX(ha)))
+ 		goto mqiobase_exit;
 -- 
 2.25.1
 
