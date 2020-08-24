@@ -7,52 +7,50 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32519C433E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:45:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B49BAC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:47:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11DA620578
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:45:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91CB820578
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 16:47:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598287554;
-	bh=icKIwklffOVx9xPkO2wT86iWiVJSw3jCrvwcdN73xcM=;
+	s=default; t=1598287662;
+	bh=FeEjMst33F7XYwCjWK2Fc1/wB2pauHmPP9mbwrcIq84=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ChKqayMvFC8dyeANjxm6QLQrgIS0O9uFFcFgz1G4cB7PsILtZ4ufYthqI8jkoYAAo
-	 2cBdSd2hzSws/d5kSNZgRJeATIolMJHfkEHou8SOCliLCGSy6jorQGeyllYEBhO3wJ
-	 GxjsYVT+Ju0MaBkK/8hVCDPRkr9guRgj5F3KQL4k=
+	b=YNQkZYuChyTeyfrmIcNAEFUW9OhOEevizSu6w12a8MVoLbdNithiQgv8/BAXogta6
+	 OWRO9IcyL1wD9F8kdxIUW/+4k86EFsf+QbVgd/4jnVR+RpG+8364UPpHG7m4yvAzKI
+	 eCJ8Q+/ndAtQLL+asMtsQtBPaSYLRJuJJLysDcqM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728815AbgHXQpu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 12:45:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47232 "EHLO mail.kernel.org"
+        id S1728764AbgHXQrl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 12:47:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46766 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728587AbgHXQjZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Aug 2020 12:39:25 -0400
+        id S1728086AbgHXQjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Aug 2020 12:39:11 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D892422CE3;
-        Mon, 24 Aug 2020 16:39:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7CB0922D74;
+        Mon, 24 Aug 2020 16:39:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598287164;
-        bh=icKIwklffOVx9xPkO2wT86iWiVJSw3jCrvwcdN73xcM=;
+        s=default; t=1598287150;
+        bh=FeEjMst33F7XYwCjWK2Fc1/wB2pauHmPP9mbwrcIq84=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WonHz26WruM/AsJtA/5Ve+dqQmllTbbJMGXWw14nDg4DXeUq/mekNTTwqplLGKIRp
-         xEckeWuEQXBSU/uoCoHguR71DUxLT7v2JpOUiQVhBULH+CjZP5h2kazc7iRMPYwUxZ
-         oM8vMRcw3FREOvtuS4SMGC1+awkc5bmbZsyv9tqM=
+        b=PCH7ft/08s95ibM5J0PvkXqFEjqKKiNuSncc/teoHKCVSRx+2lnWuIkfRT3CQPhXg
+         G9o3nZ3/8Kmh/8rEmnQ48KCZzjLOl0G3eGhBzhJmDc9RpLy5PB+7rDkkO+ZcZls/nB
+         nrLGj0p3QMEPV8n3BKKBV1uoxTV8OSUjCJB1WKWc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Andy Teng <andy.teng@mediatek.com>,
+Cc:     Saurav Kashyap <skashyap@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.14 07/11] scsi: ufs: Fix possible infinite loop in ufshcd_hold
-Date:   Mon, 24 Aug 2020 12:39:10 -0400
-Message-Id: <20200824163914.607152-7-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 18/21] Revert "scsi: qla2xxx: Fix crash on qla2x00_mailbox_command"
+Date:   Mon, 24 Aug 2020 12:38:42 -0400
+Message-Id: <20200824163845.606933-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200824163914.607152-1-sashal@kernel.org>
-References: <20200824163914.607152-1-sashal@kernel.org>
+In-Reply-To: <20200824163845.606933-1-sashal@kernel.org>
+References: <20200824163845.606933-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -62,55 +60,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit 93b6c5db06028a3b55122bbb74d0715dd8ca4ae0 ]
+[ Upstream commit de7e6194301ad31c4ce95395eb678e51a1b907e5 ]
 
-In ufshcd_suspend(), after clk-gating is suspended and link is set
-as Hibern8 state, ufshcd_hold() is still possibly invoked before
-ufshcd_suspend() returns. For example, MediaTek's suspend vops may
-issue UIC commands which would call ufshcd_hold() during the command
-issuing flow.
+FCoE adapter initialization failed for ISP8021 with the following patch
+applied. In addition, reproduction of the issue the patch originally tried
+to address has been unsuccessful.
 
-Now if UFSHCD_CAP_HIBERN8_WITH_CLK_GATING capability is enabled,
-then ufshcd_hold() may enter infinite loops because there is no
-clk-ungating work scheduled or pending. In this case, ufshcd_hold()
-shall just bypass, and keep the link as Hibern8 state.
+This reverts commit 3cb182b3fa8b7a61f05c671525494697cba39c6a.
 
-Link: https://lore.kernel.org/r/20200809050734.18740-1-stanley.chu@mediatek.com
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Co-developed-by: Andy Teng <andy.teng@mediatek.com>
-Signed-off-by: Andy Teng <andy.teng@mediatek.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Link: https://lore.kernel.org/r/20200806111014.28434-11-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1e2a97a10033b..8144a54371c35 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1423,6 +1423,7 @@ static void ufshcd_ungate_work(struct work_struct *work)
- int ufshcd_hold(struct ufs_hba *hba, bool async)
- {
- 	int rc = 0;
-+	bool flush_result;
- 	unsigned long flags;
- 
- 	if (!ufshcd_is_clkgating_allowed(hba))
-@@ -1454,7 +1455,9 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index ac5d2d34aeeae..07c5d7397d425 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -329,14 +329,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			if (time_after(jiffies, wait_time))
  				break;
- 			}
- 			spin_unlock_irqrestore(hba->host->host_lock, flags);
--			flush_work(&hba->clk_gating.ungate_work);
-+			flush_result = flush_work(&hba->clk_gating.ungate_work);
-+			if (hba->clk_gating.is_suspended && !flush_result)
-+				goto out;
- 			spin_lock_irqsave(hba->host->host_lock, flags);
- 			goto start;
- 		}
+ 
+-			/*
+-			 * Check if it's UNLOADING, cause we cannot poll in
+-			 * this case, or else a NULL pointer dereference
+-			 * is triggered.
+-			 */
+-			if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
+-				return QLA_FUNCTION_TIMEOUT;
+-
+ 			/* Check for pending interrupts. */
+ 			qla2x00_poll(ha->rsp_q_map[0]);
+ 
 -- 
 2.25.1
 
