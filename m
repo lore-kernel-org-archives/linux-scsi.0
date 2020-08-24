@@ -7,50 +7,47 @@ X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2228AC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7742C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F09B020738
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:17:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E3672067C
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Aug 2020 17:18:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598289478;
-	bh=jowReR2z/GQ4K4l2WEKj6s2SfpcIYYFpwlZYy/NPzWY=;
+	s=default; t=1598289528;
+	bh=cwUEubYXyozIkblDt/dZaV/h5IXzRFqz50ycpPTAa74=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=t/frJZZzy3Rzpvcpy7R3PK+OT10TPbmuBqL/yubD772eilg6tEqPNt2uW1mFE9LbK
-	 9572yc1S2bOFHy5g0W2zlXl5nmTiDuSrvRhGjDTBkR2DiFCk3BfvzlOODZG7dO6Xsj
-	 vEyWrNsDxipXb7hEkBm6e+YZiIqmq/Tfml9mOKQ0=
+	b=ZUeYsXgLRt9KFLFZHWQf88Ca+NwvAVyzQHncM4ees30PA5Lf/jGTHpQVkwaRi0Gf/
+	 69gX/QIdIFnYAEmFfMRfM1/6PfBJ30hpcN6GTppDIY5R58HXagYHQKOFdSgQB/+OqG
+	 Rhe4du4DijH4qDPALGqCq4JFPS1P1locMNulfzUs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726661AbgHXRRu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Aug 2020 13:17:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40112 "EHLO mail.kernel.org"
+        id S1727019AbgHXRRp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Aug 2020 13:17:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40220 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728295AbgHXQgj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1728305AbgHXQgj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 24 Aug 2020 12:36:39 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F1DF622D08;
-        Mon, 24 Aug 2020 16:35:58 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CFBE722D2C;
+        Mon, 24 Aug 2020 16:36:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598286960;
-        bh=jowReR2z/GQ4K4l2WEKj6s2SfpcIYYFpwlZYy/NPzWY=;
+        s=default; t=1598286965;
+        bh=cwUEubYXyozIkblDt/dZaV/h5IXzRFqz50ycpPTAa74=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bTTkUXVDp+QjkcmjbLWurIK7RdfHAV1q6DfNUHV0UznXqfFkks0/A03ZGyI/wA5fS
-         0MHiPIOXhYiYLeLI/AHrFgLqj/EvlqEr9FmU6iTL/SS55tajvuTleOoQjN2hPb1x4N
-         wZ10+AO2Sk9KR0Tj0o1lst5Ldt30pe5WksSN0j5Y=
+        b=vZ91rSate0QKdY69tcFLp8I/N4jEjzqSiw4Z//FzOlZRxUZheAuOQ/XRry6MuZFai
+         WHFV9j7boBKB1iAqx2n/+o6KnyOkK5E2X3hbbjZ+OI2nli3C150QLS2sGrbZ32nmwk
+         0PuB/yeh2TPkTDM3J/VFdSMdbYpVfHogHsHFuYWU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.8 41/63] scsi: ufs: Clean up completed request without interrupt notification
-Date:   Mon, 24 Aug 2020 12:34:41 -0400
-Message-Id: <20200824163504.605538-41-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 45/63] scsi: qla2xxx: Indicate correct supported speeds for Mezz card
+Date:   Mon, 24 Aug 2020 12:34:45 -0400
+Message-Id: <20200824163504.605538-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200824163504.605538-1-sashal@kernel.org>
 References: <20200824163504.605538-1-sashal@kernel.org>
@@ -63,54 +60,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit b10178ee7fa88b68a9e8adc06534d2605cb0ec23 ]
+[ Upstream commit 4709272f6327cc4a8ee1dc55771bcf9718346980 ]
 
-If somehow no interrupt notification is raised for a completed request and
-its doorbell bit is cleared by host, UFS driver needs to cleanup its
-outstanding bit in ufshcd_abort(). Otherwise, system may behave abnormally
-in the following scenario:
+Correct the supported speeds for 16G Mezz card.
 
-After ufshcd_abort() returns, this request will be requeued by SCSI layer
-with its outstanding bit set. Any future completed request will trigger
-ufshcd_transfer_req_compl() to handle all "completed outstanding bits". At
-this time the "abnormal outstanding bit" will be detected and the "requeued
-request" will be chosen to execute request post-processing flow. This is
-wrong because this request is still "alive".
-
-Link: https://lore.kernel.org/r/20200811141859.27399-2-huobean@gmail.com
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Acked-by: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
+Link: https://lore.kernel.org/r/20200806111014.28434-4-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_gs.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2b449057deb83..796c05e1b0091 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6437,7 +6437,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 			/* command completed already */
- 			dev_err(hba->dev, "%s: cmd at tag %d successfully cleared from DB.\n",
- 				__func__, tag);
--			goto out;
-+			goto cleanup;
- 		} else {
- 			dev_err(hba->dev,
- 				"%s: no response from device. tag = %d, err %d\n",
-@@ -6471,6 +6471,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto out;
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 7074073446701..3bfb5678f6515 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1505,11 +1505,11 @@ qla2x00_prep_ct_fdmi_req(struct ct_sns_pkt *p, uint16_t cmd,
+ static uint
+ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
+ {
++	uint speeds = 0;
++
+ 	if (IS_CNA_CAPABLE(ha))
+ 		return FDMI_PORT_SPEED_10GB;
+ 	if (IS_QLA28XX(ha) || IS_QLA27XX(ha)) {
+-		uint speeds = 0;
+-
+ 		if (ha->max_supported_speed == 2) {
+ 			if (ha->min_supported_speed <= 6)
+ 				speeds |= FDMI_PORT_SPEED_64GB;
+@@ -1536,9 +1536,16 @@ qla25xx_fdmi_port_speed_capability(struct qla_hw_data *ha)
+ 		}
+ 		return speeds;
  	}
- 
-+cleanup:
- 	scsi_dma_unmap(cmd);
- 
- 	spin_lock_irqsave(host->host_lock, flags);
+-	if (IS_QLA2031(ha))
+-		return FDMI_PORT_SPEED_16GB|FDMI_PORT_SPEED_8GB|
+-			FDMI_PORT_SPEED_4GB;
++	if (IS_QLA2031(ha)) {
++		if ((ha->pdev->subsystem_vendor == 0x103C) &&
++		    (ha->pdev->subsystem_device == 0x8002)) {
++			speeds = FDMI_PORT_SPEED_16GB;
++		} else {
++			speeds = FDMI_PORT_SPEED_16GB|FDMI_PORT_SPEED_8GB|
++				FDMI_PORT_SPEED_4GB;
++		}
++		return speeds;
++	}
+ 	if (IS_QLA25XX(ha))
+ 		return FDMI_PORT_SPEED_8GB|FDMI_PORT_SPEED_4GB|
+ 			FDMI_PORT_SPEED_2GB|FDMI_PORT_SPEED_1GB;
 -- 
 2.25.1
 
