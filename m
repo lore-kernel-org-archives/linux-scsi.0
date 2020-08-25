@@ -2,105 +2,173 @@ Return-Path: <SRS0=BOoC=CD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CCDC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 11:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43A3BC433E3
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 11:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF57020706
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 11:20:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11CA72075B
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 11:32:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m6ft64qd"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="bf/T+vWp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729885AbgHYLU0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Aug 2020 07:20:26 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:41584 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729698AbgHYLU0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Aug 2020 07:20:26 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PBFIW4163978;
-        Tue, 25 Aug 2020 11:20:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=f/ZPCxc9vZ8nAlaGk1YqszjChxqmeTSTY+ksjeTGrSk=;
- b=m6ft64qdZ8B6jazxp7+AzB7DpnpkrmpC/8QhWMU7SIBeqmu/vULeR7nPUL26RPC5O9he
- qyJC7wUz5VSZKlez4ZcypIFa1sKuL/Bve82nMkpb9K6vY3qKhwIi8ghiHi45U64mwUJZ
- nBt6iRf2NBbX51PKuU8xI2qa8ad73Xr4rf2trkT5A/bKB1BcSZtMqkFZHleAEmWbTZy9
- sUSwpiFYnATkTMTnZxqvdn0TWDK5El9wOw1kC9+9gMOMj/EqMHnmlqAk6hdkq5lo8Lsv
- 6o7WeIdldf7j4V1owQtYfT383MTLWIibQikc6+XnKfk5QLYVj6JGLOTiGj5fXZ0oRQYY WQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 333csj1wn1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Aug 2020 11:20:15 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PBFIce160579;
-        Tue, 25 Aug 2020 11:20:14 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 333r9je5vg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Aug 2020 11:20:14 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07PBKBPY029763;
-        Tue, 25 Aug 2020 11:20:12 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Aug 2020 04:20:11 -0700
-Date:   Tue, 25 Aug 2020 14:20:03 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Raghava Aditya Renukunta 
-        <RaghavaAditya.Renukunta@microsemi.com>,
-        Dave Carroll <David.Carroll@microsemi.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: aacraid: remove erroneous fallthrough annotation
-Message-ID: <20200825112003.GD285523@mwanda>
+        id S1729987AbgHYLc2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Aug 2020 07:32:28 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:54922 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730005AbgHYLas (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Aug 2020 07:30:48 -0400
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200825113043euoutp02238682d510b75977632648dd1a0dec0d~uf3GoPqrd1480614806euoutp02X
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2020 11:30:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200825113043euoutp02238682d510b75977632648dd1a0dec0d~uf3GoPqrd1480614806euoutp02X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1598355043;
+        bh=X8gDcs427W02/qFtPNsPSdmNDXjqciYwh7aa0XOpqik=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=bf/T+vWpq9orb92VKlt6rntA6M0vAXl4taqwUbJIAGHnDbeMzHeZRFEFmsAXDYrNq
+         Wr9AKv7vwxCWJ/Vo6hIhRgWr9K0GkTMScEkS+wDoQCoPXqBM2W4KpgH6J+25PIJB7S
+         XU9Qwn50dCGine2uiKApqXnlXT7+4oTjOnOc6UhQ=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200825113043eucas1p2a677e17885157748102be36111dd7cf0~uf3GIA3vS2151921519eucas1p2e;
+        Tue, 25 Aug 2020 11:30:43 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 2B.B0.06456.366F44F5; Tue, 25
+        Aug 2020 12:30:43 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200825113042eucas1p156019fa8529e69de368498a0a7b4279f~uf3FqdPEE0129601296eucas1p1w;
+        Tue, 25 Aug 2020 11:30:42 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200825113042eusmtrp2f1d062dd589e815ab44765282723204c~uf3FpmMBe1642116421eusmtrp26;
+        Tue, 25 Aug 2020 11:30:42 +0000 (GMT)
+X-AuditID: cbfec7f2-7efff70000001938-75-5f44f663c15d
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 45.58.06017.266F44F5; Tue, 25
+        Aug 2020 12:30:42 +0100 (BST)
+Received: from [106.210.88.143] (unknown [106.210.88.143]) by
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200825113041eusmtip26d77690ed3da6b991eebf229d4dff802~uf3EXjFCA0971809718eusmtip2L;
+        Tue, 25 Aug 2020 11:30:41 +0000 (GMT)
+Subject: Re: a saner API for allocating DMA addressable pages
+To:     Christoph Hellwig <hch@lst.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Pawel Osciak <pawel@osciak.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
+Cc:     Tom Lendacky <thomas.lendacky@amd.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, nouveau@lists.freedesktop.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        alsa-devel@alsa-project.org
+From:   Marek Szyprowski <m.szyprowski@samsung.com>
+Message-ID: <8fa1ce36-c783-1a02-6890-211eb504a33b@samsung.com>
+Date:   Tue, 25 Aug 2020 13:30:41 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+        Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- suspectscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008250085
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 clxscore=1011
- spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
- lowpriorityscore=0 suspectscore=0 mlxlogscore=999 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008250085
+In-Reply-To: <20200819065555.1802761-1-hch@lst.de>
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Sa0yTZxT2/e6g1dd64QQX1C4Yt8RL1ZjXqHiN+UZm4g+XbMsG1vIFUC7a
+        ghf+WAsabsFZ0LLaBdgMzG6KfgMHGktEpSLhbkXxrvVSY1EpYkpUpHyg/HvOc55znuckR6DV
+        tVy4kJiSJhlSdEkaLpQ52xBonafvXx+7cKAXk+vt9RTxVmQjcuKfKxQprVtOzhwSyPN77Qxp
+        Nr/kifz4BkvKDh5nyOvsHpZ0nrNzJP90NUty5GpE7v07yJKS8ic8eXStjSLFrU6K5HXVcKRc
+        fk+RI63vaNJQOp28KyhgSZEvwJPiQi9HLhc5WXLJfJFeHS4e6KhgxNN+MzeEPnDiUcs1Tsx/
+        mcWKsiOHE+VeCy/ez3NR4n/H94mFNyuQeP6WiRMfD3g58ZXTzYkFVQ4k+uWITZN+Dl0RJyUl
+        7pIMC6K2hCbIXQ5qx7NJe7rP25EJeSbkohAB8BJoqm5kc1GooMZ/I7BVukeKPgTNOQEuqFJj
+        P4KTV5eNTtw5YaUUUQWCPFsNpxSvEPR9yEZB1RS8EnrkB8OrpuIuGkrsATrYoHErDZ7K8UHM
+        YS3k+nKHLVQ4CrL8Vj6IGRwJV+quMkE8DcdAtctNKZrJ0Pi7Z5gPwYvg2OWnvLJzJvzvs4/s
+        D4NuT8lwPMCDAvSdOcQoudfDbbOfV/AUeOGqGsFfwWDt6EAmgoctJ3mlyEfQaS5Gimo53GkZ
+        GIoqDFl8A5XnFij0GmioO8wEacAT4aZvshJiIljOWmmFVkH2QbWingM216nPthfbOujfkMY2
+        5jTbmHNsY86xffEtRYwDhUnpxuR4yahNkXbPN+qSjekp8fP1qckyGnropo+u3hr0tmNrPcIC
+        0kxQmZzrYtWsbpdxb3I9AoHWTFWtbW6KUavidHszJENqrCE9STLWoxkCowlTLf7T+6sax+vS
+        pO2StEMyjHYpISTchAx/lP1VGTVOdyGiMWdzgr7Wl7ZFu7Dq7oYLT3w/ZJS791szflzrjF7U
+        5o20buJ7ZiZ29s+aW7jUEmPVrirLN2daEtM7ZjuKrv/ydrM7YmP7gzf6rw07o+fGpUa3RA/+
+        NK972oHFge8zN3gj9f3bXuyhs56a7N/ZT+EVWcyxmK1z7nsYDWNM0Gm/pQ1G3SdTBG82zAMA
+        AA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Se0hTcRTH+d3X7sThbWr9sqhYBVE523TuZ6VICd2CIOqfqHSuuqi1h+xu
+        kkE1zIVOs8d8lJkamqKV2E1TKpQ0M7UwzSwlzXKVi2YP6YllzhX434fzPZ9zOHBoXPqQDKKT
+        DGbOZNDqZJQP0fWnfTh477cYzZpBZzDq62nBkKsyA6CqK20YKm1eh66fotHYcA+BHqV9ECFh
+        tJ9El06UE+hTxjiJntwqolB2bT2JMoV6gIavTpGopOKNCL3ufIyhc91NGMp61kihCmESQ3nd
+        33F0v3Qu+p6TQ6Jc908ROudwUehebhOJWtPu4tFBrK23kmBrJ9KoafpNsflnOyk2+0M6yQrV
+        mRQrfDkrYl9mtWPsjfJjrON5JWBvD1gpdvSXi2I/Nj2l2Jy6asBOCIu2+e2SrzcZLWZuSaKR
+        N0fKdiuQUq6IQHJlWIRcEaqOXatUyUKi1u/ndEkpnCkkKl6eKDyrxpLf+R0avF0ErMDpawdi
+        GjJh8EVVAWYHPrSUuQygraEN8wYLYUe+lfSyP5zst1PeJjeA7v7juCfwZyLhuDBCeoIAZgCH
+        v93vCU+AM9047MxgvYYNwPeZZTOjKEYB7W7PKDEtYaJg+kSByMMEsxy2NT+YkQOZODh6cgr3
+        9syBHeedM3Uxo4QX7r0VeReEw+Ibr3AvL4YN7qJ/PA8OOkuw00BaOEsvnKUUzlIKZymlgKgG
+        AZyF1yfoeaWc1+p5iyFBvs+oF8D0J928/7OuEdjHd7QAhgYyX4m1aaNGSmpT+FR9C4A0LguQ
+        bHjUFSeV7NemHuZMRo3JouP4FqCaPu4MHhS4zzj9lwazRqFSqFGEQh2qDg1HsnmSDObuHimT
+        oDVzBzkumTP99zBaHGQF6s2TqrboElXxCnFsqs9YmGG5j41w1ehaG4bqv9kji5ZohyrT66aO
+        9LWmhuQ9HvG9ltxY9lXXt3OVaYE6PuxA8IPtJUcv/gjPn9+xbdzZW9Vscdx5GOiwXYqK2Cra
+        Ep8uf65Z6oifU9Ne23q5ZpO6Z3VMRU2cK7kXvzC2ZZly3WeRjOATtYqVuInX/gXVsGUeXwMA
+        AA==
+X-CMS-MailID: 20200825113042eucas1p156019fa8529e69de368498a0a7b4279f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200819065610eucas1p2fde88e81917071b1888e7cc01ba0f298
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200819065610eucas1p2fde88e81917071b1888e7cc01ba0f298
+References: <CGME20200819065610eucas1p2fde88e81917071b1888e7cc01ba0f298@eucas1p2.samsung.com>
+        <20200819065555.1802761-1-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This fallthrough annotation is unreachable so we can delete it.
+Hi Christoph,
 
-Fixes: c4e2fbca374b ("scsi: aacraid: Reworked scsi command submission path")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/scsi/aacraid/aachba.c | 1 -
- 1 file changed, 1 deletion(-)
+On 19.08.2020 08:55, Christoph Hellwig wrote:
+> this series replaced the DMA_ATTR_NON_CONSISTENT flag to dma_alloc_attrs
+> with a separate new dma_alloc_pages API, which is available on all
+> platforms.  In addition to cleaning up the convoluted code path, this
+> ensures that other drivers that have asked for better support for
+> non-coherent DMA to pages with incurring bounce buffering over can finally
+> be properly supported.
+>
+> I'm still a little unsure about the API naming, as alloc_pages sort of
+> implies a struct page return value, but we return a kernel virtual
+> address.  The other alternative would be to name the API
+> dma_alloc_noncoherent, but the whole non-coherent naming seems to put
+> people off.  As a follow up I plan to move the implementation of the
+> DMA_ATTR_NO_KERNEL_MAPPING flag over to this framework as well, given
+> that is also is a fundamentally non coherent allocation.  The replacement
+> for that flag would then return a struct page, as it is allowed to
+> actually return pages without a kernel mapping as the name suggested
+> (although most of the time they will actually have a kernel mapping..)
+>
+> In addition to the conversions of the existing non-coherent DMA users
+> the last three patches also convert the DMA coherent allocations in
+> the NVMe driver to use this new framework through a dmapool addition.
+> This was both to give me a good testing vehicle, but also because it
+> should speed up the NVMe driver on platforms with non-coherent DMA
+> nicely, without a downside on platforms with cache coherent DMA.
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index fd6ae5c38086..2fb1881954c7 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -3253,7 +3253,6 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 	case START_STOP:
- 		return aac_start_stop(scsicmd);
- 
--		fallthrough;
- 	default:
- 	/*
- 	 *	Unhandled commands
+I really wonder what is the difference between this new API and 
+alloc_pages(GFP_DMA, n). Is this API really needed? I thought that this 
+is legacy thing to be removed one day...
+
+Maybe it would make more sense to convert the few remaining drivers to 
+regular dma_map_page()/dma_sync_*()/dma_unmap_page() or have I missed 
+something?
+
+Best regards
 -- 
-2.28.0
+Marek Szyprowski, PhD
+Samsung R&D Institute Poland
 
