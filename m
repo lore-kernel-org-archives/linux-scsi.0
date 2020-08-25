@@ -4,32 +4,32 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC602C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 07:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A01B7C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 07:06:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B734520639
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 07:01:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84FF92078A
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 07:06:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729180AbgHYHBU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Aug 2020 03:01:20 -0400
-Received: from smtprelay0073.hostedemail.com ([216.40.44.73]:33036 "EHLO
+        id S1729248AbgHYHGa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Aug 2020 03:06:30 -0400
+Received: from smtprelay0045.hostedemail.com ([216.40.44.45]:38566 "EHLO
         smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728939AbgHYHBN (ORCPT
+        by vger.kernel.org with ESMTP id S1729137AbgHYHG3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Aug 2020 03:01:13 -0400
+        Tue, 25 Aug 2020 03:06:29 -0400
 Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay03.hostedemail.com (Postfix) with ESMTP id 30EA5837F27B;
-        Tue, 25 Aug 2020 07:01:11 +0000 (UTC)
+        by smtprelay01.hostedemail.com (Postfix) with ESMTP id A520D100E7B43;
+        Tue, 25 Aug 2020 07:06:28 +0000 (UTC)
 X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: kick90_3a07d8a27059
-X-Filterd-Recvd-Size: 3293
+X-HE-Tag: tooth00_0809ad927059
+X-Filterd-Recvd-Size: 2084
 Received: from XPS-9350.home (unknown [47.151.133.149])
         (Authenticated sender: joe@perches.com)
-        by omf11.hostedemail.com (Postfix) with ESMTPA;
-        Tue, 25 Aug 2020 07:01:09 +0000 (UTC)
-Message-ID: <5e8d3765063043f7a90c92c098317319757595ed.camel@perches.com>
+        by omf07.hostedemail.com (Postfix) with ESMTPA;
+        Tue, 25 Aug 2020 07:06:27 +0000 (UTC)
+Message-ID: <dc8aca7e3772670782c2abc086cab8b6f81be3c1.camel@perches.com>
 Subject: Re: [PATCH] scsi: megaraid: Remove unnecessary assignment to
  variable ret
 From:   Joe Perches <joe@perches.com>
@@ -37,11 +37,11 @@ To:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
         kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Tue, 25 Aug 2020 00:01:07 -0700
-In-Reply-To: <20200825063836.92239-1-jingxiangfeng@huawei.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Tue, 25 Aug 2020 00:06:26 -0700
+In-Reply-To: <5e8d3765063043f7a90c92c098317319757595ed.camel@perches.com>
 References: <20200825063836.92239-1-jingxiangfeng@huawei.com>
+         <5e8d3765063043f7a90c92c098317319757595ed.camel@perches.com>
 Content-Type: text/plain; charset="ISO-8859-1"
 User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
@@ -51,79 +51,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-08-25 at 14:38 +0800, Jing Xiangfeng wrote:
-> The variable ret is being initialized with 'FAILED'. So we can remove
-> this assignement.
+On Tue, 2020-08-25 at 00:01 -0700, Joe Perches wrote:
+> On Tue, 2020-08-25 at 14:38 +0800, Jing Xiangfeng wrote:
+> > The variable ret is being initialized with 'FAILED'. So we can remove
+> > this assignement.
+> 
+> If you are going to change the code at all,
+> might as well try to improve it more by removing
+> the unnecessary out: label altogether.
 
-If you are going to change the code at all,
-might as well try to improve it more by removing
-the unnecessary out: label altogether.
+Looks like the megaraid mailing list is either subscribers-only
+or doesn't exist anymore as my mail to it bounced.
 
-Perhaps:
+One of the maintainers should remove it or update it.
+
+Maybe:
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 883cccb59c2d..1a8f18113136 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -4688,9 +4688,8 @@ int megasas_task_abort_fusion(struct scsi_cmnd *scmd)
- 
- int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
- {
--
- 	struct megasas_instance *instance;
--	int ret = FAILED;
-+	int ret;
- 	u16 devhandle;
- 	struct MR_PRIV_DEVICE *mr_device_priv_data;
- 	mr_device_priv_data = scmd->device->hostdata;
-@@ -4700,32 +4699,27 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
- 	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
- 		dev_err(&instance->pdev->dev, "Controller is not OPERATIONAL,"
- 		"SCSI host:%d\n", instance->host->host_no);
--		ret = FAILED;
--		return ret;
-+		return FAILED;
- 	}
- 
- 	if (!mr_device_priv_data) {
- 		sdev_printk(KERN_INFO, scmd->device,
- 			    "device been deleted! scmd: (0x%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
--		ret = SUCCESS;
--		goto out;
-+		return SUCCESS;
- 	}
- 
--	if (!mr_device_priv_data->is_tm_capable) {
--		ret = FAILED;
--		goto out;
--	}
-+	if (!mr_device_priv_data->is_tm_capable)
-+		return FAILED;
- 
- 	mutex_lock(&instance->reset_mutex);
- 	devhandle = megasas_get_tm_devhandle(scmd->device);
- 
- 	if (devhandle == (u16)ULONG_MAX) {
--		ret = SUCCESS;
- 		sdev_printk(KERN_INFO, scmd->device,
- 			"target reset issued for invalid devhandle\n");
- 		mutex_unlock(&instance->reset_mutex);
--		goto out;
-+		return SUCCESS;
- 	}
- 
- 	sdev_printk(KERN_INFO, scmd->device,
-@@ -4741,7 +4735,6 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
- 	scmd_printk(KERN_NOTICE, scmd, "target reset %s!!\n",
- 		(ret == SUCCESS) ? "SUCCESS" : "FAILED");
- 
--out:
- 	return ret;
- }
- 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ac79fdbdf8d0..0c181cd07201 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11060,7 +11060,7 @@ MEGARAID SCSI/SAS DRIVERS
+ M:	Kashyap Desai <kashyap.desai@broadcom.com>
+ M:	Sumit Saxena <sumit.saxena@broadcom.com>
+ M:	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+-L:	megaraidlinux.pdl@broadcom.com
++L:	megaraidlinux.pdl@broadcom.com (subscribers-only)
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+ W:	http://www.avagotech.com/support/
 
 
