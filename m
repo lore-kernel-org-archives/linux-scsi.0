@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0213C433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 06:44:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE927C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 06:45:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD5BD2071E
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 06:44:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A345B2071E
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 06:45:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="b35IFPV1"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="J72ELQK5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729076AbgHYGoq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Aug 2020 02:44:46 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45914 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729137AbgHYGoo (ORCPT
+        id S1729137AbgHYGpK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Aug 2020 02:45:10 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24374 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729076AbgHYGpJ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Aug 2020 02:44:44 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07P6Utop031823
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2020 23:44:43 -0700
+        Tue, 25 Aug 2020 02:45:09 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07P6Tf6c009541
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2020 23:45:08 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=+5QyD6UCD7Dr3XqQw3z+Fl6NEiZv3z/ZToe9msndXD4=;
- b=b35IFPV12gy1OU4kEFCtMmlP/5eTp6GJ/LkuMST/XJ5/hUDiF1HDtczI7EU7ov4G78tf
- cwYP1LKFTANx7XpGuxb5xKS36vHysTcEbP7Ap7jzyAqpCdVfzfFGWswV6+DdbD8e/kf+
- Ao8bTSamEgWqFVqow9J4+RL96DMWcE2JagQ3ARI3AUPcKzSTr+jR/pQ+SsRLRE+L09Jg
- YIN1UHyvchsrMiO/6a2kieJ5PPtmslloVsrr+bFeTu01DhkL5SeoIIQRsLk7PAeplojc
- ncixoNg6J4sfw0yCHWgM4Efuo6BqFOqd7U0z249sPTzGsqTiTLa4v9Zaogaku4t/VW9d Rg== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 3330qpjuap-1
+ content-type; s=pfpt0220; bh=VnTVh/yU7PojCrNzzdukUrIOKyWn/xDt8nobcmBYgts=;
+ b=J72ELQK5MP1V+oukcXtiWCieQiwdlOk6/2AdTuQ+x1rSHguOzm/LiBhyyj8ER6Q76U0f
+ p7Q4BcokSxeBXftkT6q4Ywqu8MEkDORGVrm5cMOlm3vVwA9b0UTgFvDFiM4A7NhcVw4L
+ rj2Qy9vWMOjPJkNvyk90H3Fyz5J1uH4DPrfjHbq/EG01aAxD9IHpR8lPOpSgZT8EVzSb
+ oZNjQOlssO8JmbyBtkB7+Ht+aSVMM0cGRJ/fQgewQ0wGL2AH4jAPMTwkxOXCQX4szZGw
+ xAiar1aHmSQtgQAZVO43704b3a27YD+uCSIheb4a8ItVGSXManXnVBFaM7ZVzep6+BY+ IA== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 3332vmtby5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2020 23:44:43 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 24 Aug
- 2020 23:44:42 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 24 Aug 2020 23:44:42 -0700
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2020 23:45:08 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 24 Aug
+ 2020 23:45:06 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 24 Aug 2020 23:45:07 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 991EE3F703F;
-        Mon, 24 Aug 2020 23:44:42 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id B5E773F7043;
+        Mon, 24 Aug 2020 23:45:06 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 07P6igQa016410;
-        Mon, 24 Aug 2020 23:44:42 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 07P6j6tw016414;
+        Mon, 24 Aug 2020 23:45:06 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 07P6igOl016407;
-        Mon, 24 Aug 2020 23:44:42 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 07P6j6Sx016413;
+        Mon, 24 Aug 2020 23:45:06 -0700
 From:   Javed Hasan <jhasan@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH 1/8] qedf: Changed the debug parameter permission from read to read & write.
-Date:   Mon, 24 Aug 2020 23:43:47 -0700
-Message-ID: <20200825064354.16361-2-jhasan@marvell.com>
+Subject: [PATCH 2/8] qedf: Correct the comment in qedf_initiate_els.
+Date:   Mon, 24 Aug 2020 23:43:48 -0700
+Message-ID: <20200825064354.16361-3-jhasan@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200825064354.16361-1-jhasan@marvell.com>
 References: <20200825064354.16361-1-jhasan@marvell.com>
@@ -71,27 +71,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- -Changed the debug parameter permission from read to
-   read & write.
+From: Saurav Kashyap <skashyap@marvell.com>
 
+ -Corrected the comment in qedf_initiate_els().
 
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 2 +-
+ drivers/scsi/qedf/qedf_els.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 86b9479..5770692 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -40,7 +40,7 @@
- 	"remote ports (default 60)");
+diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
+index 6cb8c9b..625e58c 100644
+--- a/drivers/scsi/qedf/qedf_els.c
++++ b/drivers/scsi/qedf/qedf_els.c
+@@ -124,7 +124,7 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
+ 	task = qedf_get_task_mem(&qedf->tasks, xid);
+ 	qedf_init_mp_task(els_req, task, sqe);
  
- uint qedf_debug = QEDF_LOG_INFO;
--module_param_named(debug, qedf_debug, uint, S_IRUGO);
-+module_param_named(debug, qedf_debug, uint, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(debug, " Debug mask. Pass '1' to enable default debugging"
- 	" mask");
+-	/* Put timer on original I/O request */
++	/* Put timer on els request */
+ 	if (timer_msec)
+ 		qedf_cmd_timer_set(qedf, els_req, timer_msec);
  
 -- 
 1.8.3.1
