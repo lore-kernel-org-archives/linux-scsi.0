@@ -2,90 +2,105 @@ Return-Path: <SRS0=BOoC=CD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5CCFC433E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 09:40:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CCDC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 11:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A76A52075F
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 09:40:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF57020706
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 11:20:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Jm0Fyogo"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m6ft64qd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729609AbgHYJkM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Aug 2020 05:40:12 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53376 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729454AbgHYJkI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Aug 2020 05:40:08 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07P9P0Pc029626
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2020 02:40:07 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0220;
- bh=2NYROm4t5xK/XZ93U0Si4K6atvPXiUUZC/UtlBA8YQI=;
- b=Jm0FyogodIXgGKWZuLhR+dOiYzOjf35eG7FlCrEoCm0Q3LVwD6kzi/PuBy6/OwXoxYZP
- IIU8x7e5SaQQq2BJiP08s9wG8wf3izaQwn6ZHGaavhuEfETwvtnw1xiDkBZo+NIoEPtN
- smIljgY3murOjPm0O/ciRGQxnG4S5KV8Z9w5UazphCV/yj148ihCSEdUjWaw/9yFaJra
- Ck06z1DTldoCkA23BKE/MIE44LJlMQFwHPn/Du1anbTksFq6frECAHXteW8O33UvFU/m
- ZXtXXvQKznYRYpGmEAZ8HjtrXzm3CiJSOTeSlA5Lb2aEwZxi1GSRnfVOnWEsi9Lfyro3 EQ== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 3330qpkeh2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2020 02:40:07 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 25 Aug
- 2020 02:40:06 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 25 Aug 2020 02:40:06 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 44EB23F704B;
-        Tue, 25 Aug 2020 02:40:06 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 07P9e4hx019708;
-        Tue, 25 Aug 2020 02:40:04 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 07P9e4t0019646;
-        Tue, 25 Aug 2020 02:40:04 -0700
-From:   Javed Hasan <jhasan@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH] libfc: Fix for double freed.
-Date:   Tue, 25 Aug 2020 02:39:40 -0700
-Message-ID: <20200825093940.19612-1-jhasan@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        id S1729885AbgHYLU0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Aug 2020 07:20:26 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41584 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729698AbgHYLU0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Aug 2020 07:20:26 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PBFIW4163978;
+        Tue, 25 Aug 2020 11:20:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=f/ZPCxc9vZ8nAlaGk1YqszjChxqmeTSTY+ksjeTGrSk=;
+ b=m6ft64qdZ8B6jazxp7+AzB7DpnpkrmpC/8QhWMU7SIBeqmu/vULeR7nPUL26RPC5O9he
+ qyJC7wUz5VSZKlez4ZcypIFa1sKuL/Bve82nMkpb9K6vY3qKhwIi8ghiHi45U64mwUJZ
+ nBt6iRf2NBbX51PKuU8xI2qa8ad73Xr4rf2trkT5A/bKB1BcSZtMqkFZHleAEmWbTZy9
+ sUSwpiFYnATkTMTnZxqvdn0TWDK5El9wOw1kC9+9gMOMj/EqMHnmlqAk6hdkq5lo8Lsv
+ 6o7WeIdldf7j4V1owQtYfT383MTLWIibQikc6+XnKfk5QLYVj6JGLOTiGj5fXZ0oRQYY WQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 333csj1wn1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 25 Aug 2020 11:20:15 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PBFIce160579;
+        Tue, 25 Aug 2020 11:20:14 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 333r9je5vg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 25 Aug 2020 11:20:14 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07PBKBPY029763;
+        Tue, 25 Aug 2020 11:20:12 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 25 Aug 2020 04:20:11 -0700
+Date:   Tue, 25 Aug 2020 14:20:03 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Raghava Aditya Renukunta 
+        <RaghavaAditya.Renukunta@microsemi.com>,
+        Dave Carroll <David.Carroll@microsemi.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: aacraid: remove erroneous fallthrough annotation
+Message-ID: <20200825112003.GD285523@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-25_02:2020-08-24,2020-08-25 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008250085
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 clxscore=1011
+ spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
+ lowpriorityscore=0 suspectscore=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008250085
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- -Fix added for '&fp->skb' double freed.
+This fallthrough annotation is unreachable so we can delete it.
 
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Fixes: c4e2fbca374b ("scsi: aacraid: Reworked scsi command submission path")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/scsi/aacraid/aachba.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index d8cbc9c..e67abb1 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -634,8 +634,6 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	fc_frame_free(fp);
- out:
- 	kref_put(&rdata->kref, fc_rport_destroy);
--	if (!IS_ERR(fp))
--		fc_frame_free(fp);
- }
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index fd6ae5c38086..2fb1881954c7 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3253,7 +3253,6 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+ 	case START_STOP:
+ 		return aac_start_stop(scsicmd);
  
- /**
+-		fallthrough;
+ 	default:
+ 	/*
+ 	 *	Unhandled commands
 -- 
-1.8.3.1
+2.28.0
 
