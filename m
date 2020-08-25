@@ -2,85 +2,64 @@ Return-Path: <SRS0=BOoC=CD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0506AC433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 12:35:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC98C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 13:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E14062075F
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 12:35:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51EDF20639
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Aug 2020 13:26:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726884AbgHYMfp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Aug 2020 08:35:45 -0400
-Received: from stargate.chelsio.com ([12.32.117.8]:2264 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbgHYMfo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Aug 2020 08:35:44 -0400
-Received: from fcoe-test11.asicdesigners.com (fcoe-test11.blr.asicdesigners.com [10.193.185.180])
-        by stargate.chelsio.com (8.13.8/8.13.8) with ESMTP id 07PCZM4e019264;
-        Tue, 25 Aug 2020 05:35:23 -0700
-From:   Varun Prakash <varun@chelsio.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        michael.christie@oracle.com, bvanassche@acm.org,
-        nab@linux-iscsi.org, varun@chelsio.com, <stable@vger.kernel.org>
-Subject: [PATCH] scsi: target: iscsi: Fix data digest calculation
-Date:   Tue, 25 Aug 2020 18:05:10 +0530
-Message-Id: <1598358910-3052-1-git-send-email-varun@chelsio.com>
-X-Mailer: git-send-email 2.0.2
+        id S1726570AbgHYN0U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Aug 2020 09:26:20 -0400
+Received: from verein.lst.de ([213.95.11.211]:58839 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726149AbgHYN0S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Aug 2020 09:26:18 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 6E33E68BEB; Tue, 25 Aug 2020 15:26:12 +0200 (CEST)
+Date:   Tue, 25 Aug 2020 15:26:12 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Marek Szyprowski <m.szyprowski@samsung.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Pawel Osciak <pawel@osciak.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-mm@kvack.org, alsa-devel@alsa-project.org
+Subject: Re: a saner API for allocating DMA addressable pages
+Message-ID: <20200825132612.GA22318@lst.de>
+References: <CGME20200819065610eucas1p2fde88e81917071b1888e7cc01ba0f298@eucas1p2.samsung.com> <20200819065555.1802761-1-hch@lst.de> <8fa1ce36-c783-1a02-6890-211eb504a33b@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8fa1ce36-c783-1a02-6890-211eb504a33b@samsung.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current code does not consider 'page_off' in data digest
-calculation, to fix this add a local variable 'first_sg' and
-set first_sg.offset to sg->offset + page_off.
+On Tue, Aug 25, 2020 at 01:30:41PM +0200, Marek Szyprowski wrote:
+> I really wonder what is the difference between this new API and 
+> alloc_pages(GFP_DMA, n). Is this API really needed? I thought that this 
+> is legacy thing to be removed one day...
 
-Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/target/iscsi/iscsi_target.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index c968961..2ec778e 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1389,14 +1389,27 @@ static u32 iscsit_do_crypto_hash_sg(
- 	sg = cmd->first_data_sg;
- 	page_off = cmd->first_data_sg_off;
- 
-+	if (data_length && page_off) {
-+		struct scatterlist first_sg;
-+		u32 len = min_t(u32, data_length, sg->length - page_off);
-+
-+		sg_init_table(&first_sg, 1);
-+		sg_set_page(&first_sg, sg_page(sg), len, sg->offset + page_off);
-+
-+		ahash_request_set_crypt(hash, &first_sg, NULL, len);
-+		crypto_ahash_update(hash);
-+
-+		data_length -= len;
-+		sg = sg_next(sg);
-+	}
-+
- 	while (data_length) {
--		u32 cur_len = min_t(u32, data_length, (sg->length - page_off));
-+		u32 cur_len = min_t(u32, data_length, sg->length);
- 
- 		ahash_request_set_crypt(hash, sg, NULL, cur_len);
- 		crypto_ahash_update(hash);
- 
- 		data_length -= cur_len;
--		page_off = 0;
- 		/* iscsit_map_iovec has already checked for invalid sg pointers */
- 		sg = sg_next(sg);
- 	}
--- 
-2.0.2
-
+The difference is that the pages returned are guranteed to be addressable
+by the devie.  This is a very important difference that matters for
+a lot of use cases.
