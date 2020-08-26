@@ -2,46 +2,38 @@ Return-Path: <SRS0=243Y=CE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD2FFC433E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 08:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D449EC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 09:12:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 885F7206FA
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 08:19:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598429967;
-	bh=9j9S6jD3DxMEcFAPuQIscdiwN8igL/aMRjgg1A+PMWI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=C7X9DLzaz5jptJGvtWC19ojbCVH06gikljI/SxZLSdMR2GkMG9lGb+i2bHPsX896C
-	 4+JOG+BFMpISrS3090WEnrIkeG8zuCFyapsRfRct7NivCSPHwrNNTlcnNh93NXwzqr
-	 ShmwEx+ovy6GQzgF5x6VRDmWaWB+3JPxl3b6hFaU=
+	by mail.kernel.org (Postfix) with ESMTP id B5742206FA
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 09:12:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726983AbgHZITZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Aug 2020 04:19:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40432 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726016AbgHZITX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Aug 2020 04:19:23 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8967920678;
-        Wed, 26 Aug 2020 08:19:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598429963;
-        bh=9j9S6jD3DxMEcFAPuQIscdiwN8igL/aMRjgg1A+PMWI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SliejojpEfe07Yb7llCML/KuFhBA5CuWaOBDnXAAuPeT3RDbeIfq1yH2O5BjAzo8w
-         a5nquc6gurtWUlvgN+T+jgYb/QeWe7fMbZukCpYy+G7IdeDRSl8huUt845/IHyWu4d
-         PgM9pcoqPOBnu9HjvJc2vL3l3xZMzULh+6pTnPs8=
-Date:   Wed, 26 Aug 2020 10:19:38 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
+        id S1727944AbgHZJMt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Aug 2020 05:12:49 -0400
+Received: from smtprelay0204.hostedemail.com ([216.40.44.204]:49552 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727906AbgHZJMs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Aug 2020 05:12:48 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 5F9B0180A68C8;
+        Wed, 26 Aug 2020 09:12:47 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: field82_4a0e14027063
+X-Filterd-Recvd-Size: 1581
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf13.hostedemail.com (Postfix) with ESMTPA;
+        Wed, 26 Aug 2020 09:12:45 +0000 (UTC)
+Message-ID: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>
+Subject: Re: [PATCH 17/19] z2ram: reindent
+From:   Joe Perches <joe@perches.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Denis Efremov <efremov@linux.com>,
         "David S. Miller" <davem@davemloft.net>,
@@ -49,25 +41,28 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: Re: [PATCH 02/19] block: merge drivers/base/map.c into block/genhd.c
-Message-ID: <20200826081938.GC1796103@kroah.com>
+Date:   Wed, 26 Aug 2020 02:12:43 -0700
+In-Reply-To: <20200826062446.31860-18-hch@lst.de>
 References: <20200826062446.31860-1-hch@lst.de>
- <20200826062446.31860-3-hch@lst.de>
+         <20200826062446.31860-18-hch@lst.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200826062446.31860-3-hch@lst.de>
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 26, 2020 at 08:24:29AM +0200, Christoph Hellwig wrote:
-> Now that there is just a single user of the kobj_map functionality left,
-> merge it into the user to prepare for additional simplications.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Wed, 2020-08-26 at 08:24 +0200, Christoph Hellwig wrote:
+> reindent the driver using Lident as the code style was far away from
+> normal Linux code.
 
-YES!!!
+Why?  Does anyone use this anymore?
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ ** z2ram - Amiga pseudo-driver to access 16bit-RAM in ZorroII space
+ **         as a block device, to be used as a RAM disk or swap space
+ ** Copyright (C) 1994 by Ingo Wilken (Ingo.Wilken@informatik.uni-oldenburg.de)
+
+
+
