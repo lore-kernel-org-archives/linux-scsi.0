@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0AE6C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 06:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7223EC433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 06:42:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABB9F20825
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 06:40:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49D9D2071E
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 06:42:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eKbMFYls"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lUCvp9xJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726831AbgHZGkK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Aug 2020 02:40:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42358 "EHLO
+        id S1726752AbgHZGmZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Aug 2020 02:42:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726039AbgHZGkK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2020 02:40:10 -0400
+        with ESMTP id S1726202AbgHZGmV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Aug 2020 02:42:21 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEE31C061574;
-        Tue, 25 Aug 2020 23:40:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21DE4C061756;
+        Tue, 25 Aug 2020 23:42:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=4xtHD/LVW7syPOvnagl2eLkMWsDcdFz+dmbJvQXXE2U=; b=eKbMFYlsgUXM0fA+NiB4PhHzGb
-        wrwkZXLtQYgaC1ka++8b3rG5Ue12E5ZRmL1ffxpGi9oAkm/0ka6fDZIjr+EDLwY4uYWbTLLhMdOLd
-        DOlU+kA364l0BcQnT7ejGZupP7jzMKNi0pinAwP81/TWsS/qPzKHeVJJ8pDPkGIXbjvn4pNCc6j/E
-        bxFWYccnzK/dA6Ywg51oO5eIiSxbAwnMhLVMEwWWm5torWykSQxiHhv6EDYkPaaYL2PvvbA8jYAHP
-        DahlR+jEIZaga/nYBefsNQGVwWP9NU2Krc44s8y50KEKXnCc8LRV8WyG72QyDAUnss8wWUeACsx3Z
-        QvermOUw==;
+        bh=bB3iUuDyj+rBjLRpJKX1+Gi+r3rlWaLRaqbsxQSLjQE=; b=lUCvp9xJs2EXrw0ejcmACo2yTj
+        dcwpiIzXw0+VFROYI5CakH9uAJcsKrOhmCkNbcvUwWZduFJgaO80F+nFMEaILsJBIlYoJOFySREDz
+        ihS2aBTzfwNmPTTbWSI+EMvTjcygQKy8+e4iDG+7N1nfNRzBV1qx7MLR/M8BBVk0ZOQxJwEBtsaCh
+        IwTWqmguS5CyvHT3YBrCjtly6QRU5TMtPOg6vnEay7rAjudR0FfTyFdxZAvm7P8qhDQK4MQESRr4m
+        8dqEzuzoVz0SPBLMHyGScmIlRh3l1GBEOxnDCCW5NKWnVqB9HH0Qr+zZW56ady2gJwYETQeX/jDaK
+        w0N3FdZg==;
 Received: from 213-225-6-196.nat.highway.a1.net ([213.225.6.196] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kAp6J-0002Cr-VJ; Wed, 26 Aug 2020 06:40:04 +0000
+        id 1kAp8R-0002PU-2F; Wed, 26 Aug 2020 06:42:15 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -47,9 +47,9 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 06/19] block: add an optional probe callback to major_names
-Date:   Wed, 26 Aug 2020 08:24:33 +0200
-Message-Id: <20200826062446.31860-7-hch@lst.de>
+Subject: [PATCH 07/19] ide: remove ide_{,un}register_region
+Date:   Wed, 26 Aug 2020 08:24:34 +0200
+Message-Id: <20200826062446.31860-8-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200826062446.31860-1-hch@lst.de>
 References: <20200826062446.31860-1-hch@lst.de>
@@ -61,93 +61,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a callback to the major_names array that allows a driver to override
-how to probe for dev_t that doesn't currently have a gendisk registered.
-This will help separating the lookup of the gendisk by dev_t vs probe
-action for a not currently registered dev_t.
+There is no need to ever register the fake gendisk used for ide-tape.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c         | 21 ++++++++++++++++++---
- include/linux/genhd.h |  5 ++++-
- 2 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/ide/ide-probe.c | 32 --------------------------------
+ drivers/ide/ide-tape.c  |  2 --
+ include/linux/ide.h     |  3 ---
+ 3 files changed, 37 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 00164304317cfa..4cbeff3ec1ef5a 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -402,6 +402,7 @@ static struct blk_major_name {
- 	struct blk_major_name *next;
- 	int major;
- 	char name[16];
-+	void (*probe)(dev_t devt);
- } *major_names[BLKDEV_MAJOR_HASH_SIZE];
- static DEFINE_MUTEX(major_names_lock);
- 
-@@ -444,7 +445,8 @@ void blkdev_show(struct seq_file *seqf, off_t offset)
-  * See Documentation/admin-guide/devices.txt for the list of allocated
-  * major numbers.
-  */
--int register_blkdev(unsigned int major, const char *name)
-+int __register_blkdev(unsigned int major, const char *name,
-+		void (*probe)(dev_t devt))
- {
- 	struct blk_major_name **n, *p;
- 	int index, ret = 0;
-@@ -483,6 +485,7 @@ int register_blkdev(unsigned int major, const char *name)
- 	}
- 
- 	p->major = major;
-+	p->probe = probe;
- 	strlcpy(p->name, name, sizeof(p->name));
- 	p->next = NULL;
- 	index = major_to_index(major);
-@@ -505,8 +508,7 @@ int register_blkdev(unsigned int major, const char *name)
- 	mutex_unlock(&major_names_lock);
- 	return ret;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index 1ddc45a04418cd..076d34b381720f 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -929,38 +929,6 @@ static struct kobject *ata_probe(dev_t dev, int *part, void *data)
+ 	return NULL;
  }
+ 
+-static struct kobject *exact_match(dev_t dev, int *part, void *data)
+-{
+-	struct gendisk *p = data;
+-	*part &= (1 << PARTN_BITS) - 1;
+-	return &disk_to_dev(p)->kobj;
+-}
 -
--EXPORT_SYMBOL(register_blkdev);
-+EXPORT_SYMBOL(__register_blkdev);
- 
- void unregister_blkdev(unsigned int major, const char *name)
+-static int exact_lock(dev_t dev, void *data)
+-{
+-	struct gendisk *p = data;
+-
+-	if (!get_disk_and_module(p))
+-		return -1;
+-	return 0;
+-}
+-
+-void ide_register_region(struct gendisk *disk)
+-{
+-	blk_register_region(MKDEV(disk->major, disk->first_minor),
+-			    disk->minors, NULL, exact_match, exact_lock, disk);
+-}
+-
+-EXPORT_SYMBOL_GPL(ide_register_region);
+-
+-void ide_unregister_region(struct gendisk *disk)
+-{
+-	blk_unregister_region(MKDEV(disk->major, disk->first_minor),
+-			      disk->minors);
+-}
+-
+-EXPORT_SYMBOL_GPL(ide_unregister_region);
+-
+ void ide_init_disk(struct gendisk *disk, ide_drive_t *drive)
  {
-@@ -1037,6 +1039,19 @@ static ssize_t disk_badblocks_store(struct device *dev,
+ 	ide_hwif_t *hwif = drive->hwif;
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 6f26634b22bbec..88b96437b22e62 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -1822,7 +1822,6 @@ static void ide_tape_remove(ide_drive_t *drive)
  
- static void request_gendisk_module(dev_t devt)
- {
-+	unsigned int major = MAJOR(devt);
-+	struct blk_major_name **n;
-+
-+	mutex_lock(&major_names_lock);
-+	for (n = &major_names[major_to_index(major)]; *n; n = &(*n)->next) {
-+		if ((*n)->major == major && (*n)->probe) {
-+			(*n)->probe(devt);
-+			mutex_unlock(&major_names_lock);
-+			return;
-+		}
-+	}
-+	mutex_unlock(&major_names_lock);
-+
- 	if (request_module("block-major-%d-%d", MAJOR(devt), MINOR(devt)) > 0)
- 		/* Make old-style 2.4 aliases work */
- 		request_module("block-major-%d", MAJOR(devt));
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 4ab853461dff25..c0bde190a3dd0c 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -369,7 +369,10 @@ extern void blk_unregister_region(dev_t devt, unsigned long range);
+ 	ide_proc_unregister_driver(drive, tape->driver);
+ 	device_del(&tape->dev);
+-	ide_unregister_region(tape->disk);
  
- #define alloc_disk(minors) alloc_disk_node(minors, NUMA_NO_NODE)
+ 	mutex_lock(&idetape_ref_mutex);
+ 	put_device(&tape->dev);
+@@ -2026,7 +2025,6 @@ static int ide_tape_probe(ide_drive_t *drive)
+ 		      "n%s", tape->name);
  
--int register_blkdev(unsigned int major, const char *name);
-+int __register_blkdev(unsigned int major, const char *name,
-+		void (*probe)(dev_t devt));
-+#define register_blkdev(major, name) \
-+	__register_blkdev(major, name, NULL)
- void unregister_blkdev(unsigned int major, const char *name);
+ 	g->fops = &idetape_block_ops;
+-	ide_register_region(g);
  
- int revalidate_disk(struct gendisk *disk);
+ 	return 0;
+ 
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index a254841bd3156d..cfa9e4b0c325a4 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1495,9 +1495,6 @@ static inline void ide_acpi_port_init_devices(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_set_state(ide_hwif_t *hwif, int on) {}
+ #endif
+ 
+-void ide_register_region(struct gendisk *);
+-void ide_unregister_region(struct gendisk *);
+-
+ void ide_check_nien_quirk_list(ide_drive_t *);
+ void ide_undecoded_slave(ide_drive_t *);
+ 
 -- 
 2.28.0
 
