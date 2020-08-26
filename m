@@ -2,110 +2,88 @@ Return-Path: <SRS0=243Y=CE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF91C433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 16:35:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88985C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 18:26:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 467C32080C
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 16:35:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5780C20786
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 18:26:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="YypZ4VZY"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Isbip/4F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728101AbgHZQfF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Aug 2020 12:35:05 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:31156 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726772AbgHZQe7 (ORCPT
+        id S1727921AbgHZS0s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Aug 2020 14:26:48 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:57846 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727903AbgHZS0q (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Aug 2020 12:34:59 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07QGUOTL026509;
-        Wed, 26 Aug 2020 09:34:56 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=H9QKRsn3Hoq2NW5w/2vX6w6Cdab5FAgIDXygM4SSaM4=;
- b=YypZ4VZY5KIiioCIigwXPjpWp+cFlIem+jvkWUnsne0l+0Ysg25KsrRKroFDTUXQVLwt
- PleAzdORW+g5IexUwvGkaabvhcp8J0QW3jS+7tbACJuNxVH2r6Mo0zJqcHu5mLdAUGpl
- c+9lKf9NSCKjy2wSIurZPbiWF3ySU5HY20Nj/EuH49kHtMfK912RncTmy8byBq3WBbig
- jp8wEmSWbQIj+Iv+q8OrdHfTBXoX6YeE22Dh5iDIyuJNWg2xtB2BtqL3WI+CwCj30b8g
- fDIJmvfTcr80x2NjwNIeukF+/JYcfmrU21ccs1OyYeygKiD945pTU2Z/fKBm9JXOVph2 pA== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3332vn1md5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 26 Aug 2020 09:34:56 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 26 Aug
- 2020 09:34:54 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 26 Aug 2020 09:34:54 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 620893F703F;
-        Wed, 26 Aug 2020 09:34:54 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 07QGYrZa029186;
-        Wed, 26 Aug 2020 09:34:53 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Wed, 26 Aug 2020 09:34:53 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Alex Dewar <alex.dewar90@gmail.com>
-CC:     Nilesh Javali <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Remove unnecessary call to memset
-In-Reply-To: <c6f52893-6fa4-f5f8-42a8-9a2482f16c45@gmail.com>
-Message-ID: <alpine.LRH.2.21.9999.2008260934420.31539@irv1user01.caveonetworks.com>
-References: <20200820185149.932178-1-alex.dewar90@gmail.com>
- <c6f52893-6fa4-f5f8-42a8-9a2482f16c45@gmail.com>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        Wed, 26 Aug 2020 14:26:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598466404;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=jUC82NZTGG1NBiJnCc9uSJd7Fyro45VVAe7zgg+zWvA=;
+        b=Isbip/4FNOhAowUg5dP7ai2QmeT0tAiuaXVPwRzYtJP525IwUcvJymI/1InbuBl5kPTw9t
+        aUsAxiMYQlLVxrn0KbQ4hyujZHdvPl6tWnUqn+UhMwcA0NIA1+yM5lCBGNWTsDi1Vfvc0D
+        MQfHj9Uls6fl39wJN71e4qf2vjbBdi0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-274-hKTNfgUyNBqTB2DSoUH00Q-1; Wed, 26 Aug 2020 14:26:42 -0400
+X-MC-Unique: hKTNfgUyNBqTB2DSoUH00Q-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E83C6189E60D;
+        Wed, 26 Aug 2020 18:26:39 +0000 (UTC)
+Received: from [10.10.110.13] (unknown [10.10.110.13])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 87162776E8;
+        Wed, 26 Aug 2020 18:26:38 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [v4 03/11] dev_vprintk_emit: Increase hdr size
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>
+References: <20200724171706.1550403-1-tasleson@redhat.com>
+ <20200724171706.1550403-4-tasleson@redhat.com>
+ <CAHp75VcwDhHmLbOO2WKkShNYAdLawLx6A5O-4newkCe4XEb3LQ@mail.gmail.com>
+From:   Tony Asleson <tasleson@redhat.com>
+Organization: Red Hat
+Message-ID: <20dad8a0-9a6d-20b4-b5a1-06648c00008e@redhat.com>
+Date:   Wed, 26 Aug 2020 13:26:37 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-26_10:2020-08-26,2020-08-26 signatures=0
+In-Reply-To: <CAHp75VcwDhHmLbOO2WKkShNYAdLawLx6A5O-4newkCe4XEb3LQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 24 Aug 2020, 2:42pm, Alex Dewar wrote:
-
+On 7/25/20 5:05 AM, Andy Shevchenko wrote:
+> On Fri, Jul 24, 2020 at 8:19 PM Tony Asleson <tasleson@redhat.com> wrote:
 > 
-> On 2020-08-20 19:51, Alex Dewar wrote:
-> > In qla25xx_set_els_cmds_supported(), a call is made to
-> > dma_alloc_coherent() followed by zeroing the memory with memset. This is
-> > unnecessary as dma_alloc_coherent() already zeros memory. Remove.
-> > 
-> > Issue identified with Coccinelle.
-> > 
-> > Signed-off-by: Alex Dewar <alex.dewar90@gmail.com>
-> Gentle ping?
-> > ---
-> >   drivers/scsi/qla2xxx/qla_mbx.c | 2 --
-> >   1 file changed, 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-> > index 226f1428d3e5..e00f604bbf7a 100644
-> > --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> > +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> > @@ -4925,8 +4925,6 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *vha)
-> >   		return QLA_MEMORY_ALLOC_FAILED;
-> >   	}
-> >   -	memset(els_cmd_map, 0, ELS_CMD_MAP_SIZE);
-> > -
-> >   	/* List of Purex ELS */
-> >   	cmd_opcode[0] = ELS_FPIN;
-> >   	cmd_opcode[1] = ELS_RDP;
+>> -       char hdr[128];
+>> +       char hdr[288];
 > 
-> 
+> This is quite a drastic change for the stack.
+> Can you refactor to avoid this?
 
-Looks good.
+The only thing I can think of is using a hash of the identifier instead
+of the value itself.  This could drastically reduce the stack usage and
+data stored in journal, but it makes it kind of clumsy for using.
 
-Regards,
--Arun
+Would placing this on the heap be acceptable?
+
