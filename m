@@ -2,67 +2,279 @@ Return-Path: <SRS0=243Y=CE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D449EC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 09:12:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 292ACC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 09:14:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5742206FA
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 09:12:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F31842083B
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Aug 2020 09:13:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727944AbgHZJMt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Aug 2020 05:12:49 -0400
-Received: from smtprelay0204.hostedemail.com ([216.40.44.204]:49552 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727906AbgHZJMs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Aug 2020 05:12:48 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 5F9B0180A68C8;
-        Wed, 26 Aug 2020 09:12:47 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: field82_4a0e14027063
-X-Filterd-Recvd-Size: 1581
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf13.hostedemail.com (Postfix) with ESMTPA;
-        Wed, 26 Aug 2020 09:12:45 +0000 (UTC)
-Message-ID: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>
-Subject: Re: [PATCH 17/19] z2ram: reindent
-From:   Joe Perches <joe@perches.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Date:   Wed, 26 Aug 2020 02:12:43 -0700
-In-Reply-To: <20200826062446.31860-18-hch@lst.de>
-References: <20200826062446.31860-1-hch@lst.de>
-         <20200826062446.31860-18-hch@lst.de>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+        id S1727966AbgHZJNz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Aug 2020 05:13:55 -0400
+Received: from mga04.intel.com ([192.55.52.120]:47189 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727811AbgHZJNx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Aug 2020 05:13:53 -0400
+IronPort-SDR: k/5HGykLIF7IahC3PSJMNvWv6BLEi7LNF6+ldTtvKsT4MNct5IeWl8x0fchG0KedIazt/hI1WG
+ uyPZ9GMdwB6Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9724"; a="153681728"
+X-IronPort-AV: E=Sophos;i="5.76,355,1592895600"; 
+   d="scan'208";a="153681728"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2020 02:13:52 -0700
+IronPort-SDR: xOK/xO1ZDxXjmVX7zGBxqT8wqCi4/Dt0ENeQazE6o9GPEemSv7obztP3UC7avomBMiLsjS3AzP
+ e8dAVSdSJAzQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,355,1592895600"; 
+   d="scan'208";a="312828541"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.73]) ([10.237.72.73])
+  by orsmga002.jf.intel.com with ESMTP; 26 Aug 2020 02:13:50 -0700
+Subject: Re: [PATCH] scsi: ufs-pci: Add LTR support for Intel controllers
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+References: <20200825081854.7222-1-adrian.hunter@intel.com>
+ <BY5PR04MB67054EC026978782F129F88EFC540@BY5PR04MB6705.namprd04.prod.outlook.com>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <f831cd03-213f-0f0c-154e-04c591a4bf83@intel.com>
+Date:   Wed, 26 Aug 2020 12:13:16 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <BY5PR04MB67054EC026978782F129F88EFC540@BY5PR04MB6705.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-08-26 at 08:24 +0200, Christoph Hellwig wrote:
-> reindent the driver using Lident as the code style was far away from
-> normal Linux code.
+On 26/08/20 9:13 am, Avri Altman wrote:
+>  
+>>
+>> Intel host controllers support the setting of latency tolerance.
+>> Accordingly, implement the PM QoS ->set_latency_tolerance() callback. The
+>> raw register values are also exposed via debugfs.
+>>
+>> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-Why?  Does anyone use this anymore?
+Thanks for the quick review!
 
- ** z2ram - Amiga pseudo-driver to access 16bit-RAM in ZorroII space
- **         as a block device, to be used as a RAM disk or swap space
- ** Copyright (C) 1994 by Ingo Wilken (Ingo.Wilken@informatik.uni-oldenburg.de)
+I will send a V2, refer below
 
+> 
+> Some nits below.
+> 
+> Thanks,
+> Avri
+> 
+>> ---
+>>  drivers/scsi/ufs/ufshcd-pci.c | 122 +++++++++++++++++++++++++++++++++-
+>>  1 file changed, 120 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+>> index 5a95a7bfbab0..e10f05013ae6 100644
+>> --- a/drivers/scsi/ufs/ufshcd-pci.c
+>> +++ b/drivers/scsi/ufs/ufshcd-pci.c
+>> @@ -13,6 +13,14 @@
+>>  #include "ufshcd.h"
+>>  #include <linux/pci.h>
+>>  #include <linux/pm_runtime.h>
+>> +#include <linux/pm_qos.h>
+>> +#include <linux/debugfs.h>
+>> +
+>> +struct intel_host {
+>> +       u32             active_ltr;
+>> +       u32             idle_ltr;
+>> +       struct dentry   *debugfs_root;
+>> +};
+>>
+>>  static int ufs_intel_disable_lcc(struct ufs_hba *hba)
+>>  {
+>> @@ -44,20 +52,129 @@ static int ufs_intel_link_startup_notify(struct ufs_hba
+>> *hba,
+>>         return err;
+>>  }
+>>
+>> +#define INTEL_ACTIVELTR                0x804
+>> +#define INTEL_IDLELTR          0x808
+>> +
+>> +#define INTEL_LTR_REQ          BIT(15)
+>> +#define INTEL_LTR_SCALE_MASK   GENMASK(11, 10)
+>> +#define INTEL_LTR_SCALE_1US    (2 << 10)
+>> +#define INTEL_LTR_SCALE_32US   (3 << 10)
+>> +#define INTEL_LTR_VALUE_MASK   GENMASK(9, 0)
+>> +
+>> +static void intel_cache_ltr(struct ufs_hba *hba)
+>> +{
+>> +       struct intel_host *host = ufshcd_get_variant(hba);
+>> +
+>> +       host->active_ltr = readl(hba->mmio_base + INTEL_ACTIVELTR);
+>> +       host->idle_ltr = readl(hba->mmio_base + INTEL_IDLELTR);
+> You might want to use the standard ufshcd_readl
 
+LTR is more of a PCI concept, not directly related to UFS, so I am relucant
+to use ufshcd_readl which implies a closer relationship to UFS.
+
+> 
+>> +}
+>> +
+>> +static void intel_ltr_set(struct device *dev, s32 val)
+>> +{
+>> +       struct ufs_hba *hba = dev_get_drvdata(dev);
+>> +       struct intel_host *host = ufshcd_get_variant(hba);
+>> +       u32 ltr;
+>> +
+>> +       pm_runtime_get_sync(dev);
+>> +
+>> +       /*
+>> +        * Program latency tolerance (LTR) accordingly what has been asked
+>> +        * by the PM QoS layer or disable it in case we were passed
+>> +        * negative value or PM_QOS_LATENCY_ANY.
+>> +        */
+>> +       ltr = readl(hba->mmio_base + INTEL_ACTIVELTR);
+>> +
+>> +       if (val == PM_QOS_LATENCY_ANY || val < 0) {
+>> +               ltr &= ~INTEL_LTR_REQ;
+>> +       } else {
+>> +               ltr |= INTEL_LTR_REQ;
+>> +               ltr &= ~INTEL_LTR_SCALE_MASK;
+>> +               ltr &= ~INTEL_LTR_VALUE_MASK;
+>> +
+>> +               if (val > INTEL_LTR_VALUE_MASK) {
+>> +                       val >>= 5;
+>> +                       if (val > INTEL_LTR_VALUE_MASK)
+>> +                               val = INTEL_LTR_VALUE_MASK;
+>> +                       ltr |= INTEL_LTR_SCALE_32US | val;
+>> +               } else {
+>> +                       ltr |= INTEL_LTR_SCALE_1US | val;
+>> +               }
+>> +       }
+>> +
+>> +       if (ltr == host->active_ltr)
+>> +               goto out;
+>> +
+>> +       writel(ltr, hba->mmio_base + INTEL_ACTIVELTR);
+>> +       writel(ltr, hba->mmio_base + INTEL_IDLELTR);
+>> +
+>> +       /* Cache the values into intel_host structure */
+>> +       intel_cache_ltr(hba);
+>> +out:
+>> +       pm_runtime_put(dev);
+>> +}
+>> +
+>> +static void ufs_intel_ltr_expose(struct ufs_hba *hba)
+>> +{
+>> +       struct intel_host *host = ufshcd_get_variant(hba);
+>> +       struct dentry *dir = host->debugfs_root;
+>> +       struct device *dev = hba->dev;
+>> +
+>> +       dev->power.set_latency_tolerance = intel_ltr_set;
+>> +       dev_pm_qos_expose_latency_tolerance(dev);
+>> +
+>> +       intel_cache_ltr(hba);
+>> +
+>> +       debugfs_create_x32("active_ltr", 0444, dir, &host->active_ltr);
+>> +       debugfs_create_x32("idle_ltr", 0444, dir, &host->idle_ltr);
+> You might as well allow those values to be traced, e.g. use dev_pm_qos_update_user_latency_tolerance
+
+The registers default to "no requirement" and there is no use-case for
+reading the initial values, other than debugging for which there is debugfs.
+ Add the fact that there are 2 registers, which should be the same, but what
+if they are not, plus having to decode the register bits, doesn't seem worth it.
+
+> 
+>> +}
+>> +
+>> +static void ufs_intel_ltr_hide(struct ufs_hba *hba)
+>> +{
+>> +       struct device *dev = hba->dev;
+>> +
+>> +       dev_pm_qos_hide_latency_tolerance(dev);
+>> +       dev->power.set_latency_tolerance = NULL;
+>> +}
+>> +
+>> +static int ufs_intel_common_init(struct ufs_hba *hba)
+>> +{
+>> +       struct device *dev = hba->dev;
+>> +       struct intel_host *host;
+>> +
+>> +       host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+>> +       if (!host)
+>> +               return -ENOMEM;
+>> +       ufshcd_set_variant(hba, host);
+>> +       host->debugfs_root = debugfs_create_dir(dev_name(dev), NULL);
+> Maybe pack the debugfs code together, i.e. move this just above debugfs_create_x32 ....
+
+Yes, I can move all the debugfs code together.
+
+> 
+>> +       ufs_intel_ltr_expose(hba);
+>> +       return 0;
+>> +}
+>> +
+>> +static void ufs_intel_common_exit(struct ufs_hba *hba)
+>> +{
+>> +       struct intel_host *host = ufshcd_get_variant(hba);
+>> +
+>> +       debugfs_remove_recursive(host->debugfs_root);
+>> +       ufs_intel_ltr_hide(hba);
+>> +}
+>> +
+>>  static int ufs_intel_ehl_init(struct ufs_hba *hba)
+>>  {
+>>         hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
+>> -       return 0;
+>> +       return ufs_intel_common_init(hba);
+>>  }
+>>
+>>  static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
+>>         .name                   = "intel-pci",
+>> +       .init                   = ufs_intel_common_init,
+>> +       .exit                   = ufs_intel_common_exit,
+>>         .link_startup_notify    = ufs_intel_link_startup_notify,
+>>  };
+>>
+>>  static struct ufs_hba_variant_ops ufs_intel_ehl_hba_vops = {
+>>         .name                   = "intel-pci",
+>>         .init                   = ufs_intel_ehl_init,
+>> +       .exit                   = ufs_intel_common_exit,
+>>         .link_startup_notify    = ufs_intel_link_startup_notify,
+>>  };
+>>
+>> @@ -162,6 +279,8 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct
+>> pci_device_id *id)
+>>                 return err;
+>>         }
+>>
+>> +       pci_set_drvdata(pdev, hba);
+>> +
+>>         hba->vops = (struct ufs_hba_variant_ops *)id->driver_data;
+>>
+>>         err = ufshcd_init(hba, mmio_base, pdev->irq);
+>> @@ -171,7 +290,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct
+>> pci_device_id *id)
+>>                 return err;
+>>         }
+>>
+>> -       pci_set_drvdata(pdev, hba);
+>>         pm_runtime_put_noidle(&pdev->dev);
+>>         pm_runtime_allow(&pdev->dev);
+>>
+>> --
+>> 2.17.1
+> 
 
