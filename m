@@ -2,155 +2,69 @@ Return-Path: <SRS0=qcVN=CF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4016C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 20:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F09C433E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 21:33:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABA0E20825
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 20:31:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15E8F20737
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 21:33:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YPFIgcUS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="drbcAsQm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726243AbgH0UbZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Aug 2020 16:31:25 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60464 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726147AbgH0UbY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2020 16:31:24 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07RKTLK5125483;
-        Thu, 27 Aug 2020 20:31:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=dMIkdRRaTmWClqDBKVRa3A+mjyzpBTcrT5uX5NfhxdI=;
- b=YPFIgcUS+wKZIMoV/5spoZaaKelOoYh770p4q5gHwpNaUK9+/wFsjOHe5QIFu5wpjLk/
- gbfDO9DQQ2poPQPtli+GTOzMtGBA27B6Rj8FlgDQTlmev7U8aVLeqlwbngTO5RtDsoU5
- ajUNp9mpzTNhwiNypthXURBfgzux9kvRQMjaRpFHt5AQ7JpdwUObffaT1XuIdY5tkRtP
- 8lqEs99hQ3JN0QidND524nGF8f0ew04tPYNkONz0ovIyK/oSDSrRft05YnCg0FAbz/1f
- 7JzEl3Dxpb3/LpA656KNTtsEgB5oy/+PGg+zT7xdWL5TNYDQA/CtcQvHJI90sFnGtXd+ mA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 333w6u768j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 27 Aug 2020 20:31:04 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07RKUjFh143438;
-        Thu, 27 Aug 2020 20:31:03 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 333ru1xex1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 Aug 2020 20:31:03 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07RKV0DE001813;
-        Thu, 27 Aug 2020 20:31:00 GMT
-Received: from dhcp-10-154-191-150.vpn.oracle.com (/10.154.191.150)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 27 Aug 2020 13:31:00 -0700
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Subject: Re: [PATCH v3] fix qla2xxx regression on sparc64
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20200827.222729.1875148247374704975.rene@exactcode.com>
-Date:   Thu, 27 Aug 2020 15:30:58 -0500
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <F2E82F86-EEBF-41D8-9C00-73D9D17F9AB5@oracle.com>
-References: <20200827.222729.1875148247374704975.rene@exactcode.com>
-To:     Rene Rebe <rene@exactcode.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.1)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9726 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
- phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008270155
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9726 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
- mlxlogscore=999 suspectscore=0 phishscore=0 malwarescore=0 spamscore=0
- priorityscore=1501 clxscore=1015 mlxscore=0 lowpriorityscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008270155
+        id S1726243AbgH0Vdh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Aug 2020 17:33:37 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:50532 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726073AbgH0Vdh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2020 17:33:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598564016;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=iuK6RD7YDUH5xEji+J6jQ2AzGe2jQ8WSTjlhESaE7Xs=;
+        b=drbcAsQmGCw29MHpfKVALtZ0hh4xipSpdbV9OKRuc5WKqzxSdL2JdZcBd1BlJTYxjWbnjD
+        DHinoqQZpybDq/YUePUsYQ2sdE1HJe58moLavU6C40vDMSVhThGCle3QSANofkQUU5xzqk
+        MtgDNGN2bne99LMskZUitYsKcQ/1A/Y=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-373-k3ye3dGCNY6IrPI1rfp1TQ-1; Thu, 27 Aug 2020 17:33:34 -0400
+X-MC-Unique: k3ye3dGCNY6IrPI1rfp1TQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DE1CA191E2A0;
+        Thu, 27 Aug 2020 21:33:32 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-114-221.rdu2.redhat.com [10.10.114.221])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3F13078401;
+        Thu, 27 Aug 2020 21:33:32 +0000 (UTC)
+From:   John Pittman <jpittman@redhat.com>
+To:     martin.petersen@oracle.com
+Cc:     jejb@linux.ibm.com, djeffery@redhat.com, linux-scsi@vger.kernel.org
+Subject: [PATCH 0/2] scsi_debug: improve num_parts usage
+Date:   Thu, 27 Aug 2020 17:33:25 -0400
+Message-Id: <20200827213327.25537-1-jpittman@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+Hello,
 
-> On Aug 27, 2020, at 3:27 PM, Rene Rebe <rene@exactcode.com> wrote:
->=20
-> Commit 98aee70d19a7e3203649fa2078464e4f402a0ad8 in 2014 broke qla2xxx
-> on sparc64, e.g. as in the Sun Blade 1000 / 2000. Unbreak by partial
-> revert to fix endianess in nvram firmware default initialization. Also
-> mark the second frame_payload_size in nvram_t __le16 to avoid new
-> sparse warnings.
->=20
-> Fixes: 98aee70d19a7e ("qla2xxx: Add endianizer to max_payload_size =
-modifier.")
-> Signed-off-by: Ren=C3=A9 Rebe <rene@exactcode.de>
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h =
-b/drivers/scsi/qla2xxx/qla_def.h
-> index 8c92af5e4390..00782e859ef8 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -1626,7 +1626,7 @@ typedef struct {
-> 	 */
-> 	uint8_t	 firmware_options[2];
->=20
-> -	uint16_t frame_payload_size;
-> +	__le16	frame_payload_size;
-> 	__le16	max_iocb_allocation;
-> 	__le16	execution_throttle;
-> 	uint8_t	 retry_count;
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c =
-b/drivers/scsi/qla2xxx/qla_init.c
-> index 57a2d76aa691..0916c33eb076 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -4603,18 +4603,18 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
-> 			nv->firmware_options[1] =3D BIT_7 | BIT_5;
-> 			nv->add_firmware_options[0] =3D BIT_5;
-> 			nv->add_firmware_options[1] =3D BIT_5 | BIT_4;
-> -			nv->frame_payload_size =3D 2048;
-> +			nv->frame_payload_size =3D cpu_to_le16(2048);
-> 			nv->special_options[1] =3D BIT_7;
-> 		} else if (IS_QLA2200(ha)) {
-> 			nv->firmware_options[0] =3D BIT_2 | BIT_1;
-> 			nv->firmware_options[1] =3D BIT_7 | BIT_5;
-> 			nv->add_firmware_options[0] =3D BIT_5;
-> 			nv->add_firmware_options[1] =3D BIT_5 | BIT_4;
-> -			nv->frame_payload_size =3D 1024;
-> +			nv->frame_payload_size =3D cpu_to_le16(1024);
-> 		} else if (IS_QLA2100(ha)) {
-> 			nv->firmware_options[0] =3D BIT_3 | BIT_1;
-> 			nv->firmware_options[1] =3D BIT_5;
-> -			nv->frame_payload_size =3D 1024;
-> +			nv->frame_payload_size =3D cpu_to_le16(1024);
-> 		}
->=20
-> 		nv->max_iocb_allocation =3D cpu_to_le16(256);
->=20
->=20
-> --=20
->  Ren=C3=A9 Rebe, ExactCODE GmbH, Lietzenburger Str. 42, DE-10789 =
-Berlin
->  =
-https://urldefense.com/v3/__https://exactcode.com__;!!GqivPVa7Brio!OiHyjIc=
-eMlSLvY201K45s3J5OfycTE7Z8SH-AOktRAnXCmsreUUnZY8iX7nQVshbmnOO$  | =
-https://urldefense.com/v3/__https://t2sde.org__;!!GqivPVa7Brio!OiHyjIceMlS=
-LvY201K45s3J5OfycTE7Z8SH-AOktRAnXCmsreUUnZY8iX7nQVlPyHRLL$  | =
-https://urldefense.com/v3/__https://rene.rebe.de__;!!GqivPVa7Brio!OiHyjIce=
-MlSLvY201K45s3J5OfycTE7Z8SH-AOktRAnXCmsreUUnZY8iX7nQVulmVRVj$=20
+The 1st patch sets all partitions to the same size when using the
+num_parts parameter.
 
-Looks Good.
+The 2nd patch allows virtual_gb to be respected when it is passed at
+the same time as num_parts.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+John Pittman (2):
+ scsi: scsi_debug: adjust num_parts to create equally sized partitions
+ scsi: scsi_debug: sdebug_build_parts() respect virtual_gb
 
---
-Himanshu Madhani	 Oracle Linux Engineering
+scsi_debug.c |   13 ++++++++-----
+1 file changed, 8 insertions(+), 5 deletions(-)
 
