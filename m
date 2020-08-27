@@ -2,28 +2,28 @@ Return-Path: <SRS0=qcVN=CF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35BB5C433E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 07:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E6A9C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 07:26:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 199F822BED
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 07:25:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 736C522BEA
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 07:26:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728113AbgH0HZL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Aug 2020 03:25:11 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41702 "EHLO mx2.suse.de"
+        id S1728110AbgH0HZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Aug 2020 03:25:59 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41918 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728070AbgH0HZK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Aug 2020 03:25:10 -0400
+        id S1727969AbgH0HZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Aug 2020 03:25:57 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 03E1EAC2B;
-        Thu, 27 Aug 2020 07:25:40 +0000 (UTC)
-Subject: Re: [PATCH 01/19] char_dev: replace cdev_map with an xarray
+        by mx2.suse.de (Postfix) with ESMTP id 605E6AC2B;
+        Thu, 27 Aug 2020 07:26:27 +0000 (UTC)
+Subject: Re: [PATCH 07/19] ide: remove ide_{,un}register_region
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -34,7 +34,7 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
 References: <20200826062446.31860-1-hch@lst.de>
- <20200826062446.31860-2-hch@lst.de>
+ <20200826062446.31860-8-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -80,12 +80,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <b2126993-b861-1899-bb42-cb7f461094d4@suse.de>
-Date:   Thu, 27 Aug 2020 09:25:07 +0200
+Message-ID: <eddf355f-7b08-3586-438a-048caaa726c7@suse.de>
+Date:   Thu, 27 Aug 2020 09:25:55 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200826062446.31860-2-hch@lst.de>
+In-Reply-To: <20200826062446.31860-8-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -95,143 +95,19 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 8/26/20 8:24 AM, Christoph Hellwig wrote:
-> None of the complicated overlapping regions bits of the kobj_map are
-> required for the character device lookup, so just a trivial xarray
-> instead.
+> There is no need to ever register the fake gendisk used for ide-tape.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/char_dev.c | 94 +++++++++++++++++++++++++--------------------------
->  fs/dcache.c   |  1 -
->  fs/internal.h |  5 ---
->  3 files changed, 46 insertions(+), 54 deletions(-)
+>  drivers/ide/ide-probe.c | 32 --------------------------------
+>  drivers/ide/ide-tape.c  |  2 --
+>  include/linux/ide.h     |  3 ---
+>  3 files changed, 37 deletions(-)
 > 
-> diff --git a/fs/char_dev.c b/fs/char_dev.c
-> index ba0ded7842a779..6c4d6c4938f14b 100644
-> --- a/fs/char_dev.c
-> +++ b/fs/char_dev.c
-> @@ -17,7 +17,6 @@
->  #include <linux/seq_file.h>
->  
->  #include <linux/kobject.h>
-> -#include <linux/kobj_map.h>
->  #include <linux/cdev.h>
->  #include <linux/mutex.h>
->  #include <linux/backing-dev.h>
-> @@ -25,8 +24,7 @@
->  
->  #include "internal.h"
->  
-> -static struct kobj_map *cdev_map;
-> -
-> +static DEFINE_XARRAY(cdev_map);
->  static DEFINE_MUTEX(chrdevs_lock);
->  
->  #define CHRDEV_MAJOR_HASH_SIZE 255
-> @@ -367,6 +365,29 @@ void cdev_put(struct cdev *p)
->  	}
->  }
->  
-> +static struct cdev *cdev_lookup(dev_t dev)
-> +{
-> +	struct cdev *cdev;
-> +
-> +retry:
-> +	mutex_lock(&chrdevs_lock);
-> +	cdev = xa_load(&cdev_map, dev);
-> +	if (!cdev) {
-> +		mutex_unlock(&chrdevs_lock);
-> +
-> +		if (request_module("char-major-%d-%d",
-> +				   MAJOR(dev), MINOR(dev)) > 0)
-> +			/* Make old-style 2.4 aliases work */
-> +			request_module("char-major-%d", MAJOR(dev));
-> +		goto retry;
-> +	}
-> +
-> +	if (!cdev_get(cdev))
-> +		cdev = NULL;
-> +	mutex_unlock(&chrdevs_lock);
-> +	return cdev;
-> +}
-> +
->  /*
->   * Called every time a character special file is opened
->   */
-> @@ -380,13 +401,10 @@ static int chrdev_open(struct inode *inode, struct file *filp)
->  	spin_lock(&cdev_lock);
->  	p = inode->i_cdev;
->  	if (!p) {
-> -		struct kobject *kobj;
-> -		int idx;
->  		spin_unlock(&cdev_lock);
-> -		kobj = kobj_lookup(cdev_map, inode->i_rdev, &idx);
-> -		if (!kobj)
-> +		new = cdev_lookup(inode->i_rdev);
-> +		if (!new)
->  			return -ENXIO;
-> -		new = container_of(kobj, struct cdev, kobj);
->  		spin_lock(&cdev_lock);
->  		/* Check i_cdev again in case somebody beat us to it while
->  		   we dropped the lock. */
-> @@ -454,18 +472,6 @@ const struct file_operations def_chr_fops = {
->  	.llseek = noop_llseek,
->  };
->  
-> -static struct kobject *exact_match(dev_t dev, int *part, void *data)
-> -{
-> -	struct cdev *p = data;
-> -	return &p->kobj;
-> -}
-> -
-> -static int exact_lock(dev_t dev, void *data)
-> -{
-> -	struct cdev *p = data;
-> -	return cdev_get(p) ? 0 : -1;
-> -}
-> -
->  /**
->   * cdev_add() - add a char device to the system
->   * @p: the cdev structure for the device
-> @@ -478,7 +484,7 @@ static int exact_lock(dev_t dev, void *data)
->   */
->  int cdev_add(struct cdev *p, dev_t dev, unsigned count)
->  {
-> -	int error;
-> +	int error, i;
->  
->  	p->dev = dev;
->  	p->count = count;
-> @@ -486,14 +492,22 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
->  	if (WARN_ON(dev == WHITEOUT_DEV))
->  		return -EBUSY;
->  
-> -	error = kobj_map(cdev_map, dev, count, NULL,
-> -			 exact_match, exact_lock, p);
-> -	if (error)
-> -		return error;
-> +	mutex_lock(&chrdevs_lock);
-> +	for (i = 0; i < count; i++) {
-> +		error = xa_insert(&cdev_map, dev + i, p, GFP_KERNEL);
-> +		if (error)
-> +			goto out_unwind;
-> +	}
-> +	mutex_unlock(&chrdevs_lock);
->  
->  	kobject_get(p->kobj.parent);
-> -
->  	return 0;
-> +
-> +out_unwind:
-> +	while (--i >= 0)
-> +		xa_erase(&cdev_map, dev + i);
-> +	mutex_unlock(&chrdevs_lock);
-> +	return error;
->  }
->  
->  /**
-Do you really need the mutex?
-Wouldn't xa_store_range() be better and avoid the mutex?
+IDE-tape. Shudder.
+Anything to get rid of them.
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
