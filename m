@@ -2,65 +2,76 @@ Return-Path: <SRS0=qcVN=CF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E63EEC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 12:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3DF8C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 12:59:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D01F122CAE
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 12:48:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A772122BF5
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 12:59:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729011AbgH0MqS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Aug 2020 08:46:18 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60942 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728847AbgH0Mpv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Aug 2020 08:45:51 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 27660B65C;
-        Thu, 27 Aug 2020 12:46:22 +0000 (UTC)
-Message-ID: <1f16a16669dd78127236db1916e41387ebdd32d1.camel@suse.com>
-Subject: Re: [PATCH 4/4] qla2xxx: Handle incorrect entry_type entries
-From:   Martin Wilck <mwilck@suse.com>
-To:     Daniel Wagner <dwagner@suse.de>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nilesh Javali <njavali@marvell.com>
-Date:   Thu, 27 Aug 2020 14:45:49 +0200
-In-Reply-To: <20200827114626.daispydkcsdp3rj2@beryllium.lan>
-References: <20200827095829.63871-1-dwagner@suse.de>
-         <20200827095829.63871-5-dwagner@suse.de>
-         <21cd86f782616fcac25f1a6270a9bd834ec777b7.camel@suse.com>
-         <20200827114626.daispydkcsdp3rj2@beryllium.lan>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.36.5 
+        id S1726952AbgH0M7Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Aug 2020 08:59:16 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:41234 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726009AbgH0M7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Aug 2020 08:59:14 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 29AD3CB95655F8104BF9;
+        Thu, 27 Aug 2020 20:58:47 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.487.0; Thu, 27 Aug 2020
+ 20:58:37 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <aacraid@microsemi.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hare@suse.de>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
+Subject: [PATCH] scsi: dpt_i2o: remove set but not used 'pHba'
+Date:   Thu, 27 Aug 2020 20:58:12 +0800
+Message-ID: <20200827125812.427753-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.175.127.227]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2020-08-27 at 13:46 +0200, Daniel Wagner wrote:
-> On Thu, Aug 27, 2020 at 12:17:13PM +0200, Martin Wilck wrote:
-> > Should we perhaps log an error message when we detect a mismatch
-> > between sp->type and entry_type?
-> 
-> Sure can do, but does it really help? Not much we can do in the
-> driver. I hope the firmware gets fixed eventually. I am not against
-> it,
-> just not sure if the log entry really is helping except saying 'you
-> are
-> using a firmware with a known issue'.
-> 
+This addresses the following gcc warning with "make W=1":
 
-... which might provide insightful, to users as well as perhaps
-developers (by observing under which conditions this problem occurs).
-I'd hope so, at least. But you know this issue much better than me.
+drivers/scsi/dpt_i2o.c: In function ‘adpt_slave_configure’:
+drivers/scsi/dpt_i2o.c:411:12: warning: variable ‘pHba’ set but not used
+[-Wunused-but-set-variable]
+  411 |  adpt_hba* pHba;
+      |            ^~~~
 
-Regards,
-Martin
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/dpt_i2o.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index f654ad8a3d69..4251212acbbe 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -408,9 +408,6 @@ static void adpt_inquiry(adpt_hba* pHba)
+ static int adpt_slave_configure(struct scsi_device * device)
+ {
+ 	struct Scsi_Host *host = device->host;
+-	adpt_hba* pHba;
+-
+-	pHba = (adpt_hba *) host->hostdata[0];
+ 
+ 	if (host->can_queue && device->tagged_supported) {
+ 		scsi_change_queue_depth(device,
+-- 
+2.25.4
 
