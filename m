@@ -2,63 +2,70 @@ Return-Path: <SRS0=qcVN=CF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5447C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 09:39:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9F81C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 09:58:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C00C8207CD
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 09:39:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C128922CAE
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 09:58:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728246AbgH0Jjx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Aug 2020 05:39:53 -0400
-Received: from verein.lst.de ([213.95.11.211]:37505 "EHLO verein.lst.de"
+        id S1728501AbgH0J6d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Aug 2020 05:58:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37234 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726157AbgH0Jjw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Aug 2020 05:39:52 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 386C568B02; Thu, 27 Aug 2020 11:39:48 +0200 (CEST)
-Date:   Thu, 27 Aug 2020 11:39:48 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: Re: [PATCH 01/19] char_dev: replace cdev_map with an xarray
-Message-ID: <20200827093947.GA15976@lst.de>
-References: <20200826062446.31860-1-hch@lst.de> <20200826062446.31860-2-hch@lst.de> <20200826081905.GB1796103@kroah.com> <20200827085353.GA12111@lst.de> <20200827091859.GA393660@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200827091859.GA393660@kroah.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+        id S1728386AbgH0J6d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Aug 2020 05:58:33 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 20731AD79;
+        Thu, 27 Aug 2020 09:59:03 +0000 (UTC)
+From:   Daniel Wagner <dwagner@suse.de>
+To:     linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        Daniel Wagner <dwagner@suse.de>
+Subject: [PATCH 1/4] qla2xxx: Reset done and free callback pointer on release
+Date:   Thu, 27 Aug 2020 11:58:26 +0200
+Message-Id: <20200827095829.63871-2-dwagner@suse.de>
+X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200827095829.63871-1-dwagner@suse.de>
+References: <20200827095829.63871-1-dwagner@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 11:18:59AM +0200, Greg Kroah-Hartman wrote:
-> > I looked at it, but it does get registered and shows up in sysfs.
-> 
-> It does?  Where does that happen?  I see a bunch of kobject_init()
-> calls, but nothing that registers it in sysfs that I can see.
+Reset ->done and ->free when releasing the srb. There is a hidden
+use-after-free bug in the driver which corrupts the srb memory pool
+which originates from the cleanup callbacks. By explicitly resetting
+the callbacks to NULL, we workaround the memory corruption.
 
-Hmm, true.
+An extensive search didn't bring any lights on the real problem. The
+initial idea was to set both pointers to NULL and try to catch invalid
+accesses. But instead the memory corruption was gone and the driver
+didn't crash.
 
-> 
-> Note, this is not the kobject that shows up in /sys/dev/char/ as a
-> symlink, that comes from the driver core logic and is independent of the
-> cdev code.
-> 
-> The kobject does handle the structure lifetime rules, but that should be
-> able to be replaced with a simple kref instead.
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+---
+ drivers/scsi/qla2xxx/qla_inline.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Yeah.  I'll let you handle this stuff, as you obviously know the area
-better than I do.
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index 861dc522723c..6d41d758fc17 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -211,6 +211,8 @@ static inline void
+ qla2xxx_rel_qpair_sp(struct qla_qpair *qpair, srb_t *sp)
+ {
+ 	sp->qpair = NULL;
++	sp->done = NULL;
++	sp->free = NULL;
+ 	mempool_free(sp, qpair->srb_mempool);
+ 	QLA_QPAIR_MARK_NOT_BUSY(qpair);
+ }
+-- 
+2.16.4
+
