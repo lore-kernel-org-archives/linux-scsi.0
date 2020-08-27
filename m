@@ -6,32 +6,31 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0220AC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 10:12:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C13E6C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 10:17:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E02F922B49
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 10:12:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C98720738
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 10:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728472AbgH0KMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Aug 2020 06:12:06 -0400
-Received: from mx2.suse.de ([195.135.220.15]:54450 "EHLO mx2.suse.de"
+        id S1728632AbgH0KRX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Aug 2020 06:17:23 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58806 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726157AbgH0KMG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Aug 2020 06:12:06 -0400
+        id S1728932AbgH0KRQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Aug 2020 06:17:16 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D8C55AC2F;
-        Thu, 27 Aug 2020 10:12:36 +0000 (UTC)
-Message-ID: <04f76144372753cceab48f59f7f2aaea017f021f.camel@suse.com>
-Subject: Re: [PATCH 1/4] qla2xxx: Reset done and free callback pointer on
- release
+        by mx2.suse.de (Postfix) with ESMTP id 3495FAFC1;
+        Thu, 27 Aug 2020 10:17:46 +0000 (UTC)
+Message-ID: <21cd86f782616fcac25f1a6270a9bd834ec777b7.camel@suse.com>
+Subject: Re: [PATCH 4/4] qla2xxx: Handle incorrect entry_type entries
 From:   Martin Wilck <mwilck@suse.com>
 To:     Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
-Date:   Thu, 27 Aug 2020 12:12:04 +0200
-In-Reply-To: <20200827095829.63871-2-dwagner@suse.de>
+Date:   Thu, 27 Aug 2020 12:17:13 +0200
+In-Reply-To: <20200827095829.63871-5-dwagner@suse.de>
 References: <20200827095829.63871-1-dwagner@suse.de>
-         <20200827095829.63871-2-dwagner@suse.de>
+         <20200827095829.63871-5-dwagner@suse.de>
 Content-Type: text/plain; charset="ISO-8859-15"
 User-Agent: Evolution 3.36.5 
 MIME-Version: 1.0
@@ -42,44 +41,84 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Thu, 2020-08-27 at 11:58 +0200, Daniel Wagner wrote:
-> Reset ->done and ->free when releasing the srb. There is a hidden
-> use-after-free bug in the driver which corrupts the srb memory pool
-> which originates from the cleanup callbacks. By explicitly resetting
-> the callbacks to NULL, we workaround the memory corruption.
+> It was observed on an ISP8324 16Gb HBA with fw=8.08.203 (d0d5) that
+> pkt->entry_type was MBX_IOCB_TYPE/0x39 with an sp->type SRB_SCSI_CMD
+> which is invalid and should not be possible.
 > 
-> An extensive search didn't bring any lights on the real problem. The
-> initial idea was to set both pointers to NULL and try to catch
-> invalid
-> accesses. But instead the memory corruption was gone and the driver
-> didn't crash.
+> A careful code review of the crash dump didn't reveal any short
+> comings. Reading the entry_type from the crash dump shows the
+> expected
+> value of STATUS_TYPE/0x03 but the call trace shows that
+> qla24xx_mbx_iocb_entry() is used.
+> 
+> One possible explanation is when pkt->entry_type is read it doesn't
+> contain the correct information. That means the driver observes an
+> data
+> race by the firmware.
 > 
 > Signed-off-by: Daniel Wagner <dwagner@suse.de>
 > ---
->  drivers/scsi/qla2xxx/qla_inline.h | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/qla2xxx/qla_isr.c | 28 ++++++++++++++++++++++++++--
+>  1 file changed, 26 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_inline.h
-> b/drivers/scsi/qla2xxx/qla_inline.h
-> index 861dc522723c..6d41d758fc17 100644
-> --- a/drivers/scsi/qla2xxx/qla_inline.h
-> +++ b/drivers/scsi/qla2xxx/qla_inline.h
-> @@ -211,6 +211,8 @@ static inline void
->  qla2xxx_rel_qpair_sp(struct qla_qpair *qpair, srb_t *sp)
->  {
->  	sp->qpair = NULL;
-> +	sp->done = NULL;
-> +	sp->free = NULL;
->  	mempool_free(sp, qpair->srb_mempool);
->  	QLA_QPAIR_MARK_NOT_BUSY(qpair);
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+> b/drivers/scsi/qla2xxx/qla_isr.c
+> index b787643f5031..0c324e88b189 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -3392,6 +3392,31 @@ void qla24xx_nvme_ls4_iocb(struct
+> scsi_qla_host *vha,
+>  	sp->done(sp, comp_status);
 >  }
+>  
+> +static void qla24xx_process_mbx_iocb_response(struct scsi_qla_host
+> *vha,
+> +	struct rsp_que *rsp, struct sts_entry_24xx *pkt)
+> +{
+> +	srb_t *sp;
+> +
+> +	sp = qla2x00_get_sp_from_handle(vha, rsp->req, pkt);
+> +	if (!sp)
+> +		return;
+> +
+> +	if (sp->type == SRB_SCSI_CMD ||
+> +	    sp->type == SRB_NVME_CMD ||
+> +	    sp->type == SRB_TM_CMD) {
+> +		/* Some firmware version don't update the entry_type
+> +		 * correctly.  It was observed entry_type contained
+> +		 * MBCX_IOCB_TYPE instead of the expected STATUS_TYPE
+> +		 * for sp->type SRB_SCSI_CMD, SRB_NVME_CMD or
+> +		 * SRB_TM_CMD.
+> +		 */
+> +		qla2x00_status_entry(vha, rsp, pkt);
+> +		return;
+> +	}
+> +
+> +	qla24xx_mbx_iocb_entry(vha, rsp->req, (struct mbx_24xx_entry
+> *)pkt);
+> +}
+> +
+>  /**
+>   * qla24xx_process_response_queue() - Process response queue
+> entries.
+>   * @vha: SCSI driver HA context
+> @@ -3499,8 +3524,7 @@ void qla24xx_process_response_queue(struct
+> scsi_qla_host *vha,
+>  			    (struct abort_entry_24xx *)pkt);
+>  			break;
+>  		case MBX_IOCB_TYPE:
+> -			qla24xx_mbx_iocb_entry(vha, rsp->req,
+> -			    (struct mbx_24xx_entry *)pkt);
+> +			qla24xx_process_mbx_iocb_response(vha, rsp,
+> pkt);
+>  			break;
+>  		case VP_CTRL_IOCB_TYPE:
+>  			qla_ctrlvp_completed(vha, rsp->req,
 
-Both sp->done() and sp->free() are called all over the place without
-making sure the pointers are non-null. If these functions can be called
-for freed sp's, wouldn't that mean we'd crash?
+Should we perhaps log an error message when we detect a mismatch
+between sp->type and entry_type?
 
-How about setting them to a dummy function that prints a big fat
-warning?
-
+Regards,
 Martin
 
 
