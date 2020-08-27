@@ -2,109 +2,98 @@ Return-Path: <SRS0=qcVN=CF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1894CC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 20:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81AA1C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 20:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B04D420786
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 20:27:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=exactco.de header.i=@exactco.de header.b="AwJwSwYY"
+	by mail.kernel.org (Postfix) with ESMTP id 5D07D2084C
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Aug 2020 20:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726834AbgH0U1u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Aug 2020 16:27:50 -0400
-Received: from mx.exactcode.de ([144.76.154.42]:33430 "EHLO mx.exactcode.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726147AbgH0U1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Aug 2020 16:27:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=exactco.de; s=x;
-        h=Content-Transfer-Encoding:Content-Type:Mime-Version:From:Subject:Cc:To:Message-Id:Date; bh=PFMImyhnUaXJJ+NeoVNAxNDkP+Zbre7Mw9Xs2DewNUI=;
-        b=AwJwSwYYyltwSMMr0IzjeoSC8hQnNi4ahFl4UitZp6Ojl5x8r0J2QNVEHtUgtzc0yqDlV1m0WM4393yaUwcpvxGZ/BvgzUxlX4blagogkOLbL1S6w+ju5RieY/RVdfLYiYVzsxt8ioCRFZWdn+AwVCj3FJutrR9kEEqLH87P9Gg=;
-Received: from exactco.de ([90.187.5.221])
-        by mx.exactcode.de with esmtp (Exim 4.82)
-        (envelope-from <rene@exactcode.com>)
-        id 1kBOVM-0001FZ-LP; Thu, 27 Aug 2020 20:28:16 +0000
-Received: from [192.168.2.130] (helo=localhost)
-        by exactco.de with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-        (Exim 4.86_2)
-        (envelope-from <rene@exactcode.com>)
-        id 1kBOCv-0005Aa-8B; Thu, 27 Aug 2020 20:09:18 +0000
-Date:   Thu, 27 Aug 2020 22:27:29 +0200 (CEST)
-Message-Id: <20200827.222729.1875148247374704975.rene@exactcode.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v3] fix qla2xxx regression on sparc64
-From:   Rene Rebe <rene@exactcode.com>
-X-Mailer: Mew version 6.8 on Emacs 27.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+        id S1726939AbgH0U3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Aug 2020 16:29:54 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:52689 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726706AbgH0U3y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Aug 2020 16:29:54 -0400
+Received: (qmail 450277 invoked by uid 1000); 27 Aug 2020 16:29:52 -0400
+Date:   Thu, 27 Aug 2020 16:29:52 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, kernel@puri.sm
+Subject: Re: [PATCH] block: Fix bug in runtime-resume handling
+Message-ID: <20200827202952.GA449067@rowland.harvard.edu>
+References: <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
+ <20200809152643.GA277165@rowland.harvard.edu>
+ <60150284-be13-d373-5448-651b72a7c4c9@puri.sm>
+ <20200810141343.GA299045@rowland.harvard.edu>
+ <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
+ <20200823145733.GC303967@rowland.harvard.edu>
+ <3e5a465e-8fe0-b379-a80e-23e2f588c71a@acm.org>
+ <20200824201343.GA344424@rowland.harvard.edu>
+ <5152a510-bebf-bf33-f6b3-4549e50386ab@puri.sm>
+ <4c636f2d-af7f-bbde-a864-dbeb67c590ec@puri.sm>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4c636f2d-af7f-bbde-a864-dbeb67c590ec@puri.sm>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 98aee70d19a7e3203649fa2078464e4f402a0ad8 in 2014 broke qla2xxx
-on sparc64, e.g. as in the Sun Blade 1000 / 2000. Unbreak by partial
-revert to fix endianess in nvram firmware default initialization. Also
-mark the second frame_payload_size in nvram_t __le16 to avoid new
-sparse warnings.
+On Thu, Aug 27, 2020 at 07:42:43PM +0200, Martin Kepplinger wrote:
+> On 26.08.20 09:48, Martin Kepplinger wrote:
+> > On 24.08.20 22:13, Alan Stern wrote:
 
-Fixes: 98aee70d19a7e ("qla2xxx: Add endianizer to max_payload_size modi=
-fier.")
-Signed-off-by: Ren=E9 Rebe <rene@exactcode.de>
+> >> Martin:
+> >>
+> >> (I forgot to ask this question several weeks ago, while you were running 
+> >> your tests.  Better ask it now before I forget again...)
+> >>
+> >> I suspect the old runtime-PM code in the block layer would have worked 
+> >> okay in your SD cardreader test if the BLK_MQ_REQ_PREEMPT flag had not 
+> >> been set.  Do you know why the flag was set, or what line of code caused 
+> >> it to be set?
+> > 
+> > Correct. if not set, I could handle all I need in the scsi error path.
+> 
+> this thread becomes a bit confusing. I thought about REQ_FAILFAST_DEV
+> but you're talking about something different.
+> 
+> the only place I see BLK_MQ_REQ_PREEMPT getting passed on is in
+> __scsi_execute() which is the case when mounting/unmounting. At least
+> that about the only place I can find.
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_=
-def.h
-index 8c92af5e4390..00782e859ef8 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1626,7 +1626,7 @@ typedef struct {
- 	 */
- 	uint8_t	 firmware_options[2];
- =
+Ah yes, I see what you mean.
 
--	uint16_t frame_payload_size;
-+	__le16	frame_payload_size;
- 	__le16	max_iocb_allocation;
- 	__le16	execution_throttle;
- 	uint8_t	 retry_count;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla=
-_init.c
-index 57a2d76aa691..0916c33eb076 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4603,18 +4603,18 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 			nv->firmware_options[1] =3D BIT_7 | BIT_5;
- 			nv->add_firmware_options[0] =3D BIT_5;
- 			nv->add_firmware_options[1] =3D BIT_5 | BIT_4;
--			nv->frame_payload_size =3D 2048;
-+			nv->frame_payload_size =3D cpu_to_le16(2048);
- 			nv->special_options[1] =3D BIT_7;
- 		} else if (IS_QLA2200(ha)) {
- 			nv->firmware_options[0] =3D BIT_2 | BIT_1;
- 			nv->firmware_options[1] =3D BIT_7 | BIT_5;
- 			nv->add_firmware_options[0] =3D BIT_5;
- 			nv->add_firmware_options[1] =3D BIT_5 | BIT_4;
--			nv->frame_payload_size =3D 1024;
-+			nv->frame_payload_size =3D cpu_to_le16(1024);
- 		} else if (IS_QLA2100(ha)) {
- 			nv->firmware_options[0] =3D BIT_3 | BIT_1;
- 			nv->firmware_options[1] =3D BIT_5;
--			nv->frame_payload_size =3D 1024;
-+			nv->frame_payload_size =3D cpu_to_le16(1024);
- 		}
- =
+> I remember *only* your block pm fix would let me mount/unmount, but not
+> use files yet (REQ_FAILFAST_DEV and so on).
+> 
+> When I revert your fix and remove BLK_MQ_REQ_PREEMPT from being passed
+> on to blk_get_request() in __scsi_execute(), that line gets executed
+> exactly once during startup and I'm missing the /dev/sda device from the
+> cardreader then.
+> 
+> Is this what you're asking?
 
- 		nv->max_iocb_allocation =3D cpu_to_le16(256);
+Not quite sure, but it doesn't matter.  Removing BLK_MQ_REQ_PREEMPT in 
+__scsi_execute() is probably not a safe thing to do.
 
+Instead, look at sd_resume().  That routine calls __scsi_execute() 
+indirectly through sd_start_stop_device(), and the only reason it does 
+this is because the sdkp->device->manage_start_stop flag is set.  You 
+ought to be able to clear this flag in sysfs, by writing to 
+/sys/block/sda/device/scsi_disk/*/manage_start_stop.  If you do this 
+before allowing the card reader to go into runtime suspend, does it then 
+resume okay?
 
--- =
+(Yes, I know you still won't be able to read it because of the FAILFAST 
+flag.  I just want to know if the runtime resume actually takes place.)
 
-  Ren=E9 Rebe, ExactCODE GmbH, Lietzenburger Str. 42, DE-10789 Berlin
-  https://exactcode.com | https://t2sde.org | https://rene.rebe.de
+Alan Stern
