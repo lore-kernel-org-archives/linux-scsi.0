@@ -2,105 +2,123 @@ Return-Path: <SRS0=lsqi=CG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6806C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 08:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4877BC433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 08:43:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A46C520665
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 08:13:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 150822086A
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 08:43:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="cauCaQU6"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="a4vOXb0g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728218AbgH1IND (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Aug 2020 04:13:03 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64286 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728444AbgH1IM7 (ORCPT
+        id S1728444AbgH1Inx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Aug 2020 04:43:53 -0400
+Received: from mail1.bemta25.messagelabs.com ([195.245.230.66]:41999 "EHLO
+        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726643AbgH1Inr (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Aug 2020 04:12:59 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07S86Xi4017909;
-        Fri, 28 Aug 2020 01:12:48 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=Id98umVObg4vwPprlH0XhjdBkBqEfjFMJPp+TCOC5mQ=;
- b=cauCaQU684FQOeX7h0PRmqiXsQvpLZZh1AX7dMefTGp+2G8qDcJCrvE7aB7Bccr+Mz9s
- mGymgmLJr08ODbE/aBnDFSb4C4wcBHGcGfb/NawqaUFecmBHM8+AygAe9NMd5k0KQCjt
- QzFzS7p7eqsNLOfPkwaGMoIbmEY1uBXb/wdhxhdieK7KKNtGiHyIldqbu+QWs1i8DEpg
- 2m+fO9g50YyZLqGrgFzxjgzW6R9r0CIg1HUe2d/GK6bPfJRGGBP5zcMeVtYB7UWoNObI
- 06WTZXXY5fdfQ2tZE7fclPQ7zYXvpQYjfoMQ1N8zQs5FPYCo97h3AfVzC76ONV29Scx1 jA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3332vnayxt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 28 Aug 2020 01:12:48 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 28 Aug
- 2020 01:12:47 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 28 Aug
- 2020 01:12:46 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 28 Aug 2020 01:12:46 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 618493F703F;
-        Fri, 28 Aug 2020 01:12:46 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 07S8Cix7028428;
-        Fri, 28 Aug 2020 01:12:44 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Fri, 28 Aug 2020 01:12:44 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Rene Rebe <rene@exactcode.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH v3] fix qla2xxx regression on sparc64
-In-Reply-To: <20200827.222729.1875148247374704975.rene@exactcode.com>
-Message-ID: <alpine.LRH.2.21.9999.2008280106500.31539@irv1user01.caveonetworks.com>
-References: <20200827.222729.1875148247374704975.rene@exactcode.com>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        Fri, 28 Aug 2020 04:43:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1598604223; i=@ts.fujitsu.com;
+        bh=NoPGa03jBYvqxAYb4MkGSj3h6KKqasrXLhk97t5j04k=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=a4vOXb0gI4sa5fqVBrvoh9Ywz58pHsY4r6/BC1NtHoaqLuh/chv3H5kjE84wQxckL
+         LkYpb0h1otE+4VMAo+ikXt6xxVr04eVT2ewBIXICz8EMF4ZM/jr38qqN919GQevd14
+         qhecKpqVB4MwV49JYOw2fTOGwv3Yb9JW33YHWaGxeQo4PhxdubQra4FX8MhsHdECOl
+         d///+n2Fl6AmXi3u+m4O7IzofjroB5hLi6avtDj/kyjVxT0+xpvT2RzeBFipiDFTi6
+         fO8DvVY9KB+q/mlpis7Q+aJPIQHdiuXo0zOr59uLVmDmUUxNl5vl7vMSkkgRMCRbPz
+         kwJnMzEPy20Cg==
+Received: from [100.112.199.63] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-2.bemta.az-b.eu-west-1.aws.symcld.net id 70/E1-29177-FB3C84F5; Fri, 28 Aug 2020 08:43:43 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRWlGSWpSXmKPExsViZ8MxVXf/YY9
+  4g0+/mC0OL3zDZNF9fQebxYy2MIvlx/8xWfyddIPVYsHGR4wWrUvfMjmwe+ycdZfd43HPGTaP
+  j09vsXh83iQXwBLFmpmXlF+RwJrxbZlvwQGOiun397M2MP5n62Lk4hASmMwoceXBSRYIp59RY
+  t6nC4xdjJwcwgJOEs8vPAerEhE4wigxvbubBSTBLOAqsfjgPCYQW0igUmLbnfusIDabgIHEik
+  n3wWp4BRwlLi2YyAZiswioSszpuA1Uw8EhKhAu8WyFP0SJoMTJmU/AyjkF3CQe/+pnhRhvJjF
+  v80NmCFtc4taT+UwQtrzE9rdzmCcw8s9C0j4LScssJC2zkLQsYGRZxWieVJSZnlGSm5iZo2to
+  YKBraGika2hppmtmopdYpZukl1qqW55aXKJrqJdYXqxXXJmbnJOil5dasokRGBMpBUccdjDef
+  /1B7xCjJAeTkihv5UGPeCG+pPyUyozE4oz4otKc1OJDjDIcHEoSvGaHgHKCRanpqRVpmTnA+I
+  RJS3DwKInwhoCkeYsLEnOLM9MhUqcYFaXEea1AEgIgiYzSPLg2WEq4xCgrJczLyMDAIMRTkFq
+  Um1mCKv+KUZyDUUmY9wDIZTyZeSVw018BLWYCWjw3zBVkcUkiQkqqgcnjhpDkmjd8j3Ld2E41
+  q1tKyL+9YlgYfsF8ucCa2zHego+/Lr1b0ma25ArTS+0Iu1h/9zOLmx/OzHfhF3i9Rkxhp8S+S
+  p4KjvkqhydbMj9Zo8zB43uUv2ryvX/BIRek7p/eqWJwfprF7igZVn7O/M95eb8sl3O7ej6/8u
+  K0CstBS8+7Qin7Pq0PWmVwvNwv2GVjQL/oPetpbRO3HJa0P/SW53BmrPveCTysG2dx5G48JFv
+  aE9G5fm8kj/0xnQlnNu1M27azzJmj0KLBP0ZHIHF+mHmXznzWkovvg3e4bFoj0DfJUkP0zZ7N
+  Wq6Ziis+rZguxn77yrIQqdw6/p15+xjdzq0wkKmuL7raXNg6W4mlOCPRUIu5qDgRACto/2KEA
+  wAA
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-21.tower-291.messagelabs.com!1598604222!1078297!1
+X-Originating-IP: [62.60.8.149]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.3; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 19891 invoked from network); 28 Aug 2020 08:43:42 -0000
+Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
+  by server-21.tower-291.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 28 Aug 2020 08:43:42 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 07S8haNj023812;
+        Fri, 28 Aug 2020 09:43:36 +0100
+Received: from [172.17.39.90] (unknown [172.17.39.90])
+        by x-serv01 (Postfix) with ESMTP id B369B202FF;
+        Fri, 28 Aug 2020 10:43:33 +0200 (CEST)
+Subject: Re: [PATCH v2 0/2] scsi: target: tcmu: fix crashes on ARM
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        Mike Christie <michael.christie@oracle.com>,
+        stable@vger.kernel.org
+Cc:     JiangYu <lnsyyj@hotmail.com>, Daniel Meyerholt <dxm523@gmail.com>
+References: <20200618131632.32748-1-bstroesser@ts.fujitsu.com>
+ <159262354735.7800.15424809109743064228.b4-ty@oracle.com>
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Message-ID: <ec08c542-5903-4ebd-d18e-9c9b2f067eb6@ts.fujitsu.com>
+Date:   Fri, 28 Aug 2020 10:43:35 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="1745531764-457366854-1598602366=:31539"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-28_05:2020-08-28,2020-08-28 signatures=0
+In-Reply-To: <159262354735.7800.15424809109743064228.b4-ty@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---1745531764-457366854-1598602366=:31539
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Hi,
 
-On Thu, 27 Aug 2020, 1:27pm, Rene Rebe wrote:
+I'm adding stable@vger.kernel.org
 
+On 2020-06-20 05:26, Martin K. Petersen wrote:
+> On Thu, 18 Jun 2020 15:16:30 +0200, Bodo Stroesser wrote:
 > 
-> Commit 98aee70d19a7e3203649fa2078464e4f402a0ad8 in 2014 broke qla2xxx
-> on sparc64, e.g. as in the Sun Blade 1000 / 2000. Unbreak by partial
-> revert to fix endianess in nvram firmware default initialization. Also
-> mark the second frame_payload_size in nvram_t __le16 to avoid new
-> sparse warnings.
+>> This small series of patches consists of:
+>>     [PATCH 1/2 v2] scsi: target: tcmu: Optimize use of flush_dcache_page
+>>     [PATCH 2/2 v2] scsi: target: tcmu: Fix crash in tcmu_flush_dcache_range
+>>
+>> Together with commit
+>>     8c4e0f212398 scsi: target: tcmu: Fix size in calls to tcmu_flush_dcache_range
+>> these patches fix crashes in tcmu on ARM.
+>>
+>> [...]
 > 
-> Fixes: 98aee70d19a7e ("qla2xxx: Add endianizer to max_payload_size modifier.")
-> Signed-off-by: René Rebe <rene@exactcode.de>
+> Applied to 5.9/scsi-queue, thanks!
+> 
+> [1/2] scsi: target: tcmu: Optimize use of flush_dcache_page
+>        https://git.kernel.org/mkp/scsi/c/3c58f737231e
+> [2/2] scsi: target: tcmu: Fix crash in tcmu_flush_dcache_range on ARM
+>        https://git.kernel.org/mkp/scsi/c/3145550a7f8b
 > 
 
-Looks good. Other *nvram_config changes are already taken care by one of 
-the recent fixes, this was the only one missing.
+Patch 2/2 of this series already made it into 5.8, (5.7,) 5.4 and 4.19,
+but patch 1/2 was not added yet. The crash will be fixed with with both
+patches only. So please consider adding patch 1/2 also. The full commit
+is 3c58f737231e2c8cbf543a09d84d8c8e80e05e43
 
-I was surprised that this really exception path (bad HBA nvram) was 
-causing a regression; apparently this is not an exception path in this old 
-machine.
-
-Thanks Rene.
-
-Regards,
--Arun
---1745531764-457366854-1598602366=:31539--
+Thank you
+Bodo
