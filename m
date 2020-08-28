@@ -2,135 +2,173 @@ Return-Path: <SRS0=lsqi=CG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B21EC433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 07:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99745C433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 07:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58E8D20CC7
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 07:08:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 732F320CC7
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 07:13:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eJQhvxXY"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="KiNfL2MY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728363AbgH1HIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Aug 2020 03:08:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43806 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726571AbgH1HIs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 03:08:48 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57670C061264;
-        Fri, 28 Aug 2020 00:08:47 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id l2so182050eji.3;
-        Fri, 28 Aug 2020 00:08:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=HXOXmq5s+5xr9pj5xy7+jYoZFzInVOBH9Zr4gfwWfP4=;
-        b=eJQhvxXYVJnPbsMLfzFUP4xrXCfrI6e7tjrluf3qNHhupvHC3ulEml6Mo/iYaIJE9O
-         fjG3GVnF7GtGSbnL35kJU1t8rb9K6zcK1Mj+Flak3h1PsbeLAk3x/erHRKLtF0+10f3a
-         /U+wDjYB/Kw6VUzDE2OIDpdX+rG7syqxC6BusaZq/5T+QMkc/JrjNT8S2NBmd4yNMAX8
-         DIft37j+LYx38dZR6TcNt66SpDrHDyhn7IBPGzEn0LkdSmehM1OTtvJvin05EjlGgNfT
-         c4WPp0w+SszLkkLMMIg1/gYmgRvZ2E0WI5QsIkjaERTubHiBwJsS7tGnyeeDGVoeCU/o
-         bYrA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=HXOXmq5s+5xr9pj5xy7+jYoZFzInVOBH9Zr4gfwWfP4=;
-        b=TXZm+3bz7bHUO+oeNp7jK6JeE6D1yAyaNK4jfcgDk+Zhi/DtdfBrPQ+rz6DRbq0WzU
-         p3Uj5uYVWrGETc76LeEoGIf4IU/GUQQcU5TMolnDK5iRmDu3uSicKWqIespyxUveThe2
-         3uN8ITqJ7JaB5uyUvZxoeCu1v37uHMufU0rRYTmoa1AY4SGfgzM5SaqR+smw8Ks6pLrP
-         YyMklwYI9+NOT0o5QB9B55pQVC6hMfFywc8iB05Fo3Vdx46+oUthwATIC60UyakriP0u
-         be9d2FfiH2ylvwJYPFyQq2NwgjuQUALjji4sEbpl/Bab3AEbSQlzCAnGd8mYMg0tZvMB
-         DXow==
-X-Gm-Message-State: AOAM530oKvX5zOnCsaaOmBIIHJnWhd0y+prOCuyMTKK/B8YlYdA7a/pv
-        M1hTjvvlXa+/oFm2wz/v++I=
-X-Google-Smtp-Source: ABdhPJzDtDJP+OFgVA3ZKUouqUhYlcc/gNPu/2CApK5JjTni3uOW8dD9njZtxpj22dK93U68RVecTA==
-X-Received: by 2002:a17:906:7204:: with SMTP id m4mr388917ejk.342.1598598525970;
-        Fri, 28 Aug 2020 00:08:45 -0700 (PDT)
-Received: from felia.fritz.box ([2001:16b8:2d94:4000:498f:ce0c:876:946c])
-        by smtp.gmail.com with ESMTPSA id cf24sm88968ejb.61.2020.08.28.00.08.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2020 00:08:45 -0700 (PDT)
-From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        linux-spdx@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH] MAINTAINERS: orphan sections with qlogic.com group alias
-Date:   Fri, 28 Aug 2020 09:08:24 +0200
-Message-Id: <20200828070824.8032-1-lukas.bulwahn@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        id S1728320AbgH1HNJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Aug 2020 03:13:09 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:24491 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725858AbgH1HNG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 03:13:06 -0400
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200828071302epoutp0423ed9471bafce6866c74f7273fdb144f~vXR_C-9TT1984919849epoutp04g
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 07:13:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200828071302epoutp0423ed9471bafce6866c74f7273fdb144f~vXR_C-9TT1984919849epoutp04g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1598598782;
+        bh=dhb4o4jk0hfzRaKRK8AUBrnrMdhfXSXoi1n2XCF5SIE=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=KiNfL2MY0/OWkWsS2zjAvbQBkSDJYo232ody3+8KoyTPhiSxHnUc/guuANtp0E4lq
+         sTT0RnfKf+/FcHw/BMDnNLheVQwNUioxCu30px0Hg0Qmx1sdnhSPIaZ5z35kxxPcZJ
+         0NyRGRjvk+kpivD4OU81omT1YzJmi6il7DOHmEZs=
+Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p2.samsung.com
+        (KnoxPortal) with ESMTP id
+        20200828071302epcas1p2d94523b62da93756d326b26fc42d3aa9~vXR9ma-4V2556625566epcas1p2w;
+        Fri, 28 Aug 2020 07:13:02 +0000 (GMT)
+Mime-Version: 1.0
+Subject: [PATCH v9 0/4] scsi: ufs: Add Host Performance Booster Support
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <963815509.21598598782155.JavaMail.epsvc@epcpadp2>
+Date:   Fri, 28 Aug 2020 16:09:50 +0900
+X-CMS-MailID: 20200828070950epcms2p5470bd43374be18d184dd802da09e73c8
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20200828070950epcms2p5470bd43374be18d184dd802da09e73c8
+References: <CGME20200828070950epcms2p5470bd43374be18d184dd802da09e73c8@epcms2p5>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Previous attempts of getting an answer from the qlogic.com group alias,
-i.e., QLogic-Storage-Upstream@qlogic.com, have remained unanswered; see
-links below.
+Changelog:
 
-Mark those sections Orphan to prepare their deletion or give an actual
-person a chance to step up to maintain those drivers.
+v8 -> v9
+1. Change sysfs initialization.
+2. Change reading descriptor during HPB initialization
+3. Fix problems commentted in Bart's review.
+4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
 
-Link: https://lore.kernel.org/linux-spdx/20190606205526.447558989@linutronix.de
-Link: https://lore.kernel.org/linux-spdx/alpine.DEB.2.21.2006300644130.4919@felia
-Link: https://lore.kernel.org/linux-spdx/alpine.DEB.2.21.2008270740140.31123@felia
+v7 -> v8
+Remove wrongly added tags.
 
-Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
----
-applies cleanly on current master and next-20200828
+v6 -> v7
+1. Remove UFS feature layer.
+2. Cleanup for sparse error.
 
-James, Martin, please pick this minor non-urgent patch.
+v5 -> v6
+Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
 
-Anil, Sudarsana, if these drivers are still maintained by qlogic, please
-provide actual names of people that maintain these drivers.
+v4 -> v5
+Delete unused macro define.
 
- MAINTAINERS | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+v3 -> v4
+1. Cleanup.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3b186ade3597..415058b48a2e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3507,15 +3507,13 @@ F:	drivers/net/ethernet/broadcom/bnx2.*
- F:	drivers/net/ethernet/broadcom/bnx2_*
+v2 -> v3
+1. Add checking input module parameter value.
+2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
+3. Cleanup for unused variables and label.
+
+v1 -> v2
+1. Change the full boilerplate text to SPDX style.
+2. Adopt dynamic allocation for sub-region data structure.
+3. Cleanup.
+
+NAND flash memory-based storage devices use Flash Translation Layer (FTL)
+to translate logical addresses of I/O requests to corresponding flash
+memory addresses. Mobile storage devices typically have RAM with
+constrained size, thus lack in memory to keep the whole mapping table.
+Therefore, mapping tables are partially retrieved from NAND flash on
+demand, causing random-read performance degradation.
+
+To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
+(Host Performance Booster) which uses host system memory as a cache for the
+FTL mapping table. By using HPB, FTL data can be read from host memory
+faster than from NAND flash memory. 
+
+The current version only supports the DCM (device control mode).
+This patch consists of 3 parts to support HPB feature.
+
+1) HPB probe and initialization process
+2) READ -> HPB READ using cached map information
+3) L2P (logical to physical) map management
+
+In the HPB probe and init process, the device information of the UFS is
+queried. After checking supported features, the data structure for the HPB
+is initialized according to the device information.
+
+A read I/O in the active sub-region where the map is cached is changed to
+HPB READ by the HPB.
+
+The HPB manages the L2P map using information received from the
+device. For active sub-region, the HPB caches through ufshpb_map
+request. For the in-active region, the HPB discards the L2P map.
+When a write I/O occurs in an active sub-region area, associated dirty
+bitmap checked as dirty for preventing stale read.
+
+HPB is shown to have a performance improvement of 58 - 67% for random read
+workload. [1]
+
+This series patches are based on the 5.9/scsi-queue branch.
+
+[1]:
+https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
+
+Daejun park (4):
+ scsi: ufs: Add HPB feature related parameters
+ scsi: ufs: Introduce HPB feature
+ scsi: ufs: L2P map management for HPB read
+ scsi: ufs: Prepare HPB read for cached sub-region
  
- BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER
--M:	QLogic-Storage-Upstream@qlogic.com
- L:	linux-scsi@vger.kernel.org
--S:	Supported
-+S:	Orphan
- F:	drivers/scsi/bnx2fc/
- 
- BROADCOM BNX2I 1/10 GIGABIT iSCSI DRIVER
--M:	QLogic-Storage-Upstream@qlogic.com
- L:	linux-scsi@vger.kernel.org
--S:	Supported
-+S:	Orphan
- F:	drivers/scsi/bnx2i/
- 
- BROADCOM BNX2X 10 GIGABIT ETHERNET DRIVER
-@@ -14212,9 +14210,8 @@ F:	Documentation/networking/device_drivers/ethernet/qlogic/LICENSE.qla3xxx
- F:	drivers/net/ethernet/qlogic/qla3xxx.*
- 
- QLOGIC QLA4XXX iSCSI DRIVER
--M:	QLogic-Storage-Upstream@qlogic.com
- L:	linux-scsi@vger.kernel.org
--S:	Supported
-+S:	Orphan
- F:	Documentation/scsi/LICENSE.qla4xxx
- F:	drivers/scsi/qla4xxx/
- 
--- 
-2.17.1
-
+ drivers/scsi/ufs/Kconfig  |    9 +
+ drivers/scsi/ufs/Makefile |    1 +
+ drivers/scsi/ufs/ufs.h    |   47 ++
+ drivers/scsi/ufs/ufshcd.c |   58 ++
+ drivers/scsi/ufs/ufshcd.h |   22 +-
+ drivers/scsi/ufs/ufshpb.c | 1817 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshpb.h |  231 +++++
+ 7 files changed, 2184 insertions(+), 1 deletion(-)
+ created mode 100644 drivers/scsi/ufs/ufshpb.c
+ created mode 100644 drivers/scsi/ufs/ufshpb.h
