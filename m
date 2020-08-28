@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A83DEC433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 19:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3117AC433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 20:05:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9324F20776
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 19:07:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E268208A9
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 20:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726460AbgH1THs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Aug 2020 15:07:48 -0400
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:41842 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726141AbgH1THo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 15:07:44 -0400
-IronPort-SDR: 3a9Ur4ANACoZOPHKGdFpAj/csv6ilfYQA+fvjJC701VGeaFY2gvK/SjTpm48t0rLDHkUUoeiMd
- poEhMfZksDYUgZx3prsvhf+JP6tVRfFphV9LbphU4zaHVlPGocxF7MeH3aA56pFrjtPvgcwatS
- /qw81LBECDOh2LifO1ynQSTTDpudAfLvtc3M5NLg4YZqkmv1R2BDeOJ9cxhN+CKTKKCAZ1jJY3
- 6BndavUeZ/TKntFsIt8gCrEb5Fsyt+qX1E1pLiv5LaAmLWiP9viwtIcjHFKv4SPEOS3zVTcxQg
- Zjc=
+        id S1726838AbgH1UFK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Aug 2020 16:05:10 -0400
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:1708 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726010AbgH1UFK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 16:05:10 -0400
+IronPort-SDR: yYcxa2HAVvq9rrL7qPKo+2pYrx5RHTuNc173N2Dq1ziR5cNM0kt5mYEPhTQ9tyaEGk6Zb04I5B
+ +U59Uwp3otFepEX1WhFIutxr+NXDYH4pv3pFr3HOxtvVWUfbHXzaBY/Bs2y7+yzoz2gy1uUCRN
+ 3U2lDOYZfdqfx80ssuloAkbnGUZn8TDpxfb+C24DPzKUpUGccQEn/BIZxIAfNeQjL33rMbxBT1
+ on59sMxTwxvRg2R2jWoG27zqhdZm5UVaSFSk7xKRfFM7pwDLhBzBXKRyP3GCWIsdMtaHGveYQZ
+ Wps=
 X-IronPort-AV: E=Sophos;i="5.76,364,1592895600"; 
-   d="scan'208";a="88986632"
+   d="scan'208";a="85110885"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Aug 2020 12:07:43 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Aug 2020 13:05:10 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 28 Aug 2020 12:07:36 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Fri, 28 Aug 2020 12:07:35 -0700
-Subject: [PATCH] hpsa: update copyright
+ 15.1.1979.3; Fri, 28 Aug 2020 13:05:04 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Fri, 28 Aug 2020 13:05:03 -0700
+Subject: [PATCH] MAINTAINERS: update smartpqi and hpsa
 From:   Don Brace <don.brace@microsemi.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -42,8 +42,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 28 Aug 2020 14:07:42 -0500
-Message-ID: <159864166227.12131.3427629298809272795.stgit@brunhilda>
+Date:   Fri, 28 Aug 2020 15:05:08 -0500
+Message-ID: <159864510818.12656.822985017436862534.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -53,48 +53,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Add entry for Microchip
+* change M entry e-mail to microchip
+* change L entry e-mail for storagedev to microchip
 
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c     |    1 +
- drivers/scsi/hpsa.h     |    1 +
- drivers/scsi/hpsa_cmd.h |    1 +
- 3 files changed, 3 insertions(+)
+ MAINTAINERS |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 91794a50b31f..de90284ca96b 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -1,5 +1,6 @@
- /*
-  *    Disk Array driver for HP Smart Array SAS controllers
-+ *    Copyright (c) 2019-2020 Microchip Technology Inc. and its subsidiaries
-  *    Copyright 2016 Microsemi Corporation
-  *    Copyright 2014-2015 PMC-Sierra, Inc.
-  *    Copyright 2000,2009-2015 Hewlett-Packard Development Company, L.P.
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 6b87d9815b35..99b0750850b2 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -1,5 +1,6 @@
- /*
-  *    Disk Array driver for HP Smart Array SAS controllers
-+ *    Copyright (c) 2019-2020 Microchip Technology Inc. and its subsidiaries
-  *    Copyright 2016 Microsemi Corporation
-  *    Copyright 2014-2015 PMC-Sierra, Inc.
-  *    Copyright 2000,2009-2015 Hewlett-Packard Development Company, L.P.
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 7825cbfea4dc..46df2e3ff89b 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -1,5 +1,6 @@
- /*
-  *    Disk Array driver for HP Smart Array SAS controllers
-+ *    Copyright (c) 2019-2020 Microchip Technology Inc. and its subsidiaries
-  *    Copyright 2016 Microsemi Corporation
-  *    Copyright 2014-2015 PMC-Sierra, Inc.
-  *    Copyright 2000,2009-2015 Hewlett-Packard Development Company, L.P.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3b186ade3597..038c4e3b8257 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7717,8 +7717,8 @@ F:	Documentation/watchdog/hpwdt.rst
+ F:	drivers/watchdog/hpwdt.c
+ 
+ HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)
+-M:	Don Brace <don.brace@microsemi.com>
+-L:	esc.storagedev@microsemi.com
++M:	Don Brace <don.brace@microchip.com>
++L:	storagedev@microchip.com
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	Documentation/scsi/hpsa.rst
+@@ -11522,8 +11522,8 @@ F:	arch/mips/configs/generic/board-ocelot.config
+ F:	arch/mips/generic/board-ocelot.c
+ 
+ MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)
+-M:	Don Brace <don.brace@microsemi.com>
+-L:	esc.storagedev@microsemi.com
++M:	Don Brace <don.brace@microchip.com>
++L:	storagedev@microchip.com
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	Documentation/scsi/smartpqi.rst
 
