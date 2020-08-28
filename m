@@ -2,109 +2,91 @@ Return-Path: <SRS0=lsqi=CG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F775C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 15:46:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6BE6C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 17:53:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FCED20872
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 15:46:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AA302098B
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 17:53:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bfkjdGZN"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ui6InmAw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728373AbgH1Pqa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Aug 2020 11:46:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39666 "EHLO
+        id S1727888AbgH1Rxo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Aug 2020 13:53:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728235AbgH1Pq2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 11:46:28 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B26C061264;
-        Fri, 28 Aug 2020 08:46:27 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id t2so1376993wma.0;
-        Fri, 28 Aug 2020 08:46:27 -0700 (PDT)
+        with ESMTP id S1726677AbgH1Rxj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 13:53:39 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75770C061264
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 10:53:39 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id i13so82769pjv.0
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 10:53:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:date:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=Aqq6rPsX+W7iIliHjghmhHUibKq8+l+/BXXT8k2vJoI=;
-        b=bfkjdGZNtR3X0fbFjilpa02iQ+bbO3tkdlQwoa52bJIGiIOVmQhkd5fAOsAfgbwI5y
-         yQ8YOepKd5ahX8Hb2uA/iu0/xb6jSsFym00buPQkPU46bAE8v+1kr8j6N6qD+S+BCbvl
-         IV+cthw/LTz91yXb3RYJhyGqhCc6MGEUhTYKtYBiFweESqIse0fFTZB9GKSrzeYXFpY+
-         jizFlnR8wTFjDVbGsBETR87L+cMWOv4byksNEJhG4T39Z8kW1U7dbS2kk/Hdzn1TRqzD
-         WWxOnyUU1sLtkYTUXwvHr+0iziGSDQuhx0olOEDr4JEPUSy2XBsHgIkmmhDebLy1vR0B
-         OrGw==
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fc3BOzKVJl2dqsg5OXJvVDuQ5v0PBIyT7SIjEZPYYMI=;
+        b=Ui6InmAwX7L45/0eXyP8zP17mE9nH+oYx3hz8tmqJ4p+JyiXosh0V5cVVTdGMbEdl4
+         JKnezS4pkFQdJSenmKSv76gC+F7C3vebk7CCWsLz2HBDmG+rb3Bfsgcijn53f0vKFBsS
+         5DZ6Od6E9u0ItOAs7kP0Th91i4OTexa0jJtfw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:date:to:cc:subject:in-reply-to:message-id
-         :references:user-agent:mime-version;
-        bh=Aqq6rPsX+W7iIliHjghmhHUibKq8+l+/BXXT8k2vJoI=;
-        b=MZmCxhF3hY3dwM88Qt7E4qSLyq9MH8nStfw8ETf0i865Wu1MaQntyRaWRUhp1Sj1kx
-         0RrF5JAPkjvqDGvZAq9JbpzDz6h+0a7pwzNHkY3c0jdb1s4xVbLxXT1A0xV5MjlwL6Ea
-         hw/MikUSy2Run5J/isf5pPImqOoWI1Ep3kYnHxHArPi7VZHOMPzTbAS5hdM+ZYqfIliI
-         bc8NmX4fZFdez+QAnUlIZh1kdF7nM9Vp4YbZsWhKrZ/8fSPY2kgOz0P8YjQXAWkuxEgC
-         V+jFTvubFkCUCkX5xOHieo4N2PRF/643JbJj/i3R7SWu0HS/OkvyBAJjoZtcK86bvF5r
-         bzsA==
-X-Gm-Message-State: AOAM532u+UGZ+67S9JMBAfbSk6OVzmF5YPC6PDP1xM01uuvCVqfnec0N
-        wrap1yO7qfWLvqiQiVIvEcWlWE/Bo77KHbN4
-X-Google-Smtp-Source: ABdhPJz/gCyVAUjyyOAcncSR0LIOX8MlP5uO0ndSzpSxgTiQyq1SHLD6S2TvvQbdHTSPBTY7o8wb+w==
-X-Received: by 2002:a1c:ab55:: with SMTP id u82mr2228964wme.139.1598629585772;
-        Fri, 28 Aug 2020 08:46:25 -0700 (PDT)
-Received: from felia ([2001:16b8:2d94:4000:f807:c6f3:919:9c25])
-        by smtp.gmail.com with ESMTPSA id 70sm3082258wme.15.2020.08.28.08.46.24
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=fc3BOzKVJl2dqsg5OXJvVDuQ5v0PBIyT7SIjEZPYYMI=;
+        b=IUzo9289ol0KCVAqFXy/HYZKvu7zp3OUklVZSf47i0dTNvBMaaQvAGXPadgp8lvlpB
+         efqAFMIdwV497TEZtzKDgc7Vs4y8pvij1esM9uHH+F5/PWyp2Lju3kf0tGnkngDWx061
+         HpmwEvRJO1SB60+uupcyHRKSz8yWqGi4abwlsfRjXQ6OXBCf+GeAYhJwuqpCi/znd9fN
+         RsmQBeWmaZ+aNcNht5DyDPs7UAGmeBk8Cttl3UTtgqTxaVdJwR6MbRofZAUngq2ywlA8
+         Dpp5IxN2zMrO2PM8TT5eO2WPjne3q4OH8887AigEZvTg9bC9ckOH8LWFqK4BVHpnvSlE
+         +r2g==
+X-Gm-Message-State: AOAM533ib9SidYsQ6dFOkbxNagALfBftvDzTB2PSGHV61kQ1u+vxfu5h
+        OhyAnypojQ82IGAu2hKbak+eg832b3wBv7oDaCEvO+T6gfN6Qx/90czc3dAdNFmno7RfMhOLFjz
+        n877CoIyP+zCNjraTT4pE1+aSewzpV0s8Fj2jDA/0uA+yZ2p5ALXCqF30yB+rlXZs0/Luzi6QZE
+        oysnE=
+X-Google-Smtp-Source: ABdhPJzRR0ctt2zL0grc+ptt+fWPB0HAE+u+C9a2XWzceHMVGdCaOpKg/y8MHXs4SlIm0rEMwWMUIw==
+X-Received: by 2002:a17:902:fe88:: with SMTP id x8mr57078plm.204.1598637218467;
+        Fri, 28 Aug 2020 10:53:38 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id e65sm88734pjk.45.2020.08.28.10.53.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2020 08:46:24 -0700 (PDT)
-From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
-X-Google-Original-From: Lukas Bulwahn <lukas@gmail.com>
-Date:   Fri, 28 Aug 2020 17:46:19 +0200 (CEST)
-X-X-Sender: lukas@felia
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-cc:     Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        linux-spdx@vger.kernel.org, linux-kernel@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Arun Easi <aeasi@marvell.com>
-Subject: Re: [PATCH] MAINTAINERS: orphan sections with qlogic.com group
- alias
-In-Reply-To: <yq1h7smkcqc.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <alpine.DEB.2.21.2008281745450.608@felia>
-References: <20200828070824.8032-1-lukas.bulwahn@gmail.com> <20200828091758.GF54274@SPB-NB-133.local> <alpine.DEB.2.21.2008281524360.11562@felia> <yq1h7smkcqc.fsf@ca-mkp.ca.oracle.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Fri, 28 Aug 2020 10:53:37 -0700 (PDT)
+From:   James Smart <james.smart@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <james.smart@broadcom.com>
+Subject: [PATCH 0/4] lpfc: Update lpfc to revision 12.8.0.4
+Date:   Fri, 28 Aug 2020 10:53:28 -0700
+Message-Id: <20200828175332.130300-1-james.smart@broadcom.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Update lpfc to revision 12.8.0.4
 
+The patches were cut against Martin's 5.9/scsi-queue tree
 
-On Fri, 28 Aug 2020, Martin K. Petersen wrote:
+James Smart (4):
+  lpfc: Fix setting irq affinity with an empty cpu mask.
+  lpfc: Fix FLOGI/PLOGI receive race condition in pt2pt discovery
+  lpfc: Extend the RDF FPIN Registration descriptor for additional
+    events
+  lpfc: Update lpfc version to 12.8.0.4
 
-> 
-> Lukas,
-> 
-> > So, if these drivers are not orphans, you can answer Thomas Gleixner's
-> > original email from 2019. If you can quickly ack that patch set, I am
-> > happy to do the donkey work to get this apply nicely on the current
-> > master (please CC me on that response).
-> 
-> This is the first I hear of this since the patches weren't CC:ed to
-> linux-scsi. And not all of these changes pertain to storage drivers but
-> to networking so I am also not sure that mails sent to the above Storage
-> alias would have ended up in the right place.
-> 
-> But we'll get this fixed up. Reaching out to our contacts at Marvell.
->
+ drivers/scsi/lpfc/lpfc_els.c     | 7 ++++++-
+ drivers/scsi/lpfc/lpfc_hw4.h     | 2 +-
+ drivers/scsi/lpfc/lpfc_init.c    | 1 -
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
 
-Thanks, Martin, it is appreciated.
+-- 
+2.26.2
 
-Lukas
