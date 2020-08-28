@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35846C433E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 17:53:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE56CC433E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 17:53:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 139ED2098B
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 17:53:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B15E920776
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Aug 2020 17:53:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TseZztWj"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UHKNpX9D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbgH1Rxt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Aug 2020 13:53:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59446 "EHLO
+        id S1727794AbgH1Rxz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Aug 2020 13:53:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727885AbgH1Rxm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 13:53:42 -0400
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E1A3C061233
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 10:53:42 -0700 (PDT)
-Received: by mail-pl1-x644.google.com with SMTP id z15so12417plo.7
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 10:53:42 -0700 (PDT)
+        with ESMTP id S1727895AbgH1Rxo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 13:53:44 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61C84C061264
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 10:53:43 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id q3so2957pls.11
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2020 10:53:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6kJrkOqIhUPLbDJEjgvg/myb8qkNDbKsmrMpQ/tHOw4=;
-        b=TseZztWjqqSFGaom7dwnF5Xi/w9rbYux0BRGoopPvMHKkCL/2H9WkOFZGgxGNh20pM
-         OfIGLTG8FIfwVYvNaqxB58zM6Mqp1SKgYbYmbLVkk75hceu4F4C9vo1Ykw2h64mFsysu
-         7KCzThWt6Xn7lGv8icJ+FCk/9xBppenW2xmfQ=
+        bh=L30PezUSTSdSjZeoYTtXAiWGD73goEIfHvr97NNFKBA=;
+        b=UHKNpX9D7OpyzYqtBwyj24sYWvIZmTq31z7GWYtSqLLKEbEuoKegW+O39vD/5+mXMm
+         XTiEHuQAAnUpgpwWHAxqzmWkP/2KezBJlOq5C9o4x9dPIiFZNCBVzmOrkLUTVfMa3SbB
+         jAXNgs4q1ODTkazLQrsxrQeY9nAIXqzFq/CBI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6kJrkOqIhUPLbDJEjgvg/myb8qkNDbKsmrMpQ/tHOw4=;
-        b=gGeCnv/CKKWBfrOpXAYoMVaWteiGnbpg14s2ovfsFztXqxh3M9ViuFhZ8claWXh2jc
-         nbVCl1iHAX+hprjaL20qicMVcLY/XzW5waS+FFP1Sm2q5gsdlmGj1iwG0dIkFkXBAKwj
-         V9A8rxE09IXWq4LzxMDx1tSIbZIrpdV3dXr4/3L0tmkGFVCZtgs5EKxyOESTMuTp1dwk
-         /5doY4GUTTbrwfOrxCEKIqIGVR0KDLhGD5BSqy2HbNnT1AylS1JTQlIhf86LSzm6PTEe
-         c6krpPzWY3+Fe29+fWMH1zmFdAmIp/xNeUhsC/8TIMvvwcDVXexG3WXDH6L4dvNj6dvO
-         uk/Q==
-X-Gm-Message-State: AOAM531kfrR88fYFzOMzJtjB9cyT9DK8aaImANa3fQGbFpxlGKisQmkW
-        +q2+SbJt6wBKPphAZ0VaSVuEgJWey74fvZFpuc9h/JS4fTNExNp6LTjBXbmyvliSzx+71C5Qt9u
-        yRZvOd5Hi3NHL2yRZHQ5xr3sXesvkgjSlrYUcJZ1xqvyxlOBXEUHwMqRrdPyFP3QZgRrgb0SboW
-        0zHPc=
-X-Google-Smtp-Source: ABdhPJzUqVXJw/J728dLG/BcFdyP9xrA+X7qr8H6MBsTRuQX71x1NENwKFTys4rMgorX51h1jYlnNQ==
-X-Received: by 2002:a17:902:fe8e:: with SMTP id x14mr40924plm.85.1598637221133;
-        Fri, 28 Aug 2020 10:53:41 -0700 (PDT)
+        bh=L30PezUSTSdSjZeoYTtXAiWGD73goEIfHvr97NNFKBA=;
+        b=AEarJt81zAxYPQfKofKZrqa/9xq1AAUZVoxPBPNGkM4I+Ah9pSXWN/wcB/xpZucmvE
+         FK+n5CvLxdvXFvnzSc9aLDmTGZQcsY8RpD/H8fulVtNvndP/wz8Ec5ZDQ+TW7ciAiZbO
+         c5wRfsOjvnisdRYryDV4TRfMf6SsYDNvOmcXHRhjNartC0/gX3HEkjTms8kbZhtLpigm
+         xaWQV8skQdDctuqM8AuEAScbAdUdsxbuKn1frtL1/iN5U0fY+pTJQjQVhOgJ4tYmLDyp
+         4otCSH2aU9tuDoQ3UMEW4K/+uRYxtSwIeCe38ULvPHVA4tROBakTGRf39RMcoi56y/4e
+         zU0A==
+X-Gm-Message-State: AOAM533eGzinmynuUNrwTU9J5RRUYBdMsslLu36DMZgYDAycWVnXmJ/d
+        Bw4oIer/0YIwgW01r6PXVGQcVCt/szKAKErRKmiHdVfzLu8pQ6E7jnEkh3IOepduDuwHo/M7rxc
+        VKHluOHjjqssxHI8CQDb+3Kt5eqv9tImfaa1rzoP0Q9pcWrH2fQcC5F5LF0gvRfswVo5UqoKI1G
+        Gp0P8=
+X-Google-Smtp-Source: ABdhPJwN7azBlziGWosfMgguZDF2xTy5jvVNNYmJUCO17rNSmTYBc3wpiJyftKTUmpp/YJPwZOwxAA==
+X-Received: by 2002:a17:90a:f2c1:: with SMTP id gt1mr197076pjb.70.1598637222284;
+        Fri, 28 Aug 2020 10:53:42 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e65sm88734pjk.45.2020.08.28.10.53.39
+        by smtp.gmail.com with ESMTPSA id e65sm88734pjk.45.2020.08.28.10.53.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2020 10:53:40 -0700 (PDT)
+        Fri, 28 Aug 2020 10:53:41 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 2/4] lpfc: Fix FLOGI/PLOGI receive race condition in pt2pt discovery
-Date:   Fri, 28 Aug 2020 10:53:30 -0700
-Message-Id: <20200828175332.130300-3-james.smart@broadcom.com>
+Subject: [PATCH 3/4] lpfc: Extend the RDF FPIN Registration descriptor for additional events
+Date:   Fri, 28 Aug 2020 10:53:31 -0700
+Message-Id: <20200828175332.130300-4-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200828175332.130300-1-james.smart@broadcom.com>
 References: <20200828175332.130300-1-james.smart@broadcom.com>
@@ -73,54 +73,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver is unable to successfully login with remote device. During
-pt2pt login, the driver complete it's FLOGI request, with the
-remote device having WWN precedence.  The remote device issues its own
-(delayed) FLOGI after accepting the drivers, and upon transmitting the
-FLOGI, immediately recognizes it has already processed the driver's
-FLOGI thus it transitions to sending a PLOGI before waiting for an ACC
-to its FLOGI.
+Currently the driver registers for Link Integrity events only.
 
-In the driver, the FLOGI is received and an ACC sent, followed by the
-PLOGI being received and an ACC sent. The issue is that the PLOGI
-reception occurs before the response from the adapter from the FLOGI
-ACC is received. Processing of the PLOGI sets state flags to perform
-the REG_RPI mailbox command and proceed with the rest of discovery on
-the port. The same completion routine used by both FLOGI and PLOGI is
-generic in nature. One of the things it does is clear flags, and those
-flags happen to drive the rest of discovery.  So what happened was the
-PLOGI processing set the flags, the FLOGI ACC completion cleared them,
-thus when the PLOGI ACC completes it doesn't see the flags and stops.
-
-Fix by modifying the generic completion routine to not clear the rest
-of discovery flag (NLP_ACC_REGLOGIN) unless the completion is also
-associated with performing a mailbox command as part of it's handling.
-For things such as FLOGI ACC, there isn't a subsequent action to perform
-with the adapter, thus there is no mailbox cmd ptr. PLOGI ACC though
-will perform REG_RPI upon completion, thus there is a mailbox cmd ptr.
+This patch adds registration for the following FPIN types:
+Delivery Notifications
+Congestion Notification
+Peer Congestion Notification
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 
 ---
- drivers/scsi/lpfc/lpfc_els.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c | 3 +++
+ drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 48dc63f22cca..abc6200d8881 100644
+index abc6200d8881..f4e274eb6c9c 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4656,7 +4656,9 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- out:
- 	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
- 		spin_lock_irq(shost->host_lock);
--		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
-+		if (mbox)
-+			ndlp->nlp_flag &= ~NLP_ACC_REGLOGIN;
-+		ndlp->nlp_flag &= ~NLP_RM_DFLT_RPI;
- 		spin_unlock_irq(shost->host_lock);
+@@ -3517,6 +3517,9 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 				FC_TLV_DESC_LENGTH_FROM_SZ(prdf->reg_d1));
+ 	prdf->reg_d1.reg_desc.count = cpu_to_be32(ELS_RDF_REG_TAG_CNT);
+ 	prdf->reg_d1.desc_tags[0] = cpu_to_be32(ELS_DTAG_LNK_INTEGRITY);
++	prdf->reg_d1.desc_tags[1] = cpu_to_be32(ELS_DTAG_DELIVERY);
++	prdf->reg_d1.desc_tags[2] = cpu_to_be32(ELS_DTAG_PEER_CONGEST);
++	prdf->reg_d1.desc_tags[3] = cpu_to_be32(ELS_DTAG_CONGESTION);
  
- 		/* If the node is not being used by another discovery thread,
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+ 			      "Issue RDF:       did:x%x",
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index c4ba8273a63f..12e4e76233e6 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -4800,7 +4800,7 @@ struct send_frame_wqe {
+ 	uint32_t fc_hdr_wd5;           /* word 15 */
+ };
+ 
+-#define ELS_RDF_REG_TAG_CNT		1
++#define ELS_RDF_REG_TAG_CNT		4
+ struct lpfc_els_rdf_reg_desc {
+ 	struct fc_df_desc_fpin_reg	reg_desc;	/* descriptor header */
+ 	__be32				desc_tags[ELS_RDF_REG_TAG_CNT];
 -- 
 2.26.2
 
