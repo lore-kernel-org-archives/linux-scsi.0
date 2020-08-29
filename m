@@ -2,124 +2,143 @@ Return-Path: <SRS0=Q1Hz=CH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 540DBC433E6
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 01:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBDDC433E6
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 01:12:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D9BE207BB
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 01:07:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="J73h6ga2"
+	by mail.kernel.org (Postfix) with ESMTP id 9D98A207BB
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 01:12:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726439AbgH2BHQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Aug 2020 21:07:16 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:20811 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726219AbgH2BHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Aug 2020 21:07:14 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598663233; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=KBz/Mp2HjpitrTKMvGZcXdH9StIjUwyVyyPgbCHUO7s=; b=J73h6ga2kNeTo0V5lSVhGCR9NIkSMu9UWHoI0pnh2N+rSAzOuZ1S2yBtyDxIELqWFbEF983a
- 7Yx6K0j1B4r6xEI2uOM0ehGry+tSkR7yeBS5upAEMXwZHV+WdhZ4uIk3girpQG3IkgvGWTmx
- qI29cbNQH3OYxX/TymHmMyFtnqM=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5f49aa386a801be9b23bcb85 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 29 Aug 2020 01:07:04
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id BD451C43387; Sat, 29 Aug 2020 01:07:04 +0000 (UTC)
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 54F7AC433C6;
-        Sat, 29 Aug 2020 01:07:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 54F7AC433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=nguyenb@codeaurora.org
-From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
-To:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     "Bao D. Nguyen" <nguyenb@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to Auto-Hibernate Timer
-Date:   Fri, 28 Aug 2020 18:05:13 -0700
-Message-Id: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S1726798AbgH2BMF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Aug 2020 21:12:05 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:56023 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726219AbgH2BMF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Aug 2020 21:12:05 -0400
+Received: (qmail 487246 invoked by uid 1000); 28 Aug 2020 21:12:03 -0400
+Date:   Fri, 28 Aug 2020 21:12:03 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        stable <stable@vger.kernel.org>, Can Guo <cang@codeaurora.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        SCSI development list <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] block: Fix a race in the runtime power management code
+Message-ID: <20200829011203.GA486691@rowland.harvard.edu>
+References: <20200824030607.19357-1-bvanassche@acm.org>
+ <1598346681.10649.8.camel@mtkswgap22>
+ <20200825182423.GB375466@rowland.harvard.edu>
+ <1f798c21-241f-59f8-5298-a32fffe2ff01@acm.org>
+ <20200826015159.GA387575@rowland.harvard.edu>
+ <af1b1f57-59ff-0133-8108-0f3d1e1254e1@acm.org>
+ <20200827203321.GB449067@rowland.harvard.edu>
+ <5da883fe-b5ec-b98d-ae0c-bc053b6e22cb@acm.org>
+ <20200828153745.GB470612@rowland.harvard.edu>
+ <31d6f204-21ae-88da-dbfc-3d7132f8bc03@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <31d6f204-21ae-88da-dbfc-3d7132f8bc03@acm.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The zero value Auto-Hibernate Timer is a valid setting, and it
-indicates the Auto-Hibernate feature being disabled. Correctly
-support this setting. In addition, when this value is queried
-from sysfs, read from the host controller's register and return
-that value instead of using the RAM value.
+On Fri, Aug 28, 2020 at 05:51:03PM -0700, Bart Van Assche wrote:
+> On 2020-08-28 08:37, Alan Stern wrote:
+> > On Thu, Aug 27, 2020 at 08:27:49PM -0700, Bart Van Assche wrote:
+> >> On 2020-08-27 13:33, Alan Stern wrote:
+> >>> It may not need to be that complicated.  what about something like this?
+> > 
+> >> I think this patch will break SCSI domain validation. The SCSI domain
+> >> validation code calls scsi_device_quiesce() and that function in turn calls
+> >> blk_set_pm_only(). The SCSI domain validation code submits SCSI commands with
+> >> the BLK_MQ_REQ_PREEMPT flag. Since the above code postpones such requests
+> >> while blk_set_pm_only() is in effect, I think the above patch will cause the
+> >> SCSI domain validation code to deadlock.
+> > 
+> > Yes, you're right.
+> > 
+> > There may be an even simpler solution: Ensure that SCSI domain 
+> > validation is mutually exclusive with runtime PM.  It's already mutually 
+> > exclusive with system PM, so this makes sense.
+> > 
+> > What do you think of the patch below?
+> > 
+> > Alan Stern
+> > 
+> > 
+> > Index: usb-devel/drivers/scsi/scsi_transport_spi.c
+> > ===================================================================
+> > --- usb-devel.orig/drivers/scsi/scsi_transport_spi.c
+> > +++ usb-devel/drivers/scsi/scsi_transport_spi.c
+> > @@ -1001,7 +1001,7 @@ spi_dv_device(struct scsi_device *sdev)
+> >  	 * Because this function and the power management code both call
+> >  	 * scsi_device_quiesce(), it is not safe to perform domain validation
+> >  	 * while suspend or resume is in progress. Hence the
+> > -	 * lock/unlock_system_sleep() calls.
+> > +	 * lock/unlock_system_sleep() and scsi_autopm_get/put_device() calls.
+> >  	 */
+> >  	lock_system_sleep();
+> >  
+> > @@ -1018,10 +1018,13 @@ spi_dv_device(struct scsi_device *sdev)
+> >  	if (unlikely(!buffer))
+> >  		goto out_put;
+> >  
+> > +	if (scsi_autopm_get_device(sdev))
+> > +		goto out_free;
+> > +
+> >  	/* We need to verify that the actual device will quiesce; the
+> >  	 * later target quiesce is just a nice to have */
+> >  	if (unlikely(scsi_device_quiesce(sdev)))
+> > -		goto out_free;
+> > +		goto out_autopm_put;
+> >  
+> >  	scsi_target_quiesce(starget);
+> >  
+> > @@ -1041,6 +1044,8 @@ spi_dv_device(struct scsi_device *sdev)
+> >  
+> >  	spi_initial_dv(starget) = 1;
+> >  
+> > + out_autopm_put:
+> > +	scsi_autopm_put_device(sdev);
+> >   out_free:
+> >  	kfree(buffer);
+> >   out_put:
+> 
+> Hi Alan,
+> 
+> I think this is only a part of the solution. scsi_target_quiesce() invokes
+> scsi_device_quiesce() and that function in turn calls blk_set_pm_only(). So
+> I think that the above is not sufficient to fix the deadlock mentioned in
+> my previous email.
 
-Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufs-sysfs.c | 9 ++++++++-
- drivers/scsi/ufs/ufshcd.c    | 2 +-
- 2 files changed, 9 insertions(+), 2 deletions(-)
+Sorry, it sounds like you misinterpreted my preceding email.  I meant to 
+suggest that the patch above should be considered _instead of_ the patch 
+that introduced BLK_MQ_REQ_PM.  So blk_queue_enter() would remain 
+unchanged, using the BLK_MQ_REQ_PREEMPT flag to decide whether or not to 
+postpone new requests.  Thus the deadlock you're concerned about would 
+not arise.
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 02d379f00..bdcd27f 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -146,12 +146,19 @@ static u32 ufshcd_us_to_ahit(unsigned int timer)
- static ssize_t auto_hibern8_show(struct device *dev,
- 				 struct device_attribute *attr, char *buf)
- {
-+	u32 ahit;
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
- 	if (!ufshcd_is_auto_hibern8_supported(hba))
- 		return -EOPNOTSUPP;
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", ufshcd_ahit_to_us(hba->ahit));
-+	pm_runtime_get_sync(hba->dev);
-+	ufshcd_hold(hba, false);
-+	ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
-+	ufshcd_release(hba);
-+	pm_runtime_put_sync(hba->dev);
-+
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", ufshcd_ahit_to_us(ahit));
- }
- 
- static ssize_t auto_hibern8_store(struct device *dev,
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 06e2439..ea5cc33 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3975,7 +3975,7 @@ void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
- {
- 	unsigned long flags;
- 
--	if (!ufshcd_is_auto_hibern8_supported(hba) || !hba->ahit)
-+	if (!ufshcd_is_auto_hibern8_supported(hba))
- 		return;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> Maybe it is possible to fix this by creating a new request queue and by
+> submitting the DV SCSI commands to that new request queue. There may be
+> better solutions.
 
+I don't think that is necessary.  After all, quiescing is quiescing, 
+whether it is done for runtime power management, domain validation, or 
+anything else.  What we need to avoid is one thread trying to keep a 
+device quiescent at the same time that another thread is re-activating 
+it.
+
+To some extent the SCSI core addresses this by allowing only one thread 
+to put a device into the SDEV_QUIESCE state at a time.  Making domain 
+validation mutually exclusive with runtime suspend is my attempt to 
+prevent any odd corner-case interactions from cropping up.
+
+Alan Stern
