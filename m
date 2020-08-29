@@ -2,80 +2,117 @@ Return-Path: <SRS0=Q1Hz=CH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24729C433E6
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 20:28:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4761DC433E7
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 20:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D33D2076D
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 20:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 318302098B
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 20:34:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728406AbgH2U2S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Aug 2020 16:28:18 -0400
-Received: from mxout03.lancloud.ru ([89.108.73.187]:47958 "EHLO
-        mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728380AbgH2U2S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Aug 2020 16:28:18 -0400
-X-Greylist: delayed 513 seconds by postgrey-1.27 at vger.kernel.org; Sat, 29 Aug 2020 16:28:17 EDT
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 062EB211BC47
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1728521AbgH2UeG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Aug 2020 16:34:06 -0400
+Received: from smtprelay0042.hostedemail.com ([216.40.44.42]:60978 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728464AbgH2UeF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 29 Aug 2020 16:34:05 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay06.hostedemail.com (Postfix) with ESMTP id 4AD2918225DF6;
+        Sat, 29 Aug 2020 20:34:03 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: head85_181739b27081
+X-Filterd-Recvd-Size: 3499
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf19.hostedemail.com (Postfix) with ESMTPA;
+        Sat, 29 Aug 2020 20:33:57 +0000 (UTC)
+Message-ID: <b64a4cb0ee68fee01973616e5ef0f299ac191f6d.camel@perches.com>
+Subject: Re: sysfs output without newlines
+From:   Joe Perches <joe@perches.com>
+To:     Denis Efremov <efremov@linux.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Julia Lawall <julia.lawall@inria.fr>,
+        Alex Dewar <alex.dewar90@gmail.com>
+Cc:     York Sun <york.sun@nxp.com>, Borislav Petkov <bp@alien8.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Tony Luck <tony.luck@intel.com>,
+        James Morse <james.morse@arm.com>,
+        Robert Richter <rric@kernel.org>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Boris Brezillon <bbrezillon@kernel.org>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        Alex Dubov <oakad@yahoo.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Douglas Miller <dougmill@linux.ibm.com>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Kai =?ISO-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
-Subject: [PATCH] scsi: fdomain_isa: merge branches in fdomain_isa_match()
-Organization: Open Mobile Platform, LLC
-Message-ID: <df68e341-5113-4cf2-b64c-dc1ad0b686ac@omprussia.ru>
-Date:   Sat, 29 Aug 2020 23:19:42 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        Mark Brown <broonie@kernel.org>,
+        Oliver Neukum <oneukum@suse.com>,
+        Pete Zaitcev <zaitcev@redhat.com>, linux-edac@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-i3c@lists.infradead.org, linux-mmc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org
+Date:   Sat, 29 Aug 2020 13:33:56 -0700
+In-Reply-To: <4cd6275c-6e95-3aeb-9924-141f62e00449@linux.com>
+References: <0f837bfb394ac632241eaac3e349b2ba806bce09.camel@perches.com>
+         <4cd6275c-6e95-3aeb-9924-141f62e00449@linux.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [213.87.133.185]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1908.lancloud.ru (fd00:f066::208)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The *else* branch of the *if* (base) statement in fdomain_isa_match() is
-immediately followed by the *if* (!base) statement. Simplify the code by
-removing the unneeded *if*...
+On Sat, 2020-08-29 at 23:23 +0300, Denis Efremov wrote:
+> Hi,
+> 
+> On 8/29/20 9:23 PM, Joe Perches wrote:
+> > While doing an investigation for a possible treewide conversion of
+> > sysfs output using sprintf/snprintf/scnprintf, I discovered
+> > several instances of sysfs output without terminating newlines.
+> > 
+> > It seems likely all of these should have newline terminations
+> > or have the \n\r termination changed to a single newline.
+> 
+> I think that it could break badly written scripts in rare cases.
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
+Maybe.
 
----
-The patch is against the 'for-next' branch of Martin Petersen's 'scsi.git'
-repo...
+Is sysfs output a nominally unchangeable api like seq_?
+Dunno.  seq_ output is extended all the time.
 
- drivers/scsi/fdomain_isa.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+I think whitespace isn't generally considered part of
+sscanf type input content awareness.
 
-Index: scsi/drivers/scsi/fdomain_isa.c
-===================================================================
---- scsi.orig/drivers/scsi/fdomain_isa.c
-+++ scsi/drivers/scsi/fdomain_isa.c
-@@ -111,12 +111,11 @@ static int fdomain_isa_match(struct devi
- 			base = readb(p + sig->base_offset) +
- 			      (readb(p + sig->base_offset + 1) << 8);
- 		iounmap(p);
--		if (base)
-+		if (base) {
- 			dev_info(dev, "BIOS at 0x%lx specifies I/O base 0x%x\n",
- 				 bios_base, base);
--		else
-+		} else { /* no I/O base in BIOS area */
- 			dev_info(dev, "BIOS at 0x%lx\n", bios_base);
--		if (!base) {	/* no I/O base in BIOS area */
- 			/* save BIOS signature for later use in port probing */
- 			saved_sig = sig;
- 			return 0;
+> > Anyone have any objection to patches adding newlines to these
+> > in their original forms using sprintf/snprintf/scnprintf?
+> 
+> I'm not sure about existing cases, but I think it's a good
+> checkpatch.pl warning for new patches. It should be 
+> possible to check sysfs_emit() calls.
+
+Eventually, yes.
+
+cheers, Joe
+
