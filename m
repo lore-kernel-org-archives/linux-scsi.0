@@ -2,184 +2,141 @@ Return-Path: <SRS0=Q1Hz=CH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBEFFC433E7
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 07:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F39A3C433E6
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 07:32:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A768E207BB
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 07:25:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7432207BB
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 07:32:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AgqIy+rv";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="IpEGE/K5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgH2HZN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Aug 2020 03:25:13 -0400
-Received: from comms.puri.sm ([159.203.221.185]:53946 "EHLO comms.puri.sm"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726083AbgH2HZG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 29 Aug 2020 03:25:06 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 57DC3E035E;
-        Sat, 29 Aug 2020 00:24:35 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id IKjiLLbPQD1r; Sat, 29 Aug 2020 00:24:34 -0700 (PDT)
-Subject: Re: [PATCH] block: Fix bug in runtime-resume handling
-To:     Alan Stern <stern@rowland.harvard.edu>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, kernel@puri.sm
-References: <d3b6f7b8-5345-1ae1-4f79-5dde226e74f1@puri.sm>
- <20200809152643.GA277165@rowland.harvard.edu>
- <60150284-be13-d373-5448-651b72a7c4c9@puri.sm>
- <20200810141343.GA299045@rowland.harvard.edu>
- <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
- <20200823145733.GC303967@rowland.harvard.edu>
- <3e5a465e-8fe0-b379-a80e-23e2f588c71a@acm.org>
- <20200824201343.GA344424@rowland.harvard.edu>
- <5152a510-bebf-bf33-f6b3-4549e50386ab@puri.sm>
- <4c636f2d-af7f-bbde-a864-dbeb67c590ec@puri.sm>
- <20200827202952.GA449067@rowland.harvard.edu>
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
- 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
- ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
-Message-ID: <478fdc57-f51e-f480-6fde-f34596394624@puri.sm>
-Date:   Sat, 29 Aug 2020 09:24:30 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-In-Reply-To: <20200827202952.GA449067@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8
+        id S1726954AbgH2HcN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Aug 2020 03:32:13 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:4371 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726056AbgH2HcL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Aug 2020 03:32:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1598686331; x=1630222331;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=SMfWT8t8Ye/STTHMxxumJ7xfGDzJOeasYwnCTcVmnHY=;
+  b=AgqIy+rvFxhb+WzTZlAoSBPjMEQf+nu1orGzZ51PUdUyMu5RnlsZRNod
+   1I2Jmt5XVxDQ3BnNEEQnr3DM5w2d0nPnqTtSqy/3nh0rM75EgT9pgnQJL
+   BnJ6SY1nLQpbynuHRlV8Ci7HCNVrpLIeryanbMiyubtxwGxJycEn6tiMD
+   g04BDj0c6GSQFLpGvgP5lGmxFezz82o8juvDaLLckIW32Q7/0DNltmoTz
+   vFFYX5i5C1K7dWXJbYxo/WHrTFrt5JOj/eq/4OeEXYWI0FtzFFI2+jWlH
+   NlV2Ljvx/uVk9gGoEh3vS60d9d5MeiwguZRxghtjBm4ovSZEoyc47Ln/r
+   Q==;
+IronPort-SDR: YjeE12eBj8qKE23jUYjKh9quf4Rpyi7dghDKCi5jmaQHx7sL9MbCVyxbEvkn9G7PVwjOJ9WGJg
+ 1oDXSCtXLmepNxTiCOKGFjV0XqdKkTWEqpic8weoUo1uRXrYs3ywbJzVium80omX4exflDQuKQ
+ wrho5oNnbdo54UDGZVUt+dk17PjHGU/K7Ye2r+X4Mqm+hoadVehCLGe6bAUXVlwBuJF3q2hQqs
+ 4wIQs+J6BwdlgeDlANol1JKK6jyjx6Eg9uNW7UjQzsx6RBB10oPUGK/7lsvft5AO/szZQJ1qg+
+ iL4=
+X-IronPort-AV: E=Sophos;i="5.76,366,1592841600"; 
+   d="scan'208";a="150455914"
+Received: from mail-bn8nam12lp2177.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.177])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Aug 2020 15:32:09 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ePtgQ6RnK77fcuPl1574PzGGLHrvFlrbMO8L29eiT3/c8zc914VnIjQFlo8ek/zmNja/VNHrbsJzs2402B+qDnmmTwIvhLoPO2vxRbn2U3DHC3iE7oRFwKEWLk9vbG4dBUr/0Hy2jH/SH2brKP6PNP7T8lovCS+AM3t9d17/IEwYJHslhw1SZ0mKufhQ3lADUcunBlIRvd9/jxRwGtXTBANYrJbzCqh4+WrDmjJ9VY3CXgiHNtNyJYmPeut8W/gv0ApWu52y/bImyOvZPH6uGkewuKFj4uctE7uB0sayNrKY5tSWTw7FgX2S6fht8A34YyybkC6/lA+AGkC7+/4xkA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=SMfWT8t8Ye/STTHMxxumJ7xfGDzJOeasYwnCTcVmnHY=;
+ b=FINxorYjYmaVjjUrxnfj7z+H85oaBovdrIhQjbw6f1cGkatkX0afjLqBpm7Dx10QLHuwpsxcOiw9TVY2NqC01JD0IdSuQToKxETGvDxtFqD+aRsYV6So9fv26JSREqXFgwess8ndQC4YtouVUnfCTTc0caA4/8SVQaU0S/GLEk2krUbhQFXPwqKj1TQ3lK4UIl2a22yF8w6nJjfU+8SuNtYGer2s0324meOj4eoxSXq8rB4YXt3mK9D50a/3Il3HI9ApSOmz2z8vYkq8TAcQrwY75uT1rJ7HcmOsjfcdqvVZm3rPLS52CFgdTrK7AFCw86Bn5ByBcVgrJ6rUf3gnug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=SMfWT8t8Ye/STTHMxxumJ7xfGDzJOeasYwnCTcVmnHY=;
+ b=IpEGE/K5gF1Krz99tHdri00jQowIjOyv0a/yjoRW0l8qTF+VFAJKUh8nuB+WBrzO/0V0GpRtQdux1NvGibv+flKqBSjKhb0exir6Ydh7ivGeuF0sX7Tyyp12JborHe9UZiSUPilHniGx1qZylU3DK31Xtjf3XUSCwLUuZyvEwVg=
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
+ by BYAPR04MB4711.namprd04.prod.outlook.com (2603:10b6:a03:14::30) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3305.24; Sat, 29 Aug
+ 2020 07:32:05 +0000
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::1083:4093:49fa:a3fd]) by BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::1083:4093:49fa:a3fd%2]) with mapi id 15.20.3326.023; Sat, 29 Aug 2020
+ 07:32:05 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
+ Auto-Hibernate Timer
+Thread-Topic: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
+ Auto-Hibernate Timer
+Thread-Index: AQHWfaC3kd0c1Nm+d0KoEDt9jyytd6lOsAkw
+Date:   Sat, 29 Aug 2020 07:32:05 +0000
+Message-ID: <BY5PR04MB6705177184FC1A0E5F7710FDFC530@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
+In-Reply-To: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [77.138.4.172]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 88308c96-14eb-41cb-eeec-08d84beda125
+x-ms-traffictypediagnostic: BYAPR04MB4711:
+x-microsoft-antispam-prvs: <BYAPR04MB4711B8F6BBF6A302EE1FA0E6FC530@BYAPR04MB4711.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:3968;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: pUY5iEuY79n/z8Wpt2y2Wn8gWz1LIpWol8GLHuIRECSvOvqfEFoM9Hwmq6pQAe/FrERi78Lq/zUZsvonsvOB/aYRibEsqMo+fIoYLLtsf5VjdZku6yoKqpDbeFn3L3I0UAscCf1+cxS0ej9+qMFqSsbRXck3U8Bn7woTwfn4QH5fDQBlvshyZuwLZPnqGVMvaPWDfhXptulc6FWWPXoJRhx0887G1MygV9wwWxebVhUfBBo3Aj0hqDQUp5weNe1lVb+TJvojw5sfiY/WrmsqKehrcxnVQ3D7jhFeBm+g4UNtnmzTJjBXO7aS0fsHizjJ
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(366004)(39860400002)(396003)(136003)(2906002)(316002)(86362001)(7416002)(7696005)(6506007)(54906003)(4744005)(71200400001)(110136005)(4326008)(66476007)(186003)(55016002)(8936002)(26005)(33656002)(478600001)(66446008)(66946007)(64756008)(66556008)(52536014)(83380400001)(76116006)(8676002)(5660300002)(9686003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: O1b4C1RIPSUwB86UDbF/YWm63BWjwJoLShpz0bUFPm3pDzgHEZr2Fg/f80ErgzVyyyCfN6izZfhdsa7pCsPA8lp/+p5X65s0nnhSdHFjmrNZ8YzI7DxadqZuXFYETuYSzj0x8M1Q3BsA0RR6cTUpFpxZ7SVfYFERyNaALyETyoYMeqFQPGlHX8Xeyu2lgfuAZQgTUcQej/sNRjpqu6i4cd78XLCW+XsFuPDKWyuZklv1aTlQE7lyijmHFgaMtGU9zvc0Q4eGVRyilevMJmr4dZZ8VZRfqu8cXmWTmSMe+UXeJDrzMkxh98O5qfbW+5cEsbHC5HvtKE+P4Sg458zlh4DKVao5H0EoeADv03klNvIBD+PkHFV4lX87yc234ncw+0nPbW7pKthZvKvc1PVqSTcvYDRt5NeC0nGpRxLhu0rWNBkRsuz2FujcTyETaRWgWEwF+Cdf0lCfwkACRfF0mPtLD96JefYmjj47lz4+3tZbOjGa5TrkaS85OWFUrWfeOg7T/D2mCiplwiY+0oB/LC5Jwg3AwrPJ7cPnbU78SEFdytCjk8mX2znUKEQZ4r2epzPEEsqR8IjTIvAMHZiI5zeysWvh4+y2yWjZS8zsSMa0TT8saGk+VO8pH6yuBdOInSLzr2g4rUZLB12My+f5xw==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 88308c96-14eb-41cb-eeec-08d84beda125
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Aug 2020 07:32:05.4282
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gnd5piqZyUH14hTGgCm8Cb2hS9jknGsM1RAo3jGR9lNgyONWHHz/l5lVmtOSgUILc2mIUnc9XRZCR16sbmFMEg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4711
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27.08.20 22:29, Alan Stern wrote:
-> On Thu, Aug 27, 2020 at 07:42:43PM +0200, Martin Kepplinger wrote:
->> On 26.08.20 09:48, Martin Kepplinger wrote:
->>> On 24.08.20 22:13, Alan Stern wrote:
-> 
->>>> Martin:
->>>>
->>>> (I forgot to ask this question several weeks ago, while you were running 
->>>> your tests.  Better ask it now before I forget again...)
->>>>
->>>> I suspect the old runtime-PM code in the block layer would have worked 
->>>> okay in your SD cardreader test if the BLK_MQ_REQ_PREEMPT flag had not 
->>>> been set.  Do you know why the flag was set, or what line of code caused 
->>>> it to be set?
->>>
->>> Correct. if not set, I could handle all I need in the scsi error path.
->>
->> this thread becomes a bit confusing. I thought about REQ_FAILFAST_DEV
->> but you're talking about something different.
->>
->> the only place I see BLK_MQ_REQ_PREEMPT getting passed on is in
->> __scsi_execute() which is the case when mounting/unmounting. At least
->> that about the only place I can find.
-> 
-> Ah yes, I see what you mean.
-> 
->> I remember *only* your block pm fix would let me mount/unmount, but not
->> use files yet (REQ_FAILFAST_DEV and so on).
->>
->> When I revert your fix and remove BLK_MQ_REQ_PREEMPT from being passed
->> on to blk_get_request() in __scsi_execute(), that line gets executed
->> exactly once during startup and I'm missing the /dev/sda device from the
->> cardreader then.
->>
->> Is this what you're asking?
-> 
-> Not quite sure, but it doesn't matter.  Removing BLK_MQ_REQ_PREEMPT in 
-> __scsi_execute() is probably not a safe thing to do.
-> 
-> Instead, look at sd_resume().  That routine calls __scsi_execute() 
-> indirectly through sd_start_stop_device(), and the only reason it does 
-> this is because the sdkp->device->manage_start_stop flag is set.  You 
-> ought to be able to clear this flag in sysfs, by writing to 
-> /sys/block/sda/device/scsi_disk/*/manage_start_stop.  If you do this 
-> before allowing the card reader to go into runtime suspend, does it then 
-> resume okay?
+=20
+>=20
+> The zero value Auto-Hibernate Timer is a valid setting, and it
+> indicates the Auto-Hibernate feature being disabled. Correctly
+Right. So " ufshcd_auto_hibern8_enable" is no longer an appropriate name.
+Maybe ufshcd_auto_hibern8_set instead?
 
-manage_start_stop in sysfs is 0 here.
+Also, did you verified that no other platform relies on its non-zero value?
 
-> 
-> (Yes, I know you still won't be able to read it because of the FAILFAST 
-> flag.  I just want to know if the runtime resume actually takes place.)
-> 
-> Alan Stern
-> 
+Thanks,
+Avri
