@@ -1,4 +1,4 @@
-Return-Path: <SRS0=Q1Hz=CH=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=rOw5=CI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,63 +6,57 @@ X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2478FC433E6
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 23:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 129DCC433E2
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 00:38:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0ABCE20825
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Aug 2020 23:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9084208CA
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 00:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728121AbgH2Xyv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 Aug 2020 19:54:51 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:54115 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728010AbgH2Xyt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Aug 2020 19:54:49 -0400
-Received: by mail-pj1-f67.google.com with SMTP id nv17so1236500pjb.3;
-        Sat, 29 Aug 2020 16:54:48 -0700 (PDT)
+        id S1728571AbgH3Aiy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 29 Aug 2020 20:38:54 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:33061 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728256AbgH3Aix (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Aug 2020 20:38:53 -0400
+Received: by mail-pf1-f193.google.com with SMTP id u20so2612448pfn.0;
+        Sat, 29 Aug 2020 17:38:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=/dCYP4u2tuJbGRkiP485A6OJ0Qbqcq9RVKEJ97FFRpQ=;
-        b=EFZ10jw/KtgBwsCqulOu2S7LCzHGFpJ9Yjl6duSCWOGDTwG+lvCEkx7gWGU+HDmjNT
-         HMlrreZI/hOYhYOhHZayBiZrLsYUiWnPp158K8d7gO6jdZi+TRFbJbSJ7xmQwL3J974f
-         Ps1yM9405b98VqbRmwMiw8x8CdQTZw89xWCVi2UFAjw9KB39dP6gR5mWl3jZUQihGTjK
-         rI6mC+Na8v77crzW3DMVIbpgNctI1dwl3+Ve//V+s3x9NDwo/UXcWDKZjpY5y+8IRrs5
-         s72RGWs3w1sVXniGJPwP+IXcBPBMhxxywgOSLdqfROoZ0EDtkH0yQdMU8tA6xPoDOU7k
-         cKug==
-X-Gm-Message-State: AOAM532lDArBtiDvrcpnJbYQ1LBWxrsIEUysSQdWlNQ9O1boGI7Ot71V
-        KO/vZE90grAF9T9GlmRfNnw=
-X-Google-Smtp-Source: ABdhPJwMHNixYIy7gybWqDtxy5ln3FMNVgNdfH1gkEx9VCQ0AUqmuEYk7sdwTHXAaR4YMge7PX0FFw==
-X-Received: by 2002:a17:90a:fe07:: with SMTP id ck7mr2816748pjb.20.1598745288359;
-        Sat, 29 Aug 2020 16:54:48 -0700 (PDT)
+        bh=4HQjIC+m0Ct4LRAVaT/dUJNLGDayEDQaHB2mVguVBOI=;
+        b=sjyfiPIE7C8xn4B7Woy46eI0y7BjX1yJSmPOGzmudynO542eYgcD5VT3kIrcVURvsj
+         ZIwoK014dsiV5Q61aV0DH8/t1WXonMdZ71Ye0F74INcaLGx4f7ICLBip41RFeAbzKHRf
+         e9geWWbO+VKykJLJag4CBvxU20tutOl8y25/6eFCZciLi0BJJTY12050F691csHkWV19
+         o0rQCVDRvTqcKxTMU6VGQNNKB8xMDtOqIZqYsmr0G5opBuph0Q7KCstM2s06qHShPDdM
+         VtEMMx1tMrq69FquaBHybRsyQncH+dHVYAuBadsndohCmYuucNO53Shk1c/OzxEdKMTT
+         jIaQ==
+X-Gm-Message-State: AOAM530fmROsW7Y2ECDCJHhEazwlfu+MKP5XBS14ir/BlXfrHMp+LkCW
+        3X3Ry7DSDDGxhlYi1JeWd/09fev6Bp8=
+X-Google-Smtp-Source: ABdhPJxESy+80ZCUR9L/uGx9o4mWCBGVCrkBnK6QHYf8u8/iRHZP07jvTuIPM07JGb2UhQBGhU5BBQ==
+X-Received: by 2002:a62:1d49:: with SMTP id d70mr4464811pfd.197.1598747932288;
+        Sat, 29 Aug 2020 17:38:52 -0700 (PDT)
 Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id t25sm3702261pfe.51.2020.08.29.16.54.46
+        by smtp.gmail.com with ESMTPSA id e12sm3055670pjd.55.2020.08.29.17.38.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 29 Aug 2020 16:54:47 -0700 (PDT)
-Subject: Re: [PATCH v9 4/4] scsi: ufs: Prepare HPB read for cached sub-region
-To:     daejun7.park@samsung.com,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-References: <963815509.21598598782155.JavaMail.epsvc@epcpadp2>
- <CGME20200828070950epcms2p5470bd43374be18d184dd802da09e73c8@epcms2p6>
- <717176949.41598601302683.JavaMail.epsvc@epcpadp1>
+        Sat, 29 Aug 2020 17:38:51 -0700 (PDT)
+Subject: Re: [PATCH] block: Fix bug in runtime-resume handling
+To:     Alan Stern <stern@rowland.harvard.edu>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, kernel@puri.sm
+References: <6f0c530f-4309-ab1e-393b-83bf8367f59e@puri.sm>
+ <20200823145733.GC303967@rowland.harvard.edu>
+ <3e5a465e-8fe0-b379-a80e-23e2f588c71a@acm.org>
+ <20200824201343.GA344424@rowland.harvard.edu>
+ <5152a510-bebf-bf33-f6b3-4549e50386ab@puri.sm>
+ <4c636f2d-af7f-bbde-a864-dbeb67c590ec@puri.sm>
+ <20200827202952.GA449067@rowland.harvard.edu>
+ <478fdc57-f51e-f480-6fde-f34596394624@puri.sm>
+ <20200829152635.GA498519@rowland.harvard.edu>
+ <6d22ec22-a0c7-6a9d-439e-38ef87b0207c@puri.sm>
+ <20200829185653.GB501978@rowland.harvard.edu>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -87,12 +81,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <07d3fd31-a09a-716d-eac1-a22a5101a324@acm.org>
-Date:   Sat, 29 Aug 2020 16:54:46 -0700
+Message-ID: <eb208ee3-b94b-c020-990f-c7151ecaae03@acm.org>
+Date:   Sat, 29 Aug 2020 17:38:50 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <717176949.41598601302683.JavaMail.epsvc@epcpadp1>
+In-Reply-To: <20200829185653.GB501978@rowland.harvard.edu>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -101,7 +95,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-28 00:19, Daejun Park wrote:
-> This patch changes the read I/O to the HPB read I/O.
+On 2020-08-29 11:56, Alan Stern wrote:
+> A third possibility is the approach I outlined before, adding a 
+> BLK_MQ_REQ_PM flag.  But to avoid the deadlock you pointed out, I would 
+> make blk_queue_enter smarter about whether to postpone a request.  The 
+> logic would go like this:
+> 
+> 	If !blk_queue_pm_only:
+> 		Allow
+> 	If !BLK_MQ_REQ_PREEMPT:
+> 		Postpone
+> 	If q->rpm_status is RPM_ACTIVE:
+> 		Allow
+> 	If !BLK_MQ_REQ_PM:
+> 		Postpone
+> 	If q->rpm_status is RPM_SUSPENDED:
+> 		Postpone
+> 	Else:
+> 		Allow
+> 
+> The assumption here is that the PREEMPT flag is set whenever the PM flag 
+> is.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hi Alan,
+
+Although interesting, these solutions sound like workarounds to me. How
+about fixing the root cause by modifying the SCSI DV implementation such
+that it doesn't use scsi_device_quiesce() anymore()? That change would
+allow to remove BLK_MQ_REQ_PREEMPT / RQF_PREEMPT from the block layer and
+move these flags into the SCSI and IDE code.
+
+Thanks,
+
+Bart.
