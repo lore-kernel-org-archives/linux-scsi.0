@@ -2,74 +2,107 @@ Return-Path: <SRS0=rOw5=CI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6E3C433E2
-	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 07:35:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59D19C433E2
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 09:11:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AED1207DA
-	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 07:35:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38F56207BB
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 09:11:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598772910;
-	bh=Z/FmyEd9eHtomr5XbHkYpPD1417KzQFnCXSZgfQ4Z2w=;
+	s=default; t=1598778715;
+	bh=BWklOV6bppJJ3A+SKZXddiVUDib6q31F3dsVGTSMtbw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ZptcqnZ6aBPiVEXPoXgcQc6FxGdpR5AlFrMjwyckLBl3Sj2PP3xZMuBRh8B3xg444
-	 x972rEOQTBQCUNYRWWQZym3XspAMJE03YrDVjNLSkdw8+5GgRoWM0DLe9xNCREP7oU
-	 jmXvGIK/NHtJpmwCxtVjoAFrg4MnOdncpH6MRnbg=
+	b=p0WeG88XvpWktCkfQm8nNcCrC8i6S0Lzx4qUF/ECERt0QDL8o5tYA7fOFS50tgyDy
+	 MgW8zsSi1PzZp8mHvkjDLa6kSki3aFUdyJAhUBpaU2nLCySECDF3sf97m4S2pjtBaX
+	 AowcDD16IINR+w9HftBLFq3/D+hTdepCC2TJTeuU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728613AbgH3HfG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 Aug 2020 03:35:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36864 "EHLO mail.kernel.org"
+        id S1726406AbgH3JLr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 30 Aug 2020 05:11:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60982 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726013AbgH3HfG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 30 Aug 2020 03:35:06 -0400
+        id S1725869AbgH3JLq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 30 Aug 2020 05:11:46 -0400
 Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 243402076D;
-        Sun, 30 Aug 2020 07:35:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5E151207BB;
+        Sun, 30 Aug 2020 09:11:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598772905;
-        bh=Z/FmyEd9eHtomr5XbHkYpPD1417KzQFnCXSZgfQ4Z2w=;
+        s=default; t=1598778705;
+        bh=BWklOV6bppJJ3A+SKZXddiVUDib6q31F3dsVGTSMtbw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TZNUvmUykyNDYQkeTDMM7k7xX6Q8qTwfuHNXRhJpwT3hFd72yxhzKbv2be1iUohkx
-         zmtHbAcdIPmKrtNX8gpSqwzEgaZYAmV4Mw223NUF7w00kD4RQyAhtTKZ05n5zJYAkv
-         BJeK9Rsq3ErIWcoaajLCvbBxSo2ktQSHCxveqQE4=
-Date:   Sun, 30 Aug 2020 09:35:03 +0200
+        b=Ai0UuHTnZlo4wf/I5Ov08/TrKTmcZtSZYe3sSmtFPMekal3JdcbUjzjqFbnUO+Xal
+         3yu7jLxoRUMmC3+CDPYPEQ3UI5NZnEfFVp9S1Y2s6awOmfdpwE/crUJIFWSu1iADuB
+         /HLt1Sk8k3z7Ye5JS2yTFeHHb/XaDjL5nXdJ7wQA=
+Date:   Sun, 30 Aug 2020 11:11:42 +0200
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
+To:     Joe Perches <joe@perches.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
         Denis Efremov <efremov@linux.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Julia Lawall <julia.lawall@inria.fr>,
+        Alex Dewar <alex.dewar90@gmail.com>,
+        York Sun <york.sun@nxp.com>, Borislav Petkov <bp@alien8.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Tony Luck <tony.luck@intel.com>,
+        James Morse <james.morse@arm.com>,
+        Robert Richter <rric@kernel.org>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Boris Brezillon <bbrezillon@kernel.org>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        Alex Dubov <oakad@yahoo.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
         "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: Re: [PATCH 19/19] block: switch gendisk lookup to a simple xarray
-Message-ID: <20200830073503.GB112265@kroah.com>
-References: <20200830062445.1199128-1-hch@lst.de>
- <20200830062445.1199128-20-hch@lst.de>
+        Jakub Kicinski <kuba@kernel.org>,
+        Douglas Miller <dougmill@linux.ibm.com>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mark Brown <broonie@kernel.org>,
+        Oliver Neukum <oneukum@suse.com>,
+        Pete Zaitcev <zaitcev@redhat.com>, linux-edac@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-i3c@lists.infradead.org, linux-mmc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: sysfs output without newlines
+Message-ID: <20200830091142.GC112265@kroah.com>
+References: <0f837bfb394ac632241eaac3e349b2ba806bce09.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200830062445.1199128-20-hch@lst.de>
+In-Reply-To: <0f837bfb394ac632241eaac3e349b2ba806bce09.camel@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Aug 30, 2020 at 08:24:45AM +0200, Christoph Hellwig wrote:
-> Now that bdev_map is only used for finding gendisks, we can use
-> a simple xarray instead of the regions tracking structure for it.
+On Sat, Aug 29, 2020 at 11:23:43AM -0700, Joe Perches wrote:
+> While doing an investigation for a possible treewide conversion of
+> sysfs output using sprintf/snprintf/scnprintf, I discovered
+> several instances of sysfs output without terminating newlines.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/genhd.c         | 208 ++++++++----------------------------------
->  include/linux/genhd.h |   7 --
->  2 files changed, 37 insertions(+), 178 deletions(-)
+> It seems likely all of these should have newline terminations
+> or have the \n\r termination changed to a single newline.
+> 
+> Anyone have any objection to patches adding newlines to these
+> in their original forms using sprintf/snprintf/scnprintf?
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+No objection for me, patches for my subsystems will be gladly taken.
+
+thanks,
+
+greg k-h
