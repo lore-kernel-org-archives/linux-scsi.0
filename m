@@ -2,41 +2,40 @@ Return-Path: <SRS0=rOw5=CI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 801D2C433E6
-	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 06:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9C1C433E2
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 06:25:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DC2B20757
-	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 06:25:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED96B20BED
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 Aug 2020 06:25:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y6jiENa1"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pQ6BXHuh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726255AbgH3GZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 Aug 2020 02:25:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58500 "EHLO
+        id S1726722AbgH3GZX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 30 Aug 2020 02:25:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726488AbgH3GZB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 02:25:01 -0400
+        with ESMTP id S1726264AbgH3GZA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 02:25:00 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3B1DC061573;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73CAAC06123C;
         Sat, 29 Aug 2020 23:25:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=B9nqgl0BizoCFTSZ0GvnyJ44eULa8ACIMrdc+XZNiS8=; b=Y6jiENa1qL7GdBLAhxjHCGqcmj
-        cZbOAR2JMK7wXID16HODGGANEJNUGCvFQ8tjZ/4iB3RJiI9bljbShkJcJkLEOyvtQDzi+e9ocS8u1
-        qWu48aidGxhE5C0XpAMgvIburShiGP1q6IQ8j4Se1V+HFQE9vUxbScBD4b5cJHptgQWZPFnO7yMg4
-        h9CrqFjSLr2qcxi+xEzVqXeJEzWj3W5b7l2LuPU+dLfZjOnlQv+WdWon04ojCbKczHEA97uSqHf9E
-        KnClBv1WQGpowerT8txgVaf66gpxSmlr9AimY6NQDxaGFtsdh6fDw1iNqVF/6W9mVECRtEsvPsOr8
-        KbTAWocg==;
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=M8NGywF+zE3/DWly96sK3ZsPyCZ2PLaa+20n24HbM5w=; b=pQ6BXHuhUiXptBbNhhajHLmx2j
+        rHMW1iV1DIOaQecBNTKGUFrEu0njZSCCsOOLXdQe2IRyq1eXKAXkzd8LkXVouP2Nlf8wDiW8G5c7r
+        NoOEVX+xXo25toy4lSfOxoPPe+dwyNzMf4QhYdJH+q+VK8r4hvFnu734Kr//3fGLwKySvgqkPVN8V
+        JcrBq/EAVSVhwDB4XT9Zao7yBIAIQMOKS0reHVbB6Cn2ldrASCi02oAxcpyAmqg5XKSNdaTtVWvVg
+        GKh4XLzxpj8zf7VEo7AP1Z7T1SDnAncTot6eFVrNZAbdHj9MZnOhTo3dzSpLbadcQ5dnok2Oo6TF1
+        6hs6GCDg==;
 Received: from [2001:4bb8:18c:45ba:9892:9e86:5202:32f0] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kCGlq-0002NB-EA; Sun, 30 Aug 2020 06:24:54 +0000
+        id 1kCGlh-0002MA-Rm; Sun, 30 Aug 2020 06:24:46 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -47,12 +46,10 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 08/19] swim: don't call blk_register_region
-Date:   Sun, 30 Aug 2020 08:24:34 +0200
-Message-Id: <20200830062445.1199128-9-hch@lst.de>
+Subject: simplify gendisk lookup and remove struct block_device aliases v2
+Date:   Sun, 30 Aug 2020 08:24:26 +0200
+Message-Id: <20200830062445.1199128-1-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200830062445.1199128-1-hch@lst.de>
-References: <20200830062445.1199128-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -61,58 +58,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The swim driver (unlike various other floppy drivers) doesn't have
-magic device nodes for certain modes, and already registers a gendisk
-for each of the floppies supported by a device.  Thus the region
-registered is a no-op and can be removed.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/block/swim.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+this series removes the annoying struct block_device aliases, which can
+happen for a bunch of old floppy drivers (and z2ram).  In that case
+multiple struct block device instances for different dev_t's can point
+to the same gendisk, without being partitions.  The cause for that
+is the probe/get callback registered through blk_register_regions.
 
-diff --git a/drivers/block/swim.c b/drivers/block/swim.c
-index dd34504382e533..5a8f5932f9bde4 100644
---- a/drivers/block/swim.c
-+++ b/drivers/block/swim.c
-@@ -763,18 +763,6 @@ static const struct block_device_operations floppy_fops = {
- 	.revalidate_disk = floppy_revalidate,
- };
- 
--static struct kobject *floppy_find(dev_t dev, int *part, void *data)
--{
--	struct swim_priv *swd = data;
--	int drive = (*part & 3);
--
--	if (drive >= swd->floppy_count)
--		return NULL;
--
--	*part = 0;
--	return get_disk_and_module(swd->unit[drive].disk);
--}
--
- static int swim_add_floppy(struct swim_priv *swd, enum drive_location location)
- {
- 	struct floppy_state *fs = &swd->unit[swd->floppy_count];
-@@ -864,9 +852,6 @@ static int swim_floppy_init(struct swim_priv *swd)
- 		add_disk(swd->unit[drive].disk);
- 	}
- 
--	blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
--			    floppy_find, NULL, swd);
--
- 	return 0;
- 
- exit_put_disks:
-@@ -950,8 +935,6 @@ static int swim_remove(struct platform_device *dev)
- 	int drive;
- 	struct resource *res;
- 
--	blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
--
- 	for (drive = 0; drive < swd->floppy_count; drive++) {
- 		del_gendisk(swd->unit[drive].disk);
- 		blk_cleanup_queue(swd->unit[drive].disk->queue);
--- 
-2.28.0
+This series removes blk_register_region entirely, splitting it it into
+a simple xarray lookup of registered gendisks, and a probe callback
+stored in the major_names array that can be used for modprobe overrides
+or creating devices on demands when no gendisk is found.  The old
+remapping is gone entirely, and instead the 4 remaining drivers just
+register a gendisk for each operating mode.  In case of the two drivers
+that have lots of aliases that is done on-demand using the new probe
+callback, while for the other two I simply register all at probe time
+to keep things simple.
 
+Note that the m68k drivers are compile tested only.
+
+Changes since v1:
+ - add back a missing kobject_put in the cdev code
+ - improve the xarray delete loops
+
+Diffstat:
+ b/block/genhd.c           |  183 +++++++--------
+ b/drivers/base/Makefile   |    2 
+ b/drivers/block/amiflop.c |   98 ++++----
+ b/drivers/block/ataflop.c |  135 +++++++----
+ b/drivers/block/brd.c     |   39 ---
+ b/drivers/block/floppy.c  |  154 ++++++++----
+ b/drivers/block/loop.c    |   30 --
+ b/drivers/block/swim.c    |   17 -
+ b/drivers/block/z2ram.c   |  547 ++++++++++++++++++++++------------------------
+ b/drivers/ide/ide-probe.c |   66 -----
+ b/drivers/ide/ide-tape.c  |    2 
+ b/drivers/md/md.c         |   21 -
+ b/drivers/scsi/sd.c       |   19 -
+ b/fs/char_dev.c           |   94 +++----
+ b/fs/dcache.c             |    1 
+ b/fs/internal.h           |    5 
+ b/include/linux/genhd.h   |   12 -
+ b/include/linux/ide.h     |    3 
+ drivers/base/map.c        |  154 ------------
+ include/linux/kobj_map.h  |   20 -
+ 20 files changed, 686 insertions(+), 916 deletions(-)
