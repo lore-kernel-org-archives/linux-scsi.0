@@ -2,98 +2,96 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2B0BC433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D10F4C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:25:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 783132083E
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:07:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="c9hR4jQE"
+	by mail.kernel.org (Postfix) with ESMTP id A46A32067C
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:25:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728341AbgHaSHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 14:07:17 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:15408 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728239AbgHaSHR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Aug 2020 14:07:17 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598897236; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=fAEf+wFDeBUv5cYz5qkmxYUlTUgGSo7Zjv4xY6DTkC8=;
- b=c9hR4jQEfxPAryQNMjMyG9NOzRF9QpTUh7k3WPEaM9Ii6p+JtzY/zNGtTlvKnGfkCcV1Fd0N
- TSVo1ja/ucBtmzKLfnPjJOF3+tfhjqhSjU9E76WXwsXY+zAvp6IzLQKhgksAu0I22znAdDwQ
- oZn+DEFtv809NXxw07ObQqOfWXA=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
- 5f4d3c4c238e1efa37d512fe (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 31 Aug 2020 18:07:08
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E6991C43395; Mon, 31 Aug 2020 18:07:06 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 49534C433C6;
-        Mon, 31 Aug 2020 18:07:06 +0000 (UTC)
+        id S1729360AbgHaSZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 14:25:28 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:43663 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726174AbgHaSZ1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 14:25:27 -0400
+Received: (qmail 560428 invoked by uid 1000); 31 Aug 2020 14:25:26 -0400
+Date:   Mon, 31 Aug 2020 14:25:26 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Can Guo <cang@codeaurora.org>
+Subject: Re: [PATCH RFC 6/6] block, scsi, ide: Only submit power management
+ requests in state RPM_SUSPENDED
+Message-ID: <20200831182526.GA558270@rowland.harvard.edu>
+References: <20200831025357.32700-1-bvanassche@acm.org>
+ <20200831025357.32700-7-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Mon, 31 Aug 2020 11:07:06 -0700
-From:   nguyenb@codeaurora.org
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
- Auto-Hibernate Timer
-In-Reply-To: <BY5PR04MB6705177184FC1A0E5F7710FDFC530@BY5PR04MB6705.namprd04.prod.outlook.com>
-References: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
- <BY5PR04MB6705177184FC1A0E5F7710FDFC530@BY5PR04MB6705.namprd04.prod.outlook.com>
-Message-ID: <96e34a8d7d52dfbc47738f04d2a127c2@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200831025357.32700-7-bvanassche@acm.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-29 00:32, Avri Altman wrote:
->> 
->> The zero value Auto-Hibernate Timer is a valid setting, and it
->> indicates the Auto-Hibernate feature being disabled. Correctly
-> Right. So " ufshcd_auto_hibern8_enable" is no longer an appropriate 
-> name.
-> Maybe ufshcd_auto_hibern8_set instead?
-Thanks for your comment. I am ok with the name change suggestion.
+On Sun, Aug 30, 2020 at 07:53:57PM -0700, Bart Van Assche wrote:
+> Recently Martin Kepplinger reported a problem with the SCSI runtime PM
+> code. Alan Stern root-caused that deadlock as follows:
 > 
-> Also, did you verified that no other platform relies on its non-zero 
-> value?
-I only tested the change on Qualcomm's platform. I do not have other 
-platforms to do the test.
-The UFS host controller spec JESD220E, Section 5.2.5 says
-"Software writes “0” to disable Auto-Hibernate Idle Timer". So the spec 
-supports this zero value.
-Some options:
-- We could add a hba->caps so that we only apply the change for 
-Qualcomm's platforms.
-This is not preferred because it is following the spec implementations.
-- Or other platforms that do not support the zero value needs a caps.
+> 	Thread 0		Thread 1
+> 	--------		--------
+> 	Start runtime suspend
+> 	blk_pre_runtime_suspend calls
+> 	  blk_set_pm_only and sets
+> 	  q->rpm_status to RPM_SUSPENDING
 > 
-> Thanks,
-> Avri
+> 				Call sd_open -> ... -> scsi_test_unit_ready
+> 				  -> __scsi_execute -> ...
+> 				  -> blk_queue_enter
+> 				Sees BLK_MQ_REQ_PREEMPT set and
+> 				  RPM_SUSPENDING queue status, so does
+> 				  not postpone the request
+> 
+> 	blk_post_runtime_suspend sets
+> 	  q->rpm_status to RPM_SUSPENDED
+> 	The drive goes into runtime suspend
+> 
+> 				Issues the TEST UNIT READY request
+> 				Request fails because the drive is suspended
+> 
+> Fix that deadlock by only accepting power management requests while
+> suspended. Remove flag RQF_PREEMPT.
+
+Let me clarify this description.
+
+Firstly, the second-to-last sentence is ambiguous.  The word "only" is
+all too easy to misuse through carelessness.  In this case you meant
+to say "by accepting only power management requests while suspended",
+but what you actually wrote was equivalent to "by accepting power
+management requests only while suspended".  And as it happens, both
+meanings are incorrect because we don't want to accept _any_ requests
+while the device is suspended -- not even power-management requests.
+The description should have said "by postponing all non-power-management 
+requests while the device is suspending, suspended, or resuming."
+
+Secondly, the scenario described above is not a deadlock; it is a race 
+leading to a command failure.  Namely, the thread setting q->rpm_status 
+to RPM_SUSPENDED races with the thread testing q->rpm_status.
+
+Thirdly, this race is _not_ the problem that Martin encountered.  His 
+problem was a simple bug (failure to postpone a request), not a race or 
+a deadlock.
+
+Fourthly, the race illustrated above is, for now, theoretical.  It 
+cannot occur with the existing code base (mostly because the existing 
+code is buggy).  The advantage of your series over the patch I submitted 
+on Aug. 23 ("block: Fix bug in runtime-resume handling") is that it 
+fixes Martin's problem without introducing this new race.
+
+Alan Stern
