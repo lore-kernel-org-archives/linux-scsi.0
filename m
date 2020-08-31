@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D53C433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24BAEC433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A83992076D
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08BD12076D
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726775AbgHaCyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 Aug 2020 22:54:20 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:37641 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726946AbgHaCyO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 22:54:14 -0400
-Received: by mail-pl1-f194.google.com with SMTP id c15so2351494plq.4
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2020 19:54:13 -0700 (PDT)
+        id S1727056AbgHaCyV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 30 Aug 2020 22:54:21 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:43387 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726984AbgHaCyP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 22:54:15 -0400
+Received: by mail-pf1-f194.google.com with SMTP id f18so527939pfa.10
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2020 19:54:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=q0GipgpvZhLUV8bGMCiFNZOWoygkRH0DKlv2BF+3dm4=;
-        b=BNpGJTns0PE3KupFGXJ7QHYKd879Y3PltiAD1nZwD9PzWLcZwj+k95ifzkNNS5dHdL
-         YkDKFTzQpf1jyLGCJ36xL1xxncY9YxLuOalY9LZmDS9OjfrHwjfJbjJn38UNSmGBjQec
-         nFsglm4tflk6OterjQhsod2xtmnPyATYdY2aJWQkK/HrMpAagbtho7eVEysLWCSCRXDo
-         +Ll/5HN16ig7YRHvqrkSs//F+AhdpWs5x3aGRXDFTO7dzWX/EzdggQ8TMIEZfUCNAtez
-         YDH5vdY0+ZVb70iL85aBfItMQX/pRluLmoGox16qOAIs2/d1w23q7pSq3M3CDxvrHsBt
-         nmlA==
-X-Gm-Message-State: AOAM5331MoYZzK2+OZBg1gERpr1nnIabx/yY8+dXjddkFgUy5MkjlW7M
-        XTQHDJATbgr1AsrZBOMkshVMosE5aAaUNA==
-X-Google-Smtp-Source: ABdhPJz/WEaB5LifcjLr1y2zeJc2DNqRnRuhTmx9KljYIwcvmksTYTrvwHZMNh4ajv6WGd3SjzhMyA==
-X-Received: by 2002:a17:902:5991:: with SMTP id p17mr7106151pli.154.1598842452965;
-        Sun, 30 Aug 2020 19:54:12 -0700 (PDT)
+        bh=fQ3YgPbT5W7c+FaOm1s6QGKjCVUM85RXDDNSW5xzmMo=;
+        b=mA2fGBvUXZElpXuzfBrl6dCGh1Aj5/25DJ1pzCp/7usPH4fZarl0d8kLFKFr4vhP4U
+         0BHbMXYrBYG+k9ez2t4dyLACTZO2JWG13EFN93F/Es8v4QXn1dZptcvoERBCCn2NIpdp
+         GsMtYfX92U0ix5EqP9jagrD2uhZyTr+mHWBI8fTTEqvICzgeQY1Vgr7pIG0foxOBI/aN
+         P4806pSsC0MznkJzPQGOhFZCL8CP87OAcCHDpT+S8TxmWQOCKGKa/N+ZAgULJmEJokgL
+         jW0wB3+Hi2OLnmlOmMfQ504iEaYv1N36OGpjlyd0wkew7f5f1Lq3cilpLRavvrY10SWH
+         oNwQ==
+X-Gm-Message-State: AOAM530JYAPPiZT2dJl5mzV3zvSq4J/DFD/hPJEBbXFHsT+KfT9iAyex
+        g9D4pOmn/gfvxnF3WpzTI3c=
+X-Google-Smtp-Source: ABdhPJxBhpK7PfHr0BWIGF006Arnv+HGYVIFQZKwCM9m3PPEvay1vrtk75SnNXf3sb7lyszJSEVifQ==
+X-Received: by 2002:aa7:947b:: with SMTP id t27mr1676523pfq.240.1598842454489;
+        Sun, 30 Aug 2020 19:54:14 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id l123sm583569pgl.24.2020.08.30.19.54.11
+        by smtp.gmail.com with ESMTPSA id l123sm583569pgl.24.2020.08.30.19.54.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 30 Aug 2020 19:54:12 -0700 (PDT)
+        Sun, 30 Aug 2020 19:54:13 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Alan Stern <stern@rowland.harvard.edu>
 Cc:     linux-scsi@vger.kernel.org,
         Martin Kepplinger <martin.kepplinger@puri.sm>,
         Can Guo <cang@codeaurora.org>,
         Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH RFC 4/6] scsi_transport_spi: Make spi_execute() accept a request queue pointer
-Date:   Sun, 30 Aug 2020 19:53:55 -0700
-Message-Id: <20200831025357.32700-5-bvanassche@acm.org>
+Subject: [PATCH RFC 5/6] scsi_transport_spi: Freeze request queues instead of quiescing
+Date:   Sun, 30 Aug 2020 19:53:56 -0700
+Message-Id: <20200831025357.32700-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200831025357.32700-1-bvanassche@acm.org>
 References: <20200831025357.32700-1-bvanassche@acm.org>
@@ -60,233 +60,211 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Passing a request queue pointer to spi_execute() instead of a SCSI device
-pointer will allow a later patch to associate two request queues with a
-SCSI device. Additionally, instead of assuming that the device state is
-SDEV_QUIESCE before domain validation starts, read the device state. This
-patch does not change any functionality but makes a later patch easier to
-read.
+Instead of quiescing the request queues involved in domain validation,
+freeze these. As a result, the struct request_queue pm_only member is no
+longer set during domain validation. That will allow to modify
+scsi_execute() such that it stops setting the BLK_MQ_REQ_PREEMPT flag.
+Three additional changes in this patch are that scsi_mq_alloc_queue() is
+exported, that scsi_device_quiesce() is no longer exported and that
+scsi_target_{quiesce,resume}() have been changed into
+scsi_target_{freeze,unfreeze}().
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_transport_spi.c | 69 ++++++++++++++++---------------
- 1 file changed, 36 insertions(+), 33 deletions(-)
+ drivers/scsi/scsi_lib.c           | 22 ++++++------
+ drivers/scsi/scsi_priv.h          |  2 ++
+ drivers/scsi/scsi_transport_spi.c | 56 ++++++++++++++++++++-----------
+ include/scsi/scsi_device.h        |  6 ++--
+ 4 files changed, 51 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index f3d5b1bbd5aa..959990f66865 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -104,7 +104,7 @@ static int sprint_frac(char *dest, int value, int denom)
- 	return result;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1d7135f61962..49eb8f2dffd8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1866,6 +1866,7 @@ struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
+ 	blk_queue_flag_set(QUEUE_FLAG_SCSI_PASSTHROUGH, sdev->request_queue);
+ 	return sdev->request_queue;
  }
++EXPORT_SYMBOL_GPL(scsi_mq_alloc_queue);
  
--static int spi_execute(struct scsi_device *sdev, const void *cmd,
-+static int spi_execute(struct request_queue *q, const void *cmd,
- 		       enum dma_data_direction dir,
- 		       void *buffer, unsigned bufflen,
- 		       struct scsi_sense_hdr *sshdr)
-@@ -117,7 +117,7 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
- 		sshdr = &sshdr_tmp;
- 
- 	for(i = 0; i < DV_RETRIES; i++) {
--		result = scsi_execute(sdev, cmd, dir, buffer, bufflen, sense,
-+		result = __scsi_execute(q, cmd, dir, buffer, bufflen, sense,
- 				      sshdr, DV_TIMEOUT, /* retries */ 1,
- 				      REQ_FAILFAST_DEV |
- 				      REQ_FAILFAST_TRANSPORT |
-@@ -620,13 +620,14 @@ enum spi_compare_returns {
- /* This is for read/write Domain Validation:  If the device supports
-  * an echo buffer, we do read/write tests to it */
- static enum spi_compare_returns
--spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
--			  u8 *ptr, const int retries)
-+spi_dv_device_echo_buffer(struct scsi_device *sdev, struct request_queue *q,
-+			  u8 *buffer, u8 *ptr, const int retries)
+ int scsi_mq_setup_tags(struct Scsi_Host *shost)
  {
- 	int len = ptr - buffer;
- 	int j, k, r, result;
- 	unsigned int pattern = 0x0000ffff;
- 	struct scsi_sense_hdr sshdr;
-+	enum scsi_device_state sdev_state = sdev->sdev_state;
+@@ -2540,7 +2541,6 @@ scsi_device_quiesce(struct scsi_device *sdev)
  
- 	const char spi_write_buffer[] = {
- 		WRITE_BUFFER, 0x0a, 0, 0, 0, 0, 0, len >> 8, len & 0xff, 0
-@@ -671,11 +672,10 @@ spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
- 	}
- 
- 	for (r = 0; r < retries; r++) {
--		result = spi_execute(sdev, spi_write_buffer, DMA_TO_DEVICE,
-+		result = spi_execute(q, spi_write_buffer, DMA_TO_DEVICE,
- 				     buffer, len, &sshdr);
- 		if(result || !scsi_device_online(sdev)) {
--
--			scsi_device_set_state(sdev, SDEV_QUIESCE);
-+			scsi_device_set_state(sdev, sdev_state);
- 			if (scsi_sense_valid(&sshdr)
- 			    && sshdr.sense_key == ILLEGAL_REQUEST
- 			    /* INVALID FIELD IN CDB */
-@@ -693,9 +693,9 @@ spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
- 		}
- 
- 		memset(ptr, 0, len);
--		spi_execute(sdev, spi_read_buffer, DMA_FROM_DEVICE,
--			    ptr, len, NULL);
--		scsi_device_set_state(sdev, SDEV_QUIESCE);
-+		spi_execute(q, spi_read_buffer, DMA_FROM_DEVICE, ptr, len,
-+			    NULL);
-+		scsi_device_set_state(sdev, sdev_state);
- 
- 		if (memcmp(buffer, ptr, len) != 0)
- 			return SPI_COMPARE_FAILURE;
-@@ -706,11 +706,12 @@ spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
- /* This is for the simplest form of Domain Validation: a read test
-  * on the inquiry data from the device */
- static enum spi_compare_returns
--spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
--			      u8 *ptr, const int retries)
-+spi_dv_device_compare_inquiry(struct scsi_device *sdev, struct request_queue *q,
-+			      u8 *buffer, u8 *ptr, const int retries)
- {
- 	int r, result;
- 	const int len = sdev->inquiry_len;
-+	enum scsi_device_state sdev_state = sdev->sdev_state;
- 	const char spi_inquiry[] = {
- 		INQUIRY, 0, 0, 0, len, 0
- 	};
-@@ -718,11 +719,11 @@ spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
- 	for (r = 0; r < retries; r++) {
- 		memset(ptr, 0, len);
- 
--		result = spi_execute(sdev, spi_inquiry, DMA_FROM_DEVICE,
--				     ptr, len, NULL);
-+		result = spi_execute(q, spi_inquiry, DMA_FROM_DEVICE, ptr, len,
-+				     NULL);
- 		
- 		if(result || !scsi_device_online(sdev)) {
--			scsi_device_set_state(sdev, SDEV_QUIESCE);
-+			scsi_device_set_state(sdev, sdev_state);
- 			return SPI_COMPARE_FAILURE;
- 		}
- 
-@@ -742,9 +743,10 @@ spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
+ 	return err;
  }
+-EXPORT_SYMBOL(scsi_device_quiesce);
  
- static enum spi_compare_returns
--spi_dv_retrain(struct scsi_device *sdev, u8 *buffer, u8 *ptr,
--	       enum spi_compare_returns 
--	       (*compare_fn)(struct scsi_device *, u8 *, u8 *, int))
-+spi_dv_retrain(struct scsi_device *sdev, struct request_queue *q, u8 *buffer,
-+	       u8 *ptr, enum spi_compare_returns
-+	       (*compare_fn)(struct scsi_device *, struct request_queue *,
-+			     u8 *, u8 *, int))
- {
- 	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
- 	struct scsi_target *starget = sdev->sdev_target;
-@@ -754,7 +756,7 @@ spi_dv_retrain(struct scsi_device *sdev, u8 *buffer, u8 *ptr,
- 
- 	for (;;) {
- 		int newperiod;
--		retval = compare_fn(sdev, buffer, ptr, DV_LOOPS);
-+		retval = compare_fn(sdev, q, buffer, ptr, DV_LOOPS);
- 
- 		if (retval == SPI_COMPARE_SUCCESS
- 		    || retval == SPI_COMPARE_SKIP_TEST)
-@@ -800,7 +802,8 @@ spi_dv_retrain(struct scsi_device *sdev, u8 *buffer, u8 *ptr,
- }
- 
- static int
--spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
-+spi_dv_device_get_echo_buffer(struct scsi_device *sdev,
-+			      struct request_queue *q, u8 *buffer)
- {
- 	int l, result;
- 
-@@ -824,8 +827,8 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
- 	 * (reservation conflict, device not ready, etc) just
- 	 * skip the write tests */
- 	for (l = 0; ; l++) {
--		result = spi_execute(sdev, spi_test_unit_ready, DMA_NONE, 
--				     NULL, 0, NULL);
-+		result = spi_execute(q, spi_test_unit_ready, DMA_NONE, NULL, 0,
-+				     NULL);
- 
- 		if(result) {
- 			if(l >= 3)
-@@ -836,8 +839,8 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
- 		}
- 	}
- 
--	result = spi_execute(sdev, spi_read_buffer_descriptor, 
--			     DMA_FROM_DEVICE, buffer, 4, NULL);
-+	result = spi_execute(q, spi_read_buffer_descriptor, DMA_FROM_DEVICE,
-+			     buffer, 4, NULL);
- 
- 	if (result)
- 		/* Device has no echo buffer */
-@@ -847,7 +850,8 @@ spi_dv_device_get_echo_buffer(struct scsi_device *sdev, u8 *buffer)
- }
+ /**
+  *	scsi_device_resume - Restart user issued commands to a quiesced device.
+@@ -2569,30 +2569,30 @@ void scsi_device_resume(struct scsi_device *sdev)
+ EXPORT_SYMBOL(scsi_device_resume);
  
  static void
--spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
-+spi_dv_device_internal(struct scsi_device *sdev, struct request_queue *q,
-+		       u8 *buffer)
+-device_quiesce_fn(struct scsi_device *sdev, void *data)
++device_freeze_fn(struct scsi_device *sdev, void *data)
  {
- 	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
+-	scsi_device_quiesce(sdev);
++	blk_mq_freeze_queue(sdev->request_queue);
+ }
+ 
+ void
+-scsi_target_quiesce(struct scsi_target *starget)
++scsi_target_freeze(struct scsi_target *starget)
+ {
+-	starget_for_each_device(starget, NULL, device_quiesce_fn);
++	starget_for_each_device(starget, NULL, device_freeze_fn);
+ }
+-EXPORT_SYMBOL(scsi_target_quiesce);
++EXPORT_SYMBOL(scsi_target_freeze);
+ 
+ static void
+-device_resume_fn(struct scsi_device *sdev, void *data)
++device_unfreeze_fn(struct scsi_device *sdev, void *data)
+ {
+-	scsi_device_resume(sdev);
++	blk_mq_unfreeze_queue(sdev->request_queue);
+ }
+ 
+ void
+-scsi_target_resume(struct scsi_target *starget)
++scsi_target_unfreeze(struct scsi_target *starget)
+ {
+-	starget_for_each_device(starget, NULL, device_resume_fn);
++	starget_for_each_device(starget, NULL, device_unfreeze_fn);
+ }
+-EXPORT_SYMBOL(scsi_target_resume);
++EXPORT_SYMBOL(scsi_target_unfreeze);
+ 
+ /**
+  * scsi_internal_device_block_nowait - try to transition to the SDEV_BLOCK state
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index d12ada035961..6b9203df84c8 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -95,6 +95,8 @@ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern void scsi_exit_queue(void);
+ extern void scsi_evt_thread(struct work_struct *work);
++extern int scsi_device_quiesce(struct scsi_device *sdev);
++extern void scsi_device_resume(struct scsi_device *sdev);
+ struct request_queue;
+ struct request;
+ 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 959990f66865..63bec8980b27 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -997,59 +997,75 @@ void
+ spi_dv_device(struct scsi_device *sdev)
+ {
  	struct scsi_target *starget = sdev->sdev_target;
-@@ -859,7 +863,7 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 	DV_SET(offset, 0);
- 	DV_SET(width, 0);
++	struct request_queue *q1, *q2;
+ 	u8 *buffer;
+ 	const int len = SPI_MAX_ECHO_BUFFER_SIZE*2;
  
--	if (spi_dv_device_compare_inquiry(sdev, buffer, buffer, DV_LOOPS)
-+	if (spi_dv_device_compare_inquiry(sdev, q, buffer, buffer, DV_LOOPS)
- 	    != SPI_COMPARE_SUCCESS) {
- 		starget_printk(KERN_ERR, starget, "Domain Validation Initial Inquiry Failed\n");
- 		/* FIXME: should probably offline the device here? */
-@@ -875,9 +879,8 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 	if (i->f->set_width && max_width) {
- 		i->f->set_width(starget, 1);
+ 	/*
+-	 * Because this function and the power management code both call
+-	 * scsi_device_quiesce(), it is not safe to perform domain validation
+-	 * while suspend or resume is in progress. Hence the
+-	 * lock/unlock_system_sleep() calls.
++	 * Because creates a new request queue that is not visible to the rest
++	 * of the system, domain validation must be serialized against suspend,
++	 * resume and runtime power management. Hence the
++	 * lock/unlock_system_sleep() and scsi_autopm_{get,put}_device() calls.
+ 	 */
+ 	lock_system_sleep();
  
--		if (spi_dv_device_compare_inquiry(sdev, buffer,
--						   buffer + len,
--						   DV_LOOPS)
-+		if (spi_dv_device_compare_inquiry(sdev, q, buffer, buffer + len,
-+						  DV_LOOPS)
- 		    != SPI_COMPARE_SUCCESS) {
- 			starget_printk(KERN_ERR, starget, "Wide Transfers Fail\n");
- 			i->f->set_width(starget, 0);
-@@ -946,7 +949,7 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 	DV_SET(width, max_width);
++	if (scsi_autopm_get_device(sdev))
++		goto unlock_system_sleep;
++
+ 	if (unlikely(spi_dv_in_progress(starget)))
+-		goto unlock;
++		goto put_autopm;
  
- 	/* Do the read only INQUIRY tests */
--	spi_dv_retrain(sdev, buffer, buffer + sdev->inquiry_len,
-+	spi_dv_retrain(sdev, q, buffer, buffer + sdev->inquiry_len,
- 		       spi_dv_device_compare_inquiry);
- 	/* See if we actually managed to negotiate and sustain DT */
- 	if (i->f->get_dt)
-@@ -958,7 +961,7 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 	 * negotiated DT */
+ 	if (unlikely(scsi_device_get(sdev)))
+-		goto unlock;
++		goto put_autopm;
  
- 	if (len == -1 && spi_dt(starget))
--		len = spi_dv_device_get_echo_buffer(sdev, buffer);
-+		len = spi_dv_device_get_echo_buffer(sdev, q, buffer);
+ 	spi_dv_in_progress(starget) = 1;
  
- 	if (len <= 0) {
- 		starget_printk(KERN_INFO, starget, "Domain Validation skipping write tests\n");
-@@ -970,7 +973,7 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 		len = SPI_MAX_ECHO_BUFFER_SIZE;
- 	}
+ 	buffer = kzalloc(len, GFP_KERNEL);
  
--	if (spi_dv_retrain(sdev, buffer, buffer + len,
-+	if (spi_dv_retrain(sdev, q, buffer, buffer + len,
- 			   spi_dv_device_echo_buffer)
- 	    == SPI_COMPARE_SKIP_TEST) {
- 		/* OK, the stupid drive can't do a write echo buffer
-@@ -1030,7 +1033,7 @@ spi_dv_device(struct scsi_device *sdev)
+ 	if (unlikely(!buffer))
+-		goto out_put;
+-
+-	/* We need to verify that the actual device will quiesce; the
+-	 * later target quiesce is just a nice to have */
+-	if (unlikely(scsi_device_quiesce(sdev)))
+-		goto out_free;
+-
+-	scsi_target_quiesce(starget);
++		goto put_sdev;
+ 
+ 	spi_dv_pending(starget) = 1;
+ 	mutex_lock(&spi_dv_mutex(starget));
  
  	starget_printk(KERN_INFO, starget, "Beginning Domain Validation\n");
  
--	spi_dv_device_internal(sdev, buffer);
-+	spi_dv_device_internal(sdev, sdev->request_queue, buffer);
+-	spi_dv_device_internal(sdev, sdev->request_queue, buffer);
++	/*
++	 * Save the request queue pointer before it is overwritten by
++	 * scsi_mq_alloc_queue().
++	 */
++	q1 = sdev->request_queue;
++	q2 = scsi_mq_alloc_queue(sdev);
++
++	if (q2) {
++		/*
++		 * Restore the request queue pointer such that no other
++		 * subsystem can submit SCSI commands to 'sdev'.
++		 */
++		sdev->request_queue = q1;
++		scsi_target_freeze(starget);
++		spi_dv_device_internal(sdev, q2, buffer);
++		blk_cleanup_queue(q2);
++		scsi_target_unfreeze(starget);
++	}
  
  	starget_printk(KERN_INFO, starget, "Ending Domain Validation\n");
  
+ 	mutex_unlock(&spi_dv_mutex(starget));
+ 	spi_dv_pending(starget) = 0;
+ 
+-	scsi_target_resume(starget);
+-
+ 	spi_initial_dv(starget) = 1;
+ 
+- out_free:
+ 	kfree(buffer);
+- out_put:
++
++put_sdev:
+ 	spi_dv_in_progress(starget) = 0;
+ 	scsi_device_put(sdev);
+-unlock:
++
++put_autopm:
++	scsi_autopm_put_device(sdev);
++
++unlock_system_sleep:
+ 	unlock_system_sleep();
+ }
+ EXPORT_SYMBOL(spi_dv_device);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index ef6e96e12c7c..08f88ef04bc9 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -422,10 +422,8 @@ extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+ extern void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt);
+ extern void sdev_evt_send_simple(struct scsi_device *sdev,
+ 			  enum scsi_device_event evt_type, gfp_t gfpflags);
+-extern int scsi_device_quiesce(struct scsi_device *sdev);
+-extern void scsi_device_resume(struct scsi_device *sdev);
+-extern void scsi_target_quiesce(struct scsi_target *);
+-extern void scsi_target_resume(struct scsi_target *);
++extern void scsi_target_freeze(struct scsi_target *);
++extern void scsi_target_unfreeze(struct scsi_target *);
+ extern void scsi_scan_target(struct device *parent, unsigned int channel,
+ 			     unsigned int id, u64 lun,
+ 			     enum scsi_scan_mode rescan);
