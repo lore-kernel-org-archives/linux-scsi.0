@@ -2,96 +2,112 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D10F4C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:25:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 351B4C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 19:11:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A46A32067C
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:25:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E16E20866
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 19:11:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729360AbgHaSZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 14:25:28 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:43663 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1726174AbgHaSZ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 14:25:27 -0400
-Received: (qmail 560428 invoked by uid 1000); 31 Aug 2020 14:25:26 -0400
-Date:   Mon, 31 Aug 2020 14:25:26 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-scsi@vger.kernel.org,
-        Martin Kepplinger <martin.kepplinger@puri.sm>,
-        Can Guo <cang@codeaurora.org>
-Subject: Re: [PATCH RFC 6/6] block, scsi, ide: Only submit power management
- requests in state RPM_SUSPENDED
-Message-ID: <20200831182526.GA558270@rowland.harvard.edu>
-References: <20200831025357.32700-1-bvanassche@acm.org>
- <20200831025357.32700-7-bvanassche@acm.org>
+        id S1729463AbgHaTLz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 15:11:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47662 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727993AbgHaTLy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Aug 2020 15:11:54 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 09F9DAE1C;
+        Mon, 31 Aug 2020 19:11:52 +0000 (UTC)
+Message-ID: <a5a256d116dfa19e0666ae6ef128b5dea6596547.camel@suse.com>
+Subject: Re: [PATCH v2 0/4] qla2xxx: A couple crash fixes
+From:   Martin Wilck <mwilck@suse.com>
+To:     Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
+Date:   Mon, 31 Aug 2020 21:11:51 +0200
+In-Reply-To: <20200831161854.70879-1-dwagner@suse.de>
+References: <20200831161854.70879-1-dwagner@suse.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.36.5 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200831025357.32700-7-bvanassche@acm.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Aug 30, 2020 at 07:53:57PM -0700, Bart Van Assche wrote:
-> Recently Martin Kepplinger reported a problem with the SCSI runtime PM
-> code. Alan Stern root-caused that deadlock as follows:
+On Mon, 2020-08-31 at 18:18 +0200, Daniel Wagner wrote:
+> changes since v1:
 > 
-> 	Thread 0		Thread 1
-> 	--------		--------
-> 	Start runtime suspend
-> 	blk_pre_runtime_suspend calls
-> 	  blk_set_pm_only and sets
-> 	  q->rpm_status to RPM_SUSPENDING
+>  - added dummy warn function to patch#1
+>  - added log entry to patch#4
 > 
-> 				Call sd_open -> ... -> scsi_test_unit_ready
-> 				  -> __scsi_execute -> ...
-> 				  -> blk_queue_enter
-> 				Sees BLK_MQ_REQ_PREEMPT set and
-> 				  RPM_SUSPENDING queue status, so does
-> 				  not postpone the request
+> as suggested by Martin
 > 
-> 	blk_post_runtime_suspend sets
-> 	  q->rpm_status to RPM_SUSPENDED
-> 	The drive goes into runtime suspend
 > 
-> 				Issues the TEST UNIT READY request
-> 				Request fails because the drive is suspended
 > 
-> Fix that deadlock by only accepting power management requests while
-> suspended. Remove flag RQF_PREEMPT.
+> Initial cover letter:
+> 
+> The first crash we observed is due memory corruption in the srb
+> memory
+> pool. Unforuntatly, I couldn't find the source of the problem but the
+> workaround by resetting the cleanup callbacks 'fixes' this problem
+> (patch #1). I think as intermeditate step this should be merged until
+> the real cause can be identified.
+> 
+> The second crash is due a race condition(?) in the firmware. The sts
+> entries are not updated in time which leads to this crash pattern
+> which several customers have reported:
+> 
+>  #0 [c00000ffffd1bb80] scsi_dma_unmap at d00000001e4904d4 [scsi_mod]
+>  #1 [c00000ffffd1bbe0] qla2x00_sp_compl at d0000000204803cc [qla2xxx]
+>  #2 [c00000ffffd1bc20] qla24xx_process_response_queue at
+> d0000000204c5810 [qla2xxx]
+>  #3 [c00000ffffd1bd50] qla24xx_msix_rsp_q at d0000000204c8fd8
+> [qla2xxx]
+>  #4 [c00000ffffd1bde0] __handle_irq_event_percpu at c000000000189510
+>  #5 [c00000ffffd1bea0] handle_irq_event_percpu at c00000000018978c
+>  #6 [c00000ffffd1bee0] handle_irq_event at c00000000018984c
+>  #7 [c00000ffffd1bf10] handle_fasteoi_irq at c00000000018efc0
+>  #8 [c00000ffffd1bf40] generic_handle_irq at c000000000187f10
+>  #9 [c00000ffffd1bf60] __do_irq at c000000000018784
+>  #10 [c00000ffffd1bf90] call_do_irq at c00000000002caa4
+>  #11 [c00000ecca417a00] do_IRQ at c000000000018970
+>  #12 [c00000ecca417a50] restore_check_irq_replay at c00000000000de98
+> 
+> From analyzing the crash dump it was clear that
+> qla24xx_mbx_iocb_entry() calls sp->done (qla2x00_sp_compl) which
+> crashes because the response is not a mailbox entry, it is a status
+> entry. Patch #4 changes the process logic for mailbox commands so
+> that
+> the sp is parsed before calling the correct proccess function.
+> 
+> Thanks,
+> Daniel
+> 
+> Daniel Wagner (4):
+>   qla2xxx: Warn if done() or free() are called on an already freed
+> srb
+>   qla2xxx: Simplify return value logic in
+> qla2x00_get_sp_from_handle()
+>   qla2xxx: Drop unused function argument from
+>     qla2x00_get_sp_from_handle()
+>   qla2xxx: Handle incorrect entry_type entries
+> 
+>  drivers/scsi/qla2xxx/qla_gbl.h    |  3 +-
+>  drivers/scsi/qla2xxx/qla_init.c   | 10 ++++++
+>  drivers/scsi/qla2xxx/qla_inline.h |  5 +++
+>  drivers/scsi/qla2xxx/qla_isr.c    | 74 +++++++++++++++++++++++----
+> ------------
+>  drivers/scsi/qla2xxx/qla_mr.c     |  9 ++---
+>  5 files changed, 62 insertions(+), 39 deletions(-)
+> 
 
-Let me clarify this description.
+For the set:
+Reviewed-by: Martin Wilck <mwilck@suse.com>
 
-Firstly, the second-to-last sentence is ambiguous.  The word "only" is
-all too easy to misuse through carelessness.  In this case you meant
-to say "by accepting only power management requests while suspended",
-but what you actually wrote was equivalent to "by accepting power
-management requests only while suspended".  And as it happens, both
-meanings are incorrect because we don't want to accept _any_ requests
-while the device is suspended -- not even power-management requests.
-The description should have said "by postponing all non-power-management 
-requests while the device is suspending, suspended, or resuming."
 
-Secondly, the scenario described above is not a deadlock; it is a race 
-leading to a command failure.  Namely, the thread setting q->rpm_status 
-to RPM_SUSPENDED races with the thread testing q->rpm_status.
 
-Thirdly, this race is _not_ the problem that Martin encountered.  His 
-problem was a simple bug (failure to postpone a request), not a race or 
-a deadlock.
-
-Fourthly, the race illustrated above is, for now, theoretical.  It 
-cannot occur with the existing code base (mostly because the existing 
-code is buggy).  The advantage of your series over the patch I submitted 
-on Aug. 23 ("block: Fix bug in runtime-resume handling") is that it 
-fixes Martin's problem without introducing this new race.
-
-Alan Stern
