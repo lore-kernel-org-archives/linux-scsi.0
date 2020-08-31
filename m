@@ -2,357 +2,111 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2613C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 01:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E8DC433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E0B42076D
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 01:20:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="A1QiFAtY"
+	by mail.kernel.org (Postfix) with ESMTP id 65BDA2076D
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbgHaBUp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 Aug 2020 21:20:45 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:13430 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726618AbgHaBUj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 30 Aug 2020 21:20:39 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598836838; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=ttvdUTKiWDYnqwoVEcoNwY37B3FivNnyiDBj0vSZ7fc=;
- b=A1QiFAtYdzLfE2DQc7gWw/j3T+F0BIO6CiMXyEGhfN+GbFcNMa9n8h1Fd706BT8wZQIWLTXG
- FUI7y3HYimFdsL9Sz1YmEED+XM8xGApEgLo7qCuK/nWEfa22thNUNuPbH/oGqqzLCxsIUEf5
- y+Lv4a3oRsb95uesJm/14n6s/dE=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5f4c504808e77d893c42f236 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 31 Aug 2020 01:20:08
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C2FCFC433A0; Mon, 31 Aug 2020 01:20:07 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E64EBC433CA;
-        Mon, 31 Aug 2020 01:20:05 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Mon, 31 Aug 2020 09:20:05 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
+        id S1726775AbgHaCyK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 30 Aug 2020 22:54:10 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:33545 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726573AbgHaCyJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 22:54:09 -0400
+Received: by mail-pl1-f194.google.com with SMTP id h2so2361511plr.0
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2020 19:54:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=S8GnYufv9MZP7N22DryU0jHU7x5XYfvZ5ydievKhN2I=;
+        b=nj7YUQBlTcKnv8ItHN6MJwKS9XUgAAJy/VEsfl0kXy2tc6RsZptIkThHpu/pnrYKx3
+         zygP5sCFgmtwlD5PsKOTDKvgHw40/8lAfFhCcuhFqmQ5OyuvXzhE1VGLQLe8apavqmTM
+         ezJksUbGty3GVa8v+KKOKee8XvOowqOEvpshMHneS+Mu9gu4ctuI5jeWOltBpfxK0332
+         SUynII4OK+qQfKOnW2xjMxP5n8zl3hMquQ5xg4W2uvzvIh1MG9I+EyAww9tv3A9vFDEO
+         UEIwzdkbTf5G9dWjFP2lQ91UBk1uLDLPdM5CsFe8AqgjVyly8L2hX0im4G9TDf6cncmc
+         C3sQ==
+X-Gm-Message-State: AOAM531utQesqxYQdgRmxVE8kmwbPtRfqcQnOcghP/evKhj5IIr2pPT2
+        omEELCZX1aQGf/H7Vnq1QN8=
+X-Google-Smtp-Source: ABdhPJxiV2BNFdqYaNOGPLBxH1mY8UlWyz3nQaUUXvxkxoPgH80f0ydipEcvLbdRkQVqvfEQwQCOdg==
+X-Received: by 2002:a17:90a:af84:: with SMTP id w4mr8678964pjq.94.1598842448395;
+        Sun, 30 Aug 2020 19:54:08 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id l123sm583569pgl.24.2020.08.30.19.54.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 30 Aug 2020 19:54:07 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     linux-scsi@vger.kernel.org,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Can Guo <cang@codeaurora.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: Abort tasks before clear them from
- doorbell
-In-Reply-To: <26bfbdf4e5c5802cce6b0ddf5eddbd75bd306d0f.camel@gmail.com>
-References: <1598321228-21093-1-git-send-email-cang@codeaurora.org>
- <1598321228-21093-2-git-send-email-cang@codeaurora.org>
- <26bfbdf4e5c5802cce6b0ddf5eddbd75bd306d0f.camel@gmail.com>
-Message-ID: <ca7a01a24c8189646b5e7bb6bc8899bb@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        "David S . Miller" <davem@davemloft.net>
+Subject: [PATCH RFC 1/6] ide: Do not set the RQF_PREEMPT flag for sense requests
+Date:   Sun, 30 Aug 2020 19:53:52 -0700
+Message-Id: <20200831025357.32700-2-bvanassche@acm.org>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200831025357.32700-1-bvanassche@acm.org>
+References: <20200831025357.32700-1-bvanassche@acm.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bean,
+RQF_PREEMPT is used for two different purposes in the legacy IDE code:
+1. To mark power management requests.
+2. To mark requests that should preempt another request. An (old)
+   explanation of that feature is as follows:
+   "The IDE driver in the Linux kernel normally uses a series of busywait
+   delays during its initialization. When the driver executes these
+   busywaits, the kernel does nothing for the duration of the wait. The
+   time spent in these waits could be used for other initialization
+   activities, if they could be run concurrently with these waits.
 
-On 2020-08-31 02:11, Bean Huo wrote:
-> Hi Can
-> This patch conflicts and be not in line with this series patches : h
-> ttps://patchwork.kernel.org/cover/11709279/, which has been applied
-> into 5.9/scsi-fixes. But they are not apppiled in the 5.9/scsi-queue.
-> 
-> Maybe you should rebase your patch from scsi-fixes branch. or do you
-> have another better option?
-> 
-> Thanks,
-> Bean
-> 
+   More specifically, busywait-style delays such as udelay() in module
+   init functions inhibit kernel preemption because the Big Kernel Lock
+   is held, while yielding APIs such as schedule_timeout() allow preemption.
+   This is true because the kernel handles the BKL specially and releases
+   and reacquires it across reschedules allowed by the current thread.
 
-I am pushing this change due to LINERSET handling needs it and LINERESET
-handling is added based on my previous changes to err_handler, which are
-picked by 5.10/scsi-queue. So the two are applied for 5.10/scsi-queue 
-only.
-Any conflicts you see on 5.10/scsi-queue?
+   This IDE-preempt specification requires that the driver eliminate these
+   busywaits and replace them with a mechanism that allows other work to
+   proceed while the IDE driver is initializing."
 
-Thanks,
+Since I haven't found an implementation of (2), do not set the PREEMPT
+flag for sense requests. This patch causes sense requests to be
+postponed while a drive is suspended instead of being submitted to
+ide_queue_rq().
 
-Can Guo.
+If it would ever be necessary to restore the IDE PREEMPT functionality,
+that can be done by introducing a new flag in struct ide_request.
 
-> On Mon, 2020-08-24 at 19:07 -0700, Can Guo wrote:
->> To recovery non-fatal errors, no full reset is required, err_handler
->> only
->> clears those pending TRs/TMRs so that scsi layer can re-issue them.
->> In
->> current err_handler, TRs are directly cleared from UFS host's
->> doorbell but
->> not aborted from device side. However, according to the UFSHCI JEDEC
->> spec,
->> the host software shall use UTP Transfer Request List CLear Register
->> to
->> clear a task from UFS host's doorbell only when a UTP Transfer
->> Request is
->> expected to not be completed, e.g. when the host software receives a
->> “FUNCTION COMPLETE” Task Management response which means a Transfer
->> Request
->> was aborted. To follow the UFSHCI JEDEC spec, in err_handler, aborts
->> one TR
->> before clearing it from doorbell.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 143 ++++++++++++++++++++++++++--------
->> ------------
->>  1 file changed, 81 insertions(+), 62 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index b8441ad..000895f 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -235,6 +235,7 @@ static int ufshcd_setup_hba_vreg(struct ufs_hba
->> *hba, bool on);
->>  static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
->>  static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
->>  					 struct ufs_vreg *vreg);
->> +static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
->>  static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
->>  static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
->>  static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
->> @@ -5657,8 +5658,8 @@ static void ufshcd_err_handler(struct
->> work_struct *work)
->>  {
->>  	struct ufs_hba *hba;
->>  	unsigned long flags;
->> -	u32 err_xfer = 0;
->> -	u32 err_tm = 0;
->> +	bool err_xfer = false;
->> +	bool err_tm = false;
->>  	int err = 0;
->>  	int tag;
->>  	bool needs_reset = false;
->> @@ -5734,7 +5735,7 @@ static void ufshcd_err_handler(struct
->> work_struct *work)
->>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
->>  	/* Clear pending transfer requests */
->>  	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
->> -		if (ufshcd_clear_cmd(hba, tag)) {
->> +		if (ufshcd_try_to_abort_task(hba, tag)) {
->>  			err_xfer = true;
->>  			goto lock_skip_pending_xfer_clear;
->>  		}
->> @@ -6486,7 +6487,7 @@ static void ufshcd_set_req_abort_skip(struct
->> ufs_hba *hba, unsigned long bitmap)
->>  }
->> 
->>  /**
->> - * ufshcd_abort - abort a specific command
->> + * ufshcd_try_to_abort_task - abort a specific task
->>   * @cmd: SCSI command pointer
->>   *
->>   * Abort the pending command in device by sending UFS_ABORT_TASK
->> task management
->> @@ -6495,6 +6496,80 @@ static void ufshcd_set_req_abort_skip(struct
->> ufs_hba *hba, unsigned long bitmap)
->>   * issued. To avoid that, first issue UFS_QUERY_TASK to check if the
->> command is
->>   * really issued and then try to abort it.
->>   *
->> + * Returns zero on success, non-zero on failure
->> + */
->> +static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
->> +{
->> +	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
->> +	int err = 0;
->> +	int poll_cnt;
->> +	u8 resp = 0xF;
->> +	u32 reg;
->> +
->> +	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
->> +		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp-
->> >task_tag,
->> +				UFS_QUERY_TASK, &resp);
->> +		if (!err && resp ==
->> UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED) {
->> +			/* cmd pending in the device */
->> +			dev_err(hba->dev, "%s: cmd pending in the
->> device. tag = %d\n",
->> +				__func__, tag);
->> +			break;
->> +		} else if (!err && resp ==
->> UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
->> +			/*
->> +			 * cmd not pending in the device, check if it
->> is
->> +			 * in transition.
->> +			 */
->> +			dev_err(hba->dev, "%s: cmd at tag %d not
->> pending in the device.\n",
->> +				__func__, tag);
->> +			reg = ufshcd_readl(hba,
->> REG_UTP_TRANSFER_REQ_DOOR_BELL);
->> +			if (reg & (1 << tag)) {
->> +				/* sleep for max. 200us to stabilize */
->> +				usleep_range(100, 200);
->> +				continue;
->> +			}
->> +			/* command completed already */
->> +			dev_err(hba->dev, "%s: cmd at tag %d
->> successfully cleared from DB.\n",
->> +				__func__, tag);
->> +			goto out;
->> +		} else {
->> +			dev_err(hba->dev,
->> +				"%s: no response from device. tag = %d,
->> err %d\n",
->> +				__func__, tag, err);
->> +			if (!err)
->> +				err = resp; /* service response error
->> */
->> +			goto out;
->> +		}
->> +	}
->> +
->> +	if (!poll_cnt) {
->> +		err = -EBUSY;
->> +		goto out;
->> +	}
->> +
->> +	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
->> +			UFS_ABORT_TASK, &resp);
->> +	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
->> +		if (!err) {
->> +			err = resp; /* service response error */
->> +			dev_err(hba->dev, "%s: issued. tag = %d, err
->> %d\n",
->> +				__func__, tag, err);
->> +		}
->> +		goto out;
->> +	}
->> +
->> +	err = ufshcd_clear_cmd(hba, tag);
->> +	if (err)
->> +		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d,
->> err %d\n",
->> +			__func__, tag, err);
->> +
->> +out:
->> +	return err;
->> +}
->> +
->> +/**
->> + * ufshcd_abort - scsi host template eh_abort_handler callback
->> + * @cmd: SCSI command pointer
->> + *
->>   * Returns SUCCESS/FAILED
->>   */
->>  static int ufshcd_abort(struct scsi_cmnd *cmd)
->> @@ -6504,8 +6579,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->>  	unsigned long flags;
->>  	unsigned int tag;
->>  	int err = 0;
->> -	int poll_cnt;
->> -	u8 resp = 0xF;
->>  	struct ufshcd_lrb *lrbp;
->>  	u32 reg;
->> 
->> @@ -6574,63 +6647,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->>  		goto out;
->>  	}
->> 
->> -	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
->> -		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp-
->> >task_tag,
->> -				UFS_QUERY_TASK, &resp);
->> -		if (!err && resp ==
->> UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED) {
->> -			/* cmd pending in the device */
->> -			dev_err(hba->dev, "%s: cmd pending in the
->> device. tag = %d\n",
->> -				__func__, tag);
->> -			break;
->> -		} else if (!err && resp ==
->> UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
->> -			/*
->> -			 * cmd not pending in the device, check if it
->> is
->> -			 * in transition.
->> -			 */
->> -			dev_err(hba->dev, "%s: cmd at tag %d not
->> pending in the device.\n",
->> -				__func__, tag);
->> -			reg = ufshcd_readl(hba,
->> REG_UTP_TRANSFER_REQ_DOOR_BELL);
->> -			if (reg & (1 << tag)) {
->> -				/* sleep for max. 200us to stabilize */
->> -				usleep_range(100, 200);
->> -				continue;
->> -			}
->> -			/* command completed already */
->> -			dev_err(hba->dev, "%s: cmd at tag %d
->> successfully cleared from DB.\n",
->> -				__func__, tag);
->> -			goto out;
->> -		} else {
->> -			dev_err(hba->dev,
->> -				"%s: no response from device. tag = %d,
->> err %d\n",
->> -				__func__, tag, err);
->> -			if (!err)
->> -				err = resp; /* service response error
->> */
->> -			goto out;
->> -		}
->> -	}
->> -
->> -	if (!poll_cnt) {
->> -		err = -EBUSY;
->> -		goto out;
->> -	}
->> -
->> -	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
->> -			UFS_ABORT_TASK, &resp);
->> -	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
->> -		if (!err) {
->> -			err = resp; /* service response error */
->> -			dev_err(hba->dev, "%s: issued. tag = %d, err
->> %d\n",
->> -				__func__, tag, err);
->> -		}
->> -		goto out;
->> -	}
->> -
->> -	err = ufshcd_clear_cmd(hba, tag);
->> -	if (err) {
->> -		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d,
->> err %d\n",
->> -			__func__, tag, err);
->> +	err = ufshcd_try_to_abort_task(hba, tag);
->> +	if (err)
->>  		goto out;
->> -	}
->> 
->>  	spin_lock_irqsave(host->host_lock, flags);
->>  	__ufshcd_transfer_req_compl(hba, (1UL << tag));
+This patch is a first step towards removing the PREEMPT flag from the
+block layer.
+
+Cc: David S. Miller <davem@davemloft.net>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ide/ide-atapi.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 2162bc80f09e..013ad33fbbc8 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -223,7 +223,6 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
+ 	sense_rq->rq_disk = rq->rq_disk;
+ 	sense_rq->cmd_flags = REQ_OP_DRV_IN;
+ 	ide_req(sense_rq)->type = ATA_PRIV_SENSE;
+-	sense_rq->rq_flags |= RQF_PREEMPT;
+ 
+ 	req->cmd[0] = GPCMD_REQUEST_SENSE;
+ 	req->cmd[4] = cmd_len;
