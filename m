@@ -2,112 +2,95 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D360C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 17:39:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7289FC433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 17:41:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07AA32071B
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 17:39:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F8C220678
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 17:41:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="e0Zo8/yJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="n/YxVupF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727094AbgHaRi5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 13:38:57 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:30155 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726068AbgHaRi4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Aug 2020 13:38:56 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1598895536; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=tLMc2AoC+KjzdShJAZhh/7JBmG+icFLxMYh/8L1monU=;
- b=e0Zo8/yJ9Jk67cPdhBJmVOhoVssb8mkaH03RCufgDXcWNhqaxKnce67FRotlP3v+QIwL0065
- pHIGy9aZqtx5UzEhc3co1RJ+KpDLiLWpFNYA2bKCFOEzFtiYqUMMr8Y2Ayz6j0+cXP7TOegO
- W9yC6qlp2SWjpPJRYInLTI4m/eM=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5f4d35af9bdf68cc03bc79b8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 31 Aug 2020 17:38:55
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 35EE5C43391; Mon, 31 Aug 2020 17:38:55 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8CA93C433CA;
-        Mon, 31 Aug 2020 17:38:54 +0000 (UTC)
+        id S1726226AbgHaRl1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 13:41:27 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:34362 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726490AbgHaRl0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 13:41:26 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VHU8An143431;
+        Mon, 31 Aug 2020 17:41:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=ylgEmUpxNYri/ejpa4SLv6GvDytYtRgIeXnL0d0fWOY=;
+ b=n/YxVupF8i/6lapvAfefiw5gMNRn36Po4q/GeA0QXZ34xVSYd432czcw2KXwkvfT6HEp
+ hDYZsNbpq/eQ3V+n6gfMUpXBDEfnBoBfp12j9qESPQixQGXXo2JkA9kH8Nm8+hiT5ALd
+ cSq7bLtJ3WJzjGxkrW/4q/8MtX17mFO7I1BSHWQuuMUNrE0GXxKUfzrGMbri6JEuCmdz
+ l/hoIH6LXkfM18wGJjv+H6mgACpjOxZmOjeQSM20Afre+oSJrOJjpTCJEPB1UJ81wUFu
+ upyNVaif+wnJQs18zrOXF6Vjrafni7zZf4k2A5dQx38DBz1MOby+BuXeaqGBHR8b59bl Sw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 337eykyjg1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 31 Aug 2020 17:41:21 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VHeuVY029462;
+        Mon, 31 Aug 2020 17:41:20 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 3380sqbrt1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 31 Aug 2020 17:41:20 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07VHfJmE018234;
+        Mon, 31 Aug 2020 17:41:19 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 31 Aug 2020 10:41:18 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Colin King <colin.king@canonical.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        James Smart <james.smart@broadcom.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] lpfc: fix spelling mistake "Cant" -> "Can't"
+Date:   Mon, 31 Aug 2020 13:41:05 -0400
+Message-Id: <159889566024.22322.10247395222535588835.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200810101238.61787-1-colin.king@canonical.com>
+References: <20200810101238.61787-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 31 Aug 2020 10:38:54 -0700
-From:   nguyenb@codeaurora.org
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Nitin Rawat <nitirawa@codeaurora.org>,
-        Bean Huo <beanhuo@micron.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
- Auto-Hibernate Timer
-In-Reply-To: <56c8bde3-2457-402f-0ad2-94fc1fe12cd5@acm.org>
-References: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
- <56c8bde3-2457-402f-0ad2-94fc1fe12cd5@acm.org>
-Message-ID: <0914db1a7aaa8b3b528f2298eb213b3c@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008310105
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1011 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008310104
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-28 20:13, Bart Van Assche wrote:
-> On 2020-08-28 18:05, Bao D. Nguyen wrote:
->>  static ssize_t auto_hibern8_show(struct device *dev,
->>  				 struct device_attribute *attr, char *buf)
->>  {
->> +	u32 ahit;
->>  	struct ufs_hba *hba = dev_get_drvdata(dev);
-> 
-> Although not strictly required for SCSI code, how about following the 
-> "reverse
-> christmas tree" convention and adding "u32 ahit" below the "hba" 
-> declaration?
-Thanks for your comment. I will change it.
->>  	if (!ufshcd_is_auto_hibern8_supported(hba))
->>  		return -EOPNOTSUPP;
->> 
->> -	return snprintf(buf, PAGE_SIZE, "%d\n", 
->> ufshcd_ahit_to_us(hba->ahit));
->> +	pm_runtime_get_sync(hba->dev);
->> +	ufshcd_hold(hba, false);
->> +	ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
->> +	ufshcd_release(hba);
->> +	pm_runtime_put_sync(hba->dev);
->> +
->> +	return scnprintf(buf, PAGE_SIZE, "%d\n", ufshcd_ahit_to_us(ahit));
->>  }
-> 
-> Why the pm_runtime_get_sync()/pm_runtime_put_sync() and
-> ufshcd_hold()/ufshcd_release() calls? I don't think these are necessary 
-> here.
-We may try to access the hardware register during runtime suspend or UFS 
-clock is gated.
-UFS clock gating can happen even during runtime resume. Here we are 
-trying to prevent NoC error
-due to unclocked access.
-> Thanks,
-> 
-> Bart.
+On Mon, 10 Aug 2020 11:12:38 +0100, Colin King wrote:
+
+> There is a spelling mistake in an error message. Fix it.
+
+Applied to 5.10/scsi-queue, thanks!
+
+[1/1] scsi: lpfc: Fix spelling mistake "Cant" -> "Can't"
+      https://git.kernel.org/mkp/scsi/c/a9b83986fd6e
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
