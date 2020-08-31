@@ -2,57 +2,54 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E7B3C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BDFC433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 685592076D
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81D8520782
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 02:54:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727042AbgHaCyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 Aug 2020 22:54:15 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:46400 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726573AbgHaCyK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 22:54:10 -0400
-Received: by mail-pl1-f195.google.com with SMTP id k13so2328333plk.13
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2020 19:54:10 -0700 (PDT)
+        id S1727043AbgHaCyS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 30 Aug 2020 22:54:18 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:41588 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726687AbgHaCyO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Aug 2020 22:54:14 -0400
+Received: by mail-pf1-f195.google.com with SMTP id t9so3766879pfq.8
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2020 19:54:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=HUKSBOdCli73E40HgK4a0srrRRXVezp10WSLTZYZcj0=;
-        b=ow49/JPbc9h/EQAsXW3Y8G5vqMaGQNUrKX+kSDZbsTNtDkK54x6CSsz/xNMOJp+gJw
-         3+TnXtkMkoLVpj78a5xho+Uc8ihJrjx75tE3UuZQrz/07dDmK3yvsqBd3NNg0WDNAz0/
-         EIuuS0HHtSrxtV2+3u9kqtt2tePBXqhEfQTZxncrn7nvG0nbtXkpeYmZeIymTTxO2hTm
-         asG1IyIKLItIyyFj9/Y0DjHtyfv3xNkYSyg5c7Le+yZPe1AxyQ6tqo45anoiDkMdrVZL
-         6C7j0YIJho98vkUZaHWEld7PIPVwDYsKBzScrU6ogyypnodXm09PEa08Bp7TzASjGyNF
-         ms+A==
-X-Gm-Message-State: AOAM530MomXEGDwnc34mae8B9kQhFXEUjAK4jLl6jFKM6dpbEtEAxUxt
-        +EY8cUJ9eEoZyC4lHjoEqKg=
-X-Google-Smtp-Source: ABdhPJxbgFMdKy7l6KubWC5cOqNgU7NaoEKJweDwUt/29dlHM0F6o8aIkrEpxd/F1rldC5XiM7Dc2A==
-X-Received: by 2002:a17:90b:289:: with SMTP id az9mr7116465pjb.31.1598842449797;
-        Sun, 30 Aug 2020 19:54:09 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/QJfcSZkg0GwS1gdT+HrJeHUZS+JFQJkkIZVE9XrBs0=;
+        b=oHwSEpWleBH3x9SdxRkZzJ79Ke6GAoPLmKtB3Utcj/W5+4UesclXE3cD4rsxMQU15o
+         9fQ02Hzx8YClbRxDR2D/jnaLywNXsBWi4LpQ97tX0jiXebaEFEkzXJMZeDUBIkgY99Gr
+         KxABuTzoi5OEzvFC++XpPVThGJBYvTHBUQEdf9aL8cRZQP21g6/Sio2RR/SnhlTQRvEC
+         H+nmHAKBEmgfuaZQPGo+YvxWcNdkTaRsDfimbUa8nz6bEJES/6+sOR9IthILFRAhkbNv
+         3yU38i0lTO1yhQZZaSlYa/OLVmY+2Re74x7zlRSDanH9wwHzzQRyf6+hIRXLI/vhjx2x
+         TxkA==
+X-Gm-Message-State: AOAM530yckgAZI4NnbZIRFfT9y8iI8t59mA4rBBhRZxq21EvJWBH/fjN
+        CKKYvygjTpKbO5VhQY6OuJU=
+X-Google-Smtp-Source: ABdhPJxTpXXkfIo6TDJMcPTvX4jYUIZTd9+anfF7Ql2P5RM1yta/5YIEkpI7A2TopgUqjMJws3TFGg==
+X-Received: by 2002:a63:6e01:: with SMTP id j1mr6672623pgc.147.1598842446829;
+        Sun, 30 Aug 2020 19:54:06 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id l123sm583569pgl.24.2020.08.30.19.54.08
+        by smtp.gmail.com with ESMTPSA id l123sm583569pgl.24.2020.08.30.19.54.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 30 Aug 2020 19:54:08 -0700 (PDT)
+        Sun, 30 Aug 2020 19:54:05 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Alan Stern <stern@rowland.harvard.edu>
 Cc:     linux-scsi@vger.kernel.org,
         Martin Kepplinger <martin.kepplinger@puri.sm>,
         Can Guo <cang@codeaurora.org>,
         Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH RFC 2/6] scsi: Remove an incorrect comment
-Date:   Sun, 30 Aug 2020 19:53:53 -0700
-Message-Id: <20200831025357.32700-3-bvanassche@acm.org>
+Subject: [PATCH RFC 0/6] Fix a deadlock in the SCSI power management code
+Date:   Sun, 30 Aug 2020 19:53:51 -0700
+Message-Id: <20200831025357.32700-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200831025357.32700-1-bvanassche@acm.org>
-References: <20200831025357.32700-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -60,24 +57,31 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_device.sdev_target is used in more code than the single_lun code,
-hence remove the comment next to the definition of the sdev_target member.
+Recently Martin Kepplinger reported a problem with the SCSI runtime PM
+code. Alan Stern root-caused the reported deadlock. This patch series is
+an attempt to fix that deadlock. These patches compile but have not yet
+been tested.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- include/scsi/scsi_device.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Bart Van Assche (6):
+  ide: Do not set the RQF_PREEMPT flag for sense requests
+  scsi: Remove an incorrect comment
+  scsi: Pass a request queue pointer to __scsi_execute()
+  scsi_transport_spi: Make spi_execute() accept a request queue pointer
+  scsi_transport_spi: Freeze request queues instead of quiescing
+  block, scsi, ide: Only submit power management requests in state
+    RPM_SUSPENDED
 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index bc5909033d13..264501d23aea 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -144,7 +144,7 @@ struct scsi_device {
- 	struct scsi_vpd __rcu *vpd_pg80;
- 	struct scsi_vpd __rcu *vpd_pg89;
- 	unsigned char current_tag;	/* current tag */
--	struct scsi_target      *sdev_target;   /* used only for single_lun */
-+	struct scsi_target      *sdev_target;
- 
- 	blist_flags_t		sdev_bflags; /* black/white flags as also found in
- 				 * scsi_devinfo.[hc]. For now used only to
+ block/blk-core.c                  |   6 +-
+ block/blk-mq-debugfs.c            |   1 -
+ block/blk-mq.c                    |   4 +-
+ drivers/ide/ide-atapi.c           |   1 -
+ drivers/ide/ide-io.c              |   3 +-
+ drivers/ide/ide-pm.c              |   2 +-
+ drivers/scsi/scsi_lib.c           |  61 ++++++++-------
+ drivers/scsi/scsi_priv.h          |   2 +
+ drivers/scsi/scsi_transport_spi.c | 123 +++++++++++++++++-------------
+ include/linux/blk-mq.h            |   4 +-
+ include/linux/blkdev.h            |   6 +-
+ include/scsi/scsi_device.h        |  16 ++--
+ 12 files changed, 120 insertions(+), 109 deletions(-)
+
