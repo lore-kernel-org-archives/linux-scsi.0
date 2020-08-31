@@ -2,169 +2,215 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F280DC433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 11:41:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C720CC433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 12:02:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD6222098B
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 11:41:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FCCA2083E
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 12:02:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="bZLz65AF";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="LwmXMh2Z"
+	dkim=pass (2048-bit key) header.d=bytedance-com.20150623.gappssmtp.com header.i=@bytedance-com.20150623.gappssmtp.com header.b="YOKtzczK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726204AbgHaLlm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 07:41:42 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43652 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726121AbgHaLll (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Aug 2020 07:41:41 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07VBfW8k031542;
-        Mon, 31 Aug 2020 04:41:32 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0220;
- bh=6THUmfS9xdAztoPkGwC3FaclSzAdOgo9MAPU11JJB18=;
- b=bZLz65AFED43KDg+HVDYAhdIB10wdhhVzYd0euYFvG18RUCZZBPbuszOQjnR6lQYO9Cs
- WjV1LmMDECchFCelMq5+Ozn28tmPehofGy9E6hTCFzMIly2nURUlzo580wNnpeuEWrfY
- GYllISyT3JpBmAlEy+luunRphWYlYRIv3fMjBgwjAFtwBTz5Xp1UKDuCBdsDzHn9o4rN
- /lB1WHkSGJfNP2U2iN5ELIoNCFjmCCiK+1vcPtvWCc+g33TJkIbplIdBVxO5a86SUrQ4
- kpP4w2wVXYlpJEF4RZHgeVBKoGUv0rmLDQ6CyMWZM4kozM/A3ssoixajKXzSU0YFTfSu 0g== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 337phprwa7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 31 Aug 2020 04:41:31 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 31 Aug
- 2020 04:41:30 -0700
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 31 Aug
- 2020 04:41:29 -0700
-Received: from NAM04-BN3-obe.outbound.protection.outlook.com (104.47.46.59) by
- SC-EXCH03.marvell.com (10.93.176.83) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Mon, 31 Aug 2020 04:41:29 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ks6aknUu2/jI3i+ABSrlNKfJzeYfYdkWfHtZA+d26h3wMJhEioXjKLOHyGuyBqmY3dA9YGR3snXIhGd9Azc8yfxJETBi9gdd42vwpy3pPBSPWdEJOgJ7YkinFYuO7LUCw4iSfhorIACWBQ+cj/qNP20o4QYOiqbnEhazuf+VfFMe6FK57MNk3IbzIF+OUAmcnbK8Xxw2mKwdhBGhbzasNhZh+dadmsLBAShN3WVqV//M3AwHsO9W186jONxw+1IRAdcixhBbf6w9OYINZOXe5v1IFYyEeveE9Khyl0GB9+n5mka3jO0Wtvbk30GeZko8kMAKESeluAQhOq8KeRCxww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6THUmfS9xdAztoPkGwC3FaclSzAdOgo9MAPU11JJB18=;
- b=cOAW4AroT6E2onIx4JgbZJKeEoFWS37WLmVQEAUddTBp3FyItEt0jINwPNeYaQyxmmLT9y+6EwoLEvD3+U5KahdgMbUGqa86HcIWTUIvtDlpi19Gij/bHP+KWRMscNkUpJrEhX3NbwJsks02F8ARvrvcToZcyXm4JiPYl0Aq018sLDVAG431z4bntk4mdgTEeMsEcnaxAL7AVQj/H1hjebPB82fJq3gveyECQEhOZKxgdRurBtIlS5lHtWuU067EeEjIRTJJ27xcVpeOsuGZFPaBI7mm1IAPXV1PZsPyV880NrPIFPo7DKscDoTLNHgbNxHoHxMXBnYhKH6tLjaaLg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
+        id S1727037AbgHaMCj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 08:02:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51074 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727042AbgHaMCf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 08:02:35 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0723AC061575
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2020 05:02:34 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id v15so478455pgh.6
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2020 05:02:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6THUmfS9xdAztoPkGwC3FaclSzAdOgo9MAPU11JJB18=;
- b=LwmXMh2ZjQTtDisbqECPT0lOlPl7uvZX4J8ryfqcJXOd56wRJYwIPEPzZj0L4fCYrqRAj4CzoZXAo9KnguS0Y3uhG0W0NQ3a1bC6MQfeEBg2VgpoJBAP73q5c5K0//L+dlcPboEA+lDCaYowv4SxChsl5isuueAgjBY7jFpxYwM=
-Received: from DM6PR18MB3052.namprd18.prod.outlook.com (2603:10b6:5:167::19)
- by DM6PR18MB3212.namprd18.prod.outlook.com (2603:10b6:5:14a::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.19; Mon, 31 Aug
- 2020 11:41:27 +0000
-Received: from DM6PR18MB3052.namprd18.prod.outlook.com
- ([fe80::905a:ebb4:369c:ae1b]) by DM6PR18MB3052.namprd18.prod.outlook.com
- ([fe80::905a:ebb4:369c:ae1b%7]) with mapi id 15.20.3326.025; Mon, 31 Aug 2020
- 11:41:26 +0000
-From:   Nilesh Javali <njavali@marvell.com>
-To:     Xianting Tian <tian.xianting@h3c.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] [PATCH] scsi: qla2xxx: Fix the return value
-Thread-Topic: [EXT] [PATCH] scsi: qla2xxx: Fix the return value
-Thread-Index: AQHWfdsk2b/ryS/vZ06xqJFnAbz5JKlSGq5w
-Date:   Mon, 31 Aug 2020 11:41:26 +0000
-Message-ID: <DM6PR18MB3052E1B8F65AA24F80530E37AF510@DM6PR18MB3052.namprd18.prod.outlook.com>
-References: <20200829075746.19166-1-tian.xianting@h3c.com>
-In-Reply-To: <20200829075746.19166-1-tian.xianting@h3c.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: h3c.com; dkim=none (message not signed)
- header.d=none;h3c.com; dmarc=none action=none header.from=marvell.com;
-x-originating-ip: [59.90.36.175]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 662adcee-58ad-4d78-176d-08d84da2cb30
-x-ms-traffictypediagnostic: DM6PR18MB3212:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR18MB32129ACEA03197C58DC577ADAF510@DM6PR18MB3212.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5236;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: wkFMy9X34FlxareAnEekE1nzaJRpBFYE9jT96RAo66t3kb8m/n4WbqWE7L2FZpOtgjV4QjSB1XSR2n/gNfZgb7zJ6l4JJEw9cEswGbiOeni17kAJK4fbOnUvnXwID9PNkgxBEbnzsGJ8hUU0DUF/uLxyzxJFbLBcva6fDWuHT07BNorgZKqyC24/PYXxHne1ja2gNp44uiNlvBTqfnZanfZbd0XqlbXXgVI9zSk+IYjdxvG8KX/QeFcDLU37iSpwmEJcsgbOyMsL7XR2wuZNsA7e/+4gy6WdGZrb/bYzOtbYwL3YmYNo1CieRbxNbz+C
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR18MB3052.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(346002)(39850400004)(136003)(376002)(396003)(33656002)(26005)(53546011)(6506007)(8936002)(52536014)(76116006)(54906003)(71200400001)(110136005)(7696005)(5660300002)(2906002)(9686003)(83380400001)(55016002)(478600001)(66476007)(64756008)(66556008)(66946007)(6636002)(186003)(316002)(8676002)(4326008)(86362001)(66446008);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: T5D+lu0eIB7B0dOpVsbhLQKRJMi7yCYRkaRM2kg2RZiZB/KNyw8VbeXdb+xarvPvmmg1xxELP/j10BXgoGFlGw5CGwNG7vYRa4851P2j6lpL39eOI/xeR8nY84FAA6E4x7QlEDhvGhlq95On9oPSfmpcBhD2ZphcEMxr4OwZ8mVM/QZUzjtELbXQxuT433OilM0eAkxi+YGpFfldDy9FSlBWxVamFY4/3FgFn+rCt5G2BkPQpCx+OuhRnYlJbq1lSQ0kZcOzDi4RF5fDKhyYzdKo0X2LgnH2RyTOtjPqDu5zpsDjtzkmJZFX47WEgEaYn9b4f09oKp+CaT5D6YCtcO3G2Eq39MfefivUh374qSMyGkTycR3IJ4Psg0MfOc7Ekwdjd6G6k/RuG/kOLRE1bxdZOui16o0e3bGvmA039STomhxs4btU2RHsbznRRjPbgKML2CM2WtKY7sarlpY/eiV3Ntup2s/kBJ64cTDLVSD1+RA5Ho9p6ZAcb8pJErlDEmpVOP2bykL8pijqhez4nawmO0wbVSlVvsAXRjA6NqmL8JF8Xgz7JhWULCaIEWeQSvM5YYdpgqM4BeOd0ZZpzRec/AMeidi0qj1h0hizmqB8dL1n2uEsBbxGKbE0LqR0y0tn5Fup0a1oWI8YIeovPA==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=a08AENI2DFUJOZiGvCRTg/GXwM7bPYe8BJ+rCJWtnl4=;
+        b=YOKtzczKXPTHUogmgXL30H3d8zUTN7PA3qH1/VNy/iIqfSR5XtUZyM07m1Joxg985J
+         VrNmTjEogNeVB1HiyJhuBpqLFF53UzSzSNwyuyuXB7jAinMQyKMdsBL6X0pdjsjdobc+
+         ewgM7hdO7Id5BLI7CG75ztKZ2HVgBH0LYm9IO7z85XLDzDN9IG4X0vJHZWBUNK1h4IAR
+         BBgh52YyXAHcZPc6rfS1u5wBtniJAjmpQulu6mHEtyeB73B3roqTuMs568SyhmBcrbKZ
+         7pqQSzhoMrZNBTGewkIv9tLosYbAgL8Jgnm/8x/NzaRG291HqSY4Bup7OP/P7r0cPfWh
+         36jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=a08AENI2DFUJOZiGvCRTg/GXwM7bPYe8BJ+rCJWtnl4=;
+        b=ttP96kgV9DL7AB3fGtxQC+QVqr860OR88lJy7IPpFnO0J4cbbg+Z3Xz/8mgYP//R8B
+         WLdeispijYYrloymMaIEJfOH+5fq2M6mg7QJhnKo7uxwvVBg99P/7wgd92EnESn6+clj
+         djZSWfKvScrkfIt0uiq90OetCngn7mzzGZ/GyP1wGfVxY/8QaA5BiRQ295lSNwdxck4o
+         UOUyGiIei+dXFZE6V58jx+r08tL/6dsxBe6gfw/EKG9c2WnzqAm7GxFUeWZ5Z0kaO24h
+         ogP3SG9CFxzKQkjPVU2dQDsyyBIv9wezSI5HEttWALE810Gytgk/b7uxGSXuDmVdT4rn
+         4AWg==
+X-Gm-Message-State: AOAM5305HW+4+TTc7OtapeAl6j97RwTRNgD6dM+nai2Sfw58QhIPRcGQ
+        hxpO6OmpNtAvf86R9W3pP30R6Q==
+X-Google-Smtp-Source: ABdhPJyVcgDinpA+btaIb9dzZaKvDLDOFy3R9RZel/AFBg1k8y/YJWPQcqpdSx2jFCouDYNOHU0pag==
+X-Received: by 2002:a65:66c4:: with SMTP id c4mr1014869pgw.442.1598875354300;
+        Mon, 31 Aug 2020 05:02:34 -0700 (PDT)
+Received: from houpudeMacBook-Pro.local ([240e:b1:e401:1::d])
+        by smtp.gmail.com with ESMTPSA id q201sm7756648pfq.80.2020.08.31.05.02.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 31 Aug 2020 05:02:33 -0700 (PDT)
+Subject: Re: [PATCH] iscsi-target: fix hang in iscsit_access_np() when getting
+ tpg->np_login_sem
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, michael.christie@oracle.com
+Cc:     stable@vger.kernel.org
+References: <20200729130343.24976-1-houpu@bytedance.com>
+From:   Hou Pu <houpu@bytedance.com>
+Message-ID: <01a58989-8777-3967-ebcd-f8c080e18a3c@bytedance.com>
+Date:   Mon, 31 Aug 2020 20:02:20 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.11.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR18MB3052.namprd18.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 662adcee-58ad-4d78-176d-08d84da2cb30
-X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Aug 2020 11:41:26.1302
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: PyJQ4sTCw5OjJmEmwrxINh6wYSgCbCyPYCqVcvFwD8KC0mIXIGMdko5PGG137mibfD7vWnqpRo+N3BcjC0cuhA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR18MB3212
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-31_04:2020-08-31,2020-08-31 signatures=0
+In-Reply-To: <20200729130343.24976-1-houpu@bytedance.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Xianting Tian,
 
-Thanks for the patch.
+Hi,
 
-> -----Original Message-----
-> From: Xianting Tian <tian.xianting@h3c.com>
-> Sent: Saturday, August 29, 2020 1:28 PM
-> To: Nilesh Javali <njavali@marvell.com>; GR-QLogic-Storage-Upstream <GR-
-> QLogic-Storage-Upstream@marvell.com>; jejb@linux.ibm.com;
-> martin.petersen@oracle.com
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Xianting Ti=
-an
-> <tian.xianting@h3c.com>
-> Subject: [EXT] [PATCH] scsi: qla2xxx: Fix the return value
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
-> A negative error code should be returned.
->=20
-> Signed-off-by: Xianting Tian <tian.xianting@h3c.com>
+Could anyone help review this patch? It is an important
+fix.
+
+Login thread could hang __forever__ and only reboot could
+solve this. This happened several times in our production
+environment.
+
+np->np_login_timer is shared by all TPGs of a portal.
+should be used carefully. If a connection to iqn-TPG A start
+login timer, It should not stop by another connection
+to iqn-TPG B.
+
+np->np_login_timer protect potential hangs in
+__iscsi_target_login_thread.
+should be used locally in this function. It should really
+not be used in iscsi_target_login_sess_out from workqueue
+context.
+
+Thanks,
+Hou
+
+On 2020/7/29 9:03 PM, Hou Pu wrote:
+> The iscsi target login thread might stuck in following stack:
+> 
+> cat /proc/`pidof iscsi_np`/stack
+> [<0>] down_interruptible+0x42/0x50
+> [<0>] iscsit_access_np+0xe3/0x167
+> [<0>] iscsi_target_locate_portal+0x695/0x8ac
+> [<0>] __iscsi_target_login_thread+0x855/0xb82
+> [<0>] iscsi_target_login_thread+0x2f/0x5a
+> [<0>] kthread+0xfa/0x130
+> [<0>] ret_from_fork+0x1f/0x30
+> 
+> This could be reproduced by following steps:
+> 1. Initiator A try to login iqn1-tpg1 on port 3260. After finishing
+>     PDU exchange in the login thread and before the negotiation is
+>     finished, at this time the network link is down. In a production
+>     environment, this could happen. I could emulated it by bring
+>     the network card down in the initiator node by ifconfig eth0 down.
+>     (Now A could never finish this login. And tpg->np_login_sem is
+>     hold by it).
+> 2. Initiator B try to login iqn2-tpg1 on port 3260. After finishing
+>     PDU exchange in the login thread. The target expect to process
+>     remaining login PDUs in workqueue context.
+> 3. Initiator A' try to re-login to iqn1-tpg1 on port 3260 from
+>     a new socket. It will wait for tpg->np_login_sem with
+>     np->np_login_timer loaded to wait for at most 15 second.
+>     (Because the lock is held by A. A never gets a change to
+>     release tpg->np_login_sem. so A' should finally get timeout).
+> 4. Before A' got timeout. Initiator B gets negotiation failed and
+>     calls iscsi_target_login_drop()->iscsi_target_login_sess_out().
+>     The np->np_login_timer is canceled. And initiator A' will hang
+>     there forever. Because A' is now in the login thread. All other
+>     login requests could not be serviced.
+> 
+> Fix this by moving iscsi_stop_login_thread_timer() out of
+> iscsi_target_login_sess_out(). Also remove iscsi_np parameter
+> from iscsi_target_login_sess_out().
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Hou Pu <houpu@bytedance.com>
 > ---
->  drivers/scsi/qla2xxx/qla_target.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c
-> b/drivers/scsi/qla2xxx/qla_target.c
-> index fbb80a043..612e001cc 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -3781,7 +3781,7 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
->  		    "multiple abort. %p transport_state %x, t_state %x, "
->  		    "se_cmd_flags %x\n", cmd, cmd->se_cmd.transport_state,
->  		    cmd->se_cmd.t_state, cmd->se_cmd.se_cmd_flags);
-> -		return EIO;
-> +		return -EIO;
->  	}
->  	cmd->aborted =3D 1;
->  	cmd->trc_flags |=3D TRC_ABORT;
-> --
-> 2.17.1
-
-Acked-by: Nilesh Javali <njavali@marvell.com>
+>   drivers/target/iscsi/iscsi_target_login.c | 6 +++---
+>   drivers/target/iscsi/iscsi_target_login.h | 3 +--
+>   drivers/target/iscsi/iscsi_target_nego.c  | 3 +--
+>   3 files changed, 5 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+> index 85748e338858..893d1b406c29 100644
+> --- a/drivers/target/iscsi/iscsi_target_login.c
+> +++ b/drivers/target/iscsi/iscsi_target_login.c
+> @@ -1149,7 +1149,7 @@ void iscsit_free_conn(struct iscsi_conn *conn)
+>   }
+>   
+>   void iscsi_target_login_sess_out(struct iscsi_conn *conn,
+> -		struct iscsi_np *np, bool zero_tsih, bool new_sess)
+> +				 bool zero_tsih, bool new_sess)
+>   {
+>   	if (!new_sess)
+>   		goto old_sess_out;
+> @@ -1167,7 +1167,6 @@ void iscsi_target_login_sess_out(struct iscsi_conn *conn,
+>   	conn->sess = NULL;
+>   
+>   old_sess_out:
+> -	iscsi_stop_login_thread_timer(np);
+>   	/*
+>   	 * If login negotiation fails check if the Time2Retain timer
+>   	 * needs to be restarted.
+> @@ -1407,8 +1406,9 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
+>   new_sess_out:
+>   	new_sess = true;
+>   old_sess_out:
+> +	iscsi_stop_login_thread_timer(np);
+>   	tpg_np = conn->tpg_np;
+> -	iscsi_target_login_sess_out(conn, np, zero_tsih, new_sess);
+> +	iscsi_target_login_sess_out(conn, zero_tsih, new_sess);
+>   	new_sess = false;
+>   
+>   	if (tpg) {
+> diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
+> index 3b8e3639ff5d..fc95e6150253 100644
+> --- a/drivers/target/iscsi/iscsi_target_login.h
+> +++ b/drivers/target/iscsi/iscsi_target_login.h
+> @@ -22,8 +22,7 @@ extern int iscsit_put_login_tx(struct iscsi_conn *, struct iscsi_login *, u32);
+>   extern void iscsit_free_conn(struct iscsi_conn *);
+>   extern int iscsit_start_kthreads(struct iscsi_conn *);
+>   extern void iscsi_post_login_handler(struct iscsi_np *, struct iscsi_conn *, u8);
+> -extern void iscsi_target_login_sess_out(struct iscsi_conn *, struct iscsi_np *,
+> -				bool, bool);
+> +extern void iscsi_target_login_sess_out(struct iscsi_conn *, bool, bool);
+>   extern int iscsi_target_login_thread(void *);
+>   extern void iscsi_handle_login_thread_timeout(struct timer_list *t);
+>   
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+> index 685d771b51d4..e32d93b92742 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.c
+> +++ b/drivers/target/iscsi/iscsi_target_nego.c
+> @@ -535,12 +535,11 @@ static bool iscsi_target_sk_check_and_clear(struct iscsi_conn *conn, unsigned in
+>   
+>   static void iscsi_target_login_drop(struct iscsi_conn *conn, struct iscsi_login *login)
+>   {
+> -	struct iscsi_np *np = login->np;
+>   	bool zero_tsih = login->zero_tsih;
+>   
+>   	iscsi_remove_failed_auth_entry(conn);
+>   	iscsi_target_nego_release(conn);
+> -	iscsi_target_login_sess_out(conn, np, zero_tsih, true);
+> +	iscsi_target_login_sess_out(conn, zero_tsih, true);
+>   }
+>   
+>   struct conn_timeout {
+> 
