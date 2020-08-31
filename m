@@ -2,101 +2,98 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23889C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 17:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2B0BC433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01EBD214D8
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 17:43:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 783132083E
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 18:07:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f7AlhIj3"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="c9hR4jQE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728917AbgHaRng (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 13:43:36 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:50348 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726105AbgHaRn0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 13:43:26 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VHSrDR072950;
-        Mon, 31 Aug 2020 17:43:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=LP7KEZhg+XKWxIs/BSczmC1OoPoZUx3aWNFf7jH3Qe0=;
- b=f7AlhIj3J5T8JIrf1EOms30exoVXSEO8Rp89z0EioZ6Os1wfucGbgafkD55k1jI46liZ
- iPnYwRp2AM/dNRcWETy6qlzaaacr09THXbQSp2Uuiy9QeowUU2DtZX3W0Wk7/q5piwsu
- DLesClTUL2hp9fqzYgydCRgD0C4PZ4NS2NG7AFbjew+sbRUbAAokGxmege+vLaroc3/O
- NtXAF2fDIwY/Ih90dXetEqK0ZmIEOpXH/VhR8lXrerAW9sNzqwEn9w8WGH/Tx62OsNa0
- 5rYpbdVBf0u0YxwyJIEtajDRr1MfksDqzNdNJiMGsJ2H+/eWZRvjH9ogWbkLnxDJFPFb 1Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 337eeqqms1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 31 Aug 2020 17:43:19 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VHf8G9078432;
-        Mon, 31 Aug 2020 17:41:18 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 3380kkynmf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 31 Aug 2020 17:41:18 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07VHfGGH005072;
-        Mon, 31 Aug 2020 17:41:17 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 31 Aug 2020 10:41:16 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     QLogic-Storage-Upstream@qlogic.com, jejb@linux.ibm.com,
-        lalit.chandivade@qlogic.com,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        michaelc@cs.wisc.edu, vikas.chaudhary@qlogic.com,
-        JBottomley@Parallels.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: qla2xxx: Fix the size used in a 'dma_free_coherent()' call
-Date:   Mon, 31 Aug 2020 13:41:03 -0400
-Message-Id: <159889566023.22322.17846122781525526855.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200802110721.677707-1-christophe.jaillet@wanadoo.fr>
-References: <20200802110721.677707-1-christophe.jaillet@wanadoo.fr>
+        id S1728341AbgHaSHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 14:07:17 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:15408 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728239AbgHaSHR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Aug 2020 14:07:17 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1598897236; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=fAEf+wFDeBUv5cYz5qkmxYUlTUgGSo7Zjv4xY6DTkC8=;
+ b=c9hR4jQEfxPAryQNMjMyG9NOzRF9QpTUh7k3WPEaM9Ii6p+JtzY/zNGtTlvKnGfkCcV1Fd0N
+ TSVo1ja/ucBtmzKLfnPjJOF3+tfhjqhSjU9E76WXwsXY+zAvp6IzLQKhgksAu0I22znAdDwQ
+ oZn+DEFtv809NXxw07ObQqOfWXA=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 5f4d3c4c238e1efa37d512fe (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 31 Aug 2020 18:07:08
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E6991C43395; Mon, 31 Aug 2020 18:07:06 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 49534C433C6;
+        Mon, 31 Aug 2020 18:07:06 +0000 (UTC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=0 malwarescore=0 mlxlogscore=797 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008310105
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 priorityscore=1501
- lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
- phishscore=0 impostorscore=0 mlxlogscore=787 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008310104
+Date:   Mon, 31 Aug 2020 11:07:06 -0700
+From:   nguyenb@codeaurora.org
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
+ Auto-Hibernate Timer
+In-Reply-To: <BY5PR04MB6705177184FC1A0E5F7710FDFC530@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
+ <BY5PR04MB6705177184FC1A0E5F7710FDFC530@BY5PR04MB6705.namprd04.prod.outlook.com>
+Message-ID: <96e34a8d7d52dfbc47738f04d2a127c2@codeaurora.org>
+X-Sender: nguyenb@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2 Aug 2020 13:07:21 +0200, Christophe JAILLET wrote:
-
-> Update the size used in 'dma_free_coherent()' in order to match the one
-> used in the corresponding 'dma_alloc_coherent()'.
+On 2020-08-29 00:32, Avri Altman wrote:
+>> 
+>> The zero value Auto-Hibernate Timer is a valid setting, and it
+>> indicates the Auto-Hibernate feature being disabled. Correctly
+> Right. So " ufshcd_auto_hibern8_enable" is no longer an appropriate 
+> name.
+> Maybe ufshcd_auto_hibern8_set instead?
+Thanks for your comment. I am ok with the name change suggestion.
 > 
-> While at it, remove a memset after a call to 'dma_alloc_coherent()'.
-> This is useless since
-> commit 518a2f1925c3 ("dma-mapping: zero memory returned from dma_alloc_*")
-
-Applied to 5.10/scsi-queue, thanks!
-
-[1/1] scsi: qla2xxx: Fix the size used in a 'dma_free_coherent()' call
-      https://git.kernel.org/mkp/scsi/c/650b323c8e7c
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> Also, did you verified that no other platform relies on its non-zero 
+> value?
+I only tested the change on Qualcomm's platform. I do not have other 
+platforms to do the test.
+The UFS host controller spec JESD220E, Section 5.2.5 says
+"Software writes “0” to disable Auto-Hibernate Idle Timer". So the spec 
+supports this zero value.
+Some options:
+- We could add a hba->caps so that we only apply the change for 
+Qualcomm's platforms.
+This is not preferred because it is following the spec implementations.
+- Or other platforms that do not support the zero value needs a caps.
+> 
+> Thanks,
+> Avri
