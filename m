@@ -2,129 +2,107 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99776C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 19:38:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 965FEC433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 21:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7728E2078B
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 19:38:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6699B204FD
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 21:35:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZQSYiPZc"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CpXIUcGf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729607AbgHaTig (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 15:38:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37788 "EHLO
+        id S1726078AbgHaVf1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 17:35:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728865AbgHaTif (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 15:38:35 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26336C061573;
-        Mon, 31 Aug 2020 12:38:35 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id q13so6586114ejo.9;
-        Mon, 31 Aug 2020 12:38:35 -0700 (PDT)
+        with ESMTP id S1725941AbgHaVf0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 17:35:26 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8983FC061573
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2020 14:35:26 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id v16so3864148plo.1
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2020 14:35:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=BxkwfFtwYfG6geWP6qay6mU0JJ9SDlVBhDfv2d4WbyU=;
-        b=ZQSYiPZcXrYI9uWJ62qBJTIgZc68QR6thdOSu93hD3MzDSiIYhSvp/VuDGGsTCAEZT
-         5IQmUB6lG2M2SQdfcmsnK7koxa/+0m9h7p7iwPIlBJYkl8V/ZIqrNnFx2ArbOnSX069q
-         iImJJZvDhuWzf4Ne8TZTRnxHRwMw6emCaOCr+FXbOG1K7UREj1AtKRHHqw/IN7WuXnT8
-         C4OXWxy9TAXTcSJ12QF50mw3uhtEld6vZhrMvLd0GJIwycLAwCKGvlnWPYIFV4n3Ylkv
-         5GnjTSRuR5E8l7jwSZvYz5tL6zQ9rZpI8gKrh1DzAGvQPdPREBlIFx/5DPP0ym54XPfj
-         6bJQ==
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=bBFqx7Q2Bj17WNYbZVQWcvRBp3Ijs6sSaFs2UolhrCI=;
+        b=CpXIUcGff0tnIl31paNHc1DXvbCv7G/mwHZ8wfhXBqL1Q3eykNGrxaXYKC29rb26e/
+         vobv7bPdiM/b7MWiD07qL5D1JwdwwzL1XWPNe+eR31ur7XQ0zz6Oln+tSXckUD4jv05T
+         +mEq6wQUZCTvrrGvS0gA8yuGxH9TGjSyE3R+4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=BxkwfFtwYfG6geWP6qay6mU0JJ9SDlVBhDfv2d4WbyU=;
-        b=LGuv24EsEBjqc8s2YLO+kvIN4SOc2hkeuGbqxXilQtS+S8K90WQWYlkHsLvH2X4JCi
-         rypzWfJMEOdcn/qX25qv+kHCjrzUISitNII99bSk+y4hQVm7M5fuBoYllLnNSbgoveqE
-         EpgdUhdcDj4755fTlBVcNZi2yUjDg2fkg5YPju5Ps+68bIXDbjx5GQKJL3F7waXPj2Qv
-         HBNJd5TQjR3DO0ob/X/kS+J/FdyCpGz7GulqUtn4IgyMelpL0t5dAklmcXudmZDrbm1A
-         5zSpdbNyUZDfC2CVKQdnJl0OifnxK91Sn9LfZ6RfJ7BSvvRKQTz/qTLwvtbMtXoXXnT2
-         2KuQ==
-X-Gm-Message-State: AOAM532TtcNycsNhCEEcy4PVfLOm5orVRXmqg7JZ3AkXFzMOgWVYpAGz
-        Mpqq/iXOBuR56iN54H7eH7dAykX0tnc=
-X-Google-Smtp-Source: ABdhPJyhVmXbzZQkZquFJp9KcOeQF+UKEMNNkdfn2SOULX5XD8spOsjPQNMXSl6KwKewjOXL8lIisg==
-X-Received: by 2002:a17:906:5206:: with SMTP id g6mr2508687ejm.292.1598902713833;
-        Mon, 31 Aug 2020 12:38:33 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bfce6.dynamic.kabel-deutschland.de. [95.91.252.230])
-        by smtp.googlemail.com with ESMTPSA id hk14sm8859318ejb.88.2020.08.31.12.38.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 31 Aug 2020 12:38:32 -0700 (PDT)
-Message-ID: <137effceca0474e30bfbbfbbd71f9fbca53e1b9b.camel@gmail.com>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: Abort tasks before clear them from
- doorbell
-From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Date:   Mon, 31 Aug 2020 21:38:30 +0200
-In-Reply-To: <ca7a01a24c8189646b5e7bb6bc8899bb@codeaurora.org>
-References: <1598321228-21093-1-git-send-email-cang@codeaurora.org>
-         <1598321228-21093-2-git-send-email-cang@codeaurora.org>
-         <26bfbdf4e5c5802cce6b0ddf5eddbd75bd306d0f.camel@gmail.com>
-         <ca7a01a24c8189646b5e7bb6bc8899bb@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=bBFqx7Q2Bj17WNYbZVQWcvRBp3Ijs6sSaFs2UolhrCI=;
+        b=lzJkZfLvTnWuopndwv7CfEFVkbngVKVO9S2wB6xt7TroLNayN44gH6b0UWtyGJg51D
+         twBTVY7J5AV6TVwVgo+Tk9kVc8TaYs9aaqnrXcHyEUZhlHA7U+QENJPp/svM3bneNfRY
+         KLQ+uPTYZQ12nBx8HEckLy2Xqong/Sp5XXp2iwDMNKeQlD00KNncpKS/9Hg1wBSAcNCt
+         Ub4ngJ4AWZYsWJ4FplWFOUHf0dua0onF5dFUPqJUTt5gsLgvTDLlF3AtO2a3Bzg6EzMH
+         EqsMf1UVJNpIbKmfB3wWbim0cPmTz5eJ+MAcd2bI26ysdon+7oVMuED176GXL7ogdxmS
+         CyRw==
+X-Gm-Message-State: AOAM533xDNV2/WoCRBY27wwCU/4idNJlJYfQHhiaurigfFR1ubiQq3gV
+        GRhzr0KPq0Bnev4NYERolUYP/KngY3OH6YM2vgUUDHy9zPfxZNSwuyxVQE4YHTKSeB/jbKICN1y
+        HXx+8VNY58+IkXJl+cDSrcAQs1PwtogvO2GgSUL/kntotCSRobzE9HUPg5m7PeHg9V4uZQBQ7r3
+        OC3TE=
+X-Google-Smtp-Source: ABdhPJzulasrKn/kzRw3VrEMR/hN0Hu+2uMttJOE55fiN0m+kVzremfFwc0Uh0ny0+MoP30WWHhUIg==
+X-Received: by 2002:a17:90a:1697:: with SMTP id o23mr1104432pja.95.1598909725483;
+        Mon, 31 Aug 2020 14:35:25 -0700 (PDT)
+Received: from localhost.localdomain.localdomain ([192.19.228.250])
+        by smtp.gmail.com with ESMTPSA id w16sm9096855pfq.13.2020.08.31.14.35.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Aug 2020 14:35:24 -0700 (PDT)
+From:   James Smart <james.smart@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <james.smart@broadcom.com>
+Subject: [PATCH] scsi: add 256GBit speed setting to scsi fc transport
+Date:   Mon, 31 Aug 2020 14:35:18 -0700
+Message-Id: <20200831213518.48409-1-james.smart@broadcom.com>
+X-Mailer: git-send-email 2.26.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-08-31 at 09:20 +0800, Can Guo wrote:
-> On 2020-08-31 02:11, Bean Huo wrote:
-> > Hi Can
-> > This patch conflicts and be not in line with this series patches :
-> > h
-> > ttps://patchwork.kernel.org/cover/11709279/, which has been applied
-> > into 5.9/scsi-fixes. But they are not apppiled in the 5.9/scsi-
-> > queue.
-> > 
-> > Maybe you should rebase your patch from scsi-fixes branch. or do
-> > you
-> > have another better option?
-> > 
-> > Thanks,
-> > Bean
-> > 
-> 
-> I am pushing this change due to LINERSET handling needs it and
-> LINERESET
-> handling is added based on my previous changes to err_handler, which
-> are
-> picked by 5.10/scsi-queue. So the two are applied for 5.10/scsi-
-> queue 
-> only.
-> Any conflicts you see on 5.10/scsi-queue?
+Add 256GBit speed setting to the scsi fc transport.  This speed can be
+reached via FC trunking techniques.
 
-Hi Can
-I meant scsi-fixes branch. no conflict with scsi-queue branch. If the
-the changes in the scsi-fixes branch  will never be merged to scsi-
-queue branch.It is fine.
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 1 +
+ include/scsi/scsi_transport_fc.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-Thanks,
-Bean
-
-> 
-> Thanks,
-> 
-> Can Guo.
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 2732fa65119c..2ff7f06203da 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -253,6 +253,7 @@ static const struct {
+ 	{ FC_PORTSPEED_25GBIT,		"25 Gbit" },
+ 	{ FC_PORTSPEED_64GBIT,		"64 Gbit" },
+ 	{ FC_PORTSPEED_128GBIT,		"128 Gbit" },
++	{ FC_PORTSPEED_256GBIT,		"256 Gbit" },
+ 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
+ };
+ fc_bitfield_name_search(port_speed, fc_port_speed_names)
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 7db2dd783834..1c7dd35cb7a0 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -124,6 +124,7 @@ enum fc_vport_state {
+ #define FC_PORTSPEED_25GBIT		0x800
+ #define FC_PORTSPEED_64GBIT		0x1000
+ #define FC_PORTSPEED_128GBIT		0x2000
++#define FC_PORTSPEED_256GBIT		0x4000
+ #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
+ 
+ /*
+-- 
+2.26.2
 
