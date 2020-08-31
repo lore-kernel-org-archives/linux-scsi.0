@@ -2,215 +2,81 @@ Return-Path: <SRS0=g0vc=CJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C720CC433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 12:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94680C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 13:34:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FCCA2083E
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 12:02:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B23020EDD
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 Aug 2020 13:34:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance-com.20150623.gappssmtp.com header.i=@bytedance-com.20150623.gappssmtp.com header.b="YOKtzczK"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QGGOZ4O0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727037AbgHaMCj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 08:02:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51074 "EHLO
+        id S1726515AbgHaNek (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 09:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727042AbgHaMCf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 08:02:35 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0723AC061575
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2020 05:02:34 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id v15so478455pgh.6
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2020 05:02:34 -0700 (PDT)
+        with ESMTP id S1726167AbgHaNei (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 09:34:38 -0400
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE1C7C061573;
+        Mon, 31 Aug 2020 06:34:37 -0700 (PDT)
+Received: by mail-ej1-x62c.google.com with SMTP id d11so8455854ejt.13;
+        Mon, 31 Aug 2020 06:34:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=a08AENI2DFUJOZiGvCRTg/GXwM7bPYe8BJ+rCJWtnl4=;
-        b=YOKtzczKXPTHUogmgXL30H3d8zUTN7PA3qH1/VNy/iIqfSR5XtUZyM07m1Joxg985J
-         VrNmTjEogNeVB1HiyJhuBpqLFF53UzSzSNwyuyuXB7jAinMQyKMdsBL6X0pdjsjdobc+
-         ewgM7hdO7Id5BLI7CG75ztKZ2HVgBH0LYm9IO7z85XLDzDN9IG4X0vJHZWBUNK1h4IAR
-         BBgh52YyXAHcZPc6rfS1u5wBtniJAjmpQulu6mHEtyeB73B3roqTuMs568SyhmBcrbKZ
-         7pqQSzhoMrZNBTGewkIv9tLosYbAgL8Jgnm/8x/NzaRG291HqSY4Bup7OP/P7r0cPfWh
-         36jg==
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=8GcnX02giYXdZ/RxHybOYa4+sVruRRxorMeqsk/TQCk=;
+        b=QGGOZ4O0RRDhLLBhcIWkF4selDYedgjgBwmFZefkhwkgFPW69QApZd6Xe9lEi3z3Wu
+         qlunSZr4e4pnvgwQyOzm18Gf83nQlTifrQUajZaREdHEgkpCB4NlyBAdtmxnwcnFi5ea
+         NJXv9bGN1DnpYoUqTx5Uaodao9fUNh03Pw6wOQBew+6hC6gfkRWkvJmBsL/e5yTMxvxn
+         wq2OVbv61Jp5NkmX6DRTksPy2GKxh4Vg6CJ3O5gCgalulhh3dkk45I0a9nCF+h+wSD1w
+         malhRijnmH8jh6ypRaBmucO9s6QjNbmfcN/k/+V2s2/EsBGF1/tbNhAittIflALlUDkO
+         nu/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=a08AENI2DFUJOZiGvCRTg/GXwM7bPYe8BJ+rCJWtnl4=;
-        b=ttP96kgV9DL7AB3fGtxQC+QVqr860OR88lJy7IPpFnO0J4cbbg+Z3Xz/8mgYP//R8B
-         WLdeispijYYrloymMaIEJfOH+5fq2M6mg7QJhnKo7uxwvVBg99P/7wgd92EnESn6+clj
-         djZSWfKvScrkfIt0uiq90OetCngn7mzzGZ/GyP1wGfVxY/8QaA5BiRQ295lSNwdxck4o
-         UOUyGiIei+dXFZE6V58jx+r08tL/6dsxBe6gfw/EKG9c2WnzqAm7GxFUeWZ5Z0kaO24h
-         ogP3SG9CFxzKQkjPVU2dQDsyyBIv9wezSI5HEttWALE810Gytgk/b7uxGSXuDmVdT4rn
-         4AWg==
-X-Gm-Message-State: AOAM5305HW+4+TTc7OtapeAl6j97RwTRNgD6dM+nai2Sfw58QhIPRcGQ
-        hxpO6OmpNtAvf86R9W3pP30R6Q==
-X-Google-Smtp-Source: ABdhPJyVcgDinpA+btaIb9dzZaKvDLDOFy3R9RZel/AFBg1k8y/YJWPQcqpdSx2jFCouDYNOHU0pag==
-X-Received: by 2002:a65:66c4:: with SMTP id c4mr1014869pgw.442.1598875354300;
-        Mon, 31 Aug 2020 05:02:34 -0700 (PDT)
-Received: from houpudeMacBook-Pro.local ([240e:b1:e401:1::d])
-        by smtp.gmail.com with ESMTPSA id q201sm7756648pfq.80.2020.08.31.05.02.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 31 Aug 2020 05:02:33 -0700 (PDT)
-Subject: Re: [PATCH] iscsi-target: fix hang in iscsit_access_np() when getting
- tpg->np_login_sem
-To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, michael.christie@oracle.com
-Cc:     stable@vger.kernel.org
-References: <20200729130343.24976-1-houpu@bytedance.com>
-From:   Hou Pu <houpu@bytedance.com>
-Message-ID: <01a58989-8777-3967-ebcd-f8c080e18a3c@bytedance.com>
-Date:   Mon, 31 Aug 2020 20:02:20 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.11.0
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=8GcnX02giYXdZ/RxHybOYa4+sVruRRxorMeqsk/TQCk=;
+        b=tXjEUK2eCTYWqGweCmIz704FBcxh0MWXP8K8KWsSHH4XdeJv2klrZWfuA39ZgFtmyl
+         vlsQygR5o8xtObfwuhJdaOfzIKOf57GmRjxyb4zsmK40fzBuZIK8RF/nRpgsj4AkAJRZ
+         fyrhhxfedoWrmo9XODeYzuOMOKZjKlq5QMEyyNbVLMwQn2zqo/k1SCIee7MZTJ0EruG0
+         zysRwIZ7a88UOX07kKNBN9kcgsn7hXWappDR6RjKGS7BOJMEqNdAABgQjfWV4w4VFJw5
+         qO31SPjgYGRYSHTD4O5swCbs8xRxauojZafXBsCITZNnZptMrPC3MDdm+ZOIpRg0nXzg
+         JuTA==
+X-Gm-Message-State: AOAM530VMylLstYX5veHv/cEab1MQc8A4Y8L7XmaJ5kJw8IOOy/I1NsR
+        8b0OeLD7oR991xGt7dP4VwXW9qcZY1tS24ia5iunDlqrX3SARg==
+X-Google-Smtp-Source: ABdhPJzGS7uMIR2j5ikMu1m2rX3E0IdVw7LkXrZ5SBIV6NJs9csiD8cvFJr3MYcyv27oEKFz6BkTrZYO3ReoslJUcvw=
+X-Received: by 2002:a17:907:205c:: with SMTP id pg28mr1163295ejb.22.1598880876175;
+ Mon, 31 Aug 2020 06:34:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200729130343.24976-1-houpu@bytedance.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Marc Dionne <marc.c.dionne@gmail.com>
+Date:   Mon, 31 Aug 2020 10:34:24 -0300
+Message-ID: <CAB9dFdtALXb_51QiY1t1Tbng34gA4wBHQGwk4w8Fttw-ko05Ng@mail.gmail.com>
+Subject: "scheduling while atomic" BUG in iscsid since commit 1b66d253610c7
+To:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        Daniel Borkmann <daniel@iogearbox.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+The issue reported here:
+    https://lkml.org/lkml/2020/7/28/1085
+is still present as of 5.9-rc3; it was introduced in the 5.8 cycle.
 
-Hi,
+When the problem occurs, iscsid crashes and iscsi volumes fail to come
+up, which makes the machine quite sad if the volumes are critical to
+its function.
 
-Could anyone help review this patch? It is an important
-fix.
-
-Login thread could hang __forever__ and only reboot could
-solve this. This happened several times in our production
-environment.
-
-np->np_login_timer is shared by all TPGs of a portal.
-should be used carefully. If a connection to iqn-TPG A start
-login timer, It should not stop by another connection
-to iqn-TPG B.
-
-np->np_login_timer protect potential hangs in
-__iscsi_target_login_thread.
-should be used locally in this function. It should really
-not be used in iscsi_target_login_sess_out from workqueue
-context.
+Added CCs for iscsi related maintainers and lists suggested by get_maintainer.
 
 Thanks,
-Hou
-
-On 2020/7/29 9:03 PM, Hou Pu wrote:
-> The iscsi target login thread might stuck in following stack:
-> 
-> cat /proc/`pidof iscsi_np`/stack
-> [<0>] down_interruptible+0x42/0x50
-> [<0>] iscsit_access_np+0xe3/0x167
-> [<0>] iscsi_target_locate_portal+0x695/0x8ac
-> [<0>] __iscsi_target_login_thread+0x855/0xb82
-> [<0>] iscsi_target_login_thread+0x2f/0x5a
-> [<0>] kthread+0xfa/0x130
-> [<0>] ret_from_fork+0x1f/0x30
-> 
-> This could be reproduced by following steps:
-> 1. Initiator A try to login iqn1-tpg1 on port 3260. After finishing
->     PDU exchange in the login thread and before the negotiation is
->     finished, at this time the network link is down. In a production
->     environment, this could happen. I could emulated it by bring
->     the network card down in the initiator node by ifconfig eth0 down.
->     (Now A could never finish this login. And tpg->np_login_sem is
->     hold by it).
-> 2. Initiator B try to login iqn2-tpg1 on port 3260. After finishing
->     PDU exchange in the login thread. The target expect to process
->     remaining login PDUs in workqueue context.
-> 3. Initiator A' try to re-login to iqn1-tpg1 on port 3260 from
->     a new socket. It will wait for tpg->np_login_sem with
->     np->np_login_timer loaded to wait for at most 15 second.
->     (Because the lock is held by A. A never gets a change to
->     release tpg->np_login_sem. so A' should finally get timeout).
-> 4. Before A' got timeout. Initiator B gets negotiation failed and
->     calls iscsi_target_login_drop()->iscsi_target_login_sess_out().
->     The np->np_login_timer is canceled. And initiator A' will hang
->     there forever. Because A' is now in the login thread. All other
->     login requests could not be serviced.
-> 
-> Fix this by moving iscsi_stop_login_thread_timer() out of
-> iscsi_target_login_sess_out(). Also remove iscsi_np parameter
-> from iscsi_target_login_sess_out().
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hou Pu <houpu@bytedance.com>
-> ---
->   drivers/target/iscsi/iscsi_target_login.c | 6 +++---
->   drivers/target/iscsi/iscsi_target_login.h | 3 +--
->   drivers/target/iscsi/iscsi_target_nego.c  | 3 +--
->   3 files changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-> index 85748e338858..893d1b406c29 100644
-> --- a/drivers/target/iscsi/iscsi_target_login.c
-> +++ b/drivers/target/iscsi/iscsi_target_login.c
-> @@ -1149,7 +1149,7 @@ void iscsit_free_conn(struct iscsi_conn *conn)
->   }
->   
->   void iscsi_target_login_sess_out(struct iscsi_conn *conn,
-> -		struct iscsi_np *np, bool zero_tsih, bool new_sess)
-> +				 bool zero_tsih, bool new_sess)
->   {
->   	if (!new_sess)
->   		goto old_sess_out;
-> @@ -1167,7 +1167,6 @@ void iscsi_target_login_sess_out(struct iscsi_conn *conn,
->   	conn->sess = NULL;
->   
->   old_sess_out:
-> -	iscsi_stop_login_thread_timer(np);
->   	/*
->   	 * If login negotiation fails check if the Time2Retain timer
->   	 * needs to be restarted.
-> @@ -1407,8 +1406,9 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
->   new_sess_out:
->   	new_sess = true;
->   old_sess_out:
-> +	iscsi_stop_login_thread_timer(np);
->   	tpg_np = conn->tpg_np;
-> -	iscsi_target_login_sess_out(conn, np, zero_tsih, new_sess);
-> +	iscsi_target_login_sess_out(conn, zero_tsih, new_sess);
->   	new_sess = false;
->   
->   	if (tpg) {
-> diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
-> index 3b8e3639ff5d..fc95e6150253 100644
-> --- a/drivers/target/iscsi/iscsi_target_login.h
-> +++ b/drivers/target/iscsi/iscsi_target_login.h
-> @@ -22,8 +22,7 @@ extern int iscsit_put_login_tx(struct iscsi_conn *, struct iscsi_login *, u32);
->   extern void iscsit_free_conn(struct iscsi_conn *);
->   extern int iscsit_start_kthreads(struct iscsi_conn *);
->   extern void iscsi_post_login_handler(struct iscsi_np *, struct iscsi_conn *, u8);
-> -extern void iscsi_target_login_sess_out(struct iscsi_conn *, struct iscsi_np *,
-> -				bool, bool);
-> +extern void iscsi_target_login_sess_out(struct iscsi_conn *, bool, bool);
->   extern int iscsi_target_login_thread(void *);
->   extern void iscsi_handle_login_thread_timeout(struct timer_list *t);
->   
-> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-> index 685d771b51d4..e32d93b92742 100644
-> --- a/drivers/target/iscsi/iscsi_target_nego.c
-> +++ b/drivers/target/iscsi/iscsi_target_nego.c
-> @@ -535,12 +535,11 @@ static bool iscsi_target_sk_check_and_clear(struct iscsi_conn *conn, unsigned in
->   
->   static void iscsi_target_login_drop(struct iscsi_conn *conn, struct iscsi_login *login)
->   {
-> -	struct iscsi_np *np = login->np;
->   	bool zero_tsih = login->zero_tsih;
->   
->   	iscsi_remove_failed_auth_entry(conn);
->   	iscsi_target_nego_release(conn);
-> -	iscsi_target_login_sess_out(conn, np, zero_tsih, true);
-> +	iscsi_target_login_sess_out(conn, zero_tsih, true);
->   }
->   
->   struct conn_timeout {
-> 
+Marc
