@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC580C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 15:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C264C433E7
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 15:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB60D20767
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 15:59:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0847D2078B
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 15:59:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jH0wC/gL"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gd9YLKEU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732248AbgIAP7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 11:59:23 -0400
+        id S1732010AbgIAP7W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 11:59:22 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730331AbgIAP6S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 11:58:18 -0400
+        with ESMTP id S1731272AbgIAP6M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 11:58:12 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E59DC061245;
-        Tue,  1 Sep 2020 08:58:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CA4FC061251;
+        Tue,  1 Sep 2020 08:58:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=YEpQxN/tPsUCQFZoeqkrzaPHhhl8x81h/vM0+OyoL28=; b=jH0wC/gLb4OEfKTPkMKn4/dwIB
-        06OVZMsHWVv/8Ms5vHWtqbTepow87YxpfqdfzYvT8ngNVJWvmGyH+d3oWmigSSoF1/U8bWSw87zoj
-        R7WHGvxsM+OYDjT8alV54CgTTC2LTLkX4FklDK0cOp6L2CfU3NF/Uz4QfqZrf3hrYjavcdH1O3IPt
-        yWkaAefpWZnYievyIqsT0JwcH/F105z9MikBVHa3n2TqnYa/Rv7Ee1nknCwck4ProTZ8WWldT08x4
-        ugsxov6xkqNTiwoKWr18ACNEGfX/ofsRGcs/7PECZtJcFhzLkuJXENLWc35VlThOG6sV0pnbdb9LA
-        uMBE2png==;
+        bh=YMlFrJEyBw+GGxYkmnybpKhHqx0sfDNv5s7PaPhHxwU=; b=Gd9YLKEUh+L4SFkaUhbHG3M8dD
+        CML4P2q8lRLBgi2V/zqNZbsMdET9SOcLwrXiQhlC89FsEOhv4JJUVlczC5tz1NVFJGPZUGNw0mpN5
+        qzMVcmbfdKTrImeYfVqLp70KKyuHY1d2ubXJy5DbmFDTX/vqy+og9g1EbJ/6WSVHl1eU8SSA2z/HI
+        ytc8BoebmRFkeg1tryurIuFiGvIV6ETH0Mg6xVt+XrjRDBbOJe+pEs56+koko8zHmKVzoDwGo8HoE
+        qpYFiFPkZtW/ERm5Tm+y4EKezU04PHf7JUWHAb6eJCibEvzWG7ZWLoJFdHCtl/sk7HYfM9oltIJYO
+        AW3zTaqw==;
 Received: from [2001:4bb8:18c:45ba:2f95:e5:ca6b:9b4a] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kD8fe-0004S0-Bi; Tue, 01 Sep 2020 15:58:06 +0000
+        id 1kD8fZ-0004Qh-74; Tue, 01 Sep 2020 15:58:01 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Josef Bacik <josef@toxicpanda.com>,
@@ -48,9 +48,9 @@ Cc:     Josef Bacik <josef@toxicpanda.com>,
         linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 9/9] block: remove revalidate_disk()
-Date:   Tue,  1 Sep 2020 17:57:48 +0200
-Message-Id: <20200901155748.2884-10-hch@lst.de>
+Subject: [PATCH 6/9] nvme: opencode revalidate_disk in nvme_validate_ns
+Date:   Tue,  1 Sep 2020 17:57:45 +0200
+Message-Id: <20200901155748.2884-7-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200901155748.2884-1-hch@lst.de>
 References: <20200901155748.2884-1-hch@lst.de>
@@ -62,70 +62,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the now unused helper.
+Keep control in the NVMe driver instead of going through an indirect
+call back into ->revalidate_disk.  Also reorder the function a bit to be
+easier to follow with the additional code.
+
+And now that we have removed all callers of revalidate_disk() in the nvme
+code, ->revalidate_disk is only called from the open code when first
+opening the device.  Which is of course totally pointless as we have
+a valid size since the initial scan, and will get an updated view
+through the asynchronous notifiation everytime the size changes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md.h       |  2 +-
- fs/block_dev.c        | 19 -------------------
- include/linux/genhd.h |  1 -
- 3 files changed, 1 insertion(+), 21 deletions(-)
+ drivers/nvme/host/core.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d9c4e6b7e9398d..f9e2ccdd22c478 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -397,7 +397,7 @@ struct mddev {
- 	 * These locks are separate due to conflicting interactions
- 	 * with bdev->bd_mutex.
- 	 * Lock ordering is:
--	 *  reconfig_mutex -> bd_mutex : e.g. do_md_run -> revalidate_disk
-+	 *  reconfig_mutex -> bd_mutex
- 	 *  bd_mutex -> open_mutex:  e.g. __blkdev_get -> md_open
- 	 */
- 	struct mutex			open_mutex;
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 85f013315d48b3..0771836d0220bd 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1339,25 +1339,6 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose)
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index bc18523774b4be..9428e7deb68b09 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2323,7 +2323,6 @@ static const struct block_device_operations nvme_fops = {
+ 	.open		= nvme_open,
+ 	.release	= nvme_release,
+ 	.getgeo		= nvme_getgeo,
+-	.revalidate_disk= nvme_revalidate_disk,
+ 	.report_zones	= nvme_report_zones,
+ 	.pr_ops		= &nvme_pr_ops,
+ };
+@@ -4020,14 +4019,19 @@ static void nvme_ns_remove_by_nsid(struct nvme_ctrl *ctrl, u32 nsid)
+ static void nvme_validate_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+ {
+ 	struct nvme_ns *ns;
++	int ret;
+ 
+ 	ns = nvme_find_get_ns(ctrl, nsid);
+-	if (ns) {
+-		if (revalidate_disk(ns->disk))
+-			nvme_ns_remove(ns);
+-		nvme_put_ns(ns);
+-	} else
++	if (!ns) {
+ 		nvme_alloc_ns(ctrl, nsid);
++		return;
++	}
++
++	ret = nvme_revalidate_disk(ns->disk);
++	revalidate_disk_size(ns->disk, ret == 0);
++	if (ret)
++		nvme_ns_remove(ns);
++	nvme_put_ns(ns);
  }
- EXPORT_SYMBOL(revalidate_disk_size);
  
--/**
-- * revalidate_disk - wrapper for lower-level driver's revalidate_disk call-back
-- * @disk: struct gendisk to be revalidated
-- *
-- * This routine is a wrapper for lower-level driver's revalidate_disk
-- * call-backs.  It is used to do common pre and post operations needed
-- * for all revalidate_disk operations.
-- */
--int revalidate_disk(struct gendisk *disk)
--{
--	int ret = 0;
--
--	if (disk->fops->revalidate_disk)
--		ret = disk->fops->revalidate_disk(disk);
--	revalidate_disk_size(disk, ret == 0);
--	return ret;
--}
--EXPORT_SYMBOL(revalidate_disk);
--
- /*
-  * This routine checks whether a removable media has been changed,
-  * and invalidates all buffer-cache-entries in that case. This
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index c340b392452ce6..2cdc41a3fb6a57 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -372,7 +372,6 @@ extern void blk_unregister_region(dev_t devt, unsigned long range);
- int register_blkdev(unsigned int major, const char *name);
- void unregister_blkdev(unsigned int major, const char *name);
- 
--int revalidate_disk(struct gendisk *disk);
- void revalidate_disk_size(struct gendisk *disk, bool verbose);
- int check_disk_change(struct block_device *bdev);
- int __invalidate_device(struct block_device *bdev, bool kill_dirty);
+ static void nvme_remove_invalid_namespaces(struct nvme_ctrl *ctrl,
 -- 
 2.28.0
 
