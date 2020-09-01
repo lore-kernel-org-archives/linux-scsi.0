@@ -2,111 +2,134 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA5D6C43461
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 17:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A35AC433E6
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 17:55:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAA2F20BED
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 17:46:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E7F1207D3
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 17:55:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="cXlpMLt/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Carv/+tM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728516AbgIARqG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 13:46:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47038 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726942AbgIARqC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 13:46:02 -0400
-Received: from mail-qk1-x72d.google.com (mail-qk1-x72d.google.com [IPv6:2607:f8b0:4864:20::72d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A113BC061246
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2020 10:46:01 -0700 (PDT)
-Received: by mail-qk1-x72d.google.com with SMTP id o64so1768412qkb.10
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2020 10:46:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=cSy4+2RDeeEJIAWSQYiuQheGRdiGJb8NlbxFbBqq2AM=;
-        b=cXlpMLt/MZjGGJxxIXI3dRVI4uswoqGbuubaqPQro5E+Vxlidjbo5VD4YxUte9yV9n
-         JGggD9c+n5hNtPF04P2fLwYCnLrn2PjcBNJ2TPdvwxby+LqAdjuTStUJWwXWsv7+VmVM
-         5mRh+XQTeS1ZkGcYpcS2I2jsA3aNfqqxESdch/Lfa1suLKFyKj7pL/q/CaFoZCr613vh
-         nMtVSMocVtIEc52WDjqw2OvCz5cwb6gn8KIGuZiEbNTm8mwhjITdAQNlXSR/HEbhcE/I
-         OWouCb9f0F3A8GvtPJWlYO2AuTtiExzS5h17AM3EKMSVIiqlJsvrIIghN+G9eZ0GdcD3
-         223Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=cSy4+2RDeeEJIAWSQYiuQheGRdiGJb8NlbxFbBqq2AM=;
-        b=sM06VxIPA1cq4AmRbUa/vyDuYyVVsDOeQkEqHBe/XLL9+fNIyn3H30MdCym3H2VnqJ
-         BcWA8gByzZ8JDbp8lu8FxOkxoDb9yQ7P8PsUcS3TcaJzsVaZ7+j8MHbuPavAwTbPDI0F
-         jBHoZuGYfiYojZvB4l5inVCv/LHUBYO6HV+Y0R+wNwg56EumeTrDllZ0KbYmqzBVCadg
-         t4hx9zXLI+HjSqTMI993OfqrrVmAnbEh/D/1W/xynFP1jef6IABDcvuQQXENgn/xxJqB
-         E5kMrY9HAFVZDPx7J5JZ8Lqh7n1Y+LT8hzQUJuwDk46W6FPopdM71JaTYAKQAYBirMa3
-         lgqA==
-X-Gm-Message-State: AOAM530JGwCx/C02yGm9LvmCReMTPEfacEycgjuyiAoo1Njpsd9+nz6L
-        QH+/Eg6dT6rtKTwUxOFGN6FDRg==
-X-Google-Smtp-Source: ABdhPJzuyOEEW4u0szMWmuV8qaZb9/osteZ8Kxw8co7ysE17hCNMDWr3cE6A6fD+O8okSgr6GveAkA==
-X-Received: by 2002:a37:2d07:: with SMTP id t7mr2973895qkh.255.1598982360401;
-        Tue, 01 Sep 2020 10:46:00 -0700 (PDT)
-Received: from [192.168.1.45] (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
-        by smtp.gmail.com with ESMTPSA id w20sm2217486qki.108.2020.09.01.10.45.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Sep 2020 10:45:59 -0700 (PDT)
-Subject: Re: remove revalidate_disk()
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Dan Williams <dan.j.williams@intel.com>, dm-devel@redhat.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        nbd@other.debian.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20200901155748.2884-1-hch@lst.de>
-From:   Josef Bacik <josef@toxicpanda.com>
-Message-ID: <b89fe35d-cdf9-e652-2016-599d67bdc5eb@toxicpanda.com>
-Date:   Tue, 1 Sep 2020 13:45:58 -0400
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.0
+        id S1728074AbgIARzc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 13:55:32 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:37876 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726140AbgIARzb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 13:55:31 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081HraJn045155;
+        Tue, 1 Sep 2020 17:55:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=YIf9jDDGSbKpQsV/8I3H+CKi/MNgqATmGNYTH4lTdAE=;
+ b=Carv/+tMBZhZ8HhsPYYtqupo5qk0AYwgiTvwczladr+37dim1HxBzdtLf0QPQeSBCC+b
+ 9ZVuel/1qCA5EDadAsDpNQytwpj26ymNpzXhq7EVM16PtLqyxva8ziZsyU0O24n63FpN
+ Uideni2VPgAsea5SMs3j8kUZMLPRbg1zFJjEfN2ibineBjoIFW0AIoc31XXhYBUpiRJm
+ hCJ/DgLV5ZYv8jYTKdttwSUCj0Mddv0J7ILUA3UlJivA6WdgmWOp++sWIHpDnLsgW/VY
+ oQsE4IPpPjoV3GdjH8oul1RDcMsvdaHfN+7tBONGrq9FS/BuAtZEu8g20zJVOKdBKgBf lQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 339dmmvf61-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 01 Sep 2020 17:55:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081Ht19g071091;
+        Tue, 1 Sep 2020 17:55:26 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 3380ss92d3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Sep 2020 17:55:26 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 081HtPOb022784;
+        Tue, 1 Sep 2020 17:55:25 GMT
+Received: from [20.15.0.202] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 01 Sep 2020 10:55:24 -0700
+Subject: Re: [PATCH] scsi: target: iscsi: Fix data digest calculation
+To:     Varun Prakash <varun@chelsio.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        bvanassche@acm.org, nab@linux-iscsi.org, stable@vger.kernel.org
+References: <1598358910-3052-1-git-send-email-varun@chelsio.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <56a124d4-d503-d8b2-332b-99f1c2288463@oracle.com>
+Date:   Tue, 1 Sep 2020 12:55:23 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200901155748.2884-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1598358910-3052-1-git-send-email-varun@chelsio.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009010151
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=0
+ spamscore=0 clxscore=1011 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009010151
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/1/20 11:57 AM, Christoph Hellwig wrote:
-> Hi Jens,
+On 8/25/20 7:35 AM, Varun Prakash wrote:
+> Current code does not consider 'page_off' in data digest
+> calculation, to fix this add a local variable 'first_sg' and
+> set first_sg.offset to sg->offset + page_off.
 > 
-> this series removes the revalidate_disk() function, which has been a
-> really odd duck in the last years.  The prime reason why most people
-> use it is because it propagates a size change from the gendisk to
-> the block_device structure.  But it also calls into the rather ill
-> defined ->revalidate_disk method which is rather useless for the
-> callers.  So this adds a new helper to just propagate the size, and
-> cleans up all kinds of mess around this area.  Follow on patches
-> will eventuall kill of ->revalidate_disk entirely, but ther are a lot
-> more patches needed for that.
+> Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Varun Prakash <varun@chelsio.com>
+> ---
+>  drivers/target/iscsi/iscsi_target.c | 17 +++++++++++++++--
+>  1 file changed, 15 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index c968961..2ec778e 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1389,14 +1389,27 @@ static u32 iscsit_do_crypto_hash_sg(
+>  	sg = cmd->first_data_sg;
+>  	page_off = cmd->first_data_sg_off;
+>  
+> +	if (data_length && page_off) {
+> +		struct scatterlist first_sg;
+> +		u32 len = min_t(u32, data_length, sg->length - page_off);
+> +
+> +		sg_init_table(&first_sg, 1);
+> +		sg_set_page(&first_sg, sg_page(sg), len, sg->offset + page_off);
+> +
+> +		ahash_request_set_crypt(hash, &first_sg, NULL, len);
+> +		crypto_ahash_update(hash);
+> +
+> +		data_length -= len;
+> +		sg = sg_next(sg);
+> +	}
+> +
+>  	while (data_length) {
+> -		u32 cur_len = min_t(u32, data_length, (sg->length - page_off));
+> +		u32 cur_len = min_t(u32, data_length, sg->length);
+>  
+>  		ahash_request_set_crypt(hash, sg, NULL, cur_len);
+>  		crypto_ahash_update(hash);
+>  
+>  		data_length -= cur_len;
+> -		page_off = 0;
+>  		/* iscsit_map_iovec has already checked for invalid sg pointers */
+>  		sg = sg_next(sg);
+>  	}
 > 
 
-I applied and built everything on Jens's for-next, patch #2 was fuzzy but it 
-applied.
+Looks ok to me.
 
-I checked through everything, the only thing that was strange to me is not 
-calling revalidate_disk_size() in nvdimm, but since it's during attach you point 
-out it doesn't matter.  You can add
-
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
-
-To the series, thanks,
-
-Josef
+Reviewed-by: Mike Christie <michael.christie@oralce.com>
