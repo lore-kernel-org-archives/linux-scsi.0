@@ -2,116 +2,81 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5687C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 10:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 748B8C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 11:14:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B480207EA
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 10:07:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZDL+Sj5o"
+	by mail.kernel.org (Postfix) with ESMTP id 4A44620FC3
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 11:14:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726311AbgIAKG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 06:06:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60718 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725848AbgIAKG6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 06:06:58 -0400
-Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DC52C061244;
-        Tue,  1 Sep 2020 03:06:58 -0700 (PDT)
-Received: by mail-ot1-x342.google.com with SMTP id n23so650161otq.11;
-        Tue, 01 Sep 2020 03:06:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pDrlWYFFkJJmssRq429+R+iuI/x8+DPm+PEwzlRDqBQ=;
-        b=ZDL+Sj5oxpSQaoR6SHTUZZvCQ7FGrawiRYTcPP1ISEjV8Nh0SjcZHoAjzrG1DsVkjY
-         T5Tu+mYaFHH2GFeUbajP6d4BqB+fIIQZu6bJfRL5EfGJsks7NzlgkMBHX1Jq+Jf3+Sge
-         +5AZ8xmnLs45iWiRvRTdu4ePGcd/03w44lK3fLLdI+kcinJIScOq0oXTEqxanPoEML0i
-         qi6PD9aKlthYNS8YFTglNlsu7ouvD7XOaP/sbT1RgMViL5oQGjof4DM3LjtqV3/TEh57
-         3P9WZHWSk9t+Lk8irPJb/fcHeoVTD0vjwJRL6pXoBrl2pge0s6wRSamce0MqUG9W/k0i
-         A5tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pDrlWYFFkJJmssRq429+R+iuI/x8+DPm+PEwzlRDqBQ=;
-        b=DslHrc1rN5D8GaEEZcw1nJ3a2dCwCz6cKltslmpLUdYRZkSY9pu4SP5eMgu5JdN6YG
-         7WaU7mpjJNeFg6c/aZgYaG6aOE6J8zWuFG8SChe2W8w0bdD9aakPUKn33x36FtFBYYLa
-         7pv1jn0l6oL52LRx96MAGP+YUWQFfyXaNvgA51/NDUnr8F/Yw0lxyfxWanMd58xaMP11
-         37MyFZp3piKPylkfgYBRQI6PI3wya2EUs/D+nAzCEQK6NIT87MYe6ElM6VdcXDbywbmh
-         DDZKHB0405LSwIoJw0BeJf+T3boRPfIJGU9CKIPgKLeBdSvcKCoBObahUxNRRvNqoFbD
-         HwtA==
-X-Gm-Message-State: AOAM530fIKpK5jqPFPANQgCxBZFuyoU+YL5UCgBBY0sssKdAqkAsQH+Y
-        cZQKJbAKLadiUKbxSXoLlC9hwxmekOODPwdm2qE=
-X-Google-Smtp-Source: ABdhPJx4lXxBvlL1JVdxVRRP212exraJg+7ZOk+1qs7Vpy3WfCLZR53D+a2GsBQpTXygcuosjRHnzjW/vlzvjKLf66U=
-X-Received: by 2002:a05:6830:2246:: with SMTP id t6mr832583otd.264.1598954817468;
- Tue, 01 Sep 2020 03:06:57 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200817085409.25268-1-allen.cryptic@gmail.com>
- <1597675318.4475.11.camel@linux.ibm.com> <202008171227.D3A4F454D8@keescook> <1597694252.22390.12.camel@linux.ibm.com>
-In-Reply-To: <1597694252.22390.12.camel@linux.ibm.com>
-From:   Allen <allen.lkml@gmail.com>
-Date:   Tue, 1 Sep 2020 15:36:46 +0530
-Message-ID: <CAOMdWSKmNVQTpJtdEMNHc5SS75WNS7F0duzQi14kg62R4Un8zA@mail.gmail.com>
-Subject: Re: [PATCH 0/8] scsi: convert tasklets to use new tasklet_setup()
-To:     jejb@linux.ibm.com
-Cc:     Kees Cook <keescook@chromium.org>,
-        Allen Pais <allen.cryptic@gmail.com>,
-        martin.petersen@oracle.com, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        id S1726352AbgIALO1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 07:14:27 -0400
+Received: from verein.lst.de ([213.95.11.211]:53006 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726455AbgIALOT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Sep 2020 07:14:19 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 508E268B05; Tue,  1 Sep 2020 13:06:18 +0200 (CEST)
+Date:   Tue, 1 Sep 2020 13:06:17 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Tomasz Figa <tfiga@chromium.org>
+Cc:     Christoph Hellwig <hch@lst.de>, alsa-devel@alsa-project.org,
+        linux-ia64@vger.kernel.org,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        nouveau@lists.freedesktop.org, linux-nvme@lists.infradead.org,
+        linux-mips@vger.kernel.org,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        linux-mm@kvack.org,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        linux-scsi@vger.kernel.org,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Pawel Osciak <pawel@osciak.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <linux-arm-kernel@lists.infradead.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        linux-parisc@vger.kernel.org, netdev@vger.kernel.org,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        target-devel@vger.kernel.org, megaraidlinux.pdl@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH 05/28] media/v4l2: remove
+ V4L2-FLAG-MEMORY-NON-CONSISTENT
+Message-ID: <20200901110617.GA13232@lst.de>
+References: <20200819065555.1802761-1-hch@lst.de> <20200819065555.1802761-6-hch@lst.de> <CAAFQd5COLxjydDYrfx47ht8tj-aNPiaVnC+WyQA7nvpW4gs=ww@mail.gmail.com> <20200819135454.GA17098@lst.de> <CAAFQd5BuXP7t3d-Rwft85j=KTyXq7y4s24mQxLr=VoY9krEGZw@mail.gmail.com> <20200820044347.GA4533@lst.de> <20200820052004.GA5305@lst.de> <CAAFQd5CFiA2WBaaPQ9ezvMjYZfNw37c42UEy9Pk7kJyCi1mLzQ@mail.gmail.com> <20200820165407.GD12693@lst.de> <CAAFQd5D=NzgjosB51-O_cH27a8V6CPgCfaPSfHHz7nKJPbazgg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAFQd5D=NzgjosB51-O_cH27a8V6CPgCfaPSfHHz7nKJPbazgg@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > > >
-> > > > Commit 12cc923f1ccc ("tasklet: Introduce new initialization
-> > > > API")' introduced a new tasklet initialization API. This series
-> > > > converts all the scsi drivers to use the new tasklet_setup() API
-> > >
-> > > I've got to say I agree with Jens, this was a silly obfuscation:
-> > >
-> > > +#define from_tasklet(var, callback_tasklet, tasklet_fieldname) \
-> > > +       container_of(callback_tasklet, typeof(*var),
-> > > tasklet_fieldname)
-> > >
-> > > Just use container_of directly since we all understand what it
-> > > does.
+On Thu, Aug 20, 2020 at 07:33:48PM +0200, Tomasz Figa wrote:
+> > It wasn't meant to be too insulting, but I found this out when trying
+> > to figure out how to just disable it.  But it also ends up using
+> > the actual dma attr flags for it's own consistency checks, so just
+> > not setting the flag did not turn out to work that easily.
 > >
-> > But then the lines get really long, wrapped, etc.
->
-> I really don't think that's a problem but if you want to add a new
-> generic container_of that does typeof instead of insisting on the type,
-> I'd be sort of OK with that ... provided you don't gratuitously alter
-> the argument order.
->
-> The thing I object to is that this encourages everyone to roll their
-> own unnecessary container_of type macros in spite of the fact that it's
-> function is wholly generic.  It's fine if you're eliminating one of the
-> arguments, or actually making the macro specific to the type, but in
-> this case you're not, you're making a completely generic macro where
-> the name is the only thing that's specific to this case.
->
-> >  This is what the timer_struct conversion did too (added a
-> > container_of wrapper), so I think it makes sense here too.
->
-> I didn't see that one to object to it ...
+> 
+> Yes, sadly the videobuf2 ended up becoming quite counterintuitive
+> after growing for the long years and that is reflected in the design
+> of this feature as well. I think we need to do something about it.
 
-Since we could not get the generic API accepted, can I send out V2
-which would use container_of()?
+So I'm about to respin the series and wonder how we should proceed.
+I've failed to come up with a clean patch to keep the flag and make
+it a no-op.  Can you or your team give it a spin?
 
-Thanks,
-
--- 
-       - Allen
+Also I wonder if the flag should be renamed from NON_CONSISTENT
+to NON_COHERENT - the consistent thing is a weird wart from the times
+the old PCI DMA API that is mostly gone now.
