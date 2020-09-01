@@ -2,151 +2,232 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D0CC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 00:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B15C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 00:24:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D87BD2073A
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 00:23:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B6D520E65
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 00:24:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="cHKZlvbn"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="hWFQawWJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726020AbgIAAXJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 Aug 2020 20:23:09 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:60521 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbgIAAXH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Aug 2020 20:23:07 -0400
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200901002303epoutp02f4c6a3ba52ccb85afa51c9efc95d1983~wgRJU_VB31761117611epoutp02G
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2020 00:23:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200901002303epoutp02f4c6a3ba52ccb85afa51c9efc95d1983~wgRJU_VB31761117611epoutp02G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1598919783;
-        bh=Xok3Nc5LCZyof2XDbFEopewPALLd7WpbVK2fR8DHi7A=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=cHKZlvbnE7Yhmt6MJETeP7LFlzEpqKUiVBfn8eQKXmboUGdBtW2jl8eosFUySlv6P
-         NNBtC+nn47YAB9ETJlrdjZznwk5XdrRJdsmcVHpQZ9rmHtg5TRKE49FcZcO9QnWErF
-         /Wi9SuEp+4kSWDw1Wu8By+zHl9UBxJu1iykROizQ=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p2.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200901002302epcas1p2dbe898750695c35865068378905cad00~wgRI3fxbW0561905619epcas1p2c;
-        Tue,  1 Sep 2020 00:23:02 +0000 (GMT)
-Mime-Version: 1.0
-Subject: Re: [PATCH v9 3/4] scsi: ufs: L2P map management for HPB read
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <5587cf86-eeec-2c70-a47c-57149f00eb95@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1239183618.61598919782940.JavaMail.epsvc@epcpadp2>
-Date:   Tue, 01 Sep 2020 09:21:10 +0900
-X-CMS-MailID: 20200901002110epcms2p59e3e52812b12ab19f210bb5c1f7f7391
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200828070950epcms2p5470bd43374be18d184dd802da09e73c8
-References: <5587cf86-eeec-2c70-a47c-57149f00eb95@acm.org>
-        <963815509.21598598782155.JavaMail.epsvc@epcpadp2>
-        <1210830415.21598601302480.JavaMail.epsvc@epcpadp1>
-        <CGME20200828070950epcms2p5470bd43374be18d184dd802da09e73c8@epcms2p5>
+        id S1726446AbgIAAYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 Aug 2020 20:24:53 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:61450 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725987AbgIAAYx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Aug 2020 20:24:53 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0810I5di085973;
+        Mon, 31 Aug 2020 20:24:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=deJxd9HqlqVaOwemxvY4Rdre3L6cKhhHSqsfzIjrEAk=;
+ b=hWFQawWJDC8IITJQmvX/jX8I2xnYEA6Bo526vJCHijlDRY2pT1xPcQU2v78TSDXG8VJk
+ oUJ7c9qOaR2+/Fqj3gwC3jDA0b/Om4b/VnbUp3tO20HCxxwlrjxAi9qsEOE+PjiCSBnX
+ 1vf22/xM0NdjlODzuxBFE8EUU+/rgET8l2DszIWGGQOkDr7w5kssSbGTkywAaaU82F+4
+ 7ssFI+Hk6ze0t+Ac2iBHxho6iWK4ho8yn3PfmOJRqTzUUMXFTvERTc1i7CyJcJwigtYE
+ eMYI1YHD804V7YKRoefFtmgYNuUvNzHREsvPbHJcXr1G6FRcn1TbfpXpYHqdLDXXsBHV +Q== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 339bmx02v8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 31 Aug 2020 20:24:23 -0400
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0810C5v1000785;
+        Tue, 1 Sep 2020 00:24:22 GMT
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+        by ppma02dal.us.ibm.com with ESMTP id 337en9h0b6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 01 Sep 2020 00:24:22 +0000
+Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
+        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0810OMRF38207946
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 1 Sep 2020 00:24:22 GMT
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id EA42B28058;
+        Tue,  1 Sep 2020 00:24:21 +0000 (GMT)
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7201528060;
+        Tue,  1 Sep 2020 00:24:21 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.40.195.188])
+        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
+        Tue,  1 Sep 2020 00:24:21 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v2] scsi: ibmvfc: interface updates for future FPIN and MQ support
+Date:   Mon, 31 Aug 2020 19:24:20 -0500
+Message-Id: <20200901002420.648532-1-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-08-31_10:2020-08-31,2020-08-31 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=962 suspectscore=1 mlxscore=0
+ lowpriorityscore=0 adultscore=0 bulkscore=0 clxscore=1015 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008310145
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-> > +static unsigned int ufshpb_host_map_kbytes = 1024;
-> 
-> A comment that explains where this value comes from would be welcome.
+VIOS partitions with SLI-4 enabled Emulex adapters will be capable of
+driving IO in parallel through mulitple work queues or channels, and
+with new hyperviosr firmware that supports multiple interrupt sources
+an ibmvfc NPIV single initiator can be modified to exploit end to end
+channelization in a PowerVM environment.
 
-I will add a follows comment and change defalut value 1024 to 2048. 
-"A cache size of 2MB can cache ppn in the 1GB range."
+VIOS hosts will also be able to expose fabric perfromance impact
+notifications (FPIN) via a new asynchronous event to ibmvfc clients that
+advertise support via IBMVFC_CAN_HANDLE_FPIN in their capabilities flag
+during NPIV_LOGIN.
 
-> > +static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
-> > +					     struct ufshpb_subregion *srgn)
-> > +{
-> > +	struct ufshpb_req *map_req;
-> > +	struct request *req;
-> > +	struct bio *bio;
-> > +
-> > +	map_req = kmem_cache_alloc(hpb->map_req_cache, GFP_KERNEL);
-> > +	if (!map_req)
-> > +		return NULL;
-> > +
-> > +	req = blk_get_request(hpb->sdev_ufs_lu->request_queue,
-> > +			      REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
-> 
-> Why BLK_MQ_REQ_PREEMPT? Since this code is only executed while medium access
-> commands are processed and since none of these commands have the PREEMPT flag
-> set I think that the PREEMPT flag should be left out. Otherwise there probably
-> will be weird interactions with runtime suspended devices.
+This patch introduces three new Managment Datagrams (MADs) for
+channelization support negotiation as well as the FPIN asynchronous
+event and FPIN status flags. Follow up work is required to plumb the
+ibmvfc client driver to use these new interfaces.
 
-OK, I will remove BLK_MQ_REQ_PREEMPT flag.
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+v1 -> v2:
+	Fixup complier errors from neglected commit --amend
 
-> Is it acceptable that the above blk_get_request() call blocks if a UFS device
-> has been runtime suspended? If not, consider using the flag BLK_MQ_REQ_NOWAIT
-> instead.
+---
+ drivers/scsi/ibmvscsi/ibmvfc.h | 66 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 65 insertions(+), 1 deletion(-)
 
-The map worker don't issue map requests when the UFS device is in 
-runtime suspend. So, I think BLK_MQ_REQ_NOWAIT flags is not needed.
-
-> > +	bio = bio_alloc(GFP_KERNEL, hpb->pages_per_srgn);
-> > +	if (!bio) {
-> > +		blk_put_request(req);
-> > +		goto free_map_req;
-> > +	}
-> 
-> If the blk_get_request() would be modified such that it doesn't wait, this
-> call may have to be modified too (GFP_NOWAIT?).
->
-> > +	if (rgn->rgn_state == HPB_RGN_INACTIVE) {
-> > +		if (atomic_read(&lru_info->active_cnt)
-> > +		    == lru_info->max_lru_active_cnt) {
-> 
-> When splitting a line, please put comparison operators at the end of the line
-> instead of at the start, e.g. as follows:
-> 
-> 		if (atomic_read(&lru_info->active_cnt) ==
-> 		    lru_info->max_lru_active_cnt) {
-
-OK, I will change it.
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 907889f1fa9d..fe55cfc79421 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -124,6 +124,9 @@ enum ibmvfc_mad_types {
+ 	IBMVFC_PASSTHRU		= 0x0200,
+ 	IBMVFC_TMF_MAD		= 0x0100,
+ 	IBMVFC_NPIV_LOGOUT	= 0x0800,
++	IBMVFC_CHANNEL_ENQUIRY	= 0x1000,
++	IBMVFC_CHANNEL_SETUP	= 0x2000,
++	IBMVFC_CONNECTION_INFO	= 0x4000,
+ };
  
-> > +	pool_size = DIV_ROUND_UP(ufshpb_host_map_kbytes * 1024, PAGE_SIZE);
-> 
-> Please use PAGE_ALIGN() to align to the next page boundary.
+ struct ibmvfc_mad_common {
+@@ -162,6 +165,8 @@ struct ibmvfc_npiv_login {
+ 	__be32 max_cmds;
+ 	__be64 capabilities;
+ #define IBMVFC_CAN_MIGRATE		0x01
++#define IBMVFC_CAN_USE_CHANNELS		0x02
++#define IBMVFC_CAN_HANDLE_FPIN		0x04
+ 	__be64 node_name;
+ 	struct srp_direct_buf async;
+ 	u8 partition_name[IBMVFC_MAX_NAME];
+@@ -204,6 +209,7 @@ struct ibmvfc_npiv_login_resp {
+ 	__be64 capabilities;
+ #define IBMVFC_CAN_FLUSH_ON_HALT	0x08
+ #define IBMVFC_CAN_SUPPRESS_ABTS	0x10
++#define IBMVFC_CAN_SUPPORT_CHANNELS	0x20
+ 	__be32 max_cmds;
+ 	__be32 scsi_id_sz;
+ 	__be64 max_dma_len;
+@@ -482,6 +488,52 @@ struct ibmvfc_passthru_mad {
+ 	struct ibmvfc_passthru_fc_iu fc_iu;
+ }__attribute__((packed, aligned (8)));
+ 
++struct ibmvfc_channel_enquiry {
++	struct ibmvfc_mad_common common;
++	__be32 flags;
++#define IBMVFC_NO_CHANNELS_TO_CRQ_SUPPORT	0x01
++#define IBMVFC_SUPPORT_VARIABLE_SUBQ_MSG	0x02
++#define IBMVFC_NO_N_TO_M_CHANNELS_SUPPORT	0x04
++	__be32 num_scsi_subq_channels;
++	__be32 num_nvmeof_subq_channels;
++	__be32 num_scsi_vas_channels;
++	__be32 num_nvmeof_vas_channels;
++}__attribute__((packed, aligned (8)));
++
++struct ibmvfc_channel_setup_mad {
++	struct ibmvfc_mad_common common;
++	struct srp_direct_buf buffer;
++}__attribute__((packed, aligned (8)));
++
++#define IBMVFC_MAX_CHANNELS	502
++
++struct ibmvfc_channel_setup {
++	__be32 flags;
++#define IBMVFC_CANCEL_CHANNELS		0x01
++#define IBMVFC_USE_BUFFER		0x02
++#define IBMVFC_CHANNELS_CANCELED	0x04
++	__be32 reserved;
++	__be32 num_scsi_subq_channels;
++	__be32 num_nvmeof_subq_channels;
++	__be32 num_scsi_vas_channels;
++	__be32 num_nvmeof_vas_channels;
++	struct srp_direct_buf buffer;
++	__be64 reserved2[5];
++	__be64 channel_handles[IBMVFC_MAX_CHANNELS];
++}__attribute__((packed, aligned (8)));
++
++struct ibmvfc_connection_info {
++	struct ibmvfc_mad_common common;
++	__be64 information_bits;
++#define IBMVFC_NO_FC_IO_CHANNEL		0x01
++#define IBMVFC_NO_PHYP_VAS		0x02
++#define IBMVFC_NO_PHYP_SUBQ		0x04
++#define IBMVFC_PHYP_DEPRECATED_SUBQ	0x08
++#define IBMVFC_PHYP_PRESERVED_SUBQ	0x10
++#define IBMVFC_PHYP_FULL_SUBQ		0x20
++	__be64 reserved[16];
++}__attribute__((packed, aligned (8)));
++
+ struct ibmvfc_trace_start_entry {
+ 	u32 xfer_len;
+ }__attribute__((packed));
+@@ -532,6 +584,7 @@ enum ibmvfc_async_event {
+ 	IBMVFC_AE_HALT			= 0x0400,
+ 	IBMVFC_AE_RESUME			= 0x0800,
+ 	IBMVFC_AE_ADAPTER_FAILED	= 0x1000,
++	IBMVFC_AE_FPIN			= 0x2000,
+ };
+ 
+ struct ibmvfc_async_desc {
+@@ -560,10 +613,18 @@ enum ibmvfc_ae_link_state {
+ 	IBMVFC_AE_LS_LINK_DEAD		= 0x08,
+ };
+ 
++enum ibmvfc_ae_fpin_status {
++	IBMVFC_AE_FPIN_LINK_CONGESTED	= 0x1,
++	IBMVFC_AE_FPIN_PORT_CONGESTED	= 0x2,
++	IBMVFC_AE_FPIN_PORT_CLEARED	= 0x3,
++	IBMVFC_AE_FPIN_PORT_DEGRADED	= 0x4,
++};
++
+ struct ibmvfc_async_crq {
+ 	volatile u8 valid;
+ 	u8 link_state;
+-	u8 pad[2];
++	u8 fpin_status;
++	u8 pad;
+ 	__be32 pad2;
+ 	volatile __be64 event;
+ 	volatile __be64 scsi_id;
+@@ -590,6 +651,9 @@ union ibmvfc_iu {
+ 	struct ibmvfc_tmf tmf;
+ 	struct ibmvfc_cmd cmd;
+ 	struct ibmvfc_passthru_mad passthru;
++	struct ibmvfc_channel_enquiry channel_enquiry;
++	struct ibmvfc_channel_setup_mad channel_setup;
++	struct ibmvfc_connection_info connection_info;
+ }__attribute__((packed, aligned (8)));
+ 
+ enum ibmvfc_target_action {
+-- 
+2.27.0
 
-OK, I will.
-
-Thanks,
-Daejun.
