@@ -2,134 +2,137 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A35AC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 17:55:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CEBFC433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 21:05:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E7F1207D3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 17:55:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B1D0207D3
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 21:05:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Carv/+tM"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="n31IY9+1";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="MQVRwKN0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728074AbgIARzc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 13:55:32 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:37876 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726140AbgIARzb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 13:55:31 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081HraJn045155;
-        Tue, 1 Sep 2020 17:55:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=YIf9jDDGSbKpQsV/8I3H+CKi/MNgqATmGNYTH4lTdAE=;
- b=Carv/+tMBZhZ8HhsPYYtqupo5qk0AYwgiTvwczladr+37dim1HxBzdtLf0QPQeSBCC+b
- 9ZVuel/1qCA5EDadAsDpNQytwpj26ymNpzXhq7EVM16PtLqyxva8ziZsyU0O24n63FpN
- Uideni2VPgAsea5SMs3j8kUZMLPRbg1zFJjEfN2ibineBjoIFW0AIoc31XXhYBUpiRJm
- hCJ/DgLV5ZYv8jYTKdttwSUCj0Mddv0J7ILUA3UlJivA6WdgmWOp++sWIHpDnLsgW/VY
- oQsE4IPpPjoV3GdjH8oul1RDcMsvdaHfN+7tBONGrq9FS/BuAtZEu8g20zJVOKdBKgBf lQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 339dmmvf61-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 01 Sep 2020 17:55:26 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081Ht19g071091;
-        Tue, 1 Sep 2020 17:55:26 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 3380ss92d3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Sep 2020 17:55:26 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 081HtPOb022784;
-        Tue, 1 Sep 2020 17:55:25 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Sep 2020 10:55:24 -0700
-Subject: Re: [PATCH] scsi: target: iscsi: Fix data digest calculation
-To:     Varun Prakash <varun@chelsio.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        bvanassche@acm.org, nab@linux-iscsi.org, stable@vger.kernel.org
-References: <1598358910-3052-1-git-send-email-varun@chelsio.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <56a124d4-d503-d8b2-332b-99f1c2288463@oracle.com>
-Date:   Tue, 1 Sep 2020 12:55:23 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <1598358910-3052-1-git-send-email-varun@chelsio.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S1729267AbgIAVFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 17:05:01 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48922 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726355AbgIAVFA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 17:05:00 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 254838EE112;
+        Tue,  1 Sep 2020 14:04:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1598994299;
+        bh=3yQ8KCRSQAxpdGZ/cPAEMssmlgc5FoQPkt68+FhXhxM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=n31IY9+1uutwxiqCR+Tn4Q7rdAWPoY4rda8bR1HpKjiKLQ71Pjq5paIXO9dU/qqWH
+         h2+cln0tPXpxCNBL2bFq8WOBg02oM594M1bap9MPIIF+6ktR4mm0Z4UOIdY+oDQUVa
+         L+5lYiuklSFGaQtWVi4vTBRdDgGDr9S75cmbSo+g=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id lm76zS-PMhPO; Tue,  1 Sep 2020 14:04:58 -0700 (PDT)
+Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 19FB08EE0F5;
+        Tue,  1 Sep 2020 14:04:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1598994298;
+        bh=3yQ8KCRSQAxpdGZ/cPAEMssmlgc5FoQPkt68+FhXhxM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=MQVRwKN0KxlkwKC6kn2YW9+cq2JmRRS8FKN/tYXwjUfniwiPB10V7c5WRUPuTpvz1
+         L3Q1S1yNsCSNfRwFmaBfLO538PQvBryfNrOv8kQXgXvVjJiewjOltdF/93XBYBAE0T
+         K7l2BURG6KZRQmJSXWENJChxKci82+hNAOlo45lU=
+Message-ID: <1598994296.4238.30.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.8-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Tue, 01 Sep 2020 14:04:56 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009010151
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=0
- spamscore=0 clxscore=1011 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009010151
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/25/20 7:35 AM, Varun Prakash wrote:
-> Current code does not consider 'page_off' in data digest
-> calculation, to fix this add a local variable 'first_sg' and
-> set first_sg.offset to sg->offset + page_off.
-> 
-> Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Varun Prakash <varun@chelsio.com>
-> ---
->  drivers/target/iscsi/iscsi_target.c | 17 +++++++++++++++--
->  1 file changed, 15 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index c968961..2ec778e 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -1389,14 +1389,27 @@ static u32 iscsit_do_crypto_hash_sg(
->  	sg = cmd->first_data_sg;
->  	page_off = cmd->first_data_sg_off;
->  
-> +	if (data_length && page_off) {
-> +		struct scatterlist first_sg;
-> +		u32 len = min_t(u32, data_length, sg->length - page_off);
-> +
-> +		sg_init_table(&first_sg, 1);
-> +		sg_set_page(&first_sg, sg_page(sg), len, sg->offset + page_off);
-> +
-> +		ahash_request_set_crypt(hash, &first_sg, NULL, len);
-> +		crypto_ahash_update(hash);
-> +
-> +		data_length -= len;
-> +		sg = sg_next(sg);
-> +	}
-> +
->  	while (data_length) {
-> -		u32 cur_len = min_t(u32, data_length, (sg->length - page_off));
-> +		u32 cur_len = min_t(u32, data_length, sg->length);
->  
->  		ahash_request_set_crypt(hash, sg, NULL, cur_len);
->  		crypto_ahash_update(hash);
->  
->  		data_length -= cur_len;
-> -		page_off = 0;
->  		/* iscsit_map_iovec has already checked for invalid sg pointers */
->  		sg = sg_next(sg);
->  	}
-> 
+Three minor fixes, all in drivers.
 
-Looks ok to me.
+The patch is available here:
 
-Reviewed-by: Mike Christie <michael.christie@oralce.com>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Dan Carpenter (1):
+      scsi: libcxgbi: Fix a use after free in cxgbi_conn_xmit_pdu()
+
+Niklas Cassel (1):
+      scsi: scsi_debug: Remove superfluous close zone in resp_open_zone()
+
+Ye Bin (1):
+      scsi: qedf: Fix null ptr reference in qedf_stag_change_work
+
+With the diffstat:
+
+ drivers/scsi/cxgbi/libcxgbi.c | 2 +-
+ drivers/scsi/qedf/qedf_main.c | 2 +-
+ drivers/scsi/scsi_debug.c     | 2 --
+ 3 files changed, 2 insertions(+), 4 deletions(-)
+
+And full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 71aebaf533ea..0e8621a6956d 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -2457,10 +2457,10 @@ int cxgbi_conn_xmit_pdu(struct iscsi_task *task)
+ 		return err;
+ 	}
+ 
+-	__kfree_skb(skb);
+ 	log_debug(1 << CXGBI_DBG_ISCSI | 1 << CXGBI_DBG_PDU_TX,
+ 		  "itt 0x%x, skb 0x%p, len %u/%u, xmit err %d.\n",
+ 		  task->itt, skb, skb->len, skb->data_len, err);
++	__kfree_skb(skb);
+ 	iscsi_conn_printk(KERN_ERR, task->conn, "xmit err %d.\n", err);
+ 	iscsi_conn_failure(task->conn, ISCSI_ERR_XMIT_FAILED);
+ 	return err;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 3f04f2c81366..5ca424df355c 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3863,7 +3863,7 @@ void qedf_stag_change_work(struct work_struct *work)
+ 	    container_of(work, struct qedf_ctx, stag_work.work);
+ 
+ 	if (!qedf) {
+-		QEDF_ERR(&qedf->dbg_ctx, "qedf is NULL");
++		QEDF_ERR(NULL, "qedf is NULL");
+ 		return;
+ 	}
+ 	QEDF_ERR(&qedf->dbg_ctx, "Performing software context reset.\n");
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 139f0073da37..1ad7260d4758 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4482,8 +4482,6 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		goto fini;
+ 	}
+ 
+-	if (zc == ZC2_IMPLICIT_OPEN)
+-		zbc_close_zone(devip, zsp);
+ 	zbc_open_zone(devip, zsp, true);
+ fini:
+ 	write_unlock(macc_lckp);
