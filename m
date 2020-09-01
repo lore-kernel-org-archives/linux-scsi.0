@@ -2,44 +2,55 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF28EC433E7
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:54:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F12A1C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:57:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5B5720767
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:54:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC33321556
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:57:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Qp7cO1c6"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="UvqMRf/V";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="QlglmDYf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732479AbgIAQyD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 12:54:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38914 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730228AbgIAQxf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 12:53:35 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1B89C061244;
-        Tue,  1 Sep 2020 09:53:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mr+spIm0j102sxFcc3WXz2mCLWqWkBrKAQyNQoZhMH4=; b=Qp7cO1c6obl/HbURjQhpBiYPQG
-        zMVpdHyURqSWTczQUMKFJAjOy/TiFuPuIO99chev9Opx0LZ/TLT95QaNoVyb4m6rgj02rzNms21bD
-        l/OJj+Pn3H4e3Mzua6ZOGdf7TbV7b19zK1HK8PwPz1sPjHOWtXsWoQGxS7DBoTJGYTbRtUYGJqxI7
-        8CsalzSoTglaLhiOvz2SYPVRp3wWJsHM/wtbu2DlirQcXKmjLD+1CJIvyaMBTnf2S3HPWyMsavtNt
-        3tJ7WFYYYteWuJLPBqd7P2w3N7flwqDEkXxZ8pD/Jd3z/6ksKCRHFQo9SY2r/QQ5XzKyjmUUHgPI3
-        osL/2N3Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kD9Wy-0001ZZ-0r; Tue, 01 Sep 2020 16:53:12 +0000
-Date:   Tue, 1 Sep 2020 17:53:11 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Helge Deller <deller@gmx.de>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Christoph Hellwig <hch@lst.de>,
+        id S1729765AbgIAPXE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 11:23:04 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42978 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729348AbgIAPXB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 11:23:01 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0E0068EE187;
+        Tue,  1 Sep 2020 08:22:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1598973779;
+        bh=oM6M8l0ba8Kwr86wVvWOr0ibc9GeoVF02RI3gdpRvZg=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=UvqMRf/V4bYGUnXRFYzHR0MoWszTvt72MUDJlkPgLVL7Z5C9ghIwUJJ5HYM5kfJ3n
+         5VYFPt986TvN+zbqjMT6pkl+t9bvzRZjP81gXVEMiUig/anUDkmm0cM9tI1gLXtLCF
+         UIwKWRUmpM4JixpLzQm9dVgj9tnlX6pm+UJWHqoc=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id U-JPs2CIcW43; Tue,  1 Sep 2020 08:22:58 -0700 (PDT)
+Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 8B8B18EE0F5;
+        Tue,  1 Sep 2020 08:22:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1598973778;
+        bh=oM6M8l0ba8Kwr86wVvWOr0ibc9GeoVF02RI3gdpRvZg=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=QlglmDYfmn+LUmPHNl9G1vxZ4WANgTGEDBcv3VoTq5jkCobGzHRwV7MDXP/8CkPRF
+         DlnAvyJzmngr5D0/wC86DqyXRPVdp/OwUQc4zsVd3Mrk54apOxtDVbGKnBnOuqrFqS
+         /e8+ps58Vp9230FkQlqzYQQbltdvuVP33ee7Vxcw=
+Message-ID: <1598973776.4238.11.camel@HansenPartnership.com>
+Subject: Re: [PATCH 07/28] 53c700: improve non-coherent DMA handling
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
         Joonyoung Shim <jy0922.shim@samsung.com>,
@@ -58,29 +69,38 @@ Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
         nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
         linux-mm@kvack.org, alsa-devel@alsa-project.org
-Subject: Re: [PATCH 07/28] 53c700: improve non-coherent DMA handling
-Message-ID: <20200901165311.GS14765@casper.infradead.org>
+Date:   Tue, 01 Sep 2020 08:22:56 -0700
+In-Reply-To: <20200901150554.GN14765@casper.infradead.org>
 References: <20200819065555.1802761-1-hch@lst.de>
- <20200819065555.1802761-8-hch@lst.de>
- <1598971960.4238.5.camel@HansenPartnership.com>
- <20200901150554.GN14765@casper.infradead.org>
- <1598973776.4238.11.camel@HansenPartnership.com>
- <3369218e-eea4-14e9-15f1-870269e4649d@gmx.de>
- <77c9b2b6-bedc-d090-8b23-6ac664df1d1f@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <77c9b2b6-bedc-d090-8b23-6ac664df1d1f@gmx.de>
+         <20200819065555.1802761-8-hch@lst.de>
+         <1598971960.4238.5.camel@HansenPartnership.com>
+         <20200901150554.GN14765@casper.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 01, 2020 at 06:41:12PM +0200, Helge Deller wrote:
-> > I still have a zoo of machines running for such testing, including a
-> > 715/64 and two 730.
-> > I'm going to test this git tree on the 715/64:
+On Tue, 2020-09-01 at 16:05 +0100, Matthew Wilcox wrote:
+> On Tue, Sep 01, 2020 at 07:52:40AM -0700, James Bottomley wrote:
+> > I think this looks mostly OK, except for one misnamed parameter
+> > below. Unfortunately, the last non-coherent parisc was the 700
+> > series and I no longer own a box, so I can't test that part of it
+> > (I can fire up the C360 to test it on a coherent arch).
+> 
+> I have a 715/50 that probably hasn't been powered on in 15 years if
+> you need something that old to test on (I believe the 725/100 uses
+> the 7100LC and so is coherent).  I'll need to set up a cross-compiler 
+> ...
 
-The 715/64 is a 7100LC machine though.  I think you need to boot on
-the 730 to test the non-coherent path.
+I'm not going to say no to actual testing, but it's going to be a world
+of pain getting something so old going.  I do have a box of older
+systems I keep for architectural testing that I need to rummage around
+in ... I just have a vague memory that my 715 actually caught fire a
+decade ago and had to be disposed of.
+
+James
 
