@@ -2,95 +2,162 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UPPERCASE_50_75,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16FACC433E6
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 06:54:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43379C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 07:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6AE520FC3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 06:54:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED7182071B
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 07:01:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="uoeG71ej"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726946AbgIAGym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 02:54:42 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60748 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726006AbgIAGyl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Sep 2020 02:54:41 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 7F7CEB5EB;
-        Tue,  1 Sep 2020 06:54:39 +0000 (UTC)
-Subject: Re: [PATCH V4] scsi: core: only re-run queue in scsi_end_request() if
- device queue is busy
-To:     Ming Lei <ming.lei@redhat.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "Ewan D . Milne" <emilne@redhat.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Long Li <longli@microsoft.com>,
-        John Garry <john.garry@huawei.com>, linux-block@vger.kernel.org
-References: <20200817100840.2496976-1-ming.lei@redhat.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d6f37b50-decd-f0c9-2b72-7a00e7ead774@suse.de>
-Date:   Tue, 1 Sep 2020 08:54:37 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <20200817100840.2496976-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1726724AbgIAHA6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 03:00:58 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:31954 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726117AbgIAHAo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 03:00:44 -0400
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200901070003epoutp03818691f05c6bbd6079005a871ea36314~wlrxErDuR2732627326epoutp03X
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2020 07:00:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200901070003epoutp03818691f05c6bbd6079005a871ea36314~wlrxErDuR2732627326epoutp03X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1598943603;
+        bh=DSnklmNM1iRH6V9fPTu0ChZ9yrpvpym06lWfFNwv+dQ=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=uoeG71ejSC6RG9HQgfIItAPwmQPuM12NteedpTFH9jwAFdOqZUzt8Kr/luoiFMTuD
+         T/7XlXkP1aVo9b09Rja7QJmqInoCySXXIVwing/ehFxSp3V/d1H87XYfzG42cP8yh9
+         ko0fR2/B9P1EZQO8nR2ijW2LwdIc98dNpuj/u1S4=
+Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p3.samsung.com
+        (KnoxPortal) with ESMTP id
+        20200901070002epcas1p3663b4ac20444e4bc81463a9bc07bc589~wlrwrsgXW0540605406epcas1p3S;
+        Tue,  1 Sep 2020 07:00:02 +0000 (GMT)
+Mime-Version: 1.0
+Subject: [PATCH V10 1/4] scsi: ufs: Add HPB feature related parameters
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Daejun Park <daejun7.park@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <231786897.01598943181634.JavaMail.epsvc@epcpadp2>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <963815509.21598943602645.JavaMail.epsvc@epcpadp1>
+Date:   Tue, 01 Sep 2020 15:53:44 +0900
+X-CMS-MailID: 20200901065344epcms2p6030a44c984b24fb9bafc64ff71bfe67f
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20200901043152epcms2p55ba1891c12bd8002dff38a1214aace72
+References: <231786897.01598943181634.JavaMail.epsvc@epcpadp2>
+        <CGME20200901043152epcms2p55ba1891c12bd8002dff38a1214aace72@epcms2p6>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/20 12:08 PM, Ming Lei wrote:
-> Now the request queue is run in scsi_end_request() unconditionally if both
-> target queue and host queue is ready. We should have re-run request queue
-> only after this device queue becomes busy for restarting this LUN only.
-> 
-> Recently Long Li reported that cost of run queue may be very heavy in
-> case of high queue depth. So improve this situation by only running
-> the request queue when this LUN is busy.
-> 
-> Cc: Ewan D. Milne <emilne@redhat.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Long Li <longli@microsoft.com>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: linux-block@vger.kernel.org
-> Reported-by: Long Li <longli@microsoft.com>
-> Tested-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
-> V4:
-> 	- fix one race reported by Kashyap, and simplify the implementation
-> 	a bit; also pass Kashyap's both function and performance test
-> V3:
-> 	- add one smp_mb() in scsi_mq_get_budget() and comment
-> 
-> V2:
-> 	- commit log change, no any code change
-> 	- add reported-by tag
-> 
->   drivers/scsi/scsi_lib.c    | 51 +++++++++++++++++++++++++++++++++++---
->   include/scsi/scsi_device.h |  1 +
->   2 files changed, 49 insertions(+), 3 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+This is a patch for parameters to be used for HPB feature.
 
-Cheers,
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Can Guo <cang@codeaurora.org>
+Acked-by: Avri Altman <Avri.Altman@wdc.com>
+Tested-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Daejun Park <daejun7.park@samsung.com>
+---
+ drivers/scsi/ufs/ufs.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Hannes
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index f8ab16f30fdc..e879ac34c065 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -122,6 +122,7 @@ enum flag_idn {
+ 	QUERY_FLAG_IDN_WB_EN                            = 0x0E,
+ 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN                 = 0x0F,
+ 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
++	QUERY_FLAG_IDN_HPB_RESET                        = 0x11,
+ };
+ 
+ /* Attribute idn for Query requests */
+@@ -195,6 +196,9 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
+ 	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
++	UNIT_DESC_HPB_LU_MAX_ACTIVE_REGIONS	= 0x23,
++	UNIT_DESC_HPB_LU_PIN_REGION_START_OFFSET	= 0x25,
++	UNIT_DESC_HPB_LU_NUM_PIN_REGIONS	= 0x27,
+ 	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
+ };
+ 
+@@ -235,6 +239,8 @@ enum device_desc_param {
+ 	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
+ 	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
+ 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
++	DEVICE_DESC_PARAM_HPB_VER		= 0x40,
++	DEVICE_DESC_PARAM_HPB_CONTROL		= 0x42,
+ 	DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP	= 0x4F,
+ 	DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN	= 0x53,
+ 	DEVICE_DESC_PARAM_WB_TYPE		= 0x54,
+@@ -283,6 +289,10 @@ enum geometry_desc_param {
+ 	GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS	= 0x3E,
+ 	GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR	= 0x42,
+ 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
++	GEOMETRY_DESC_PARAM_HPB_REGION_SIZE	= 0x48,
++	GEOMETRY_DESC_PARAM_HPB_NUMBER_LU	= 0x49,
++	GEOMETRY_DESC_PARAM_HPB_SUBREGION_SIZE	= 0x4A,
++	GEOMETRY_DESC_PARAM_HPB_MAX_ACTIVE_REGS	= 0x4B,
+ 	GEOMETRY_DESC_PARAM_WB_MAX_ALLOC_UNITS	= 0x4F,
+ 	GEOMETRY_DESC_PARAM_WB_MAX_WB_LUNS	= 0x53,
+ 	GEOMETRY_DESC_PARAM_WB_BUFF_CAP_ADJ	= 0x54,
+@@ -327,8 +337,10 @@ enum {
+ 
+ /* Possible values for dExtendedUFSFeaturesSupport */
+ enum {
++	UFS_DEV_HPB_SUPPORT		= BIT(7),
+ 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+ };
++#define UFS_DEV_HPB_SUPPORT_VERSION		0x310
+ 
+ #define POWER_DESC_MAX_SIZE			0x62
+ #define POWER_DESC_MAX_ACTV_ICC_LVLS		16
+@@ -537,6 +549,7 @@ struct ufs_dev_info {
+ 	u8 *model;
+ 	u16 wspecversion;
+ 	u32 clk_gating_wait_us;
++	u8 b_ufs_feature_sup;
+ 	u32 d_ext_ufs_feature_sup;
+ 	u8 b_wb_buffer_type;
+ 	u32 d_wb_alloc_units;
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.17.1
+
+
