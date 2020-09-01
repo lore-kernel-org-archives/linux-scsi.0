@@ -2,96 +2,102 @@ Return-Path: <SRS0=73BN=CK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83112C433E7
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:01:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F714C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:22:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 529DA2078B
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:01:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fo1o7u6I"
+	by mail.kernel.org (Postfix) with ESMTP id E8BF42065F
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Sep 2020 16:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731987AbgIAQB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 12:01:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58522 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731158AbgIAP6D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 11:58:03 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3A3DC061244;
-        Tue,  1 Sep 2020 08:58:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=M79so1AwUwPIRouROFaNCg3KdKArTwMSMNd8wl3xC9I=; b=Fo1o7u6IVr6vurOMarEGQIw99y
-        WHqyrdok/75XjmzAvs98wm2mZXYI8eGfVJCJLikO8fuOJu/9j6XvoFdlr1RTa038r8DDcHMqAU7lY
-        mmSZLC/smn0SnolNwwxdyrpDJlJoZhG0K7MVmnl8ewTBrEYNYAPRaMnE4rjqCK7VlkM7JqAlUWyDU
-        YkH9TJZ6yJEEibyeqV37+FBh0RkQQ6BwwzwRxyMvkU7/sD29/P1lImVmElLT8cbRAFklBxMxACP/P
-        9Ptq9IU2Xfcl9fIpw/yp4N3MdH0FKE600v4IAuPUo366M4kD36FMV0WaYWth1qfPOYnF35tgpEEiP
-        sE6GqZdg==;
-Received: from [2001:4bb8:18c:45ba:2f95:e5:ca6b:9b4a] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kD8fN-0004OS-MU; Tue, 01 Sep 2020 15:57:50 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Josef Bacik <josef@toxicpanda.com>,
-        Dan Williams <dan.j.williams@intel.com>, dm-devel@redhat.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        nbd@other.debian.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-raid@vger.kernel.org, linux-nvdimm@lists.01.org,
+        id S1731533AbgIAQWB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 12:22:01 -0400
+Received: from elvis.franken.de ([193.175.24.41]:45872 "EHLO elvis.franken.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731021AbgIAPcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Sep 2020 11:32:24 -0400
+Received: from uucp (helo=alpha)
+        by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
+        id 1kD8Gf-0002rq-00; Tue, 01 Sep 2020 17:32:17 +0200
+Received: by alpha.franken.de (Postfix, from userid 1000)
+        id 92E50C0E4C; Tue,  1 Sep 2020 17:22:09 +0200 (CEST)
+Date:   Tue, 1 Sep 2020 17:22:09 +0200
+From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Pawel Osciak <pawel@osciak.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-ia64@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: remove revalidate_disk()
-Date:   Tue,  1 Sep 2020 17:57:39 +0200
-Message-Id: <20200901155748.2884-1-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
+        linux-mm@kvack.org, alsa-devel@alsa-project.org
+Subject: Re: [PATCH 22/28] sgiseeq: convert from dma_cache_sync to
+ dma_sync_single_for_device
+Message-ID: <20200901152209.GA14288@alpha.franken.de>
+References: <20200819065555.1802761-1-hch@lst.de>
+ <20200819065555.1802761-23-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200819065555.1802761-23-hch@lst.de>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Jens,
+On Wed, Aug 19, 2020 at 08:55:49AM +0200, Christoph Hellwig wrote:
+> Use the proper modern API to transfer cache ownership for incoherent DMA.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/net/ethernet/seeq/sgiseeq.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/seeq/sgiseeq.c b/drivers/net/ethernet/seeq/sgiseeq.c
+> index 39599bbb5d45b6..f91dae16d69a19 100644
+> --- a/drivers/net/ethernet/seeq/sgiseeq.c
+> +++ b/drivers/net/ethernet/seeq/sgiseeq.c
+> @@ -112,14 +112,18 @@ struct sgiseeq_private {
+>  
+>  static inline void dma_sync_desc_cpu(struct net_device *dev, void *addr)
+>  {
+> -	dma_cache_sync(dev->dev.parent, addr, sizeof(struct sgiseeq_rx_desc),
+> -		       DMA_FROM_DEVICE);
+> +	struct sgiseeq_private *sp = netdev_priv(dev);
+> +
+> +	dma_sync_single_for_cpu(dev->dev.parent, VIRT_TO_DMA(sp, addr),
+> +			sizeof(struct sgiseeq_rx_desc), DMA_BIDIRECTIONAL);
+>  }
+>  
+>  static inline void dma_sync_desc_dev(struct net_device *dev, void *addr)
+>  {
+> -	dma_cache_sync(dev->dev.parent, addr, sizeof(struct sgiseeq_rx_desc),
+> -		       DMA_TO_DEVICE);
+> +	struct sgiseeq_private *sp = netdev_priv(dev);
+> +
+> +	dma_sync_single_for_device(dev->dev.parent, VIRT_TO_DMA(sp, addr),
+> +			sizeof(struct sgiseeq_rx_desc), DMA_BIDIRECTIONAL);
+>  }
 
-this series removes the revalidate_disk() function, which has been a
-really odd duck in the last years.  The prime reason why most people
-use it is because it propagates a size change from the gendisk to
-the block_device structure.  But it also calls into the rather ill
-defined ->revalidate_disk method which is rather useless for the
-callers.  So this adds a new helper to just propagate the size, and
-cleans up all kinds of mess around this area.  Follow on patches
-will eventuall kill of ->revalidate_disk entirely, but ther are a lot
-more patches needed for that.
+this breaks ethernet on IP22 completely, but I haven't figured out why, yet.
 
-Diffstat:
- Documentation/filesystems/locking.rst |    3 --
- block/genhd.c                         |    9 ++----
- drivers/block/nbd.c                   |    8 ++---
- drivers/block/rbd.c                   |    2 -
- drivers/block/rnbd/rnbd-clt.c         |   10 +------
- drivers/block/virtio_blk.c            |    2 -
- drivers/block/zram/zram_drv.c         |    4 +-
- drivers/md/dm-raid.c                  |    2 -
- drivers/md/md-cluster.c               |    6 ++--
- drivers/md/md-linear.c                |    2 -
- drivers/md/md.c                       |   10 +++----
- drivers/md/md.h                       |    2 -
- drivers/nvdimm/blk.c                  |    3 --
- drivers/nvdimm/btt.c                  |    3 --
- drivers/nvdimm/bus.c                  |    9 ++----
- drivers/nvdimm/nd.h                   |    2 -
- drivers/nvdimm/pmem.c                 |    3 --
- drivers/nvme/host/core.c              |   16 +++++++----
- drivers/scsi/sd.c                     |    6 ++--
- fs/block_dev.c                        |   46 ++++++++++++++++------------------
- include/linux/blk_types.h             |    4 ++
- include/linux/genhd.h                 |    6 ++--
- 22 files changed, 74 insertions(+), 84 deletions(-)
+Thomas.
+
+-- 
+Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
+good idea.                                                [ RFC1925, 2.3 ]
