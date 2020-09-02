@@ -2,83 +2,120 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99A9EC433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 21:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C2BC433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 21:38:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B21F208C7
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 21:14:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bSL/Pt1a"
+	by mail.kernel.org (Postfix) with ESMTP id 1F57720BED
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 21:38:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbgIBVOt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 17:14:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:55558 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726269AbgIBVOr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 17:14:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599081286;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=33opjgLrh2ZsUn/nG1tz2yuZ7Nvimue9R8d5qrdj7+U=;
-        b=bSL/Pt1aIlRGagD+7sqTP3gjEuglA+dHofIxmHjDex7SfjhN53CyqZQpQQKbX/HNtw4hSl
-        2PKdTIy+Yp1ioVhfL4gwgj6SyN6soocvM7H6RDexmcfoNe95CoX0C6OTa7/OVZV5iCN4S2
-        PrCucCTb3JzLv1FEQvaKlaZQ0eKZ4kI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-308-k2RG6qnmMA2OhVFiWhrPWQ-1; Wed, 02 Sep 2020 17:14:44 -0400
-X-MC-Unique: k2RG6qnmMA2OhVFiWhrPWQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7BFE01DE00;
-        Wed,  2 Sep 2020 21:14:43 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-115-53.rdu2.redhat.com [10.10.115.53])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B9C6B5C22D;
-        Wed,  2 Sep 2020 21:14:42 +0000 (UTC)
-From:   John Pittman <jpittman@redhat.com>
-To:     martin.petersen@oracle.com
-Cc:     jejb@linux.ibm.com, dgilbert@interlog.com, djeffery@redhat.com,
-        loberman@redhat.com, linux-scsi@vger.kernel.org,
-        John Pittman <jpittman@redhat.com>
-Subject: [PATCH v2 2/2] scsi: scsi_debug: sdebug_build_parts() respect virtual_gb
-Date:   Wed,  2 Sep 2020 17:14:34 -0400
-Message-Id: <20200902211434.9979-3-jpittman@redhat.com>
-In-Reply-To: <20200902211434.9979-1-jpittman@redhat.com>
-References: <20200902211434.9979-1-jpittman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+        id S1726882AbgIBVid (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 17:38:33 -0400
+Received: from elvis.franken.de ([193.175.24.41]:49452 "EHLO elvis.franken.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726355AbgIBVic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Sep 2020 17:38:32 -0400
+Received: from uucp (helo=alpha)
+        by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
+        id 1kDaSO-0001KH-00; Wed, 02 Sep 2020 23:38:16 +0200
+Received: by alpha.franken.de (Postfix, from userid 1000)
+        id 29A9AC0E7B; Wed,  2 Sep 2020 23:38:09 +0200 (CEST)
+Date:   Wed, 2 Sep 2020 23:38:09 +0200
+From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     alsa-devel@alsa-project.org, linux-ia64@vger.kernel.org,
+        linux-doc@vger.kernel.org, nouveau@lists.freedesktop.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        linux-mm@kvack.org, Marek Szyprowski <m.szyprowski@samsung.com>,
+        linux-samsung-soc@vger.kernel.org,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        linux-scsi@vger.kernel.org,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        linux-media@vger.kernel.org,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Pawel Osciak <pawel@osciak.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-parisc@vger.kernel.org,
+        netdev@vger.kernel.org, Seung-Woo Kim <sw0312.kim@samsung.com>,
+        linux-mips@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: Re: [PATCH 22/28] sgiseeq: convert from dma_cache_sync to
+ dma_sync_single_for_device
+Message-ID: <20200902213809.GA7998@alpha.franken.de>
+References: <20200819065555.1802761-1-hch@lst.de>
+ <20200819065555.1802761-23-hch@lst.de>
+ <20200901152209.GA14288@alpha.franken.de>
+ <20200901171241.GA20685@alpha.franken.de>
+ <20200901171627.GA8255@lst.de>
+ <20200901173810.GA25282@alpha.franken.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200901173810.GA25282@alpha.franken.de>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If virtual_gb is passed while using num_parts, when creating the
-partitions, virtual_gb is not respected.  Set num_sectors using
-get_sdebug_capacity() to pull virtual_gb if set.
+On Tue, Sep 01, 2020 at 07:38:10PM +0200, Thomas Bogendoerfer wrote:
+> On Tue, Sep 01, 2020 at 07:16:27PM +0200, Christoph Hellwig wrote:
+> > Well, if IP22 doesn't speculate (which I'm pretty sure is the case),
+> > dma_sync_single_for_cpu should indeeed be a no-op.  But then there
+> > also shouldn't be anything in the cache, as the previous
+> > dma_sync_single_for_device should have invalidated it.  So it seems like
+> > we are missing one (or more) ownership transfers to the device.  I'll
+> > try to look at the the ownership management in a little more detail
+> > tomorrow.
+> 
+> this is the problem:
+> 
+>        /* Always check for received packets. */
+>         sgiseeq_rx(dev, sp, hregs, sregs);
+> 
+> so the driver will look at the rx descriptor on every interrupt, so
+> we cache the rx descriptor on the first interrupt and if there was
+> $no rx packet, we will only see it, if cache line gets flushed for
+> some other reason. kick_tx() does a busy loop checking tx descriptors,
+> with just sync_desc_cpu...
 
-Signed-off-by: John Pittman <jpittman@redhat.com>
----
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+the patch below fixes the problem.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index ada0361eac83..a36652d41314 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -5268,7 +5268,7 @@ static void sdebug_build_parts(unsigned char *ramp, unsigned long store_size)
- 		sdebug_num_parts = SDEBUG_MAX_PARTS;
- 		pr_warn("reducing partitions to %d\n", SDEBUG_MAX_PARTS);
- 	}
--	num_sectors = (int)sdebug_store_sectors;
-+	num_sectors = (int)get_sdebug_capacity();
- 	sectors_per_part = (num_sectors - sdebug_sectors_per)
- 			   / sdebug_num_parts;
- 	heads_by_sects = sdebug_heads * sdebug_sectors_per;
+Thomas.
+
+
+diff --git a/drivers/net/ethernet/seeq/sgiseeq.c b/drivers/net/ethernet/seeq/sgiseeq.c
+index 8507ff242014..876e3700a0e4 100644
+--- a/drivers/net/ethernet/seeq/sgiseeq.c
++++ b/drivers/net/ethernet/seeq/sgiseeq.c
+@@ -112,14 +112,18 @@ struct sgiseeq_private {
+ 
+ static inline void dma_sync_desc_cpu(struct net_device *dev, void *addr)
+ {
+-       dma_cache_sync(dev->dev.parent, addr, sizeof(struct sgiseeq_rx_desc),
+-                      DMA_FROM_DEVICE);
++       struct sgiseeq_private *sp = netdev_priv(dev);
++
++       dma_sync_single_for_device(dev->dev.parent, VIRT_TO_DMA(sp, addr),
++                       sizeof(struct sgiseeq_rx_desc), DMA_FROM_DEVICE);
+ }
+ 
+ static inline void dma_sync_desc_dev(struct net_device *dev, void *addr)
+ {
+-       dma_cache_sync(dev->dev.parent, addr, sizeof(struct sgiseeq_rx_desc),
+-                      DMA_TO_DEVICE);
++       struct sgiseeq_private *sp = netdev_priv(dev);
++
++       dma_sync_single_for_device(dev->dev.parent, VIRT_TO_DMA(sp, addr),
++                       sizeof(struct sgiseeq_rx_desc), DMA_TO_DEVICE);
+ }
+ 
 -- 
-2.17.2
-
+Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
+good idea.                                                [ RFC1925, 2.3 ]
