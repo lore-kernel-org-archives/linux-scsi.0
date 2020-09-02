@@ -2,60 +2,69 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C80C433E7
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 22:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 817F9C433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 22:23:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0A8020767
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 22:00:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B923207D3
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 22:23:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726686AbgIBWAK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 18:00:10 -0400
-Received: from smtp.hosts.co.uk ([85.233.160.19]:36177 "EHLO smtp.hosts.co.uk"
+        id S1726377AbgIBWXj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 18:23:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58940 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726269AbgIBWAJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Sep 2020 18:00:09 -0400
-Received: from host86-136-163-47.range86-136.btcentralplus.com ([86.136.163.47] helo=[192.168.1.65])
-        by smtp.hosts.co.uk with esmtpa (Exim)
-        (envelope-from <antlists@youngman.org.uk>)
-        id 1kDanW-00031m-Be; Wed, 02 Sep 2020 23:00:06 +0100
-Subject: Re: [PATCH 11/19] gdrom: use bdev_check_media_change
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20200902141218.212614-1-hch@lst.de>
- <20200902141218.212614-12-hch@lst.de>
-From:   antlists <antlists@youngman.org.uk>
-Message-ID: <0b8fa1fe-f2d5-bf18-2e8a-ad13e343629d@youngman.org.uk>
-Date:   Wed, 2 Sep 2020 23:00:05 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726226AbgIBWXj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Sep 2020 18:23:39 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id B7518AC55;
+        Wed,  2 Sep 2020 22:23:38 +0000 (UTC)
+Date:   Thu, 3 Sep 2020 00:23:36 +0200
+From:   David Disseldorp <ddiss@suse.de>
+To:     Michael Christie <michael.christie@oracle.com>
+Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [RFC PATCH] scsi: target: detect XCOPY NAA descriptor conflicts
+Message-ID: <20200903002336.083e88a4@suse.de>
+In-Reply-To: <2155E745-0E65-441B-93AF-7B4C0A53F5F4@oracle.com>
+References: <20200813002142.13820-1-ddiss@suse.de>
+        <2155E745-0E65-441B-93AF-7B4C0A53F5F4@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20200902141218.212614-12-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 02/09/2020 15:12, Christoph Hellwig wrote:
-> The GD-ROM driver does not have a ->revalidate_disk method, so it can
-       ^^ (sic)
+Hi Mike,
 
-Cheers,
-Wol
+On Tue, 1 Sep 2020 22:17:51 -0500, Michael Christie wrote:
+
+> > --- a/drivers/target/target_core_xcopy.c
+> > +++ b/drivers/target/target_core_xcopy.c
+> > @@ -68,8 +68,14 @@ static int target_xcopy_locate_se_dev_e4_iter(struct se_device *se_dev,
+> > 	if (rc != 0)
+> > 		return 0;
+> > 
+> > -	info->found_dev = se_dev;
+> > 	pr_debug("XCOPY 0xe4: located se_dev: %p\n", se_dev);
+> > +	if (info->found_dev) {
+> > +		pr_warn("XCOPY 0xe4 descriptor conflict for se_dev %p and %p\n",
+> > +			info->found_dev, se_dev);
+> > +		target_undepend_item(&info->found_dev->dev_group.cg_item);
+> > +		return -ENOTUNIQ;
+> > +	}
+> > +	info->found_dev = se_dev;  
+> 
+> Was it valid to copy to/from the same LUN? You would copy from/to different src/destinations on that LUN. Would your patch break that?
+
+XCOPY allows for copies to occur on the same LUN or between separate
+src/destinations. The intention of this patch is that regardless of the
+source or destination, if the NAA WWN could refer to multiple LUNs on
+the same target (via target_for_each_device()) then the XCOPY should
+fail and force the initiator to fallback to initiator driver copy.
+
+Cheers, David
