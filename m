@@ -2,115 +2,72 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB234C433E7
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 06:07:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3FE5C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 06:17:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E71220758
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 06:07:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599026830;
-	bh=5+KmkwCh74/cntArpz/UMLM/pddG8ulQKVSpeB3X+RY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=fTt42aufjlXNUhDjRuK+FM4CuubnH074vW0cLBDhYWQVt5lWHegHjx5rhByiqIh9k
-	 47ia8kEsiKO/8KAerTbocUvwHK0QvtqiKVupxQi2OQ3i3aFYn1Tcb6BRiS7/Ev+rIv
-	 yPJv2XB9kjQKZfyOkx7zJygvlfYXskKhsnTQy7ZQ=
+	by mail.kernel.org (Postfix) with ESMTP id CF25F206C0
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 06:17:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726559AbgIBGHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 02:07:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34400 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725774AbgIBGHH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Sep 2020 02:07:07 -0400
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6830220758;
-        Wed,  2 Sep 2020 06:07:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599026826;
-        bh=5+KmkwCh74/cntArpz/UMLM/pddG8ulQKVSpeB3X+RY=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=cTkF1377EKFMiKH243aPvnk5sDiPB+mAJ8UbjY3H3CxHW3ub6AhJm8zB6sjCeyjos
-         0Zb34r3LG95586+asqAax7/k2wV4jNsfLjOB7nVyJnDD7czJn3t7iganE4hOlIZPud
-         bwrsx4majAT2w7kFdtUeFxc30f6s6TlOONSSdwLw=
-Received: by mail-lj1-f181.google.com with SMTP id a15so4432606ljk.2;
-        Tue, 01 Sep 2020 23:07:06 -0700 (PDT)
-X-Gm-Message-State: AOAM531wo4BTlz2HG9icZPboh263vixMIECn1BCzuBJqVPF+HveKr8CU
-        +IkexbLSoJ7mbsIoPypTK4b3saCDZC/Xafb8sVQ=
-X-Google-Smtp-Source: ABdhPJyE5jGOrYyZE6ORaRQIp51/fhLfZD64Ax0jpOVcS4L2G+U2YIU+6jbqUjHlXVyGhP2izG2P3ekqYZd5wXuophY=
-X-Received: by 2002:a2e:81c2:: with SMTP id s2mr2472465ljg.10.1599026824658;
- Tue, 01 Sep 2020 23:07:04 -0700 (PDT)
+        id S1726312AbgIBGR0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 02:17:26 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:10753 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726140AbgIBGR0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Sep 2020 02:17:26 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 0B82DEA5C11E8D626663;
+        Wed,  2 Sep 2020 14:17:24 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Wed, 2 Sep 2020
+ 14:17:13 +0800
+From:   Ye Bin <yebin10@huawei.com>
+To:     <willy@infradead.org>, <linux-scsi@vger.kernel.org>
+CC:     Ye Bin <yebin10@huawei.com>
+Subject: [PATCH] scsi: sym53c8xx_2: Delete useless if-else in sym_xerr_cam_status
+Date:   Wed, 2 Sep 2020 14:16:46 +0800
+Message-ID: <20200902061646.576966-1-yebin10@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-References: <20200901155748.2884-1-hch@lst.de> <20200901155748.2884-5-hch@lst.de>
-In-Reply-To: <20200901155748.2884-5-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 1 Sep 2020 23:06:52 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW5-nfKQK_178R-Y+ps6KLNMrwvWe0Rh5=M1-xvcKHYTgg@mail.gmail.com>
-Message-ID: <CAPhsuW5-nfKQK_178R-Y+ps6KLNMrwvWe0Rh5=M1-xvcKHYTgg@mail.gmail.com>
-Subject: Re: [PATCH 4/9] block: add a new revalidate_disk_size helper
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>,
-        Dan Williams <dan.j.williams@intel.com>, dm-devel@redhat.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-block@vger.kernel.org, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org,
-        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 1, 2020 at 9:00 AM Christoph Hellwig <hch@lst.de> wrote:
->
-[...]
+Only (x_status & XE_PARITY_ERR) is true we set cam_status = DID_PARITY,
+other condition we set cam_status = DID_ERROR. So delete useless if-else.
 
->  drivers/md/md-cluster.c       |  6 ++---
->  drivers/md/md-linear.c        |  2 +-
->  drivers/md/md.c               | 10 ++++-----
+Signed-off-by: Ye Bin <yebin10@huawei.com>
+---
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-For md bits:
-Acked-by: Song Liu <song@kernel.org>
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 28edb6e53ea2..d9a045f9858c 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -156,12 +156,8 @@ void sym_xpt_async_bus_reset(struct sym_hcb *np)
+ static int sym_xerr_cam_status(int cam_status, int x_status)
+ {
+ 	if (x_status) {
+-		if	(x_status & XE_PARITY_ERR)
++		if (x_status & XE_PARITY_ERR)
+ 			cam_status = DID_PARITY;
+-		else if	(x_status &(XE_EXTRA_DATA|XE_SODL_UNRUN|XE_SWIDE_OVRUN))
+-			cam_status = DID_ERROR;
+-		else if	(x_status & XE_BAD_PHASE)
+-			cam_status = DID_ERROR;
+ 		else
+ 			cam_status = DID_ERROR;
+ 	}
+-- 
+2.25.4
 
-[...]
->
-> +/**
-> + * revalidate_disk_size - checks for disk size change and adjusts bdev size.
-> + * @disk: struct gendisk to check
-> + * @verbose: if %true log a message about a size change if there is any
-> + *
-> + * This routine checks to see if the bdev size does not match the disk size
-> + * and adjusts it if it differs. When shrinking the bdev size, its all caches
-> + * are freed.
-> + */
-> +void revalidate_disk_size(struct gendisk *disk, bool verbose)
-> +{
-> +       struct block_device *bdev;
-> +
-> +       /*
-> +        * Hidden disks don't have associated bdev so there's no point in
-> +        * revalidating them.
-> +        */
-> +       if (disk->flags & GENHD_FL_HIDDEN)
-> +               return;
-> +
-> +       bdev = bdget_disk(disk, 0);
-> +       if (bdev) {
-> +               check_disk_size_change(disk, bdev, verbose);
-> +               bdput(bdev);
-> +       }
-> +}
-> +EXPORT_SYMBOL(revalidate_disk_size);
-
-Shall we use EXPORT_SYMBOL_GPL() here?
-
-[...]
