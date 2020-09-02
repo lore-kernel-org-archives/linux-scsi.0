@@ -2,133 +2,196 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98323C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:34:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CCB5C2BBD0
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:35:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CEC9208C7
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:34:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1125120678
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:35:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Va8x5AV0";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="iV5TZyBe"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MCMzkrli"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728513AbgIBPe0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 11:34:26 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:30089 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726140AbgIBPUB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 11:20:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1599060001; x=1630596001;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=Va8x5AV0/azlrO+ziqFHlbJUsBvwAj4e9qzQb1fM7kX5J5PMXgv/pfEd
-   IcsmATF6jq13ZBhjmRo5Tqbl5Hnoo/HE65+iJ4XCJarv+dUSkDbZZMsiX
-   OmwWBa8KlYdkI7v2n3JvlYPsUvzOUxA0qWFCdbLxYyVeZXk9ix3ZBdtZ2
-   tCQYL2VY8ni8RTZwoBe6R7dBix44rs4R2Enr7rYvTh5zWXcahQ7Zl40D3
-   vh14xcmo3C9rqRecrZMXfZe6VJZzg1W52nKsflGfdFEE0ApdaKoj6RCOQ
-   mxxBirNCq16Xh6Km6RfvTtWi1CiZcn7ope7ObyT3LQOxGblLD/gWo865X
-   g==;
-IronPort-SDR: Wu3N5Xej4/5130/Yz6/ooT6IS0AFbEsfhe0tPvnOP09BOJXh8Smq/yyidSO9UD+26/4UBVpbzf
- giO5eZpXj69ppMMWlv7dkJCWv5aei4kpGuO5hFvN22/uI2fYqBDJKF49DwgHG74iYIYTwOPNcf
- MOEUKJMA/7F9f7FnLsbKUTEIJf+Oo0kE56QH+1zwa9bSroJMZsUTbVjsMuFTQoDmghoHQyH3Nk
- wJxUw7Y011VkZ5UB21dg/8IBwQWtyzkLxBgzvYh81ohGBWXfOyzmVN1KA7s0yAI8GepqVOoz7e
- imc=
-X-IronPort-AV: E=Sophos;i="5.76,383,1592841600"; 
-   d="scan'208";a="146346567"
-Received: from mail-dm6nam10lp2105.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.105])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Sep 2020 23:19:02 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RyUtOBo6UAtPVP2DaudF8o3EiC0Gqm49IPRt4WCw+J/xxaO5qHVj1mnrh/oRbJWKMMNQ6PlD17sB9i/CAWgYNgT9uYzUtDx6zrNBE6uN/AyoV65QmOVqh8cEqIDBtF6qE44jzzBGgNokM5f2qU1kXg3cKAh7aHclL17WVxseteWG8Ptq5LccG7G68OV9swmpH8s5rJHoflbMlfNTnvNJgY6U13buVD/Rqcbd29kR/rNUxaRfcgiZgskGUzXtAFIKS0PMK8bjHa229b0EDz8mJhH3IHqpMWFPqVfsiBau9rhvIPP0ZU9i9pIqI4FIFn8LgNk6BJo8belN7T7OzSmFyw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=I3SGvJ/p2Gc85WbYjsI3sTHRVRh5rYVIiXnygD0JH4LeQHrs2gnUrbYkPXpvPzHwUZkPPhzeUvZpzix7c5AYXN3+VBtH2gp5HMqZd4lSSLyLnjP9y8gbhP6lOWEPjowPATJy9xHj2v6b6Jn6YUoRfMsri84LcWIDDcs1Ar9EPmkHGF61bve911HM0pTj/RIjyuFIkHOTqkPJhctGCFvzgM+HSpxnQiii6zuR7ImrrZtsGW8110DMywKUwatMTaYxcaxz1yTV3Wx7KL+MN+3LCQ6h6emx7myMWx1SF59bxCMN/7ChB02YDvL633yZBZMGkSR/yOOVri3hJ6GyNzk17g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=iV5TZyBeyWb/fS+2SvRjTlR4+cOXe6cuq9NOSCW1I2Is7L4tPi24I4VIXShQYfEfyyu+wLKL7PTI1GFk2TFrQJQ5Aw3MhI7vTEgLz7Laqky+jId2x8TIqHfG3x4ZmL3Tj46XANwr9m8THqVA9fxXzDI4IkjithcA4oRIJXB60Zw=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3679.namprd04.prod.outlook.com
- (2603:10b6:803:46::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.25; Wed, 2 Sep
- 2020 15:19:00 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738%7]) with mapi id 15.20.3326.023; Wed, 2 Sep 2020
- 15:19:00 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "linux-m68k@lists.linux-m68k.org" <linux-m68k@lists.linux-m68k.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 02/19] amiflop: use bdev_check_media_change
-Thread-Topic: [PATCH 02/19] amiflop: use bdev_check_media_change
-Thread-Index: AQHWgTRRy9uPGHJeTU6aD/n7hdh8Pw==
-Date:   Wed, 2 Sep 2020 15:19:00 +0000
-Message-ID: <SN4PR0401MB35984640F866198E060690779B2F0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200902141218.212614-1-hch@lst.de>
- <20200902141218.212614-3-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2001:a62:1590:f101:1584:4722:fd5f:b30e]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 66c50792-e5b1-4ee6-4a23-08d84f5384ef
-x-ms-traffictypediagnostic: SN4PR0401MB3679:
-x-microsoft-antispam-prvs: <SN4PR0401MB3679751F9846AC7EF6E6C6A49B2F0@SN4PR0401MB3679.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ZxlxFfVYbut5l6t1auiYRuTPk5exo698ujcwnj0mCxHTYXrJXZwiUaPLxuRwNDIua6b3tZmBb+++D/BHg34Ax9QS7YxAhDkZvJkN9j3sDZuKD5QeD0IrZSVnjjqBfX1CoXDdp0cNhnUzmFIthgQVCdrO8CfzzAlMWKfFr/L0ocR8Bf2n31/Awe+LydI/8PaehRcQFc6kx2uwnmVuL0kadE7ZWjZzz3Wiit3iigNBjAYzgQZ/xjpbame6nNCXZT9ajK1i31EAULSPxZyL4Yor0dYslisUhoFN70Ia1fGK4EaFrxqUi4NQUd+noFfHJeL4Hjp3Q55HzAbgCM4oDzHiRg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(136003)(39850400004)(396003)(366004)(8936002)(86362001)(76116006)(52536014)(91956017)(66476007)(66556008)(33656002)(66946007)(71200400001)(5660300002)(4326008)(66446008)(64756008)(7696005)(316002)(558084003)(54906003)(110136005)(7416002)(8676002)(186003)(19618925003)(478600001)(4270600006)(6506007)(55016002)(9686003)(2906002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: K2EZhfWqfxRLNK+dCq2RaH47w5R/vJm92wcyv12OF7QWneh48R4ueImtqwRP0VEiHQm/SLOPhfVHvQQ5txUMhvYEO04uISyPeA4j9FaxvNArDOx4P1/xF8VWUx40qlbOP65MzvnoRqWwvDgN0yWWTbJf2WZtV9eD1S4R1e1S3fZyGLcxa/iAD18v8o6SOwvqTQ8CZOhvAcM9eI8vOGAtJEmSgr/UNx9Q0anoYH0RpNoLtc9H863wmetDnj+L9WUD/sEPxrn2vLTYM/fcczz2fpIOpGVgvUBihYEg+rKML8GJwzCAqnfq+0MB+YI5MNmvNheCHI8LsftxDZwnXxUe5erGL4P8SuzxL5IwlQcVtqryEkt0F233gVRp3ikorMaQxVZUcD5A7lnYoiBRtNg182BbhgwhbF9V8lv6IXYVtuZPoS9GSrQ/okBpZsmLLaA8X/wb6QDttOOkRg+SFXmy59N1sP6FH3rWH+5QtfttBzRvy6IFD7/H0lTRh5RNtwSla3lxR4Dg4YfphVcQu0F+gXphxzKAcLgZNevOxrr8nTK8sWbtoSIP7dutYBUU1SUYb3EtVEAykB+HNIHmw1eiOhWFGSA2cpNrkHc0FWZ5KPmBai0iItiSKF49tc1PJkSJE99vgDsx3dr1n0xuAOyOnHl63hO5o1QOrz3dTk3acpbXBWaOD/Nm+0qUlCyJEnVzRTPdBvd3/rx6PNR1+P+G5g==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
+        id S1726293AbgIBPfe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 11:35:34 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37844 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728361AbgIBPfU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 11:35:20 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082FYwxp089320;
+        Wed, 2 Sep 2020 15:35:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=myRg0eqVKQyenXybhty7ky8DK2ncQbSGm+UIlN6pU1o=;
+ b=MCMzkrlig42tAS7dtw8V9wJ/+tyKazntBSkLU+PYd2FDEkHVJ98WZLFv0aDT6XGQjDEC
+ +Q3W+fyYkGQJxAlAFuTmeRnPes71fcdDpi2t0ElJo4Zs6rQOnEacL6UNawwZpnlMYI5V
+ 1OtirzX7QEab26iqztrSyh39xJpUJ8ho4x3lz7YQp++JGtej9UR8NiAeCkna3zhHRJ6z
+ LACzFhoMcR+sywIxs3yvFigjOJmkg3rFdUvWbWLJqVvlso0oEr9bwrGrCrLRcJFcuAGi
+ 837AUXb9g7oxEemc9hn6yTXE+VeIznPvsg26ZTygJhR7x/bzyuykN5yCsl4BS2iNAmfs HA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 337eer3c37-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 02 Sep 2020 15:35:17 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082FZ5h4172425;
+        Wed, 2 Sep 2020 15:35:17 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 3380su557a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Sep 2020 15:35:17 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 082FZGiC029459;
+        Wed, 2 Sep 2020 15:35:16 GMT
+Received: from dhcp-10-154-155-248.vpn.oracle.com (/10.154.155.248)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 02 Sep 2020 08:35:16 -0700
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
+Subject: Re: [PATCH v2 03/13] qla2xxx: Allow dev_loss_tmo setting for FC-NVMe
+ devices
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+In-Reply-To: <20200902072548.11491-4-njavali@marvell.com>
+Date:   Wed, 2 Sep 2020 10:35:15 -0500
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 66c50792-e5b1-4ee6-4a23-08d84f5384ef
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 15:19:00.2080
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: DjY+EDVSEKKTZM0NYBXDollYy2E+jS4Jg/0hUVJqGA+dvzNixGhtTJJu4Eohz29V2gJVarz3MfTTiUzL7yvWt5WzOthPMlif43uwQXZfrc4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3679
+Message-Id: <610EB2F9-0263-4D29-9989-03237EBAEF03@oracle.com>
+References: <20200902072548.11491-1-njavali@marvell.com>
+ <20200902072548.11491-4-njavali@marvell.com>
+To:     Nilesh Javali <njavali@marvell.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.1)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020148
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
+ phishscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 suspectscore=3
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009020148
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+
+
+> On Sep 2, 2020, at 2:25 AM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> From: Arun Easi <aeasi@marvell.com>
+>=20
+> Add a remote port debugfs entry to get/set dev_loss_tmo for NVMe
+> devices.
+>=20
+> Signed-off-by: Arun Easi <aeasi@marvell.com>
+> Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+> ---
+> drivers/scsi/qla2xxx/qla_dfs.c | 58 ++++++++++++++++++++++++++++++++++
+> 1 file changed, 58 insertions(+)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c =
+b/drivers/scsi/qla2xxx/qla_dfs.c
+> index 3c4b9b549b17..616ce891818d 100644
+> --- a/drivers/scsi/qla2xxx/qla_dfs.c
+> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
+> @@ -12,6 +12,61 @@
+> static struct dentry *qla2x00_dfs_root;
+> static atomic_t qla2x00_dfs_root_count;
+>=20
+> +#define QLA_DFS_RPORT_DEVLOSS_TMO	1
+> +
+> +static int
+> +qla_dfs_rport_get(struct fc_port *fp, int attr_id, u64 *val)
+> +{
+> +	switch (attr_id) {
+> +	case QLA_DFS_RPORT_DEVLOSS_TMO:
+> +		/* Only supported for FC-NVMe devices that are =
+registered. */
+> +		if (!(fp->nvme_flag & NVME_FLAG_REGISTERED))
+> +			return -EIO;
+> +		*val =3D fp->nvme_remote_port->dev_loss_tmo;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int
+> +qla_dfs_rport_set(struct fc_port *fp, int attr_id, u64 val)
+> +{
+> +	switch (attr_id) {
+> +	case QLA_DFS_RPORT_DEVLOSS_TMO:
+> +		/* Only supported for FC-NVMe devices that are =
+registered. */
+> +		if (!(fp->nvme_flag & NVME_FLAG_REGISTERED))
+> +			return -EIO;
+> +#if (IS_ENABLED(CONFIG_NVME_FC))
+> +		return =
+nvme_fc_set_remoteport_devloss(fp->nvme_remote_port,
+> +						      val);
+> +#else /* CONFIG_NVME_FC */
+> +		return -EINVAL;
+> +#endif /* CONFIG_NVME_FC */
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +#define DEFINE_QLA_DFS_RPORT_RW_ATTR(_attr_id, _attr)		=
+\
+> +static int qla_dfs_rport_##_attr##_get(void *data, u64 *val)	\
+> +{								\
+> +	struct fc_port *fp =3D data;				\
+> +	return qla_dfs_rport_get(fp, _attr_id, val);		\
+> +}								\
+> +static int qla_dfs_rport_##_attr##_set(void *data, u64 val)	\
+> +{								\
+> +	struct fc_port *fp =3D data;				\
+> +	return qla_dfs_rport_set(fp, _attr_id, val);		\
+> +}								\
+> +DEFINE_DEBUGFS_ATTRIBUTE(qla_dfs_rport_##_attr##_fops,		=
+\
+> +		qla_dfs_rport_##_attr##_get,			\
+> +		qla_dfs_rport_##_attr##_set, "%llu\n")
+> +
+> +DEFINE_QLA_DFS_RPORT_RW_ATTR(QLA_DFS_RPORT_DEVLOSS_TMO, =
+dev_loss_tmo);
+> +
+> void
+> qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
+> {
+> @@ -24,6 +79,9 @@ qla2x00_dfs_create_rport(scsi_qla_host_t *vha, =
+struct fc_port *fp)
+> 	fp->dfs_rport_dir =3D debugfs_create_dir(wwn, =
+vha->dfs_rport_root);
+> 	if (!fp->dfs_rport_dir)
+> 		return;
+> +	if (NVME_TARGET(vha->hw, fp))
+> +		debugfs_create_file("dev_loss_tmo", 0600, =
+fp->dfs_rport_dir,
+> +				    fp, =
+&qla_dfs_rport_dev_loss_tmo_fops);
+> }
+>=20
+> void
+> --=20
+> 2.19.0.rc0
+>=20
+
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+--
+Himanshu Madhani	 Oracle Linux Engineering
+
