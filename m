@@ -2,108 +2,127 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D215BC433E6
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 02:49:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C14F8C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 02:59:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B94FD20639
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 02:49:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A028620707
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 02:59:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oHRFz4j6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726193AbgIBCtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Sep 2020 22:49:43 -0400
-Received: from mail-pf1-f169.google.com ([209.85.210.169]:46492 "EHLO
-        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726122AbgIBCtm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 22:49:42 -0400
-Received: by mail-pf1-f169.google.com with SMTP id b124so1998302pfg.13;
-        Tue, 01 Sep 2020 19:49:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=y0tgeTnOWFbjoTCP04Pv3Ohxcmth0doMEi+kkl3hlFk=;
-        b=olNT0JesuPeNNfg40EVCa1rD9wV7CJh5weF6vbTtjB+hlYZdQKcGgL8wXDWP7MgONM
-         vYmrwl/uCuqSVrw86fJSG6T8YRkfyq4H47gFnxNsKHhpjAkvLUK/D1lGRJ+wG1XT8hFQ
-         hWc0r9fJsX5TJQ1BdEjJN26OqfIm4G9B5EYNovmAqb3Ka2+iNd8fh24eXwZJQnwMXj/T
-         yRVYgypCLpaFIa1iDnbWVE2R61poD+5nmKxTD2Ck5nTdCOue1vXp0ZUwtmsFqCjLY4cO
-         WdQ3BKGdJMicPyJEIxabefUDC3EcJTThxEdP9+ep075G046m69UYzirPJ85YtRbFUFfN
-         CSGA==
-X-Gm-Message-State: AOAM533cN2KcYTaGN67Z7t6MYVKr/dOj5M8Pj/TCALykqJpu1CWRe9bd
-        ni1iOyYorpZG9I5sJ5fJYnI=
-X-Google-Smtp-Source: ABdhPJwOl74MAXsxJHgMa/K4CrEAKgtkeHul0mFeQIc6PMwAppbsd8UOBJ9Y3PkRMtUyOcFEnWi9VQ==
-X-Received: by 2002:a63:161d:: with SMTP id w29mr227523pgl.16.1599014980908;
-        Tue, 01 Sep 2020 19:49:40 -0700 (PDT)
-Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id p20sm2719515pjz.49.2020.09.01.19.49.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Sep 2020 19:49:39 -0700 (PDT)
-Subject: Re: [PATCH V10 3/4] scsi: ufs: L2P map management for HPB read
-To:     daejun7.park@samsung.com,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>
-References: <231786897.01598943181634.JavaMail.epsvc@epcpadp2>
- <CGME20200901043152epcms2p55ba1891c12bd8002dff38a1214aace72@epcms2p5>
- <1210830415.21598943781976.JavaMail.epsvc@epcpadp2>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <53d50755-055c-ca7d-9e07-6b5c7a69cb45@acm.org>
-Date:   Tue, 1 Sep 2020 19:49:38 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <1210830415.21598943781976.JavaMail.epsvc@epcpadp2>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726654AbgIBC7H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Sep 2020 22:59:07 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:48134 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726140AbgIBC7F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Sep 2020 22:59:05 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0822reYl124264;
+        Wed, 2 Sep 2020 02:59:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=0giVz1o+VCCS8VKnCNvTQEqXBGUN6yWSXQt6dCZHuEU=;
+ b=oHRFz4j6AovQaOWR8xieEzt14PRdaP2mpEzk5RNCOY7zavt1iC7je3s9yJM8J1BC8sfy
+ o2u8aF7vZtY+DQ9+SNpwEAkRvJF4TznM38kWVIh/ph6fBJWF6YvMxpVkG324thQBwK6q
+ ZqMelE8QaVsIZhujjDP+zD0+7etDfop5Lm0XzK8IBbKbCgDw/FYdrghcFZtZsAP5W5d6
+ wU3R014R58iOhq4v9QNGfjQoT20jErBWbUTUC4ScSIoHcMRWyCSiTzQ7z490gdTB0XiG
+ THsT31LJXRaWZLAQzL1wmbrLklzER+gvovyMLnxUaWNvZ9P0CNLfWcJOsVVJyyeBfE+U Pw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 339dmmxaaf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 02 Sep 2020 02:59:03 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0822t16F186009;
+        Wed, 2 Sep 2020 02:57:02 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 3380st0wt5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Sep 2020 02:57:02 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0822v1hJ005678;
+        Wed, 2 Sep 2020 02:57:01 GMT
+Received: from [20.15.0.5] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 01 Sep 2020 19:57:01 -0700
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
+Subject: Re: [PATCH] iscsi-target: fix hang in iscsit_access_np() when getting
+ tpg->np_login_sem
+From:   Michael Christie <michael.christie@oracle.com>
+In-Reply-To: <20200729130343.24976-1-houpu@bytedance.com>
+Date:   Tue, 1 Sep 2020 21:57:00 -0500
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        stable@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <24875CC6-70FA-477D-BB74-51FBFDD96732@oracle.com>
+References: <20200729130343.24976-1-houpu@bytedance.com>
+To:     Hou Pu <houpu@bytedance.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.1)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020026
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=0
+ spamscore=0 clxscore=1011 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020026
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-08-31 23:54, Daejun Park wrote:
-> This is a patch for managing L2P map in HPB module.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
+> On Jul 29, 2020, at 8:03 AM, Hou Pu <houpu@bytedance.com> wrote:
+>=20
+> The iscsi target login thread might stuck in following stack:
+>=20
+> cat /proc/`pidof iscsi_np`/stack
+> [<0>] down_interruptible+0x42/0x50
+> [<0>] iscsit_access_np+0xe3/0x167
+> [<0>] iscsi_target_locate_portal+0x695/0x8ac
+> [<0>] __iscsi_target_login_thread+0x855/0xb82
+> [<0>] iscsi_target_login_thread+0x2f/0x5a
+> [<0>] kthread+0xfa/0x130
+> [<0>] ret_from_fork+0x1f/0x30
+>=20
+> This could be reproduced by following steps:
+> 1. Initiator A try to login iqn1-tpg1 on port 3260. After finishing
+>   PDU exchange in the login thread and before the negotiation is
+>   finished, at this time the network link is down. In a production
+>   environment, this could happen. I could emulated it by bring
+>   the network card down in the initiator node by ifconfig eth0 down.
+>   (Now A could never finish this login. And tpg->np_login_sem is
+>   hold by it).
+> 2. Initiator B try to login iqn2-tpg1 on port 3260. After finishing
+>   PDU exchange in the login thread. The target expect to process
+>   remaining login PDUs in workqueue context.
+> 3. Initiator A' try to re-login to iqn1-tpg1 on port 3260 from
+>   a new socket. It will wait for tpg->np_login_sem with
+>   np->np_login_timer loaded to wait for at most 15 second.
+>   (Because the lock is held by A. A never gets a change to
+>   release tpg->np_login_sem. so A' should finally get timeout).
+> 4. Before A' got timeout. Initiator B gets negotiation failed and
+>   calls iscsi_target_login_drop()->iscsi_target_login_sess_out().
+>   The np->np_login_timer is canceled. And initiator A' will hang
+>   there forever. Because A' is now in the login thread. All other
+>   login requests could not be serviced.
+
+iqn1 and iqn1 are different targets right? It=E2=80=99s not clear to me =
+how when initiator B fails negotiation that it cancels the timer for the =
+portal under a different iqn/target.
+
+Is iqn2-tpg1->np1 a different struct than iqn1-tpg1-np1? I mean =
+iscsit_get_tpg_from_np would return a different np struct for initiator =
+B and for A?=
