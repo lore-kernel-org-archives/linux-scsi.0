@@ -2,161 +2,152 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B14C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 04:16:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2592C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 05:10:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09BC820709
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 04:16:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F71D20709
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 05:10:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance-com.20150623.gappssmtp.com header.i=@bytedance-com.20150623.gappssmtp.com header.b="rw759oD7"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="b3MC0sS0";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="T3MF2QhM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726536AbgIBEQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 00:16:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59486 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726247AbgIBEQL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 00:16:11 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECBD3C061244
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2020 21:16:10 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id l191so1880384pgd.5
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2020 21:16:10 -0700 (PDT)
+        id S1726355AbgIBFKd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 01:10:33 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:6012 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726285AbgIBFKa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 01:10:30 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1599023428; x=1630559428;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Mck26RQzN5xmNC5QAv5OOxbey49vtuBE6wweHry4UzA=;
+  b=b3MC0sS0KHIBuY2YX/GCXQ3qXMDQ8W7F0uTTSYz4hv/D3dSlW6c7RsRZ
+   +eaipqnLcxSvmbtVIP0pbBPdq8edS+g6sZ0beZma3TkcTsZGHzk59vn/F
+   5Gyv/PKPKJL+DItwAWVpAAtTTHKCCGLCuaGTCoX4FTSEIKHHWW4464HXI
+   CNYiLdbdwSgbvHJJTtW9Q5kHjhVe7XhEb/VbU94FQXMB6Qq9sRO/5FL/M
+   wQ4xyg+v1FSvCoI/BK9l3C2uoI10EUFA6vev6ieKcyl2KZI+MpBH1zBbh
+   9W8m8ZfHKEiVSgrrjc8JSTH+zApltiHkp3/vhmVd++tH6DubOfqgkga2p
+   Q==;
+IronPort-SDR: iAnFgyusQRUalp/mCk1baiv068tzzPuFo95n0g3b7PCpx724hNwmN6hgIbHxlMOaPTK2sIxhGt
+ NdHQt4d3AV7djfPynJ2zTgeqeJz/A7sAtYSz2FB8x00Og15N1KVHOLcnj74mm74NnHwyjPwVDa
+ LKYTaQQ+NghIpZ8V8bTIM36mFpnEDjeQoLzt7sgiVf3tfjboKRk/z2M9rq/qmkAhgNhtJkqT1F
+ JZamA/XNoY/5ssLOoBWRc1WoTx5gQcA5AUDsD4axHVEUE1LTP9sGy5VwPAhqO3LZTWMozbRPF7
+ yzM=
+X-IronPort-AV: E=Sophos;i="5.76,381,1592841600"; 
+   d="scan'208";a="147603230"
+Received: from mail-bn7nam10lp2101.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.101])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Sep 2020 13:10:25 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=eyxxyfGhZ1JZHUS/gTd596zGL2M5GT19sSUBEqR3zfQOCnMtId7tnr46TvUjCgbJtGrDXqt7zBo55gi8N6tvRrlJMAx6AZh/qmcLDmkcjpNi/gqhYDbHfPg3Tyjsr960sLtvRY1higEKjQwtYI8ouIVGf+Cgy3tFMtoKQL3xr13khlwnI/oPvchWdghvrLm+z0Jv6WXNg59szsC6jZyRSLwbbSqTn9hIL7Jve5GVt2HFPeAYDcwQPmz9rKmKfpO4RxY/sik+IscLt27MUvNrWQCZq9AtHPAJ6w88lMPzEKEo2VmxKBrhUWFoB8qyGqb9ObcFpRk0ANKWEyFW80mVyw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Mck26RQzN5xmNC5QAv5OOxbey49vtuBE6wweHry4UzA=;
+ b=RvSKBHI5CNZUZflixHF7b8txsCQxfqWMjKV2pg+5VGnSCj0xDHNw8pYeTFHnZ0uCQwO6QYp0xlpipy4zorSeJAOO6jNAYxxNjV7O+IXXQ+W0PAmDNKOamZc4MvDKRJKIAgMuHm+sxGv0r1ibgue5oe17tcitm/n+Zqm/tdcDOLYP8JVnC59aJi76pgsKLPM32GiZer1hssmBnWvkT4I3zvWV5e0130Aus2/wmiuVQb39wN7bPYVkEzojP0v2HYEuz+h0k1hj+o2Wwzed/ETad6YfVTtx/y4pdysnZqa0Qna0x8j3aBdNDEQWDkp0D2DoWBIydX0pGV9b70viXKBzhQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=YjuQEk1m++l8+VgRagE9HCI6EDDx7NljlOmBUw7K6jE=;
-        b=rw759oD7fSY02fi35ImzrcQcE892StuRZ7BzmV2Nyic6E859zO2UlxVlj5GwrsqRCe
-         /Np64c4+tiehj4WkuyJodDepUwpoHkJi28vWgoGhhEZ7AmOnJFPtBcC2Cq1zXoPwzC2T
-         Jo8SCS2jwGDkI5lyiEx0ltSoWJiiDfPF09VmCCGhM+y15oj5qu6Gl/jYz4vCYL5QXQuX
-         PlN+wpxjx1qr5UI56qJP6kIQ5PuDm6NmTFiQKhPQyuhKqN0PyGgYUzJviKxdyDibdKWt
-         09jZhB9fp/ct4XzZWfT5MzPXmVRmRWxvNAs/PQKXa9ty7CZFQRCToA8Qx5RIFY6dQDjh
-         syjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=YjuQEk1m++l8+VgRagE9HCI6EDDx7NljlOmBUw7K6jE=;
-        b=e8YAKlEnYh67uPBAVHPkrZvleDlh/+nrITtJmf3zt92p3smbdCCGh4+HDH7b+noZK5
-         kljzQ5RNGFs1aDXHQWOMhGNFTwWZJUJiU5cH+GsFX91EoAmpBMvB9o5fmNtSCbA8l/nI
-         juwA9OXDYsV/0RRxGrzIH3kyAiF2ux4RhJINAdFLpPJbUfAxNZVDSWfKWyC4aLkzzt58
-         mRfboyeqzP6h6JtlPYX4pxQL7Nxre9Fl3Ok6iMxM+zMjftwTB5BK+e7Aof55HEqzVeL6
-         0zPUwXbdSLQukLr6nViZvdG7xUglBopQVjyQf3KSD/cOjoJXWZiowoXvTybgCRj32B2H
-         PXpg==
-X-Gm-Message-State: AOAM533k31EUi7vFGWRIlKqLFgjeE+hfOU5ZXyKxMn6sR8m/8t8nIjnU
-        fZvlKSoZIozCPGPWAzCn544xNw==
-X-Google-Smtp-Source: ABdhPJxkYNhpuDRKo12BK397uJNblMB8taTb9JDBABcjU97i4j3G3oM8HvwGtq2T7nsipNYvm06yVQ==
-X-Received: by 2002:a62:6847:: with SMTP id d68mr1490556pfc.110.1599020167776;
-        Tue, 01 Sep 2020 21:16:07 -0700 (PDT)
-Received: from [10.2.202.243] ([61.120.150.74])
-        by smtp.gmail.com with ESMTPSA id a5sm3711965pfb.26.2020.09.01.21.16.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Sep 2020 21:16:07 -0700 (PDT)
-Subject: Re: [PATCH] iscsi-target: fix hang in iscsit_access_np() when getting
- tpg->np_login_sem
-To:     Michael Christie <michael.christie@oracle.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        stable@vger.kernel.org
-References: <20200729130343.24976-1-houpu@bytedance.com>
- <24875CC6-70FA-477D-BB74-51FBFDD96732@oracle.com>
-From:   Hou Pu <houpu@bytedance.com>
-Message-ID: <e655c868-966d-1846-6bd8-19671cf966d4@bytedance.com>
-Date:   Wed, 2 Sep 2020 12:16:03 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <24875CC6-70FA-477D-BB74-51FBFDD96732@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Mck26RQzN5xmNC5QAv5OOxbey49vtuBE6wweHry4UzA=;
+ b=T3MF2QhMQPnOAb1XezFZjJNZXM2v7fsGIpT4aTZkk4LS0gXPGakiq54d31k0Sgkgt00hDP5h7Z0NErY/IzHwKa/PB85FEIP8G5uSisB59Zckqe88A9LvHdv/oVIU9ZREzg9chmcrWskdOfy7s9UP4e73EexhNuOFvaVOb4DLM7w=
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
+ by BYAPR04MB5767.namprd04.prod.outlook.com (2603:10b6:a03:10e::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.23; Wed, 2 Sep
+ 2020 05:10:23 +0000
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::1083:4093:49fa:a3fd]) by BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::1083:4093:49fa:a3fd%2]) with mapi id 15.20.3326.025; Wed, 2 Sep 2020
+ 05:10:23 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>
+CC:     "cang@codeaurora.org" <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
+ Auto-Hibernate Timer
+Thread-Topic: [PATCH v1 1/1] scsi: ufshcd: Allow zero value setting to
+ Auto-Hibernate Timer
+Thread-Index: AQHWfaC3kd0c1Nm+d0KoEDt9jyytd6lOsAkwgAPXxwCAAkrNAA==
+Date:   Wed, 2 Sep 2020 05:10:23 +0000
+Message-ID: <BY5PR04MB67058266FB01737736CFC978FC2F0@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <b141cfcd7998b8933635828b56fbb64f8ad4d175.1598661071.git.nguyenb@codeaurora.org>
+ <BY5PR04MB6705177184FC1A0E5F7710FDFC530@BY5PR04MB6705.namprd04.prod.outlook.com>
+ <96e34a8d7d52dfbc47738f04d2a127c2@codeaurora.org>
+In-Reply-To: <96e34a8d7d52dfbc47738f04d2a127c2@codeaurora.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [77.138.4.172]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: f6914c38-d949-40c0-ea37-08d84efe7f62
+x-ms-traffictypediagnostic: BYAPR04MB5767:
+x-microsoft-antispam-prvs: <BYAPR04MB576755241CA685B9A2FCC905FC2F0@BYAPR04MB5767.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: qiOeiQWildYDvFdYx8C1y7tmDkFV4ningbkIWlfOyJXrJ9Vx0oNE5qT/xLKIbMzCebM9rpMCckKC9wayj6BwtByYQqENULbH1ZK2+JTmmySk9R7ugzy4ITDQ0LYRrGCeVm98mZURNKYa/elojJ4+FbRnQvr+b2+HN5Q5tcbhy4sAqXM14dfZBIjjsLpawTLW0Kh2ACv1O3qiueQVA7JvTfUPSOo1Sjp1vUdEs7d22JDgMzeKiSRO+EMwozfF88qOVBD/ngZn02irxMNnWD2dJxD9z/IyYagibhKJLL8fhlGUTZID/RwEKMEG3ws3sWsK
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(136003)(366004)(396003)(376002)(346002)(76116006)(83380400001)(86362001)(4326008)(316002)(2906002)(54906003)(26005)(52536014)(9686003)(186003)(478600001)(53546011)(66946007)(64756008)(55016002)(66476007)(71200400001)(6916009)(66556008)(66446008)(8676002)(5660300002)(7416002)(8936002)(6506007)(33656002)(7696005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 1Q7ybvo8JSqdArxVPjyB1fXKh2s/fijEUwO5JMFoi4nUX7d9yY6cPn6OFyvzKuYQiUNDAEgNref9YpS0mLMq87lwF2hS+vQiGQU1mprQz5c23QDU8wqRA4dpVpNV5TygqwNS0/jOw7Pc6O9qVlkl1xOARWx1VChkf1UoSqdS5LtC6gfd0BiQ63gd53YbKRqa0cvO9nUgL/fJScV1Yz1qgMh8P7vThkXfbegmTDaxjblopacjdtOMtwXY/gPig1eZhL3luNEbbfO3zrytMG7mbm+I8Jwjpou1qPU2eFi+y//oxQWaX8DDDXo5QWoZCVDXYGDeeg4F4r0qPBVDOhUWbbJF3p9AsTTS5aRE7HL2Dv748DpePa9PhGXRcPVcFvo2FCean4LtLTV7nLGlt5zriLPh5ml0JyLh981u8thqarc9TpG4SlrXuITnkOdwTxAK6lZF+HXDkB8CcSYqpPIz+C9X0jTGlYC2jXqyqw9EZv0B8F1YFdYcRwPCm720bDAgkbjQuIVNaTqf2J7D4uIzFdUf6/l8MvsxqluNYfh3BV9BM1XVAmAQRzMb9BlWoMw6UwJardIUYTweOcoPenAG2Wf13Heo+Sv2vR8MCsS0SjAYcZOQeIFYYUv5/hKx+RrQ+NDVIXnOpC+4OLBav3AnGA==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f6914c38-d949-40c0-ea37-08d84efe7f62
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 05:10:23.7847
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: kZfUngvAt0g1xZlMpMLt8aZWEqFYpRSf7d+miJeGix7Ju9cByBZqO+epG/R/dDNKiaYiwLMLlTyGZhud9yFs0A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5767
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 2020/9/2 10:57 AM, Michael Christie wrote:
-> 
-> 
->> On Jul 29, 2020, at 8:03 AM, Hou Pu <houpu@bytedance.com> wrote:
->>
->> The iscsi target login thread might stuck in following stack:
->>
->> cat /proc/`pidof iscsi_np`/stack
->> [<0>] down_interruptible+0x42/0x50
->> [<0>] iscsit_access_np+0xe3/0x167
->> [<0>] iscsi_target_locate_portal+0x695/0x8ac
->> [<0>] __iscsi_target_login_thread+0x855/0xb82
->> [<0>] iscsi_target_login_thread+0x2f/0x5a
->> [<0>] kthread+0xfa/0x130
->> [<0>] ret_from_fork+0x1f/0x30
->>
->> This could be reproduced by following steps:
->> 1. Initiator A try to login iqn1-tpg1 on port 3260. After finishing
->>    PDU exchange in the login thread and before the negotiation is
->>    finished, at this time the network link is down. In a production
->>    environment, this could happen. I could emulated it by bring
->>    the network card down in the initiator node by ifconfig eth0 down.
->>    (Now A could never finish this login. And tpg->np_login_sem is
->>    hold by it).
->> 2. Initiator B try to login iqn2-tpg1 on port 3260. After finishing
->>    PDU exchange in the login thread. The target expect to process
->>    remaining login PDUs in workqueue context.
->> 3. Initiator A' try to re-login to iqn1-tpg1 on port 3260 from
->>    a new socket. It will wait for tpg->np_login_sem with
->>    np->np_login_timer loaded to wait for at most 15 second.
->>    (Because the lock is held by A. A never gets a change to
->>    release tpg->np_login_sem. so A' should finally get timeout).
->> 4. Before A' got timeout. Initiator B gets negotiation failed and
->>    calls iscsi_target_login_drop()->iscsi_target_login_sess_out().
->>    The np->np_login_timer is canceled. And initiator A' will hang
->>    there forever. Because A' is now in the login thread. All other
->>    login requests could not be serviced.
-> 
-> iqn1 and iqn1 are different targets right? It’s not clear to me how when initiator B fails negotiation that it cancels the timer for the portal under a different iqn/target.
-
-iqn1-tpg1 in step1 and step3 are same one. (same target volume)
-iqn2-tpg1 in step2 is a different volume on the same host.
-The configuration likes below:
-
-iqn1-tpg1:
-root@storageXXX:/sys/kernel/config/target/iscsi# ls 
-iqn.2010-10.org.openstack\:volume-00e50deb-5296-4f18-xxxx-106f96a880c8/tpgt_1/np/
-10.129.77.16:3260
-
-iqn2-tpg1:
-root@storageXXX:/sys/kernel/config/target/iscsi# ls 
-iqn.2010-10.org.openstack\:volume-86af15c6-c529-4715-xxxx-3c9ca068635d/tpgt_1/np/
-10.129.77.16:3260
-
-(I could provide more is needed)
-
-> 
-> Is iqn2-tpg1->np1 a different struct than iqn1-tpg1-np1? I mean iscsit_get_tpg_from_np would return a different np struct for initiator B and for A?
-> 
-
-iscsit_get_tpg_from_np() returned different struct iscsi_portal_group
-for initiator A and B. But struct iscsi_np is shared by them.
-Because they have the same portal(ip address and port).
-
-
-Thanks,
-Hou
-
-
-
-
-
-
-
-
-
-
+IA0KPiANCj4gT24gMjAyMC0wOC0yOSAwMDozMiwgQXZyaSBBbHRtYW4gd3JvdGU6DQo+ID4+DQo+
+ID4+IFRoZSB6ZXJvIHZhbHVlIEF1dG8tSGliZXJuYXRlIFRpbWVyIGlzIGEgdmFsaWQgc2V0dGlu
+ZywgYW5kIGl0DQo+ID4+IGluZGljYXRlcyB0aGUgQXV0by1IaWJlcm5hdGUgZmVhdHVyZSBiZWlu
+ZyBkaXNhYmxlZC4gQ29ycmVjdGx5DQo+ID4gUmlnaHQuIFNvICIgdWZzaGNkX2F1dG9faGliZXJu
+OF9lbmFibGUiIGlzIG5vIGxvbmdlciBhbiBhcHByb3ByaWF0ZQ0KPiA+IG5hbWUuDQo+ID4gTWF5
+YmUgdWZzaGNkX2F1dG9faGliZXJuOF9zZXQgaW5zdGVhZD8NCj4gVGhhbmtzIGZvciB5b3VyIGNv
+bW1lbnQuIEkgYW0gb2sgd2l0aCB0aGUgbmFtZSBjaGFuZ2Ugc3VnZ2VzdGlvbi4NCj4gPg0KPiA+
+IEFsc28sIGRpZCB5b3UgdmVyaWZpZWQgdGhhdCBubyBvdGhlciBwbGF0Zm9ybSByZWxpZXMgb24g
+aXRzIG5vbi16ZXJvDQo+ID4gdmFsdWU/DQo+IEkgb25seSB0ZXN0ZWQgdGhlIGNoYW5nZSBvbiBR
+dWFsY29tbSdzIHBsYXRmb3JtLiBJIGRvIG5vdCBoYXZlIG90aGVyDQo+IHBsYXRmb3JtcyB0byBk
+byB0aGUgdGVzdC4NCj4gVGhlIFVGUyBob3N0IGNvbnRyb2xsZXIgc3BlYyBKRVNEMjIwRSwgU2Vj
+dGlvbiA1LjIuNSBzYXlzDQo+ICJTb2Z0d2FyZSB3cml0ZXMg4oCcMOKAnSB0byBkaXNhYmxlIEF1
+dG8tSGliZXJuYXRlIElkbGUgVGltZXIiLiBTbyB0aGUgc3BlYw0KPiBzdXBwb3J0cyB0aGlzIHpl
+cm8gdmFsdWUuDQo+IFNvbWUgb3B0aW9uczoNCj4gLSBXZSBjb3VsZCBhZGQgYSBoYmEtPmNhcHMg
+c28gdGhhdCB3ZSBvbmx5IGFwcGx5IHRoZSBjaGFuZ2UgZm9yDQo+IFF1YWxjb21tJ3MgcGxhdGZv
+cm1zLg0KPiBUaGlzIGlzIG5vdCBwcmVmZXJyZWQgYmVjYXVzZSBpdCBpcyBmb2xsb3dpbmcgdGhl
+IHNwZWMgaW1wbGVtZW50YXRpb25zLg0KPiAtIE9yIG90aGVyIHBsYXRmb3JtcyB0aGF0IGRvIG5v
+dCBzdXBwb3J0IHRoZSB6ZXJvIHZhbHVlIG5lZWRzIGEgY2Fwcy4NClllYWgsIEkgZG9uJ3QgdGhp
+bmsgYW5vdGhlciBjYXBzIGlzIHJlcXVpcmVkLA0KTWF5YmUganVzdCBhbiBhY2sgZnJvbSBTdGFu
+bGV5Lg0KDQpUaGFua3MsDQpBdnJpDQo=
