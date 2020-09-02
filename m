@@ -2,133 +2,201 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C3AC433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:55:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 324D1C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC31320829
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:54:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09BE3207EA
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:59:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BOwsGITH";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="IDFUGwZl"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gk78EeP5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728294AbgIBPyy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 11:54:54 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:62314 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726726AbgIBPyt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 11:54:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1599062090; x=1630598090;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=BOwsGITHCE1eDcWVfB2YPAqhzYaGzhJQwwSRqYSvL9Oidzy0y1MReRtC
-   I5X+M+J7W4r0hRsVyrlWCXgl3mPPPSBGnhe1KA0iq3oVoUePVBvBeN2YJ
-   TRKeeTDInBp8AJBOp603xy0zpPGh8wy6tqDECmUK2xYEFMKsshV5MqkEw
-   wRB/xWmw+wYhkRrV2/UAYZrx5gLh07pbB8XyZiwuvGPCqn2d6yDwjp0aW
-   RTXY5EzqqhFUYqDYifr7FvFFuYFvAZSJMD0x1n5aYGKytQ9jzfmTSiFuK
-   htqLSa9dKOT8UseZBUEBAdAKSboKmJmygzQC7tazppoEEIA7ES9Yr57mG
-   w==;
-IronPort-SDR: lSNVUr8AMvDd4SfHH7Eqz9y7EnL9oqrnn0QQMTpoKjf/2rfoo4ogHbiqPlAIY/H2MCdiW7EfG1
- R6qwpLmnHTXAJWCfTXHOEGpnC/i8/+t1KsLuzDlRp8Miyxvz/4NxqEJUu3FADaoz/ilLNBWD2P
- cgXgO/uW5pRAnY+QA4Iukap0BVDPn/dRdjDiQYCUb5dGiasgfEHgKA+eRRcITQFsRlRBc/2YdR
- hdhgp3NIeb3gUTiE6LcJ9X9uXKDix/rJD3BqhLC9/cuObj7FN7LGEx3jpudoi1W2tLjHdnjjAZ
- n3M=
-X-IronPort-AV: E=Sophos;i="5.76,383,1592841600"; 
-   d="scan'208";a="249683662"
-Received: from mail-dm6nam11lp2168.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.168])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Sep 2020 23:54:47 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YTuAjvLv39qXYkIHqPCWxgFzOd34nP2dDbY9XsxK4rv/3Wgsxkh4VFS6MbIm/mP+IwYWfTbkgXXEvh/rraDaUcIFKDw+v73ySaOvcGPMbVWbt2oA7i/wlerOD1a7Z5Pi+tFONZlb7tBLTWkc9kfQAw/7hunYxitSOHz6iQJi4hmcZkaXDw6yP5Ju5/ODg10L+xoCefo1jmKJfQp0eydHgoWcBn1eLGUPEYezxbOdU4B00zVLkSkak8bZhbTTcBf17Cbai70BYg4OwZzoER9iMbiGpyqoNpnpbtiVpeijVGpjVwR4xkCBOdCIf1bYZQIlnT+nv62fNre6VaP/8QKqxg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=D8vyknZtntywevN5CLZdovrI+pu9mK59NFDXyaCgk3c6+YQjuckpwg+DUldhLzbTNvmTL7fM7G1sDMxZtzBYFWpYfKlKl+RyA2MLEr1L9c43YpaoXoNXASVXTn/lnLqRggKtCurAh+69Q3T0vqR0WHpOd9jgoc24wd/1QrHQJS1ri9D/LLnhJn4BF46Phbu/tO4/1zcxWu2z6Xqojd4Kox/bUcyw6hfmO6VpbJHEVFJ71lz7JUpanEH2UImdKa/1EnCDXcT37WgUUzykRffMzH/t4HZQmk/5Z4mMp0N6H6lHBy4WvCi9+CLN0rbqzcC+HlxNQDSy5cCn6NBp2qjHYA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=IDFUGwZlbpnNbjER3KJTuNFvLQBK6JOyrb+Tg58RiyeOgnsgA1ySPWtiqndbWlqyIRW75FR/HsORkQhrb067RjNYnRssLevkrku/ZZF1zcQNPmdG6288aPP4aVCBZWwYJuzWzeFWtbxX9dwpeJ+zYdqYfvX68933vzD3A3Fu8Ts=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN2PR04MB2142.namprd04.prod.outlook.com
- (2603:10b6:804:16::10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.19; Wed, 2 Sep
- 2020 15:54:45 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::457e:5fe9:2ae3:e738%7]) with mapi id 15.20.3326.023; Wed, 2 Sep 2020
- 15:54:45 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "linux-m68k@lists.linux-m68k.org" <linux-m68k@lists.linux-m68k.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH 19/19] block: remove check_disk_change
-Thread-Topic: [PATCH 19/19] block: remove check_disk_change
-Thread-Index: AQHWgTTM/VMdxHIOSki4rSDxObQdDA==
-Date:   Wed, 2 Sep 2020 15:54:45 +0000
-Message-ID: <SN4PR0401MB3598D00C3B1D7DE2DE13EB659B2F0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200902141218.212614-1-hch@lst.de>
- <20200902141218.212614-20-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2001:a62:1590:f101:1584:4722:fd5f:b30e]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 2efcab8a-0de2-4dcd-abd6-08d84f58837e
-x-ms-traffictypediagnostic: SN2PR04MB2142:
-x-microsoft-antispam-prvs: <SN2PR04MB2142B6E7FEDE109FB8BCD27F9B2F0@SN2PR04MB2142.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 3chquWAona7oNgqHSaHq7hSibThOsxNBPSjF0OL02GAJNctZ8rhRDcxlKe6k/imhwFycD543BseqeNRwXnh0V1Gqo7tOlGINNeXkWOQXiOT/Lxd1GKDCKVjZt3y7hnigh6W+tMp8BaC6e0ddLziQQQfv2lMQ3nVrSyU/hdwullPkHrc5Uz6CiUdBJV8efskxBixkB8kDlMYizIxELvfoM0WK+bmBXH4Kt3JA91YlH+wZW0flGDVuwoQfjtEc8QOF6I9WEav0qUz+QONXV3spcrNPpUucw3xJGksJuc3wnZSxud4tHBWbm731jkbiQHC4P/1C0GLYmY7uc4tUiXSAgQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39850400004)(376002)(136003)(346002)(396003)(366004)(76116006)(66446008)(186003)(7696005)(91956017)(8676002)(5660300002)(66556008)(7416002)(6506007)(64756008)(52536014)(66946007)(19618925003)(66476007)(8936002)(110136005)(316002)(55016002)(478600001)(558084003)(4326008)(54906003)(4270600006)(9686003)(71200400001)(86362001)(2906002)(33656002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: zWWeH+lwWT2qJgiJSPJFvsVZClbv9TVV6lc58lwzRepeHH3BrMyCnQ3EpbSoE3pI220c39AXU+MxegW0Ab/7iGBk5Bkg1Qgf0QGBQ6U2Xgqov6ds3I5chT8721RhlN//lXOC8Xp184olX2QiH/R/xPehG+xf14RcK8R5fBGCeKpubyXSBi+35v8sKFBEvpKa2bIUuLDNme/ia7RLH/kjy55h8oxOnutRY8w53HAVrl+Q2zq1I4seAy8VGgidzLu+1lnuhsHUs3ci/YM7dSqhFyzmXLiTPajnMV2IHu0vKe4ZlZ/vpTTZsk6pg0TynUnRbedYUp1jkx7OAvhlSfBLR9RRdyaO6hQaVxXNl05twM+hbMYZT3kPpEcjbuaeCsWKGyZDVj47Q91J9+dNctvIgyv7pKsjB5q6E9VU2zEfWbs5tDa0f7wvxT1m7+nqbl8YX0DuZH8sH/czKhGM7cd+j2LB16F6SKmn1Ei1cxHRNVxcBYabExzJz9QrzNhRZUZoXyTLm/dxxA9Ri1CsE1MdKn6oforepmFU1L8ksalqINRShmqu8XvRDQd5WEKqLOAQ4rZmAu5uxoC6qU14ZOt2xR5FDY4libqUKzA67TWKjHMVmE0KBEIa4G9UTw2loeyWnqr+tI1MrWsSGlIai/K5bLlgndaK8Eufiegz5GK9WNsh406Q6QJ8RL8FU8obObfNa80EhBSP5V3RwYZMIvHb4Q==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
+        id S1727825AbgIBP73 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 11:59:29 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36268 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726310AbgIBP7Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 11:59:24 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082Fo96E011401;
+        Wed, 2 Sep 2020 15:59:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=kjLmay4MdXd9APFKL6X82c9pOYlyhKjcXACCrEmAbAI=;
+ b=gk78EeP52y69y7rpJ1suvpJVu+C2hQ+Ezjruqoixt6CfM1m+4kpt/L8otVAZqb1MtZ0h
+ d0+6JGD5vHlI58Y67lo6GDPGnuJCpT3DC8uWC9AljneOhQ00shx1X3cUuJvoZuyf2egA
+ nBV2SmI3dtOgyWgVk84j8xRFxIdpNlwu/GYYw1+9e4JpkVhWy39r/sw39gD0+rbcqkq4
+ K5yK7FMPIKiK8lsBuw/d6fEXpP+xPQ/NWdn0FtDSSQshSFhpWxD6afmjMnowXR/IFz6b
+ HA/czdtejbe+qDeCO19+WFnYhYfVIJpCUINY/skXtVQ7q7PTPqYYx8nfcAzWkSgmQaSr 9A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 337eymbfce-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 02 Sep 2020 15:59:21 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082FtF8q030694;
+        Wed, 2 Sep 2020 15:57:21 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 3380kq7er4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Sep 2020 15:57:21 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 082FvK8l006176;
+        Wed, 2 Sep 2020 15:57:20 GMT
+Received: from dhcp-10-154-155-248.vpn.oracle.com (/10.154.155.248)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 02 Sep 2020 08:57:20 -0700
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
+Subject: Re: [PATCH v2 09/13] qla2xxx: Make tgt_port_database available in
+ initiator mode
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+In-Reply-To: <20200902072548.11491-10-njavali@marvell.com>
+Date:   Wed, 2 Sep 2020 10:57:19 -0500
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2efcab8a-0de2-4dcd-abd6-08d84f58837e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 15:54:45.2819
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Lilrbp7kQ67XgWn5bHsx0R4QfP4xNRpGsYSCNZhvGI3Rmi6UwoRXk0fQDLaFF5Xf/enoKm4KtDLUZYoeicOw6vR3HmyasVdM5ND5owIEBdg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN2PR04MB2142
+Message-Id: <1F6E85E2-38CF-4B33-A39A-76256F5B3F1A@oracle.com>
+References: <20200902072548.11491-1-njavali@marvell.com>
+ <20200902072548.11491-10-njavali@marvell.com>
+To:     Nilesh Javali <njavali@marvell.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.1)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ mlxscore=0 suspectscore=11 malwarescore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009020152
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=11 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020151
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+
+
+> On Sep 2, 2020, at 2:25 AM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> From: Arun Easi <aeasi@marvell.com>
+>=20
+> tgt_port_database data is today exported only in target mode, allow it
+> to be shown in initiator mode, as well.
+>=20
+> Signed-off-by: Arun Easi <aeasi@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+> drivers/scsi/qla2xxx/qla_dfs.c | 64 +++++++++++++++++-----------------
+> 1 file changed, 32 insertions(+), 32 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c =
+b/drivers/scsi/qla2xxx/qla_dfs.c
+> index 616ce891818d..1e9db568aee3 100644
+> --- a/drivers/scsi/qla2xxx/qla_dfs.c
+> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
+> @@ -138,51 +138,51 @@ qla2x00_dfs_tgt_port_database_show(struct =
+seq_file *s, void *unused)
+> {
+> 	scsi_qla_host_t *vha =3D s->private;
+> 	struct qla_hw_data *ha =3D vha->hw;
+> -	struct gid_list_info *gid_list, *gid;
+> +	struct gid_list_info *gid_list;
+> 	dma_addr_t gid_list_dma;
+> 	fc_port_t fc_port;
+> +	char *id_iter;
+> 	int rc, i;
+> 	uint16_t entries, loop_id;
+> -	struct qla_tgt *tgt =3D vha->vha_tgt.qla_tgt;
+>=20
+> 	seq_printf(s, "%s\n", vha->host_str);
+> -	if (tgt) {
+> -		gid_list =3D dma_alloc_coherent(&ha->pdev->dev,
+> -		    qla2x00_gid_list_size(ha),
+> -		    &gid_list_dma, GFP_KERNEL);
+> -		if (!gid_list) {
+> -			ql_dbg(ql_dbg_user, vha, 0x7018,
+> -			    "DMA allocation failed for %u\n",
+> -			     qla2x00_gid_list_size(ha));
+> -			return 0;
+> -		}
+> +	gid_list =3D dma_alloc_coherent(&ha->pdev->dev,
+> +				      qla2x00_gid_list_size(ha),
+> +				      &gid_list_dma, GFP_KERNEL);
+> +	if (!gid_list) {
+> +		ql_dbg(ql_dbg_user, vha, 0x7018,
+> +		       "DMA allocation failed for %u\n",
+> +		       qla2x00_gid_list_size(ha));
+> +		return 0;
+> +	}
+>=20
+> -		rc =3D qla24xx_gidlist_wait(vha, gid_list, gid_list_dma,
+> -		    &entries);
+> -		if (rc !=3D QLA_SUCCESS)
+> -			goto out_free_id_list;
+> +	rc =3D qla24xx_gidlist_wait(vha, gid_list, gid_list_dma,
+> +				  &entries);
+> +	if (rc !=3D QLA_SUCCESS)
+> +		goto out_free_id_list;
+>=20
+> -		gid =3D gid_list;
+> +	id_iter =3D (char *)gid_list;
+>=20
+> -		seq_puts(s, "Port Name	Port ID 	Loop ID\n");
+> +	seq_puts(s, "Port Name	Port ID		Loop ID\n");
+>=20
+> -		for (i =3D 0; i < entries; i++) {
+> -			loop_id =3D le16_to_cpu(gid->loop_id);
+> -			memset(&fc_port, 0, sizeof(fc_port_t));
+> +	for (i =3D 0; i < entries; i++) {
+> +		struct gid_list_info *gid =3D
+> +			(struct gid_list_info *)id_iter;
+> +		loop_id =3D le16_to_cpu(gid->loop_id);
+> +		memset(&fc_port, 0, sizeof(fc_port_t));
+>=20
+> -			fc_port.loop_id =3D loop_id;
+> +		fc_port.loop_id =3D loop_id;
+>=20
+> -			rc =3D qla24xx_gpdb_wait(vha, &fc_port, 0);
+> -			seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
+> -				fc_port.port_name, =
+fc_port.d_id.b.domain,
+> -				fc_port.d_id.b.area, =
+fc_port.d_id.b.al_pa,
+> -				fc_port.loop_id);
+> -			gid =3D (void *)gid + ha->gid_list_info_size;
+> -		}
+> -out_free_id_list:
+> -		dma_free_coherent(&ha->pdev->dev, =
+qla2x00_gid_list_size(ha),
+> -		    gid_list, gid_list_dma);
+> +		rc =3D qla24xx_gpdb_wait(vha, &fc_port, 0);
+> +		seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
+> +			   fc_port.port_name, fc_port.d_id.b.domain,
+> +			   fc_port.d_id.b.area, fc_port.d_id.b.al_pa,
+> +			   fc_port.loop_id);
+> +		id_iter +=3D ha->gid_list_info_size;
+> 	}
+> +out_free_id_list:
+> +	dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
+> +			  gid_list, gid_list_dma);
+>=20
+> 	return 0;
+> }
+> --=20
+> 2.19.0.rc0
+>=20
+
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+--
+Himanshu Madhani	 Oracle Linux Engineering
+
