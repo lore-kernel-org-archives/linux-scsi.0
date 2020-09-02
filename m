@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1134BC43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 021A6C43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:48:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA81120829
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1C3B20829
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:48:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jUHxx6hF"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZuN/Dmn2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728245AbgIBOrt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:47:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38088 "EHLO
+        id S1728255AbgIBOrv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:47:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727964AbgIBOMy (ORCPT
+        with ESMTP id S1727957AbgIBOMy (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 10:12:54 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67061C061246;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76268C061249;
         Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=/qlsu7oTYC7Ky6k7tpiA+p9AylNGHSY5Bb3wPIG2HJ8=; b=jUHxx6hFjNMotTFc/lUHdZ1Rb1
-        CJ6ceuzZrzKwofuy3YT4uCfSV3Q4H9Bq5trKK1iWmIfdaXVBWWAsX+M7OhcnoE9qVUhfEQb6QJNeH
-        fzPpgq7wd5olWprO3ne7uDvVx7r/A7lfXDpsvIbmHSyD654S8GXX3r7iTNqq/zIG5ucfrirnJQxpR
-        m8axEnPM98Y99y/iX56LgNH9oD2ubfbKM9bXDZfrX7fbF1Gp0/ofQgc/MJUtsrHDrSlhJxkTy8Hho
-        mFgi/F4rQW+Ztn9WjBXWvR8OBmXlpx7vAmYZmQPweS/7FdkR66BvQ6uUva1M1n7DCM+sDVXtuo5Da
-        L7a+VXIA==;
+        bh=IOBdZmqfub+9TrAGeUEaXu5Vz5gp+vrz6f+ooFKXHwY=; b=ZuN/Dmn2J8IDS9piakhRmsdkpI
+        7vWOwaizTLkjNJZxYBailM2+9Gl+YeAVFkiiwel78wa+j0YAag1iY7m8xJoMJzrMEi9g5hRbd/mX4
+        96CJBtGZJ690xEt7ffFH5Bq3HC9aTfTPlVKUzp5n4Pyuu51JrEvzAxLAhvbwg1D6SASNJKuwilp4f
+        5cPWKtsThdhLGWnV4ifqgx6HPdP8bp1+SIo/LtGnRAVWFIZgBr44DEPpeweTkKFy+8o8V3slYgBtu
+        J9XmHaFEinAi5UwsSHm7hKaBR1cAkO67N5oCJLbNexpnDyC9UkVHw9cXaHLhCzF5YWsQHRqLyAAov
+        9uuRmeHQ==;
 Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTV0-0005di-My; Wed, 02 Sep 2020 14:12:30 +0000
+        id 1kDTUy-0005dM-96; Wed, 02 Sep 2020 14:12:28 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -51,9 +51,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 08/19] xsysace: use bdev_check_media_change
-Date:   Wed,  2 Sep 2020 16:12:07 +0200
-Message-Id: <20200902141218.212614-9-hch@lst.de>
+Subject: [PATCH 06/19] swim: simplify media change handling
+Date:   Wed,  2 Sep 2020 16:12:05 +0200
+Message-Id: <20200902141218.212614-7-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200902141218.212614-1-hch@lst.de>
 References: <20200902141218.212614-1-hch@lst.de>
@@ -65,39 +65,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Switch to use bdev_check_media_change instead of check_disk_change and
-call ace_revalidate_disk manually.  Given that ace_revalidate_disk only
-deals with media change events, the extra call into ->revalidate_disk
-from bdev_disk_changed is not required either, so stop wiring up the
-method.
+floppy_revalidate mostly duplicates work already done in floppy_open
+despite only beeing called from floppy_open.  Remove the function and
+just clear the ->ejected flag directly under the right condition.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/xsysace.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/block/swim.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/block/xsysace.c b/drivers/block/xsysace.c
-index 5d8e0ab3f054f5..eefe542f2d9fff 100644
---- a/drivers/block/xsysace.c
-+++ b/drivers/block/xsysace.c
-@@ -922,7 +922,8 @@ static int ace_open(struct block_device *bdev, fmode_t mode)
- 	ace->users++;
- 	spin_unlock_irqrestore(&ace->lock, flags);
+diff --git a/drivers/block/swim.c b/drivers/block/swim.c
+index d4565c555b289f..52dd1efa00f9c5 100644
+--- a/drivers/block/swim.c
++++ b/drivers/block/swim.c
+@@ -217,8 +217,6 @@ extern int swim_read_sector_header(struct swim __iomem *base,
+ extern int swim_read_sector_data(struct swim __iomem *base,
+ 				 unsigned char *data);
  
--	check_disk_change(bdev);
-+	if (bdev_check_media_change(bdev))
-+		ace_revalidate_disk(bdev->bd_disk);
- 	mutex_unlock(&xsysace_mutex);
+-static int floppy_revalidate(struct gendisk *disk);
+-
+ static DEFINE_MUTEX(swim_mutex);
+ static inline void set_swim_mode(struct swim __iomem *base, int enable)
+ {
+@@ -640,8 +638,8 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
+ 		return 0;
  
- 	return 0;
-@@ -966,7 +967,6 @@ static const struct block_device_operations ace_fops = {
- 	.open = ace_open,
- 	.release = ace_release,
- 	.check_events = ace_check_events,
--	.revalidate_disk = ace_revalidate_disk,
- 	.getgeo = ace_getgeo,
- };
+ 	if (mode & (FMODE_READ|FMODE_WRITE)) {
+-		if (bdev_check_media_change(bdev))
+-			floppy_revalidate(bdev->bd_disk);
++		if (bdev_check_media_change(bdev) && fs->disk_in)
++			fs->ejected = 0;
+ 		if ((mode & FMODE_WRITE) && fs->write_protected) {
+ 			err = -EROFS;
+ 			goto out;
+@@ -738,24 +736,6 @@ static unsigned int floppy_check_events(struct gendisk *disk,
+ 	return fs->ejected ? DISK_EVENT_MEDIA_CHANGE : 0;
+ }
  
+-static int floppy_revalidate(struct gendisk *disk)
+-{
+-	struct floppy_state *fs = disk->private_data;
+-	struct swim __iomem *base = fs->swd->base;
+-
+-	swim_drive(base, fs->location);
+-
+-	if (fs->ejected)
+-		setup_medium(fs);
+-
+-	if (!fs->disk_in)
+-		swim_motor(base, OFF);
+-	else
+-		fs->ejected = 0;
+-
+-	return !fs->disk_in;
+-}
+-
+ static const struct block_device_operations floppy_fops = {
+ 	.owner		 = THIS_MODULE,
+ 	.open		 = floppy_unlocked_open,
 -- 
 2.28.0
 
