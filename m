@@ -2,120 +2,60 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C2BC433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 21:38:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C80C433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 22:00:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F57720BED
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 21:38:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0A8020767
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 22:00:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726882AbgIBVid (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 17:38:33 -0400
-Received: from elvis.franken.de ([193.175.24.41]:49452 "EHLO elvis.franken.de"
+        id S1726686AbgIBWAK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 18:00:10 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:36177 "EHLO smtp.hosts.co.uk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726355AbgIBVic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Sep 2020 17:38:32 -0400
-Received: from uucp (helo=alpha)
-        by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
-        id 1kDaSO-0001KH-00; Wed, 02 Sep 2020 23:38:16 +0200
-Received: by alpha.franken.de (Postfix, from userid 1000)
-        id 29A9AC0E7B; Wed,  2 Sep 2020 23:38:09 +0200 (CEST)
-Date:   Wed, 2 Sep 2020 23:38:09 +0200
-From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     alsa-devel@alsa-project.org, linux-ia64@vger.kernel.org,
-        linux-doc@vger.kernel.org, nouveau@lists.freedesktop.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-mm@kvack.org, Marek Szyprowski <m.szyprowski@samsung.com>,
-        linux-samsung-soc@vger.kernel.org,
-        Joonyoung Shim <jy0922.shim@samsung.com>,
-        linux-scsi@vger.kernel.org,
-        Kyungmin Park <kyungmin.park@samsung.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        linux-media@vger.kernel.org,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Pawel Osciak <pawel@osciak.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, linux-parisc@vger.kernel.org,
-        netdev@vger.kernel.org, Seung-Woo Kim <sw0312.kim@samsung.com>,
-        linux-mips@vger.kernel.org, iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 22/28] sgiseeq: convert from dma_cache_sync to
- dma_sync_single_for_device
-Message-ID: <20200902213809.GA7998@alpha.franken.de>
-References: <20200819065555.1802761-1-hch@lst.de>
- <20200819065555.1802761-23-hch@lst.de>
- <20200901152209.GA14288@alpha.franken.de>
- <20200901171241.GA20685@alpha.franken.de>
- <20200901171627.GA8255@lst.de>
- <20200901173810.GA25282@alpha.franken.de>
+        id S1726269AbgIBWAJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Sep 2020 18:00:09 -0400
+Received: from host86-136-163-47.range86-136.btcentralplus.com ([86.136.163.47] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1kDanW-00031m-Be; Wed, 02 Sep 2020 23:00:06 +0100
+Subject: Re: [PATCH 11/19] gdrom: use bdev_check_media_change
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20200902141218.212614-1-hch@lst.de>
+ <20200902141218.212614-12-hch@lst.de>
+From:   antlists <antlists@youngman.org.uk>
+Message-ID: <0b8fa1fe-f2d5-bf18-2e8a-ad13e343629d@youngman.org.uk>
+Date:   Wed, 2 Sep 2020 23:00:05 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200901173810.GA25282@alpha.franken.de>
-User-Agent: Mutt/1.5.23 (2014-03-12)
+In-Reply-To: <20200902141218.212614-12-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 01, 2020 at 07:38:10PM +0200, Thomas Bogendoerfer wrote:
-> On Tue, Sep 01, 2020 at 07:16:27PM +0200, Christoph Hellwig wrote:
-> > Well, if IP22 doesn't speculate (which I'm pretty sure is the case),
-> > dma_sync_single_for_cpu should indeeed be a no-op.  But then there
-> > also shouldn't be anything in the cache, as the previous
-> > dma_sync_single_for_device should have invalidated it.  So it seems like
-> > we are missing one (or more) ownership transfers to the device.  I'll
-> > try to look at the the ownership management in a little more detail
-> > tomorrow.
-> 
-> this is the problem:
-> 
->        /* Always check for received packets. */
->         sgiseeq_rx(dev, sp, hregs, sregs);
-> 
-> so the driver will look at the rx descriptor on every interrupt, so
-> we cache the rx descriptor on the first interrupt and if there was
-> $no rx packet, we will only see it, if cache line gets flushed for
-> some other reason. kick_tx() does a busy loop checking tx descriptors,
-> with just sync_desc_cpu...
+On 02/09/2020 15:12, Christoph Hellwig wrote:
+> The GD-ROM driver does not have a ->revalidate_disk method, so it can
+       ^^ (sic)
 
-the patch below fixes the problem.
-
-Thomas.
-
-
-diff --git a/drivers/net/ethernet/seeq/sgiseeq.c b/drivers/net/ethernet/seeq/sgiseeq.c
-index 8507ff242014..876e3700a0e4 100644
---- a/drivers/net/ethernet/seeq/sgiseeq.c
-+++ b/drivers/net/ethernet/seeq/sgiseeq.c
-@@ -112,14 +112,18 @@ struct sgiseeq_private {
- 
- static inline void dma_sync_desc_cpu(struct net_device *dev, void *addr)
- {
--       dma_cache_sync(dev->dev.parent, addr, sizeof(struct sgiseeq_rx_desc),
--                      DMA_FROM_DEVICE);
-+       struct sgiseeq_private *sp = netdev_priv(dev);
-+
-+       dma_sync_single_for_device(dev->dev.parent, VIRT_TO_DMA(sp, addr),
-+                       sizeof(struct sgiseeq_rx_desc), DMA_FROM_DEVICE);
- }
- 
- static inline void dma_sync_desc_dev(struct net_device *dev, void *addr)
- {
--       dma_cache_sync(dev->dev.parent, addr, sizeof(struct sgiseeq_rx_desc),
--                      DMA_TO_DEVICE);
-+       struct sgiseeq_private *sp = netdev_priv(dev);
-+
-+       dma_sync_single_for_device(dev->dev.parent, VIRT_TO_DMA(sp, addr),
-+                       sizeof(struct sgiseeq_rx_desc), DMA_TO_DEVICE);
- }
- 
--- 
-Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
-good idea.                                                [ RFC1925, 2.3 ]
+Cheers,
+Wol
