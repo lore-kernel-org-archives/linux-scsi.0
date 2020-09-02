@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCCCEC433E6
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 07:26:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD379C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 07:27:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB6272072A
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 07:26:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90B592072A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 07:27:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="RY9IKSJR"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ksMc9nTL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726895AbgIBH0j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 03:26:39 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:5746 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726800AbgIBH0i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 03:26:38 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0827QKbL016285
-        for <linux-scsi@vger.kernel.org>; Wed, 2 Sep 2020 00:26:38 -0700
+        id S1726510AbgIBH1F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 03:27:05 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:11336 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726323AbgIBH1E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 03:27:04 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0827Pbrf023781
+        for <linux-scsi@vger.kernel.org>; Wed, 2 Sep 2020 00:27:03 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=9Bk0beYoQkq7tpt7w6zQSf7zYtMMFyVtIAUKOKMYVbc=;
- b=RY9IKSJR+c0Ou0UlGdKqu2pLI9BAIx92XajoE35q4i+5vCeLVmpFbxhUxwQ6N8ZeLb2E
- Rkeg+d+LkEJ8Lh6M25IFENhcz1JtZo4r5LZ7DGnpCPfJTKpphap2jaOxrOPpAKpG1sey
- htDUl7xx2Clekj8pGeUhheFVHtNRWiRptM3nboBK2cBIW8RQQdHbHcd6ohqAMuoSrSE5
- 30bg9wFQyhoiDKKn2+ECcFDmxpVovDxbCaovO/Wd7djd5fM5KkEOpSRrVGfTX1ln3wZ5
- WGTFqQQEO2/Z1VkuwJxazng0kdKhFKYmRzQPLEYFN7E0QI97FB50e1OH+3jvh31oVpsL cQ== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 337mcqdwkx-2
+ content-type; s=pfpt0220; bh=SuH0Ybw/2xH4PYH/7tCX7RwbZ2Odvz7YDag3tQu0m0E=;
+ b=ksMc9nTL0BOCF2P45rFyz6j1kxvpd+2CSW4aU7zn487Ksv4PmFn94Re5aj8geBBHc9CH
+ aot2TJJvSPMUvM0qyfhy5i5bnfvvTd+mTmiLBDNKwLM20YcEXiUjpqmjfjDhnrlwhZak
+ 1v1ml7ZGXBaMsxIxjiza0MCFRUQZovhvVWz4nkpUZnMKIHToPrSj+HN/6pl4hIBSezok
+ l7uC7EVC4v4r2aIdcQ7rCUz8fZtre+PcDCw8HcT9qpC00ePSKqDOTq5YCb8BLZKcLjks
+ pDbgghDfn9D9VcYqRgUkpAdOkYfAi/MdmC8SAGljSvUjL0xpFL9bU2EJK+mojyAO6a0a Aw== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 337phq5461-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Sep 2020 00:26:38 -0700
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Sep
- 2020 00:26:37 -0700
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Sep 2020 00:27:02 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Sep
+ 2020 00:27:01 -0700
 Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
  (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Sep
- 2020 00:26:36 -0700
+ 2020 00:27:00 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 2 Sep 2020 00:26:37 -0700
+ Transport; Wed, 2 Sep 2020 00:27:01 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id EB0283F703F;
-        Wed,  2 Sep 2020 00:26:36 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 15E843F7043;
+        Wed,  2 Sep 2020 00:27:01 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0827QauB011538;
-        Wed, 2 Sep 2020 00:26:36 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0827R0WL011542;
+        Wed, 2 Sep 2020 00:27:00 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0827QaDT011537;
-        Wed, 2 Sep 2020 00:26:36 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0827R0G8011541;
+        Wed, 2 Sep 2020 00:27:00 -0700
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 01/13] qla2xxx: Fix I/O failures during remote port toggle testing
-Date:   Wed, 2 Sep 2020 00:25:36 -0700
-Message-ID: <20200902072548.11491-2-njavali@marvell.com>
+Subject: [PATCH v2 02/13] qla2xxx: Setup debugfs entries for remote ports
+Date:   Wed, 2 Sep 2020 00:25:37 -0700
+Message-ID: <20200902072548.11491-3-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200902072548.11491-1-njavali@marvell.com>
 References: <20200902072548.11491-1-njavali@marvell.com>
@@ -75,46 +75,150 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arun Easi <aeasi@marvell.com>
 
-Driver was using a lower value for dev_loss_tmo making it more prone to
-I/O failures during remote port toggle testing. Set dev_loss_tmo to zero
-during remote port registration to allow nvme-fc default dev_loss_tmo to
-be used, which is higher than what driver was using.
+Create a base for adding remote port related entries in debugfs.
 
 Signed-off-by: Arun Easi <aeasi@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
- drivers/scsi/qla2xxx/qla_nvme.h | 3 ---
- 2 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |  4 +++
+ drivers/scsi/qla2xxx/qla_dfs.c    | 42 ++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_gbl.h    |  2 ++
+ drivers/scsi/qla2xxx/qla_init.c   |  2 ++
+ drivers/scsi/qla2xxx/qla_target.c |  2 ++
+ 5 files changed, 51 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 0ded9a778bb0..b05e4545ef5f 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -42,7 +42,7 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
- 	req.port_name = wwn_to_u64(fcport->port_name);
- 	req.node_name = wwn_to_u64(fcport->node_name);
- 	req.port_role = 0;
--	req.dev_loss_tmo = NVME_FC_DEV_LOSS_TMO;
-+	req.dev_loss_tmo = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1bc090d8a71b..074d8753cfc3 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2544,6 +2544,8 @@ typedef struct fc_port {
+ 	u8 last_login_state;
+ 	u16 n2n_link_reset_cnt;
+ 	u16 n2n_chip_reset;
++
++	struct dentry *dfs_rport_dir;
+ } fc_port_t;
  
- 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_INITIATOR)
- 		req.port_role = FC_PORT_ROLE_NVME_INITIATOR;
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.h b/drivers/scsi/qla2xxx/qla_nvme.h
-index fbb844226630..cf45a5b277f1 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.h
-+++ b/drivers/scsi/qla2xxx/qla_nvme.h
-@@ -14,9 +14,6 @@
- #include "qla_def.h"
- #include "qla_dsd.h"
+ enum {
+@@ -4780,6 +4782,8 @@ typedef struct scsi_qla_host {
+ 	uint16_t ql2xexchoffld;
+ 	uint16_t ql2xiniexchg;
  
--/* default dev loss time (seconds) before transport tears down ctrl */
--#define NVME_FC_DEV_LOSS_TMO  30
--
- #define NVME_ATIO_CMD_OFF 32
- #define NVME_FIRST_PACKET_CMDLEN (64 - NVME_ATIO_CMD_OFF)
- #define Q2T_NVME_NUM_TAGS 2048
++	struct dentry *dfs_rport_root;
++
+ 	struct purex_list {
+ 		struct list_head head;
+ 		spinlock_t lock;
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index e62b2115235e..3c4b9b549b17 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -12,6 +12,29 @@
+ static struct dentry *qla2x00_dfs_root;
+ static atomic_t qla2x00_dfs_root_count;
+ 
++void
++qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
++{
++	char wwn[32];
++
++	if (!vha->dfs_rport_root || fp->dfs_rport_dir)
++		return;
++
++	sprintf(wwn, "pn-%016llx", wwn_to_u64(fp->port_name));
++	fp->dfs_rport_dir = debugfs_create_dir(wwn, vha->dfs_rport_root);
++	if (!fp->dfs_rport_dir)
++		return;
++}
++
++void
++qla2x00_dfs_remove_rport(scsi_qla_host_t *vha, struct fc_port *fp)
++{
++	if (!vha->dfs_rport_root || !fp->dfs_rport_dir)
++		return;
++	debugfs_remove_recursive(fp->dfs_rport_dir);
++	fp->dfs_rport_dir = NULL;
++}
++
+ static int
+ qla2x00_dfs_tgt_sess_show(struct seq_file *s, void *unused)
+ {
+@@ -473,9 +496,21 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+ 	ha->tgt.dfs_tgt_sess = debugfs_create_file("tgt_sess",
+ 		S_IRUSR, ha->dfs_dir, vha, &dfs_tgt_sess_ops);
+ 
+-	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha))
++	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha)) {
+ 		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
+ 		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
++		if (!ha->tgt.dfs_naqp) {
++			ql_log(ql_log_warn, vha, 0xd011,
++			       "Unable to create debugFS naqp node.\n");
++			goto out;
++		}
++	}
++	vha->dfs_rport_root = debugfs_create_dir("rports", ha->dfs_dir);
++	if (!vha->dfs_rport_root) {
++		ql_log(ql_log_warn, vha, 0xd012,
++		       "Unable to create debugFS rports node.\n");
++		goto out;
++	}
+ out:
+ 	return 0;
+ }
+@@ -515,6 +550,11 @@ qla2x00_dfs_remove(scsi_qla_host_t *vha)
+ 		ha->dfs_fce = NULL;
+ 	}
+ 
++	if (vha->dfs_rport_root) {
++		debugfs_remove_recursive(vha->dfs_rport_root);
++		vha->dfs_rport_root = NULL;
++	}
++
+ 	if (ha->dfs_dir) {
+ 		debugfs_remove(ha->dfs_dir);
+ 		ha->dfs_dir = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 0ced18f3104e..36c210c24f72 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -935,6 +935,8 @@ void qlt_clr_qp_table(struct scsi_qla_host *vha);
+ void qlt_set_mode(struct scsi_qla_host *);
+ int qla2x00_set_data_rate(scsi_qla_host_t *vha, uint16_t mode);
+ extern void qla24xx_process_purex_list(struct purex_list *);
++extern void qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp);
++extern void qla2x00_dfs_remove_rport(scsi_qla_host_t *vha, struct fc_port *fp);
+ 
+ /* nvme.c */
+ void qla_nvme_unregister_remote_port(struct fc_port *fcport);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 57a2d76aa691..b4d53eb4e53e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5486,6 +5486,8 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 
+ 	qla2x00_iidma_fcport(vha, fcport);
+ 
++	qla2x00_dfs_create_rport(vha, fcport);
++
+ 	if (NVME_TARGET(vha->hw, fcport)) {
+ 		qla_nvme_register_remote(vha, fcport);
+ 		qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_COMPLETE);
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 1237d952973d..e28a977b0770 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1111,6 +1111,8 @@ void qlt_free_session_done(struct work_struct *work)
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 	sess->free_pending = 0;
+ 
++	qla2x00_dfs_remove_rport(vha, sess);
++
+ 	ql_dbg(ql_dbg_disc, vha, 0xf001,
+ 	    "Unregistration of sess %p %8phC finished fcp_cnt %d\n",
+ 		sess, sess->port_name, vha->fcport_count);
 -- 
 2.19.0.rc0
 
