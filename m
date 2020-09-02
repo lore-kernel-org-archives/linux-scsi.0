@@ -2,165 +2,169 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D2CC433E6
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 06:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A109C433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 07:02:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C1CB20758
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 06:38:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 085252087D
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 07:02:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="FG10l9R0";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="deRGYZ5R"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g9HwN39v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726323AbgIBGiO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 02:38:14 -0400
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:63429 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726247AbgIBGiK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 02:38:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1599028690; x=1630564690;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=F9SRxEVNisZLp4w0W7V8aZrzehyLyrm4c70xSXh8axY=;
-  b=FG10l9R0rl7nkfQAWxms3I3fLIX6M4P+dhRL/74ziemvnHUtqPLOQNHq
-   Cls8xVC/OQxG+iXgmgghdrMrbk9NoCABL3gFja9iNlPo2EYaJDyY4+aBp
-   yA3yxGH2qds5CVDPTIwJJ21NDUr2AeBZt5yFEF/BjOt5V1n+E+E6CE6RL
-   a7g7g5lBlhLoaSvp4YvuJz1opdJfnC4B/acNRdo3UgSCljyf05qGQ6TnT
-   SakVw74Bonpp9JEnUHLH2vi3ck/S5iATurlQiVOTmlxADi9GzP6HCemcK
-   Yk108QHxdi23ps2flyDxKO5NNC3OitaEvLuZ1MT2ZuOG3hbkNkxumzUgm
-   g==;
-IronPort-SDR: 7jvfpwntM4ZoybtIVs2tOyEWcKq2MQ8F0jCsSZZi2mA/JDfCPRvCysGwg2CnbeWpNEFZ/cvDFW
- ZvpM8heCwHL+w9SsN70W2vrAC60WQouYdMarQvwJzn+xgJFEBRfPRjOMpCPm4mR32nwK/Ps9+v
- jiZsVz2aHa0987IwkAHwIRj7qsYAIlR6SPpWVQa71S+6XoF6XKU03dEC6TQ1cimVMKq9LXO22B
- Iqfoh8opN76Cv7T3tOpRfYMJsQkbRTqFlVZCmyzy5W1rLNehyJh9ThP8lvQu6fJOg3BPuj3UCI
- qek=
-X-IronPort-AV: E=Sophos;i="5.76,381,1592895600"; 
-   d="scan'208";a="94049603"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 01 Sep 2020 23:38:09 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 1 Sep 2020 23:38:09 -0700
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3 via Frontend
- Transport; Tue, 1 Sep 2020 23:37:36 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LZeKa1LM9zJlSlonRGfCwXdOGgJaKyNB8/aI4nEkfCNmQiMsqe1TjWIsI+QzNekAFSoH0O93RPfy/rfAuOc4K2G0K2c6Bq3LmYpZNnhKz1tcpyyn45bw4vOkbHaKv6ctONTYF5KInF9MUkrNRxwDvKyUNemN0T0P2IFn1/lxhCJCFhDOdFAyyi7LH4WffZIruIN9DFb5gOA49SXurRcY3dYhK2ErbOhLRxCDbMyZAbWBOFIDsOqbyEXu6puy46Mv3HPl/jK5THx3ak98ACgU8K3kiUNY4u+ZGbt5mkd0uKuFhB3dITo5FNectAJPIyMHDmvwBRjIYTySpzjNRuvGow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DbjlDCEEfaq7hN5mQyw7o4WmThdcNQlOgNgjRCaRDWg=;
- b=jBe5ZoZd9UiVC7IHMjtIDn8xt7YvUUdpUpUq3JKmmosbqczZeCQzsaPm8nXl1bZUKDtMoKab8N/+mRYbQ1kPmAzke+Ksx90drSMqSSLqnbH+m+6YhknMZW402zOMiNgxvOH+v1RXj/MixCOcI+rz3rWoLxbbA9pyX+wXmgW+9bldG0jkeRtg1N81VFlFfMs35VMUDSty8/ViXwQP7wGlNY6Epz9k8WoA1/1Y/o5rq80swlEpBswxeegm7vT3L4+DPFNjaOZpRn9HSkOfezpYcVZ5aZujaIiCvO2vkCJP5DXUp2N722tY5Ls3J/TsAr+pLPNV1RUw16zho0ERaotcTg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DbjlDCEEfaq7hN5mQyw7o4WmThdcNQlOgNgjRCaRDWg=;
- b=deRGYZ5Rg+dNbgEHSYluf9y+oUJGeHyGRV4onHLnpS3IKbn8zUByakgYNQNWzYANljYj+j3iL10qvLw4OVHxzwbRb7Sjfr2iyeIhzthe0p0LJ5zXAHdntXNrOt3X8rTdckZ7LhRjMDuDMG3LyV64iADp2xm+/FdSwm9yqsiYnKE=
-Received: from SN6PR11MB3488.namprd11.prod.outlook.com (2603:10b6:805:b8::27)
- by SN6PR11MB2733.namprd11.prod.outlook.com (2603:10b6:805:58::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3348.15; Wed, 2 Sep
- 2020 06:38:05 +0000
-Received: from SN6PR11MB3488.namprd11.prod.outlook.com
- ([fe80::9464:652:6b4f:12e6]) by SN6PR11MB3488.namprd11.prod.outlook.com
- ([fe80::9464:652:6b4f:12e6%6]) with mapi id 15.20.3326.025; Wed, 2 Sep 2020
- 06:38:05 +0000
-From:   <Viswas.G@microchip.com>
-To:     <martin.petersen@oracle.com>, <Viswas.G@microchip.com.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Deepak.Ukey@microchip.com>, <yuuzheng@google.com>,
-        <auradkar@google.com>, <vishakhavc@google.com>,
-        <bjashnani@google.com>, <radha@google.com>, <akshatzen@google.com>
-Subject: RE: [PATCH v8 2/2] pm80xx : Staggered spin up support.
-Thread-Topic: [PATCH v8 2/2] pm80xx : Staggered spin up support.
-Thread-Index: AQHWdyGWFMJ2LWitWEWbukXdJDG1gKlUoF5sgABYGlA=
-Date:   Wed, 2 Sep 2020 06:38:05 +0000
-Message-ID: <SN6PR11MB3488B9061999CB58402B936B9D2F0@SN6PR11MB3488.namprd11.prod.outlook.com>
-References: <20200820185123.27354-1-Viswas.G@microchip.com.com>
-        <20200820185123.27354-3-Viswas.G@microchip.com.com>
- <yq1k0xdf006.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1k0xdf006.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [43.229.88.89]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 822f0919-8223-4c47-8c6c-08d84f0abf5d
-x-ms-traffictypediagnostic: SN6PR11MB2733:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR11MB2733AB65C7947F76CAEAF4B99D2F0@SN6PR11MB2733.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: jWQmln4EaxN4YqVMuyoKkE9LFEoVPnjA03SyS41GpD61rvBxLYwErRHSAFcC5BA6CU1XYPP46eBBseeH3JI9KsJ8bCBVXznqpAGu1ZtGeCPWqy3RQG27qoLV2nyY66NiR16Zyug1gV3fleFAWRHsikaM/sQpauQ99Wud16FbUS45YWR7n+arzncFPRHTfU4A6G/xg072Ulyr1qUXBl/7Wa5RxMfeaNMfTHeYNyQtIAz/cq7olfY25+ugmtZySI4/SF6j0/hiaezpAu3G6bXzdvZVCzrLijaXz1hRCwqUA2XKbrCNLC2SX52XBAfcB5Nu
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB3488.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(366004)(346002)(396003)(376002)(53546011)(6506007)(55236004)(316002)(8936002)(55016002)(33656002)(26005)(2906002)(186003)(9686003)(76116006)(52536014)(66946007)(66446008)(64756008)(66556008)(71200400001)(66476007)(8676002)(5660300002)(4326008)(83380400001)(110136005)(7696005)(478600001)(54906003)(86362001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: D/ahKZEVoI6zg8w0boiNCqvydhq/RH01U9ZksuIszLqL4hcZzRM/eF7VHC55ziGeXDMV3JMqORf58usUbLJZhFm8ak/CTcXI4rTGbHhhGedhi2p0jQSa16uOmYK5mqt9f1uCF9cStEdgF2gwOPgmUwQCpUfQ8vEnPssxMcKG5tyNNuMyHJwtYNz50DAEbHzbGPamdChzOlPjY2h5BX6onIGRxiUdIDbUnoWJXs3xNf5cbkn5vlhcYExGN5xZOEjV/wXedL/8MgiU6hGBfE1fatRvSpCU9llWBgpAkVuBGFBxoXJnoKSX1S54c1MFFTAoJS0iPDo032W51oCUmbOlm0H52mnB2xt+uv0k42S/bjzpaVTbWpxoH3wu0qtXtwxJPCIsH7Glbze/i072VsTM7ZQ9jY092wf3qXXtNLXusLoDUmRbtBTrm55Ro54XkOkh4xKJvwMqiCFrhqLNNI/BSQKGQAYpzpX47pg+VPmV2BK78FpCWi2Z0E8uXcfUiK1vLilmxJkgJNXZk3JYvLzcsosaWQWe9WrXe4Serc2WZOMfdWbngk9uUUff9qszacNle7IcK0peOnm8ChdvVm+X1fmpPRTcM44dwn7Q8l01o+SlNtKuQgO6ZCJj1RANCehm4g5Ic/ruX6dBa9TqyrcOsg==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726467AbgIBHCU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 03:02:20 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:22941 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726130AbgIBHCR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 03:02:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599030133;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=WuyrVPdjCUS9N2dJ5Cq4O023vSL+AzoSU8JYNbu18iA=;
+        b=g9HwN39vOkNNm3az62/jbixrn4ffmCwbzNQ/8bm7F9ru1CEuFN5XEtz9unwxvgq+r4ZvK7
+        OrxTswiZvaBAIq07UDsY8DY+e+O/5wE5LaIkmzR7flu6ZV2HlYDLIYkmMjjjfOj4AWxOjC
+        Qlet8N3VwaYeWgUgdaN2kzlMqmRsi64=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-274-jB2cbp8mNdixDsdDzZcL-g-1; Wed, 02 Sep 2020 03:02:11 -0400
+X-MC-Unique: jB2cbp8mNdixDsdDzZcL-g-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 159591005E5C;
+        Wed,  2 Sep 2020 07:02:10 +0000 (UTC)
+Received: from T590 (ovpn-12-189.pek2.redhat.com [10.72.12.189])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 338335D9CC;
+        Wed,  2 Sep 2020 07:01:59 +0000 (UTC)
+Date:   Wed, 2 Sep 2020 15:01:55 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>,
+        John Garry <john.garry@huawei.com>, linux-block@vger.kernel.org
+Subject: Re: [PATCH V4] scsi: core: only re-run queue in scsi_end_request()
+ if device queue is busy
+Message-ID: <20200902070155.GD317674@T590>
+References: <20200817100840.2496976-1-ming.lei@redhat.com>
+ <93faff01-daf7-4805-edc6-9101495686ce@acm.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB3488.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 822f0919-8223-4c47-8c6c-08d84f0abf5d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 06:38:05.0922
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Y86v6gYgv/I1hnA3lVXirJ4ra1l+526L2UcsKwWfpbZMa6F4F0/tlsq3BSoipUGakgaIj2rYU4o8PZo/BqdfBw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2733
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <93faff01-daf7-4805-edc6-9101495686ce@acm.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks Martin. We will move this to libsas.
+On Tue, Sep 01, 2020 at 07:40:54PM -0700, Bart Van Assche wrote:
+> On 2020-08-17 03:08, Ming Lei wrote:
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 7c6dd6f75190..a62c29058d26 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -551,8 +551,27 @@ static void scsi_run_queue_async(struct scsi_device *sdev)
+> >  	if (scsi_target(sdev)->single_lun ||
+> >  	    !list_empty(&sdev->host->starved_list))
+> >  		kblockd_schedule_work(&sdev->requeue_work);
+> > -	else
+> > -		blk_mq_run_hw_queues(sdev->request_queue, true);
+> > +	else {
+> 
+> Has this patch been verified with checkpatch? Checkpatch should have warned
+> about the unbalanced braces.
 
-Regards,
-Viswas G
+[linux]$ ./scripts/checkpatch.pl -g HEAD
+total: 0 errors, 0 warnings, 71 lines checked
 
-> -----Original Message-----
-> From: Martin K. Petersen <martin.petersen@oracle.com>
-> Sent: Wednesday, September 2, 2020 6:51 AM
-> To: Viswas G <Viswas.G@microchip.com.com>
-> Cc: linux-scsi@vger.kernel.org; Vasanthalakshmi Tharmarajan - I30664
-> <Vasanthalakshmi.Tharmarajan@microchip.com>; Viswas G - I30667
-> <Viswas.G@microchip.com>; Deepak Ukey - I31172
-> <Deepak.Ukey@microchip.com>; martin.petersen@oracle.com;
-> yuuzheng@google.com; auradkar@google.com; vishakhavc@google.com;
-> bjashnani@google.com; radha@google.com; akshatzen@google.com
-> Subject: Re: [PATCH v8 2/2] pm80xx : Staggered spin up support.
->=20
-> EXTERNAL EMAIL: Do not click links or open attachments unless you know
-> the content is safe
->=20
-> Viswas,
->=20
-> > As a part of drive discovery, driver will initaite the drive spin up.
-> > If all drives do spin up together, it will result in large power
-> > consumption. To reduce the power consumption, driver provide an option
-> > to make a small group of drives (say 3 or 4 drives together) to do the
-> > spin up. The delay between two spin up group and no of drives to spin
-> > up (group) can be programmed by the customer in seeprom and driver
-> > will use it to control the spinup.
->=20
-> Please implement this in libsas as several people have suggested.
-> Thanks!
->=20
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Commit 0cbe51645b54 ("scsi: core: only re-run queue in scsi_end_request() if device queue is busy") has no obvious style problems and is ready for submission.
+
+> 
+> > +		/*
+> > +		 * smp_mb() implied in either rq->end_io or blk_mq_free_request
+> > +		 * is for ordering writing .device_busy in scsi_device_unbusy()
+> > +		 * and reading sdev->restarts.
+> > +		 */
+> 
+> Hmm ... I don't see what orders the atomic_dec(&sdev->device_busy) from
+> scsi_device_unbusy() and the atomic_read() below? I don't think that the block
+> layer guarantees ordering of these two memory accesses since both accesses
+> happen in the request completion path.
+
+__blk_mq_end_request() is called between scsi_device_unbusy() and
+scsi_run_queue_async(). When __blk_mq_end_request() is called, this
+request is actually ended really because SCMD_STATE_COMPLETE is covered
+race between timeout and normal completion, so:
+
+1) either __blk_mq_free_request() is called, smp_mb__after_atomic() is
+implied in sbitmap_queue_clear() called from blk_mq_put_tag()
+
+2) or rq->end_io() is called. We don't have too many ->end_io()
+implemented. Either wake_up_process() or blk_mq_free_request() is called
+in ->end_io(), so memory barrier is implied.
+
+> 
+> > +		int old = atomic_read(&sdev->restarts);
+> > +
+> > +		if (old) {
+> > +			/*
+> > +			 * ->restarts has to be kept as non-zero if there is
+> > +			 *  new budget contention comes.
+> 
+> There are two verbs in the above sentence ("is" and "comes"). Please remove
+> "comes" such that the sentence becomes grammatically correct.
+> 
+> > +			 *
+> > +			 *  No need to run queue when either another re-run
+> > +			 *  queue wins in updating ->restarts or one new budget
+> > +			 *  contention comes.
+> > +			 */
+> > +			if (atomic_cmpxchg(&sdev->restarts, old, 0) == old)
+> > +				blk_mq_run_hw_queues(sdev->request_queue, true);
+> > +		}
+> > +	}
+> 
+> Please combine the two if-statements into a single if-statement using "&&"
+> to keep the indentation level low.
+> 
+> > @@ -1611,8 +1630,34 @@ static void scsi_mq_put_budget(struct request_queue *q)
+> >  static bool scsi_mq_get_budget(struct request_queue *q)
+> >  {
+> >  	struct scsi_device *sdev = q->queuedata;
+> > +	int ret = scsi_dev_queue_ready(q, sdev);
+> > +
+> > +	if (ret)
+> > +		return true;
+> > +
+> > +	atomic_inc(&sdev->restarts);
+> >  
+> > -	return scsi_dev_queue_ready(q, sdev);
+> > +	/*
+> > +	 * Order writing .restarts and reading .device_busy, and make sure
+> > +	 * .restarts is visible to scsi_end_request(). Its pair is implied by
+> > +	 * __blk_mq_end_request() in scsi_end_request() for ordering
+> > +	 * writing .device_busy in scsi_device_unbusy() and reading .restarts.
+> > +	 *
+> > +	 */
+> > +	smp_mb__after_atomic();
+> 
+> Barriers do not guarantee "is visible to". Barriers enforce ordering of memory
+> accesses performed by a certain CPU core. Did you perhaps mean that
+> sdev->restarts must be incremented before the code below reads sdev->device busy?
+
+Right, ->restart has to be incremented before reading sdev->device_busy.
+
+
+Thanks, 
+Ming
+
