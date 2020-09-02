@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D0DC433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:39:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01754C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:40:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D82B20767
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:39:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6CE6207D3
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:40:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pea5ho/X"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="G+AbJXlh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728088AbgIBO3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:29:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38202 "EHLO
+        id S1728082AbgIBO3U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:29:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727998AbgIBONl (ORCPT
+        with ESMTP id S1728001AbgIBONl (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 10:13:41 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 497B8C061261;
-        Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49B77C061263;
+        Wed,  2 Sep 2020 07:12:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=wRTpxrCFSwDx+sGCrcIKP/8yjcbTpSeoq/gsW225qj8=; b=Pea5ho/Xg2iRWW6kBTgvU4wogw
-        q5SqCIGj1P+XdD5U7/JADn/FOVLtLZFrQEmE2UPK9VSW9kZ6c8hkfJAOegdWuDKEJY9rJ66HiTv4v
-        mijiZpFtfw9JfYcXx7fUAS4cKHqhvKTjZECC0gREe6JtCEDBcSAPkAoi/odpfLqjJ8QIDv+YwW50D
-        i7FJbkoOHBOp68LabfpZ5yXLYUNu1fk/0BFbiVWuEeUoiSutkHHQ8RxGgkWPGb/2e1Tl5DqUFC3xf
-        Z+RIYGYyjVlZf9fnAuG35VCHyZLevVrvo3riOUvam7No+AAgm/POEzfEp3ygvcfu3Zb9GHA7WaBGd
-        Ni9JQXpg==;
+        bh=nQ83Cu9ozqMklDRnkFmyDq+TQLjs94xXUv+UC4IWP5c=; b=G+AbJXlhEoNUEhaJJMqoU5D+/n
+        mCY3DZHbjS+WEqjZrwnBNnG0+sGUP+Fc1k3byExCn/m364AtZmlOc+nnmyWYhyTb5kjveVPEf8WcG
+        qpahI9oNcpABZcfIcvQE5nc9oDjc3+7JZh93qKoCzeGwpcTiYECz0hHUGsqeYHvJXRKRmAAoL2kSr
+        679BHRTVcCTosaKcFvyFAoDRW9XVD14vlroKaBOJUJ7VNcght62kdZH4/3mWU8CwyKc4dzV6bOYBg
+        qK9n+uDdU6xqvLTfuzTn5i1ykA3nW+kEZVfxhPVsQOsTgtek006rNLAAvc+z0/z2lILP5YuIh4Wso
+        veiqYMwA==;
 Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTUz-0005dZ-Fr; Wed, 02 Sep 2020 14:12:29 +0000
+        id 1kDTV3-0005e2-8l; Wed, 02 Sep 2020 14:12:33 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -51,9 +51,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 07/19] swim3: use bdev_check_media_changed
-Date:   Wed,  2 Sep 2020 16:12:06 +0200
-Message-Id: <20200902141218.212614-8-hch@lst.de>
+Subject: [PATCH 10/19] paride/pcd: use bdev_check_media_change
+Date:   Wed,  2 Sep 2020 16:12:09 +0200
+Message-Id: <20200902141218.212614-11-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200902141218.212614-1-hch@lst.de>
 References: <20200902141218.212614-1-hch@lst.de>
@@ -65,39 +65,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Switch to use bdev_check_media_changed instead of check_disk_change and
-call floppy_revalidate manually.  Given that floppy_revalidate only
-deals with media change events, the extra call into ->revalidate_disk
-from bdev_disk_changed is not required either, so stop wiring up the
-method.
+The pcd driver does not have a ->revalidate_disk method, so it can just
+use bdev_check_media_change without any additional changes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/swim3.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/block/paride/pcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/swim3.c b/drivers/block/swim3.c
-index aa77eb5fb7de88..c2d922d125e281 100644
---- a/drivers/block/swim3.c
-+++ b/drivers/block/swim3.c
-@@ -945,7 +945,8 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
+diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
+index 5124eca90e8337..70da8b86ce587d 100644
+--- a/drivers/block/paride/pcd.c
++++ b/drivers/block/paride/pcd.c
+@@ -233,7 +233,7 @@ static int pcd_block_open(struct block_device *bdev, fmode_t mode)
+ 	struct pcd_unit *cd = bdev->bd_disk->private_data;
+ 	int ret;
  
- 	if (err == 0 && (mode & FMODE_NDELAY) == 0
- 	    && (mode & (FMODE_READ|FMODE_WRITE))) {
--		check_disk_change(bdev);
-+		if (bdev_check_media_change(bdev))
-+			floppy_revalidate(bdev->bd_disk);
- 		if (fs->ejected)
- 			err = -ENXIO;
- 	}
-@@ -1055,7 +1056,6 @@ static const struct block_device_operations floppy_fops = {
- 	.release	= floppy_release,
- 	.ioctl		= floppy_ioctl,
- 	.check_events	= floppy_check_events,
--	.revalidate_disk= floppy_revalidate,
- };
+-	check_disk_change(bdev);
++	bdev_check_media_change(bdev);
  
- static const struct blk_mq_ops swim3_mq_ops = {
+ 	mutex_lock(&pcd_mutex);
+ 	ret = cdrom_open(&cd->info, bdev, mode);
 -- 
 2.28.0
 
