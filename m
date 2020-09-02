@@ -2,124 +2,90 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA2F5C433E7
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 13:50:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4A3FC433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:14:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B07D12078E
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 13:50:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 690D12078E
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:14:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="G7X44HiR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727026AbgIBNuv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 09:50:51 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42590 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726871AbgIBNtr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Sep 2020 09:49:47 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E96B9B609;
-        Wed,  2 Sep 2020 13:49:45 +0000 (UTC)
-Message-ID: <cbbd368e6e33af6e22c850192e69b27edd043efd.camel@suse.com>
-Subject: Re: [PATCH v4 2/4] target: initialize LUN in
- transport_init_se_cmd().
-From:   Martin Wilck <mwilck@suse.com>
-To:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>,
-        martin.petersen@oracle.com, michael.christie@oracle.com,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     shirley.ma@oracle.com, Hannes Reinecke <hare@suse.com>,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        Arun Easi <aeasi@marvell.com>
-Date:   Wed, 02 Sep 2020 15:49:43 +0200
-In-Reply-To: <1591559913-8388-3-git-send-email-sudhakar.panneerselvam@oracle.com>
-References: <1591559913-8388-1-git-send-email-sudhakar.panneerselvam@oracle.com>
-         <1591559913-8388-3-git-send-email-sudhakar.panneerselvam@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.36.5 
+        id S1727116AbgIBON6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:13:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38138 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727986AbgIBONL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 10:13:11 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADA39C061258;
+        Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=F3ySvW+0LV/eEp4ukNxLWcqNSpE01eTInOOTJQ8Lr18=; b=G7X44HiRcM/JgcWlZooMaP4koW
+        rcfEa3NDJkcDkQKo8ORctDDkXQ5IseKhAws17oXMoud7xM2TlcsfR/GqWZvJ75mlyalzSDqid/81C
+        PAMCykjZi+PpLdP2yzYKuVt9+tFvVmIEZtbSe1zF2Yhr87Bnn0ktPOM2Q6AsFj/MDh07bvgDsHP9E
+        oZh/erionLIYWEtxl7f/8F700PmHfi6W6QYGTGNoRy4a/2gsckqgfiWOBqXX3g9wTDAgGG0T59Pea
+        7zGDP0q4DYNPXWRB+c5iVq2k3wL7Ys8qFaGX0hz/qWZrpj8Oz5/qWXDh/YKV78xpBK26bi+limiW5
+        xnQ16DeQ==;
+Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kDTV4-0005eB-Gm; Wed, 02 Sep 2020 14:12:34 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH 11/19] gdrom: use bdev_check_media_change
+Date:   Wed,  2 Sep 2020 16:12:10 +0200
+Message-Id: <20200902141218.212614-12-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200902141218.212614-1-hch@lst.de>
+References: <20200902141218.212614-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Sudhakar,
+The GD-ROM driver does not have a ->revalidate_disk method, so it can
+just use bdev_check_media_change without any additional changes.
 
-On Sun, 2020-06-07 at 19:58 +0000, Sudhakar Panneerselvam wrote:
-> Initialization of orig_fe_lun is moved to transport_init_se_cmd()
-> from
-> transport_lookup_cmd_lun(). This helps for the cases where the scsi
-> request
-> fails before the call to transport_lookup_cmd_lun() so that
-> trace_target_cmd_complete() can print the LUN information to the
-> trace
-> buffer. Due to this change, the lun parameter is removed from
-> transport_lookup_cmd_lun() and transport_lookup_tmr_lun().
-> 
-> Signed-off-by: Sudhakar Panneerselvam <
-> sudhakar.panneerselvam@oracle.com>
-> ---
->  drivers/target/iscsi/iscsi_target.c    | 11 +++++------
->  drivers/target/target_core_device.c    | 19 ++++++++-----------
->  drivers/target/target_core_tmr.c       |  4 ++--
->  drivers/target/target_core_transport.c | 12 +++++++-----
->  drivers/target/target_core_xcopy.c     |  4 ++--
->  drivers/usb/gadget/function/f_tcm.c    |  6 ++++--
->  include/target/target_core_fabric.h    |  6 +++---
->  7 files changed, 31 insertions(+), 31 deletions(-)
-> 
-> [...]
-> diff --git a/drivers/target/target_core_transport.c
-> b/drivers/target/target_core_transport.c
-> index f2f7c5b818cc..7ea77933e64d 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> [...]
-> @@ -1790,7 +1792,7 @@ int target_submit_tmr(struct se_cmd *se_cmd,
-> struct se_session *se_sess,
->  	BUG_ON(!se_tpg);
->  
->  	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess,
-> -			      0, DMA_NONE, TCM_SIMPLE_TAG, sense);
-> +			      0, DMA_NONE, TCM_SIMPLE_TAG, sense,
-> unpacked_lun);
->  	/*
->  	 * FIXME: Currently expect caller to handle se_cmd->se_tmr_req
->  	 * allocation failure.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/cdrom/gdrom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Between this hunk and the next one in target_submit_tmr(), there
-is this code:
-
-        /*
-         * If this is ABORT_TASK with no explicit fabric provided LUN,
-         * go ahead and search active session tags for a match to figure
-         * out unpacked_lun for the original se_cmd.
-         */
-        if (tm_type == TMR_ABORT_TASK && (flags & TARGET_SCF_LOOKUP_LUN_FROM_TAG)) {
-                if (!target_lookup_lun_from_tag(se_sess, tag, &unpacked_lun))
-                        goto failure;
-        }
-
-> @@ -1818,7 +1820,7 @@ int target_submit_tmr(struct se_cmd *se_cmd,
-> struct se_session *se_sess,
->  			goto failure;
->  	}
->  
-> -	ret = transport_lookup_tmr_lun(se_cmd, unpacked_lun);
-> +	ret = transport_lookup_tmr_lun(se_cmd);
->  	if (ret)
->  		goto failure;
->  
-
-AFAICS, your patch breaks the case where the above code is executed to
-derive unpacked_lun from the tag. The updated value of unpacked_lun is 
-never used. That would break aborts for the qla2xxx target.
-
-Am I overlooking something? Can you please explain?
-
-Regards
-Martin
-
+diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+index 09b0cd292720fa..9874fc1c815b53 100644
+--- a/drivers/cdrom/gdrom.c
++++ b/drivers/cdrom/gdrom.c
+@@ -479,7 +479,7 @@ static int gdrom_bdops_open(struct block_device *bdev, fmode_t mode)
+ {
+ 	int ret;
+ 
+-	check_disk_change(bdev);
++	bdev_check_media_change(bdev);
+ 
+ 	mutex_lock(&gdrom_mutex);
+ 	ret = cdrom_open(gd.cd_info, bdev, mode);
+-- 
+2.28.0
 
