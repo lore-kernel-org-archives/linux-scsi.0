@@ -2,182 +2,133 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F23C433E7
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B58F5C433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:48:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64270208B3
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:46:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DB6B208B3
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 15:48:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="x25ddqXl"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="GB7njFYV";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="s7v/8YYR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727906AbgIBPqZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 11:46:25 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:42804 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727980AbgIBPqX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 11:46:23 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082Fhcv3041297;
-        Wed, 2 Sep 2020 15:46:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=iuolGXeag3dm1pKLSqsUBoBGta9Po4NKV1S+UfFIJus=;
- b=x25ddqXlRHpT2gQ0LQMc8HK/p4Oj+xCGaAqZ8LWYffkGeIenVB8bgRjVOjlpKDqho7rD
- vRCSsIud0tYhjlohR0nWm8NXjM771HMjYfrbwfCPEIG0pq50z3WPpoyvI4tejkyQjcUZ
- LNPB97iuABGzyHab46VNRH67jT7/TIAh1CIZB5sjpcvfDz4j8+42MZ0Q6hJOQ2z4IGRX
- /l9Ath5Et1M5V4dOR7RpNzIeVeATvT++kzmaH4fWdBN03wW/4Fk+pxLWJwhGbTXhswqv
- KhH2NhuTtrDS6fZjD3m11WRztNDmI1xNpGNAxHKRL2hvNA4RKvDFVZqdTZMzbithey2l SA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 339dmn1vaq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 02 Sep 2020 15:46:21 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082Fid5s110599;
-        Wed, 2 Sep 2020 15:46:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 3380x712pb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Sep 2020 15:46:20 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 082FkJVf030360;
-        Wed, 2 Sep 2020 15:46:19 GMT
-Received: from dhcp-10-154-155-248.vpn.oracle.com (/10.154.155.248)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Sep 2020 08:46:19 -0700
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Subject: Re: [PATCH v2 06/13] qla2xxx: Fix memory size truncation
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20200902072548.11491-7-njavali@marvell.com>
-Date:   Wed, 2 Sep 2020 10:46:18 -0500
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+        id S1728660AbgIBPsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 11:48:23 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:32484 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726733AbgIBPsR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 11:48:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1599061696; x=1630597696;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+  b=GB7njFYVQhbUnkETigaRf5Dg5X4oNPNQ7Xt7Ft3YVF8TLTOZoEoN28Tk
+   tXG1avbvZ6iP+iTE/5mAVkCklutyIVCjzf6BIisnFj2JhSUFMyamUD5GP
+   LL3vzvQEv7NiiVQ7elKBMxx1CC+pN4g/Ij+nHPRh8fXNkxvKbB9U43SyW
+   85thZ3Ys9kj1j4hrN3vMRbIl5LPUI9oOakqFzYBItbHn5jvs+fsNPop6c
+   U1vKmcnu2jXIEMz/hErspmBQJO+a2xd8YLlFCOQYRC8YFmFe8xyq7kbTO
+   yWMExkW5Z39+sCWmP4hRpnWWj7xKeFERlHshdxBnjEw8PT80zKLCCjo/w
+   A==;
+IronPort-SDR: ualaJYGBOv4tRwzWeGSiJX6soFl/pYDN1u3KkPtA5cFkJJTaprkFzBKhgRTYvycIcASoaMJn4e
+ 4p+Ir8Ae8IhV+REzxdoQy/RjDu1pU0l7xHNyK+KWbLKwbf2TIdRJUMfFoWR2aPjgqUFLIWXKNQ
+ RwRXGkIhEAShYNOfdjcDE1ORMmaAnJBm0OWvq3bdTOBxvOeKEOKyAQfzZWgWCrjLXalF8Z1bRK
+ zt2h5Tk1Fq2m+bNB7JurCzofWGX12Jb8U8o6df0zt197r9IBbpGKD3G5V6q2O8TGBdfe2hg5O5
+ Qow=
+X-IronPort-AV: E=Sophos;i="5.76,383,1592841600"; 
+   d="scan'208";a="146348705"
+Received: from mail-bn7nam10lp2109.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.109])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Sep 2020 23:48:14 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Wa20FDSCa6dhiOQVPKRs4fJcxQyrE2mUyYnjHXd+hlo5JXq09XX2laZ19LoQYiRctJSeDYLV9y/Cq7BUyl7vL0EdmKhZ28GZE012sePgtDdeyoT0IQT2AY+5bG2aHcrL9dHd9eA3NNEnCjLrd6RqaGQXoPMz+IQmNom/3v2W9A8teI10faD8PDgeZlFLrsBc2L9G7oZdYnW8Ma4Q3WpmwR77wqNw1Jg24juyA6E8ihPWe0SqIuImxnn/QXmXh1fm4PGLBQkfZPMS+Ipy+ofu9aZb73iPuXhZk4nLMtm+TLrv5gsQmrgSR522hV8GUTIMwmsZqNItHcpEAu4BT+Icxw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=X+WY4vVgyzw6ve8HwGe+1oaJQmrXacUeJWGjtWoXxHNJ8O3cEEhssZVC+zPwJWDBcF5A68qpaIJdT16wr7ypN1R21Jevk6We54RwAxpFdnEfSmVGS4k7+T8IZJFVxgd+Pbxhm7tS7rZphDwh3+X1Y/166J20B2SwpsjSONtOmVRGAO2xxehwpyfvuUbmi4nwqqtoPOxzP+jniZ9q+jaFxp0akyyY5J1C/OrKeHkTl+CRU+44wUdDu1VjBhR1BJQs6qonJyOSdcWCwalBTt5Bi1HVhHwvbGGaCMIiVwz7aD4OCFYGZShqmjCvgzX/Z9dfQNa/YMQ3qrwApPM2d24Hqg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=s7v/8YYRcKInqTj+x1Q+Z5Wr4rmueG7chjQRo6yU4KUMNZ2tLZ0BqbHQ8WabyK3d8XDY+hV60s4nMvZnHMlQjcLGeFGYrbRqfcrlf8DkiAWrmJwNfGapQky41qHwYVE8tC56+/Ud9Kz/7/TAID0kCWEZStoSekwe3sYN3yrw1wo=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3680.namprd04.prod.outlook.com
+ (2603:10b6:803:4e::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3326.25; Wed, 2 Sep
+ 2020 15:48:13 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::457e:5fe9:2ae3:e738]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::457e:5fe9:2ae3:e738%7]) with mapi id 15.20.3326.023; Wed, 2 Sep 2020
+ 15:48:13 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        "linux-m68k@lists.linux-m68k.org" <linux-m68k@lists.linux-m68k.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH 13/19] ide-cd: remove idecd_revalidate_disk
+Thread-Topic: [PATCH 13/19] ide-cd: remove idecd_revalidate_disk
+Thread-Index: AQHWgTNcbBeAB1I0XUykIgBKlMBQCg==
+Date:   Wed, 2 Sep 2020 15:48:12 +0000
+Message-ID: <SN4PR0401MB3598FB75575DB82199E8AB349B2F0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200902141218.212614-1-hch@lst.de>
+ <20200902141218.212614-14-hch@lst.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2001:a62:1590:f101:1584:4722:fd5f:b30e]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: ec3ee1b4-25e4-4b83-1aaa-08d84f5799ac
+x-ms-traffictypediagnostic: SN4PR0401MB3680:
+x-microsoft-antispam-prvs: <SN4PR0401MB368085EDA815F8EE107ACB249B2F0@SN4PR0401MB3680.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1728;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: eqcyQ/ednqBG5+Uufp+7yUHSuyMNZqS99qlXI6y4vWoDio7ZnYZmPQ64xUmkP7A9g8RiU0Av55YMWKpRpymXh5zU+QhB+Bw0aumQcrc6qiAyWct0aTooLdBG4twX0OqeezGRj8BcjJYEVr/cCShFplscLcJaFB3IYcWRJ4Twb22yxHgj5IFPlfyDzTtYgwEgy44TC8QGs6fqVol9dRmocBZvtEoAMd5/yEP7ivz3rH05lmCL+GN6jJZaJxhJ2a3dc66RwOtIf+UFWOdZSwNhHkNWG75jMVStWDillhqhGpiPSK3HXbe+WALp/Or/eC6D8JoeFdgMgfETiFCSv4bqJQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39850400004)(396003)(366004)(346002)(376002)(136003)(71200400001)(7696005)(66446008)(7416002)(186003)(316002)(66556008)(54906003)(110136005)(66476007)(6506007)(66946007)(91956017)(52536014)(64756008)(76116006)(4326008)(8676002)(19618925003)(9686003)(86362001)(33656002)(55016002)(558084003)(5660300002)(8936002)(478600001)(2906002)(4270600006);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: +dHMUKmCAefzyo683506hsGCC6SHF2kg2tAO6lUHoNHJA2ElBRcoBnK6kAzLA1l5wkrc7PZGmgpK9alVEB5Quf7JuhNluqyES7Z7IU3PIfDLUTXGrwmA/FpYsNSXMYRaHxKPXOxqmUDGK3qYE41ZOLa/Muihvc+XXYckge4LXJVH/788uQ/Hh5zMIOj2e9sQlzkTR1ut4QOJc/cSn0l+HbjHUmWM2AwmPfcCQDwLswfHaw5/Awwn1nRG0WLVxRD4l2pgJWUc01RgPmMZWxcTRZtkX76gLuzR+mqpJOMwBexlv3ZAeY7d3Y8UnF3GJ56DbI6ueZfmpmUEuBb/Pby/afYFJ6lJKCZWUdV/XWnJxaKi4AHnCqmiPXXvUugrCJ/2013AlmsN2hiS/6SJ0HReQBJCcro3xHzw+tKnXEA+uGMDLnvHdIofb1s2oBooP05/EkaETeWTOWZAuXRuRhnNTc1DT3HuDMY+1QhhDtWcxlYJ2R9VP70W9Vk3XHpqU7nALvQQd7tJdOcP/J9lVob+dTcMNxUhMsxnfPTb7bfH5tZICAzBGXSBpYkusjeg3tNXc+4TKnR0NGFVkp3LQtYnM6zpEOYawMWxRCk4gaV4yF+6SXHWUGlFJGcOxbFtzOoHpX3Ny8obbpjSDPrf4ZmqizEFMHyaQ7JP2cEFvBi7am+lKQI5Q1ksrHJtCIXiembQzlKN8nU7WTAL+BW7wZyTSw==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <571543A3-4D6F-4EB8-AD73-9A2344ECA29C@oracle.com>
-References: <20200902072548.11491-1-njavali@marvell.com>
- <20200902072548.11491-7-njavali@marvell.com>
-To:     Nilesh Javali <njavali@marvell.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.1)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 suspectscore=3 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009020150
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=3
- spamscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009020150
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ec3ee1b4-25e4-4b83-1aaa-08d84f5799ac
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2020 15:48:13.0018
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: F/7204arV3xs8aDMhyt8xksHimNMYfd36SbZiAeKfbW4BJ9BRkjIS/7P41KUs2HYHlEtueG5saxbA0OMRwMaE4u6fHEObo72D0gZkMnv2E8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3680
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-> On Sep 2, 2020, at 2:25 AM, Nilesh Javali <njavali@marvell.com> wrote:
->=20
-> From: Quinn Tran <qutran@marvell.com>
->=20
-> Memory size calculation for Extended Login use in hardware
-> offload was truncated when the setting was set with higher
-> value.
->=20
-
-I see code change makes sense but commit message does not.=20
-
-Does following makes sense?=20
-
-Memory size calculations for Extended Login used in hardware Offload got =
-truncated.
-Fix this by changing definition of exlogin_size to use uint32_t.
-
-> Signed-off-by: Quinn Tran <qutran@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
-> drivers/scsi/qla2xxx/qla_def.h | 2 +-
-> drivers/scsi/qla2xxx/qla_mbx.c | 7 ++++---
-> drivers/scsi/qla2xxx/qla_os.c  | 5 +++--
-> 3 files changed, 8 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h =
-b/drivers/scsi/qla2xxx/qla_def.h
-> index 074d8753cfc3..ad4a0ba7203c 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -4216,7 +4216,7 @@ struct qla_hw_data {
-> 	/* Extended Logins  */
-> 	void		*exlogin_buf;
-> 	dma_addr_t	exlogin_buf_dma;
-> -	int		exlogin_size;
-> +	uint32_t	exlogin_size;
->=20
-> #define ENABLE_EXCHANGE_OFFLD	BIT_2
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c =
-b/drivers/scsi/qla2xxx/qla_mbx.c
-> index 989327868dd8..ab7dbbc99c22 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -845,7 +845,7 @@ qla_get_exlogin_status(scsi_qla_host_t *vha, =
-uint16_t *buf_sz,
->  * Context:
->  *	Kernel context.
->  */
-> -#define CONFIG_XLOGINS_MEM	0x3
-> +#define CONFIG_XLOGINS_MEM	0x9
-> int
-> qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr)
-> {
-> @@ -872,8 +872,9 @@ qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, =
-dma_addr_t phys_addr)
-> 	mcp->flags =3D 0;
-> 	rval =3D qla2x00_mailbox_command(vha, mcp);
-> 	if (rval !=3D QLA_SUCCESS) {
-> -		/*EMPTY*/
-> -		ql_dbg(ql_dbg_mbx, vha, 0x111b, "Failed=3D%x.\n", rval);
-> +		ql_dbg(ql_dbg_mbx, vha, 0x111b,
-> +		       "EXlogin Failed=3D%x. MB0=3D%x MB11=3D%x\n",
-> +		       rval, mcp->mb[0], mcp->mb[11]);
-> 	} else {
-> 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x118c,
-> 		    "Done %s.\n", __func__);
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c =
-b/drivers/scsi/qla2xxx/qla_os.c
-> index 74e6a04850c0..31bfc0c088b7 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -4379,11 +4379,12 @@ int
-> qla2x00_set_exlogins_buffer(scsi_qla_host_t *vha)
-> {
-> 	int rval;
-> -	uint16_t	size, max_cnt, temp;
-> +	uint16_t	size, max_cnt;
-> +	uint32_t temp;
-> 	struct qla_hw_data *ha =3D vha->hw;
->=20
-> 	/* Return if we don't need to alloacate any extended logins */
-> -	if (!ql2xexlogins)
-> +	if (ql2xexlogins <=3D MAX_FIBRE_DEVICES_2400)
-> 		return QLA_SUCCESS;
->=20
-> 	if (!IS_EXLOGIN_OFFLD_CAPABLE(ha))
-> --=20
-> 2.19.0.rc0
->=20
-
-Small nit for commit message, Otherwise=20
-
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-
---
-Himanshu Madhani	 Oracle Linux Engineering
-
+Looks good,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
