@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55076C43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:24:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E32CC433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:28:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 307DC20829
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:24:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EA902087D
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:28:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EzvW+WRU"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TWTumlPN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728067AbgIBOYb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:24:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38138 "EHLO
+        id S1728053AbgIBO2N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:28:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726984AbgIBONl (ORCPT
+        with ESMTP id S1727955AbgIBONl (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 10:13:41 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EEB5C061231;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A309CC06123A;
         Wed,  2 Sep 2020 07:13:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=JsmSEHqUTPHzIdiuujgytMYVmaPLDkPMtqBFsN746VA=; b=EzvW+WRU6ocqroaF91GmMLKtwY
-        nTHpPcnlF9niVs+7RjtJZeCQxp9v5fF0wGWanEjySq1iFFZJDMZKzPCqtyKrSQTbWAkyTsqjVT55Q
-        iD/n2seyc/esMFg4wQO5m3F72Mwva4oG37BI1mEQ4gESiyggBoHE0cZAegPOy6vyED9ZhEWbCiVgT
-        Ys8Wi2PNgTCN/rHxeRVjAIvzNNpREuSn4i/ikZs+x/ZDO9ofVpQmJ7ld/bWo2F83N3CjGGsx3JHJv
-        Hl2OAV7Tbs9yDOCOr0rXsb0f53R+j06c53vCxpYfinFl+LSPeDGn2hvVwJCIIdnTQON4fRKP+bbLs
-        Zl0N0jOA==;
+        bh=W0vMWQBgGgqKGkq/ZVvGLbZ6CKd/5CcgKMoWsNAi6yg=; b=TWTumlPNV4nH9eq9Gh3f9FViES
+        NHZN4Kw0CBEJcMigOFlTCbzR0F3B9cWB7TOXmhqdDxF4ugy73ZhKFiyIEob+QRxXBR0JJkh+kRsw9
+        pQfOYUviYjY8awuiNG60FSvJsm40o9YcRQ1+2gDZoNRQTX7IdbO6aYgBZCVHrJhvOVCmiPm5a6LYA
+        1wilHTzH7Bto1mDL9p3+6WpMuAtjGzmphMtPuAUDMGsLxWneMs6q105TQImWgpz0LkD883tarnxmt
+        Z38EGbo/Ek76sNa+l2Ex5XW7stVNMobUNC+X2bQXeADo0S94487fA58oTziynqUjGfEKnijlA1Ifu
+        8ALFS/kA==;
 Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTVG-0005hA-83; Wed, 02 Sep 2020 14:12:46 +0000
+        id 1kDTVD-0005gC-Mk; Wed, 02 Sep 2020 14:12:43 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -51,9 +51,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 19/19] block: remove check_disk_change
-Date:   Wed,  2 Sep 2020 16:12:18 +0200
-Message-Id: <20200902141218.212614-20-hch@lst.de>
+Subject: [PATCH 17/19] sr: use bdev_check_media_change
+Date:   Wed,  2 Sep 2020 16:12:16 +0200
+Message-Id: <20200902141218.212614-18-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200902141218.212614-1-hch@lst.de>
 References: <20200902141218.212614-1-hch@lst.de>
@@ -65,57 +65,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the now unused check_disk_change helper.
+Switch to use bdev_check_media_change instead of check_disk_change and
+call sr_block_revalidate_disk manually.  Also add an explicit call to
+sr_block_revalidate_disk just before disk_add() to ensure we always
+read check for a ready unit and read the TOC and then stop wiring up
+->revalidate_disk.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/block_dev.c        | 20 --------------------
- include/linux/genhd.h |  1 -
- 2 files changed, 21 deletions(-)
+ drivers/scsi/sr.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 37cb809b217926..c6baae5b85060c 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1339,26 +1339,6 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose)
- }
- EXPORT_SYMBOL(revalidate_disk_size);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 3b3a53c6a0de53..34be94b62523fa 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -86,6 +86,7 @@ static int sr_remove(struct device *);
+ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt);
+ static int sr_done(struct scsi_cmnd *);
+ static int sr_runtime_suspend(struct device *dev);
++static int sr_block_revalidate_disk(struct gendisk *disk);
  
--/*
-- * This routine checks whether a removable media has been changed,
-- * and invalidates all buffer-cache-entries in that case. This
-- * is a relatively slow routine, so we have to try to minimize using
-- * it. Thus it is called only upon a 'mount' or 'open'. This
-- * is the best way of combining speed and utility, I think.
-- * People changing diskettes in the middle of an operation deserve
-- * to lose :-)
-- */
--int check_disk_change(struct block_device *bdev)
--{
--	if (!bdev_check_media_change(bdev))
--		return 0;
--	if (bdev->bd_disk->fops->revalidate_disk)
--		bdev->bd_disk->fops->revalidate_disk(bdev->bd_disk);
--	return 1;
--}
--
--EXPORT_SYMBOL(check_disk_change);
--
- void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors)
- {
- 	spin_lock(&bdev->bd_size_lock);
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 322d48a207728a..1c97cf84f011a7 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -370,7 +370,6 @@ int register_blkdev(unsigned int major, const char *name);
- void unregister_blkdev(unsigned int major, const char *name);
+ static const struct dev_pm_ops sr_pm_ops = {
+ 	.runtime_suspend	= sr_runtime_suspend,
+@@ -529,7 +530,8 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
  
- void revalidate_disk_size(struct gendisk *disk, bool verbose);
--int check_disk_change(struct block_device *bdev);
- bool bdev_check_media_change(struct block_device *bdev);
- int __invalidate_device(struct block_device *bdev, bool kill_dirty);
- void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
+ 	sdev = cd->device;
+ 	scsi_autopm_get_device(sdev);
+-	check_disk_change(bdev);
++	if (bdev_check_media_change(bdev))
++		sr_block_revalidate_disk(bdev->bd_disk);
+ 
+ 	mutex_lock(&cd->lock);
+ 	ret = cdrom_open(&cd->cdi, bdev, mode);
+@@ -688,7 +690,6 @@ static const struct block_device_operations sr_bdops =
+ 	.compat_ioctl	= sr_block_compat_ioctl,
+ #endif
+ 	.check_events	= sr_block_check_events,
+-	.revalidate_disk = sr_block_revalidate_disk,
+ };
+ 
+ static int sr_open(struct cdrom_device_info *cdi, int purpose)
+@@ -802,6 +803,7 @@ static int sr_probe(struct device *dev)
+ 
+ 	dev_set_drvdata(dev, cd);
+ 	disk->flags |= GENHD_FL_REMOVABLE;
++	sr_block_revalidate_disk(disk);
+ 	device_add_disk(&sdev->sdev_gendev, disk, NULL);
+ 
+ 	sdev_printk(KERN_DEBUG, sdev,
 -- 
 2.28.0
 
