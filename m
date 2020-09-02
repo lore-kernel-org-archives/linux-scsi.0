@@ -2,85 +2,98 @@ Return-Path: <SRS0=1vUj=CL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 239D6C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 08:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F6C7C433E7
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 09:28:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F34282084C
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 08:18:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599034730;
-	bh=7+JEzktISsgTMdUzuapRscBPtX4N6Y3wMNOli4jVPQ4=;
-	h=Date:From:To:cc:Subject:In-Reply-To:References:List-ID:From;
-	b=P1gvr9tbnS5svsA3XfRSm65O6hXK+UqgsxPIb7IrClf9Q2u91A0xbMjK7jyDaG8vQ
-	 7vHAfzY6qat54mlmN7TrmZDUVI//MlY8NYgqAc5eSt2S9F5OyBUyD5ZyvgVp7hsiRQ
-	 LariXgOBPT6SzpwDKxljC7lcKcQHNmvkoaBWhtdI=
+	by mail.kernel.org (Postfix) with ESMTP id 7317E2072A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 09:28:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726657AbgIBISl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 04:18:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39108 "EHLO mail.kernel.org"
+        id S1726400AbgIBJ2K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 05:28:10 -0400
+Received: from mga03.intel.com ([134.134.136.65]:29045 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726310AbgIBISl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Sep 2020 04:18:41 -0400
-Received: from pobox.suse.cz (nat1.prg.suse.com [195.250.132.148])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BADA92084C;
-        Wed,  2 Sep 2020 08:18:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599034720;
-        bh=7+JEzktISsgTMdUzuapRscBPtX4N6Y3wMNOli4jVPQ4=;
-        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
-        b=AUuruMhNnTWN9d+oIWMoSqWA8+m8sBM+oeWPLsiObVeHFiq7BNSvIvN4IuQjBGrUN
-         k+B+5u9HrYhoRwTH/Os1qWGB1TXIiwzK1gOw6wV1fQkR0xWwE/1B4a4FZP7bKSHIC9
-         PP5dp0UkLkUuQvkHkcTKYHlSgMUgvsrGj9E2u+Z4=
-Date:   Wed, 2 Sep 2020 10:18:35 +0200 (CEST)
-From:   Jiri Kosina <jikos@kernel.org>
-To:     Boqun Feng <boqun.feng@gmail.com>
-cc:     linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Michael Kelley <mikelley@microsoft.com>
-Subject: Re: [RFC v2 09/11] HID: hyperv: Make ringbuffer at least take two
- pages
-In-Reply-To: <20200902030107.33380-10-boqun.feng@gmail.com>
-Message-ID: <nycvar.YFH.7.76.2009021018080.4671@cbobk.fhfr.pm>
-References: <20200902030107.33380-1-boqun.feng@gmail.com> <20200902030107.33380-10-boqun.feng@gmail.com>
-User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
+        id S1726140AbgIBJ2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Sep 2020 05:28:10 -0400
+IronPort-SDR: IGaoofaOCszIrAuqNFsQINaqArFCKV958pWyWmAkrk/alYSpUuawG4aNBDwje61pB/+OCd7NDH
+ 8onUK8KQDMWw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9731"; a="157358867"
+X-IronPort-AV: E=Sophos;i="5.76,381,1592895600"; 
+   d="scan'208";a="157358867"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2020 02:28:04 -0700
+IronPort-SDR: ZjOyCf8L1o3UKofFPyqqcqzz4hgmZuuvLS8kECsM066KHnnFFTKEm2pxywaWzq2OEqdvtrc3Gs
+ oZd4kRBuzGuA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.76,381,1592895600"; 
+   d="scan'208";a="297617334"
+Received: from slisovsk-lenovo-ideapad-720s-13ikb.fi.intel.com (HELO [10.237.72.190]) ([10.237.72.190])
+  by orsmga003.jf.intel.com with ESMTP; 02 Sep 2020 02:28:03 -0700
+Subject: Re: [PATCH V2] scsi: ufs-pci: Add LTR support for Intel controllers
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>
+References: <20200827072030.24655-1-adrian.hunter@intel.com>
+ <yq14kohexka.fsf@ca-mkp.ca.oracle.com>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <dc615e02-18a3-334d-dbc4-8aba94e4be6b@intel.com>
+Date:   Wed, 2 Sep 2020 12:27:42 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <yq14kohexka.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2 Sep 2020, Boqun Feng wrote:
-
-> When PAGE_SIZE > HV_HYP_PAGE_SIZE, we need the ringbuffer size to be at
-> least 2 * PAGE_SIZE: one page for the header and at least one page of
-> the data part (because of the alignment requirement for double mapping).
+On 2/09/20 5:12 am, Martin K. Petersen wrote:
 > 
-> So make sure the ringbuffer sizes to be at least 2 * PAGE_SIZE when
-> using vmbus_open() to establish the vmbus connection.
+> Adrian,
 > 
-> Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
+>> Intel host controllers support the setting of latency tolerance.
+>> Accordingly, implement the PM QoS ->set_latency_tolerance() callback. The
+>> raw register values are also exposed via debugfs.
+> 
+> Does not apply to 5.10/scsi-queue. Please rebase. Thanks!
+> 
 
-Acked-by: Jiri Kosina <jkosina@suse.cz>
+Hi
 
--- 
-Jiri Kosina
-SUSE Labs
+Thanks for processing this.
+
+The 5.10/scsi-queue branch seems to be missing the following fix.  If you cherry
+pick that, then it applies.
+
+
+                                                                                                                                                                                                                                                                                          
+commit 8da76f71fef7d8a1a72af09d48899573feb60065                                                                                                                                                                                                                                                                                                                                     
+Author: Adrian Hunter <adrian.hunter@intel.com>                                                                                                                                                                                                                                                                                                                                     
+Date:   Mon Aug 10 17:10:24 2020 +0300                                                                                                                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                                                                                                                                                                    
+    scsi: ufs-pci: Add quirk for broken auto-hibernate for Intel EHL                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                    
+    Intel EHL UFS host controller advertises auto-hibernate capability but it
+    does not work correctly. Add a quirk for that.
+    
+    [mkp: checkpatch fix]
+    
+    Link: https://lore.kernel.org/r/20200810141024.28859-1-adrian.hunter@intel.com
+    Fixes: 8c09d7527697 ("scsi: ufshdc-pci: Add Intel PCI IDs for EHL")
+    Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+    Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
