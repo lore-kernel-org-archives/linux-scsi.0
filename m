@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A27C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:43:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8868C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:46:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0946920767
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:43:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A03BE2078E
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Sep 2020 14:46:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ny3p7wlw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EWDvdMIv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728022AbgIBOlK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:41:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38196 "EHLO
+        id S1728089AbgIBOqQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:46:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727995AbgIBONl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 10:13:41 -0400
+        with ESMTP id S1727972AbgIBONL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 10:13:11 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D082C06125E;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7343C061251;
         Wed,  2 Sep 2020 07:12:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=s3JUZA1FtjTiqtgMGHDLmiQxYMnM63DlyIQ2tpQALUI=; b=Ny3p7wlwFy0wP4sf+hF5EVB2Lh
-        YO7A8mKgrJj2mwOaaVLcOAng30rxxwPQzGxnkFxqbeBkqELDupdq1CTAmmgrTEEA+8pbXRdZGR8FU
-        ob3xxQh/ov/JgKEOJ4gpqc6w94Jg6FnXLLZRWESj2o6T+SxU40AwIUU0APyI895U2kjqoUlCaX7EC
-        agS1nWtjptWx5OQtQ+WfCnQTImB6Qck7pRcFjzgCMkt4F21sUM1CuxxwcC0L7oS/0QpgwIAg3G/Zq
-        UhRZu7rj15jFBLrcVefahoM/8IXk5+jxtutPIkHljxBCtyl2P8qdKD3uyuewbg3P1k3geKVpoOjZh
-        b65a2RWA==;
+        bh=/5SAWZk6icJ/MBm6T7B/yGzjpfvARn7uvD55NqOY+BE=; b=EWDvdMIvlQWYwV73Cx9dI0xu7i
+        sWu2vGTiz7z10ZM+OfMHq7tF7ljG9yCO3BgQgp251yW7D6Jo7iM/6uv4WyMQGc6dKe985svnO6mlj
+        yqykq1p+7ju22/KtWrLP/3AGX8cA9Fv2n0pVym7W7+uIuWxjz9eICjqdkJ+YCGTJBl/bZfTs9wpVC
+        yuAWuJnKNHtwuErm9tMSuSi4jcO98Y92Ql0Ck+/nHfS3VrwrGN0Z3+Lmz6G4LrCbDl2jdEv/bfmmt
+        vJ4QrEuk3yfDtfx3be/GtJ6gNOM2oesokgEE1uOYM7Y+Rcl7L6oVZ6k6SBnLqJlOPDHOMUgr6eQZB
+        W/q/PVxA==;
 Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTV9-0005fV-Jn; Wed, 02 Sep 2020 14:12:39 +0000
+        id 1kDTUu-0005cr-4h; Wed, 02 Sep 2020 14:12:24 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -51,9 +51,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 14/19] ide-gd: stop using the disk events mechanism
-Date:   Wed,  2 Sep 2020 16:12:13 +0200
-Message-Id: <20200902141218.212614-15-hch@lst.de>
+Subject: [PATCH 03/19] ataflop: use bdev_check_media_change
+Date:   Wed,  2 Sep 2020 16:12:02 +0200
+Message-Id: <20200902141218.212614-4-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200902141218.212614-1-hch@lst.de>
 References: <20200902141218.212614-1-hch@lst.de>
@@ -65,143 +65,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ide-gd is only using the disk events mechanism to be able to force an
-invalidation and partition scan on opening removable media.  Just open
-code the logic without invoving the block layer.
+Switch to use bdev_check_media_change instead of check_disk_change and
+call floppy_revalidate manually.  Given that floppy_revalidate only
+deals with media change events, the extra call into ->revalidate_disk
+from bdev_disk_changed is not required either, so stop wiring up the
+method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ide/ide-disk.c   |  5 +----
- drivers/ide/ide-floppy.c |  2 --
- drivers/ide/ide-gd.c     | 48 +++++-----------------------------------
- include/linux/ide.h      |  2 --
- 4 files changed, 7 insertions(+), 50 deletions(-)
+ drivers/block/ataflop.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 1d3407d7e095fa..34b9441084f84f 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -739,12 +739,9 @@ static void ide_disk_setup(ide_drive_t *drive)
- 	set_wcache(drive, 1);
- 
- 	if ((drive->dev_flags & IDE_DFLAG_LBA) == 0 &&
--	    (drive->head == 0 || drive->head > 16)) {
-+	    (drive->head == 0 || drive->head > 16))
- 		printk(KERN_ERR "%s: invalid geometry: %d physical heads?\n",
- 			drive->name, drive->head);
--		drive->dev_flags &= ~IDE_DFLAG_ATTACH;
--	} else
--		drive->dev_flags |= IDE_DFLAG_ATTACH;
- }
- 
- static void ide_disk_flush(ide_drive_t *drive)
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index af7503b47dbe32..f5a2870aaf54bb 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -516,8 +516,6 @@ static void ide_floppy_setup(ide_drive_t *drive)
- 	(void) ide_floppy_get_capacity(drive);
- 
- 	ide_proc_register_driver(drive, floppy->driver);
--
--	drive->dev_flags |= IDE_DFLAG_ATTACH;
- }
- 
- static void ide_floppy_flush(ide_drive_t *drive)
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index 05c26986637ba3..661e2aa9c96784 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -225,8 +225,12 @@ static int ide_gd_open(struct block_device *bdev, fmode_t mode)
- 		 * and the door_lock is irrelevant at this point.
- 		 */
- 		drive->disk_ops->set_doorlock(drive, disk, 1);
--		drive->dev_flags |= IDE_DFLAG_MEDIA_CHANGED;
+diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
+index a50e13af030526..3e881fdb06e0ad 100644
+--- a/drivers/block/ataflop.c
++++ b/drivers/block/ataflop.c
+@@ -1732,7 +1732,8 @@ static int fd_locked_ioctl(struct block_device *bdev, fmode_t mode,
+ 		/* invalidate the buffer track to force a reread */
+ 		BufferDrive = -1;
+ 		set_bit(drive, &fake_change);
 -		check_disk_change(bdev);
-+		if (__invalidate_device(bdev, true))
-+			pr_warn("VFS: busy inodes on changed media %s\n",
-+				bdev->bd_disk->disk_name);
-+		drive->disk_ops->get_capacity(drive);
-+		set_capacity(disk, ide_gd_capacity(drive));
-+		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
- 	} else if (drive->dev_flags & IDE_DFLAG_FORMAT_IN_PROGRESS) {
- 		ret = -EBUSY;
- 		goto out_put_idkp;
-@@ -284,32 +288,6 @@ static int ide_gd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
- 	return 0;
- }
++		if (bdev_check_media_change(bdev))
++			floppy_revalidate(bdev->bd_disk);
+ 		return 0;
+ 	default:
+ 		return -EINVAL;
+@@ -1909,7 +1910,8 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
+ 		return 0;
  
--static unsigned int ide_gd_check_events(struct gendisk *disk,
--					unsigned int clearing)
--{
--	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
--	ide_drive_t *drive = idkp->drive;
--	bool ret;
--
--	/* do not scan partitions twice if this is a removable device */
--	if (drive->dev_flags & IDE_DFLAG_ATTACH) {
--		drive->dev_flags &= ~IDE_DFLAG_ATTACH;
--		return 0;
--	}
--
--	/*
--	 * The following is used to force revalidation on the first open on
--	 * removeable devices, and never gets reported to userland as
--	 * DISK_EVENT_FLAG_UEVENT isn't set in genhd->event_flags.
--	 * This is intended as removable ide disk can't really detect
--	 * MEDIA_CHANGE events.
--	 */
--	ret = drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED;
--	drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
--
--	return ret ? DISK_EVENT_MEDIA_CHANGE : 0;
--}
--
- static void ide_gd_unlock_native_capacity(struct gendisk *disk)
- {
- 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
-@@ -320,18 +298,6 @@ static void ide_gd_unlock_native_capacity(struct gendisk *disk)
- 		disk_ops->unlock_native_capacity(drive);
- }
- 
--static int ide_gd_revalidate_disk(struct gendisk *disk)
--{
--	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
--	ide_drive_t *drive = idkp->drive;
--
--	if (ide_gd_check_events(disk, 0))
--		drive->disk_ops->get_capacity(drive);
--
--	set_capacity(disk, ide_gd_capacity(drive));
--	return 0;
--}
--
- static int ide_gd_ioctl(struct block_device *bdev, fmode_t mode,
- 			     unsigned int cmd, unsigned long arg)
- {
-@@ -364,9 +330,7 @@ static const struct block_device_operations ide_gd_ops = {
- 	.compat_ioctl		= ide_gd_compat_ioctl,
- #endif
- 	.getgeo			= ide_gd_getgeo,
--	.check_events		= ide_gd_check_events,
- 	.unlock_native_capacity	= ide_gd_unlock_native_capacity,
--	.revalidate_disk	= ide_gd_revalidate_disk
+ 	if (mode & (FMODE_READ|FMODE_WRITE)) {
+-		check_disk_change(bdev);
++		if (bdev_check_media_change(bdev))
++			floppy_revalidate(bdev->bd_disk);
+ 		if (mode & FMODE_WRITE) {
+ 			if (p->wpstat) {
+ 				if (p->ref < 0)
+@@ -1953,7 +1955,6 @@ static const struct block_device_operations floppy_fops = {
+ 	.release	= floppy_release,
+ 	.ioctl		= fd_ioctl,
+ 	.check_events	= floppy_check_events,
+-	.revalidate_disk= floppy_revalidate,
  };
  
- static int ide_gd_probe(ide_drive_t *drive)
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index a254841bd3156d..62653769509f89 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -490,8 +490,6 @@ enum {
- 	IDE_DFLAG_NOPROBE		= BIT(9),
- 	/* need to do check_media_change() */
- 	IDE_DFLAG_REMOVABLE		= BIT(10),
--	/* needed for removable devices */
--	IDE_DFLAG_ATTACH		= BIT(11),
- 	IDE_DFLAG_FORCED_GEOM		= BIT(12),
- 	/* disallow setting unmask bit */
- 	IDE_DFLAG_NO_UNMASK		= BIT(13),
+ static const struct blk_mq_ops ataflop_mq_ops = {
 -- 
 2.28.0
 
