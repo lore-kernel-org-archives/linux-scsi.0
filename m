@@ -2,25 +2,26 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3EA1C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90A76C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:46:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B68A1206E7
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:43:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D77020897
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728405AbgICInK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 04:43:10 -0400
-Received: from verein.lst.de ([213.95.11.211]:37010 "EHLO verein.lst.de"
+        id S1728254AbgICIqu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 04:46:50 -0400
+Received: from verein.lst.de ([213.95.11.211]:37058 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726025AbgICInG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Sep 2020 04:43:06 -0400
+        id S1726493AbgICIqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Sep 2020 04:46:49 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1CF6368CEC; Thu,  3 Sep 2020 10:43:03 +0200 (CEST)
-Date:   Thu, 3 Sep 2020 10:43:02 +0200
+        id F0C1868CEE; Thu,  3 Sep 2020 10:46:43 +0200 (CEST)
+Date:   Thu, 3 Sep 2020 10:46:43 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
 Cc:     Christoph Hellwig <hch@lst.de>, alsa-devel@alsa-project.org,
@@ -44,38 +45,46 @@ Cc:     Christoph Hellwig <hch@lst.de>, alsa-devel@alsa-project.org,
         linux-mips@vger.kernel.org, iommu@lists.linux-foundation.org
 Subject: Re: [PATCH 22/28] sgiseeq: convert from dma_cache_sync to
  dma_sync_single_for_device
-Message-ID: <20200903084302.GB24410@lst.de>
-References: <20200819065555.1802761-1-hch@lst.de> <20200819065555.1802761-23-hch@lst.de> <20200901152209.GA14288@alpha.franken.de> <20200901171241.GA20685@alpha.franken.de> <20200901171627.GA8255@lst.de> <20200901173810.GA25282@alpha.franken.de>
+Message-ID: <20200903084643.GA25111@lst.de>
+References: <20200819065555.1802761-1-hch@lst.de> <20200819065555.1802761-23-hch@lst.de> <20200901152209.GA14288@alpha.franken.de> <20200901171241.GA20685@alpha.franken.de> <20200901171627.GA8255@lst.de> <20200901173810.GA25282@alpha.franken.de> <20200903084302.GB24410@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200901173810.GA25282@alpha.franken.de>
+In-Reply-To: <20200903084302.GB24410@lst.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 01, 2020 at 07:38:10PM +0200, Thomas Bogendoerfer wrote:
-> this is the problem:
+On Thu, Sep 03, 2020 at 10:43:02AM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 01, 2020 at 07:38:10PM +0200, Thomas Bogendoerfer wrote:
+> > this is the problem:
+> > 
+> >        /* Always check for received packets. */
+> >         sgiseeq_rx(dev, sp, hregs, sregs);
+> > 
+> > so the driver will look at the rx descriptor on every interrupt, so
+> > we cache the rx descriptor on the first interrupt and if there was
+> > $no rx packet, we will only see it, if cache line gets flushed for
+> > some other reason.
 > 
->        /* Always check for received packets. */
->         sgiseeq_rx(dev, sp, hregs, sregs);
-> 
-> so the driver will look at the rx descriptor on every interrupt, so
-> we cache the rx descriptor on the first interrupt and if there was
-> $no rx packet, we will only see it, if cache line gets flushed for
-> some other reason.
+> That means a transfer back to device ownership is missing after a
+> (negative) check.
 
-That means a transfer back to device ownership is missing after a
-(negative) check.
+E.g. something like this for the particular problem, although there
+might be other hiding elsewhere:
 
-> kick_tx() does a busy loop checking tx descriptors,
-> with just sync_desc_cpu...
-> 
-> Thomas.
-> 
-> -- 
-> Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
-> good idea.                                                [ RFC1925, 2.3 ]
----end quoted text---
+diff --git a/drivers/net/ethernet/seeq/sgiseeq.c b/drivers/net/ethernet/seeq/sgiseeq.c
+index 8507ff2420143a..a1c7be8a0d1e5d 100644
+--- a/drivers/net/ethernet/seeq/sgiseeq.c
++++ b/drivers/net/ethernet/seeq/sgiseeq.c
+@@ -403,6 +403,8 @@ static inline void sgiseeq_rx(struct net_device *dev, struct sgiseeq_private *sp
+ 		rd = &sp->rx_desc[sp->rx_new];
+ 		dma_sync_desc_cpu(dev, rd);
+ 	}
++	dma_sync_desc_dev(dev, rd);
++
+ 	dma_sync_desc_cpu(dev, &sp->rx_desc[orig_end]);
+ 	sp->rx_desc[orig_end].rdma.cntinfo &= ~(HPCDMA_EOR);
+ 	dma_sync_desc_dev(dev, &sp->rx_desc[orig_end]);
