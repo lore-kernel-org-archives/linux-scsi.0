@@ -2,38 +2,43 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73ED0C433E7
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B04D9C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:15:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B13521527
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 846FB2145D
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:15:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KFoHKJIn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728910AbgICIOv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 04:14:51 -0400
-Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:43735 "EHLO
-        outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728522AbgICIOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 04:14:41 -0400
-Received: from inpost2.zedat.fu-berlin.de ([130.133.4.69])
-          by outpost.zedat.fu-berlin.de (Exim 4.93)
-          with esmtps (TLS1.2)
-          tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-          (envelope-from <glaubitz@zedat.fu-berlin.de>)
-          id 1kDkOD-001H42-Ry; Thu, 03 Sep 2020 10:14:37 +0200
-Received: from p57bd95bc.dip0.t-ipconnect.de ([87.189.149.188] helo=[192.168.178.139])
-          by inpost2.zedat.fu-berlin.de (Exim 4.93)
-          with esmtpsa (TLS1.2)
-          tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-          (envelope-from <glaubitz@physik.fu-berlin.de>)
-          id 1kDkOD-000NUw-Kf; Thu, 03 Sep 2020 10:14:37 +0200
-Subject: Re: [PATCH 16/19] ataflop: use a separate gendisk for each media
- format
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+        id S1728899AbgICIOs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 04:14:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60954 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728280AbgICIBj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 04:01:39 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 363B0C061245;
+        Thu,  3 Sep 2020 01:01:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=jtS62lQ0Rm8mpaW0OdPDrzysFsFYBLY+VRU8MHAlSxE=; b=KFoHKJIntr7HYs+GfXiVXMrydl
+        u16r7jFZuBANNgpX4jFo0Yd1h0BICAJwVVjJ1GGFBaiHgOXQToB7uwSp1c4rpnu55LfhHmnTUr/I3
+        96JMJCBua8BT/hsCfaMcf96vAkpcfCUxfCejuQN34FoZ8GPBNF3H1JwHmnAve95NtABOe9Elg1LPg
+        OI0Uf51wlkU6xXig7Hb1qLBOl1DSov2nlLalbe0bl3z70gfDT9FVHradEDJ5Bx7ZrvMy6ur2ZxnuY
+        5jH1/ixX8IWNfBI9ICzHVPNAawlIBjbHJ00OkTyuxk5bhNQp0hd0rk7zCs9DCPTfRyrYtvHY+7aHx
+        JLGPtaHw==;
+Received: from [2001:4bb8:184:af1:c70:4a89:bc61:2] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kDkBZ-0006bg-L2; Thu, 03 Sep 2020 08:01:33 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Denis Efremov <efremov@linux.com>,
@@ -44,81 +49,85 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
+Subject: [PATCH 09/19] sd: use __register_blkdev to avoid a modprobe for an unregistered dev_t
+Date:   Thu,  3 Sep 2020 10:01:09 +0200
+Message-Id: <20200903080119.441674-10-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200903080119.441674-1-hch@lst.de>
 References: <20200903080119.441674-1-hch@lst.de>
- <20200903080119.441674-17-hch@lst.de>
-From:   John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Autocrypt: addr=glaubitz@physik.fu-berlin.de; keydata=
- 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
- scOkTAZQGVpD/8AaLH4v1w==
-Message-ID: <e4ae0e80-dc96-7f57-58b1-03b83d117933@physik.fu-berlin.de>
-Date:   Thu, 3 Sep 2020 10:14:35 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <20200903080119.441674-17-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Original-Sender: glaubitz@physik.fu-berlin.de
-X-Originating-IP: 87.189.149.188
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph!
+Switch from using blk_register_region to the probe callback passed to
+__register_blkdev to disable the request_module call for an unclaimed
+dev_t in the SD majors.
 
-On 9/3/20 10:01 AM, Christoph Hellwig wrote:
-> The Atari floppy driver usually autodetects the media when used with the
-> ormal /dev/fd? devices, which also are the only nodes created by udev.
-  ^^^^
-  typo?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/sd.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
 
-Adrian
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2bec8cd526164d..97bf84b1871571 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -596,13 +596,11 @@ static struct scsi_driver sd_template = {
+ };
+ 
+ /*
+- * Dummy kobj_map->probe function.
+- * The default ->probe function will call modprobe, which is
+- * pointless as this module is already loaded.
++ * Don't request a new module, as that could deadlock in multipath
++ * environment.
+  */
+-static struct kobject *sd_default_probe(dev_t devt, int *partno, void *data)
++static void sd_default_probe(dev_t devt)
+ {
+-	return NULL;
+ }
+ 
+ /*
+@@ -3481,9 +3479,6 @@ static int sd_remove(struct device *dev)
+ 
+ 	free_opal_dev(sdkp->opal_dev);
+ 
+-	blk_register_region(devt, SD_MINORS, NULL,
+-			    sd_default_probe, NULL, NULL);
+-
+ 	mutex_lock(&sd_ref_mutex);
+ 	dev_set_drvdata(dev, NULL);
+ 	put_device(&sdkp->dev);
+@@ -3673,11 +3668,9 @@ static int __init init_sd(void)
+ 	SCSI_LOG_HLQUEUE(3, printk("init_sd: sd driver entry point\n"));
+ 
+ 	for (i = 0; i < SD_MAJORS; i++) {
+-		if (register_blkdev(sd_major(i), "sd") != 0)
++		if (__register_blkdev(sd_major(i), "sd", sd_default_probe))
+ 			continue;
+ 		majors++;
+-		blk_register_region(sd_major(i), SD_MINORS, NULL,
+-				    sd_default_probe, NULL, NULL);
+ 	}
+ 
+ 	if (!majors)
+@@ -3750,10 +3743,8 @@ static void __exit exit_sd(void)
+ 
+ 	class_unregister(&sd_disk_class);
+ 
+-	for (i = 0; i < SD_MAJORS; i++) {
+-		blk_unregister_region(sd_major(i), SD_MINORS);
++	for (i = 0; i < SD_MAJORS; i++)
+ 		unregister_blkdev(sd_major(i), "sd");
+-	}
+ }
+ 
+ module_init(init_sd);
 -- 
- .''`.  John Paul Adrian Glaubitz
-: :' :  Debian Developer - glaubitz@debian.org
-`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
-  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
+2.28.0
+
