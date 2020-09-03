@@ -2,104 +2,167 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA334C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 03:25:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF143C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 03:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 964992071B
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 03:25:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84F942072A
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 03:44:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Uwogh1sU"
+	dkim=pass (2048-bit key) header.d=sholland.org header.i=@sholland.org header.b="J8uMl5op";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="aW6AIcNH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbgICDZ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 23:25:58 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36852 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726528AbgICDZ5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 23:25:57 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0833Ovs0073275
-        for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2020 03:25:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : subject : from :
- message-id : date : mime-version : content-type; s=corp-2020-01-29;
- bh=faZwFhJbJZmaWYlQ73kx2Q3kyUjiYX4AXkTIb40rXWQ=;
- b=Uwogh1sUYziPCQAMdlx1DgoTZQJ2cP1V5Ju4C+d8NW6L1xsJSFM5LZROCWDgbCTUilDh
- tnxWNocL3511ce/S9ZSZUlswsyPpRIzJusLDuamAH7EmwlUIKWkw0lQbrA1wUHQrXsMz
- 2r7GxbEGr7EEeq5GnW+/35OUdimUDWVxssdN0lm6TDMHQXfdeOdxV618u/24OqFZ2unc
- p9ih0tgMZYJ7L2YvhXfje/4HRGCO0TqqpxDrvWthEuX7xmsgkiJoP4X/UR4cHweviU37
- VPPHvoGd17CxYV4eCacbSbPGey5wJaTRkSC5rBUXFKc8mJGuDqJcORGFtQc/oDFfB0bM Dw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 337eer69hg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2020 03:25:56 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0833PFT0050769
-        for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2020 03:25:55 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 3380kr24n8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2020 03:25:55 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0833PsHd028718
-        for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2020 03:25:55 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Sep 2020 20:25:54 -0700
-To:     linux-scsi@vger.kernel.org
-Subject: SCSI staging branch
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1o8mnd0k5.fsf@ca-mkp.ca.oracle.com>
-Date:   Wed, 02 Sep 2020 23:25:53 -0400
+        id S1727986AbgICDo4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 23:44:56 -0400
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:58309 "EHLO
+        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726654AbgICDoy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 23:44:54 -0400
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailout.nyi.internal (Postfix) with ESMTP id 015B75C01ED;
+        Wed,  2 Sep 2020 23:44:53 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute3.internal (MEProxy); Wed, 02 Sep 2020 23:44:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sholland.org; h=
+        from:to:cc:subject:date:message-id:in-reply-to:references
+        :mime-version:content-transfer-encoding; s=fm3; bh=CzDMzrx7Uon4Y
+        51DrS7UpU2Heup60DvL4sgkL20Fbjg=; b=J8uMl5opwoW/OmMJ4G60dbmqURcY1
+        RChqN5dCqgT8WrbMamabLIIq1LcjGrPyD292o76PvFvllN9+p9ewG+8xkhBhlgkh
+        BWvziYapMaSzpNEeYWsUI+TTBJYWJetFV5apu4bAiNqCihaj8RdOjfLI2wcnzT4C
+        SRUockgMs+u5pbe9AOWLuRTLGxZ/ugKCMtMhNN8r4IJ8C2cy3ZqiAJ53dIiOH2Hb
+        M01zubZPNbLjaNPld8Ni6gSwrw4CHFzBeEBOyTyC5eJqcl4h0PAThiqIzQtvd/8E
+        TZOEt6N//FRy7tXrFFa8K6UA+XvtZ//iqOECHmABqt70jn1/x7xmfW4tw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm3; bh=CzDMzrx7Uon4Y51DrS7UpU2Heup60DvL4sgkL20Fbjg=; b=aW6AIcNH
+        xgPVfcBveaxPlh8CcS3lCrH3Sye199wZUcKtA5BziVivX00BEjpab0D/NoIL/OqL
+        VSu0xTn7PjbNd1YCsBca03LXgKYUivPd7DIth5iuOzYxzzfgeNuZwCkU0bZ2RWNL
+        jLeLGfTtvU6GEXvANXVsOVbVmEAfTidY6ak294Bkl36k078ki9z+xNmD+z52AmJc
+        caOMk9NgGerom7CtYLotfHpzUY4iQmQqgOx5ddaLDfODtF5dsTyEsnWibDnqONQm
+        wxKHZizDcjh0MJ41brraloJoHKRl1dJUUggSqFyl+sEIc3LMG4+jrmu5DwgJofhi
+        uQ/nH02NNKv7wQ==
+X-ME-Sender: <xms:tGZQX6z6XD7v6H-Rx1aoEloMCiHPjdpLXQEzFYAbjTVexdKbmRwNrw>
+    <xme:tGZQX2RfU52C9uIIMZEKj2uF87HoxHKc2cW1XABVLe-ftgIFmPIbiHkH92hQaEs9j
+    gFmoTd-pHPgq58wVw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrudegtddgjeegucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhephffvufffkffojghfggfgsedtkeertdertddtnecuhfhrohhmpefurghmuhgv
+    lhcujfholhhlrghnugcuoehsrghmuhgvlhesshhhohhllhgrnhgurdhorhhgqeenucggtf
+    frrghtthgvrhhnpeduhfejfedvhffgfeehtefghfeiiefgfeehgfdvvdevfeegjeehjedv
+    gfejheeuieenucfkphepjedtrddufeehrddugeekrdduhedunecuvehluhhsthgvrhfuih
+    iivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepshgrmhhuvghlsehshhholhhlrghn
+    ugdrohhrgh
+X-ME-Proxy: <xmx:tGZQX8XNw4MYfvF0GlL8ozDqJgiGqW321FKWh_C1fBWPKlC3Zqamew>
+    <xmx:tGZQXwgHvdF4wM2O6k-LEqDbwLK7HkAiT2v3NuOgxZa0eKSQkuRRqg>
+    <xmx:tGZQX8DycMmUDldtdGBE9xeqMTYpcKDP3uxcZRF4aufHB7Nzh74GOQ>
+    <xmx:tGZQX75JPP5irkQWFztHg-SGDBb1LjbLVbmto_r3f_khHA8u9sU-uw>
+Received: from titanium.stl.sholland.net (70-135-148-151.lightspeed.stlsmo.sbcglobal.net [70.135.148.151])
+        by mail.messagingengine.com (Postfix) with ESMTPA id D011B30600A3;
+        Wed,  2 Sep 2020 23:44:51 -0400 (EDT)
+From:   Samuel Holland <samuel@sholland.org>
+To:     Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Joe Perches <joe@perches.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Samuel Holland <samuel@sholland.org>
+Subject: [PATCH v4 2/3] scsi: 3w-9xxx: Reduce scope of structure packing
+Date:   Wed,  2 Sep 2020 22:44:49 -0500
+Message-Id: <20200903034450.5491-2-samuel@sholland.org>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200903034450.5491-1-samuel@sholland.org>
+References: <20200903034450.5491-1-samuel@sholland.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=3 malwarescore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009030030
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
- phishscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 suspectscore=3
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009030030
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Currently, all command packet structs used by this driver are packed.
+However, only one (TW_SG_Entry) actually needs to be packed, because it
+uses 64-bit addresses at 32-bit alignment. To improve the quality of
+generated code, stop packing all of the other command packet structs.
+This requires adjusting the type of one misaligned "reserved" member.
 
-I have had a few pokes about why patches are slow to show up in
-5.10/scsi-queue. The reason is that there have been an awful lot of
-rebases and fixups in the last couple of releases. When I have to go
-back and fix things that breaks the commit hash previously sent in the
-thank you notes from b4. Which again breaks the lore archive mail thread
-links to the git commits, etc.
+After this change, pahole reports that only one type had its layout
+change: the tw_compat_info member of TW_Device_Extension is now
+naturally aligned.
 
-As a result I am experimenting with having a staging branch that is
-separate from and slightly ahead of scsi-queue. I merge patches and let
-them soak in there for a few days to let zeroday and the various code
-analyzers do their thing. And once I am reasonably comfortable that I
-don't have to go back and fix anything, I'll shuffle the commits over to
-5.10/scsi-queue.
+Signed-off-by: Samuel Holland <samuel@sholland.org>
+---
 
-This also means that there is now a delay between me merging something
-and the thank you notes being sent out. I was contemplating hacking b4
-so I could send notes for both staging and queue but it would generate a
-lot of potentially duplicate email.
+Changes since v3: None.
 
-Another option is that I send a personal note to the submitter once
-stuff is staged. And then the public b4 thank you notes once the commits
-end up in scsi-queue proper. I'm open to suggestions.
+---
+ drivers/scsi/3w-9xxx.h | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-Patchwork should still accurately reflect the status of posted
-patches. Plus my for-next branch shows what is currently staged, of
-course.
-
+diff --git a/drivers/scsi/3w-9xxx.h b/drivers/scsi/3w-9xxx.h
+index e65dafda2e3e..36b865eca67d 100644
+--- a/drivers/scsi/3w-9xxx.h
++++ b/drivers/scsi/3w-9xxx.h
+@@ -471,13 +471,17 @@ printk(KERN_WARNING "3w-9xxx: ERROR: (0x%02X:0x%04X): %s.\n",a,b,c); \
+ #define TW_PADDING_LENGTH (sizeof(dma_addr_t) > 4 ? 8 : 0)
+ #define TW_CPU_TO_SGL(x) (sizeof(dma_addr_t) > 4 ? cpu_to_le64(x) : cpu_to_le32(x))
+ 
+-#pragma pack(1)
++#if IS_ENABLED(CONFIG_ARCH_DMA_ADDR_T_64BIT)
++typedef u64 twa_addr_t;
++#else
++typedef u32 twa_addr_t;
++#endif
+ 
+ /* Scatter Gather List Entry */
+ typedef struct TAG_TW_SG_Entry {
+-	dma_addr_t address;
++	twa_addr_t address;
+ 	u32 length;
+-} TW_SG_Entry;
++} __packed TW_SG_Entry;
+ 
+ /* Command Packet */
+ typedef struct TW_Command {
+@@ -496,12 +500,12 @@ typedef struct TW_Command {
+ 		struct {
+ 			u32 lba;
+ 			TW_SG_Entry sgl[TW_ESCALADE_MAX_SGL_LENGTH];
+-			dma_addr_t padding;
++			twa_addr_t padding;
+ 		} io;
+ 		struct {
+ 			TW_SG_Entry sgl[TW_ESCALADE_MAX_SGL_LENGTH];
+ 			u32 padding;
+-			dma_addr_t padding2;
++			twa_addr_t padding2;
+ 		} param;
+ 	} byte8_offset;
+ } TW_Command;
+@@ -531,7 +535,7 @@ typedef struct TAG_TW_Command_Apache_Header {
+ 	unsigned char err_specific_desc[98];
+ 	struct {
+ 		unsigned char size_header;
+-		unsigned short reserved;
++		unsigned char reserved[2];
+ 		unsigned char size_sense;
+ 	} header_desc;
+ } TW_Command_Apache_Header;
+@@ -631,8 +635,6 @@ typedef struct TAG_TW_Compatibility_Info
+ 	unsigned short fw_on_ctlr_build;
+ } TW_Compatibility_Info;
+ 
+-#pragma pack()
+-
+ typedef struct TAG_TW_Device_Extension {
+ 	u32                     __iomem *base_addr;
+ 	unsigned long	       	*generic_buffer_virt[TW_Q_LENGTH];
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.26.2
+
