@@ -2,452 +2,258 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A311C433E9
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 17:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF7DC433E9
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 19:29:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0769520775
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 17:41:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="PNVQv4FR"
+	by mail.kernel.org (Postfix) with ESMTP id 8A1BC2137B
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 19:29:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728085AbgICRlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 13:41:37 -0400
-Received: from mail1.bemta25.messagelabs.com ([195.245.230.65]:41936 "EHLO
-        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726368AbgICRlf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 13:41:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1599154891; i=@ts.fujitsu.com;
-        bh=4RIsLPHU4AME3Y8HW0+PEJNOcg70CDDdkhkrpylEmzo=;
-        h=From:To:Cc:Subject:Date:Message-Id;
-        b=PNVQv4FR5aM7VnHYQEoQPweEg+Olgf+m67haL/zs49LbIkUxraC5rYDhVtbD4Z/Q0
-         QWLkJe69UV9BCXmcvOq1CQS5iZ5c1ewSEHZSLwGEnbRL6a4CP5pZKqS326JAXaD2Fd
-         hj48yfsbGOYjVs02Ob8pw5zsaDhTLbWyPaC5k2/jF6Dtec71diWUMwmwMPUb3gG/X3
-         xjD6nGTs+yOfO8IF95fOWxXa95gwIOGrq1pYefgNKT1mCKHQRIddyKo6rhwFtGZGfc
-         SC7ASuiMsqu45qJsU0d8va69zR/wWZMQuSOS3WEnVEgkwyZj+rb20G/bZT0Wzd7nMM
-         u5rOsyh2wptPA==
-Received: from [100.112.196.208] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-1.bemta.az-b.eu-west-1.aws.symcld.net id 74/75-01492-ACA215F5; Thu, 03 Sep 2020 17:41:30 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrBLMWRWlGSWpSXmKPExsViZ8MxRfeUVmC
-  8wfQ7ChYb+zksuq/vYLNYfvwfk8XfSTdYLVqXvmVyYPWYNukUm8fHp7dYPD5vkgtgjmLNzEvK
-  r0hgzdj/6AtjQWt0RedqtQbGk95djFwcQgKTGCV2LXnFDuFMZ5RoXLSYpYuRk4NNwEBixaT7L
-  CAJEYG3jBJrDsxhBEkwC+hJTPu3jh3EFhaIlvh79AEriM0ioCrx5+9cZhCbV8BW4sbiZWC2hI
-  C8RMeBySwTGDkXMDKsYrRIKspMzyjJTczM0TU0MNA1NDTSNbQ01zU0NtdLrNJN0kst1S1PLS7
-  RNdRLLC/WK67MTc5J0ctLLdnECAyElIKjnTsYf736oHeIUZKDSUmUV0EjMF6ILyk/pTIjsTgj
-  vqg0J7X4EKMMB4eSBC8rMLSEBItS01Mr0jJzgEEJk5bg4FES4WUBaeUtLkjMLc5Mh0idYtTl2
-  Hl03iJmIZa8/LxUKXHeJE2gIgGQoozSPLgRsAi5xCgrJczLyMDAIMRTkFqUm1mCKv+KUZyDUU
-  mYVxtkCk9mXgncpldARzABHXHGwRfkiJJEhJRUAxPf+9hnLSnOor8fPmH3ftKekM6QO1ctp2t
-  5wjvVUxumzl+5u/LxiW9Ld2Rb5Mx+zPhjc8bBra61D2MyK2wnTZ58a4WmtOrL68vaWnQesGg8
-  zXTi3yOzXijrnNy+DpWLSd/ZDpxb9S+679Cm8oIGZ+61by993ssYU6jzqLeEaeazHTePHT/3x
-  fah8Jz0+Lj3a+f7fo/qvZrBUjY/N/W8z7rXH8we9e1+3Hmy+n/M+tX9R7eUsF0QfLDAQnbevV
-  ez+lr+HnrY+VArI85AWrb5ZcvfOAHr2a/EDvt9yHZ4WpvMm1OktjNlxZJrO0XDl/0uu7/pyrp
-  4zngHMcUNX5L32tlUfpkq+nPyyi0CEbeZq99tUWIpzkg01GIuKk4EAHRfGyoLAwAA
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-17.tower-291.messagelabs.com!1599154889!1591829!1
-X-Originating-IP: [62.60.8.148]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.3; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 2802 invoked from network); 3 Sep 2020 17:41:30 -0000
-Received: from unknown (HELO mailhost1.uk.fujitsu.com) (62.60.8.148)
-  by server-17.tower-291.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 3 Sep 2020 17:41:30 -0000
-Received: from x-serv01 ([172.17.38.52])
-        by mailhost1.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 083HfKTl014919;
-        Thu, 3 Sep 2020 18:41:20 +0100
-Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
-        by x-serv01 (Postfix) with ESMTP id 7FA4B204D1;
-        Thu,  3 Sep 2020 19:41:20 +0200 (CEST)
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: [PATCH v2] scsi: target: tcmu: add compat mode for 32bit userspace on 64bit kernel
-Date:   Thu,  3 Sep 2020 19:41:05 +0200
-Message-Id: <20200903174105.4571-1-bstroesser@ts.fujitsu.com>
-X-Mailer: git-send-email 2.12.3
+        id S1729032AbgICT3E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 15:29:04 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:54426 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728312AbgICT3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Sep 2020 15:29:02 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 210B620418E;
+        Thu,  3 Sep 2020 21:28:59 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id bsyRkBUWlmm6; Thu,  3 Sep 2020 21:28:51 +0200 (CEST)
+Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
+        by smtp.infotech.no (Postfix) with ESMTPA id 2B35620417A;
+        Thu,  3 Sep 2020 21:28:47 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v8 00/18] blk-mq/scsi: Provide hostwide shared tags for
+ SCSI HBAs
+To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, kashyap.desai@broadcom.com,
+        ming.lei@redhat.com, bvanassche@acm.org, paolo.valente@linaro.org,
+        hare@suse.de, hch@lst.de
+Cc:     sumit.saxena@broadcom.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, megaraidlinux.pdl@broadcom.com,
+        chenxiang66@hisilicon.com, luojiaxing@huawei.com
+References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <18bdfa01-9e08-60b1-3eb8-cb395d639935@interlog.com>
+Date:   Thu, 3 Sep 2020 15:28:46 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When using tcmu it might happen, that userspace application cannot
-be built as 64 bit program even on a 64 bit host due to existing
-32 bit libraries that must be used, e.g. for compression, encryption,
-deduplication, ...
+On 2020-08-19 11:20 a.m., John Garry wrote:
+> Hi all,
+> 
+> Here is v8 of the patchset.
+> 
+> In this version of the series, we keep the shared sbitmap for driver tags,
+> and introduce changes to fix up the tag budgeting across request queues.
+> We also have a change to count requests per-hctx for when an elevator is
+> enabled, as an optimisation. I also dropped the debugfs changes - more on
+> that below.
+> 
+> Some performance figures:
+> 
+> Using 12x SAS SSDs on hisi_sas v3 hw. mq-deadline results are included,
+> but it is not always an appropriate scheduler to use.
+> 
+> Tag depth 		4000 (default)			260**
+> 
+> Baseline (v5.9-rc1):
+> none sched:		2094K IOPS			513K
+> mq-deadline sched:	2145K IOPS			1336K
+> 
+> Final, host_tagset=0 in LLDD *, ***:
+> none sched:		2120K IOPS			550K
+> mq-deadline sched:	2121K IOPS			1309K
+> 
+> Final ***:
+> none sched:		2132K IOPS			1185			
+> mq-deadline sched:	2145K IOPS			2097	
+> 
+> * this is relevant as this is the performance in supporting but not
+>    enabling the feature
+> ** depth=260 is relevant as some point where we are regularly waiting for
+>     tags to be available. Figures were are a bit unstable here.
+> *** Included "[PATCH V4] scsi: core: only re-run queue in
+>      scsi_end_request() if device queue is busy"
+> 
+> A copy of the patches can be found here:
+> https://github.com/hisilicon/kernel-dev/tree/private-topic-blk-mq-shared-tags-v8
+> 
+> The hpsa patch depends on:
+> https://lore.kernel.org/linux-scsi/20200430131904.5847-1-hare@suse.de/
+> 
+> And the smartpqi patch is not to be accepted.
+> 
+> Comments (and testing) welcome, thanks!
 
-Currently this only works with manual changes in userspace include
-file target_core_user.h due to a missing padding field in
-struct tcmu_cmd_entry. Additionally one has to change uio.h because
-32-bit userspace interprets struct iovec to have 8 byte size while
-64-bit kernel creates it with 16 byte size.
+I tested this v8 patchset on MKP's 5.10/scsi-queue branch together with
+my rewritten sg driver on my laptop and a Ryzen 5 3600 machine. Since I
+don't have same hardware, I use the scsi_debug driver as the target:
 
-This patch adds CONFIG_COMPAT support for X86_64 in tcmu to avoid
-header file editing.
+    modprobe scsi_debug dev_size_mb=1024 sector_size=512 add_host=7 
+per_host_store=1 ndelay=1000 random=1 submit_queues=12
 
-During mmap() of the command ring and data area of tcmu_dev's
-uio device, tcmu checks and saves the value returned from
-in_compat_syscall(). That way it allows multiple tasks to mmap()
-only if they are of same type (32-/64-bit).
+My test is a script which runs these three commands many times with
+differing parameters:
 
-During SCSI command processing tcmu now creates tcmu_cmd_entry
-records according to the saved type of the userspace program.
+sg_mrq_dd iflag=random bs=512 of=/dev/sg8 thr=64 time=2
+time to transfer data was 0.312705 secs, 3433.72 MB/sec
+2097152+0 records in
+2097152+0 records out
 
-Offset and size of data fields in tcmu_cmd_entry differ between
-32-bit and 64-bit only in the req part.
-The field cdb_off (__u64) is on a 4-byte boundary in 32-bit, while
-in 64-bit it is on the next 8-byte boundary.
-The same is true for the start of the "struct iovec iov[]" array.
-It also contains 8 vs. 16 byte per array entry in 32-bit vs 64-bit
-mode.
+sg_mrq_dd bpt=256 thr=64 mrq=36 time=2 if=/dev/sg8 bs=512 of=/dev/sg9
+time to transfer data was 0.212090 secs, 5062.67 MB/sec
+2097152+0 records in
+2097152+0 records out
 
-Since differences are not too many, I mostly inserted changes into
-existing code where necessary instead of writing a full set of
-compat_* functions.
+sg_mrq_dd --verify if=/dev/sg8 of=/dev/sg9 bs=512 bpt=256 thr=64 mrq=36 time=2
+Doing verify/cmp rather than copy
+time to transfer data was 0.184563 secs, 5817.75 MB/sec
+2097152+0 records in
+2097152+0 records verified
 
-This patch is tested on x86_64.
+The above is the output from last section of the my script run on the Ryzen 5.
 
-Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
----
+So the three steps are:
+    1) produce random data on /dev/sg8
+    2) copy /dev/sg8 to /dev/sg9
+    3) verify /dev/sg8 and /dev/sg9 are the same.
 
-This patch is made on top of Martin's 5.10/scsi-queue tree
+The latter step is done with a sequence of READ(/dev/sg8) and
+VERIFY(BYTCHK=1 on /dev/sg9). The "mrq" stands for multiple requests (in
+one invocation; the bsg driver did that before its write(2) command was
+removed.
+The SCSI devices on the Ryzen 5 machine are:
 
-History:
+# lsscsi -gs
+[2:0:0:0]  disk    IBM-207x HUSMM8020ASS20   J4B6  /dev/sda   /dev/sg0   200GB
+[2:0:1:0]  disk    SEAGATE  ST200FM0073      0007  /dev/sdb   /dev/sg1   200GB
+[2:0:2:0]  enclosu Areca Te ARC-802801.37.69 0137  -          /dev/sg2       -
+[3:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sdc   /dev/sg3  1.07GB
+[4:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sdd   /dev/sg4  1.07GB
+[5:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sde   /dev/sg5  1.07GB
+[6:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sdf   /dev/sg6  1.07GB
+[7:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sdg   /dev/sg7  1.07GB
+[8:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sdh   /dev/sg8  1.07GB
+[9:0:0:0]  disk    Linux    scsi_debug       0190  /dev/sdi   /dev/sg9  1.07GB
+[N:0:1:1]  disk    WDC WDS250G2B0C-00PXH0__1       /dev/nvme0n1  -      250GB
 
-- First attempt was a PATCH RFC that didn't compile correctly in
-  32-bit kernel, but in 64bit kernel only.
+My script took 17m12 and the highest throughput (on a copy) was 7.5 GB/sec.
+Then I reloaded the scsi_debug module, this time with an additional
+'host_max_queue=128' parameter. The script run time was 5 seconds shorter
+and the maximum throughput was around 7.6 GB/sec. [Average throughput is
+around 4 GB/sec.]
 
-- The first PATCH was fixed to compile in 32bit kernel and in
-  64bit kernel with and without CONFIG_COMPAT.
-  Additionally I changed it to support CONFIG_COMPAT for X86_64
-  only, since I wasn't able to find out what field sizes and
-  offsets if struct tcmu_cmd_entry userspace programs on other
-  archs would expect in compat mode.
+For comparison:
 
-- V2:
-  Meanwhile I found out, that the compat handling in the patch
-  should be fine for all ARCHes:
-  * see iovec vs. compat_iovec handling in fs/io_uring.c
-  * see usage of "__attribute__ ((__packed__))" in
-    struct btrfs_ioctl_send_args_32 in fs/btrfs/ioctl.c
-    vs. struct btrfs_ioctl_send_args in include/uapi/linux/btrfs.h
-  So I re-allowed COMPAT support for all ARCHes.
----
- drivers/target/target_core_user.c | 170 +++++++++++++++++++++++++++++++++-----
- 1 file changed, 149 insertions(+), 21 deletions(-)
+# time liburing/examples/io_uring-cp /dev/sdh /dev/sdi
+real	0m1.542s
+user	0m0.004s
+sys	0m1.027s
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 9b7592350502..5fe73e5ab5a7 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -24,6 +24,15 @@
- #include <net/genetlink.h>
- #include <scsi/scsi_common.h>
- #include <scsi/scsi_proto.h>
-+
-+#if defined(CONFIG_COMPAT) && defined(CONFIG_64BIT)
-+#define TCMU_COMPAT
-+#endif
-+
-+#ifdef TCMU_COMPAT
-+#include <linux/compat.h>
-+#endif
-+
- #include <target/target_core_base.h>
- #include <target/target_core_fabric.h>
- #include <target/target_core_backend.h>
-@@ -136,6 +145,11 @@ struct tcmu_dev {
- 	uint32_t max_blocks;
- 	size_t ring_size;
- 
-+#ifdef TCMU_COMPAT
-+	bool compat;
-+	bool new_open;
-+#endif
-+
- 	struct mutex cmdr_lock;
- 	struct list_head qfull_queue;
- 	struct list_head tmr_queue;
-@@ -193,6 +207,30 @@ struct tcmu_tmr {
- 	uint32_t tmr_cmd_cnt;
- 	int16_t tmr_cmd_ids[0];
- };
-+#ifdef TCMU_COMPAT
-+struct tcmu_compat_cmd_entry {
-+	struct tcmu_cmd_entry_hdr hdr;
-+
-+	union {
-+		struct {
-+			__u32 iov_cnt;
-+			__u32 iov_bidi_cnt;
-+			__u32 iov_dif_cnt;
-+			__u64 cdb_off;
-+			__u64 __pad1;
-+			__u64 __pad2;
-+			struct compat_iovec iov[0];
-+		} __packed req;
-+		struct {
-+			__u8 scsi_status;
-+			__u8 __pad1;
-+			__u16 __pad2;
-+			__u32 read_len;
-+			char sense_buffer[TCMU_SENSE_BUFFERSIZE];
-+		} rsp;
-+	};
-+} __packed;
-+#endif
- 
- /*
-  * To avoid dead lock the mutex lock order should always be:
-@@ -671,6 +709,26 @@ static inline size_t iov_tail(struct iovec *iov)
- 	return (size_t)iov->iov_base + iov->iov_len;
- }
- 
-+#ifdef TCMU_COMPAT
-+static inline void compat_new_iov(struct iovec **iov, int *iov_cnt)
-+{
-+	struct compat_iovec **c_iov = (struct compat_iovec **)iov;
-+
-+	if (*iov_cnt != 0)
-+		(*c_iov)++;
-+	(*iov_cnt)++;
-+
-+	memset(*c_iov, 0, sizeof(struct compat_iovec));
-+}
-+
-+static inline size_t compat_iov_tail(struct iovec *iov)
-+{
-+	struct compat_iovec *c_iov = (struct compat_iovec *)iov;
-+
-+	return (size_t)c_iov->iov_base + c_iov->iov_len;
-+}
-+#endif
-+
- static void scatter_data_area(struct tcmu_dev *udev,
- 	struct tcmu_cmd *tcmu_cmd, struct scatterlist *data_sg,
- 	unsigned int data_nents, struct iovec **iov,
-@@ -705,13 +763,41 @@ static void scatter_data_area(struct tcmu_dev *udev,
- 			to_offset = get_block_offset_user(udev, dbi,
- 					block_remaining);
- 
-+			copy_bytes = min_t(size_t, sg_remaining,
-+					block_remaining);
-+			if (copy_data) {
-+				offset = DATA_BLOCK_SIZE - block_remaining;
-+				memcpy(to + offset,
-+				       from + sg->length - sg_remaining,
-+				       copy_bytes);
-+			}
-+			sg_remaining -= copy_bytes;
-+			block_remaining -= copy_bytes;
-+
- 			/*
- 			 * The following code will gather and map the blocks
- 			 * to the same iovec when the blocks are all next to
- 			 * each other.
- 			 */
--			copy_bytes = min_t(size_t, sg_remaining,
--					block_remaining);
-+#ifdef TCMU_COMPAT
-+			if (udev->compat) {
-+				struct compat_iovec *c_iov;
-+
-+				if (*iov_cnt != 0 &&
-+				    to_offset == compat_iov_tail(*iov)) {
-+					c_iov = (struct compat_iovec *)*iov;
-+					c_iov->iov_len += copy_bytes;
-+				} else {
-+					compat_new_iov(iov, iov_cnt);
-+					c_iov = (struct compat_iovec *)*iov;
-+					c_iov->iov_base =
-+						(compat_uptr_t)to_offset;
-+					c_iov->iov_len = copy_bytes;
-+				}
-+				continue;
-+			}
-+#endif
-+
- 			if (*iov_cnt != 0 &&
- 			    to_offset == iov_tail(*iov)) {
- 				/*
-@@ -730,16 +816,6 @@ static void scatter_data_area(struct tcmu_dev *udev,
- 				(*iov)->iov_base = (void __user *)to_offset;
- 				(*iov)->iov_len = copy_bytes;
- 			}
--
--			if (copy_data) {
--				offset = DATA_BLOCK_SIZE - block_remaining;
--				memcpy(to + offset,
--				       from + sg->length - sg_remaining,
--				       copy_bytes);
--			}
--
--			sg_remaining -= copy_bytes;
--			block_remaining -= copy_bytes;
- 		}
- 		kunmap_atomic(from - sg->offset);
- 	}
-@@ -879,8 +955,15 @@ static bool is_ring_space_avail(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
- 	return tcmu_get_empty_blocks(udev, cmd);
- }
- 
--static inline size_t tcmu_cmd_get_base_cmd_size(size_t iov_cnt)
-+static inline size_t tcmu_cmd_get_base_cmd_size(struct tcmu_dev *tcmu_dev,
-+						size_t iov_cnt)
- {
-+#ifdef TCMU_COMPAT
-+	if (tcmu_dev->compat) {
-+		return max(offsetof(struct tcmu_compat_cmd_entry, req.iov[iov_cnt]),
-+				sizeof(struct tcmu_compat_cmd_entry));
-+	}
-+#endif
- 	return max(offsetof(struct tcmu_cmd_entry, req.iov[iov_cnt]),
- 			sizeof(struct tcmu_cmd_entry));
- }
-@@ -1016,7 +1099,7 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- 	 * The size will be recalculated later as actually needed to save
- 	 * cmd area memories.
- 	 */
--	base_command_size = tcmu_cmd_get_base_cmd_size(tcmu_cmd->dbi_cnt);
-+	base_command_size = tcmu_cmd_get_base_cmd_size(udev, tcmu_cmd->dbi_cnt);
- 	command_size = tcmu_cmd_get_cmd_size(tcmu_cmd, base_command_size);
- 
- 	if (!list_empty(&udev->qfull_queue))
-@@ -1049,7 +1132,15 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- 
- 	/* Handle allocating space from the data area */
- 	tcmu_cmd_reset_dbi_cur(tcmu_cmd);
--	iov = &entry->req.iov[0];
-+#ifdef TCMU_COMPAT
-+	if (udev->compat) {
-+		struct compat_iovec *c_iov;
-+
-+		c_iov = &((struct tcmu_compat_cmd_entry *)entry)->req.iov[0];
-+		iov = (struct iovec *)c_iov;
-+	} else
-+#endif
-+		iov = &entry->req.iov[0];
- 	iov_cnt = 0;
- 	copy_to_data_area = (se_cmd->data_direction == DMA_TO_DEVICE
- 		|| se_cmd->se_cmd_flags & SCF_BIDI);
-@@ -1061,7 +1152,12 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- 	/* Handle BIDI commands */
- 	iov_cnt = 0;
- 	if (se_cmd->se_cmd_flags & SCF_BIDI) {
--		iov++;
-+#ifdef TCMU_COMPAT
-+		if (udev->compat)
-+			iov = (struct iovec *)((struct compat_iovec *)iov + 1);
-+		else
-+#endif
-+			iov++;
- 		scatter_data_area(udev, tcmu_cmd, se_cmd->t_bidi_data_sg,
- 				  se_cmd->t_bidi_data_nents, &iov, &iov_cnt,
- 				  false);
-@@ -1089,7 +1185,7 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- 	 * Recalaulate the command's base size and size according
- 	 * to the actual needs
- 	 */
--	base_command_size = tcmu_cmd_get_base_cmd_size(entry->req.iov_cnt +
-+	base_command_size = tcmu_cmd_get_base_cmd_size(udev, entry->req.iov_cnt +
- 						       entry->req.iov_bidi_cnt);
- 	command_size = tcmu_cmd_get_cmd_size(tcmu_cmd, base_command_size);
- 
-@@ -1098,7 +1194,14 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- 	/* All offsets relative to mb_addr, not start of entry! */
- 	cdb_off = CMDR_OFF + cmd_head + base_command_size;
- 	memcpy((void *) mb + cdb_off, se_cmd->t_task_cdb, scsi_command_size(se_cmd->t_task_cdb));
--	entry->req.cdb_off = cdb_off;
-+
-+#ifdef TCMU_COMPAT
-+	if (udev->compat)
-+		((struct tcmu_compat_cmd_entry *)entry)->req.cdb_off = cdb_off;
-+	else
-+#endif
-+		entry->req.cdb_off = cdb_off;
-+
- 	tcmu_flush_dcache_range(entry, command_size);
- 
- 	UPDATE_HEAD(mb->cmd_head, command_size, udev->cmdr_size);
-@@ -1729,6 +1832,8 @@ static const struct vm_operations_struct tcmu_vm_ops = {
- 	.fault = tcmu_vma_fault,
- };
- 
-+static void __tcmu_reset_ring(struct tcmu_dev *, u8);
-+
- static int tcmu_mmap(struct uio_info *info, struct vm_area_struct *vma)
- {
- 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
-@@ -1742,6 +1847,23 @@ static int tcmu_mmap(struct uio_info *info, struct vm_area_struct *vma)
- 	if (vma_pages(vma) != (udev->ring_size >> PAGE_SHIFT))
- 		return -EINVAL;
- 
-+#ifdef TCMU_COMPAT
-+	mutex_lock(&udev->cmdr_lock);
-+	if (udev->new_open) {
-+		if (in_compat_syscall() != udev->compat) {
-+			udev->compat = !udev->compat;
-+			__tcmu_reset_ring(udev, 1);
-+		}
-+		udev->new_open = false;
-+	} else if (in_compat_syscall() != udev->compat) {
-+		mutex_unlock(&udev->cmdr_lock);
-+		return -EINVAL;
-+	}
-+	mutex_unlock(&udev->cmdr_lock);
-+
-+	pr_debug("mmap() successful on %s, compat = %d\n", udev->name, udev->compat);
-+#endif
-+
- 	return 0;
- }
- 
-@@ -1752,6 +1874,9 @@ static int tcmu_open(struct uio_info *info, struct inode *inode)
- 	/* O_EXCL not supported for char devs, so fake it? */
- 	if (test_and_set_bit(TCMU_DEV_BIT_OPEN, &udev->flags))
- 		return -EBUSY;
-+#ifdef TCMU_COMPAT
-+	udev->new_open = true;
-+#endif
- 
- 	udev->inode = inode;
- 	kref_get(&udev->kref);
-@@ -2209,14 +2334,12 @@ static void tcmu_block_dev(struct tcmu_dev *udev)
- 	mutex_unlock(&udev->cmdr_lock);
- }
- 
--static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
-+static void __tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- {
- 	struct tcmu_mailbox *mb;
- 	struct tcmu_cmd *cmd;
- 	int i;
- 
--	mutex_lock(&udev->cmdr_lock);
--
- 	idr_for_each_entry(&udev->commands, cmd, i) {
- 		pr_debug("removing cmd %u on dev %s from ring (is expired %d)\n",
- 			  cmd->cmd_id, udev->name,
-@@ -2265,7 +2388,12 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- 	tcmu_remove_all_queued_tmr(udev);
- 
- 	run_qfull_queue(udev, false);
-+}
- 
-+static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
-+{
-+	mutex_lock(&udev->cmdr_lock);
-+	__tcmu_reset_ring(udev, err_level);
- 	mutex_unlock(&udev->cmdr_lock);
- }
- 
--- 
-2.12.3
+Umm, that's less then 1 GB/sec. In its defence io_uring-cp is an
+extremely simple, single threaded, proof-of-concept copy program,
+at least compared to sg_mrq_dd . As used by the sg_mrq_dd the
+rewritten sg driver bypasses moving 1 GB to and from the _user_
+space while doing the above copy and verify steps.
+
+So:
+
+Tested-by: Douglas Gilbert <dgilbert@interlog.com>
+
+> Differences to v7:
+> - Add null_blk and scsi_debug support
+> - Drop debugfs tags patch - it's too difficult to be the same between
+> hostwide and non-hostwide, as discussed:
+> https://lore.kernel.org/linux-scsi/1591810159-240929-1-git-send-email-john.garry@huawei.com/T/#mb3eb462d8be40273718505989abd12f8228c15fd
+> And from commit 6bf0eb550452 ("sbitmap: Consider cleared bits in
+> sbitmap_bitmap_show()"), I guess not many used this anyway...
+> - Add elevator per-hctx request count for optimisation
+> - Break up "blk-mq: rename blk_mq_update_tag_set_depth()" into 2x patches
+> - Pass flags for avoid per-hq queue tags init/free for hostwide tags
+> - Add Don's reviewed-tag and tested-by tags to appropiate patches
+> 	- (@Don, please let me know if issue with how I did this)
+> - Add "scsi: core: Show nr_hw_queues in sysfs"
+> - Rework megaraid SAS patch to have module param (Kashyap)
+> - rebase
+> 
+> V7 is here for more info:
+> https://lore.kernel.org/linux-scsi/1591810159-240929-1-git-send-email-john.garry@huawei.com/T/#t
+> 
+> Hannes Reinecke (5):
+>    blk-mq: Rename blk_mq_update_tag_set_depth()
+>    blk-mq: Free tags in blk_mq_init_tags() upon error
+>    scsi: Add host and host template flag 'host_tagset'
+>    hpsa: enable host_tagset and switch to MQ
+>    smartpqi: enable host tagset
+> 
+> John Garry (10):
+>    blk-mq: Pass flags for tag init/free
+>    blk-mq: Use pointers for blk_mq_tags bitmap tags
+>    blk-mq: Facilitate a shared sbitmap per tagset
+>    blk-mq: Relocate hctx_may_queue()
+>    blk-mq: Record nr_active_requests per queue for when using shared
+>      sbitmap
+>    blk-mq: Record active_queues_shared_sbitmap per tag_set for when using
+>      shared sbitmap
+>    null_blk: Support shared tag bitmap
+>    scsi: core: Show nr_hw_queues in sysfs
+>    scsi: hisi_sas: Switch v3 hw to MQ
+>    scsi: scsi_debug: Support host tagset
+> 
+> Kashyap Desai (2):
+>    blk-mq, elevator: Count requests per hctx to improve performance
+>    scsi: megaraid_sas: Added support for shared host tagset for
+>      cpuhotplug
+> 
+> Ming Lei (1):
+>    blk-mq: Rename BLK_MQ_F_TAG_SHARED as BLK_MQ_F_TAG_QUEUE_SHARED
+> 
+>   block/bfq-iosched.c                         |   9 +-
+>   block/blk-core.c                            |   2 +
+>   block/blk-mq-debugfs.c                      |  10 +-
+>   block/blk-mq-sched.c                        |  13 +-
+>   block/blk-mq-tag.c                          | 149 ++++++++++++++------
+>   block/blk-mq-tag.h                          |  56 +++-----
+>   block/blk-mq.c                              |  81 +++++++----
+>   block/blk-mq.h                              |  76 +++++++++-
+>   block/kyber-iosched.c                       |   4 +-
+>   block/mq-deadline.c                         |   6 +
+>   drivers/block/null_blk_main.c               |   6 +
+>   drivers/block/rnbd/rnbd-clt.c               |   2 +-
+>   drivers/scsi/hisi_sas/hisi_sas.h            |   3 +-
+>   drivers/scsi/hisi_sas/hisi_sas_main.c       |  36 ++---
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c      |  87 +++++-------
+>   drivers/scsi/hosts.c                        |   1 +
+>   drivers/scsi/hpsa.c                         |  44 +-----
+>   drivers/scsi/hpsa.h                         |   1 -
+>   drivers/scsi/megaraid/megaraid_sas_base.c   |  39 +++++
+>   drivers/scsi/megaraid/megaraid_sas_fusion.c |  29 ++--
+>   drivers/scsi/scsi_debug.c                   |  28 ++--
+>   drivers/scsi/scsi_lib.c                     |   2 +
+>   drivers/scsi/scsi_sysfs.c                   |  11 ++
+>   drivers/scsi/smartpqi/smartpqi_init.c       |  45 ++++--
+>   include/linux/blk-mq.h                      |  13 +-
+>   include/linux/blkdev.h                      |   3 +
+>   include/scsi/scsi_host.h                    |   9 +-
+>   27 files changed, 484 insertions(+), 281 deletions(-)
+> 
 
