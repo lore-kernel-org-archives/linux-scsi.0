@@ -2,112 +2,139 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E67C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 20:54:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C27C8C43461
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 21:23:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74C23206EB
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 20:54:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94782206E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 21:23:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="YWusSryR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726528AbgICUy1 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 16:54:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:50268 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726088AbgICUy1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Sep 2020 16:54:27 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 5C36EAB7D;
-        Thu,  3 Sep 2020 20:54:26 +0000 (UTC)
-Date:   Thu, 3 Sep 2020 22:54:24 +0200
-From:   David Disseldorp <ddiss@suse.de>
-To:     Michael Christie <michael.christie@oracle.com>
-Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH] scsi: target: detect XCOPY NAA descriptor conflicts
-Message-ID: <20200903225424.331f1d94@suse.de>
-In-Reply-To: <7F596A9A-2116-4BA8-8A32-E98EDE996D8C@oracle.com>
-References: <20200813002142.13820-1-ddiss@suse.de>
-        <2155E745-0E65-441B-93AF-7B4C0A53F5F4@oracle.com>
-        <20200903002336.083e88a4@suse.de>
-        <7F596A9A-2116-4BA8-8A32-E98EDE996D8C@oracle.com>
+        id S1726397AbgICVXs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 17:23:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43560 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729226AbgICVXn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 17:23:43 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32203C061246
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Sep 2020 14:23:43 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id h12so3129284pgm.7
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2020 14:23:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=7aPf35sf/rS+GXTAQsshOPRXPlwTg6mH4xINQljk/gs=;
+        b=YWusSryRB8OcSkITbDHW/EnL1O/mD9bEqM8DYvjXJbHtrcFb8EHan+0f1sXoNXbb8i
+         VpnHm2/J9Ngzg9ND5BGc/oXr6jtgVLu1VP3mBDHkl1ptmzNiwTJW9y2OVFk9fpaANOp3
+         aJSUvD9m7EfQDpgyqKBqjsR0i2J5j97MiE6NXIO3GDDBDoM46Er41HUkJxui+v2KjPZV
+         y6Qyu85ZJd702JPAxSVSNNyG9bOM7VvKq/H7feko+WrI6I25Q6Iqd11dUxU9mKwV4qRt
+         jb1ReKZH5H6o9L5VdNLoDB7U7GS0P7G7D+E3jSAH0DQCabwewZfSixE4hSH6JxsY1zOw
+         AO+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=7aPf35sf/rS+GXTAQsshOPRXPlwTg6mH4xINQljk/gs=;
+        b=c9WvKi9zCqj367MCYeo/36AK7en3KQ6FjJw9JlG+lvBJyL8IPDmt3sk03QDrFPRwVo
+         HLY7wK7SMBJH0jY8h0spx0sY8Zl2LeUShrRUtZXUPG6AIVrX/CUsp0bdVoZp9SOfHqDT
+         qWrUSsiMeTu+QXP7Qm0+6OCmCjNMNiLd6zym4XnAJIHU8+VxldSzBWktq24i0Pyt9pKH
+         pxvRTJJT0zZrOcQMhkSc06bY0rcDCOADuHScfaXT/vz2uWfqxC5qL3s0GcqCwev3afml
+         kIN/6N3F5Oe1qvg03mZAM97MPkj+kQr6J85bnsWad1nDWtkxKTwX5ntOJRxlz6TwsmlM
+         b+7g==
+X-Gm-Message-State: AOAM531d3pklVRV65lyrb0Wp6Frk6HwjAfLGZdyy+68Napx6zEz418KW
+        hWQPPYCU0wy5sm4Wn+zkzlzXgQ==
+X-Google-Smtp-Source: ABdhPJym9rvtUQKTClz+mGu97nT6oHUMgtaUIZjPoGBmcrUgQSrxVqyJs/60gErYsCPJ4ijihoDT1w==
+X-Received: by 2002:aa7:8ecf:: with SMTP id b15mr5674464pfr.236.1599168222424;
+        Thu, 03 Sep 2020 14:23:42 -0700 (PDT)
+Received: from ?IPv6:2620:10d:c085:21c1::1063? ([2620:10d:c090:400::5:c6f0])
+        by smtp.gmail.com with ESMTPSA id u63sm4188113pfu.34.2020.09.03.14.23.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Sep 2020 14:23:41 -0700 (PDT)
+Subject: Re: [PATCH v8 00/18] blk-mq/scsi: Provide hostwide shared tags for
+ SCSI HBAs
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, don.brace@microsemi.com,
+        kashyap.desai@broadcom.com, ming.lei@redhat.com,
+        bvanassche@acm.org, dgilbert@interlog.com,
+        paolo.valente@linaro.org, hare@suse.de, hch@lst.de
+Cc:     sumit.saxena@broadcom.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, megaraidlinux.pdl@broadcom.com,
+        chenxiang66@hisilicon.com, luojiaxing@huawei.com
+References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <df6a3bd3-a89e-5f2f-ece1-a12ada02b521@kernel.dk>
+Date:   Thu, 3 Sep 2020 15:23:39 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 3 Sep 2020 10:36:58 -0500, Michael Christie wrote:
-
-> > On Sep 2, 2020, at 5:23 PM, David Disseldorp <ddiss@suse.de> wrote:
-> > 
-> > Hi Mike,
-> > 
-> > On Tue, 1 Sep 2020 22:17:51 -0500, Michael Christie wrote:
-> >   
-> >>> --- a/drivers/target/target_core_xcopy.c
-> >>> +++ b/drivers/target/target_core_xcopy.c
-> >>> @@ -68,8 +68,14 @@ static int target_xcopy_locate_se_dev_e4_iter(struct se_device *se_dev,
-> >>> 	if (rc != 0)
-> >>> 		return 0;
-> >>> 
-> >>> -	info->found_dev = se_dev;
-> >>> 	pr_debug("XCOPY 0xe4: located se_dev: %p\n", se_dev);
-> >>> +	if (info->found_dev) {
-> >>> +		pr_warn("XCOPY 0xe4 descriptor conflict for se_dev %p and %p\n",
-> >>> +			info->found_dev, se_dev);
-> >>> +		target_undepend_item(&info->found_dev->dev_group.cg_item);
-> >>> +		return -ENOTUNIQ;
-> >>> +	}
-> >>> +	info->found_dev = se_dev;    
-> >> 
-> >> Was it valid to copy to/from the same LUN? You would copy from/to different src/destinations on that LUN. Would your patch break that?  
-> > 
-> > XCOPY allows for copies to occur on the same LUN or between separate
-> > src/destinations. The intention of this patch is that regardless of the
-> > source or destination, if the NAA WWN could refer to multiple LUNs on
-> > the same target (via target_for_each_device()) then the XCOPY should
-> > fail and force the initiator to fallback to initiator driver copy.  
+On 8/19/20 9:20 AM, John Garry wrote:
+> Hi all,
 > 
-> So is the answer to my question a maybe but it probably will never happen?
-
-A src=dest XCOPY? I think it's just as likely as a cross device XCOPY.
-The UUID collision error is probably unlikely to be triggered because:
-- XCOPY is a pretty exotic SCSI command mostly used by ESXi
-- Users may already provide a vpd_unit_serial with enough unique
-  hexadecimal characters(?)
-- The initiator could detect the NAA WWN collision itself by comparing
-  the INQUIRY(dev-id)->NAA between other LUNs on the target, and thereby
-  detect+avoid sending XCOPY requests with ambiguous src/dest WWNs
-
-> If the user has multiple backend devices with the same serial, then your patch would now return error right?
-
-Yes, XCOPY will now fail if the src or dest NAA WWN matches more than
-one se_dev. Keep in mind that the NAA WWN is derived from only the
-hexadecimal characters of the vpd_unit_serial (see
-spc_parse_naa_6h_vendor_specific), so collision might be more likely.
-
-> Is the reason that this patch is a RFC to try and figure out if that case is valid or ever happens? If so, the only way I could see that happening on purpose is if someone was trying to bypass a device issue.
-
-Sorry, I should have mode this more clear in the patch itself. The
-reasons for RFC are:
-- there might be a better approach. I considered detecting NAA WWN
-  collisions when the vpd_unit_serial is set via configfs. Throwing a
-  configfs error might break existing setups, rather than just
-  triggering the XCOPY error (allowing for subsequent READ/WRITE
-  fallback).
-- I've tested this with libiscsi's iscsi-dd (-x) and test suite, but not
-  against the ESXi initiator yet.
-
-> For example, I create 2 tcmu devices. They both point to the same real device. Then export dev1 through target port1 and dev2 through target port2. Each tcmu device would then have it’s own data/cmd ring and locking, so you do not hit those perf issues. I do this for perf testing. I don’t think that type of thing is common or ever done, so I think the patch would be ok if that is a concern and it’s better than possible data corruption.
+> Here is v8 of the patchset.
 > 
-> Code wise it looks ok to me.
+> In this version of the series, we keep the shared sbitmap for driver tags,
+> and introduce changes to fix up the tag budgeting across request queues.
+> We also have a change to count requests per-hctx for when an elevator is
+> enabled, as an optimisation. I also dropped the debugfs changes - more on
+> that below.
+> 
+> Some performance figures:
+> 
+> Using 12x SAS SSDs on hisi_sas v3 hw. mq-deadline results are included,
+> but it is not always an appropriate scheduler to use.
+> 
+> Tag depth 		4000 (default)			260**
+> 
+> Baseline (v5.9-rc1):
+> none sched:		2094K IOPS			513K
+> mq-deadline sched:	2145K IOPS			1336K
+> 
+> Final, host_tagset=0 in LLDD *, ***:
+> none sched:		2120K IOPS			550K
+> mq-deadline sched:	2121K IOPS			1309K
+> 
+> Final ***:
+> none sched:		2132K IOPS			1185			
+> mq-deadline sched:	2145K IOPS			2097	
+> 
+> * this is relevant as this is the performance in supporting but not
+>   enabling the feature
+> ** depth=260 is relevant as some point where we are regularly waiting for
+>    tags to be available. Figures were are a bit unstable here.
+> *** Included "[PATCH V4] scsi: core: only re-run queue in
+>     scsi_end_request() if device queue is busy"
+> 
+> A copy of the patches can be found here:
+> https://github.com/hisilicon/kernel-dev/tree/private-topic-blk-mq-shared-tags-v8
+> 
+> The hpsa patch depends on:
+> https://lore.kernel.org/linux-scsi/20200430131904.5847-1-hare@suse.de/
+> 
+> And the smartpqi patch is not to be accepted.
+> 
+> Comments (and testing) welcome, thanks!
 
-Thanks a lot for the feedback, Mike.
+I applied 1-11, leaving the SCSI core bits and drivers to Martin. I can
+also carry them, just let me know.
 
-Cheers, David
+-- 
+Jens Axboe
+
