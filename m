@@ -2,94 +2,178 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B19D5C433E7
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 01:20:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7894C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 01:39:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 869D3206E7
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 01:20:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eFr3ju4Z"
+	by mail.kernel.org (Postfix) with ESMTP id 909EF20665
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 01:39:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727784AbgICBU2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 21:20:28 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:40902 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726814AbgICBU1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 21:20:27 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0831DdNG017482;
-        Thu, 3 Sep 2020 01:20:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=j0ertZsCwM1/ANvNsjalQbfqejdQR6X4/FoFM0pUEic=;
- b=eFr3ju4ZuQHJaBnhRyJ4TILuPXvGQmp1KY0EzOzyWM9pNTELIq9dW5T5SnF6dIEyMneH
- CEAV51kaXU3RSLdi9RT/w2RaJuSQGbFkBud+D/QBqrOGMwhKleJqYJSu1R3wiOtgxWPr
- KEcFKE8dbn8Z3ZAi1fDYdOr2GG97CSj9Gn9g2jUJ+4gNusirE5YQLOTuMLEqFCL6Ykh0
- Uz/34aSweloEL0Pw1f/u4dzvhYDQf+yCgM5jwnOuDPTpPbfB4AENE2n174+t/I7RNAuB
- 3Ok11amXxDfbPVWlguuDy9OtMbJU3EhrXeukdzuXo/1UhouCTwlUkIzGz0S9vwBV+Vvh zA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 339dmn4cmw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 03 Sep 2020 01:20:22 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0831FFio151098;
-        Thu, 3 Sep 2020 01:20:21 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 3380kqxttr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Sep 2020 01:20:21 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0831KKrk032662;
-        Thu, 3 Sep 2020 01:20:20 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Sep 2020 18:20:19 -0700
-To:     Alex Dewar <alex.dewar90@gmail.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        njavali@marvell.com
-Subject: Re: [PATCH v2] scsi: Don't call memset after dma_alloc_coherent()
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq14kofejwh.fsf@ca-mkp.ca.oracle.com>
-References: <20200820185149.932178-1-alex.dewar90@gmail.com>
-        <20200820234952.317313-1-alex.dewar90@gmail.com>
-        <yq1eenlezwf.fsf@ca-mkp.ca.oracle.com>
-        <20200902160337.kvuujxodeokrbn4d@medion>
-Date:   Wed, 02 Sep 2020 21:20:17 -0400
-In-Reply-To: <20200902160337.kvuujxodeokrbn4d@medion> (Alex Dewar's message of
-        "Wed, 2 Sep 2020 17:03:37 +0100")
+        id S1726528AbgICBjb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 21:39:31 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:58453 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726177AbgICBj0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 21:39:26 -0400
+Received: (qmail 644172 invoked by uid 1000); 2 Sep 2020 21:39:25 -0400
+Date:   Wed, 2 Sep 2020 21:39:25 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Can Guo <cang@codeaurora.org>
+Subject: Re: [PATCH RFC 5/6] scsi_transport_spi: Freeze request queues
+ instead of quiescing
+Message-ID: <20200903013925.GB643631@rowland.harvard.edu>
+References: <20200831025357.32700-1-bvanassche@acm.org>
+ <20200831025357.32700-6-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=1 malwarescore=0 mlxlogscore=956 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009030008
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- mlxlogscore=976 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=1
- spamscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009030008
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200831025357.32700-6-bvanassche@acm.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Sun, Aug 30, 2020 at 07:53:56PM -0700, Bart Van Assche wrote:
+> Instead of quiescing the request queues involved in domain validation,
+> freeze these. As a result, the struct request_queue pm_only member is no
+> longer set during domain validation. That will allow to modify
+> scsi_execute() such that it stops setting the BLK_MQ_REQ_PREEMPT flag.
+> Three additional changes in this patch are that scsi_mq_alloc_queue() is
+> exported, that scsi_device_quiesce() is no longer exported and that
+> scsi_target_{quiesce,resume}() have been changed into
+> scsi_target_{freeze,unfreeze}().
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
 
-Alex,
+> --- a/drivers/scsi/scsi_transport_spi.c
+> +++ b/drivers/scsi/scsi_transport_spi.c
+> @@ -997,59 +997,75 @@ void
+>  spi_dv_device(struct scsi_device *sdev)
+>  {
+>  	struct scsi_target *starget = sdev->sdev_target;
+> +	struct request_queue *q1, *q2;
+>  	u8 *buffer;
+>  	const int len = SPI_MAX_ECHO_BUFFER_SIZE*2;
+>  
+>  	/*
+> -	 * Because this function and the power management code both call
+> -	 * scsi_device_quiesce(), it is not safe to perform domain validation
+> -	 * while suspend or resume is in progress. Hence the
+> -	 * lock/unlock_system_sleep() calls.
+> +	 * Because creates a new request queue that is not visible to the rest
+> +	 * of the system, domain validation must be serialized against suspend,
+> +	 * resume and runtime power management. Hence the
+> +	 * lock/unlock_system_sleep() and scsi_autopm_{get,put}_device() calls.
+>  	 */
+>  	lock_system_sleep();
+>  
+> +	if (scsi_autopm_get_device(sdev))
+> +		goto unlock_system_sleep;
+> +
+>  	if (unlikely(spi_dv_in_progress(starget)))
+> -		goto unlock;
+> +		goto put_autopm;
+>  
+>  	if (unlikely(scsi_device_get(sdev)))
+> -		goto unlock;
+> +		goto put_autopm;
+>  
+>  	spi_dv_in_progress(starget) = 1;
+>  
+>  	buffer = kzalloc(len, GFP_KERNEL);
+>  
+>  	if (unlikely(!buffer))
+> -		goto out_put;
+> -
+> -	/* We need to verify that the actual device will quiesce; the
+> -	 * later target quiesce is just a nice to have */
+> -	if (unlikely(scsi_device_quiesce(sdev)))
+> -		goto out_free;
+> -
+> -	scsi_target_quiesce(starget);
+> +		goto put_sdev;
+>  
+>  	spi_dv_pending(starget) = 1;
 
-> Nvm, someone's already beaten me to the punch!
+I'm not familiar with this code.  What happens if the test and 
+assignment of spi_dv_in_progress() race between two threads?
 
-Yep, that one was already fixed up. Thanks!
+It looks like the first to acquire the spi_dv_mutex will do a domain 
+validation, then clear the spi_dv_in_progress and spi_dv_pending flags.
+Then the second thread will perform another domain validation with 
+those flags set to 0.  Is it supposed to work like that?
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>  	mutex_lock(&spi_dv_mutex(starget));
+>  
+>  	starget_printk(KERN_INFO, starget, "Beginning Domain Validation\n");
+>  
+> -	spi_dv_device_internal(sdev, sdev->request_queue, buffer);
+> +	/*
+> +	 * Save the request queue pointer before it is overwritten by
+> +	 * scsi_mq_alloc_queue().
+> +	 */
+> +	q1 = sdev->request_queue;
+> +	q2 = scsi_mq_alloc_queue(sdev);
+> +
+> +	if (q2) {
+> +		/*
+> +		 * Restore the request queue pointer such that no other
+> +		 * subsystem can submit SCSI commands to 'sdev'.
+> +		 */
+
+Too bad there's a little window here during which external commands can 
+get sent to q2.
+
+> +		sdev->request_queue = q1;
+> +		scsi_target_freeze(starget);
+> +		spi_dv_device_internal(sdev, q2, buffer);
+> +		blk_cleanup_queue(q2);
+> +		scsi_target_unfreeze(starget);
+> +	}
+
+No error message if the domain validation couldn't be performed?
+
+Also, do you need to restore sdev->request_queue if the allocation 
+failed?  It would be a little safer to move the restoration line 
+immediately after the scsi_mq_alloc_queue call.
+
+Ideally scsi_mq_alloc_queue would return q2 without assigning it to 
+sdev->request_queue.
+
+>  
+>  	starget_printk(KERN_INFO, starget, "Ending Domain Validation\n");
+>  
+>  	mutex_unlock(&spi_dv_mutex(starget));
+>  	spi_dv_pending(starget) = 0;
+>  
+> -	scsi_target_resume(starget);
+> -
+>  	spi_initial_dv(starget) = 1;
+>  
+> - out_free:
+>  	kfree(buffer);
+> - out_put:
+> +
+> +put_sdev:
+>  	spi_dv_in_progress(starget) = 0;
+>  	scsi_device_put(sdev);
+> -unlock:
+> +
+> +put_autopm:
+> +	scsi_autopm_put_device(sdev);
+> +
+> +unlock_system_sleep:
+>  	unlock_system_sleep();
+>  }
+>  EXPORT_SYMBOL(spi_dv_device);
+
+Alan Stern
