@@ -2,132 +2,138 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,
-	DKIM_ADSP_CUSTOM_MED,DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B749C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 15:29:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18C38C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 15:37:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34BC92072A
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 15:29:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9F1D206D4
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 15:37:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uhYwIN2a"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xI/cy3Nn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728566AbgICP3L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 11:29:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45324 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728446AbgICP2r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 11:28:47 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B7F1C061244;
-        Thu,  3 Sep 2020 08:28:47 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id e11so5608034wme.0;
-        Thu, 03 Sep 2020 08:28:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=OnIkX7rxg+ctJcVWRv3lpkXGv5XLsLWj9CB5s4zIv08=;
-        b=uhYwIN2a/HWgD4LA8wl/lOsUUfZSY2RS8+WxUiUiIlkV+gGpBf6uzgy70WXmgbtvcG
-         CtZhcl85NHxBFKeovA8X5vLdh+ctFqTzUd5bDDuePtDMy1GfCV+5iG5kiTI5/CnM8qV9
-         NM/vaEvQafotc00gBn//LqOzUQyOfFynXgTBvyAX5XMKDwjQlgejRLG9xZ7L0pa7OliY
-         Sfvsa3Arxl66zBprfiAEQU1+I9FfM2ghAl+rKBLoMHZtawoaUlpTT+iJbK+Lw/rdVLSR
-         F1zLsvUHycIQCfWHsg1bKYgFt1Dt/O6gA8wibHwxpDBoelpZture7QYbevKKp19tRyWO
-         Xbkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=OnIkX7rxg+ctJcVWRv3lpkXGv5XLsLWj9CB5s4zIv08=;
-        b=geLN8UR04YC82zji+3KzhLwvwA2AkMmzyc/lSsh7E97Y26MfefYHMeNE+T3ecYMmCb
-         ZM4Tc/w23wVMJAL90Lza1JS7Fo/GZ1R3e8hyDmiOKFQmM5DQHrxiJSyE5TydksCdE5Zg
-         IGTmKGFppauLUZpaPEjfNZG8SQh4loskuwuaL1lyW/R3cyMf0OBoUUR9p3tZROQgrTPZ
-         eghVVfU1F24yuevdZXZdSvL5GMdyE853dG7NEHoMFpPra7bKB0Cez7xxIK81HGZtWeb7
-         gv0QlmRvVI0LeqJHYEjVG6kEbempHEV/XD3DhXP4KoaX/p4xM1BU3a961I0j6CmOoWPm
-         cekw==
-X-Gm-Message-State: AOAM531QF69MNegb/C9rUu1n3659xn5vmktUA7YlD0pAjOVImajEr8qL
-        uGbdVbk4XuW818oEdj/18Tg=
-X-Google-Smtp-Source: ABdhPJw6Oip3THDVYlyv7zwXpwOXFLZJr+401RI7fsrk9ZuaEexkdskyMvOJBrzvWXBxbkxq8BGopw==
-X-Received: by 2002:a1c:3886:: with SMTP id f128mr3051184wma.121.1599146925667;
-        Thu, 03 Sep 2020 08:28:45 -0700 (PDT)
-Received: from localhost.localdomain (cpc83661-brig20-2-0-cust443.3-3.cable.virginm.net. [82.28.105.188])
-        by smtp.gmail.com with ESMTPSA id 32sm5750210wrh.18.2020.09.03.08.28.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2020 08:28:45 -0700 (PDT)
-From:   Alex Dewar <alex.dewar90@gmail.com>
-Cc:     Alex Dewar <alex.dewar90@gmail.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH RFC 2/3] scsi: mpt: Replace a few uses of GFP_ATOMIC with GFP_KERNEL
-Date:   Thu,  3 Sep 2020 16:28:31 +0100
-Message-Id: <20200903152832.484908-3-alex.dewar90@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200903152832.484908-1-alex.dewar90@gmail.com>
-References: <20200903152832.484908-1-alex.dewar90@gmail.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+        id S1728372AbgICPhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 11:37:06 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:50978 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728036AbgICPhE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 11:37:04 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 083FXvsq194222;
+        Thu, 3 Sep 2020 15:37:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=dtiQ03CReIpSecyBc/8ufU2knhQkZUc6ny1k7/fQ7u0=;
+ b=xI/cy3NnT0NWDf8IzVxnET4UPq3vcYjpThfBixU03i/9D5Q+Ey6YL3xCNAgCmTJVAOXf
+ cDjPV9QsSHsGWbCaaua9Uo0JRKwkGqQaAxyo379+JsB7CYV57FkmV9fRdHA0Nff8OhNh
+ ti8ofmaExqmR2uDvVbv1NFXCGk6EUBOolWYV6912YKm3f9B36In9vV8poR2hiJit6+Ax
+ 9lJKf7JWpziwzVri17GtK7u6JezP6QUzqDwExhiB++2MBXr3NR/Oxlr8hC8icLDq1x8/
+ TquO3wkQuLQe8UNqx72aF2siFBMieAXMV27W++wEjTuaKJyOP1NnNcX4PHSaZpH94OY2 xg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 339dmn7y33-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 03 Sep 2020 15:37:00 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 083FZHUh042782;
+        Thu, 3 Sep 2020 15:36:59 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 3380krym1n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Sep 2020 15:36:59 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 083Faw0o008916;
+        Thu, 3 Sep 2020 15:36:59 GMT
+Received: from [20.15.0.5] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 03 Sep 2020 08:36:58 -0700
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
+Subject: Re: [RFC PATCH] scsi: target: detect XCOPY NAA descriptor conflicts
+From:   Michael Christie <michael.christie@oracle.com>
+In-Reply-To: <20200903002336.083e88a4@suse.de>
+Date:   Thu, 3 Sep 2020 10:36:58 -0500
+Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <7F596A9A-2116-4BA8-8A32-E98EDE996D8C@oracle.com>
+References: <20200813002142.13820-1-ddiss@suse.de>
+ <2155E745-0E65-441B-93AF-7B4C0A53F5F4@oracle.com>
+ <20200903002336.083e88a4@suse.de>
+To:     David Disseldorp <ddiss@suse.de>
+X-Mailer: Apple Mail (2.3608.120.23.2.1)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ mlxscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009030145
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=0
+ spamscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009030145
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-None of the relevant functions are called from an atomic context, so
-allocate memory with GFP_KERNEL to give a better chance of allocating
-memory.
 
-Signed-off-by: Alex Dewar <alex.dewar90@gmail.com>
----
- drivers/message/fusion/mptbase.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index b7136257b455..85fd9c3721ec 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -4254,14 +4254,14 @@ initChainBuffers(MPT_ADAPTER *ioc)
- 	 */
- 	if (ioc->ReqToChain == NULL) {
- 		sz = ioc->req_depth * sizeof(int);
--		mem = kmalloc(sz, GFP_ATOMIC);
-+		mem = kmalloc(sz, GFP_KERNEL);
- 		if (mem == NULL)
- 			return -1;
- 
- 		ioc->ReqToChain = (int *) mem;
- 		dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "ReqToChain alloc  @ %p, sz=%d bytes\n",
- 			 	ioc->name, mem, sz));
--		mem = kmalloc(sz, GFP_ATOMIC);
-+		mem = kmalloc(sz, GFP_KERNEL);
- 		if (mem == NULL)
- 			return -1;
- 
-@@ -4328,7 +4328,7 @@ initChainBuffers(MPT_ADAPTER *ioc)
- 
- 	sz = num_chain * sizeof(int);
- 	if (ioc->ChainToChain == NULL) {
--		mem = kmalloc(sz, GFP_ATOMIC);
-+		mem = kmalloc(sz, GFP_KERNEL);
- 		if (mem == NULL)
- 			return -1;
- 
-@@ -5283,7 +5283,7 @@ mpt_GetScsiPortSettings(MPT_ADAPTER *ioc, int portnum)
- 		int	 sz;
- 		u8	*mem;
- 		sz = MPT_MAX_SCSI_DEVICES * sizeof(int);
--		mem = kmalloc(sz, GFP_ATOMIC);
-+		mem = kmalloc(sz, GFP_KERNEL);
- 		if (mem == NULL)
- 			return -EFAULT;
- 
--- 
-2.28.0
+> On Sep 2, 2020, at 5:23 PM, David Disseldorp <ddiss@suse.de> wrote:
+>=20
+> Hi Mike,
+>=20
+> On Tue, 1 Sep 2020 22:17:51 -0500, Michael Christie wrote:
+>=20
+>>> --- a/drivers/target/target_core_xcopy.c
+>>> +++ b/drivers/target/target_core_xcopy.c
+>>> @@ -68,8 +68,14 @@ static int =
+target_xcopy_locate_se_dev_e4_iter(struct se_device *se_dev,
+>>> 	if (rc !=3D 0)
+>>> 		return 0;
+>>>=20
+>>> -	info->found_dev =3D se_dev;
+>>> 	pr_debug("XCOPY 0xe4: located se_dev: %p\n", se_dev);
+>>> +	if (info->found_dev) {
+>>> +		pr_warn("XCOPY 0xe4 descriptor conflict for se_dev %p =
+and %p\n",
+>>> +			info->found_dev, se_dev);
+>>> +		=
+target_undepend_item(&info->found_dev->dev_group.cg_item);
+>>> +		return -ENOTUNIQ;
+>>> +	}
+>>> +	info->found_dev =3D se_dev; =20
+>>=20
+>> Was it valid to copy to/from the same LUN? You would copy from/to =
+different src/destinations on that LUN. Would your patch break that?
+>=20
+> XCOPY allows for copies to occur on the same LUN or between separate
+> src/destinations. The intention of this patch is that regardless of =
+the
+> source or destination, if the NAA WWN could refer to multiple LUNs on
+> the same target (via target_for_each_device()) then the XCOPY should
+> fail and force the initiator to fallback to initiator driver copy.
+
+So is the answer to my question a maybe but it probably will never =
+happen?
+
+If the user has multiple backend devices with the same serial, then your =
+patch would now return error right? Is the reason that this patch is a =
+RFC to try and figure out if that case is valid or ever happens? If so, =
+the only way I could see that happening on purpose is if someone was =
+trying to bypass a device issue.
+
+For example, I create 2 tcmu devices. They both point to the same real =
+device. Then export dev1 through target port1 and dev2 through target =
+port2. Each tcmu device would then have it=E2=80=99s own data/cmd ring =
+and locking, so you do not hit those perf issues. I do this for perf =
+testing. I don=E2=80=99t think that type of thing is common or ever =
+done, so I think the patch would be ok if that is a concern and it=E2=80=99=
+s better than possible data corruption.
+
+Code wise it looks ok to me.
 
