@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E0A7C43461
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E48CC43461
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DE4E21775
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BCF520FC3
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pcGloet3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rvKTOycG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728996AbgICINn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 04:13:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60976 "EHLO
+        id S1728473AbgICIOj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 04:14:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728299AbgICIBq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 04:01:46 -0400
+        with ESMTP id S1728297AbgICIBm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 04:01:42 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75275C061244;
-        Thu,  3 Sep 2020 01:01:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77536C061247;
+        Thu,  3 Sep 2020 01:01:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=gTvoN30CdkKLQtIKPaFxicLUsCyMtAXc2Ckoop6VvpU=; b=pcGloet3zWNds23vPERqx7e9zk
-        ZtPB+QB3xFyPt3BhthLrn3D65KwYrvM0b74bQaAYEV79jwkwXVO4nJcxHKiooMf0cSknGY1622AkX
-        vRiT4ycFTmiG9vH3/hRfaSuQnfk0Xv++GdVDLNulMLWNnVsAtRkFks5rQk+IDx6AInzYQYup/Rp8q
-        6fpHuMd3fR/wbby0c3Z42hJ287ISaa7Y/mNLiEZzzVctZbbTyrrbZuxKrZI7OZvzoCR/X1nFzdH6r
-        0qmpiP9/HTOAqR3d82rNPqy19VdYYk0piirzgV38mDMTypxmp3xjovRQrk9LroAT57wjE0qA6IdCm
-        h+X6p4WQ==;
+        bh=aXzX3WXObjugRRtp+aQv86YqJNCjDSFsRhe0aTup0rE=; b=rvKTOycGFXit4oKx8Aleh/WZbC
+        OGOAuRF3S7d77shXkMOhQBUcWPdvZ5z3Yg/nfUKzF1YTSDjBGr8VefXDzng5PDBtOOVeydmFh8aHO
+        rfxToJ3hZCdKZNobkRcA1H/bGJBURBX2B2D+IK+bxEBLNlKGaxcVxQ2mvEX5IZOsNArRC2MlpO3rB
+        wt9QIinoO9qzctt9sTX3KbNiFXWzh8UuzPT81r15DqFTrIbZAayV9+kikAiNWpjVS3qa1x6u7H22R
+        CfyxMlkiVvHkM2Ct/tglcjzUhS8fZfd34NhiBhzlYH7IsOmTs+VOor4x0qYjGfdoxaKVk5MeCPIyF
+        dx1rNiag==;
 Received: from [2001:4bb8:184:af1:c70:4a89:bc61:2] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDkBd-0006cQ-T6; Thu, 03 Sep 2020 08:01:38 +0000
+        id 1kDkBc-0006c6-Gq; Thu, 03 Sep 2020 08:01:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -49,9 +49,9 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 12/19] md: use __register_blkdev to allocate devices on demand
-Date:   Thu,  3 Sep 2020 10:01:12 +0200
-Message-Id: <20200903080119.441674-13-hch@lst.de>
+Subject: [PATCH 11/19] loop: use __register_blkdev to allocate devices on demand
+Date:   Thu,  3 Sep 2020 10:01:11 +0200
+Message-Id: <20200903080119.441674-12-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200903080119.441674-1-hch@lst.de>
 References: <20200903080119.441674-1-hch@lst.de>
@@ -67,72 +67,79 @@ Use the simpler mechanism attached to major_name to allocate a brd device
 when a currently unregistered minor is accessed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Song Liu <song@kernel.org>
 ---
- drivers/md/md.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+ drivers/block/loop.c | 30 ++++++++----------------------
+ 1 file changed, 8 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9562ef598ae1f4..be3625acf67d7e 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5766,11 +5766,12 @@ static int md_alloc(dev_t dev, char *name)
- 	return error;
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index cb1191d6e945f2..15b5a0ea7cc4a9 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -2234,24 +2234,18 @@ static int loop_lookup(struct loop_device **l, int i)
+ 	return ret;
  }
  
--static struct kobject *md_probe(dev_t dev, int *part, void *data)
-+static void md_probe(dev_t dev)
+-static struct kobject *loop_probe(dev_t dev, int *part, void *data)
++static void loop_probe(dev_t dev)
  {
-+	if (MAJOR(dev) == MD_MAJOR && MINOR(dev) >= 512)
++	int idx = MINOR(dev) >> part_shift;
+ 	struct loop_device *lo;
+-	struct kobject *kobj;
+-	int err;
++
++	if (max_loop && idx >= max_loop)
 +		return;
- 	if (create_on_open)
- 		md_alloc(dev, NULL);
--	return NULL;
+ 
+ 	mutex_lock(&loop_ctl_mutex);
+-	err = loop_lookup(&lo, MINOR(dev) >> part_shift);
+-	if (err < 0)
+-		err = loop_add(&lo, MINOR(dev) >> part_shift);
+-	if (err < 0)
+-		kobj = NULL;
+-	else
+-		kobj = get_disk_and_module(lo->lo_disk);
++	if (loop_lookup(&lo, idx) < 0)
++		loop_add(&lo, idx);
+ 	mutex_unlock(&loop_ctl_mutex);
+-
+-	*part = 0;
+-	return kobj;
  }
  
- static int add_named_array(const char *val, const struct kernel_param *kp)
-@@ -6536,7 +6537,7 @@ static void autorun_devices(int part)
- 			break;
- 		}
+ static long loop_control_ioctl(struct file *file, unsigned int cmd,
+@@ -2371,14 +2365,11 @@ static int __init loop_init(void)
+ 		goto err_out;
  
--		md_probe(dev, NULL, NULL);
-+		md_probe(dev);
- 		mddev = mddev_find(dev);
- 		if (!mddev || !mddev->gendisk) {
- 			if (mddev)
-@@ -9548,18 +9549,15 @@ static int __init md_init(void)
- 	if (!md_misc_wq)
- 		goto err_rdev_misc_wq;
  
--	if ((ret = register_blkdev(MD_MAJOR, "md")) < 0)
-+	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
-+	if (ret < 0)
- 		goto err_md;
+-	if (register_blkdev(LOOP_MAJOR, "loop")) {
++	if (__register_blkdev(LOOP_MAJOR, "loop", loop_probe)) {
+ 		err = -EIO;
+ 		goto misc_out;
+ 	}
  
--	if ((ret = register_blkdev(0, "mdp")) < 0)
-+	ret = __register_blkdev(0, "mdp", md_probe);
-+	if (ret < 0)
- 		goto err_mdp;
- 	mdp_major = ret;
- 
--	blk_register_region(MKDEV(MD_MAJOR, 0), 512, THIS_MODULE,
--			    md_probe, NULL, NULL);
--	blk_register_region(MKDEV(mdp_major, 0), 1UL<<MINORBITS, THIS_MODULE,
--			    md_probe, NULL, NULL);
+-	blk_register_region(MKDEV(LOOP_MAJOR, 0), range,
+-				  THIS_MODULE, loop_probe, NULL, NULL);
 -
- 	register_reboot_notifier(&md_notifier);
- 	raid_table_header = register_sysctl_table(raid_root_table);
+ 	/* pre-create number of devices given by config or max_loop */
+ 	mutex_lock(&loop_ctl_mutex);
+ 	for (i = 0; i < nr; i++)
+@@ -2404,16 +2395,11 @@ static int loop_exit_cb(int id, void *ptr, void *data)
  
-@@ -9826,9 +9824,6 @@ static __exit void md_exit(void)
- 	struct list_head *tmp;
- 	int delay = 1;
- 
--	blk_unregister_region(MKDEV(MD_MAJOR,0), 512);
--	blk_unregister_region(MKDEV(mdp_major,0), 1U << MINORBITS);
+ static void __exit loop_exit(void)
+ {
+-	unsigned long range;
 -
- 	unregister_blkdev(MD_MAJOR,"md");
- 	unregister_blkdev(mdp_major, "mdp");
- 	unregister_reboot_notifier(&md_notifier);
+-	range = max_loop ? max_loop << part_shift : 1UL << MINORBITS;
+-
+ 	mutex_lock(&loop_ctl_mutex);
+ 
+ 	idr_for_each(&loop_index_idr, &loop_exit_cb, NULL);
+ 	idr_destroy(&loop_index_idr);
+ 
+-	blk_unregister_region(MKDEV(LOOP_MAJOR, 0), range);
+ 	unregister_blkdev(LOOP_MAJOR, "loop");
+ 
+ 	misc_deregister(&loop_misc);
 -- 
 2.28.0
 
