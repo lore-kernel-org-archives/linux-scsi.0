@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A899CC433E2
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 02:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B848C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 02:26:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A3D820773
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 02:25:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5877320773
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 02:26:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726947AbgICCZc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Sep 2020 22:25:32 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:3836 "EHLO
+        id S1727996AbgICC0D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Sep 2020 22:26:03 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:11840 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726177AbgICCZb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 22:25:31 -0400
-IronPort-SDR: 1BTrOD9lwhZFNhGA64FlbLP0y+SZAaM7K94QcUAw5i20PXwBaBUiBiiconrwOTGG6t2M3fe6wa
- tu70AKMZ1uwA3jtQSRSCZ4Pd+Ce3iygcQ1ewuczduDLJ3u7q2+2q2se9xwiyVRsNdMtPkfUoxA
- ddk+aF6VlG4IoAgDZosgdbFtKRwMQZoY/vYrDIEZksDwkjQAvofMRUbZO9f5PFGf43RCQXGKR5
- 4z/xHRyZ+A/E0on9LAsGKNVu1AfkMHb3HZFBM1lB1qIq6Catchq7BwS570n6WmxKi8YL/KTtka
- XAw=
+        with ESMTP id S1726586AbgICC0C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Sep 2020 22:26:02 -0400
+IronPort-SDR: hQzm/UzqdA69CQYQqtQ6e1s6zNE0ZEPr1i4+tgpizquKjs/nwr7HWb1XwycKs4fykJn+wgpYhZ
+ f9iQCiCggXQlBkY4wBDDyW46FW56mAYvOM8KQfHeUXknmVKfs41Gb0p4hgfWJnACHGa6OqUr6S
+ eKOyYkhxg67N/V5CwvQ49F1dWeWgVzOZNPcI3JiR3FMti6YBH3rK7ltCk9KXVN3X9OUWoZ3aUj
+ VseokIu8HrhqGlXRAaIRnqj9fNXKyVHVeAai9xXDLW9m6Jb3l02bwR/FJ4ea3PVGO8vXg1iO65
+ gIk=
 X-IronPort-AV: E=Sophos;i="5.76,384,1592895600"; 
-   d="scan'208";a="29130859"
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by labrats.qualcomm.com with ESMTP; 02 Sep 2020 19:24:40 -0700
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 02 Sep 2020 19:24:39 -0700
+   d="scan'208";a="29130860"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 02 Sep 2020 19:24:50 -0700
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 02 Sep 2020 19:24:49 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 44EB4215EA; Wed,  2 Sep 2020 19:24:39 -0700 (PDT)
+        id 7E3D1215EA; Wed,  2 Sep 2020 19:24:49 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, ziqichen@codeaurora.org,
@@ -42,243 +42,332 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH v2 1/2] scsi: ufs: Abort tasks before clear them from doorbell
-Date:   Wed,  2 Sep 2020 19:24:31 -0700
-Message-Id: <1599099873-32579-2-git-send-email-cang@codeaurora.org>
+        Satya Tangirala <satyat@google.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2 2/2] scsi: ufs: Handle LINERESET indication in err handler
+Date:   Wed,  2 Sep 2020 19:24:32 -0700
+Message-Id: <1599099873-32579-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
 References: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-To recovery non-fatal errors, no full reset is required, err_handler only
-clears those pending TRs/TMRs so that scsi layer can re-issue them. In
-current err_handler, TRs are directly cleared from UFS host's doorbell but
-not aborted from device side. However, according to the UFSHCI JEDEC spec,
-the host software shall use UTP Transfer Request List CLear Register to
-clear a task from UFS host's doorbell only when a UTP Transfer Request is
-expected to not be completed, e.g. when the host software receives a
-“FUNCTION COMPLETE” Task Management response which means a Transfer Request
-was aborted. To follow the UFSHCI JEDEC spec, in err_handler, aborts one TR
-before clearing it from doorbell.
+PA Layer issues a LINERESET to the PHY at the recovery step in the Power
+Mode change operation. If it happens during auto or mannual hibern8 enter,
+even if hibern8 enter succeeds, UFS power mode shall be set to PWM-G1 mode
+and kept in that mode after exit from hibern8, leading to bad performance.
+Handle the LINERESET in the eh_work by restoring power mode to HS mode
+after all pending reqs and tasks are cleared from doorbell.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
-Acked-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 143 ++++++++++++++++++++++++++--------------------
- 1 file changed, 81 insertions(+), 62 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 140 ++++++++++++++++++++++++++++++++++++----------
+ drivers/scsi/ufs/ufshcd.h |   2 +
+ drivers/scsi/ufs/ufshci.h |   1 +
+ drivers/scsi/ufs/unipro.h |   3 +
+ 4 files changed, 115 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 06e2439..72afe12 100644
+index 72afe12..93619bc 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -238,6 +238,7 @@ static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
- static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
-+static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
- static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
- static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
- static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-@@ -5666,8 +5667,8 @@ static void ufshcd_err_handler(struct work_struct *work)
- {
- 	struct ufs_hba *hba;
- 	unsigned long flags;
--	u32 err_xfer = 0;
--	u32 err_tm = 0;
-+	bool err_xfer = false;
-+	bool err_tm = false;
- 	int err = 0;
- 	int tag;
- 	bool needs_reset = false;
-@@ -5743,7 +5744,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	/* Clear pending transfer requests */
- 	for_each_set_bit(tag, &hba->outstanding_reqs, hba->nutrs) {
--		if (ufshcd_clear_cmd(hba, tag)) {
-+		if (ufshcd_try_to_abort_task(hba, tag)) {
- 			err_xfer = true;
- 			goto lock_skip_pending_xfer_clear;
- 		}
-@@ -6495,7 +6496,7 @@ static void ufshcd_set_req_abort_skip(struct ufs_hba *hba, unsigned long bitmap)
- }
+@@ -146,6 +146,7 @@ enum {
+ 	UFSHCD_UIC_NL_ERROR = (1 << 3), /* Network layer error */
+ 	UFSHCD_UIC_TL_ERROR = (1 << 4), /* Transport Layer error */
+ 	UFSHCD_UIC_DME_ERROR = (1 << 5), /* DME error */
++	UFSHCD_UIC_PA_GENERIC_ERROR = (1 << 6), /* Generic PA error */
+ };
  
- /**
-- * ufshcd_abort - abort a specific command
-+ * ufshcd_try_to_abort_task - abort a specific task
-  * @cmd: SCSI command pointer
-  *
-  * Abort the pending command in device by sending UFS_ABORT_TASK task management
-@@ -6504,6 +6505,80 @@ static void ufshcd_set_req_abort_skip(struct ufs_hba *hba, unsigned long bitmap)
-  * issued. To avoid that, first issue UFS_QUERY_TASK to check if the command is
-  * really issued and then try to abort it.
-  *
-+ * Returns zero on success, non-zero on failure
-+ */
-+static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ #define ufshcd_set_eh_in_progress(h) \
+@@ -4069,7 +4070,8 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
+ 	int ret;
+ 
+ 	/* if already configured to the requested pwr_mode */
+-	if (pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
++	if (!hba->force_pmc &&
++	    pwr_mode->gear_rx == hba->pwr_info.gear_rx &&
+ 	    pwr_mode->gear_tx == hba->pwr_info.gear_tx &&
+ 	    pwr_mode->lane_rx == hba->pwr_info.lane_rx &&
+ 	    pwr_mode->lane_tx == hba->pwr_info.lane_tx &&
+@@ -4503,6 +4505,8 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
+ 
++	/* Clear UECPA once due to LINERESET has happened during LINK_STARTUP */
++	ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+ 	ret = ufshcd_make_hba_operational(hba);
+ out:
+ 	if (ret) {
+@@ -5659,6 +5663,22 @@ static inline void ufshcd_recover_pm_error(struct ufs_hba *hba)
+ }
+ #endif
+ 
++static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
 +{
-+	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-+	int err = 0;
-+	int poll_cnt;
-+	u8 resp = 0xF;
-+	u32 reg;
++	struct ufs_pa_layer_attr *pwr_info = &hba->pwr_info;
++	u32 mode;
 +
-+	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
-+		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
-+				UFS_QUERY_TASK, &resp);
-+		if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED) {
-+			/* cmd pending in the device */
-+			dev_err(hba->dev, "%s: cmd pending in the device. tag = %d\n",
-+				__func__, tag);
-+			break;
-+		} else if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-+			/*
-+			 * cmd not pending in the device, check if it is
-+			 * in transition.
-+			 */
-+			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
-+				__func__, tag);
-+			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-+			if (reg & (1 << tag)) {
-+				/* sleep for max. 200us to stabilize */
-+				usleep_range(100, 200);
-+				continue;
-+			}
-+			/* command completed already */
-+			dev_err(hba->dev, "%s: cmd at tag %d successfully cleared from DB.\n",
-+				__func__, tag);
-+			goto out;
-+		} else {
-+			dev_err(hba->dev,
-+				"%s: no response from device. tag = %d, err %d\n",
-+				__func__, tag, err);
-+			if (!err)
-+				err = resp; /* service response error */
-+			goto out;
-+		}
-+	}
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
 +
-+	if (!poll_cnt) {
-+		err = -EBUSY;
-+		goto out;
-+	}
++	if (pwr_info->pwr_rx != ((mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK))
++		return true;
 +
-+	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
-+			UFS_ABORT_TASK, &resp);
-+	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-+		if (!err) {
-+			err = resp; /* service response error */
-+			dev_err(hba->dev, "%s: issued. tag = %d, err %d\n",
-+				__func__, tag, err);
-+		}
-+		goto out;
-+	}
++	if (pwr_info->pwr_tx != (mode & PWRMODE_MASK))
++		return true;
 +
-+	err = ufshcd_clear_cmd(hba, tag);
-+	if (err)
-+		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
-+			__func__, tag, err);
-+
-+out:
-+	return err;
++	return false;
 +}
 +
-+/**
-+ * ufshcd_abort - scsi host template eh_abort_handler callback
-+ * @cmd: SCSI command pointer
-+ *
-  * Returns SUCCESS/FAILED
-  */
- static int ufshcd_abort(struct scsi_cmnd *cmd)
-@@ -6513,8 +6588,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ /**
+  * ufshcd_err_handler - handle UFS errors that require s/w attention
+  * @work: pointer to work structure
+@@ -5669,9 +5689,9 @@ static void ufshcd_err_handler(struct work_struct *work)
  	unsigned long flags;
- 	unsigned int tag;
- 	int err = 0;
--	int poll_cnt;
--	u8 resp = 0xF;
- 	struct ufshcd_lrb *lrbp;
- 	u32 reg;
+ 	bool err_xfer = false;
+ 	bool err_tm = false;
+-	int err = 0;
++	int err = 0, pmc_err;
+ 	int tag;
+-	bool needs_reset = false;
++	bool needs_reset = false, needs_restore = false;
  
-@@ -6583,63 +6656,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto out;
+ 	hba = container_of(work, struct ufs_hba, eh_work);
+ 
+@@ -5687,16 +5707,13 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	ufshcd_err_handling_prepare(hba);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_scsi_block_requests(hba);
++	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 	/*
+ 	 * A full reset and restore might have happened after preparation
+ 	 * is finished, double check whether we should stop.
+ 	 */
+-	if (ufshcd_err_handling_should_stop(hba)) {
+-		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+-			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+-		goto out;
+-	}
+-	hba->ufshcd_state = UFSHCD_STATE_RESET;
++	if (ufshcd_err_handling_should_stop(hba))
++		goto skip_err_handling;
+ 
+ 	/* Complete requests that have door-bell cleared by h/w */
+ 	ufshcd_complete_requests(hba);
+@@ -5712,15 +5729,9 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 			goto skip_err_handling;
  	}
  
--	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
--		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
--				UFS_QUERY_TASK, &resp);
--		if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_SUCCEEDED) {
--			/* cmd pending in the device */
--			dev_err(hba->dev, "%s: cmd pending in the device. tag = %d\n",
--				__func__, tag);
--			break;
--		} else if (!err && resp == UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
--			/*
--			 * cmd not pending in the device, check if it is
--			 * in transition.
--			 */
--			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
--				__func__, tag);
--			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--			if (reg & (1 << tag)) {
--				/* sleep for max. 200us to stabilize */
--				usleep_range(100, 200);
--				continue;
--			}
--			/* command completed already */
--			dev_err(hba->dev, "%s: cmd at tag %d successfully cleared from DB.\n",
--				__func__, tag);
--			goto out;
--		} else {
--			dev_err(hba->dev,
--				"%s: no response from device. tag = %d, err %d\n",
--				__func__, tag, err);
--			if (!err)
--				err = resp; /* service response error */
--			goto out;
--		}
--	}
+-	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
+-	    ufshcd_is_saved_err_fatal(hba) ||
+-	    ((hba->saved_err & UIC_ERROR) &&
+-	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
+-				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
+-		needs_reset = true;
 -
--	if (!poll_cnt) {
--		err = -EBUSY;
--		goto out;
--	}
--
--	err = ufshcd_issue_tm_cmd(hba, lrbp->lun, lrbp->task_tag,
--			UFS_ABORT_TASK, &resp);
--	if (err || resp != UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
--		if (!err) {
--			err = resp; /* service response error */
--			dev_err(hba->dev, "%s: issued. tag = %d, err %d\n",
--				__func__, tag, err);
--		}
--		goto out;
--	}
--
--	err = ufshcd_clear_cmd(hba, tag);
--	if (err) {
--		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
--			__func__, tag, err);
-+	err = ufshcd_try_to_abort_task(hba, tag);
-+	if (err)
- 		goto out;
--	}
+-	if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR |
+-			      UFSHCD_UIC_HIBERN8_MASK)) {
++	if ((hba->saved_err & (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) ||
++	    (hba->saved_uic_err &&
++	     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
+ 		bool pr_prdt = !!(hba->saved_err & SYSTEM_BUS_FATAL_ERROR);
  
- 	spin_lock_irqsave(host->host_lock, flags);
- 	__ufshcd_transfer_req_compl(hba, (1UL << tag));
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+@@ -5733,13 +5744,36 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	}
+ 
+ 	/*
+-	 * if host reset is required then skip clearing the pending
++	 * If host reset is required then skip clearing the pending
+ 	 * transfers forcefully because they will get cleared during
+ 	 * host reset and restore
+ 	 */
+-	if (needs_reset)
+-		goto skip_pending_xfer_clear;
++	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
++	    ufshcd_is_saved_err_fatal(hba) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
++				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))) {
++		needs_reset = true;
++		goto do_reset;
++	}
++
++	/*
++	 * If LINERESET was caught, UFS might have been put to PWM mode,
++	 * check if power mode restore is needed.
++	 */
++	if (hba->saved_uic_err & UFSHCD_UIC_PA_GENERIC_ERROR) {
++		hba->saved_uic_err &= ~UFSHCD_UIC_PA_GENERIC_ERROR;
++		if (!hba->saved_uic_err)
++			hba->saved_err &= ~UIC_ERROR;
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		if (ufshcd_is_pwr_mode_restore_needed(hba))
++			needs_restore = true;
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		if (!hba->saved_err && !needs_restore)
++			goto skip_err_handling;
++	}
+ 
++	hba->silence_err_logs = true;
+ 	/* release lock as clear command might sleep */
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	/* Clear pending transfer requests */
+@@ -5763,11 +5797,38 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 
+ 	/* Complete the requests that are cleared by s/w */
+ 	ufshcd_complete_requests(hba);
++	hba->silence_err_logs = false;
+ 
+-	if (err_xfer || err_tm)
++	if (err_xfer || err_tm) {
+ 		needs_reset = true;
++		goto do_reset;
++	}
+ 
+-skip_pending_xfer_clear:
++	/*
++	 * After all reqs and tasks are cleared from doorbell,
++	 * now it is safe to retore power mode.
++	 */
++	if (needs_restore) {
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		/*
++		 * Hold the scaling lock just in case dev cmds
++		 * are sent via bsg and/or sysfs.
++		 */
++		down_write(&hba->clk_scaling_lock);
++		hba->force_pmc = true;
++		pmc_err = ufshcd_config_pwr_mode(hba, &(hba->pwr_info));
++		if (pmc_err) {
++			needs_reset = true;
++			dev_err(hba->dev, "%s: Failed to restore power mode, err = %d\n",
++					__func__, pmc_err);
++		}
++		hba->force_pmc = false;
++		ufshcd_print_pwr_info(hba);
++		up_write(&hba->clk_scaling_lock);
++		spin_lock_irqsave(hba->host->host_lock, flags);
++	}
++
++do_reset:
+ 	/* Fatal errors need reset */
+ 	if (needs_reset) {
+ 		unsigned long max_doorbells = (1UL << hba->nutrs) - 1;
+@@ -5802,8 +5863,6 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
+ 			    __func__, hba->saved_err, hba->saved_uic_err);
+ 	}
+-
+-out:
+ 	ufshcd_clear_eh_in_progress(hba);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_scsi_unblock_requests(hba);
+@@ -5823,17 +5882,34 @@ static irqreturn_t ufshcd_update_uic_error(struct ufs_hba *hba)
+ 	u32 reg;
+ 	irqreturn_t retval = IRQ_NONE;
+ 
+-	/* PHY layer lane error */
++	/* PHY layer error */
+ 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
+-	/* Ignore LINERESET indication, as this is not an error */
+ 	if ((reg & UIC_PHY_ADAPTER_LAYER_ERROR) &&
+-	    (reg & UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK)) {
++	    (reg & UIC_PHY_ADAPTER_LAYER_ERROR_CODE_MASK)) {
+ 		/*
+ 		 * To know whether this error is fatal or not, DB timeout
+ 		 * must be checked but this error is handled separately.
+ 		 */
+-		dev_dbg(hba->dev, "%s: UIC Lane error reported\n", __func__);
+-		ufshcd_update_reg_hist(&hba->ufs_stats.pa_err, reg);
++		if (reg & UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK) {
++			ufshcd_update_reg_hist(&hba->ufs_stats.pa_err, reg);
++			dev_dbg(hba->dev, "%s: UIC Lane error reported\n",
++					__func__);
++		}
++
++		/* Got a LINERESET indication. */
++		if (reg & UIC_PHY_ADAPTER_LAYER_GENERIC_ERROR) {
++			struct uic_command *cmd = NULL;
++
++			hba->uic_error |= UFSHCD_UIC_PA_GENERIC_ERROR;
++			if (hba->uic_async_done && hba->active_uic_cmd)
++				cmd = hba->active_uic_cmd;
++			/*
++			 * Ignore the LINERESET during power mode change
++			 * operation via DME_SET command.
++			 */
++			if (cmd && (cmd->command == UIC_CMD_DME_SET))
++				hba->uic_error &= ~UFSHCD_UIC_PA_GENERIC_ERROR;
++		}
+ 		retval |= IRQ_HANDLED;
+ 	}
+ 
+@@ -5950,7 +6026,9 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
+ 		hba->saved_uic_err |= hba->uic_error;
+ 
+ 		/* dump controller state before resetting */
+-		if (hba->saved_err & (INT_FATAL_ERRORS | UIC_ERROR)) {
++		if ((hba->saved_err & (INT_FATAL_ERRORS)) ||
++		    (hba->saved_uic_err &&
++		     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
+ 			dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 0x%x\n",
+ 					__func__, hba->saved_err,
+ 					hba->saved_uic_err);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 618b253..8817103 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -629,6 +629,7 @@ struct ufs_hba_variant_params {
+  * @saved_err: sticky error mask
+  * @saved_uic_err: sticky UIC error mask
+  * @force_reset: flag to force eh_work perform a full reset
++ * @force_pmc: flag to force a power mode change
+  * @silence_err_logs: flag to silence error logs
+  * @dev_cmd: ufs device management command information
+  * @last_dme_cmd_tstamp: time stamp of the last completed DME command
+@@ -728,6 +729,7 @@ struct ufs_hba {
+ 	u32 saved_uic_err;
+ 	struct ufs_stats ufs_stats;
+ 	bool force_reset;
++	bool force_pmc;
+ 	bool silence_err_logs;
+ 
+ 	/* Device management request data */
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index ba31b09..6795e1f 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -171,6 +171,7 @@ enum {
+ #define UIC_PHY_ADAPTER_LAYER_ERROR			0x80000000
+ #define UIC_PHY_ADAPTER_LAYER_ERROR_CODE_MASK		0x1F
+ #define UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK		0xF
++#define UIC_PHY_ADAPTER_LAYER_GENERIC_ERROR		0x10
+ 
+ /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
+ #define UIC_DATA_LINK_LAYER_ERROR		0x80000000
+diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+index 4ee6478..f6b52ce 100644
+--- a/drivers/scsi/ufs/unipro.h
++++ b/drivers/scsi/ufs/unipro.h
+@@ -205,6 +205,9 @@ enum {
+ 	UNCHANGED	= 7,
+ };
+ 
++#define PWRMODE_MASK		0xF
++#define PWRMODE_RX_OFFSET	4
++
+ /* PA TX/RX Frequency Series */
+ enum {
+ 	PA_HS_MODE_A	= 1,
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
