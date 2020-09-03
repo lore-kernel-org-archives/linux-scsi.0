@@ -2,43 +2,38 @@ Return-Path: <SRS0=xo/b=CM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE719C433E7
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73ED0C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF63C214F1
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r3rlemq3"
+	by mail.kernel.org (Postfix) with ESMTP id 4B13521527
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Sep 2020 08:14:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728287AbgICIBk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Sep 2020 04:01:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60926 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727857AbgICIBd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 04:01:33 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D2F0C061246;
-        Thu,  3 Sep 2020 01:01:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=aD2MhDFcb/ZoH9flZ+AmXcB/BoVwq9mrqs7TZ6lFHLs=; b=r3rlemq3iHBuUTMDJU+dnfhyds
-        DzRNAh3peHCgwijHKDtb9lns2djcrDH5016yO1gOrsCGCSPzi05vMWA5KxQMtk2uF1K5WgWwOTeQp
-        YDoiCHiv6jzta5IbZpO8rLsSoTEWWWnyXjuuGvgMg/PwVsQmvlCjAfO3VoWraLE9Ugm5r+M02GTvq
-        yCHqO2tW403rBAIpjwdENbLfwTVRQ6wEp7k9ZZ3r40niZlJVw+pWBdTTLobNofMLdi+fY5J4C0r0E
-        awZj3irMi0aDPgtNtLUR6Rte0BAIEmOVroZoWyxY/0zwjTP4xdx9m90OHMDcvNpE+vhFCFayqJyLT
-        WAnhu9jQ==;
-Received: from [2001:4bb8:184:af1:c70:4a89:bc61:2] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDkBO-0006a3-H6; Thu, 03 Sep 2020 08:01:22 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
+        id S1728910AbgICIOv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Sep 2020 04:14:51 -0400
+Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:43735 "EHLO
+        outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728522AbgICIOl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Sep 2020 04:14:41 -0400
+Received: from inpost2.zedat.fu-berlin.de ([130.133.4.69])
+          by outpost.zedat.fu-berlin.de (Exim 4.93)
+          with esmtps (TLS1.2)
+          tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+          (envelope-from <glaubitz@zedat.fu-berlin.de>)
+          id 1kDkOD-001H42-Ry; Thu, 03 Sep 2020 10:14:37 +0200
+Received: from p57bd95bc.dip0.t-ipconnect.de ([87.189.149.188] helo=[192.168.178.139])
+          by inpost2.zedat.fu-berlin.de (Exim 4.93)
+          with esmtpsa (TLS1.2)
+          tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+          (envelope-from <glaubitz@physik.fu-berlin.de>)
+          id 1kDkOD-000NUw-Kf; Thu, 03 Sep 2020 10:14:37 +0200
+Subject: Re: [PATCH 16/19] ataflop: use a separate gendisk for each media
+ format
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Denis Efremov <efremov@linux.com>,
@@ -49,429 +44,81 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 02/19] block: merge drivers/base/map.c into block/genhd.c
-Date:   Thu,  3 Sep 2020 10:01:02 +0200
-Message-Id: <20200903080119.441674-3-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200903080119.441674-1-hch@lst.de>
 References: <20200903080119.441674-1-hch@lst.de>
+ <20200903080119.441674-17-hch@lst.de>
+From:   John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Autocrypt: addr=glaubitz@physik.fu-berlin.de; keydata=
+ mQINBE3JE9wBEADMrYGNfz3oz6XLw9XcWvuIxIlPWoTyw9BxTicfGAv0d87wngs9U+d52t/R
+ EggPePf34gb7/k8FBY1IgyxnZEB5NxUb1WtW0M3GUxpPx6gBZqOm7SK1ZW3oSORw+T7Aezl3
+ Zq4Nr4Nptqx7fnLpXfRDs5iYO/GX8WuL8fkGS/gIXtxKewd0LkTlb6jq9KKq8qn8/BN5YEKq
+ JlM7jsENyA5PIe2npN3MjEg6p+qFrmrzJRuFjjdf5vvGfzskrXCAKGlNjMMA4TgZvugOFmBI
+ /iSyV0IOaj0uKhes0ZNX+lQFrOB4j6I5fTBy7L/T3W/pCWo3wVkknNYa8TDYT73oIZ7Aimv+
+ k7OzRfnxsSOAZT8Re1Yt8mvzr6FHVFjr/VdyTtO5JgQZ6LEmvo4Ro+2ByBmCHORCQ0NJhD1U
+ 3avjGfvfslG999W0WEZLTeaGkBAN1yG/1bgGAytQQkD9NsVXqBy7S3LVv9bB844ysW5Aj1nv
+ tgIz14E2WL8rbpfjJMXi7B5ha6Lxf3rFOgxpr6ZoEn+bGG4hmrO+/ReA4SerfMqwSTnjZsZv
+ xMJsx2B9c8DaZE8GsA4I6lsihbJmXhw8i7Cta8Dx418wtEbXhL6m/UEk60O7QD1VBgGqDMnJ
+ DFSlvKa9D+tZde/kHSNmQmLLzxtDbNgBgmR0jUlmxirijnm8bwARAQABtFRKb2huIFBhdWwg
+ QWRyaWFuIEdsYXViaXR6IChGcmVpZSBVbml2ZXJzaXRhZXQgQmVybGluKSA8Z2xhdWJpdHpA
+ cGh5c2lrLmZ1LWJlcmxpbi5kZT6JAlEEEwEIADsCGwMFCwkIBwMFFQoJCAsFFgIDAQACHgEC
+ F4AWIQRi/4p1hOApVpVGAAZ0Jjs39bX5EwUCWhQoUgIZAQAKCRB0Jjs39bX5Ez/ID/98r9c4
+ WUSgOHVPSMVcOVziMOi+zPWfF1OhOXW+atpTM4LSSp66196xOlDFHOdNNmO6kxckXAX9ptvp
+ Bc0mRxa7OrC168fKzqR7P75eTsJnVaOu+uI/vvgsbUIosYdkkekCxDAbYCUwmzNotIspnFbx
+ iSPMNrpw7Ud/yQkS9TDYeXnrZDhBp7p5+naWCD/yMvh7yVCA4Ea8+xDVoX+kjv6EHJrwVupO
+ pMa39cGs2rKYZbWTazcflKH+bXG3FHBrwh9XRjA6A1CTeC/zTVNgGF6wvw/qT2x9tS7WeeZ1
+ jvBCJub2cb07qIfuvxXiGcYGr+W4z9GuLCiWsMmoff/Gmo1aeMZDRYKLAZLGlEr6zkYh1Abt
+ iz0YLqIYVbZAnf8dCjmYhuwPq77IeqSjqUqI2Cb0oOOlwRKVWDlqAeo0Bh8DrvZvBAojJf4H
+ nQZ/pSz0yaRed/0FAmkVfV+1yR6BtRXhkRF6NCmguSITC96IzE26C6n5DBb43MR7Ga/mof4M
+ UufnKADNG4qz57CBwENHyx6ftWJeWZNdRZq10o0NXuCJZf/iulHCWS/hFOM5ygfONq1Vsj2Z
+ DSWvVpSLj+Ufd2QnmsnrCr1ZGcl72OC24AmqFWJY+IyReHWpuABEVZVeVDQooJ0K4yqucmrF
+ R7HyH7oZGgR0CgYHCI+9yhrXHrQpyLkCDQRNyRQuARAArCaWhVbMXw9iHmMH0BN/TuSmeKtV
+ h/+QOT5C5Uw+XJ3A+OHr9rB+SpndJEcDIhv70gLrpEuloXhZI9VYazfTv6lrkCZObXq/NgDQ
+ Mnu+9E/E/PE9irqnZZOMWpurQRh41MibRii0iSr+AH2IhRL6CN2egZID6f93Cdu7US53ZqIx
+ bXoguqGB2CK115bcnsswMW9YiVegFA5J9dAMsCI9/6M8li+CSYICi9gq0LdpODdsVfaxmo4+
+ xYFdXoDN33b8Yyzhbh/I5gtVIRpfL+Yjfk8xAsfz78wzifSDckSB3NGPAXvs6HxKc50bvf+P
+ 6t2tLpmB/KrpozlZazq16iktY97QulyEY9JWCiEgDs6EKb4wTx+lUe4yS9eo95cBV+YlL+BX
+ kJSAMyxgSOy35BeBaeUSIrYqfHpbNn6/nidwDhg/nxyJs8mPlBvHiCLwotje2AhtYndDEhGQ
+ KEtEaMQEhDi9MsCGHe+00QegCv3FRveHwzGphY1YlRItLjF4TcFz1SsHn30e7uLTDe/pUMZU
+ Kd1xU73WWr0NlWG1g49ITyaBpwdv/cs/RQ5laYYeivnag81TcPCDbTm7zXiwo53aLQOZj4u3
+ gSQvAUhgYTQUstMdkOMOn0PSIpyVAq3zrEFEYf7bNSTcdGrgwCuCBe4DgI3Vu4LOoAeI428t
+ 2dj1K1EAEQEAAYkCHwQYAQgACQUCTckULgIbDAAKCRB0Jjs39bX5E683EAC1huywL4BlxTj7
+ FTm7FiKd5/KEH5/oaxLQN26mn8yRkP/L3xwiqXxdd0hnrPyUe8mUOrSg7KLMul+pSRxPgaHA
+ xt1I1hQZ30cJ1j/SkDIV2ImSf75Yzz5v72fPiYLq9+H3qKZwrgof9yM/s0bfsSX/GWyFatvo
+ Koo+TgrE0rmtQw82vv7/cbDAYceQm1bRB8Nr8agPyGXYcjohAj7NJcra4hnu1wUw3yD05p/B
+ Rntv7NvPWV3Oo7DKCWIS4RpEd6I6E+tN3GCePqROeK1nDv+FJWLkyvwLigfNaCLro6/292YK
+ VMdBISNYN4s6IGPrXGGvoDwo9RVo6kBhlYEfg6+2eaPCwq40IVfKbYNwLLB2MR2ssL4yzmDo
+ OR3rQFDPj+QcDvH4/0gCQ+qRpYATIegS8zU5xQ8nPL8lba9YNejaOMzw8RB80g+2oPOJ3Wzx
+ oMsmw8taUmd9TIw/bJ2VO1HniiJUGUXCqoeg8homvBOQ0PmWAWIwjC6nf6CIuIM4Egu2I5Kl
+ jEF9ImTPcYZpw5vhdyPwBdXW2lSjV3EAqknWujRgcsm84nycuJnImwJptR481EWmtuH6ysj5
+ YhRVGbQPfdsjVUQfZdRdkEv4CZ90pdscBi1nRqcqANtzC+WQFwekDzk2lGqNRDg56s+q0KtY
+ scOkTAZQGVpD/8AaLH4v1w==
+Message-ID: <e4ae0e80-dc96-7f57-58b1-03b83d117933@physik.fu-berlin.de>
+Date:   Thu, 3 Sep 2020 10:14:35 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200903080119.441674-17-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Original-Sender: glaubitz@physik.fu-berlin.de
+X-Originating-IP: 87.189.149.188
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that there is just a single user of the kobj_map functionality left,
-merge it into the user to prepare for additional simplications.
+Hi Christoph!
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- block/genhd.c            | 130 +++++++++++++++++++++++++++++----
- drivers/base/Makefile    |   2 +-
- drivers/base/map.c       | 154 ---------------------------------------
- include/linux/kobj_map.h |  20 -----
- 4 files changed, 118 insertions(+), 188 deletions(-)
- delete mode 100644 drivers/base/map.c
- delete mode 100644 include/linux/kobj_map.h
+On 9/3/20 10:01 AM, Christoph Hellwig wrote:
+> The Atari floppy driver usually autodetects the media when used with the
+> ormal /dev/fd? devices, which also are the only nodes created by udev.
+  ^^^^
+  typo?
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 081f1039d9367f..44f69f4b2c5aa6 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -17,7 +17,6 @@
- #include <linux/seq_file.h>
- #include <linux/slab.h>
- #include <linux/kmod.h>
--#include <linux/kobj_map.h>
- #include <linux/mutex.h>
- #include <linux/idr.h>
- #include <linux/log2.h>
-@@ -29,6 +28,16 @@
- static DEFINE_MUTEX(block_class_lock);
- static struct kobject *block_depr;
- 
-+struct bdev_map {
-+	struct bdev_map *next;
-+	dev_t dev;
-+	unsigned long range;
-+	struct module *owner;
-+	struct kobject *(*probe)(dev_t, int *, void *);
-+	int (*lock)(dev_t, void *);
-+	void *data;
-+} *bdev_map[255];
-+
- /* for extended dynamic devt allocation, currently only one major is used */
- #define NR_EXT_DEVT		(1 << MINORBITS)
- 
-@@ -517,8 +526,6 @@ void unregister_blkdev(unsigned int major, const char *name)
- 
- EXPORT_SYMBOL(unregister_blkdev);
- 
--static struct kobj_map *bdev_map;
--
- /**
-  * blk_mangle_minor - scatter minor numbers apart
-  * @minor: minor number to mangle
-@@ -645,16 +652,60 @@ void blk_register_region(dev_t devt, unsigned long range, struct module *module,
- 			 struct kobject *(*probe)(dev_t, int *, void *),
- 			 int (*lock)(dev_t, void *), void *data)
- {
--	kobj_map(bdev_map, devt, range, module, probe, lock, data);
--}
-+	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
-+	unsigned index = MAJOR(devt);
-+	unsigned i;
-+	struct bdev_map *p;
-+
-+	n = min(n, 255u);
-+	p = kmalloc_array(n, sizeof(struct bdev_map), GFP_KERNEL);
-+	if (p == NULL)
-+		return;
- 
-+	for (i = 0; i < n; i++, p++) {
-+		p->owner = module;
-+		p->probe = probe;
-+		p->lock = lock;
-+		p->dev = devt;
-+		p->range = range;
-+		p->data = data;
-+	}
-+
-+	mutex_lock(&block_class_lock);
-+	for (i = 0, p -= n; i < n; i++, p++, index++) {
-+		struct bdev_map **s = &bdev_map[index % 255];
-+		while (*s && (*s)->range < range)
-+			s = &(*s)->next;
-+		p->next = *s;
-+		*s = p;
-+	}
-+	mutex_unlock(&block_class_lock);
-+}
- EXPORT_SYMBOL(blk_register_region);
- 
- void blk_unregister_region(dev_t devt, unsigned long range)
- {
--	kobj_unmap(bdev_map, devt, range);
--}
-+	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
-+	unsigned index = MAJOR(devt);
-+	unsigned i;
-+	struct bdev_map *found = NULL;
- 
-+	mutex_lock(&block_class_lock);
-+	for (i = 0; i < min(n, 255u); i++, index++) {
-+		struct bdev_map **s;
-+		for (s = &bdev_map[index % 255]; *s; s = &(*s)->next) {
-+			struct bdev_map *p = *s;
-+			if (p->dev == devt && p->range == range) {
-+				*s = p->next;
-+				if (!found)
-+					found = p;
-+				break;
-+			}
-+		}
-+	}
-+	mutex_unlock(&block_class_lock);
-+	kfree(found);
-+}
- EXPORT_SYMBOL(blk_unregister_region);
- 
- static struct kobject *exact_match(dev_t devt, int *partno, void *data)
-@@ -980,6 +1031,47 @@ static ssize_t disk_badblocks_store(struct device *dev,
- 	return badblocks_store(disk->bb, page, len, 0);
- }
- 
-+static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
-+{
-+	struct kobject *kobj;
-+	struct bdev_map *p;
-+	unsigned long best = ~0UL;
-+
-+retry:
-+	mutex_lock(&block_class_lock);
-+	for (p = bdev_map[MAJOR(dev) % 255]; p; p = p->next) {
-+		struct kobject *(*probe)(dev_t, int *, void *);
-+		struct module *owner;
-+		void *data;
-+
-+		if (p->dev > dev || p->dev + p->range - 1 < dev)
-+			continue;
-+		if (p->range - 1 >= best)
-+			break;
-+		if (!try_module_get(p->owner))
-+			continue;
-+		owner = p->owner;
-+		data = p->data;
-+		probe = p->probe;
-+		best = p->range - 1;
-+		*partno = dev - p->dev;
-+		if (p->lock && p->lock(dev, data) < 0) {
-+			module_put(owner);
-+			continue;
-+		}
-+		mutex_unlock(&block_class_lock);
-+		kobj = probe(dev, partno, data);
-+		/* Currently ->owner protects _only_ ->probe() itself. */
-+		module_put(owner);
-+		if (kobj)
-+			return dev_to_disk(kobj_to_dev(kobj));
-+		goto retry;
-+	}
-+	mutex_unlock(&block_class_lock);
-+	return NULL;
-+}
-+
-+
- /**
-  * get_gendisk - get partitioning information for a given device
-  * @devt: device to get partitioning information for
-@@ -997,11 +1089,7 @@ struct gendisk *get_gendisk(dev_t devt, int *partno)
- 	might_sleep();
- 
- 	if (MAJOR(devt) != BLOCK_EXT_MAJOR) {
--		struct kobject *kobj;
--
--		kobj = kobj_lookup(bdev_map, devt, partno);
--		if (kobj)
--			disk = dev_to_disk(kobj_to_dev(kobj));
-+		disk = lookup_gendisk(devt, partno);
- 	} else {
- 		struct hd_struct *part;
- 
-@@ -1214,6 +1302,22 @@ static struct kobject *base_probe(dev_t devt, int *partno, void *data)
- 	return NULL;
- }
- 
-+static void bdev_map_init(void)
-+{
-+	struct bdev_map *base;
-+	int i;
-+
-+	base = kzalloc(sizeof(*base), GFP_KERNEL);
-+	if (!base)
-+		panic("cannot allocate bdev_map");
-+
-+	base->dev = 1;
-+	base->range = ~0 ;
-+	base->probe = base_probe;
-+	for (i = 0; i < 255; i++)
-+		bdev_map[i] = base;
-+}
-+
- static int __init genhd_device_init(void)
- {
- 	int error;
-@@ -1222,7 +1326,7 @@ static int __init genhd_device_init(void)
- 	error = class_register(&block_class);
- 	if (unlikely(error))
- 		return error;
--	bdev_map = kobj_map_init(base_probe, &block_class_lock);
-+	bdev_map_init();
- 	blk_dev_init();
- 
- 	register_blkdev(BLOCK_EXT_MAJOR, "blkext");
-diff --git a/drivers/base/Makefile b/drivers/base/Makefile
-index 157452080f3d7f..4ffd2a785f5ed3 100644
---- a/drivers/base/Makefile
-+++ b/drivers/base/Makefile
-@@ -3,7 +3,7 @@
- 
- obj-y			:= component.o core.o bus.o dd.o syscore.o \
- 			   driver.o class.o platform.o \
--			   cpu.o firmware.o init.o map.o devres.o \
-+			   cpu.o firmware.o init.o devres.o \
- 			   attribute_container.o transport_class.o \
- 			   topology.o container.o property.o cacheinfo.o \
- 			   devcon.o swnode.o
-diff --git a/drivers/base/map.c b/drivers/base/map.c
-deleted file mode 100644
-index 5650ab2b247ada..00000000000000
---- a/drivers/base/map.c
-+++ /dev/null
-@@ -1,154 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- *  linux/drivers/base/map.c
-- *
-- * (C) Copyright Al Viro 2002,2003
-- *
-- * NOTE: data structure needs to be changed.  It works, but for large dev_t
-- * it will be too slow.  It is isolated, though, so these changes will be
-- * local to that file.
-- */
--
--#include <linux/module.h>
--#include <linux/slab.h>
--#include <linux/mutex.h>
--#include <linux/kdev_t.h>
--#include <linux/kobject.h>
--#include <linux/kobj_map.h>
--
--struct kobj_map {
--	struct probe {
--		struct probe *next;
--		dev_t dev;
--		unsigned long range;
--		struct module *owner;
--		kobj_probe_t *get;
--		int (*lock)(dev_t, void *);
--		void *data;
--	} *probes[255];
--	struct mutex *lock;
--};
--
--int kobj_map(struct kobj_map *domain, dev_t dev, unsigned long range,
--	     struct module *module, kobj_probe_t *probe,
--	     int (*lock)(dev_t, void *), void *data)
--{
--	unsigned n = MAJOR(dev + range - 1) - MAJOR(dev) + 1;
--	unsigned index = MAJOR(dev);
--	unsigned i;
--	struct probe *p;
--
--	if (n > 255)
--		n = 255;
--
--	p = kmalloc_array(n, sizeof(struct probe), GFP_KERNEL);
--	if (p == NULL)
--		return -ENOMEM;
--
--	for (i = 0; i < n; i++, p++) {
--		p->owner = module;
--		p->get = probe;
--		p->lock = lock;
--		p->dev = dev;
--		p->range = range;
--		p->data = data;
--	}
--	mutex_lock(domain->lock);
--	for (i = 0, p -= n; i < n; i++, p++, index++) {
--		struct probe **s = &domain->probes[index % 255];
--		while (*s && (*s)->range < range)
--			s = &(*s)->next;
--		p->next = *s;
--		*s = p;
--	}
--	mutex_unlock(domain->lock);
--	return 0;
--}
--
--void kobj_unmap(struct kobj_map *domain, dev_t dev, unsigned long range)
--{
--	unsigned n = MAJOR(dev + range - 1) - MAJOR(dev) + 1;
--	unsigned index = MAJOR(dev);
--	unsigned i;
--	struct probe *found = NULL;
--
--	if (n > 255)
--		n = 255;
--
--	mutex_lock(domain->lock);
--	for (i = 0; i < n; i++, index++) {
--		struct probe **s;
--		for (s = &domain->probes[index % 255]; *s; s = &(*s)->next) {
--			struct probe *p = *s;
--			if (p->dev == dev && p->range == range) {
--				*s = p->next;
--				if (!found)
--					found = p;
--				break;
--			}
--		}
--	}
--	mutex_unlock(domain->lock);
--	kfree(found);
--}
--
--struct kobject *kobj_lookup(struct kobj_map *domain, dev_t dev, int *index)
--{
--	struct kobject *kobj;
--	struct probe *p;
--	unsigned long best = ~0UL;
--
--retry:
--	mutex_lock(domain->lock);
--	for (p = domain->probes[MAJOR(dev) % 255]; p; p = p->next) {
--		struct kobject *(*probe)(dev_t, int *, void *);
--		struct module *owner;
--		void *data;
--
--		if (p->dev > dev || p->dev + p->range - 1 < dev)
--			continue;
--		if (p->range - 1 >= best)
--			break;
--		if (!try_module_get(p->owner))
--			continue;
--		owner = p->owner;
--		data = p->data;
--		probe = p->get;
--		best = p->range - 1;
--		*index = dev - p->dev;
--		if (p->lock && p->lock(dev, data) < 0) {
--			module_put(owner);
--			continue;
--		}
--		mutex_unlock(domain->lock);
--		kobj = probe(dev, index, data);
--		/* Currently ->owner protects _only_ ->probe() itself. */
--		module_put(owner);
--		if (kobj)
--			return kobj;
--		goto retry;
--	}
--	mutex_unlock(domain->lock);
--	return NULL;
--}
--
--struct kobj_map *kobj_map_init(kobj_probe_t *base_probe, struct mutex *lock)
--{
--	struct kobj_map *p = kmalloc(sizeof(struct kobj_map), GFP_KERNEL);
--	struct probe *base = kzalloc(sizeof(*base), GFP_KERNEL);
--	int i;
--
--	if ((p == NULL) || (base == NULL)) {
--		kfree(p);
--		kfree(base);
--		return NULL;
--	}
--
--	base->dev = 1;
--	base->range = ~0;
--	base->get = base_probe;
--	for (i = 0; i < 255; i++)
--		p->probes[i] = base;
--	p->lock = lock;
--	return p;
--}
-diff --git a/include/linux/kobj_map.h b/include/linux/kobj_map.h
-deleted file mode 100644
-index c9919f8b22932c..00000000000000
---- a/include/linux/kobj_map.h
-+++ /dev/null
-@@ -1,20 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- * kobj_map.h
-- */
--
--#ifndef _KOBJ_MAP_H_
--#define _KOBJ_MAP_H_
--
--#include <linux/mutex.h>
--
--typedef struct kobject *kobj_probe_t(dev_t, int *, void *);
--struct kobj_map;
--
--int kobj_map(struct kobj_map *, dev_t, unsigned long, struct module *,
--	     kobj_probe_t *, int (*)(dev_t, void *), void *);
--void kobj_unmap(struct kobj_map *, dev_t, unsigned long);
--struct kobject *kobj_lookup(struct kobj_map *, dev_t, int *);
--struct kobj_map *kobj_map_init(kobj_probe_t *, struct mutex *);
--
--#endif /* _KOBJ_MAP_H_ */
+Adrian
+
 -- 
-2.28.0
-
+ .''`.  John Paul Adrian Glaubitz
+: :' :  Debian Developer - glaubitz@debian.org
+`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
+  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
