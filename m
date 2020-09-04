@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2847BC433E2
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:28:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7496AC433E2
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:29:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CE1420791
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:28:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B09920791
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:29:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730031AbgIDK2h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 06:28:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46696 "EHLO mx2.suse.de"
+        id S1730132AbgIDK3O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 06:29:14 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47196 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726171AbgIDK2g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Sep 2020 06:28:36 -0400
+        id S1730114AbgIDK3H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Sep 2020 06:29:07 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A59E9AF6D;
-        Fri,  4 Sep 2020 10:28:35 +0000 (UTC)
-Subject: Re: [PATCH 15/19] amiflop: use separate gendisks for Amiga vs MS-DOS
- mode
+        by mx2.suse.de (Postfix) with ESMTP id 16A6DB7FC;
+        Fri,  4 Sep 2020 10:29:07 +0000 (UTC)
+Subject: Re: [PATCH 16/19] ataflop: use a separate gendisk for each media
+ format
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -37,14 +37,14 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
 References: <20200903080119.441674-1-hch@lst.de>
- <20200903080119.441674-16-hch@lst.de>
+ <20200903080119.441674-17-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <55a79fd2-aa85-a687-0f17-60fa05830cf2@suse.de>
-Date:   Fri, 4 Sep 2020 12:28:33 +0200
+Message-ID: <d0bb8f40-3d6b-9011-d266-6a2c35efbd46@suse.de>
+Date:   Fri, 4 Sep 2020 12:29:05 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <20200903080119.441674-16-hch@lst.de>
+In-Reply-To: <20200903080119.441674-17-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -54,16 +54,23 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/3/20 10:01 AM, Christoph Hellwig wrote:
-> Use separate gendisks (which share a tag_set) for the native Amgiga vs
-> the MS-DOS mode instead of redirecting the gendisk lookup using a probe
-> callback.  This avoids potential problems with aliased block_device
-> instances and will eventually allow for removing the blk_register_region
-> framework.
+> The Atari floppy driver usually autodetects the media when used with the
+> ormal /dev/fd? devices, which also are the only nodes created by udev.
+> But it also supports various aliases that force a given media format.
+> That is currently supported using the blk_register_region framework
+> which finds the floppy gendisk even for a 'mismatched' dev_t.  The
+> problem with this (besides the code complexity) is that it creates
+> multiple struct block_device instances for the whole device of a
+> single gendisk, which can lead to interesting issues in code not
+> aware of that fact.
+> 
+> To fix this just create a separate gendisk for each of the aliases
+> if they are accessed.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/block/amiflop.c | 98 +++++++++++++++++++++++------------------
->   1 file changed, 55 insertions(+), 43 deletions(-)
+>   drivers/block/ataflop.c | 135 +++++++++++++++++++++++++---------------
+>   1 file changed, 86 insertions(+), 49 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
