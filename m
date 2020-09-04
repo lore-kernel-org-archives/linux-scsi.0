@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2FC8C2BC84
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C00F6C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:24:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D363020791
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:22:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 979AF2087C
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729930AbgIDKWt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 06:22:49 -0400
-Received: from mx2.suse.de ([195.135.220.15]:38222 "EHLO mx2.suse.de"
+        id S1730113AbgIDKYi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 06:24:38 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40370 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726171AbgIDKWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Sep 2020 06:22:47 -0400
+        id S1730101AbgIDKY2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Sep 2020 06:24:28 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A3BB0AEC4;
-        Fri,  4 Sep 2020 10:22:46 +0000 (UTC)
-Subject: Re: [PATCH 09/19] sd: use __register_blkdev to avoid a modprobe for
- an unregistered dev_t
+        by mx2.suse.de (Postfix) with ESMTP id 3B43FB7E7;
+        Fri,  4 Sep 2020 10:24:27 +0000 (UTC)
+Subject: Re: [PATCH 11/19] loop: use __register_blkdev to allocate devices on
+ demand
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -37,14 +37,14 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
 References: <20200903080119.441674-1-hch@lst.de>
- <20200903080119.441674-10-hch@lst.de>
+ <20200903080119.441674-12-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <37e98474-0a73-0952-201d-850461bd9f6c@suse.de>
-Date:   Fri, 4 Sep 2020 12:22:43 +0200
+Message-ID: <e32a36d3-daf5-9539-3ea8-84adce5fae67@suse.de>
+Date:   Fri, 4 Sep 2020 12:24:23 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <20200903080119.441674-10-hch@lst.de>
+In-Reply-To: <20200903080119.441674-12-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -54,14 +54,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/3/20 10:01 AM, Christoph Hellwig wrote:
-> Switch from using blk_register_region to the probe callback passed to
-> __register_blkdev to disable the request_module call for an unclaimed
-> dev_t in the SD majors.
+> Use the simpler mechanism attached to major_name to allocate a brd device
+> when a currently unregistered minor is accessed.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/sd.c | 19 +++++--------------
->   1 file changed, 5 insertions(+), 14 deletions(-)
+>   drivers/block/loop.c | 30 ++++++++----------------------
+>   1 file changed, 8 insertions(+), 22 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
