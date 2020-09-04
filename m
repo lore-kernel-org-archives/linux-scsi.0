@@ -7,24 +7,23 @@ X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7496AC433E2
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA542C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B09920791
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:29:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B039720791
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 10:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730132AbgIDK3O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 06:29:14 -0400
-Received: from mx2.suse.de ([195.135.220.15]:47196 "EHLO mx2.suse.de"
+        id S1730158AbgIDK3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 06:29:54 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47530 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730114AbgIDK3H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Sep 2020 06:29:07 -0400
+        id S1729753AbgIDK3k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Sep 2020 06:29:40 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 16A6DB7FC;
-        Fri,  4 Sep 2020 10:29:07 +0000 (UTC)
-Subject: Re: [PATCH 16/19] ataflop: use a separate gendisk for each media
- format
+        by mx2.suse.de (Postfix) with ESMTP id B59A0B7F8;
+        Fri,  4 Sep 2020 10:29:39 +0000 (UTC)
+Subject: Re: [PATCH 17/19] z2ram: reindent
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -37,14 +36,14 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
 References: <20200903080119.441674-1-hch@lst.de>
- <20200903080119.441674-17-hch@lst.de>
+ <20200903080119.441674-18-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d0bb8f40-3d6b-9011-d266-6a2c35efbd46@suse.de>
-Date:   Fri, 4 Sep 2020 12:29:05 +0200
+Message-ID: <f1408b96-863e-0ca2-13a5-2e1d9c85546d@suse.de>
+Date:   Fri, 4 Sep 2020 12:29:37 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <20200903080119.441674-17-hch@lst.de>
+In-Reply-To: <20200903080119.441674-18-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -54,23 +53,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/3/20 10:01 AM, Christoph Hellwig wrote:
-> The Atari floppy driver usually autodetects the media when used with the
-> ormal /dev/fd? devices, which also are the only nodes created by udev.
-> But it also supports various aliases that force a given media format.
-> That is currently supported using the blk_register_region framework
-> which finds the floppy gendisk even for a 'mismatched' dev_t.  The
-> problem with this (besides the code complexity) is that it creates
-> multiple struct block_device instances for the whole device of a
-> single gendisk, which can lead to interesting issues in code not
-> aware of that fact.
-> 
-> To fix this just create a separate gendisk for each of the aliases
-> if they are accessed.
+> reindent the driver using Lident as the code style was far away from
+> normal Linux code.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/block/ataflop.c | 135 +++++++++++++++++++++++++---------------
->   1 file changed, 86 insertions(+), 49 deletions(-)
+>   drivers/block/z2ram.c | 493 ++++++++++++++++++++----------------------
+>   1 file changed, 236 insertions(+), 257 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
