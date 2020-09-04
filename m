@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91C54C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 20:06:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41FDC43461
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 20:06:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41F432084D
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 20:06:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 729C32084D
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 20:06:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LdZ1iew7"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jAGlZSlE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727051AbgIDUGK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 16:06:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55788 "EHLO
+        id S1727855AbgIDUGN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 16:06:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726317AbgIDUGI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2020 16:06:08 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C838FC061244
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2020 13:06:08 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id h2so1673925plr.0
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2020 13:06:08 -0700 (PDT)
+        with ESMTP id S1726317AbgIDUGM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2020 16:06:12 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D063CC061244
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2020 13:06:11 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id s10so1669579plp.1
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2020 13:06:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=EcapTIGFf+31wVMqsHZgBSE+2BUv5P+WBgtFpuHKTB4=;
-        b=LdZ1iew781MsmUY9b5ayzdV8tZn4cX+ULtEHpTLX2wxSqa3q1eCh2Rb0Vy10Is8vsF
-         lqvvA9Y5FyVU4l2ni5ijNwJllCfyu/Qnzqm+C8Bt+PQk6pyKYOm4+/TtSWrK2tk4iq8p
-         jn4hXE4r2/V429/yXum1WDMVpeiR3OXCmwh6LnDEnhqYn6tMQxrCYqck8lwfudsdCfla
-         BptYvLVcR8IJt9d8H571KslUJDTGF2Yb1IqeNvzDv4hfbM+L6Qwy593y9i0XEYx7gz3g
-         LezfpNYnqCZI9ccDXQMeIQ0s50pOgXZTaKa0+bXV/Mmb5QAOPUQ4Pasu/PfKq7pThqhA
-         iiLQ==
+        bh=GH3vO2zorCGfPUvIZzkKisvrCrW3Qnmk8aOiUtht/RM=;
+        b=jAGlZSlEVcbd43mtRZUEtflBOiKgmHEETXnSYUPQoQZ3/wBaeC/09c3tur/dwWnm5a
+         Dn2C/FBR7BsFs3Jegl+/dTzY4NzhFtIVfrDC3kMu3eDfU7lqn3VLyIbcQbpR/5RhoW2e
+         gwC784Av+1A64yihrBgAQOLosOh6j7JQ+giHJxFGJ6zU+3RnZK/XiP+2NiROXFyBl6zp
+         7l48N6s9fa690oVojbdw3MJ2GY4D0NH1Fqkn2XE/TtQa/MZRDKMJTSZarGBOuc+FESHu
+         hyoAkykux3Osc9j0d0BX+xPlZN41N5AG4qbpUvqz6FFB+OMKaDISY29iUF35DeA3TJ7N
+         eqFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=EcapTIGFf+31wVMqsHZgBSE+2BUv5P+WBgtFpuHKTB4=;
-        b=nIp5HDARnxbPQSJZthLy5cQnGyFx6cr7VyioLTWOndKdpH3ohzlPh0Avo1tcqyDj0s
-         91q2MeplEFq9FxYXlkrDbhP8qSuqdh0btT/zYQ9FxKrqyoLmAz7qzYjpQgRI8bFs5CUE
-         PQIumDXFKTAJgf9LMkl8ZM2rlxWgYWA0PcYj3kZZrUaWibAf+hBpf/liMzRs03wx3VYo
-         IfAhtCmev1Ogcm+R4GpiQH0kIkc0/CWYbKo8xbrFM3+pjPCuSgNz9B1pj4T9E9fZ2vnC
-         leHDOJI9sLohFFBR+CgUtupMjoa0KlOhY2zWKf294uP9m0L/ngn4SXZBVASclilgwdeH
-         l8dw==
-X-Gm-Message-State: AOAM530Ypj29PgwjC0D0d8C4DKiTX1Zx4s6wuEaiGWlHhCDDcfQZyWZE
-        JxsK6vf4LPpeXoTBTTtzwrk2NZ5SX74=
-X-Google-Smtp-Source: ABdhPJz1yHiYC4VvTFmAiQ0vmglbgBCb0gJtN9PCc/o+LHsUI4ZZnc38M7yHnUn8T7Jwjch9qqx3qw==
-X-Received: by 2002:a17:902:a60e:: with SMTP id u14mr10353745plq.179.1599249968026;
-        Fri, 04 Sep 2020 13:06:08 -0700 (PDT)
+        bh=GH3vO2zorCGfPUvIZzkKisvrCrW3Qnmk8aOiUtht/RM=;
+        b=VhcpkvcEYbd+5/y13a9n5rIcN2AjFupEc5N90ouLwUQAEHsLTLJ4nF08h9CFQIWsSs
+         AP8Q5zi2RsHnZ3DaLzXSe7ZXy8YG3sw6czHtBHIrM3xyihkt3dilx5HrEuBdSNHZCMRQ
+         qbYYJ0zl3+BqWIsbcntQxKEnIq45NS37LOMV5BQtRVUlWQMGc8sPHb+Y4wrCijYNCGzm
+         5U/lI0FDhQMrKyFo4GqwD9LSY4pxUb3l5sHO/ONqNFwGdg6ejw+hqjPLBOsoR10K10K2
+         kDWY8FpHiz0rbUo50T44ZlwEu4bHHtuIYsi9X95RVdPixnZbbFagBpnXd8C8rbEYMO8i
+         j8jw==
+X-Gm-Message-State: AOAM532K36En+dJXHX9lpoRB/PF5D61AcGpM/zeCBRG8ghE0o2p6X4MZ
+        vdY5RF69YXk4VMbNguxJwoshRO/bswk=
+X-Google-Smtp-Source: ABdhPJwlnJZ6d7IDPK1pENRPn9CV8VUXLyCCuFLGn5Xethn7+5WnqcQ7cSVf66PtrU5i7gb/fRqfbg==
+X-Received: by 2002:a17:90a:ac07:: with SMTP id o7mr9955161pjq.194.1599249971113;
+        Fri, 04 Sep 2020 13:06:11 -0700 (PDT)
 Received: from localhost.localdomain ([161.81.62.213])
-        by smtp.gmail.com with ESMTPSA id k5sm21131905pjl.3.2020.09.04.13.06.05
+        by smtp.gmail.com with ESMTPSA id k5sm21131905pjl.3.2020.09.04.13.06.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2020 13:06:07 -0700 (PDT)
+        Fri, 04 Sep 2020 13:06:10 -0700 (PDT)
 From:   Tom Yan <tom.ty89@gmail.com>
 To:     linux-scsi@vger.kernel.org, dgilbert@interlog.com
 Cc:     stern@rowland.harvard.edu, James.Bottomley@SteelEye.com,
         akinobu.mita@gmail.com, hch@lst.de, jens.axboe@oracle.com,
         Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH 2/4] scsi: sg: implement BLKSSZGET
-Date:   Sat,  5 Sep 2020 04:05:52 +0800
-Message-Id: <20200904200554.168979-2-tom.ty89@gmail.com>
+Subject: [PATCH 3/4] scsi: sg: use queue_logical_sector_size() in max_sectors_bytes()
+Date:   Sat,  5 Sep 2020 04:05:53 +0800
+Message-Id: <20200904200554.168979-3-tom.ty89@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200904200554.168979-1-tom.ty89@gmail.com>
 References: <CAGnHSE=fY2wkzNeZTSHC37Sp-uD4D8YMEb7LesDkPcQWAfiK=w@mail.gmail.com>
@@ -77,29 +77,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Provide an ioctl to get the logical sector size so that the maximum
-bytes per request can be derived.
-
-Follow-up of the BLKSECTGET fix.
-
 Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 ---
- drivers/scsi/sg.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/sg.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index e57831910228..0e3f084141a3 100644
+index 0e3f084141a3..deeab4855172 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1118,6 +1118,8 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
- 		max_sectors = min_t(unsigned int, USHRT_MAX,
- 				    queue_max_sectors(sdp->device->request_queue));
- 		return put_user(max_sectors, ip);
-+	case BLKSSZGET:
-+		return put_user(queue_logical_block_size(sdp->device->request_queue), ip);
- 	case BLKTRACESETUP:
- 		return blk_trace_setup(sdp->device->request_queue,
- 				       sdp->disk->disk_name,
+@@ -848,10 +848,11 @@ static int srp_done(Sg_fd *sfp, Sg_request *srp)
+ static int max_sectors_bytes(struct request_queue *q)
+ {
+ 	unsigned int max_sectors = queue_max_sectors(q);
++	unsigned int logical_block_size = queue_logical_block_size(q);
+ 
+-	max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
++	max_sectors = min_t(unsigned int, max_sectors, USHRT_MAX);
+ 
+-	return max_sectors << 9;
++	return max_sectors * logical_block_size;
+ }
+ 
+ static void
 -- 
 2.28.0
 
