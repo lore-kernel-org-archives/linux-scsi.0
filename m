@@ -2,77 +2,150 @@ Return-Path: <SRS0=dnbB=CN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F881C43461
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 11:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8277C43461
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 11:55:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28B34208C7
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 11:37:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a2qeYtvZ"
+	by mail.kernel.org (Postfix) with ESMTP id A9460214F1
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 11:55:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599220546;
+	bh=3gjh72ssf9Q4cLyUZJiBs6BnZ4iUD7PvuTcSLsrMwQk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=gRkY1T3rw5leqNCh5yQLCygRcD3fCO96NKz23E8wt9NnpPESIE7VhYy+JOP8tpWaq
+	 v04beq4stSzKZzWbB8lo8RQ3Gt7ZHl8jkxeg+Q2y97OsxmaIb7D9Esm9GCit1dskZp
+	 N76T7wbJuMnU8LND2UXuOK420bnbSZRd40tYXZ+M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730194AbgIDLhf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 07:37:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33662 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730116AbgIDLhS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2020 07:37:18 -0400
-Received: from mail-il1-x130.google.com (mail-il1-x130.google.com [IPv6:2607:f8b0:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8567C061244
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2020 04:37:17 -0700 (PDT)
-Received: by mail-il1-x130.google.com with SMTP id b17so6048663ilh.4
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2020 04:37:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=P+hlH44g5Jz7kmbirrQDDmLsUNWWo2HktCmUdcwrxJ8=;
-        b=a2qeYtvZ7U9L1lS5oVRpCRMdT7vjoohQNoBW6gJETRpCLHvGMF6L/tQb8fBF9Mkhz7
-         cx1OK8lHZaKmbc6KwynggbRT4o+LHmZ/OO9A6vE5sV48Ke8u6AAgXSDHZqRTrS36X2MQ
-         YsCDYDf3fpfjGiFd0ZG5bBqDeL7yTGp3eGk1uWUPb8wAou7mWKOwV87gatE/Pfyn48Ej
-         740QmexKMKHT6VNut9jicnwtVM1fheL/I1P/uFW2G6WgJbN3bRslOTFZjhvdfWdICMUC
-         pmujpSwq8O5fPJunCN/lgxVkIaQDtyG02/Qwhdk34zABErEaKRxu8esjNpBY66ZnAR+R
-         8e+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=P+hlH44g5Jz7kmbirrQDDmLsUNWWo2HktCmUdcwrxJ8=;
-        b=S8DjGsLx28kUA8j2uH1Ymhqm/vWHb2T8a9WN08MbnYVULhGN7DUdz7xgdbv+mG6rBg
-         GWoLvSwjKK6gXXRPM8YlgLiYNzhRSqTQNC4ejN7vo/HDZq7nqielShvk58EQo+b9RzMc
-         niDBpb+pyBHIPtLImAnK3UI/kGwNlnjkBiBuxrJuFxurxrRmxGM/D2i8hEUHWKP+kGB1
-         kkUjwh5QdLHQWCpTe6rKUq4n4PXklVxRXN+Cdg6n0QxdJ9MnqE2miy4PbmadqyOb5ZkI
-         VElqHV9UzXPYt5TM5r12e3/ZjZYuYgVrsLI4DNvAN3GKA31bfsHOvrIKcrx+hWLqeEJY
-         bwkQ==
-X-Gm-Message-State: AOAM530loewEPj92eGcmM1JtrSx4rBKw0MnZulGSmDrNl5oXdPUx5rpM
-        l4ik/qs87CTZVKsBzl4ZwcU0InR9DY+FXoZzo6dKBwbSmyDi+A==
-X-Google-Smtp-Source: ABdhPJxapWbzyJ2fZ5uMOkrL63bbwiu8S+PqYsaF8aF9JvZzH/1w05Hk874MzpEFYlE2C/Kr1KvxlOaR57kvPzV9D28=
-X-Received: by 2002:a05:6e02:d4f:: with SMTP id h15mr7101761ilj.307.1599219436881;
- Fri, 04 Sep 2020 04:37:16 -0700 (PDT)
+        id S1730021AbgIDLzp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 07:55:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58962 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729897AbgIDLzj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Sep 2020 07:55:39 -0400
+Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AA13E214F1;
+        Fri,  4 Sep 2020 11:55:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599220538;
+        bh=3gjh72ssf9Q4cLyUZJiBs6BnZ4iUD7PvuTcSLsrMwQk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=X251CJuI/Ywhpc5U5mJzTiW8MI5Lom7mP/1kes/9EHNa5BrvU6C9iZY+0B8WSTJwT
+         7wYGHJHR0QJHbjLPsTHnLnhIHZllV1kZ2TrHE2al4VL/7ubptyXuu0hWE+8NhTwaAj
+         8Hl9zy/6MzMqjPFzYE7XSQE9H9JEnDauJ1fMK4xw=
+Date:   Fri, 4 Sep 2020 13:55:59 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Mike Christie <mchristi@redhat.com>, stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: tcmu: fix size in calls to
+ tcmu_flush_dcache_range
+Message-ID: <20200904115559.GC2964473@kroah.com>
+References: <20200528193108.9085-1-bstroesser@ts.fujitsu.com>
+ <159114947916.26776.943125808891892721.b4-ty@oracle.com>
+ <79f7119f-fda7-64cc-b617-d49a23f2e628@ts.fujitsu.com>
+ <28862cd1-e7f2-d161-1bab-4d2ff73cf6a1@ts.fujitsu.com>
+ <20200901140212.GE397411@kroah.com>
+ <8ced4335-dcae-96c8-7c14-3eeb5c97324b@ts.fujitsu.com>
 MIME-Version: 1.0
-From:   sgmihai <sgmihai@gmail.com>
-Date:   Fri, 4 Sep 2020 14:37:05 +0300
-Message-ID: <CALP1Rr7iwsnJ0VcOmNx0z5841zw-=YLy-fjOZnjcs1eQ9ExUzQ@mail.gmail.com>
-Subject: LSI 9201-16e regression ?
-To:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8ced4335-dcae-96c8-7c14-3eeb5c97324b@ts.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi. Somebody on irc gave me this e-mail for reporting a potential bug.
-I have a LSI 9201-16e controller and no hard drives connected to it
-are detected if using kernel 5.8.5 or 5.9 current
-(5.9rc3.d0830.gf75aef3-1, packaged by manjaro).
-Relevant dmesg message:
-mpt2sas_cm0: failure at
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:10790/_scsih_probe()!
+On Tue, Sep 01, 2020 at 05:58:29PM +0200, Bodo Stroesser wrote:
+> On 2020-09-01 16:02, Greg KH wrote:
+> > On Fri, Aug 28, 2020 at 12:03:38PM +0200, Bodo Stroesser wrote:
+> >> Hi,
+> >> I'm adding stable@vger.kernel.org
+> >>
+> >> Once again, this time really adding stable.
+> >>
+> >> On 2020-06-03 04:31, Martin K. Petersen wrote:
+> >>> On Thu, 28 May 2020 21:31:08 +0200, Bodo Stroesser wrote:
+> >>>
+> >>>> 1) If remaining ring space before the end of the ring is
+> >>>>       smaller then the next cmd to write, tcmu writes a padding
+> >>>>       entry which fills the remaining space at the end of the
+> >>>>       ring.
+> >>>>       Then tcmu calls tcmu_flush_dcache_range() with the size
+> >>>>       of struct tcmu_cmd_entry as data length to flush.
+> >>>>       If the space filled by the padding was smaller then
+> >>>>       tcmu_cmd_entry, tcmu_flush_dcache_range() is called for
+> >>>>       an address range reaching behind the end of the vmalloc'ed
+> >>>>       ring.
+> >>>>       tcmu_flush_dcache_range() in a loop calls
+> >>>>          flush_dcache_page(virt_to_page(start));
+> >>>>       for every page being part of the range. On x86 the line is
+> >>>>       optimized out by the compiler, as flush_dcache_page() is
+> >>>>       empty on x86.
+> >>>>       But I assume the above can cause trouble on other
+> >>>>       architectures that really have a flush_dcache_page().
+> >>>>       For paddings only the header part of an entry is relevant
+> >>>>       Due to alignment rules the header always fits in the
+> >>>>       remaining space, if padding is needed.
+> >>>>       So tcmu_flush_dcache_range() can safely be called with
+> >>>>       sizeof(entry->hdr) as the length here.
+> >>>>
+> >>>> [...]
+> >>>
+> >>> Applied to 5.8/scsi-queue, thanks!
+> >>>
+> >>> [1/1] scsi: target: tcmu: Fix size in calls to tcmu_flush_dcache_range
+> >>>          https://git.kernel.org/mkp/scsi/c/8c4e0f212398
+> >>>
+> >>
+> >> The full commit of this patch is:
+> >>       8c4e0f212398cdd1eb4310a5981d06a723cdd24f
+> >>
+> >> This patch is the first of four patches that are necessary to run tcmu
+> >> on ARM without crash. For details please see
+> >>       https://bugzilla.kernel.org/show_bug.cgi?id=208045
+> >> Upsteam commits of patches 2,3, and 4 are:
+> >>     2: 3c58f737231e "scsi: target: tcmu: Optimize use of flush_dcache_page"
+> >>     3: 3145550a7f8b "scsi: target: tcmu: Fix crash in tcmu_flush_dcache_range
+> >> on ARM"
+> >>     4: 5a0c256d96f0 "scsi: target: tcmu: Fix crash on ARM during cmd
+> >> completion"
+> >>
+> >> Since patches 3 and 4 already were accepted for 5.8, 5.4, and 4.19, and
+> >> I sent a request to add patch 2 about 1 hour ago, please consider adding
+> >> this patch to 5.4 and 4.19, because without it tcmu on ARM will still
+> >> crash.
+> > 
+> > I don't see such a request, and am confused now.
+> > 
+> > What exact commits do you want backported, and to what trees?
+> > 
+> > thanks,
+> > 
+> > greg k-h
+> > 
+> 
+> Sorry for the confusion.
+> 
+> The subject of the request I mentioned is
+>     "Re: [PATCH v2 0/2] scsi: target: tcmu: fix crashes on ARM"
+> because it is for the first patch of a small series of two.
+> 
+> Please backport to kernels 4.19 and 5.4 (it is part of 5.8 from beginning):
+>   8c4e0f212398 "scsi: target: tcmu: fix size in calls to tcmu_flush_dcache_range"
+> 
+> Please backport to kernels 4.19, 5.4 and 5.8:
+>   3c58f737231e "scsi: target: tcmu: Optimize use of flush_dcache_page"
+> 
+> Backporting to 4.14 or earlier AFAICS would need more work, especially testing.
+> I don't think that its worth it.
 
-I tested with 4.19, 5.4.6, and 5.7.19 and it works fine with all of
-those. My motherboard is B450 Aorus Elite. Not sure if the regression
-is related to the driver handling that card, or something else.
-Let me know if you can help me track this down and what further info
-to provide if needed.
+Thanks, both now queued up.
+
+greg k-h
