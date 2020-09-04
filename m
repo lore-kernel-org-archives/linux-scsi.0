@@ -2,104 +2,332 @@ Return-Path: <SRS0=dnbB=CN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99971C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 20:06:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A14AC43461
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 23:29:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C48D2087C
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 20:06:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2172C2078E
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 23:29:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XBkwK5CA"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="C8ViL/s7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727923AbgIDUGU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 16:06:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55822 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726317AbgIDUGT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2020 16:06:19 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9C4FC061244
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2020 13:06:18 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id w186so4860810pgb.8
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2020 13:06:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=bg1T/4Ha1GXOocbDAQsf5gtGn1bi3WAb271zUVCosk8=;
-        b=XBkwK5CA0CApuYZMzegPF4t+Xxim413gDj4R5lhx1BRnPYsKrDTq16u9Uv4rytwh4W
-         xBhI35mqqC87mMXxzDoHPzu+S4QPnUtdQ4oxC2KfwOja4EGGj0qEggK/3q2YmVe2PO3u
-         /rbCB4KfGkpwKehabVYBQ2lCFlRO/1UdxNQMBQ/Qob6gMo8YaBSsJHoxCgibBFRvMIwE
-         q+4Kr6kGvD5twGcMVgb4x21RRj+Yo+dkyyAmKZpmDk/Iaq/Eqli+fsKZFFVjWx2KHtvU
-         oIHsqDZ+OjwWBrKV8hlJxw4UbZnvPoxwJDm0X2mbZl/HK/8l3sTPcE/45/4uZCvI5Kct
-         EUpQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=bg1T/4Ha1GXOocbDAQsf5gtGn1bi3WAb271zUVCosk8=;
-        b=l8DlelapmKox1zBpgFU+K3OFJMp4wY3+HusZOZrfMOO77Aiaikgv+dgSg13Idode8A
-         03d2ZKyw/oiAuiteGbby5Rm46/e9syU1Q84I1wWIicbCSAumhO5NigYoqlL//rgbZ06g
-         jv/4jfF2eZeotsmpT59HxgaK1yNdHBKIR2LH+EK+/6Yl7jvukAwjhn2wOXEW764NfZpI
-         uog/IHIlxRWTtv8mt2WrI6ymlvEQCQsZg5J8IXzEUbwu+5NmQVFvvNg/NtOgBMD49fpS
-         b+YMqs27Lf9cg9rL1bjxBgCuYepuBXyc+Sbn6rWhNscZaNLiwXHTiVa0nzrCKjugtoPh
-         9yVg==
-X-Gm-Message-State: AOAM531v1bOqR7f2m6h68TSl5H5MxURjEWCG1BqQpktwoN7WuqvaEihX
-        Poa4Jk/ViWuhLQJVQZ2iBaUZe0lwHBI=
-X-Google-Smtp-Source: ABdhPJxtgzwVWt89jgU4AKB3SpR+NtDBnBl8kMwQdX5yankr/j1IjHFyPMziNt5ixwnInA/C5lZdQQ==
-X-Received: by 2002:a63:e1f:: with SMTP id d31mr8723418pgl.262.1599249974143;
-        Fri, 04 Sep 2020 13:06:14 -0700 (PDT)
-Received: from localhost.localdomain ([161.81.62.213])
-        by smtp.gmail.com with ESMTPSA id k5sm21131905pjl.3.2020.09.04.13.06.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2020 13:06:13 -0700 (PDT)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     linux-scsi@vger.kernel.org, dgilbert@interlog.com
-Cc:     stern@rowland.harvard.edu, James.Bottomley@SteelEye.com,
-        akinobu.mita@gmail.com, hch@lst.de, jens.axboe@oracle.com,
-        Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH 4/4] block/scsi_ioctl.c: use queue_logical_sector_size() in max_sectors_bytes()
-Date:   Sat,  5 Sep 2020 04:05:54 +0800
-Message-Id: <20200904200554.168979-4-tom.ty89@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200904200554.168979-1-tom.ty89@gmail.com>
-References: <CAGnHSE=fY2wkzNeZTSHC37Sp-uD4D8YMEb7LesDkPcQWAfiK=w@mail.gmail.com>
- <20200904200554.168979-1-tom.ty89@gmail.com>
+        id S1728307AbgIDX3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 19:29:54 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32766 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728247AbgIDX3w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2020 19:29:52 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 084N21Hj163406;
+        Fri, 4 Sep 2020 19:29:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=54a2dzktp+EaHtCMf6qtkuWphngdICkTER0HUdbympk=;
+ b=C8ViL/s7FNY8h8WhwaEB098tY71QdtO6ajR4dK8hOk9u5znLJdD2s/bzySznfSFLEVCh
+ VM29V81lqCr7ZDQBFMkI3ZDigjQ8ieI7AVC+9ddDkjklpWamCnwwKwVjv9t0uNPZFH0l
+ uhhlznvHKakKr8AgbmQNqm+rLqmnn/+pAkgAannk2FzPE10CWUbqvNq/T003WNJ5dZB2
+ oqRgY0l/RrRiSE4NO/jE6fMFbXNok8P9Zagclp2O+vLkINaePckAyds0MsoRUrU/WBrO
+ E9zVlpQZt0DyjCCoi55g9erVGMdFGB2yLhWPFt2VJVeQQBYM2ddrep+EQ5Ay2Vqmv9Lm nQ== 
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 33bwga9x0r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Sep 2020 19:29:40 -0400
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 084NRaOt017407;
+        Fri, 4 Sep 2020 23:29:39 GMT
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+        by ppma01dal.us.ibm.com with ESMTP id 337enafmse-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Sep 2020 23:29:39 +0000
+Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
+        by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 084NTcea57213326
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 4 Sep 2020 23:29:38 GMT
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B5C542805A;
+        Fri,  4 Sep 2020 23:29:38 +0000 (GMT)
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 426CE28059;
+        Fri,  4 Sep 2020 23:29:38 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.40.195.188])
+        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
+        Fri,  4 Sep 2020 23:29:38 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v3 1/2] scsi: ibmvfc: use compiler attribute defines instead of __attribute__()
+Date:   Fri,  4 Sep 2020 18:29:35 -0500
+Message-Id: <20200904232936.840193-1-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-09-04_15:2020-09-04,2020-09-04 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
+ bulkscore=0 impostorscore=0 adultscore=0 spamscore=0 priorityscore=1501
+ malwarescore=0 clxscore=1015 phishscore=0 mlxlogscore=999 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009040191
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
----
- block/scsi_ioctl.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Update ibmvfc.h structs to use the preferred  __packed and __aligned()
+attribute macros defined in include/linux/compiler_attributes.h in place
+of __attribute__().
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index ef722f04f88a..ae6aae40a8b6 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -73,10 +73,11 @@ static int sg_set_timeout(struct request_queue *q, int __user *p)
- static int max_sectors_bytes(struct request_queue *q)
- {
- 	unsigned int max_sectors = queue_max_sectors(q);
-+	unsigned int logical_block_size = queue_logical_block_size(q);
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.h | 56 +++++++++++++++++-----------------
+ 1 file changed, 28 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 907889f1fa9d..6da23666f5be 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -133,16 +133,16 @@ struct ibmvfc_mad_common {
+ 	__be16 status;
+ 	__be16 length;
+ 	__be64 tag;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
  
--	max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
-+	max_sectors = min_t(unsigned int, max_sectors, USHRT_MAX);
+ struct ibmvfc_npiv_login_mad {
+ 	struct ibmvfc_mad_common common;
+ 	struct srp_direct_buf buffer;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
  
--	return max_sectors << 9;
-+	return max_sectors * logical_block_size;
- }
+ struct ibmvfc_npiv_logout_mad {
+ 	struct ibmvfc_mad_common common;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
  
- static int sg_get_reserved_size(struct request_queue *q, int __user *p)
+ #define IBMVFC_MAX_NAME 256
+ 
+@@ -168,7 +168,7 @@ struct ibmvfc_npiv_login {
+ 	u8 device_name[IBMVFC_MAX_NAME];
+ 	u8 drc_name[IBMVFC_MAX_NAME];
+ 	__be64 reserved2[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_common_svc_parms {
+ 	__be16 fcph_version;
+@@ -177,7 +177,7 @@ struct ibmvfc_common_svc_parms {
+ 	__be16 bb_rcv_sz; /* upper nibble is BB_SC_N */
+ 	__be32 ratov;
+ 	__be32 edtov;
+-}__attribute__((packed, aligned (4)));
++} __packed __aligned(4);
+ 
+ struct ibmvfc_service_parms {
+ 	struct ibmvfc_common_svc_parms common;
+@@ -192,7 +192,7 @@ struct ibmvfc_service_parms {
+ 	__be32 ext_len;
+ 	__be32 reserved[30];
+ 	__be32 clk_sync_qos[2];
+-}__attribute__((packed, aligned (4)));
++} __packed __aligned(4);
+ 
+ struct ibmvfc_npiv_login_resp {
+ 	__be32 version;
+@@ -217,12 +217,12 @@ struct ibmvfc_npiv_login_resp {
+ 	u8 drc_name[IBMVFC_MAX_NAME];
+ 	struct ibmvfc_service_parms service_parms;
+ 	__be64 reserved2;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ union ibmvfc_npiv_login_data {
+ 	struct ibmvfc_npiv_login login;
+ 	struct ibmvfc_npiv_login_resp resp;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_discover_targets_buf {
+ 	__be32 scsi_id[1];
+@@ -239,7 +239,7 @@ struct ibmvfc_discover_targets {
+ 	__be32 num_avail;
+ 	__be32 num_written;
+ 	__be64 reserved[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ enum ibmvfc_fc_reason {
+ 	IBMVFC_INVALID_ELS_CMD_CODE	= 0x01,
+@@ -283,7 +283,7 @@ struct ibmvfc_port_login {
+ 	struct ibmvfc_service_parms service_parms;
+ 	struct ibmvfc_service_parms service_parms_change;
+ 	__be64 reserved3[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_prli_svc_parms {
+ 	u8 type;
+@@ -303,7 +303,7 @@ struct ibmvfc_prli_svc_parms {
+ #define IBMVFC_PRLI_TARGET_FUNC			0x00000010
+ #define IBMVFC_PRLI_READ_FCP_XFER_RDY_DISABLED	0x00000002
+ #define IBMVFC_PRLI_WR_FCP_XFER_RDY_DISABLED	0x00000001
+-}__attribute__((packed, aligned (4)));
++} __packed __aligned(4);
+ 
+ struct ibmvfc_process_login {
+ 	struct ibmvfc_mad_common common;
+@@ -314,7 +314,7 @@ struct ibmvfc_process_login {
+ 	__be16 error;			/* also fc_reason */
+ 	__be32 reserved2;
+ 	__be64 reserved3[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_query_tgt {
+ 	struct ibmvfc_mad_common common;
+@@ -325,13 +325,13 @@ struct ibmvfc_query_tgt {
+ 	__be16 fc_explain;
+ 	__be16 fc_type;
+ 	__be64 reserved[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_implicit_logout {
+ 	struct ibmvfc_mad_common common;
+ 	__be64 old_scsi_id;
+ 	__be64 reserved[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_tmf {
+ 	struct ibmvfc_mad_common common;
+@@ -348,7 +348,7 @@ struct ibmvfc_tmf {
+ 	__be32 my_cancel_key;
+ 	__be32 pad;
+ 	__be64 reserved[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ enum ibmvfc_fcp_rsp_info_codes {
+ 	RSP_NO_FAILURE		= 0x00,
+@@ -361,7 +361,7 @@ struct ibmvfc_fcp_rsp_info {
+ 	u8 reserved[3];
+ 	u8 rsp_code;
+ 	u8 reserved2[4];
+-}__attribute__((packed, aligned (2)));
++} __packed __aligned(2);
+ 
+ enum ibmvfc_fcp_rsp_flags {
+ 	FCP_BIDI_RSP			= 0x80,
+@@ -377,7 +377,7 @@ enum ibmvfc_fcp_rsp_flags {
+ union ibmvfc_fcp_rsp_data {
+ 	struct ibmvfc_fcp_rsp_info info;
+ 	u8 sense[SCSI_SENSE_BUFFERSIZE + sizeof(struct ibmvfc_fcp_rsp_info)];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_fcp_rsp {
+ 	__be64 reserved;
+@@ -388,7 +388,7 @@ struct ibmvfc_fcp_rsp {
+ 	__be32 fcp_sense_len;
+ 	__be32 fcp_rsp_len;
+ 	union ibmvfc_fcp_rsp_data data;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ enum ibmvfc_cmd_flags {
+ 	IBMVFC_SCATTERLIST	= 0x0001,
+@@ -422,7 +422,7 @@ struct ibmvfc_fcp_cmd_iu {
+ #define IBMVFC_WRDATA		0x01
+ 	u8 cdb[IBMVFC_MAX_CDB_LEN];
+ 	__be32 xfer_len;
+-}__attribute__((packed, aligned (4)));
++} __packed __aligned(4);
+ 
+ struct ibmvfc_cmd {
+ 	__be64 task_tag;
+@@ -446,7 +446,7 @@ struct ibmvfc_cmd {
+ 	__be64 reserved3[2];
+ 	struct ibmvfc_fcp_cmd_iu iu;
+ 	struct ibmvfc_fcp_rsp rsp;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_passthru_fc_iu {
+ 	__be32 payload[7];
+@@ -473,18 +473,18 @@ struct ibmvfc_passthru_iu {
+ 	__be64 scsi_id;
+ 	__be64 tag;
+ 	__be64 reserved2[2];
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_passthru_mad {
+ 	struct ibmvfc_mad_common common;
+ 	struct srp_direct_buf cmd_ioba;
+ 	struct ibmvfc_passthru_iu iu;
+ 	struct ibmvfc_passthru_fc_iu fc_iu;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_trace_start_entry {
+ 	u32 xfer_len;
+-}__attribute__((packed));
++} __packed;
+ 
+ struct ibmvfc_trace_end_entry {
+ 	u16 status;
+@@ -493,7 +493,7 @@ struct ibmvfc_trace_end_entry {
+ 	u8 rsp_code;
+ 	u8 scsi_status;
+ 	u8 reserved;
+-}__attribute__((packed));
++} __packed;
+ 
+ struct ibmvfc_trace_entry {
+ 	struct ibmvfc_event *evt;
+@@ -510,7 +510,7 @@ struct ibmvfc_trace_entry {
+ 		struct ibmvfc_trace_start_entry start;
+ 		struct ibmvfc_trace_end_entry end;
+ 	} u;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ enum ibmvfc_crq_formats {
+ 	IBMVFC_CMD_FORMAT		= 0x01,
+@@ -545,7 +545,7 @@ struct ibmvfc_crq {
+ 	volatile u8 format;
+ 	u8 reserved[6];
+ 	volatile __be64 ioba;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_crq_queue {
+ 	struct ibmvfc_crq *msgs;
+@@ -570,7 +570,7 @@ struct ibmvfc_async_crq {
+ 	volatile __be64 wwpn;
+ 	volatile __be64 node_name;
+ 	__be64 reserved;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ struct ibmvfc_async_crq_queue {
+ 	struct ibmvfc_async_crq *msgs;
+@@ -590,7 +590,7 @@ union ibmvfc_iu {
+ 	struct ibmvfc_tmf tmf;
+ 	struct ibmvfc_cmd cmd;
+ 	struct ibmvfc_passthru_mad passthru;
+-}__attribute__((packed, aligned (8)));
++} __packed __aligned(8);
+ 
+ enum ibmvfc_target_action {
+ 	IBMVFC_TGT_ACTION_NONE = 0,
 -- 
-2.28.0
+2.27.0
 
