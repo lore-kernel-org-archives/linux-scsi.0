@@ -2,112 +2,123 @@ Return-Path: <SRS0=dnbB=CN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57647C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 04:57:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 618AFC43461
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 09:12:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AF25206E7
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 04:57:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="EpgZ//mD"
+	by mail.kernel.org (Postfix) with ESMTP id 2B1A220748
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 09:12:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726032AbgIDE5K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 00:57:10 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59296 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725765AbgIDE5I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Sep 2020 00:57:08 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0844uRXD018244
-        for <linux-scsi@vger.kernel.org>; Thu, 3 Sep 2020 21:57:07 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=Bog4x4eRCpM1MiVJETpyk4vsxblUqucxgBduQeKK0bA=;
- b=EpgZ//mDTUeHpGiKmbEkenphmpRhsIcNyyoErQTuqazXvnIKaWanZk6hBI7EOUC75KEm
- nqsU6SU0yT8ofcJQdf5mJE4SRlDyqocIA+SlJemNfptdBN3W20wLvWIkfIuayJ6pXMeb
- xEVkgWtWQjot75yckoBEKq3P4HyYRnO3eS9ZNEFD0s9xGbyTjKH3bVR9QEp+Yb++F7So
- pHU0+bCdgBZtKbFshfYuJNT5uL0NvdEFHc7lL0N8idbdc+xNOBOKJqeBUhP25B3Dcvf6
- 9uUCQd98+6Sb/YNc0CRGgI6z41JCF+V1c7wnTA97fLuN9KCBA3fnRqX8lE1kOn31AD6/ bA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 337mcqrqju-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2020 21:57:07 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 3 Sep
- 2020 21:57:06 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 3 Sep 2020 21:57:06 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 633D43F7044;
-        Thu,  3 Sep 2020 21:57:06 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0844v669023768;
-        Thu, 3 Sep 2020 21:57:06 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0844v6mQ023759;
-        Thu, 3 Sep 2020 21:57:06 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v3 13/13] qla2xxx: Update version to 10.02.00.102-k
-Date:   Thu, 3 Sep 2020 21:51:28 -0700
-Message-ID: <20200904045128.23631-14-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200904045128.23631-1-njavali@marvell.com>
-References: <20200904045128.23631-1-njavali@marvell.com>
+        id S1730023AbgIDJML (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 05:12:11 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2752 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729712AbgIDJMJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Sep 2020 05:12:09 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 3FDB791929569A201FCF;
+        Fri,  4 Sep 2020 10:12:07 +0100 (IST)
+Received: from [127.0.0.1] (10.47.1.112) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1913.5; Fri, 4 Sep 2020
+ 10:12:05 +0100
+Subject: Re: [PATCH v8 00/18] blk-mq/scsi: Provide hostwide shared tags for
+ SCSI HBAs
+To:     Jens Axboe <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
+        <kashyap.desai@broadcom.com>, <ming.lei@redhat.com>,
+        <bvanassche@acm.org>, <dgilbert@interlog.com>,
+        <paolo.valente@linaro.org>, <hare@suse.de>, <hch@lst.de>
+CC:     <sumit.saxena@broadcom.com>, <linux-block@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <esc.storagedev@microsemi.com>, <megaraidlinux.pdl@broadcom.com>,
+        <chenxiang66@hisilicon.com>, <luojiaxing@huawei.com>
+References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
+ <df6a3bd3-a89e-5f2f-ece1-a12ada02b521@kernel.dk>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <379ef8a4-5042-926a-b8a0-2d0a684a0e01@huawei.com>
+Date:   Fri, 4 Sep 2020 10:09:27 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-04_02:2020-09-03,2020-09-04 signatures=0
+In-Reply-To: <df6a3bd3-a89e-5f2f-ece1-a12ada02b521@kernel.dk>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.1.112]
+X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update internal driver version and remove module version macro.
+On 03/09/2020 22:23, Jens Axboe wrote:
+> On 8/19/20 9:20 AM, John Garry wrote:
+>> Hi all,
+>>
+>> Here is v8 of the patchset.
+>>
+>> In this version of the series, we keep the shared sbitmap for driver tags,
+>> and introduce changes to fix up the tag budgeting across request queues.
+>> We also have a change to count requests per-hctx for when an elevator is
+>> enabled, as an optimisation. I also dropped the debugfs changes - more on
+>> that below.
+>>
+>> Some performance figures:
+>>
+>> Using 12x SAS SSDs on hisi_sas v3 hw. mq-deadline results are included,
+>> but it is not always an appropriate scheduler to use.
+>>
+>> Tag depth 		4000 (default)			260**
+>>
+>> Baseline (v5.9-rc1):
+>> none sched:		2094K IOPS			513K
+>> mq-deadline sched:	2145K IOPS			1336K
+>>
+>> Final, host_tagset=0 in LLDD *, ***:
+>> none sched:		2120K IOPS			550K
+>> mq-deadline sched:	2121K IOPS			1309K
+>>
+>> Final ***:
+>> none sched:		2132K IOPS			1185			
+>> mq-deadline sched:	2145K IOPS			2097	
+>>
+>> * this is relevant as this is the performance in supporting but not
+>>    enabling the feature
+>> ** depth=260 is relevant as some point where we are regularly waiting for
+>>     tags to be available. Figures were are a bit unstable here.
+>> *** Included "[PATCH V4] scsi: core: only re-run queue in
+>>      scsi_end_request() if device queue is busy"
+>>
+>> A copy of the patches can be found here:
+>> https://github.com/hisilicon/kernel-dev/tree/private-topic-blk-mq-shared-tags-v8
+>>
+>> The hpsa patch depends on:
+>> https://lore.kernel.org/linux-scsi/20200430131904.5847-1-hare@suse.de/
+>>
+>> And the smartpqi patch is not to be accepted.
+>>
+>> Comments (and testing) welcome, thanks!
+> 
+> I applied 1-11, leaving the SCSI core bits and drivers to Martin. I can
+> also carry them, just let me know.
+> 
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- drivers/scsi/qla2xxx/qla_os.c      | 1 -
- drivers/scsi/qla2xxx/qla_version.h | 6 +++---
- 2 files changed, 3 insertions(+), 4 deletions(-)
+Great, thanks!
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 763f79c5f624..b943b2f1df6b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7961,7 +7961,6 @@ module_exit(qla2x00_module_exit);
- MODULE_AUTHOR("QLogic Corporation");
- MODULE_DESCRIPTION("QLogic Fibre Channel HBA Driver");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(QLA2XXX_VERSION);
- MODULE_FIRMWARE(FW_FILE_ISP21XX);
- MODULE_FIRMWARE(FW_FILE_ISP22XX);
- MODULE_FIRMWARE(FW_FILE_ISP2300);
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 8ccd9ba1ddef..0f5a5f17dcef 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,9 +7,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.01.00.25-k"
-+#define QLA2XXX_VERSION      "10.02.00.102-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
--#define QLA_DRIVER_MINOR_VER	1
-+#define QLA_DRIVER_MINOR_VER	2
- #define QLA_DRIVER_PATCH_VER	0
--#define QLA_DRIVER_BETA_VER	0
-+#define QLA_DRIVER_BETA_VER	102
--- 
-2.19.0.rc0
+So the SCSI parts depend on the block parts for building, so I guess it 
+makes sense if you could carry them also.
+
+hpsa and smartpqi patches are pending for now, but the rest could be 
+picked up. Martin/James may want more review of the SCSI core bits, though.
+
+Thanks again,
+John
+
 
