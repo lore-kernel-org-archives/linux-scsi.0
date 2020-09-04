@@ -2,123 +2,97 @@ Return-Path: <SRS0=dnbB=CN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 618AFC43461
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 09:12:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 239AAC2BC84
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 09:23:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B1A220748
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 09:12:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAEDB20770
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Sep 2020 09:23:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730023AbgIDJML (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 05:12:11 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2752 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729712AbgIDJMJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Sep 2020 05:12:09 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id 3FDB791929569A201FCF;
-        Fri,  4 Sep 2020 10:12:07 +0100 (IST)
-Received: from [127.0.0.1] (10.47.1.112) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1913.5; Fri, 4 Sep 2020
- 10:12:05 +0100
-Subject: Re: [PATCH v8 00/18] blk-mq/scsi: Provide hostwide shared tags for
- SCSI HBAs
-To:     Jens Axboe <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
-        <kashyap.desai@broadcom.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <dgilbert@interlog.com>,
-        <paolo.valente@linaro.org>, <hare@suse.de>, <hch@lst.de>
-CC:     <sumit.saxena@broadcom.com>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <megaraidlinux.pdl@broadcom.com>,
-        <chenxiang66@hisilicon.com>, <luojiaxing@huawei.com>
-References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
- <df6a3bd3-a89e-5f2f-ece1-a12ada02b521@kernel.dk>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <379ef8a4-5042-926a-b8a0-2d0a684a0e01@huawei.com>
-Date:   Fri, 4 Sep 2020 10:09:27 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1730052AbgIDJXK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Sep 2020 05:23:10 -0400
+Received: from mx2.suse.de ([195.135.220.15]:39698 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728588AbgIDJXK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Sep 2020 05:23:10 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 899CAB165;
+        Fri,  4 Sep 2020 09:23:08 +0000 (UTC)
+Subject: Re: rework check_disk_change()
+To:     dgilbert@interlog.com, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20200902141218.212614-1-hch@lst.de>
+ <730eced4-c804-a78f-3d52-2a448dbd1b84@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <29ec4708-3a8d-a4f2-5eea-a08908a8d093@suse.de>
+Date:   Fri, 4 Sep 2020 11:23:04 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <df6a3bd3-a89e-5f2f-ece1-a12ada02b521@kernel.dk>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <730eced4-c804-a78f-3d52-2a448dbd1b84@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.1.112]
-X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/09/2020 22:23, Jens Axboe wrote:
-> On 8/19/20 9:20 AM, John Garry wrote:
->> Hi all,
+On 9/2/20 5:38 PM, Douglas Gilbert wrote:
+> On 2020-09-02 10:11 a.m., Christoph Hellwig wrote:
+>> Hi Jens,
 >>
->> Here is v8 of the patchset.
+>> this series replaced the not very nice check_disk_change() function with
+>> a new bdev_media_changed that avoids having the ->revalidate_disk call
+>> at its end.  As a result ->revalidate_disk can be removed from a lot of
+>> drivers.
 >>
->> In this version of the series, we keep the shared sbitmap for driver tags,
->> and introduce changes to fix up the tag budgeting across request queues.
->> We also have a change to count requests per-hctx for when an elevator is
->> enabled, as an optimisation. I also dropped the debugfs changes - more on
->> that below.
->>
->> Some performance figures:
->>
->> Using 12x SAS SSDs on hisi_sas v3 hw. mq-deadline results are included,
->> but it is not always an appropriate scheduler to use.
->>
->> Tag depth 		4000 (default)			260**
->>
->> Baseline (v5.9-rc1):
->> none sched:		2094K IOPS			513K
->> mq-deadline sched:	2145K IOPS			1336K
->>
->> Final, host_tagset=0 in LLDD *, ***:
->> none sched:		2120K IOPS			550K
->> mq-deadline sched:	2121K IOPS			1309K
->>
->> Final ***:
->> none sched:		2132K IOPS			1185			
->> mq-deadline sched:	2145K IOPS			2097	
->>
->> * this is relevant as this is the performance in supporting but not
->>    enabling the feature
->> ** depth=260 is relevant as some point where we are regularly waiting for
->>     tags to be available. Figures were are a bit unstable here.
->> *** Included "[PATCH V4] scsi: core: only re-run queue in
->>      scsi_end_request() if device queue is busy"
->>
->> A copy of the patches can be found here:
->> https://github.com/hisilicon/kernel-dev/tree/private-topic-blk-mq-shared-tags-v8
->>
->> The hpsa patch depends on:
->> https://lore.kernel.org/linux-scsi/20200430131904.5847-1-hare@suse.de/
->>
->> And the smartpqi patch is not to be accepted.
->>
->> Comments (and testing) welcome, thanks!
 > 
-> I applied 1-11, leaving the SCSI core bits and drivers to Martin. I can
-> also carry them, just let me know.
+> For over 20 years the sg driver has been carrying this snippet that hangs
+> off the completion callback:
 > 
+>         if (driver_stat & DRIVER_SENSE) {
+>                  struct scsi_sense_hdr ssh;
+> 
+>                  if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
+>                          if (!scsi_sense_is_deferred(&ssh)) {
+>                                  if (ssh.sense_key == UNIT_ATTENTION) {
+>                                          if (sdp->device->removable)
+>                                                  sdp->device->changed = 1;
+>                                  }
+>                          }
+>                  }
+>          }
+> 
+> Is it needed? The unit attention (UA) may not be associated with the
+> device changing. Shouldn't the SCSI mid-level monitor UAs if they
+> impact the state of a scsi_device object?
+> 
+We do; check scsi_io_completion_action() in drivers/scsi/scsi_lib.c
+So I don't think you'd need to keep it in sg.c.
 
-Great, thanks!
+Cheers,
 
-So the SCSI parts depend on the block parts for building, so I guess it 
-makes sense if you could carry them also.
-
-hpsa and smartpqi patches are pending for now, but the rest could be 
-picked up. Martin/James may want more review of the SCSI core bits, though.
-
-Thanks again,
-John
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
