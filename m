@@ -2,269 +2,163 @@ Return-Path: <SRS0=n0Yx=CO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA9BC433E2
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Sep 2020 02:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD0AC43461
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Sep 2020 05:56:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F90420791
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Sep 2020 02:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F089C208DB
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Sep 2020 05:56:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="Sw1q11AQ"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="SW5acDdX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728340AbgIECzz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Sep 2020 22:55:55 -0400
-Received: from mail-co1nam11on2123.outbound.protection.outlook.com ([40.107.220.123]:2817
-        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726329AbgIECzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Sep 2020 22:55:52 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Wt5PHsJQTFcSsSODowQ6IwmWaSh8kwULGSkJDFbOxSIyiFE8PU4A7pOUgaJAiSeTogIBGa/KkcVj74z15Y6ZcRv9jJ/POrA3fh6SvT3v9cHIou2nIGs3l3Eo3bLmlqidHgKHTCOcaF6Z6rcstABX+yQoII41ic1FRB3lHZit+XLhp7tPip3xmTKmSFAYiH6eU4/tJiCTu+CWiCahrnvy+U2H/M/aAs6QLOXGDbMJsAVuz7WxeZkYNUGod87sfkXGzxlJGOheYxOUlA1csUFVP3vjFWm8/f/lHtVu5JnQcyu1/wzG9l3/9Ic+tB9dPmRIjsLfC9GZVDO6m0PuRpXyVw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o7glVAHFyQaNVHqsco2Ncan9L3S9yMz0SEOCa1l4oro=;
- b=WhCT2RDMrbQB/a7M56yeRIz6oZu+cZ2Sm3ML0/QNYXXPbFX+mkbNqDlN9d1YojJ7dckFpNMefHMmMhA/DYblBf7BCSvvhwetzGS7HIFaD/ELkxFaj8DgkonuxjXnMole1kAIwLOS+g8omCVPDu0qbxRsLwQcLnYSdjvw81JKoQwM/8c2wJtAaIHe1KL2IfRYFjhvwRPmwGItOx8SqI9vrjF8Ky+RHHmhysY7O8IGCbzenRXT1IrT5muuE4bYsB01sQPzDlqT729enuuSPKKqEnvQ8LCRrU3sGMptaxECSamRcu7wAOCd5xSTCKJ9zF5pkmtpV7UJdSTP9SbctBwmaw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o7glVAHFyQaNVHqsco2Ncan9L3S9yMz0SEOCa1l4oro=;
- b=Sw1q11AQ+u3joGQmsYZxz+nmz839FHdesZhpPfIHzby4defTsLwZEpZ3aPsQNdaX2o49G1Be6nd04ZIUlRGCFLDLOQGmg05yZ6ZhG+R7y6L/K4k/sAamCAuLNvuZj+3YvpUpZRVHEaADl5ddNQsJn50+rcES/sFHLTwI8AR3d1E=
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
- by MW2PR2101MB0969.namprd21.prod.outlook.com (2603:10b6:302:4::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.0; Sat, 5 Sep
- 2020 02:55:48 +0000
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::d00b:3909:23b:83f1]) by MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::d00b:3909:23b:83f1%5]) with mapi id 15.20.3370.008; Sat, 5 Sep 2020
- 02:55:48 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Boqun Feng <boqun.feng@gmail.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: RE: [RFC v2 11/11] scsi: storvsc: Support PAGE_SIZE larger than 4K
-Thread-Topic: [RFC v2 11/11] scsi: storvsc: Support PAGE_SIZE larger than 4K
-Thread-Index: AQHWgNViudirRNKRX0u5bfq2r+DQyalZVOwQ
-Date:   Sat, 5 Sep 2020 02:55:48 +0000
-Message-ID: <MW2PR2101MB10523D98F77D5A80468A07CDD72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
-References: <20200902030107.33380-1-boqun.feng@gmail.com>
- <20200902030107.33380-12-boqun.feng@gmail.com>
-In-Reply-To: <20200902030107.33380-12-boqun.feng@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-09-05T02:55:46Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=ff219b7d-18cd-4f53-a460-a8dc10c8c4fa;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=microsoft.com;
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: e065bad8-a35b-4860-192d-08d851473182
-x-ms-traffictypediagnostic: MW2PR2101MB0969:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MW2PR2101MB0969B56942986A265D23CD02D72A0@MW2PR2101MB0969.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 65TusjnYgCCuL/3+tVojVIJ81Mr+twK/rJdBcvWVTE75+pd+Ty+udLttAjGM+U0b0vLe4wMnabfgNUYXKLCtx62gwwbeONOrCUep2dNvPm6Q9fscSqTDFiHgMy1gCT2tjTos3gUBihCPLz1P6BXlmXFDfjIaoE54v7wWxkOJLW6kDR/RRRNN1IaO3A71cap90fWlefQKkwdntuNBrEbn7X35NTUExJHB0B2ncb0x3rlHaxMVnM1EZHPXdqnJPqMiQQOk5qo7LdLMfgWKOTUtOzZNHQ2AlkAeqXuGfqJScFaiTo7SKiaqW6R4VZ2wWWRorqj/a+gcqb7EQ9Eh2Wq1fVVnaQxFJxSNSCIKKq+edlsTmYSVYCjJJbIY8EMrPPuD
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(39860400002)(136003)(346002)(366004)(396003)(71200400001)(55016002)(2906002)(8676002)(66476007)(86362001)(8936002)(9686003)(4326008)(66556008)(478600001)(54906003)(66946007)(110136005)(64756008)(8990500004)(66446008)(316002)(76116006)(83380400001)(33656002)(7416002)(82960400001)(82950400001)(52536014)(6506007)(5660300002)(10290500003)(7696005)(26005)(186003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: /IyvZ4jAwdO2qjI/kHw+J6IGOucA1R1xbtMqDYP06jOvIZbMvk0zKdtcBGQs3d+w3eymUD1sVbQ4aGMJjgXVNfeCdlEODbTJhqpQPXODkJFTLej7W79O9FWYvShEPoyxNnWcULOsQSANOjbIPihvHmbl8SIJ1itIQ6YYeOwNS6VWNb7PoUztuW4BLsotXjSd9zPUC0DzjX37zXH1VVvbragfYe7laHy4CId6SP/QaPxg7CRDWsLI0EwzcXE/kn2QZTv1Qs9KdbvSMDJY4g8P/BKsxeg0n935Q2yFsW3EK9chQcuuPEJUdyRyuCqCOiGB25TLsEn1y+r9czK2phUfUbl3fawvQ/eskNDwhXJF2PxS8YpkC6eGTcYCbOa6kwkuefn07uZlGmlsyL+f8mFrishSRoGuZOH6UYSPzQ7lTvz+3OUqcH2NK7deiXjc0ZYd25S5o+Dm2C/0q5Ig/aSinEiGDdcsLIIUpUfIfEWsbEn8dA7CUo6wSoP6AxaKtjhRpVYJNfYzKnD3o9ZcW3ByxsVmhONzeP+ASq5so95gYFSDr/4oYRy2JY61+HFlKDq7j4FioqdFMHPASyhyJNhM4Dupbc/fbs45795bUrrvLaM+NxfuWQ2P5A6psrTMil6CoiQYMOj+QZctw4HfXSMk5w==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e065bad8-a35b-4860-192d-08d851473182
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Sep 2020 02:55:48.7313
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: uibUe2sIeCNVU9ytoNYDQYpXN0sSInmeFOjA5u9dcsWmXlMTscoavvFAwhRQ/LQ3DR7EACd3iz+ci8XZsa2Wnx2BlXA+PiKb9FFGYakZTqk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB0969
+        id S1726203AbgIEF4Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Sep 2020 01:56:25 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:21675 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725818AbgIEF4X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 01:56:23 -0400
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200905055620epoutp0456357027d530330bd2a455165c9a382c~xzZSkAO593092530925epoutp04D
+        for <linux-scsi@vger.kernel.org>; Sat,  5 Sep 2020 05:56:20 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200905055620epoutp0456357027d530330bd2a455165c9a382c~xzZSkAO593092530925epoutp04D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1599285381;
+        bh=q2pbPNbffknjpXUlA3cfcKpw3Fz4sCC98x/yM5Ihxh0=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=SW5acDdX/CD77dc4RdDP585DmE255bRsElEVklP8H21dAlA1fPjaMe4lvqCh8+VCU
+         e9IHiYT/1a8omdD894vs2UpKAuhdSY262SGyjBNDvqOzw9NEe/0ZIKN9cKWhfxTT2e
+         yFbC/9atoogPwQ674hkeJloBFDUWHivPAK1awgkk=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20200905055620epcas2p441069984459b07c414d133c5c1e42b91~xzZR-Q07-1604616046epcas2p43;
+        Sat,  5 Sep 2020 05:56:20 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4Bk3h1456gzMqYkZ; Sat,  5 Sep
+        2020 05:56:17 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        EB.17.19322.188235F5; Sat,  5 Sep 2020 14:56:17 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200905055616epcas2p18fcdaa65c5040b9bf9fdc350ab075de3~xzZOpc-7f0317503175epcas2p1L;
+        Sat,  5 Sep 2020 05:56:16 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200905055616epsmtrp242154b72b658bf56c1c93d20c405173d~xzZOoiC4y1855018550epsmtrp2d;
+        Sat,  5 Sep 2020 05:56:16 +0000 (GMT)
+X-AuditID: b6c32a45-797ff70000004b7a-0e-5f53288169dc
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        07.91.08382.088235F5; Sat,  5 Sep 2020 14:56:16 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200905055616epsmtip1aff32283862c26002710a3a69d5747d4~xzZOaLulz2808628086epsmtip13;
+        Sat,  5 Sep 2020 05:56:16 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v7 0/2] ufs: exynos: introduce the way to get cmd info
+Date:   Sat,  5 Sep 2020 14:47:18 +0900
+Message-Id: <cover.1599284713.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpkk+LIzCtJLcpLzFFi42LZdljTQrdRIzjeYPEqGYsH87axWextO8Fu
+        8fLnVTaLgw87WSymffjJbPFp/TJWi19/17NbrF78gMVi0Y1tTBY3txxlsei+voPNYvnxf0wW
+        XXdvMFos/feWxYHP4/IVb4/Lfb1MHhMWHWD0+L6+g83j49NbLB59W1YxenzeJOfRfqCbKYAj
+        KscmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0zB+huJYWy
+        xJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BoWGBXnFibnFpXrpecn6ulaGBgZEpUGVC
+        Tsb9FbEFH7kqth5tZWxgPMPRxcjJISFgIvH45QPmLkYuDiGBHYwS51Y+ZIRwPjFKfLu9khXC
+        +cYoserSVSaYllOTWtkgEnsZJXZe/88O4fxglGic+hCsik1AU+LpzalMIAkRgc1MEq8W3GcG
+        STALqEvsmnACrEhYwE3ixMFtLCA2i4CqxKwVT9lBbF4BC4mFbXcYIdbJSdw818kMYf9kl3g+
+        mQfCdpH492MeC4QtLPHq+BZ2CFtK4vO7vWwQdr3EvqkNYD9ICPQwSjzd9w9qqLHErGftQDYH
+        0EGaEut36YOYEgLKEkdusUCcySfRcfgvO0SYV6KjTQiiUVni16TJUEMkJWbevAO11UPi/ryn
+        YK1CArESDRPWMk1glJ2FMH8BI+MqRrHUguLc9NRiowJD5EjaxAhOi1quOxgnv/2gd4iRiYPx
+        EKMEB7OSCK/HucB4Id6UxMqq1KL8+KLSnNTiQ4ymwOCayCwlmpwPTMx5JfGGpkZmZgaWpham
+        ZkYWSuK8uYoX4oQE0hNLUrNTUwtSi2D6mDg4pRqYZnvdtjIxyQmbpnzdb9HGJyq/donsPbh2
+        9SOnYBZ2pbNaP6Y/v1d2yJuzOToyz775es+zw2l9oobx9i69+dwzbjQ1/2YVDjzRff8x+w3G
+        93/z65NC897v3PvrVFtphkNVTGmCo/I6Xr4CkaD+rpjNB/s/C2oHPcjxW3pzQZ9fX/D+h23q
+        4SvWPGp9fr7jtgnPiyWGH9pq+GY//1SyP5Izvdo0R7wxZvJs4yRmqz973A9dUvr96NcRlf87
+        ddZXOX9o0OrefvdpyeUrjSq3V2irCceez5w8P0am0yXf7+s8ZYf/bvbsZV/kHF+d2nhfdI+0
+        j6tBk+rFTw8j5D6+Czj/Vmxbx3PdP4XKAnlGZ/SUWIozEg21mIuKEwHTOsXHFAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrALMWRmVeSWpSXmKPExsWy7bCSnG6DRnC8wfG/ahYP5m1js9jbdoLd
+        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCxubjnKYtF9fQebxfLj/5gs
+        uu7eYLRY+u8tiwOfx+Ur3h6X+3qZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBH
+        FJdNSmpOZllqkb5dAlfG/RWxBR+5KrYebWVsYDzD0cXIySEhYCJxalIrWxcjF4eQwG5Gibv9
+        fawQCUmJEzufM0LYwhL3W46wQhR9Y5TY8v8oG0iCTUBT4unNqUwgCRGBw0wS/7c+ZwdJMAuo
+        S+yacIIJxBYWcJM4cXAbC4jNIqAqMWvFU7AaXgELiYVtd6A2yEncPNfJPIGRZwEjwypGydSC
+        4tz03GLDAsO81HK94sTc4tK8dL3k/NxNjOBA1dLcwbh91Qe9Q4xMHIyHGCU4mJVEeD3OBcYL
+        8aYkVlalFuXHF5XmpBYfYpTmYFES571RuDBOSCA9sSQ1OzW1ILUIJsvEwSnVwLQlKn9Cxnn1
+        RY4bVr5p4uqMbr3aP3uxQ1SdhEY4u8qz+f+6NS02bwj63bJQrHf9+bWr9p7l4srsf/LC5+D/
+        /8vSLAXls+esXSS1j2su/9rdh0/GRTH3+zbprc5jSpD+H6FtfE9VJaay4KE4n90UjnvL3zbp
+        LvZNiA0+3vyFQ2gtz0HlbTd1z+RMltJZwsyQtO/SQce+mP0HKlQ6PDcV7Yi/Nr/g0o1ruw73
+        bt8iIPIqOUSqJOr3BvblxQ3nlh/s4nmuvPGhvcWqdbWPKybqlZ5YuFBxbkKrhMLRsOMT9z16
+        M2nPtUUWAYdWmrcu772+Yu3V40tTO873HOm+LdK3R7M8zEaN54fin8Yvtnvu35RRYinOSDTU
+        Yi4qTgQASvwaicMCAAA=
+X-CMS-MailID: 20200905055616epcas2p18fcdaa65c5040b9bf9fdc350ab075de3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200905055616epcas2p18fcdaa65c5040b9bf9fdc350ab075de3
+References: <CGME20200905055616epcas2p18fcdaa65c5040b9bf9fdc350ab075de3@epcas2p1.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Boqun Feng <boqun.feng@gmail.com> Sent: Tuesday, September 1, 2020 8:=
-01 PM
->=20
-> Hyper-V always use 4k page size (HV_HYP_PAGE_SIZE), so when
-> communicating with Hyper-V, a guest should always use HV_HYP_PAGE_SIZE
-> as the unit for page related data. For storvsc, the data is
-> vmbus_packet_mpb_array. And since in scsi_cmnd, sglist of pages (in unit
-> of PAGE_SIZE) is used, we need convert pages in the sglist of scsi_cmnd
-> into Hyper-V pages in vmbus_packet_mpb_array.
->=20
-> This patch does the conversion by dividing pages in sglist into Hyper-V
-> pages, offset and indexes in vmbus_packet_mpb_array are recalculated
-> accordingly.
->=20
-> Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 60 ++++++++++++++++++++++++++++++++++----
->  1 file changed, 54 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 8f5f5dc863a4..3f6610717d4e 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1739,23 +1739,71 @@ static int storvsc_queuecommand(struct Scsi_Host =
-*host, struct
-> scsi_cmnd *scmnd)
->  	payload_sz =3D sizeof(cmd_request->mpb);
->=20
->  	if (sg_count) {
-> -		if (sg_count > MAX_PAGE_BUFFER_COUNT) {
-> +		unsigned int hvpg_idx =3D 0;
-> +		unsigned int j =3D 0;
-> +		unsigned long hvpg_offset =3D sgl->offset & ~HV_HYP_PAGE_MASK;
-> +		unsigned int hvpg_count =3D HVPFN_UP(hvpg_offset + length);
->=20
-> -			payload_sz =3D (sg_count * sizeof(u64) +
-> +		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
-> +
-> +			payload_sz =3D (hvpg_count * sizeof(u64) +
->  				      sizeof(struct vmbus_packet_mpb_array));
->  			payload =3D kzalloc(payload_sz, GFP_ATOMIC);
->  			if (!payload)
->  				return SCSI_MLQUEUE_DEVICE_BUSY;
->  		}
->=20
-> +		/*
-> +		 * sgl is a list of PAGEs, and payload->range.pfn_array
-> +		 * expects the page number in the unit of HV_HYP_PAGE_SIZE (the
-> +		 * page size that Hyper-V uses, so here we need to divide PAGEs
-> +		 * into HV_HYP_PAGE in case that PAGE_SIZE > HV_HYP_PAGE_SIZE.
-> +		 */
->  		payload->range.len =3D length;
-> -		payload->range.offset =3D sgl[0].offset;
-> +		payload->range.offset =3D sgl[0].offset & ~HV_HYP_PAGE_MASK;
-> +		hvpg_idx =3D sgl[0].offset >> HV_HYP_PAGE_SHIFT;
->=20
->  		cur_sgl =3D sgl;
-> -		for (i =3D 0; i < sg_count; i++) {
-> -			payload->range.pfn_array[i] =3D
-> -				page_to_pfn(sg_page((cur_sgl)));
-> +		for (i =3D 0, j =3D 0; i < sg_count; i++) {
-> +			/*
-> +			 * "PAGE_SIZE / HV_HYP_PAGE_SIZE - hvpg_idx" is the #
-> +			 * of HV_HYP_PAGEs in the current PAGE.
-> +			 *
-> +			 * "hvpg_count - j" is the # of unhandled HV_HYP_PAGEs.
-> +			 *
-> +			 * As shown in the following, the minimal of both is
-> +			 * the # of HV_HYP_PAGEs, we need to handle in this
-> +			 * PAGE.
-> +			 *
-> +			 * |------------------ PAGE ----------------------|
-> +			 * |   PAGE_SIZE / HV_HYP_PAGE_SIZE in total      |
-> +			 * |hvpg|hvpg| ...                 |hvpg|... |hvpg|
-> +			 *           ^                     ^
-> +			 *         hvpg_idx                |
-> +			 *           ^                     |
-> +			 *           +---(hvpg_count - j)--+
-> +			 *
-> +			 * or
-> +			 *
-> +			 * |------------------ PAGE ----------------------|
-> +			 * |   PAGE_SIZE / HV_HYP_PAGE_SIZE in total      |
-> +			 * |hvpg|hvpg| ...                 |hvpg|... |hvpg|
-> +			 *           ^                                           ^
-> +			 *         hvpg_idx                                      |
-> +			 *           ^                                           |
-> +			 *           +---(hvpg_count - j)------------------------+
-> +			 */
-> +			unsigned int nr_hvpg =3D min((unsigned int)(PAGE_SIZE / HV_HYP_PAGE_S=
-IZE) - hvpg_idx,
-> +						   hvpg_count - j);
-> +			unsigned int k;
-> +
-> +			for (k =3D 0; k < nr_hvpg; k++) {
-> +				payload->range.pfn_array[j] =3D
-> +					page_to_hvpfn(sg_page((cur_sgl))) + hvpg_idx + k;
-> +				j++;
-> +			}
->  			cur_sgl =3D sg_next(cur_sgl);
-> +			hvpg_idx =3D 0;
->  		}
+v6 -> v7
+migrate this to 5.10.
+shrink the patch set, two patches.
+merge a fix for build errors
 
-This code works; I don't see any errors.  But I think it can be made simple=
-r based
-on doing two things:
-1)  Rather than iterating over the sg_count, and having to calculate nr_hvp=
-g on
-each iteration, base the exit decision on having filled up the pfn_array[].=
-  You've
-already calculated the exact size of the array that is needed given the dat=
-a
-length, so it's easy to exit when the array is full.
-2) In the inner loop, iterate from hvpg_idx to PAGE_SIZE/HV_HYP_PAGE_SIZE
-rather than from 0 to a calculated value.
+v5 -> v6
+replace put_aligned with get_unaligned_be32 to set lba and sct
+fix null pointer access symptom
 
-Also, as an optimization, pull page_to_hvpfn(sg_page((cur_sgl)) out of the
-inner loop.
+v4 -> v5
+Rebased on Stanley's patch (scsi: ufs: Fix and simplify ..
+Change cmd history print order
+rename config to SCSI_UFS_EXYNOS_DBG
+feature functions in ufs-exynos-dbg.c by SCSI_UFS_EXYNOS_DBG
 
-I think this code does it (though I haven't tested it):
+v3 -> v4
+seperate respective implementations of the callbacks
+change the location of compl_xfer_req related stuffs
+fix null pointer access
 
-                for (j =3D 0; ; sgl =3D sg_next(sgl)) {
-                        unsigned int k;
-                        unsigned long pfn;
+v2 -> v3
+fix build errors
 
-                        pfn =3D page_to_hvpfn(sg_page(sgl));
-                        for (k =3D hvpg_idx; k < (unsigned int)(PAGE_SIZE /=
-HV_HYP_PAGE_SIZE); k++) {
-                                payload->range.pfn_array[j] =3D pfn + k;
-                                if (++j =3D=3D hvpg_count)
-                                        goto done;
-                        }
-                        hvpg_idx =3D 0;
-                }
-done:
+v1 -> v2
+change callbacks
+allocate memory for ufs_s_dbg_mgr dynamically, not static way
 
-This approach also makes the limit of the inner loop a constant, and that
-constant will be 1 when page size is 4K.  So the compiler should be able to
-optimize away the loop in that case.
+Kiwoong Kim (2):
+  ufs: introduce a callback to get info of command completion
+  ufs: exynos: introduce command history
 
-Michael
+ drivers/scsi/ufs/Kconfig          |  14 +++
+ drivers/scsi/ufs/Makefile         |   4 +-
+ drivers/scsi/ufs/ufs-exynos-dbg.c | 200 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos-if.h  |  17 ++++
+ drivers/scsi/ufs/ufs-exynos.c     |  38 ++++++++
+ drivers/scsi/ufs/ufs-exynos.h     |  35 +++++++
+ drivers/scsi/ufs/ufshcd.c         |   1 +
+ drivers/scsi/ufs/ufshcd.h         |   8 ++
+ 8 files changed, 316 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-dbg.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-if.h
 
-
-
-
-
-
->  	}
->=20
-> --
-> 2.28.0
+-- 
+2.7.4
 
