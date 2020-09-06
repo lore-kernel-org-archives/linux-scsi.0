@@ -2,104 +2,164 @@ Return-Path: <SRS0=a8U3=CP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5895EC43461
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:27:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5BBFC43461
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 04:51:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 216F82078E
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:27:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96F4A20759
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 04:51:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OmkEN5sA"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZUaxledh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728913AbgIFB1g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Sep 2020 21:27:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42494 "EHLO
+        id S1726211AbgIFEvP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Sep 2020 00:51:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728751AbgIFB1e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:27:34 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C04E7C061573;
-        Sat,  5 Sep 2020 18:27:34 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id n3so6332435pjq.1;
-        Sat, 05 Sep 2020 18:27:34 -0700 (PDT)
+        with ESMTP id S1725280AbgIFEvN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2020 00:51:13 -0400
+Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 226E1C061573;
+        Sat,  5 Sep 2020 21:51:13 -0700 (PDT)
+Received: by mail-qv1-xf36.google.com with SMTP id f11so5060801qvw.3;
+        Sat, 05 Sep 2020 21:51:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=bg1T/4Ha1GXOocbDAQsf5gtGn1bi3WAb271zUVCosk8=;
-        b=OmkEN5sAudh66UEkXdATHHM7c6WY8B9mwx5twLEEC60AHeUOsNvhPXwvN128tXhgqH
-         R4DuE/hcchGRyPb58ULw70zj1Ji/EsqcriXEbUT+YhW0aPKvCqE1tiI4A3PDxoTldgx+
-         XDtUmZQIRTMcBX365GyEEIxS1aB139jubdy49YuZrpg9q2Snu0Pgtc05TcpP+IHBsWzD
-         XPgIqeEaetqS2GwJJXlECqGz+ferjsy1j6FzhBu4tidOyIusuNphW8SnKWzT5MxSQ9+z
-         j0E7fS/WMKlbOnRT1eAJHEGy6hLU90C1fT8yuFUJS4RWooq7MNopSkGz2ukAp8uo2df5
-         to1A==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=S+yc3P3tKNdaheR8C4irj9BMqK6L98Ju22GvQsWWgBE=;
+        b=ZUaxledhueBq9Vc/H2dDgnA1nhPm5u4mA3aJpU6quYyT010mOj6IayBu2fo6lOaUvO
+         buxgjg4D4rAffbOdzZn0SYc+G7ERV9xRSEHoHmfXNnG7VPKmeoqJCH1nRE44UjAAwMRH
+         XIpRhRbZH29KaiPD5Y/bJnpuDntLmacwNwJU3ys4Q8tN2pabrReEAivvZlGpNK1vfhuB
+         UBOozC4hO7gD7tuR7kJMe0lFXHIzzAAVZCWKVvY4Sg1kcbA8UQR2JXYTnOY+58w6qfXX
+         bksjIUq8CUyRnd1H23HqHMeAuZyvxoPcxb1DvGRuKndyCoRGyCm+J0AHoKanXF4CK3LE
+         u3gQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=bg1T/4Ha1GXOocbDAQsf5gtGn1bi3WAb271zUVCosk8=;
-        b=XadPKBN6M65FAuhIEW8YlbRjynLtQgKzcQ9lYvc91U2AS1EGNg38Eh2VAhwZ+Up1nF
-         Qwv4XtI7s/nMJ6gvyr3zFZVg81f6h+bEnzQm3dWQ9ef3UmhQWWU8cDVJktZS0gyA1oGg
-         UOFJTy/+qnClWEpRRTlGsizSj5iW89YLU/2mFcbUX1mYb7Os/A27+n5nXBTj4XX49PSh
-         cSWeP6faPYkzF9G8Ig+1P5goiLfL5abLhGIFJy+ZHVyQSG8kLNTsnimnHpk4fGZg0U8s
-         WwQj7NTlaGK47gbwTMzzAIlGaNIPjA2by+WxyW09LRiEAIeI9MssKgmqad/QX/978bjI
-         sEHw==
-X-Gm-Message-State: AOAM533G8lAB998WKUoF+waHSHf0ItOvi/hD1nSfAqO/cPbLoHahDnj/
-        emcjH8vZ2HNTAiX5unGK5AWfd1AKZ+c=
-X-Google-Smtp-Source: ABdhPJwiaQljkH2yb6ew2rqB3WdgihEEr7+c61XfZC6uMMrm4jSC7pK2Ukv7Dx/kOE70Ae8nHjfVRA==
-X-Received: by 2002:a17:902:fe15:: with SMTP id g21mr14454297plj.22.1599355653759;
-        Sat, 05 Sep 2020 18:27:33 -0700 (PDT)
-Received: from localhost.localdomain ([161.81.62.213])
-        by smtp.gmail.com with ESMTPSA id gx5sm8462072pjb.57.2020.09.05.18.27.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2020 18:27:33 -0700 (PDT)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     linux-scsi@vger.kernel.org, dgilbert@interlog.com,
-        bvanassche@acm.org
-Cc:     stern@rowland.harvard.edu, akinobu.mita@gmail.com, hch@lst.de,
-        linux-api@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH RESEND 4/4] block/scsi_ioctl.c: use queue_logical_sector_size() in max_sectors_bytes()
-Date:   Sun,  6 Sep 2020 09:27:16 +0800
-Message-Id: <20200906012716.1553-4-tom.ty89@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200906012716.1553-1-tom.ty89@gmail.com>
-References: <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
- <20200906012716.1553-1-tom.ty89@gmail.com>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=S+yc3P3tKNdaheR8C4irj9BMqK6L98Ju22GvQsWWgBE=;
+        b=kzgCS7QJ85/AXb0R27urd2k8GpcjSHaVSI1yl7TJHuP0dnNk0agrHk79W+ynJ3HM/b
+         vpd1RNGYQs+DDNm2cNsEj4B/Lz2ZSwQPYva+UWojLiJ8vKEDtDa5NhN8K9BQ2rDH5Qyj
+         Q4O1WIT2wwji4/kNamOafUGxhyYula2loDO6sZeUe2oyB50zA/921a93wCrfDfiPrARn
+         13cRaW/afICi0DgNWtGvyQmFlAC3XW/DMHZFo5mlWz8xHdKEuaOphnTlkmeA1Pmy2BDF
+         cZkDbkxwU0AsURKWitFZXZreq2h2WhxWqJySERTS13UCDm/u4II51hGQBQykFEEnc+re
+         Nu0Q==
+X-Gm-Message-State: AOAM531jhTtZlHMsowwRTdM7DVGg0y+85cuABfEnvupEqOB0WlG8NRut
+        Z/l5+sqhfFs8TYNKdcczuqM=
+X-Google-Smtp-Source: ABdhPJwKhFcCv07nv/3Y6M8uL9V109sfu5OYjJg3KXakjofYEfAXOLshmMpH+JCDwfK7uU1SXrSR+A==
+X-Received: by 2002:a0c:e989:: with SMTP id z9mr14715798qvn.81.1599367870118;
+        Sat, 05 Sep 2020 21:51:10 -0700 (PDT)
+Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
+        by smtp.gmail.com with ESMTPSA id f8sm4584295qtx.81.2020.09.05.21.51.08
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 05 Sep 2020 21:51:09 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailauth.nyi.internal (Postfix) with ESMTP id 3F4E927C0054;
+        Sun,  6 Sep 2020 00:51:08 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute3.internal (MEProxy); Sun, 06 Sep 2020 00:51:08 -0400
+X-ME-Sender: <xms:u2pUX1eiWo1nY4nzQanEa7Jwlj-heG1LV_JUZpnLEEcajp61zadSZg>
+    <xme:u2pUXzNlm__kfWD8uD59qu_9aCZFKaJ9kXs0guPAHmKsPbGDjwZ5fD6qvC3ivOZGa
+    4Su548MZErRSCNQXQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrudegiedgkeejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhquhhn
+    ucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrth
+    htvghrnhepvdelieegudfggeevjefhjeevueevieetjeeikedvgfejfeduheefhffggedv
+    geejnecukfhppeehvddrudehhedrudduuddrjedunecuvehluhhsthgvrhfuihiivgeptd
+    enucfrrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvshhmthhprghuthhhphgv
+    rhhsohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheehvddqsghoqhhunhdrfh
+    gvnhhgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
+X-ME-Proxy: <xmx:u2pUX-hAeu5Md4hciO5-OHgDSWHKWz4nyDaRK2xLIiP-E2uR9cRmAA>
+    <xmx:u2pUX-9-IavrJS6qrIsE34_JGX33g7gOvh35zQ2f9pYR1hx6PUukXg>
+    <xmx:u2pUXxuK5XdMKRm91YsrmUijAm8GeeCSU6HEt7bRFOg2WaBUJJp1dQ>
+    <xmx:vGpUXxMlvS1HryUnhHQ842KlMvAuuEjtvsYeEQ957BCPeXFAXvCv-LWjI14>
+Received: from localhost (unknown [52.155.111.71])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 0641F3280059;
+        Sun,  6 Sep 2020 00:51:06 -0400 (EDT)
+Date:   Sun, 6 Sep 2020 12:51:05 +0800
+From:   Boqun Feng <boqun.feng@gmail.com>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RFC v2 03/11] Drivers: hv: vmbus: Introduce types of GPADL
+Message-ID: <20200906045105.GE7503@debian-boqun.qqnc3lrjykvubdpftowmye0fmh.lx.internal.cloudapp.net>
+References: <20200902030107.33380-1-boqun.feng@gmail.com>
+ <20200902030107.33380-4-boqun.feng@gmail.com>
+ <MW2PR2101MB105294660A73A7C69273AB9ED72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <MW2PR2101MB105294660A73A7C69273AB9ED72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
----
- block/scsi_ioctl.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On Sat, Sep 05, 2020 at 12:19:08AM +0000, Michael Kelley wrote:
+[...]
+> > 
+> > @@ -462,7 +576,13 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
+> >  	open_msg->openid = newchannel->offermsg.child_relid;
+> >  	open_msg->child_relid = newchannel->offermsg.child_relid;
+> >  	open_msg->ringbuffer_gpadlhandle = newchannel->ringbuffer_gpadlhandle;
+> > -	open_msg->downstream_ringbuffer_pageoffset = newchannel-
+> > >ringbuffer_send_offset;
+> > +	/*
+> > +	 * The unit of ->downstream_ringbuffer_pageoffset is HV_HYP_PAGE and
+> > +	 * the unit of ->ringbuffer_send_offset is PAGE, so here we first
+> > +	 * calculate it into bytes and then convert into HV_HYP_PAGE.
+> > +	 */
+> > +	open_msg->downstream_ringbuffer_pageoffset =
+> > +		hv_ring_gpadl_send_offset(newchannel->ringbuffer_send_offset << PAGE_SHIFT) >> HV_HYP_PAGE_SHIFT;
+> 
+> Line length?
+> 
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index ef722f04f88a..ae6aae40a8b6 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -73,10 +73,11 @@ static int sg_set_timeout(struct request_queue *q, int __user *p)
- static int max_sectors_bytes(struct request_queue *q)
- {
- 	unsigned int max_sectors = queue_max_sectors(q);
-+	unsigned int logical_block_size = queue_logical_block_size(q);
- 
--	max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
-+	max_sectors = min_t(unsigned int, max_sectors, USHRT_MAX);
- 
--	return max_sectors << 9;
-+	return max_sectors * logical_block_size;
- }
- 
- static int sg_get_reserved_size(struct request_queue *q, int __user *p)
--- 
-2.28.0
+Thanks for the review! I've resolved all your comments on wording for
+patch #2 and #4 in my local branch. For this line length issue, I fix it
+with two changes:
 
+1)	both the callsite of hv_ring_gpadl_send_offset() use ">> ..."
+	to calculate the index in HV_HYP_PAGE, so I change the function
+	to return offset in unit of HV_HYP_PAGE instead of bytes, and
+	that can save us the ">> ..." here.
+
+2)	newchannel->ringbuffer_send_offset is read in the previous code
+	of the function into local variable "send_pages", so I use it
+	to replace the "newchannel->ringbuffer_send_offset" here.
+
+now the code is:
+
+	open_msg->downstream_ringbuffer_pageoffset =
+		hv_ring_gpadl_send_hvpgoffset(send_pages << PAGE_SHIFT);
+
+Regards,
+Boqun
+
+
+> >  	open_msg->target_vp = hv_cpu_number_to_vp_number(newchannel->target_cpu);
+> > 
+> >  	if (userdatalen)
+> > @@ -556,7 +676,6 @@ int vmbus_open(struct vmbus_channel *newchannel,
+> >  }
+> >  EXPORT_SYMBOL_GPL(vmbus_open);
+> > 
