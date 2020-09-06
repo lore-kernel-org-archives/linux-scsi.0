@@ -2,117 +2,64 @@ Return-Path: <SRS0=a8U3=CP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29EEFC43461
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 07:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4069CC433E2
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 16:04:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB1852145D
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 07:52:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QCWiMBSX"
+	by mail.kernel.org (Postfix) with ESMTP id 0AB8B207BB
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 16:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726642AbgIFHwN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Sep 2020 03:52:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44916 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726362AbgIFHwM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2020 03:52:12 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0784BC061573;
-        Sun,  6 Sep 2020 00:52:12 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id x18so3058554pll.6;
-        Sun, 06 Sep 2020 00:52:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=I9t8W0xVBTzwntMqKUpY1JXn7OO0PXlgWGrbZCcekzk=;
-        b=QCWiMBSXxOiFqPRm/S3oHCU1UwC6vISk97TuwUqHGKbRhgz09bIOyBGgaxVcUzKLSZ
-         2oILRokktUQWBa19hIXHYGRYbKpFrAUunjGQezHw61xxBZEYObDElBNyzVrDzq4CG4K2
-         kP/3qF2knW4/yVK2MluGtKZqYzMTM1wddX8aUsoGHp5TPLatd0rHVvLvzQN6qXO/xAfW
-         mlwcyfc2/3Oufm6hFTtwzXyCH0tLgADGVUoRiDlP/647NTZHbKkgCzYEdMkmh0sV9F0i
-         ISIzjVFNE73qqrqgZBRuvnxd57NB+S82ihclZeZQk7KkGRkfPfzMmyFQscGcEHx7n9VG
-         L8QA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=I9t8W0xVBTzwntMqKUpY1JXn7OO0PXlgWGrbZCcekzk=;
-        b=dRTxJstVIkkHcSFRMTxpwOiNPWDRpe6pEep8zI0idnPtu1NW7F1i4AAqPuS2L4yrqt
-         LNAjPwgJ8iUi2goBgF7xpf1edqPoqwMs3rOnjy7AQ21J1/Jg6gWbaOdt2vAEsdkbKZo1
-         pt4tcxm48QCIiaIYBRBgqE7IsbnOfc5z2BIi7DrPBXvKS8N7LU3kSh1KEt+JNmOydVks
-         aUyfDYEtteYhHU9EH/FV10DgPSZn2OjpFwW2cbD0O/yoyZfDdRBvs9PfAsyR/cXAhsDp
-         USk/JRCvXPZJ80/kM+49ft07Rqj1hN6eUUbhrLlvJ5g+aKuTEWbHX/lOAi0+AaM525jG
-         H3Qw==
-X-Gm-Message-State: AOAM531z8zLiKFnRH0KjQb9g+M7J6v9ta25Jw1qWgC0ebcEMQcX05rdD
-        sw8rpavdlvwK7drUB2PdtXaNtk8wNCc=
-X-Google-Smtp-Source: ABdhPJyOBLQESxnGoxA9oMoaqKyYfQ1sfeaIaA5R0C2j+A4Qjdxc4NcKH9EtQnCFzDqk1WeeSVyjkg==
-X-Received: by 2002:a17:90a:c288:: with SMTP id f8mr4029734pjt.123.1599378731213;
-        Sun, 06 Sep 2020 00:52:11 -0700 (PDT)
-Received: from localhost.localdomain ([161.81.62.213])
-        by smtp.gmail.com with ESMTPSA id 67sm11799041pfv.173.2020.09.06.00.52.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Sep 2020 00:52:10 -0700 (PDT)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     linux-scsi@vger.kernel.org, dgilbert@interlog.com,
-        bvanassche@acm.org, gregkh@linuxfoundation.org
-Cc:     stern@rowland.harvard.edu, akinobu.mita@gmail.com, hch@lst.de,
-        linux-api@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH v3 4/4] block/scsi_ioctl.c: use queue_logical_sector_size() in max_sectors_bytes()
-Date:   Sun,  6 Sep 2020 15:51:52 +0800
-Message-Id: <20200906075152.2927-4-tom.ty89@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200906075152.2927-1-tom.ty89@gmail.com>
-References: <CAGnHSEmos_vznm40WfnX0XC-kdOKz9CNdW9thWzepkgS2eEDCw@mail.gmail.com>
- <20200906075152.2927-1-tom.ty89@gmail.com>
+        id S1728969AbgIFQEA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Sep 2020 12:04:00 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:40995 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726931AbgIFQD7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2020 12:03:59 -0400
+Received: (qmail 741986 invoked by uid 1000); 6 Sep 2020 12:03:57 -0400
+Date:   Sun, 6 Sep 2020 12:03:57 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 5/9] scsi: Do not wait for a request in
+ scsi_eh_lock_door()
+Message-ID: <20200906160357.GA741441@rowland.harvard.edu>
+References: <20200906012219.17893-1-bvanassche@acm.org>
+ <20200906012219.17893-6-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200906012219.17893-6-bvanassche@acm.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Logical sector size was never / is no longer necessarily 512.
+On Sat, Sep 05, 2020 at 06:22:15PM -0700, Bart Van Assche wrote:
+> It is not guaranteed that a request is available when scsi_eh_lock_door()
+> is called. Hence pass the BLK_MQ_REQ_NOWAIT flag to blk_get_request().
+> This patch has a second purpose, namely preventing that
+> scsi_eh_lock_door() deadlocks if sdev->request_queue is frozen and if a
+> SCSI command is submitted to a SCSI device through a second request queue
+> that has not been frozen.
 
-Programatically speaking it may not be necessary for us to clamp
-max_sectors to USHRT_MAX here, but since such clamping is used in
-BLKSECTGET, it's probably a good idea to have it here too, so that
-what the function returns is consistent to what the ioctl reports.
+I think it would help readers understand the reason for doing this if 
+you mentioned that scsi_eh_lock_door() is the only place in the SCSI 
+error handler that calls blk_get_request().
 
-Alternatively we can clamp (max_sectors * logical_block_size) to
-INT_MAX instead, or maybe even not clamping it at all.
+Also mention that an upcoming patch in this series requires the error 
+handler to work okay even when the device's request queue is frozen.  
+(That's what the second sentence of your description is getting at, but 
+the connection is not clear.)
 
-P.S. sg_reserved_size is initially set to INT_MAX by
-blk_mq_init_allocated_queue().
-
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
----
- block/scsi_ioctl.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index ef722f04f88a..ae6aae40a8b6 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -73,10 +73,11 @@ static int sg_set_timeout(struct request_queue *q, int __user *p)
- static int max_sectors_bytes(struct request_queue *q)
- {
- 	unsigned int max_sectors = queue_max_sectors(q);
-+	unsigned int logical_block_size = queue_logical_block_size(q);
- 
--	max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
-+	max_sectors = min_t(unsigned int, max_sectors, USHRT_MAX);
- 
--	return max_sectors << 9;
-+	return max_sectors * logical_block_size;
- }
- 
- static int sg_get_reserved_size(struct request_queue *q, int __user *p)
--- 
-2.28.0
-
+Alan Stern
