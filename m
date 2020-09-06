@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EF92C43461
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64851C2D0A8
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33E272078D
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30F0420E65
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728789AbgIFBWa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Sep 2020 21:22:30 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:54151 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728409AbgIFBW3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:22:29 -0400
-Received: by mail-pj1-f66.google.com with SMTP id t7so1784160pjd.3;
-        Sat, 05 Sep 2020 18:22:29 -0700 (PDT)
+        id S1728807AbgIFBWb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Sep 2020 21:22:31 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43027 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728409AbgIFBWa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:22:30 -0400
+Received: by mail-pl1-f195.google.com with SMTP id y6so2838530plk.10;
+        Sat, 05 Sep 2020 18:22:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=VHGPS1eQkp3Nq4k5T2mBcncvv3X8+Xgal2LBLA7ET2I=;
-        b=YhTkWqCM8aXvGTeKJgeQIXLUEwTOfGVSP9t5pduO9lPrsZ7WVYs6/BGFNI+vb0tT1r
-         h+z700DVSd+ymgUhpeAcaEzFfiCMwnHm1CLkj+mOjD0JrX9NwvNe+YJnJFP6XQiWE3BS
-         o7vhZ5vD2GC+YI/yQ1KzUHLV0G8vq/U7FMkMTwDheb9cy2anqWKBUjSLo6tAB+BRBJ32
-         961w31Lkm8Je6HYvDc+Kl9bueoHctXwAM+VqbXWO3FMe5Xc2D1zlG6+/ELYX557IqFDa
-         8HoOnEtppjAbnd8OPyaaCM4nmaD7BLbeyGzcy25vwLV7Ic6DuJyx512+1nz2yIpqIJq+
-         ZNcw==
-X-Gm-Message-State: AOAM530kAHzspkpPhRdP6AJ4iWMQl7TtygzzYtpgDzWgBR5/z2CxqTdh
-        mLVV21wjts9mhSL5j2jVoAc=
-X-Google-Smtp-Source: ABdhPJzjvw9TknM5zPRwJIdxrM7mVMvvZTx8q9fgC3nxHqY4Qnsp3jtGIxUparC9qXfKEIECKi0fFg==
-X-Received: by 2002:a17:90b:80f:: with SMTP id bk15mr14559521pjb.36.1599355348468;
-        Sat, 05 Sep 2020 18:22:28 -0700 (PDT)
+        bh=WBxpkiMjxwD+IRn41vyX5xWhB8DClldowR9a4K9oHbk=;
+        b=MA0Ziz8djkgkMyA9tOpuf5yFiMjToq2BLlrw6b3P7+lR4RPaAvGGsijopd1EPgeF4Z
+         c34bcgmCznLki1KpKmCITqZNUcpGqWW+vxjDL0yJaSurIhFjpIgkWtkG82axfH7OznpZ
+         joxmbKHBLO2zWMaWR52KUz3lGd0f7SVYlK7QsQ1nQsktoVnKtW9EtCus9i8zMFgY//Qg
+         +5HJpy3/nblyQMn6l6/+deaA8YeuHo9edacsquIlfc1s5wHtmKEWY1ZmtOg0lb0spNqv
+         kG05SBBO47+wG3QS06LVPr86aTVgsteW1KGmCIy97gsk7M+APiI7NqDnDGii4BWqIoQ6
+         C5mA==
+X-Gm-Message-State: AOAM532F4EH0JkvoItH34dpu6vTGuQBV1EKu1EF4JTWzqwRJavR8WLKC
+        8kXkQTNMZm9T4yszGY39ApY=
+X-Google-Smtp-Source: ABdhPJwoIMtvOpDsg6UTyCd0hUXSX1uEqT9KJWuRMHOj0yEX0nWRCqXjcFmR2sOmzmvcG2ycrSBDXg==
+X-Received: by 2002:a17:90a:d703:: with SMTP id y3mr14635755pju.183.1599355350066;
+        Sat, 05 Sep 2020 18:22:30 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:cd46:435a:ac98:84de])
-        by smtp.gmail.com with ESMTPSA id 25sm3585165pjh.57.2020.09.05.18.22.26
+        by smtp.gmail.com with ESMTPSA id 25sm3585165pjh.57.2020.09.05.18.22.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2020 18:22:27 -0700 (PDT)
+        Sat, 05 Sep 2020 18:22:29 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -48,13 +48,14 @@ To:     Jens Axboe <axboe@kernel.dk>,
 Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
         Bart Van Assche <bvanassche@acm.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Ming Lei <ming.lei@redhat.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        stable <stable@vger.kernel.org>, Can Guo <cang@codeaurora.org>
-Subject: [PATCH 1/9] block: Fix a race in the runtime power management code
-Date:   Sat,  5 Sep 2020 18:22:11 -0700
-Message-Id: <20200906012219.17893-2-bvanassche@acm.org>
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH 2/9] ide: Do not set the RQF_PREEMPT flag for sense requests
+Date:   Sat,  5 Sep 2020 18:22:12 -0700
+Message-Id: <20200906012219.17893-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200906012219.17893-1-bvanassche@acm.org>
 References: <20200906012219.17893-1-bvanassche@acm.org>
@@ -65,64 +66,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With the current implementation the following race can happen:
-* blk_pre_runtime_suspend() calls blk_freeze_queue_start() and
-  blk_mq_unfreeze_queue().
-* blk_queue_enter() calls blk_queue_pm_only() and that function returns
-  true.
-* blk_queue_enter() calls blk_pm_request_resume() and that function does
-  not call pm_request_resume() because the queue runtime status is
-  RPM_ACTIVE.
-* blk_pre_runtime_suspend() changes the queue status into RPM_SUSPENDING.
+RQF_PREEMPT is used for two different purposes in the legacy IDE code:
+1. To mark power management requests.
+2. To mark requests that should preempt another request. An (old)
+   explanation of that feature is as follows:
+   "The IDE driver in the Linux kernel normally uses a series of busywait
+   delays during its initialization. When the driver executes these
+   busywaits, the kernel does nothing for the duration of the wait. The
+   time spent in these waits could be used for other initialization
+   activities, if they could be run concurrently with these waits.
 
-Fix this race by changing the queue runtime status into RPM_SUSPENDING
-before switching q_usage_counter to atomic mode.
+   More specifically, busywait-style delays such as udelay() in module
+   init functions inhibit kernel preemption because the Big Kernel Lock
+   is held, while yielding APIs such as schedule_timeout() allow preemption.
+   This is true because the kernel handles the BKL specially and releases
+   and reacquires it across reschedules allowed by the current thread.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+   This IDE-preempt specification requires that the driver eliminate these
+   busywaits and replace them with a mechanism that allows other work to
+   proceed while the IDE driver is initializing."
+
+Since I haven't found an implementation of (2), do not set the PREEMPT
+flag for sense requests. This patch causes sense requests to be
+postponed while a drive is suspended instead of being submitted to
+ide_queue_rq().
+
+If it would ever be necessary to restore the IDE PREEMPT functionality,
+that can be done by introducing a new flag in struct ide_request.
+
+This patch is a first step towards removing the PREEMPT flag from the
+block layer.
+
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: stable <stable@vger.kernel.org>
-Fixes: 986d413b7c15 ("blk-mq: Enable support for runtime power management")
-Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-pm.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/ide/ide-atapi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/block/blk-pm.c b/block/blk-pm.c
-index b85234d758f7..17bd020268d4 100644
---- a/block/blk-pm.c
-+++ b/block/blk-pm.c
-@@ -67,6 +67,10 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 2162bc80f09e..013ad33fbbc8 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -223,7 +223,6 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
+ 	sense_rq->rq_disk = rq->rq_disk;
+ 	sense_rq->cmd_flags = REQ_OP_DRV_IN;
+ 	ide_req(sense_rq)->type = ATA_PRIV_SENSE;
+-	sense_rq->rq_flags |= RQF_PREEMPT;
  
- 	WARN_ON_ONCE(q->rpm_status != RPM_ACTIVE);
- 
-+	spin_lock_irq(&q->queue_lock);
-+	q->rpm_status = RPM_SUSPENDING;
-+	spin_unlock_irq(&q->queue_lock);
-+
- 	/*
- 	 * Increase the pm_only counter before checking whether any
- 	 * non-PM blk_queue_enter() calls are in progress to avoid that any
-@@ -89,15 +93,14 @@ int blk_pre_runtime_suspend(struct request_queue *q)
- 	/* Switch q_usage_counter back to per-cpu mode. */
- 	blk_mq_unfreeze_queue(q);
- 
--	spin_lock_irq(&q->queue_lock);
--	if (ret < 0)
-+	if (ret < 0) {
-+		spin_lock_irq(&q->queue_lock);
-+		q->rpm_status = RPM_ACTIVE;
- 		pm_runtime_mark_last_busy(q->dev);
--	else
--		q->rpm_status = RPM_SUSPENDING;
--	spin_unlock_irq(&q->queue_lock);
-+		spin_unlock_irq(&q->queue_lock);
- 
--	if (ret)
- 		blk_clear_pm_only(q);
-+	}
- 
- 	return ret;
- }
+ 	req->cmd[0] = GPCMD_REQUEST_SENSE;
+ 	req->cmd[4] = cmd_len;
