@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39170C2D0A8
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E16C1C43461
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 053AE2078D
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFB7020797
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728880AbgIFBWl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Sep 2020 21:22:41 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:38087 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728850AbgIFBWi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:22:38 -0400
-Received: by mail-pg1-f193.google.com with SMTP id l191so6282403pgd.5;
-        Sat, 05 Sep 2020 18:22:38 -0700 (PDT)
+        id S1728897AbgIFBWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Sep 2020 21:22:51 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:44875 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728887AbgIFBWm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:22:42 -0400
+Received: by mail-pg1-f196.google.com with SMTP id 7so6267833pgm.11;
+        Sat, 05 Sep 2020 18:22:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=i3+83kwUl5p6aC78eMCGt1VVVPamG+eHtGnBI8drvj0=;
-        b=ZrrpOHIumjEVIINnohGfxvp0WoZaCRzLL1o61O+xXL/NyI0+R0povvsht5XAeZIUa4
-         aHAe95yFioni+SSyiR4YTFSsODw3kj2o1CJEmityQWZfr20veXcXYWskd7iiOrT6XzyL
-         mQkSu8lsJr73+BiUUqdm1lfkPePepJTl0cKni98GqG+bAWtFV/Sb84xHQCgCx9YOtLfe
-         4z+rIMirW0A3epYct2niZofM/RjH1W+2pJ7IDWsgFmaiZoY4Tm3T23HDAf/ZBmroYAH0
-         Jy4QMt5aWdCuxkjMeYdGaSW8VdNdphMMN3sa8aurk8fJc820wm+nXKEhSwItA5oE2K/r
-         SGIg==
-X-Gm-Message-State: AOAM532NMA9ILC9BGIBgmJ7h+a7XD+MSRQTE3iaVrzlK+MzWpHyej+m1
-        tlSzTkF/hr9OMfcpPequdFQ=
-X-Google-Smtp-Source: ABdhPJzJ0iLHo6bLBqQHqNWyfop11rMuomOL3K8hOjyz6jeFWrVD1tcPRZLWP4OLuC24tKE8ZQPH/g==
-X-Received: by 2002:a63:ba5e:: with SMTP id l30mr12218966pgu.425.1599355357583;
-        Sat, 05 Sep 2020 18:22:37 -0700 (PDT)
+        bh=vzqwbvuEI0MUhU8xoJagSYikuR6h4EfX4KZRl8Z2nRE=;
+        b=be2d8BktjGVZhGonAXyd9a2BOitu+sTzFq3hUzzRBapiboSZHoN8PiQuU1zh82oYzg
+         Bw0IRcNykhzE5n5b0qCpbqfx4f6V5VAvRiGKqjy8DRILccDbPxWyC0TAmw4+Z5WMb7BI
+         HGvq+9teKv5iaiUxrmWaMXnLciclad7IJRi7VVc2lpqjELHusYzh3IcFNYJuOIvxlZ8h
+         g1mOQB1g/yQldHZ+wEaLjidwEIXrm5PAA6PpAkgC5rwUFks+sVdz6x+oYjE0oChsx7/H
+         yLE4GH1Ney27LbLeols7jopjd8JQrlgnPW+oHvUNJ5JCd+PXk87fcbrQUaoiEwikPi57
+         hjZQ==
+X-Gm-Message-State: AOAM531aOa3TkA+R093Cy7mugz7l9qQeHCSGTNsJRWJ42L8ZvE6fDRM/
+        riCxksP3knLt+EQAsaBiqINMCX/n3WA=
+X-Google-Smtp-Source: ABdhPJwBbiTvZMj3ugSNOtOgzrsTYXIkmvVKxjy29lc9pPmPonlkUE5TKQJwkZ8J+U/xPgtVpK4TQg==
+X-Received: by 2002:a63:a08:: with SMTP id 8mr11182601pgk.300.1599355360874;
+        Sat, 05 Sep 2020 18:22:40 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:cd46:435a:ac98:84de])
-        by smtp.gmail.com with ESMTPSA id 25sm3585165pjh.57.2020.09.05.18.22.36
+        by smtp.gmail.com with ESMTPSA id 25sm3585165pjh.57.2020.09.05.18.22.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2020 18:22:36 -0700 (PDT)
+        Sat, 05 Sep 2020 18:22:40 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -48,15 +48,14 @@ To:     Jens Axboe <axboe@kernel.dk>,
 Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
         Bart Van Assche <bvanassche@acm.org>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Woody Suwalski <terraluna977@gmail.com>,
         Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Ming Lei <ming.lei@redhat.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH 7/9] scsi_transport_spi: Freeze request queues instead of quiescing
-Date:   Sat,  5 Sep 2020 18:22:17 -0700
-Message-Id: <20200906012219.17893-8-bvanassche@acm.org>
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Subject: [PATCH 9/9] block: Do not accept any requests while suspended
+Date:   Sat,  5 Sep 2020 18:22:19 -0700
+Message-Id: <20200906012219.17893-10-bvanassche@acm.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200906012219.17893-1-bvanassche@acm.org>
 References: <20200906012219.17893-1-bvanassche@acm.org>
@@ -67,229 +66,101 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of quiescing the request queues involved in domain validation,
-freeze these. As a result, the struct request_queue pm_only member is no
-longer set during domain validation. That will allow to modify
-scsi_execute() such that it stops setting the BLK_MQ_REQ_PREEMPT flag.
-Three additional changes in this patch are that scsi_mq_alloc_queue() is
-exported, that scsi_device_quiesce() is no longer exported and that
-scsi_target_{quiesce,resume}() have been changed into
-scsi_target_{freeze,unfreeze}().
+From: Alan Stern <stern@rowland.harvard.edu>
 
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Woody Suwalski <terraluna977@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
+blk_queue_enter() accepts BLK_MQ_REQ_PREEMPT independent of the runtime
+power management state. Since SCSI domain validation no longer depends on
+this behavior, modify the behavior of blk_queue_enter() as follows:
+- Do not accept any requests while suspended.
+- Only process power management requests while suspending or resuming.
+
+Submitting BLK_MQ_REQ_PREEMPT requests to a device that is runtime-
+suspended causes runtime-suspended block devices not to resume as they
+should. The request which should cause a runtime resume instead gets
+issued directly, without resuming the device first. Of course the device
+can't handle it properly, the I/O fails, and the device remains suspended.
+
+The problem is fixed by checking that the queue's runtime-PM status
+isn't RPM_SUSPENDED before allowing a request to be issued, and
+queuing a runtime-resume request if it is.  In particular, the inline
+blk_pm_request_resume() routine is renamed blk_pm_resume_queue() and
+the code is unified by merging the surrounding checks into the
+routine.  If the queue isn't set up for runtime PM, or there currently
+is no restriction on allowed requests, the request is allowed.
+Likewise if the BLK_MQ_REQ_PREEMPT flag is set and the status isn't
+RPM_SUSPENDED.  Otherwise a runtime resume is queued and the request
+is blocked until conditions are more suitable.
+
 Cc: Can Guo <cang@codeaurora.org>
 Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reported-and-tested-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+[ bvanassche: modified commit message and removed Cc: stable because without
+  the previous patches from this series this patch would break parallel SCSI
+  domain validation ]
 ---
- drivers/scsi/scsi_lib.c           | 22 +++++-----
- drivers/scsi/scsi_priv.h          |  2 +
- drivers/scsi/scsi_transport_spi.c | 72 ++++++++++++++++++++-----------
- include/scsi/scsi_device.h        |  6 +--
- 4 files changed, 61 insertions(+), 41 deletions(-)
+ block/blk-core.c |  6 +++---
+ block/blk-pm.h   | 14 +++++++++-----
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9e3c2930ce40..0b0cb727e699 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1864,6 +1864,7 @@ struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
- 	blk_queue_flag_set(QUEUE_FLAG_SCSI_PASSTHROUGH, q);
- 	return q;
- }
-+EXPORT_SYMBOL_GPL(scsi_mq_alloc_queue);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index c5a2f8173b1f..22c1c6e6c0e1 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -436,7 +436,8 @@ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+ 			 * responsible for ensuring that that counter is
+ 			 * globally visible before the queue is unfrozen.
+ 			 */
+-			if (pm || !blk_queue_pm_only(q)) {
++			if ((pm && q->rpm_status != RPM_SUSPENDED) ||
++			    !blk_queue_pm_only(q)) {
+ 				success = true;
+ 			} else {
+ 				percpu_ref_put(&q->q_usage_counter);
+@@ -461,8 +462,7 @@ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
  
- int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 		wait_event(q->mq_freeze_wq,
+ 			   (!q->mq_freeze_depth &&
+-			    (pm || (blk_pm_request_resume(q),
+-				    !blk_queue_pm_only(q)))) ||
++			    blk_pm_resume_queue(pm, q)) ||
+ 			   blk_queue_dying(q));
+ 		if (blk_queue_dying(q))
+ 			return -ENODEV;
+diff --git a/block/blk-pm.h b/block/blk-pm.h
+index ea5507d23e75..a2283cc9f716 100644
+--- a/block/blk-pm.h
++++ b/block/blk-pm.h
+@@ -6,11 +6,14 @@
+ #include <linux/pm_runtime.h>
+ 
+ #ifdef CONFIG_PM
+-static inline void blk_pm_request_resume(struct request_queue *q)
++static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
  {
-@@ -2538,7 +2539,6 @@ scsi_device_quiesce(struct scsi_device *sdev)
- 
- 	return err;
+-	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+-		       q->rpm_status == RPM_SUSPENDING))
+-		pm_request_resume(q->dev);
++	if (!q->dev || !blk_queue_pm_only(q))
++		return 1;	/* Nothing to do */
++	if (pm && q->rpm_status != RPM_SUSPENDED)
++		return 1;	/* Request allowed */
++	pm_request_resume(q->dev);
++	return 0;
  }
--EXPORT_SYMBOL(scsi_device_quiesce);
  
- /**
-  *	scsi_device_resume - Restart user issued commands to a quiesced device.
-@@ -2567,30 +2567,30 @@ void scsi_device_resume(struct scsi_device *sdev)
- EXPORT_SYMBOL(scsi_device_resume);
- 
- static void
--device_quiesce_fn(struct scsi_device *sdev, void *data)
-+device_freeze_fn(struct scsi_device *sdev, void *data)
+ static inline void blk_pm_mark_last_busy(struct request *rq)
+@@ -44,8 +47,9 @@ static inline void blk_pm_put_request(struct request *rq)
+ 		--rq->q->nr_pending;
+ }
+ #else
+-static inline void blk_pm_request_resume(struct request_queue *q)
++static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
  {
--	scsi_device_quiesce(sdev);
-+	blk_mq_freeze_queue(sdev->request_queue);
++	return 1;
  }
  
- void
--scsi_target_quiesce(struct scsi_target *starget)
-+scsi_target_freeze(struct scsi_target *starget)
- {
--	starget_for_each_device(starget, NULL, device_quiesce_fn);
-+	starget_for_each_device(starget, NULL, device_freeze_fn);
- }
--EXPORT_SYMBOL(scsi_target_quiesce);
-+EXPORT_SYMBOL(scsi_target_freeze);
- 
- static void
--device_resume_fn(struct scsi_device *sdev, void *data)
-+device_unfreeze_fn(struct scsi_device *sdev, void *data)
- {
--	scsi_device_resume(sdev);
-+	blk_mq_unfreeze_queue(sdev->request_queue);
- }
- 
- void
--scsi_target_resume(struct scsi_target *starget)
-+scsi_target_unfreeze(struct scsi_target *starget)
- {
--	starget_for_each_device(starget, NULL, device_resume_fn);
-+	starget_for_each_device(starget, NULL, device_unfreeze_fn);
- }
--EXPORT_SYMBOL(scsi_target_resume);
-+EXPORT_SYMBOL(scsi_target_unfreeze);
- 
- /**
-  * scsi_internal_device_block_nowait - try to transition to the SDEV_BLOCK state
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index d12ada035961..6b9203df84c8 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -95,6 +95,8 @@ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
- extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
- extern void scsi_exit_queue(void);
- extern void scsi_evt_thread(struct work_struct *work);
-+extern int scsi_device_quiesce(struct scsi_device *sdev);
-+extern void scsi_device_resume(struct scsi_device *sdev);
- struct request_queue;
- struct request;
- 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 959990f66865..f0ef9ab008c5 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -997,59 +997,79 @@ void
- spi_dv_device(struct scsi_device *sdev)
- {
- 	struct scsi_target *starget = sdev->sdev_target;
-+	struct request_queue *q2;
- 	u8 *buffer;
- 	const int len = SPI_MAX_ECHO_BUFFER_SIZE*2;
- 
- 	/*
--	 * Because this function and the power management code both call
--	 * scsi_device_quiesce(), it is not safe to perform domain validation
--	 * while suspend or resume is in progress. Hence the
--	 * lock/unlock_system_sleep() calls.
-+	 * Because this function creates a new request queue that is not
-+	 * visible to the rest of the system, this function must be serialized
-+	 * against suspend, resume and runtime power management. Hence the
-+	 * lock/unlock_system_sleep() and scsi_autopm_{get,put}_device()
-+	 * calls.
- 	 */
- 	lock_system_sleep();
- 
-+	if (scsi_autopm_get_device(sdev))
-+		goto unlock_system_sleep;
-+
- 	if (unlikely(spi_dv_in_progress(starget)))
--		goto unlock;
-+		goto put_autopm;
- 
- 	if (unlikely(scsi_device_get(sdev)))
--		goto unlock;
--
--	spi_dv_in_progress(starget) = 1;
-+		goto put_autopm;
- 
- 	buffer = kzalloc(len, GFP_KERNEL);
- 
- 	if (unlikely(!buffer))
--		goto out_put;
--
--	/* We need to verify that the actual device will quiesce; the
--	 * later target quiesce is just a nice to have */
--	if (unlikely(scsi_device_quiesce(sdev)))
--		goto out_free;
--
--	scsi_target_quiesce(starget);
-+		goto put_sdev;
- 
- 	spi_dv_pending(starget) = 1;
-+
- 	mutex_lock(&spi_dv_mutex(starget));
-+	if (unlikely(spi_dv_in_progress(starget)))
-+		goto clear_pending;
-+
-+	spi_dv_in_progress(starget) = 1;
- 
- 	starget_printk(KERN_INFO, starget, "Beginning Domain Validation\n");
- 
--	spi_dv_device_internal(sdev, sdev->request_queue, buffer);
-+	q2 = scsi_mq_alloc_queue(sdev);
-+
-+	if (q2) {
-+		/*
-+		 * Freeze the target such that no other subsystem can submit
-+		 * SCSI commands to 'sdev'. Submitting SCSI commands through
-+		 * q2 may trigger the SCSI error handler. The SCSI error
-+		 * handler must be able to handle a frozen sdev->request_queue
-+		 * and must also use blk_mq_rq_from_pdu(q2)->q instead of
-+		 * sdev->request_queue if it would be necessary to access q2
-+		 * directly.
-+		 */
-+		scsi_target_freeze(starget);
-+		spi_dv_device_internal(sdev, q2, buffer);
-+		blk_cleanup_queue(q2);
-+		scsi_target_unfreeze(starget);
-+	}
- 
- 	starget_printk(KERN_INFO, starget, "Ending Domain Validation\n");
- 
--	mutex_unlock(&spi_dv_mutex(starget));
--	spi_dv_pending(starget) = 0;
--
--	scsi_target_resume(starget);
--
- 	spi_initial_dv(starget) = 1;
-+	spi_dv_in_progress(starget) = 0;
-+
-+clear_pending:
-+	spi_dv_pending(starget) = 0;
-+	mutex_unlock(&spi_dv_mutex(starget));
- 
-- out_free:
- 	kfree(buffer);
-- out_put:
--	spi_dv_in_progress(starget) = 0;
-+
-+put_sdev:
- 	scsi_device_put(sdev);
--unlock:
-+
-+put_autopm:
-+	scsi_autopm_put_device(sdev);
-+
-+unlock_system_sleep:
- 	unlock_system_sleep();
- }
- EXPORT_SYMBOL(spi_dv_device);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 48c80793915e..891ffebadebe 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -422,10 +422,8 @@ extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
- extern void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt);
- extern void sdev_evt_send_simple(struct scsi_device *sdev,
- 			  enum scsi_device_event evt_type, gfp_t gfpflags);
--extern int scsi_device_quiesce(struct scsi_device *sdev);
--extern void scsi_device_resume(struct scsi_device *sdev);
--extern void scsi_target_quiesce(struct scsi_target *);
--extern void scsi_target_resume(struct scsi_target *);
-+extern void scsi_target_freeze(struct scsi_target *);
-+extern void scsi_target_unfreeze(struct scsi_target *);
- extern void scsi_scan_target(struct device *parent, unsigned int channel,
- 			     unsigned int id, u64 lun,
- 			     enum scsi_scan_mode rescan);
+ static inline void blk_pm_mark_last_busy(struct request *rq)
