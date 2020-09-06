@@ -2,164 +2,193 @@ Return-Path: <SRS0=a8U3=CP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5BBFC43461
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 04:51:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB314C43461
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 05:09:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96F4A20759
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 04:51:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZUaxledh"
+	by mail.kernel.org (Postfix) with ESMTP id 7F47B2075A
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 05:09:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726211AbgIFEvP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Sep 2020 00:51:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45704 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725280AbgIFEvN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2020 00:51:13 -0400
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 226E1C061573;
-        Sat,  5 Sep 2020 21:51:13 -0700 (PDT)
-Received: by mail-qv1-xf36.google.com with SMTP id f11so5060801qvw.3;
-        Sat, 05 Sep 2020 21:51:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=S+yc3P3tKNdaheR8C4irj9BMqK6L98Ju22GvQsWWgBE=;
-        b=ZUaxledhueBq9Vc/H2dDgnA1nhPm5u4mA3aJpU6quYyT010mOj6IayBu2fo6lOaUvO
-         buxgjg4D4rAffbOdzZn0SYc+G7ERV9xRSEHoHmfXNnG7VPKmeoqJCH1nRE44UjAAwMRH
-         XIpRhRbZH29KaiPD5Y/bJnpuDntLmacwNwJU3ys4Q8tN2pabrReEAivvZlGpNK1vfhuB
-         UBOozC4hO7gD7tuR7kJMe0lFXHIzzAAVZCWKVvY4Sg1kcbA8UQR2JXYTnOY+58w6qfXX
-         bksjIUq8CUyRnd1H23HqHMeAuZyvxoPcxb1DvGRuKndyCoRGyCm+J0AHoKanXF4CK3LE
-         u3gQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=S+yc3P3tKNdaheR8C4irj9BMqK6L98Ju22GvQsWWgBE=;
-        b=kzgCS7QJ85/AXb0R27urd2k8GpcjSHaVSI1yl7TJHuP0dnNk0agrHk79W+ynJ3HM/b
-         vpd1RNGYQs+DDNm2cNsEj4B/Lz2ZSwQPYva+UWojLiJ8vKEDtDa5NhN8K9BQ2rDH5Qyj
-         Q4O1WIT2wwji4/kNamOafUGxhyYula2loDO6sZeUe2oyB50zA/921a93wCrfDfiPrARn
-         13cRaW/afICi0DgNWtGvyQmFlAC3XW/DMHZFo5mlWz8xHdKEuaOphnTlkmeA1Pmy2BDF
-         cZkDbkxwU0AsURKWitFZXZreq2h2WhxWqJySERTS13UCDm/u4II51hGQBQykFEEnc+re
-         Nu0Q==
-X-Gm-Message-State: AOAM531jhTtZlHMsowwRTdM7DVGg0y+85cuABfEnvupEqOB0WlG8NRut
-        Z/l5+sqhfFs8TYNKdcczuqM=
-X-Google-Smtp-Source: ABdhPJwKhFcCv07nv/3Y6M8uL9V109sfu5OYjJg3KXakjofYEfAXOLshmMpH+JCDwfK7uU1SXrSR+A==
-X-Received: by 2002:a0c:e989:: with SMTP id z9mr14715798qvn.81.1599367870118;
-        Sat, 05 Sep 2020 21:51:10 -0700 (PDT)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id f8sm4584295qtx.81.2020.09.05.21.51.08
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 05 Sep 2020 21:51:09 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailauth.nyi.internal (Postfix) with ESMTP id 3F4E927C0054;
-        Sun,  6 Sep 2020 00:51:08 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute3.internal (MEProxy); Sun, 06 Sep 2020 00:51:08 -0400
-X-ME-Sender: <xms:u2pUX1eiWo1nY4nzQanEa7Jwlj-heG1LV_JUZpnLEEcajp61zadSZg>
-    <xme:u2pUXzNlm__kfWD8uD59qu_9aCZFKaJ9kXs0guPAHmKsPbGDjwZ5fD6qvC3ivOZGa
-    4Su548MZErRSCNQXQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrudegiedgkeejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhquhhn
-    ucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrth
-    htvghrnhepvdelieegudfggeevjefhjeevueevieetjeeikedvgfejfeduheefhffggedv
-    geejnecukfhppeehvddrudehhedrudduuddrjedunecuvehluhhsthgvrhfuihiivgeptd
-    enucfrrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvshhmthhprghuthhhphgv
-    rhhsohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheehvddqsghoqhhunhdrfh
-    gvnhhgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
-X-ME-Proxy: <xmx:u2pUX-hAeu5Md4hciO5-OHgDSWHKWz4nyDaRK2xLIiP-E2uR9cRmAA>
-    <xmx:u2pUX-9-IavrJS6qrIsE34_JGX33g7gOvh35zQ2f9pYR1hx6PUukXg>
-    <xmx:u2pUXxuK5XdMKRm91YsrmUijAm8GeeCSU6HEt7bRFOg2WaBUJJp1dQ>
-    <xmx:vGpUXxMlvS1HryUnhHQ842KlMvAuuEjtvsYeEQ957BCPeXFAXvCv-LWjI14>
-Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 0641F3280059;
-        Sun,  6 Sep 2020 00:51:06 -0400 (EDT)
-Date:   Sun, 6 Sep 2020 12:51:05 +0800
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC v2 03/11] Drivers: hv: vmbus: Introduce types of GPADL
-Message-ID: <20200906045105.GE7503@debian-boqun.qqnc3lrjykvubdpftowmye0fmh.lx.internal.cloudapp.net>
-References: <20200902030107.33380-1-boqun.feng@gmail.com>
- <20200902030107.33380-4-boqun.feng@gmail.com>
- <MW2PR2101MB105294660A73A7C69273AB9ED72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
+        id S1725497AbgIFFJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Sep 2020 01:09:13 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:60144 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725283AbgIFFJM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 6 Sep 2020 01:09:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 44F0B204194;
+        Sun,  6 Sep 2020 07:09:10 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id r6uLZHpHoYwM; Sun,  6 Sep 2020 07:09:03 +0200 (CEST)
+Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
+        by smtp.infotech.no (Postfix) with ESMTPA id 05182204153;
+        Sun,  6 Sep 2020 07:09:01 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 1/4] scsi: sg: fix BLKSECTGET ioctl
+To:     Tom Yan <tom.ty89@gmail.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>, akinobu.mita@gmail.com,
+        hch@lst.de
+References: <CAGnHSE=fY2wkzNeZTSHC37Sp-uD4D8YMEb7LesDkPcQWAfiK=w@mail.gmail.com>
+ <20200904200554.168979-1-tom.ty89@gmail.com>
+ <caf0aa91-3e54-f8bd-d818-587f4318716c@acm.org>
+ <868195a0-94f2-f009-bfd4-f206f0da7db8@interlog.com>
+ <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <1a0b8035-8072-6de0-5e4f-b6c2848d3a1c@interlog.com>
+Date:   Sun, 6 Sep 2020 01:09:00 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <MW2PR2101MB105294660A73A7C69273AB9ED72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
+In-Reply-To: <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Sep 05, 2020 at 12:19:08AM +0000, Michael Kelley wrote:
-[...]
-> > 
-> > @@ -462,7 +576,13 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
-> >  	open_msg->openid = newchannel->offermsg.child_relid;
-> >  	open_msg->child_relid = newchannel->offermsg.child_relid;
-> >  	open_msg->ringbuffer_gpadlhandle = newchannel->ringbuffer_gpadlhandle;
-> > -	open_msg->downstream_ringbuffer_pageoffset = newchannel-
-> > >ringbuffer_send_offset;
-> > +	/*
-> > +	 * The unit of ->downstream_ringbuffer_pageoffset is HV_HYP_PAGE and
-> > +	 * the unit of ->ringbuffer_send_offset is PAGE, so here we first
-> > +	 * calculate it into bytes and then convert into HV_HYP_PAGE.
-> > +	 */
-> > +	open_msg->downstream_ringbuffer_pageoffset =
-> > +		hv_ring_gpadl_send_offset(newchannel->ringbuffer_send_offset << PAGE_SHIFT) >> HV_HYP_PAGE_SHIFT;
+On 2020-09-05 9:19 p.m., Tom Yan wrote:
+> It was my concern as well, that for this sort of
+> "backwards-incompatible reason", it has been kept broken
+> intentionally.
+
+Bumping the sg driver version number is simple:
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 20472aaaf630..c9763b85961f 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -11,8 +11,8 @@
+   *        Copyright (C) 1998 - 2014 Douglas Gilbert
+   */
+
+-static int sg_version_num = 30536;     /* 2 digits for each component */
+-#define SG_VERSION_STR "3.5.36"
++static int sg_version_num = 30537;     /* 2 digits for each component */
++#define SG_VERSION_STR "3.5.37"
+
+  /*
+   *  D. P. Gilbert (dgilbert@interlog.com), notes:
+
+
+And bumping the version number is appropriate for an interface
+tweak/correction.
+
+I'm rewriting the sg driver currently (12 months and counting) and am up
+to version 11 of the _first_ half. So far I'm using a sg_version_num of
+ > 40000 for the rewritten code. Please keep away from version numbers
+40000 and above.
+
+The rewritten driver is documented here:
+     https://doug-gilbert.github.io/sg_v40.html
+
+and its ioctls are listed in Table 8, including the BLK* ones. Perhaps you
+could suggest some corrections. Obviously BLKSSZGET needs to be added
+when your patches are accepted.
+
+Doug Gilbert
+
+> I am not sure if queue_max_sectors() or BLKSECTGET has ever been
+> implemented in the block layer to give out the limit in bytes, but it
+> certainly isn't the case anymore.
 > 
-> Line length?
+> I am not in position to say whether it's "right" or "wrong" to
+> implement BLKSECTGET/BLKSSZGET in the sg driver, but they is
+> definitely useful in some cases (as long as the queue_* functions work
+> for the given underlying device). Is it not okay if they don't
+> ultimately work on *some* devices, even when they aren't named SG_*?
+> 
+> Perhaps we can consider having them removed as well (and implement
+> them as e.g. SG_GET_MAX_SECTORS and SG_GET_LBS; but IMHO that only
+> makes a point if they can be made to work on more than block devices).
+> 
+> 
+> On Sun, 6 Sep 2020 at 04:37, Douglas Gilbert <dgilbert@interlog.com> wrote:
+>>
+>> On 2020-09-05 3:32 p.m., Bart Van Assche wrote:
+>>> On 2020-09-04 13:05, Tom Yan wrote:
+>>>> It should give out the maximum number of sectors per request
+>>>> instead of maximum number of bytes.
+>>>>
+>>>> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>>>> ---
+>>>>    drivers/scsi/sg.c | 6 ++++--
+>>>>    1 file changed, 4 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>>>> index 20472aaaf630..e57831910228 100644
+>>>> --- a/drivers/scsi/sg.c
+>>>> +++ b/drivers/scsi/sg.c
+>>>> @@ -922,6 +922,7 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
+>>>>       int result, val, read_only;
+>>>>       Sg_request *srp;
+>>>>       unsigned long iflags;
+>>>> +    unsigned int max_sectors;
+>>>>
+>>>>       SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+>>>>                                  "sg_ioctl: cmd=0x%x\n", (int) cmd_in));
+>>>> @@ -1114,8 +1115,9 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
+>>>>               sdp->sgdebug = (char) val;
+>>>>               return 0;
+>>>>       case BLKSECTGET:
+>>>> -            return put_user(max_sectors_bytes(sdp->device->request_queue),
+>>>> -                            ip);
+>>>> +            max_sectors = min_t(unsigned int, USHRT_MAX,
+>>>> +                                queue_max_sectors(sdp->device->request_queue));
+>>>> +            return put_user(max_sectors, ip);
+>>>>       case BLKTRACESETUP:
+>>>>               return blk_trace_setup(sdp->device->request_queue,
+>>>>                                      sdp->disk->disk_name,
+>>>
+>>> Is this perhaps a backwards-incompatible change to the kernel ABI, the
+>>> kind of change Linus totally disagrees with?
+>>>
+>>> Additionally, please Cc linux-api for patches that modify the kernel ABI.
+>>> >From https://www.kernel.org/doc/man-pages/linux-api-ml.html: "The kernel
+>>> source file Documentation/SubmitChecklist notes that all Linux kernel
+>>> patches that change userspace interfaces should be CCed to
+>>> linux-api@vger.kernel.org, so that the various parties who are interested
+>>> in API changes are informed. For further information, see
+>>> https://www.kernel.org/doc/man-pages/linux-api-ml.html"
+>>
+>> Hmm,
+>> The BLK* ioctl()s in the sg driver were an undocumented addition by others.
+>> Plus it is not clear to me why a char device such as the sg driver should
+>> be supporting BLK* ioctl(2)s. For example, how should an enclosure react to
+>> those ioctls or a WLUN?
+>>
+>> If they are going to be supported for storage devices and /dev/sdb and
+>> /dev/sg2 are the same device then if:
+>>      blockdev --getmaxsect /dev/sg1
+>>
+>> gives a different result to:
+>>      blockdev --getmaxsect /dev/sdb
+>>
+>> then I would consider that a bug. So fixing it is making the kernel ABI
+>> more consistent :-)
+> 
+> That's exactly my point. They should work identically as the ones
+> implemented in the block layer, because of their names.
+> 
+> With that said, sg_version needs to be bumped once the fix gets in, so
+> that there's a way to differentiate the "different implementations" in
+> userspace.
+> 
+>>
+>> Doug Gilbert
+>>
+>>
+>>
+> 
+> Regards,
+> Tom
 > 
 
-Thanks for the review! I've resolved all your comments on wording for
-patch #2 and #4 in my local branch. For this line length issue, I fix it
-with two changes:
-
-1)	both the callsite of hv_ring_gpadl_send_offset() use ">> ..."
-	to calculate the index in HV_HYP_PAGE, so I change the function
-	to return offset in unit of HV_HYP_PAGE instead of bytes, and
-	that can save us the ">> ..." here.
-
-2)	newchannel->ringbuffer_send_offset is read in the previous code
-	of the function into local variable "send_pages", so I use it
-	to replace the "newchannel->ringbuffer_send_offset" here.
-
-now the code is:
-
-	open_msg->downstream_ringbuffer_pageoffset =
-		hv_ring_gpadl_send_hvpgoffset(send_pages << PAGE_SHIFT);
-
-Regards,
-Boqun
-
-
-> >  	open_msg->target_vp = hv_cpu_number_to_vp_number(newchannel->target_cpu);
-> > 
-> >  	if (userdatalen)
-> > @@ -556,7 +676,6 @@ int vmbus_open(struct vmbus_channel *newchannel,
-> >  }
-> >  EXPORT_SYMBOL_GPL(vmbus_open);
-> > 
