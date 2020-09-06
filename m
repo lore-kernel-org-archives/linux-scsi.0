@@ -2,55 +2,62 @@ Return-Path: <SRS0=a8U3=CP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC96C43461
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EF92C43461
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07BAB20C09
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33E272078D
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Sep 2020 01:22:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728757AbgIFBW2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Sep 2020 21:22:28 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:35222 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728409AbgIFBW1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:22:27 -0400
-Received: by mail-pj1-f65.google.com with SMTP id g6so4762187pjl.0;
-        Sat, 05 Sep 2020 18:22:27 -0700 (PDT)
+        id S1728789AbgIFBWa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Sep 2020 21:22:30 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:54151 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728409AbgIFBW3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2020 21:22:29 -0400
+Received: by mail-pj1-f66.google.com with SMTP id t7so1784160pjd.3;
+        Sat, 05 Sep 2020 18:22:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=y8P3mIHd6ojJKrdWs6XRkjCCCxjWTf60yFc1j4m7E/w=;
-        b=W/xnP0fgmvK9XIpahiSk2pOrvz9zRH+zX5TiA+3cSmIqBrghKAzQ83yl9trjRGf752
-         zBqENj7LaHACFFxwNYC/p6W74BJ3soqyZN/DG0jRKAlziLvHGEFvbLtiKjwPmKVipImn
-         m+WjImipaMwfkYm9JO6B5MHdKc1CP7f5ogMfx/D+kZOFh/6P1D1pULIkdVGu2p2AW918
-         q/UOOR8KItmuFHvHeUejnwV6EL0ONIZzdubQQRl3Eo0h542tXYpCOJJVHDzNqnVI/SuQ
-         cjo4BtuSw7efeYprfo8OkV/49BDBxX+0V+aThNaZqTC1UNsW9tAHLKPvI5OfuJl1mN7J
-         4h7w==
-X-Gm-Message-State: AOAM531BCKbWJkMrdh6uF+NAAlkc5uli7nq0Nu1giLvdCIxx4SYeHfis
-        9AXWgD6T4nqbilmkTQ36Ws0=
-X-Google-Smtp-Source: ABdhPJxas14xGh5T55KwWXMiIx7io1GuyxS3OcNkcqQo73B8qM2lruLbEVWsLzBFoxqqG/SV4rQTww==
-X-Received: by 2002:a17:902:e993:: with SMTP id f19mr14625702plb.270.1599355346755;
-        Sat, 05 Sep 2020 18:22:26 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=VHGPS1eQkp3Nq4k5T2mBcncvv3X8+Xgal2LBLA7ET2I=;
+        b=YhTkWqCM8aXvGTeKJgeQIXLUEwTOfGVSP9t5pduO9lPrsZ7WVYs6/BGFNI+vb0tT1r
+         h+z700DVSd+ymgUhpeAcaEzFfiCMwnHm1CLkj+mOjD0JrX9NwvNe+YJnJFP6XQiWE3BS
+         o7vhZ5vD2GC+YI/yQ1KzUHLV0G8vq/U7FMkMTwDheb9cy2anqWKBUjSLo6tAB+BRBJ32
+         961w31Lkm8Je6HYvDc+Kl9bueoHctXwAM+VqbXWO3FMe5Xc2D1zlG6+/ELYX557IqFDa
+         8HoOnEtppjAbnd8OPyaaCM4nmaD7BLbeyGzcy25vwLV7Ic6DuJyx512+1nz2yIpqIJq+
+         ZNcw==
+X-Gm-Message-State: AOAM530kAHzspkpPhRdP6AJ4iWMQl7TtygzzYtpgDzWgBR5/z2CxqTdh
+        mLVV21wjts9mhSL5j2jVoAc=
+X-Google-Smtp-Source: ABdhPJzjvw9TknM5zPRwJIdxrM7mVMvvZTx8q9fgC3nxHqY4Qnsp3jtGIxUparC9qXfKEIECKi0fFg==
+X-Received: by 2002:a17:90b:80f:: with SMTP id bk15mr14559521pjb.36.1599355348468;
+        Sat, 05 Sep 2020 18:22:28 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:cd46:435a:ac98:84de])
-        by smtp.gmail.com with ESMTPSA id 25sm3585165pjh.57.2020.09.05.18.22.25
+        by smtp.gmail.com with ESMTPSA id 25sm3585165pjh.57.2020.09.05.18.22.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2020 18:22:25 -0700 (PDT)
+        Sat, 05 Sep 2020 18:22:27 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Jens Axboe <axboe@kernel.dk>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 0/9] Rework runtime suspend and SCSI domain validation
-Date:   Sat,  5 Sep 2020 18:22:10 -0700
-Message-Id: <20200906012219.17893-1-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        stable <stable@vger.kernel.org>, Can Guo <cang@codeaurora.org>
+Subject: [PATCH 1/9] block: Fix a race in the runtime power management code
+Date:   Sat,  5 Sep 2020 18:22:11 -0700
+Message-Id: <20200906012219.17893-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200906012219.17893-1-bvanassche@acm.org>
+References: <20200906012219.17893-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -58,53 +65,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Jens,
+With the current implementation the following race can happen:
+* blk_pre_runtime_suspend() calls blk_freeze_queue_start() and
+  blk_mq_unfreeze_queue().
+* blk_queue_enter() calls blk_queue_pm_only() and that function returns
+  true.
+* blk_queue_enter() calls blk_pm_request_resume() and that function does
+  not call pm_request_resume() because the queue runtime status is
+  RPM_ACTIVE.
+* blk_pre_runtime_suspend() changes the queue status into RPM_SUSPENDING.
 
-The SCSI runtime suspend and domain validation mechanisms both use
-scsi_device_quiesce(). scsi_device_quiesce() restricts blk_queue_enter() to
-BLK_MQ_REQ_PREEMPT requests. There is a conflict between the requirements
-of runtime suspend and SCSI domain validation: no requests must be sent to
-runtime suspended devices that are in the state RPM_SUSPENDED while
-BLK_MQ_REQ_PREEMPT requests must be processed during SCSI domain
-validation. This conflict is resolved by reworking the SCSI domain
-validation implementation.
+Fix this race by changing the queue runtime status into RPM_SUSPENDING
+before switching q_usage_counter to atomic mode.
 
-Hybernation and runtime suspend have been retested but SCSI domain
-validation not yet.
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: stable <stable@vger.kernel.org>
+Fixes: 986d413b7c15 ("blk-mq: Enable support for runtime power management")
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ block/blk-pm.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-Please consider this patch series for kernel v5.10.
-
-Thanks,
-
-Bart.
-
-Alan Stern (1):
-  block: Do not accept any requests while suspended
-
-Bart Van Assche (8):
-  block: Fix a race in the runtime power management code
-  ide: Do not set the RQF_PREEMPT flag for sense requests
-  scsi: Pass a request queue pointer to __scsi_execute()
-  scsi: Rework scsi_mq_alloc_queue()
-  scsi: Do not wait for a request in scsi_eh_lock_door()
-  scsi_transport_spi: Make spi_execute() accept a request queue pointer
-  scsi_transport_spi: Freeze request queues instead of quiescing
-  block, scsi, ide: Only process PM requests if rpm_status != RPM_ACTIVE
-
- block/blk-core.c                  |  12 +--
- block/blk-mq-debugfs.c            |   1 -
- block/blk-mq.c                    |   4 +-
- block/blk-pm.c                    |  15 ++--
- block/blk-pm.h                    |  14 +--
- drivers/ide/ide-atapi.c           |   1 -
- drivers/ide/ide-io.c              |   3 +-
- drivers/ide/ide-pm.c              |   2 +-
- drivers/scsi/scsi_error.c         |   3 +-
- drivers/scsi/scsi_lib.c           |  73 ++++++++--------
- drivers/scsi/scsi_priv.h          |   2 +
- drivers/scsi/scsi_transport_spi.c | 139 +++++++++++++++++-------------
- include/linux/blk-mq.h            |   4 +-
- include/linux/blkdev.h            |   6 +-
- include/scsi/scsi_device.h        |  14 ++-
- 15 files changed, 158 insertions(+), 135 deletions(-)
-
+diff --git a/block/blk-pm.c b/block/blk-pm.c
+index b85234d758f7..17bd020268d4 100644
+--- a/block/blk-pm.c
++++ b/block/blk-pm.c
+@@ -67,6 +67,10 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+ 
+ 	WARN_ON_ONCE(q->rpm_status != RPM_ACTIVE);
+ 
++	spin_lock_irq(&q->queue_lock);
++	q->rpm_status = RPM_SUSPENDING;
++	spin_unlock_irq(&q->queue_lock);
++
+ 	/*
+ 	 * Increase the pm_only counter before checking whether any
+ 	 * non-PM blk_queue_enter() calls are in progress to avoid that any
+@@ -89,15 +93,14 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+ 	/* Switch q_usage_counter back to per-cpu mode. */
+ 	blk_mq_unfreeze_queue(q);
+ 
+-	spin_lock_irq(&q->queue_lock);
+-	if (ret < 0)
++	if (ret < 0) {
++		spin_lock_irq(&q->queue_lock);
++		q->rpm_status = RPM_ACTIVE;
+ 		pm_runtime_mark_last_busy(q->dev);
+-	else
+-		q->rpm_status = RPM_SUSPENDING;
+-	spin_unlock_irq(&q->queue_lock);
++		spin_unlock_irq(&q->queue_lock);
+ 
+-	if (ret)
+ 		blk_clear_pm_only(q);
++	}
+ 
+ 	return ret;
+ }
