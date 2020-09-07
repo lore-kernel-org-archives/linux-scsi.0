@@ -2,88 +2,83 @@ Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC3D0C2BB84
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 17:11:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A46C43461
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 17:46:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CC3221532
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 17:11:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599498714;
-	bh=fMnkgAblkIzmn4NV5qpGYdRfZFLnYfW+R/fXUqvNWzI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MHVvARaXGDCTuzUK2bFPSCPF+WCibqt9GnZkfYqUcRHjz8YPXF5KEHSXgntTEnrdK
-	 kT9PkPgUak5S+QA+Uf51mS5HyqgqTjIiwvtKMoVxQZPy80KP2fesWqTZDZfsvPdjxq
-	 EMB2myM83P53aNNPkUIyJRIApC/DiPW5N7em0uYA=
+	by mail.kernel.org (Postfix) with ESMTP id 734A3206E7
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 17:46:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="npf7CRB6";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="npf7CRB6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730633AbgIGQck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:32:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46496 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729851AbgIGQch (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Sep 2020 12:32:37 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727032AbgIGRq6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 13:46:58 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49672 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729496AbgIGRqw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 13:46:52 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id CCCC18EE0F8;
+        Mon,  7 Sep 2020 10:46:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1599500809;
+        bh=qwU3L64pNFkotVWGHIcfTG3OOJPchayPoQuEP8fzy4w=;
+        h=Subject:From:To:Date:In-Reply-To:References:From;
+        b=npf7CRB6V7V38UOiN/v4+tAcGa8Hti0R9cIrifjB0T81dnz9izOtIdSlxPgmfVvqh
+         3FD4Xvu5+h+UZrgoOqH0tALaywkDY957ptaOoDcKP79A/3nIbqllktiUN9XeUPwoZR
+         PCZSce+zqQC2NWMMcblrmX9tTrWk8RbAS++ZZCzg=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id dr2h6KKrhgM1; Mon,  7 Sep 2020 10:46:49 -0700 (PDT)
+Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EC343217A0;
-        Mon,  7 Sep 2020 16:32:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599496353;
-        bh=fMnkgAblkIzmn4NV5qpGYdRfZFLnYfW+R/fXUqvNWzI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QZ23v3jzYH6cvhN/VT6/Av0T7inaPKka/VAxsYYFxgU2DYtXukRR5/C7s29T96e6q
-         0w/vMtHhdXVXWpCPEGizHdgtVl9tYJa+6qIM4fC6CJW/gWv0sB8CF7e26GHVqU2T3L
-         Zqb0fj4pzzzazFKv6Z89vwYSB2dibLdHLfAlfXow=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ye Bin <yebin10@huawei.com>, Saurav Kashyap <skashyap@marvell.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 10/53] scsi: qedf: Fix null ptr reference in qedf_stag_change_work
-Date:   Mon,  7 Sep 2020 12:31:36 -0400
-Message-Id: <20200907163220.1280412-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200907163220.1280412-1-sashal@kernel.org>
-References: <20200907163220.1280412-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 714658EE0E9;
+        Mon,  7 Sep 2020 10:46:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1599500809;
+        bh=qwU3L64pNFkotVWGHIcfTG3OOJPchayPoQuEP8fzy4w=;
+        h=Subject:From:To:Date:In-Reply-To:References:From;
+        b=npf7CRB6V7V38UOiN/v4+tAcGa8Hti0R9cIrifjB0T81dnz9izOtIdSlxPgmfVvqh
+         3FD4Xvu5+h+UZrgoOqH0tALaywkDY957ptaOoDcKP79A/3nIbqllktiUN9XeUPwoZR
+         PCZSce+zqQC2NWMMcblrmX9tTrWk8RbAS++ZZCzg=
+Message-ID: <1599500808.4232.19.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: take module reference during async scan
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
+Date:   Mon, 07 Sep 2020 10:46:48 -0700
+In-Reply-To: <20200907154745.20145-1-thenzl@redhat.com>
+References: <20200907154745.20145-1-thenzl@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ye Bin <yebin10@huawei.com>
+On Mon, 2020-09-07 at 17:47 +0200, Tomas Henzl wrote:
+> During an async scan the driver shost->hostt structures are used,
+> that may cause issues when the driver is removed at that time.
+> As protection take the module reference.
 
-[ Upstream commit f308a35f547cd7c1d8a901c12b3ac508e96df665 ]
+Can I just ask what issues?  Today, our module model is that
+scsi_device_get() bumps the module refcount and therefore makes the
+module ineligible to be removed.  scsi_host_get() doesn't do this
+because the way the host model is supposed to be coded, we can call
+remove at any time but the module won't get freed until the last put of
+the host.  I can see we have a potential problem with
+scsi_forget_host() racing with the async scan thread ... is that what
+you see? What's supposed to happen is that scsi_device_get() starts
+failing as soon as the module begins it's exit routine, so if a scan is
+in progress, it can't add any new devices ... in theory this means that
+the list is stable for scsi_forget_host(), so knowing how that
+assumption is breaking would be useful.
 
-Link: https://lore.kernel.org/r/20200824033436.45570-1-yebin10@huawei.com
-Acked-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Ye Bin <yebin10@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qedf/qedf_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 36b1ca2dadbb5..51cfab9d1afdc 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3843,7 +3843,7 @@ void qedf_stag_change_work(struct work_struct *work)
- 	    container_of(work, struct qedf_ctx, stag_work.work);
- 
- 	if (!qedf) {
--		QEDF_ERR(&qedf->dbg_ctx, "qedf is NULL");
-+		QEDF_ERR(NULL, "qedf is NULL");
- 		return;
- 	}
- 	QEDF_ERR(&qedf->dbg_ctx, "Performing software context reset.\n");
--- 
-2.25.1
+James
 
