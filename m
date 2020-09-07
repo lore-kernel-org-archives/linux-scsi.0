@@ -2,158 +2,89 @@ Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3AAC43461
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 00:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA76BC10DAA
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 01:37:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A39CC214F1
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 00:09:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MAuaXP8/"
+	by mail.kernel.org (Postfix) with ESMTP id BCDB020708
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 01:37:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726871AbgIGAJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Sep 2020 20:09:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52342 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726721AbgIGAJW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Sep 2020 20:09:22 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64589C061573;
-        Sun,  6 Sep 2020 17:09:21 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id j11so15941850ejk.0;
-        Sun, 06 Sep 2020 17:09:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=93zhO48suX6QzkH46mTIlpJ2YtXViw8tf8wpAARIdJo=;
-        b=MAuaXP8/gHKbbROVChKdLmxdhfQd+YgsNtrxAvoddxd9pYs810z7VxMVh0OBByd7px
-         nVdkeSTav3p4ro8baI9CauV5NjiyqZBLetZZFJ8eG8VFhl7BxAqhKljKEckKlFaRTuxr
-         ravHJ8/n9UHWAgbc/H/IV4s0AoTmNJLPi5CFc1fFh9z/ky9VzAYgH4QHRdZqU+yw8FYd
-         f4p+5Ucox12O9dnEfMPgdDwp4lQ0LuPhw53bYc+Ta9XxQlV0i5UjUkWQrMT8yehspxaP
-         VCwPMV0lCDqoVo6AcdHxX0A/a0xmUEhjmvBgU0u9QHU0X+RzKge5ohQ67iVT4Qsjiz7C
-         LsTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=93zhO48suX6QzkH46mTIlpJ2YtXViw8tf8wpAARIdJo=;
-        b=lV3S7ptPloZRGrzMFVO1rNskQxzJ4HN1HlxrwgEiwLWbVhdDWZ24gC9eSlmmrIT766
-         wBYWLnVZMHMrgj6IGYpXr62aGQPb20BLvO+9xo2IrNysufVgXyAKFqXpSgCCYISxjhO3
-         L7X47b4StnsVZUMrQkD0wGgqteo1gtub3a7+e7e/3D+z+/K2DV2vEic6Y5L9JgQ215jA
-         6xTFFqSbjxRlbl9nbXYXIHmhqHRFe49BqNAbEvGORaY+R+H7PCuOX5HdjR+rKKerewja
-         VD1fc3mgsxe7bgqSTQPtUrNdj2QjFPka8pLWX975uqw4mOAFnIKxo2oydkTKUfFqxehO
-         yrUA==
-X-Gm-Message-State: AOAM531Tp+2ozN6VlHOVszhjFdt++3WttRCgR5D+Pekwz/iUrvsrIxYr
-        jjEbF9MABAfbU0DmAovMdjs=
-X-Google-Smtp-Source: ABdhPJweeQ4NuQTd29lGUGxEe+zjVwQETK+Z2icG9hinmHOQfqVfRyzOItom1EPmdDSFHaBaDqtSvg==
-X-Received: by 2002:a17:906:a0c2:: with SMTP id bh2mr19227646ejb.493.1599437359957;
-        Sun, 06 Sep 2020 17:09:19 -0700 (PDT)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id sd17sm13977062ejb.93.2020.09.06.17.09.16
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 06 Sep 2020 17:09:18 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailauth.nyi.internal (Postfix) with ESMTP id DE62827C0054;
-        Sun,  6 Sep 2020 20:09:15 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute3.internal (MEProxy); Sun, 06 Sep 2020 20:09:15 -0400
-X-ME-Sender: <xms:KnpVX_Ch3CwVUK0KmW_gD3CLFPUiK-_U3jGIt7G5xFPQQCkvrJRRcA>
-    <xme:KnpVX1ivpASud1s-3tVmIZdTT7SRzcHgHnG5_ox9zhyaSG6DVIXiG9tY6jQwfSpa0
-    -p5tbG7XSADzE7xRA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrudegkedgvdekucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhquhhn
-    ucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrth
-    htvghrnhepvdelieegudfggeevjefhjeevueevieetjeeikedvgfejfeduheefhffggedv
-    geejnecukfhppeehvddrudehhedrudduuddrjedunecuvehluhhsthgvrhfuihiivgeptd
-    enucfrrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvshhmthhprghuthhhphgv
-    rhhsohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheehvddqsghoqhhunhdrfh
-    gvnhhgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
-X-ME-Proxy: <xmx:KnpVX6kQKNwQPvrDp_3a-lIFvB20SRN_E3ZHCmpb1OlaGsvpzeHO2Q>
-    <xmx:KnpVXxxatupxLX5GJq5ves9wfrvpo0InsWQa73s6d0T2z5zoyH5-1A>
-    <xmx:KnpVX0RKrVoYlcSYg7qJJhpM1W1TLfR3TV4CtjBAfzxfUnTVyYpjnw>
-    <xmx:K3pVXxiqzy9rzAbNzKVEXt2fWFsQvcG5GZG5SOVZ7pt33Ftx7seM32rQPBI>
-Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id F393B328005D;
-        Sun,  6 Sep 2020 20:09:13 -0400 (EDT)
-Date:   Mon, 7 Sep 2020 08:09:12 +0800
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        id S1726928AbgIGBhS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Sep 2020 21:37:18 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:60238 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726620AbgIGBhS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 6 Sep 2020 21:37:18 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id DB7DE54EDDC5E93ECC73;
+        Mon,  7 Sep 2020 09:37:15 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.92) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Mon, 7 Sep 2020
+ 09:37:06 +0800
+Subject: Re: [PATCH] scsi: libsas: Fix error path in
+ sas_notify_lldd_dev_found()
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC v2 07/11] hv_netvsc: Use HV_HYP_PAGE_SIZE for Hyper-V
- communication
-Message-ID: <20200907000912.GF7503@debian-boqun.qqnc3lrjykvubdpftowmye0fmh.lx.internal.cloudapp.net>
-References: <20200902030107.33380-1-boqun.feng@gmail.com>
- <20200902030107.33380-8-boqun.feng@gmail.com>
- <MW2PR2101MB10521041242835B2D6E3EA0AD72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
+        Dan Williams <dan.j.williams@intel.com>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.garry@huawei.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+References: <20200905125836.GF183976@mwanda>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <c2e1730d-fe83-7c6a-6011-4bc6c4848f57@huawei.com>
+Date:   Mon, 7 Sep 2020 09:37:05 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <MW2PR2101MB10521041242835B2D6E3EA0AD72A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
+In-Reply-To: <20200905125836.GF183976@mwanda>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.92]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Sep 05, 2020 at 12:30:48AM +0000, Michael Kelley wrote:
-> From: Boqun Feng <boqun.feng@gmail.com> Sent: Tuesday, September 1, 2020 8:01 PM
-[...]
-> >  struct rndis_request {
-> >  	struct list_head list_ent;
-> >  	struct completion  wait_event;
-> > @@ -215,18 +215,18 @@ static int rndis_filter_send_request(struct rndis_device *dev,
-> >  	packet->page_buf_cnt = 1;
-> > 
-> >  	pb[0].pfn = virt_to_phys(&req->request_msg) >>
-> > -					PAGE_SHIFT;
-> > +					HV_HYP_PAGE_SHIFT;
-> >  	pb[0].len = req->request_msg.msg_len;
-> >  	pb[0].offset =
-> > -		(unsigned long)&req->request_msg & (PAGE_SIZE - 1);
-> > +		(unsigned long)&req->request_msg & (HV_HYP_PAGE_SIZE - 1);
+
+ÔÚ 2020/9/5 20:58, Dan Carpenter Ð´µÀ:
+> In sas_notify_lldd_dev_found(), if we can't find a device, then it seems
+> like the wrong thing to mark the device as found and to increment the
+> reference count.  None of the callers ever drop the reference in that
+> situation.
 > 
-> Use offset_in_hvpage() as defined in patch 6 of the series?
+> Fixes: 735f7d2fedf5 ("[SCSI] libsas: fix domain_device leak")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+>   drivers/scsi/libsas/sas_discover.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> index cd7c7d269f6f..d0f9e90e3279 100644
+> --- a/drivers/scsi/libsas/sas_discover.c
+> +++ b/drivers/scsi/libsas/sas_discover.c
+> @@ -182,10 +182,11 @@ int sas_notify_lldd_dev_found(struct domain_device *dev)
+>   		pr_warn("driver on host %s cannot handle device %016llx, error:%d\n",
+>   			dev_name(sas_ha->dev),
+>   			SAS_ADDR(dev->sas_addr), res);
+> +		return res;
+>   	}
+>   	set_bit(SAS_DEV_FOUND, &dev->state);
+>   	kref_get(&dev->kref);
+> -	return res;
+> +	return 0;
+>   }
+>   
+>   
 > 
 
-Fair enough, I will use offset_in_hvpage() in the next version
+Hi Dan, thanks for finding this,
 
-Regards,
-Boqun
+Reviewed-by: Jason Yan <yanaijie@huawei.com>
 
-> > 
-> >  	/* Add one page_buf when request_msg crossing page boundary */
-> > -	if (pb[0].offset + pb[0].len > PAGE_SIZE) {
-> > +	if (pb[0].offset + pb[0].len > HV_HYP_PAGE_SIZE) {
-> >  		packet->page_buf_cnt++;
-> > -		pb[0].len = PAGE_SIZE -
-> > +		pb[0].len = HV_HYP_PAGE_SIZE -
-> >  			pb[0].offset;
-> >  		pb[1].pfn = virt_to_phys((void *)&req->request_msg
-> > -			+ pb[0].len) >> PAGE_SHIFT;
-> > +			+ pb[0].len) >> HV_HYP_PAGE_SHIFT;
-> >  		pb[1].offset = 0;
-> >  		pb[1].len = req->request_msg.msg_len -
-> >  			pb[0].len;
-> > --
-> > 2.28.0
-> 
