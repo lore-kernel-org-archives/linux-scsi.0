@@ -2,97 +2,122 @@ Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B2DC2BB84
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 17:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2484C43461
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 20:09:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30D92206E7
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 17:49:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FEF021582
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 20:09:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="IS9CbZVV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XszdPtDm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729297AbgIGRtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 13:49:43 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20024 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729211AbgIGMQC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 08:16:02 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 087C58XV027366
-        for <linux-scsi@vger.kernel.org>; Mon, 7 Sep 2020 05:15:57 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=8YkRep2lAGMOCH7N2ZCB7QzcP3vhWfcsTxi/5W1hgUI=;
- b=IS9CbZVVf+rpQTyb9LYim/tgVedgY9WhYJKCB97B+3O+58h0V6fmZ3yM7HOZMD7NOOuF
- 0I7/tcCH2UMXvi5x5BVN0vdpgKx+IY5nqYskcv9CbCptkANTQNn6wuz8K/Kcn3M4D8ON
- DpNEIcYQ+fAjebwOeTTvdIIH1Q7sFBmwUKrNMKJP7arLBUOLjr3AQb9SreiBfQaT5I2D
- UvabJGaXrsRh3RAsMN5yPeMjBPqmjY/GaxYJ7OYduzL72C2nVzKun+VILNuC3X8GK3z7
- QYBD/lNHchAS4msNbRiu0NB0ZSMT1Z6XvIUpi8eTy1DE9nGxT02x+3BuK9ags3mqA88a IA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 33c81pqv0x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Sep 2020 05:15:57 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 7 Sep
- 2020 05:15:55 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 7 Sep 2020 05:15:56 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 2CFF23F703F;
-        Mon,  7 Sep 2020 05:15:56 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 087CFuUo005210;
-        Mon, 7 Sep 2020 05:15:56 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 087CFuJe005201;
-        Mon, 7 Sep 2020 05:15:56 -0700
-From:   Javed Hasan <jhasan@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH 2/8] qedf: Correct the comment in qedf_initiate_els
-Date:   Mon, 7 Sep 2020 05:14:37 -0700
-Message-ID: <20200907121443.5150-3-jhasan@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200907121443.5150-1-jhasan@marvell.com>
-References: <20200907121443.5150-1-jhasan@marvell.com>
+        id S1728934AbgIGUJe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 16:09:34 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:54130 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728879AbgIGUJd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 16:09:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599509370;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=U92wTgfb7ujMAMgyGUmBIOFduv/fE1sLDpeelLKtrVQ=;
+        b=XszdPtDmMlypeXn1b+jK0nemqIyd4SgCvAT3PFq7zd5/dG/zfix4QkvSIggcIkSUyRq/Pf
+        rgbx4KhiYvsM3X094Ah2libhob6CFYo0RmmPaGFC1SWX2kpblRHRvqdUZFjYHoX1d0s93b
+        jsD/gCWV+5GAw6EqMuthlTVZV4qDuWA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-551-fjWJHNl0N9Ov255GyB_UAw-1; Mon, 07 Sep 2020 16:09:29 -0400
+X-MC-Unique: fjWJHNl0N9Ov255GyB_UAw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32C3E1074646;
+        Mon,  7 Sep 2020 20:09:28 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.40.194.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A42A9805F0;
+        Mon,  7 Sep 2020 20:09:27 +0000 (UTC)
+Subject: Re: [PATCH] scsi: take module reference during async scan
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20200907154745.20145-1-thenzl@redhat.com>
+ <1599500808.4232.19.camel@HansenPartnership.com>
+From:   Tomas Henzl <thenzl@redhat.com>
+Message-ID: <f3095df4-4a34-1e0c-04e7-8983ffeac973@redhat.com>
+Date:   Mon, 7 Sep 2020 22:09:26 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-07_06:2020-09-07,2020-09-07 signatures=0
+In-Reply-To: <1599500808.4232.19.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+On 9/7/20 7:46 PM, James Bottomley wrote:
+> On Mon, 2020-09-07 at 17:47 +0200, Tomas Henzl wrote:
+>> During an async scan the driver shost->hostt structures are used,
+>> that may cause issues when the driver is removed at that time.
+>> As protection take the module reference.
+> 
+> Can I just ask what issues?  Today, our module model is that
+> scsi_device_get() bumps the module refcount and therefore makes the
+> module ineligible to be removed.  scsi_host_get() doesn't do this
+> because the way the host model is supposed to be coded, we can call
+> remove at any time but the module won't get freed until the last put of
+> the host.  I can see we have a potential problem with
+> scsi_forget_host() racing with the async scan thread ... is that what
+> you see? What's supposed to happen is that scsi_device_get() starts
+> failing as soon as the module begins it's exit routine, so if a scan is
+> in progress, it can't add any new devices ... in theory this means that
+> the list is stable for scsi_forget_host(), so knowing how that
+> assumption is breaking would be useful.
 
- Correction of the comment in qedf_initiate_els().
- Comment was misleading, hence corrected it.
+I think that the problem is that async scan uses callbacks to the module
+and when the module is being removed during scan it is not protected.
 
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
----
- drivers/scsi/qedf/qedf_els.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+modprobe mpt3sas && rmmod  mpt3sas
 
-diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
-index 6cb8c9b..625e58c 100644
---- a/drivers/scsi/qedf/qedf_els.c
-+++ b/drivers/scsi/qedf/qedf_els.c
-@@ -124,7 +124,7 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
- 	task = qedf_get_task_mem(&qedf->tasks, xid);
- 	qedf_init_mp_task(els_req, task, sqe);
- 
--	/* Put timer on original I/O request */
-+	/* Put timer on els request */
- 	if (timer_msec)
- 		qedf_cmd_timer_set(qedf, els_req, timer_msec);
- 
--- 
-1.8.3.1
+[  370.031614] INFO: task rmmod:3120 blocked for more than 120 seconds.
+[  370.037967]       Not tainted 4.18.0-193.el8.x86_64 #1
+[  370.043105] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+disables this message.
+[  370.050931] rmmod           D    0  3120   2460 0x00004080
+[  370.056414] Call Trace:
+[  370.058889]  ? __schedule+0x24f/0x650
+[  370.062554]  schedule+0x2f/0xa0
+[  370.065738]  async_synchronize_cookie_domain+0xad/0x140
+[  370.070983]  ? finish_wait+0x80/0x80
+[  370.074580]  __x64_sys_delete_module+0x166/0x280
+[  370.079198]  do_syscall_64+0x5b/0x1a0
+[  370.082876]  entry_SYSCALL_64_after_hwframe+0x65/0xca
+[  370.087946] RIP: 0033:0x7f6de460a7db
+[  370.091534] Code: Bad RIP value.
+[  370.094777] RSP: 002b:00007ffe9971e798 EFLAGS: 00000206 ORIG_RAX:
+00000000000000b0
+[  370.102341] RAX: ffffffffffffffda RBX: 00005592370d37b0 RCX:
+00007f6de460a7db
+[  370.109481] RDX: 000000000000000a RSI: 0000000000000800 RDI:
+00005592370d3818
+[  370.116606] RBP: 0000000000000000 R08: 00007ffe9971d711 R09:
+0000000000000000
+[  370.123748] R10: 00007f6de467c8e0 R11: 0000000000000206 R12:
+00007ffe9971e9c0
+[  370.130888] R13: 00007ffe99720333 R14: 00005592370d32a0 R15:
+00005592370d37b0
+
+
+> 
+> James
+> 
 
