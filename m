@@ -2,100 +2,106 @@ Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C4CC433E2
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 08:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8053EC43461
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 09:01:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3FA621582
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 08:57:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41B592168B
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 09:01:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K4/D1evv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728233AbgIGI5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 04:57:30 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2772 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727953AbgIGI5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Sep 2020 04:57:30 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 2C5D77505446F7B84C87;
-        Mon,  7 Sep 2020 09:57:28 +0100 (IST)
-Received: from [127.0.0.1] (10.47.2.208) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 7 Sep 2020
- 09:57:27 +0100
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: libsas: Fix error path in
- sas_notify_lldd_dev_found()
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Dan Williams <dan.j.williams@intel.com>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Jason Yan <yanaijie@huawei.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-References: <20200905125836.GF183976@mwanda>
-Message-ID: <4ef45b15-34fd-80e9-1adb-53044ca9fa84@huawei.com>
-Date:   Mon, 7 Sep 2020 09:54:51 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1728310AbgIGJBt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 05:01:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48918 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728079AbgIGJBt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 05:01:49 -0400
+Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FCFCC061573;
+        Mon,  7 Sep 2020 02:01:47 -0700 (PDT)
+Received: by mail-ed1-x544.google.com with SMTP id t16so7208575edw.7;
+        Mon, 07 Sep 2020 02:01:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9trCb+/NMrlBO+YeMAVjtwXhSPiV/QwbGusZnE12Aqs=;
+        b=K4/D1evvjZalgr9BMI4o8W1xzy99FhHD/LL3ht79batJuLo27KIKEYUBLI8z1nG029
+         EkI4hRCG8s+JsJGO16PbUuMXo4N00AbQJ4u+VNisvvphcPeq7HIa9zlubw6vr6qff3AD
+         l9GR4Ab3vjmxTKaJRS5Q90/8JJ6jJDnBfcVII0Fc14aa+CRxFZW/kPZXV4hTcVmMOcN5
+         /dOOz1VnPjqzqd69HbIRbEssJwUEa6s/pKirj4gSwOuug0/BlV70eScgXsB3aHPBvGeE
+         acNf+C89Z6UQVx3uLKZyvRZbWqKxoZbqYJDgfZX6EKKGFQ8WLhjkRKDAdDG0rOxeas7N
+         m64A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9trCb+/NMrlBO+YeMAVjtwXhSPiV/QwbGusZnE12Aqs=;
+        b=VWmKXTc3NdeZOWvAXxr7Zbt9HLITQo7bOWZxNOu+WGg0ahMhnh33tutB14gslnoz3Y
+         1tG6bKPw/dLKlx0QotJQfoGQ8c72ImUXOMrs7n0ggM2V422GcBgH50TC//dZ6y9m8UfY
+         k9a5u6ogDU/ovNfCgkv1LLYmNcPNvFtcCZC0mxStGd9DbHyD2RnXWnXaAUj0t8z8k6KI
+         w32N76awc9Io1mAnjLQ5Dfs9LSM8AwT34/kXimG9qA283pHGqgLisjLtkpuefdhigWq6
+         N62wdCVO5JbeilA/pUxQrgRMRB5Oewz9PdRIJoVB7AbFPLYFAaMX8TvS8XbqQCs65HgC
+         wTwQ==
+X-Gm-Message-State: AOAM533zsyDF1TCdxTF5q+hssVx1In9IA6gjxflLpfVxpg8N3r7+A3i2
+        MaKwreenbfIPvbxNuNCCVNPatUsfqxb9koMQEeI=
+X-Google-Smtp-Source: ABdhPJxoABDVn5TA8s4+V7jNkWwfaSuDGs2TweZ/9HhzHPyrC+plqoeJ8i6qnIrPXFfiEGunlRdnTF0qjfAi1nXg+Wo=
+X-Received: by 2002:a05:6402:138a:: with SMTP id b10mr20594423edv.113.1599469305542;
+ Mon, 07 Sep 2020 02:01:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200905125836.GF183976@mwanda>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.2.208]
-X-ClientProxiedBy: lhreml726-chm.china.huawei.com (10.201.108.77) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
+ <20200906012716.1553-1-tom.ty89@gmail.com> <20200906012716.1553-2-tom.ty89@gmail.com>
+ <20200907060927.GA18909@lst.de>
+In-Reply-To: <20200907060927.GA18909@lst.de>
+From:   Tom Yan <tom.ty89@gmail.com>
+Date:   Mon, 7 Sep 2020 17:01:34 +0800
+Message-ID: <CAGnHSEnWPSaM3xS1MtFUJDrSZPfaH_VwAiQ5UkndFTVe3uWNVA@mail.gmail.com>
+Subject: Re: [PATCH RESEND 2/4] scsi: sg: implement BLKSSZGET
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-scsi@vger.kernel.org, dgilbert@interlog.com,
+        Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>, akinobu.mita@gmail.com,
+        linux-api@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/09/2020 13:58, Dan Carpenter wrote:
-> In sas_notify_lldd_dev_found(), if we can't find a device, 
+Feel free to omit this. But then you will probably want to ditch
+BLKSECTGET as well, and then any usage of queue_max_sectors(), and
+maybe more/all queue_*().
 
-nit: the callback is for the LLDD is to allocate resources, device 
-context etc., for that domain_device, and not find the device. The 
-device has been found at this point.
+I'm not really interested in discussing/arguing whether
+general/ideally-speaking it's appropriate/necessary to keep BLKSECTGET
+/ add BLKSSZGET. The only reason I added this is that, when BLKSECTGET
+was introduced to sg long time ago, it was wrongly implemented to
+gives out the limit in bytes, so now when I'm fixing it, I'm merely
+making sure that whatever has been relying on the ioctl (e.g. qemu)
+will only need to do one more ioctl (instead of e.g. doing SCSI in its
+non-SCSI-specific part), if they want/need the limit in bytes. If they
+can be implemented more "generic"-ly, feel free to improve/extend them
+to make them "SG_*-qualified".
 
- > then it seems
-> like the wrong thing to mark the device as found and to increment the
-> reference count.  None of the callers ever drop the reference in that
-> situation.
-> 
-> Fixes: 735f7d2fedf5 ("[SCSI] libsas: fix domain_device leak")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
->   drivers/scsi/libsas/sas_discover.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index cd7c7d269f6f..d0f9e90e3279 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -182,10 +182,11 @@ int sas_notify_lldd_dev_found(struct domain_device *dev)
->   		pr_warn("driver on host %s cannot handle device %016llx, error:%d\n",
->   			dev_name(sas_ha->dev),
->   			SAS_ADDR(dev->sas_addr), res);
-> +		return res;
->   	}
->   	set_bit(SAS_DEV_FOUND, &dev->state);
->   	kref_get(&dev->kref);
-> -	return res;
-> +	return 0;
+Even if you can do SCSI from the userspace, or even should, I don't
+see any reason that we shouldn't provide an ioctl to do
+queue_logical_block_size() *while we provide one to do
+queue_max_sectors()*.
 
-This looks ok.
-
->   }
-
-Thanks,
-John
-
->   
->   
-> 
-
+On Mon, 7 Sep 2020 at 14:09, Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Sun, Sep 06, 2020 at 09:27:14AM +0800, Tom Yan wrote:
+> > Provide an ioctl to get the logical sector size so that the maximum
+> > bytes per request can be derived.
+> >
+> > Follow-up of the BLKSECTGET fix.
+>
+> I don't think this has any business going in.  /dev/sg is a generic
+> interface that is not specific to block based command sets.  Just issue
+> your command set specific command to query the logical block size if
+> you care about it.
