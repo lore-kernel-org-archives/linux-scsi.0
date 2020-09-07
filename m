@@ -4,81 +4,67 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D069CC43461
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 07:46:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A226FC2BB84
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 08:40:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AFF121481
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 07:46:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64AF421481
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 08:40:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727842AbgIGHqc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 03:46:32 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:45658 "EHLO huawei.com"
+        id S1727921AbgIGIj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 04:39:59 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:58260 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727835AbgIGHqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Sep 2020 03:46:08 -0400
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 536D46BEB3307514F75B;
-        Mon,  7 Sep 2020 15:46:07 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS405-HUB.china.huawei.com
- (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Mon, 7 Sep 2020
- 15:45:59 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <mdr@sgi.com>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <yanaijie@huawei.com>, <tbogendoerfer@suse.de>,
-        <linux-scsi@vger.kernel.org>
-CC:     Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH 2/4] scsi: qla1280: remove set but not used variable in qla1280_nvram_config()
-Date:   Mon, 7 Sep 2020 15:45:16 +0800
-Message-ID: <20200907074518.2326360-3-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.25.4
-In-Reply-To: <20200907074518.2326360-1-yanaijie@huawei.com>
-References: <20200907074518.2326360-1-yanaijie@huawei.com>
+        id S1727897AbgIGIjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Sep 2020 04:39:48 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 4AABD5675653A422822F;
+        Mon,  7 Sep 2020 16:39:46 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
+ 14.3.487.0; Mon, 7 Sep 2020 16:39:37 +0800
+From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
+To:     <tyreld@linux.ibm.com>, <mpe@ellerman.id.au>,
+        <benh@kernel.crashing.org>, <paulus@samba.org>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+        <linux-kernel@vger.kernel.org>, <jingxiangfeng@huawei.com>
+Subject: [PATCH] scsi: ibmvfc: Fix error return in ibmvfc_probe()
+Date:   Mon, 7 Sep 2020 16:39:49 +0800
+Message-ID: <20200907083949.154251-1-jingxiangfeng@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.175.127.227]
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
 X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This addresses the following gcc warning with "make W=1":
+Fix to return error code PTR_ERR() from the error handling case instead
+of 0.
 
-drivers/scsi/qla1280.c: In function ‘qla1280_nvram_config’:
-drivers/scsi/qla1280.c:2188:36: warning: variable ‘ddma_conf’ set but
-not used [-Wunused-but-set-variable]
- 2188 |   uint16_t hwrev, cfg1, cdma_conf, ddma_conf;
-      |                                    ^~~~~~~~~
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 ---
- drivers/scsi/qla1280.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 42c68bd98fa5..72f92733e75f 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -2184,13 +2184,12 @@ qla1280_nvram_config(struct scsi_qla_host *ha)
- 		nv->cntr_flags_1.disable_loading_risc_code;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index ea7c8930592d..70daa0605082 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -4928,6 +4928,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	if (IS_ERR(vhost->work_thread)) {
+ 		dev_err(dev, "Couldn't create kernel thread: %ld\n",
+ 			PTR_ERR(vhost->work_thread));
++		rc = PTR_ERR(vhost->work_thread);
+ 		goto free_host_mem;
+ 	}
  
- 	if (IS_ISP1040(ha)) {
--		uint16_t hwrev, cfg1, cdma_conf, ddma_conf;
-+		uint16_t hwrev, cfg1, cdma_conf;
- 
- 		hwrev = RD_REG_WORD(&reg->cfg_0) & ISP_CFG0_HWMSK;
- 
- 		cfg1 = RD_REG_WORD(&reg->cfg_1) & ~(BIT_4 | BIT_5 | BIT_6);
- 		cdma_conf = RD_REG_WORD(&reg->cdma_cfg);
--		ddma_conf = RD_REG_WORD(&reg->ddma_cfg);
- 
- 		/* Busted fifo, says mjacob. */
- 		if (hwrev != ISP_CFG0_1040A)
 -- 
-2.25.4
+2.17.1
 
