@@ -2,146 +2,165 @@ Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E73C43461
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 22:02:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7CF5C43461
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 22:02:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4586F215A4
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 22:02:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74EDE215A4
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 22:02:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="DJg5HkmS"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="oh43VCKh";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="oh43VCKh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727889AbgIGWCJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 18:02:09 -0400
-Received: from mail-bn8nam12on2094.outbound.protection.outlook.com ([40.107.237.94]:14177
-        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726446AbgIGWCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Sep 2020 18:02:07 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bVQUv19yESIzcFLUJA07ZRivxvrnmbZUNPNcPQ3uapsEKBneqUeGe8A1TpvTwXjwMnro+p5z1zPqTJsOpOgMkb9yX4fTVwbzxi5LCmrhy5OpMBDDkAmF056Ulj1vmjnJg79KwFvqs+srZsxKEGVn+ly7PZSsD2guRjKaRtfQBcsRHcOCPHTvHPKhmjJ/BvJtuktQ0oTbyU7mKvGT/tB4fZQCZSS9bLr55CFcYHFfKwsYuRpuLGzywiIXctMIyzz6qCwI906eacmofRhCQu6mGGukpIBDMi+0kXH40hhgnDnyohihB1jT46MUxuXu39ZInUaGI9FoUdKBF2WfdjeajA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zDS8LdEgnqImJW3BWL+JmF2qY5MOZeY/ai3RXN3nwpk=;
- b=Wj8bcl2WtaHp4f0GHF9vH6Ws/exYdHT05+ynETexQa+1E5edCKoBC9Z2rhMpJMcYxBtiQRCaXXkw0ZAGz7BbNelMRzgqrRcHpMf8dnn2c6fhsb4J0keP6OfOjjXuKBUnX2t4IpESjBQONVUxNpX2EmBV4ytHulf6zrTLzg0nc4o67v69UtdOOksJUhLKyGK7MB3vFN8Wxwv8CBKvd7kWz/Y/uebWptb0OCj4+Bcx5uPZye2tiNtx9IQ1vF9w1AmR0mSoGfrn26sv8/ysSJOaMBCR1NhGKM1L0nSsY3tBeFvfkCiiZwO1UEnHSnpWgVVEzentQgCkAY7Z4tYbodsZag==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zDS8LdEgnqImJW3BWL+JmF2qY5MOZeY/ai3RXN3nwpk=;
- b=DJg5HkmSaNlApzW2TagP8O0EmjXEGuMyQMQJ+otazJB9amyni+42Sj9ixarZfZAJ/uwdeb6h2+Q5z2ZQZBsMZ2k//vg5Oh9keSGsMwrFdVk1ZzLhKrfo5mkiJsmjSlwzmXR6naEiQW08x5JGXXsKnx1UYV255I2GrltPUQ9KO8E=
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
- by MWHPR21MB0190.namprd21.prod.outlook.com (2603:10b6:300:79::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.0; Mon, 7 Sep
- 2020 22:02:04 +0000
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::d00b:3909:23b:83f1]) by MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::d00b:3909:23b:83f1%5]) with mapi id 15.20.3370.015; Mon, 7 Sep 2020
- 22:02:03 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH v7 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Thread-Topic: [PATCH v7 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Thread-Index: AQHWhTK5wmNH8yZwxUOXEBXmTsUDXalduoLQ
-Date:   Mon, 7 Sep 2020 22:02:03 +0000
-Message-ID: <MW2PR2101MB1052AAF2FB35646D03B1BF31D7280@MW2PR2101MB1052.namprd21.prod.outlook.com>
-References: <20200907161920.71460-1-parri.andrea@gmail.com>
- <20200907161920.71460-3-parri.andrea@gmail.com>
-In-Reply-To: <20200907161920.71460-3-parri.andrea@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-09-07T22:02:02Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=9e05f9b9-1a38-4cb7-91a7-b69a5f77739a;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=microsoft.com;
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: ffa731fb-59d1-4a23-ed3b-08d85379a784
-x-ms-traffictypediagnostic: MWHPR21MB0190:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MWHPR21MB0190067A242797AB9B8404ADD7280@MWHPR21MB0190.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:4714;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: FjzMxLlUYs0LniOEEvDyPlPO/6s0fdyz4MzzoOvzntfcPM5Z7nZxIHVT8oNz3Wu8oXLE2/mzzVEWj8kwlvUUMM6sNMB2/guGSBK/J82u5hIY399NUQdcK4bdiBe2V6wksas8OjRiFldzQev28esuNqv2sPoBDZyTodYmJu4e0I+63riQCMw/gFhRpkn7AU4x0Zot5UDQJ8R33kC3g/OMvr2+GnH31NAalLjzzJ8BmuRSUUnUFzNijHVVfrJp5VQHdd1eVo7ymWBpz0bF3kyuwAoO8G2so3Pt5RvidYyenajEnETZD901IFWGZWxtsNzmq3qR21nZ+mGk44hyscQi9aoLCE4YqFjoM//yYkfO9ArLsK5Jx533BuSYzzysnOII
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(136003)(366004)(396003)(39860400002)(7696005)(55016002)(2906002)(8936002)(83380400001)(478600001)(6506007)(4326008)(10290500003)(9686003)(8676002)(26005)(71200400001)(33656002)(186003)(86362001)(110136005)(66556008)(316002)(5660300002)(66446008)(82950400001)(64756008)(66946007)(66476007)(52536014)(82960400001)(76116006)(54906003)(8990500004);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: aukUlODl7gPmwZR99x214NnD9bD9ycOCi48ccyawU/j2J7Xe2laTSBzDXAYo6/iN96EKCt8eR1nFV+MpQH39sAkJdvBYDctXOMQGaJyqV/CCQ+6fTO2dm7vD2+6N3mu7I+z/kDkDQkJ+xDIAJur5MkXTfe/nu7Jfn+xxiBeibXlW0LbHBr1iP0KXQWHGcaLg0f8im43dB8gz8jkuGBySIJtaPhCF69xIWvi7d11fypKowuRbLOq89pfLNpuptYNgQ62qhgEf9BvPwI9JWItoHQrnR7ZNbYgcVlzokHqMbCUQgVxl880LIZ9qniIEm68HnPmcQpuERnEJ/BqYV3TYzYA9t9mFzT9MQZRV6W+4vuQS9+LU9IpLd7J9wInpYLCtT1lFM6EpK8hhsH5aZOWxcue5gtmVxz1bP8ErRneN1iRmIaSNu1bGl+8KMDGrXkymiDLBjkUoiDyBsZPLSYG5DQVvM8fWnIVs0364KnN+tbKiVDED83/QR36gpxDR37n/aK7ypyQBGMK6URep9mWysjg9vBT+SCLd3sYDlFnY3zMyQugpXSgjbwdF3oL3KRcV3RumWQN/EBR/f02Nw3Pp9K/0uV+9Laqpo1dZ2hwELQf1M9c8OsHGhupAjFvuzx6WPWqsVjtKKadR3o8zPo4A5Q==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ffa731fb-59d1-4a23-ed3b-08d85379a784
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Sep 2020 22:02:03.8480
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qfRmCHxk4J/GAQ2b2noJdKEhs1/w0PsKolYGOX5iYfY2QVFk/QXkLjv9vmGzLuun+JwLY5+ohDyklPkXw5tiWyfZrVJBqLAjQTGuEoTyD+Y=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR21MB0190
+        id S1727771AbgIGWCi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 18:02:38 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52140 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726446AbgIGWCh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 18:02:37 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 5A1548EE10C;
+        Mon,  7 Sep 2020 15:02:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1599516157;
+        bh=I0hiDTVj7HDXhVGoLwerj26w9RX+r4rqDHo2vEI2rEg=;
+        h=Subject:From:To:Date:In-Reply-To:References:From;
+        b=oh43VCKhMitGieYV04hfTAmwIz05ZqjSosEDqUDsOtJalBSgcdDJ1zh80h76mqIdY
+         O9tM+FWxq40OAPTLVT0TnO3EDLi9iPzGIgPMLLvd7NmYT09bW605YHB1z4IRc2j+40
+         zO6DH3edK3VIDqAPNPoSLJNA+/4xF0fiHk/Zc4kM=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id qBDvu39CFwRz; Mon,  7 Sep 2020 15:02:37 -0700 (PDT)
+Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DE81A8EE0E9;
+        Mon,  7 Sep 2020 15:02:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1599516157;
+        bh=I0hiDTVj7HDXhVGoLwerj26w9RX+r4rqDHo2vEI2rEg=;
+        h=Subject:From:To:Date:In-Reply-To:References:From;
+        b=oh43VCKhMitGieYV04hfTAmwIz05ZqjSosEDqUDsOtJalBSgcdDJ1zh80h76mqIdY
+         O9tM+FWxq40OAPTLVT0TnO3EDLi9iPzGIgPMLLvd7NmYT09bW605YHB1z4IRc2j+40
+         zO6DH3edK3VIDqAPNPoSLJNA+/4xF0fiHk/Zc4kM=
+Message-ID: <1599516156.4232.64.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: take module reference during async scan
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
+Date:   Mon, 07 Sep 2020 15:02:36 -0700
+In-Reply-To: <dc1d763f-648d-5d26-3071-9de4a842b529@redhat.com>
+References: <20200907154745.20145-1-thenzl@redhat.com>
+         <1599500808.4232.19.camel@HansenPartnership.com>
+         <f3095df4-4a34-1e0c-04e7-8983ffeac973@redhat.com>
+         <1599510282.4232.54.camel@HansenPartnership.com>
+         <dc1d763f-648d-5d26-3071-9de4a842b529@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Andrea Parri (Microsoft) <parri.andrea@gmail.com> Sent: Monday, Septe=
-mber 7, 2020 9:19 AM
->=20
-> From: Andres Beltran <lkmlabelt@gmail.com>
->=20
-> Currently, pointers to guest memory are passed to Hyper-V as
-> transaction IDs in storvsc. In the face of errors or malicious
-> behavior in Hyper-V, storvsc should not expose or trust the transaction
-> IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> use small integers generated by vmbus_requestor as requests
-> (transaction) IDs.
->=20
-> Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> ---
-> Changes in v7:
-> 	- Move the allocation of the request ID after the data has been
-> 	  copied into the ring buffer (cf. 1/3).
-> Changes in v2:
->         - Add casts to unsigned long to fix warnings on 32bit.
->=20
->  drivers/scsi/storvsc_drv.c | 26 +++++++++++++++++++++++---
->  1 file changed, 23 insertions(+), 3 deletions(-)
->=20
+On Mon, 2020-09-07 at 23:02 +0200, Tomas Henzl wrote:
+> On 9/7/20 10:24 PM, James Bottomley wrote:
+> > On Mon, 2020-09-07 at 22:09 +0200, Tomas Henzl wrote:
+> > > On 9/7/20 7:46 PM, James Bottomley wrote:
+> > > > On Mon, 2020-09-07 at 17:47 +0200, Tomas Henzl wrote:
+> > > > > During an async scan the driver shost->hostt structures are
+> > > > > used, that may cause issues when the driver is removed at
+> > > > > that time. As protection take the module reference.
+> > > > 
+> > > > Can I just ask what issues?  Today, our module model is that
+> > > > scsi_device_get() bumps the module refcount and therefore makes
+> > > > the module ineligible to be removed.  scsi_host_get() doesn't
+> > > > do this because the way the host model is supposed to be coded,
+> > > > we can call remove at any time but the module won't get freed
+> > > > until the last put of the host.  I can see we have a potential
+> > > > problem with scsi_forget_host() racing with the async scan
+> > > > thread ... is that what you see? What's supposed to happen is
+> > > > that scsi_device_get() starts failing as soon as the module
+> > > > begins it's exit routine, so if a scan is in progress, it can't
+> > > > add any new devices ... in theory this means that the list is
+> > > > stable for scsi_forget_host(), so knowing how that assumption
+> > > > is breaking would be useful.
+> > > 
+> > > I think that the problem is that async scan uses callbacks to the
+> > > module and when the module is being removed during scan it is not
+> > > protected.
+> > 
+> > As I said above: the module shouldn't be freed until the scans are
+> > completed or aborted ... I don't think we have a use after free
+> > problem.  What you show below seems to be a deadlock:
+> > 
+> > > modprobe mpt3sas && rmmod  mpt3sas
+> > > 
+> > > [  370.031614] INFO: task rmmod:3120 blocked for more than 120
+> > > seconds.
+> > > [  370.037967]       Not tainted 4.18.0-193.el8.x86_64 #1
+> > > [  370.043105] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> > > disables this message.
+> > > [  370.050931] rmmod           D    0  3120   2460 0x00004080
+> > > [  370.056414] Call Trace:
+> > > [  370.058889]  ? __schedule+0x24f/0x650
+> > > [  370.062554]  schedule+0x2f/0xa0
+> > > [  370.065738]  async_synchronize_cookie_domain+0xad/0x140
+> > > [  370.070983]  ? finish_wait+0x80/0x80
+> > > [  370.074580]  __x64_sys_delete_module+0x166/0x280
+> > > [  370.079198]  do_syscall_64+0x5b/0x1a0
+> > > [  370.082876]  entry_SYSCALL_64_after_hwframe+0x65/0xca
+> > > [  370.087946] RIP: 0033:0x7f6de460a7db
+> > > [  370.091534] Code: Bad RIP value.
+> > > [  370.094777] RSP: 002b:00007ffe9971e798 EFLAGS: 00000206
+> > > ORIG_RAX:
+> > > 00000000000000b0
+> > > [  370.102341] RAX: ffffffffffffffda RBX: 00005592370d37b0 RCX:
+> > > 00007f6de460a7db
+> > > [  370.109481] RDX: 000000000000000a RSI: 0000000000000800 RDI:
+> > > 00005592370d3818
+> > > [  370.116606] RBP: 0000000000000000 R08: 00007ffe9971d711 R09:
+> > > 0000000000000000
+> > > [  370.123748] R10: 00007f6de467c8e0 R11: 0000000000000206 R12:
+> > > 00007ffe9971e9c0
+> > > [  370.130888] R13: 00007ffe99720333 R14: 00005592370d32a0 R15:
+> > > 00005592370d37b0
+> > 
+> > This seems to be showing something different: I think the
+> > async_synchronize_full() in delete_module is where we're stuck.
+> > That seems to indicate something has just stopped inside the async
+> > scan code ... likely due to something reacting badly to
+> > scsi_device_get() failing.
+> 
+> We may be protected by the async_synchronize_full waiting for
+> probably the  do_scan_async to end and that protects us from use
+> after free - all that seems to resolve after a longer time and the
+> driver is removed in the end.
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+OK, so the above isn't actually a deadlock?  I was just assuming that
+because 120s seems rather a long time for a SAS scan.  If it actually
+eventually returns everything seems to be working correctly ... unless
+it's still taking longer than an actual scan would?
+
+> Maybe the driver could react better to when its exit function is
+> called but what is wrong with keeping an additional module reference
+> during the scan process, the driver's exit function can't then be
+> called from module removal code at any time and there is no weird
+> behavior?
+
+Well it alters the behaviour in two ways: firstly because now you're
+forced to wait for an entire host scan to complete once you start it,
+you can't cancel it as you can today by removing the module; and
+secondly it will be a behaviour change:  Today you can call rmmod at
+any time until something pins the host either by opening a tape or
+mounting a disk at which point delete_modul() fails with -EBUSY.  After
+the patch you propose it will also fail with -EBUSY from the moment
+scanning starts until the moment it finishes.  I'm not convinced
+anything would actually notice either of these, but it is a behaviour
+change.
+
+James
+
