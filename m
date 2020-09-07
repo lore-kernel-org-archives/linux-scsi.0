@@ -2,180 +2,179 @@ Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D24C2BB84
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 16:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F3A0C2D0A8
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 16:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCC9F207DE
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 16:21:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j/G2Jgb5"
+	by mail.kernel.org (Postfix) with ESMTP id E6B35215A4
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 16:53:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730509AbgIGQUD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 12:20:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60232 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730451AbgIGQTz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 12:19:55 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04653C061574;
-        Mon,  7 Sep 2020 09:19:55 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id e17so14860062wme.0;
-        Mon, 07 Sep 2020 09:19:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=T7f55k2r5OlXk34A84CpxQUybUpvWvz4gMNJy8/sgno=;
-        b=j/G2Jgb5rqzKNExV7n7ohz9X0rhecUAfO122e2W6GiCJGkS7SRSbBs1l17qp9P20P0
-         cq5Whd1wnqmJWs6inM/xoE4YGdwTU/u/1ujllsBbNFCpxhwMjkBvlQEEmJzqCncZkO/v
-         v8AqGieKdPLCM1U+H90iYzuyI4DMO50pcVu5RYluLsco2JGHRF90iF+LyU0i/QeHUUXp
-         6HD+LccqFGZawMX56ZfpGDVQxuQJp4cDGwbvlUmJy0TrgEhsTHboGtOS/p84MkB823g0
-         hdzCKYtQ1PoB61rLjnpwE0mond/cMdCvQRgJB0zB3gXemewRVdi/2AsTFMsuF83uWI85
-         xujg==
+        id S1730776AbgIGQxC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 12:53:02 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42344 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730905AbgIGQwq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 12:52:46 -0400
+Received: by mail-pf1-f194.google.com with SMTP id d6so1827074pfn.9;
+        Mon, 07 Sep 2020 09:52:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=T7f55k2r5OlXk34A84CpxQUybUpvWvz4gMNJy8/sgno=;
-        b=AqBBhE3lk+eRdpBjmFuGjf0VojGEX04ldVNQV6ZAzbvcJEdqGJr/WnnViSHUtS/4eA
-         7BJwC0CyHrr3jPuRf8hk6MCksOwKMfe4as8FOHT6KZEFQVeiEGdTHhqdzr4ShT14zno8
-         GGsztSBwRCgwHAuroZK3iDr2cheURSZQ90grSOwCNE4eRFDdbFc0kbv0tCz0+DSF+/Er
-         aEf+rEweH+sgaT5izI/pUh3J0Xi3hFVK4oTWuDanqY9atUAd4SShXAW/uxDPlcrCHKTW
-         CCG/qZBoOIT+5xQ9MCnC2IrBb6eU9HEEJb96hDvMGj7HKYtWHJhPlToPeyPzljyJjKg8
-         DpTQ==
-X-Gm-Message-State: AOAM532umrF2lvohQVmERRehqExttZ/defPmVmr2A9AO4j6UN7TMzFR6
-        Nf4nTruevNbDD2Sy5Mm5T61YExKk7kjnpPBKc1Y=
-X-Google-Smtp-Source: ABdhPJwUkE7qxaHw6/zuh4vX8vncU+49AVAJIbQstYfDfYYPfEucG95/E7Wi4K/ugKLUZ5K7SeBq2A==
-X-Received: by 2002:a1c:2d85:: with SMTP id t127mr133500wmt.22.1599495593247;
-        Mon, 07 Sep 2020 09:19:53 -0700 (PDT)
-Received: from localhost.localdomain (userh713.uk.uudial.com. [194.69.103.86])
-        by smtp.gmail.com with ESMTPSA id y5sm19313717wrh.6.2020.09.07.09.19.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2020 09:19:52 -0700 (PDT)
-From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        Andrea Parri <parri.andrea@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH v7 2/3] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
-Date:   Mon,  7 Sep 2020 18:19:19 +0200
-Message-Id: <20200907161920.71460-3-parri.andrea@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200907161920.71460-1-parri.andrea@gmail.com>
-References: <20200907161920.71460-1-parri.andrea@gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=VEvhRokwwqmz0U/HN6F5/kaO/COX6wQ1MLILWEgM7qw=;
+        b=c1n8UGoIdD8MvK6GVQLe+4YlVet3Yum3u+zGg0HC3xsBt+8AArfBbs54RYiP2vtSY4
+         PQ7x3TK6vJpnkIOay1Hi0ZtTb6L/ndcIRmEkSBkG6c9V3RHalgmgYKl2+OpSAeLjHqbp
+         4kuZdeilfbtWQeX6URD55BHAEwAzGy6dmmDqL/WR9SjZu1a+EA/n5BWz/IqPm6rKr6PV
+         IUK/siCayKwwL2MD0/eHXqZv0paT0mFrtMeEuegywOTZEkLcB938cMKy1vTd/R0Giuop
+         AoD6eY7/j2rERAD2xuGXx5j+KTuRo6fiNJGqH3rBQ2KPNMRdI5wStCh1iAKTgjVm0uv1
+         +trQ==
+X-Gm-Message-State: AOAM532yCXxIBYYBTq7acbzhaBUK+X+4xC+kTWBkjRjjgxxg0Jx0ykkW
+        364/09Onpu01v2gStM7IJdlDB4X34fY=
+X-Google-Smtp-Source: ABdhPJyBf0pBXopK7X+LDOPgsPVmhGty9Io1yR27QH5eMM2I+fpOFILXWtZgRKU7CjEk6xUL8IgslQ==
+X-Received: by 2002:a65:68d6:: with SMTP id k22mr16739358pgt.136.1599497564505;
+        Mon, 07 Sep 2020 09:52:44 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:ff58:da99:dd6f:be14? ([2601:647:4000:d7:ff58:da99:dd6f:be14])
+        by smtp.gmail.com with ESMTPSA id ih11sm12898562pjb.51.2020.09.07.09.52.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Sep 2020 09:52:43 -0700 (PDT)
+Subject: Re: [PATCH V5] scsi: core: only re-run queue in scsi_end_request() if
+ device queue is busy
+To:     Ming Lei <ming.lei@redhat.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "Ewan D . Milne" <emilne@redhat.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>,
+        John Garry <john.garry@huawei.com>, linux-block@vger.kernel.org
+References: <20200907071048.1078838-1-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <4da219e6-7c2b-b93b-c6d0-2e18aa8ce11f@acm.org>
+Date:   Mon, 7 Sep 2020 09:52:42 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200907071048.1078838-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Andres Beltran <lkmlabelt@gmail.com>
+On 2020-09-07 00:10, Ming Lei wrote:
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7affaaf8b98e..a05e431ee62a 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -551,8 +551,25 @@ static void scsi_run_queue_async(struct scsi_device *sdev)
+>  	if (scsi_target(sdev)->single_lun ||
+>  	    !list_empty(&sdev->host->starved_list))
+>  		kblockd_schedule_work(&sdev->requeue_work);
+> -	else
+> -		blk_mq_run_hw_queues(sdev->request_queue, true);
+> +	else {
 
-Currently, pointers to guest memory are passed to Hyper-V as
-transaction IDs in storvsc. In the face of errors or malicious
-behavior in Hyper-V, storvsc should not expose or trust the transaction
-IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-use small integers generated by vmbus_requestor as requests
-(transaction) IDs.
+Please follow the Linux kernel coding style and balance braces.
 
-Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
-Changes in v7:
-	- Move the allocation of the request ID after the data has been
-	  copied into the ring buffer (cf. 1/3).
-Changes in v2:
-        - Add casts to unsigned long to fix warnings on 32bit.
+> +		/*
+> +		 * smp_mb() implied in either rq->end_io or blk_mq_free_request
+> +		 * is for ordering writing .device_busy in scsi_device_unbusy()
+> +		 * and reading sdev->restarts.
+> +		 */
+> +		int old = atomic_read(&sdev->restarts);
 
- drivers/scsi/storvsc_drv.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+scsi_run_queue_async() has two callers: scsi_end_request() and scsi_queue_rq().
+I don't see how ordering between scsi_device_unbusy() and the above atomic_read()
+could be guaranteed if this function is called from scsi_queue_rq()?
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 8f5f5dc863a4a..0b9090d031fc0 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -399,6 +399,7 @@ static int storvsc_timeout = 180;
- static struct scsi_transport_template *fc_transport_template;
- #endif
- 
-+static struct scsi_host_template scsi_driver;
- static void storvsc_on_channel_callback(void *context);
- 
- #define STORVSC_MAX_LUNS_PER_TARGET			255
-@@ -698,6 +699,12 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
- 
- 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
- 
-+	/*
-+	 * The size of vmbus_requestor is an upper bound on the number of requests
-+	 * that can be in-progress at any one time across all channels.
-+	 */
-+	new_sc->rqstor_size = scsi_driver.can_queue;
-+
- 	ret = vmbus_open(new_sc,
- 			 storvsc_ringbuffer_size,
- 			 storvsc_ringbuffer_size,
-@@ -1242,9 +1249,17 @@ static void storvsc_on_channel_callback(void *context)
- 	foreach_vmbus_pkt(desc, channel) {
- 		void *packet = hv_pkt_data(desc);
- 		struct storvsc_cmd_request *request;
-+		u64 cmd_rqst;
-+
-+		cmd_rqst = vmbus_request_addr(&channel->requestor,
-+					      desc->trans_id);
-+		if (cmd_rqst == VMBUS_RQST_ERROR) {
-+			dev_err(&device->device,
-+				"Incorrect transaction id\n");
-+			continue;
-+		}
- 
--		request = (struct storvsc_cmd_request *)
--			((unsigned long)desc->trans_id);
-+		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
- 
- 		if (request == &stor_device->init_request ||
- 		    request == &stor_device->reset_request) {
-@@ -1265,6 +1280,12 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
- 
- 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
- 
-+	/*
-+	 * The size of vmbus_requestor is an upper bound on the number of requests
-+	 * that can be in-progress at any one time across all channels.
-+	 */
-+	device->channel->rqstor_size = scsi_driver.can_queue;
-+
- 	ret = vmbus_open(device->channel,
- 			 ring_size,
- 			 ring_size,
-@@ -1572,7 +1593,6 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
- 	struct vstor_packet *vstor_packet;
- 	int ret, t;
- 
--
- 	stor_device = get_out_stor_device(device);
- 	if (!stor_device)
- 		return FAILED;
--- 
-2.25.1
+Regarding the I/O completion path, my understanding is that the I/O completion
+path is as follows if rq->end_io == NULL:
 
+scsi_mq_done()
+  blk_mq_complete_request()
+    rq->q->mq_ops->complete(rq) = scsi_softirq_done
+      scsi_finish_command()
+        scsi_device_unbusy()
+        scsi_cmd_to_driver(cmd)->done(cmd)
+        scsi_io_completion()
+          scsi_end_request()
+            blk_update_request()
+            scsi_mq_uninit_cmd()
+            __blk_mq_end_request()
+              blk_mq_free_request()
+                __blk_mq_free_request()
+                  blk_queue_exit()
+            scsi_run_queue_async()
+
+I haven't found any store memory barrier between the .device_busy change in
+scsi_device_unbusy() and the scsi_run_queue_async() call? Did I perhaps overlook
+something?
+
+> +		/*
+> +		 * ->restarts has to be kept as non-zero if there new budget
+> +		 *  contention comes.
+
+Please fix the grammar in the above sentence.
+
+> +	/*
+> +	 * Order writing .restarts and reading .device_busy. Its pair is
+> +	 * implied by __blk_mq_end_request() in scsi_end_request() for
+> +	 * ordering writing .device_busy in scsi_device_unbusy() and
+> +	 * reading .restarts.
+> +	 */
+> +	smp_mb__after_atomic();
+
+What does "its pair is implied" mean? Please make the above comment
+unambiguous.
+
+> +	/*
+> +	 * If all in-flight requests originated from this LUN are completed
+> +	 * before setting .restarts, sdev->device_busy will be observed as
+> +	 * zero, then blk_mq_delay_run_hw_queues() will dispatch this request
+> +	 * soon. Otherwise, completion of one of these request will observe
+> +	 * the .restarts flag, and the request queue will be run for handling
+> +	 * this request, see scsi_end_request().
+> +	 */
+> +	if (unlikely(atomic_read(&sdev->device_busy) == 0 &&
+> +				!scsi_device_blocked(sdev)))
+> +		blk_mq_delay_run_hw_queues(sdev->request_queue, SCSI_QUEUE_DELAY);
+> +	return false;
+
+What will happen if all in-flight requests complete after
+scsi_run_queue_async() has read .restarts and before it executes
+atomic_cmpxchg()? Will that cause the queue to be run after a delay
+although it should be run immediately?
+
+Thanks,
+
+Bart.
