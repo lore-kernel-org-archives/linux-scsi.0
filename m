@@ -2,132 +2,129 @@ Return-Path: <SRS0=d5MZ=CR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C64F3C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 14:55:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A79D0C43461
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 15:19:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84235229C5
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 14:55:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 705D920738
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 15:19:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fo+A47xP"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="noebgbDT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729753AbgIHOyw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 10:54:52 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:29947 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729114AbgIHOYw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 10:24:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599575059;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cIq/H7MU4yjMR3Dxb1c5M85cjyHgWOfijzmJ6gh8S4M=;
-        b=fo+A47xPhiW96JZbwqFxp/Yo4Q4qOQH9ya8gox+KLB8eW0c61QRitn+kP4UAOZxNE+NICz
-        jHUwj+FCNAyrZPxYer+VPiVb+Fglw7tCKGDD310ze/PnjINQ2FTo5jZkFYo34az9Zc7hm9
-        v3raxZJwkk0El2F3RpIJWU2ik6WLP20=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-463-TMYZs0eANJKxOHhgLQbokg-1; Tue, 08 Sep 2020 10:21:59 -0400
-X-MC-Unique: TMYZs0eANJKxOHhgLQbokg-1
-Received: by mail-ej1-f69.google.com with SMTP id d8so4749588ejt.14
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Sep 2020 07:21:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=cIq/H7MU4yjMR3Dxb1c5M85cjyHgWOfijzmJ6gh8S4M=;
-        b=pnsls6eej7x0dDTjpcUKggOAnQlWKs+OIuYmAO2ysi7xfQMtD3NdzVk4Tkrr5OotA+
-         0iL4oJTgilacFNKsYBazT/QwnGEWPOG9Wxjk3yFqfVHznxosJcpsqrQe/D61mj1GEFd6
-         WdQ1ulkCRJruaMeQSkL3HX1x/vSm61rRiX5aXtIGRtvIRMsOWpEW47mNKG/tJGywni8N
-         TJfH/U8/zLLvmh1Vu/qX35zisYud/J2/s+BLRRz9bQpMLoC0WYDjYyTRYn32Ls0I2a+e
-         vrv6yqheCgzeFLJlF5BW1REDAEewKFApTILFiXYZphAiy84n+GCZ8q2ZO/xLU04ckSQz
-         jOIA==
-X-Gm-Message-State: AOAM531X9c+826NzaFnmq9scQFfBk5lu8fSFu+t4KET5/9UVJnBxNHRt
-        OZhE+U1HFft+k7YtXwDA6pRiavwO8mxzgXhLe/gTB3hyINCuEHHDWwdURphYVICMZ9Uuq2mkPV3
-        n7X7xndWfcrNIIrJIh36rAw==
-X-Received: by 2002:a17:906:facb:: with SMTP id lu11mr27438267ejb.249.1599574918086;
-        Tue, 08 Sep 2020 07:21:58 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwcrrxhjakvShyUktbSgcQRcpXgRjHqw8S3hbu9iZfrSPWQtWOzrRv0FR0qtNZ9apnBfLejsA==
-X-Received: by 2002:a17:906:facb:: with SMTP id lu11mr27438244ejb.249.1599574917844;
-        Tue, 08 Sep 2020 07:21:57 -0700 (PDT)
-Received: from ?IPv6:2001:b07:6468:f312:5f70:b94c:ca5f:28f2? ([2001:b07:6468:f312:5f70:b94c:ca5f:28f2])
-        by smtp.gmail.com with ESMTPSA id i15sm10063285edf.82.2020.09.08.07.21.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Sep 2020 07:21:57 -0700 (PDT)
-Subject: Re: [PATCH] Rescan the entire target on transport reset when LUN is 0
-To:     Matej Genci <matej.genci@nutanix.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     "mst@redhat.com" <mst@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "stefanha@redhat.com" <stefanha@redhat.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Felipe Franciosi <felipe@nutanix.com>
-References: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
-From:   Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <200ad446-1242-9555-96b6-4fa94ee27ec7@redhat.com>
-Date:   Tue, 8 Sep 2020 16:22:00 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1729969AbgIHPTS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 11:19:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47046 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730203AbgIHPSl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 11:18:41 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3DB2C0A3BE7;
+        Tue,  8 Sep 2020 07:54:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=T3DAd20WTb1Hb/Ra/a3WLrHCAUox9jbNIuydKc6Zwq0=; b=noebgbDTM393jBZuz8b4XPDreU
+        6wJ3DmWW4agGQj7UfprYVx8eF3+AFoEFftZqarIzWu1hxbmosigPQIHqlIZ+66W/uJmVFP9aXLjZU
+        ozaQ3eGcPyvoxsu6KMF/k7jX4EtE8YMhn+xwUfisrE85z2VvUQrm96lE97H1eWdMW5nW46FosdncC
+        WceOuD/7NyEZ1vcGW/fA8pqZJLAJPpx5RteD/YTpmudBbWS8uFR+8XbK3yMUgtijSWHPXig9zmArD
+        1UrJLeuY2m/E2QToGMBRKZ0HOsckIhOVNmyDTakcOz5VMW2zg9DQkub5G140UKeFW3ehh0juqUcC9
+        mf9Q+lNQ==;
+Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kFf0n-0002xK-0m; Tue, 08 Sep 2020 14:54:22 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH 06/19] swim: simplify media change handling
+Date:   Tue,  8 Sep 2020 16:53:34 +0200
+Message-Id: <20200908145347.2992670-7-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
+References: <20200908145347.2992670-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/08/20 14:21, Matej Genci wrote:
-> VirtIO 1.0 spec says
->     The removed and rescan events ... when sent for LUN 0, they MAY
->     apply to the entire target so the driver can ask the initiator
->     to rescan the target to detect this.
-> 
-> This change introduces the behaviour described above by scanning the
-> entire scsi target when LUN is set to 0. This is both a functional and a
-> performance fix. It aligns the driver with the spec and allows control
-> planes to hotplug targets with large numbers of LUNs without having to
-> request a RESCAN for each one of them.
-> 
-> Signed-off-by: Matej Genci <matej@nutanix.com>
-> Suggested-by: Felipe Franciosi <felipe@nutanix.com>
-> ---
->  drivers/scsi/virtio_scsi.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index bfec84aacd90..a4b9bc7b4b4a 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -284,7 +284,12 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
->  
->  	switch (virtio32_to_cpu(vscsi->vdev, event->reason)) {
->  	case VIRTIO_SCSI_EVT_RESET_RESCAN:
-> -		scsi_add_device(shost, 0, target, lun);
-> +		if (lun == 0) {
-> +			scsi_scan_target(&shost->shost_gendev, 0, target,
-> +					 SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
-> +		} else {
-> +			scsi_add_device(shost, 0, target, lun);
-> +		}
->  		break;
->  	case VIRTIO_SCSI_EVT_RESET_REMOVED:
->  		sdev = scsi_device_lookup(shost, 0, target, lun);
-> 
+floppy_revalidate mostly duplicates work already done in floppy_open
+despite only beeing called from floppy_open.  Remove the function and
+just clear the ->ejected flag directly under the right condition.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ drivers/block/swim.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+diff --git a/drivers/block/swim.c b/drivers/block/swim.c
+index d4565c555b289f..52dd1efa00f9c5 100644
+--- a/drivers/block/swim.c
++++ b/drivers/block/swim.c
+@@ -217,8 +217,6 @@ extern int swim_read_sector_header(struct swim __iomem *base,
+ extern int swim_read_sector_data(struct swim __iomem *base,
+ 				 unsigned char *data);
+ 
+-static int floppy_revalidate(struct gendisk *disk);
+-
+ static DEFINE_MUTEX(swim_mutex);
+ static inline void set_swim_mode(struct swim __iomem *base, int enable)
+ {
+@@ -640,8 +638,8 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
+ 		return 0;
+ 
+ 	if (mode & (FMODE_READ|FMODE_WRITE)) {
+-		if (bdev_check_media_change(bdev))
+-			floppy_revalidate(bdev->bd_disk);
++		if (bdev_check_media_change(bdev) && fs->disk_in)
++			fs->ejected = 0;
+ 		if ((mode & FMODE_WRITE) && fs->write_protected) {
+ 			err = -EROFS;
+ 			goto out;
+@@ -738,24 +736,6 @@ static unsigned int floppy_check_events(struct gendisk *disk,
+ 	return fs->ejected ? DISK_EVENT_MEDIA_CHANGE : 0;
+ }
+ 
+-static int floppy_revalidate(struct gendisk *disk)
+-{
+-	struct floppy_state *fs = disk->private_data;
+-	struct swim __iomem *base = fs->swd->base;
+-
+-	swim_drive(base, fs->location);
+-
+-	if (fs->ejected)
+-		setup_medium(fs);
+-
+-	if (!fs->disk_in)
+-		swim_motor(base, OFF);
+-	else
+-		fs->ejected = 0;
+-
+-	return !fs->disk_in;
+-}
+-
+ static const struct block_device_operations floppy_fops = {
+ 	.owner		 = THIS_MODULE,
+ 	.open		 = floppy_unlocked_open,
+-- 
+2.28.0
 
