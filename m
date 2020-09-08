@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E047C43461
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 20:09:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42CBDC433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 20:10:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 542F7207DE
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 20:09:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED39D2080A
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 20:10:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="georDWjw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FNH6u+62"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730413AbgIHUJU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 16:09:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46568 "EHLO
+        id S1730636AbgIHUJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 16:09:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730244AbgIHPSl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 11:18:41 -0400
+        with ESMTP id S1730230AbgIHPSj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 11:18:39 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93E79C0A3BF9;
-        Tue,  8 Sep 2020 07:56:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85DEEC0A3BEF;
+        Tue,  8 Sep 2020 07:55:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=qhhv9Hm93hbrEWUTmerzcHfYJ5eCRp8QXVw+0H+lRDo=; b=georDWjwq0N5HilZmlDSCDWJeZ
-        f8oJjOYDfJUCfRFx5Z3VmT+Tlcdr6V8JfV/pMKw9EmaZ5huEBNXFbahQXQvMIbjPhEcMP8y+TcPt0
-        M/rYM8SI7fm/88ci7wbJMgZSasAoiMbM45H8jf2XImil3qlEHlK2UPgwxyr/WGWZT0Jpn96MTcHit
-        ePM6bzVpuje/sMhrk6ZMN8IWgjqYDJB12fDjKAoitSvlVk1R74pfQHirCs4B2wFPop2jiUUJtrHxp
-        Mp+8BmLcmIlGy34HnXzw00JG+emkTXiqd6ripTWqqFlPmj704iX0t4bdzllFnZ3aSVoRY+JDkk0nB
-        uEHP9pqA==;
+        bh=Zy4mHdnm7nEv0UQArUtuxkqnpnJR+O5jTaPdRGF8f0Q=; b=FNH6u+62Cp6Fu4gPFo/+ZAKGq9
+        whO+GRRSYtfYck0Apr6u5ok8EeWsbKQOBj7q49fxZ9GYRKU831HMe4iQyXFvw+juBmtua9uVX93T+
+        bEc0BHeJcJVc+35m/J6ADnwdMLFIezhilrTi1FTh0tUhNzAh9hJeOgVYaD1i8X6V4/bv9+hwvXJID
+        iKXX5PDPbVb25tzNxrFw33cchnztxmJyZ1pXXltCXbMRWhcSKhX7zEhKPJQfme4WBH6WhqFrub6AK
+        IfKIRksUVnN3x9UvCew+pvNQ/BT8B+BlKTbHE21N0DOCe3BRi2/2cl4Msi8A4gvDHAE9de7eXIFSS
+        +8PIK0zQ==;
 Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFf1Q-00031Z-Bh; Tue, 08 Sep 2020 14:55:01 +0000
+        id 1kFf12-0002yK-Nc; Tue, 08 Sep 2020 14:54:37 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -52,9 +52,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 19/19] block: remove check_disk_change
-Date:   Tue,  8 Sep 2020 16:53:47 +0200
-Message-Id: <20200908145347.2992670-20-hch@lst.de>
+Subject: [PATCH 11/19] gdrom: use bdev_check_media_change
+Date:   Tue,  8 Sep 2020 16:53:39 +0200
+Message-Id: <20200908145347.2992670-12-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
 References: <20200908145347.2992670-1-hch@lst.de>
@@ -66,58 +66,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the now unused check_disk_change helper.
+The Sega GD-ROM driver does not have a ->revalidate_disk method, so it
+can just use bdev_check_media_change without any additional changes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- fs/block_dev.c        | 20 --------------------
- include/linux/genhd.h |  1 -
- 2 files changed, 21 deletions(-)
+ drivers/cdrom/gdrom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index c6ac0bd22eca70..0b34955b9e360f 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1368,26 +1368,6 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose)
- }
- EXPORT_SYMBOL(revalidate_disk_size);
- 
--/*
-- * This routine checks whether a removable media has been changed,
-- * and invalidates all buffer-cache-entries in that case. This
-- * is a relatively slow routine, so we have to try to minimize using
-- * it. Thus it is called only upon a 'mount' or 'open'. This
-- * is the best way of combining speed and utility, I think.
-- * People changing diskettes in the middle of an operation deserve
-- * to lose :-)
-- */
--int check_disk_change(struct block_device *bdev)
--{
--	if (!bdev_check_media_change(bdev))
--		return 0;
--	if (bdev->bd_disk->fops->revalidate_disk)
--		bdev->bd_disk->fops->revalidate_disk(bdev->bd_disk);
--	return 1;
--}
--
--EXPORT_SYMBOL(check_disk_change);
--
- void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors)
+diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+index 09b0cd292720fa..9874fc1c815b53 100644
+--- a/drivers/cdrom/gdrom.c
++++ b/drivers/cdrom/gdrom.c
+@@ -479,7 +479,7 @@ static int gdrom_bdops_open(struct block_device *bdev, fmode_t mode)
  {
- 	spin_lock(&bdev->bd_size_lock);
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 322d48a207728a..1c97cf84f011a7 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -370,7 +370,6 @@ int register_blkdev(unsigned int major, const char *name);
- void unregister_blkdev(unsigned int major, const char *name);
+ 	int ret;
  
- void revalidate_disk_size(struct gendisk *disk, bool verbose);
--int check_disk_change(struct block_device *bdev);
- bool bdev_check_media_change(struct block_device *bdev);
- int __invalidate_device(struct block_device *bdev, bool kill_dirty);
- void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
+-	check_disk_change(bdev);
++	bdev_check_media_change(bdev);
+ 
+ 	mutex_lock(&gdrom_mutex);
+ 	ret = cdrom_open(gd.cd_info, bdev, mode);
 -- 
 2.28.0
 
