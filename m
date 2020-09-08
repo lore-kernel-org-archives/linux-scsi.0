@@ -2,66 +2,46 @@ Return-Path: <SRS0=d5MZ=CR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 157F5C2D0A7
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 17:10:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D97C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 17:32:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D303F20732
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 17:10:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tG/YUPF7"
+	by mail.kernel.org (Postfix) with ESMTP id 9B8DF21919
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 17:32:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599586359;
+	bh=kUTqcdvvfzcSjWaK0H6A5NdpMrZNrv0SGFczPrxzh2I=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=hRSR7IZ66NvMw+sqLegkC9nYOraH/WFYsqWr8S20Dol0qF/qJu83APIxMy68eQ2ta
+	 EQBb91j/6mOf33y2HqNh9W4BjIffOoiWz6fiYvsC6SDy+OettMf4I/sHCh0kSUKcN8
+	 zHOcLRVzMMZJhh9hUH1+ylRs1Xh03BJrFFW+TEJ4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732003AbgIHRH6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 13:07:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37230 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731839AbgIHRHx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 13:07:53 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D67BC061573;
-        Tue,  8 Sep 2020 10:07:53 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id v196so11497248pfc.1;
-        Tue, 08 Sep 2020 10:07:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Vkm3URthXwvfCz2X/0Dh5umMnxjwLofZTcBfaZl0Z6Y=;
-        b=tG/YUPF7peaPAP9CfK209Pn38yxJyOy8OHKCwmmqVxJ0gETyFt5E47yypeNVZlb0WW
-         vzSrLbR71gHvWpEnbgdYI1Xjom5ZjiE6euinp+gISUzKn7g9rhYwU/3Gms63brYZ3oP6
-         5djflAAHKKiCLS/xeeT7uFxDOasbEPszX6z74lQeQGxDYN3KXOPjMt4w+3FMTmczQc4v
-         cO+KrOQTnkS9y3godo4V8gLjVbu5JdYF0mcK5XxdOc4fwUy9Xo2RTMrGfv6ynzKDzXqm
-         nlVz4SXWSn0BFDXJQCrMXlZTnfBnhd143sO2H7sxeondeXhdg0bq1xoatGNL7RRJiiAl
-         gd8Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Vkm3URthXwvfCz2X/0Dh5umMnxjwLofZTcBfaZl0Z6Y=;
-        b=e8MN429gqJhy2uCZTsSQKjxvlib6XK+ntlhy/O5s4iObYy44QiIdhzPubQMboeQ5wc
-         fe1lld8wkyVRUE6KCUkipUpQcRvlTG+tILLlLFBda+BW7jmkzSLgcIHQTUzajQGXYdrY
-         ScWJ/d0t3xAn3jA5HlT3weKEDwtFEyc2mL1sBW0Iq06fI8HRzJ/qSdv6CD2COwQONX7z
-         m4JgC8s/0C1F/tgULUf1Z2Mm9khxMYGH06bJRXrYaeghZlcd2ZxKo13Xn++YyzdOwLby
-         uUk0ZZbCMLCwYp0e9lu7RVEkmV+De8RrJ78ha15xKdy4zEA3V8UUHZZGYiWvt0t3VyWK
-         sYZQ==
-X-Gm-Message-State: AOAM5333tDHJ1ZD7KJRxRJVMgLvJiG2BggW56dbKPfqeYcE57Ywed67t
-        3h3vXUMOGoXQ9N+Ywa7i9o4=
-X-Google-Smtp-Source: ABdhPJzjf3ma939UXz/wlJ5BHxhf5CnuqeUC1sRoD1AIWGssRazx9QXjeHH5ONg+i+f1WoTcQBDdAA==
-X-Received: by 2002:a17:902:70c8:b029:d0:cbe1:e748 with SMTP id l8-20020a17090270c8b02900d0cbe1e748mr2028914plt.35.1599584872526;
-        Tue, 08 Sep 2020 10:07:52 -0700 (PDT)
-Received: from gmail.com ([106.201.26.241])
-        by smtp.gmail.com with ESMTPSA id q71sm41669pja.9.2020.09.08.10.07.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 10:07:52 -0700 (PDT)
-Date:   Tue, 8 Sep 2020 22:35:59 +0530
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        id S1728442AbgIHRch (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 13:32:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35402 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731740AbgIHRcL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Sep 2020 13:32:11 -0400
+Received: from localhost (35.sub-72-107-115.myvzw.com [72.107.115.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 821D220738;
+        Tue,  8 Sep 2020 17:32:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599586330;
+        bh=kUTqcdvvfzcSjWaK0H6A5NdpMrZNrv0SGFczPrxzh2I=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=w443FAgsCnle6zPIMQhAt3jMhssw9u1Htr1KiAP6iOc1pzVVGk6sw4JNj43q7EOZJ
+         SZnAMZ6lwcAJ1LPoz4m/tiVshXlhrheQfSg08J1HyqKYAjyIHowjC+NRJfM1bJsxfM
+         Q0IFMBC3s4GtTf+rIMpFH2mcfYxWqayRcp7xnn8U=
+Date:   Tue, 8 Sep 2020 12:32:09 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Vaibhav Gupta <vaibhavgupta40@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Bjorn Helgaas <bjorn@helgaas.com>,
         Vaibhav Gupta <vaibhav.varodek@gmail.com>,
         Adam Radford <aradford@gmail.com>,
@@ -81,134 +61,209 @@ To:     Bjorn Helgaas <helgaas@kernel.org>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc:     Shuah Khan <skhan@linuxfoundation.org>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Shuah Khan <skhan@linuxfoundation.org>,
         linux-kernel@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v2 12/15] scsi: 3w-9xxx: use generic power management
-Message-ID: <20200908170559.GM9948@gmail.com>
-References: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
- <20200720133427.454400-13-vaibhavgupta40@gmail.com>
+Subject: Re: [PATCH v2 01/15] scsi: megaraid_sas: use generic power management
+Message-ID: <20200908173209.GA607806@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200720133427.454400-13-vaibhavgupta40@gmail.com>
+In-Reply-To: <20200720133427.454400-2-vaibhavgupta40@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 20, 2020 at 07:04:25PM +0530, Vaibhav Gupta wrote:
-> Drivers using legacy PM have to manage PCI states and device's PM states
-> themselves. They also need to take care of configuration registers.
+On Mon, Jul 20, 2020 at 07:04:14PM +0530, Vaibhav Gupta wrote:
+> With legacy PM hooks, it was the responsibility of a driver to manage PCI
+> states and also the device's power state. The generic approach is to let
+> the PCI core handle the work.
 > 
-> With improved and powerful support of generic PM, PCI Core takes care of
-> above mentioned, device-independent, jobs.
+> PCI core passes "struct device*" as an argument to the .suspend() and
+> .resume() callbacks. As the .suspend() work with "struct instance*",
+> extract it from "struct device*" using dev_get_drv_data().
 > 
-> This driver makes use of PCI helper functions like
-> pci_save/restore_state(), pci_enable/disable_device(),
-> pci_set_power_state() and pci_set_master() to do required operations. In
-> generic mode, they are no longer needed.
-> 
-> Change function parameter in both .suspend() and .resume() to
-> "struct device*" type. Use to_pci_dev() and dev_get_drvdata() to get
-> "struct pci_dev*" variable and drv data.
+> Driver was also using PCI helper functions like pci_save/restore_state(),
+> pci_disable/enable_device(), pci_set_power_state() and pci_enable_wake().
+> They should not be invoked by the driver.
 > 
 > Compile-tested only.
 > 
 > Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 > ---
->  drivers/scsi/3w-9xxx.c | 30 ++++++++----------------------
->  1 file changed, 8 insertions(+), 22 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 61 ++++++-----------------
+>  1 file changed, 16 insertions(+), 45 deletions(-)
 > 
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index 3337b1e80412..c15dcfda3957 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -2191,10 +2191,10 @@ static void twa_remove(struct pci_dev *pdev)
->  	twa_device_extension_count--;
->  } /* End twa_remove() */
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 00668335c2af..4a6ee7778977 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -7539,25 +7539,21 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+>  	megasas_return_cmd(instance, cmd);
+>  }
 >  
 > -#ifdef CONFIG_PM
->  /* This function is called on PCI suspend */
-> -static int twa_suspend(struct pci_dev *pdev, pm_message_t state)
-> +static int __maybe_unused twa_suspend(struct device *dev)
+>  /**
+>   * megasas_suspend -	driver suspend entry point
+> - * @pdev:		PCI device structure
+> - * @state:		PCI power state to suspend routine
+> + * @dev:		Device structure
+>   */
+> -static int
+> -megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+> +static int __maybe_unused
+> +megasas_suspend(struct device *dev)
 >  {
-> +	struct pci_dev *pdev = to_pci_dev(dev);
->  	struct Scsi_Host *host = pci_get_drvdata(pdev);
->  	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
+> -	struct megasas_instance *instance;
+> -
+> -	instance = pci_get_drvdata(pdev);
+> +	struct megasas_instance *instance = dev_get_drvdata(dev);
 >  
-> @@ -2214,32 +2214,21 @@ static int twa_suspend(struct pci_dev *pdev, pm_message_t state)
->  	}
->  	TW_CLEAR_ALL_INTERRUPTS(tw_dev);
+>  	if (!instance)
+>  		return 0;
+>  
+>  	instance->unload = 1;
+>  
+> -	dev_info(&pdev->dev, "%s is called\n", __func__);
+> +	dev_info(dev, "%s is called\n", __func__);
+>  
+>  	/* Shutdown SR-IOV heartbeat timer */
+>  	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
+> @@ -7579,7 +7575,7 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+>  
+>  	tasklet_kill(&instance->isr_tasklet);
+>  
+> -	pci_set_drvdata(instance->pdev, instance);
+> +	dev_set_drvdata(dev, instance);
+
+It *might* be correct to replace "instance->pdev" with "dev", but it's
+not obvious and deserves some explanation.  It's true that you can
+replace &pdev->dev with dev, but I don't know anything about
+instance->dev.
+
+I don't think this change is actually necessary, is it?
+"instance->pdev" is still a pci_dev pointer, so pci_set_drvdata()
+should work fine.
+
+It looks goofy to use pci_set_drvdata() or dev_set_drvdata() in a
+suspend routine, but I didn't bother trying to figure out what's going
+on here.
+
+>  	instance->instancet->disable_intr(instance);
+>  
+>  	megasas_destroy_irqs(instance);
+> @@ -7587,48 +7583,28 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+>  	if (instance->msix_vectors)
+>  		pci_free_irq_vectors(instance->pdev);
 >  
 > -	pci_save_state(pdev);
 > -	pci_disable_device(pdev);
+> -
 > -	pci_set_power_state(pdev, pci_choose_state(pdev, state));
 > -
 >  	return 0;
->  } /* End twa_suspend() */
+>  }
 >  
->  /* This function is called on PCI resume */
-> -static int twa_resume(struct pci_dev *pdev)
-> +static int __maybe_unused twa_resume(struct device *dev)
+>  /**
+>   * megasas_resume-      driver resume entry point
+> - * @pdev:               PCI device structure
+> + * @dev:              Device structure
+>   */
+> -static int
+> -megasas_resume(struct pci_dev *pdev)
+> +static int __maybe_unused
+> +megasas_resume(struct device *dev)
 >  {
->  	int retval = 0;
-> +	struct pci_dev *pdev = to_pci_dev(dev);
->  	struct Scsi_Host *host = pci_get_drvdata(pdev);
->  	TW_Device_Extension *tw_dev = (TW_Device_Extension *)host->hostdata;
+>  	int rval;
+>  	struct Scsi_Host *host;
+> -	struct megasas_instance *instance;
+> +	struct megasas_instance *instance = dev_get_drvdata(dev);
+>  	u32 status_reg;
 >  
->  	printk(KERN_WARNING "3w-9xxx: Resuming host %d.\n", tw_dev->host->host_no);
+> -	instance = pci_get_drvdata(pdev);
+> -
+>  	if (!instance)
+>  		return 0;
+>  
+>  	host = instance->host;
 > -	pci_set_power_state(pdev, PCI_D0);
 > -	pci_enable_wake(pdev, PCI_D0, 0);
 > -	pci_restore_state(pdev);
->  
-> -	retval = pci_enable_device(pdev);
-> -	if (retval) {
-> -		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x39, "Enable device failed during resume");
-> -		return retval;
-> -	}
 > +	device_wakeup_disable(dev);
->  
+
+Shouldn't there be a corresponding device_wakeup_enable() or similar
+elsewhere?
+
+Maybe the fact that megasas disables wakeup but never enables it is a
+latent bug?
+
+> -	dev_info(&pdev->dev, "%s is called\n", __func__);
+> -	/*
+> -	 * PCI prepping: enable device set bus mastering and dma mask
+> -	 */
+> -	rval = pci_enable_device_mem(pdev);
+> -
+> -	if (rval) {
+> -		dev_err(&pdev->dev, "Enable device failed\n");
+> -		return rval;
+> -	}
+> -
 > -	pci_set_master(pdev);
->  	pci_try_set_mwi(pdev);
+> +	dev_info(dev, "%s is called\n", __func__);
 >  
->  	retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-> @@ -2277,11 +2266,9 @@ static int twa_resume(struct pci_dev *pdev)
+>  	/*
+>  	 * We expect the FW state to be READY
+> @@ -7754,14 +7730,8 @@ megasas_resume(struct pci_dev *pdev)
+>  fail_set_dma_mask:
+>  fail_ready_state:
 >  
->  out_disable_device:
->  	scsi_remove_host(host);
 > -	pci_disable_device(pdev);
->  
->  	return retval;
->  } /* End twa_resume() */
+> -
+>  	return -ENODEV;
+>  }
+> -#else
+> -#define megasas_suspend	NULL
+> -#define megasas_resume	NULL
 > -#endif
 >  
->  /* PCI Devices supported by this driver */
->  static struct pci_device_id twa_pci_tbl[] = {
-> @@ -2297,16 +2284,15 @@ static struct pci_device_id twa_pci_tbl[] = {
+>  static inline int
+>  megasas_wait_for_adapter_operational(struct megasas_instance *instance)
+> @@ -7931,7 +7901,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
+>  
+>  /**
+>   * megasas_shutdown -	Shutdown entry point
+> - * @device:		Generic device structure
+> + * @pdev:		PCI device structure
+
+Looks like an unrelated typo fix?  I would put this in a separate
+patch.
+
+>   */
+>  static void megasas_shutdown(struct pci_dev *pdev)
+>  {
+> @@ -8508,6 +8478,8 @@ static const struct file_operations megasas_mgmt_fops = {
+>  	.llseek = noop_llseek,
 >  };
->  MODULE_DEVICE_TABLE(pci, twa_pci_tbl);
 >  
-> +static SIMPLE_DEV_PM_OPS(twa_pm_ops, twa_suspend, twa_resume);
+> +static SIMPLE_DEV_PM_OPS(megasas_pm_ops, megasas_suspend, megasas_resume);
 > +
->  /* pci_driver initializer */
->  static struct pci_driver twa_driver = {
->  	.name		= "3w-9xxx",
->  	.id_table	= twa_pci_tbl,
->  	.probe		= twa_probe,
->  	.remove		= twa_remove,
-> -#ifdef CONFIG_PM
-> -	.suspend	= twa_suspend,
-> -	.resume		= twa_resume,
-> -#endif
-> +	.driver.pm	= &twa_pm_ops,
->  	.shutdown	= twa_shutdown
+>  /*
+>   * PCI hotplug support registration structure
+>   */
+> @@ -8517,8 +8489,7 @@ static struct pci_driver megasas_pci_driver = {
+>  	.id_table = megasas_pci_table,
+>  	.probe = megasas_probe_one,
+>  	.remove = megasas_detach_one,
+> -	.suspend = megasas_suspend,
+> -	.resume = megasas_resume,
+> +	.driver.pm = &megasas_pm_ops,
+>  	.shutdown = megasas_shutdown,
 >  };
 >  
 > -- 
 > 2.27.0
 > 
-.
