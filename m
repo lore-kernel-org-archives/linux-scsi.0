@@ -1,151 +1,193 @@
-Return-Path: <SRS0=wipa=CQ=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=d5MZ=CR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96B0EC43461
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 23:15:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F6EC43461
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 01:47:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46FF221741
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Sep 2020 23:15:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 863B72137B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 01:47:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f+KvpGzx"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gOc3DDat"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727861AbgIGXPI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Sep 2020 19:15:08 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58148 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726918AbgIGXPE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 19:15:04 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 087NDsL8144903;
-        Mon, 7 Sep 2020 23:14:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=Ix6Y6JjZeh7TBlfeYYjwl7+9wh3u5mgubHtORH10LSs=;
- b=f+KvpGzxqYlhw20q9QmPHa2PNzCber1x8KvxM7tILT2QXmsHgDnhaTnmVm8/PAmm+I8z
- tfBTY3DHAFdQgZnm7ttNb29FN6inotbKI8v8FpWhaa6xgKRoOiWlj+W8vkqXV6OHsCB0
- FDZYhLLNIC1Yv7XMbNsycImxzI9T0GTZs6ntk2m0FRWM2n2s7VXCLRDKYi8bI/YwUVZu
- fAowVvd1nZBEblo0SlWovdWKfQc6XJJFrULyvCDxCFE0oGRP2qEqc5VgVygiGKvbKBNH
- s5Ioil3HyHMg9gji6tzLGGbij5VEfK0CQx+gS7G2lelkNrgVWjFChvt5LKSEIS21jikd yA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 33c3amr766-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 07 Sep 2020 23:14:56 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 087NBN3x028016;
-        Mon, 7 Sep 2020 23:14:56 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 33cmeq39wu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Sep 2020 23:14:56 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 087NEplY008519;
-        Mon, 7 Sep 2020 23:14:55 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 07 Sep 2020 16:14:51 -0700
-Subject: Re: [PATCH v2] scsi: target: tcmu: add compat mode for 32bit
- userspace on 64bit kernel
-To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20200903174105.4571-1-bstroesser@ts.fujitsu.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <8f276b52-f741-b00b-9b00-77fcd855c4fe@oracle.com>
-Date:   Mon, 7 Sep 2020 18:14:50 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1728140AbgIHBra (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Sep 2020 21:47:30 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:40772 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728113AbgIHBr3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2020 21:47:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599529646;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=8hiCj61KJfeUl7LkibCfArDkGhNR0/4KrqJWXopzPs4=;
+        b=gOc3DDat/vn50MiPRg6aYIMyKOX71bvpO+omW+aqnYsmRKe5Y01i66VZ0ii5EexK1UskTv
+        Naf/U4sZUpN0D+ZCcum1hMPWMvTv045W8BumNfhD5yCgN6vgcAUeSvTdSgHMZ0XtfFr8ZS
+        fvk2sQDVmIWnQMxx4DjDR9VSj5DOp60=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-507-cJpZMPPkPeKTRUH_nTysew-1; Mon, 07 Sep 2020 21:47:23 -0400
+X-MC-Unique: cJpZMPPkPeKTRUH_nTysew-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 51FDA801AC2;
+        Tue,  8 Sep 2020 01:47:21 +0000 (UTC)
+Received: from T590 (ovpn-12-217.pek2.redhat.com [10.72.12.217])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AE2B910013D7;
+        Tue,  8 Sep 2020 01:47:12 +0000 (UTC)
+Date:   Tue, 8 Sep 2020 09:47:08 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>,
+        John Garry <john.garry@huawei.com>, linux-block@vger.kernel.org
+Subject: Re: [PATCH V5] scsi: core: only re-run queue in scsi_end_request()
+ if device queue is busy
+Message-ID: <20200908014708.GA1091256@T590>
+References: <20200907071048.1078838-1-ming.lei@redhat.com>
+ <4da219e6-7c2b-b93b-c6d0-2e18aa8ce11f@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <20200903174105.4571-1-bstroesser@ts.fujitsu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9737 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 adultscore=0
- bulkscore=0 phishscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009070225
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9737 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
- clxscore=1015 bulkscore=0 malwarescore=0 lowpriorityscore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 impostorscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009070225
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4da219e6-7c2b-b93b-c6d0-2e18aa8ce11f@acm.org>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/3/20 12:41 PM, Bodo Stroesser wrote:
-> +#ifdef TCMU_COMPAT
-> +static inline void compat_new_iov(struct iovec **iov, int *iov_cnt)
-> +{
-> +	struct compat_iovec **c_iov = (struct compat_iovec **)iov;
-> +
-> +	if (*iov_cnt != 0)
-> +		(*c_iov)++;
-> +	(*iov_cnt)++;
-> +
-> +	memset(*c_iov, 0, sizeof(struct compat_iovec));
-> +}
-> +
-> +static inline size_t compat_iov_tail(struct iovec *iov)
-> +{
-> +	struct compat_iovec *c_iov = (struct compat_iovec *)iov;
-> +
-> +	return (size_t)c_iov->iov_base + c_iov->iov_len;
-> +}
-> +#endif
-> +
->  static void scatter_data_area(struct tcmu_dev *udev,
->  	struct tcmu_cmd *tcmu_cmd, struct scatterlist *data_sg,
->  	unsigned int data_nents, struct iovec **iov,
-> @@ -705,13 +763,41 @@ static void scatter_data_area(struct tcmu_dev *udev,
->  			to_offset = get_block_offset_user(udev, dbi,
->  					block_remaining);
->  
-> +			copy_bytes = min_t(size_t, sg_remaining,
-> +					block_remaining);
-> +			if (copy_data) {
-> +				offset = DATA_BLOCK_SIZE - block_remaining;
-> +				memcpy(to + offset,
-> +				       from + sg->length - sg_remaining,
-> +				       copy_bytes);
-> +			}
-> +			sg_remaining -= copy_bytes;
-> +			block_remaining -= copy_bytes;
-> +
->  			/*
->  			 * The following code will gather and map the blocks
->  			 * to the same iovec when the blocks are all next to
->  			 * each other.
->  			 */
-> -			copy_bytes = min_t(size_t, sg_remaining,
-> -					block_remaining);
-> +#ifdef TCMU_COMPAT
-> +			if (udev->compat) {
-> +				struct compat_iovec *c_iov;
-> +
-> +				if (*iov_cnt != 0 &&
-> +				    to_offset == compat_iov_tail(*iov)) {
-> +					c_iov = (struct compat_iovec *)*iov;
-> +					c_iov->iov_len += copy_bytes;
-> +				} else {
-> +					compat_new_iov(iov, iov_cnt);
-> +					c_iov = (struct compat_iovec *)*iov;
-> +					c_iov->iov_base =
-> +						(compat_uptr_t)to_offset;
-> +					c_iov->iov_len = copy_bytes;
-> +				}
-> +				continue;
-> +			}
-> +#endif
+On Mon, Sep 07, 2020 at 09:52:42AM -0700, Bart Van Assche wrote:
+> On 2020-09-07 00:10, Ming Lei wrote:
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 7affaaf8b98e..a05e431ee62a 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -551,8 +551,25 @@ static void scsi_run_queue_async(struct scsi_device *sdev)
+> >  	if (scsi_target(sdev)->single_lun ||
+> >  	    !list_empty(&sdev->host->starved_list))
+> >  		kblockd_schedule_work(&sdev->requeue_work);
+> > -	else
+> > -		blk_mq_run_hw_queues(sdev->request_queue, true);
+> > +	else {
+> 
+> Please follow the Linux kernel coding style and balance braces.
 
-I think a couple one or two liner ifdefs in the middle of a function is something people look the other way on. Maybe here we went a little too wild though. If we are not going the callout route, I think it would be nicer here to separate this part into functions. In the ifdef with compat_new_iov/compat_iov_tail above this function, add a tcmu_compat_iov_set and move the code above there. Move the code below it that does the non compat code to a new function tcmu_iov_set. We will still need a ifdef for the tcmu_compat_iov_set somewhere, but it feels more organized.
+Could you provide one document about such style? The patch does pass
+checkpatch, or I am happy to follow your suggestion if checkpatch is
+updated to this way.
+
+> 
+> > +		/*
+> > +		 * smp_mb() implied in either rq->end_io or blk_mq_free_request
+> > +		 * is for ordering writing .device_busy in scsi_device_unbusy()
+> > +		 * and reading sdev->restarts.
+> > +		 */
+> > +		int old = atomic_read(&sdev->restarts);
+> 
+> scsi_run_queue_async() has two callers: scsi_end_request() and scsi_queue_rq().
+> I don't see how ordering between scsi_device_unbusy() and the above atomic_read()
+> could be guaranteed if this function is called from scsi_queue_rq()?
+> 
+> Regarding the I/O completion path, my understanding is that the I/O completion
+> path is as follows if rq->end_io == NULL:
+> 
+> scsi_mq_done()
+>   blk_mq_complete_request()
+>     rq->q->mq_ops->complete(rq) = scsi_softirq_done
+>       scsi_finish_command()
+>         scsi_device_unbusy()
+
+scsi_device_unbusy()
+	atomic_dec(&sdev->device_busy);
+
+>         scsi_cmd_to_driver(cmd)->done(cmd)
+>         scsi_io_completion()
+>           scsi_end_request()
+>             blk_update_request()
+>             scsi_mq_uninit_cmd()
+>             __blk_mq_end_request()
+>               blk_mq_free_request()
+>                 __blk_mq_free_request()
+
+__blk_mq_free_request()
+	blk_mq_put_tag
+		smp_mb__after_atomic()
+
+>                   blk_queue_exit()
+>             scsi_run_queue_async()
+> 
+> I haven't found any store memory barrier between the .device_busy change in
+> scsi_device_unbusy() and the scsi_run_queue_async() call? Did I perhaps overlook
+> something?
+> 
+> > +		/*
+> > +		 * ->restarts has to be kept as non-zero if there new budget
+> > +		 *  contention comes.
+> 
+> Please fix the grammar in the above sentence.
+
+OK.
+
+> 
+> > +	/*
+> > +	 * Order writing .restarts and reading .device_busy. Its pair is
+> > +	 * implied by __blk_mq_end_request() in scsi_end_request() for
+> > +	 * ordering writing .device_busy in scsi_device_unbusy() and
+> > +	 * reading .restarts.
+> > +	 */
+> > +	smp_mb__after_atomic();
+> 
+> What does "its pair is implied" mean? Please make the above comment
+> unambiguous.
+
+See comment in scsi_run_queue_async().
+
+> 
+> > +	/*
+> > +	 * If all in-flight requests originated from this LUN are completed
+> > +	 * before setting .restarts, sdev->device_busy will be observed as
+> > +	 * zero, then blk_mq_delay_run_hw_queues() will dispatch this request
+> > +	 * soon. Otherwise, completion of one of these request will observe
+> > +	 * the .restarts flag, and the request queue will be run for handling
+> > +	 * this request, see scsi_end_request().
+> > +	 */
+> > +	if (unlikely(atomic_read(&sdev->device_busy) == 0 &&
+> > +				!scsi_device_blocked(sdev)))
+> > +		blk_mq_delay_run_hw_queues(sdev->request_queue, SCSI_QUEUE_DELAY);
+> > +	return false;
+> 
+> What will happen if all in-flight requests complete after
+> scsi_run_queue_async() has read .restarts and before it executes
+> atomic_cmpxchg()?
+
+One of these completions will run atomic_cmpxchg() successfully, and the
+queue is re-run immediately from scsi_run_queue_async().
+
+> Will that cause the queue to be run after a delay
+> although it should be run immediately?
+
+Yeah, blk_mq_delay_run_hw_queues() will be called, however:
+
+If scsi_run_queue_async() has scheduled run queue already, this code path
+won't queue a dwork successfully. On the other hand, if
+blk_mq_delay_run_hw_queues(SCSI_QUEUE_DELAY) has queued a dwork,
+scsi_run_queue_async() still can queue the dwork successfully, since the delay
+timer can be deactivated easily, see try_to_grab_pending(). In short, the case
+you described is an extremely unlikely event. Even though it happens,
+forward progress is still guaranteed.
+
+
+Thanks,
+Ming
+
