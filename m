@@ -7,58 +7,61 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE9FEC43461
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 05:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E29A1C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 05:27:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96E6521897
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 05:26:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABE7421897
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 05:27:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="dn991XKX"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="AX6T0pyL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728586AbgIHF0o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 01:26:44 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45212 "EHLO
+        id S1728587AbgIHF1K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 01:27:10 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54262 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725903AbgIHF0n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 01:26:43 -0400
+        by vger.kernel.org with ESMTP id S1728516AbgIHF1J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 01:27:09 -0400
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0885Pi85023737;
-        Mon, 7 Sep 2020 22:26:38 -0700
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0885P5Mp023578;
+        Mon, 7 Sep 2020 22:27:03 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=bmDvC3ZNx55Y+wPxvBwkaE98rDbLuoSaGr6pb30JTdU=;
- b=dn991XKX50F2jg8rtrgFjXVO7gl9A3/I/pJABHg07uTr50+8LW/1RA6GqOs7uCR2xQR3
- G3jlDXiCrjM9lpkUTapVRaizPDIHgh7pvhG/U9doYU23eLzE9ks6D/zRbE+ea/vMMXLt
- NkTp5SGf5Y1He5FG+tlnwni5PKuJC/Huf4U7fy2YmVvIvE9i3uDPkLWLAnFFA28w0R1+
- CoPBpGFwwoeM1g4O/peBE/F1V+gVr5uR9Ss1hUnOMgbxqn8VxpSUsakLmA9Y9aOlX7Gt
- Ceighs/YMi71WFRmvr7OYdbrtzedfYGCbNzimWMrNBMuAWz0exLMTXT7CFP5eg+J1TVS Yg== 
+ content-type; s=pfpt0220; bh=zDviW05fqJeHHUhQzDHiw0QT8l1FpHJPqkIHBDOEOZk=;
+ b=AX6T0pyLqoknwrFvitGSJzpG4G6+FfKN84FCOxTxB8JCy8juqjoLnmCiLtau8sVQPCbW
+ 7pS5yiEfxQFfv26QSN5VamDQqDo5lFJZ53sfUyX6o0OZUjZrRuTRcl9XkGsds+ndymjW
+ RqlW1dZsC3kTkbnPosIdIBxem8WgEDMqgNc60ywpAdiOoGxLBdmuWPc1rb/5IxcnDkZD
+ hBE3qmJs1EvM8J+7ARXkynFOO0D3FAjjAFVn50nXMJQMngriUSubDGGIst3W5kOK4l5z
+ C/yA6DurB79wj4c5Cj/UWQif6fVLW+CUfmCZUzqW6FoXfW1xwUqF1DMb3kABWh5EuhKG Pw== 
 Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 33c81pt6d4-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 33c81pt6dy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 07 Sep 2020 22:26:38 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
+        Mon, 07 Sep 2020 22:27:02 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH02.marvell.com
  (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 7 Sep
- 2020 22:26:37 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 7 Sep 2020 22:26:37 -0700
+ 2020 22:27:01 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 7 Sep
+ 2020 22:27:01 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 7 Sep 2020 22:27:01 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 3BEAB3F7043;
-        Mon,  7 Sep 2020 22:26:37 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 5C70B3F703F;
+        Mon,  7 Sep 2020 22:27:01 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0885QbmH021989;
-        Mon, 7 Sep 2020 22:26:37 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0885R1nG022001;
+        Mon, 7 Sep 2020 22:27:01 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0885Qbp8021988;
-        Mon, 7 Sep 2020 22:26:37 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0885R1Q0021992;
+        Mon, 7 Sep 2020 22:27:01 -0700
 From:   Manish Rangankar <mrangankar@marvell.com>
 To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
         <cleech@redhat.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 5/8] qedi: Use snprintf instead of sprintf
-Date:   Mon, 7 Sep 2020 22:24:09 -0700
-Message-ID: <20200908052412.21917-6-mrangankar@marvell.com>
+Subject: [PATCH 6/8] qedi: Mark all connections for recovery on link down event
+Date:   Mon, 7 Sep 2020 22:24:10 -0700
+Message-ID: <20200908052412.21917-7-mrangankar@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200908052412.21917-1-mrangankar@marvell.com>
 References: <20200908052412.21917-1-mrangankar@marvell.com>
@@ -71,26 +74,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use snprintf to limit max number of bytes to the buffer.
+From: Nilesh Javali <njavali@marvell.com>
 
+  For short time cable pulls, the in-flight i/o to the FW,
+is never cleaned up, resulting in the behaviour of stale i/o
+completion causing list_del corruption and soft lockup of the
+system. So, on link down event, mark all the connections for
+recovery, causing cleanup of all the in-flight i/o immediately.
+
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 ---
- drivers/scsi/qedi/qedi_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qedi/qedi_main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index e1ec22d7d699..2db99613b8a9 100644
+index 2db99613b8a9..4f43e2a24b50 100644
 --- a/drivers/scsi/qedi/qedi_main.c
 +++ b/drivers/scsi/qedi/qedi_main.c
-@@ -2538,7 +2538,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_DISC, "MAC address is %pM.\n",
- 		  qedi->mac);
+@@ -1127,6 +1127,15 @@ static void qedi_schedule_recovery_handler(void *dev)
+ 	schedule_delayed_work(&qedi->recovery_work, 0);
+ }
  
--	sprintf(host_buf, "host_%d", qedi->shost->host_no);
-+	snprintf(host_buf, sizeof(host_buf), "host_%d", qedi->shost->host_no);
- 	qedi_ops->common->set_name(qedi->cdev, host_buf);
++static void qedi_set_conn_recovery(struct iscsi_cls_session *cls_session)
++{
++	struct iscsi_session *session = cls_session->dd_data;
++	struct iscsi_conn *conn = session->leadconn;
++	struct qedi_conn *qedi_conn = conn->dd_data;
++
++	qedi_start_conn_recovery(qedi_conn->qedi, qedi_conn);
++}
++
+ static void qedi_link_update(void *dev, struct qed_link_output *link)
+ {
+ 	struct qedi_ctx *qedi = (struct qedi_ctx *)dev;
+@@ -1138,6 +1147,7 @@ static void qedi_link_update(void *dev, struct qed_link_output *link)
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
+ 			  "Link Down event.\n");
+ 		atomic_set(&qedi->link_state, QEDI_LINK_DOWN);
++		iscsi_host_for_each_session(qedi->shost, qedi_set_conn_recovery);
+ 	}
+ }
  
- 	qedi_ops->register_ops(qedi->cdev, &qedi_cb_ops, qedi);
 -- 
 2.25.0
 
