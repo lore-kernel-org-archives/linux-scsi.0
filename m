@@ -2,127 +2,173 @@ Return-Path: <SRS0=d5MZ=CR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07DB7C43461
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 16:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D430EC433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 16:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8B19206DB
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 16:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DCB3207DE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 16:57:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iK7u8gqp"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ele0Rrax"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731935AbgIHQnq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 12:43:46 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:56078 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731891AbgIHQbd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 12:31:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599582670;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UXzNpJhj5sowidUDfDEXaS6phGxQ0LavcBR8ek7/U9c=;
-        b=iK7u8gqpTdfoXtYU7OEq1JMZEKUJ/jsz2+CmjRLgK0vnEdBMfK+xTHflvuSIQPLCQXQfKI
-        USZG0O04bXNJOlvoGMTFRjaBw7T40JaXY42xiTQfpf4AohMPEtBxaRPxNgnOL7Zhri5m+g
-        MiUFwMRms28BSiokT5MqTL9KorYiJ3Q=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-108-yqOPgh7lOgOisn2aAF95xg-1; Tue, 08 Sep 2020 10:15:59 -0400
-X-MC-Unique: yqOPgh7lOgOisn2aAF95xg-1
-Received: by mail-wm1-f70.google.com with SMTP id d22so2444229wmd.6
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Sep 2020 07:15:58 -0700 (PDT)
+        id S1731716AbgIHQ5J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 12:57:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35508 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731432AbgIHQ5B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 12:57:01 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0501C061573;
+        Tue,  8 Sep 2020 09:57:01 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id w7so11464622pfi.4;
+        Tue, 08 Sep 2020 09:57:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kBD1EJXPjVAPBpvdc8wf1ILIVz5P8vX0mxtXEPwALzw=;
+        b=Ele0Rrax+SxCArR7vCT+Ep4XzRpupXA++JWD3kHsYCsN5NDhZAVsIEGGQQ88ehNC5R
+         46X0/j2chtpx+hmu9XItNJmS3if7iMfnXSYDV1uEJMrQHQDW22kF9ka/I3di4/dJSFYF
+         4mtMnPvRlqjWvbhmtg21sQpyMB8u4w4i21teNB+X3EFAJhMHaLCu5aKE2z+IrKZzcuRB
+         8LmD1TVvq7PW+2h4Y8+DchxExEX+odbLBhJV+TqhWyBPLlyj/IFZkOOwXg5f6T1hM9cn
+         I1yEt6NQJu3QdvQoIL6YzFaipMpF4S26ypm5drRygYvWFfuiOGAdfr8wrkQXzy2hLNNH
+         xKCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=UXzNpJhj5sowidUDfDEXaS6phGxQ0LavcBR8ek7/U9c=;
-        b=krzOhvsMDgxgKK3b4UPqqjs5VeOmVkeB2v7C9se+O5ytb2xsXGoOdjYw8aM7cr/P8T
-         LbZeCFmfpEHcT3Xu/07UrMHaVejfp87q1CZUYL6Bv0lV7X4s5RTC8slhunP44QQ4N2Ej
-         tMSwwKG5Vw5TtY3cOXciCRMKs5ZJ3fV2oVwP0l5nFruMgy61R41pmLCpPFNUc69LxjGv
-         79xBOPWuJniXUw7LsvP9EzHxngbeWDxcv4nzHILY3Y1MzqsQAuYNwKIhHMi2nFoxTPD0
-         iHmcyI+8Hoh6LfV8Fqb4awmeQB8eUOShPSaiEaonfWfhz5+8WqmWyLjuFa58hwc3SAqb
-         wSYw==
-X-Gm-Message-State: AOAM530Xr6E+taTivhUY4kEPTxa76THLD0Rij7uEPBJeZspZzCKIFbhG
-        wcMNFvkhPl/G77dRFSoJzluDX91ewUT/PNoPyadJtzRQ1BIE1+OBKpxa13WNRV0ohsTvrePGakO
-        PskG4pc4Bx1WGfE3quI4N5Q==
-X-Received: by 2002:adf:ba10:: with SMTP id o16mr26932371wrg.100.1599574557185;
-        Tue, 08 Sep 2020 07:15:57 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzqEKlAdEL5xW+LjUpamB0FNN2eHC7z5gQAJUS0ZT9mISMnhGZ2hx0LZial5U4dn8IDd/bz+A==
-X-Received: by 2002:adf:ba10:: with SMTP id o16mr26932354wrg.100.1599574557014;
-        Tue, 08 Sep 2020 07:15:57 -0700 (PDT)
-Received: from redhat.com (IGLD-80-230-218-236.inter.net.il. [80.230.218.236])
-        by smtp.gmail.com with ESMTPSA id a20sm30604272wmm.40.2020.09.08.07.15.52
+        bh=kBD1EJXPjVAPBpvdc8wf1ILIVz5P8vX0mxtXEPwALzw=;
+        b=ixkI/jGdZJVTUcZNk2LluRjrMzZAUr8tN10xq39LAgE2+PMkJBWfYgTUYSDHf4x5M7
+         qfJv8mz5yVUeLJgxRnAdYy2Rg5dHyOA6NIiiKxVOS0zP1/hpUPTgBDJokrQMU+yIM/J0
+         8TKnxXMRpuirmFfytgFIn/kn5pghLEr3LAxmM28QTG7ZwhhRc41sL1df8b/ydAvZzPpZ
+         pEKE42QFA3McF7EjW1vTOMFc0QGOJqsf4dFUTH1JHo7FRbsLj7Aqw/B17vDtauae895c
+         n4Ja4C8FCnWvgY5d4zI8bW7HBVR1XnZJZbC1SU8fVdZLjcGcrCqeX07gXU0tiFmMmc7H
+         EL7g==
+X-Gm-Message-State: AOAM532m5CC7SJB4bfTPY0ocr/WWt6HyYdUv/P9JRusBiWdw5Pxo/sFT
+        +2VdxOsiBWDvBCJs/y7X5z4=
+X-Google-Smtp-Source: ABdhPJwZxemNY6Dve6ZxiSwz4vCGjA5iIlNIPUHL3l9AnM4JkFzTMbYq7IAQKVpAR9CjNuYYwMBgSQ==
+X-Received: by 2002:a05:6a00:8c5:b029:13e:ce2c:88bd with SMTP id s5-20020a056a0008c5b029013ece2c88bdmr96593pfu.0.1599584221085;
+        Tue, 08 Sep 2020 09:57:01 -0700 (PDT)
+Received: from gmail.com ([106.201.26.241])
+        by smtp.gmail.com with ESMTPSA id h15sm4467pfo.23.2020.09.08.09.56.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Sep 2020 07:15:55 -0700 (PDT)
-Date:   Tue, 8 Sep 2020 10:15:50 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Matej Genci <matej.genci@nutanix.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "pbonzini@redhat.com" <pbonzini@redhat.com>,
-        "stefanha@redhat.com" <stefanha@redhat.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Felipe Franciosi <felipe@nutanix.com>
-Subject: Re: [PATCH] Rescan the entire target on transport reset when LUN is 0
-Message-ID: <20200908101531-mutt-send-email-mst@kernel.org>
-References: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
+        Tue, 08 Sep 2020 09:57:00 -0700 (PDT)
+Date:   Tue, 8 Sep 2020 22:24:58 +0530
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bjorn Helgaas <bjorn@helgaas.com>,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Bradley Grove <linuxdrivers@attotech.com>,
+        John Garry <john.garry@huawei.com>,
+        Don Brace <don.brace@microsemi.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>
+Cc:     Shuah Khan <skhan@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
+        megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
+Subject: Re: [PATCH v2 00/15] scsi: use generic power management
+Message-ID: <20200908165458.GA9948@gmail.com>
+References: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
+In-Reply-To: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 28, 2020 at 12:21:35PM +0000, Matej Genci wrote:
-> VirtIO 1.0 spec says
->     The removed and rescan events ... when sent for LUN 0, they MAY
->     apply to the entire target so the driver can ask the initiator
->     to rescan the target to detect this.
+On Mon, Jul 20, 2020 at 07:04:13PM +0530, Vaibhav Gupta wrote:
+> Linux Kernel Mentee: Remove Legacy Power Management.
 > 
-> This change introduces the behaviour described above by scanning the
-> entire scsi target when LUN is set to 0. This is both a functional and a
-> performance fix. It aligns the driver with the spec and allows control
-> planes to hotplug targets with large numbers of LUNs without having to
-> request a RESCAN for each one of them.
+> The purpose of this patch series is to upgrade power management in scsi
+> drivers. This has been done by upgrading .suspend() and .resume() callbacks.
 > 
-> Signed-off-by: Matej Genci <matej@nutanix.com>
-> Suggested-by: Felipe Franciosi <felipe@nutanix.com>
-
-Stefan, Paolo, could you review this pls?
-
-> ---
->  drivers/scsi/virtio_scsi.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+> The upgrade makes sure that the involvement of PCI Core does not change the
+> order of operations executed in a driver. Thus, does not change its behavior.
 > 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index bfec84aacd90..a4b9bc7b4b4a 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -284,7 +284,12 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
->  
->  	switch (virtio32_to_cpu(vscsi->vdev, event->reason)) {
->  	case VIRTIO_SCSI_EVT_RESET_RESCAN:
-> -		scsi_add_device(shost, 0, target, lun);
-> +		if (lun == 0) {
-> +			scsi_scan_target(&shost->shost_gendev, 0, target,
-> +					 SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
-> +		} else {
-> +			scsi_add_device(shost, 0, target, lun);
-> +		}
->  		break;
->  	case VIRTIO_SCSI_EVT_RESET_REMOVED:
->  		sdev = scsi_device_lookup(shost, 0, target, lun);
+> In general, drivers with legacy PM, .suspend() and .resume() make use of PCI
+> helper functions like pci_request/release_regions(), pci_set_power_state(),
+> pci_save/restore_state(), pci_enable/disable_device(), etc. to complete
+> their job.
+> 
+> The conversion requires the removal of those function calls, change the
+> callbacks' definition accordingly and make use of dev_pm_ops structure.
+> 
+> v2: kbuild error in v1.
+> 
+> All patches are compile-tested only.
+> 
+> Test tools:
+>     - Compiler: gcc (GCC) 10.1.0
+>     - allmodconfig build: make -j$(nproc) W=1 all
+> 
+> Vaibhav Gupta (15):
+>   scsi: megaraid_sas: use generic power management
+>   scsi: aacraid: use generic power management
+>   scsi: aic7xxx: use generic power management
+>   scsi: aic79xx: use generic power management
+>   scsi: arcmsr: use generic power management
+>   scsi: esas2r: use generic power management
+>   scsi: hisi_sas_v3_hw: use generic power management
+>   scsi: mpt3sas_scsih: use generic power management
+>   scsi: lpfc: use generic power management
+>   scsi: pm_8001: use generic power management
+>   scsi: hpsa: use generic power management
+>   scsi: 3w-9xxx: use generic power management
+>   scsi: 3w-sas: use generic power management
+>   scsi: mvumi: use generic power management
+>   scsi: pmcraid: use generic power management
+> 
+>  drivers/scsi/3w-9xxx.c                    |  30 ++-----
+>  drivers/scsi/3w-sas.c                     |  31 ++-----
+>  drivers/scsi/aacraid/linit.c              |  34 ++------
+>  drivers/scsi/aic7xxx/aic79xx.h            |  12 +--
+>  drivers/scsi/aic7xxx/aic79xx_core.c       |   8 +-
+>  drivers/scsi/aic7xxx/aic79xx_osm_pci.c    |  43 +++-------
+>  drivers/scsi/aic7xxx/aic79xx_pci.c        |   6 +-
+>  drivers/scsi/aic7xxx/aic7xxx.h            |  10 +--
+>  drivers/scsi/aic7xxx/aic7xxx_core.c       |   6 +-
+>  drivers/scsi/aic7xxx/aic7xxx_osm_pci.c    |  46 +++-------
+>  drivers/scsi/aic7xxx/aic7xxx_pci.c        |   4 +-
+>  drivers/scsi/arcmsr/arcmsr_hba.c          |  35 +++-----
+>  drivers/scsi/esas2r/esas2r.h              |   5 +-
+>  drivers/scsi/esas2r/esas2r_init.c         |  48 +++--------
+>  drivers/scsi/esas2r/esas2r_main.c         |   3 +-
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  32 +++----
+>  drivers/scsi/hpsa.c                       |  12 +--
+>  drivers/scsi/lpfc/lpfc_init.c             | 100 +++++++---------------
+>  drivers/scsi/megaraid/megaraid_sas_base.c |  61 ++++---------
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  36 +++-----
+>  drivers/scsi/mvumi.c                      |  49 +++--------
+>  drivers/scsi/pm8001/pm8001_init.c         |  46 ++++------
+>  drivers/scsi/pmcraid.c                    |  44 +++-------
+>  23 files changed, 212 insertions(+), 489 deletions(-)
+> 
 > -- 
-> 2.20.1
+> 2.27.0
+> 
+Please review the patch-series.
 
+Thanks
+Vaibhav Gupta
