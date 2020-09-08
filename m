@@ -7,58 +7,61 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED7AC433E2
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 09:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F7C6C43461
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 09:59:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D00DA21D7A
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 09:59:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D53721D7B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 09:59:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="g2YP1S8s"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="CJXG3RQl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729158AbgIHJ7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 05:59:04 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52324 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728828AbgIHJ7E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 05:59:04 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0889p6Rl002554;
-        Tue, 8 Sep 2020 02:58:59 -0700
+        id S1728966AbgIHJ7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 05:59:31 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28466 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728828AbgIHJ73 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 05:59:29 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0889p33v008228;
+        Tue, 8 Sep 2020 02:59:24 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=g7EJ0ES+qzVmtE56onOJLs0Go+C/M6IL3HMq7BqnnlM=;
- b=g2YP1S8sw7deX+woONcvAumfj2REZP7FKZr+LJqbJn6UQs0B4xdnAKRTYDthroSHFyAt
- ZuqVOw515FRlOpVSnW8FA24fmUAz5JBKU11kncB+4UqUTaHul1+5vqgGfbyRXUh7hOIm
- lc1Eir8Es+rixRhV7gVduF6HaDZ8Sa1R7XWFwthCJqW4nJE0wnqiJHemBfZb2+Oj1h/k
- OzmWE1SJXYCeYej/BWFqvM3TyHndeiAtKZfiNAjarmAUYQmQYdKjpbzhmAFc27aw8Lr3
- 2uvsj+vRyzwz06f7xiBiXPRsMnE/c9IMHEPfGEnkYJDyyjfhEEJqLNfh2WQAJJvxL/bk kQ== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 33c81pu0tf-1
+ content-type; s=pfpt0220; bh=bmDvC3ZNx55Y+wPxvBwkaE98rDbLuoSaGr6pb30JTdU=;
+ b=CJXG3RQltdDlCvcRv58ETZIrDpRtWbtIcQg6GmKg3GtjwcmcQPbMnL8b52E52nEfpouP
+ VpRPCG/ZRaVg2CEHGo37gIg4uLJBUCXzKBqhZEd2QgTvkM9ubOfuNtT/GnLb7axXmNFE
+ jRaxjXIoQYVfdQUC8uC2W5Rk5L3k16+TqrTggqkguX7+Vsq2t1QFdyKqRJQsd2SeWGly
+ 36Ne7ySGZSRRxzMFNRNlaQ9EgkQ7ZAP32ffRa3lJAE/jM94ly/4bZ2fGmM0UkWCYHSRP
+ +cPvfCogRiEqs8fvS7BWkkbXDmc65UhE9Qiuj1msZ2vpRZVNCLBRqAtPi8bnu+4m17EI 5Q== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 33ccvr1tw0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 08 Sep 2020 02:58:59 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Sep
- 2020 02:58:58 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 8 Sep 2020 02:58:58 -0700
+        Tue, 08 Sep 2020 02:59:24 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Sep
+ 2020 02:59:23 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 8 Sep
+ 2020 02:59:22 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 8 Sep 2020 02:59:22 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 666EF3F703F;
-        Tue,  8 Sep 2020 02:58:58 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 83ED63F703F;
+        Tue,  8 Sep 2020 02:59:22 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0889wwip026888;
-        Tue, 8 Sep 2020 02:58:58 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0889xM4o026900;
+        Tue, 8 Sep 2020 02:59:22 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0889wweR026887;
-        Tue, 8 Sep 2020 02:58:58 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0889xMPg026891;
+        Tue, 8 Sep 2020 02:59:22 -0700
 From:   Manish Rangankar <mrangankar@marvell.com>
 To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
         <cleech@redhat.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 4/8] qedi: Protect active command list to avoid list corruption
-Date:   Tue, 8 Sep 2020 02:56:53 -0700
-Message-ID: <20200908095657.26821-5-mrangankar@marvell.com>
+Subject: [PATCH v2 5/8] qedi: Use snprintf instead of sprintf
+Date:   Tue, 8 Sep 2020 02:56:54 -0700
+Message-ID: <20200908095657.26821-6-mrangankar@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200908095657.26821-1-mrangankar@marvell.com>
 References: <20200908095657.26821-1-mrangankar@marvell.com>
@@ -71,101 +74,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nilesh Javali <njavali@marvell.com>
+Use snprintf to limit max number of bytes to the buffer.
 
-Protect active command list for non i/o commands like,
-login response, logout response, text response and recovery
-cleanup of active list to avoid list corruption.
-
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 ---
- drivers/scsi/qedi/qedi_fw.c    | 8 ++++++++
- drivers/scsi/qedi/qedi_iscsi.c | 2 ++
- 2 files changed, 10 insertions(+)
+ drivers/scsi/qedi/qedi_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 34c477bda8a4..f158fde0a43c 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -59,6 +59,7 @@ static void qedi_process_logout_resp(struct qedi_ctx *qedi,
- 		  "Freeing tid=0x%x for cid=0x%x\n",
- 		  cmd->task_id, qedi_conn->iscsi_conn_id);
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index e1ec22d7d699..2db99613b8a9 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2538,7 +2538,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
+ 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_DISC, "MAC address is %pM.\n",
+ 		  qedi->mac);
  
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(cmd->io_cmd_in_list)) {
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
-@@ -69,6 +70,7 @@ static void qedi_process_logout_resp(struct qedi_ctx *qedi,
- 			  cmd->task_id, qedi_conn->iscsi_conn_id,
- 			  &cmd->io_cmd);
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
+-	sprintf(host_buf, "host_%d", qedi->shost->host_no);
++	snprintf(host_buf, sizeof(host_buf), "host_%d", qedi->shost->host_no);
+ 	qedi_ops->common->set_name(qedi->cdev, host_buf);
  
- 	cmd->state = RESPONSE_RECEIVED;
- 	qedi_clear_task_idx(qedi, cmd->task_id);
-@@ -122,6 +124,7 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
- 		  "Freeing tid=0x%x for cid=0x%x\n",
- 		  cmd->task_id, qedi_conn->iscsi_conn_id);
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(cmd->io_cmd_in_list)) {
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
-@@ -132,6 +135,7 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
- 			  cmd->task_id, qedi_conn->iscsi_conn_id,
- 			  &cmd->io_cmd);
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- 
- 	cmd->state = RESPONSE_RECEIVED;
- 	qedi_clear_task_idx(qedi, cmd->task_id);
-@@ -222,11 +226,13 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
- 
- 	tmf_hdr = (struct iscsi_tm *)qedi_cmd->task->hdr;
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(qedi_cmd->io_cmd_in_list)) {
- 		qedi_cmd->io_cmd_in_list = false;
- 		list_del_init(&qedi_cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- 
- 	if (((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
- 	      ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) ||
-@@ -288,11 +294,13 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
- 		  ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK;
- 	qedi_conn->gen_pdu.resp_wr_ptr = qedi_conn->gen_pdu.resp_buf + pld_len;
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(cmd->io_cmd_in_list)) {
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- 
- 	memset(task_ctx, '\0', sizeof(*task_ctx));
- 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index f815845fc568..ae86a40ca040 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -975,11 +975,13 @@ static void qedi_cleanup_active_cmd_list(struct qedi_conn *qedi_conn)
- {
- 	struct qedi_cmd *cmd, *cmd_tmp;
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	list_for_each_entry_safe(cmd, cmd_tmp, &qedi_conn->active_cmd_list,
- 				 io_cmd) {
- 		list_del_init(&cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- }
- 
- static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
+ 	qedi_ops->register_ops(qedi->cdev, &qedi_cb_ops, qedi);
 -- 
 2.25.0
 
