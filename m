@@ -2,249 +2,105 @@ Return-Path: <SRS0=d5MZ=CR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51072C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 10:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 606DBC43461
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 13:48:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16823215A4
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 10:02:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F08C224D1
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Sep 2020 13:48:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OUYxi5F8"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=sslab.ics.keio.ac.jp header.i=@sslab.ics.keio.ac.jp header.b="XXNR65cR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729057AbgIHKCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 06:02:06 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30095 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728828AbgIHKB7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 06:01:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599559317;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=qbdadZHl4nAOXpeHcT7xreFsFuB8tAcppftKTd69eHA=;
-        b=OUYxi5F8yZ1W9sMQXipOnojDZPPi39BYW8CXm9lbkDkVIchBFAx4SIxyyIPwgsAL6nxmU5
-        3S09eazANA7nNeKAx8vUj2ktF8SSWxZTkZNYxc9CHbZ31brQUEJe7rLx65E80wVf9ioZA5
-        ZryCg5piz07z+0eLusSguaoCwF6xbr8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-287-RWoqErYkO6GWc-jGPYLetw-1; Tue, 08 Sep 2020 06:01:55 -0400
-X-MC-Unique: RWoqErYkO6GWc-jGPYLetw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 26A8580EDA1;
-        Tue,  8 Sep 2020 10:01:54 +0000 (UTC)
-Received: from T590 (ovpn-12-217.pek2.redhat.com [10.72.12.217])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 88C3E1002388;
-        Tue,  8 Sep 2020 10:01:46 +0000 (UTC)
-Date:   Tue, 8 Sep 2020 18:01:39 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, Long Li <longli@microsoft.com>,
-        John Garry <john.garry@huawei.com>, linux-block@vger.kernel.org
-Subject: Re: [PATCH V5] scsi: core: only re-run queue in scsi_end_request()
- if device queue is busy
-Message-ID: <20200908100139.GB1094743@T590>
-References: <20200907071048.1078838-1-ming.lei@redhat.com>
- <4da219e6-7c2b-b93b-c6d0-2e18aa8ce11f@acm.org>
- <20200908014708.GA1091256@T590>
- <a51b0af4-219c-4cfc-f224-0cfff3d07ec3@acm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a51b0af4-219c-4cfc-f224-0cfff3d07ec3@acm.org>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+        id S1730183AbgIHNrU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 09:47:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60642 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729911AbgIHNmM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2020 09:42:12 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07C3AC0619C4
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2020 06:36:12 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id d6so3913301pfn.9
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Sep 2020 06:36:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sslab.ics.keio.ac.jp; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=ehTU8VuqCe4uQqnVpDe9geOxORvh8qag6CqSgGb/x38=;
+        b=XXNR65cRXkVSPXHNMlGccTpQI7cOqRyhk5d8MsIws07AR035m+bxTug70SDBbKciK5
+         2lYRSm8fhoP+SbAUu7pr7CorYMYDf8ArGi3ZDTGpK4TqR6w3vHrr/iW4tbDJwhKJjYVE
+         ryBEybf6RG9DjezNonEi/3yWFDJBF0DAYhs6k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ehTU8VuqCe4uQqnVpDe9geOxORvh8qag6CqSgGb/x38=;
+        b=T+PvOpJ+slGSa9DXPCg4zUTxvCUMYgzmt4bVEWFIqCTlKfHhWNOxdZjCpwJPWW5mrD
+         i9I/uCuAGZKShrHRYM+a/KCjgVVpCa7mE1tRmwJFuNUFkXVN78Jzayb2fEu5lb9TeX5Q
+         9AfVp20y1Hl3tKN1WltPK8X/By9J+C+KL0y79VFLQOPMaHyO/Dl+rbXC1GCEOhraZ42n
+         dOnSE6Vt6oFj/rGX2RdFsxzTFXh8lFUCUJrytXkF6MDb9mvn/uE6jIMhxCLPcJCs5V2p
+         XnUWud3MTq4RjbXw3wAZiICrwJFjXMDuGktfInsmLOpl0GLO5AmFklHb0T4D/d0L2J7m
+         EPGg==
+X-Gm-Message-State: AOAM5300B0kTqA3UXww9GvYPMCj18rNANgdcyu9S11yUVOSeyescO33f
+        gHiGvwFHBTHuhfC0ktnMW683OQ==
+X-Google-Smtp-Source: ABdhPJwhXtG+H2LqAISEDK2z1kRlZcOQuBM48N1pdIL7c/KejeE7ihVjm7S4Fd1HckDMPESkOFR8iA==
+X-Received: by 2002:a17:902:c410:: with SMTP id k16mr24241546plk.123.1599572171471;
+        Tue, 08 Sep 2020 06:36:11 -0700 (PDT)
+Received: from brooklyn.i.sslab.ics.keio.ac.jp (sslab-relay.ics.keio.ac.jp. [131.113.126.173])
+        by smtp.googlemail.com with ESMTPSA id b20sm19856758pfb.198.2020.09.08.06.36.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Sep 2020 06:36:10 -0700 (PDT)
+From:   Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Cc:     keitasuzuki.park@sslab.ics.keio.ac.jp,
+        takafumi@sslab.ics.keio.ac.jp, Don Brace <don.brace@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: hpsa: fix memory leak in hpsa_init_one
+Date:   Tue,  8 Sep 2020 13:35:32 +0000
+Message-Id: <20200908133533.16744-1-keitasuzuki.park@sslab.ics.keio.ac.jp>
+X-Mailer: git-send-email 2.17.1
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 07, 2020 at 08:45:32PM -0700, Bart Van Assche wrote:
-> On 2020-09-07 18:47, Ming Lei wrote:
-> > On Mon, Sep 07, 2020 at 09:52:42AM -0700, Bart Van Assche wrote:
-> >> On 2020-09-07 00:10, Ming Lei wrote:
-> >>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> >>> index 7affaaf8b98e..a05e431ee62a 100644
-> >>> --- a/drivers/scsi/scsi_lib.c
-> >>> +++ b/drivers/scsi/scsi_lib.c
-> >>> @@ -551,8 +551,25 @@ static void scsi_run_queue_async(struct scsi_device *sdev)
-> >>>  	if (scsi_target(sdev)->single_lun ||
-> >>>  	    !list_empty(&sdev->host->starved_list))
-> >>>  		kblockd_schedule_work(&sdev->requeue_work);
-> >>> -	else
-> >>> -		blk_mq_run_hw_queues(sdev->request_queue, true);
-> >>> +	else {
-> >>
-> >> Please follow the Linux kernel coding style and balance braces.
-> > 
-> > Could you provide one document about such style? The patch does pass
-> > checkpatch, or I am happy to follow your suggestion if checkpatch is
-> > updated to this way.
-> 
-> Apparently the checkpatch script only warns about unbalanced braces with the
-> option --strict. From commit e4c5babd32f9 ("checkpatch: notice unbalanced
-> else braces in a patch") # v4.11:
-> 
->     checkpatch: notice unbalanced else braces in a patch
-> 
->     Patches that add or modify code like
-> 
->             } else
->                     <foo>
->     or
->             else {
->                     <bar>
-> 
->     where one branch appears to have a brace and the other branch does not
->     have a brace should emit a --strict style message.
-> 
-> [ ... ]
-> 
-> +# check for single line unbalanced braces
-> +		if ($sline =~ /.\s*\}\s*else\s*$/ ||
-> +		    $sline =~ /.\s*else\s*\{\s*$/) {
-> +			CHK("BRACES", "Unbalanced braces around else statement\n" . $herecurr);
-> +		}
-> +
-> 
-> Anyway, I think the following output makes it clear that there are many more
-> balanced than non-balanced else statements:
-> 
-> $ git grep -c "} else {" | awk 'BEGIN {FS=":"} {total+=$2} END {print total}'
-> 66944
-> $ git grep -Ec "$(printf "\t")else \{|\} else$" | awk 'BEGIN {FS=":"} {total+=$2} END {print total}'
-> 12289
+When hpsa_scsi_add_host fails, h->lastlogicals is leaked since it lacks
+free in the error handler.
 
-OK, looks it is still not something which must be obeyed, but I do not
-want to waste time on this thing, so will switch to balanced brace.
+Fix this by adding free when hpsa_scsi_add_host fails.
 
-> 
-> >>> +		/*
-> >>> +		 * smp_mb() implied in either rq->end_io or blk_mq_free_request
-> >>> +		 * is for ordering writing .device_busy in scsi_device_unbusy()
-> >>> +		 * and reading sdev->restarts.
-> >>> +		 */
-> >>> +		int old = atomic_read(&sdev->restarts);
-> >>
-> >> scsi_run_queue_async() has two callers: scsi_end_request() and scsi_queue_rq().
-> >> I don't see how ordering between scsi_device_unbusy() and the above atomic_read()
-> >> could be guaranteed if this function is called from scsi_queue_rq()?
-> >>
-> >> Regarding the I/O completion path, my understanding is that the I/O completion
-> >> path is as follows if rq->end_io == NULL:
-> >>
-> >> scsi_mq_done()
-> >>   blk_mq_complete_request()
-> >>     rq->q->mq_ops->complete(rq) = scsi_softirq_done
-> >>       scsi_finish_command()
-> >>         scsi_device_unbusy()
-> > 
-> > scsi_device_unbusy()
-> > 	atomic_dec(&sdev->device_busy);
-> > 
-> >>         scsi_cmd_to_driver(cmd)->done(cmd)
-> >>         scsi_io_completion()
-> >>           scsi_end_request()
-> >>             blk_update_request()
-> >>             scsi_mq_uninit_cmd()
-> >>             __blk_mq_end_request()
-> >>               blk_mq_free_request()
-> >>                 __blk_mq_free_request()
-> > 
-> > __blk_mq_free_request()
-> > 	blk_mq_put_tag
-> > 		smp_mb__after_atomic()
-> > 
-> 
-> Thanks for the clarification. How about changing the text "implied in either
-> rq->end_io or blk_mq_free_request" into "present in sbitmap_queue_clear()"
-> such that the person who reads the comment does not have to look up where
-> the barrier occurs?
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+---
+ drivers/scsi/hpsa.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Fine.
-
-> >>
-> >>> +	/*
-> >>> +	 * Order writing .restarts and reading .device_busy. Its pair is
-> >>> +	 * implied by __blk_mq_end_request() in scsi_end_request() for
-> >>> +	 * ordering writing .device_busy in scsi_device_unbusy() and
-> >>> +	 * reading .restarts.
-> >>> +	 */
-> >>> +	smp_mb__after_atomic();
-> >>
-> >> What does "its pair is implied" mean? Please make the above comment
-> >> unambiguous.
-> > 
-> > See comment in scsi_run_queue_async().
-> 
-> How about making the above comment more by changing it into the following?
-> /*
->  * Orders atomic_inc(&sdev->restarts) and atomic_read(&sdev->device_busy).
->  * .restarts must be incremented before .device_busy is read because the code
->  * in scsi_run_queue_async() depends on the order of these operations.
->  */
-
-OK.
-
-> 
-> >> Will that cause the queue to be run after a delay
-> >> although it should be run immediately?
-> > 
-> > Yeah, blk_mq_delay_run_hw_queues() will be called, however:
-> > 
-> > If scsi_run_queue_async() has scheduled run queue already, this code path
-> > won't queue a dwork successfully. On the other hand, if
-> > blk_mq_delay_run_hw_queues(SCSI_QUEUE_DELAY) has queued a dwork,
-> > scsi_run_queue_async() still can queue the dwork successfully, since the delay
-> > timer can be deactivated easily, see try_to_grab_pending(). In short, the case
-> > you described is an extremely unlikely event. Even though it happens,
-> > forward progress is still guaranteed.
-> 
-> I think I would sleep better if that race would be fixed. I'm concerned
-
-blk-mq has several similar handling, see delay run queue in the following functions:
-
-	__blk_mq_do_dispatch_sched()
-	blk_mq_do_dispatch_ctx()
-	blk_mq_dispatch_rq_list()
-
-> that sooner or later someone will run a workload that triggers that scenario
-> systematically ...
-
-After taking a close look at mod_delayed_work_on() & try_to_grab_pending(), I
-think there isn't such issue you are worrying about.
-
-mod_delayed_work_on() calls try_to_grab_pending() in the following way:
-
-        do {
-                ret = try_to_grab_pending(&dwork->work, true, &flags);
-        } while (unlikely(ret == -EAGAIN));
-
-The only two negative return values from try_to_grab_pending are -EAGAIN
-and -ENOENT.
-
-Both blk_mq_run_hw_queues()(called from scsi_run_queue_async) and
-blk_mq_delay_run_hw_queues()(called from scsi_mq_get_budget) calls
-mod_delayed_work_on() finally via kblockd_mod_delayed_work_on().
-
-Both two calls of mod_delayed_work_on() will call __queue_delayed_work()
-finally. blk_mq_run_hw_queues() will call __queue_work() to queue
-the work immediately because delay is zero, blk_mq_delay_run_hw_queues()
-just calls add_timer() to schedule a timer for running __queue_work()
-because the delay is 3ms.
-
-So blk_mq_delay_run_hw_queues() will _not_ cause a delay run queue.
-
-Thanks,
-Ming
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 48d5da59262b..aed59ec20ad9 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8854,7 +8854,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* hook into SCSI subsystem */
+ 	rc = hpsa_scsi_add_host(h);
+ 	if (rc)
+-		goto clean7; /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
++		goto clean8; /* lastlogicals, perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 
+ 	/* Monitor the controller for firmware lockups */
+ 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+@@ -8869,6 +8869,8 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 				HPSA_EVENT_MONITOR_INTERVAL);
+ 	return 0;
+ 
++clean8: /* lastlogicals, perf, sg, cmd, irq, shost, pci, lu, aer/h */
++	kfree(h->lastlogicals);
+ clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_performant_mode(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+-- 
+2.17.1
 
