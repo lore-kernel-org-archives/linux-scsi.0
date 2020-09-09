@@ -2,302 +2,184 @@ Return-Path: <SRS0=U9Ib=CS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13614C43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 10:05:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91AB3C43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 10:15:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C470621973
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 10:05:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 395CA21D7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 10:15:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CP9aECFZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="oaKK+IW3";
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="XwuCrtTv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728443AbgIIKFV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 06:05:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53524 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbgIIKFV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 06:05:21 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FD62C061573;
-        Wed,  9 Sep 2020 03:05:20 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id kk9so1102315pjb.2;
-        Wed, 09 Sep 2020 03:05:20 -0700 (PDT)
+        id S1726708AbgIIKPq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 06:15:46 -0400
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:60761 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726970AbgIIKPk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 06:15:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1599646539; x=1631182539;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=ydvzCPpMxHb0mX7CGzJITe8yols/6rllZkKKhbkbsLo=;
+  b=oaKK+IW3TWEb4XNteuNy/2mnoCumzTDQdtW8Y6iPiVcG2qJhqXIAUc2L
+   kAh1a03HFrzyyJEoXzViQuj+ANbHh5A1wiSzp+gt3IChvq0d9lqrV6R1W
+   +7sriMlNFeXoaTEvzhjpQDDje6Evi2yJDAVGo9aMLTcg03IqfCveJxsOK
+   kczjdPLe9wAGjBKG3MJZFxlynesCvMvTOZVOuT7WkAYCC5HA30coUYuOF
+   bT+/vsH92nE60hn5Xwvllnf+mOppwXWE/g8iZj6ch/QS4UfJ4bRkeNL5p
+   vYyAxTVTsHXJagIgngmJh8QxsyHZFl8mQ8k3zixMhWPLUcZ/fYErlu1BF
+   g==;
+IronPort-SDR: F5osyAmM7R5A3L7yL6Y278nra3AzpeS3mTylR4xPmcPNKjGbxxk/B7v5O+RhI5GuWC+arc6dw5
+ 0L+jzRfw79qx2SZVStmPMt41noMDL/bAYl6yeGmQ4C+B5QRz8TLP3lx3w+Yh5xJtwiE48BOd7E
+ 53xT01o9xIcQ+i6NdQsUi0o8rE5F5SFHpeb4W33jQ4Ti8LSPBwAmpQtgnjOaxWNJcbXXAz1/Y6
+ sAxloMGK5JkbZkWxKQEB9xAazaXFXKyMIklXOfg6+XDy1Exim7SjCjysy/HT6gXGintLUfSPbM
+ MJE=
+X-IronPort-AV: E=Sophos;i="5.76,409,1592895600"; 
+   d="scan'208";a="25774736"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 09 Sep 2020 03:15:38 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Wed, 9 Sep 2020 03:15:11 -0700
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
+ via Frontend Transport; Wed, 9 Sep 2020 03:15:36 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=A3kSJR8qjhZFEh5TOdluFpg9hiqg/2uynIpsRn+J+E0EdDjdDFTI73HpeoDyy9rKY42CVjGf/9y7mILbRZ9ML5O4PzPSQh8VAegbk9Lr5VjJoL3aqiNiZLCS0RsMYVggu0EGRtu51X6yYgowSAy15ANkuRMmJJ7NwybAg8MU2AqD7ez6BYsI+XczUJLXIVfC/dMHJRDnPDKxe0ymGg16/w2/lG/cygSGtoiC6MhlznYg10Jz+LlsrzJWUL7IIlzAZY9k1cVCDNc5UzJ03iX8STtI/kIz5IPL5IoWJTrtsLkHy9zRuBxxJVghfbapS6JQkT0Nw9J5OMg6XfbTmXrtxg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3o5Y1BA3kmrb1vzyWVFYnn61CDOUHYotGWPYlkHh568=;
+ b=bPen6q+7kmJa/AnMPEO77P5P9YPbhk76PVMY5fOygMLTF+6tqiEQ5CHiM8SWJfX1X9dxM2iCclKtEawLe6TI3YDTIodwdEDFPsRLCb1a1JxVJoEAfNjs6ZjOF6CIomI8HCMZhMJucnA39urkqln7C/YSTc/VNVPEAT5c6tOM3uNZl6jgNcZULOuHQZuXzGIkp2rKS+qgBnDuMkPMjtYTDQwIjdTk+WBg74yIFhKZNDypmDztLmUhhcWtcUTE0liv7Gq1SyBFt9Qpng0GopXK69n8ewPDmRK35lkCz+bc4WOXhHQV+09BFaf1zm5Dhd4EoUf7Di9Ho3z3lSW5XrRFFA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=XB3RLON5qcBthb/U8/A/O+8sQ7Tgn2KHnSYoALIjbSE=;
-        b=CP9aECFZyZL9cNPC6KblFfjHnAeIdhRWfiNbIoAx5Bbi0lvpDWFQXeebyLf80tMdzx
-         sMXsLSW6Y0qPhAmJjbsIP8Xx7GiprSnRuc83FpiCT3NcsiyETFbsK4OOo12gfCybKKtj
-         37eVSUMylMLjGaMgeG4lqDh6DmoQAG8leelQkKYQJ5WwfxKDu9FFz7MrXx/G6yOgwzdx
-         BVM0WTwbs5HcmMiG3dlCjDJ3/n2PFzA9nvyGu6V5NakdDsP5TRLRk+K8bU9bCMXXBgvj
-         xKisg4nlLlnZM79rB/B/FzOPbFVbvZqRXk1qCmGHFbnqBBQYNwC8g4+5dRvescvPp9Zm
-         cBkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=XB3RLON5qcBthb/U8/A/O+8sQ7Tgn2KHnSYoALIjbSE=;
-        b=iG+Qbg3u9nzoNCMLy3LgYMxhaC0eL+o+CqiTvISlk2tFFHtXukIFhEkK6cMoAzP4+w
-         4tvpxLl0wVvX/Rq7V4Lngi/ggp/D8UFYtmRGUUVHHjfFTB9HKR6+QvjI/rqwGZ/ClimG
-         5o7z15SRIPrWRLYKk9GsIGriGm3HMK64mAdx5y5t23+bQ90IebXtSkG7013U5lejPN0n
-         ePigWHQSM75K7gfOAvTa3m8s6IUpJW44/YBqkEW/4YQBcWVMB/2z7/RyzzZ7TAune8gW
-         BluIlKMlY+nIfqk5oEz1bU+53Yx2Pn/CFOEY/iRr7otmvD2m0vK0Yoh7WILZbD6HniTJ
-         JUmQ==
-X-Gm-Message-State: AOAM530p5SaERGloUkSYn78MFkaTgQHwz5NWOnH+cMMQUG3McUzr981R
-        XTc+L9bczIoNxZwBXcI0ykc=
-X-Google-Smtp-Source: ABdhPJxhipPJcCxZ+k1YRv2vZByYBjQ1zjv+RABOUsx9MSpGzEONZGUieuPo5vYeNuljeYpsEhsgUw==
-X-Received: by 2002:a17:90b:1916:: with SMTP id mp22mr170102pjb.132.1599645919622;
-        Wed, 09 Sep 2020 03:05:19 -0700 (PDT)
-Received: from gmail.com ([106.201.26.241])
-        by smtp.gmail.com with ESMTPSA id h1sm1577255pji.52.2020.09.09.03.05.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Sep 2020 03:05:19 -0700 (PDT)
-Date:   Wed, 9 Sep 2020 15:33:15 +0530
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
-        Adam Radford <aradford@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        John Garry <john.garry@huawei.com>,
-        Don Brace <don.brace@microsemi.com>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
-        megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v2 01/15] scsi: megaraid_sas: use generic power management
-Message-ID: <20200909100315.GA13015@gmail.com>
-References: <20200720133427.454400-2-vaibhavgupta40@gmail.com>
- <20200908173209.GA607806@bjorn-Precision-5520>
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector2-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3o5Y1BA3kmrb1vzyWVFYnn61CDOUHYotGWPYlkHh568=;
+ b=XwuCrtTvX049jiRM69eQZoNL+wEV9k1gx/iwxXTt8gVtOCG2VoVOkRLNqc8gt9HTs1MySDbzi9Xy0Td/KczuGMVOPh7KMBsa1G5KgAdMYy9MsviKRfMIhJXCCsA1JbLdJS8o60qWsTB7s3PcrsQkPbKKUoDIRvAr0MeDkfT1V/c=
+Received: from SN6PR11MB3488.namprd11.prod.outlook.com (2603:10b6:805:b8::27)
+ by SA0PR11MB4655.namprd11.prod.outlook.com (2603:10b6:806:9d::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3348.16; Wed, 9 Sep
+ 2020 10:15:36 +0000
+Received: from SN6PR11MB3488.namprd11.prod.outlook.com
+ ([fe80::9464:652:6b4f:12e6]) by SN6PR11MB3488.namprd11.prod.outlook.com
+ ([fe80::9464:652:6b4f:12e6%6]) with mapi id 15.20.3326.025; Wed, 9 Sep 2020
+ 10:15:36 +0000
+From:   <Viswas.G@microchip.com>
+To:     <martin.petersen@oracle.com>
+CC:     <Viswas.G@microchip.com.com>, <linux-scsi@vger.kernel.org>,
+        <Vasanthalakshmi.Tharmarajan@microchip.com>,
+        <Deepak.Ukey@microchip.com>, <yuuzheng@google.com>,
+        <auradkar@google.com>, <vishakhavc@google.com>,
+        <bjashnani@google.com>, <radha@google.com>, <akshatzen@google.com>
+Subject: RE: [PATCH v8 1/2] pm80xx : Support for get phy profile
+ functionality.
+Thread-Topic: [PATCH v8 1/2] pm80xx : Support for get phy profile
+ functionality.
+Thread-Index: AQHWdyGWrXbEKONvEEqLhfPGQkid6alUoL4/gABW2wCAATo7hYAKAPDw
+Date:   Wed, 9 Sep 2020 10:15:36 +0000
+Message-ID: <SN6PR11MB3488F126461CC2C8764A3F329D260@SN6PR11MB3488.namprd11.prod.outlook.com>
+References: <20200820185123.27354-1-Viswas.G@microchip.com.com>
+        <20200820185123.27354-2-Viswas.G@microchip.com.com>
+        <yq1pn75f09i.fsf@ca-mkp.ca.oracle.com>
+        <SN6PR11MB348809CB28AA66A7905490949D2F0@SN6PR11MB3488.namprd11.prod.outlook.com>
+ <yq1a6y7ek7u.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1a6y7ek7u.fsf@ca-mkp.ca.oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=microchip.com;
+x-originating-ip: [63.216.172.121]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: a322532e-9c92-4e91-5a13-08d854a94b99
+x-ms-traffictypediagnostic: SA0PR11MB4655:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SA0PR11MB4655A70D68F9480E372A4CD99D260@SA0PR11MB4655.namprd11.prod.outlook.com>
+x-bypassexternaltag: True
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: XIJeEYTEyiHNOXWzG6rSExL/FkFTPnOydrFXu0fd4Qx32gWZNEfJgTCzmoooSCqZQs4ux5iEZMtgGWpvVSYZVWgrM4ZZ55fPdwzH/hhkd2R9IHoWjLgbAs7FIEp+zJofZpwVSLkkmZVO14UyicqV3Jlnlj7MqIQwuXfdLvB+bhyDB3o/fVjlaR2UazFbEc3yVjCuUelQjd4a4V83TgrkKBB6SJ7bdDaNzIMa2GxQK4coRk8g5+xSHRkR3z4cZxNWoT/FY0H4bfjZHm0gluCSE2ONYUGpjKFq5dK4EmTJRReQXR2Xq1cKyDnfU4/vHDvZszRM96hmtuPkpXpu4skajw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB3488.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(346002)(39860400002)(396003)(366004)(136003)(6506007)(33656002)(86362001)(83380400001)(26005)(9686003)(478600001)(316002)(76116006)(8676002)(66946007)(66556008)(4326008)(64756008)(66476007)(7696005)(8936002)(54906003)(53546011)(66446008)(2906002)(52536014)(6916009)(71200400001)(5660300002)(186003)(55016002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: ehtAaz8KGopDTP8ax4fN2mAy0tJkeFoii8lpufj5YF+a2sDEZL7Wc6nCsYMXmf4BL7/g+ygxx/Ng57FmlW4jTg6SXni2U5NAvfv7TeeYH4vlV7yZl1nLgFI3CMFYP7b6AdOs6O9xddl8wVelVRQlHErSH/t4ZqGiLBzS10h3sqFw3lPV8o6TwOY/a/DO44s6ncF2471M8LZ7p2mGw6QWric7JenGstwHmcmJn73zkkNmW11HnvsSFR/D31eWV6oQriDPEIEyyRxyNHP/xrA6XIGH/uVlTKMzk+AUQ9tw64TJG3sRq8w68d5GDi0mpFGdwBbbusjUKWvC17zhQ/EYth2pt3rmVND3l1O58ljlr8deVB1cfxMdqgMUJ1lMl4hwpkKolZz7piP4iVf36wk90U70BPwQaVzOX1dhII6qSZszutptroeJVkSBq45d19prEuoquvc2PXAGZxXTBOXOcd84mAvytcC419NYvRNP4RqhzUHTWxbIQx7Enl1NPPE/5dVTDjjzw2C9c6J/OYQLImUOnd4T03oC37i+qKnTkspETTaIBnIGHJNyxFZbRQOyaA7oMbCrU730lQg084qE898GhkzbbsO75A5PTQoD8KN9moti7Ozsr6esFwwk97X3LFlpSIZEUdHRxdPPGPJEHA==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20200908173209.GA607806@bjorn-Precision-5520>
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB3488.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a322532e-9c92-4e91-5a13-08d854a94b99
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Sep 2020 10:15:36.5923
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Ja3zR+vWOGH6WJWhcwBSuIn5XuflClqVJqKcAchJexS3liZP9OG/hSIZ4PJwHPIJqaTz1QYydtxwLeRORv4wkw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR11MB4655
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 08, 2020 at 12:32:09PM -0500, Bjorn Helgaas wrote:
-> On Mon, Jul 20, 2020 at 07:04:14PM +0530, Vaibhav Gupta wrote:
-> > With legacy PM hooks, it was the responsibility of a driver to manage PCI
-> > states and also the device's power state. The generic approach is to let
-> > the PCI core handle the work.
-> > 
-> > PCI core passes "struct device*" as an argument to the .suspend() and
-> > .resume() callbacks. As the .suspend() work with "struct instance*",
-> > extract it from "struct device*" using dev_get_drv_data().
-> > 
-> > Driver was also using PCI helper functions like pci_save/restore_state(),
-> > pci_disable/enable_device(), pci_set_power_state() and pci_enable_wake().
-> > They should not be invoked by the driver.
-> > 
-> > Compile-tested only.
-> > 
-> > Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
-> > ---
-> >  drivers/scsi/megaraid/megaraid_sas_base.c | 61 ++++++-----------------
-> >  1 file changed, 16 insertions(+), 45 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > index 00668335c2af..4a6ee7778977 100644
-> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > @@ -7539,25 +7539,21 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
-> >  	megasas_return_cmd(instance, cmd);
-> >  }
-> >  
-> > -#ifdef CONFIG_PM
-> >  /**
-> >   * megasas_suspend -	driver suspend entry point
-> > - * @pdev:		PCI device structure
-> > - * @state:		PCI power state to suspend routine
-> > + * @dev:		Device structure
-> >   */
-> > -static int
-> > -megasas_suspend(struct pci_dev *pdev, pm_message_t state)
-> > +static int __maybe_unused
-> > +megasas_suspend(struct device *dev)
-> >  {
-> > -	struct megasas_instance *instance;
-> > -
-> > -	instance = pci_get_drvdata(pdev);
-> > +	struct megasas_instance *instance = dev_get_drvdata(dev);
-> >  
-> >  	if (!instance)
-> >  		return 0;
-> >  
-> >  	instance->unload = 1;
-> >  
-> > -	dev_info(&pdev->dev, "%s is called\n", __func__);
-> > +	dev_info(dev, "%s is called\n", __func__);
-> >  
-> >  	/* Shutdown SR-IOV heartbeat timer */
-> >  	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
-> > @@ -7579,7 +7575,7 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
-> >  
-> >  	tasklet_kill(&instance->isr_tasklet);
-> >  
-> > -	pci_set_drvdata(instance->pdev, instance);
-> > +	dev_set_drvdata(dev, instance);
-> 
-> It *might* be correct to replace "instance->pdev" with "dev", but it's
-> not obvious and deserves some explanation.  It's true that you can
-> replace &pdev->dev with dev, but I don't know anything about
-> instance->dev.
-> 
-> I don't think this change is actually necessary, is it?
-> "instance->pdev" is still a pci_dev pointer, so pci_set_drvdata()
-> should work fine.
-> 
-> It looks goofy to use pci_set_drvdata() or dev_set_drvdata() in a
-> suspend routine, but I didn't bother trying to figure out what's going
-> on here.
-> 
-There is no instance->dev . The 'dev' passed dev_set_drvdata() is same
-&pdev->dev. The dev pointer used here, points to same value.
+Hi Martin,
 
-pci_get_drvdata() and pci_set_drvdata() invoke dev_get_drvdata() and
-dev_set_drvdata() respectively. And they do nothing else. Seems like additional
-unnecessary function calls and operations.
+This is not exposed to userland anymore. We have submitted an IOCTL support=
+ in driver to=20
+expose these information and later dropped it since similar functionality c=
+an be achieved=20
+through libsas sysfs entries. Controller exposes the phy error counter and =
+status=20
+information pages through IOMB. We retained this patch in driver thinking t=
+hat it might be=20
+useful if we want to query these information through driver sysfs or by som=
+e other means.=20
+We are okay to drop this. Please suggest.
 
-We can get rid of these PCI helper functions too.
-> >  	instance->instancet->disable_intr(instance);
-> >  
-> >  	megasas_destroy_irqs(instance);
-> > @@ -7587,48 +7583,28 @@ megasas_suspend(struct pci_dev *pdev, pm_message_t state)
-> >  	if (instance->msix_vectors)
-> >  		pci_free_irq_vectors(instance->pdev);
-> >  
-> > -	pci_save_state(pdev);
-> > -	pci_disable_device(pdev);
-> > -
-> > -	pci_set_power_state(pdev, pci_choose_state(pdev, state));
-> > -
-> >  	return 0;
-> >  }
-> >  
-> >  /**
-> >   * megasas_resume-      driver resume entry point
-> > - * @pdev:               PCI device structure
-> > + * @dev:              Device structure
-> >   */
-> > -static int
-> > -megasas_resume(struct pci_dev *pdev)
-> > +static int __maybe_unused
-> > +megasas_resume(struct device *dev)
-> >  {
-> >  	int rval;
-> >  	struct Scsi_Host *host;
-> > -	struct megasas_instance *instance;
-> > +	struct megasas_instance *instance = dev_get_drvdata(dev);
-> >  	u32 status_reg;
-> >  
-> > -	instance = pci_get_drvdata(pdev);
-> > -
-> >  	if (!instance)
-> >  		return 0;
-> >  
-> >  	host = instance->host;
-> > -	pci_set_power_state(pdev, PCI_D0);
-> > -	pci_enable_wake(pdev, PCI_D0, 0);
-> > -	pci_restore_state(pdev);
-> > +	device_wakeup_disable(dev);
-> 
-> Shouldn't there be a corresponding device_wakeup_enable() or similar
-> elsewhere?
-> 
-> Maybe the fact that megasas disables wakeup but never enables it is a
-> latent bug?
-> 
-Yeah, I guess I sent this patch a lot earlier than we figured this out and
-didn't notice it later. I will send v3 for it.
-> > -	dev_info(&pdev->dev, "%s is called\n", __func__);
-> > -	/*
-> > -	 * PCI prepping: enable device set bus mastering and dma mask
-> > -	 */
-> > -	rval = pci_enable_device_mem(pdev);
-> > -
-> > -	if (rval) {
-> > -		dev_err(&pdev->dev, "Enable device failed\n");
-> > -		return rval;
-> > -	}
-> > -
-> > -	pci_set_master(pdev);
-> > +	dev_info(dev, "%s is called\n", __func__);
-> >  
-> >  	/*
-> >  	 * We expect the FW state to be READY
-> > @@ -7754,14 +7730,8 @@ megasas_resume(struct pci_dev *pdev)
-> >  fail_set_dma_mask:
-> >  fail_ready_state:
-> >  
-> > -	pci_disable_device(pdev);
-> > -
-> >  	return -ENODEV;
-> >  }
-> > -#else
-> > -#define megasas_suspend	NULL
-> > -#define megasas_resume	NULL
-> > -#endif
-> >  
-> >  static inline int
-> >  megasas_wait_for_adapter_operational(struct megasas_instance *instance)
-> > @@ -7931,7 +7901,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
-> >  
-> >  /**
-> >   * megasas_shutdown -	Shutdown entry point
-> > - * @device:		Generic device structure
-> > + * @pdev:		PCI device structure
-> 
-> Looks like an unrelated typo fix?  I would put this in a separate
-> patch.
-> 
-Okay.
-> >   */
-> >  static void megasas_shutdown(struct pci_dev *pdev)
-> >  {
-> > @@ -8508,6 +8478,8 @@ static const struct file_operations megasas_mgmt_fops = {
-> >  	.llseek = noop_llseek,
-> >  };
-> >  
-> > +static SIMPLE_DEV_PM_OPS(megasas_pm_ops, megasas_suspend, megasas_resume);
-> > +
-> >  /*
-> >   * PCI hotplug support registration structure
-> >   */
-> > @@ -8517,8 +8489,7 @@ static struct pci_driver megasas_pci_driver = {
-> >  	.id_table = megasas_pci_table,
-> >  	.probe = megasas_probe_one,
-> >  	.remove = megasas_detach_one,
-> > -	.suspend = megasas_suspend,
-> > -	.resume = megasas_resume,
-> > +	.driver.pm = &megasas_pm_ops,
-> >  	.shutdown = megasas_shutdown,
-> >  };
-> >  
-> > -- 
-> > 2.27.0
-> > 
+Regards,
+Viswas G
+
+> -----Original Message-----
+> From: Martin K. Petersen <martin.petersen@oracle.com>
+> Sent: Thursday, September 3, 2020 6:48 AM
+> To: Viswas G - I30667 <Viswas.G@microchip.com>
+> Cc: martin.petersen@oracle.com; Viswas.G@microchip.com.com; linux-
+> scsi@vger.kernel.org; Vasanthalakshmi Tharmarajan - I30664
+> <Vasanthalakshmi.Tharmarajan@microchip.com>; Deepak Ukey - I31172
+> <Deepak.Ukey@microchip.com>; yuuzheng@google.com;
+> auradkar@google.com; vishakhavc@google.com; bjashnani@google.com;
+> radha@google.com; akshatzen@google.com
+> Subject: Re: [PATCH v8 1/2] pm80xx : Support for get phy profile
+> functionality.
+>=20
+> EXTERNAL EMAIL: Do not click links or open attachments unless you know
+> the content is safe
+>=20
+> Hi Viswas!
+>=20
+> >> Where are these parameters made visible?
+> >>
+> >> Also, why not make the phy_errcnt members __le32 instead of using
+> >> __force?
+> >
+> > This was added to avoid sparse compiler warnings reported.
+>=20
+> Yes, but those warnings are indicative that your struct definitions are
+> problematic. I suggest you have one struct with __le32 members which you
+> use when querying the values from the hardware. And then another struct
+> that's host-endian. Which goes back to my first question: Where are these
+> phy parameters actually used and/or exposed to userland?
+>=20
+> --
+> Martin K. Petersen      Oracle Linux Engineering
