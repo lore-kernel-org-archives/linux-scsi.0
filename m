@@ -2,84 +2,122 @@ Return-Path: <SRS0=U9Ib=CS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A52E4C43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 06:57:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF84AC10DAA
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 06:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3138A21532
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 06:57:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="hjFoOkkf"
+	by mail.kernel.org (Postfix) with ESMTP id 93C0421532
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 06:59:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725991AbgIIG50 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 02:57:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52624 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725840AbgIIG5Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 02:57:25 -0400
-Received: from forward100j.mail.yandex.net (forward100j.mail.yandex.net [IPv6:2a02:6b8:0:801:2::100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0590C061573
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2020 23:57:23 -0700 (PDT)
-Received: from forward101q.mail.yandex.net (forward101q.mail.yandex.net [IPv6:2a02:6b8:c0e:4b:0:640:4012:bb98])
-        by forward100j.mail.yandex.net (Yandex) with ESMTP id 0F8E550E277F
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Sep 2020 09:57:12 +0300 (MSK)
-Received: from mxback5q.mail.yandex.net (mxback5q.mail.yandex.net [IPv6:2a02:6b8:c0e:1ba:0:640:b716:ad89])
-        by forward101q.mail.yandex.net (Yandex) with ESMTP id 08EC5CF40002
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Sep 2020 09:57:12 +0300 (MSK)
-Received: from vla1-00787b9b359d.qloud-c.yandex.net (vla1-00787b9b359d.qloud-c.yandex.net [2a02:6b8:c0d:2915:0:640:78:7b9b])
-        by mxback5q.mail.yandex.net (mxback/Yandex) with ESMTP id wzO8VrN1LO-vBdCwwmh;
-        Wed, 09 Sep 2020 09:57:12 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1599634632;
-        bh=3zKgb8mf59vCRVaCjdzm/1w5Ui3dwA9pSRDp9QvvPUY=;
-        h=Subject:From:To:Date:Message-ID;
-        b=hjFoOkkfsJlxk8emNDj7MtAqRGh0CP9qPSY9y3XZdDrktkXlrmwrE67ZHTq4ufmPX
-         XI8cnS3ftx3rp/t4Ec+VzcFUC5ZGfZuSgz/4RDDnztJUP5RsWpCA0H/VwF7oHVLiZH
-         bfHJI6l7vZ7JyNu0TOXeFeMsdWy2qxMszwZ4fRG8=
-Authentication-Results: mxback5q.mail.yandex.net; dkim=pass header.i=@yandex.ru
-Received: by vla1-00787b9b359d.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id 3Ty8NU3s1k-vBlmWWit;
-        Wed, 09 Sep 2020 09:57:11 +0300
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (Client certificate not present)
-To:     linux-scsi@vger.kernel.org
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-Subject: Using MPI2_TOOLBOX_BEACON_TOOL from userspace
-Message-ID: <2c7f7718-e9a8-3d20-4877-3ee08d132945@yandex.ru>
-Date:   Wed, 9 Sep 2020 09:57:11 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1728463AbgIIG7u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 02:59:50 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54826 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726426AbgIIG7j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 02:59:39 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id B1372AD77;
+        Wed,  9 Sep 2020 06:59:34 +0000 (UTC)
+Subject: Re: [PATCH 01/19] block: add a bdev_check_media_change helper
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+References: <20200908145347.2992670-1-hch@lst.de>
+ <20200908145347.2992670-2-hch@lst.de>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <55971456-47ca-221a-51c6-a9665c6c0f8f@suse.de>
+Date:   Wed, 9 Sep 2020 08:59:32 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20200908145347.2992670-2-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Is it possible to issue MPI2_TOOLBOX_BEACON_TOOL messages from userspace
-(doing ioctl() on /dev/mpt3ctl, using sysfs entry, whatever)? I would like
-to use this feature to control device LED lights, in the way similar to
-LSI's (well, Broadcom's) proprietary 'lsiutil' tool.
+On 9/8/20 4:53 PM, Christoph Hellwig wrote:
+> Like check_disk_changed, except that it does not call ->revalidate_disk
+> but leaves that to the caller.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>  block/genhd.c         | 29 ++++++++++++++++++++++++++++-
+>  fs/block_dev.c        | 17 +++--------------
+>  include/linux/genhd.h |  2 +-
+>  3 files changed, 32 insertions(+), 16 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-As listed by 'lshw', my device is:
+Cheers,
 
-description: Serial Attached SCSI controller
-product: SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon]
-vendor: LSI Logic / Symbios Logic
-physical id: 0
-bus info: pci@0000:03:00.0
-logical name: scsi0
-version: 03
-width: 64 bits
-clock: 33MHz
-capabilities: storage pm pciexpress vpd msi msix bus_master cap_list rom
-configuration: driver=mpt3sas latency=0
-resources: irq:29 ioport:7000(size=256) memory:904c0000-904c3fff memory:90080000-900bffff \
-            memory:90000000-9007ffff memory:904c4000-90503fff memory:900c0000-904bffff
-
-Thanks,
-Dmitry
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
