@@ -2,111 +2,133 @@ Return-Path: <SRS0=U9Ib=CS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0184C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 05:21:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C69AC433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 05:54:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9332C21D46
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 05:21:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PbOSy2t+"
+	by mail.kernel.org (Postfix) with ESMTP id 3C33A21941
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 05:54:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599630852;
+	bh=pbyS4ZMWYMUKwmpi3BhxrHHLzLjXuJLnUN/DArAAcCk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=YpnljN6YCwl4UXcgrDg6lxYeY6pUAmj8dkw4r1aq1TTny+DNPvX4Bs6gFaWKRo77G
+	 h4ClAq9pMRv+agoTGfhjGuQA4Bt8/TjoLuo80+aAa/yCbvSzx9YrEVUGBo/9rIFuUx
+	 ebXrfsVtPoPVZLBrmtWC0436C1Ab/Za81CQeAL9g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725877AbgIIFVX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 01:21:23 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:16562 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725826AbgIIFVV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 01:21:21 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 089515oj052409;
-        Wed, 9 Sep 2020 01:21:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=Nw8TOQQ9zm+FwON85mt+CB23ciXM3ZURviO0Ezct4mo=;
- b=PbOSy2t+XO5oMshNxFAEkxFbT8UXBgFT34QSyPy69IIs+oDLL8OzgUUzgujsCp1SKGuJ
- aY42n099F9JZWka0UijXaddo6HD6GAo86pS46WX0PPZbkFJx7oGeUOTu/N0hDHYSs5gk
- idkGVWmFNGCImI5BqYZnSaqIhCWbK/NVMlbfhwds/Bi1i79Ni58uwlseTWtxVHLTBxXb
- FhimzVh9XYa6rkXZyy2ADgSEAuMm+2W9/g1MuzWq9LgYH+Ztz5QWKCMhnkZyFbRCmM08
- CfjnAkd4Qui88xtcZtWcCsHnskb0uicoKUH4LbH3voeiU9juH5CwwhiT0O0HSYySApDa UQ== 
-Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 33eqgwt0fh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Sep 2020 01:21:11 -0400
-Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
-        by ppma02dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0895GQjA013550;
-        Wed, 9 Sep 2020 05:21:11 GMT
-Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
-        by ppma02dal.us.ibm.com with ESMTP id 33c2a9by1d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Sep 2020 05:21:11 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0895L9x162652800
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 9 Sep 2020 05:21:10 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D98A47805C;
-        Wed,  9 Sep 2020 05:21:09 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 890D37805F;
-        Wed,  9 Sep 2020 05:21:07 +0000 (GMT)
-Received: from [153.66.254.174] (unknown [9.85.154.61])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed,  9 Sep 2020 05:21:07 +0000 (GMT)
-Message-ID: <1599628866.10803.68.camel@linux.ibm.com>
-Subject: Re: [PATCH v4 1/2] ufs: introduce skipping manual flush for wb
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
-        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com
-Date:   Tue, 08 Sep 2020 22:21:06 -0700
-In-Reply-To: <3cf3e93696510922b775d8887ca8408dd384648b.1599285983.git.kwmad.kim@samsung.com>
-References: <cover.1599285983.git.kwmad.kim@samsung.com>
-         <CGME20200905061549epcas2p3e3554be6bb9737f3133529ebac4ce99a@epcas2p3.samsung.com>
-         <3cf3e93696510922b775d8887ca8408dd384648b.1599285983.git.kwmad.kim@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-09_02:2020-09-08,2020-09-09 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 adultscore=0 priorityscore=1501 mlxlogscore=723
- impostorscore=0 mlxscore=0 bulkscore=0 phishscore=0 malwarescore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009090040
+        id S1725864AbgIIFyH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 01:54:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36198 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725807AbgIIFyH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 01:54:07 -0400
+Received: from localhost (unknown [172.98.75.202])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CC8532166E;
+        Wed,  9 Sep 2020 05:54:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599630846;
+        bh=pbyS4ZMWYMUKwmpi3BhxrHHLzLjXuJLnUN/DArAAcCk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Up3DXdI8JG6lYgGcC0tVjYoVSP1nLZyG6no0UVGh0mcYcuP7bLalh/ZHMcaxkd8ZT
+         4hKkD4LUFJoxQFZYfY0KmG9+m5OcFoTb6CHL9YtBOQqvWQ53gbXqE+GdKD+ZcMeAHE
+         2uF6//oVS8x+8pzmKdA8VqSS/nBIguX1Si2IuUBY=
+Date:   Wed, 9 Sep 2020 07:54:03 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Felipe Franciosi <felipe@nutanix.com>
+Cc:     Paolo Bonzini <pbonzini@redhat.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Matej Genci <matej.genci@nutanix.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "mst@redhat.com" <mst@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "stefanha@redhat.com" <stefanha@redhat.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "virtualization@lists.linux-foundation.org" 
+        <virtualization@lists.linux-foundation.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] Rescan the entire target on transport reset when LUN is 0
+Message-ID: <20200909055403.GA310264@kroah.com>
+References: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
+ <200ad446-1242-9555-96b6-4fa94ee27ec7@redhat.com>
+ <CCFAFEBB-8250-4627-B25D-3B9054954C45@nutanix.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CCFAFEBB-8250-4627-B25D-3B9054954C45@nutanix.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2020-09-05 at 15:06 +0900, Kiwoong Kim wrote:
-[...]
-> +
-> +	/*
-> +	 * This quirk needs to disable manual flush for write booster
-> +	 */
-> +	UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL		= 1 << 11,
+On Tue, Sep 08, 2020 at 05:53:16PM +0000, Felipe Franciosi wrote:
+> 
+> 
+> > On Sep 8, 2020, at 3:22 PM, Paolo Bonzini <pbonzini@redhat.com> wrote:
+> > 
+> > On 28/08/20 14:21, Matej Genci wrote:
+> >> VirtIO 1.0 spec says
+> >>    The removed and rescan events ... when sent for LUN 0, they MAY
+> >>    apply to the entire target so the driver can ask the initiator
+> >>    to rescan the target to detect this.
+> >> 
+> >> This change introduces the behaviour described above by scanning the
+> >> entire scsi target when LUN is set to 0. This is both a functional and a
+> >> performance fix. It aligns the driver with the spec and allows control
+> >> planes to hotplug targets with large numbers of LUNs without having to
+> >> request a RESCAN for each one of them.
+> >> 
+> >> Signed-off-by: Matej Genci <matej@nutanix.com>
+> >> Suggested-by: Felipe Franciosi <felipe@nutanix.com>
+> >> ---
+> >> drivers/scsi/virtio_scsi.c | 7 ++++++-
+> >> 1 file changed, 6 insertions(+), 1 deletion(-)
+> >> 
+> >> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> >> index bfec84aacd90..a4b9bc7b4b4a 100644
+> >> --- a/drivers/scsi/virtio_scsi.c
+> >> +++ b/drivers/scsi/virtio_scsi.c
+> >> @@ -284,7 +284,12 @@ static void virtscsi_handle_transport_reset(struct virtio_scsi *vscsi,
+> >> 
+> >> 	switch (virtio32_to_cpu(vscsi->vdev, event->reason)) {
+> >> 	case VIRTIO_SCSI_EVT_RESET_RESCAN:
+> >> -		scsi_add_device(shost, 0, target, lun);
+> >> +		if (lun == 0) {
+> >> +			scsi_scan_target(&shost->shost_gendev, 0, target,
+> >> +					 SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
+> >> +		} else {
+> >> +			scsi_add_device(shost, 0, target, lun);
+> >> +		}
+> >> 		break;
+> >> 	case VIRTIO_SCSI_EVT_RESET_REMOVED:
+> >> 		sdev = scsi_device_lookup(shost, 0, target, lun);
+> >> 
+> > 
+> > 
+> > Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+> 
+> Cc: stable@vger.kernel.org
+> 
+> Thanks, Paolo.
+> 
+> I'm Cc'ing stable as I believe this fixes a driver bug where it
+> doesn't follow the spec. Per commit message, today devices are
+> required to issue RESCAN events for each LUN behind a target when
+> hotplugging, or risking the driver not seeing the new LUNs.
+> 
+> Is this enough? Or should we resend after merge per below?
+> https://www.kernel.org/doc/Documentation/process/stable-kernel-rules.rst
 
-You can't have 1 << 11 it's already taken by:
+You need to let stable know the git commit id of the patch in Linus's
+tree if the cc: stable is not on the final commit that gets merged.
 
-8da76f71fef7 scsi: ufs-pci: Add quirk for broken auto-hibernate for Intel EHL
+thanks,
 
-	/*
-         * This quirk needs to disable manual flush for write booster
-         */
-        UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL          = 1 << 11,
-
-I take it 1 << 12 is OK?
-
-James
-
+greg k-h
 
