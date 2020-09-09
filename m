@@ -2,186 +2,122 @@ Return-Path: <SRS0=U9Ib=CS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 742A7C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E05E9C43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:33:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 214EE21973
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:30:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HAFtEuRo"
+	by mail.kernel.org (Postfix) with ESMTP id AFB1921919
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730128AbgIIHaO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 03:30:14 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:26710 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725959AbgIIHaL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 03:30:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599636609;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=AzppDD/YqKA5cSEDHDmQCZCZgQ73SyuNbBfJEeq+VIg=;
-        b=HAFtEuRoLhQmGOxfYaL9y508wIVFjflgvSC0JmQSswFh25qQOGd1ABfM3PNT95jmXDFMIj
-        g9sQoifx5UoOOHEu8VSgy8iRZ+2l2kPpdu/gfpseYxR8E2ZUURBqrePbdPX1+S7DpirPUz
-        mmG7z6HJ4XDpcl4PHfAHKLvG6mG/egU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-36-nmSKvH5IPk6a8oIdpu4l4A-1; Wed, 09 Sep 2020 03:30:07 -0400
-X-MC-Unique: nmSKvH5IPk6a8oIdpu4l4A-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 068281084D72;
-        Wed,  9 Sep 2020 07:30:06 +0000 (UTC)
-Received: from localhost (ovpn-12-76.pek2.redhat.com [10.72.12.76])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 23E4260C87;
-        Wed,  9 Sep 2020 07:29:59 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        John Garry <john.garry@huawei.com>,
-        Long Li <longli@microsoft.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH V6] scsi: core: only re-run queue in scsi_end_request() if device queue is busy
-Date:   Wed,  9 Sep 2020 15:29:52 +0800
-Message-Id: <20200909072952.1583148-1-ming.lei@redhat.com>
+        id S1729507AbgIIHdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 03:33:00 -0400
+Received: from mx2.suse.de ([195.135.220.15]:50644 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725864AbgIIHc6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 03:32:58 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id A772EB588;
+        Wed,  9 Sep 2020 07:32:56 +0000 (UTC)
+Subject: Re: [PATCH 14/19] ide-gd: stop using the disk events mechanism
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20200908145347.2992670-1-hch@lst.de>
+ <20200908145347.2992670-15-hch@lst.de>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <151a6f1f-1657-52ef-d1a9-e5601eb30b1f@suse.de>
+Date:   Wed, 9 Sep 2020 09:32:53 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
+In-Reply-To: <20200908145347.2992670-15-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now the request queue is run in scsi_end_request() unconditionally if both
-target queue and host queue is ready. We should have re-run request queue
-only after this device queue becomes busy for restarting this LUN only.
-
-Recently Long Li reported that cost of run queue may be very heavy in
-case of high queue depth. So improve this situation by only running
-the request queue when this LUN is busy.
-
+On 9/8/20 4:53 PM, Christoph Hellwig wrote:
+> ide-gd is only using the disk events mechanism to be able to force an
+> invalidation and partition scan on opening removable media.  Just open
+> code the logic without invoving the block layer.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/ide/ide-disk.c   |  5 +----
+>  drivers/ide/ide-floppy.c |  2 --
+>  drivers/ide/ide-gd.c     | 48 +++++-----------------------------------
+>  include/linux/ide.h      |  2 --
+>  4 files changed, 7 insertions(+), 50 deletions(-)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Tested-by: Long Li <longli@microsoft.com>
-Reported-by: Long Li <longli@microsoft.com>
-Tested-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
-V6:
-        - patch style && comment change, as suggested by Bart	
-        - add reviewed-by & tested-by tag
-V5:
-        - patch style && comment change, as suggested by Bart
-        - add reviewed-by & tested-by tag
-V4:
-        - fix one race reported by Kashyap, and simplify the implementation
-        a bit; also pass Kashyap's both function and performance test
-V3:
-        - add one smp_mb() in scsi_mq_get_budget() and comment
-V2:
-        - commit log change, no any code change
-        - add reported-by tag
 
- drivers/scsi/scsi_lib.c    | 51 +++++++++++++++++++++++++++++++++++---
- include/scsi/scsi_device.h |  1 +
- 2 files changed, 48 insertions(+), 4 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7affaaf8b98e..1b46a0375e20 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -549,10 +549,29 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- static void scsi_run_queue_async(struct scsi_device *sdev)
- {
- 	if (scsi_target(sdev)->single_lun ||
--	    !list_empty(&sdev->host->starved_list))
-+	    !list_empty(&sdev->host->starved_list)) {
- 		kblockd_schedule_work(&sdev->requeue_work);
--	else
--		blk_mq_run_hw_queues(sdev->request_queue, true);
-+	} else {
-+		/*
-+		 * smp_mb() present in sbitmap_queue_clear() or implied in
-+		 * .end_io is for ordering writing .device_busy in
-+		 * scsi_device_unbusy() and reading sdev->restarts.
-+		 */
-+		int old = atomic_read(&sdev->restarts);
-+
-+		if (old) {
-+			/*
-+			 * ->restarts has to be kept as non-zero if there is
-+			 *  new budget contention comes.
-+			 *
-+			 *  No need to run queue when either another re-run
-+			 *  queue wins in updating ->restarts or one new budget
-+			 *  contention comes.
-+			 */
-+			if (atomic_cmpxchg(&sdev->restarts, old, 0) == old)
-+				blk_mq_run_hw_queues(sdev->request_queue, true);
-+		}
-+	}
- }
- 
- /* Returns false when no more bytes to process, true if there are more */
-@@ -1611,8 +1630,32 @@ static void scsi_mq_put_budget(struct request_queue *q)
- static bool scsi_mq_get_budget(struct request_queue *q)
- {
- 	struct scsi_device *sdev = q->queuedata;
-+	int ret = scsi_dev_queue_ready(q, sdev);
- 
--	return scsi_dev_queue_ready(q, sdev);
-+	if (ret)
-+		return true;
-+
-+	atomic_inc(&sdev->restarts);
-+
-+	/*
-+	 * Orders atomic_inc(&sdev->restarts) and atomic_read(&sdev->device_busy).
-+	 * .restarts must be incremented before .device_busy is read because the
-+	 * code in scsi_run_queue_async() depends on the order of these operations.
-+	 */
-+	smp_mb__after_atomic();
-+
-+	/*
-+	 * If all in-flight requests originated from this LUN are completed
-+	 * before setting .restarts, sdev->device_busy will be observed as
-+	 * zero, then blk_mq_delay_run_hw_queues() will dispatch this request
-+	 * soon. Otherwise, completion of one of these request will observe
-+	 * the .restarts flag, and the request queue will be run for handling
-+	 * this request, see scsi_end_request().
-+	 */
-+	if (unlikely(atomic_read(&sdev->device_busy) == 0 &&
-+				!scsi_device_blocked(sdev)))
-+		blk_mq_delay_run_hw_queues(sdev->request_queue, SCSI_QUEUE_DELAY);
-+	return false;
- }
- 
- static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index bc5909033d13..1a5c9a3df6d6 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -109,6 +109,7 @@ struct scsi_device {
- 	atomic_t device_busy;		/* commands actually active on LLDD */
- 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
- 
-+	atomic_t restarts;
- 	spinlock_t list_lock;
- 	struct list_head starved_entry;
- 	unsigned short queue_depth;	/* How deep of a queue we want */
+Hannes
 -- 
-2.25.2
-
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
