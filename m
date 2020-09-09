@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D62C43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:39:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7034BC433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:39:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3619820732
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:39:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F5C21D7A
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730280AbgIIHjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 03:39:01 -0400
-Received: from mx2.suse.de ([195.135.220.15]:54176 "EHLO mx2.suse.de"
+        id S1730312AbgIIHjj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 03:39:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55644 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730177AbgIIHi7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Sep 2020 03:38:59 -0400
+        id S1726226AbgIIHjh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 03:39:37 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 5B63FB666;
-        Wed,  9 Sep 2020 07:38:55 +0000 (UTC)
-Subject: Re: [PATCH 18/19] sr: simplify sr_block_revalidate_disk
+        by mx2.suse.de (Postfix) with ESMTP id 9788DB666;
+        Wed,  9 Sep 2020 07:39:35 +0000 (UTC)
+Subject: Re: [PATCH 19/19] block: remove check_disk_change
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         Michal Simek <michal.simek@xilinx.com>,
@@ -39,7 +39,7 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
 References: <20200908145347.2992670-1-hch@lst.de>
- <20200908145347.2992670-19-hch@lst.de>
+ <20200908145347.2992670-20-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -85,12 +85,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <08e6de4e-4c7d-209c-a15d-2a8f85bbeeca@suse.de>
-Date:   Wed, 9 Sep 2020 09:38:10 +0200
+Message-ID: <bb2b4f3c-dc54-c5f5-e270-f72efff58f80@suse.de>
+Date:   Wed, 9 Sep 2020 09:39:17 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200908145347.2992670-19-hch@lst.de>
+In-Reply-To: <20200908145347.2992670-20-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -100,15 +100,14 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/8/20 4:53 PM, Christoph Hellwig wrote:
-> Both callers have a valid CD struture available, so rely on that instead
-> of getting another reference.  Also move the function to avoid a forward
-> declaration.
+> Remove the now unused check_disk_change helper.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/scsi/sr.c | 36 +++++++++++++-----------------------
->  1 file changed, 13 insertions(+), 23 deletions(-)
+>  fs/block_dev.c        | 20 --------------------
+>  include/linux/genhd.h |  1 -
+>  2 files changed, 21 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
