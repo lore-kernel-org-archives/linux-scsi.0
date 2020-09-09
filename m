@@ -2,114 +2,116 @@ Return-Path: <SRS0=U9Ib=CS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89591C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 19:21:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6CCCC43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 20:04:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CFF721D81
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 19:21:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8708D21D7E
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 20:04:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Xn3olNCn"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qD/yDq3D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726399AbgIITVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 15:21:24 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:4988 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725772AbgIITVX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 15:21:23 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 089J5enk077421;
-        Wed, 9 Sep 2020 15:20:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=wI2LxfXNbDDIWk+xzWG3L8PJPVjUR3KEWKVAUC1zG7g=;
- b=Xn3olNCnyQbPW4fO0sfB3M7imcUtD4sOJvn2ymxDutok9DNIPUHONSFCc66B6WA8kdXY
- zJ/mAokkqV08mqDeNW6p8yyWyQVInV/ESL9vIwHlKtz0EwH8kpcl7Ve8fkKjf1dkk9n7
- hPI9aJG0wX+t2TTAnhOXssLhNF7iqPQek3ldRELGWbn5EDt4EEGzRhpzl15uGdYcs5Pt
- RltwfBEsK21HHeuO/VExL/1tBXWlzh2CbNm6dVGcQen93Ud0w6tHTWEJiKLxm8FmkVHf
- X70WSYR9YRAyssOis21kz/PH6he9aAjy6jJN+OoqR51b86i/6hOP+AT0KfDk4tCpDUxD YA== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 33f47eshya-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Sep 2020 15:20:58 -0400
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 089JBtJP026932;
-        Wed, 9 Sep 2020 19:20:57 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma01dal.us.ibm.com with ESMTP id 33d46mw1m8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Sep 2020 19:20:57 +0000
-Received: from b01ledav005.gho.pok.ibm.com (b01ledav005.gho.pok.ibm.com [9.57.199.110])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 089JKuCj49873192
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 9 Sep 2020 19:20:56 GMT
-Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 56765AE060;
-        Wed,  9 Sep 2020 19:20:56 +0000 (GMT)
-Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 163E2AE05F;
-        Wed,  9 Sep 2020 19:20:55 +0000 (GMT)
-Received: from oc6857751186.ibm.com (unknown [9.65.215.230])
-        by b01ledav005.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed,  9 Sep 2020 19:20:54 +0000 (GMT)
-Subject: Re: [PATCH] scsi: ibmvfc: Fix error return in ibmvfc_probe()
-To:     Jing Xiangfeng <jingxiangfeng@huawei.com>, mpe@ellerman.id.au,
-        benh@kernel.crashing.org, paulus@samba.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org
-References: <20200907083949.154251-1-jingxiangfeng@huawei.com>
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-Message-ID: <93fb2dbf-b386-4009-95e2-508c56c68607@linux.ibm.com>
-Date:   Wed, 9 Sep 2020 12:20:54 -0700
+        id S1727010AbgIIUEl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 16:04:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33648 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725772AbgIIUEk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 16:04:40 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9903AC061573;
+        Wed,  9 Sep 2020 13:04:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=Jvm77/90HJwYlfYPmRWddMCR1SEU0mTsLpsMQ1Ko468=; b=qD/yDq3DH2haYhqEJ+5QHtsEP9
+        ad4v7Ils7MwCrW3lZqFPjpk8dNcZWVDqGuNfwwjFzlI3aAztH+dHxVoR4WMVGVjAvKrCqKcXGyaF2
+        KalLAJbKAvE45F8oVW8szWLyVl0Hz07dsINhg7Ut4LHR2enTGbg8aszl1U8TpJdQ9OXtC8ygbB+vM
+        8rQJIZi0WLpt1q9LzfHCZSQZoUydYfN8SQQ/TCf4dDh/++G7Tp89QtTcSfCqjtpdgNrx30xw/QPT2
+        PDQD3kl+D/f2CUKABTtW/JzWgackM6lmfvKgaOnE5BFSKUqFPZxqbz5WnR6LpIwdV3G4koMFzofQx
+        ev5ED+zQ==;
+Received: from [2601:1c0:6280:3f0::19c2]
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kG6KS-0001V9-Aq; Wed, 09 Sep 2020 20:04:28 +0000
+Subject: Re: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        'Stephen Rothwell' <sfr@canb.auug.org.au>,
+        'Linux Next Mailing List' <linux-next@vger.kernel.org>
+Cc:     'Linux Kernel Mailing List' <linux-kernel@vger.kernel.org>,
+        'linux-scsi' <linux-scsi@vger.kernel.org>,
+        'Santosh Yaraganavi' <santosh.sy@samsung.com>,
+        'Vinayak Holikatti' <h.vinayak@samsung.com>,
+        'Seungwon Jeon' <essuuj@gmail.com>
+References: <20200720194225.17de9962@canb.auug.org.au>
+ <CGME20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4@epcas5p2.samsung.com>
+ <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
+ <06a601d65f86$3d8aeee0$b8a0cca0$@samsung.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <f72b8022-1ebd-c5a1-2fe2-a3e93854fd0e@infradead.org>
+Date:   Wed, 9 Sep 2020 13:04:24 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-In-Reply-To: <20200907083949.154251-1-jingxiangfeng@huawei.com>
+In-Reply-To: <06a601d65f86$3d8aeee0$b8a0cca0$@samsung.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-09_13:2020-09-09,2020-09-09 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
- phishscore=0 mlxlogscore=999 suspectscore=2 lowpriorityscore=0 spamscore=0
- clxscore=1011 malwarescore=0 adultscore=0 impostorscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009090169
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/7/20 1:39 AM, Jing Xiangfeng wrote:
-> Fix to return error code PTR_ERR() from the error handling case instead
-> of 0.
+On 7/21/20 10:41 AM, Alim Akhtar wrote:
+> Hi Randy,
 > 
-> Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+>> -----Original Message-----
+>> From: Randy Dunlap <rdunlap@infradead.org>
+>> Sent: 20 July 2020 22:11
+>> To: Stephen Rothwell <sfr@canb.auug.org.au>; Linux Next Mailing List <linux-
+>> next@vger.kernel.org>
+>> Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>; linux-scsi <linux-
+>> scsi@vger.kernel.org>; Santosh Yaraganavi <santosh.sy@samsung.com>;
+>> Vinayak Holikatti <h.vinayak@samsung.com>; Alim Akhtar
+>> <alim.akhtar@samsung.com>; Seungwon Jeon <essuuj@gmail.com>
+>> Subject: Re: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+>>
+>> On 7/20/20 2:42 AM, Stephen Rothwell wrote:
+>>> Hi all,
+>>>
+>>> Changes since 20200717:
+>>>
+>>
+>> on x86_64:
+>>
+>> WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
+>>   Depends on [n]: OF [=n] && (ARCH_EXYNOS || COMPILE_TEST [=y])
+>>   Selected by [y]:
+>>   - SCSI_UFS_EXYNOS [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] &&
+>> SCSI_UFSHCD_PLATFORM [=y] && (ARCH_EXYNOS || COMPILE_TEST [=y])
+>>
+> Thanks, will post a patch shortly.
 
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Hi Alim,
+I am still seeing this in linux-next of 20200909.
+Was there a patch posted that I missed and is not applied anywhere yet?
 
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
->  1 file changed, 1 insertion(+)
+
+>> There are no build errors since <linux/of.h> provides stubs for functions when
+>> CONFIG_OF is not enabled.
+>>
+>> But new warnings are not OK.
+>>
+>> thanks.
+>> --
+>> ~Randy
+>> Reported-by: Randy Dunlap <rdunlap@infradead.org>
 > 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index ea7c8930592d..70daa0605082 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -4928,6 +4928,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
->  	if (IS_ERR(vhost->work_thread)) {
->  		dev_err(dev, "Couldn't create kernel thread: %ld\n",
->  			PTR_ERR(vhost->work_thread));
-> +		rc = PTR_ERR(vhost->work_thread);
->  		goto free_host_mem;
->  	}
->  
-> 
+
+thanks.
+-- 
+~Randy
 
