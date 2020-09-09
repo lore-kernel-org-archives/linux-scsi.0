@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B105BC43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20CFDC433E2
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:11:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72CA221D79
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:11:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4A5E21D79
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729876AbgIIHLD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 03:11:03 -0400
-Received: from mx2.suse.de ([195.135.220.15]:33654 "EHLO mx2.suse.de"
+        id S1729655AbgIIHKs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 03:10:48 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33312 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729781AbgIIHK5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Sep 2020 03:10:57 -0400
+        id S1729212AbgIIHKb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 03:10:31 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 903A4B588;
-        Wed,  9 Sep 2020 07:10:55 +0000 (UTC)
-Subject: Re: [PATCH 09/19] xsysace: simplify media change handling
+        by mx2.suse.de (Postfix) with ESMTP id 63553B61F;
+        Wed,  9 Sep 2020 07:10:28 +0000 (UTC)
+Subject: Re: [PATCH 08/19] xsysace: use bdev_check_media_change
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         Michal Simek <michal.simek@xilinx.com>,
@@ -36,9 +36,10 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
+        linux-fsdevel@vger.kernel.org,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
 References: <20200908145347.2992670-1-hch@lst.de>
- <20200908145347.2992670-10-hch@lst.de>
+ <20200908145347.2992670-9-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -84,12 +85,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <6fcc6e53-45e3-30e7-9972-e000d7155c53@suse.de>
-Date:   Wed, 9 Sep 2020 09:10:53 +0200
+Message-ID: <b858ada6-966e-eac5-b985-4f23c022af34@suse.de>
+Date:   Wed, 9 Sep 2020 09:10:25 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200908145347.2992670-10-hch@lst.de>
+In-Reply-To: <20200908145347.2992670-9-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -99,14 +100,17 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/8/20 4:53 PM, Christoph Hellwig wrote:
-> Pass a struct ace_device to ace_revalidate_disk, move the media changed
-> check into the one caller that needs it, and give the routine a better
-> name.
+> Switch to use bdev_check_media_change instead of check_disk_change and
+> call ace_revalidate_disk manually.  Given that ace_revalidate_disk only
+> deals with media change events, the extra call into ->revalidate_disk
+> from bdev_disk_changed is not required either, so stop wiring up the
+> method.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/block/xsysace.c | 26 ++++++++++----------------
->  1 file changed, 10 insertions(+), 16 deletions(-)
+>  drivers/block/xsysace.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
