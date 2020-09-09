@@ -2,28 +2,28 @@ Return-Path: <SRS0=U9Ib=CS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38255C43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2161BC43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:09:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07A2821D7A
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC06D21D79
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:09:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728936AbgIIG77 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 02:59:59 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55080 "EHLO mx2.suse.de"
+        id S1727085AbgIIHJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 03:09:44 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60270 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728398AbgIIG7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Sep 2020 02:59:51 -0400
+        id S1725877AbgIIHJi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 03:09:38 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id DEB77B11F;
-        Wed,  9 Sep 2020 06:59:49 +0000 (UTC)
-Subject: Re: [PATCH 02/19] amiflop: use bdev_check_media_change
+        by mx2.suse.de (Postfix) with ESMTP id B6C46AC68;
+        Wed,  9 Sep 2020 07:09:36 +0000 (UTC)
+Subject: Re: [PATCH 06/19] swim: simplify media change handling
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         Michal Simek <michal.simek@xilinx.com>,
@@ -39,7 +39,7 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
 References: <20200908145347.2992670-1-hch@lst.de>
- <20200908145347.2992670-3-hch@lst.de>
+ <20200908145347.2992670-7-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -85,12 +85,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <dc872e95-c3b5-fae1-4398-e2af8a884ae4@suse.de>
-Date:   Wed, 9 Sep 2020 08:59:48 +0200
+Message-ID: <ba0fb6cb-5703-6b42-2669-4aaf3554d4df@suse.de>
+Date:   Wed, 9 Sep 2020 09:09:34 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200908145347.2992670-3-hch@lst.de>
+In-Reply-To: <20200908145347.2992670-7-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -100,29 +100,18 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/8/20 4:53 PM, Christoph Hellwig wrote:
-> The Amiga floppy driver does not have a ->revalidate_disk method, so it
-> can just use bdev_check_media_change without any additional changes.
+> floppy_revalidate mostly duplicates work already done in floppy_open
+> despite only beeing called from floppy_open.  Remove the function and
+> just clear the ->ejected flag directly under the right condition.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/block/amiflop.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/block/swim.c | 24 ++----------------------
+>  1 file changed, 2 insertions(+), 22 deletions(-)
 > 
-> diff --git a/drivers/block/amiflop.c b/drivers/block/amiflop.c
-> index 226219da3da6a7..71c2b156455860 100644
-> --- a/drivers/block/amiflop.c
-> +++ b/drivers/block/amiflop.c
-> @@ -1670,7 +1670,7 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
->  	}
->  
->  	if (mode & (FMODE_READ|FMODE_WRITE)) {
-> -		check_disk_change(bdev);
-> +		bdev_check_media_change(bdev);
->  		if (mode & FMODE_WRITE) {
->  			int wrprot;
->  
-> 
+What a convoluted driver.
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
