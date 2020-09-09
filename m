@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28E1FC10DAA
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:27:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C5EC43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E710821741
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:27:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7B9E21919
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 07:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729670AbgIIH1q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 03:27:46 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48752 "EHLO mx2.suse.de"
+        id S1729860AbgIIH2c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 03:28:32 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48962 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725863AbgIIH1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Sep 2020 03:27:45 -0400
+        id S1725917AbgIIH22 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Sep 2020 03:28:28 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 298FBAE51;
-        Wed,  9 Sep 2020 07:27:43 +0000 (UTC)
-Subject: Re: [PATCH 12/19] ide-cd: use bdev_check_media_changed
+        by mx2.suse.de (Postfix) with ESMTP id 45A64AD3C;
+        Wed,  9 Sep 2020 07:28:26 +0000 (UTC)
+Subject: Re: [PATCH 13/19] ide-cd: remove idecd_revalidate_disk
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         Michal Simek <michal.simek@xilinx.com>,
@@ -39,7 +39,7 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
 References: <20200908145347.2992670-1-hch@lst.de>
- <20200908145347.2992670-13-hch@lst.de>
+ <20200908145347.2992670-14-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -85,12 +85,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <2bfce1f9-fa1a-a628-2311-971e4384d9bc@suse.de>
-Date:   Wed, 9 Sep 2020 09:27:37 +0200
+Message-ID: <7c6c6ee4-d140-335e-9e70-0b80ffdccdcd@suse.de>
+Date:   Wed, 9 Sep 2020 09:28:20 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200908145347.2992670-13-hch@lst.de>
+In-Reply-To: <20200908145347.2992670-14-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -100,17 +100,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/8/20 4:53 PM, Christoph Hellwig wrote:
-> Switch to use bdev_check_media_changed instead of check_disk_change and
-> call idecd_revalidate_disk manually.  Given that idecd_revalidate_disk
-> only re-reads the TOC, and we already do the same at probe time, the
-> extra call into ->revalidate_disk from bdev_disk_changed is not required
-> either, so stop wiring up the method.
+> Just merge the trivial function into its only caller.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/ide/ide-cd.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  drivers/ide/ide-cd.c | 17 +++++------------
+>  1 file changed, 5 insertions(+), 12 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
