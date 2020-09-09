@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42812C43461
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 00:55:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 167A5C43461
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 00:56:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F96B216C4
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 00:55:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D686E21D41
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Sep 2020 00:56:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599612949;
-	bh=NljrK6DZ67Y2lgb5dD1jWF3Bw2u9eqUapVKXFIgps3U=;
+	s=default; t=1599612970;
+	bh=RvzjuGzz/kTSEdxXHggSfWjCrdq+3b4CqDYSDYaXs48=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=y5kVg51HcH1vPGynsjZuK9b9eCjc/u1lMbmdEewsa/HyfNrQ9gLERSPy/GCfa+6BR
-	 3iiqKkFVgFNAtNiBKseu6BFFWmR8YRZfyRoBdHIcPb1BN7DDiumkIdDLYpf/s/YTcK
-	 9Q8vFLe3e52q9l2WzzlAqOft0AbJ17yic/TjNjhU=
+	b=gHi20hIGaj6Rtgmi02OExc9cLptFPWtQZC7eyDPijeqWFzGefP/zVA70GmlWHlc1g
+	 tvdy+EbkAvVr4mOTITiggWNdQbHNQhBlaACEnRUtLThSwjjB6YaJR6Ngr0JKO1lbwr
+	 baQLF/vvg3My0LkvW5rI8Ns09t8NlPkALLIm0c68=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729251AbgIIAzo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Sep 2020 20:55:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52096 "EHLO mail.kernel.org"
+        id S1729912AbgIIA4E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Sep 2020 20:56:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726489AbgIIAzn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Sep 2020 20:55:43 -0400
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
+        id S1726489AbgIIA4B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Sep 2020 20:56:01 -0400
+Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D1279216C4;
-        Wed,  9 Sep 2020 00:55:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9626421D40;
+        Wed,  9 Sep 2020 00:56:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599612942;
-        bh=NljrK6DZ67Y2lgb5dD1jWF3Bw2u9eqUapVKXFIgps3U=;
+        s=default; t=1599612960;
+        bh=RvzjuGzz/kTSEdxXHggSfWjCrdq+3b4CqDYSDYaXs48=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=GOiNe8A+Z0vTTTifPiCPBcHcdbEHQkfWlRxTDBj/Pe0I88gYH9vzSKUDLD27Jcns2
-         5pdMRPZ/uvmf9F4zMSASsMr58Na9advGa///ZSw/JngxR332XN39tr/EYePt27PZKM
-         ZYhwsKS7Z+Y39YoQL3C0SH2R0XvxsGhvJw+cD5lI=
-Received: by mail-lj1-f182.google.com with SMTP id v23so1314350ljd.1;
-        Tue, 08 Sep 2020 17:55:41 -0700 (PDT)
-X-Gm-Message-State: AOAM5334n58LSKdKFGwwTaZNM5DOloWuZLb4IuyA1HB/PbymqaaMf7ji
-        ufTtlaSwSNiS8h4afMtvncN31VW+DElumS8G1l4=
-X-Google-Smtp-Source: ABdhPJxQq74vo5JbuRHxUTS8m9tdD+iAtivYUG50MMcb53T1num8JutKqyxkzEWd0qSatAXELIL2sCltGdwuDe8hang=
-X-Received: by 2002:a2e:8597:: with SMTP id b23mr561854lji.41.1599612940170;
- Tue, 08 Sep 2020 17:55:40 -0700 (PDT)
+        b=QCrNHxqhyTNUbEUBWg7m5RppKYxhztDiw//6ubU7/VQofyzcTv22t1N98zavCtLup
+         QysnOQsfy4G3tScSXrtRl0tR2KP2W+WLMdIRlzmAp5TUK0MJw/rxTcC/h816xb25+8
+         K183C1Rs3MqMJKmfCbVj974g3dCS/0aa3QBb0zJU=
+Received: by mail-lj1-f173.google.com with SMTP id a15so1304276ljk.2;
+        Tue, 08 Sep 2020 17:56:00 -0700 (PDT)
+X-Gm-Message-State: AOAM532WrJ4gIibYUTQl9nOlAcrxw9EtcERfolk57Gmhgq+WaeAMceDL
+        0x38q0EWLgveQT4DskbpHXZ+OS3051v6kqNMutM=
+X-Google-Smtp-Source: ABdhPJxM7jCblK+I3K12WYnFdTKastGkaOpZLr2TCZ6RdAZ0LK1RcX7wDsfx2yoNcvq/FpYJy3EsInbbGExnKObCwTE=
+X-Received: by 2002:a2e:9c8d:: with SMTP id x13mr523960lji.392.1599612958934;
+ Tue, 08 Sep 2020 17:55:58 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200903054104.228829-1-hch@lst.de> <20200903054104.228829-4-hch@lst.de>
-In-Reply-To: <20200903054104.228829-4-hch@lst.de>
+References: <20200903054104.228829-1-hch@lst.de> <20200903054104.228829-5-hch@lst.de>
+In-Reply-To: <20200903054104.228829-5-hch@lst.de>
 From:   Song Liu <song@kernel.org>
-Date:   Tue, 8 Sep 2020 17:55:29 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW7ZtGruPhBWZpjCDoyq1DwoA3t_p3UXbSPrHGMnHh7enw@mail.gmail.com>
-Message-ID: <CAPhsuW7ZtGruPhBWZpjCDoyq1DwoA3t_p3UXbSPrHGMnHh7enw@mail.gmail.com>
-Subject: Re: [PATCH 3/9] md: compare bd_disk instead of bd_contains
+Date:   Tue, 8 Sep 2020 17:55:48 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW62Cd329s-LUR9uQVcFvn4pbOj7H0434P7zwRhbNVScgA@mail.gmail.com>
+Message-ID: <CAPhsuW62Cd329s-LUR9uQVcFvn4pbOj7H0434P7zwRhbNVScgA@mail.gmail.com>
+Subject: Re: [PATCH 4/9] md: don't detour through bd_contains for the gendisk
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
         Linux Doc Mailing List <linux-doc@vger.kernel.org>,
@@ -69,42 +69,43 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Wed, Sep 2, 2020 at 10:43 PM Christoph Hellwig <hch@lst.de> wrote:
 >
-> To check for partitions of the same disk bd_contains works as well, but
-> bd_disk is way more obvious.
+> bd_disk is set on all block devices, including those for partitions.
 >
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Acked-by: Song Liu <song@kernel.org>
 
 > ---
->  drivers/md/md.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
+>  drivers/md/md.c | 2 +-
+>  drivers/md/md.h | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 9562ef598ae1f4..3f33562d10d6f5 100644
+> index 3f33562d10d6f5..5a0fd93769a70e 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -2322,8 +2322,7 @@ static int match_mddev_units(struct mddev *mddev1, struct mddev *mddev2)
->                             test_bit(Journal, &rdev2->flags) ||
->                             rdev2->raid_disk == -1)
->                                 continue;
-> -                       if (rdev->bdev->bd_contains ==
-> -                           rdev2->bdev->bd_contains) {
-> +                       if (rdev->bdev->bd_disk == rdev2->bdev->bd_disk) {
->                                 rcu_read_unlock();
->                                 return 1;
->                         }
-> @@ -5944,8 +5943,8 @@ int md_run(struct mddev *mddev)
->                 rdev_for_each(rdev, mddev)
->                         rdev_for_each(rdev2, mddev) {
->                                 if (rdev < rdev2 &&
-> -                                   rdev->bdev->bd_contains ==
-> -                                   rdev2->bdev->bd_contains) {
-> +                                   rdev->bdev->bd_disk ==
-> +                                   rdev2->bdev->bd_disk) {
->                                         pr_warn("%s: WARNING: %s appears to be on the same physical disk as %s.\n",
->                                                 mdname(mddev),
->                                                 bdevname(rdev->bdev,b),
+> @@ -8444,7 +8444,7 @@ static int is_mddev_idle(struct mddev *mddev, int init)
+>         idle = 1;
+>         rcu_read_lock();
+>         rdev_for_each_rcu(rdev, mddev) {
+> -               struct gendisk *disk = rdev->bdev->bd_contains->bd_disk;
+> +               struct gendisk *disk = rdev->bdev->bd_disk;
+>                 curr_events = (int)part_stat_read_accum(&disk->part0, sectors) -
+>                               atomic_read(&disk->sync_io);
+>                 /* sync IO will cause sync_io to increase before the disk_stats
+> diff --git a/drivers/md/md.h b/drivers/md/md.h
+> index f9e2ccdd22c478..2175a5ac4f7c68 100644
+> --- a/drivers/md/md.h
+> +++ b/drivers/md/md.h
+> @@ -551,7 +551,7 @@ extern void mddev_unlock(struct mddev *mddev);
+>
+>  static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
+>  {
+> -       atomic_add(nr_sectors, &bdev->bd_contains->bd_disk->sync_io);
+> +       atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
+>  }
+>
+>  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
 > --
 > 2.28.0
 >
