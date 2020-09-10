@@ -4,112 +4,153 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E322FC43461
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:35:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BB6C43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:36:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA5C92087C
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:35:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97ACB21D40
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:36:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fCx4BGZU"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rOYFMHv8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730690AbgIJCfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 22:35:15 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38494 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730449AbgIJCdI (ORCPT
+        id S1730883AbgIJCgj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 22:36:39 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:40911 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730434AbgIJCdI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 22:33:08 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08A2SWH3127504;
-        Thu, 10 Sep 2020 02:32:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=an7L+UH4c4nfLl3pql5CjoOv/Ddb1mwYqyEWS3Cvcyk=;
- b=fCx4BGZUczIglj7jc1RleSkP1Uk1MKnS7WBWvEvM3C+PIEG5YjEErUSGNugY+u8VevXV
- vWf0b0eEZmtGm/mvU7cIQrUKsDxLaqD0g85JWx5p0fDIXD5X/7B291fW6XjHZrRAMt5u
- e78t9dE9iVxYXgwv6TPFSHY/yaRLzpknyTYYi5T1N6aoV7j5s5WEc0Qkgwa8zivfIbNf
- AG/MhvSZPWhnlyDQNkljeSrtjs0qt+MLqhq3sYiWyKxO6gu25PjAU1jt/Sh4sA6iXeDp
- kurY2NckGubMTnEJwF1hvrn5UEpbMwxrWkZQlH3dPEU6SKWD3t1stdXioGFBZ7opw5wO SA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 33c2mm5868-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 10 Sep 2020 02:32:51 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08A2UT2u140713;
-        Thu, 10 Sep 2020 02:32:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 33cmkyyw9m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Sep 2020 02:32:50 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08A2WlZF013885;
-        Thu, 10 Sep 2020 02:32:47 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Sep 2020 19:32:47 -0700
-To:     Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Abort tasks before clear them from
- doorbell
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq14ko62wn5.fsf@ca-mkp.ca.oracle.com>
-References: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
-        <1599099873-32579-2-git-send-email-cang@codeaurora.org>
-        <1599627906.10803.65.camel@linux.ibm.com>
-Date:   Wed, 09 Sep 2020 22:32:43 -0400
-In-Reply-To: <1599627906.10803.65.camel@linux.ibm.com> (James Bottomley's
-        message of "Tue, 08 Sep 2020 22:05:06 -0700")
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200910023306epoutp049de7d8e46e0f7c5b2be18385fc601b0c~zS2Qox8jR0275802758epoutp04-
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2020 02:33:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200910023306epoutp049de7d8e46e0f7c5b2be18385fc601b0c~zS2Qox8jR0275802758epoutp04-
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1599705186;
+        bh=teGCqHEFthsRoEpChIqH0QsySgv8omqE3KANwVAcCYg=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=rOYFMHv8skkfz3GKYer1VtbeMZwGgCpvdkZ9w9Zxu6Vt8wyY+n6VB/dAR2IghvhyS
+         qEMkp0sMAGAvdjyNo99xvj462yMeZBCgHHWU7obatRYptvA1O6SiB35sT42Kja0ezK
+         1SEtIBVY3RA1YsL42+rm6IH4EBXhGuzyS7u15alM=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20200910023305epcas5p3055a9045fa34a834221d5849dec7d0f2~zS2QN-O3Q1505215052epcas5p3Q;
+        Thu, 10 Sep 2020 02:33:05 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        43.09.40333.160995F5; Thu, 10 Sep 2020 11:33:05 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200910023304epcas5p33a0b919b4ac04564f198039bded0f11e~zS2O2yFnU3181931819epcas5p3D;
+        Thu, 10 Sep 2020 02:33:04 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200910023304epsmtrp2db94ac8dfa57c83ce40e7c28007207c6~zS2O2J5hE2057720577epsmtrp2E;
+        Thu, 10 Sep 2020 02:33:04 +0000 (GMT)
+X-AuditID: b6c32a4a-9a7ff70000019d8d-23-5f599061bca8
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5F.FB.08303.060995F5; Thu, 10 Sep 2020 11:33:04 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.122.12.5]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20200910023302epsmtip149e3e90d71931ca158338c7cfaaa84fa~zS2Ng6cQJ2321123211epsmtip1A;
+        Thu, 10 Sep 2020 02:33:02 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        "'Randy Dunlap'" <rdunlap@infradead.org>
+Cc:     "'Stephen Rothwell'" <sfr@canb.auug.org.au>,
+        "'Linux Next Mailing List'" <linux-next@vger.kernel.org>,
+        "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
+        "'linux-scsi'" <linux-scsi@vger.kernel.org>,
+        "'Santosh Yaraganavi'" <santosh.sy@samsung.com>,
+        "'Vinayak Holikatti'" <h.vinayak@samsung.com>,
+        "'Seungwon Jeon'" <essuuj@gmail.com>
+In-Reply-To: <yq1a6xy2wph.fsf@ca-mkp.ca.oracle.com>
+Subject: RE: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+Date:   Thu, 10 Sep 2020 08:03:01 +0530
+Message-ID: <001501d6871a$b5b29f10$2117dd30$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=1
- spamscore=0 mlxlogscore=964 adultscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009100022
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=952
- malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009100022
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIWmKFrqc6cTichonS6aOkZQnVssAH33GmqAhZA118BQ2wKXgD2W6KbAfj42Oionvwl0A==
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprHKsWRmVeSWpSXmKPExsWy7bCmpm7ihMh4g5urNSyWX1jCZHF51xw2
+        i4ML2xgtuq/vYLNYfvwfk8XbO9NZLLbuvcruwO7ReOMGm8fOWXfZPTav0PL4+PQWi8fnTXIB
+        rFFcNimpOZllqUX6dglcGWd/LmMrmM9ZMWXjatYGxgvsXYycHBICJhL3nkxg62Lk4hAS2M0o
+        saX1HjuE84lRoqvrJyOE85lR4vvDz6wwLXv/f2KGSOxilOjbeJYJwnnJKPH74FsmkCo2AV2J
+        HYvb2EBsEYFkic2L94J1MAs8YpLo3PMHaBQHB6eAscStm3kgNcICVhJzzuwC28AioCoxc/98
+        ZhCbV8BSonnLVhYIW1Di5MwnYDazgLzE9rdzmCEuUpD4+XQZK8SuMImNT1dB1YhLHP3ZA7ZX
+        QmAmh8Tyk+egXnCRmP/nPwuELSzx6vgWaGhISXx+t5cN5DYJgWyJnl3GEOEaiaXzjkGV20sc
+        uDKHBaSEWUBTYv0ufYhVfBK9v58wQXTySnS0CUFUq0o0v7sK1SktMbG7G+oAD4n27QtYJzAq
+        zkLy2Cwkj81C8sAshGULGFlWMUqmFhTnpqcWmxYY5aWW6xUn5haX5qXrJefnbmIEJyEtrx2M
+        Dx980DvEyMTBeIhRgoNZSYQ3KT8yXog3JbGyKrUoP76oNCe1+BCjNAeLkjiv0o8zcUIC6Ykl
+        qdmpqQWpRTBZJg5OqQYmkykJ65Oeh3+6ZvssRH/emwMfPy1xy05paf760nHzHflmro1Z25Z9
+        Vtu3J7is6UuWfdWU8Cr2v8aL0itfFc9R23U3O8ymqnPK54AkKyNn5mVSDzL6thwy3yrWlLif
+        a965FW+4KhhUpedwGc5idr9ac1ZYd9/WdMXv8Vq6FbbZ/1/mJEyZsr2jZlk4w7K/Vs9DvhbM
+        LpicKCHlnL5HWu27DjebjGv4U/fU+hsL9GfOM/11nU078M5W0Y+OOzbqeS/purLF4URd8w7b
+        6KPKPz4G+dWdPl0ZzPDvlOUiufluOUy/Upo4Votxr9q3er3R/dA7Vy9+s/giIZqSlOGxvllc
+        qcrJyCV6UbIb74tth1cqsRRnJBpqMRcVJwIAypUNkbEDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpgkeLIzCtJLcpLzFFi42LZdlhJTjdhQmS8wbLVvBbLLyxhsri8aw6b
+        xcGFbYwW3dd3sFksP/6PyeLtneksFlv3XmV3YPdovHGDzWPnrLvsHptXaHl8fHqLxePzJrkA
+        1igum5TUnMyy1CJ9uwSujLM/l7EVzOesmLJxNWsD4wX2LkZODgkBE4m9/z8xg9hCAjsYJa7t
+        M4KIS0tc3zgBqkZYYuW/50A2F1DNc0aJJ5tmMoIk2AR0JXYsbmMDsUUEkiV2P9/ODFLELPCM
+        SWLXvnZWiI7jTBLbuvtZuhg5ODgFjCVu3cwDaRAWsJKYc2YXK4jNIqAqMXP/fLAreAUsJZq3
+        bGWBsAUlTs58AtbKLKAn0bYRbC+zgLzE9rdzmCGOU5D4+XQZK8QNYRIbn65igagRlzj6s4d5
+        AqPwLCSTZiFMmoVk0iwkHQsYWVYxSqYWFOem5xYbFhjlpZbrFSfmFpfmpesl5+duYgRHkpbW
+        DsY9qz7oHWJk4mA8xCjBwawkwpuUHxkvxJuSWFmVWpQfX1Sak1p8iFGag0VJnPfrrIVxQgLp
+        iSWp2ampBalFMFkmDk6pBqbWB8/lLn0WsDzkzDHn0OKlr3gOzP+sr7p7xa8SifvFMyoL5UPi
+        a84+UNlwx+Vbg7bC2n1vHpe94Zphu9Zsytz1TVM/7fNq2XzQMmLGm6KivFR2hgXbrZMzDhn1
+        tn6P5qm077r6+KZMZvp274r3glbZvkcPBhwz38G+p9thcveW1D/VHtv/TfBcempzYsPn4PSi
+        v51f840mHnd/8eux+MPVB961/klcs0Jimu7BA223z/gp+AVxzeniDfkZJKIQkDDH6Wrx/2Y9
+        Zue6qnWu2UaMhxWuK5zcdWifyP7so9v5zutMT7IVCBe45rJyYruOAaMX5xqdwuC7s05mhjua
+        t+65MMlTZ8vh7qh+4SnpvX1KLMUZiYZazEXFiQDBWXGuEwMAAA==
+X-CMS-MailID: 20200910023304epcas5p33a0b919b4ac04564f198039bded0f11e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4
+References: <20200720194225.17de9962@canb.auug.org.au>
+        <CGME20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4@epcas5p2.samsung.com>
+        <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
+        <06a601d65f86$3d8aeee0$b8a0cca0$@samsung.com>
+        <f72b8022-1ebd-c5a1-2fe2-a3e93854fd0e@infradead.org>
+        <yq1a6xy2wph.fsf@ca-mkp.ca.oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Randy and Martin,
 
-Can and Stanley,
+> -----Original Message-----
+> From: Martin K. Petersen <martin.petersen@oracle.com>
+> Sent: 10 September 2020 07:58
+> To: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>; 'Stephen Rothwell'
+> <sfr@canb.auug.org.au>; 'Linux Next Mailing List' <linux-
+> next@vger.kernel.org>; 'Linux Kernel Mailing List' <linux-
+> kernel@vger.kernel.org>; 'linux-scsi' <linux-scsi@vger.kernel.org>;
+'Santosh
+> Yaraganavi' <santosh.sy@samsung.com>; 'Vinayak Holikatti'
+> <h.vinayak@samsung.com>; 'Seungwon Jeon' <essuuj@gmail.com>
+> Subject: Re: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+> 
+> 
+> Randy,
+> 
+> > I am still seeing this in linux-next of 20200909.
+> > Was there a patch posted that I missed and is not applied anywhere yet?
+> 
+> This patch became a victim of dropping the Exynos changes in 5.9. I have
+> added it back in.
+> 
+Sorry about not following on this after 5.9-rc1 was out.
+As Martin pointed this was posted 
+https://www.spinics.net/lists/linux-scsi/msg144970.html
 
-> I can't reconcile this hunk:
+I just send V2 of the same with Randy's Acked-by
+Please take a look.
 
-Please provide a resolution for these conflicting commits in fixes and
-queue:
+> --
+> Martin K. Petersen	Oracle Linux Engineering
 
-307348f6ab14 scsi: ufs: Abort tasks before clearing them from doorbell
-
-b10178ee7fa8 scsi: ufs: Clean up completed request without interrupt
-notification
-
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
