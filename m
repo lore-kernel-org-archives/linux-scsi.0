@@ -2,143 +2,144 @@ Return-Path: <SRS0=aJuI=CT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6044C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 14:40:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B943CC433E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 15:49:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 661412076C
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 14:40:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56DA12087C
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 15:49:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PLMSr5mh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m20sc749"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731196AbgIJOim (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Sep 2020 10:38:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56818 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731019AbgIJOfX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 10:35:23 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A10ECC0617A3;
-        Thu, 10 Sep 2020 07:35:19 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id nw23so9063267ejb.4;
-        Thu, 10 Sep 2020 07:35:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=KCYaWwcvDjz/OmO+LXtbRJ6LszuyteB8m/JYCI1W1Mk=;
-        b=PLMSr5mhrZi80kquG3UTKc10L5Ed+nu36WWw+z2lZB7jY2NtSZwMDvRpv3TuwllizR
-         7wpc1iofk2ZoyyDJwpWceFzTiHn90TWZgiZ045Rqz/ctDq5xo9epE09YznVy4EY1BmCs
-         l2St/n4EQLGLl4Irlj/CjiNUTGWsQjI0pEg6F+baJPziJDFYBOwuCCOyMb+xCs9CEFvu
-         9KFGfkT69xlzT78AdIbRIVXoCrdn7bCNxNeWDPtg/woOLBOGoZLIKsWAlBjbsXvCsg9/
-         +ESlgsmFyeGx507Da/rJqBOVrFWssFaCbV59079oaLVMMMb6jhwsRiqhXjYp00Drq8eS
-         JdWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=KCYaWwcvDjz/OmO+LXtbRJ6LszuyteB8m/JYCI1W1Mk=;
-        b=UFEPDaW6+yZMFx6m0VsNz3MGpAwL6M01lCF9AbqLIjFd63jnlOiw5djUQvdTIPokW3
-         VHmxa+Vyv/WzdOTxr2SEOnyD7j43evAls5fS/lI86MXSaDa0UJ4YQZtQIWxiRD6THmWN
-         bAJLAf2VKkdvTOG53mLFImXh7ZuiLo3x+AllljfJ05YnflmrDrNHPaHgqRjD8b9mplFw
-         qNA8sImuiwgO9O/xK4HaS71jXLVHsGygYDog/+ooCpxRm+5AKKYfhIISJKs5CzDrL72/
-         7RdEVaio6ZEY4Oz+W2hQfcrkPv+OP8EXky2dFoJPf1j6s82Z5lRnX/+bbaLC4AHaJthY
-         KAfA==
-X-Gm-Message-State: AOAM532OKeSERX9CGPVjdviG55sYo/xPyfeuQYo69cztuMbQJwywpaeQ
-        iwII9gjap6tv8/JWgpadtTA=
-X-Google-Smtp-Source: ABdhPJzWHmRORR4s5GPtiMxYzRL7RIeJHACIEt31sw6plEpoQQDbSHFzrwWgxYbTiAiLDLiHODRGHA==
-X-Received: by 2002:a17:906:e4f:: with SMTP id q15mr9640896eji.155.1599748518392;
-        Thu, 10 Sep 2020 07:35:18 -0700 (PDT)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id ot19sm6825559ejb.121.2020.09.10.07.35.14
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 10 Sep 2020 07:35:17 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailauth.nyi.internal (Postfix) with ESMTP id CE39C27C00A2;
-        Thu, 10 Sep 2020 10:35:13 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute3.internal (MEProxy); Thu, 10 Sep 2020 10:35:13 -0400
-X-ME-Sender: <xms:oTlaX8LSfERbecu5P4Y3VnX8QDSTfUIGezI8Hipxv2LnPtz7F4DBPg>
-    <xme:oTlaX8IkTh1tJF26F5X221FUudtaV7u56qa6z1D_VKOQW2Lmh0L4mwdo_h5rkdvG_
-    ECZe3GDzwCWnxUEXg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrudehjedgjedvucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    goufhorhhtvggutfgvtghiphdvucdlgedtmdenucfjughrpefhvffufffkofgjfhgggfes
-    tdekredtredttdenucfhrhhomhepuehoqhhunhcuhfgvnhhguceosghoqhhunhdrfhgvnh
-    hgsehgmhgrihhlrdgtohhmqeenucggtffrrghtthgvrhhnpeehvdevteefgfeiudettdef
-    vedvvdelkeejueffffelgeeuhffhjeetkeeiueeuleenucfkphephedvrdduheehrdduud
-    durdejudenucevlhhushhtvghrufhiiigvpeehnecurfgrrhgrmhepmhgrihhlfhhrohhm
-    pegsohhquhhnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdeiledvgeehtd
-    eigedqudejjeekheehhedvqdgsohhquhhnrdhfvghngheppehgmhgrihhlrdgtohhmsehf
-    ihigmhgvrdhnrghmvg
-X-ME-Proxy: <xmx:oTlaX8tKhMX0KlXUF85wFnPzW9q02D2iV3z0nFlfNh75RGMaWwXWZw>
-    <xmx:oTlaX5amjTY7Rkksn5WCySfesXGC-eH8Vs3Dz60JGqN1ty073ZFy0Q>
-    <xmx:oTlaXzZ2hmDQiNVFuEI1gHCMoz1HeGK-QKZrR6fgxUOJ1Lq-hcO6gw>
-    <xmx:oTlaXwJ27AAct8MQcnQ5XmCc0ME2n0zxJ-szRB9WVJWXntdGTOzVGz5uryA>
-Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 106293280059;
-        Thu, 10 Sep 2020 10:35:13 -0400 (EDT)
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc:     "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Michael Kelley <mikelley@microsoft.com>, will@kernel.org,
-        ardb@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
-        mark.rutland@arm.com, maz@kernel.org,
-        Boqun Feng <boqun.feng@gmail.com>
-Subject: [PATCH v3 06/11] hv: hyperv.h: Introduce some hvpfn helper functions
-Date:   Thu, 10 Sep 2020 22:34:50 +0800
-Message-Id: <20200910143455.109293-7-boqun.feng@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200910143455.109293-1-boqun.feng@gmail.com>
-References: <20200910143455.109293-1-boqun.feng@gmail.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1731369AbgIJPsS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Sep 2020 11:48:18 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41628 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730408AbgIJPrj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 11:47:39 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AFi3QK170647;
+        Thu, 10 Sep 2020 15:46:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=ZrPymd9ayEA4cEcw3vDr1WFAm1EWnYzLuplMs/4TKLM=;
+ b=m20sc749FdVxnhmEEW5/6EvnIgw2LDyP3JgxSiRKXnsMWrzI6I2QZmeW0dys+OGEsPb8
+ iLKvtsqFxakLEv0wqQ641YYUTkP+aaXVvvaQVgcQyRe7jDPIy3K2ycjlG3t1HOI98yQo
+ cXAhXyKQmmxIA7sZ1tVculupnLo7VAm9tzneryCh+4amw219TMNtiFO7gNauSWQETZiQ
+ 7kEcV8p8pzsh7CMPlHM6lcmqvdABcnJxvea40xu9xYgj3FO9f8TeGtUFTYJ+9tWYW2wO
+ Drsuve7Ihxj6vtTACUgEaIf1ILt3A9BTQh7xlgd42lGbrWcZxDLMY9oWwBL9U4pNR6Ik Bw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 33c3an8vvx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 10 Sep 2020 15:46:28 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AFjq5k159552;
+        Thu, 10 Sep 2020 15:46:27 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 33cmka2wvs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Sep 2020 15:46:27 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08AFkRJH000356;
+        Thu, 10 Sep 2020 15:46:27 GMT
+Received: from dhcp-10-154-107-125.vpn.oracle.com (/10.154.107.125)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 10 Sep 2020 08:46:27 -0700
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
+Subject: Re: [PATCH v2 3/3] scsi: handle zone resources errors
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+In-Reply-To: <20200910074843.217661-4-damien.lemoal@wdc.com>
+Date:   Thu, 10 Sep 2020 10:46:26 -0500
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <4D07E3FF-38F9-4B80-94AD-56D277EB6069@oracle.com>
+References: <20200910074843.217661-1-damien.lemoal@wdc.com>
+ <20200910074843.217661-4-damien.lemoal@wdc.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.1)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=3
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009100145
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ clxscore=1015 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 suspectscore=3 adultscore=0 mlxscore=0 impostorscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009100145
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a guest communicate with the hypervisor, it must use HV_HYP_PAGE to
-calculate PFN, so introduce a few hvpfn helper functions as the
-counterpart of the page helper functions. This is the preparation for
-supporting guest whose PAGE_SIZE is not 4k.
 
-Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
----
- include/linux/hyperv.h | 5 +++++
- 1 file changed, 5 insertions(+)
 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 6f4831212979..00c09d2ff9ad 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1687,4 +1687,9 @@ static inline unsigned long virt_to_hvpfn(void *addr)
- 	return  paddr >> HV_HYP_PAGE_SHIFT;
- }
- 
-+#define NR_HV_HYP_PAGES_IN_PAGE	(PAGE_SIZE / HV_HYP_PAGE_SIZE)
-+#define offset_in_hvpage(ptr)	((unsigned long)(ptr) & ~HV_HYP_PAGE_MASK)
-+#define HVPFN_UP(x)	(((x) + HV_HYP_PAGE_SIZE-1) >> HV_HYP_PAGE_SHIFT)
-+#define page_to_hvpfn(page)	(page_to_pfn(page) * NR_HV_HYP_PAGES_IN_PAGE)
-+
- #endif /* _HYPERV_H */
--- 
-2.28.0
+> On Sep 10, 2020, at 2:48 AM, Damien Le Moal <Damien.LeMoal@wdc.com> =
+wrote:
+>=20
+> ZBC or ZAC disks that have a limit on the number of open zones may =
+fail
+> a zone open command or a write to a zone that is not already =
+implicitly
+> or explicitly open if the total number of open zones is already at the
+> maximum allowed.
+>=20
+> For these operations, instead of returning the generic BLK_STS_IOERR,
+> return BLK_STS_DEV_RESOURCE which is returned as -EBUSY to the I/O
+> issuer, allowing the device user to act appropriately on these
+> relatively benign zone resource errors.
+>=20
+> With this change the NVMe (ZNS) and sd drivers both return the same
+> error code for zone resource errors, facilitating the implementation =
+of
+> IO error handling by the user with a common code base for both device
+> types.
+>=20
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+> drivers/scsi/scsi_lib.c | 9 +++++++++
+> 1 file changed, 9 insertions(+)
+>=20
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7c6dd6f75190..1b5c2a6ad072 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -758,6 +758,15 @@ static void scsi_io_completion_action(struct =
+scsi_cmnd *cmd, int result)
+> 			/* See SSC3rXX or current. */
+> 			action =3D ACTION_FAIL;
+> 			break;
+> +		case DATA_PROTECT:
+> +			action =3D ACTION_FAIL;
+> +			if ((sshdr.asc =3D=3D 0x0C && sshdr.ascq =3D=3D =
+0x12) ||
+> +			    (sshdr.asc =3D=3D 0x55 &&
+> +			     (sshdr.ascq =3D=3D 0x0E || sshdr.ascq =3D=3D =
+0x0F))) {
+> +				/* Insufficient zone resources */
+> +				blk_stat =3D BLK_STS_DEV_RESOURCE;
+> +			}
+> +			break;
+> 		default:
+> 			action =3D ACTION_FAIL;
+> 			break;
+> --=20
+> 2.26.2
+>=20
+
+Looks Good.=20
+
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+--
+Himanshu Madhani	 Oracle Linux Engineering
 
