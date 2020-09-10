@@ -3,26 +3,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B76C43461
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:48:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8F31C43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:49:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C5B921D81
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:48:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7889021D82
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:49:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730299AbgIJB7O convert rfc822-to-8bit (ORCPT
+        id S1730285AbgIJB7F convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 21:59:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51610 "EHLO mail.kernel.org"
+        Wed, 9 Sep 2020 21:59:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51614 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729296AbgIJBka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729251AbgIJBka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 9 Sep 2020 21:40:30 -0400
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 206123] aacraid ( PM8068) and iommu=nobypass Frozen PHB error 
  on ppc64
-Date:   Wed, 09 Sep 2020 23:14:47 +0000
+Date:   Thu, 10 Sep 2020 01:32:11 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
@@ -38,7 +39,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-206123-11613-CSEZhO1RWW@https.bugzilla.kernel.org/>
+Message-ID: <bug-206123-11613-V89NlnDJQ7@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-206123-11613@https.bugzilla.kernel.org/>
 References: <bug-206123-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -53,11 +54,23 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=206123
 
---- Comment #9 from gyakovlev@gentoo.org ---
-Hi!
-Thanks.
+--- Comment #10 from gyakovlev@gentoo.org ---
+(In reply to Oliver O'Halloran from comment #8)
+> Can you see if this patch fixes it?
+> 
+> https://patchwork.ozlabs.org/project/linuxppc-dev/patch/20200908015106.79661-
+> 1-aik@ozlabs.ru/
 
-Yes, will test again sometime this week, sooner that later.
+ok I applied this patch to linux-5.4.63
+
+looks very good so far, kernel booted with 'iommu=nobypass' and I don't see any
+problems with aacraid yet, it works. I can write to all 8 SAS disks in
+parallel, and can't trigger the error.
+
+
+I'll try to generate torture/heavy random IO on the disks a bit later.
+
+also I may give linux-5.8.8 a try.
 
 -- 
 You are receiving this mail because:
