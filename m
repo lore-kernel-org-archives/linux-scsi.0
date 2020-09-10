@@ -2,144 +2,114 @@ Return-Path: <SRS0=aJuI=CT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C9A3C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E322FC43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:35:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18DF22087C
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:31:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA5C92087C
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 02:35:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="jOVHY0Au"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fCx4BGZU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730480AbgIJCbL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Sep 2020 22:31:11 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:36185 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730870AbgIJC0D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 22:26:03 -0400
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200910022553epoutp04cc2e6f82dfdcc90807ae8f77191eee93~zSv9uGtBB2776027760epoutp04C
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2020 02:25:53 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200910022553epoutp04cc2e6f82dfdcc90807ae8f77191eee93~zSv9uGtBB2776027760epoutp04C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1599704753;
-        bh=Ud/VzAfX4crf3keXqhpq/GL9lD3v995f5NkpdOA5784=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=jOVHY0AusBHnHjQn54dNa1DwdmkNGTHe1jDih7Obou7bcHFv1Tu9GQ/OTS/l4BRcb
-         l764GXtw1sM3kOINmA3cUlrCdhQPWz1PV3plPztQp9rz+L6mO+7/BofGSiNv1akXZs
-         T8zLdJDq3MlS0qVyDQ38u5C5x2fIuc1c8nma6Lwo=
-Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20200910022552epcas5p41486f82589e10d4e6da0866160d1c29e~zSv83VYRN0668806688epcas5p4r;
-        Thu, 10 Sep 2020 02:25:52 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D5.37.40333.0BE895F5; Thu, 10 Sep 2020 11:25:52 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200910022551epcas5p2f42a5d87a0e171d0d6ba9ab7f077af4b~zSv7tKag60641506415epcas5p2b;
-        Thu, 10 Sep 2020 02:25:51 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200910022551epsmtrp2ef4ae7171b6b3317697404943b950b20~zSv7sijwK1619816198epsmtrp2Y;
-        Thu, 10 Sep 2020 02:25:51 +0000 (GMT)
-X-AuditID: b6c32a4a-991ff70000019d8d-48-5f598eb05a6a
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        DE.4B.08303.FAE895F5; Thu, 10 Sep 2020 11:25:51 +0900 (KST)
-Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
-        [107.108.73.139]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200910022550epsmtip21cfcbb638d06aed9b4abdf018191d9bb~zSv6daxrp2640026400epsmtip2O;
-        Thu, 10 Sep 2020 02:25:49 +0000 (GMT)
-From:   Alim Akhtar <alim.akhtar@samsung.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
-        avri.altman@wdc.com, linux-kernel@vger.kernel.org,
-        sfr@canb.auug.org.au, rdunlap@infradead.org,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v2] scsi: ufs: Fix 'unmet direct dependencies' config
- warning
-Date:   Thu, 10 Sep 2020 07:26:47 +0530
-Message-Id: <20200910015647.52875-1-alim.akhtar@samsung.com>
-X-Mailer: git-send-email 2.17.1
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrBIsWRmVeSWpSXmKPExsWy7bCmuu6Gvsh4g+c/FS0ezNvGZvHy51U2
-        i0U3tjFZXN41h82i+/oONovlx/8xWby9M53FYuveq+wOHB6NN26weWxeoeUxYdEBRo+PT2+x
-        ePRtWcXo8XmTnEf7gW6mAPYoLpuU1JzMstQifbsErozn7+6zFRzkqpjUsompgfEhRxcjJ4eE
-        gInE5vbTLF2MXBxCArsZJR4vncYE4XxilGheOgcq85lR4tiRJSwwLTs/9DFDJHYxSvxa0wXl
-        tDBJHF27jRmkik1AW+Lu9C1MILaIgJzE5uVfwbqZBfYySuy96ghiCwv4Szx+/hCshkVAVeJo
-        Vw9YL6+AjcTHX3fYIbbJS6zecABsgYTAMXaJ91/6gRo4gBwXiVsvaiBqhCVeHd8CVS8l8fnd
-        XjaIkmyJnl3GEOEaiaXzjkE9YC9x4ArIZxxA52hKrN+lD3EZn0Tv7ydQw3klOtqEIKpVJZrf
-        XYXqlJaY2N3NCmF7SPx6vQ0sLiQQK/Gv9QX7BEaZWQhDFzAyrmKUTC0ozk1PLTYtMMpLLdcr
-        TswtLs1L10vOz93ECI58La8djA8ffNA7xMjEwXiIUYKDWUmENyk/Ml6INyWxsiq1KD++qDQn
-        tfgQozQHi5I4r9KPM3FCAumJJanZqakFqUUwWSYOTqkGJh+u+s8hmTsee4k9qXCZ9ngbw889
-        DIe8pK65ic9TnmRmPjmvWEd48WyFI1VGwtoXQ72NfllH3p5dFvTxnNRFbmNF406payqh+TP0
-        nj6W0D23smDbDjvW1QdT/p2qubu+7+NOmxy9l/fi1n8rMZ4k/eHyXKcYxcSX8u+e2/5IEQq1
-        vL6vbE/hw7SO2Lt6V2N2H+MI132e8y6T+Uvp3Z2KYTP4b772tZSc6u140mx6H/uen6rpr4SW
-        2+/ye1v59uWmjL37K3x6vl1/ZaV276DaceutWTEbWsoOHVm5fGbysXjVvMx+/0eip6fZRngc
-        9FmUd0jS9sqJDydCRDv7dKwP1WW+Ma5fVRWk+lf4nN2+aiWW4oxEQy3mouJEAKe+3AdrAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupjluLIzCtJLcpLzFFi42LZdlhJXnd9X2S8wZo/ghYP5m1js3j58yqb
-        xaIb25gsLu+aw2bRfX0Hm8Xy4/+YLN7emc5isXXvVXYHDo/GGzfYPDav0PKYsOgAo8fHp7dY
-        PPq2rGL0+LxJzqP9QDdTAHsUl01Kak5mWWqRvl0CV8bzd/fZCg5yVUxq2cTUwPiQo4uRk0NC
-        wERi54c+5i5GLg4hgR2MEj9XHWODSEhLXN84gR3CFpZY+e85O0RRE5PE75u3mEASbALaEnen
-        bwGzRQTkJDYv/8oCUsQscJRR4vb532CThAV8JRZ17WMBsVkEVCWOdvUwg9i8AjYSH3/dgdog
-        L7F6wwHmCYw8CxgZVjFKphYU56bnFhsWGOWllusVJ+YWl+al6yXn525iBAeZltYOxj2rPugd
-        YmTiYDzEKMHBrCTCm5QfGS/Em5JYWZValB9fVJqTWnyIUZqDRUmc9+ushXFCAumJJanZqakF
-        qUUwWSYOTqkGJl0uL59nuUc3etvnXd40/fW2Izv90pafap+/JTT6jL/xspZvF6pSHH926j/x
-        XmLWtfWs8Ywvuw+xib6cdb292PzS+6U1BTdalSa2s0bONVpsmRL/e06zcgfHhs0G9mfezWNQ
-        2G3GueHH5ne3up61ZszdYb1Da1rdMh7FmrNZFjJz858nnirsX9LMxaradHWRcOb7+kqrEw9b
-        79Y+fWM8z+l55vUXyqvaJh84WX0tx/5Bg6lR8OYFHyaX7GPav145pq6vxPnIpp1qV3a6SVz5
-        2/S0aF7FrKC/5c1v84KvPoidEbQuco5NIvvSwKbuKavWy8WvSuex3//P+LD/o7UVGa3dEjpa
-        bZfYdJWf3fHft0mJpTgj0VCLuag4EQDF3P0goQIAAA==
-X-CMS-MailID: 20200910022551epcas5p2f42a5d87a0e171d0d6ba9ab7f077af4b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200910022551epcas5p2f42a5d87a0e171d0d6ba9ab7f077af4b
-References: <CGME20200910022551epcas5p2f42a5d87a0e171d0d6ba9ab7f077af4b@epcas5p2.samsung.com>
+        id S1730690AbgIJCfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Sep 2020 22:35:15 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38494 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730449AbgIJCdI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2020 22:33:08 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08A2SWH3127504;
+        Thu, 10 Sep 2020 02:32:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=an7L+UH4c4nfLl3pql5CjoOv/Ddb1mwYqyEWS3Cvcyk=;
+ b=fCx4BGZUczIglj7jc1RleSkP1Uk1MKnS7WBWvEvM3C+PIEG5YjEErUSGNugY+u8VevXV
+ vWf0b0eEZmtGm/mvU7cIQrUKsDxLaqD0g85JWx5p0fDIXD5X/7B291fW6XjHZrRAMt5u
+ e78t9dE9iVxYXgwv6TPFSHY/yaRLzpknyTYYi5T1N6aoV7j5s5WEc0Qkgwa8zivfIbNf
+ AG/MhvSZPWhnlyDQNkljeSrtjs0qt+MLqhq3sYiWyKxO6gu25PjAU1jt/Sh4sA6iXeDp
+ kurY2NckGubMTnEJwF1hvrn5UEpbMwxrWkZQlH3dPEU6SKWD3t1stdXioGFBZ7opw5wO SA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 33c2mm5868-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 10 Sep 2020 02:32:51 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08A2UT2u140713;
+        Thu, 10 Sep 2020 02:32:50 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 33cmkyyw9m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Sep 2020 02:32:50 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08A2WlZF013885;
+        Thu, 10 Sep 2020 02:32:47 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 09 Sep 2020 19:32:47 -0700
+To:     Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v2 1/2] scsi: ufs: Abort tasks before clear them from
+ doorbell
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq14ko62wn5.fsf@ca-mkp.ca.oracle.com>
+References: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
+        <1599099873-32579-2-git-send-email-cang@codeaurora.org>
+        <1599627906.10803.65.camel@linux.ibm.com>
+Date:   Wed, 09 Sep 2020 22:32:43 -0400
+In-Reply-To: <1599627906.10803.65.camel@linux.ibm.com> (James Bottomley's
+        message of "Tue, 08 Sep 2020 22:05:06 -0700")
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=1
+ spamscore=0 mlxlogscore=964 adultscore=0 malwarescore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009100022
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
+ phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=952
+ malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009100022
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With !CONFIG_OF and SCSI_UFS_EXYNOS selected, the below
-warning is given:
 
-WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
-  Depends on [n]: OF [=n] && (ARCH_EXYNOS || COMPILE_TEST [=y])
-  Selected by [y]:
-  - SCSI_UFS_EXYNOS [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && SCSI_UFSHCD_PLATFORM [=y] && (ARCH_EXYNOS || COMPILE_TEST [=y])
+Can and Stanley,
 
-Fix it by removing PHY_SAMSUNG_UFS dependency.
+> I can't reconcile this hunk:
 
-Reported-by: Randy Dunlap <rdunlap@infradead.org>
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
----
-* Changes since v1
- - rebased on 5.10-scsi-queue 
- - Added Randy's Acked-by
+Please provide a resolution for these conflicting commits in fixes and
+queue:
 
- drivers/scsi/ufs/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+307348f6ab14 scsi: ufs: Abort tasks before clearing them from doorbell
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index f6394999b98c..dcdb4eb1f90b 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -165,7 +165,6 @@ config SCSI_UFS_BSG
- config SCSI_UFS_EXYNOS
- 	tristate "EXYNOS specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && (ARCH_EXYNOS || COMPILE_TEST)
--	select PHY_SAMSUNG_UFS
- 	help
- 	  This selects the EXYNOS specific additions to UFSHCD platform driver.
- 	  UFS host on EXYNOS includes HCI and UNIPRO layer, and associates with
+b10178ee7fa8 scsi: ufs: Clean up completed request without interrupt
+notification
 
-base-commit: 32417d7844ab0bc154c39128d9ac026f4f8a7907
+Thanks!
+
 -- 
-2.17.1
-
+Martin K. Petersen	Oracle Linux Engineering
