@@ -2,195 +2,150 @@ Return-Path: <SRS0=aJuI=CT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AE83C2D0A7
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 09:30:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B31EC43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 10:02:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E175207EA
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 09:30:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5A8E2075A
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 10:02:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BoSxMilj"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="qAHPkyhF";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="c5wE3DeQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728709AbgIJJ3q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Sep 2020 05:29:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36252 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730358AbgIJJYi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 05:24:38 -0400
-Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 140A9C061573;
-        Thu, 10 Sep 2020 02:24:37 -0700 (PDT)
-Received: by mail-io1-xd44.google.com with SMTP id z25so6271818iol.10;
-        Thu, 10 Sep 2020 02:24:37 -0700 (PDT)
+        id S1730432AbgIJKCN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Sep 2020 06:02:13 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:26367 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729971AbgIJKCJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 06:02:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1599732128; x=1631268128;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=9BHLGls136Gg6KcgEPigRxw7h5iUt5xfNUxzt6zd+SQ=;
+  b=qAHPkyhF1j+U58Ndx/fNAcPaCYABXiVH/le4Sn9RaekbPrZsdJjd9IG7
+   hqKcxjdqJT7IRsWfAY0bhF6a3lrP4mx4pdCmE6gfThRDFjHP5GD9vu/KO
+   NqExMhBa202eB9nSVHfPOMF/m7ycmVvcc1pW0Tx1l7aAIM+fpdOM6/p2R
+   NS27RMd0zE/RG/5gu3LD5Tgbh65LDpZC2Gk9iLvIlCxpRwurgyk4SnKNF
+   1XF+TtrYT384Y+h93+XjWX70qpMxX6ptzdk+piEfyuWqHF1B0BqQM9JGN
+   FmGgTbBmy6P7vOrDsaDwTwkPuk5WBu3BWZiHnsAr8B4KBhi9cdoOeYOuP
+   A==;
+IronPort-SDR: Y5LU5RbevJD/mFfEWStWpWxse9gVpcmNxdxIhHjEOZaLn7mMa2bt33iGJxt7RFCcDBhlALaF0a
+ rOMM5N3cg3LmEdQBrXW44X8M3VL5e6hVf0JfLAqE4Ut9H3VJQSpnhaGToFEl4HzTbn9AGv0rFZ
+ MYR/J3w4JXqMN98x//PP8HKj59YGVVmHY+8oIk+/Vfxo6Ua/zMHsxeDZzu9v2Rg1Z7KHpxIOq3
+ k3dttS0i1zkh6CpQfXYyvUfwQU0qNyXBFv/loaFnDwXqa5nJsEmFacy0GWwjxHtjJTQfEsQpLe
+ gRU=
+X-IronPort-AV: E=Sophos;i="5.76,412,1592841600"; 
+   d="scan'208";a="146942068"
+Received: from mail-co1nam11lp2169.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.169])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Sep 2020 18:02:06 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ejTigs8TVP2QYLx4fse3/TsK5KwLB2afIvJboImvfXR2+mbPaZrl6Flib4zPVDzqSKK1/LldqcbnxJx1G5/eQ+6Wdt3nH7AxZ5aeHhS7ae3/P+UoJFRC+WZe2AxeY65ZAF0lEoDL2aQF3jd4ofxCEVTrIL2IPssw6Z7lM7dGTWb88iy/Fou0YRBK2JgzEZvHtzZxZqfONsGczinAVJbjJCyBfomQ5977685pyUv5c8XfCKgKxsqdQQMZWhbKSHlSU5ZTNzE5xwZKcVcUZWVcse38ZjZdZRVX2HLRkPTZsMrlcd/idDg2n2Rxh5BwDCDSsKUc/S9MM0D2XYLShtFBtQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9BHLGls136Gg6KcgEPigRxw7h5iUt5xfNUxzt6zd+SQ=;
+ b=f2Z5om7u2ni8ON+W2DjQLpb713/snEsug1YtIXDVaETMTZIO5qia3/uRNUrDQz4anUBlBr4wJhyxMuDg3wK0AgP/mRrEuevrJO4hm9disW6URm/hrjE9O+qgGnDmcyDONmP4SbqAtYIHqbF6es2oY0SWlr59buUIfXYE4QsqT2Y0WoPbRSJ5u80TUsQycYZ9D+uU/4bymG5lQ8NYcIaa0cRuRFk15xnUsB/4D3pP2ZiEvbSNG8V5phH4ddWLH8vfZhr1TZPuKpQghF6aq4mJ1rHLtYmocOshAadsrJe7ZYw8y/ChjONHZlUkxMhQ869D5N4PjC7/9tTLG3yaDn96Pg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UyqGiyvWtrvEPIbfLtgakvWHIPcO7f2wwjJnMPORWG0=;
-        b=BoSxMiljYiAjMP/XBn/hYGNVKL/oHxnqnEUJ7qSdwoJLG0pxR2qK3V4/fkUTSaV51s
-         3pvr292/IyS8ps68VC6dxn72XHdiWpnrMVrw8xogJTOMYamirEZ059PvshX7H4Z5GWuh
-         Vr7j8283bIhfaNsK7sxUGLf6s0Z2Efi6Yl4vefoBSqVlIDK265aYxjjSjS69bDYpqbGV
-         /GSb5UhzJJFq63scKHt5GhqSRkybY6g2zuA571aN2zohyHumpin0aZgpFfaeOPy0WbSg
-         Mpw6iHtgik0cTA/OjEeiGwKuBqjHR2p7i1mxyZ7WrSW4CGvjjQTt8jjc//sWyeGDOFMK
-         9KBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=UyqGiyvWtrvEPIbfLtgakvWHIPcO7f2wwjJnMPORWG0=;
-        b=O/2XUnV1EtfgfgEoeb0tWhNcir4xfPnAGynDycHILp/UjjoK+MkhZcdiMLOsBL6sdx
-         ueBZJVL79C2C9MYcsMGOL5bdh4O3PQW2D9Pvgjq4HoEkSZEPII9X+aymHemdtnjE0Alr
-         0WZSMVhmEj8voYJ03ltlEthJhY6lv0tbZJuxabeIV0pa9EMhXA9un7B+DH/ntObBIf+9
-         BmpMd/WrGD0wwAbHbSMBDvQItIHDUC0d9E+sFnVFDAaI8gr/N227J5uMxl5cT6wXoE10
-         IPnjMS2l7nvI//BN//lgm0N0g8L3K4kq5Py7WD00fgh6oDALQkzp7TRutHF6MYjxWahv
-         sM6A==
-X-Gm-Message-State: AOAM532ywlPycKW7BigrvrbeI5fmmYuKtgIlMY+CTkpgz3ykrSwmz6YG
-        yk2jcSj2kjVBOGcpW+CrBpuFuh7r23UhtnrKsec=
-X-Google-Smtp-Source: ABdhPJzJ/LFpexv9kLm1kjwc0/B+7GHCOB8WQagf03Hz+gzhVFwgLWrpkGefOcCCEeSFlcKtCwndocR5oDNlZlvNymM=
-X-Received: by 2002:a5d:8846:: with SMTP id t6mr7056972ios.123.1599729876856;
- Thu, 10 Sep 2020 02:24:36 -0700 (PDT)
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9BHLGls136Gg6KcgEPigRxw7h5iUt5xfNUxzt6zd+SQ=;
+ b=c5wE3DeQYs8cJgVNr6hR7Zb+EJ/tO0SMEHcHb3XeUwrGFpNw2oqg9aYrjcT4GojzaV4DzXbwEA+VdOiOaw+dQOyh2KKJpki0jbJmX78QUIL7qXMjECcxdMM+KJEQJehE0lgKr5RcvrbKzYb+swdtpryqb48Q174mxfnU9ptbgh0=
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
+ by BYAPR04MB5511.namprd04.prod.outlook.com (2603:10b6:a03:eb::27) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.16; Thu, 10 Sep
+ 2020 10:02:05 +0000
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::2c49:48e2:e9fb:d5a0]) by BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::2c49:48e2:e9fb:d5a0%9]) with mapi id 15.20.3370.016; Thu, 10 Sep 2020
+ 10:02:05 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v1 1/1] scsi: ufshcd: Properly set the device Icc Level
+Thread-Topic: [PATCH v1 1/1] scsi: ufshcd: Properly set the device Icc Level
+Thread-Index: AQHWhxG+0K54wBwZM0eA3rPrh1VjiKlhodNw
+Date:   Thu, 10 Sep 2020 10:02:05 +0000
+Message-ID: <BY5PR04MB6705A865E35CDA367249DC4EFC270@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <5c9d6f76303bbe5188bf839b2ea5e5bf530e7281.1598923023.git.nguyenb@codeaurora.org>
+ <0101017475a11d00-6def34a7-db5d-472c-9dcc-215a80510402-000000@us-west-2.amazonses.com>
+In-Reply-To: <0101017475a11d00-6def34a7-db5d-472c-9dcc-215a80510402-000000@us-west-2.amazonses.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2a00:a040:188:8f6c:c9c6:4a8e:98b2:ddf5]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 00827195-87a2-479a-de5d-08d855709279
+x-ms-traffictypediagnostic: BYAPR04MB5511:
+x-microsoft-antispam-prvs: <BYAPR04MB55114B9A247FF534C2081332FC270@BYAPR04MB5511.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: QUifcPxqtnyBSf/dStbajTjGLarmTOmlaEDiwx+bLrqZz7SXfwwrHQcR/npx10a4sqed6cIIBAwFmti2i65HeEVA5ewq0DBQmMlyv9DxZodCdRrJO6bhCpdpjk20/SeIVz5DwT2xEDOPKUmtEjq/60zUwNLnagoaVcqL1LXR/w8aYxO3oUq/s12hOwxiR5ADdhb+kMrj3iUaQJaxfXa1DV/vcr9ZTan6tuWZ06pXT3haFx/PMaybCGOPygmHNCreDYX95eW19RXiAJQM8KVK1JTRQLUvxtUUQFzez1gdn6jwUMJIhTS3Q39FwPf1+9Vw0/+a3I7tJrnr6Ty9eKv8BA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(396003)(136003)(366004)(39860400002)(53546011)(66556008)(52536014)(478600001)(316002)(6506007)(66476007)(8936002)(4326008)(7416002)(64756008)(186003)(66446008)(55016002)(4744005)(33656002)(66946007)(71200400001)(54906003)(8676002)(9686003)(7696005)(86362001)(76116006)(5660300002)(2906002)(110136005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 3awd6YyFeeL/c8pOCgwLFjkOqoi0zh7bvyxMvLLvq8kXU6/6cLwQreIpuJGRBka8hwVwaRwOjp0cynYGlTSEHB41xizjwP2jMKVT/e+lY3QA1yZUFDpyUetcTD8zTjHkUdMfY6dcjSUZ6u7C79szPaa32usUhF7sS0/WsWKSw+v8ZmafDTH1mf716klDi9xj+5wiAfHA0TBReYZ5ieWM4Lqnizt5sCoLeWy7bg/pHrSEm0jymfC9ioj11hIffJD2NyNzUOsRIfeYYykhSe6XpkyJ2yIafL632yOS3UMNeVgumzCBeh5QIqma+1jE57VujZGZDPPsljlfLVBgSbq9jcJ3JsE7NmgdQ98SX56eFOxF1cZPXo5zwkGtgEwtKT49Dud8q40rfRKTes8PF4ht5sdujuf7ESEyM2mVOEZcGjnINyWXsUyF1LlySwyJvY+SzUa6h9E4wZLxHIli5TiiV6i2A7l9VGxzM2Ym8xJJ8G2qHTaaOBcoAsInQceOS9reYW9oPLz+KrckNFPrcg1WcxTFEazU5bcu06nC9TOB+OYJkB8MXlyOPePhCHrrLdsTa790Vqm0hpaMai1J+EgEQPngwH4z3djFuUDpLjrHFMmRhHuf07jeYNwFWbIImML7xiyODyqbq0rM45Ivyac3r5YyYlZd6P8lPMI8KnrizRvBfjPpm9syx0RL3bg8g+HW9t6VhyD4mQc2yfmw7hw7Fg==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
-In-Reply-To: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
-From:   Ilya Dryomov <idryomov@gmail.com>
-Date:   Thu, 10 Sep 2020 11:24:26 +0200
-Message-ID: <CAOi1vP-v77pj3G5Ez94CDYVs2jSO828c4uV_wzNi6sRKp=Yvyg@mail.gmail.com>
-Subject: Re: [trivial PATCH] treewide: Convert switch/case fallthrough; to break;
-To:     Joe Perches <joe@perches.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Jiri Kosina <trivial@kernel.org>,
-        Kees Cook <kees.cook@canonical.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu,
-        linux-mips@vger.kernel.org, linux-s390@vger.kernel.org,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        linux-ide@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
-        netdev <netdev@vger.kernel.org>, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        linux-input@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-rdma@vger.kernel.org, iommu@lists.linux-foundation.org,
-        dm-devel@redhat.com, linux-media@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        intel-wired-lan@lists.osuosl.org, oss-drivers@netronome.com,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, storagedev@microchip.com,
-        sparclinux@vger.kernel.org, linux-serial@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-parisc@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linux-afs@lists.infradead.org,
-        Ceph Development <ceph-devel@vger.kernel.org>,
-        linux-nfs@vger.kernel.org, bpf@vger.kernel.org,
-        dccp@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, linux-sctp@vger.kernel.org,
-        alsa-devel <alsa-devel@alsa-project.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 00827195-87a2-479a-de5d-08d855709279
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Sep 2020 10:02:05.2743
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 74za/KBpCaFGX3q6efWR77VF2L3Ra6YxjRg8kLfPgdTckwK28uvWD06viut0rRyknOqZOnU0nh5JjLsA196Awg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5511
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 9, 2020 at 10:10 PM Joe Perches <joe@perches.com> wrote:
->
-> fallthrough to a separate case/default label break; isn't very readable.
->
-> Convert pseudo-keyword fallthrough; statements to a simple break; when
-> the next label is case or default and the only statement in the next
-> label block is break;
->
-> Found using:
->
-> $ grep-2.5.4 -rP --include=*.[ch] -n "fallthrough;(\s*(case\s+\w+|default)\s*:\s*){1,7}break;" *
->
-> Miscellanea:
->
-> o Move or coalesce a couple label blocks above a default: block.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->
-> Compiled allyesconfig x86-64 only.
-> A few files for other arches were not compiled.
->
->  arch/arm/mach-mmp/pm-pxa910.c                             |  2 +-
->  arch/arm64/kvm/handle_exit.c                              |  2 +-
->  arch/mips/kernel/cpu-probe.c                              |  2 +-
->  arch/mips/math-emu/cp1emu.c                               |  2 +-
->  arch/s390/pci/pci.c                                       |  2 +-
->  crypto/tcrypt.c                                           |  4 ++--
->  drivers/ata/sata_mv.c                                     |  2 +-
->  drivers/atm/lanai.c                                       |  2 +-
->  drivers/gpu/drm/i915/display/intel_sprite.c               |  2 +-
->  drivers/gpu/drm/nouveau/nvkm/engine/disp/hdmi.c           |  2 +-
->  drivers/hid/wacom_wac.c                                   |  2 +-
->  drivers/i2c/busses/i2c-i801.c                             |  2 +-
->  drivers/infiniband/ulp/rtrs/rtrs-clt.c                    | 14 +++++++-------
->  drivers/infiniband/ulp/rtrs/rtrs-srv.c                    |  6 +++---
->  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c               |  2 +-
->  drivers/irqchip/irq-vic.c                                 |  4 ++--
->  drivers/md/dm.c                                           |  2 +-
->  drivers/media/dvb-frontends/drxd_hard.c                   |  2 +-
->  drivers/media/i2c/ov5640.c                                |  2 +-
->  drivers/media/i2c/ov6650.c                                |  5 ++---
->  drivers/media/i2c/smiapp/smiapp-core.c                    |  2 +-
->  drivers/media/i2c/tvp5150.c                               |  2 +-
->  drivers/media/pci/ddbridge/ddbridge-core.c                |  2 +-
->  drivers/media/usb/cpia2/cpia2_core.c                      |  2 +-
->  drivers/mfd/iqs62x.c                                      |  3 +--
->  drivers/mmc/host/atmel-mci.c                              |  2 +-
->  drivers/mtd/nand/raw/nandsim.c                            |  2 +-
->  drivers/net/ethernet/intel/e1000e/phy.c                   |  2 +-
->  drivers/net/ethernet/intel/fm10k/fm10k_pf.c               |  2 +-
->  drivers/net/ethernet/intel/i40e/i40e_adminq.c             |  2 +-
->  drivers/net/ethernet/intel/i40e/i40e_txrx.c               |  2 +-
->  drivers/net/ethernet/intel/iavf/iavf_txrx.c               |  2 +-
->  drivers/net/ethernet/intel/igb/e1000_phy.c                |  2 +-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_82599.c            |  2 +-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c             |  2 +-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c            |  2 +-
->  drivers/net/ethernet/intel/ixgbevf/vf.c                   |  2 +-
->  drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c |  2 +-
->  drivers/net/ethernet/qlogic/qed/qed_mcp.c                 |  2 +-
->  drivers/net/ethernet/sfc/falcon/farch.c                   |  2 +-
->  drivers/net/ethernet/sfc/farch.c                          |  2 +-
->  drivers/net/phy/adin.c                                    |  3 +--
->  drivers/net/usb/pegasus.c                                 |  4 ++--
->  drivers/net/usb/usbnet.c                                  |  2 +-
->  drivers/net/wireless/ath/ath5k/eeprom.c                   |  2 +-
->  drivers/net/wireless/mediatek/mt7601u/dma.c               |  8 ++++----
->  drivers/nvme/host/core.c                                  | 12 ++++++------
->  drivers/pcmcia/db1xxx_ss.c                                |  4 ++--
->  drivers/power/supply/abx500_chargalg.c                    |  2 +-
->  drivers/power/supply/charger-manager.c                    |  2 +-
->  drivers/rtc/rtc-pcf85063.c                                |  2 +-
->  drivers/s390/scsi/zfcp_fsf.c                              |  2 +-
->  drivers/scsi/aic7xxx/aic79xx_core.c                       |  4 ++--
->  drivers/scsi/aic94xx/aic94xx_tmf.c                        |  2 +-
->  drivers/scsi/lpfc/lpfc_sli.c                              |  2 +-
->  drivers/scsi/smartpqi/smartpqi_init.c                     |  2 +-
->  drivers/scsi/sr.c                                         |  2 +-
->  drivers/tty/serial/sunsu.c                                |  2 +-
->  drivers/tty/serial/sunzilog.c                             |  2 +-
->  drivers/tty/vt/vt_ioctl.c                                 |  2 +-
->  drivers/usb/dwc3/core.c                                   |  2 +-
->  drivers/usb/gadget/legacy/inode.c                         |  2 +-
->  drivers/usb/gadget/udc/pxa25x_udc.c                       |  4 ++--
->  drivers/usb/host/ohci-hcd.c                               |  2 +-
->  drivers/usb/isp1760/isp1760-hcd.c                         |  2 +-
->  drivers/usb/musb/cppi_dma.c                               |  2 +-
->  drivers/usb/phy/phy-fsl-usb.c                             |  2 +-
->  drivers/video/fbdev/stifb.c                               |  2 +-
->  fs/afs/yfsclient.c                                        |  8 ++++----
->  fs/ceph/dir.c                                             |  2 +-
+>=20
+> On 2020-08-31 18:19, Bao D. Nguyen wrote:
+> > UFS version 3.0 and later devices require Vcc and Vccq power supplies
+> > with Vccq2 being optional. While earlier UFS version 2.0 and 2.1
+> > devices, the Vcc and Vccq2 are required with Vccq being optional.
+> > Check the required power supplies used by the device
+> > and set the device's supported Icc level properly.
+Practically you are correct - most flash vendors moved in UFS3.1 to 1.2 sup=
+ply instead of 1.8.
+However, the host should provide all 3 supplies to the device because -=20
+a) A flash vendor might want to still use 1.8 in its UFS3.1 device, and
+b) We should allow a degenerated configurations, e.g. 3.1 devices, that are=
+ degenerated to 2.1 or 2.2
 
-For ceph:
-
-Acked-by: Ilya Dryomov <idryomov@gmail.com>
+That said, I think we can entirely remove the check in the beginning of the=
+ function,
+But not because the spec allows it, but because each supply is explicitly c=
+hecked later on,
+before reading its applicable max current entry in the power descriptor.
 
 Thanks,
-
-                Ilya
+Avri
