@@ -2,115 +2,106 @@ Return-Path: <SRS0=aJuI=CT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A129C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 16:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B96C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 16:11:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC27820C09
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 16:04:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9143C206A1
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 16:11:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="l3BcWT9F"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="SqTOBGdd";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="SqTOBGdd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731465AbgIJQDu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Sep 2020 12:03:50 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:60950 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731482AbgIJQCz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 12:02:55 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AEBOw9176964;
-        Thu, 10 Sep 2020 14:11:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=Bcx2l8Sn/99nygVABlzYumMb7K+pjCccmBpzgHjZ8kg=;
- b=l3BcWT9F1jmRKSgR7XZEG30tjzFq6xKj8+GJ4BcPLIfHoEx0JAPIeRnd34rDT64vBPpS
- Re2/mpJTZ/TzHik+AMXGwZQ7/8vvXqCykytY80B89QpkaLIDengJrMRz4QYGBvD7Jz/Q
- mZTNN+v0iVbMDCmByScL19xe05+UyW2miIKprcimRYf8dUQlOzVGQPtScmT5FoJVsJgw
- ppEnNbgAyCjM7vlWBIrNV7TVz03KucV+0tiv30JZPAfVwqyBsQDbEZVUQU14cTXluqso
- JxzEtCgxTCai/EIDJwQHkYFWfv6UkX1anC+yFWLK0MZzXoEJFV6luPUSXPJJnd5J4zEU cA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 33c2mm8a30-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 10 Sep 2020 14:11:33 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AEB8aj023310;
-        Thu, 10 Sep 2020 14:11:33 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 33cmk9utcc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Sep 2020 14:11:33 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08AEBVnn003540;
-        Thu, 10 Sep 2020 14:11:31 GMT
-Received: from dhcp-10-154-107-125.vpn.oracle.com (/10.154.107.125)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 10 Sep 2020 07:11:31 -0700
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Subject: Re: [PATCH 0/3] Improve error handling
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20200910073952.212130-1-damien.lemoal@wdc.com>
-Date:   Thu, 10 Sep 2020 09:11:30 -0500
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
+        id S1726109AbgIJQKs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Sep 2020 12:10:48 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54580 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725820AbgIJQJo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Sep 2020 12:09:44 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id B4B848EE11E;
+        Thu, 10 Sep 2020 09:09:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1599754150;
+        bh=vjqoZjjs4ZL988BGG7sXtVJHzIb1zQDOeZ88/1JThQw=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=SqTOBGdd05DEXZCUAUSRCFQLQh+D8HlmsHDZknIpCoLNKWMiASjKLlkwGQpE1qB2y
+         Ra66T5QAZClQDQ1tI6wCPqz6A+A1azS+MUvPfnrYOwq0bWYX6ZlSPFX3WbX9nPfwsv
+         HXiNLeDe7+r88pNXMcY6eguRdu3R4RQu703OyKHk=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id c7vL7lTQ-z-f; Thu, 10 Sep 2020 09:09:10 -0700 (PDT)
+Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 6C6ED8EE0E2;
+        Thu, 10 Sep 2020 09:09:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1599754150;
+        bh=vjqoZjjs4ZL988BGG7sXtVJHzIb1zQDOeZ88/1JThQw=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=SqTOBGdd05DEXZCUAUSRCFQLQh+D8HlmsHDZknIpCoLNKWMiASjKLlkwGQpE1qB2y
+         Ra66T5QAZClQDQ1tI6wCPqz6A+A1azS+MUvPfnrYOwq0bWYX6ZlSPFX3WbX9nPfwsv
+         HXiNLeDe7+r88pNXMcY6eguRdu3R4RQu703OyKHk=
+Message-ID: <1599754148.3575.4.camel@HansenPartnership.com>
+Subject: Re: [PATCH v2 1/2] scsi: ufs: Abort tasks before clear them from
+ doorbell
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        ziqichen@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Date:   Thu, 10 Sep 2020 09:09:08 -0700
+In-Reply-To: <1599725880.10649.35.camel@mtkswgap22>
+References: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
+         <1599099873-32579-2-git-send-email-cang@codeaurora.org>
+         <1599627906.10803.65.camel@linux.ibm.com>
+         <yq14ko62wn5.fsf@ca-mkp.ca.oracle.com>
+         <1599706080.10649.30.camel@mtkswgap22>
+         <1599718697.3851.3.camel@HansenPartnership.com>
+         <1599725880.10649.35.camel@mtkswgap22>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Message-Id: <4FC25ED6-8B7A-4D96-B8C3-F7808F170B65@oracle.com>
-References: <20200910073952.212130-1-damien.lemoal@wdc.com>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.1)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
- mlxlogscore=695 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=3
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009100131
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=705
- malwarescore=0 suspectscore=3 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009100131
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-> On Sep 10, 2020, at 2:39 AM, Damien Le Moal <Damien.LeMoal@wdc.com> wrote:
+On Thu, 2020-09-10 at 16:18 +0800, Stanley Chu wrote:
+[...]
+> > + 	if (!err) {
+> >  +cleanup:
 > 
-> A small series to improve command error hadling.
+> Yeah, considering Bean Huo's patch "scsi: ufs: No need to send Abort
+> Task if the task in DB was cleared", "cleanup" label shall be added
+> back here.
 > 
-> The first patch is a simple code cleanup. The second patch updates
-> asc/ascq sense codes list. Finally, the third patch adds zone resource
-> errors handling for zoned block deives to return BLK_STS_DEV_RESOURCE,
-> similarly to what the NVMe driver does for ZNS devices.
+> So your resolution looks good to me.
 > 
-> Damien Le Moal (3):
->  scsi: Cleanup scsi_noretry_cmd()
->  scsi: update additional sense codes list
->  scsi: handle zone resources errors
-> 
-> drivers/scsi/scsi_error.c  |  4 +--
-> drivers/scsi/scsi_lib.c    | 12 +++++++++
-> drivers/scsi/sense_codes.h | 54 +++++++++++++++++++++++++++++++++++++-
-> 3 files changed, 67 insertions(+), 3 deletions(-)
-> 
-> -- 
-> 2.26.2
-> 
+> Thanks so much : )
 
-For the Series with updated Patch 3. 
+You're welcome ... but just remember I have to explain this to Linus
+when the merge window opens.  It would be a lot easier if this hadn't
+happened so please don't make it any worse ...
 
-Looks Good.
-
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-
---
-Himanshu Madhani	 Oracle Linux Engineering
+James
 
