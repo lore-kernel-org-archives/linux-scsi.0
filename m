@@ -2,116 +2,106 @@ Return-Path: <SRS0=aJuI=CT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C78FCC433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 21:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26704C2D0E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 21:23:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79407221E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 21:22:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3BCB221E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Sep 2020 21:23:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="E2vJlq56"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Am/wT710"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728195AbgIJVWX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Sep 2020 17:22:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35972 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726539AbgIJVWG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 17:22:06 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88DF2C061573
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2020 14:22:06 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id x123so5508729pfc.7
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2020 14:22:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=from:content-transfer-encoding:mime-version:subject:message-id:date
-         :to;
-        bh=7amgYtKA5AHB51jGt6qVc4R+ZemklilWw9+RcNp7k/I=;
-        b=E2vJlq56WKILuCLvyIfkVv48J4mznCKv7BjL+pkwZXttswl1TseVd5+k82D8XX/qd/
-         dSc7Z6sEB8dv7gn1+Lg1xBZzPEY2cSsqcSe2lhsUoaEmVAODAZhd2LgtrSzbChvdrBxG
-         yRggepQgkuz8l2yc8uJSsUd4A9ElSkfrsDg5I=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:content-transfer-encoding:mime-version
-         :subject:message-id:date:to;
-        bh=7amgYtKA5AHB51jGt6qVc4R+ZemklilWw9+RcNp7k/I=;
-        b=JSN3ILFxdr9mNu1WvG/klsxawBSIYKjIvI8oUtAni3zQSTmDjkP/e0FoxbWdGEPfib
-         Q+cYGifdfjyTw8EmE7VA0uOZUJQMAKC0ZVOwyPOzYbfyCYr+nND0//6kmRlyRehYgeW6
-         Uz5Wso5tgY745u1CgqyGg4Fe1RpQsyCbATTdjFebmR0GW+2My0QD/lqx1aQLJMaII8v3
-         W/cPSinf/Lh5gtSjJ64dchrN8UFYU6gIa6MUpbPoKWkf1I+1Ax5/wSCcPu0rTphumLXa
-         zGXxubAkVEIiqxh0sWq1khWOHfXnx1USuU3Vv5NYbjB1lJGF2WPaoWk5HvziEgYRyy0z
-         m3mg==
-X-Gm-Message-State: AOAM532Jb2MAaqqU+DDIdCWRq6WKP6yJh0bttVIJBUzkFu59sHULnfDt
-        sjp804JofrvyM3J44ocOso/iFWSj3GlLXc2PKnYdVFbglqtPbRwZi1xKz36SnJ0UK8nNb5SMGkD
-        +cfS0+4Zftkd/e+y8Zx/c5YTHZtibbaWW0AZW49a4cYO3R8wMy2kNW28Ga3Vzlh7tTE5cT0vc5o
-        qcMT0=
-X-Google-Smtp-Source: ABdhPJwCAPnP6rUSKjA2YrAO1zLeJOJiGqs15R6ZE4WizOC+lz7iZMQ9Hj+WgrCH8SMDJvttmHNS4w==
-X-Received: by 2002:a17:902:bccb:b029:d1:9be4:9d22 with SMTP id o11-20020a170902bccbb02900d19be49d22mr385846pls.40.1599772923843;
-        Thu, 10 Sep 2020 14:22:03 -0700 (PDT)
-Received: from localhost.localdomain ([192.30.189.3])
-        by smtp.gmail.com with ESMTPSA id w19sm22676pfq.60.2020.09.10.14.22.02
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 10 Sep 2020 14:22:03 -0700 (PDT)
-From:   Brian Bunker <brian@purestorage.com>
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.0.3.2.26\))
-Subject: [PATCH 1/1] scsi: scsi_dh_alua: remove the list entry before
- assigning the pointer and sdev to NULL
-Message-Id: <4064EB40-C84F-42E8-82F7-3940901C09D2@purestorage.com>
-Date:   Thu, 10 Sep 2020 14:22:02 -0700
+        id S1728258AbgIJVW6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Sep 2020 17:22:58 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:58526 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730999AbgIJOXl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 10:23:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599747820;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=1yJ9ddxR+iNkpyzrpzM7/oFsZpyU2kWzWgFxFpsaZPk=;
+        b=Am/wT7100Rf8Pp/4EgQxrD4lgbdLj6aSXrmazV/bImU/wVzk7AOED0/0yv4cWpi/looQup
+        XhdXaL5q+lQUZGtiZpZIcxQ7wxRe3djI6eECx0cu+Pj7kcaLtbO08rHhVmGBsaVvsbttyc
+        IBiUCpcZOXViqJj4enZdlDhfnZhiBKQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-376-DqereVxkPyeesllvZl-3yg-1; Thu, 10 Sep 2020 10:21:30 -0400
+X-MC-Unique: DqereVxkPyeesllvZl-3yg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E232F8DEC68;
+        Thu, 10 Sep 2020 14:21:28 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.195.107])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D4A407E73E;
+        Thu, 10 Sep 2020 14:21:27 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
 To:     linux-scsi@vger.kernel.org
-X-Mailer: Apple Mail (2.3654.0.3.2.26)
+Cc:     sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, sathya.prakash@broadcom.com
+Subject: [PATCH] mpt3sas: fix sync irqs
+Date:   Thu, 10 Sep 2020 16:21:26 +0200
+Message-Id: <20200910142126.8147-1-thenzl@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A race exists where the BUG_ON(!h->sdev) will fire if the detach device =
-handler
-from one thread runs removing a list entry while another thread is =
-trying to
-evaluate the target portal group state.
+- _base_process_reply_queue called from _base_interrupt
+may schedule a new irq poll, fix this by calling
+synchronize_irq first
+- a fix for "Unbalanced enable for IRQ..."
+enable_irq should be called only when necessary
 
-The order of the detach operation is now changed to delete the list =
-entry
-before modifying the pointer and setting h->sdev to NULL.
+Fixes: 320e77acb327 ("scsi: mpt3sas: Irq poll to avoid CPU hard lockups")
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 14 +++++++++-----
+ drivers/scsi/scsi_scan.c            |  8 ++++++++
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-Signed-off-by: Brian Bunker <brian@purestorage.com>
-Acked-by: Krishna Kant <krishna.kant@purestorage.com>
-___
-diff -Naur a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c =
-b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
---- a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10 =
-12:29:03.000000000 -0700
-+++ b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10 =
-12:41:34.000000000 -0700
-@@ -1146,16 +1146,18 @@
-
- 	spin_lock(&h->pg_lock);
- 	pg =3D rcu_dereference_protected(h->pg, =
-lockdep_is_held(&h->pg_lock));
--	rcu_assign_pointer(h->pg, NULL);
--	h->sdev =3D NULL;
--	spin_unlock(&h->pg_lock);
- 	if (pg) {
- 		spin_lock_irq(&pg->lock);
- 		list_del_rcu(&h->node);
- 		spin_unlock_irq(&pg->lock);
--		kref_put(&pg->kref, release_port_group);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index a85c9672c6ea..a67749c8f4ab 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1808,18 +1808,22 @@ mpt3sas_base_sync_reply_irqs(struct MPT3SAS_ADAPTER *ioc)
+ 		/* TMs are on msix_index == 0 */
+ 		if (reply_q->msix_index == 0)
+ 			continue;
++		synchronize_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index));
+ 		if (reply_q->irq_poll_scheduled) {
+ 			/* Calling irq_poll_disable will wait for any pending
+ 			 * callbacks to have completed.
+ 			 */
+ 			irq_poll_disable(&reply_q->irqpoll);
+ 			irq_poll_enable(&reply_q->irqpoll);
+-			reply_q->irq_poll_scheduled = false;
+-			reply_q->irq_line_enable = true;
+-			enable_irq(reply_q->os_irq);
+-			continue;
++			/* check how the scheduled poll has ended,
++			 * clean up only if necessary
++			 */
++			if (reply_q->irq_poll_scheduled) {
++				reply_q->irq_poll_scheduled = false;
++				reply_q->irq_line_enable = true;
++				enable_irq(reply_q->os_irq);
++			}
+ 		}
+-		synchronize_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index));
  	}
-+	rcu_assign_pointer(h->pg, NULL);
-+	h->sdev =3D NULL;
-+	spin_unlock(&h->pg_lock);
- 	sdev->handler_data =3D NULL;
-+	if (pg) {
-+		kref_put(&pg->kref, release_port_group);
-+	}
- 	kfree(h);
- }=
+ }
+ 
+-- 
+2.25.4
+
