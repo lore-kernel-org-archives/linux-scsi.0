@@ -2,121 +2,76 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18424C43461
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 02:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B686BC2D0E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 03:25:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D804E20829
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 02:52:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7511B21D81
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 03:25:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sMzIJ5FG"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="FY0/q0hf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725845AbgIKCwg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Sep 2020 22:52:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58698 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725355AbgIKCwe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 22:52:34 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 743F4C061573;
-        Thu, 10 Sep 2020 19:52:33 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id n13so8393165edo.10;
-        Thu, 10 Sep 2020 19:52:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Rh9Pt7YWiJuvraTJEw+iENa93uiuxFqswvg59VFnc6k=;
-        b=sMzIJ5FGHMBaziTx/PNmiVfjtuRIgGHsCfOiukKXUtWWDXqx4zyi+l46IaqToLBYD5
-         o/7T07SKyvvJ4LV+5gVMpFsimNbwSQxj4Qe9OqarblX5aGy733vSPZZgHwhUIOF/3Y27
-         B2hZz8oRU9+PmjrohSC1fKeyrkbAeB1UKBYkMDo8NMCfK3etSog31MlBRUhspJJDE6c6
-         2jNW8wZnEwPCXTghUymxPbck0Dt5poc6oBj+zLm6aHlzx2Ii6gV7eyAWZnmsyA+Q3iWJ
-         rmilZVDNVS1AGqphtuFkqBDkKz2KGoXifDXAlvZCtVH4BR+XUD3/pb3EGEjka+LAZv4R
-         pR4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Rh9Pt7YWiJuvraTJEw+iENa93uiuxFqswvg59VFnc6k=;
-        b=oCdIvTJiQnvqbsWHH0wfIq+yzpAQkVdgvA/YngQuGfO15cUl4k7+YGqrtrjJnt14Vj
-         NyqX5loaZ98uAQp+RG1tg4K5K+JLTcpG/fy/TE/CbDBxr7RE3LEnQ/UN6FNSGSHsCn7A
-         7s3OZShyWtx2HxPAAOsKUyFdVeYYJzEOV4fgkWUbx/8cpS12jlvHg981bcf4nV3fxmeM
-         WVm+CQwvEyLcR86lhgMg4p+L02yKQaz5p/o4MZsRROi77r8SfGfeUI/rXyS3oRODRQco
-         I7KOdK99Fa0FRGK6ExW5Ke7GIkTLS+UYY24tQkzpLqdo/7haFG/UPD1DGP76cqEm0w8J
-         kwwg==
-X-Gm-Message-State: AOAM5320a+t4HYvPgw+QagPjvIpjgvjYyxANCGnagCb/QTH7wu9atInY
-        LOV9TnjIfPHxydbK8uM6QSz4p4JGCeh4HT/JPeg=
-X-Google-Smtp-Source: ABdhPJyvdhO2E+WIGNANGbpMRpyYJJsV/39TVNMjyh7xPuRhfmQw80nfT6TjdyzpW+P6aj1Q4yDgB0e2hFy/k3AOr/E=
-X-Received: by 2002:a50:fb15:: with SMTP id d21mr13117595edq.150.1599792751820;
- Thu, 10 Sep 2020 19:52:31 -0700 (PDT)
+        id S1725840AbgIKDZF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Sep 2020 23:25:05 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:31211 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725812AbgIKDY5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 23:24:57 -0400
+X-UUID: 5c87b4bd350445b7bd4bf279273356d0-20200911
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=QmwsEWaxnOAFLlTyKo3ep0gcRa5p3BgYqpCcV32oTwI=;
+        b=FY0/q0hfYGHPVT+qxJj3J8+82uDg1QSHCnbojPftesPvPJxU/rrp2i9kSeCRge2esHJMUMzM+nnkHiz9MID0CyZC80HnRMKZM7Gy/QlEKZ1mtUWJTU6ObUoJ3BrJseJMbJ5xn3JTq5exUXNkERX5u0wD9mg318ZCG3oANfnAoLA=;
+X-UUID: 5c87b4bd350445b7bd4bf279273356d0-20200911
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 954541614; Fri, 11 Sep 2020 11:24:52 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 11 Sep 2020 11:24:49 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 11 Sep 2020 11:24:49 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <robh+dt@kernel.org>, <robh@kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, <arvin.wang@mediatek.com>,
+        <HenryC.Chen@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH 0/2] scsi: ufs-mediatek: Support performance mode for inline encryption engine
+Date:   Fri, 11 Sep 2020 11:24:47 +0800
+Message-ID: <20200911032449.21577-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-References: <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
- <20200906012716.1553-1-tom.ty89@gmail.com> <20200906012716.1553-2-tom.ty89@gmail.com>
- <20200907060927.GA18909@lst.de> <CAGnHSEnWPSaM3xS1MtFUJDrSZPfaH_VwAiQ5UkndFTVe3uWNVA@mail.gmail.com>
- <20200908084258.GA17030@lst.de> <CAGnHSE=ASs3DG2yp1NpODHimwxHe+=XPRsOyDdkB3ThtyEU-KA@mail.gmail.com>
- <20200910052835.GB18283@lst.de>
-In-Reply-To: <20200910052835.GB18283@lst.de>
-From:   Tom Yan <tom.ty89@gmail.com>
-Date:   Fri, 11 Sep 2020 10:52:19 +0800
-Message-ID: <CAGnHSE=pcW0zJMSaowdsRXFa=TmOeidekgvDuEPB8PU7mheXNA@mail.gmail.com>
-Subject: Re: [PATCH RESEND 2/4] scsi: sg: implement BLKSSZGET
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-scsi@vger.kernel.org, dgilbert@interlog.com,
-        Bart Van Assche <bvanassche@acm.org>,
-        Alan Stern <stern@rowland.harvard.edu>, akinobu.mita@gmail.com,
-        linux-api@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 10 Sep 2020 at 13:28, Christoph Hellwig <hch@lst.de> wrote:
->
-> On Thu, Sep 10, 2020 at 09:59:05AM +0800, Tom Yan wrote:
-> > If we rename it to e.g. SG_GET_MAX_XFER_BYTES, it will still break
-> > applications unless we also keep the wrong/ugly/confusing name (and
-> > you lose the advantage/generality that the two ioctls can be used on
-> > both sg and "pure" block devices; which seems to be the case of some
-> > SG_* ioctls as well).
->
-> How is that an advantage?  Applications that works with block devices
-> don't really work with a magic passthrough character device.
+SGkgTWFydGluLCBSb2IsIEF2cmksDQoNClRoaXMgc2VyaWVzIGFkZHMgaGlnaC1wZXJmb3JtYW5j
+ZSBtb2RlIHN1cHBvcnQgZm9yIE1lZGlhVGVrIFVGUyBpbmxpbmUgZW5jcnlwdGlvbiBlbmdpbmUu
+DQpUaGlzIGZlYXR1cmUgaXMgb25seSByZXF1aXJlZCBpbiBzcGVjaWZpYyBwbGF0Zm9ybXMsIGku
+ZS4sIE1UODE5MiBzZXJpZXMuDQoNClBsZWFzZSBoZWxwIGNvbnNpZGVyIHRoaXMgcGF0Y2ggc2V0
+IGluIGtlcm5lbCB2NS4xMC4NCg0KVGhhbmtzLg0KDQpTdGFubGV5IENodSAoMik6DQogIHNjc2k6
+IHVmcy1tZWRpYXRlazogU3VwcG9ydCBwZXJmb3JtYW5jZSBtb2RlIGZvciBpbmxpbmUgZW5jcnlw
+dGlvbg0KICAgIGVuZ2luZQ0KICBkdC1iaW5kaW5nczogdWZzLW1lZGlhdGVrOiBBZGQgbXQ4MTky
+LXVmc2hjaSBjb21wYXRpYmxlIHN0cmluZw0KDQogLi4uL2RldmljZXRyZWUvYmluZGluZ3MvdWZz
+L3Vmcy1tZWRpYXRlay50eHQgIHwgICA0ICstDQogZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0
+ZWsuYyAgICAgICAgICAgICAgIHwgMTc4ICsrKysrKysrKysrKysrKysrLQ0KIGRyaXZlcnMvc2Nz
+aS91ZnMvdWZzLW1lZGlhdGVrLmggICAgICAgICAgICAgICB8ICAyMiArKysNCiAzIGZpbGVzIGNo
+YW5nZWQsIDE5NyBpbnNlcnRpb25zKCspLCA3IGRlbGV0aW9ucygtKQ0KDQotLSANCjIuMTguMA0K
 
-You must assume that there are applications already assuming that
-work. (And it will, at least in some cases, if this series get
-merged.)
-
-And you have not been giving me a solid point anyway, as I said, it's
-just queue_*() at the end of the day; regardless of whether those
-would work in all sg cases, we have been using them in the sg driver
-anyway.
-
-And it's not like we have to guarantee that (the) ioctls can work in
-every case anyway, right? (Especially when they aren't named SG_*).
-
-I mean, what's even your point? How do you propose we fix this? Should
-we just leave it broken/wrong/rotten as-is (including the case that
-you don't consider it being so)? If that's what you are trying to say
-then please just say it, I'll just walk away quietly. I'm really kind
-of done with this sort of looping that leads to nowhere.
-
->
-> > I don't really care enough though. I mean, I'm okay with
-> > SG_GET_MAX_XFER_BYTES *and* NO "improper" BLKSECTGET. If that will get
-> > the patch series in, I am willing to send a new version. If not, I'm
-> > just gonna drop this.
->
-> You must assume that there are applications already that depend in the
-> "weird" BLKSECTGET on sg, given that it has been around so long.  Any
-> change to the semantics will break them.
-
-While you forgot to assume that there are applications assuming
-BLKSECTGET is as "weird" in the block layer at the same time. (That's
-exactly what has happened in qemu.) You don't get the slightest
-advantage in "trying not to break things" by doing the wrong thing. It
-only goes on making more things broken.
