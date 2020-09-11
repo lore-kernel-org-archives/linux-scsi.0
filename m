@@ -2,158 +2,180 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F1F0C43461
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 21:33:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4479C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 22:49:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35E83221E3
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 21:33:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 855C52220A
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 22:49:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z616F7Ui"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725876AbgIKVd0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 17:33:26 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:46279 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1725847AbgIKVdX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2020 17:33:23 -0400
-Received: (qmail 897715 invoked by uid 1000); 11 Sep 2020 17:33:22 -0400
-Date:   Fri, 11 Sep 2020 17:33:22 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        akinobu.mita@gmail.com, linux-api@vger.kernel.org
-Subject: Re: [PATCH RESEND 2/4] scsi: sg: implement BLKSSZGET
-Message-ID: <20200911213322.GA897374@rowland.harvard.edu>
-References: <20200906012716.1553-1-tom.ty89@gmail.com>
- <20200906012716.1553-2-tom.ty89@gmail.com>
- <20200907060927.GA18909@lst.de>
- <CAGnHSEnWPSaM3xS1MtFUJDrSZPfaH_VwAiQ5UkndFTVe3uWNVA@mail.gmail.com>
- <20200908084258.GA17030@lst.de>
- <CAGnHSE=ASs3DG2yp1NpODHimwxHe+=XPRsOyDdkB3ThtyEU-KA@mail.gmail.com>
- <20200910052835.GB18283@lst.de>
- <CAGnHSE=pcW0zJMSaowdsRXFa=TmOeidekgvDuEPB8PU7mheXNA@mail.gmail.com>
- <20200911064844.GA22190@lst.de>
- <a8d8e0d3-dfd7-5a2d-8f63-5e1816805c8e@interlog.com>
+        id S1725890AbgIKWtu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Sep 2020 18:49:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46374 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725856AbgIKWts (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2020 18:49:48 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A31D3C061573
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2020 15:49:48 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id z19so8385923pfn.8
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2020 15:49:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ebXYtqS6yzn2QM5hdwlBfN9iYtRv+REsIrN8CLiqCZo=;
+        b=Z616F7Ui4Ne/20NAW8xEW8CtKiSJfK+k48fE03MFvoc+550LU7tDNYQF9OIP4awo2E
+         e3AJYVHoI5/UPRKCeOzoFlV5ZYMSumm1jUuZ8BUp/TXBVfQ+EjkcmT3HUvYZXdqj0oEK
+         Et2Sfux+QMybiVJ95DYjzVPdusYkEv4BRJGz3EsIUmMLZF75Tc7K0UTVJDCs7lnvG3n4
+         It8hSNiyT7TxnyD/V/eW4QLTx7/1eepn4VPeG8uMfL+d/F8HihyhDZEmVoVw2d6Y5tzb
+         ELyqoYnQyX+ojuJM0LpJgyYlLSDWZKx1X9iH6sr52kIaw0xXNBEA1tn+AM1TVv2d8rS6
+         sdQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ebXYtqS6yzn2QM5hdwlBfN9iYtRv+REsIrN8CLiqCZo=;
+        b=Vb/8O8ezf5GSpo21RWhWEJ7i9zQnn5Z2F/hCXLc5lKymPtGJ+xAmbb5HXM3LZV+UZX
+         egF9XtsEw6Gt7warY3bXhVuSwveP2c2jp1/6h/dLMag3bi3YnTy6hYB0jjc2S7klo+V2
+         fkj8P1/VYs8Jo1aUjy8xqiAo/fnia3pRZR2IAJAmoEkHoOVF9RaCUbRt71fmzTAJR5d5
+         zGuoy/emfJkqGhzj05lfWQ0SBaZO1oQISUnEIb9YcA1M1PkflfaL64CTSYNS7tsQdMeH
+         UwEbZ8+2+WlZ3aZ/+fuULFqznNYMlNvU3DuUixGmASaEeuAP3LZLKXEn99fhGsBOGZvL
+         fbDw==
+X-Gm-Message-State: AOAM532QSrKdguGL/yajSLz802nhVR8jbjZoNdJG2xKudVhLe/HUBYec
+        VNaJLlrl5Z5XiHYLUhboEbuT4Hd6FRA=
+X-Google-Smtp-Source: ABdhPJyKnbiDZrbIfyiDOBF8mI26CYfsonDxP6c+JBHW5erj+jp1bwPlHomdEQSHtLlteKI8G6iXnA==
+X-Received: by 2002:a62:7743:0:b029:13c:1611:658e with SMTP id s64-20020a6277430000b029013c1611658emr3977138pfc.11.1599864587777;
+        Fri, 11 Sep 2020 15:49:47 -0700 (PDT)
+Received: from [10.230.185.151] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id c1sm3223483pfc.93.2020.09.11.15.49.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 11 Sep 2020 15:49:46 -0700 (PDT)
+Subject: Re: lockdep warning in lpfc v5.9-rc4
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     linux-scsi@vger.kernel.org
+References: <20200911083415.4k2rjgwbevkdkxis@beryllium.lan>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <9e25d9ee-bcc2-3389-3d13-61aa94838c54@gmail.com>
+Date:   Fri, 11 Sep 2020 15:49:45 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a8d8e0d3-dfd7-5a2d-8f63-5e1816805c8e@interlog.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200911083415.4k2rjgwbevkdkxis@beryllium.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 11, 2020 at 01:52:07PM -0400, Douglas Gilbert wrote:
-> On 2020-09-11 2:48 a.m., Christoph Hellwig wrote:
-> > On Fri, Sep 11, 2020 at 10:52:19AM +0800, Tom Yan wrote:
-> > > > How is that an advantage?  Applications that works with block devices
-> > > > don't really work with a magic passthrough character device.
-> > > 
-> > > You must assume that there are applications already assuming that
-> > > work. (And it will, at least in some cases, if this series get
-> > > merged.)
-> > 
-> > Why "must" I assume that?
-> > 
-> > > And you have not been giving me a solid point anyway, as I said, it's
-> > > just queue_*() at the end of the day; regardless of whether those
-> > > would work in all sg cases, we have been using them in the sg driver
-> > > anyway.
-> > > 
-> > > And it's not like we have to guarantee that (the) ioctls can work in
-> > > every case anyway, right? (Especially when they aren't named SG_*).
-> > 
-> > No.  While it is unfortunte we have all kinds of cases of ioctls working
-> > differnetly on different devices.
-> > 
-> > > 
-> > > I mean, what's even your point? How do you propose we fix this?
-> > 
-> > I propose to not "fix" anything, because nothing is broken except for
-> > maybe a lack of documentation.
+On 9/11/2020 1:34 AM, Daniel Wagner wrote:
+> Hi,
 > 
-> Alan Stern are you reading this thread? Why do I ask, you may ask?
-> Because 'git blame' fingers you:
+> I just hit a lockdep warning in lpfc. Not sure if it is a valid complain
+> or not:
 > 
-> vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+>   ================================
+>   WARNING: inconsistent lock state
+>   5.9.0-rc4-default #80 Tainted: G            E
+>   --------------------------------
+>   inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
+>   kworker/2:2/264 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>   ffff9a726e7cd668 (&lpfc_ncmd->buf_lock){+.?.}-{2:2}, at: lpfc_scsi_cmd_iocb_cmpl+0x49/0xae0 [lpfc]
+>   {IN-SOFTIRQ-W} state was registered at:
+>     lock_acquire+0xb2/0x3a0
+>     _raw_spin_lock+0x30/0x70
+>     lpfc_scsi_cmd_iocb_cmpl+0x49/0xae0 [lpfc]
+>     lpfc_sli4_fp_handle_fcp_wcqe.isra.29+0xfb/0x390 [lpfc]
+>     lpfc_sli4_fp_handle_cqe+0x172/0x490 [lpfc]
+>     __lpfc_sli4_process_cq+0xfd/0x270 [lpfc]
+>     __lpfc_sli4_hba_process_cq+0x3c/0x110 [lpfc]
+>     lpfc_cq_poll_hdler+0x16/0x20 [lpfc]
+>     irq_poll_softirq+0x96/0x150
+>     __do_softirq+0xd3/0x47b
+>     asm_call_on_stack+0x12/0x20
+>     do_softirq_own_stack+0x52/0x60
+>     irq_exit_rcu+0xea/0xf0
+>     common_interrupt+0xa9/0x1a0
+>     asm_common_interrupt+0x1e/0x40
+>     refresh_cpu_vm_stats+0x20c/0x2a0
+>     vmstat_update+0xf/0x50
+>     process_one_work+0x2b7/0x640
+>     worker_thread+0x39/0x3f0
+>     kthread+0x139/0x150
+>     ret_from_fork+0x22/0x30
+>   irq event stamp: 2621
+>   hardirqs last  enabled at (2621): [<ffffffff91ff525d>] _raw_spin_unlock_irqrestore+0x2d/0x50
+>   hardirqs last disabled at (2620): [<ffffffff91ff5a38>] _raw_spin_lock_irqsave+0x88/0x8a
+>   softirqs last  enabled at (1420): [<ffffffff92200351>] __do_softirq+0x351/0x47b
+>   softirqs last disabled at (1399): [<ffffffff92001032>] asm_call_on_stack+0x12/0x20
+>   
+>   other info that might help us debug this:
+>    Possible unsafe locking scenario:
+>   
+>          CPU0
+>          ----
+>     lock(&lpfc_ncmd->buf_lock);
+>     <Interrupt>
+>       lock(&lpfc_ncmd->buf_lock);
+>   
+>    *** DEADLOCK ***
+>   
+>   2 locks held by kworker/2:2/264:
+>    #0: ffff9a727ccd2d48 ((wq_completion)lpfc_wq#4){+.+.}-{0:0}, at: process_one_work+0x237/0x640
+>    #1: ffffb73dc0d37e68 ((work_completion)(&queue->irqwork)){+.+.}-{0:0}, at: process_one_work+0x237/0x640
+>   
+>   stack backtrace:
+>   CPU: 2 PID: 264 Comm: kworker/2:2 Tainted: G            E     5.9.0-rc4-default #80
+>   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.12.0-0-ga698c89-rebuilt.suse.com 04/01/2014
+>   Workqueue: lpfc_wq lpfc_sli4_hba_process_cq [lpfc]
+>   Call Trace:
+>    dump_stack+0x8d/0xbb
+>    mark_lock+0x5e5/0x690
+>    ? print_shortest_lock_dependencies+0x180/0x180
+>    __lock_acquire+0x2d5/0xbf0
+>    lock_acquire+0xb2/0x3a0
+>    ? lpfc_scsi_cmd_iocb_cmpl+0x49/0xae0 [lpfc]
+>    ? lock_acquire+0xb2/0x3a0
+>    _raw_spin_lock+0x30/0x70
+>    ? lpfc_scsi_cmd_iocb_cmpl+0x49/0xae0 [lpfc]
+>    lpfc_scsi_cmd_iocb_cmpl+0x49/0xae0 [lpfc]
+>    lpfc_sli4_fp_handle_fcp_wcqe.isra.29+0xfb/0x390 [lpfc]
+>    ? ret_from_fork+0x22/0x30
+>    ? unwind_next_frame+0x1fc/0x640
+>    ? create_prof_cpu_mask+0x20/0x20
+>    ? arch_stack_walk+0x8f/0xf0
+>    ? ret_from_fork+0x22/0x30
+>    ? lpfc_handle_fcp_err+0xb00/0xb00 [lpfc]
+>    ? lpfc_sli4_fp_handle_cqe+0x172/0x490 [lpfc]
+>    lpfc_sli4_fp_handle_cqe+0x172/0x490 [lpfc]
+>    __lpfc_sli4_process_cq+0xfd/0x270 [lpfc]
+>    ? lpfc_sli4_sp_handle_abort_xri_wcqe.isra.54+0x170/0x170 [lpfc]
+>    __lpfc_sli4_hba_process_cq+0x3c/0x110 [lpfc]
+>    process_one_work+0x2b7/0x640
+>    ? find_held_lock+0x34/0xa0
+>    ? process_one_work+0x640/0x640
+>    worker_thread+0x39/0x3f0
+>    ? process_one_work+0x640/0x640
+>    kthread+0x139/0x150
+>    ? kthread_park+0x90/0x90
+>    ret_from_fork+0x22/0x30
 > 
-> commit 44ec95425c1d9dce6e4638c29e4362cfb44814e7
-> Author: Alan Stern <stern@rowland.harvard.edu>
-> Date:   Tue Feb 20 11:01:57 2007 -0500
 > 
->     [SCSI] sg: cap reserved_size values at max_sectors
+> Thanks,
+> Daniel
 > 
->     This patch (as857) modifies the SG_GET_RESERVED_SIZE and
->     SG_SET_RESERVED_SIZE ioctls in the sg driver, capping the values at
->     the device's request_queue's max_sectors value.  This will permit
->     cdrecord to obtain a legal value for the maximum transfer length,
->     fixing Bugzilla #7026.
-> 
->     The patch also caps the initial reserved_size value.  There's no
->     reason to have a reserved buffer larger than max_sectors, since it
->     would be impossible to use the extra space.
-> 
->     The corresponding ioctls in the block layer are modified similarly,
->     and the initial value for the reserved_size is set as large as
->     possible.  This will effectively make it default to max_sectors.
->     Note that the actual value is meaningless anyway, since block devices
->     don't have a reserved buffer.
-> 
->     Finally, the BLKSECTGET ioctl is added to sg, so that there will be a
->     uniform way for users to determine the actual max_sectors value for
->     any raw SCSI transport.
-> 
->     Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
->     Acked-by: Jens Axboe <jens.axboe@oracle.com>
->     Acked-by: Douglas Gilbert <dougg@torque.net>
->     Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-> 
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
-> Oops, I ack-ed this patch from 2007:-)
 
-The Bugzilla entry it talks about is from 2006!
+It's likely valid, but rare. Most of the time, only one of these 2 flows 
+are occuring. We'll look into it.
 
->  Anyway it would seem BLKSECTGET ioctl
-> was meant to be a "uniform way to determine the actual max_sectors value for
-> any raw SCSI transport."
-
-Right.  The question at hand was: Given an open file descriptor for an 
-SG device, how can a program determine the largest amount it can send in 
-a single transfer?  This ioctl seemed to be the best answer.
-
-See comment #26 (https://bugzilla.kernel.org/show_bug.cgi?id=7026#c26) 
-and following for the viewpoint of the notoriously prickly author of 
-cdrecord.
-
->  Given that the initial implementation of BLKSECTGET
-> now seems to be at odds with other implementations, what should we do?
-> 
-> It is possible that it was correct on 2007 and the BLKSECTGET ioctl has
-> changed elsewhere but failed to fix the sg driver's implementation.
-
-Could be.  Also, I'm not sure how careful people were back then to 
-distinguish between logical and physical sector sizes.
-
-> If I get a vote then it would be for Tom Yan's approach: reduce entropy or
-> it will overwhelm us :-)
-> 
-> 
-> So Christoph, it IS documented, both in the above commit message and:
->    https://doug-gilbert.github.io/sg_v40.html
-> 
-> in Table 8. So please stop with your "maybe a lack of documentation" line.
-
-My vote is not to change an interface which a program like cdrecord may 
-currently rely on.
-
-I can understand Christoph's point about documentation.  It would be 
-good to have something in the actual kernel source, rather than in the 
-history or somebody's github files.
-
-Alan Stern
+-- james
