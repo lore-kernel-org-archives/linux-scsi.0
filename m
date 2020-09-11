@@ -4,136 +4,119 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B27C43461
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 02:26:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18424C43461
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 02:52:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4620F2078D
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 02:26:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D804E20829
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 02:52:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JVe7GmKW"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sMzIJ5FG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725385AbgIKC0y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Sep 2020 22:26:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54806 "EHLO
+        id S1725845AbgIKCwg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Sep 2020 22:52:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725300AbgIKC0v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 22:26:51 -0400
-Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F998C061573
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2020 19:26:51 -0700 (PDT)
-Received: by mail-il1-x142.google.com with SMTP id u20so7690219ilk.6
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2020 19:26:51 -0700 (PDT)
+        with ESMTP id S1725355AbgIKCwe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2020 22:52:34 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 743F4C061573;
+        Thu, 10 Sep 2020 19:52:33 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id n13so8393165edo.10;
+        Thu, 10 Sep 2020 19:52:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=0hkBtC1XXR5c2rVgycvrpYUSPHrUWo3fR32rbmRN3HE=;
-        b=JVe7GmKWniObu6rYHod1PrP94Bxgbcsym/3d+MErluYXg2AxyvRhe3E0BTK5ZNT6nG
-         wKz4I2dKOGrG2Dk5m0t40bYVW9iyh0Rlkr/LGnERen4k5g8zmQH36LGdCVYT5mp861gr
-         B3d4EjLt+v+z+eixMUkKuI0Ag53OwLY+M3lxtr7ZWMtPsaEHjC1cni93mpuEHpFwNMME
-         aq+XzdNZGKkJQnKC1U2W3CUTusxcyI1zT1BFivPUVRgoFM/sG/3W1mLfExRQg9LhfuDx
-         mog8DhFq5U7Ih970c2GD+WsNpbJoOpEEFaEF+sc7rKfM1duutzJwwbCdH/W1jKDiDvLN
-         vXgQ==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Rh9Pt7YWiJuvraTJEw+iENa93uiuxFqswvg59VFnc6k=;
+        b=sMzIJ5FGHMBaziTx/PNmiVfjtuRIgGHsCfOiukKXUtWWDXqx4zyi+l46IaqToLBYD5
+         o/7T07SKyvvJ4LV+5gVMpFsimNbwSQxj4Qe9OqarblX5aGy733vSPZZgHwhUIOF/3Y27
+         B2hZz8oRU9+PmjrohSC1fKeyrkbAeB1UKBYkMDo8NMCfK3etSog31MlBRUhspJJDE6c6
+         2jNW8wZnEwPCXTghUymxPbck0Dt5poc6oBj+zLm6aHlzx2Ii6gV7eyAWZnmsyA+Q3iWJ
+         rmilZVDNVS1AGqphtuFkqBDkKz2KGoXifDXAlvZCtVH4BR+XUD3/pb3EGEjka+LAZv4R
+         pR4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=0hkBtC1XXR5c2rVgycvrpYUSPHrUWo3fR32rbmRN3HE=;
-        b=fczbe+Gy7/S/uDqpGbz+PtFPBreD2CFG5IRUnkTPy4ASWzkvXfzXhhaWIBKpYy4YN7
-         m4guhIIQnMZGRue3s4Q0meu7Y84gLS/2RNwYLDmxr36zAqZSd22gkseET4hJdNpfEkZ3
-         u6Fci7zhZYKUxE7iyXJhQv+ziACtqGLUWek1ADINuLKlsKwogM6naodXPq165pGKU2Fg
-         BGBRcRyYzF8O4sJcG2GBF74WvWK6Mr0Syql7eJZ5LNJJJxoUXQWoiAl+3IA36AYKP/kZ
-         Nh3QSmOsUFaDGWQYPvQsSAXiVZS/uKslo592BpcAdZAIq2D//F939KrUEaB/9762qq07
-         nBfg==
-X-Gm-Message-State: AOAM532Ax89dVmfv/1V306dKJ1XM7uucw6O+jMtf5ZqNbjFg9IGK8kso
-        5Hqg5Rq8a9T5mFFqMihvOC22pnD9vKwgHJPjN8E=
-X-Google-Smtp-Source: ABdhPJxioKNUgMH0Ic7NLk9CVWiK4GLNDOMZtSoQX4O96C7Ar5MxmiFBUPd/6/DRitcNbxTJ7Qxo+2Md1JKw34wl6hQ=
-X-Received: by 2002:a92:dd88:: with SMTP id g8mr8420299iln.101.1599791209278;
- Thu, 10 Sep 2020 19:26:49 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Rh9Pt7YWiJuvraTJEw+iENa93uiuxFqswvg59VFnc6k=;
+        b=oCdIvTJiQnvqbsWHH0wfIq+yzpAQkVdgvA/YngQuGfO15cUl4k7+YGqrtrjJnt14Vj
+         NyqX5loaZ98uAQp+RG1tg4K5K+JLTcpG/fy/TE/CbDBxr7RE3LEnQ/UN6FNSGSHsCn7A
+         7s3OZShyWtx2HxPAAOsKUyFdVeYYJzEOV4fgkWUbx/8cpS12jlvHg981bcf4nV3fxmeM
+         WVm+CQwvEyLcR86lhgMg4p+L02yKQaz5p/o4MZsRROi77r8SfGfeUI/rXyS3oRODRQco
+         I7KOdK99Fa0FRGK6ExW5Ke7GIkTLS+UYY24tQkzpLqdo/7haFG/UPD1DGP76cqEm0w8J
+         kwwg==
+X-Gm-Message-State: AOAM5320a+t4HYvPgw+QagPjvIpjgvjYyxANCGnagCb/QTH7wu9atInY
+        LOV9TnjIfPHxydbK8uM6QSz4p4JGCeh4HT/JPeg=
+X-Google-Smtp-Source: ABdhPJyvdhO2E+WIGNANGbpMRpyYJJsV/39TVNMjyh7xPuRhfmQw80nfT6TjdyzpW+P6aj1Q4yDgB0e2hFy/k3AOr/E=
+X-Received: by 2002:a50:fb15:: with SMTP id d21mr13117595edq.150.1599792751820;
+ Thu, 10 Sep 2020 19:52:31 -0700 (PDT)
 MIME-Version: 1.0
-From:   Zhengyuan Liu <liuzhengyuang521@gmail.com>
-Date:   Fri, 11 Sep 2020 10:26:38 +0800
-Message-ID: <CAOOPZo448A7-qg6gpJqMF6TmnUWVXL3=A4nEo2pKVRt3iEkGrA@mail.gmail.com>
-Subject: qla2xxx panic with 4.19-stable
-To:     qla2xxx-upstream@qlogic.com
-Cc:     linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org,
-        liuzhengyuan@tj.kylinos.cn
+References: <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
+ <20200906012716.1553-1-tom.ty89@gmail.com> <20200906012716.1553-2-tom.ty89@gmail.com>
+ <20200907060927.GA18909@lst.de> <CAGnHSEnWPSaM3xS1MtFUJDrSZPfaH_VwAiQ5UkndFTVe3uWNVA@mail.gmail.com>
+ <20200908084258.GA17030@lst.de> <CAGnHSE=ASs3DG2yp1NpODHimwxHe+=XPRsOyDdkB3ThtyEU-KA@mail.gmail.com>
+ <20200910052835.GB18283@lst.de>
+In-Reply-To: <20200910052835.GB18283@lst.de>
+From:   Tom Yan <tom.ty89@gmail.com>
+Date:   Fri, 11 Sep 2020 10:52:19 +0800
+Message-ID: <CAGnHSE=pcW0zJMSaowdsRXFa=TmOeidekgvDuEPB8PU7mheXNA@mail.gmail.com>
+Subject: Re: [PATCH RESEND 2/4] scsi: sg: implement BLKSSZGET
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-scsi@vger.kernel.org, dgilbert@interlog.com,
+        Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>, akinobu.mita@gmail.com,
+        linux-api@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On Thu, 10 Sep 2020 at 13:28, Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Thu, Sep 10, 2020 at 09:59:05AM +0800, Tom Yan wrote:
+> > If we rename it to e.g. SG_GET_MAX_XFER_BYTES, it will still break
+> > applications unless we also keep the wrong/ugly/confusing name (and
+> > you lose the advantage/generality that the two ioctls can be used on
+> > both sg and "pure" block devices; which seems to be the case of some
+> > SG_* ioctls as well).
+>
+> How is that an advantage?  Applications that works with block devices
+> don't really work with a magic passthrough character device.
 
-There is a panic of NULL pointer dereference on my arm64 server when
-boot  with the fabric line  plugged into the HBA of QLE2692. After
-binary-search with git bisect I found this panic is introduced by
-commit 4984a06bf094 ("scsi: qla2xxx: Remove all rports if fabric scan
-retry fails"). The upstream and 4.19-stable both had the same problem
-when reset to this point. but the upstream had fix this
-unintentionally after commit da61ef053bcf ("scsi: qla2xxx: Reduce
-holding sess_lock to prevent CPU") while the latest 4.19-stable still
-has this issue. the panic showed as following:
+You must assume that there are applications already assuming that
+work. (And it will, at least in some cases, if this series get
+merged.)
 
-[   13.380405][  0] Unable to handle kernel NULL pointer dereference
-at virtual address 0000000000000000
-[   13.390947][  0] Mem abort info:
-[   13.395535][  0]   ESR = 0x96000045
-[   13.400390][  0]   Exception class = DABT (current EL), IL = 32 bits
-[   13.408089][  0]   SET = 0, FnV = 0
-.
-[   13.412941][  0]   EA = 0, S1PTW = 0
-[   13.416747][  0] Data abort info:
-[   13.420048][  0]   ISV = 0, ISS = 0x00000045
-[   13.424293][  0]   CM = 0, WnR = 1
-[   13.427676][  0] user pgtable: 64k pages, 48-bit VAs, pgdp = (____ptrval____)
-[   13.434778][  0] [0000000000000000] pgd=0000000000000000,
-pud=0000000000000000
-[   13.441968][  0] Internal error: Oops: 96000045 [#1] SMP
-[   13.447250][  0] Modules linked in: qla2xxx nvme_fc nvme_fabrics
-scsi_transport_fc igb megaraid_sas dm_snapshot iscsi_tcp libiscsi_tcp
-libs
-[   13.472588][  0] Process kworker/0:2 (pid: 343, stack limit =
-0x(____ptrval____))
-[   13.472675][  5] audit: type=1130 audit(1599118767.260:14): pid=1
-uid=0 auid=4294967295 ses=4294967295 msg='unit=initrd-parse-etc
-comm="sy'
-[   13.480032][  0] CPU: 0 PID: 343 Comm: kworker/0:2 Tainted: G
- W         4.19.90-19.ky10.aarch64 #1
-[   13.480033][  5] Hardware name: GreatWall, BIOS 601FBE28 2020/04/20
-[   13.480045][  0] Workqueue: qla2xxx_wq qla2x00_iocb_work_fn [qla2xxx]
-[   13.499248][  0] audit: type=1131 audit(1599118767.260:15): pid=1
-uid=0 auid=4294967295 ses=4294967295 msg='unit=initrd-parse-etc
-comm="sy'
-[   13.508759][  0] pstate: 40000005 (nZcv daif -PAN -UAO)
-[   13.547687][ 24] pc : __memset+0x16c/0x188
-[   13.547697][  0] lr : qla24xx_async_gpnft+0x194/0x950 [qla2xxx]
-[   13.547701][  0] sp : ffffb2158236bc60
-[   13.561388][  0] x29: ffffb2158236bc60 x28: 0000000000000000
-[   13.567104][  0] x27: ffff3be824ac0148 x26: ffff3be824ac00b8
-[   13.572820][  0] x25: ffff3be824b031e0 x24: 0000000000000028
-[   13.578535][  0] x23: ffffb2158600d188 x22: ffffb21586d3ea38
-[   13.584251][  0] x21: 0000000000008010 x20: ffffb21586d3ea08
-[   13.589968][  0] x19: ffffb2158600d040 x18: 0000000000000400
-[   13.595683][  0] x17: 0000000000000000 x16: ffff3be83f9a9500
-[   13.601398][  0] x15: 0000000000000400 x14: 0000000000000400
-[   13.607114][  0] x13: 0000000000000189 x12: 0000000000000001
-[   13.612829][  0] x11: 0000000000000000 x10: 0000000000000b40
-[   13.618544][  0] x9 : 0000000000000000 x8 : 0000000000000000
-[   13.624259][  0] x7 : 0000000000000000 x6 : 000000000000003f
-[   13.629974][  0] x5 : 0000000000000040 x4 : 0000000000000000
-[   13.635689][  0] x3 : 0000000000000004 x2 : 0000000000007fd0
-[   13.641404][  0] x1 : 0000000000000000 x0 : 0000000000000000
-[   13.647119][  0] Call trace:
-[   13.649983][  0]  __memset+0x16c/0x188
-[   13.653718][  0]  qla2x00_do_work+0x398/0x440 [qla2xxx]
-[   13.658920][  0]  qla2x00_iocb_work_fn+0x50/0xe8 [qla2xxx]
-[   13.664378][  0]  process_one_work+0x1f0/0x3c8
-[   13.668797][  0]  worker_thread+0x48/0x4d0
-[   13.672871][  0]  kthread+0x128/0x130
-[   13.676514][  0]  ret_from_fork+0x10/0x18
-[   13.680503][  0] Code: 91010108 54ffff4a 8b040108 cb050042 (d50b7428)
-[   13.687027][  0] ---[ end trace 258cdcdd74a25238 ]---
-[   13.692051][  0] Kernel panic - not syncing: Fatal exception
+And you have not been giving me a solid point anyway, as I said, it's
+just queue_*() at the end of the day; regardless of whether those
+would work in all sg cases, we have been using them in the sg driver
+anyway.
+
+And it's not like we have to guarantee that (the) ioctls can work in
+every case anyway, right? (Especially when they aren't named SG_*).
+
+I mean, what's even your point? How do you propose we fix this? Should
+we just leave it broken/wrong/rotten as-is (including the case that
+you don't consider it being so)? If that's what you are trying to say
+then please just say it, I'll just walk away quietly. I'm really kind
+of done with this sort of looping that leads to nowhere.
+
+>
+> > I don't really care enough though. I mean, I'm okay with
+> > SG_GET_MAX_XFER_BYTES *and* NO "improper" BLKSECTGET. If that will get
+> > the patch series in, I am willing to send a new version. If not, I'm
+> > just gonna drop this.
+>
+> You must assume that there are applications already that depend in the
+> "weird" BLKSECTGET on sg, given that it has been around so long.  Any
+> change to the semantics will break them.
+
+While you forgot to assume that there are applications assuming
+BLKSECTGET is as "weird" in the block layer at the same time. (That's
+exactly what has happened in qemu.) You don't get the slightest
+advantage in "trying not to break things" by doing the wrong thing. It
+only goes on making more things broken.
