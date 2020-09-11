@@ -2,83 +2,67 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20896C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 18:01:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A8B3C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 18:30:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C955A221EE
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 18:01:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CMpAaEcx"
+	by mail.kernel.org (Postfix) with ESMTP id B4EA221D79
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 18:30:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725813AbgIKSBG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 14:01:06 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30553 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725794AbgIKSBF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Sep 2020 14:01:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599847264;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=xgQuGnAtCJW2lSv+isKvnoUt38ZjQfV86/V9pnD/Fcc=;
-        b=CMpAaEcxlIguNHWHKs0HjVgQ46ZOzAzRHdfstqdA18QObKSWtOA6rb5bZzSzOkhbudooT1
-        zjFol0lWn89Yat+CMdm2XHIM92VUdkkxQO21Kl6HUbCF9GBoXEi33QeAB04ocfczIiZ6Np
-        yTtnSm8w4bH7Uc5WQ8AMNbGWEEzYfIY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-71-JeXcl_iDO9SFOgiO5BV34w-1; Fri, 11 Sep 2020 14:01:01 -0400
-X-MC-Unique: JeXcl_iDO9SFOgiO5BV34w-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 766EC80EF9D;
-        Fri, 11 Sep 2020 18:01:00 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.40.193.125])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6439719C78;
-        Fri, 11 Sep 2020 18:00:58 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
+        id S1725846AbgIKSa5 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Sep 2020 14:30:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37636 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725787AbgIKSa4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Sep 2020 14:30:56 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, sathya.prakash@broadcom.com
-Subject: [PATCH] mpt3sas: a small correction in _base_process_reply_queue
-Date:   Fri, 11 Sep 2020 20:00:57 +0200
-Message-Id: <20200911180057.14633-1-thenzl@redhat.com>
+Subject: [Bug 206123] aacraid ( PM8068) and iommu=nobypass Frozen PHB error 
+ on ppc64
+Date:   Fri, 11 Sep 2020 18:30:55 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: sagar.biradar@microchip.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-206123-11613-k8i3uIOtMR@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-206123-11613@https.bugzilla.kernel.org/>
+References: <bug-206123-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need to compute module a simple comparision
-is good enough.
+https://bugzilla.kernel.org/show_bug.cgi?id=206123
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--- Comment #15 from Sagar (sagar.biradar@microchip.com) ---
+Hi Georgy,
+Thanks for your response and efforts on this.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index a67749c8f4ab..ea51fd04e3f1 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1627,7 +1627,7 @@ _base_process_reply_queue(struct adapter_reply_queue *reply_q)
- 		 * So that FW can find enough entries to post the Reply
- 		 * Descriptors in the reply descriptor post queue.
- 		 */
--		if (!base_mod64(completed_cmds, ioc->thresh_hold)) {
-+		if (completed_cmds >= ioc->thresh_hold) {
- 			if (ioc->combined_reply_queue) {
- 				writel(reply_q->reply_post_host_index |
- 						((msix_index  & 7) <<
+Also Thanks to Oliver for pointing to the right patch.
+I am closing this one since we are no longer seeing this issue.
+
+Sagar
+
 -- 
-2.25.4
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
