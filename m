@@ -2,145 +2,83 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,TRACKER_ID,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D551C43461
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 17:52:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20896C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 18:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35323221ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 17:52:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C955A221EE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 18:01:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CMpAaEcx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725933AbgIKRwX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 13:52:23 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:47803 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725794AbgIKRwX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Sep 2020 13:52:23 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 611E7204191;
-        Fri, 11 Sep 2020 19:52:18 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id p-SIdQsLBuAC; Fri, 11 Sep 2020 19:52:10 +0200 (CEST)
-Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id 7E24E20417A;
-        Fri, 11 Sep 2020 19:52:08 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH RESEND 2/4] scsi: sg: implement BLKSSZGET
-To:     Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        akinobu.mita@gmail.com, linux-api@vger.kernel.org
-References: <CAGnHSE=bhpL4REG5PXST6dF3gSWeewg1Eqr+sLw_9rtqL-ToFQ@mail.gmail.com>
- <20200906012716.1553-1-tom.ty89@gmail.com>
- <20200906012716.1553-2-tom.ty89@gmail.com> <20200907060927.GA18909@lst.de>
- <CAGnHSEnWPSaM3xS1MtFUJDrSZPfaH_VwAiQ5UkndFTVe3uWNVA@mail.gmail.com>
- <20200908084258.GA17030@lst.de>
- <CAGnHSE=ASs3DG2yp1NpODHimwxHe+=XPRsOyDdkB3ThtyEU-KA@mail.gmail.com>
- <20200910052835.GB18283@lst.de>
- <CAGnHSE=pcW0zJMSaowdsRXFa=TmOeidekgvDuEPB8PU7mheXNA@mail.gmail.com>
- <20200911064844.GA22190@lst.de>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <a8d8e0d3-dfd7-5a2d-8f63-5e1816805c8e@interlog.com>
-Date:   Fri, 11 Sep 2020 13:52:07 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1725813AbgIKSBG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Sep 2020 14:01:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30553 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725794AbgIKSBF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Sep 2020 14:01:05 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599847264;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=xgQuGnAtCJW2lSv+isKvnoUt38ZjQfV86/V9pnD/Fcc=;
+        b=CMpAaEcxlIguNHWHKs0HjVgQ46ZOzAzRHdfstqdA18QObKSWtOA6rb5bZzSzOkhbudooT1
+        zjFol0lWn89Yat+CMdm2XHIM92VUdkkxQO21Kl6HUbCF9GBoXEi33QeAB04ocfczIiZ6Np
+        yTtnSm8w4bH7Uc5WQ8AMNbGWEEzYfIY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-71-JeXcl_iDO9SFOgiO5BV34w-1; Fri, 11 Sep 2020 14:01:01 -0400
+X-MC-Unique: JeXcl_iDO9SFOgiO5BV34w-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 766EC80EF9D;
+        Fri, 11 Sep 2020 18:01:00 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.193.125])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6439719C78;
+        Fri, 11 Sep 2020 18:00:58 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, sathya.prakash@broadcom.com
+Subject: [PATCH] mpt3sas: a small correction in _base_process_reply_queue
+Date:   Fri, 11 Sep 2020 20:00:57 +0200
+Message-Id: <20200911180057.14633-1-thenzl@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20200911064844.GA22190@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-11 2:48 a.m., Christoph Hellwig wrote:
-> On Fri, Sep 11, 2020 at 10:52:19AM +0800, Tom Yan wrote:
->>> How is that an advantage?  Applications that works with block devices
->>> don't really work with a magic passthrough character device.
->>
->> You must assume that there are applications already assuming that
->> work. (And it will, at least in some cases, if this series get
->> merged.)
-> 
-> Why "must" I assume that?
-> 
->> And you have not been giving me a solid point anyway, as I said, it's
->> just queue_*() at the end of the day; regardless of whether those
->> would work in all sg cases, we have been using them in the sg driver
->> anyway.
->>
->> And it's not like we have to guarantee that (the) ioctls can work in
->> every case anyway, right? (Especially when they aren't named SG_*).
-> 
-> No.  While it is unfortunte we have all kinds of cases of ioctls working
-> differnetly on different devices.
-> 
->>
->> I mean, what's even your point? How do you propose we fix this?
-> 
-> I propose to not "fix" anything, because nothing is broken except for
-> maybe a lack of documentation.
+There is no need to compute module a simple comparision
+is good enough.
 
-Alan Stern are you reading this thread? Why do I ask, you may ask?
-Because 'git blame' fingers you:
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-commit 44ec95425c1d9dce6e4638c29e4362cfb44814e7
-Author: Alan Stern <stern@rowland.harvard.edu>
-Date:   Tue Feb 20 11:01:57 2007 -0500
-
-     [SCSI] sg: cap reserved_size values at max_sectors
-
-     This patch (as857) modifies the SG_GET_RESERVED_SIZE and
-     SG_SET_RESERVED_SIZE ioctls in the sg driver, capping the values at
-     the device's request_queue's max_sectors value.  This will permit
-     cdrecord to obtain a legal value for the maximum transfer length,
-     fixing Bugzilla #7026.
-
-     The patch also caps the initial reserved_size value.  There's no
-     reason to have a reserved buffer larger than max_sectors, since it
-     would be impossible to use the extra space.
-
-     The corresponding ioctls in the block layer are modified similarly,
-     and the initial value for the reserved_size is set as large as
-     possible.  This will effectively make it default to max_sectors.
-     Note that the actual value is meaningless anyway, since block devices
-     don't have a reserved buffer.
-
-     Finally, the BLKSECTGET ioctl is added to sg, so that there will be a
-     uniform way for users to determine the actual max_sectors value for
-     any raw SCSI transport.
-
-     Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-     Acked-by: Jens Axboe <jens.axboe@oracle.com>
-     Acked-by: Douglas Gilbert <dougg@torque.net>
-     Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Oops, I ack-ed this patch from 2007:-) Anyway it would seem BLKSECTGET ioctl
-was meant to be a "uniform way to determine the actual max_sectors value for
-any raw SCSI transport." Given that the initial implementation of BLKSECTGET
-now seems to be at odds with other implementations, what should we do?
-
-It is possible that it was correct on 2007 and the BLKSECTGET ioctl has
-changed elsewhere but failed to fix the sg driver's implementation.
-
-If I get a vote then it would be for Tom Yan's approach: reduce entropy or
-it will overwhelm us :-)
-
-
-So Christoph, it IS documented, both in the above commit message and:
-    https://doug-gilbert.github.io/sg_v40.html
-
-in Table 8. So please stop with your "maybe a lack of documentation" line.
-
-Doug Gilbert
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index a67749c8f4ab..ea51fd04e3f1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1627,7 +1627,7 @@ _base_process_reply_queue(struct adapter_reply_queue *reply_q)
+ 		 * So that FW can find enough entries to post the Reply
+ 		 * Descriptors in the reply descriptor post queue.
+ 		 */
+-		if (!base_mod64(completed_cmds, ioc->thresh_hold)) {
++		if (completed_cmds >= ioc->thresh_hold) {
+ 			if (ioc->combined_reply_queue) {
+ 				writel(reply_q->reply_post_host_index |
+ 						((msix_index  & 7) <<
+-- 
+2.25.4
 
