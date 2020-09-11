@@ -2,134 +2,124 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27845C2BC11
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0619DC433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:59:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5DB5221ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:59:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB82721D47
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:59:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vibNFZhH"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JghBkQNZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726546AbgIKP7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 11:59:13 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:51154 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726479AbgIKP6e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2020 11:58:34 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08BDMQFM156701;
-        Fri, 11 Sep 2020 13:23:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=Red1KfmdrafTES2OBbtSFrSu50BYGfLvnMworFNXkMg=;
- b=vibNFZhHQaKI31k2Y2zZKGhK/KffgNBmfqHAktuk1/o5mZv8jr7h8oPcPCSHsBm/rM9X
- jJ1CbNmKtUksgsbOsnEvyyt2A0+QlWwpxMjFyRCXXUYSuJnh3tni6HB9FAX540IyqwWr
- grTbcYhzU7Ggw5QSHkktml2YEP5f8ktzp9X9vtHHKC5AMVhujnCnSRtcp3gL9rhcxD/p
- FKfUm7cg9B5MuTHXqojkIdKhgZL+ziUm3ahoU489EWv/PZbrP5gpDE3PYotwk3QDzTL1
- QZurtR6Eduqgvl7DQBc32P6jLaYuLFn/K3DmzzLdRcI25HZAYY67Bemd2Cz+Sf2kBSPo wA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 33c23re7me-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 11 Sep 2020 13:23:31 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08BDLBUG053057;
-        Fri, 11 Sep 2020 13:23:30 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 33cmkcy2gn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Sep 2020 13:23:30 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08BDNTnO009072;
-        Fri, 11 Sep 2020 13:23:29 GMT
-Received: from [192.168.1.18] (/70.114.128.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 11 Sep 2020 06:23:29 -0700
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Subject: Re: [PATCH] scsi: qla2xxx: remove unneeded variable 'rval'
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20200911091021.2937708-1-yanaijie@huawei.com>
-Date:   Fri, 11 Sep 2020 08:23:28 -0500
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        hmadhani@marvell.com, linux-scsi@vger.kernel.org,
-        Hulk Robot <hulkci@huawei.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <FF312963-5603-4541-80AF-5266DA0DEBB1@oracle.com>
-References: <20200911091021.2937708-1-yanaijie@huawei.com>
-To:     Jason Yan <yanaijie@huawei.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.1)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009110107
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
- mlxlogscore=999 mlxscore=0 bulkscore=0 suspectscore=0 spamscore=0
- malwarescore=0 phishscore=0 lowpriorityscore=0 clxscore=1011
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009110108
+        id S1726551AbgIKP7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Sep 2020 11:59:23 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:47313 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726598AbgIKP6D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Sep 2020 11:58:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599839882;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=MnqP80VfwQSbfZ7ARSC2y51Jf6mJED8b7AN6WRugtEg=;
+        b=JghBkQNZLimbl7LmeSmcWHS0ljKNU1aJ0HfV+49FK0TPllbL6gdmgIdGwcYEYDepNIhHad
+        aGi2S5NMJiALgkbP+7MMW3lZ4A2CdrVjUu2dnCAjQQQJlZw8sH7czbfhecKtcRdPhm2CgZ
+        ZB+2dqKpIZC9+OcWfifYDUhR7UwT+QM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-17-On7d7XMZPnK4Ac2hIG2RpQ-1; Fri, 11 Sep 2020 09:44:03 -0400
+X-MC-Unique: On7d7XMZPnK4Ac2hIG2RpQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1771018C9F7E;
+        Fri, 11 Sep 2020 13:44:02 +0000 (UTC)
+Received: from ovpn-113-26.phx2.redhat.com (ovpn-113-26.phx2.redhat.com [10.3.113.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id ABC1B709E1;
+        Fri, 11 Sep 2020 13:44:01 +0000 (UTC)
+Message-ID: <adbb27fcbe0a534a9f19f4ff624f05dbf2a1a193.camel@redhat.com>
+Subject: Re: [PATCH 1/1] scsi: scsi_dh_alua: remove the list entry before
+ assigning the pointer and sdev to NULL
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org
+Cc:     hare@suse.de
+Date:   Fri, 11 Sep 2020 09:44:01 -0400
+In-Reply-To: <4064EB40-C84F-42E8-82F7-3940901C09D2@purestorage.com>
+References: <4064EB40-C84F-42E8-82F7-3940901C09D2@purestorage.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, 2020-09-10 at 14:22 -0700, Brian Bunker wrote:
+> A race exists where the BUG_ON(!h->sdev) will fire if the detach
+> device handler
+> from one thread runs removing a list entry while another thread is
+> trying to
+> evaluate the target portal group state.
+> 
+> The order of the detach operation is now changed to delete the list
+> entry
+> before modifying the pointer and setting h->sdev to NULL.
+> 
+> Signed-off-by: Brian Bunker <brian@purestorage.com>
+> Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+> ___
+> diff -Naur a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
+> b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
+> --- a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10
+> 12:29:03.000000000 -0700
+> +++ b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10
+> 12:41:34.000000000 -0700
+> @@ -1146,16 +1146,18 @@
+> 
+>  	spin_lock(&h->pg_lock);
+>  	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h-
+> >pg_lock));
+> -	rcu_assign_pointer(h->pg, NULL);
+> -	h->sdev = NULL;
+> -	spin_unlock(&h->pg_lock);
+>  	if (pg) {
+>  		spin_lock_irq(&pg->lock);
+>  		list_del_rcu(&h->node);
+>  		spin_unlock_irq(&pg->lock);
+> -		kref_put(&pg->kref, release_port_group);
+>  	}
+> +	rcu_assign_pointer(h->pg, NULL);
+> +	h->sdev = NULL;
+> +	spin_unlock(&h->pg_lock);
+>  	sdev->handler_data = NULL;
+> +	if (pg) {
+> +		kref_put(&pg->kref, release_port_group);
+> +	}
+>  	kfree(h);
+>  }
+> 
 
+Good catch.
 
-> On Sep 11, 2020, at 4:10 AM, Jason Yan <yanaijie@huawei.com> wrote:
->=20
-> This addresses the following coccinelle warning:
->=20
-> drivers/scsi/qla2xxx/qla_init.c:7112:5-9: Unneeded variable: "rval".
-> Return "QLA_SUCCESS" on line 7115
->=20
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> ---
-> drivers/scsi/qla2xxx/qla_init.c | 5 ++---
-> 1 file changed, 2 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c =
-b/drivers/scsi/qla2xxx/qla_init.c
-> index 0bd04a62af83..df56ac8c3f00 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -7109,10 +7109,9 @@ qla24xx_reset_adapter(scsi_qla_host_t *vha)
-> 	unsigned long flags =3D 0;
-> 	struct qla_hw_data *ha =3D vha->hw;
-> 	struct device_reg_24xx __iomem *reg =3D &ha->iobase->isp24;
-> -	int rval =3D QLA_SUCCESS;
->=20
-> 	if (IS_P3P_TYPE(ha))
-> -		return rval;
-> +		return QLA_SUCCESS;
->=20
-> 	vha->flags.online =3D 0;
-> 	ha->isp_ops->disable_intrs(ha);
-> @@ -7127,7 +7126,7 @@ qla24xx_reset_adapter(scsi_qla_host_t *vha)
-> 	if (IS_NOPOLLING_TYPE(ha))
-> 		ha->isp_ops->enable_intrs(ha);
->=20
-> -	return rval;
-> +	return QLA_SUCCESS;
-> }
->=20
-> /* On sparc systems, obtain port and node WWN from firmware
-> --=20
-> 2.25.4
->=20
+This makes the code hold the h->pg_lock while holding the pg->lock
+though.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+It seems like all that is needed is to remove the h->sdev = NULL
+assignment, since it has to remain valid until the alua_ah_data is
+removed from the pg->dh_list, and the object is going to be freed
+right afterwards anyway?
 
---
-Himanshu Madhani	 Oracle Linux Engineering
+Might as well also remove the BUG_ON(!h->sdev) in 2 places since the
+kernel will crash when h is dereferenced anyway if it is NULL.
+
+-Ewan
+
 
