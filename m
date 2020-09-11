@@ -2,124 +2,126 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0619DC433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:59:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB26AC433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 16:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB82721D47
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:59:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A754208FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 16:21:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JghBkQNZ"
+	dkim=pass (1024-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="KOHwV0nW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726551AbgIKP7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 11:59:23 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:47313 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726598AbgIKP6D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Sep 2020 11:58:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599839882;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=MnqP80VfwQSbfZ7ARSC2y51Jf6mJED8b7AN6WRugtEg=;
-        b=JghBkQNZLimbl7LmeSmcWHS0ljKNU1aJ0HfV+49FK0TPllbL6gdmgIdGwcYEYDepNIhHad
-        aGi2S5NMJiALgkbP+7MMW3lZ4A2CdrVjUu2dnCAjQQQJlZw8sH7czbfhecKtcRdPhm2CgZ
-        ZB+2dqKpIZC9+OcWfifYDUhR7UwT+QM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-17-On7d7XMZPnK4Ac2hIG2RpQ-1; Fri, 11 Sep 2020 09:44:03 -0400
-X-MC-Unique: On7d7XMZPnK4Ac2hIG2RpQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1771018C9F7E;
-        Fri, 11 Sep 2020 13:44:02 +0000 (UTC)
-Received: from ovpn-113-26.phx2.redhat.com (ovpn-113-26.phx2.redhat.com [10.3.113.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id ABC1B709E1;
-        Fri, 11 Sep 2020 13:44:01 +0000 (UTC)
-Message-ID: <adbb27fcbe0a534a9f19f4ff624f05dbf2a1a193.camel@redhat.com>
-Subject: Re: [PATCH 1/1] scsi: scsi_dh_alua: remove the list entry before
- assigning the pointer and sdev to NULL
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org
-Cc:     hare@suse.de
-Date:   Fri, 11 Sep 2020 09:44:01 -0400
-In-Reply-To: <4064EB40-C84F-42E8-82F7-3940901C09D2@purestorage.com>
-References: <4064EB40-C84F-42E8-82F7-3940901C09D2@purestorage.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+        id S1726551AbgIKQVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Sep 2020 12:21:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42260 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726552AbgIKQVK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2020 12:21:10 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70EEDC061573
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2020 09:21:09 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id 7so6977062pgm.11
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2020 09:21:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=from:content-transfer-encoding:mime-version:subject:message-id:date
+         :to;
+        bh=V2N3yyGKFkqeOT8pl/d/gwuEP1edsjjDij1TWzHYTuM=;
+        b=KOHwV0nWFcmp5odmHQ7xW0wqUgPBCInGFvWzFYx7CbMRTC1pRpNbbzrqPDkaCTyrGI
+         aiixHJlPI3ZFxsLKEznc4r2xU2sTtU7UuQ951uWegRmFt4CKRJLmoX0+Mw2MjvlX5FkZ
+         lLtxqqaZlYlUcVFlHuNjYxiglBzo5akgxD5+w=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:content-transfer-encoding:mime-version
+         :subject:message-id:date:to;
+        bh=V2N3yyGKFkqeOT8pl/d/gwuEP1edsjjDij1TWzHYTuM=;
+        b=Zpu+zGe8eGPe+R1CYm609oRYnNvccgvjYAhpSKDQjVpJtaDSrRQ+Ws2twP2kZppWH+
+         pxtDYH+8Y9hVVZnN/w2ow4f2ox/BiwsV0hpslUvCnJu2Xvmve9BBYRNvf5tCmorQc25q
+         em7sFVEC5jRqB687WekblzZJkflVZGLlmknWyIIdgYmwwyE3l+9l6baXagdjR/fyrahr
+         lj/vz4RVnU4gwQFnccIVBqNqnm0LFVQ2av/Ov6kjkASVWSdAgeAKRKQm6qi3cJYm2Ru4
+         SQN4CFE5IW18Lhw2wFzrVqgKbKh0ZhJNaOPCg555MMywSFBACgv96jLCldgoi5vI/HQO
+         mMqA==
+X-Gm-Message-State: AOAM532lzeCQestx6a+Gys57zK+QZBRMz+LhJlwrNiYZlU/s3NVzhRep
+        tm9ExTqY5NCzXqHniFLahf1IecxTZlZ+xLv8GfZ2Ipb7Yf8etq619r4eXTRzvxq0SkzCmxLaCG+
+        NlMRPsgje3MYzfgdln3N5dSWe90DNFwMIhkDzUrH2Cb7M77ZIwONWOzDf6NUTMyr5TKP/SQSert
+        QJlZM=
+X-Google-Smtp-Source: ABdhPJxpGgIzwcTqsMmFH20kI9k9I0xWfkHDtc9ZwF4JN4kSLx5q+jbnsEb/Iz97CUXit4MYfBvraA==
+X-Received: by 2002:a63:1a21:: with SMTP id a33mr2221344pga.305.1599841268392;
+        Fri, 11 Sep 2020 09:21:08 -0700 (PDT)
+Received: from localhost.localdomain ([192.30.189.3])
+        by smtp.gmail.com with ESMTPSA id 72sm2744671pfx.79.2020.09.11.09.21.07
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 11 Sep 2020 09:21:07 -0700 (PDT)
+From:   Brian Bunker <brian@purestorage.com>
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.0.3.2.26\))
+Subject: [PATCH 1/1] scsi: scsi_dh_alua: do not set h->sdev to NULL before
+ removing the list entry
+Message-Id: <8239CB66-1836-444D-A230-83714795D5DC@purestorage.com>
+Date:   Fri, 11 Sep 2020 09:21:07 -0700
+To:     linux-scsi@vger.kernel.org
+X-Mailer: Apple Mail (2.3654.0.3.2.26)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2020-09-10 at 14:22 -0700, Brian Bunker wrote:
-> A race exists where the BUG_ON(!h->sdev) will fire if the detach
-> device handler
-> from one thread runs removing a list entry while another thread is
-> trying to
-> evaluate the target portal group state.
-> 
-> The order of the detach operation is now changed to delete the list
-> entry
-> before modifying the pointer and setting h->sdev to NULL.
-> 
-> Signed-off-by: Brian Bunker <brian@purestorage.com>
-> Acked-by: Krishna Kant <krishna.kant@purestorage.com>
-> ___
-> diff -Naur a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
-> b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
-> --- a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10
-> 12:29:03.000000000 -0700
-> +++ b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10
-> 12:41:34.000000000 -0700
-> @@ -1146,16 +1146,18 @@
-> 
->  	spin_lock(&h->pg_lock);
->  	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h-
-> >pg_lock));
-> -	rcu_assign_pointer(h->pg, NULL);
-> -	h->sdev = NULL;
-> -	spin_unlock(&h->pg_lock);
->  	if (pg) {
->  		spin_lock_irq(&pg->lock);
->  		list_del_rcu(&h->node);
->  		spin_unlock_irq(&pg->lock);
-> -		kref_put(&pg->kref, release_port_group);
->  	}
-> +	rcu_assign_pointer(h->pg, NULL);
-> +	h->sdev = NULL;
-> +	spin_unlock(&h->pg_lock);
->  	sdev->handler_data = NULL;
-> +	if (pg) {
-> +		kref_put(&pg->kref, release_port_group);
-> +	}
->  	kfree(h);
->  }
-> 
+A race exists where the BUG_ON(!h->sdev) will fire if the detach device =
+handler
+from one thread runs removing a list entry while another thread is =
+trying to
+evaluate the target portal group state.
 
-Good catch.
+Do not set the h->sdev to NULL in the detach device handler. It is freed =
+at the
+end of the function any way. Also remove the BUG_ON since the condition
+that causes them to fire has been removed.
 
-This makes the code hold the h->pg_lock while holding the pg->lock
-though.
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+___
+--- a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c   2020-09-10 =
+12:29:03.000000000 -0700
++++ b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c   2020-09-11 =
+09:14:15.000000000 -0700
+@@ -658,8 +658,6 @@
+                                        rcu_read_lock();
+                                        list_for_each_entry_rcu(h,
+                                                &tmp_pg->dh_list, node) =
+{
+-                                               /* h->sdev should always =
+be valid */
+-                                               BUG_ON(!h->sdev);
+                                                h->sdev->access_state =3D =
+desc[0];
+                                        }
+                                        rcu_read_unlock();
+@@ -705,7 +703,6 @@
+                        pg->expiry =3D 0;
+                        rcu_read_lock();
+                        list_for_each_entry_rcu(h, &pg->dh_list, node) {
+-                               BUG_ON(!h->sdev);
+                                h->sdev->access_state =3D
+                                        (pg->state & =
+SCSI_ACCESS_STATE_MASK);
+                                if (pg->pref)
+@@ -1147,7 +1144,6 @@
+        spin_lock(&h->pg_lock);
+        pg =3D rcu_dereference_protected(h->pg, =
+lockdep_is_held(&h->pg_lock));
+        rcu_assign_pointer(h->pg, NULL);
+-       h->sdev =3D NULL;
+        spin_unlock(&h->pg_lock);
+        if (pg) {
+                spin_lock_irq(&pg->lock);
 
-It seems like all that is needed is to remove the h->sdev = NULL
-assignment, since it has to remain valid until the alua_ah_data is
-removed from the pg->dh_list, and the object is going to be freed
-right afterwards anyway?
 
-Might as well also remove the BUG_ON(!h->sdev) in 2 places since the
-kernel will crash when h is dereferenced anyway if it is NULL.
-
--Ewan
 
 
