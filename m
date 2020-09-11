@@ -2,88 +2,159 @@ Return-Path: <SRS0=m8O6=CU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E72C2BC11
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:33:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32C88C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:48:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A2ED20770
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:33:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3028221ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 15:48:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="MlZQBj/o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725814AbgIKPd4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 11:33:56 -0400
-Received: from mga05.intel.com ([192.55.52.43]:53188 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726513AbgIKPdt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Sep 2020 11:33:49 -0400
-IronPort-SDR: 8PLDrsbdgt72oSt5/WgO4Mpt7bAw2tbAk5sEFsffMwcKkpKPm6IgTOBHgIsJowb9dSiIQhq9NH
- ofvrZ44aQHpw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9740"; a="243578500"
-X-IronPort-AV: E=Sophos;i="5.76,415,1592895600"; 
-   d="scan'208";a="243578500"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2020 07:01:35 -0700
-IronPort-SDR: QQgLCeVX9kCsYDZoRTSgdRIBcUe+kmyz1tNdGnjn0NXylpLc1SMG6Oo3tTnf0C4W5K/yccFnGP
- PXfGAG1XnuLQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.76,415,1592895600"; 
-   d="scan'208";a="329788215"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.190]) ([10.237.72.190])
-  by fmsmga004.fm.intel.com with ESMTP; 11 Sep 2020 07:01:33 -0700
-Subject: Re: [PATCH V2] scsi: ufs-pci: Add LTR support for Intel controllers
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-References: <20200827072030.24655-1-adrian.hunter@intel.com>
- <yq14kohexka.fsf@ca-mkp.ca.oracle.com>
- <dc615e02-18a3-334d-dbc4-8aba94e4be6b@intel.com>
- <a27fa387-356c-82e1-a49f-62602336589e@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <841d40b4-1181-2bd3-2c7f-4c00e76cbe60@intel.com>
-Date:   Fri, 11 Sep 2020 17:01:08 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
-MIME-Version: 1.0
-In-Reply-To: <a27fa387-356c-82e1-a49f-62602336589e@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S1726568AbgIKPse (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Sep 2020 11:48:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37028 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726021AbgIKPrq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2020 11:47:46 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E24CC061756
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2020 08:47:46 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id d6so7650862pfn.9
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2020 08:47:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=8qITAmpZovlk0VqFzAPSzRSUuVesfkTqqVBpZYXhTqY=;
+        b=MlZQBj/oGNs5Ngu/7pa9Ux7BEhFqjU8Qn+s8DgZsKksuQZBWtIROkLODiX5yzT39WK
+         nsTwEFlWNdBb5ayg83w8UfxJc8zeYbBejQz7PH8b6vRlqQcTXBGf8FmWinB0mOIZgL9O
+         bZck87JGaxoY+6xHGttol2Z6+jsx1JbMj7C5E=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=8qITAmpZovlk0VqFzAPSzRSUuVesfkTqqVBpZYXhTqY=;
+        b=Bu/27IwCb/HDCqbY28dGRjmVGwFi2NmNWHAZw6+KUQwIsDZ3IY2sxOKvEbaUFnzzRm
+         HdNL/243Rh0fpH2W6dXUddbb3ue6TE/smSgNSRfdVjCOdaT22luYobj/PjF/h0IFqF+Y
+         lVsp2WH/JZ1pTwZB09anuGI4o5Afx19n7GwhPXHNpRvCug++B7ZHL5EQjbpMap2UDGAg
+         n/RUaRWv6bMNyLbzsegR4og3SjmJifJa76wFk6nMqdOOEP+5ONnVC4RmQAA9Quh07+Jx
+         csdMlHqTwfx/GrkZaukU5xq8XHt7IOgVCOY3WMErkRvdiZYVJuocGt8HohE22kLlhQos
+         iIhA==
+X-Gm-Message-State: AOAM531phoMFwJiQeKfXOiBEIZvtF6bkQ+jHN1ctYnImHgAnRh25ICaj
+        INtPavfGSXqmtAhw9XBaQCZuLQ==
+X-Google-Smtp-Source: ABdhPJzKf8v2QCyWm2BMqBtIjlUXRWYsk7umKxRnFWZCmspUm3x4I/CjB1hrRYx/6YRLx2ppBLVdAw==
+X-Received: by 2002:a17:902:d909:b029:d0:cbe1:e716 with SMTP id c9-20020a170902d909b02900d0cbe1e716mr2857745plz.36.1599839265879;
+        Fri, 11 Sep 2020 08:47:45 -0700 (PDT)
+Received: from localhost.localdomain ([192.30.189.3])
+        by smtp.gmail.com with ESMTPSA id g32sm2222561pgl.89.2020.09.11.08.47.44
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 11 Sep 2020 08:47:45 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.0.3.2.26\))
+Subject: Re: [PATCH 1/1] scsi: scsi_dh_alua: remove the list entry before
+ assigning the pointer and sdev to NULL
+From:   Brian Bunker <brian@purestorage.com>
+In-Reply-To: <adbb27fcbe0a534a9f19f4ff624f05dbf2a1a193.camel@redhat.com>
+Date:   Fri, 11 Sep 2020 08:47:44 -0700
+Cc:     linux-scsi@vger.kernel.org, hare@suse.de
 Content-Transfer-Encoding: 7bit
+Message-Id: <1D8474C3-6D04-4C0F-B23C-A2924CD5436A@purestorage.com>
+References: <4064EB40-C84F-42E8-82F7-3940901C09D2@purestorage.com>
+ <adbb27fcbe0a534a9f19f4ff624f05dbf2a1a193.camel@redhat.com>
+To:     "Ewan D. Milne" <emilne@redhat.com>
+X-Mailer: Apple Mail (2.3654.0.3.2.26)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/09/20 5:06 pm, Adrian Hunter wrote:
-> On 2/09/20 12:27 pm, Adrian Hunter wrote:
->> On 2/09/20 5:12 am, Martin K. Petersen wrote:
->>>
->>> Adrian,
->>>
->>>> Intel host controllers support the setting of latency tolerance.
->>>> Accordingly, implement the PM QoS ->set_latency_tolerance() callback. The
->>>> raw register values are also exposed via debugfs.
->>>
->>> Does not apply to 5.10/scsi-queue. Please rebase. Thanks!
->>>
->>
->> Hi
->>
->> Thanks for processing this.
->>
->> The 5.10/scsi-queue branch seems to be missing the following fix.  If you cherry
->> pick that, then it applies.
-> 
-> Now there seem to be conflicts between 5.10/scsi-queue and v5.9-rc4.
-> I am not sure what I can do?
+To me just removing the h->sdev = NULL seems strange because then this
+looks strange to me:
 
-Now I see it does apply to James' for-next branch.  Can it be applied there?
+pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+rcu_assign_pointer(h->pg, NULL);
+
+Then saying
+If (pg)
+
+Since we just assigned that pointer, h->pg to NULL.
+
+Thanks,
+Brian 
+
+Brian Bunker
+SW Eng
+brian@purestorage.com
+
+
+
+> On Sep 11, 2020, at 6:44 AM, Ewan D. Milne <emilne@redhat.com> wrote:
+> 
+> On Thu, 2020-09-10 at 14:22 -0700, Brian Bunker wrote:
+>> A race exists where the BUG_ON(!h->sdev) will fire if the detach
+>> device handler
+>> from one thread runs removing a list entry while another thread is
+>> trying to
+>> evaluate the target portal group state.
+>> 
+>> The order of the detach operation is now changed to delete the list
+>> entry
+>> before modifying the pointer and setting h->sdev to NULL.
+>> 
+>> Signed-off-by: Brian Bunker <brian@purestorage.com>
+>> Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+>> ___
+>> diff -Naur a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
+>> b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c
+>> --- a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10
+>> 12:29:03.000000000 -0700
+>> +++ b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c	2020-09-10
+>> 12:41:34.000000000 -0700
+>> @@ -1146,16 +1146,18 @@
+>> 
+>> 	spin_lock(&h->pg_lock);
+>> 	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h-
+>>> pg_lock));
+>> -	rcu_assign_pointer(h->pg, NULL);
+>> -	h->sdev = NULL;
+>> -	spin_unlock(&h->pg_lock);
+>> 	if (pg) {
+>> 		spin_lock_irq(&pg->lock);
+>> 		list_del_rcu(&h->node);
+>> 		spin_unlock_irq(&pg->lock);
+>> -		kref_put(&pg->kref, release_port_group);
+>> 	}
+>> +	rcu_assign_pointer(h->pg, NULL);
+>> +	h->sdev = NULL;
+>> +	spin_unlock(&h->pg_lock);
+>> 	sdev->handler_data = NULL;
+>> +	if (pg) {
+>> +		kref_put(&pg->kref, release_port_group);
+>> +	}
+>> 	kfree(h);
+>> }
+>> 
+> 
+> Good catch.
+> 
+> This makes the code hold the h->pg_lock while holding the pg->lock
+> though.
+> 
+> It seems like all that is needed is to remove the h->sdev = NULL
+> assignment, since it has to remain valid until the alua_ah_data is
+> removed from the pg->dh_list, and the object is going to be freed
+> right afterwards anyway?
+> 
+> Might as well also remove the BUG_ON(!h->sdev) in 2 places since the
+> kernel will crash when h is dereferenced anyway if it is NULL.
+> 
+> -Ewan
+> 
+> 
+
