@@ -3,27 +3,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F688C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 06:16:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4C4C43461
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 06:22:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 335BD221E5
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 06:16:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A857221EE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Sep 2020 06:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725536AbgIKGQV convert rfc822-to-8bit (ORCPT
+        id S1725778AbgIKGWx convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Sep 2020 02:16:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36612 "EHLO mail.kernel.org"
+        Fri, 11 Sep 2020 02:22:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37276 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725468AbgIKGQU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Sep 2020 02:16:20 -0400
+        id S1725468AbgIKGWv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Sep 2020 02:22:51 -0400
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 206123] aacraid ( PM8068) and iommu=nobypass Frozen PHB error 
  on ppc64
-Date:   Fri, 11 Sep 2020 06:16:19 +0000
+Date:   Fri, 11 Sep 2020 06:22:50 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
@@ -32,14 +31,14 @@ X-Bugzilla-Component: AACRAID
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: normal
-X-Bugzilla-Who: sagar.biradar@microchip.com
+X-Bugzilla-Who: gyakovlev@gentoo.org
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-206123-11613-Vf8oS3cbuN@https.bugzilla.kernel.org/>
+Message-ID: <bug-206123-11613-tDXvVzokPc@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-206123-11613@https.bugzilla.kernel.org/>
 References: <bug-206123-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -54,33 +53,18 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=206123
 
---- Comment #13 from Sagar (sagar.biradar@microchip.com) ---
-(In reply to gyakovlev from comment #12)
-> applied patch to linux-5.4.64, booted with iommu=nobypass and ran some
-> stress-ng tests across all drives.
-> looks good so far.
-> wrote close to 1TB of test data, not a sign of a problem.
-> performance is excellent.
-> 
-> 
-> also booted linux-5.8.8 (without patch), just a tiny bit of IO triggers the
-> error, controller does not recover after reset, everything hangs.
-> I have not tested patched 5.8.8.
-> 
-> 
-> Conclusion is - patch Oliver linked definitely helps and system is stable
-> and performant.
-> 
-> Hopefully it'll make into 5.4 and 5.8, I'll be patching manually meanwhile.
-> 
-> 
-> Tested-by: Georgy Yakovlev <gyakovlev@gentoo.org>
+--- Comment #14 from gyakovlev@gentoo.org ---
+Hi Sagar,
 
-Thanks for the prompt response Georgy. Appreciate it
-Does that mean you will patch it one more time on 5.8.8 and based on the result
-- we can consider closing this BZ?
+testing on 5.8 is a bit problematic for me, because some things on that system
+require 5.4 kernel.
 
-Sagar
+Patch applies to 5.8, I assume it'll work just fine. No plans testing it.
+I meant I'll be patching my kernels till the fix will be backported to release
+versions of linux.
+
+Thanks all for you help and attention, bug definitely can be closed from my
+point of view.
 
 -- 
 You are receiving this mail because:
