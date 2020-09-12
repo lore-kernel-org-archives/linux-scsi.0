@@ -2,86 +2,144 @@ Return-Path: <SRS0=de5d=CV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1FCEC43461
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Sep 2020 17:03:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE799C433E2
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Sep 2020 19:23:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B30BF2087C
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Sep 2020 17:03:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7453F207C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Sep 2020 19:23:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="MurFS5HB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725885AbgILRDc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Sep 2020 13:03:32 -0400
-Received: from mout.kundenserver.de ([212.227.126.134]:57949 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbgILRD1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Sep 2020 13:03:27 -0400
-Received: from mail-qk1-f170.google.com ([209.85.222.170]) by
- mrelayeu.kundenserver.de (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis)
- id 1MlwJv-1kzn5i262V-00j2c4; Sat, 12 Sep 2020 19:03:25 +0200
-Received: by mail-qk1-f170.google.com with SMTP id q5so13046377qkc.2;
-        Sat, 12 Sep 2020 10:03:25 -0700 (PDT)
-X-Gm-Message-State: AOAM532YYb7pYi4ysDzOIk8XprAbqp5lOYLjABWnOcCmdlXYUUYPizWz
-        M+xdmwGDEXf2omLoViJW1IDQkPv1gQ5SKl6H3LE=
-X-Google-Smtp-Source: ABdhPJwrFDiQN6ar3nG7uFmwIH05x3gLlT9Xo/ra0kyl9Nr9O28w9hfUNyR7+vG9Vv9FPreMq7aWAM44U13zJtHoAhc=
-X-Received: by 2002:a37:a483:: with SMTP id n125mr6418718qke.286.1599930204172;
- Sat, 12 Sep 2020 10:03:24 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200908213715.3553098-1-arnd@arndb.de> <20200908213715.3553098-2-arnd@arndb.de>
- <20200912072053.GB1945@infradead.org>
-In-Reply-To: <20200912072053.GB1945@infradead.org>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Sat, 12 Sep 2020 19:03:08 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a1ymnvnAjdcO3Dzfy9bp4LO-2uhtimOkrmFStynJYXrqQ@mail.gmail.com>
-Message-ID: <CAK8P3a1ymnvnAjdcO3Dzfy9bp4LO-2uhtimOkrmFStynJYXrqQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] scsi: megaraid_sas: check user-provided offsets
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        id S1725881AbgILTXb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Sep 2020 15:23:31 -0400
+Received: from mail-mw2nam10on2114.outbound.protection.outlook.com ([40.107.94.114]:54669
+        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725838AbgILTXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 12 Sep 2020 15:23:25 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Yde6PBD1cPsRuaANZH+t9e23zgokJOQKtDMPBl2I5r78Q/joN+EMafVVWWTz5Dx7zxHMxzFfOw9A1ky7aIziPR0wE1/EpTRs6oYW1JDUEFfHJ53F7ERdN2Yyhk3tL0MHCWjfVgfaAfylRaIw6zhf+AavAYRUqILbCNREG1WkBgk4Rjf+OHMYLLMapdtcOgli1iJGBrKoyy+GhVbKV1o/4iO7NmYUPsfqPMajosPhITtgPluC0w8sqCWT77JO6Tdg3IKewCFMQ9mVlIAg/oYqFlz4UeKPhJ07WHC/x01yENrEvgKyjQFIbtM7nIInS+0jQwIC3jQf4aC54+bvmF2J4w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VMP08KSLf9/k4zv1G1BpYMEP8EWoFkaIJKBBJBtGhYc=;
+ b=ktqsLB2U5ZzCw5CcVekxxl5jbjaRxx1A7qtvF35puZi12pPMdzhGHBZGfWBAmM7iay7zZMUzeUyndFKqKcY3VzO/blWERzzhayRq+wnI/++M/W7leXhb29xEvgfsjVYjmHqvyYBrLHiOjE6hRrgsANZSWcbDwGgrPyHAxyXPpZYLvAl1fxWjArGgu6BNFA2pH6qxdmX+A/3TGGCUVBFj3VF0jdwjDP8QBnTDn5y41CjdP3dLObQhK8rrcyC2oB2g3pI2jPG5jl+gBRpbbJv3HbPVAy06RZHflfLW4R7qg/jgLrJwXg3VgCT/nLQQYuLI6RRuMwryv3Gu07CR08l1SA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VMP08KSLf9/k4zv1G1BpYMEP8EWoFkaIJKBBJBtGhYc=;
+ b=MurFS5HBKG42taDdLWiZ7JwWZygwAg/rqkW4BlRiFv1h33rtEWbD7zu9hRhitIkb5VhivDigEHLA7ONgK4Bv9EtxP4QUHqvvlhweCly/7VLyxCm9LuTgI3Jqmvg931Ngv8GjCUdUTqrnqVu7ZlLQ8buz9ovrj86EJWqIJpOalAc=
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
+ by MWHPR2101MB0730.namprd21.prod.outlook.com (2603:10b6:301:7f::39) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3391.4; Sat, 12 Sep
+ 2020 19:23:22 +0000
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::d00b:3909:23b:83f1]) by MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::d00b:3909:23b:83f1%4]) with mapi id 15.20.3412.001; Sat, 12 Sep 2020
+ 19:23:22 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     Boqun Feng <boqun.feng@gmail.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>
+CC:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "# 3.4.x" <stable@vger.kernel.org>,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, megaraidlinux.pdl@broadcom.com,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:hbMAjJDifK2HVVhi27X5Besa5VEM3hTSvOoV1MK/IerO8sGzQjV
- 6iV4Ta6BpFB2HGCeo3d0feQUcq7c9Vdq/YOT+SbHa1VY6N47rU//ptvJ5Qv7p9d/Wg9+kmi
- 1qfqSP7vGUrSa2aNfOe9wL3y1qwUkH5sTrt3BkZMCkG/wgpps4RVce/BckAmh+inNgTdxDR
- ahEs0/Q15WqJSrkYKDDNw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:q/7iCtCs4Ew=:peIsGLb79b+/RHge38VB3M
- okC4WIhEPCfDdABZPI6XYuN6Z4H9bjT4h0zWigyT6qPxyTysQNHkAoJbeM+Vqro4NOPmKj8+r
- BO44JIXF6sF/gdmnXE/i2DyqlTvwzxHpATM3sEl3TIg94BgKH6VV+Td9kbGKH8zZ7rY/B4DzT
- 1BEX9RXGl3ZK+RfdFBxKBNA6BYJSFPhnou324FibIecbi3Q9vic+BMhK/uRNpZnvBLTyHd1rQ
- HzL8XhrVhzFAyaGF6D90WEXteYuQy5wIopMsNkZiOxuvPTLKipCJoSU+8fXP64Okek3Bo8AW3
- qhurNFP15tdhclxLjTpizoLtD9dB6F6steziwU2yRnoHPCg9TtZpigRF9Wumr9mfmmbmPTaNE
- yxtAEIRYQ0si9jVL7Uw26qnrTYdMoss2Lnq60Id0Xs6muC/CCJzmVwsOLPVI84KjU1HIFfYIZ
- SHDSZhii1EsGt9HPZLxt1+3ARq8CzsKEJvgsVSF0TGhDm8uEtmb9twoJmZIUWpAfqutpWT6BQ
- 9HhFvYZ3wT1v+q1vwb7COoBmUOfWyqvKZR+iIojX0WKsEo496pfwWdfsWtX5Z8sZ5ec6a9PwV
- h2sfSo2wGQBs4kvJ+AHSCPiPQGGOBxwEdUXTeKVQ0ZKpl94dSa8KvNZCI+gs/iYfKZLFe124N
- YynUUlaZtg6+R9JORRJ5tENomBFWIqseSyOieboMqvL/psA09XIeQ33TU32J+ZxM7l2Qi8qBf
- nYteDh2NcWUAQfGxbCehE4u3TQUIUbu0wks7gTD3LSACLFPMMPIZ2PL9P+YPmPkDcqCLn/+x6
- JIZuD9h8c4lYkvRuiWBfBzeG0InUhv2q6tzlVq8ALbrS+5beVFsXQIOl/bPoKdTbKwGnoCJb4
- S6wHh7lrfOQYqZtDYuP1C4FHs5xy7W3PujeZfk2QwrL16eFb2jfgEnqggEcW+ojiMXq+AcuOz
- +RLl86lSXgbiesPOmbdCGTInaZzFM6FimEwMat/e6F9ZVJhM8lzmy
+        "will@kernel.org" <will@kernel.org>,
+        "ardb@kernel.org" <ardb@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "Mark.Rutland@arm.com" <Mark.Rutland@arm.com>,
+        "maz@kernel.org" <maz@kernel.org>
+Subject: RE: [PATCH v3 01/11] Drivers: hv: vmbus: Always use HV_HYP_PAGE_SIZE
+ for gpadl
+Thread-Topic: [PATCH v3 01/11] Drivers: hv: vmbus: Always use HV_HYP_PAGE_SIZE
+ for gpadl
+Thread-Index: AQHWh3+XvK3gEZf5Dkqy4sFhfg8006llZRFg
+Date:   Sat, 12 Sep 2020 19:23:22 +0000
+Message-ID: <MW2PR2101MB1052F3454F1AAF4A5D9D0EE0D7250@MW2PR2101MB1052.namprd21.prod.outlook.com>
+References: <20200910143455.109293-1-boqun.feng@gmail.com>
+ <20200910143455.109293-2-boqun.feng@gmail.com>
+In-Reply-To: <20200910143455.109293-2-boqun.feng@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-09-12T19:23:20Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=5f8c0fd0-33b2-42c9-9c1c-c5efb702d8c6;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 06335d38-89f9-4891-cee0-08d857515061
+x-ms-traffictypediagnostic: MWHPR2101MB0730:
+x-ms-exchange-transport-forked: True
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <MWHPR2101MB07306B44D32F72915BEEEBA4D7250@MWHPR2101MB0730.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3276;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: B2FKYIsUYmIXB/0W/Ecn/etXUs9LgxzeZz1TbOqf2ACfbJRgfVK9yTEoMgYwIBHI7diwpELk5OQ06OJsZVVqHTC/a2lpEcCyggvPKHxQlhD4GGoobiHxv8/epOkhAzb7TH78Q1EhCDReXu52OAA9OAMt+WzLVMrQeMqoRxXmbyDqGWcttOgOygWLQBjJ6WgyysM3oCmlaDe4vKXFyb+qPEM21XDtN8hLmp1zb6Xvb6CUPm+wTaaPEcTewxwRCI+iR8YzbAvlNSKy4SSHZhE9ALyPC0OZDFgG8BIhx9MyVs6epIXL5HBeFA1LJy9Nb0vDa62GsOAoLLydoyiisnR4OAs9TElREelHnt6BPPWJC5WXx4EO3tJLgiX7SHtLTnmg
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(376002)(346002)(39860400002)(366004)(396003)(4744005)(52536014)(5660300002)(8936002)(2906002)(82950400001)(8676002)(33656002)(66556008)(66446008)(64756008)(66476007)(83380400001)(8990500004)(76116006)(71200400001)(66946007)(82960400001)(7696005)(26005)(7416002)(6506007)(316002)(110136005)(54906003)(478600001)(10290500003)(9686003)(55016002)(186003)(86362001)(4326008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: N0suUn9yuUEDnjo1ifLVoFehoHy1HE6hpnYEV8V/61/Yz2/UZZZ4KLA53KslpnL4L7A16mV4atRIYRdCoR2GkCTDCEKpwJesxXd5T2UKOhu8szZU+OvJ36c6eXydfYPvrx6j+QxJC4lRE3OC0Yqka/YdtA8rHl31gA+NVrr4/AUlkKL/49nGvaOcgMrij+J6+4m1bVMNXJbmRc6DGanc5I98YEo19PYhlUxwza1BYbSxRNQnpliVoeUSGdoP6+TJXe+o36ACpdmk1KrSvB0Vs45HE5Ewp2OZSYpmZJuf9r8ks9AA9gTnuKUkn1o9Ez+TzwVA5lmgkMEvqzaCQG/UDZq/Lig02aAbEyWEtCUtbs8XF1x+nFS2mtO35ELXoZZhoMhfIOXRJNR06f2/ka+YjdI8sWUGy4rdrWD5KRnOE97A0DfUvxKIM9jfBJvj3iaSL/tCnWZMEngCEthngzsWI594sO/0Kk98F/v0oWigX6tJY/ia9IuRZwxWWJ9KPBj90n0xF5sraEVttRlF7Rf/r50FKaeZIW0cIXva/JFkJQZF95mnrekG8pIhnijNOD7f5iJYfNTMZFwwlXmCys8Bmp2EKwCCfJ1U8cqe6vroncRyHpg21+s5oYv2RufgXfUjVRaxbiQOHP958sKSQaX+gQ==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 06335d38-89f9-4891-cee0-08d857515061
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Sep 2020 19:23:22.2481
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QU/W+ACeXgEzt/QAfyaoWQLOq07ddEKi+WbdjuGQI1wOP5CqLwk+z0QuuJPL70kQR0ex/pD1SqP6td0PIfFG9tL0qcPsEdMj7Kbz+3SV/+0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR2101MB0730
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Sep 12, 2020 at 9:20 AM Christoph Hellwig <hch@infradead.org> wrote:
-> On Tue, Sep 08, 2020 at 11:36:22PM +0200, Arnd Bergmann wrote:
+From: Boqun Feng <boqun.feng@gmail.com> Sent: Thursday, September 10, 2020 =
+7:35 AM
+>=20
+> Since the hypervisor always uses 4K as its page size, the size of PFNs
+> used for gpadl should be HV_HYP_PAGE_SIZE rather than PAGE_SIZE, so
+> adjust this accordingly as the preparation for supporting 16K/64K page
+> size guests. No functional changes on x86, since PAGE_SIZE is always 4k
+> (equals to HV_HYP_PAGE_SIZE).
+>=20
+> Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
+> ---
+>  drivers/hv/channel.c | 13 +++++--------
+>  1 file changed, 5 insertions(+), 8 deletions(-)
+>=20
 
-> > Cc: stable@vger.kernel.org
->
-> What about a Fixes tag instead?
-
-Sure, I can add that. It's been broken since 2.6.15 though, when the driver was
-initially merged.
-
-     Arnd
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
