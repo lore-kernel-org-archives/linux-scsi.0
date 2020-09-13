@@ -2,137 +2,115 @@ Return-Path: <SRS0=npVx=CW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B09F9C43461
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Sep 2020 06:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00505C43461
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Sep 2020 07:05:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46FA621655
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Sep 2020 06:51:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B60A217BA
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Sep 2020 07:05:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tgRT2y9f"
+	dkim=pass (1024-bit key) header.d=alien8.de header.i=@alien8.de header.b="O/V13iVt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725920AbgIMGvG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Sep 2020 02:51:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57680 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725894AbgIMGvE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Sep 2020 02:51:04 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 250EEC061573;
-        Sat, 12 Sep 2020 23:51:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=G8Jt3Cj5p4UQTWwyjETj0ogW7uLgq2Y1WhT3SbsNF4s=; b=tgRT2y9fguKfz5VbcjSOhPITkq
-        XdvrFfdNFdltuBvbH2bz8qzU2AXmFOimgVRKvjIw8Up3QJi0hWH+ktd6oEZRrum63ySvBzlfmyxBV
-        AV5itW1NWovlXeNYAWMyOhf4Yd4zyLZ7zvQHkdJMBViPbzER3wszh+qx7rzYE1IRCuFJMzstoPgbw
-        xb4yXHht0mPCZW6rPsNpRb2o3SG/hoTDqoV6DEvsYBnei/6bjOV/j6xLUgW5sCXvBxlPqIRfstle0
-        ua1x7p//Aq/EO52Uw0KHEZ9i4e4GFivANzfGms+LbgkG+Eq0FUaAEnykggHnC18wYN8ZussrPsuR8
-        6WBDft9Q==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kHLqd-0005bX-TL; Sun, 13 Sep 2020 06:50:51 +0000
-Date:   Sun, 13 Sep 2020 07:50:51 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>, megaraidlinux.pdl@broadcom.com,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        viro@zeniv.linux.org.uk
-Subject: compat_alloc_user_space removal, was Re: [PATCH 3/3] scsi:
- megaraid_sas: simplify compat_ioctl handling
-Message-ID: <20200913065051.GA17932@infradead.org>
-References: <20200908213715.3553098-1-arnd@arndb.de>
- <20200908213715.3553098-3-arnd@arndb.de>
- <20200912074757.GA6688@infradead.org>
- <CAK8P3a363DxgZnN9x4oNL7W4__kyG1U_34=7Hpqhpc-obAvjWw@mail.gmail.com>
+        id S1725912AbgIMHFV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Sep 2020 03:05:21 -0400
+Received: from mail.skyhub.de ([5.9.137.197]:50918 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725878AbgIMHFT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 13 Sep 2020 03:05:19 -0400
+Received: from zn.tnic (p200300ec2f290b00e66ccb465e44ee87.dip0.t-ipconnect.de [IPv6:2003:ec:2f29:b00:e66c:cb46:5e44:ee87])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id DA5051EC0501;
+        Sun, 13 Sep 2020 09:05:16 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1599980717;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=e914e8whMVmGW7aK1X34dlD6tHZkjqgsV/4kJ55/P7o=;
+        b=O/V13iVt2p0xPpHzk/GRBfdatRwzoT9Wa0wS2vgdZJJ1xtFMiRz54TiqNaZFJdkXREMKQ/
+        zjJMhsav4whZwyZflsfCQJk42nqv/Fz+VUxbpJx/qyRWFqpCJrH2/vhfOrV5Brl252e8pg
+        6VqExBImCtD0ZPqCeJMXcr6l1kKHjBM=
+Date:   Sun, 13 Sep 2020 09:05:06 +0200
+From:   Borislav Petkov <bp@alien8.de>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: Re: [PATCH 0/2] Fix handling of host-aware ZBC disks
+Message-ID: <20200913070506.GA5213@zn.tnic>
+References: <20200913060304.294898-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CAK8P3a363DxgZnN9x4oNL7W4__kyG1U_34=7Hpqhpc-obAvjWw@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200913060304.294898-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Sep 12, 2020 at 02:49:05PM +0200, Arnd Bergmann wrote:
-> fs/quota/compat.c: dqblk = compat_alloc_user_space(sizeof(struct if_dqblk));
-> fs/quota/compat.c: dqblk = compat_alloc_user_space(sizeof(struct if_dqblk));
-> fs/quota/compat.c: fsqstat = compat_alloc_user_space(sizeof(struct
-> fs_quota_stat));
+Mornin',
 
-I sent this out a while ago, an Al has it in a branch, but not in
-linux-next:
+On Sun, Sep 13, 2020 at 03:03:02PM +0900, Damien Le Moal wrote:
+> I tested all this. I could recreate the hang you are seeing with
+> CONFIG_BLK_DEV_ZONED disabled. The cause for this hang was that
+> good_bytes always ended up being 0 for all IOs to the host-aware disk.
+> The fix for this is in the first patch.
+> If you could test this (on top of 5.9-rc), it would be great. Thanks !
 
-https://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git/log/?h=work.quota-compat
+Sure, below is the diff of both boot dmesgs, with CONFIG_BLK_DEV_ZONED
+and without it. So for both:
 
-> drivers/staging/media/atomisp/pci/atomisp_compat_ioctl32.c: karg =
-> compat_alloc_user_space(
-> 
-> Had a brief look but did not investigate further, it's complicated.
-> 
-> drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c: args =
-> compat_alloc_user_space(sizeof(*args));
-> drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c: args =
-> compat_alloc_user_space(sizeof(*args) +
-> drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c: args =
-> compat_alloc_user_space(sizeof(*args));
-> drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c: args =
-> compat_alloc_user_space(sizeof(*args) +
-> drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c: args =
-> compat_alloc_user_space(sizeof(*args));
-> drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c: args =
-> compat_alloc_user_space(sizeof(*args));
-> 
-> Should not be too hard, but I have not looked in detail.
+Tested-by: Borislav Petkov <bp@suse.de>
 
-We do not have to care about staging drivers when removing interfaces.
-But to be nice you probably ping the maintainers to see what they can
-do.
+Thanks Damien and sorry for ruining your weekend.
 
-I also have the mount side handles in this branch which I need to rebase
-and submit:
+---
+--- 09-rc4+.CONFIG_BLK_DEV_ZONED	2020-09-13 08:36:13.423999302 +0200
++++ 09-rc4+.CONFIG_BLK_DEV_ZONED.off	2020-09-13 08:43:45.371999496 +0200
+@@ -825,28 +825,26 @@ input: DATACOMP SteelS쀁̄Љ̒DATA Cons
+ hid-generic 0003:04B4:0101.0002: input,hidraw1: USB HID v1.00 Device [DATACOMP SteelS쀁̄Љ̒DATA] on usb-0000:03:00.0-12/input1
+ usb 1-13: new low-speed USB device number 3 using xhci_hcd
+ usb 1-13: New USB device found, idVendor=046d, idProduct=c018, bcdDevice=43.01
+-ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+ usb 1-13: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+-ata4.00: NCQ Send/Recv Log not supported
+ usb 1-13: Product: USB Optical Mouse
+ usb 1-13: Manufacturer: Logitech
++ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
++ata4.00: NCQ Send/Recv Log not supported
+ ata4.00: ATA-10: ST8000AS0022-1WL17Z, SN01, max UDMA/133
+-ata4.00: 15628053168 sectors, multi 16: LBA48 NCQ (depth 32), AA
+ input: Logitech USB Optical Mouse as /devices/pci0000:00/0000:00:01.3/0000:03:00.0/usb1/1-13/1-13:1.0/0003:046D:C018.0003/input/input5
++ata4.00: 15628053168 sectors, multi 16: LBA48 NCQ (depth 32), AA
+ ata4.00: NCQ Send/Recv Log not supported
+ hid-generic 0003:046D:C018.0003: input,hidraw2: USB HID v1.11 Mouse [Logitech USB Optical Mouse] on usb-0000:03:00.0-13/input0
+ ata4.00: configured for UDMA/133
+ scsi 3:0:0:0: Direct-Access     ATA      ST8000AS0022-1WL SN01 PQ: 0 ANSI: 5
+ sd 3:0:0:0: Attached scsi generic sg1 type 0
+-sd 3:0:0:0: [sdb] Host-aware zoned block device
++sd 3:0:0:0: [sdb] Host-aware SMR disk used as regular disk
+ sd 3:0:0:0: [sdb] 15628053168 512-byte logical blocks: (8.00 TB/7.28 TiB)
+ sd 3:0:0:0: [sdb] 4096-byte physical blocks
+ sd 3:0:0:0: [sdb] Write Protect is off
+ sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+ sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+-sd 3:0:0:0: [sdb] 29808 zones of 524288 logical blocks + 1 runt zone
+  sdb: sdb1
+-sdb: disabling host aware zoned block device support due to partitions
+ sd 3:0:0:0: [sdb] Attached SCSI disk
+ ata5: failed to resume link (SControl 0)
+ ata5: SATA link down (SStatus 0 SControl 0)
 
-http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/mount-cleanups
+-- 
+Regards/Gruss,
+    Boris.
 
-> I think you got the wrong one there, the code above is where the
-> dma address gets stored in the in-kernel copy of the sense data
-> based on the user space offset. Conceptually it does make sense
-> though and would end up looking something like
-> 
->         if (ioc->sense_len) {
->                 /*
->                  * sense_ptr points to the location that has the user
->                  * sense buffer address
->                  */
->                 sense_ptr = (void *)ioc->frame.raw + ioc->sense_off;
->                 if (in_compat_syscall())
->                         uptr = compat_ptr(get_unaligned(u32 *)sense_ptr);
->                 else
->                         uptr = get_unaligned((void __user **)sense_ptr);
-> 
->                 if (copy_to_user(uptr, sense, ioc->sense_len)) {
-
-Indeed.  As said, I had started on the change and gave up pretty quickly
-:)
-
-> I tried that, but there is still one difference because one of them uses
-> MEGASAS_IOC_FIRMWARE while the other one uses
-> MEGASAS_IOC_FIRMWARE32. It would be possible to have
-> a common handler that always handles both command codes.
-> I tried to avoid changing the behavior that way though.
-
-Ok.
+https://people.kernel.org/tglx/notes-about-netiquette
