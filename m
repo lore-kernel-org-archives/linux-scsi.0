@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C82FC43461
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 17:12:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B22C43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 17:12:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D5A321D24
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 17:12:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D345521D7E
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 17:12:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600103531;
-	bh=3oTBHsTFSaSjiAFuk1w5MRsRzcO9Ats6ervYAEvAuDQ=;
+	s=default; t=1600103538;
+	bh=kK9BT5mjTQ8XF5WRbFDzOIgCtUNac6wLSe0z0LkB2mo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=f5jRKj1P/an+ebzmkcOww12HKuH5Bb9HqR/V5R/7i3raVsIFWkwAEJzLo8/N9jjCR
-	 yMTsbB25qqxrBDUETIJNXjubFYvUhSLYxD0kBE7aUN5ZidQv+DS28nFH+MQbBFpEQo
-	 lSwTgiQ9dMtjEbblGg/v8R/+DJJDCTOAQLd0lUQM=
+	b=dn+0HfFbkMhtfNg+n0DZeYiLX/Mx6Vfu6cp8Khaqyp2ulIVLwOVkvQX6sOdbWJ9Yg
+	 tgiLH6kjqOFIO2FvTV+woEiInbL3xePh3telJo9qprSeroRtqBkmTbc2meS6fe7+QD
+	 r3o02yjfYwgUUek/wwgx7qlI+X4F7YPhWDKwea0A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726040AbgINRLY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 13:11:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60274 "EHLO mail.kernel.org"
+        id S1726119AbgINRMO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 13:12:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60114 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726258AbgINNEt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 09:04:49 -0400
+        id S1726441AbgINNEp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Sep 2020 09:04:45 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A982C21D7E;
-        Mon, 14 Sep 2020 13:04:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3F99B21D24;
+        Mon, 14 Sep 2020 13:04:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600088648;
-        bh=3oTBHsTFSaSjiAFuk1w5MRsRzcO9Ats6ervYAEvAuDQ=;
+        s=default; t=1600088646;
+        bh=kK9BT5mjTQ8XF5WRbFDzOIgCtUNac6wLSe0z0LkB2mo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HrBRL9QTzP8mK2xNjVV8txOPCnjKjW+0/A/JSud7Wmx1g6G9H5w6gJDRXBUqV+F9/
-         nCY2OZ8LUCqOvIVElYJKmQNDaL9bYudGgVRUrLh5m9Ms5GrZlA5GF7+/j9FTfxVCOe
-         P03t38exl4mHwXiW0LnkHAL5Sum01dNUsTAFU3Xs=
+        b=JnVJTACKQunaaFCQ4Lj34P5avJQYfVrGoL9+cHyX1LNELa3CkMr0ICVHM6Qb3AGS+
+         oLVIwG2XOIcNXiqXJMpA6uh7K3kOCkd/JbFF0FSeFYjzcyPPzwzu2ru3pKPGETAQYg
+         +fxXANOY+T6m6C9qM90PHPV2bvzKv3sBtCGx8jB0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Dinghao Liu <dinghao.liu@zju.edu.cn>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 08/29] scsi: lpfc: Fix FLOGI/PLOGI receive race condition in pt2pt discovery
-Date:   Mon, 14 Sep 2020 09:03:37 -0400
-Message-Id: <20200914130358.1804194-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 06/29] scsi: pm8001: Fix memleak in pm8001_exec_internal_task_abort
+Date:   Mon, 14 Sep 2020 09:03:35 -0400
+Message-Id: <20200914130358.1804194-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200914130358.1804194-1-sashal@kernel.org>
 References: <20200914130358.1804194-1-sashal@kernel.org>
@@ -59,60 +59,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <james.smart@broadcom.com>
+From: Dinghao Liu <dinghao.liu@zju.edu.cn>
 
-[ Upstream commit 7b08e89f98cee9907895fabb64cf437bc505ce9a ]
+[ Upstream commit ea403fde7552bd61bad6ea45e3feb99db77cb31e ]
 
-The driver is unable to successfully login with remote device. During pt2pt
-login, the driver completes its FLOGI request with the remote device having
-WWN precedence.  The remote device issues its own (delayed) FLOGI after
-accepting the driver's and, upon transmitting the FLOGI, immediately
-recognizes it has already processed the driver's FLOGI thus it transitions
-to sending a PLOGI before waiting for an ACC to its FLOGI.
+When pm8001_tag_alloc() fails, task should be freed just like it is done in
+the subsequent error paths.
 
-In the driver, the FLOGI is received and an ACC sent, followed by the PLOGI
-being received and an ACC sent. The issue is that the PLOGI reception
-occurs before the response from the adapter from the FLOGI ACC is
-received. Processing of the PLOGI sets state flags to perform the REG_RPI
-mailbox command and proceed with the rest of discovery on the port. The
-same completion routine used by both FLOGI and PLOGI is generic in
-nature. One of the things it does is clear flags, and those flags happen to
-drive the rest of discovery.  So what happened was the PLOGI processing set
-the flags, the FLOGI ACC completion cleared them, thus when the PLOGI ACC
-completes it doesn't see the flags and stops.
-
-Fix by modifying the generic completion routine to not clear the rest of
-discovery flag (NLP_ACC_REGLOGIN) unless the completion is also associated
-with performing a mailbox command as part of its handling.  For things such
-as FLOGI ACC, there isn't a subsequent action to perform with the adapter,
-thus there is no mailbox cmd ptr. PLOGI ACC though will perform REG_RPI
-upon completion, thus there is a mailbox cmd ptr.
-
-Link: https://lore.kernel.org/r/20200828175332.130300-3-james.smart@broadcom.com
-Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
+Link: https://lore.kernel.org/r/20200823091453.4782-1-dinghao.liu@zju.edu.cn
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm8001_sas.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 3d670568a2760..7b6a210825677 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4644,7 +4644,9 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- out:
- 	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
- 		spin_lock_irq(shost->host_lock);
--		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
-+		if (mbox)
-+			ndlp->nlp_flag &= ~NLP_ACC_REGLOGIN;
-+		ndlp->nlp_flag &= ~NLP_RM_DFLT_RPI;
- 		spin_unlock_irq(shost->host_lock);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index b7cbc312843e9..da9fd8a5f8cae 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -818,7 +818,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
  
- 		/* If the node is not being used by another discovery thread,
+ 		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+ 		if (res)
+-			return res;
++			goto ex_err;
+ 		ccb = &pm8001_ha->ccb_info[ccb_tag];
+ 		ccb->device = pm8001_dev;
+ 		ccb->ccb_tag = ccb_tag;
 -- 
 2.25.1
 
