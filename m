@@ -2,108 +2,116 @@ Return-Path: <SRS0=3W2l=CX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48B1BC2BC11
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29007C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 16:20:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0210120829
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:34:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8E3821D1B
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 16:20:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RSn2RJzb"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="EHqN4dTn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726448AbgINPeh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 11:34:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47990 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726196AbgINPeH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 11:34:07 -0400
-Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A12DC06174A;
-        Mon, 14 Sep 2020 08:34:06 -0700 (PDT)
-Received: by mail-lj1-x244.google.com with SMTP id a15so75289ljk.2;
-        Mon, 14 Sep 2020 08:34:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=6QGIaljRH231VAywJdapvuATziOfA42BJnpSHpoIEVE=;
-        b=RSn2RJzblwAHTSK+plrf24n4vXY7/p/jXtG+T94xADRsRUBY8CHEBNgnMf/kQyrnxy
-         YieEPQGTw3bOqSmW8AmGOLLdGNA7YSDJLGbEMo+AGcNWh2pxH6XRgNcz8Cs5uCOpKkzC
-         gQyRsPyGfUidZAcBfjITy0I3uSNrMpc1xEktaPuU1N5ohOzXYJc8kuUdIFaZ6+PLkH1j
-         ej79ZdbMIfsu6iduHBqVwRFdln66PldWiNNCVGGJ8TfEu+jWybTfxA05D2VHpJvxymYA
-         bWH+DdU6BYBQ8HP2CiwI9zxdkYMl9jJc8yEPZeyVx3GZKr3H03N+EEitFWK+0KohnbKI
-         Gy2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=6QGIaljRH231VAywJdapvuATziOfA42BJnpSHpoIEVE=;
-        b=YeYWECqoKGgbUSdB7xoMSOD7SkTRDc++YfYAp4jk2pcoR4iYbHtzsBxOMMgZAAkNIO
-         8QtdEuJPnlwOBQpkNGad07r0lsOxpKt1h2+UZ6i/kHMRtFHCAjel0r/VHQqr7/FtYbAe
-         tuG1V9nzlm84tLTlUTgV0QsgfadauDyZrs4kQmrzDhELpX9kRusWxY/R+w09JbzqL//8
-         TYkG0uoblChY5NtJ0UNIh+/C3iH4CPRt+4ThnH1eB3Vd9C4HM1RMAA0bqOKwZDTSwBwh
-         C48ANhNXerj6QSjh4FHIcX9eV8JXMcoF/jlBJK9h8vTDa7iPvTC9mCY2bplQ9NeFWN3p
-         W44g==
-X-Gm-Message-State: AOAM533/5JLXyTteFDb4tICppE4xrIsfS8mNU4Jh3XRiNR6b8pOfPFxa
-        xc5ym6NM7k92D0ZIoIA23D4=
-X-Google-Smtp-Source: ABdhPJwhd/LhTRq+JWSW5bzIk6PAoYzRDD2WFOZyHy/0zgbs8GXUoAwbOWmbxU7cQ/01j9Vl+1ORow==
-X-Received: by 2002:a05:651c:200b:: with SMTP id s11mr5091489ljo.196.1600097644849;
-        Mon, 14 Sep 2020 08:34:04 -0700 (PDT)
-Received: from wasted.omprussia.ru ([2a00:1fa0:44ca:acb2:3cb7:6882:b0eb:1108])
-        by smtp.gmail.com with ESMTPSA id l129sm3367001lfd.191.2020.09.14.08.34.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 14 Sep 2020 08:34:04 -0700 (PDT)
-Subject: Re: [PATCH 03/17] drm/exynos: stop setting DMA_ATTR_NON_CONSISTENT
-To:     Christoph Hellwig <hch@lst.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Joonyoung Shim <jy0922.shim@samsung.com>,
-        Seung-Woo Kim <sw0312.kim@samsung.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Tomasz Figa <tfiga@chromium.org>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        iommu@lists.linux-foundation.org
-Cc:     Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        linux1394-devel@lists.sourceforge.net, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
-        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
-        alsa-devel@alsa-project.org
-References: <20200914144433.1622958-1-hch@lst.de>
- <20200914144433.1622958-4-hch@lst.de>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <7a1d11c2-0fc5-e110-dabe-960e516bb343@gmail.com>
-Date:   Mon, 14 Sep 2020 18:34:02 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1726239AbgINQUE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 12:20:04 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:57348 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726306AbgINQTz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Sep 2020 12:19:55 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600100359; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=6kP6V+U+oC1wCvvEWglojf58K6rS+SRnVM0PaaQN5Kk=;
+ b=EHqN4dTnKQjbDsG8t72giCAumLyrN3UtYiBfLblpTb+41Gvs3OgRuivsn9KLuWVTqSvvsnrr
+ tNFUnaB2LrOoO7hxIzfd5A0jnZKc0TUrhrwzCQ4QtFT7G9tOYjstrhovLhflxtxX33UnuXoW
+ IKi2tLfWB/D3JDEZBqrD7xPcu3s=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 5f5f97febe06707b34d18e4f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 14 Sep 2020 16:19:10
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E3A41C433C8; Mon, 14 Sep 2020 16:19:09 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2E83AC433CA;
+        Mon, 14 Sep 2020 16:19:09 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <20200914144433.1622958-4-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Mon, 14 Sep 2020 09:19:09 -0700
+From:   nguyenb@codeaurora.org
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for
+ UFS
+In-Reply-To: <BY5PR04MB670510941B91C0D394A23A68FC220@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <cover.1598939393.git.nguyenb@codeaurora.org>
+ <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
+ <BY5PR04MB670510941B91C0D394A23A68FC220@BY5PR04MB6705.namprd04.prod.outlook.com>
+Message-ID: <aaed1cfb1cdee8cd6e45191814af5763@codeaurora.org>
+X-Sender: nguyenb@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/14/20 5:44 PM, Christoph Hellwig wrote:
-
-> DMA_ATTR_NON_CONSISTENT is a no-op except on PARISC and some mips
-> configs, so don't set it in this ARM specific driver.
-
-   Hm, PARICS and ARM capitalized but mips in lower case? :-)
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-[...]
-
-MBR, Sergei
+On 2020-09-13 02:35, Avri Altman wrote:
+>> 
+>> 
+>> UFS's specifications supports a range of Vcc operating
+>> voltage levels. Add documentation for the UFS's Vcc voltage
+>> levels setting.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+>> ---
+>>  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
+>>  1 file changed, 2 insertions(+)
+>> 
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> index 415ccdd..7257b32 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> @@ -23,6 +23,8 @@ Optional properties:
+>>                            with "phys" attribute, provides phandle to 
+>> UFS PHY node
+>>  - vdd-hba-supply        : phandle to UFS host controller supply 
+>> regulator node
+>>  - vcc-supply            : phandle to VCC supply regulator node
+>> +- vcc-voltage-level     : specifies voltage levels for VCC supply.
+> For ufs3.1+ devices
+Thanks for the comments, Avri.
+I am not clear what this comment means. Could you please clarify?
+> 
+>> +                          Should be specified in pairs (min, max), 
+>> units uV.
+>>  - vccq-supply           : phandle to VCCQ supply regulator node
+>>  - vccq2-supply          : phandle to VCCQ2 supply regulator node
+>>  - vcc-supply-1p8        : For embedded UFS devices, valid VCC range 
+>> is 1.7-1.95V
+>> --
+> Why are you removing all other docs?
+> They are still relevant for non ufs3.1 devices.
+I did not remove anything. You may be confused by the "-" used as 
+listing in the original document.
