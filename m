@@ -2,57 +2,45 @@ Return-Path: <SRS0=3W2l=CX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC64DC433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FCE4C43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:24:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6D1620639
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:20:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44A87208B3
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:24:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="MwCEKT1C";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="MwCEKT1C"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fTgqNs7c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726438AbgINPUh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 11:20:37 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48832 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726090AbgINPU1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 11:20:27 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D94B18EE188;
-        Mon, 14 Sep 2020 08:20:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1600096820;
-        bh=GKXYjllCOYoz9s1DCxjF5LhZlRPIv8wDG6prJomb0DU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MwCEKT1C51gNQI4k2c/TW5TFLSyvCL+DaM8jG72BtMupIn9VJeN1dkJcyAJV4JkG0
-         n6sSw+D1WaOUFen3nc5d+f9REcdFZ8Klept06jhzp/Us0zXjri6r0Pype5gmTqA+88
-         YuaiMKfDE+athYdKXtMltIVOrUi9whs+u8kR+5FU=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id d819rpRvd1Od; Mon, 14 Sep 2020 08:20:20 -0700 (PDT)
-Received: from [153.66.254.174] (c-73-35-198-56.hsd1.wa.comcast.net [73.35.198.56])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4E7098EE111;
-        Mon, 14 Sep 2020 08:20:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1600096820;
-        bh=GKXYjllCOYoz9s1DCxjF5LhZlRPIv8wDG6prJomb0DU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MwCEKT1C51gNQI4k2c/TW5TFLSyvCL+DaM8jG72BtMupIn9VJeN1dkJcyAJV4JkG0
-         n6sSw+D1WaOUFen3nc5d+f9REcdFZ8Klept06jhzp/Us0zXjri6r0Pype5gmTqA+88
-         YuaiMKfDE+athYdKXtMltIVOrUi9whs+u8kR+5FU=
-Message-ID: <1600096818.4061.7.camel@HansenPartnership.com>
-Subject: Re: [PATCH 07/17] 53c700: improve non-coherent DMA handling
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Christoph Hellwig <hch@lst.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        id S1726055AbgINPWx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 11:22:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46142 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726044AbgINPWP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 11:22:15 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38386C06174A;
+        Mon, 14 Sep 2020 08:22:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=Y4Zt5Q6wslvCqwY7SHiicX4jOFlI8lEV5uqNCn2aPDc=; b=fTgqNs7c5EBijS2DP4edBbpLiN
+        UGpXgXxgKbOHvPtwrOPu7ImJF2b75wXAG9Ku78wGkkG+v9lQ52Ag5nH3dgiq1KbDywwk/Cvz9cWlz
+        BWaYfAMBLusX9aAaVmab+mQOqO79KCe+tL8S3vj3Syqps+xM10G9m/5bhIdXt+4N1H1yzP5SG5J5w
+        kBKy+xzJMzB3KmsCgnheH/cpg4h9kXXBM5qYBU1BB1FdRAaw2nV8HDKSmVkgImXmpVHSCJDLlqvuO
+        6qxzqCVTtZLsXZBSL0TL8FCYo/qDJBfT1w7a2NSNAytKj2HEeiiFChC1P/u5ePX5K/mR6pNNrOoyz
+        vjw6Ynrg==;
+Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kHqIf-0004Dp-GN; Mon, 14 Sep 2020 15:21:49 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         Joonyoung Shim <jy0922.shim@samsung.com>,
         Seung-Woo Kim <sw0312.kim@samsung.com>,
         Ben Skeggs <bskeggs@redhat.com>,
@@ -68,78 +56,114 @@ Cc:     Stefan Richter <stefanr@s5r6.in-berlin.de>,
         nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-mm@kvack.org,
         alsa-devel@alsa-project.org
-Date:   Mon, 14 Sep 2020 08:20:18 -0700
-In-Reply-To: <20200914144433.1622958-8-hch@lst.de>
+Subject: [PATCH 16/17] dma-iommu: implement ->alloc_noncoherent
+Date:   Mon, 14 Sep 2020 16:44:32 +0200
+Message-Id: <20200914144433.1622958-17-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200914144433.1622958-1-hch@lst.de>
 References: <20200914144433.1622958-1-hch@lst.de>
-         <20200914144433.1622958-8-hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-09-14 at 16:44 +0200, Christoph Hellwig wrote:
-> @@ -429,7 +430,7 @@ struct NCR_700_Host_Parameters {
->  	for(i=0; i< (sizeof(A_##symbol##_used) / sizeof(__u32));
-> i++) { \
->  		__u32 val =
-> bS_to_cpu((script)[A_##symbol##_used[i]]) + da; \
->  		(script)[A_##symbol##_used[i]] = bS_to_host(val); \
-> -		dma_cache_sync((dev),
-> &(script)[A_##symbol##_used[i]], 4, DMA_TO_DEVICE); \
-> +		dma_sync_to_dev((dev),
-> &(script)[A_##symbol##_used[i]], 4); \
->  		DEBUG((" script, patching %s at %d to %pad\n", \
->  		       #symbol, A_##symbol##_used[i], &da)); \
->  	} \
-> @@ -441,7 +442,7 @@ struct NCR_700_Host_Parameters {
->  	dma_addr_t da = value; \
->  	for(i=0; i< (sizeof(A_##symbol##_used) / sizeof(__u32));
-> i++) { \
->  		(script)[A_##symbol##_used[i]] = bS_to_host(da); \
-> -		dma_cache_sync((dev),
-> &(script)[A_##symbol##_used[i]], 4, DMA_TO_DEVICE); \
-> +		dma_sync_to_dev((dev),
-> &(script)[A_##symbol##_used[i]], 4); \
->  		DEBUG((" script, patching %s at %d to %pad\n", \
->  		       #symbol, A_##symbol##_used[i], &da)); \
->  	} \
-> @@ -456,7 +457,7 @@ struct NCR_700_Host_Parameters {
->  		val &= 0xff00ffff; \
->  		val |= ((value) & 0xff) << 16; \
->  		(script)[A_##symbol##_used[i]] = bS_to_host(val); \
-> -		dma_cache_sync((dev),
-> &(script)[A_##symbol##_used[i]], 4, DMA_TO_DEVICE); \
-> +		dma_sync_to_dev((dev),
-> &(script)[A_##symbol##_used[i]], 4); \
->  		DEBUG((" script, patching ID field %s at %d to
-> 0x%x\n", \
->  		       #symbol, A_##symbol##_used[i], val)); \
->  	} \
-> @@ -470,7 +471,7 @@ struct NCR_700_Host_Parameters {
->  		val &= 0xffff0000; \
->  		val |= ((value) & 0xffff); \
->  		(script)[A_##symbol##_used[i]] = bS_to_host(val); \
-> -		dma_cache_sync((dev),
-> &(script)[A_##symbol##_used[i]], 4, DMA_TO_DEVICE); \
-> +		dma_sync_to_dev((dev),
-> &(script)[A_##symbol##_used[i]], 4); \
->  		DEBUG((" script, patching short field %s at %d to
-> 0x%x\n", \
->  		       #symbol, A_##symbol##_used[i], val)); \
->  	} \
+Implement the alloc_noncoherent method to provide memory that is neither
+coherent not contiguous.
 
-If you're going to change the macros from taking a device to taking a
-hostdata structure then the descriptive argument name needs to change
-... it can't be dev anymore.  I'm happy with it simply becoming 'h' if
-hostdata is too long.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/iommu/dma-iommu.c | 41 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 37 insertions(+), 4 deletions(-)
 
-I already asked for this on the first go around:
-
-https://lore.kernel.org/alsa-devel/1598971960.4238.5.camel@HansenPartnership.com/
-
-James
+diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+index 00a5b49248e334..c12c1dc43d312e 100644
+--- a/drivers/iommu/dma-iommu.c
++++ b/drivers/iommu/dma-iommu.c
+@@ -572,6 +572,7 @@ static struct page **__iommu_dma_alloc_pages(struct device *dev,
+  * @size: Size of buffer in bytes
+  * @dma_handle: Out argument for allocated DMA handle
+  * @gfp: Allocation flags
++ * @prot: pgprot_t to use for the remapped mapping
+  * @attrs: DMA attributes for this allocation
+  *
+  * If @size is less than PAGE_SIZE, then a full CPU page will be allocated,
+@@ -580,14 +581,14 @@ static struct page **__iommu_dma_alloc_pages(struct device *dev,
+  * Return: Mapped virtual address, or NULL on failure.
+  */
+ static void *iommu_dma_alloc_remap(struct device *dev, size_t size,
+-		dma_addr_t *dma_handle, gfp_t gfp, unsigned long attrs)
++		dma_addr_t *dma_handle, gfp_t gfp, pgprot_t prot,
++		unsigned long attrs)
+ {
+ 	struct iommu_domain *domain = iommu_get_dma_domain(dev);
+ 	struct iommu_dma_cookie *cookie = domain->iova_cookie;
+ 	struct iova_domain *iovad = &cookie->iovad;
+ 	bool coherent = dev_is_dma_coherent(dev);
+ 	int ioprot = dma_info_to_prot(DMA_BIDIRECTIONAL, coherent, attrs);
+-	pgprot_t prot = dma_pgprot(dev, PAGE_KERNEL, attrs);
+ 	unsigned int count, min_size, alloc_sizes = domain->pgsize_bitmap;
+ 	struct page **pages;
+ 	struct sg_table sgt;
+@@ -1030,8 +1031,10 @@ static void *iommu_dma_alloc(struct device *dev, size_t size,
+ 	gfp |= __GFP_ZERO;
+ 
+ 	if (IS_ENABLED(CONFIG_DMA_REMAP) && gfpflags_allow_blocking(gfp) &&
+-	    !(attrs & DMA_ATTR_FORCE_CONTIGUOUS))
+-		return iommu_dma_alloc_remap(dev, size, handle, gfp, attrs);
++	    !(attrs & DMA_ATTR_FORCE_CONTIGUOUS)) {
++		return iommu_dma_alloc_remap(dev, size, handle, gfp,
++				dma_pgprot(dev, PAGE_KERNEL, attrs), attrs);
++	}
+ 
+ 	if (IS_ENABLED(CONFIG_DMA_DIRECT_REMAP) &&
+ 	    !gfpflags_allow_blocking(gfp) && !coherent)
+@@ -1052,6 +1055,34 @@ static void *iommu_dma_alloc(struct device *dev, size_t size,
+ 	return cpu_addr;
+ }
+ 
++#ifdef CONFIG_DMA_REMAP
++static void *iommu_dma_alloc_noncoherent(struct device *dev, size_t size,
++		dma_addr_t *handle, enum dma_data_direction dir, gfp_t gfp)
++{
++	if (!gfpflags_allow_blocking(gfp)) {
++		struct page *page;
++
++		page = dma_common_alloc_pages(dev, size, handle, dir, gfp);
++		if (!page)
++			return NULL;
++		return page_address(page);
++	}
++
++	return iommu_dma_alloc_remap(dev, size, handle, gfp | __GFP_ZERO,
++				     PAGE_KERNEL, 0);
++}
++
++static void iommu_dma_free_noncoherent(struct device *dev, size_t size,
++		void *cpu_addr, dma_addr_t handle, enum dma_data_direction dir)
++{
++	__iommu_dma_unmap(dev, handle, size);
++	__iommu_dma_free(dev, size, cpu_addr);
++}
++#else
++#define iommu_dma_alloc_noncoherent		NULL
++#define iommu_dma_free_noncoherent		NULL
++#endif /* CONFIG_DMA_REMAP */
++
+ static int iommu_dma_mmap(struct device *dev, struct vm_area_struct *vma,
+ 		void *cpu_addr, dma_addr_t dma_addr, size_t size,
+ 		unsigned long attrs)
+@@ -1122,6 +1153,8 @@ static const struct dma_map_ops iommu_dma_ops = {
+ 	.free			= iommu_dma_free,
+ 	.alloc_pages		= dma_common_alloc_pages,
+ 	.free_pages		= dma_common_free_pages,
++	.alloc_noncoherent	= iommu_dma_alloc_noncoherent,
++	.free_noncoherent	= iommu_dma_free_noncoherent,
+ 	.mmap			= iommu_dma_mmap,
+ 	.get_sgtable		= iommu_dma_get_sgtable,
+ 	.map_page		= iommu_dma_map_page,
+-- 
+2.28.0
 
