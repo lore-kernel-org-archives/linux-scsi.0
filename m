@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBDE6C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:25:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 098BEC43461
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:26:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94C3920665
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:25:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD89520829
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:26:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U0IBgU2Q"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JY/8kYp/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726450AbgINPYg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 11:24:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46486 "EHLO
+        id S1726396AbgINPUg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 11:20:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726215AbgINPY3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 11:24:29 -0400
+        with ESMTP id S1726356AbgINPUE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 11:20:04 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49367C06174A;
-        Mon, 14 Sep 2020 08:24:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F0ABC06174A;
+        Mon, 14 Sep 2020 08:20:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=3uuWATlux5CLwoYUg+NN5gOtHb6T7EXPohKT/lTJKJI=; b=U0IBgU2QceYv7cYz0f441RijWy
-        jX6Uz56bUrKfzqiHUqW4Am8nd+6lVMXE3/VPeI6Dyctys5vWsqG7p9TZjmsaB4shTobADfofWCt2s
-        1s3TKwLjbf+g5qtDtSLFgL8DmFzhOuChm2RFQ+dWaxRQVaecIXZU24GAOneelMTCvJ13zxrzITOvg
-        ExNdpySucaD8C2anmkAXbMOJB2da5zC7FBZvWjUSKNpv1i+Go/vuMfGDKG5gApZgbramlUxDAnvlC
-        0pbLEfVZA10XQ/7JqJFE/O3mSpo7OqirHTyfcD2gC9N8uRPiSLShe9jiyo8nmIV8jkTp7pR6eEG4A
-        UuqWKTxw==;
+        bh=1/bEcy21h9dr4Lop81Jp+A+3tsDr/+YN8bI8sHR6ers=; b=JY/8kYp/POQkPS9/pbiO0kzzh+
+        mOyOphuwGiSxozJvdBmQbVXdpG38y4zvNPvDTEyqS70PZWHyQ+nUIMv9lzq4a5ypYPc9tvDK+CIM0
+        7lPCr4+YDj0yPFSArV9+fF62o2ujujYy0fqhRY7vll4u9LQmtZw2tTKPsUgNC0K4460oEdMJDxZH8
+        sQX9U2nH0JZQmQSYjbvSg5j0AR5nK0avIw2Pm4jETjZ3wR7Ck3smxO0QE/zAC0srKZ0vyTkUngfv0
+        wWOHZXVky9pTxXktOYz6Qkry3FEB9cbV2JlxroMdit4cUgD9HF00poCUnC+JhWxxk6qSXNvtOcUpC
+        Re7j27kQ==;
 Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kHqKm-0004Mq-MA; Mon, 14 Sep 2020 15:24:01 +0000
+        id 1kHqGY-0003zk-8d; Mon, 14 Sep 2020 15:19:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
@@ -56,9 +56,9 @@ Cc:     Stefan Richter <stefanr@s5r6.in-berlin.de>,
         nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-mm@kvack.org,
         alsa-devel@alsa-project.org
-Subject: [PATCH 17/17] firewire-ohci: use dma_alloc_pages
-Date:   Mon, 14 Sep 2020 16:44:33 +0200
-Message-Id: <20200914144433.1622958-18-hch@lst.de>
+Subject: [PATCH 15/17] dma-mapping: add new {alloc,free}_noncoherent dma_map_ops methods
+Date:   Mon, 14 Sep 2020 16:44:31 +0200
+Message-Id: <20200914144433.1622958-16-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200914144433.1622958-1-hch@lst.de>
 References: <20200914144433.1622958-1-hch@lst.de>
@@ -70,72 +70,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use dma_alloc_pages to allocate DMAable pages instead of hoping that
-the architecture either has GFP_DMA32 or not more than 4G of memory.
+This will allow IOMMU drivers to allocate non-contigous memory and
+return a vmapped virtual address.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/firewire/ohci.c | 26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
+ include/linux/dma-mapping.h |  5 +++++
+ kernel/dma/mapping.c        | 33 +++++++++++++++++++++++++++------
+ 2 files changed, 32 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/firewire/ohci.c b/drivers/firewire/ohci.c
-index 020cb15a4d8fcc..9811c40956e54d 100644
---- a/drivers/firewire/ohci.c
-+++ b/drivers/firewire/ohci.c
-@@ -674,17 +674,16 @@ static void ar_context_link_page(struct ar_context *ctx, unsigned int index)
- 
- static void ar_context_release(struct ar_context *ctx)
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index bf592cf0db4acb..b4b5d75260d6dc 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -80,6 +80,11 @@ struct dma_map_ops {
+ 			gfp_t gfp);
+ 	void (*free_pages)(struct device *dev, size_t size, struct page *vaddr,
+ 			dma_addr_t dma_handle, enum dma_data_direction dir);
++	void* (*alloc_noncoherent)(struct device *dev, size_t size,
++			dma_addr_t *dma_handle, enum dma_data_direction dir,
++			gfp_t gfp);
++	void (*free_noncoherent)(struct device *dev, size_t size, void *vaddr,
++			dma_addr_t dma_handle, enum dma_data_direction dir);
+ 	int (*mmap)(struct device *, struct vm_area_struct *,
+ 			  void *, dma_addr_t, size_t,
+ 			  unsigned long attrs);
+diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+index 6f86c925b8251d..8614d7d2ee59a9 100644
+--- a/kernel/dma/mapping.c
++++ b/kernel/dma/mapping.c
+@@ -502,19 +502,40 @@ EXPORT_SYMBOL_GPL(dma_free_pages);
+ void *dma_alloc_noncoherent(struct device *dev, size_t size,
+ 		dma_addr_t *dma_handle, enum dma_data_direction dir, gfp_t gfp)
  {
-+	struct device *dev = ctx->ohci->card.device;
- 	unsigned int i;
+-	struct page *page;
++	const struct dma_map_ops *ops = get_dma_ops(dev);
++	void *vaddr;
  
- 	vunmap(ctx->buffer);
- 
--	for (i = 0; i < AR_BUFFERS; i++)
--		if (ctx->pages[i]) {
--			dma_unmap_page(ctx->ohci->card.device,
--				       ar_buffer_bus(ctx, i),
--				       PAGE_SIZE, DMA_FROM_DEVICE);
--			__free_page(ctx->pages[i]);
--		}
-+	for (i = 0; i < AR_BUFFERS; i++) {
-+		if (ctx->pages[i])
-+			dma_free_pages(dev, PAGE_SIZE, ctx->pages[i],
-+				       ar_buffer_bus(ctx, i), DMA_FROM_DEVICE);
+-	page = dma_alloc_pages(dev, size, dma_handle, dir, gfp);
+-	if (!page)
+-		return NULL;
+-	return page_address(page);
++	if (!ops || !ops->alloc_noncoherent) {
++		struct page *page;
++
++		page = dma_alloc_pages(dev, size, dma_handle, dir, gfp);
++		if (!page)
++			return NULL;
++		return page_address(page);
 +	}
++
++	size = PAGE_ALIGN(size);
++	vaddr = ops->alloc_noncoherent(dev, size, dma_handle, dir, gfp);
++	if (vaddr)
++		debug_dma_map_page(dev, virt_to_page(vaddr), 0, size, dir,
++				   *dma_handle);
++	return vaddr;
  }
+ EXPORT_SYMBOL_GPL(dma_alloc_noncoherent);
  
- static void ar_context_abort(struct ar_context *ctx, const char *error_msg)
-@@ -970,6 +969,7 @@ static void ar_context_tasklet(unsigned long data)
- static int ar_context_init(struct ar_context *ctx, struct fw_ohci *ohci,
- 			   unsigned int descriptors_offset, u32 regs)
+ void dma_free_noncoherent(struct device *dev, size_t size, void *vaddr,
+ 		dma_addr_t dma_handle, enum dma_data_direction dir)
  {
-+	struct device *dev = ohci->card.device;
- 	unsigned int i;
- 	dma_addr_t dma_addr;
- 	struct page *pages[AR_BUFFERS + AR_WRAPAROUND_PAGES];
-@@ -980,17 +980,13 @@ static int ar_context_init(struct ar_context *ctx, struct fw_ohci *ohci,
- 	tasklet_init(&ctx->tasklet, ar_context_tasklet, (unsigned long)ctx);
+-	dma_free_pages(dev, size, virt_to_page(vaddr), dma_handle, dir);
++	const struct dma_map_ops *ops = get_dma_ops(dev);
++
++	if (!ops || !ops->free_noncoherent) {
++		dma_free_pages(dev, size, virt_to_page(vaddr), dma_handle, dir);
++		return;
++	}
++
++	size = PAGE_ALIGN(size);
++	debug_dma_unmap_page(dev, dma_handle, size, dir);
++	ops->free_noncoherent(dev, size, vaddr, dma_handle, dir);
+ }
+ EXPORT_SYMBOL_GPL(dma_free_noncoherent);
  
- 	for (i = 0; i < AR_BUFFERS; i++) {
--		ctx->pages[i] = alloc_page(GFP_KERNEL | GFP_DMA32);
-+		ctx->pages[i] = dma_alloc_pages(dev, PAGE_SIZE, &dma_addr,
-+						DMA_FROM_DEVICE, GFP_KERNEL);
- 		if (!ctx->pages[i])
- 			goto out_of_memory;
--		dma_addr = dma_map_page(ohci->card.device, ctx->pages[i],
--					0, PAGE_SIZE, DMA_FROM_DEVICE);
--		if (dma_mapping_error(ohci->card.device, dma_addr)) {
--			__free_page(ctx->pages[i]);
--			ctx->pages[i] = NULL;
--			goto out_of_memory;
--		}
- 		set_page_private(ctx->pages[i], dma_addr);
-+		dma_sync_single_for_device(dev, dma_addr, PAGE_SIZE,
-+					   DMA_FROM_DEVICE);
- 	}
- 
- 	for (i = 0; i < AR_BUFFERS; i++)
 -- 
 2.28.0
 
