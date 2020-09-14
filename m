@@ -5,51 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE15C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 13:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0704C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 13:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAE992222C
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 13:06:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65925208E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 13:15:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600088762;
-	bh=+hTCQXSoThcQFiyF2kREjmsvdzzXC//BrwpSRW/S5Bo=;
+	s=default; t=1600089321;
+	bh=kAMW49P1gnd6Q7vgEB8RTzXo+02ZKiNLkrobbCM3QN8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=F1CGEvrIELDc+vIRFe1MXUGGyI5H/a7X2o9J1N9272/kGrTNaqqVZpGSYxZqHYHiA
-	 8JX3F92CImQ7ee8uzCHEN6ZJe1lap+8vAdcgxr2wTI1VpSUjYdU9F2wbVZ1cKTErSN
-	 Mk8wNUf13RleCsl/1x+RtPKyGYIy9ylCGYP6ef9o=
+	b=hlpi0IzaylhZbru65oJJnLjA08Zg8smF3m4+156OBm1zpqAoDHIjHdIkMpj72iTp0
+	 JsNuGB0R3WT+oZCryLOfJZfSzjw6nELQe7gsL5KkDIdHuLLnEUuD/1oG4HDDrayn7x
+	 bw5zeKA0LI8t6AS9d9Sy4DBZNyJZO/Ghrho9RpUs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726627AbgINNFk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 09:05:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60272 "EHLO mail.kernel.org"
+        id S1726586AbgINNPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 09:15:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726586AbgINNEt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 09:04:49 -0400
+        id S1726687AbgINNHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Sep 2020 09:07:14 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E58A021D41;
-        Mon, 14 Sep 2020 13:04:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EB5F42224D;
+        Mon, 14 Sep 2020 13:06:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600088649;
-        bh=+hTCQXSoThcQFiyF2kREjmsvdzzXC//BrwpSRW/S5Bo=;
+        s=default; t=1600088763;
+        bh=kAMW49P1gnd6Q7vgEB8RTzXo+02ZKiNLkrobbCM3QN8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GWTP7vzVof5O6qmfZZyDPs6gWjgDTi4Lq3ryo7InHfmyKGwHOgKkjUdFOVj69atv2
-         ZNHXl1Aqn0U4iQCVNXsNePop0GpCKgkKUFoyD9Wb10GY2oaaRZTN5Dr2R3xzFdy4Hv
-         Y7FIpAmadmb0RSERda4LURy6hZYm4PjeWdH28drE=
+        b=IeFgALjOAOBUCw28CrLOMqpYIDxrhzp0Qf6D6pLgIzcOnl2U9ucZS+DWo0F4fFi9i
+         HCu2grJnVX3SS2uVCkK61TIcixNCqZm3dQ/kkzut97S9TIC1/0RnkjVpdyFeA4Y/OP
+         9Scid8YzoWGwf7v4Y1wXeI8rPivyLxUkYyCFDkd4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 09/29] scsi: lpfc: Extend the RDF FPIN Registration descriptor for additional events
-Date:   Mon, 14 Sep 2020 09:03:38 -0400
-Message-Id: <20200914130358.1804194-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 3/8] scsi: lpfc: Fix FLOGI/PLOGI receive race condition in pt2pt discovery
+Date:   Mon, 14 Sep 2020 09:05:53 -0400
+Message-Id: <20200914130559.1805574-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200914130358.1804194-1-sashal@kernel.org>
-References: <20200914130358.1804194-1-sashal@kernel.org>
+In-Reply-To: <20200914130559.1805574-1-sashal@kernel.org>
+References: <20200914130559.1805574-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,54 +61,58 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <james.smart@broadcom.com>
 
-[ Upstream commit 441f6b5b097d74a8aa72ec0d8992ef820e2b3773 ]
+[ Upstream commit 7b08e89f98cee9907895fabb64cf437bc505ce9a ]
 
-Currently the driver registers for Link Integrity events only.
+The driver is unable to successfully login with remote device. During pt2pt
+login, the driver completes its FLOGI request with the remote device having
+WWN precedence.  The remote device issues its own (delayed) FLOGI after
+accepting the driver's and, upon transmitting the FLOGI, immediately
+recognizes it has already processed the driver's FLOGI thus it transitions
+to sending a PLOGI before waiting for an ACC to its FLOGI.
 
-This patch adds registration for the following FPIN types:
+In the driver, the FLOGI is received and an ACC sent, followed by the PLOGI
+being received and an ACC sent. The issue is that the PLOGI reception
+occurs before the response from the adapter from the FLOGI ACC is
+received. Processing of the PLOGI sets state flags to perform the REG_RPI
+mailbox command and proceed with the rest of discovery on the port. The
+same completion routine used by both FLOGI and PLOGI is generic in
+nature. One of the things it does is clear flags, and those flags happen to
+drive the rest of discovery.  So what happened was the PLOGI processing set
+the flags, the FLOGI ACC completion cleared them, thus when the PLOGI ACC
+completes it doesn't see the flags and stops.
 
- - Delivery Notifications
- - Congestion Notification
- - Peer Congestion Notification
+Fix by modifying the generic completion routine to not clear the rest of
+discovery flag (NLP_ACC_REGLOGIN) unless the completion is also associated
+with performing a mailbox command as part of its handling.  For things such
+as FLOGI ACC, there isn't a subsequent action to perform with the adapter,
+thus there is no mailbox cmd ptr. PLOGI ACC though will perform REG_RPI
+upon completion, thus there is a mailbox cmd ptr.
 
-Link: https://lore.kernel.org/r/20200828175332.130300-4-james.smart@broadcom.com
+Link: https://lore.kernel.org/r/20200828175332.130300-3-james.smart@broadcom.com
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 3 +++
- drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 7b6a210825677..519c7be404e75 100644
+index 315dd25a0c44e..5be938b47f48b 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3512,6 +3512,9 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
- 				FC_TLV_DESC_LENGTH_FROM_SZ(prdf->reg_d1));
- 	prdf->reg_d1.reg_desc.count = cpu_to_be32(ELS_RDF_REG_TAG_CNT);
- 	prdf->reg_d1.desc_tags[0] = cpu_to_be32(ELS_DTAG_LNK_INTEGRITY);
-+	prdf->reg_d1.desc_tags[1] = cpu_to_be32(ELS_DTAG_DELIVERY);
-+	prdf->reg_d1.desc_tags[2] = cpu_to_be32(ELS_DTAG_PEER_CONGEST);
-+	prdf->reg_d1.desc_tags[3] = cpu_to_be32(ELS_DTAG_CONGESTION);
+@@ -3841,7 +3841,9 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ out:
+ 	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
+ 		spin_lock_irq(shost->host_lock);
+-		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
++		if (mbox)
++			ndlp->nlp_flag &= ~NLP_ACC_REGLOGIN;
++		ndlp->nlp_flag &= ~NLP_RM_DFLT_RPI;
+ 		spin_unlock_irq(shost->host_lock);
  
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
- 			      "Issue RDF:       did:x%x",
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 6dfff03765471..c7085769170d7 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4797,7 +4797,7 @@ struct send_frame_wqe {
- 	uint32_t fc_hdr_wd5;           /* word 15 */
- };
- 
--#define ELS_RDF_REG_TAG_CNT		1
-+#define ELS_RDF_REG_TAG_CNT		4
- struct lpfc_els_rdf_reg_desc {
- 	struct fc_df_desc_fpin_reg	reg_desc;	/* descriptor header */
- 	__be32				desc_tags[ELS_RDF_REG_TAG_CNT];
+ 		/* If the node is not being used by another discovery thread,
 -- 
 2.25.1
 
