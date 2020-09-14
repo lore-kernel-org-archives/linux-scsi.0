@@ -2,187 +2,113 @@ Return-Path: <SRS0=3W2l=CX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E69C43461
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 10:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE15C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 13:06:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24FC620829
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 10:23:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hzM7MOO9"
+	by mail.kernel.org (Postfix) with ESMTP id DAE992222C
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 13:06:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600088762;
+	bh=+hTCQXSoThcQFiyF2kREjmsvdzzXC//BrwpSRW/S5Bo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=F1CGEvrIELDc+vIRFe1MXUGGyI5H/a7X2o9J1N9272/kGrTNaqqVZpGSYxZqHYHiA
+	 8JX3F92CImQ7ee8uzCHEN6ZJe1lap+8vAdcgxr2wTI1VpSUjYdU9F2wbVZ1cKTErSN
+	 Mk8wNUf13RleCsl/1x+RtPKyGYIy9ylCGYP6ef9o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726427AbgINKXE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 06:23:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55980 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbgINKWu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 06:22:50 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11D96C06174A;
-        Mon, 14 Sep 2020 03:22:49 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id e23so22443378eja.3;
-        Mon, 14 Sep 2020 03:22:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=JcgkykQbCEEzXPOIKLN/riEHEv6JbaxpqPU0ln50usE=;
-        b=hzM7MOO9Rq9mUDA18kNMYt8jvZNAg4cOM75HXB9rzSkA2PdvarrESSKauS0rt7oIFS
-         8tys67UrARZuybnkT31wATqbBVQ6dyGGnlrQxxcgxCstmOLdLpB74ALzBk5C57e+YiXm
-         0FTJMvrZdzQGX64u2FUkKEDzlqP5mVpqkHGo49yz5CtmjgOlAw0/8WidBJLCKr7JuuOy
-         AB01U/psleIcCbsplAvTLkTKDXj0kkXZL3G8NBM8RG5dD8xww8xxmed1ya/ClqHOS0Wf
-         uOwSd1bDDSpWfQEB5J/qrtVECPePwCkr5Bg+Bf7/x1Y7mgTuoh1MBJI9kzEsWLcVwz/d
-         OcIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=JcgkykQbCEEzXPOIKLN/riEHEv6JbaxpqPU0ln50usE=;
-        b=KMuq67NlS+HRF7pasuyg+r/SSyzjzOWlNkFureCJfnDyeoxpmNUSg2IoIL4ECaOKlf
-         AOmF+dbxNxQSc4uDo4lAwy0J3IWl3rff3VQF/TrPSNlYvOa51qUwIYHZuSzn5PpH762N
-         UJIBuyGL4cxHA0dO8+xTXdqBr51FvaYTBYBt5tzNl/PFk8+0v42mU3q1l4j3ab1unn2t
-         y0RaGX4Tw7wzsZf985F5OA3hni/O7EF5aKPzw/4HTIfQm7ETLJN77/RXi4nBLKMg7n2C
-         71G0vcIHbbPp1PJeqeGV2Xo8NpA2T7zN8qYQ4FXVR5syW+owOUNmVDsV7gsi0bR/BXE7
-         E1/Q==
-X-Gm-Message-State: AOAM532Z1pEMpWfSN/erR1KTSCt15EJ3SnwVeL4ieAP3ACn+xHD/Qrhz
-        96Se9lgonfRW6Od4wz66C3o=
-X-Google-Smtp-Source: ABdhPJwpMgR1QyKRF+Kx+/hv2hcRWvEASyyAo3WtCvNRWY08dtRJDCvsuH3otupJYgT7EZUdcIIYKQ==
-X-Received: by 2002:a17:906:4b4a:: with SMTP id j10mr13903598ejv.498.1600078967703;
-        Mon, 14 Sep 2020 03:22:47 -0700 (PDT)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id e15sm8827333eds.5.2020.09.14.03.22.44
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 14 Sep 2020 03:22:46 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailauth.nyi.internal (Postfix) with ESMTP id 01B2027C0054;
-        Mon, 14 Sep 2020 06:22:43 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute3.internal (MEProxy); Mon, 14 Sep 2020 06:22:43 -0400
-X-ME-Sender: <xms:cURfX-NqGW-l0nzsMMf9SBHOJ4BR-riZQvV2i6qhqpTBM1n42ck86A>
-    <xme:cURfX8-QFM8aa_0TAPAqgJKYNpFSzXdJanLqbLIaCkoneIIzdevUun9tXvnu02Zq0
-    p_Pmvt-F8aBtu1-rQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrudeiiedgvdejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhquhhn
-    ucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrth
-    htvghrnhepvdelieegudfggeevjefhjeevueevieetjeeikedvgfejfeduheefhffggedv
-    geejnecukfhppeehvddrudehhedrudduuddrjedunecuvehluhhsthgvrhfuihiivgeptd
-    enucfrrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvshhmthhprghuthhhphgv
-    rhhsohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheehvddqsghoqhhunhdrfh
-    gvnhhgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
-X-ME-Proxy: <xmx:cURfX1T6D57hu7t5BUnlV0l8BZgxvpp-gb7ZsHu4j4JvlLpoMwlMIQ>
-    <xmx:cURfX-t5CIr1HQbqC6DxHCylZ4AeCGuRTWjUk9Yb39pfPwxHWfjh9Q>
-    <xmx:cURfX2fPDM7ZbuInfgNAx6PoZgxiINQQBXUQ5EpyGEQvh4YzWEuIew>
-    <xmx:ckRfX6OyRJZcGmIW0NC4Nv53MQh6BYUo6bKgv50VxeE-UwleIdCKZnmh4Q8>
-Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 76F87306467E;
-        Mon, 14 Sep 2020 06:22:40 -0400 (EDT)
-Date:   Mon, 14 Sep 2020 18:22:39 +0800
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     Wei Liu <wei.liu@kernel.org>
-Cc:     linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Michael Kelley <mikelley@microsoft.com>, will@kernel.org,
-        ardb@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
-        mark.rutland@arm.com, maz@kernel.org
-Subject: Re: [PATCH v3 08/11] Input: hyperv-keyboard: Make ringbuffer at
- least take two pages
-Message-ID: <20200914102239.GB45838@debian-boqun.qqnc3lrjykvubdpftowmye0fmh.lx.internal.cloudapp.net>
-References: <20200910143455.109293-1-boqun.feng@gmail.com>
- <20200910143455.109293-9-boqun.feng@gmail.com>
- <20200914084600.GA45838@debian-boqun.qqnc3lrjykvubdpftowmye0fmh.lx.internal.cloudapp.net>
- <20200914093016.lsfrfk4c7kyj6tn3@liuwe-devbox-debian-v2>
+        id S1726627AbgINNFk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 09:05:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60272 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726586AbgINNEt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Sep 2020 09:04:49 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E58A021D41;
+        Mon, 14 Sep 2020 13:04:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600088649;
+        bh=+hTCQXSoThcQFiyF2kREjmsvdzzXC//BrwpSRW/S5Bo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=GWTP7vzVof5O6qmfZZyDPs6gWjgDTi4Lq3ryo7InHfmyKGwHOgKkjUdFOVj69atv2
+         ZNHXl1Aqn0U4iQCVNXsNePop0GpCKgkKUFoyD9Wb10GY2oaaRZTN5Dr2R3xzFdy4Hv
+         Y7FIpAmadmb0RSERda4LURy6hZYm4PjeWdH28drE=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.8 09/29] scsi: lpfc: Extend the RDF FPIN Registration descriptor for additional events
+Date:   Mon, 14 Sep 2020 09:03:38 -0400
+Message-Id: <20200914130358.1804194-9-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200914130358.1804194-1-sashal@kernel.org>
+References: <20200914130358.1804194-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200914093016.lsfrfk4c7kyj6tn3@liuwe-devbox-debian-v2>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 14, 2020 at 09:30:16AM +0000, Wei Liu wrote:
-> On Mon, Sep 14, 2020 at 04:46:00PM +0800, Boqun Feng wrote:
-> > On Thu, Sep 10, 2020 at 10:34:52PM +0800, Boqun Feng wrote:
-> > > When PAGE_SIZE > HV_HYP_PAGE_SIZE, we need the ringbuffer size to be at
-> > > least 2 * PAGE_SIZE: one page for the header and at least one page of
-> > > the data part (because of the alignment requirement for double mapping).
-> > > 
-> > > So make sure the ringbuffer sizes to be at least 2 * PAGE_SIZE when
-> > > using vmbus_open() to establish the vmbus connection.
-> > > 
-> > > Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
-> > > ---
-> > >  drivers/input/serio/hyperv-keyboard.c | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/input/serio/hyperv-keyboard.c b/drivers/input/serio/hyperv-keyboard.c
-> > > index df4e9f6f4529..6ebc61e2db3f 100644
-> > > --- a/drivers/input/serio/hyperv-keyboard.c
-> > > +++ b/drivers/input/serio/hyperv-keyboard.c
-> > > @@ -75,8 +75,8 @@ struct synth_kbd_keystroke {
-> > >  
-> > >  #define HK_MAXIMUM_MESSAGE_SIZE 256
-> > >  
-> > > -#define KBD_VSC_SEND_RING_BUFFER_SIZE		(40 * 1024)
-> > > -#define KBD_VSC_RECV_RING_BUFFER_SIZE		(40 * 1024)
-> > > +#define KBD_VSC_SEND_RING_BUFFER_SIZE	max(40 * 1024, (int)(2 * PAGE_SIZE))
-> > > +#define KBD_VSC_RECV_RING_BUFFER_SIZE	max(40 * 1024, (int)(2 * PAGE_SIZE))
-> > >  
-> > 
-> > Hmm.. just realized there is a problem here, if PAGE_SIZE = 16k, then
-> > 40 * 1024 > 2 * PAGE_SIZE, however in the ring buffer size should also
-> > be page aligned, otherwise vmbus_open() will fail.
-> > 
-> > I plan to modify this as
-> > 
-> > in linux/hyperv.h:
-> > 
-> > #define VMBUS_RING_SIZE(payload_sz) PAGE_ALIGN(sizeof(struct hv_ring_buffer) + (playload_sz))
-> > 
-> > and here:
-> > 
-> > #define KBD_VSC_SEND_RING_BUFFER_SIZE VMBUS_RING_SIZE(36 * 1024)
-> > #define KBD_VSC_RECV_RING_BUFFER_SIZE VMBUS_RING_SIZE(36 * 1024)
-> > 
-> > and the similar change for patch #9.
-> 
-> OOI why do you reduce the size by 4k here?
-> 
+From: James Smart <james.smart@broadcom.com>
 
-To keep the total ring buffer size unchanged (still 40k) when
-PAGE_SIZE=4k. Because in VMBUS_RING_SIZE() (which I plan to rename as
-HV_RING_SIZE()), the hv_ring_buffer size is already added.
+[ Upstream commit 441f6b5b097d74a8aa72ec0d8992ef820e2b3773 ]
 
-Regards,
-Boqun
+Currently the driver registers for Link Integrity events only.
 
-> Wei.
-> 
-> > 
-> > Thoughts?
-> > 
-> > Regards,
-> > Boqun
-> > 
-> > >  #define XTKBD_EMUL0     0xe0
-> > >  #define XTKBD_EMUL1     0xe1
-> > > -- 
-> > > 2.28.0
-> > > 
+This patch adds registration for the following FPIN types:
+
+ - Delivery Notifications
+ - Congestion Notification
+ - Peer Congestion Notification
+
+Link: https://lore.kernel.org/r/20200828175332.130300-4-james.smart@broadcom.com
+Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_els.c | 3 +++
+ drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 7b6a210825677..519c7be404e75 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3512,6 +3512,9 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 				FC_TLV_DESC_LENGTH_FROM_SZ(prdf->reg_d1));
+ 	prdf->reg_d1.reg_desc.count = cpu_to_be32(ELS_RDF_REG_TAG_CNT);
+ 	prdf->reg_d1.desc_tags[0] = cpu_to_be32(ELS_DTAG_LNK_INTEGRITY);
++	prdf->reg_d1.desc_tags[1] = cpu_to_be32(ELS_DTAG_DELIVERY);
++	prdf->reg_d1.desc_tags[2] = cpu_to_be32(ELS_DTAG_PEER_CONGEST);
++	prdf->reg_d1.desc_tags[3] = cpu_to_be32(ELS_DTAG_CONGESTION);
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+ 			      "Issue RDF:       did:x%x",
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 6dfff03765471..c7085769170d7 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -4797,7 +4797,7 @@ struct send_frame_wqe {
+ 	uint32_t fc_hdr_wd5;           /* word 15 */
+ };
+ 
+-#define ELS_RDF_REG_TAG_CNT		1
++#define ELS_RDF_REG_TAG_CNT		4
+ struct lpfc_els_rdf_reg_desc {
+ 	struct fc_df_desc_fpin_reg	reg_desc;	/* descriptor header */
+ 	__be32				desc_tags[ELS_RDF_REG_TAG_CNT];
+-- 
+2.25.1
+
