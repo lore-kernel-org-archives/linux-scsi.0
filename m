@@ -2,105 +2,182 @@ Return-Path: <SRS0=3W2l=CX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C59C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 16:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B0EFC433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 16:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C51A20672
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 16:35:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B67C4217BA
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 16:43:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZCD7Hhh3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dP3pKRmp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726349AbgINQfg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 12:35:36 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:14266 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726031AbgINQey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 12:34:54 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600101293; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=ObHJxhWnQ6Id1CMXMXxijV0dvfRIEHq6RwO9EgQfuVY=;
- b=ZCD7Hhh3/5pgssIKBltNNmzQpehRPk4lyb5iNdcrJTD+yd8/+5iaLZeic486Vd60dU2syhVR
- zIKJs9w6PvDHIx3CIPsJVbH0KgWSdfYioZlqzNqusGoCYujLPOJjw7EpHps/nr2wCxLnaVum
- lX1r2oyXjVTToH9IbVm9xwlyiew=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5f5f9ba44ba82a82fdbafb39 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 14 Sep 2020 16:34:44
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2DA8DC43382; Mon, 14 Sep 2020 16:34:44 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 613BAC433C8;
-        Mon, 14 Sep 2020 16:34:43 +0000 (UTC)
+        id S1726306AbgINQmg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 12:42:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44762 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726172AbgINPNb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 11:13:31 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 226CBC06174A;
+        Mon, 14 Sep 2020 08:13:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=RqQGv7rUrofRqLyMSzfEtcHVgVUslC8cDoNR577KrIg=; b=dP3pKRmpC+I0E+dOSbraRXJ35X
+        3haQwB40uPuLpGR5zn67wQbMCYeYUDIDCnlsB5tNCLi9vaoDWIjbKg2ty0ncKAbUYHiAWQ1Gwe4T2
+        /L1d3ii2rUMCke8WZymWHb2tl/HocPOnGFPqgOwVy0kntsQ5+2r+a5DBRhRIc7Qwt5AhJHft+rUwc
+        cUuL4BH3aNOU3nrCkiiuv/cztMGgjnYHVBqE36sUV2hPE4iUig7eK9l316jWvenjHMhEIQ2Nevj2v
+        NzaWOE2Dnmj9Uqr/OYUKSLadMvLX2JkZjrKxFODSeBkgfvxBjLKXD/2ClVZgj/x7V7GdULKR4vyHX
+        B3N9jL+g==;
+Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kHqAB-0003UL-04; Mon, 14 Sep 2020 15:13:03 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Tomasz Figa <tfiga@chromium.org>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
+Cc:     Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        linux1394-devel@lists.sourceforge.net, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        alsa-devel@alsa-project.org
+Subject: [PATCH 12/17] 53c700: convert to dma_alloc_noncoherent
+Date:   Mon, 14 Sep 2020 16:44:28 +0200
+Message-Id: <20200914144433.1622958-13-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200914144433.1622958-1-hch@lst.de>
+References: <20200914144433.1622958-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 14 Sep 2020 09:34:43 -0700
-From:   nguyenb@codeaurora.org
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Properly set the device Icc Level
-In-Reply-To: <BY5PR04MB6705A865E35CDA367249DC4EFC270@BY5PR04MB6705.namprd04.prod.outlook.com>
-References: <5c9d6f76303bbe5188bf839b2ea5e5bf530e7281.1598923023.git.nguyenb@codeaurora.org>
- <0101017475a11d00-6def34a7-db5d-472c-9dcc-215a80510402-000000@us-west-2.amazonses.com>
- <BY5PR04MB6705A865E35CDA367249DC4EFC270@BY5PR04MB6705.namprd04.prod.outlook.com>
-Message-ID: <e1b4e9f5eab891fa6615e7a4b2ed29e6@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-10 03:02, Avri Altman wrote:
->> 
->> On 2020-08-31 18:19, Bao D. Nguyen wrote:
->> > UFS version 3.0 and later devices require Vcc and Vccq power supplies
->> > with Vccq2 being optional. While earlier UFS version 2.0 and 2.1
->> > devices, the Vcc and Vccq2 are required with Vccq being optional.
->> > Check the required power supplies used by the device
->> > and set the device's supported Icc level properly.
-> Practically you are correct - most flash vendors moved in UFS3.1 to
-> 1.2 supply instead of 1.8.
-> However, the host should provide all 3 supplies to the device because -
-> a) A flash vendor might want to still use 1.8 in its UFS3.1 device, and
-> b) We should allow a degenerated configurations, e.g. 3.1 devices,
-> that are degenerated to 2.1 or 2.2
-Thank you for your comment.
-The host can provide all 3 power supplies. However, the change is to 
-ensure
-we do not exit early and fail to properly set the Icc level because the 
-optional power
-supply is not provided.
-> 
-> That said, I think we can entirely remove the check in the beginning
-> of the function,
-> But not because the spec allows it, but because each supply is
-> explicitly checked later on,
-> before reading its applicable max current entry in the power 
-> descriptor.
-We need these checks to prevent NULL pointer access subsequently in this 
-function.
-> Thanks,
-> Avri
+Use the new non-coherent DMA API including proper ownership transfers.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/53c700.c | 11 +++++++++--
+ drivers/scsi/53c700.h | 16 ++++++++--------
+ 2 files changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 9a343f8ecb6c3e..5117d90ccd9edf 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -269,18 +269,25 @@ NCR_700_get_SXFER(struct scsi_device *SDp)
+ 					      spi_period(SDp->sdev_target));
+ }
+ 
++static inline dma_addr_t virt_to_dma(struct NCR_700_Host_Parameters *h, void *p)
++{
++	return h->pScript + ((uintptr_t)p - (uintptr_t)h->script);
++}
++
+ static inline void dma_sync_to_dev(struct NCR_700_Host_Parameters *h,
+ 		void *addr, size_t size)
+ {
+ 	if (h->noncoherent)
+-		dma_cache_sync(h->dev, addr, size, DMA_TO_DEVICE);
++		dma_sync_single_for_device(h->dev, virt_to_dma(h, addr),
++					   size, DMA_BIDIRECTIONAL);
+ }
+ 
+ static inline void dma_sync_from_dev(struct NCR_700_Host_Parameters *h,
+ 		void *addr, size_t size)
+ {
+ 	if (h->noncoherent)
+-		dma_cache_sync(h->dev, addr, size, DMA_FROM_DEVICE);
++		dma_sync_single_for_device(h->dev, virt_to_dma(h, addr), size,
++					   DMA_BIDIRECTIONAL);
+ }
+ 
+ struct Scsi_Host *
+diff --git a/drivers/scsi/53c700.h b/drivers/scsi/53c700.h
+index 0f545b05fe611d..c9f8c497babb3d 100644
+--- a/drivers/scsi/53c700.h
++++ b/drivers/scsi/53c700.h
+@@ -423,33 +423,33 @@ struct NCR_700_Host_Parameters {
+ #define NCR_710_MIN_XFERP	0
+ #define NCR_700_MIN_PERIOD	25 /* for SDTR message, 100ns */
+ 
+-#define script_patch_32(dev, script, symbol, value) \
++#define script_patch_32(h, script, symbol, value) \
+ { \
+ 	int i; \
+ 	dma_addr_t da = value; \
+ 	for(i=0; i< (sizeof(A_##symbol##_used) / sizeof(__u32)); i++) { \
+ 		__u32 val = bS_to_cpu((script)[A_##symbol##_used[i]]) + da; \
+ 		(script)[A_##symbol##_used[i]] = bS_to_host(val); \
+-		dma_sync_to_dev((dev), &(script)[A_##symbol##_used[i]], 4); \
++		dma_sync_to_dev((h), &(script)[A_##symbol##_used[i]], 4); \
+ 		DEBUG((" script, patching %s at %d to %pad\n", \
+ 		       #symbol, A_##symbol##_used[i], &da)); \
+ 	} \
+ }
+ 
+-#define script_patch_32_abs(dev, script, symbol, value) \
++#define script_patch_32_abs(h, script, symbol, value) \
+ { \
+ 	int i; \
+ 	dma_addr_t da = value; \
+ 	for(i=0; i< (sizeof(A_##symbol##_used) / sizeof(__u32)); i++) { \
+ 		(script)[A_##symbol##_used[i]] = bS_to_host(da); \
+-		dma_sync_to_dev((dev), &(script)[A_##symbol##_used[i]], 4); \
++		dma_sync_to_dev((h), &(script)[A_##symbol##_used[i]], 4); \
+ 		DEBUG((" script, patching %s at %d to %pad\n", \
+ 		       #symbol, A_##symbol##_used[i], &da)); \
+ 	} \
+ }
+ 
+ /* Used for patching the SCSI ID in the SELECT instruction */
+-#define script_patch_ID(dev, script, symbol, value) \
++#define script_patch_ID(h, script, symbol, value) \
+ { \
+ 	int i; \
+ 	for(i=0; i< (sizeof(A_##symbol##_used) / sizeof(__u32)); i++) { \
+@@ -457,13 +457,13 @@ struct NCR_700_Host_Parameters {
+ 		val &= 0xff00ffff; \
+ 		val |= ((value) & 0xff) << 16; \
+ 		(script)[A_##symbol##_used[i]] = bS_to_host(val); \
+-		dma_sync_to_dev((dev), &(script)[A_##symbol##_used[i]], 4); \
++		dma_sync_to_dev((h), &(script)[A_##symbol##_used[i]], 4); \
+ 		DEBUG((" script, patching ID field %s at %d to 0x%x\n", \
+ 		       #symbol, A_##symbol##_used[i], val)); \
+ 	} \
+ }
+ 
+-#define script_patch_16(dev, script, symbol, value) \
++#define script_patch_16(h, script, symbol, value) \
+ { \
+ 	int i; \
+ 	for(i=0; i< (sizeof(A_##symbol##_used) / sizeof(__u32)); i++) { \
+@@ -471,7 +471,7 @@ struct NCR_700_Host_Parameters {
+ 		val &= 0xffff0000; \
+ 		val |= ((value) & 0xffff); \
+ 		(script)[A_##symbol##_used[i]] = bS_to_host(val); \
+-		dma_sync_to_dev((dev), &(script)[A_##symbol##_used[i]], 4); \
++		dma_sync_to_dev((h), &(script)[A_##symbol##_used[i]], 4); \
+ 		DEBUG((" script, patching short field %s at %d to 0x%x\n", \
+ 		       #symbol, A_##symbol##_used[i], val)); \
+ 	} \
+-- 
+2.28.0
 
