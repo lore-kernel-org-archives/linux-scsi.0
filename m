@@ -2,92 +2,220 @@ Return-Path: <SRS0=3W2l=CX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5584C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A50DBC433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:09:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A7FF216C4
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:09:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600096157;
-	bh=nj04gQ2nO4VIAL2d7c7u/+7BBIF7UPrKHeahbNgg3hw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LyLVg5CyNna9gfKmHZoRdWWibq2VEwxL6q9VjYA9F/qivQOQDWsaP7f5qCpXyqQsN
-	 Bb4mTSydT+C5peNrI7agBIRm/jy63RLwLDUZxYF9A3Rz0Ee4Flhz0Sg0n4g3B7AnhI
-	 wPMaelAQWbpfuWeZknjexXwZJg4LwDlQhn+ixK08=
+	by mail.kernel.org (Postfix) with ESMTP id 5E37D20829
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 15:09:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KmfGrfDX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726031AbgINPJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 11:09:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32952 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726621AbgINNF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 09:05:29 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8492C2222D;
-        Mon, 14 Sep 2020 13:04:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600088679;
-        bh=nj04gQ2nO4VIAL2d7c7u/+7BBIF7UPrKHeahbNgg3hw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xr0uzeSO/sqmMkePVP09eccWv23Pqd6XLdVonwSLreL7Y5TmA5CYkgzBs1ZiA87jw
-         b4ltAssWZZ/pCcDt59VReBWoNuFwBEu0amwSkSTiaiVK2HnRpKuq7f6P5KFTT/vIa5
-         QUapyeG6/I6NDVQvNZfkbsSjT7laaf8JjuG9VAJc=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 03/22] scsi: libfc: Fix for double free()
-Date:   Mon, 14 Sep 2020 09:04:15 -0400
-Message-Id: <20200914130434.1804478-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200914130434.1804478-1-sashal@kernel.org>
-References: <20200914130434.1804478-1-sashal@kernel.org>
+        id S1726171AbgINPJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 11:09:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44052 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725992AbgINPJH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 11:09:07 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79CF6C06178A;
+        Mon, 14 Sep 2020 08:09:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=Hd44flV0rNOoconJIhItgKEmFIKY+u0t7YJsM9KNpfo=; b=KmfGrfDX7byZuKSDmAvqbHPmbG
+        rVaI8AfoPY6UsW2JcwgF4VuMlzi7fLK0J2xpI95SGy0q+W5zBRBcMVQ48ucc/QC/JtBbmBw2rpIi9
+        k2hdX5nDNJVJiGWdMoQGMk7KRRTGvh0MIF+0oRVh8VPbm/iHIJ4t0AAsaDW8cmC9dxwwIAuvWz6+v
+        Gta5PNKJzPOsjrE8pPJot2z39D/4owQoF9Nt8nXSM22jnkkdQMTdKKTO6VZE0csNfpqzMQatn8xP6
+        SS2WBIoSfFEy1gOvLpecVGJG4LcKAOo3nI1A6Rs3aY3bxSBocIMVe8GEYW4DiACK5ruWQPrRzPTSo
+        HLZyS2gw==;
+Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kHq5w-0003B7-Sc; Mon, 14 Sep 2020 15:08:41 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Tomasz Figa <tfiga@chromium.org>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
+Cc:     Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        linux1394-devel@lists.sourceforge.net, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        alsa-devel@alsa-project.org
+Subject: [PATCH 10/17] hal2: convert to dma_alloc_noncoherent
+Date:   Mon, 14 Sep 2020 16:44:26 +0200
+Message-Id: <20200914144433.1622958-11-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200914144433.1622958-1-hch@lst.de>
+References: <20200914144433.1622958-1-hch@lst.de>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+Use the new non-coherent DMA API including proper ownership transfers.
+This also means we can allocate the buffer memory with the proper
+direction instead of bidirectional.
 
-[ Upstream commit 5a5b80f98534416b3b253859897e2ba1dc241e70 ]
-
-Fix for '&fp->skb' double free.
-
-Link:
-https://lore.kernel.org/r/20200825093940.19612-1-jhasan@marvell.com
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/libfc/fc_disc.c | 2 --
- 1 file changed, 2 deletions(-)
+ sound/mips/hal2.c | 58 ++++++++++++++++++++++-------------------------
+ 1 file changed, 27 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index e00dc4693fcbd..589ddf003886e 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -634,8 +634,6 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	fc_frame_free(fp);
- out:
- 	kref_put(&rdata->kref, fc_rport_destroy);
--	if (!IS_ERR(fp))
--		fc_frame_free(fp);
+diff --git a/sound/mips/hal2.c b/sound/mips/hal2.c
+index ec84bc4c3a6e77..9ac9b58d7c8cdd 100644
+--- a/sound/mips/hal2.c
++++ b/sound/mips/hal2.c
+@@ -441,7 +441,8 @@ static inline void hal2_stop_adc(struct snd_hal2 *hal2)
+ 	hal2->adc.pbus.pbus->pbdma_ctrl = HPC3_PDMACTRL_LD;
  }
  
- /**
+-static int hal2_alloc_dmabuf(struct snd_hal2 *hal2, struct hal2_codec *codec)
++static int hal2_alloc_dmabuf(struct snd_hal2 *hal2, struct hal2_codec *codec,
++		enum dma_data_direction buffer_dir)
+ {
+ 	struct device *dev = hal2->card->dev;
+ 	struct hal2_desc *desc;
+@@ -449,15 +450,15 @@ static int hal2_alloc_dmabuf(struct snd_hal2 *hal2, struct hal2_codec *codec)
+ 	int count = H2_BUF_SIZE / H2_BLOCK_SIZE;
+ 	int i;
+ 
+-	codec->buffer = dma_alloc_attrs(dev, H2_BUF_SIZE, &buffer_dma,
+-					GFP_KERNEL, DMA_ATTR_NON_CONSISTENT);
++	codec->buffer = dma_alloc_noncoherent(dev, H2_BUF_SIZE, &buffer_dma,
++					buffer_dir, GFP_KERNEL);
+ 	if (!codec->buffer)
+ 		return -ENOMEM;
+-	desc = dma_alloc_attrs(dev, count * sizeof(struct hal2_desc),
+-			       &desc_dma, GFP_KERNEL, DMA_ATTR_NON_CONSISTENT);
++	desc = dma_alloc_noncoherent(dev, count * sizeof(struct hal2_desc),
++			&desc_dma, DMA_BIDIRECTIONAL, GFP_KERNEL);
+ 	if (!desc) {
+-		dma_free_attrs(dev, H2_BUF_SIZE, codec->buffer, buffer_dma,
+-			       DMA_ATTR_NON_CONSISTENT);
++		dma_free_noncoherent(dev, H2_BUF_SIZE, codec->buffer, buffer_dma,
++				buffer_dir);
+ 		return -ENOMEM;
+ 	}
+ 	codec->buffer_dma = buffer_dma;
+@@ -470,20 +471,22 @@ static int hal2_alloc_dmabuf(struct snd_hal2 *hal2, struct hal2_codec *codec)
+ 		      desc_dma : desc_dma + (i + 1) * sizeof(struct hal2_desc);
+ 		desc++;
+ 	}
+-	dma_cache_sync(dev, codec->desc, count * sizeof(struct hal2_desc),
+-		       DMA_TO_DEVICE);
++	dma_sync_single_for_device(dev, codec->desc_dma,
++				   count * sizeof(struct hal2_desc),
++				   DMA_BIDIRECTIONAL);
+ 	codec->desc_count = count;
+ 	return 0;
+ }
+ 
+-static void hal2_free_dmabuf(struct snd_hal2 *hal2, struct hal2_codec *codec)
++static void hal2_free_dmabuf(struct snd_hal2 *hal2, struct hal2_codec *codec,
++		enum dma_data_direction buffer_dir)
+ {
+ 	struct device *dev = hal2->card->dev;
+ 
+-	dma_free_attrs(dev, codec->desc_count * sizeof(struct hal2_desc),
+-		       codec->desc, codec->desc_dma, DMA_ATTR_NON_CONSISTENT);
+-	dma_free_attrs(dev, H2_BUF_SIZE, codec->buffer, codec->buffer_dma,
+-		       DMA_ATTR_NON_CONSISTENT);
++	dma_free_noncoherent(dev, codec->desc_count * sizeof(struct hal2_desc),
++		       codec->desc, codec->desc_dma, DMA_BIDIRECTIONAL);
++	dma_free_noncoherent(dev, H2_BUF_SIZE, codec->buffer, codec->buffer_dma,
++			buffer_dir);
+ }
+ 
+ static const struct snd_pcm_hardware hal2_pcm_hw = {
+@@ -509,21 +512,16 @@ static int hal2_playback_open(struct snd_pcm_substream *substream)
+ {
+ 	struct snd_pcm_runtime *runtime = substream->runtime;
+ 	struct snd_hal2 *hal2 = snd_pcm_substream_chip(substream);
+-	int err;
+ 
+ 	runtime->hw = hal2_pcm_hw;
+-
+-	err = hal2_alloc_dmabuf(hal2, &hal2->dac);
+-	if (err)
+-		return err;
+-	return 0;
++	return hal2_alloc_dmabuf(hal2, &hal2->dac, DMA_TO_DEVICE);
+ }
+ 
+ static int hal2_playback_close(struct snd_pcm_substream *substream)
+ {
+ 	struct snd_hal2 *hal2 = snd_pcm_substream_chip(substream);
+ 
+-	hal2_free_dmabuf(hal2, &hal2->dac);
++	hal2_free_dmabuf(hal2, &hal2->dac, DMA_TO_DEVICE);
+ 	return 0;
+ }
+ 
+@@ -579,7 +577,9 @@ static void hal2_playback_transfer(struct snd_pcm_substream *substream,
+ 	unsigned char *buf = hal2->dac.buffer + rec->hw_data;
+ 
+ 	memcpy(buf, substream->runtime->dma_area + rec->sw_data, bytes);
+-	dma_cache_sync(hal2->card->dev, buf, bytes, DMA_TO_DEVICE);
++	dma_sync_single_for_device(hal2->card->dev,
++			hal2->dac.buffer_dma + rec->hw_data, bytes,
++			DMA_TO_DEVICE);
+ 
+ }
+ 
+@@ -597,22 +597,16 @@ static int hal2_capture_open(struct snd_pcm_substream *substream)
+ {
+ 	struct snd_pcm_runtime *runtime = substream->runtime;
+ 	struct snd_hal2 *hal2 = snd_pcm_substream_chip(substream);
+-	struct hal2_codec *adc = &hal2->adc;
+-	int err;
+ 
+ 	runtime->hw = hal2_pcm_hw;
+-
+-	err = hal2_alloc_dmabuf(hal2, adc);
+-	if (err)
+-		return err;
+-	return 0;
++	return hal2_alloc_dmabuf(hal2, &hal2->adc, DMA_FROM_DEVICE);
+ }
+ 
+ static int hal2_capture_close(struct snd_pcm_substream *substream)
+ {
+ 	struct snd_hal2 *hal2 = snd_pcm_substream_chip(substream);
+ 
+-	hal2_free_dmabuf(hal2, &hal2->adc);
++	hal2_free_dmabuf(hal2, &hal2->adc, DMA_FROM_DEVICE);
+ 	return 0;
+ }
+ 
+@@ -667,7 +661,9 @@ static void hal2_capture_transfer(struct snd_pcm_substream *substream,
+ 	struct snd_hal2 *hal2 = snd_pcm_substream_chip(substream);
+ 	unsigned char *buf = hal2->adc.buffer + rec->hw_data;
+ 
+-	dma_cache_sync(hal2->card->dev, buf, bytes, DMA_FROM_DEVICE);
++	dma_sync_single_for_cpu(hal2->card->dev,
++			hal2->adc.buffer_dma + rec->hw_data, bytes,
++			DMA_FROM_DEVICE);
+ 	memcpy(substream->runtime->dma_area + rec->sw_data, buf, bytes);
+ }
+ 
 -- 
-2.25.1
+2.28.0
 
