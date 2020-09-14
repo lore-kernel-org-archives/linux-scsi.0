@@ -2,117 +2,71 @@ Return-Path: <SRS0=3W2l=CX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80903C43461
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 14:19:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFE30C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 14:20:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B6E8207EA
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 14:19:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600093144;
-	bh=joFQyl+j5Fc43C9AOBe7sS/X26HHeUPABLCMKhb5Kzs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0iU2mtQNSBYLviJq0MSMcvKokpDT+ccnn34DYSsqsgzWyKcWpo+oQdXYkwnQWurIb
-	 H1DD5We2uYYOPLCicuvSvsw5sBnnFeSgx0WGpyQh1guUm3taRR65Jr3Ae+J5XqlPor
-	 TKZ6+yfV7+kKWwCVDdEIR6Ek0ZTNoZWmttSfQgOI=
+	by mail.kernel.org (Postfix) with ESMTP id 543D8206A5
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Sep 2020 14:20:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UsnAEsCe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726677AbgINOS7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 10:18:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60290 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726695AbgINNHL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 09:07:11 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5D85122224;
-        Mon, 14 Sep 2020 13:05:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600088750;
-        bh=joFQyl+j5Fc43C9AOBe7sS/X26HHeUPABLCMKhb5Kzs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=X11iUHdBWbvxAbO1pz0UzZ1c0HtLvpA6uDgyP4heakzNOkPaJWrTV5O26+I2ybWvs
-         Dbk4A7XaV8e1wnlDRvhMDczegNudd72+zPCxOtj3LP7daXDiPlr6bXYXmGbdVDzxWv
-         pcFcFHW3XhbkAuGAQnnvYo8S+F0ADRexzNm8BBKs=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+        id S1726802AbgINOUa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Sep 2020 10:20:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36378 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726667AbgINOUP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2020 10:20:15 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88160C06174A;
+        Mon, 14 Sep 2020 07:20:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=9YKXruRD1GIGI2F0NMKyLvaAHDHfv6h+lQaAljDhid8=; b=UsnAEsCe93yuk5c3QewEY3LcSl
+        c3SrZ7WE8/sGqb4cVrjgBnRp2H9lJL4WTsWBv/seDYieRvaPydti1y4IWZi4/rNiMqOGKnocZD+WN
+        EIjbTjp/JhdHoCmj4VSf7jIpdJp4cdbgT4y7uoIHy9QGA+JwH67t6kr+aYWJ4B+wikhpGyVaOGVxE
+        k1bd226UB4ciP7baY/351tLVFiW+ph+QroxMPEn46IZXniT7La2xuNE/ZMjPJEC+/gLFdz3X5kl23
+        epLc4c4zuCyZ3cJQGhb+TIFvvPjonHPMv9X1WzhF2hwAlH9kdK9V1dTpc45jcccQs6pmQft5V9enR
+        S+qi2n7Q==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kHpL1-0007y3-Qt; Mon, 14 Sep 2020 14:20:11 +0000
+Date:   Mon, 14 Sep 2020 15:20:11 +0100
+From:   "hch@infradead.org" <hch@infradead.org>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     "hch@infradead.org" <hch@infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 03/10] scsi: lpfc: Fix FLOGI/PLOGI receive race condition in pt2pt discovery
-Date:   Mon, 14 Sep 2020 09:05:38 -0400
-Message-Id: <20200914130545.1805084-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200914130545.1805084-1-sashal@kernel.org>
-References: <20200914130545.1805084-1-sashal@kernel.org>
+        Borislav Petkov <bp@suse.de>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Subject: Re: [PATCH v2 1/2] scsi: Fix handling of host-aware ZBC disks
+Message-ID: <20200914142011.GA30097@infradead.org>
+References: <20200914003448.471624-1-damien.lemoal@wdc.com>
+ <20200914003448.471624-2-damien.lemoal@wdc.com>
+ <20200914072034.GA25808@infradead.org>
+ <CY4PR04MB3751877C568C7F8B3E458960E7230@CY4PR04MB3751.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CY4PR04MB3751877C568C7F8B3E458960E7230@CY4PR04MB3751.namprd04.prod.outlook.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <james.smart@broadcom.com>
+On Mon, Sep 14, 2020 at 09:03:49AM +0000, Damien Le Moal wrote:
+> Yes, that's nice. Will send something along these lines. But since this is a bug
+> fix for the current cycle & stable, we probably should keep the patch as is and
+> add the improvement on top for 5.10, no ?
 
-[ Upstream commit 7b08e89f98cee9907895fabb64cf437bc505ce9a ]
-
-The driver is unable to successfully login with remote device. During pt2pt
-login, the driver completes its FLOGI request with the remote device having
-WWN precedence.  The remote device issues its own (delayed) FLOGI after
-accepting the driver's and, upon transmitting the FLOGI, immediately
-recognizes it has already processed the driver's FLOGI thus it transitions
-to sending a PLOGI before waiting for an ACC to its FLOGI.
-
-In the driver, the FLOGI is received and an ACC sent, followed by the PLOGI
-being received and an ACC sent. The issue is that the PLOGI reception
-occurs before the response from the adapter from the FLOGI ACC is
-received. Processing of the PLOGI sets state flags to perform the REG_RPI
-mailbox command and proceed with the rest of discovery on the port. The
-same completion routine used by both FLOGI and PLOGI is generic in
-nature. One of the things it does is clear flags, and those flags happen to
-drive the rest of discovery.  So what happened was the PLOGI processing set
-the flags, the FLOGI ACC completion cleared them, thus when the PLOGI ACC
-completes it doesn't see the flags and stops.
-
-Fix by modifying the generic completion routine to not clear the rest of
-discovery flag (NLP_ACC_REGLOGIN) unless the completion is also associated
-with performing a mailbox command as part of its handling.  For things such
-as FLOGI ACC, there isn't a subsequent action to perform with the adapter,
-thus there is no mailbox cmd ptr. PLOGI ACC though will perform REG_RPI
-upon completion, thus there is a mailbox cmd ptr.
-
-Link: https://lore.kernel.org/r/20200828175332.130300-3-james.smart@broadcom.com
-Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_els.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 09dbf3021bb0b..7d4a5bb916062 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3865,7 +3865,9 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- out:
- 	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
- 		spin_lock_irq(shost->host_lock);
--		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
-+		if (mbox)
-+			ndlp->nlp_flag &= ~NLP_ACC_REGLOGIN;
-+		ndlp->nlp_flag &= ~NLP_RM_DFLT_RPI;
- 		spin_unlock_irq(shost->host_lock);
- 
- 		/* If the node is not being used by another discovery thread,
--- 
-2.25.1
-
+I'd much rather also add the trivial helper for 5.9 - otherwise we'll
+need to pull current mainline into the for-5.10 tree and create
+all kinds of mess.  And just adding the helper and using it for sd
+only will have no side effects elsewhere.
