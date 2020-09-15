@@ -2,137 +2,124 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30385C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 03:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F784C2BC11
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 04:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E135820897
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 03:14:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C94E4206B5
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 04:42:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LoVXD1cn"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ToH3Ovt7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726106AbgIODOX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Sep 2020 23:14:23 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:45314 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726093AbgIODOU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Sep 2020 23:14:20 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600139660; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=QxjINoDGZVmrQAg4UwCNgFbElvBYGScfRzCvwRPrrLA=;
- b=LoVXD1cnRsc9xy3DuVUlkXnoHQpjBdz09QV6Es4btGnwHmIl5SiJJJMWLdX5rtRaV/G9QYGI
- s7z3uQFcVLtQVxW4BCCFBSmS10M15I4CI0DLO3aOwGT62oIVVX2TQ5P65f/AaNMjUxqX1Ci3
- UmrLvlL6cmbMWyvSiRlwDM3KkX0=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 5f60318a4ba82a82fddfdb25 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Sep 2020 03:14:18
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3CFE1C433F1; Tue, 15 Sep 2020 03:14:18 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5E316C433C8;
-        Tue, 15 Sep 2020 03:14:17 +0000 (UTC)
+        id S1726183AbgIOEmI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 00:42:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56550 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726157AbgIOEl7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 00:41:59 -0400
+Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E671BC06178B
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2020 21:41:58 -0700 (PDT)
+Received: by mail-ot1-x342.google.com with SMTP id o8so2018066otl.4
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2020 21:41:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=I/ZnzMpFblwaWryRS21SJ/GyazzhCSsArSdcbBdV5LQ=;
+        b=ToH3Ovt7Gu16Tk3FQija82rEvQjY97itvmMTSLJvj2ztm8dAoWTTAeQgvY4s2GPy8k
+         3czF78ECJQ4Yb1DPXtMOOYwZchibDTSdlyDtvrRQiGYjtEs1mfbnXOaEm6O81YrY3tz9
+         Ch2tso6Wt+mHTsPcmc8D/Gd+Qdf+2+sh6voSL/Y8vfnevbHb737qHzeBKul0lE/X9DVN
+         U1vToegbxuDVL4xMNZeDzjR4uENEwFa1JaO59bITPBZx62vKbhrmC5OTBv6xx44fsCFs
+         d+gjm5eBuF2erL+0H3ko5zIlLzdBcw22leurTGk+55scHWvrolRzqXgANPg2gHsTE+YW
+         InZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=I/ZnzMpFblwaWryRS21SJ/GyazzhCSsArSdcbBdV5LQ=;
+        b=UUKY2MVWAjc9v0SXk0rsHcf+MrEKSb4uCcfgY+lG41p7+bFX5lEoFL/HOGYgHfIC1O
+         e1elVmjnGPw28zf3NeA/Ah250rXErLOpfLw7WdRSEbwscWaOfkvyizB0Has0cHxxvav8
+         otpwQJgP+GRoTeeiHbBEfhDwWWSWvQd6qr24SZ3DwbvR+gx1QmqDci3W6pDqDAaUMLFA
+         MgewaPaIxWeiL4mHv2eaYxgnZ1rIacF60cJUxG+h/IaL4X/OkFlg/73ZI9/Z90nM5jJY
+         9md2iY37Cy5i2EWwI1DsZnJekQrDLgH3t5WLOzOj3EelkxLpE6y0D9iwb+VACyT70TrW
+         majA==
+X-Gm-Message-State: AOAM533SzJg31w91Gxe9j8SVzEm3temfmRtW0hKAYjOKqGmstMGWiL6I
+        RmdevhXMz95NlQ/9ErrY6+jAoQ==
+X-Google-Smtp-Source: ABdhPJwsjtbia2zRcFgxcthB6iDRW9n/DpQMSzL87iGZhXFNS7DLpTSgAV4OiMmIDfzMCuhg3ZKQyQ==
+X-Received: by 2002:a05:6830:1653:: with SMTP id h19mr10617054otr.147.1600144917697;
+        Mon, 14 Sep 2020 21:41:57 -0700 (PDT)
+Received: from yoga ([2605:6000:e5cb:c100:8898:14ff:fe6d:34e])
+        by smtp.gmail.com with ESMTPSA id i23sm5843654oos.17.2020.09.14.21.41.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Sep 2020 21:41:56 -0700 (PDT)
+Date:   Mon, 14 Sep 2020 23:41:54 -0500
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for
+ UFS
+Message-ID: <20200915044154.GB670377@yoga>
+References: <cover.1598939393.git.nguyenb@codeaurora.org>
+ <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 15 Sep 2020 11:14:17 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Abort tasks before clear them from
- doorbell
-In-Reply-To: <d151d6a2b53cfbd7bf3f9c9313b49c4c404c4c5a.camel@gmail.com>
-References: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
- <1599099873-32579-2-git-send-email-cang@codeaurora.org>
- <1599627906.10803.65.camel@linux.ibm.com>
- <yq14ko62wn5.fsf@ca-mkp.ca.oracle.com>
- <1599706080.10649.30.camel@mtkswgap22>
- <1599718697.3851.3.camel@HansenPartnership.com>
- <1599725880.10649.35.camel@mtkswgap22>
- <1599754148.3575.4.camel@HansenPartnership.com>
- <010101747af387e9-f68ac6fa-1bc6-461d-92ec-dc0ee4486728-000000@us-west-2.amazonses.com>
- <d151d6a2b53cfbd7bf3f9c9313b49c4c404c4c5a.camel@gmail.com>
-Message-ID: <4017d039fa323a63f89f01b5bf4cf714@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bean,
+On Tue 01 Sep 01:00 CDT 2020, Bao D. Nguyen wrote:
 
-On 2020-09-11 17:09, Bean Huo wrote:
-> On Fri, 2020-09-11 at 02:16 +0000, Can Guo wrote:
->> > >
->> > > So your resolution looks good to me.
->> > >
->> > > Thanks so much : )
->> >
->> > You're welcome ... but just remember I have to explain this to
->> > Linus
->> > when the merge window opens.  It would be a lot easier if this
->> > hadn't
->> > happened so please don't make it any worse ...
->> >
->> > James
->> 
->> Sorry that my changes got you confused and thank you for help
->> resolve
->> the
->> conflicts. My change ("scsi: ufs: Abort tasks before clearing them
->> from
->> doorbell") is to serve my fixes to ufs error recovery which only got
->> picked
->> up on scsi-queue-5.10. So I checked out to scsi-queue-5.10 and made
->> my
->> changes on the tip of scsi-queue-5.10, below 2 changes were not even
->> present in scsi-queue-5.10 back that time.
+> UFS's specifications supports a range of Vcc operating
+> voltage levels. Add documentation for the UFS's Vcc voltage
+> levels setting.
 > 
-> I mentioned here https://patchwork.kernel.org/patch/11734713/
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index 415ccdd..7257b32 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -23,6 +23,8 @@ Optional properties:
+>                            with "phys" attribute, provides phandle to UFS PHY node
+>  - vdd-hba-supply        : phandle to UFS host controller supply regulator node
+>  - vcc-supply            : phandle to VCC supply regulator node
+> +- vcc-voltage-level     : specifies voltage levels for VCC supply.
+> +                          Should be specified in pairs (min, max), units uV.
 
-Do you know when can this change be picked up in scsi-queue-5.10?
-If I push my fixes to ufshcd_abort() on scsi-queue-5.10, they will
-run into conflicts with this one again, right? How should I move
-forward now? Thanks.
+What exactly are these pairs representing?
+
+Is this supposed to be 3 pairs of (min,max) for vcc, vcc and vccq2 to be
+passed into a regulator_set_voltage() for each regulator?
+
+Or are these some sort of "operating points" for the vcc-supply?
 
 Regards,
+Bjorn
 
-Can Guo.
-
+>  - vccq-supply           : phandle to VCCQ supply regulator node
+>  - vccq2-supply          : phandle to VCCQ2 supply regulator node
+>  - vcc-supply-1p8        : For embedded UFS devices, valid VCC range is 1.7-1.95V
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
 > 
-> this change (scsi: ufs: Abort tasks before clearing them from doorbell)
-> has conflicts with the scsi-fixes branch. I don't know which branch is
-> the main branch we should focus on.
-> 
-> 
-> Bean
