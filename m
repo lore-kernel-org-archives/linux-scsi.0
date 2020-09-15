@@ -2,155 +2,140 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE2DC43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:11:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84B18C43461
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:17:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B3BA20809
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:11:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42D1C20732
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:17:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="YBlu85+T"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="n3p/yVJZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727977AbgIOWLs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:11:48 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:29645 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727507AbgIOQr1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Sep 2020 12:47:27 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600188446; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=yEHNYIgoLCIfyK1Nj7VW1RZeG1P4bPnr1BXOU5FeJZ8=;
- b=YBlu85+T1imHDCPyoDVk+Yl+W626qiEuBFbmvUkpi0FqTcj1CuwdO35j0uRDlIOvlj8Ye3Pj
- TWh4nR3MkqfQIM4B7QgiagCbiNpVO/jSI3kiA+3Su9z7DTR7RFi5Pka68v5CC59H95hDzTWb
- Wi+mHUyGWKEwKhKUyuS0fsac8rk=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 5f60f01eba408b30ce29c232 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Sep 2020 16:47:26
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8A026C43385; Tue, 15 Sep 2020 16:47:25 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 973EFC433F0;
-        Tue, 15 Sep 2020 16:47:24 +0000 (UTC)
+        id S1727907AbgIOWQ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 18:16:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53688 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727701AbgIOQdY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 12:33:24 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8C3DC06178A;
+        Tue, 15 Sep 2020 09:33:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=3uuWATlux5CLwoYUg+NN5gOtHb6T7EXPohKT/lTJKJI=; b=n3p/yVJZRK+wbxyYEp8pkVnF7d
+        hOOHcYTdFzo7akNyeet0DZXxccLdgZIoOr6taxspBy/6Nw2HzuudIL5cO3cux/0Ps1kPOPpCaDuiZ
+        71xYegixSYfkkcrW3QjKCgmzELBA6x8wDtzWuiR4saDycE2AC35+V5oi4+daZIEjq2ToSWnv4R9cJ
+        boT1A66ZJ9G2igo0eQXvpTU9Ka7B0HiUCVukCMermJx4dV3Bpp33w8WLP0t3lZ8ajE4VQW97wGslQ
+        7cj3CUwUESH+xL2nh4b2897z9ZoRIetEyG0yjYlRcvvUAz2cF1ga1smN8Gnx/99jq8B/YKpwQ7hY/
+        2LJFzrkw==;
+Received: from 089144214092.atnat0023.highway.a1.net ([89.144.214.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kIDt1-0006DO-8d; Tue, 15 Sep 2020 16:32:55 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Tomasz Figa <tfiga@chromium.org>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
+Cc:     Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        linux1394-devel@lists.sourceforge.net, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        alsa-devel@alsa-project.org
+Subject: [PATCH 18/18] firewire-ohci: use dma_alloc_pages
+Date:   Tue, 15 Sep 2020 17:51:22 +0200
+Message-Id: <20200915155122.1768241-19-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200915155122.1768241-1-hch@lst.de>
+References: <20200915155122.1768241-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 15 Sep 2020 09:47:24 -0700
-From:   nguyenb@codeaurora.org
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for
- UFS
-In-Reply-To: <20200915134335.GE670377@yoga>
-References: <cover.1598939393.git.nguyenb@codeaurora.org>
- <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
- <20200915044154.GB670377@yoga>
- <748d238a3d9e53834a498c6f37f9f3c9@codeaurora.org>
- <20200915134335.GE670377@yoga>
-Message-ID: <e39516da0d94a4046edbcfb48b665f82@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-15 06:43, Bjorn Andersson wrote:
-> On Tue 15 Sep 03:14 CDT 2020, nguyenb@codeaurora.org wrote:
-> 
->> On 2020-09-14 21:41, Bjorn Andersson wrote:
->> > On Tue 01 Sep 01:00 CDT 2020, Bao D. Nguyen wrote:
->> >
->> > > UFS's specifications supports a range of Vcc operating
->> > > voltage levels. Add documentation for the UFS's Vcc voltage
->> > > levels setting.
->> > >
->> > > Signed-off-by: Can Guo <cang@codeaurora.org>
->> > > Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> > > Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
->> > > ---
->> > >  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
->> > >  1 file changed, 2 insertions(+)
->> > >
->> > > diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> > > b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> > > index 415ccdd..7257b32 100644
->> > > --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> > > +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> > > @@ -23,6 +23,8 @@ Optional properties:
->> > >                            with "phys" attribute, provides phandle
->> > > to UFS PHY node
->> > >  - vdd-hba-supply        : phandle to UFS host controller supply
->> > > regulator node
->> > >  - vcc-supply            : phandle to VCC supply regulator node
->> > > +- vcc-voltage-level     : specifies voltage levels for VCC supply.
->> > > +                          Should be specified in pairs (min, max),
->> > > units uV.
->> >
->> > What exactly are these pairs representing?
->> The pair is the min and max Vcc voltage request to the PMIC chip.
->> As a result, the regulator output voltage would only be in this range.
->> 
-> 
-> If you have static min/max voltage constraints for a device on a
-> particular board the right way to handle this is to adjust the board's
-> regulator-min-microvolt and regulator-max-microvolt accordingly - and
-> not call regulator_set_voltage() from the river at all.
-> 
-> In other words, you shouldn't add this new property to describe
-> something already described in the node vcc-supply points to.
-> 
-> Regards,
-> Bjorn
-Thank you all for your comments. The current driver hardcoding 2.7V Vcc 
-min voltage
-does not work for UFS3.0+ devices according to the UFS device JEDEC 
-spec. However, we will
-try to address it in a different way.
+Use dma_alloc_pages to allocate DMAable pages instead of hoping that
+the architecture either has GFP_DMA32 or not more than 4G of memory.
 
-Regards,
-Bao
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/firewire/ohci.c | 26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
 
-> 
->> >
->> > Is this supposed to be 3 pairs of (min,max) for vcc, vcc and vccq2 to be
->> > passed into a regulator_set_voltage() for each regulator?
->> Yes, that's right. I should include the other power supplies in this 
->> change
->> as well.
->> >
->> > Or are these some sort of "operating points" for the vcc-supply?
->> >
->> > Regards,
->> > Bjorn
->> >
->> > >  - vccq-supply           : phandle to VCCQ supply regulator node
->> > >  - vccq2-supply          : phandle to VCCQ2 supply regulator node
->> > >  - vcc-supply-1p8        : For embedded UFS devices, valid VCC range
->> > > is 1.7-1.95V
->> > > --
->> > > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
->> > > Forum,
->> > > a Linux Foundation Collaborative Project
->> > >
+diff --git a/drivers/firewire/ohci.c b/drivers/firewire/ohci.c
+index 020cb15a4d8fcc..9811c40956e54d 100644
+--- a/drivers/firewire/ohci.c
++++ b/drivers/firewire/ohci.c
+@@ -674,17 +674,16 @@ static void ar_context_link_page(struct ar_context *ctx, unsigned int index)
+ 
+ static void ar_context_release(struct ar_context *ctx)
+ {
++	struct device *dev = ctx->ohci->card.device;
+ 	unsigned int i;
+ 
+ 	vunmap(ctx->buffer);
+ 
+-	for (i = 0; i < AR_BUFFERS; i++)
+-		if (ctx->pages[i]) {
+-			dma_unmap_page(ctx->ohci->card.device,
+-				       ar_buffer_bus(ctx, i),
+-				       PAGE_SIZE, DMA_FROM_DEVICE);
+-			__free_page(ctx->pages[i]);
+-		}
++	for (i = 0; i < AR_BUFFERS; i++) {
++		if (ctx->pages[i])
++			dma_free_pages(dev, PAGE_SIZE, ctx->pages[i],
++				       ar_buffer_bus(ctx, i), DMA_FROM_DEVICE);
++	}
+ }
+ 
+ static void ar_context_abort(struct ar_context *ctx, const char *error_msg)
+@@ -970,6 +969,7 @@ static void ar_context_tasklet(unsigned long data)
+ static int ar_context_init(struct ar_context *ctx, struct fw_ohci *ohci,
+ 			   unsigned int descriptors_offset, u32 regs)
+ {
++	struct device *dev = ohci->card.device;
+ 	unsigned int i;
+ 	dma_addr_t dma_addr;
+ 	struct page *pages[AR_BUFFERS + AR_WRAPAROUND_PAGES];
+@@ -980,17 +980,13 @@ static int ar_context_init(struct ar_context *ctx, struct fw_ohci *ohci,
+ 	tasklet_init(&ctx->tasklet, ar_context_tasklet, (unsigned long)ctx);
+ 
+ 	for (i = 0; i < AR_BUFFERS; i++) {
+-		ctx->pages[i] = alloc_page(GFP_KERNEL | GFP_DMA32);
++		ctx->pages[i] = dma_alloc_pages(dev, PAGE_SIZE, &dma_addr,
++						DMA_FROM_DEVICE, GFP_KERNEL);
+ 		if (!ctx->pages[i])
+ 			goto out_of_memory;
+-		dma_addr = dma_map_page(ohci->card.device, ctx->pages[i],
+-					0, PAGE_SIZE, DMA_FROM_DEVICE);
+-		if (dma_mapping_error(ohci->card.device, dma_addr)) {
+-			__free_page(ctx->pages[i]);
+-			ctx->pages[i] = NULL;
+-			goto out_of_memory;
+-		}
+ 		set_page_private(ctx->pages[i], dma_addr);
++		dma_sync_single_for_device(dev, dma_addr, PAGE_SIZE,
++					   DMA_FROM_DEVICE);
+ 	}
+ 
+ 	for (i = 0; i < AR_BUFFERS; i++)
+-- 
+2.28.0
+
