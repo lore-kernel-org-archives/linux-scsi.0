@@ -2,137 +2,107 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9D2C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 11:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50EC6C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 12:33:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E253021D1B
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 11:03:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0780720770
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 12:33:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ypYYMR/P"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hq3VryK5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726265AbgIOLDU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 07:03:20 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:45760 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726235AbgIOLAn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 07:00:43 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FAwxpO026428;
-        Tue, 15 Sep 2020 10:59:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2020-01-29;
- bh=uc1nnwweUN3M7hTlh7aVus0Xqc+cXvdEzC3DnDY4d+8=;
- b=ypYYMR/PpLIYQ6wuykLm+y+sW3e5NcMmff5wP/JSIgZ696MrgnmG+zkcv4GOduR3g14z
- 7GyvTFXUswYjYhVsnawFExLT2Auwy9HKwsG0r7Ks1OXVWG3WRAc3DbSxvUPI/D3CnYHn
- 2vIsg6AH5vMmTFGd6kSnVVJQ66Od7P0Rh2NVLQWxnBWRtxL2re7cJtEASNw//PRiXK1d
- SlrXT5Ranu2UFSJRNXVehbKpni0LrmeauyNYyb7q5dgGlRTdrHNQYXgI8LifXeiZlrKB
- vHipPOcKJNXHYx8zqV6JnlQLBJZxqT8UXPV1SIm3wZHYRrSq+oq9mPKy4Y+VS3Rs3DMu 6g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 33gp9m45vu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Sep 2020 10:59:51 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FAxn3u100210;
-        Tue, 15 Sep 2020 10:59:50 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3020.oracle.com with ESMTP id 33hm307h4n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Sep 2020 10:59:50 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 08FAxnbg100079;
-        Tue, 15 Sep 2020 10:59:49 GMT
-Received: from mybox.in.oracle.com (dhcp-10-76-51-53.vpn.oracle.com [10.76.51.53])
-        by userp3020.oracle.com with ESMTP id 33hm307fy6-1;
-        Tue, 15 Sep 2020 10:59:33 +0000
-From:   Jitendra Khasdev <jitendra.khasdev@oracle.com>
-To:     martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.com,
-        loberman@redhat.com
-Cc:     joe.jin@oracle.com, junxiao.bi@oracle.com,
-        gulam.mohamed@oracle.com, RITIKA.SRIVASTAVA@ORACLE.COM,
-        linux-scsi@vger.kernel.org, jitendra.khasdev@oracle.com
-Subject: [PATCH] scsi: alua: fix the race between alua_bus_detach and alua_rtpg
-Date:   Tue, 15 Sep 2020 16:28:57 +0530
-Message-Id: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
-X-Mailer: git-send-email 1.8.3.1
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9744 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
- adultscore=0 malwarescore=0 clxscore=1011 lowpriorityscore=0 phishscore=0
- spamscore=0 priorityscore=1501 suspectscore=0 impostorscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009150096
+        id S1726212AbgIOMaf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 08:30:35 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:21256 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726458AbgIOMBm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 08:01:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600171261;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=iRKZxnfmXT6xHa0W2Qaoc/OtvN5Snga93SmINoltYeM=;
+        b=Hq3VryK5+vKOmtXxhLfkYV+t54OBg7nmsdsdT9/eLhJAno5DdrR16S9gJ9RncBKJr2wV2D
+        EfOk4xGF4STB0diVQZf0sJgNAUPZR7GrjCkKp9bSYyVQQ8pzvBKvXQWEznwjJsnwBBQnxw
+        CuksPvySA96djK/v0xv74bK8o8DA1hk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-204-MTpbt8lGPiuhSS14uL2xMA-1; Tue, 15 Sep 2020 07:58:06 -0400
+X-MC-Unique: MTpbt8lGPiuhSS14uL2xMA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9DB4F801ADF;
+        Tue, 15 Sep 2020 11:58:04 +0000 (UTC)
+Received: from [10.40.193.20] (unknown [10.40.193.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0D2977B7B2;
+        Tue, 15 Sep 2020 11:58:01 +0000 (UTC)
+Subject: Re: [PATCH] scsi: target: remove redundant assignment to variable
+ 'ret'
+To:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
+        martin.petersen@oracle.com, bvanassche@acm.org,
+        michael.christie@oracle.com, sudhakar.panneerselvam@oracle.com,
+        ddiss@suse.de, gustavoars@kernel.org
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20200914023207.113792-1-jingxiangfeng@huawei.com>
+From:   Maurizio Lombardi <mlombard@redhat.com>
+Message-ID: <2410adca-9e8c-d16e-8097-9c6eb8103362@redhat.com>
+Date:   Tue, 15 Sep 2020 13:58:00 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
+MIME-Version: 1.0
+In-Reply-To: <20200914023207.113792-1-jingxiangfeng@huawei.com>
+Content-Type: text/plain; charset=iso-8859-2
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is patch to fix the race occurs between bus detach and alua_rtpg.
 
-It fluses the all pending workqueue in bus detach handler, so it can avoid
-race between alua_bus_detach and alua_rtpg.
 
-Here is call trace where race got detected.
+Dne 14. 09. 20 v 4:32 Jing Xiangfeng napsal(a):
+> The variable ret has been initialized with a value '0'. The assignment
+> in switch-case is redundant. So remove it.
+> 
+> Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+> ---
+>  drivers/target/iscsi/iscsi_target.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index cd045dc75a58..f5272ac18b16 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -4516,7 +4516,6 @@ int iscsit_logout_post_handler(
+>  			iscsit_logout_post_handler_closesession(conn);
+>  			break;
+>  		}
+> -		ret = 0;
+>  		break;
+>  	case ISCSI_LOGOUT_REASON_CLOSE_CONNECTION:
+>  		if (conn->cid == cmd->logout_cid) {
+> @@ -4527,7 +4526,6 @@ int iscsit_logout_post_handler(
+>  				iscsit_logout_post_handler_samecid(conn);
+>  				break;
+>  			}
+> -			ret = 0;
+>  		} else {
+>  			switch (cmd->logout_response) {
+>  			case ISCSI_LOGOUT_SUCCESS:
+> 
 
-multipathd call stack:
-[exception RIP: native_queued_spin_lock_slowpath+100]
---- <NMI exception stack> ---
-native_queued_spin_lock_slowpath at ffffffff89307f54
-queued_spin_lock_slowpath at ffffffff89307c18
-_raw_spin_lock_irq at ffffffff89bd797b
-alua_bus_detach at ffffffff8984dcc8
-scsi_dh_release_device at ffffffff8984b6f2
-scsi_device_dev_release_usercontext at ffffffff89846edf
-execute_in_process_context at ffffffff892c3e60
-scsi_device_dev_release at ffffffff8984637c
-device_release at ffffffff89800fbc
-kobject_cleanup at ffffffff89bb1196
-kobject_put at ffffffff89bb12ea
-put_device at ffffffff89801283
-scsi_device_put at ffffffff89838d5b
-scsi_disk_put at ffffffffc051f650 [sd_mod]
-sd_release at ffffffffc051f8a2 [sd_mod]
-__blkdev_put at ffffffff8952c79e
-blkdev_put at ffffffff8952c80c
-blkdev_close at ffffffff8952c8b5
-__fput at ffffffff894e55e6
-____fput at ffffffff894e57ee
-task_work_run at ffffffff892c94dc
-exit_to_usermode_loop at ffffffff89204b12
-do_syscall_64 at ffffffff892044da
-entry_SYSCALL_64_after_hwframe at ffffffff89c001b8
+Looks ok to me.
 
-kworker:
-[exception RIP: alua_rtpg+2003]
-account_entity_dequeue at ffffffff892e42c1
-alua_rtpg_work at ffffffff8984f097
-process_one_work at ffffffff892c4c29
-worker_thread at ffffffff892c5a4f
-kthread at ffffffff892cb135
-ret_from_fork at ffffffff89c00354
-
-Signed-off-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index f32da0c..024a752 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1144,6 +1144,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
- 	struct alua_dh_data *h = sdev->handler_data;
- 	struct alua_port_group *pg;
- 
-+	sdev_printk(KERN_INFO, sdev, "%s: flushing workqueues\n", ALUA_DH_NAME);
-+	flush_workqueue(kaluad_wq);
-+
- 	spin_lock(&h->pg_lock);
- 	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
- 	rcu_assign_pointer(h->pg, NULL);
--- 
-1.8.3.1
+Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
 
