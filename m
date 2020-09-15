@@ -2,121 +2,159 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E626DC43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:24:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA64C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A45AC2080C
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:24:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zuAracgP"
+	by mail.kernel.org (Postfix) with ESMTP id 9A7E620936
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:47:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600202842;
+	bh=6CFCy86M8iz95yHuyD/L5TCOMJziCyBzC/IGpcbjHtg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=nkzp3H1T4XMuR9PITPfFO2HZFC+0R+SS8MWguEEd4uU1ltcLfMBG3IGq5UC5ByqBE
+	 /kRKz3x836FRXyLrOOwBhRLvC3b7HDGsgr/yhUvtTqqVMpWSdnTMyQ7YnJ6pF8FEfZ
+	 9oipnTi0ejZrzganmcNzEh1+ZvGfgmk3WXhbObPk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728012AbgIOUXs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 16:23:48 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33462 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727999AbgIOUWg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 16:22:36 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FKIKWe005289;
-        Tue, 15 Sep 2020 20:21:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=TnDy68QXwHqhErgx7hW/B1RJIBUXJT65ykDE+gQ4vdc=;
- b=zuAracgPYWMqCuMLq/5WXTa9CFgSuSPkO/5AFp/Y5RS9O/0q/e+i0+eSN7GE4h8fcac9
- By63AzXNOJvZm/R4sHJKNJPgsAu/FCiBqLqY/7skPCG3m5qf9PqV+KfWnngQVbhbzJGS
- mjRwjgUsLR9z8uTrcxMT2LCY2AUiII7TRgRZJWgvQHMpUV8xck0VFb4v3sg96GJkp8hO
- FniuwtpwMC0Of0S7SWRGuuqFTqRWlWlLzPr+3qXJHaPOJrDdzbP9GJ7dFjcVmSeeo/gX
- 5y/sNHqy4i7P0UDbDtsEPjyVYt75IRqQQHOHVxR2Yb3ZhLsaOmZgm8Rk+QPLTtzkGP9n 1g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 33j91dh1nq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Sep 2020 20:21:40 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FKFpfb106804;
-        Tue, 15 Sep 2020 20:21:39 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 33hm3171h5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Sep 2020 20:21:39 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08FKLb47018439;
-        Tue, 15 Sep 2020 20:21:37 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Sep 2020 20:21:36 +0000
-To:     Can Guo <cang@codeaurora.org>
-Cc:     Bean Huo <huobean@gmail.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        id S1728087AbgIOUrQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 16:47:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42726 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728051AbgIOUqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Sep 2020 16:46:46 -0400
+Received: from localhost (unknown [104.132.1.66])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F005D212CC;
+        Tue, 15 Sep 2020 20:46:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600202798;
+        bh=6CFCy86M8iz95yHuyD/L5TCOMJziCyBzC/IGpcbjHtg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=0GKifIzuYRs4t0HlIw0zbNCbSPAjZYiQ7a9d2vmCClRZNhwYxxNsU1HFef/XwWOCt
+         ABqxRgLbCrz4zdV30pebCDiEf+Q0R+Ir+rT/ew5Rk5dTmvtALfbh4m+5tHW1lzAtbf
+         53kjfucWbMbCamWVUQ1xSog9J5Wow2CcBWb5iPUk=
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     Jaegeuk Kim <jaegeuk@google.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Abort tasks before clear them from
- doorbell
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1wo0u6bdw.fsf@ca-mkp.ca.oracle.com>
-References: <1599099873-32579-1-git-send-email-cang@codeaurora.org>
-        <1599099873-32579-2-git-send-email-cang@codeaurora.org>
-        <1599627906.10803.65.camel@linux.ibm.com>
-        <yq14ko62wn5.fsf@ca-mkp.ca.oracle.com>
-        <1599706080.10649.30.camel@mtkswgap22>
-        <1599718697.3851.3.camel@HansenPartnership.com>
-        <1599725880.10649.35.camel@mtkswgap22>
-        <1599754148.3575.4.camel@HansenPartnership.com>
-        <010101747af387e9-f68ac6fa-1bc6-461d-92ec-dc0ee4486728-000000@us-west-2.amazonses.com>
-        <d151d6a2b53cfbd7bf3f9c9313b49c4c404c4c5a.camel@gmail.com>
-        <4017d039fa323a63f89f01b5bf4cf714@codeaurora.org>
-Date:   Tue, 15 Sep 2020 16:21:32 -0400
-In-Reply-To: <4017d039fa323a63f89f01b5bf4cf714@codeaurora.org> (Can Guo's
-        message of "Tue, 15 Sep 2020 11:14:17 +0800")
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH 4/6] scsi: ufs: fix LINERESET on hibern8
+Date:   Tue, 15 Sep 2020 13:45:30 -0700
+Message-Id: <20200915204532.1672300-4-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.28.0.618.gf4bc123cb7-goog
+In-Reply-To: <20200915204532.1672300-1-jaegeuk@kernel.org>
+References: <20200915204532.1672300-1-jaegeuk@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
- malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009150158
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
- priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
- clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150158
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Jaegeuk Kim <jaegeuk@google.com>
 
-Can,
+When testing infinite test to read sysfs entries of UFS, I got a UFS timeout
+with the following kernel message.
 
-> Do you know when can this change be picked up in scsi-queue-5.10?
-> If I push my fixes to ufshcd_abort() on scsi-queue-5.10, they will
-> run into conflicts with this one again, right? How should I move
-> forward now?
+query: dev_cmd_send: seq_no=78082 tag=31, idn=2
+query: ufshcd_wait_for_dev_cmd: dev_cmd request timedout, tag 31
+query: __ufshcd_query_descriptor: opcode 0x01 for idn 2 failed, index 0, err = -11
+ --  hibern8: dme: dme_send: cmd_id=0x17 idn=0
+query: ufshcd_query_descriptor: failed with error -11, retries 3
+ --  hibern8: ufshcd_update_uic_error: LINERESET during hibern8 enter
+ --  hibern8: __ufshcd_uic_hibern8_enter: hibern8 enter failed. ret = -110
 
-You should be able to use 5.10/scsi-queue as baseline now.
+The problem is casued by hibern8 command issued by ufshcd_suspend(), which is
+not aware of query command. If autohibern8 is enabled, we actually don't need
+to issue hibern8 command by suspend.
 
-For 5.11 I think I'll do a separate branch for UFS.
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 20 ++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h |  1 +
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 848e33ec40639..bdc82cc3824aa 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3079,8 +3079,12 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+ 	int retries;
+ 
+ 	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
+-		err = __ufshcd_query_descriptor(hba, opcode, idn, index,
++		err = -EAGAIN;
++		down_read(&hba->query_lock);
++		if (!ufshcd_is_link_hibern8(hba))
++			err = __ufshcd_query_descriptor(hba, opcode, idn, index,
+ 						selector, desc_buf, buf_len);
++		up_read(&hba->query_lock);
+ 		if (!err || err == -EINVAL)
+ 			break;
+ 	}
+@@ -8263,8 +8267,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	enum ufs_pm_level pm_lvl;
+ 	enum ufs_dev_pwr_mode req_dev_pwr_mode;
+ 	enum uic_link_state req_link_state;
++	bool need_upwrite = false;
+ 
+-	hba->pm_op_in_progress = 1;
+ 	if (!ufshcd_is_shutdown_pm(pm_op)) {
+ 		pm_lvl = ufshcd_is_runtime_pm(pm_op) ?
+ 			 hba->rpm_lvl : hba->spm_lvl;
+@@ -8275,6 +8279,15 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		req_link_state = UIC_LINK_OFF_STATE;
+ 	}
+ 
++	if (ufshcd_is_runtime_pm(pm_op) &&
++			req_link_state == UIC_LINK_HIBERN8_STATE &&
++			hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
++		need_upwrite = true;
++		if (!down_write_trylock(&hba->query_lock))
++			return -EBUSY;
++	}
++	hba->pm_op_in_progress = 1;
++
+ 	/*
+ 	 * If we can't transition into any of the low power modes
+ 	 * just gate the clocks.
+@@ -8403,6 +8416,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	}
+ 
+ 	hba->pm_op_in_progress = 0;
++	if (need_upwrite)
++		up_write(&hba->query_lock);
+ 
+ 	if (ret)
+ 		ufshcd_update_reg_hist(&hba->ufs_stats.suspend_err, (u32)ret);
+@@ -8894,6 +8909,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	mutex_init(&hba->dev_cmd.lock);
+ 
+ 	init_rwsem(&hba->clk_scaling_lock);
++	init_rwsem(&hba->query_lock);
+ 
+ 	ufshcd_init_clk_gating(hba);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 363589c0bd370..6f8e05eaf9661 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -754,6 +754,7 @@ struct ufs_hba {
+ 	bool is_urgent_bkops_lvl_checked;
+ 
+ 	struct rw_semaphore clk_scaling_lock;
++	struct rw_semaphore query_lock;
+ 	unsigned char desc_size[QUERY_DESC_IDN_MAX];
+ 	atomic_t scsi_block_reqs_cnt;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.28.0.618.gf4bc123cb7-goog
+
