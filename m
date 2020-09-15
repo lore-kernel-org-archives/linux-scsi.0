@@ -7,32 +7,31 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8DF5C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 08:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9194C43461
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 08:39:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DEB821D24
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 08:39:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D7D920B1F
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 08:39:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726174AbgIOIjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 04:39:13 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:12262 "EHLO huawei.com"
+        id S1726185AbgIOIjZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 04:39:25 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:52574 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726119AbgIOIjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Sep 2020 04:39:11 -0400
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id E521BD06E92F6439C127;
-        Tue, 15 Sep 2020 16:39:09 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Tue, 15 Sep 2020
- 16:38:59 +0800
+        id S1726161AbgIOIjX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Sep 2020 04:39:23 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 05FA846B6A80AC6C4929;
+        Tue, 15 Sep 2020 16:39:22 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS412-HUB.china.huawei.com
+ (10.3.19.212) with Microsoft SMTP Server id 14.3.487.0; Tue, 15 Sep 2020
+ 16:39:15 +0800
 From:   Jason Yan <yanaijie@huawei.com>
-To:     <hare@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <gustavoars@kernel.org>,
-        <linux-scsi@vger.kernel.org>
+To:     <achim_leubner@adaptec.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
 CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] scsi: myrb: make some symblos static
-Date:   Tue, 15 Sep 2020 16:40:18 +0800
-Message-ID: <20200915084018.2826922-1-yanaijie@huawei.com>
+Subject: [PATCH] scsi: gdth: make option_setup() static
+Date:   Tue, 15 Sep 2020 16:40:33 +0800
+Message-ID: <20200915084033.2827009-1-yanaijie@huawei.com>
 X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -46,50 +45,28 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 This addresses the following sparse warning:
 
-drivers/scsi/myrb.c:2229:27: warning: symbol 'myrb_template' was not
-declared. Should it be static?
-drivers/scsi/myrb.c:2318:31: warning: symbol 'myrb_raid_functions' was
-not declared. Should it be static?
-drivers/scsi/myrb.c:2492:6: warning: symbol 'myrb_err_status' was not
+drivers/scsi/gdth.c:3229:12: warning: symbol 'option_setup' was not
 declared. Should it be static?
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/scsi/myrb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/gdth.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-index b2869c5dd7fb..cbf1e8b091b9 100644
---- a/drivers/scsi/myrb.c
-+++ b/drivers/scsi/myrb.c
-@@ -2226,7 +2226,7 @@ static struct device_attribute *myrb_shost_attrs[] = {
- 	NULL,
- };
- 
--struct scsi_host_template myrb_template = {
-+static struct scsi_host_template myrb_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "DAC960",
- 	.proc_name		= "myrb",
-@@ -2315,7 +2315,7 @@ static void myrb_get_state(struct device *dev)
- 	raid_set_state(myrb_raid_template, dev, state);
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index dc0e17729acf..0519d3fa43d4 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -3226,7 +3226,7 @@ static void __init internal_setup(char *str,int *ints)
+     }
  }
  
--struct raid_function_template myrb_raid_functions = {
-+static struct raid_function_template myrb_raid_functions = {
- 	.cookie		= &myrb_template,
- 	.is_raid	= myrb_is_raid,
- 	.get_resync	= myrb_get_resync,
-@@ -2489,7 +2489,7 @@ static void myrb_monitor(struct work_struct *work)
-  *
-  * Return: true for fatal errors and false otherwise.
-  */
--bool myrb_err_status(struct myrb_hba *cb, unsigned char error,
-+static bool myrb_err_status(struct myrb_hba *cb, unsigned char error,
- 		unsigned char parm0, unsigned char parm1)
+-int __init option_setup(char *str)
++static int __init option_setup(char *str)
  {
- 	struct pci_dev *pdev = cb->pdev;
+     int ints[MAXHA];
+     char *cur = str;
 -- 
 2.25.4
 
