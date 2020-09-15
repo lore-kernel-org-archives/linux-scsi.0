@@ -2,135 +2,100 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8157C43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 08:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5601C31E40
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 09:07:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82D1521D80
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 08:49:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="S117pVnl"
+	by mail.kernel.org (Postfix) with ESMTP id 7685121974
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 09:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726276AbgIOIt3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 04:49:29 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:60855 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726185AbgIOIt2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Sep 2020 04:49:28 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600159767; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=lgWaE3f5Tk8GQse/S9qKMVFoUNqqNMGU6pVowPuyQYs=;
- b=S117pVnlE0PLUfIaJEdrN5lVafuVCO2rP5B6JChgTCfqeRyJ/3EJmWDFLBCYY7W9zVZfXFpT
- 22JB9dcbcLTGigT9mYLXStOAW5IOtaUfLMtzoj4yzZR5gJQrZfVS4WlM7cop8T20/aPi1nm7
- MkwV2HXVOGT4sRBRf4uk4LK4MAA=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5f608016947f606f7ef1a973 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Sep 2020 08:49:26
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D3C55C43387; Tue, 15 Sep 2020 08:49:25 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D4FEEC433C8;
-        Tue, 15 Sep 2020 08:49:24 +0000 (UTC)
+        id S1726434AbgIOJGj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 05:06:39 -0400
+Received: from mga03.intel.com ([134.134.136.65]:35019 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726269AbgIOJGe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Sep 2020 05:06:34 -0400
+IronPort-SDR: RZD/fFWTjvWyaYIJCtNMDzEdl4brC47SlQmB8DC403Dr6vIA5u/jFu0AFJj/JoHYnbKKWwa4bw
+ iw1Jurkpfvfw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9744"; a="159272034"
+X-IronPort-AV: E=Sophos;i="5.76,429,1592895600"; 
+   d="scan'208";a="159272034"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2020 02:06:31 -0700
+IronPort-SDR: JN6muYTQqB3wm3kCXqk1xsORqKL94poqyPOQLwwV9SSOFBG1M/RLedvNq9ruyR1KSefDfAWvPJ
+ brvH/uTc728w==
+X-IronPort-AV: E=Sophos;i="5.76,429,1592895600"; 
+   d="scan'208";a="482690707"
+Received: from emoriart-mobl.ger.corp.intel.com (HELO localhost) ([10.252.7.208])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2020 02:06:16 -0700
+From:   Jani Nikula <jani.nikula@linux.intel.com>
+To:     Joe Perches <joe@perches.com>, LKML <linux-kernel@vger.kernel.org>,
+        Jiri Kosina <trivial@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        oss-drivers@netronome.com, nouveau@lists.freedesktop.org,
+        alsa-devel <alsa-devel@alsa-project.org>,
+        dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org,
+        dm-devel@redhat.com, linux-mtd@lists.infradead.org,
+        linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org,
+        kvmarm@lists.cs.columbia.edu, linux-rtc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        dccp@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-afs@lists.infradead.org, coreteam@netfilter.org,
+        intel-wired-lan@lists.osuosl.org, linux-serial@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-mmc@vger.kernel.org,
+        Kees Cook <kees.cook@canonical.com>,
+        linux-media@vger.kernel.org, linux-pm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, linux-sctp@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-nvme@lists.infradead.org,
+        storagedev@microchip.com, ceph-devel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-parisc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-mips@vger.kernel.org, iommu@lists.linux-foundation.org,
+        netfilter-devel@vger.kernel.org, linux-crypto@vger.kernel.org,
+        bpf@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [Intel-gfx] [trivial PATCH] treewide: Convert switch/case fallthrough; to break;
+In-Reply-To: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+References: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
+Date:   Tue, 15 Sep 2020 12:06:21 +0300
+Message-ID: <87d02nxvci.fsf@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 15 Sep 2020 01:49:24 -0700
-From:   nguyenb@codeaurora.org
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Properly set the device Icc Level
-In-Reply-To: <20200915025401.GD471@uller>
-References: <5c9d6f76303bbe5188bf839b2ea5e5bf530e7281.1598923023.git.nguyenb@codeaurora.org>
- <20200915025401.GD471@uller>
-Message-ID: <a8c851744fcaee205fc7a58db8f747fa@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-14 19:54, Bjorn Andersson wrote:
-> On Tue 01 Sep 01:19 UTC 2020, Bao D. Nguyen wrote:
-> 
->> UFS version 3.0 and later devices require Vcc and Vccq power supplies
->> with Vccq2 being optional. While earlier UFS version 2.0 and 2.1
->> devices, the Vcc and Vccq2 are required with Vccq being optional.
->> Check the required power supplies used by the device
->> and set the device's supported Icc level properly.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 5 +++--
->>  1 file changed, 3 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 06e2439..fdd1d3e 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -6845,8 +6845,9 @@ static u32 
->> ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
->>  {
->>  	u32 icc_level = 0;
->> 
->> -	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
->> -						!hba->vreg_info.vccq2) {
->> +	if (!hba->vreg_info.vcc ||
-> 
-> How did you test this?
-> 
-> devm_regulator_get() never returns NULL, so afaict this conditional 
-> will
-> never be taken with either the old or new version of the code.
-Thanks for your comment. The call flow is as follows:
-ufshcd_pltfrm_init->ufshcd_parse_regulator_info->ufshcd_populate_vreg
-In the ufshcd_populate_vreg() function, it looks for DT entries 
-"%s-supply"
-For UFS3.0+ devices, "vccq2-supply" is optional, so the vendor may 
-choose not to provide vccq2-supply in the DT.
-As a result, a NULL is returned to hba->vreg_info.vccq2.
-Same for UFS2.0 and UFS2.1 devices, a NULL may be returned to 
-hba->vreg_info.vccq if vccq-supply is not provided in the DT.
-The current code only checks for !hba->vreg_info.vccq OR 
-!hba->vreg_info.vccq2. It will skip the setting for icc_level
-if either vccq or vccq2 is not provided in the DT.
-> 
-> Regards,
-> Bjorn
-> 
->> +		(!hba->vreg_info.vccq && hba->dev_info.wspecversion >= 0x300) ||
->> +		(!hba->vreg_info.vccq2 && hba->dev_info.wspecversion < 0x300)) {
->>  		dev_err(hba->dev,
->>  			"%s: Regulator capability was not set, actvIccLevel=%d",
->>  							__func__, icc_level);
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
->> Forum,
->> a Linux Foundation Collaborative Project
->> 
+On Wed, 09 Sep 2020, Joe Perches <joe@perches.com> wrote:
+> diff --git a/drivers/gpu/drm/i915/display/intel_sprite.c b/drivers/gpu/drm/i915/display/intel_sprite.c
+> index 5ac0dbf0e03d..35ac539cc2b1 100644
+> --- a/drivers/gpu/drm/i915/display/intel_sprite.c
+> +++ b/drivers/gpu/drm/i915/display/intel_sprite.c
+> @@ -2861,7 +2861,7 @@ static bool gen12_plane_format_mod_supported(struct drm_plane *_plane,
+>  	case I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS:
+>  		if (!gen12_plane_supports_mc_ccs(dev_priv, plane->id))
+>  			return false;
+> -		fallthrough;
+> +		break;
+>  	case DRM_FORMAT_MOD_LINEAR:
+>  	case I915_FORMAT_MOD_X_TILED:
+>  	case I915_FORMAT_MOD_Y_TILED:
+
+Acked-by: Jani Nikula <jani.nikula@intel.com>
+
+for merging via whichever tree seems best.
+
+BR,
+Jani.
+
+
+-- 
+Jani Nikula, Intel Open Source Graphics Center
