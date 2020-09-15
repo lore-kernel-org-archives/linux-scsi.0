@@ -2,111 +2,155 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89063C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE2DC43461
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52E2720872
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:09:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B3BA20809
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 22:11:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LPvho3pW"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="YBlu85+T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727992AbgIOWJe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:09:34 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:38750 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727813AbgIOUSq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 16:18:46 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FK9x5Z029965;
-        Tue, 15 Sep 2020 20:18:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=J0f88TJ3MzuRKzgrTsYuX79FV3NFRBLaRMSD7V87SeU=;
- b=LPvho3pW6Id2HkxvMLHY7wqwvFk/he0l9L2+Sdj+ffIjIUgHeGCmdANuIhzxIC7iJWI0
- ZurDjaBWwWJe7FVeakPesjMS3BHCqzL4AlfZOj2w/aiRL0fJm/Tb3XIDLg6GsGC7dDdM
- VHivKLITBlSR3MiutQ/kx2/RbE+pTIxHkCBZqcy3/6cZdAPqRSoxieN02sHF856xoMuU
- QxZBEfTndP7yAt+TsyJ9RhwDutguqqnHZdOWyYX0GokIgiP7AYzeCTX8eHiX9Cwyz6io
- Gznxj5BC2jZj4lQaAx7wGab6RZAFzEKhYUPK5F8x2zHynS7VMLJW1XzfcHy4ccOeJvbO cQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 33gnrqyebt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Sep 2020 20:18:40 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FKFvck127273;
-        Tue, 15 Sep 2020 20:16:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 33h7wppqed-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Sep 2020 20:16:39 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08FKGdtY006667;
-        Tue, 15 Sep 2020 20:16:39 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Sep 2020 20:16:38 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Javed Hasan <jhasan@marvell.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/8] qedf: Misc fixes for the driver.
-Date:   Tue, 15 Sep 2020 16:16:24 -0400
-Message-Id: <160020074002.8134.14134333892194634729.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200907121443.5150-1-jhasan@marvell.com>
-References: <20200907121443.5150-1-jhasan@marvell.com>
+        id S1727977AbgIOWLs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 18:11:48 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:29645 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727507AbgIOQr1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Sep 2020 12:47:27 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600188446; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=yEHNYIgoLCIfyK1Nj7VW1RZeG1P4bPnr1BXOU5FeJZ8=;
+ b=YBlu85+T1imHDCPyoDVk+Yl+W626qiEuBFbmvUkpi0FqTcj1CuwdO35j0uRDlIOvlj8Ye3Pj
+ TWh4nR3MkqfQIM4B7QgiagCbiNpVO/jSI3kiA+3Su9z7DTR7RFi5Pka68v5CC59H95hDzTWb
+ Wi+mHUyGWKEwKhKUyuS0fsac8rk=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5f60f01eba408b30ce29c232 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Sep 2020 16:47:26
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 8A026C43385; Tue, 15 Sep 2020 16:47:25 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 973EFC433F0;
+        Tue, 15 Sep 2020 16:47:24 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- adultscore=0 bulkscore=0 phishscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150158
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0
- lowpriorityscore=0 malwarescore=0 mlxscore=0 bulkscore=0 suspectscore=0
- clxscore=1015 mlxlogscore=999 adultscore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150157
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 15 Sep 2020 09:47:24 -0700
+From:   nguyenb@codeaurora.org
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for
+ UFS
+In-Reply-To: <20200915134335.GE670377@yoga>
+References: <cover.1598939393.git.nguyenb@codeaurora.org>
+ <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
+ <20200915044154.GB670377@yoga>
+ <748d238a3d9e53834a498c6f37f9f3c9@codeaurora.org>
+ <20200915134335.GE670377@yoga>
+Message-ID: <e39516da0d94a4046edbcfb48b665f82@codeaurora.org>
+X-Sender: nguyenb@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 7 Sep 2020 05:14:35 -0700, Javed Hasan wrote:
-
-> This series has misc bug fixes and code enhancements.
+On 2020-09-15 06:43, Bjorn Andersson wrote:
+> On Tue 15 Sep 03:14 CDT 2020, nguyenb@codeaurora.org wrote:
 > 
-> Kindly apply this series to scsi-queue at your earliest convenience.
+>> On 2020-09-14 21:41, Bjorn Andersson wrote:
+>> > On Tue 01 Sep 01:00 CDT 2020, Bao D. Nguyen wrote:
+>> >
+>> > > UFS's specifications supports a range of Vcc operating
+>> > > voltage levels. Add documentation for the UFS's Vcc voltage
+>> > > levels setting.
+>> > >
+>> > > Signed-off-by: Can Guo <cang@codeaurora.org>
+>> > > Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> > > Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+>> > > ---
+>> > >  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
+>> > >  1 file changed, 2 insertions(+)
+>> > >
+>> > > diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> > > b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> > > index 415ccdd..7257b32 100644
+>> > > --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> > > +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> > > @@ -23,6 +23,8 @@ Optional properties:
+>> > >                            with "phys" attribute, provides phandle
+>> > > to UFS PHY node
+>> > >  - vdd-hba-supply        : phandle to UFS host controller supply
+>> > > regulator node
+>> > >  - vcc-supply            : phandle to VCC supply regulator node
+>> > > +- vcc-voltage-level     : specifies voltage levels for VCC supply.
+>> > > +                          Should be specified in pairs (min, max),
+>> > > units uV.
+>> >
+>> > What exactly are these pairs representing?
+>> The pair is the min and max Vcc voltage request to the PMIC chip.
+>> As a result, the regulator output voltage would only be in this range.
+>> 
 > 
-> Thanks,
-> ~Javed
+> If you have static min/max voltage constraints for a device on a
+> particular board the right way to handle this is to adjust the board's
+> regulator-min-microvolt and regulator-max-microvolt accordingly - and
+> not call regulator_set_voltage() from the river at all.
 > 
-> [...]
+> In other words, you shouldn't add this new property to describe
+> something already described in the node vcc-supply points to.
+> 
+> Regards,
+> Bjorn
+Thank you all for your comments. The current driver hardcoding 2.7V Vcc 
+min voltage
+does not work for UFS3.0+ devices according to the UFS device JEDEC 
+spec. However, we will
+try to address it in a different way.
 
-Applied to 5.10/scsi-queue, thanks!
+Regards,
+Bao
 
-[1/8] scsi: qedf: Change the debug parameter permission to read & write
-      https://git.kernel.org/mkp/scsi/c/066664645d9a
-[2/8] scsi: qedf: Correct the comment in qedf_initiate_els
-      https://git.kernel.org/mkp/scsi/c/31fc82d7fbd8
-[3/8] scsi: qedf: Fix for the session’s E_D_TOV value
-      https://git.kernel.org/mkp/scsi/c/f78f8126264b
-[4/8] scsi: qedf: FDMI attributes correction
-      https://git.kernel.org/mkp/scsi/c/41715c6292b6
-[5/8] scsi: qedf: Return SUCCESS if stale rport is encountered
-      https://git.kernel.org/mkp/scsi/c/10aff62fab26
-[6/8] scsi: qedf: Add schedule_hw_err_handler callback for fan failure
-      https://git.kernel.org/mkp/scsi/c/55e049910e08
-[7/8] scsi: qedf: Retry qed->probe during recovery
-      https://git.kernel.org/mkp/scsi/c/988100a7de0f
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> 
+>> >
+>> > Is this supposed to be 3 pairs of (min,max) for vcc, vcc and vccq2 to be
+>> > passed into a regulator_set_voltage() for each regulator?
+>> Yes, that's right. I should include the other power supplies in this 
+>> change
+>> as well.
+>> >
+>> > Or are these some sort of "operating points" for the vcc-supply?
+>> >
+>> > Regards,
+>> > Bjorn
+>> >
+>> > >  - vccq-supply           : phandle to VCCQ supply regulator node
+>> > >  - vccq2-supply          : phandle to VCCQ2 supply regulator node
+>> > >  - vcc-supply-1p8        : For embedded UFS devices, valid VCC range
+>> > > is 1.7-1.95V
+>> > > --
+>> > > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+>> > > Forum,
+>> > > a Linux Foundation Collaborative Project
+>> > >
