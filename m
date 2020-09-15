@@ -2,128 +2,175 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA531C43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 18:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB94C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 18:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C74A2145D
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 18:34:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8522521655
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 18:36:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q/pfs+hs"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="z8MJShO7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728023AbgIOSer (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 14:34:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40138 "EHLO
+        id S1727901AbgIOSg2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 14:36:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727983AbgIOSIx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 14:08:53 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EAF7C06178C;
-        Tue, 15 Sep 2020 11:07:25 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id u21so6426944eja.2;
-        Tue, 15 Sep 2020 11:07:25 -0700 (PDT)
+        with ESMTP id S1727881AbgIOSgG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 14:36:06 -0400
+Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A5A7C061788
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2020 11:36:06 -0700 (PDT)
+Received: by mail-qt1-x842.google.com with SMTP id k25so4004858qtu.4
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2020 11:36:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=VDXs3UaUSwmfye/yNYLIy4eJ7yCHNkNrXTn6GB6XFac=;
-        b=q/pfs+hsumRAnXu+NF0wi5xEYfVeLJ5L2CG8iJCKA9TRd+uGzCZKR7EoTR2u8JDpSK
-         8/hn1IKXtxvVo+9aknOkqa6vsGL8ldMU8nq02uyzDSZbvbtinJVf6sGlSM1reRToZao9
-         Rdl6eNDQoLIqv4G3ApC2J6AZA5CWhVFZi8cLDvbmck3Q3zoHzhYTa68YpFgtu0RhkoTd
-         l64UrITJN/2clFm5np9UAh5rzAUbgza4XOPACRUzvjX8a1SX1ria6o3QmrCTF57zb0Ja
-         YODNOGM1uu/Ck8h5FTX0LmSWfxi26hoahdCzpbHeJDBCiXC2hj/z3CyxWCPblJeQ673H
-         w5/g==
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=GgZ/I9dmFcrJX4+Gcxzi1wWr8Iu40sI3TTgomrtpN/0=;
+        b=z8MJShO7zBTWm3yVC0Q2B1jLLQdjAl69a3uv6ayRBTCgRBwaOGvRCejJjlUYVvyhob
+         C515IoetU9yk0QA2QzTSEYI4Hy2csIlbO98uYArEQ6vGBlBIbqumJWE2bDSdNtbbnFfa
+         xinHnfJDeLSD/ldAg/WkI/U1uzw0rPtga9bJMz0WJ3ZKr8XLEKd/ILfjhZMJO5pHuE9D
+         7Z0c368zo5Yl2zKPJWdR7WllBb1d6b0Y+72fA1aDPG2oEFTTRcSfyZhk8vYo5TmyiUXE
+         787sDu5TyHgeDTHlhSsP6+59QdthTLl8S+QMi1DiSFc37jUvJIFJI2HNWsbPZls0YKJ/
+         Xr4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=VDXs3UaUSwmfye/yNYLIy4eJ7yCHNkNrXTn6GB6XFac=;
-        b=EuHEod00xAN7cosvW3IOG+nDpgyz8FiFQshziNQVwYhmS2wFwJYYCbjQVOF08gH3I8
-         PcpTKSdZB5m7iIsS8daEnOyS9xkQqh/LVFzPZhS/+kSqFWOriz8GPtGeBV4AW2QC8KBv
-         gamcOB6KkuH81bQd205A1q9nQ/efXWYJMN3fCSeO8znYuFWDi/2/NBtHM7fLM/GC9Jw0
-         pqxGqpFG2VvbURe20dueu0ih4y13Zm3hNA+DPWOrxinxhywSt6rBHSd87oPpA69UJHjL
-         5ZYN8gXkwJSZM84UMSsJLiQW0qpGL57Z6eJEVSgg//OZqg1mF6tHRmrEBXfH7deEZt2N
-         RUFQ==
-X-Gm-Message-State: AOAM5307D+/d0W2kAS+sIi4ejbzlWI9betjtPcRCX7aRa9Fkh7zQHOkA
-        TU7get6jFCakgsywuXkNuSaEMQiZIwo=
-X-Google-Smtp-Source: ABdhPJz72nhYvzAUxd7KZk1YMtgLkjnH63lfB4uo4I0txBPNxy3wUtqpa7zshDmr7OV2MGAySgz5Fw==
-X-Received: by 2002:a17:906:4a53:: with SMTP id a19mr22539391ejv.56.1600193244137;
-        Tue, 15 Sep 2020 11:07:24 -0700 (PDT)
-Received: from localhost.localdomain ([2a01:598:b890:1ee4:75d6:3bdd:1167:483e])
-        by smtp.gmail.com with ESMTPSA id k25sm10687083ejk.3.2020.09.15.11.07.23
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=GgZ/I9dmFcrJX4+Gcxzi1wWr8Iu40sI3TTgomrtpN/0=;
+        b=GyubVLmtB8RDcb8guWZwqQykfxvl+Iy3UYji3OrafE4EqEnpe0SmtxJ0QtlPxHGEx+
+         TR5V1UrblJrc9ehfkT3v8qwSGd5nKv25+kDmne22RYC4KW38rtlUV0c9UDmHeziFHD1G
+         IGPLxedRwzN+EXW0D8P79eAZFk65bI0XqmnoYZbYQ0k/SygmCe1yDcNVrzJ48mzuRIo5
+         YH9qHFNO7kpqud5KLgG/CPJrLu9700djFx6Z9plxMZe8AJFthQMOswEcwHSqKgFaZ4My
+         20RMp6/8owdt9jfxBMApdYQ9Y0SUYB37KXY8abxelisKGVsATpAz61mX0RkMY8U660OM
+         vUtQ==
+X-Gm-Message-State: AOAM533INNV2ClxVYwjwERDf5YKtVrMVA5jJF1a1YMLYaCc8ron4J5ad
+        G4Rokna9yHLbe6KNr73qTF06bg==
+X-Google-Smtp-Source: ABdhPJwfFRNQG2gODIPTVtMLkOKyS7JO8o2XcPk3uqPJDEyfwQbbtxIUkzEh4rOiUD1Yglft+jg0VQ==
+X-Received: by 2002:ac8:1e07:: with SMTP id n7mr270166qtl.156.1600194965114;
+        Tue, 15 Sep 2020 11:36:05 -0700 (PDT)
+Received: from uller (ec2-34-197-84-77.compute-1.amazonaws.com. [34.197.84.77])
+        by smtp.gmail.com with ESMTPSA id v18sm16726433qtq.15.2020.09.15.11.36.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2020 11:07:23 -0700 (PDT)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] scsi: ufs-mediatek: use devm_platform_ioremap_resource_byname()
-Date:   Tue, 15 Sep 2020 20:07:07 +0200
-Message-Id: <20200915180708.12311-2-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200915180708.12311-1-huobean@gmail.com>
-References: <20200915180708.12311-1-huobean@gmail.com>
+        Tue, 15 Sep 2020 11:36:04 -0700 (PDT)
+Date:   Tue, 15 Sep 2020 18:36:02 +0000
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     nguyenb@codeaurora.org
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for
+ UFS
+Message-ID: <20200915183602.GK478@uller>
+References: <cover.1598939393.git.nguyenb@codeaurora.org>
+ <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
+ <20200915044154.GB670377@yoga>
+ <748d238a3d9e53834a498c6f37f9f3c9@codeaurora.org>
+ <20200915134335.GE670377@yoga>
+ <e39516da0d94a4046edbcfb48b665f82@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e39516da0d94a4046edbcfb48b665f82@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Tue 15 Sep 16:47 UTC 2020, nguyenb@codeaurora.org wrote:
 
-Use devm_platform_ioremap_resource_byname() to simplify the code.
+> On 2020-09-15 06:43, Bjorn Andersson wrote:
+> > On Tue 15 Sep 03:14 CDT 2020, nguyenb@codeaurora.org wrote:
+> > 
+> > > On 2020-09-14 21:41, Bjorn Andersson wrote:
+> > > > On Tue 01 Sep 01:00 CDT 2020, Bao D. Nguyen wrote:
+> > > >
+> > > > > UFS's specifications supports a range of Vcc operating
+> > > > > voltage levels. Add documentation for the UFS's Vcc voltage
+> > > > > levels setting.
+> > > > >
+> > > > > Signed-off-by: Can Guo <cang@codeaurora.org>
+> > > > > Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> > > > > Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> > > > > ---
+> > > > >  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
+> > > > >  1 file changed, 2 insertions(+)
+> > > > >
+> > > > > diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> > > > > b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> > > > > index 415ccdd..7257b32 100644
+> > > > > --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> > > > > +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> > > > > @@ -23,6 +23,8 @@ Optional properties:
+> > > > >                            with "phys" attribute, provides phandle
+> > > > > to UFS PHY node
+> > > > >  - vdd-hba-supply        : phandle to UFS host controller supply
+> > > > > regulator node
+> > > > >  - vcc-supply            : phandle to VCC supply regulator node
+> > > > > +- vcc-voltage-level     : specifies voltage levels for VCC supply.
+> > > > > +                          Should be specified in pairs (min, max),
+> > > > > units uV.
+> > > >
+> > > > What exactly are these pairs representing?
+> > > The pair is the min and max Vcc voltage request to the PMIC chip.
+> > > As a result, the regulator output voltage would only be in this range.
+> > > 
+> > 
+> > If you have static min/max voltage constraints for a device on a
+> > particular board the right way to handle this is to adjust the board's
+> > regulator-min-microvolt and regulator-max-microvolt accordingly - and
+> > not call regulator_set_voltage() from the river at all.
+> > 
+> > In other words, you shouldn't add this new property to describe
+> > something already described in the node vcc-supply points to.
+> > 
+> > Regards,
+> > Bjorn
+> Thank you all for your comments. The current driver hardcoding 2.7V Vcc min
+> voltage
+> does not work for UFS3.0+ devices according to the UFS device JEDEC spec.
+> However, we will
+> try to address it in a different way.
+> 
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufs-exynos.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Right, but what I'm saying is that you should remove the
+regulator_set_voltage() call from the driver and rely on the device's
+dts, in which case you won't have this problem.
 
-diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-index 8f1b6f61a776..1eecbe550536 100644
---- a/drivers/scsi/ufs/ufs-exynos.c
-+++ b/drivers/scsi/ufs/ufs-exynos.c
-@@ -940,7 +940,6 @@ static int exynos_ufs_init(struct ufs_hba *hba)
- 	struct device *dev = hba->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct exynos_ufs *ufs;
--	struct resource *res;
- 	int ret;
- 
- 	ufs = devm_kzalloc(dev, sizeof(*ufs), GFP_KERNEL);
-@@ -948,24 +947,21 @@ static int exynos_ufs_init(struct ufs_hba *hba)
- 		return -ENOMEM;
- 
- 	/* exynos-specific hci */
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "vs_hci");
--	ufs->reg_hci = devm_ioremap_resource(dev, res);
-+	ufs->reg_hci = devm_platform_ioremap_resource_byname(pdev, "vs_hci");
- 	if (IS_ERR(ufs->reg_hci)) {
- 		dev_err(dev, "cannot ioremap for hci vendor register\n");
- 		return PTR_ERR(ufs->reg_hci);
- 	}
- 
- 	/* unipro */
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "unipro");
--	ufs->reg_unipro = devm_ioremap_resource(dev, res);
-+	ufs->reg_unipro = devm_platform_ioremap_resource_byname(pdev, "unipro");
- 	if (IS_ERR(ufs->reg_unipro)) {
- 		dev_err(dev, "cannot ioremap for unipro register\n");
- 		return PTR_ERR(ufs->reg_unipro);
- 	}
- 
- 	/* ufs protector */
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ufsp");
--	ufs->reg_ufsp = devm_ioremap_resource(dev, res);
-+	ufs->reg_ufsp = devm_platform_ioremap_resource_byname(pdev, "ufsp");
- 	if (IS_ERR(ufs->reg_ufsp)) {
- 		dev_err(dev, "cannot ioremap for ufs protector register\n");
- 		return PTR_ERR(ufs->reg_ufsp);
--- 
-2.17.1
+Thanks,
+Bjorn
 
+> Regards,
+> Bao
+> 
+> > 
+> > > >
+> > > > Is this supposed to be 3 pairs of (min,max) for vcc, vcc and vccq2 to be
+> > > > passed into a regulator_set_voltage() for each regulator?
+> > > Yes, that's right. I should include the other power supplies in this
+> > > change
+> > > as well.
+> > > >
+> > > > Or are these some sort of "operating points" for the vcc-supply?
+> > > >
+> > > > Regards,
+> > > > Bjorn
+> > > >
+> > > > >  - vccq-supply           : phandle to VCCQ supply regulator node
+> > > > >  - vccq2-supply          : phandle to VCCQ2 supply regulator node
+> > > > >  - vcc-supply-1p8        : For embedded UFS devices, valid VCC range
+> > > > > is 1.7-1.95V
+> > > > > --
+> > > > > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+> > > > > Forum,
+> > > > > a Linux Foundation Collaborative Project
+> > > > >
