@@ -2,30 +2,31 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,FAKE_REPLY_C,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9CD7C2D0E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 06:27:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3DE3C43461
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 06:32:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 811FB2076C
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 06:27:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9321214F1
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 06:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726140AbgIOG1r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 02:27:47 -0400
-Received: from verein.lst.de ([213.95.11.211]:46528 "EHLO verein.lst.de"
+        id S1726131AbgIOGcc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 02:32:32 -0400
+Received: from verein.lst.de ([213.95.11.211]:46552 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726048AbgIOG1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Sep 2020 02:27:45 -0400
+        id S1726033AbgIOGcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Sep 2020 02:32:31 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 527E66736F; Tue, 15 Sep 2020 08:27:39 +0200 (CEST)
-Date:   Tue, 15 Sep 2020 08:27:38 +0200
+        id 10D806736F; Tue, 15 Sep 2020 08:32:25 +0200 (CEST)
+Date:   Tue, 15 Sep 2020 08:32:24 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Christoph Hellwig <hch@lst.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
         Joonyoung Shim <jy0922.shim@samsung.com>,
         Seung-Woo Kim <sw0312.kim@samsung.com>,
         Ben Skeggs <bskeggs@redhat.com>,
@@ -41,26 +42,27 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-mm@kvack.org,
         alsa-devel@alsa-project.org
-Subject: Re: [PATCH 07/17] 53c700: improve non-coherent DMA handling
-Message-ID: <20200915062738.GA19113@lst.de>
-References: <20200914144433.1622958-1-hch@lst.de> <20200914144433.1622958-8-hch@lst.de> <1600096818.4061.7.camel@HansenPartnership.com>
+Subject: Re: [PATCH 11/17] sgiseeq: convert to dma_alloc_noncoherent
+Message-ID: <20200915063224.GB19113@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1600096818.4061.7.camel@HansenPartnership.com>
+In-Reply-To: <20200914151358.GQ6583@casper.infradead.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 14, 2020 at 08:20:18AM -0700, James Bottomley wrote:
-> If you're going to change the macros from taking a device to taking a
-> hostdata structure then the descriptive argument name needs to change
-> ... it can't be dev anymore.  I'm happy with it simply becoming 'h' if
-> hostdata is too long.
+On Mon, Sep 14, 2020 at 04:13:58PM +0100, Matthew Wilcox wrote:
+> On Mon, Sep 14, 2020 at 04:44:27PM +0200, Christoph Hellwig wrote:
+> >  drivers/net/ethernet/i825xx/lasi_82596.c |  25 ++---
+> >  drivers/net/ethernet/i825xx/lib82596.c   | 114 ++++++++++++++---------
+> >  drivers/net/ethernet/i825xx/sni_82596.c  |   4 -
+> >  drivers/net/ethernet/seeq/sgiseeq.c      |  28 ++++--
+> >  drivers/scsi/53c700.c                    |   9 +-
+> >  5 files changed, 103 insertions(+), 77 deletions(-)
 > 
-> I already asked for this on the first go around:
+> I think your patch slicing-and-dicing went wrong here ;-(
 
-And I did rename them, those hunks just accidentally slipped into patch
-12 instead of this one.  Fixed for the next versions.
+Pretty much..  Fixed up for the next version.
