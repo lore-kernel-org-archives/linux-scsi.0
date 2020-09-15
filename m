@@ -2,51 +2,51 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA64C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C99FC433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:47:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A7E620936
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:47:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32D3E20771
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 20:47:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600202842;
-	bh=6CFCy86M8iz95yHuyD/L5TCOMJziCyBzC/IGpcbjHtg=;
+	s=default; t=1600202875;
+	bh=py0H0Nt71dgZGsc2v1e3bd1BFG4ko+PaI/MDzo15VX8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nkzp3H1T4XMuR9PITPfFO2HZFC+0R+SS8MWguEEd4uU1ltcLfMBG3IGq5UC5ByqBE
-	 /kRKz3x836FRXyLrOOwBhRLvC3b7HDGsgr/yhUvtTqqVMpWSdnTMyQ7YnJ6pF8FEfZ
-	 9oipnTi0ejZrzganmcNzEh1+ZvGfgmk3WXhbObPk=
+	b=hcmOyDtQrXsZphyP/QSuBWIMQggU/2Ud0Da1JB306HSIxPVu/nG2x9ea46FgQcNaB
+	 K2iYZX7WUJ2/re8+6hTR08S52ymNI/ZGxOr75I4wJ05tlZt+pPjF6DCI9AaG+EJ1y7
+	 LHKJX26uVMzV7FDhjeBAv53C2MzxLs0+BkJK0FG8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728087AbgIOUrQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 16:47:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42726 "EHLO mail.kernel.org"
+        id S1728070AbgIOUrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 16:47:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42786 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728051AbgIOUqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Sep 2020 16:46:46 -0400
+        id S1728083AbgIOUqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Sep 2020 16:46:47 -0400
 Received: from localhost (unknown [104.132.1.66])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F005D212CC;
-        Tue, 15 Sep 2020 20:46:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1568B21655;
+        Tue, 15 Sep 2020 20:46:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600202798;
-        bh=6CFCy86M8iz95yHuyD/L5TCOMJziCyBzC/IGpcbjHtg=;
+        s=default; t=1600202799;
+        bh=py0H0Nt71dgZGsc2v1e3bd1BFG4ko+PaI/MDzo15VX8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0GKifIzuYRs4t0HlIw0zbNCbSPAjZYiQ7a9d2vmCClRZNhwYxxNsU1HFef/XwWOCt
-         ABqxRgLbCrz4zdV30pebCDiEf+Q0R+Ir+rT/ew5Rk5dTmvtALfbh4m+5tHW1lzAtbf
-         53kjfucWbMbCamWVUQ1xSog9J5Wow2CcBWb5iPUk=
+        b=1czTBxu7slicrVo5h3XqzbXp8mbMy9GTa1qHc9jxpAIJIPZ9ckStu39gMC+XCgi9o
+         DELYRBCUSy72rVgzXkSrC4+BAPiimCK4S6Qb5ffIrGqh3n+1MDADJ2lEkAcRuoEasy
+         z+RarUd0ilF6LghxOI7gFv3DyIhLbwlVNKVqlkMs=
 From:   Jaegeuk Kim <jaegeuk@kernel.org>
 To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com
 Cc:     Jaegeuk Kim <jaegeuk@google.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 4/6] scsi: ufs: fix LINERESET on hibern8
-Date:   Tue, 15 Sep 2020 13:45:30 -0700
-Message-Id: <20200915204532.1672300-4-jaegeuk@kernel.org>
+Subject: [PATCH 6/6] scsi: add more contexts in the ufs tracepoints
+Date:   Tue, 15 Sep 2020 13:45:32 -0700
+Message-Id: <20200915204532.1672300-6-jaegeuk@kernel.org>
 X-Mailer: git-send-email 2.28.0.618.gf4bc123cb7-goog
 In-Reply-To: <20200915204532.1672300-1-jaegeuk@kernel.org>
 References: <20200915204532.1672300-1-jaegeuk@kernel.org>
@@ -59,101 +59,104 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Jaegeuk Kim <jaegeuk@google.com>
 
-When testing infinite test to read sysfs entries of UFS, I got a UFS timeout
-with the following kernel message.
-
-query: dev_cmd_send: seq_no=78082 tag=31, idn=2
-query: ufshcd_wait_for_dev_cmd: dev_cmd request timedout, tag 31
-query: __ufshcd_query_descriptor: opcode 0x01 for idn 2 failed, index 0, err = -11
- --  hibern8: dme: dme_send: cmd_id=0x17 idn=0
-query: ufshcd_query_descriptor: failed with error -11, retries 3
- --  hibern8: ufshcd_update_uic_error: LINERESET during hibern8 enter
- --  hibern8: __ufshcd_uic_hibern8_enter: hibern8 enter failed. ret = -110
-
-The problem is casued by hibern8 command issued by ufshcd_suspend(), which is
-not aware of query command. If autohibern8 is enabled, we actually don't need
-to issue hibern8 command by suspend.
+This adds user-friendly tracepoints with group id.
 
 Cc: Alim Akhtar <alim.akhtar@samsung.com>
 Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 20 ++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |  1 +
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c  |  6 ++++--
+ include/trace/events/ufs.h | 21 +++++++++++++++++----
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 848e33ec40639..bdc82cc3824aa 100644
+index b81c116b976ff..d70ca62c4c6d0 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3079,8 +3079,12 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
- 	int retries;
- 
- 	for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
--		err = __ufshcd_query_descriptor(hba, opcode, idn, index,
-+		err = -EAGAIN;
-+		down_read(&hba->query_lock);
-+		if (!ufshcd_is_link_hibern8(hba))
-+			err = __ufshcd_query_descriptor(hba, opcode, idn, index,
- 						selector, desc_buf, buf_len);
-+		up_read(&hba->query_lock);
- 		if (!err || err == -EINVAL)
- 			break;
- 	}
-@@ -8263,8 +8267,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	enum ufs_pm_level pm_lvl;
- 	enum ufs_dev_pwr_mode req_dev_pwr_mode;
- 	enum uic_link_state req_link_state;
-+	bool need_upwrite = false;
- 
--	hba->pm_op_in_progress = 1;
- 	if (!ufshcd_is_shutdown_pm(pm_op)) {
- 		pm_lvl = ufshcd_is_runtime_pm(pm_op) ?
- 			 hba->rpm_lvl : hba->spm_lvl;
-@@ -8275,6 +8279,15 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		req_link_state = UIC_LINK_OFF_STATE;
+@@ -336,7 +336,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
+ 		unsigned int tag, const char *str)
+ {
+ 	sector_t lba = -1;
+-	u8 opcode = 0;
++	u8 opcode = 0, group_id = 0;
+ 	u32 intr, doorbell;
+ 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+ 	struct scsi_cmnd *cmd = lrbp->cmd;
+@@ -362,13 +362,15 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
+ 				lba = cmd->request->bio->bi_iter.bi_sector;
+ 			transfer_len = be32_to_cpu(
+ 				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
++			if (opcode == WRITE_10)
++				group_id = lrbp->cmd->cmnd[6];
+ 		}
  	}
  
-+	if (ufshcd_is_runtime_pm(pm_op) &&
-+			req_link_state == UIC_LINK_HIBERN8_STATE &&
-+			hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) {
-+		need_upwrite = true;
-+		if (!down_write_trylock(&hba->query_lock))
-+			return -EBUSY;
-+	}
-+	hba->pm_op_in_progress = 1;
+ 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ 	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	trace_ufshcd_command(dev_name(hba->dev), str, tag,
+-				doorbell, transfer_len, intr, lba, opcode);
++			doorbell, transfer_len, intr, lba, opcode, group_id);
+ }
+ 
+ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+index 84841b3a7ffd5..50654f3526392 100644
+--- a/include/trace/events/ufs.h
++++ b/include/trace/events/ufs.h
+@@ -11,6 +11,15 @@
+ 
+ #include <linux/tracepoint.h>
+ 
++#define str_opcode(opcode)						\
++	__print_symbolic(opcode,					\
++		{ WRITE_16,		"WRITE_16" },			\
++		{ WRITE_10,		"WRITE_10" },			\
++		{ READ_16,		"READ_16" },			\
++		{ READ_10,		"READ_10" },			\
++		{ SYNCHRONIZE_CACHE,	"SYNC" },			\
++		{ UNMAP,		"UNMAP" })
 +
- 	/*
- 	 * If we can't transition into any of the low power modes
- 	 * just gate the clocks.
-@@ -8403,6 +8416,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	}
+ #define UFS_LINK_STATES			\
+ 	EM(UIC_LINK_OFF_STATE)		\
+ 	EM(UIC_LINK_ACTIVE_STATE)	\
+@@ -215,9 +224,10 @@ DEFINE_EVENT(ufshcd_template, ufshcd_init,
+ TRACE_EVENT(ufshcd_command,
+ 	TP_PROTO(const char *dev_name, const char *str, unsigned int tag,
+ 			u32 doorbell, int transfer_len, u32 intr, u64 lba,
+-			u8 opcode),
++			u8 opcode, u8 group_id),
  
- 	hba->pm_op_in_progress = 0;
-+	if (need_upwrite)
-+		up_write(&hba->query_lock);
+-	TP_ARGS(dev_name, str, tag, doorbell, transfer_len, intr, lba, opcode),
++	TP_ARGS(dev_name, str, tag, doorbell, transfer_len,
++				intr, lba, opcode, group_id),
  
- 	if (ret)
- 		ufshcd_update_reg_hist(&hba->ufs_stats.suspend_err, (u32)ret);
-@@ -8894,6 +8909,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	mutex_init(&hba->dev_cmd.lock);
+ 	TP_STRUCT__entry(
+ 		__string(dev_name, dev_name)
+@@ -228,6 +238,7 @@ TRACE_EVENT(ufshcd_command,
+ 		__field(u32, intr)
+ 		__field(u64, lba)
+ 		__field(u8, opcode)
++		__field(u8, group_id)
+ 	),
  
- 	init_rwsem(&hba->clk_scaling_lock);
-+	init_rwsem(&hba->query_lock);
+ 	TP_fast_assign(
+@@ -239,13 +250,15 @@ TRACE_EVENT(ufshcd_command,
+ 		__entry->intr = intr;
+ 		__entry->lba = lba;
+ 		__entry->opcode = opcode;
++		__entry->group_id = group_id;
+ 	),
  
- 	ufshcd_init_clk_gating(hba);
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 363589c0bd370..6f8e05eaf9661 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -754,6 +754,7 @@ struct ufs_hba {
- 	bool is_urgent_bkops_lvl_checked;
- 
- 	struct rw_semaphore clk_scaling_lock;
-+	struct rw_semaphore query_lock;
- 	unsigned char desc_size[QUERY_DESC_IDN_MAX];
- 	atomic_t scsi_block_reqs_cnt;
+ 	TP_printk(
+-		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x",
++		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x",
+ 		__get_str(str), __get_str(dev_name), __entry->tag,
+ 		__entry->doorbell, __entry->transfer_len,
+-		__entry->intr, __entry->lba, (u32)__entry->opcode
++		__entry->intr, __entry->lba, (u32)__entry->opcode,
++		str_opcode(__entry->opcode), (u32)__entry->group_id
+ 	)
+ );
  
 -- 
 2.28.0.618.gf4bc123cb7-goog
