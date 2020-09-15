@@ -2,161 +2,137 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 160FBC43461
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 09:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9D2C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 11:03:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5A502080C
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 09:22:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E253021D1B
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 11:03:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Z7+ej7AO";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="QAJ6vaFT"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ypYYMR/P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726265AbgIOJWh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 05:22:37 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:19591 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726366AbgIOJW2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 05:22:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1600161747; x=1631697747;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=WuZqoqt0fIBH0kqeBUZygpxPc/TeQ0yj+HkDP1wOi8A=;
-  b=Z7+ej7AONvLJXd2cnOpNl+MFOYamjgwVjnfwSoag2Yp/9kfMZifZ2+i6
-   A4I4e7yTp0Nlt76vFNHxzOxYnhoJXOPWU8AE0pkIMQ4ByTa3WwlOWC2EO
-   8MnS+PJNhbQPWxvmzY41lOcbFEoVoFyf4W9VuWMInNxUwAl9rlYGgezki
-   kzq8a4QuTFZwQW5qZ0omHZ3CMeWbwj5HOdwpF+Powl6pxyI23fHe0R0W5
-   wsk4B/lri8OicKp3mmEXmy4z93MDq3lkkezFMIwCyoJRC6gHg+5NDwyT1
-   GWhb6BZokEZ1BTzK/+9Omc0xiDURDr5neVI+lkmrw3f1avx0SR87kEnUB
-   w==;
-IronPort-SDR: XM/g+w8jQeZYkGHcUm+CBrMDHnOuFbAG5W+EBKiZpjTTtMLdxfM5gUxo1GwArLu3Ho8x9H5NOf
- EQPF0TBdKL0ebrA+h6g+Gy3LclAMLU1KPuaSPbP8XOuT95Q2VeV8LAG9gRoY3hjAsodZ6bGDDD
- MTxJZRFcjZTHMKteiG/V/Lz03hZaCGCKVuiUwZDeTOem0nmeEGsENBe9gd+sxy1bZMpezKbzaN
- 1uF6MhWytZCEKzZVMlSqSL8hx0lC6316284DhujdHae4LfccgnW6tWHlOVjx1w8NGJgQ7NyVEw
- YTg=
-X-IronPort-AV: E=Sophos;i="5.76,429,1592841600"; 
-   d="scan'208";a="147328461"
-Received: from mail-bn7nam10lp2109.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.109])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Sep 2020 17:22:26 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cYjSJ2o96PqrnxCMs2soyYGUl2arX18EUFFwaIf6ovgPFGfo17NEcuUlgIYvSFCiup64c3s8iGD+SebFPyYTsjX5IW1/w2vUWxX8lm6oW/TAS8Rkg1m4vw+4u5LU7OhJLJ5ccbYaRGpuf22v/+kYZNoFFCluSE4KYKWBX54v5mB3sPZek632tbbKuACHz1ISf1b5T2dysJytcGZm/svLKQTEey0QO67E3wHb6KXMiJf365Qi/HN43jVKr6bERRMlO3Q28KymhG6bz6BzDqxh4uGKflmnhw1Jh8A4mDZHAGZEhNk6/hpWIvmbQbzmUfORB9DXcVuRqMGJeyltYyAXzA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gLsvZYtk7zE2MliRbCqWzAv4dALxHarTMlUYGoq09J0=;
- b=g1lT/maFm5kFZ7tV0O7Wgvtv+FLkPWh0EeWuneI3q8c263baYiZSQz9tXhJeMFtuJJ6vLUdpgu+/nHpl8XnYvl2wcoZ4HMm2Tm77ZCH2R0Of4NjL4uz0+dEEQhXEH+5KAAjuNrjxvXf/7YQHUyvt+/Z8iseGj8weSFK3ZOLdb1sY0KAUx4cc/4DlgRhQP2UcMBLyDpzn4nH3moS9K12FbjPkgbngRBpMnbLoBHJCET+iHs6g3Y/CopEKGcj0ktw/zB5CYEMZuCuMwYrR+3IELRRq9IJTp5qZ5sTBm0uASCGJFHBo0kjT4gcGa+2z6RWFvdabAJV66riCxuyqfygwKw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gLsvZYtk7zE2MliRbCqWzAv4dALxHarTMlUYGoq09J0=;
- b=QAJ6vaFTXv6NDP+IhzH6IZk9F+/9YWXNpx+jz8RMLbZt2G6GnBNiMzd3CEZK64UMps2eHl6xqdI+DPkjm5NNxRQOqtTVFC91n99cC11fMEzpRsmPlFvoHgRutvcb2RgXuxfnSiu+irUrQV8Ys9yEtIr2Df/S2eAD2XJ84M6L7vs=
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
- by CY4PR04MB0566.namprd04.prod.outlook.com (2603:10b6:903:b5::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.16; Tue, 15 Sep
- 2020 09:22:25 +0000
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::9124:2453:fe9c:9a7]) by CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::9124:2453:fe9c:9a7%12]) with mapi id 15.20.3370.019; Tue, 15 Sep 2020
- 09:22:25 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Jason Yan <yanaijie@huawei.com>,
-        "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
-        "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>,
-        "shivasharan.srikanteshwara@broadcom.com" 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH] scsi: megaraid: make smp_affinity_enable static
-Thread-Topic: [PATCH] scsi: megaraid: make smp_affinity_enable static
-Thread-Index: AQHWizuhmRvIWDHFdUSHQ66WFWtAEQ==
-Date:   Tue, 15 Sep 2020 09:22:25 +0000
-Message-ID: <CY4PR04MB3751C6672A68014B136A91E9E7200@CY4PR04MB3751.namprd04.prod.outlook.com>
-References: <20200915083948.2826598-1-yanaijie@huawei.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2400:2411:43c0:6000:f58c:fb44:b59e:e65e]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 7474546d-dddf-4396-69a1-08d85958dc08
-x-ms-traffictypediagnostic: CY4PR04MB0566:
-x-microsoft-antispam-prvs: <CY4PR04MB056625E15B46DC559C088C37E7200@CY4PR04MB0566.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:3968;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: jDVPw/s7BaTBeaEZ2uNi6ceEJttr4jRKcrzCtzo6jkiQEeZM+ziNfWRv25OgJ6TqqlZkA3OPepZEuVhaUT3zi/sDbnUL6DAzUpXvW/hOJPTZ/G2QM7DVRFfzipnmuG7HkA9jjC9KHPIULK4ARCmJwcCzcdItCGQBndf6tUozTxj4Qtl2eJUHK4iOG5ZXWb2dyisuBuI2LdcvXclr4m9e7IzNUrUH7KF9wLBCblB9bSdjm4RvTzbrx6J3JFBal8Qlz/IqJ/lCwww19FPILQ4dNruOTGoRjgLTYfaseScVAXO7TIpJasCnsq8OEIHcd4J2OheKFoRqfHjWV0yHxtDTrRfRmd1ClK7sibHxxaxzmcr+SW8JMAYnGDyrQ8JKd8bn
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(366004)(346002)(376002)(396003)(136003)(71200400001)(2906002)(83380400001)(8936002)(9686003)(186003)(53546011)(316002)(86362001)(478600001)(52536014)(8676002)(4326008)(7696005)(91956017)(55016002)(5660300002)(76116006)(6506007)(66446008)(66556008)(66476007)(33656002)(66946007)(64756008)(110136005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: fSr09+kaxh5SU5g2Tk1//9bQ/39O5ElnrGyoM2Ax9RzJT0dn0Nil7NKM24WQ39EUaXKZsUY5ZhzvKRG4fyZIq2wHU0SGWl+ZBhZYmiJ1T44Ipw6P6gUs4Gu8U5OwUwEcKnEuBc8CsAboOj2gtQNIJSusuJNEwurn2NsYyofDqP9h3e5Csm1G03b1RuYaOLqEnbMzvoFHJpGxECdfsTWb9sByY4eGQdUJtJ7gI8OqVrH9nrIUXDmILHK7egIi0JKrVFakSL8puZb7FVVD1EZ6J2la9FjTpAuSdD8E+TCkRY6hKwh8ryaS/YfhUEKuqrDCCWhUAnbkxqq987w4aZFja4KEPnTpISn+fe0SxmMICWIIjs4JvirgxYNzLeBT7cTU3++CFvooRqc36pA8hlx9WBc81jufWjGiAM17Twg8wwunS4f5NLlK1LtEPxUErb/vBG8ThLSRjp1DzF17YSnzKKbRXHjDBbavcjOxWCL0BgF7cbnoWrTbEfD3DGGafXdHu6sDNVmCm92kZV6y2PrYAUF9bfJ9Lrrnmo313o5I9u7stWU7dfA2vAjf/ADsVN3zGRMO5Sw79j9DeVcaOtGQ5UTMbEXZA5wYxbZ0wumcg2SeDfPKNfM+Vj/xsfswFj6+q4bU17jz8FOaxRDE0qZ22urn/+npqYWbGjyk30Vje3xx7gJINbJsxYJZwFqXnHEXeOUquAC4fOo6FmfumO9OFw==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7474546d-dddf-4396-69a1-08d85958dc08
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Sep 2020 09:22:25.4649
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: G4olcfaaA6WgCiPoOoiGTTbqWyO39LsC7fKrHXA9SxV/N/NkByffkb0zB848kwOmr1F3jy4FlbXFzAske3gVdw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0566
+        id S1726265AbgIOLDU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 07:03:20 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:45760 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726235AbgIOLAn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 07:00:43 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FAwxpO026428;
+        Tue, 15 Sep 2020 10:59:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id; s=corp-2020-01-29;
+ bh=uc1nnwweUN3M7hTlh7aVus0Xqc+cXvdEzC3DnDY4d+8=;
+ b=ypYYMR/PpLIYQ6wuykLm+y+sW3e5NcMmff5wP/JSIgZ696MrgnmG+zkcv4GOduR3g14z
+ 7GyvTFXUswYjYhVsnawFExLT2Auwy9HKwsG0r7Ks1OXVWG3WRAc3DbSxvUPI/D3CnYHn
+ 2vIsg6AH5vMmTFGd6kSnVVJQ66Od7P0Rh2NVLQWxnBWRtxL2re7cJtEASNw//PRiXK1d
+ SlrXT5Ranu2UFSJRNXVehbKpni0LrmeauyNYyb7q5dgGlRTdrHNQYXgI8LifXeiZlrKB
+ vHipPOcKJNXHYx8zqV6JnlQLBJZxqT8UXPV1SIm3wZHYRrSq+oq9mPKy4Y+VS3Rs3DMu 6g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 33gp9m45vu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 15 Sep 2020 10:59:51 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FAxn3u100210;
+        Tue, 15 Sep 2020 10:59:50 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3020.oracle.com with ESMTP id 33hm307h4n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 15 Sep 2020 10:59:50 +0000
+Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 08FAxnbg100079;
+        Tue, 15 Sep 2020 10:59:49 GMT
+Received: from mybox.in.oracle.com (dhcp-10-76-51-53.vpn.oracle.com [10.76.51.53])
+        by userp3020.oracle.com with ESMTP id 33hm307fy6-1;
+        Tue, 15 Sep 2020 10:59:33 +0000
+From:   Jitendra Khasdev <jitendra.khasdev@oracle.com>
+To:     martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.com,
+        loberman@redhat.com
+Cc:     joe.jin@oracle.com, junxiao.bi@oracle.com,
+        gulam.mohamed@oracle.com, RITIKA.SRIVASTAVA@ORACLE.COM,
+        linux-scsi@vger.kernel.org, jitendra.khasdev@oracle.com
+Subject: [PATCH] scsi: alua: fix the race between alua_bus_detach and alua_rtpg
+Date:   Tue, 15 Sep 2020 16:28:57 +0530
+Message-Id: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
+X-Mailer: git-send-email 1.8.3.1
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9744 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ adultscore=0 malwarescore=0 clxscore=1011 lowpriorityscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 suspectscore=0 impostorscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009150096
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020/09/15 17:38, Jason Yan wrote:=0A=
-> This addresses the following sparse warning:=0A=
-> =0A=
-> drivers/scsi/megaraid/megaraid_sas_base.c:80:5: warning: symbol=0A=
-> 'smp_affinity_enable' was not declared. Should it be static?=0A=
-> =0A=
-> Reported-by: Hulk Robot <hulkci@huawei.com>=0A=
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>=0A=
-> ---=0A=
->  drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-=0A=
->  1 file changed, 1 insertion(+), 1 deletion(-)=0A=
-> =0A=
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c=0A=
-> index 2b7e7b5f38ed..e158d3d62056 100644=0A=
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c=0A=
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c=0A=
-> @@ -77,7 +77,7 @@ unsigned int resetwaittime =3D MEGASAS_RESET_WAIT_TIME;=
-=0A=
->  module_param(resetwaittime, int, 0444);=0A=
->  MODULE_PARM_DESC(resetwaittime, "Wait time in (1-180s) after I/O timeout=
- before resetting adapter. Default: 180s");=0A=
->  =0A=
-> -int smp_affinity_enable =3D 1;=0A=
-> +static int smp_affinity_enable =3D 1;=0A=
->  module_param(smp_affinity_enable, int, 0444);=0A=
->  MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disab=
-le Default: enable(1)");=0A=
-=0A=
-Looks good.=0A=
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+This is patch to fix the race occurs between bus detach and alua_rtpg.
+
+It fluses the all pending workqueue in bus detach handler, so it can avoid
+race between alua_bus_detach and alua_rtpg.
+
+Here is call trace where race got detected.
+
+multipathd call stack:
+[exception RIP: native_queued_spin_lock_slowpath+100]
+--- <NMI exception stack> ---
+native_queued_spin_lock_slowpath at ffffffff89307f54
+queued_spin_lock_slowpath at ffffffff89307c18
+_raw_spin_lock_irq at ffffffff89bd797b
+alua_bus_detach at ffffffff8984dcc8
+scsi_dh_release_device at ffffffff8984b6f2
+scsi_device_dev_release_usercontext at ffffffff89846edf
+execute_in_process_context at ffffffff892c3e60
+scsi_device_dev_release at ffffffff8984637c
+device_release at ffffffff89800fbc
+kobject_cleanup at ffffffff89bb1196
+kobject_put at ffffffff89bb12ea
+put_device at ffffffff89801283
+scsi_device_put at ffffffff89838d5b
+scsi_disk_put at ffffffffc051f650 [sd_mod]
+sd_release at ffffffffc051f8a2 [sd_mod]
+__blkdev_put at ffffffff8952c79e
+blkdev_put at ffffffff8952c80c
+blkdev_close at ffffffff8952c8b5
+__fput at ffffffff894e55e6
+____fput at ffffffff894e57ee
+task_work_run at ffffffff892c94dc
+exit_to_usermode_loop at ffffffff89204b12
+do_syscall_64 at ffffffff892044da
+entry_SYSCALL_64_after_hwframe at ffffffff89c001b8
+
+kworker:
+[exception RIP: alua_rtpg+2003]
+account_entity_dequeue at ffffffff892e42c1
+alua_rtpg_work at ffffffff8984f097
+process_one_work at ffffffff892c4c29
+worker_thread at ffffffff892c5a4f
+kthread at ffffffff892cb135
+ret_from_fork at ffffffff89c00354
+
+Signed-off-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index f32da0c..024a752 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -1144,6 +1144,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
+ 	struct alua_dh_data *h = sdev->handler_data;
+ 	struct alua_port_group *pg;
+ 
++	sdev_printk(KERN_INFO, sdev, "%s: flushing workqueues\n", ALUA_DH_NAME);
++	flush_workqueue(kaluad_wq);
++
+ 	spin_lock(&h->pg_lock);
+ 	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+ 	rcu_assign_pointer(h->pg, NULL);
+-- 
+1.8.3.1
+
