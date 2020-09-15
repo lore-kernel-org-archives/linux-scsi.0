@@ -2,107 +2,157 @@ Return-Path: <SRS0=8u70=CY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50EC6C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 12:33:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B8FC433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 13:50:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0780720770
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 12:33:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 526B420738
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Sep 2020 13:50:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hq3VryK5"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="P4iMu1hR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726212AbgIOMaf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 08:30:35 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:21256 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726458AbgIOMBm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 08:01:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600171261;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iRKZxnfmXT6xHa0W2Qaoc/OtvN5Snga93SmINoltYeM=;
-        b=Hq3VryK5+vKOmtXxhLfkYV+t54OBg7nmsdsdT9/eLhJAno5DdrR16S9gJ9RncBKJr2wV2D
-        EfOk4xGF4STB0diVQZf0sJgNAUPZR7GrjCkKp9bSYyVQQ8pzvBKvXQWEznwjJsnwBBQnxw
-        CuksPvySA96djK/v0xv74bK8o8DA1hk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-204-MTpbt8lGPiuhSS14uL2xMA-1; Tue, 15 Sep 2020 07:58:06 -0400
-X-MC-Unique: MTpbt8lGPiuhSS14uL2xMA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9DB4F801ADF;
-        Tue, 15 Sep 2020 11:58:04 +0000 (UTC)
-Received: from [10.40.193.20] (unknown [10.40.193.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0D2977B7B2;
-        Tue, 15 Sep 2020 11:58:01 +0000 (UTC)
-Subject: Re: [PATCH] scsi: target: remove redundant assignment to variable
- 'ret'
-To:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
-        martin.petersen@oracle.com, bvanassche@acm.org,
-        michael.christie@oracle.com, sudhakar.panneerselvam@oracle.com,
-        ddiss@suse.de, gustavoars@kernel.org
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20200914023207.113792-1-jingxiangfeng@huawei.com>
-From:   Maurizio Lombardi <mlombard@redhat.com>
-Message-ID: <2410adca-9e8c-d16e-8097-9c6eb8103362@redhat.com>
-Date:   Tue, 15 Sep 2020 13:58:00 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1726734AbgIONtr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 09:49:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56156 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726746AbgIONsb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 09:48:31 -0400
+Received: from mail-oi1-x244.google.com (mail-oi1-x244.google.com [IPv6:2607:f8b0:4864:20::244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45759C061A2E
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2020 06:37:34 -0700 (PDT)
+Received: by mail-oi1-x244.google.com with SMTP id i17so3842336oig.10
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2020 06:37:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ttARGbDHmVnJ0g6Br9D8cEVRotoN7PzoX1uzLIImtD4=;
+        b=P4iMu1hRBC5Lq/Gsju/uOwqOCm78IqbBrXKblX1kH+6k5Kbezqh1Wq6Gh+8GjYG3Gf
+         E/c6KaLLnzqGlL6bcou+LtU65EFYrQyZhY02LU2ksp5T8r1mmsNsfaeXZnO5975n7rnE
+         kY9NpNAjXndInQBjmq/FC14J8665OALEqcHkeQU9dI2tjzSeITtyr7+hSQVkxAimoso3
+         4ilRgwsf0k2QRNQeY1qVuDCjCGCetlOHAY+a9bH7T2r7hxwPAd87Job/JFPNb4c7Dmp2
+         /zmn4o+qH/iaooeHCY3kqOFyT1fbUoYdbKXs4D9erDo1LgH9JEH51s10XA7gGi4zOWfP
+         1j7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ttARGbDHmVnJ0g6Br9D8cEVRotoN7PzoX1uzLIImtD4=;
+        b=a74IaRvdQuu2IEUbH+DTSIDdakaR0ZfE4u29hey394sceuajI7TapsOTjpR+OXZrdO
+         96M8JuLhHuqOfdYZCuTrVHMRKjbcK16hyXrhsSVE7f6OhSds8jd3orZcO1UgepKNziNW
+         YaEDB9bQL4fgZ2ywsWcpjL8MsE8mvDxVPVC2xhH4XluJgVx7q/MD0QY61m62W0sWMHrb
+         RlgFUDSQFyAWQetnTU4H55qzrrHi755Jw/COledCLQwnVuTc+g9G8gvXvN2kssf/geP7
+         SRw5CfIIjSO7WJWrYGHIlBSnWDYuXQ385Nq67KqU1mrDAk36pYEXFYeiZHR6LUgD8y1i
+         q40w==
+X-Gm-Message-State: AOAM530N2XdtVqpPAjf56LJ3JjV652G28X+FkSfLEdprLRIdx18WGLl3
+        uK+ursrfiL3eqpMX2+ZopGHaYA==
+X-Google-Smtp-Source: ABdhPJxisvq6caWh5L4EG6TGFxDpwY6jGGBJ+sNGZgHWBV118w2EVtYOtdNF6lKC5Rac05XL7IXV6A==
+X-Received: by 2002:a05:6808:a05:: with SMTP id n5mr3418167oij.154.1600177053525;
+        Tue, 15 Sep 2020 06:37:33 -0700 (PDT)
+Received: from yoga ([2605:6000:e5cb:c100:8898:14ff:fe6d:34e])
+        by smtp.gmail.com with ESMTPSA id 91sm1156918ott.55.2020.09.15.06.37.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Sep 2020 06:37:32 -0700 (PDT)
+Date:   Tue, 15 Sep 2020 08:37:29 -0500
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     nguyenb@codeaurora.org
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Properly set the device Icc Level
+Message-ID: <20200915133729.GD670377@yoga>
+References: <5c9d6f76303bbe5188bf839b2ea5e5bf530e7281.1598923023.git.nguyenb@codeaurora.org>
+ <20200915025401.GD471@uller>
+ <a8c851744fcaee205fc7a58db8f747fa@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20200914023207.113792-1-jingxiangfeng@huawei.com>
-Content-Type: text/plain; charset=iso-8859-2
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a8c851744fcaee205fc7a58db8f747fa@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue 15 Sep 03:49 CDT 2020, nguyenb@codeaurora.org wrote:
 
+> On 2020-09-14 19:54, Bjorn Andersson wrote:
+> > On Tue 01 Sep 01:19 UTC 2020, Bao D. Nguyen wrote:
+> > 
+> > > UFS version 3.0 and later devices require Vcc and Vccq power supplies
+> > > with Vccq2 being optional. While earlier UFS version 2.0 and 2.1
+> > > devices, the Vcc and Vccq2 are required with Vccq being optional.
+> > > Check the required power supplies used by the device
+> > > and set the device's supported Icc level properly.
+> > > 
+> > > Signed-off-by: Can Guo <cang@codeaurora.org>
+> > > Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> > > Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> > > ---
+> > >  drivers/scsi/ufs/ufshcd.c | 5 +++--
+> > >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > > index 06e2439..fdd1d3e 100644
+> > > --- a/drivers/scsi/ufs/ufshcd.c
+> > > +++ b/drivers/scsi/ufs/ufshcd.c
+> > > @@ -6845,8 +6845,9 @@ static u32
+> > > ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+> > >  {
+> > >  	u32 icc_level = 0;
+> > > 
+> > > -	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
+> > > -						!hba->vreg_info.vccq2) {
+> > > +	if (!hba->vreg_info.vcc ||
+> > 
+> > How did you test this?
+> > 
+> > devm_regulator_get() never returns NULL, so afaict this conditional will
+> > never be taken with either the old or new version of the code.
+> Thanks for your comment. The call flow is as follows:
+> ufshcd_pltfrm_init->ufshcd_parse_regulator_info->ufshcd_populate_vreg
+> In the ufshcd_populate_vreg() function, it looks for DT entries "%s-supply"
+> For UFS3.0+ devices, "vccq2-supply" is optional, so the vendor may choose
+> not to provide vccq2-supply in the DT.
+> As a result, a NULL is returned to hba->vreg_info.vccq2.
+> Same for UFS2.0 and UFS2.1 devices, a NULL may be returned to
+> hba->vreg_info.vccq if vccq-supply is not provided in the DT.
+> The current code only checks for !hba->vreg_info.vccq OR
+> !hba->vreg_info.vccq2. It will skip the setting for icc_level
+> if either vccq or vccq2 is not provided in the DT.
+> > 
 
-Dne 14. 09. 20 v 4:32 Jing Xiangfeng napsal(a):
-> The variable ret has been initialized with a value '0'. The assignment
-> in switch-case is redundant. So remove it.
-> 
-> Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
-> ---
->  drivers/target/iscsi/iscsi_target.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index cd045dc75a58..f5272ac18b16 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -4516,7 +4516,6 @@ int iscsit_logout_post_handler(
->  			iscsit_logout_post_handler_closesession(conn);
->  			break;
->  		}
-> -		ret = 0;
->  		break;
->  	case ISCSI_LOGOUT_REASON_CLOSE_CONNECTION:
->  		if (conn->cid == cmd->logout_cid) {
-> @@ -4527,7 +4526,6 @@ int iscsit_logout_post_handler(
->  				iscsit_logout_post_handler_samecid(conn);
->  				break;
->  			}
-> -			ret = 0;
->  		} else {
->  			switch (cmd->logout_response) {
->  			case ISCSI_LOGOUT_SUCCESS:
-> 
+Thanks for the pointers, I now see that the there will only be struct
+ufs_vreg objects allocated for the items that has an associated
+%s-supply.
 
-Looks ok to me.
+FYI, the idiomatic way to handle optional regulators is to use
+regulator_get_optional(), which will return -ENODEV for regulators not
+specified.
 
-Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+Regards,
+Bjorn
 
+> > Regards,
+> > Bjorn
+> > 
+> > > +		(!hba->vreg_info.vccq && hba->dev_info.wspecversion >= 0x300) ||
+> > > +		(!hba->vreg_info.vccq2 && hba->dev_info.wspecversion < 0x300)) {
+> > >  		dev_err(hba->dev,
+> > >  			"%s: Regulator capability was not set, actvIccLevel=%d",
+> > >  							__func__, icc_level);
+> > > --
+> > > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+> > > Forum,
+> > > a Linux Foundation Collaborative Project
+> > > 
