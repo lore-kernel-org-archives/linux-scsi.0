@@ -7,75 +7,73 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C17C43461
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 01:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29024C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 01:32:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D36A921D1B
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 01:32:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D689121655
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 01:32:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N9RSj6O5"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X33on2T5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726172AbgIPBcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 21:32:33 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:59918 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726235AbgIPBc2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 21:32:28 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G1UWSL168691;
-        Wed, 16 Sep 2020 01:32:18 GMT
+        id S1726235AbgIPBch (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 21:32:37 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37364 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726321AbgIPBcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 21:32:33 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G1TmFi018782;
+        Wed, 16 Sep 2020 01:32:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=h6Npc63CvrL/i9wqyNhlTn1+9wo0BWG4NAvT8gC8wLE=;
- b=N9RSj6O5ee3qKH3/JhQpjpwUdkeA1CpMH1JD2k7xpNyscVNtZVzaZ7J0cSVFg+C8cUIb
- z7BHyhHe7EFedbY6bGM9iDIBRtusA8wtNf6hNBMAOJIClKVVuuf9R96ThVaqf2sYUTDI
- 76ydzbYAPXlo4C0tL/hOa9otw9UVCcHAE7RxtJBFSkpB2pM8BCcbXaM8LJfQ37/eLzWi
- 5XRsLjxsp2ktQp5RuFrsVS0bJnOU/D0kX8XODVW7GZDOBAw3P3SlwD3uHbylHVP9rjsz
- 2cX9fXDyN8wxJZxOHo7BqjyIr3eK/NiszJ3Ttlx0RCx5G34xN8IgXpoRbszv7QF8bfzV iw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 33j91dhx3n-1
+ bh=8ck4XG1MJV++vA6w9vkliE2IdDNZb46ogwiHEX3W9pU=;
+ b=X33on2T5XkX/zPvE4oWIkzur4N/1ggXgSqCr5iha72H68Fl5QjNlgtO51qmVs7ZkjXWX
+ TvBKeXwvUvFGkDus1UPSBpKdOLqhwy/pJhibGZxTTnX9pb2Tul4Iov2OCZ6JCIK96FGS
+ 85Fe6Z1AaD2Q+H5dSuRzJL2GjL+vg7Q36apnYz8LM6chRwioXighQ38TYykigPceZuFH
+ gdELihdkt7FOyJOHReaZUGJLQ9yLXu7dx+T3tQR+hDLE8HzfykiRLW/obndewM+q0px6
+ E9B4I+QLQO9Hjwq5Iqzv1Jmo6yZYQZMfVaFmFXjuuuM9TVCKmekQ+qq4vPNDYN/hMzQn uw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 33gnrr0ava-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Sep 2020 01:32:18 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G1OvPe103184;
-        Wed, 16 Sep 2020 01:30:18 GMT
+        Wed, 16 Sep 2020 01:32:14 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G1VV10107851;
+        Wed, 16 Sep 2020 01:32:13 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 33h890d9md-1
+        by aserp3020.oracle.com with ESMTP id 33h886m6d9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 16 Sep 2020 01:30:18 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08G1UGX7023862;
-        Wed, 16 Sep 2020 01:30:16 GMT
+        Wed, 16 Sep 2020 01:32:13 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08G1WCDA024491;
+        Wed, 16 Sep 2020 01:32:12 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 16 Sep 2020 01:30:15 +0000
+        with ESMTP ; Wed, 16 Sep 2020 01:32:11 +0000
 To:     Jason Yan <yanaijie@huawei.com>
-Cc:     <skashyap@marvell.com>, <jhasan@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <lee.jones@linaro.org>,
+Cc:     <hare@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <gustavoars@kernel.org>,
         <linux-scsi@vger.kernel.org>, Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH] scsi: bnx2fc: make a bunch of symbols static in
- bnx2fc_fcoe.c
+Subject: Re: [PATCH] scsi: myrb: make some symblos static
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1tuvyzeyd.fsf@ca-mkp.ca.oracle.com>
-References: <20200912033758.142601-1-yanaijie@huawei.com>
-Date:   Tue, 15 Sep 2020 21:30:13 -0400
-In-Reply-To: <20200912033758.142601-1-yanaijie@huawei.com> (Jason Yan's
-        message of "Sat, 12 Sep 2020 11:37:58 +0800")
+Message-ID: <yq1d02mzeul.fsf@ca-mkp.ca.oracle.com>
+References: <20200915084018.2826922-1-yanaijie@huawei.com>
+Date:   Tue, 15 Sep 2020 21:32:09 -0400
+In-Reply-To: <20200915084018.2826922-1-yanaijie@huawei.com> (Jason Yan's
+        message of "Tue, 15 Sep 2020 16:40:18 +0800")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- suspectscore=1 mlxscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
+ suspectscore=1 phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=917
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009160006
+ definitions=main-2009160007
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
- priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
- clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0
+ lowpriorityscore=0 malwarescore=0 mlxscore=0 bulkscore=0 suspectscore=1
+ clxscore=1015 mlxlogscore=944 adultscore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2009160006
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -85,18 +83,14 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Jason,
 
-> This eliminates the following sparse warning:
+> This addresses the following sparse warning:
 >
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:53:1: warning: symbol
-> 'bnx2fc_global_lock' was not declared. Should it be static?
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:111:6: warning: symbol
-> 'bnx2fc_devloss_tmo' was not declared. Should it be static?
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:116:6: warning: symbol
-> 'bnx2fc_max_luns' was not declared. Should it be static?
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:121:6: warning: symbol
-> 'bnx2fc_queue_depth' was not declared. Should it be static?
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:126:6: warning: symbol
-> 'bnx2fc_log_fka' was not declared. Should it be static?
+> drivers/scsi/myrb.c:2229:27: warning: symbol 'myrb_template' was not
+> declared. Should it be static?
+> drivers/scsi/myrb.c:2318:31: warning: symbol 'myrb_raid_functions' was
+> not declared. Should it be static?
+> drivers/scsi/myrb.c:2492:6: warning: symbol 'myrb_err_status' was not
+> declared. Should it be static?
 
 Applied to 5.10/scsi-staging, thanks!
 
