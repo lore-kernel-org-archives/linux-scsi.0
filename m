@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 189F0C43461
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 03:49:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0E4C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 03:49:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D18CC221E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 03:49:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BD79221E7
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 03:49:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fb3GcBME"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s6J2vMTb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726458AbgIPDst (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Sep 2020 23:48:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45942 "EHLO
+        id S1726445AbgIPDss (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Sep 2020 23:48:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbgIPDsj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 23:48:39 -0400
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44EA0C06178A;
-        Tue, 15 Sep 2020 20:48:38 -0700 (PDT)
-Received: by mail-qk1-x744.google.com with SMTP id w186so6857740qkd.1;
-        Tue, 15 Sep 2020 20:48:38 -0700 (PDT)
+        with ESMTP id S1726140AbgIPDse (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2020 23:48:34 -0400
+Received: from mail-qt1-x844.google.com (mail-qt1-x844.google.com [IPv6:2607:f8b0:4864:20::844])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F69C06178B;
+        Tue, 15 Sep 2020 20:48:30 -0700 (PDT)
+Received: by mail-qt1-x844.google.com with SMTP id y11so5091588qtn.9;
+        Tue, 15 Sep 2020 20:48:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qJmwrh6J6rcv6MUxLlkxyb5Vql7vSYwyh7LH4D3LEqA=;
-        b=fb3GcBMEZSWYsUqGLTS3YELiN72LoJZrDv/xB5k5ae8B5Edp+As0kxRPsWkE59ifE0
-         T1pXpeuPEcA2BkroyONSPsf7Jqm+18RPcFL7W17TaJoxp8UUo4Nu0SR0Q3IikXHpzPHW
-         78VtSUe76C38o3LLkbrfC4+KKOpt1wgKWdomHJWVU++f2x3z3PWdSCWnZGMg1NLKL7zL
-         ArPEFqNPHeoUfsJVVQAi+B91J7/4ukvS1ILwpqOy7oKIGzyimC3jycmcl0E/sCjik9pJ
-         7HPzqA1VaX8SXIeUdlqPVxOPM50Ou4c4uHTmCyNO5U7CAcW41MMqXi3R+OTKSavYXPma
-         OXmQ==
+        bh=USSwhP09izf+LnpVrE3M0RxVw0+t66PHn4L0u3pS4fg=;
+        b=s6J2vMTbEpPu4mSucLu8+qOtzIBZ+7Yjn9Z6S79lWp97w2jmedzB1aDMrrJdECYQKJ
+         UHoM+AiefpYOOBINwCzSZU1RnAZmLl3trG4ry3HtnfdDz8C/aXR45CxGmcuXRd9fOH/h
+         6RghjczkCs8ojcC18B8tl7qtbF4PVq7sruHBeEVeY+vXUmsBzN8EpSnfVO/AnWDxbTqW
+         tdUP572KhYsjqEkkQewr9HMysWDvQqIESkzhHxSnOdhP5+3CDSJelHPSMebbVgsZvpsx
+         DVafn54joVtksdZo2kW0lREmE09jc3soo/JwsHTRf9ADc6bf1gOtADhWYBtZxTo03gF8
+         41tQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qJmwrh6J6rcv6MUxLlkxyb5Vql7vSYwyh7LH4D3LEqA=;
-        b=r3xl/1Sjc1VPczl6yQk2XDBViZFf2YWtMnW+c89HUZjG8uq1i4qqh7L31b3p7mI2yW
-         2OLVtFhXlHtINgwmxB48bGEUO/4U6u0oCKOohwP+w2WU0FMPPHiRgpkuhrvoWlI1d4aq
-         sUHTsrbRVa79hMEEmueBn4TSiYaoH1l0m8ryy7kfIeWmbgVnc0ZYst9gxeu35KKnWnhG
-         fSBgzPzO7SL6ksdWBCZc4XBU7qI8c3d9ZAXiGt4Aoxkhg37GFO1KRFMUhL8EHPpjTEPA
-         qCPJlyRgIoCJKtoGKp43oOr84p3Huv3kOYmo9zQ910tA0ZEROsZuo6YxmV8tHpKe+P6+
-         VFbQ==
-X-Gm-Message-State: AOAM530vxgeIafD1zJKAsaYIrysZpcMGtYMP5B/LtOXXzmkE8LOYwfm3
-        eHuUvozKqpBrdX7uKlBJJtE=
-X-Google-Smtp-Source: ABdhPJycut6cyDGtJLlufHlc1Ibn9u3uJPexpQn/Oghzfa2pp0pOauiHQuvt950r/uE/krCH3GIxYg==
-X-Received: by 2002:a05:620a:1098:: with SMTP id g24mr20706113qkk.399.1600228117531;
-        Tue, 15 Sep 2020 20:48:37 -0700 (PDT)
+        bh=USSwhP09izf+LnpVrE3M0RxVw0+t66PHn4L0u3pS4fg=;
+        b=FazYDn4toLu5wGewnrI+p+9qLpxyqRdjVVbqWyGezh3/KyAqAMUuRyHGbIRnjztPlT
+         zr/u7gisVmUYKn3NtcmqwSgDa9jS+Ifl8NuzPzWWfQ7aWVcksFDTeNLl8VsnWmdeh3BZ
+         XOWDU19v56y8rmjapiQqs8EJMnadUyz2qVYX88+SwsWTq67mv0dT1ap0rZTFdFZ9ysnM
+         +eBRSjFaiIFdPwxhAZwIPPYBMoz6xcs6rhNWAcTAp8RBdhhr8G2J6cESGYwLvPuNDzXy
+         kKx2tRc6mOuIHLfZ3VJHOAzEyqFFpRAXZLWy0gh/nriLwd/JVGfUdAQpGQNo3SzjFFrE
+         4zTQ==
+X-Gm-Message-State: AOAM531uBFL5Zbd13xf/0qefZmthBy9nICDIa75uJwfodQvrroeeQ52F
+        nFSsiSgvnn0e+2BcV5SfHb4=
+X-Google-Smtp-Source: ABdhPJyzejBWQEaC5mH5YVRjTYO3rhGjyzc3WikTI66JgJqlBUWHTc3iFLiPU3cw8FOMUWMmAOcD3A==
+X-Received: by 2002:aed:39a1:: with SMTP id m30mr9021636qte.39.1600228109917;
+        Tue, 15 Sep 2020 20:48:29 -0700 (PDT)
 Received: from auth1-smtp.messagingengine.com (auth1-smtp.messagingengine.com. [66.111.4.227])
-        by smtp.gmail.com with ESMTPSA id x124sm18735736qkd.72.2020.09.15.20.48.36
+        by smtp.gmail.com with ESMTPSA id c193sm16805471qke.20.2020.09.15.20.48.28
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 15 Sep 2020 20:48:36 -0700 (PDT)
+        Tue, 15 Sep 2020 20:48:29 -0700 (PDT)
 Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailauth.nyi.internal (Postfix) with ESMTP id F250F27C0054;
-        Tue, 15 Sep 2020 23:48:35 -0400 (EDT)
+        by mailauth.nyi.internal (Postfix) with ESMTP id 4A6EF27C0058;
+        Tue, 15 Sep 2020 23:48:28 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute3.internal (MEProxy); Tue, 15 Sep 2020 23:48:35 -0400
-X-ME-Sender: <xms:E4thX1q39EHukdQWgdetzkZs-cHP8Vpw70nzwfMBgaVjvCQ_IqKtzA>
-    <xme:E4thX3oJ20zI_9I-0BFESi_NNYUje3uHbVPMUuil57ivbBUnVMP7WqByJc7hx-or8
-    MVkVJ3L1EWuT8HEng>
+  by compute3.internal (MEProxy); Tue, 15 Sep 2020 23:48:28 -0400
+X-ME-Sender: <xms:DIthX3P0NO5BbehBjUZ2uSkgvGyZthZ8tA1IpuMoc3YlMPdoIJXjRA>
+    <xme:DIthXx-DJVxpC_AKJolSUNMyk6jtzbTm1C9cE2TMLj8qrqxnVsiJ11jm6vrmfs8cU
+    EWUQo1fTh4VFURNqw>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrtddugdeikecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenog
@@ -73,17 +73,17 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrtddugdeikecutefuodetggdote
     keertdertddtnecuhfhrohhmpeeuohhquhhnucfhvghnghcuoegsohhquhhnrdhfvghngh
     esghhmrghilhdrtghomheqnecuggftrfgrthhtvghrnhephedvveetfefgiedutedtfeev
     vddvleekjeeuffffleeguefhhfejteekieeuueelnecukfhppeehvddrudehhedrudduud
-    drjedunecuvehluhhsthgvrhfuihiivgepgeenucfrrghrrghmpehmrghilhhfrhhomhep
+    drjedunecuvehluhhsthgvrhfuihiivgepudenucfrrghrrghmpehmrghilhhfrhhomhep
     sghoqhhunhdomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqieelvdeghedtie
     egqddujeejkeehheehvddqsghoqhhunhdrfhgvnhhgpeepghhmrghilhdrtghomhesfhhi
     gihmvgdrnhgrmhgv
-X-ME-Proxy: <xmx:E4thXyP9ngPwai6HX8PumjTgDyiFNmfdoh87EQDgGy_z5855OVjhHA>
-    <xmx:E4thXw6mRl2g4EfVKPA32hF-fFeGp9mfHyNQjWCZhT0owhFPPPjo0Q>
-    <xmx:E4thX04McaVaLyiJztQwQUvl4SMkOhktmEtvzrGpW5IDBjlP7aSoEA>
-    <xmx:E4thX5qG6qgCtS5g8NUTXBClfYmZCS7J1AzmKk4Hi_suiX3T4-qSXKqQqBQ>
+X-ME-Proxy: <xmx:DIthX2QGu6mi5SrGFJPHO1Eh5QYJuIcvwm-ATsCw4yrdpWdWq_bc2w>
+    <xmx:DIthX7v8ci2A72SgFhGWeTkEIqhqvmcWTjXOpA_kLZFjuP2sl1z-Yg>
+    <xmx:DIthX_dhrQvi3dp3K60oeiGaHSw7d_7TIXrJngZi1NCSgPNsgVDA6w>
+    <xmx:DIthXzNENMT1OAWiYFO_B3Qt7b_rxWKve0HSf_KjBreRPhLFUim5-oeZBNo>
 Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 3A286306467E;
-        Tue, 15 Sep 2020 23:48:35 -0400 (EDT)
+        by mail.messagingengine.com (Postfix) with ESMTPA id 89B8C3064682;
+        Tue, 15 Sep 2020 23:48:27 -0400 (EDT)
 From:   Boqun Feng <boqun.feng@gmail.com>
 To:     linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org,
         linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
@@ -102,9 +102,9 @@ Cc:     "K. Y. Srinivasan" <kys@microsoft.com>,
         ardb@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
         mark.rutland@arm.com, maz@kernel.org,
         Boqun Feng <boqun.feng@gmail.com>
-Subject: [PATCH v4 07/11] hv_netvsc: Use HV_HYP_PAGE_SIZE for Hyper-V communication
-Date:   Wed, 16 Sep 2020 11:48:13 +0800
-Message-Id: <20200916034817.30282-8-boqun.feng@gmail.com>
+Subject: [PATCH v4 03/11] Drivers: hv: vmbus: Introduce types of GPADL
+Date:   Wed, 16 Sep 2020 11:48:09 +0800
+Message-Id: <20200916034817.30282-4-boqun.feng@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200916034817.30282-1-boqun.feng@gmail.com>
 References: <20200916034817.30282-1-boqun.feng@gmail.com>
@@ -115,179 +115,363 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When communicating with Hyper-V, HV_HYP_PAGE_SIZE should be used since
-that's the page size used by Hyper-V and Hyper-V expects all
-page-related data using the unit of HY_HYP_PAGE_SIZE, for example, the
-"pfn" in hv_page_buffer is actually the HV_HYP_PAGE (i.e. the Hyper-V
-page) number.
+This patch introduces two types of GPADL: HV_GPADL_{BUFFER, RING}. The
+types of GPADL are purely the concept in the guest, IOW the hypervisor
+treat them as the same.
 
-In order to support guest whose page size is not 4k, we need to make
-hv_netvsc always use HV_HYP_PAGE_SIZE for Hyper-V communication.
+The reason of introducing the types for GPADL is to support guests whose
+page size is not 4k (the page size of Hyper-V hypervisor). In these
+guests, both the headers and the data parts of the ringbuffers need to
+be aligned to the PAGE_SIZE, because 1) some of the ringbuffers will be
+mapped into userspace and 2) we use "double mapping" mechanism to
+support fast wrap-around, and "double mapping" relies on ringbuffers
+being page-aligned. However, the Hyper-V hypervisor only uses 4k
+(HV_HYP_PAGE_SIZE) headers. Our solution to this is that we always make
+the headers of ringbuffers take one guest page and when GPADL is
+established between the guest and hypervisor, the only first 4k of
+header is used. To handle this special case, we need the types of GPADL
+to differ different guest memory usage for GPADL.
+
+Type enum is introduced along with several general interfaces to
+describe the differences between normal buffer GPADL and ringbuffer
+GPADL.
 
 Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
 Reviewed-by: Michael Kelley <mikelley@microsoft.com>
 ---
- drivers/net/hyperv/netvsc.c       |  2 +-
- drivers/net/hyperv/netvsc_drv.c   | 46 +++++++++++++++----------------
- drivers/net/hyperv/rndis_filter.c | 13 ++++-----
- 3 files changed, 30 insertions(+), 31 deletions(-)
+ drivers/hv/channel.c   | 160 +++++++++++++++++++++++++++++++++++------
+ include/linux/hyperv.h |  48 ++++++++++++-
+ 2 files changed, 187 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
-index 41f5cf0bb997..1d6f2256da6b 100644
---- a/drivers/net/hyperv/netvsc.c
-+++ b/drivers/net/hyperv/netvsc.c
-@@ -794,7 +794,7 @@ static void netvsc_copy_to_send_buf(struct netvsc_device *net_device,
- 	}
- 
- 	for (i = 0; i < page_count; i++) {
--		char *src = phys_to_virt(pb[i].pfn << PAGE_SHIFT);
-+		char *src = phys_to_virt(pb[i].pfn << HV_HYP_PAGE_SHIFT);
- 		u32 offset = pb[i].offset;
- 		u32 len = pb[i].len;
- 
-diff --git a/drivers/net/hyperv/netvsc_drv.c b/drivers/net/hyperv/netvsc_drv.c
-index 64b0a74c1523..61ea568e1ddf 100644
---- a/drivers/net/hyperv/netvsc_drv.c
-+++ b/drivers/net/hyperv/netvsc_drv.c
-@@ -373,32 +373,29 @@ static u16 netvsc_select_queue(struct net_device *ndev, struct sk_buff *skb,
- 	return txq;
+diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
+index 1cbe8fc931fc..45267b6d069e 100644
+--- a/drivers/hv/channel.c
++++ b/drivers/hv/channel.c
+@@ -35,6 +35,99 @@ static unsigned long virt_to_hvpfn(void *addr)
+ 	return  paddr >> HV_HYP_PAGE_SHIFT;
  }
  
--static u32 fill_pg_buf(struct page *page, u32 offset, u32 len,
-+static u32 fill_pg_buf(unsigned long hvpfn, u32 offset, u32 len,
- 		       struct hv_page_buffer *pb)
++/*
++ * hv_gpadl_size - Return the real size of a gpadl, the size that Hyper-V uses
++ *
++ * For BUFFER gpadl, Hyper-V uses the exact same size as the guest does.
++ *
++ * For RING gpadl, in each ring, the guest uses one PAGE_SIZE as the header
++ * (because of the alignment requirement), however, the hypervisor only
++ * uses the first HV_HYP_PAGE_SIZE as the header, therefore leaving a
++ * (PAGE_SIZE - HV_HYP_PAGE_SIZE) gap. And since there are two rings in a
++ * ringbuffer, the total size for a RING gpadl that Hyper-V uses is the
++ * total size that the guest uses minus twice of the gap size.
++ */
++static inline u32 hv_gpadl_size(enum hv_gpadl_type type, u32 size)
++{
++	switch (type) {
++	case HV_GPADL_BUFFER:
++		return size;
++	case HV_GPADL_RING:
++		/* The size of a ringbuffer must be page-aligned */
++		BUG_ON(size % PAGE_SIZE);
++		/*
++		 * Two things to notice here:
++		 * 1) We're processing two ring buffers as a unit
++		 * 2) We're skipping any space larger than HV_HYP_PAGE_SIZE in
++		 * the first guest-size page of each of the two ring buffers.
++		 * So we effectively subtract out two guest-size pages, and add
++		 * back two Hyper-V size pages.
++		 */
++		return size - 2 * (PAGE_SIZE - HV_HYP_PAGE_SIZE);
++	}
++	BUG();
++	return 0;
++}
++
++/*
++ * hv_ring_gpadl_send_hvpgoffset - Calculate the send offset (in unit of
++ *                                 HV_HYP_PAGE) in a ring gpadl based on the
++ *                                 offset in the guest
++ *
++ * @offset: the offset (in bytes) where the send ringbuffer starts in the
++ *               virtual address space of the guest
++ */
++static inline u32 hv_ring_gpadl_send_hvpgoffset(u32 offset)
++{
++
++	/*
++	 * For RING gpadl, in each ring, the guest uses one PAGE_SIZE as the
++	 * header (because of the alignment requirement), however, the
++	 * hypervisor only uses the first HV_HYP_PAGE_SIZE as the header,
++	 * therefore leaving a (PAGE_SIZE - HV_HYP_PAGE_SIZE) gap.
++	 *
++	 * And to calculate the effective send offset in gpadl, we need to
++	 * substract this gap.
++	 */
++	return (offset - (PAGE_SIZE - HV_HYP_PAGE_SIZE)) >> HV_HYP_PAGE_SHIFT;
++}
++
++/*
++ * hv_gpadl_hvpfn - Return the Hyper-V page PFN of the @i th Hyper-V page in
++ *                  the gpadl
++ *
++ * @type: the type of the gpadl
++ * @kbuffer: the pointer to the gpadl in the guest
++ * @size: the total size (in bytes) of the gpadl
++ * @send_offset: the offset (in bytes) where the send ringbuffer starts in the
++ *               virtual address space of the guest
++ * @i: the index
++ */
++static inline u64 hv_gpadl_hvpfn(enum hv_gpadl_type type, void *kbuffer,
++				 u32 size, u32 send_offset, int i)
++{
++	int send_idx = hv_ring_gpadl_send_hvpgoffset(send_offset);
++	unsigned long delta = 0UL;
++
++	switch (type) {
++	case HV_GPADL_BUFFER:
++		break;
++	case HV_GPADL_RING:
++		if (i == 0)
++			delta = 0;
++		else if (i <= send_idx)
++			delta = PAGE_SIZE - HV_HYP_PAGE_SIZE;
++		else
++			delta = 2 * (PAGE_SIZE - HV_HYP_PAGE_SIZE);
++		break;
++	default:
++		BUG();
++		break;
++	}
++
++	return virt_to_hvpfn(kbuffer + delta + (HV_HYP_PAGE_SIZE * i));
++}
++
+ /*
+  * vmbus_setevent- Trigger an event notification on the specified
+  * channel.
+@@ -160,7 +253,8 @@ EXPORT_SYMBOL_GPL(vmbus_send_modifychannel);
+ /*
+  * create_gpadl_header - Creates a gpadl for the specified buffer
+  */
+-static int create_gpadl_header(void *kbuffer, u32 size,
++static int create_gpadl_header(enum hv_gpadl_type type, void *kbuffer,
++			       u32 size, u32 send_offset,
+ 			       struct vmbus_channel_msginfo **msginfo)
  {
- 	int j = 0;
+ 	int i;
+@@ -173,7 +267,7 @@ static int create_gpadl_header(void *kbuffer, u32 size,
  
--	/* Deal with compound pages by ignoring unused part
--	 * of the page.
--	 */
--	page += (offset >> PAGE_SHIFT);
--	offset &= ~PAGE_MASK;
-+	hvpfn += offset >> HV_HYP_PAGE_SHIFT;
-+	offset = offset & ~HV_HYP_PAGE_MASK;
+ 	int pfnsum, pfncount, pfnleft, pfncurr, pfnsize;
  
- 	while (len > 0) {
- 		unsigned long bytes;
+-	pagecount = size >> HV_HYP_PAGE_SHIFT;
++	pagecount = hv_gpadl_size(type, size) >> HV_HYP_PAGE_SHIFT;
  
--		bytes = PAGE_SIZE - offset;
-+		bytes = HV_HYP_PAGE_SIZE - offset;
- 		if (bytes > len)
- 			bytes = len;
--		pb[j].pfn = page_to_pfn(page);
-+		pb[j].pfn = hvpfn;
- 		pb[j].offset = offset;
- 		pb[j].len = bytes;
+ 	/* do we need a gpadl body msg */
+ 	pfnsize = MAX_SIZE_CHANNEL_MESSAGE -
+@@ -200,10 +294,10 @@ static int create_gpadl_header(void *kbuffer, u32 size,
+ 		gpadl_header->range_buflen = sizeof(struct gpa_range) +
+ 					 pagecount * sizeof(u64);
+ 		gpadl_header->range[0].byte_offset = 0;
+-		gpadl_header->range[0].byte_count = size;
++		gpadl_header->range[0].byte_count = hv_gpadl_size(type, size);
+ 		for (i = 0; i < pfncount; i++)
+-			gpadl_header->range[0].pfn_array[i] = virt_to_hvpfn(
+-				kbuffer + HV_HYP_PAGE_SIZE * i);
++			gpadl_header->range[0].pfn_array[i] = hv_gpadl_hvpfn(
++				type, kbuffer, size, send_offset, i);
+ 		*msginfo = msgheader;
  
- 		offset += bytes;
- 		len -= bytes;
+ 		pfnsum = pfncount;
+@@ -254,8 +348,8 @@ static int create_gpadl_header(void *kbuffer, u32 size,
+ 			 * so the hypervisor guarantees that this is ok.
+ 			 */
+ 			for (i = 0; i < pfncurr; i++)
+-				gpadl_body->pfn[i] = virt_to_hvpfn(
+-					kbuffer + HV_HYP_PAGE_SIZE * (pfnsum + i));
++				gpadl_body->pfn[i] = hv_gpadl_hvpfn(type,
++					kbuffer, size, send_offset, pfnsum + i);
  
--		if (offset == PAGE_SIZE && len) {
--			page++;
-+		if (offset == HV_HYP_PAGE_SIZE && len) {
-+			hvpfn++;
- 			offset = 0;
- 			j++;
- 		}
-@@ -421,23 +418,26 @@ static u32 init_page_array(void *hdr, u32 len, struct sk_buff *skb,
- 	 * 2. skb linear data
- 	 * 3. skb fragment data
- 	 */
--	slots_used += fill_pg_buf(virt_to_page(hdr),
--				  offset_in_page(hdr),
--				  len, &pb[slots_used]);
-+	slots_used += fill_pg_buf(virt_to_hvpfn(hdr),
-+				  offset_in_hvpage(hdr),
-+				  len,
-+				  &pb[slots_used]);
+ 			/* add to msg header */
+ 			list_add_tail(&msgbody->msglistentry,
+@@ -281,10 +375,10 @@ static int create_gpadl_header(void *kbuffer, u32 size,
+ 		gpadl_header->range_buflen = sizeof(struct gpa_range) +
+ 					 pagecount * sizeof(u64);
+ 		gpadl_header->range[0].byte_offset = 0;
+-		gpadl_header->range[0].byte_count = size;
++		gpadl_header->range[0].byte_count = hv_gpadl_size(type, size);
+ 		for (i = 0; i < pagecount; i++)
+-			gpadl_header->range[0].pfn_array[i] = virt_to_hvpfn(
+-				kbuffer + HV_HYP_PAGE_SIZE * i);
++			gpadl_header->range[0].pfn_array[i] = hv_gpadl_hvpfn(
++				type, kbuffer, size, send_offset, i);
  
- 	packet->rmsg_size = len;
- 	packet->rmsg_pgcnt = slots_used;
- 
--	slots_used += fill_pg_buf(virt_to_page(data),
--				offset_in_page(data),
--				skb_headlen(skb), &pb[slots_used]);
-+	slots_used += fill_pg_buf(virt_to_hvpfn(data),
-+				  offset_in_hvpage(data),
-+				  skb_headlen(skb),
-+				  &pb[slots_used]);
- 
- 	for (i = 0; i < frags; i++) {
- 		skb_frag_t *frag = skb_shinfo(skb)->frags + i;
- 
--		slots_used += fill_pg_buf(skb_frag_page(frag),
--					skb_frag_off(frag),
--					skb_frag_size(frag), &pb[slots_used]);
-+		slots_used += fill_pg_buf(page_to_hvpfn(skb_frag_page(frag)),
-+					  skb_frag_off(frag),
-+					  skb_frag_size(frag),
-+					  &pb[slots_used]);
+ 		*msginfo = msgheader;
  	}
- 	return slots_used;
+@@ -297,15 +391,20 @@ static int create_gpadl_header(void *kbuffer, u32 size,
  }
-@@ -453,8 +453,8 @@ static int count_skb_frag_slots(struct sk_buff *skb)
- 		unsigned long offset = skb_frag_off(frag);
  
- 		/* Skip unused frames from start of page */
--		offset &= ~PAGE_MASK;
--		pages += PFN_UP(offset + size);
-+		offset &= ~HV_HYP_PAGE_MASK;
-+		pages += HVPFN_UP(offset + size);
- 	}
- 	return pages;
- }
-@@ -462,12 +462,12 @@ static int count_skb_frag_slots(struct sk_buff *skb)
- static int netvsc_get_slots(struct sk_buff *skb)
+ /*
+- * vmbus_establish_gpadl - Establish a GPADL for the specified buffer
++ * __vmbus_establish_gpadl - Establish a GPADL for a buffer or ringbuffer
+  *
+  * @channel: a channel
++ * @type: the type of the corresponding GPADL, only meaningful for the guest.
+  * @kbuffer: from kmalloc or vmalloc
+  * @size: page-size multiple
++ * @send_offset: the offset (in bytes) where the send ring buffer starts,
++ * 		 should be 0 for BUFFER type gpadl
+  * @gpadl_handle: some funky thing
+  */
+-int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
+-			       u32 size, u32 *gpadl_handle)
++static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
++				   enum hv_gpadl_type type, void *kbuffer,
++				   u32 size, u32 send_offset,
++				   u32 *gpadl_handle)
  {
- 	char *data = skb->data;
--	unsigned int offset = offset_in_page(data);
-+	unsigned int offset = offset_in_hvpage(data);
- 	unsigned int len = skb_headlen(skb);
- 	int slots;
- 	int frag_slots;
+ 	struct vmbus_channel_gpadl_header *gpadlmsg;
+ 	struct vmbus_channel_gpadl_body *gpadl_body;
+@@ -319,7 +418,7 @@ int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
+ 	next_gpadl_handle =
+ 		(atomic_inc_return(&vmbus_connection.next_gpadl_handle) - 1);
  
--	slots = DIV_ROUND_UP(offset + len, PAGE_SIZE);
-+	slots = DIV_ROUND_UP(offset + len, HV_HYP_PAGE_SIZE);
- 	frag_slots = count_skb_frag_slots(skb);
- 	return slots + frag_slots;
+-	ret = create_gpadl_header(kbuffer, size, &msginfo);
++	ret = create_gpadl_header(type, kbuffer, size, send_offset, &msginfo);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -400,6 +499,21 @@ int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
+ 	kfree(msginfo);
+ 	return ret;
  }
-diff --git a/drivers/net/hyperv/rndis_filter.c b/drivers/net/hyperv/rndis_filter.c
-index b81ceba38218..1e2de8fb7fec 100644
---- a/drivers/net/hyperv/rndis_filter.c
-+++ b/drivers/net/hyperv/rndis_filter.c
-@@ -25,7 +25,7 @@
++
++/*
++ * vmbus_establish_gpadl - Establish a GPADL for the specified buffer
++ *
++ * @channel: a channel
++ * @kbuffer: from kmalloc or vmalloc
++ * @size: page-size multiple
++ * @gpadl_handle: some funky thing
++ */
++int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
++			  u32 size, u32 *gpadl_handle)
++{
++	return __vmbus_establish_gpadl(channel, HV_GPADL_BUFFER, kbuffer, size,
++				       0U, gpadl_handle);
++}
+ EXPORT_SYMBOL_GPL(vmbus_establish_gpadl);
  
- static void rndis_set_multicast(struct work_struct *w);
+ static int __vmbus_open(struct vmbus_channel *newchannel,
+@@ -438,10 +552,11 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
+ 	/* Establish the gpadl for the ring buffer */
+ 	newchannel->ringbuffer_gpadlhandle = 0;
  
--#define RNDIS_EXT_LEN PAGE_SIZE
-+#define RNDIS_EXT_LEN HV_HYP_PAGE_SIZE
- struct rndis_request {
- 	struct list_head list_ent;
- 	struct completion  wait_event;
-@@ -215,18 +215,17 @@ static int rndis_filter_send_request(struct rndis_device *dev,
- 	packet->page_buf_cnt = 1;
+-	err = vmbus_establish_gpadl(newchannel,
+-				    page_address(newchannel->ringbuffer_page),
+-				    (send_pages + recv_pages) << PAGE_SHIFT,
+-				    &newchannel->ringbuffer_gpadlhandle);
++	err = __vmbus_establish_gpadl(newchannel, HV_GPADL_RING,
++				      page_address(newchannel->ringbuffer_page),
++				      (send_pages + recv_pages) << PAGE_SHIFT,
++				      newchannel->ringbuffer_send_offset << PAGE_SHIFT,
++				      &newchannel->ringbuffer_gpadlhandle);
+ 	if (err)
+ 		goto error_clean_ring;
  
- 	pb[0].pfn = virt_to_phys(&req->request_msg) >>
--					PAGE_SHIFT;
-+					HV_HYP_PAGE_SHIFT;
- 	pb[0].len = req->request_msg.msg_len;
--	pb[0].offset =
--		(unsigned long)&req->request_msg & (PAGE_SIZE - 1);
-+	pb[0].offset = offset_in_hvpage(&req->request_msg);
+@@ -462,7 +577,13 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
+ 	open_msg->openid = newchannel->offermsg.child_relid;
+ 	open_msg->child_relid = newchannel->offermsg.child_relid;
+ 	open_msg->ringbuffer_gpadlhandle = newchannel->ringbuffer_gpadlhandle;
+-	open_msg->downstream_ringbuffer_pageoffset = newchannel->ringbuffer_send_offset;
++	/*
++	 * The unit of ->downstream_ringbuffer_pageoffset is HV_HYP_PAGE and
++	 * the unit of ->ringbuffer_send_offset (i.e. send_pages) is PAGE, so
++	 * here we calculate it into HV_HYP_PAGE.
++	 */
++	open_msg->downstream_ringbuffer_pageoffset =
++		hv_ring_gpadl_send_hvpgoffset(send_pages << PAGE_SHIFT);
+ 	open_msg->target_vp = hv_cpu_number_to_vp_number(newchannel->target_cpu);
  
- 	/* Add one page_buf when request_msg crossing page boundary */
--	if (pb[0].offset + pb[0].len > PAGE_SIZE) {
-+	if (pb[0].offset + pb[0].len > HV_HYP_PAGE_SIZE) {
- 		packet->page_buf_cnt++;
--		pb[0].len = PAGE_SIZE -
-+		pb[0].len = HV_HYP_PAGE_SIZE -
- 			pb[0].offset;
- 		pb[1].pfn = virt_to_phys((void *)&req->request_msg
--			+ pb[0].len) >> PAGE_SHIFT;
-+			+ pb[0].len) >> HV_HYP_PAGE_SHIFT;
- 		pb[1].offset = 0;
- 		pb[1].len = req->request_msg.msg_len -
- 			pb[0].len;
+ 	if (userdatalen)
+@@ -556,7 +677,6 @@ int vmbus_open(struct vmbus_channel *newchannel,
+ }
+ EXPORT_SYMBOL_GPL(vmbus_open);
+ 
+-
+ /*
+  * vmbus_teardown_gpadl -Teardown the specified GPADL handle
+  */
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 38100e80360a..9c19149c0e1a 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -29,6 +29,48 @@
+ 
+ #pragma pack(push, 1)
+ 
++/*
++ * Types for GPADL, decides is how GPADL header is created.
++ *
++ * It doesn't make much difference between BUFFER and RING if PAGE_SIZE is the
++ * same as HV_HYP_PAGE_SIZE.
++ *
++ * If PAGE_SIZE is bigger than HV_HYP_PAGE_SIZE, the headers of ring buffers
++ * will be of PAGE_SIZE, however, only the first HV_HYP_PAGE will be put
++ * into gpadl, therefore the number for HV_HYP_PAGE and the indexes of each
++ * HV_HYP_PAGE will be different between different types of GPADL, for example
++ * if PAGE_SIZE is 64K:
++ *
++ * BUFFER:
++ *
++ * gva:    |--       64k      --|--       64k      --| ... |
++ * gpa:    | 4k | 4k | ... | 4k | 4k | 4k | ... | 4k |
++ * index:  0    1    2     15   16   17   18 .. 31   32 ...
++ *         |    |    ...   |    |    |   ...    |   ...
++ *         v    V          V    V    V          V
++ * gpadl:  | 4k | 4k | ... | 4k | 4k | 4k | ... | 4k | ... |
++ * index:  0    1    2 ... 15   16   17   18 .. 31   32 ...
++ *
++ * RING:
++ *
++ *         | header  |           data           | header  |     data      |
++ * gva:    |-- 64k --|--       64k      --| ... |-- 64k --|-- 64k --| ... |
++ * gpa:    | 4k | .. | 4k | 4k | ... | 4k | ... | 4k | .. | 4k | .. | ... |
++ * index:  0    1    16   17   18    31   ...   n   n+1  n+16 ...         2n
++ *         |         /    /          /          |         /               /
++ *         |        /    /          /           |        /               /
++ *         |       /    /   ...    /    ...     |       /      ...      /
++ *         |      /    /          /             |      /               /
++ *         |     /    /          /              |     /               /
++ *         V    V    V          V               V    V               v
++ * gpadl:  | 4k | 4k |   ...    |    ...        | 4k | 4k |  ...     |
++ * index:  0    1    2   ...    16   ...       n-15 n-14 n-13  ...  2n-30
++ */
++enum hv_gpadl_type {
++	HV_GPADL_BUFFER,
++	HV_GPADL_RING
++};
++
+ /* Single-page buffer */
+ struct hv_page_buffer {
+ 	u32 len;
+@@ -111,7 +153,7 @@ struct hv_ring_buffer {
+ 	} feature_bits;
+ 
+ 	/* Pad it to PAGE_SIZE so that data starts on page boundary */
+-	u8	reserved2[4028];
++	u8	reserved2[PAGE_SIZE - 68];
+ 
+ 	/*
+ 	 * Ring data starts here + RingDataStartOffset
+@@ -120,6 +162,10 @@ struct hv_ring_buffer {
+ 	u8 buffer[];
+ } __packed;
+ 
++/* Calculate the proper size of a ringbuffer, it must be page-aligned */
++#define VMBUS_RING_SIZE(payload_sz) PAGE_ALIGN(sizeof(struct hv_ring_buffer) + \
++					       (payload_sz))
++
+ struct hv_ring_buffer_info {
+ 	struct hv_ring_buffer *ring_buffer;
+ 	u32 ring_size;			/* Include the shared header */
 -- 
 2.28.0
 
