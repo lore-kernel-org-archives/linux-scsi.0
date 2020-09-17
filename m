@@ -2,155 +2,141 @@ Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 045B1C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 17:21:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC3AC43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 17:33:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96524221E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 17:21:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB0E3221EC
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 17:33:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="cZSRtcFx";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="FzbFOfNd"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GeUf1MNh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726514AbgIQRVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 13:21:20 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28184 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726508AbgIQRVD (ORCPT
+        id S1726492AbgIQRdW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 13:33:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40652 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726202AbgIQRdO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 13:21:03 -0400
-X-Greylist: delayed 1643 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 13:21:02 EDT
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 08HGpbF0003313;
-        Thu, 17 Sep 2020 09:53:33 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0220;
- bh=be1zsipaPUEkaxtCeUqW9OoGjK1N+Ibgy/B0beXzwRg=;
- b=cZSRtcFxfVw6KfE0vi/nX7Xz1dSMvkWA0e/bAYGKCjjbTcACEfeLE63qbQDbAKeFk1Bd
- 0DlUQhdP81EJnqxQA/eejpz4NpELetyqJrC7XG6oKrD0LLgnPb+9lC/PcRJ340LV8mnX
- DKZx+ruibyWl1dxQCnuSBuYaM0RJIpgBPDaZL16Yt1BrzJNrsOYasSDt2wmYQsIlOPqQ
- KDIngLrHjgHiwlQLDUtkKyrW9gZe5LArWoBN3x/2fA749pr6x1EClpTi/Ijzc0C5d5fd
- Z7jN5aJQHtIXa//OTl1rrnBsMbZMqMEpUTeyPBWX5crNTniIz3RlLdlCIPGJMfw3rluh 3A== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 33m73p113a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 17 Sep 2020 09:53:33 -0700
-Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 17 Sep
- 2020 09:53:32 -0700
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.176)
- by SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Thu, 17 Sep 2020 09:53:32 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dRhkglwNcWvcI4MlKExyGqGXnoUWKcvQ7Jx0lJsUobkNRfvvrWZVjMiWLj63ki9fUO2jYWajSYSM1NlnVyPsBn/JMJ7q26QkTWVIVkMJkUdQRGnfOrcptJvaQPLMHLGKVtHfXRXBy/PjhOnRth/+FwjYbl/xpeEeFjZIgZ7iqqJbV090KhOJxFlC+JCOAsv3L4NkhHrHYCyxqS0pOf5SUhnXsijnMeys1pG+xysm/rFGqL5O596hDZ4DaE/8jNt1eM1yR0A6/nBlTKK0Bmc215El/F0Z5UsciQex36ry05bG/hBq8oR/fqt350mJHD8kOQta/VtlXpL5CfJL6XAImQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=be1zsipaPUEkaxtCeUqW9OoGjK1N+Ibgy/B0beXzwRg=;
- b=YUpF3gkUmCcTeEm8NnHURB/KbxEVEWLrMobHz0ILFKwsu5/BYyn56UkkXnkMYKEoR9qTIIChf73SaF91kKYd5SzlI20lMhoEHrCQljXXwO4fh8fBvR+nvu4FTxfkdjKfqfVsWWD2JrxShlkY5CQt4C8V4tRytqjZxDgt4TFimQirzWNi3hl2hvI64ObnAoXDNdOTQvXZ+mCy26OqOHEW1g4TZJOqvi/dit++YrO62Ylic8FBSEi+OOLOQLUUNPx03lhJGWO4O5cige270T4p1XPjRaCJ3QK0/UDgwrwh9E5mG7kzkPm8sP4raS2RunpybU671vn1sc9FrgG2gBHKDg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=be1zsipaPUEkaxtCeUqW9OoGjK1N+Ibgy/B0beXzwRg=;
- b=FzbFOfNddkU/4HI0q5nwEbfkOJI2V/WwHgk1A4NxY2vqqEPFx0w1awwsgmZysES6fZOntHBMTEoR39r2/uzNQtT1kFCOu8lVI0sKKM51VFZQaMX+h9fn8cUgYbyrAxEOotMyIdadgPt22anOCJzfkSltNu3ACJ/v/CZJ5wsN4ig=
-Received: from DM6PR18MB3052.namprd18.prod.outlook.com (2603:10b6:5:167::19)
- by DM5PR18MB1658.namprd18.prod.outlook.com (2603:10b6:3:14d::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.17; Thu, 17 Sep
- 2020 16:53:31 +0000
-Received: from DM6PR18MB3052.namprd18.prod.outlook.com
- ([fe80::905a:ebb4:369c:ae1b]) by DM6PR18MB3052.namprd18.prod.outlook.com
- ([fe80::905a:ebb4:369c:ae1b%7]) with mapi id 15.20.3370.019; Thu, 17 Sep 2020
- 16:53:31 +0000
-From:   Nilesh Javali <njavali@marvell.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Smart <james.smart@broadcom.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: RE: [EXT] Re: [PATCH 0/2] SAN Congestion Management (SCM) statistics
-Thread-Topic: [EXT] Re: [PATCH 0/2] SAN Congestion Management (SCM) statistics
-Thread-Index: AQHWZjhMrgcFZD1E10agzucUNAA04KldOfTggAKjcR2ACkyeQA==
-Date:   Thu, 17 Sep 2020 16:53:30 +0000
-Message-ID: <DM6PR18MB3052AD22FD8D495CEF4948B7AF3E0@DM6PR18MB3052.namprd18.prod.outlook.com>
-References: <20200730061116.20111-1-njavali@marvell.com>
-        <DM6PR18MB3052C2991B834B3A93D96E69AF280@DM6PR18MB3052.namprd18.prod.outlook.com>
- <yq1imcn4q6y.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1imcn4q6y.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=marvell.com;
-x-originating-ip: [59.90.37.202]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 97e206fb-ebec-406e-597a-08d85b2a351a
-x-ms-traffictypediagnostic: DM5PR18MB1658:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM5PR18MB165893484B6DD5563661A98FAF3E0@DM5PR18MB1658.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:3968;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: e2Ufj/tFipOizkiCdKfrBoWP3wwyuME7nIcg6tlN4fTEpPtq+pzgExV20kqjH7CMLY30OXYPc3MGJThprcYCmogagoBL1oW4x5nnWKP5y/aZDWKO8gqfDKwwbt9wfN3fP/jMThUYHRN1FgHfurTHotEFAQJNY4Ove+DhU3UkkBEjZCs6vMLyvLtDqulGZthFvku0jt95vZJmnhQLU3tTs0IEr1099B0isUHzvESrjkZMClIzv0wAclxDOj3fLX2BAf7xZVmLMK9BHXaXGwpRl0uB0dAlnaCoFccAQtaGAgelAWVebJ+PhEz2nTD4v5WoLqXUnyqfwI3mdbwPd5EUWg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR18MB3052.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(396003)(366004)(346002)(39860400002)(376002)(64756008)(110136005)(66556008)(66476007)(186003)(66446008)(76116006)(316002)(8936002)(66946007)(54906003)(26005)(83380400001)(4744005)(107886003)(4326008)(478600001)(53546011)(52536014)(6506007)(86362001)(71200400001)(2906002)(8676002)(7696005)(55016002)(5660300002)(33656002)(9686003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: hlBYQt9517H3KQF1Rqr+swmbmYiyzCziGtbWh2lZHlgSRa7CkDofS51YVAEKSFaGt+sn9ELWEYKZULpytmCdjyNomUkp6ZFQ+gXqVQ4VUGGE1lZDr9iEQbNFLabdyGCakWirlBcQnGdOpFpqra6NG6L/5ZHOsTTeUHcheBUjKu3Pk3YSE4CUSTvPpmlVbExhYt+44QhMj2PTFrHBf6E8KDUZnSx6McpngF7XmU5MLRcteR5eJvNVAnjuW+BVAZ2GwW1bbaUh707OE11gduVGXh1qPNuAYJ0ZF1JcA5u/Mn5b+3RbZZMloptIfprj/N70bLjHJc74gMECa5JtWwi4fb3IFcvYxpa0mRqxm8hTu+3PQuHVD0A+yV7OHgah1PB7KOQqc0Gd9WJcOZy6agEWuhBYIhKLEtrwWGHXumJRJq+0w6n68D1/8jjZPYp+fkWcRCV85T9MB4+B9Tn5DtMVPxC+2Z2lWXzmyAl7qmwMtAR/rj7V4iLIgkV3nG84L+yItNW2IIpUkuH2M1miv5FClukO6+fQqDkishekjP9JjeW0hSZbUvrKWv2RakjZhWxCqjJyyWCLW1sW0zdY7n5FCcxL8iZFuWKaYLS7aMdZTjEyyr0ok9PUzjk6wL+xcTvtA2NSJ6O7kwJT4H5bq/8qng==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Thu, 17 Sep 2020 13:33:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600363981;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rmBUT/pYvgtK96UoWJYzCla0EiXSKgDJX1lzo9cTEeU=;
+        b=GeUf1MNhIEofyAmkfugEO/Yk0LLfeExw/siQ19wp0KgyYeB+gxZO5l7zvEc9pJVVp2p7d1
+        a/WUZwUg4KjqOqJijftfgnFnYTVGyabX2ngIeH5FZ5OeLKs9eFit7EtkyKY1H07Nk+q7xf
+        Ql5DAIxz70kpTNrKdlHgfinU3l0IfBI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-546-d3C2VEkeONmoXRS--YAquA-1; Thu, 17 Sep 2020 13:30:48 -0400
+X-MC-Unique: d3C2VEkeONmoXRS--YAquA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1A36910BBED9;
+        Thu, 17 Sep 2020 17:30:46 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4B92710023A7;
+        Thu, 17 Sep 2020 17:30:45 +0000 (UTC)
+Message-ID: <c5e0700bb192a422541d1328db7ca0146edf7a81.camel@redhat.com>
+Subject: Re: [PATCH] scsi: alua: fix the race between alua_bus_detach and
+ alua_rtpg
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Jitendra Khasdev <jitendra.khasdev@oracle.com>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.com,
+        loberman@redhat.com
+Cc:     joe.jin@oracle.com, junxiao.bi@oracle.com,
+        gulam.mohamed@oracle.com, RITIKA.SRIVASTAVA@ORACLE.COM,
+        linux-scsi@vger.kernel.org
+Date:   Thu, 17 Sep 2020 13:30:44 -0400
+In-Reply-To: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
+References: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR18MB3052.namprd18.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 97e206fb-ebec-406e-597a-08d85b2a351a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Sep 2020 16:53:30.9249
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 75RfQVRzFM7ZeWyYC4gvfZgM0YCsb4OWGEhQjqCiiWx8PDSut/g5cI6tUdS/zTAgZiLcuh6FI1e0ciTbBWswAw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR18MB1658
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-17_12:2020-09-16,2020-09-17 signatures=0
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-James,
+On Tue, 2020-09-15 at 16:28 +0530, Jitendra Khasdev wrote:
+> This is patch to fix the race occurs between bus detach and alua_rtpg.
+> 
+> It fluses the all pending workqueue in bus detach handler, so it can avoid
+> race between alua_bus_detach and alua_rtpg.
+> 
+> Here is call trace where race got detected.
+> 
+> multipathd call stack:
+> [exception RIP: native_queued_spin_lock_slowpath+100]
+> --- <NMI exception stack> ---
+> native_queued_spin_lock_slowpath at ffffffff89307f54
+> queued_spin_lock_slowpath at ffffffff89307c18
+> _raw_spin_lock_irq at ffffffff89bd797b
+> alua_bus_detach at ffffffff8984dcc8
+> scsi_dh_release_device at ffffffff8984b6f2
+> scsi_device_dev_release_usercontext at ffffffff89846edf
+> execute_in_process_context at ffffffff892c3e60
+> scsi_device_dev_release at ffffffff8984637c
+> device_release at ffffffff89800fbc
+> kobject_cleanup at ffffffff89bb1196
+> kobject_put at ffffffff89bb12ea
+> put_device at ffffffff89801283
+> scsi_device_put at ffffffff89838d5b
+> scsi_disk_put at ffffffffc051f650 [sd_mod]
+> sd_release at ffffffffc051f8a2 [sd_mod]
+> __blkdev_put at ffffffff8952c79e
+> blkdev_put at ffffffff8952c80c
+> blkdev_close at ffffffff8952c8b5
+> __fput at ffffffff894e55e6
+> ____fput at ffffffff894e57ee
+> task_work_run at ffffffff892c94dc
+> exit_to_usermode_loop at ffffffff89204b12
+> do_syscall_64 at ffffffff892044da
+> entry_SYSCALL_64_after_hwframe at ffffffff89c001b8
+> 
+> kworker:
+> [exception RIP: alua_rtpg+2003]
+> account_entity_dequeue at ffffffff892e42c1
+> alua_rtpg_work at ffffffff8984f097
+> process_one_work at ffffffff892c4c29
+> worker_thread at ffffffff892c5a4f
+> kthread at ffffffff892cb135
+> ret_from_fork at ffffffff89c00354
+> 
+> Signed-off-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index f32da0c..024a752 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -1144,6 +1144,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
+>  	struct alua_dh_data *h = sdev->handler_data;
+>  	struct alua_port_group *pg;
+>  
+> +	sdev_printk(KERN_INFO, sdev, "%s: flushing workqueues\n", ALUA_DH_NAME);
+> +	flush_workqueue(kaluad_wq);
+> +
+>  	spin_lock(&h->pg_lock);
+>  	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+>  	rcu_assign_pointer(h->pg, NULL);
 
-A gentle reminder to review the SCM statistics changes.
+I'm not sure this is the best solution.  The current code
+references h->sdev when the dh_list is traversed.  So it needs
+to remain valid.  Fixing it by flushing the workqueue to avoid
+the list traversal code running leaves open the possibility that
+future code alterations may expose this problem again.
 
-Thanks,
-Nilesh
+-Ewan
 
-> -----Original Message-----
-> From: Martin K. Petersen <martin.petersen@oracle.com>
-> Sent: Wednesday, September 9, 2020 8:27 AM
-> To: Nilesh Javali <njavali@marvell.com>
-> Cc: martin.petersen@oracle.com; linux-scsi@vger.kernel.org; GR-QLogic-
-> Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>; James
-> Smart <james.smart@broadcom.com>
-> Subject: [EXT] Re: [PATCH 0/2] SAN Congestion Management (SCM) statistics
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
->=20
-> Nilesh,
->=20
-> > A gentle reminder to review this patch set.
-> >
-> >> Shyam Sundar (2):
-> >>   scsi: fc: Update statistics for host and rport on FPIN reception.
-> >>   scsi: fc: Update documentation of sysfs nodes for FPIN stats
->=20
-> I'm waiting for James to review these changes.
->=20
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+
