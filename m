@@ -1,149 +1,149 @@
-Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=xkU+=C3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F67C43466
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 23:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CEA0C43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:11:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C3C7208E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 23:18:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600384736;
-	bh=77Kxgapl7no1WFV+APUmjan4i/QFUqqtiSGZHbU3iiw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cVtCC/HTSRgk7Y5Ff1bu0jWoJMkk+wgNoZbAvcgExBA0FGhau95gHN72PIbfiVuMw
-	 qSpxTqWsGkKlaUacKysi4XvVwRNSBZWsfqCd5S3wd9J1W7Ak6nMyqIrwwV3fssWXgW
-	 Lr7o7oCk4Z5TvXjcQ1hx2u3GNw0GgIuNstq1P/c4=
+	by mail.kernel.org (Postfix) with ESMTP id 1D6EE208E4
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:11:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="NQMy2QJ7";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="NqfsqC2j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726126AbgIQXSx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 19:18:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55796 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726101AbgIQXSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 19:18:50 -0400
-Received: from dhcp-10-100-145-180.wdl.wdc.com (unknown [199.255.45.60])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1AD7F2085B;
-        Thu, 17 Sep 2020 23:18:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600384729;
-        bh=77Kxgapl7no1WFV+APUmjan4i/QFUqqtiSGZHbU3iiw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xgARRf/p6wEOxHhwhBCLO0XlmncVbS/ukJgatHNihHqKcoibRDz0GhonhhBNAnHPk
-         +JYnn89vlJrTp+rImd9ua3+oCQVVnYsjMeIOLbErV+rNqwr4E5A/ZJ7hLx2WENUGGf
-         GQalqNEQGbSDwM3l6RJ5vfxE/YtjRtruu6UGq9I4=
-From:   Keith Busch <kbusch@kernel.org>
-To:     linux-nvme@lists.infradead.org, sagi@grimberg.me, hch@lst.de,
-        linux-block@vger.kernel.org
-Cc:     axboe@kernel.dk, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, Keith Busch <kbusch@kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: [PATCHv3 1/4] block: add zone specific block statuses
-Date:   Thu, 17 Sep 2020 16:18:38 -0700
-Message-Id: <20200917231841.4029747-2-kbusch@kernel.org>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200917231841.4029747-1-kbusch@kernel.org>
-References: <20200917231841.4029747-1-kbusch@kernel.org>
+        id S1726109AbgIRALZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 20:11:25 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:44167 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726040AbgIRALY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 20:11:24 -0400
+X-Greylist: delayed 637 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 20:11:24 EDT
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1600387891; x=1631923891;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=X7a9WaOIOjFzeHUIeiShtn6z+X2bReOco7w+L/KdyIM=;
+  b=NQMy2QJ7EZqEMZzRp7zPGhjYFIU/CfF/gnIdDbR5zxZBRyOdCH7tFy2m
+   4M6VWG+uWBMVVViQN9a4YHPAmgciwvwgV+KnRCQKBk7HYX7RlgTLWWdwG
+   YXPfLxbpSLZZQkRwb9qj8p6SaFLx7Shd3psA0gw8D3iMdR0JgFEv24CmW
+   nKyLj6/sagdwxTT2D1lJNiqyJPw8PzhZXcpgdJ0J4VLXI+XFvVevp1oyZ
+   GHNOnPdVlCAnS5AQ+jOFIZzqc4HZ1PmGX16FAWCKQalnRMPHAfj+nvOG/
+   ln5ZoMdXyErfp+6ZRN1rUGRcSzi2Wj2QgMadUTxDz9uV1spgG/oQVaQ/V
+   A==;
+IronPort-SDR: O7vyrTd/kVzARrWOTlmWhTnu/u0u/aZXxpiCBXoaCUdzKJ25Ogai4jd3T7pgd6g8czB1g4YZyx
+ nogZEdGvoRm1qqp9zhlu+MYZWS/CAVaSc4LDXVm0G9jBB8TKk5/v6UfO1PFwRmPO4bqehhMYYC
+ KvRemId2Y9YSaef4lPvfgZlX8Z/VNaDmJnK3jgTYr0Y/iUpLhEEK3C3vuxSmkoF9+1VEe9Ej7G
+ XxeM7Q60zJljCI3q44/eDM+L7oPRgHL+TAUOuoyuJ3cfSR2AjjKgz6qgGty3CBrQDEWrnnACF0
+ i4I=
+X-IronPort-AV: E=Sophos;i="5.77,272,1596470400"; 
+   d="scan'208";a="251026492"
+Received: from mail-mw2nam10lp2107.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.107])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Sep 2020 07:50:53 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dwe+1AhmJZyru4869Tbb2MdlVgj/br5qnVzJoU//aT+sBNFwu57HcIs+MkbNRJik41+3E7kpkviJwydhAl3c+fC+cLoBT/mbIBHWlINKugt8XYuoATNtGNML7W844sZvNKVtQUgS6QBiYXt9WBkWok4gKt2vf+ZEDxN6FntPuubXSykRh+CWxU/V992j7wKIcd4G0LhFh+ZVYHRU20WerK3+jLBp1anRBw2IxUxZDrds/t9HtljS2X84zjR3T3sJ0qXdTNna58VnpW7htu076mBPuKUsNooODGUPhLTslHCDGcyMxbbO2yoj/6bWeZMODJhRqUOaScAjDrcMc5N0LQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8lMi3QJapMJED0kjBj6LLbBJL8keHFV/nYLife8+mk0=;
+ b=gCQviaL4yuOJMw1Pp77qLs58xa4CWhLN8WYp1x8DTd2XHOsqjH9mxAgbK3NeKHu4OJPFBbc3amxeevtEzb+9RI/QBw3BqyT48yDQtnuhlA8dvolbQ2tSMEHpxFyQjwF14MNgxD7bviauPnsORhAjxGDUixmnOOdDHk9wjQTu4qckp86qfVC6hnC0GwUfgmUSUtdqKh8rBew3Ol1SQgfK158Qeo6tUtDUMobYGpggKSHkDIpk+XxcqCjN4+ehm0N7etfh/3Xjz7/RJM+oDuF4fIGzoeYKghmqhIbg3lm1b+eNXNDSofPRqMhTvEcvHlDVlboc8yX3HOxSMC7sE5dfVQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8lMi3QJapMJED0kjBj6LLbBJL8keHFV/nYLife8+mk0=;
+ b=NqfsqC2jUeD4HS38qgOt8V8vQyDXaCsjHxonR1kJmqPY0lGjnnyIOch3f+JwttU9Fp6ZpRBoyFEi1+4/87A6EqM8NdwkqOqTRjEwC2KXeOAczjK6KZws8D9d4O+GxzvRzdb8dOGNhJQzALTmm8/5nby0FobMRMwFzT6JOmAPojM=
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
+ by CY4PR04MB0758.namprd04.prod.outlook.com (2603:10b6:903:e4::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3391.11; Thu, 17 Sep
+ 2020 23:50:44 +0000
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::9124:2453:fe9c:9a7]) by CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::9124:2453:fe9c:9a7%12]) with mapi id 15.20.3391.015; Thu, 17 Sep 2020
+ 23:50:44 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     Sasha Levin <sashal@kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v3 1/2] scsi: Fix handling of host-aware ZBC disks
+Thread-Topic: [PATCH v3 1/2] scsi: Fix handling of host-aware ZBC disks
+Thread-Index: AQHWizKYugjPQJBBvkOKOwpDX/vtCg==
+Date:   Thu, 17 Sep 2020 23:50:44 +0000
+Message-ID: <CY4PR04MB3751FEC907B8C0FD50B53624E73E0@CY4PR04MB3751.namprd04.prod.outlook.com>
+References: <20200915073347.832424-2-damien.lemoal@wdc.com>
+ <20200917155335.19CBF21D24@mail.kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2400:2411:43c0:6000:c162:b6b0:12c6:8cc]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 416fd3c8-02bb-4d25-28cb-08d85b647e13
+x-ms-traffictypediagnostic: CY4PR04MB0758:
+x-microsoft-antispam-prvs: <CY4PR04MB075846E0E8381FF5EBE85E0EE73E0@CY4PR04MB0758.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:2512;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: M+UthBem+mHkC7Zsui1H/oE5DfhhMUzNGxxvwIR1JQFeFFpUC+YZmH3XKais74RBjlXZBnAdAhRJ6JChZyvfr/iIGJT7ZfMoXlF5sGnSUjyTDw5HLIhMkymFBT/PMbD6+eW6qV5LZaBlJpopbOEXuCXnzW1emwNTQq5bd6qPYJzuW/y3RprLzGmNNbCXMDnUnS4dTBleS1hq/PFTR/pI+H8i/smHNeUZjTLlHYzOpZdxYZHbVPn9NMGvi+PCXLqJCmbsQoIdEWq+gJbea4ByOfQmoBbUQoOJMJOKqg3dytSmrbe3Ovf6Ueh2xt1U7/c6ZaRFLuo08Pz38UCTAWmjZpfV2lKU7aDcyqkGbThMexqspMKeR21lijTMxm9Xcxjj
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(396003)(376002)(366004)(346002)(136003)(86362001)(8936002)(64756008)(66446008)(66476007)(66556008)(66946007)(8676002)(33656002)(76116006)(2906002)(91956017)(4326008)(54906003)(110136005)(53546011)(7696005)(71200400001)(186003)(6506007)(4744005)(478600001)(5660300002)(83380400001)(316002)(52536014)(55016002)(9686003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: P7U27qeWfgQGo9KjPAOWQ52NKJME6JzPNu1pXcTcu31ju2QDualMqeXARESNiF7NWDkJVqAO7k8kyPVeqn2Ns0SgaBrEPNqcULUzBnn9AYQUZuXDQXo94eRXl1BG6i8A8Ycoi4hy8PzJPgSR6xbq7It26yhq6V17+p8ACmvfLRTG6GdVNs02BS6M97uzwJHFqkAPs5X0zDLioN/ZOydxUCmL+c7kQ/g+eQX8jxB4Uw1zSNsatRUaiqfnqKPb3R5vfImMVhhSLAk8npuHJT5zl+v6eWbMu1+VN64eQARoKOXerY7I8OIhv8qyfKyGVjQkeohvmPEp6lAYOALc7L0sEhq+70QbSmzsYnxPo6Hunl5kND+sMTyKrVV8XyBJ+nW6UFZI0PRUXW/3Aw1Qhg6ZyiKmmc7z54DBnzjkHWC2AHZoQ/v0dolgHPdJ2fiVdWPpUcoH+IHs2J9aLygBQTBz/u7RdV2vqLDTinokCXklrwQasnKgL/bT5U8+MRQiY5R/4IKhZ9Jox5oxpTwj5GoHeNgZU2v0FDm06wNfte7XloiAAMqccAqZ2GeR/dvHfEJ8KFOXMroYzVOigbhR7oN1dyJGijteNV6HkBFTYXWZsyPL89Yv5FGv6ro6e1GHwxby2vvMZzRas51pKt7SJnAr+kqOrQlrSQ4nQzqQnnl86sBaVcnjElFxIMfiI6doGvUa0xg53+DI7soDH6gaNTPKoQ==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 416fd3c8-02bb-4d25-28cb-08d85b647e13
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Sep 2020 23:50:44.1467
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Lw2Isp04mU+YDdYO3W6ogJ43GEzMKWT68SEgv2Ec5HyhmNYE6/uA5iCknmHOa35HcfkUiPpas0kcr9B7qcOrOw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0758
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A zoned device with limited resources to open or activate zones may
-return an error when the host exceeds those limits. The same command may
-be successful if retried later, but the host needs to wait for specific
-zone states before it should retry. Have the block layer provide an
-appropriate status for these conditions so applications can distinuguish
-this error for special handling.
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- Documentation/block/queue-sysfs.rst |  8 ++++++++
- block/blk-core.c                    |  4 ++++
- include/linux/blk_types.h           | 18 ++++++++++++++++++
- 3 files changed, 30 insertions(+)
-
-diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
-index f261a5c84170..2638d3446b79 100644
---- a/Documentation/block/queue-sysfs.rst
-+++ b/Documentation/block/queue-sysfs.rst
-@@ -124,6 +124,10 @@ For zoned block devices (zoned attribute indicating "host-managed" or
- EXPLICIT OPEN, IMPLICIT OPEN or CLOSED, is limited by this value.
- If this value is 0, there is no limit.
- 
-+If the host attempts to exceed this limit, the driver should report this error
-+with BLK_STS_ZONE_ACTIVE_RESOURCE, which user space may see as the EOVERFLOW
-+errno.
-+
- max_open_zones (RO)
- -------------------
- For zoned block devices (zoned attribute indicating "host-managed" or
-@@ -131,6 +135,10 @@ For zoned block devices (zoned attribute indicating "host-managed" or
- EXPLICIT OPEN or IMPLICIT OPEN, is limited by this value.
- If this value is 0, there is no limit.
- 
-+If the host attempts to exceed this limit, the driver should report this error
-+with BLK_STS_ZONE_OPEN_RESOURCE, which user space may see as the ETOOMANYREFS
-+errno.
-+
- max_sectors_kb (RW)
- -------------------
- This is the maximum number of kilobytes that the block layer will allow
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 10c08ac50697..8bffc7732e37 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -186,6 +186,10 @@ static const struct {
- 	/* device mapper special case, should not leak out: */
- 	[BLK_STS_DM_REQUEUE]	= { -EREMCHG, "dm internal retry" },
- 
-+	/* zone device specific errors */
-+	[BLK_STS_ZONE_OPEN_RESOURCE]	= { -ETOOMANYREFS, "open zones exceeded" },
-+	[BLK_STS_ZONE_ACTIVE_RESOURCE]	= { -EOVERFLOW, "active zones exceeded" },
-+
- 	/* everything else not covered above: */
- 	[BLK_STS_IOERR]		= { -EIO,	"I/O" },
- };
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 4ecf4fed171f..8603fc5f86a3 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -103,6 +103,24 @@ typedef u8 __bitwise blk_status_t;
-  */
- #define BLK_STS_ZONE_RESOURCE	((__force blk_status_t)14)
- 
-+/*
-+ * BLK_STS_ZONE_OPEN_RESOURCE is returned from the driver in the completion
-+ * path if the device returns a status indicating that too many zone resources
-+ * are currently open. The same command should be successful if resubmitted
-+ * after the number of open zones decreases below the device's limits, which is
-+ * reported in the request_queue's max_open_zones.
-+ */
-+#define BLK_STS_ZONE_OPEN_RESOURCE	((__force blk_status_t)15)
-+
-+/*
-+ * BLK_STS_ZONE_ACTIVE_RESOURCE is returned from the driver in the completion
-+ * path if the device returns a status indicating that too many zone resources
-+ * are currently active. The same command should be successful if resubmitted
-+ * after the number of active zones decreases below the device's limits, which
-+ * is reported in the request_queue's max_active_zones.
-+ */
-+#define BLK_STS_ZONE_ACTIVE_RESOURCE	((__force blk_status_t)16)
-+
- /**
-  * blk_path_error - returns true if error may be path related
-  * @error: status the request was completed with
--- 
-2.24.1
-
+On 2020/09/18 0:53, Sasha Levin wrote:=0A=
+> Hi=0A=
+> =0A=
+> [This is an automated email]=0A=
+> =0A=
+> This commit has been processed because it contains a "Fixes:" tag=0A=
+> fixing commit: b72053072c0b ("block: allow partitions on host aware zone =
+devices").=0A=
+> =0A=
+> The bot has tested the following trees: v5.8.9.=0A=
+> =0A=
+> v5.8.9: Failed to apply! Possible dependencies:=0A=
+>     a3d8a2573687 ("scsi: sd_zbc: Improve zone revalidation")=0A=
+> =0A=
+> =0A=
+> NOTE: The patch will not be queued to stable trees until it is upstream.=
+=0A=
+> =0A=
+> How should we proceed with this patch?=0A=
+> =0A=
+=0A=
+Usually, I wait for Greg's bots to ping me and then I send a fixed up backp=
+orted=0A=
+patch for stable. Would that work ? I can backport now if needed.=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
