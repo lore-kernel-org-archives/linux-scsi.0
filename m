@@ -1,103 +1,126 @@
-Return-Path: <SRS0=FSVS=CZ=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1320C433E2
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 23:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99442C43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DE5E2065D
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Sep 2020 23:54:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 362E0206CA
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:52:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0XyIgSai"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="LCUBOcKJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726769AbgIPXyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Sep 2020 19:54:43 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:41438 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726409AbgIPXyl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2020 19:54:41 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08GNdCI5043285;
-        Wed, 16 Sep 2020 23:54:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2020-01-29;
- bh=faphjq4V6qIdb6BswXLcrA4nmRlyKCEQZO7jAdMlnvo=;
- b=0XyIgSaiFSBIMb6k+onifLcP364Lk3ScvdZxhjiGZQ5SmBGmiaD7cOmm7v8mAE7Eccgu
- 4UdlwvNQPOmChBioSU/e/NRgf7pXSPTUVId5T+QTvE75/4d7OhpE9FGCxoWb984twhif
- ky7Z0+8GoFTNCb3Mao+9e268o+N6eyqdk4/jLrXDCsL8t7yOfXXgWk26xUcchJNRA//r
- 0/IbBDFG2uTejk0qSzw3OJWM0PiLT0S2X/mQN0F+luXzya5eZ0tu4Y1bhMfoZeBOsQ5P
- 9n+nY9dwKEdfz5r/OWNL2DfLUcJJqCIePnk5PkGErfT0f7wggt3pRK4g0TMKoZM0iNuw UA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 33gp9me074-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Sep 2020 23:54:39 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08GNe1IQ192413;
-        Wed, 16 Sep 2020 23:54:39 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 33khpm6v7m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 16 Sep 2020 23:54:39 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08GNscb8027289;
-        Wed, 16 Sep 2020 23:54:38 GMT
-Received: from supannee-devvm-ol7.osdevelopmeniad.oraclevcn.com (/100.100.231.179)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 16 Sep 2020 23:54:38 +0000
-From:   Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
-To:     martin.petersen@oracle.com, michael.christie@oracle.com,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     ssudhakarp@gmail.com
-Subject: [PATCH] scsi: target: Fix lun lookup for TARGET_SCF_LOOKUP_LUN_FROM_TAG case.
-Date:   Wed, 16 Sep 2020 23:54:31 +0000
-Message-Id: <1600300471-26135-1-git-send-email-sudhakar.panneerselvam@oracle.com>
-X-Mailer: git-send-email 1.8.3.1
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 adultscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009160176
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
- adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0 phishscore=0
- spamscore=0 priorityscore=1501 suspectscore=0 impostorscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009160176
+        id S1725858AbgIQAwN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Sep 2020 20:52:13 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:36865 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726007AbgIQAwL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2020 20:52:11 -0400
+X-Greylist: delayed 540 seconds by postgrey-1.27 at vger.kernel.org; Wed, 16 Sep 2020 20:52:09 EDT
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200917004302epoutp03e4f877d85a4445fa7745dce29d16a8ba~1a3J6vRDf0583605836epoutp03T
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2020 00:43:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200917004302epoutp03e4f877d85a4445fa7745dce29d16a8ba~1a3J6vRDf0583605836epoutp03T
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1600303382;
+        bh=iF01R0RXpU+eG69rlPV5Od9C+ssN22uuhWON4+DSNWY=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=LCUBOcKJm6KSsXIPiJQz8JOvW6JMijIvJ/3n/QU22bN7kaOdPeD5AND75hpnbbJpI
+         XVKFZ9wNWV3W81XmsrAZxf7/htYSeDWLs7VqVq/NQJ//9Oh61jwuCz+omCaLGPJ/X7
+         DfZ3hRBh5Q6ZTOT7QvxxgL7h9LvA93W3s5GOAgZc=
+Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p2.samsung.com
+        (KnoxPortal) with ESMTP id
+        20200917004301epcas1p25b5958440691a33befafc83db482b36e~1a3JhP3uT1274212742epcas1p27;
+        Thu, 17 Sep 2020 00:43:01 +0000 (GMT)
+Mime-Version: 1.0
+Subject: Re: [PATCH v11 0/4] scsi: ufs: Add Host Performance Booster Support
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        SEUNGUK SHIN <seunguk.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20200916052208.GB12923@infradead.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <231786897.01600303381578.JavaMail.epsvc@epcpadp2>
+Date:   Thu, 17 Sep 2020 09:25:50 +0900
+X-CMS-MailID: 20200917002550epcms2p168eb4c7e2fb77f7f31a5db2f3522e256
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20200902031713epcms2p664cebf386ba19d3d05895fec89aaf4fe
+References: <20200916052208.GB12923@infradead.org>
+        <231786897.01599016802080.JavaMail.epsvc@epcpadp1>
+        <231786897.01600211401846.JavaMail.epsvc@epcpadp1>
+        <CGME20200902031713epcms2p664cebf386ba19d3d05895fec89aaf4fe@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-transport_lookup_tmr_lun() uses "orig_fe_lun" member of struct se_cmd
-for the lookup. Hence, update this field directly for the
-TARGET_SCF_LOOKUP_LUN_FROM_TAG case.
+> > Hi All,
+> > 
+> > I want to know how to improve this patch.
+> 
+> Drop it and fix the actual UFS feature to not be so horrible?
+> 
 
-Fixes: a36840d80027 ("target: Initialize LUN in transport_init_se_cmd()")
-Reported-by: Martin Wilck <mwilck@suse.com>
-Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
----
- drivers/target/target_core_transport.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Hello Christoph,
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9fb0be0aa620..8dd289214dd8 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1840,7 +1840,8 @@ int target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
- 	 * out unpacked_lun for the original se_cmd.
- 	 */
- 	if (tm_type == TMR_ABORT_TASK && (flags & TARGET_SCF_LOOKUP_LUN_FROM_TAG)) {
--		if (!target_lookup_lun_from_tag(se_sess, tag, &unpacked_lun))
-+		if (!target_lookup_lun_from_tag(se_sess, tag,
-+						&se_cmd->orig_fe_lun))
- 			goto failure;
- 	}
- 
--- 
-1.8.3.1
+Thanks for the comment.
+
+The HPB is essential feature for mobile devices.
+
+NAND-based storage needs logical to physical mapping, which is cached in
+the storage to minimize translation overhead. UFS is a NAND-based storage
+device with limited resources, mainly used for mobile devices. Typically,
+SSD has enough cache space for mapping information in SSD, but UFS has not
+enough.
+So, UFS stores L2P mapping in NAND and performs IO using demand loading 
+for translation. Due to overhead of demand loading, it degrades random read
+performance.
+
+The HPB is a feature which uses host memory to relieve this problem. By 
+using the HPB feature, UFS can provide improved random read performance
+without mapping data thrashing problem. Therefore, the HPB is currently
+already included in the Linux kernel code in android devices, however it 
+is maintained as out-of-tree.
+
+While upstreaming HPB feature to mainline kernel, we received various
+comments from several reviewers (thanks!) and the HPB feature can be
+improved. I think it would be good to make mainline the feature that are
+mainly used.
+
+Thanks,
+Daejun
 
