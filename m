@@ -2,125 +2,137 @@ Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99442C43461
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5DDC35256
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 362E0206CA
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:52:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 863E0206CA
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:59:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="LCUBOcKJ"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uIdarbCK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725858AbgIQAwN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Sep 2020 20:52:13 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:36865 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726007AbgIQAwL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2020 20:52:11 -0400
-X-Greylist: delayed 540 seconds by postgrey-1.27 at vger.kernel.org; Wed, 16 Sep 2020 20:52:09 EDT
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200917004302epoutp03e4f877d85a4445fa7745dce29d16a8ba~1a3J6vRDf0583605836epoutp03T
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2020 00:43:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200917004302epoutp03e4f877d85a4445fa7745dce29d16a8ba~1a3J6vRDf0583605836epoutp03T
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1600303382;
-        bh=iF01R0RXpU+eG69rlPV5Od9C+ssN22uuhWON4+DSNWY=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=LCUBOcKJm6KSsXIPiJQz8JOvW6JMijIvJ/3n/QU22bN7kaOdPeD5AND75hpnbbJpI
-         XVKFZ9wNWV3W81XmsrAZxf7/htYSeDWLs7VqVq/NQJ//9Oh61jwuCz+omCaLGPJ/X7
-         DfZ3hRBh5Q6ZTOT7QvxxgL7h9LvA93W3s5GOAgZc=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p2.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200917004301epcas1p25b5958440691a33befafc83db482b36e~1a3JhP3uT1274212742epcas1p27;
-        Thu, 17 Sep 2020 00:43:01 +0000 (GMT)
-Mime-Version: 1.0
-Subject: Re: [PATCH v11 0/4] scsi: ufs: Add Host Performance Booster Support
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        Daejun Park <daejun7.park@samsung.com>
-CC:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20200916052208.GB12923@infradead.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <231786897.01600303381578.JavaMail.epsvc@epcpadp2>
-Date:   Thu, 17 Sep 2020 09:25:50 +0900
-X-CMS-MailID: 20200917002550epcms2p168eb4c7e2fb77f7f31a5db2f3522e256
+        id S1726152AbgIQA72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Sep 2020 20:59:28 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:62623 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726072AbgIQA7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Sep 2020 20:59:25 -0400
+X-Greylist: delayed 304 seconds by postgrey-1.27 at vger.kernel.org; Wed, 16 Sep 2020 20:59:24 EDT
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1600304364; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=8pI1//eDzriKf81JxhFe+YUeQTcTypsWCIXjCbZwU54=;
+ b=uIdarbCKVQxe/nebob3aSu/aKFpVRPaH0lA7XM+3Dx63axKojT723K+7qscZcEuBjKfONU/U
+ n6jDD8oQcjG2QltdF4Zsn0mUvQs/HTaZZeaPQxQ1MyirDKbAsBxT//I/CmvZKivOqxr5oWhi
+ wuCXedkSEVggIl7yAZOMd/SoANI=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5f62b3ad91755cb92b328128 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 17 Sep 2020 00:54:05
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 0C84BC433CA; Thu, 17 Sep 2020 00:54:05 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB543C433C8;
+        Thu, 17 Sep 2020 00:54:03 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200902031713epcms2p664cebf386ba19d3d05895fec89aaf4fe
-References: <20200916052208.GB12923@infradead.org>
-        <231786897.01599016802080.JavaMail.epsvc@epcpadp1>
-        <231786897.01600211401846.JavaMail.epsvc@epcpadp1>
-        <CGME20200902031713epcms2p664cebf386ba19d3d05895fec89aaf4fe@epcms2p1>
+Date:   Thu, 17 Sep 2020 08:54:03 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     Bean Huo <huobean@gmail.com>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: Re: [PATCH 5/6] scsi: ufs: show ufs part info in error case
+In-Reply-To: <20200916160533.GA1011272@google.com>
+References: <20200915204532.1672300-1-jaegeuk@kernel.org>
+ <20200915204532.1672300-5-jaegeuk@kernel.org>
+ <bdc48d03dae86abef158aa33468f6c2f8e669ce8.camel@gmail.com>
+ <20200916160533.GA1011272@google.com>
+Message-ID: <06eb20588007cf87181446ab3946e8b2@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > Hi All,
-> > 
-> > I want to know how to improve this patch.
+On 2020-09-17 00:05, Jaegeuk Kim wrote:
+> On 09/16, Bean Huo wrote:
+>> On Tue, 2020-09-15 at 13:45 -0700, Jaegeuk Kim wrote:
+>> > Cc: Avri Altman <avri.altman@wdc.com>
+>> > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+>> > ---
+>> >  drivers/scsi/ufs/ufshcd.c | 8 ++++++++
+>> >  1 file changed, 8 insertions(+)
+>> >
+>> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> > index bdc82cc3824aa..b81c116b976ff 100644
+>> > --- a/drivers/scsi/ufs/ufshcd.c
+>> > +++ b/drivers/scsi/ufs/ufshcd.c
+>> > @@ -500,6 +500,14 @@ static void ufshcd_print_tmrs(struct ufs_hba
+>> > *hba, unsigned long bitmap)
+>> >  static void ufshcd_print_host_state(struct ufs_hba *hba)
+>> >  {
+>> >         dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
+>> > +       if (hba->sdev_ufs_device) {
+>> > +               dev_err(hba->dev, " vendor = %.8s\n",
+>> > +                                       hba->sdev_ufs_device-
+>> > >vendor);
+>> > +               dev_err(hba->dev, " model = %.16s\n",
+>> > +                                       hba->sdev_ufs_device->model);
+>> > +               dev_err(hba->dev, " rev = %.4s\n",
+>> > +                                       hba->sdev_ufs_device->rev);
+>> > +       }
+>> 
+>> Hi Jaegeuk
+>> these prints have been added since this change:
+>> 
+>> commit 3f8af6044713 ("scsi: ufs: Add some debug information to
+>> ufshcd_print_host_state()")
+>> 
+>> https://patchwork.kernel.org/patch/11694371/
 > 
-> Drop it and fix the actual UFS feature to not be so horrible?
+> Cool, thank you for pointing this out. BTW, which branch can I see the 
+> -next
+> patches?
 > 
 
-Hello Christoph,
+Hi Jaegeuk,
 
-Thanks for the comment.
+This patch comes from a series of changes trying to fix and simplify
+the UFS error handling. You can find the whole series here - they are
+picked up on scsi-queue-5.10
 
-The HPB is essential feature for mobile devices.
+https://lore.kernel.org/linux-scsi/1596975355-39813-10-git-send-email-cang@codeaurora.org/
 
-NAND-based storage needs logical to physical mapping, which is cached in
-the storage to minimize translation overhead. UFS is a NAND-based storage
-device with limited resources, mainly used for mobile devices. Typically,
-SSD has enough cache space for mapping information in SSD, but UFS has not
-enough.
-So, UFS stores L2P mapping in NAND and performs IO using demand loading 
-for translation. Due to overhead of demand loading, it degrades random read
-performance.
+Besides, several more fixes for error handling based on above series are
 
-The HPB is a feature which uses host memory to relieve this problem. By 
-using the HPB feature, UFS can provide improved random read performance
-without mapping data thrashing problem. Therefore, the HPB is currently
-already included in the Linux kernel code in android devices, however it 
-is maintained as out-of-tree.
+https://lore.kernel.org/patchwork/patch/1290405/
+&
+https://lore.kernel.org/linux-scsi/159961731708.5787.8825955850640714260.b4-ty@oracle.com/
 
-While upstreaming HPB feature to mainline kernel, we received various
-comments from several reviewers (thanks!) and the HPB feature can be
-improved. I think it would be good to make mainline the feature that are
-mainly used.
+I've mainline all above changes to Android12-5.4 and Android11-5.4.
+
+Moreover, there are 2 more fixes on the way for error handling, I
+will push them soon.
 
 Thanks,
-Daejun
 
+Can Guo.
+
+>> 
+>> Thanks,
+>> Bean
