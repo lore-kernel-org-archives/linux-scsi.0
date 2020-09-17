@@ -4,135 +4,160 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5DDC35256
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:59:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BB71C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 01:00:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 863E0206CA
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 00:59:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB692206CA
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 01:00:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uIdarbCK"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="rKSgL/qw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726152AbgIQA72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Sep 2020 20:59:28 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:62623 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726072AbgIQA7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Sep 2020 20:59:25 -0400
-X-Greylist: delayed 304 seconds by postgrey-1.27 at vger.kernel.org; Wed, 16 Sep 2020 20:59:24 EDT
+        id S1726185AbgIQBAF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Sep 2020 21:00:05 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:23545 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726004AbgIQBAD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Sep 2020 21:00:03 -0400
+X-Greylist: delayed 303 seconds by postgrey-1.27 at vger.kernel.org; Wed, 16 Sep 2020 21:00:02 EDT
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600304364; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1600304394; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=8pI1//eDzriKf81JxhFe+YUeQTcTypsWCIXjCbZwU54=;
- b=uIdarbCKVQxe/nebob3aSu/aKFpVRPaH0lA7XM+3Dx63axKojT723K+7qscZcEuBjKfONU/U
- n6jDD8oQcjG2QltdF4Zsn0mUvQs/HTaZZeaPQxQ1MyirDKbAsBxT//I/CmvZKivOqxr5oWhi
- wuCXedkSEVggIl7yAZOMd/SoANI=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ MIME-Version: Sender; bh=fVudm0/lgiiKwjiWJ16VOu7Farkh1dx277bHuq90WXc=;
+ b=rKSgL/qwD6S5Pt+8HmYzR6J437Vmj3IJtiQ9PJUObiZcjrrdt+HW1BtK0U/q2X7hM2PZ+SCI
+ pbJ6Kgd44e4iLQo0KNwfll2EcmP0zGeSiw3QG3R3w+oMPUiDnniY65QT6q8yapSgAmZa+PS0
+ NSUhURvC/EDem4UJYLvzsMorAk0=
+X-Mailgun-Sending-Ip: 104.130.122.29
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 5f62b3ad91755cb92b328128 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 17 Sep 2020 00:54:05
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5f62b3944ab73023a7f6fd9f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 17 Sep 2020 00:53:40
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0C84BC433CA; Thu, 17 Sep 2020 00:54:05 +0000 (UTC)
+        id 35E1EC433F0; Thu, 17 Sep 2020 00:53:40 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB543C433C8;
-        Thu, 17 Sep 2020 00:54:03 +0000 (UTC)
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DCB40C433C8;
+        Thu, 17 Sep 2020 00:53:37 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 17 Sep 2020 08:54:03 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Jaegeuk Kim <jaegeuk@kernel.org>
-Cc:     Bean Huo <huobean@gmail.com>, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
+Date:   Wed, 16 Sep 2020 17:53:37 -0700
+From:   nguyenb@codeaurora.org
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: Re: [PATCH 5/6] scsi: ufs: show ufs part info in error case
-In-Reply-To: <20200916160533.GA1011272@google.com>
-References: <20200915204532.1672300-1-jaegeuk@kernel.org>
- <20200915204532.1672300-5-jaegeuk@kernel.org>
- <bdc48d03dae86abef158aa33468f6c2f8e669ce8.camel@gmail.com>
- <20200916160533.GA1011272@google.com>
-Message-ID: <06eb20588007cf87181446ab3946e8b2@codeaurora.org>
-X-Sender: cang@codeaurora.org
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/1] scsi: ufshcd: Properly set the device Icc Level
+In-Reply-To: <20200915133729.GD670377@yoga>
+References: <5c9d6f76303bbe5188bf839b2ea5e5bf530e7281.1598923023.git.nguyenb@codeaurora.org>
+ <20200915025401.GD471@uller>
+ <a8c851744fcaee205fc7a58db8f747fa@codeaurora.org>
+ <20200915133729.GD670377@yoga>
+Message-ID: <6e36f0a315c13429bdad1ce704cbe878@codeaurora.org>
+X-Sender: nguyenb@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-17 00:05, Jaegeuk Kim wrote:
-> On 09/16, Bean Huo wrote:
->> On Tue, 2020-09-15 at 13:45 -0700, Jaegeuk Kim wrote:
->> > Cc: Avri Altman <avri.altman@wdc.com>
->> > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
->> > ---
->> >  drivers/scsi/ufs/ufshcd.c | 8 ++++++++
->> >  1 file changed, 8 insertions(+)
+On 2020-09-15 06:37, Bjorn Andersson wrote:
+> On Tue 15 Sep 03:49 CDT 2020, nguyenb@codeaurora.org wrote:
+> 
+>> On 2020-09-14 19:54, Bjorn Andersson wrote:
+>> > On Tue 01 Sep 01:19 UTC 2020, Bao D. Nguyen wrote:
 >> >
->> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> > index bdc82cc3824aa..b81c116b976ff 100644
->> > --- a/drivers/scsi/ufs/ufshcd.c
->> > +++ b/drivers/scsi/ufs/ufshcd.c
->> > @@ -500,6 +500,14 @@ static void ufshcd_print_tmrs(struct ufs_hba
->> > *hba, unsigned long bitmap)
->> >  static void ufshcd_print_host_state(struct ufs_hba *hba)
->> >  {
->> >         dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
->> > +       if (hba->sdev_ufs_device) {
->> > +               dev_err(hba->dev, " vendor = %.8s\n",
->> > +                                       hba->sdev_ufs_device-
->> > >vendor);
->> > +               dev_err(hba->dev, " model = %.16s\n",
->> > +                                       hba->sdev_ufs_device->model);
->> > +               dev_err(hba->dev, " rev = %.4s\n",
->> > +                                       hba->sdev_ufs_device->rev);
->> > +       }
->> 
->> Hi Jaegeuk
->> these prints have been added since this change:
->> 
->> commit 3f8af6044713 ("scsi: ufs: Add some debug information to
->> ufshcd_print_host_state()")
->> 
->> https://patchwork.kernel.org/patch/11694371/
+>> > > UFS version 3.0 and later devices require Vcc and Vccq power supplies
+>> > > with Vccq2 being optional. While earlier UFS version 2.0 and 2.1
+>> > > devices, the Vcc and Vccq2 are required with Vccq being optional.
+>> > > Check the required power supplies used by the device
+>> > > and set the device's supported Icc level properly.
+>> > >
+>> > > Signed-off-by: Can Guo <cang@codeaurora.org>
+>> > > Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> > > Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+>> > > ---
+>> > >  drivers/scsi/ufs/ufshcd.c | 5 +++--
+>> > >  1 file changed, 3 insertions(+), 2 deletions(-)
+>> > >
+>> > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> > > index 06e2439..fdd1d3e 100644
+>> > > --- a/drivers/scsi/ufs/ufshcd.c
+>> > > +++ b/drivers/scsi/ufs/ufshcd.c
+>> > > @@ -6845,8 +6845,9 @@ static u32
+>> > > ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+>> > >  {
+>> > >  	u32 icc_level = 0;
+>> > >
+>> > > -	if (!hba->vreg_info.vcc || !hba->vreg_info.vccq ||
+>> > > -						!hba->vreg_info.vccq2) {
+>> > > +	if (!hba->vreg_info.vcc ||
+>> >
+>> > How did you test this?
+>> >
+>> > devm_regulator_get() never returns NULL, so afaict this conditional will
+>> > never be taken with either the old or new version of the code.
+>> Thanks for your comment. The call flow is as follows:
+>> ufshcd_pltfrm_init->ufshcd_parse_regulator_info->ufshcd_populate_vreg
+>> In the ufshcd_populate_vreg() function, it looks for DT entries 
+>> "%s-supply"
+>> For UFS3.0+ devices, "vccq2-supply" is optional, so the vendor may 
+>> choose
+>> not to provide vccq2-supply in the DT.
+>> As a result, a NULL is returned to hba->vreg_info.vccq2.
+>> Same for UFS2.0 and UFS2.1 devices, a NULL may be returned to
+>> hba->vreg_info.vccq if vccq-supply is not provided in the DT.
+>> The current code only checks for !hba->vreg_info.vccq OR
+>> !hba->vreg_info.vccq2. It will skip the setting for icc_level
+>> if either vccq or vccq2 is not provided in the DT.
+>> >
 > 
-> Cool, thank you for pointing this out. BTW, which branch can I see the 
-> -next
-> patches?
+> Thanks for the pointers, I now see that the there will only be struct
+> ufs_vreg objects allocated for the items that has an associated
+> %s-supply.
 > 
-
-Hi Jaegeuk,
-
-This patch comes from a series of changes trying to fix and simplify
-the UFS error handling. You can find the whole series here - they are
-picked up on scsi-queue-5.10
-
-https://lore.kernel.org/linux-scsi/1596975355-39813-10-git-send-email-cang@codeaurora.org/
-
-Besides, several more fixes for error handling based on above series are
-
-https://lore.kernel.org/patchwork/patch/1290405/
-&
-https://lore.kernel.org/linux-scsi/159961731708.5787.8825955850640714260.b4-ty@oracle.com/
-
-I've mainline all above changes to Android12-5.4 and Android11-5.4.
-
-Moreover, there are 2 more fixes on the way for error handling, I
-will push them soon.
+> FYI, the idiomatic way to handle optional regulators is to use
+> regulator_get_optional(), which will return -ENODEV for regulators not
+> specified.
+Thanks for the regulator_get_optional() suggestion. Do you have a strong 
+opinion about
+using regulator_get_optional() or would my proposal be ok? With 
+regulator_get_optional(),
+we need to make 3 calls and check each result while the current 
+implementation is also reliable
+simple quick check for NULL without any potential problem.
 
 Thanks,
-
-Can Guo.
-
->> 
->> Thanks,
->> Bean
+Bao
+> 
+> Regards,
+> Bjorn
+> 
+>> > Regards,
+>> > Bjorn
+>> >
+>> > > +		(!hba->vreg_info.vccq && hba->dev_info.wspecversion >= 0x300) ||
+>> > > +		(!hba->vreg_info.vccq2 && hba->dev_info.wspecversion < 0x300)) {
+>> > >  		dev_err(hba->dev,
+>> > >  			"%s: Regulator capability was not set, actvIccLevel=%d",
+>> > >  							__func__, icc_level);
+>> > > --
+>> > > The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+>> > > Forum,
+>> > > a Linux Foundation Collaborative Project
+>> > >
