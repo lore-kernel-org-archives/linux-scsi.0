@@ -2,84 +2,86 @@ Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF5BEC43464
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 23:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09721C43465
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 23:18:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF219208DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 23:18:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFCCB21D92
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 23:18:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600384730;
-	bh=o6h0uQcYxT8hDqeNxh4o4wx37bxZ8o2tWkPFDlaL3Zg=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=tpXGa3FTnbW+dwPZHAUY83EbzSEp65JRwJNISYmNMlzmtE051meGofOSF8jJ6EHMC
-	 PaAPpdr8fv5gIpF2WA6RndbYF2cbFK/0oQ4Fsn32npio5uKIHwaW0syKs0erQxhBkm
-	 OT3SZ81P8imPX+H+Gvlop/Liw3/IXjsUe2ywRzU8=
+	s=default; t=1600384733;
+	bh=jfma3X7pilb5Fg1ZcDsNgNV8kAHXdod6ppTdWMc8RNo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=yQaHmC8XA3G6DeB76voo/vMOPTwmHuDVq8FDq/kYm3PXS2lqNvK8FLkNME0I6UfGq
+	 y8KII+HPZ5+AaKOjqVRcGvWzVecgUKWv+Pj0H3mZyOusC8V1FhG4w32uFHGth/f7f7
+	 aXKnuP+nqMLOtwP4ECf14sGMDUmwBWHw8JS9TA5Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726093AbgIQXSu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 19:18:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55782 "EHLO mail.kernel.org"
+        id S1726149AbgIQXSx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 19:18:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725886AbgIQXSt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 19:18:49 -0400
+        id S1725886AbgIQXSv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 19:18:51 -0400
 Received: from dhcp-10-100-145-180.wdl.wdc.com (unknown [199.255.45.60])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 525CE20838;
-        Thu, 17 Sep 2020 23:18:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F1AE220870;
+        Thu, 17 Sep 2020 23:18:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600384728;
-        bh=o6h0uQcYxT8hDqeNxh4o4wx37bxZ8o2tWkPFDlaL3Zg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Uc7H8rbAxkFA478xseYdETekhlX/hB2v82QZ4iNoLiXGkRD11mrqAaabA2QiKquuY
-         8VwmF3jiTF6zasq2aqtiK2ORXVhES/zwYqzg7b/ebE+E0TeKoaSiderK9l9+WVx5nk
-         YYC6vVoWY9YnPfiXa2bLzF/W5nmmI4QgV64adKtk=
+        s=default; t=1600384730;
+        bh=jfma3X7pilb5Fg1ZcDsNgNV8kAHXdod6ppTdWMc8RNo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ofz0qOD3l9X33Kcfw7NbvkmdAyr24FL7eNh/2umKkDo7vHaNwKCCu0+iFKD8h2wNN
+         36u5GrK1w/S4OPQHLsi1N9JHIKO9Pg+tALI2DeGR/KyyAGRpEYQ7yyMd8+5cnDwtfN
+         16HgroN2pOrrI7GYatIf4qGod2C4B5iTNqEaiskU=
 From:   Keith Busch <kbusch@kernel.org>
 To:     linux-nvme@lists.infradead.org, sagi@grimberg.me, hch@lst.de,
         linux-block@vger.kernel.org
 Cc:     axboe@kernel.dk, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, Keith Busch <kbusch@kernel.org>
-Subject: [PATCHv3 0/4] zoned block device specific errors
-Date:   Thu, 17 Sep 2020 16:18:37 -0700
-Message-Id: <20200917231841.4029747-1-kbusch@kernel.org>
+        martin.petersen@oracle.com, Keith Busch <kbusch@kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Subject: [PATCHv3 2/4] nvme: translate zone resource errors
+Date:   Thu, 17 Sep 2020 16:18:39 -0700
+Message-Id: <20200917231841.4029747-3-kbusch@kernel.org>
 X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200917231841.4029747-1-kbusch@kernel.org>
+References: <20200917231841.4029747-1-kbusch@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Zone block devices may have some limits that require special handling.
-This series provides a way for drivers to notify of these conditions.
+Translate zoned resource errors to the appropriate blk_status_t.
 
-v2->v3:
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+---
+ drivers/nvme/host/core.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-  Split status for max open vs max active errors (Christoph)
-
-  Include scsi use for the new status (Damien)
-
-  Update documentation for the new status inline with the request_queue
-  properties they relate to
-
-Damien Le Moal (2):
-  scsi: update additional sense codes list
-  scsi: handle zone resources errors
-
-Keith Busch (2):
-  block: add zone specific block statuses
-  nvme: translate zone resource errors
-
- Documentation/block/queue-sysfs.rst |  8 +++++
- block/blk-core.c                    |  4 +++
- drivers/nvme/host/core.c            |  4 +++
- drivers/scsi/scsi_lib.c             |  9 +++++
- drivers/scsi/sense_codes.h          | 54 ++++++++++++++++++++++++++++-
- include/linux/blk_types.h           | 18 ++++++++++
- 6 files changed, 96 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 614cd455836b..a0d26fcbf923 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -236,6 +236,10 @@ static blk_status_t nvme_error_status(u16 status)
+ 		return BLK_STS_NEXUS;
+ 	case NVME_SC_HOST_PATH_ERROR:
+ 		return BLK_STS_TRANSPORT;
++	case NVME_SC_ZONE_TOO_MANY_ACTIVE:
++		return BLK_STS_ZONE_ACTIVE_RESOURCE;
++	case NVME_SC_ZONE_TOO_MANY_OPEN:
++		return BLK_STS_ZONE_OPEN_RESOURCE;
+ 	default:
+ 		return BLK_STS_IOERR;
+ 	}
 -- 
 2.24.1
 
