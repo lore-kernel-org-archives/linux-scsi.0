@@ -2,100 +2,79 @@ Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20817C43461
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 19:17:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E35EC43461
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 19:55:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDD3120874
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 19:17:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEC8B2078D
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 19:55:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mt9OJz/z"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DKmSBGMZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726514AbgIQTRW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 15:17:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47822 "EHLO
+        id S1726683AbgIQTzZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 15:55:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728393AbgIQQSX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 12:18:23 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0070AC061756
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2020 09:00:31 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id q12so1343874plr.12
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2020 09:00:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dL5bjsBTpI1WHY1Lul+C+ZXEBNZvu4AIQRGli0lUOx4=;
-        b=mt9OJz/zcgF06uTcLmCvJqC8qMwbhFkudsZx0RItt2u4Ob+qc8sisFaFzs7LTpHzUq
-         Lz/Y0ZIL25qKDWNeKPz3v96dDvnRySrz767m50CaxcHxh6zM4I++9vA06lge3EOMujDY
-         7yFbNmb2A5UfCGvzfL9XW3WYKGyRegQ0piDyWgmB7Vhvuwdc8pZ4a8fKOa87E67QXgOQ
-         p5882KV/axOpCDf/91KXDflwXE75rCx9miWnMkOsvCulckrGfYVZTOHftw2pHiL6Yg6p
-         hMJPAgfqKscwpKx+mzUNzVbFAadDLBsqU22NuMmFvPfnYxprj8/J9sUfDxggbXQ/Rau0
-         66NA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dL5bjsBTpI1WHY1Lul+C+ZXEBNZvu4AIQRGli0lUOx4=;
-        b=Fj8RQA6k4uumBX3kRw7nRyNlbUgYv5XNaTimYAo6/NNjwm4IqGKvAX4MQb2c6+vlXZ
-         H6tYM7JHPkg6Vibp/8JSnnuD5IkAz/aCn1QYIHWkSRz3OrbmK5exXTD3lhcfRwRGhX5M
-         j6JEYYyRzgH1qstD/4t8ktilQ5far6TdEPc/hmpSybQCD65sqgxGDuuhq5k6p9Z6qq5f
-         VBFnAFXZqpIGqFllirVpBbyzZHES+3V05kaS/Zaw3hgRG4nJE8btI8INQktyAxoRioy7
-         tWNsQWaHGjuYelZ7+M13RhVtYGskFaA02kfSW8Bds0F9Au9+1LBjGDGU4j7lCDUDO0w1
-         iF/w==
-X-Gm-Message-State: AOAM5322SnNg2yy7tp5kWDUjaAsPtXyAMZ+XdbvgGyPmj4SiTdxhDoTz
-        OtNbCA22Pp6H0wG3fPs/EzDL8CVP9cYuAQ==
-X-Google-Smtp-Source: ABdhPJwcuj0AmaWpE2pcCdWARsJi+GFNSXG5434TRGxLz09h5InR+K75RaoJGx1EYZdj9dCbSxC6bQ==
-X-Received: by 2002:a17:902:d311:b029:d1:e598:3ff8 with SMTP id b17-20020a170902d311b02900d1e5983ff8mr11509473plc.50.1600358431116;
-        Thu, 17 Sep 2020 09:00:31 -0700 (PDT)
-Received: from localhost.localdomain ([161.81.44.186])
-        by smtp.gmail.com with ESMTPSA id 137sm29897pfu.149.2020.09.17.09.00.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Sep 2020 09:00:30 -0700 (PDT)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH 1/2] scsi: sg: use queue_logical_block_size() in max_sectors_bytes()
-Date:   Fri, 18 Sep 2020 00:00:15 +0800
-Message-Id: <20200917160016.2091-1-tom.ty89@gmail.com>
-X-Mailer: git-send-email 2.28.0
+        with ESMTP id S1727387AbgIQO5u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 10:57:50 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1DEAC06178A;
+        Thu, 17 Sep 2020 07:57:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=DYbvYhbMXA9ajPbJG0Is0bvKHq8e2tKSFLIz7K4cCtw=; b=DKmSBGMZ8ouyh+lFHVFF2+PC1S
+        6P9h3/975zGRn/faB+N9lXC9y2nImmDeIehApvvBnaubVjQC3jBJL52BbOeDdxIJdc66Gatu6X//o
+        DyBsMMCBwhoUjxbyrzdbjIWGGTeoQjvwsmyvx/4JPellHtRekUV6IxhI82hmS77G1gBAdjwpqOebr
+        N4ULZVA7W5yODbUa3ufgqWNrpYd/KoBsy3rPv/tIROnsN9XnLwWvnU+SIBcdC6QVaZZCmBkJbLK1w
+        uSuIGqkvrDXUDp1t0IEkWR6c2obuf+E4xsec7LCbHnucJ94EZllMdsYRLExEuRaPeyJV5eaY+wKWy
+        o9cd1AEw==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kIvLp-0000Ok-KT; Thu, 17 Sep 2020 14:57:33 +0000
+Date:   Thu, 17 Sep 2020 15:57:33 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>, megaraidlinux.pdl@broadcom.com,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>
+Subject: Re: compat_alloc_user_space removal, was Re: [PATCH 3/3] scsi:
+ megaraid_sas: simplify compat_ioctl handling
+Message-ID: <20200917145733.GA1433@infradead.org>
+References: <20200908213715.3553098-1-arnd@arndb.de>
+ <20200908213715.3553098-3-arnd@arndb.de>
+ <20200912074757.GA6688@infradead.org>
+ <CAK8P3a363DxgZnN9x4oNL7W4__kyG1U_34=7Hpqhpc-obAvjWw@mail.gmail.com>
+ <20200913065051.GA17932@infradead.org>
+ <CAK8P3a3W1EYts=2uL-6kTWwcgBeigLdv-W4mnxBd+En2ZFReLA@mail.gmail.com>
+ <CAK8P3a2r=-JQLyVeLhFvDtWrdtJN_pWsPHRoi5VHcgfK0SbQ5g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAK8P3a2r=-JQLyVeLhFvDtWrdtJN_pWsPHRoi5VHcgfK0SbQ5g@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Logical block size was never / is no longer necessarily 512.
+On Thu, Sep 17, 2020 at 04:55:49PM +0200, Arnd Bergmann wrote:
+> Unfortunately, the commit b902bfb3f0e "arm64: stop using <asm/compat.h>
+> directly" seems to introduce a circular header file inclusion between
+> linux/compat.h and asm/stat.h, breaking arm64 compilation.
+> 
+> Moving the compat_u64/compat_s64 definitions to include/asm-generic/compat.h
+> works fine though.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
----
- drivers/scsi/sg.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 20472aaaf630..8a2cca71017f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -848,10 +848,11 @@ static int srp_done(Sg_fd *sfp, Sg_request *srp)
- static int max_sectors_bytes(struct request_queue *q)
- {
- 	unsigned int max_sectors = queue_max_sectors(q);
-+	max_sectors *= queue_logical_block_size(q);
- 
--	max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
-+	max_sectors = min_t(unsigned int, max_sectors, INT_MAX);
- 
--	return max_sectors << 9;
-+	return max_sectors;
- }
- 
- static void
--- 
-2.28.0
-
+I posted a version doing exactly that a few hours ago.
