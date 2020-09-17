@@ -2,112 +2,97 @@ Return-Path: <SRS0=qxeY=C2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5C0C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 04:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B9E2C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 05:53:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57397208E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 04:39:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uZc1SkBA"
+	by mail.kernel.org (Postfix) with ESMTP id 3D12720936
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Sep 2020 05:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726126AbgIQEjF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 00:39:05 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43034 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725267AbgIQEjE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 00:39:04 -0400
-X-Greylist: delayed 12460 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 00:39:03 EDT
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H18u4d003589;
-        Thu, 17 Sep 2020 01:10:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=tjZQK6ULcGr0MkqRNUv7sTRb+fPh/vA/4XgPl7/esnU=;
- b=uZc1SkBAODgzfsLj2OPNti3MoEtuZff14d/u5deKYcez5I5bUXV6l1GRgD8v9aAqoWWF
- aoWxyHjJpY3uRmg2w05ePcz2Bl+yp/sx5usZMeb2KS/iBxVU/yBolS5VKGk6iOOHfhRl
- V0/2w7NV7nzDthXnmf53BurvV7ue7WfT7Ul2Y1lTy8HRkddi1ktgOXDxYbmAAAowBOox
- YDF8fP99qn2smWUtFSLrwTF466/GZvfxvMVlbVuULHEQ4atFpXMi+3ngjd6hNM2/Gz2p
- HDFMw6mI06RFIt4bptHT1hcmomM64fnFztwTacD/edpx7NvjwbAw91UJIca/3DhdJCca Xw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 33gp9me6ej-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 17 Sep 2020 01:10:52 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H19te4010994;
-        Thu, 17 Sep 2020 01:10:51 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 33hm33v1s6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Sep 2020 01:10:51 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08H1AedG009064;
-        Thu, 17 Sep 2020 01:10:40 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Sep 2020 01:10:39 +0000
-To:     John Garry <john.garry@huawei.com>
+        id S1726152AbgIQFxo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 01:53:44 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42608 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725267AbgIQFxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 01:53:44 -0400
+X-Greylist: delayed 976 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 01:53:43 EDT
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id A2757B0BA;
+        Thu, 17 Sep 2020 05:37:41 +0000 (UTC)
+Subject: Re: [PATCH] lpfc: use NVMe error codes for LS request done callback
+To:     James Smart <james.smart@broadcom.com>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <don.brace@microsemi.com>, <kashyap.desai@broadcom.com>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>,
-        <dgilbert@interlog.com>, <paolo.valente@linaro.org>,
-        <hare@suse.de>, <hch@lst.de>, <sumit.saxena@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <esc.storagedev@microsemi.com>,
-        <megaraidlinux.pdl@broadcom.com>, <chenxiang66@hisilicon.com>,
-        <luojiaxing@huawei.com>
-Subject: Re: [PATCH v8 00/18] blk-mq/scsi: Provide hostwide shared tags for
- SCSI HBAs
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1imcdw6ni.fsf@ca-mkp.ca.oracle.com>
-References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
-        <df6a3bd3-a89e-5f2f-ece1-a12ada02b521@kernel.dk>
-        <379ef8a4-5042-926a-b8a0-2d0a684a0e01@huawei.com>
-        <yq1363xbtk7.fsf@ca-mkp.ca.oracle.com>
-        <32def143-911f-e497-662e-a2a41572fe4f@huawei.com>
-Date:   Wed, 16 Sep 2020 21:10:36 -0400
-In-Reply-To: <32def143-911f-e497-662e-a2a41572fe4f@huawei.com> (John Garry's
-        message of "Wed, 16 Sep 2020 08:21:25 +0100")
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20200916085059.27206-1-hare@suse.de>
+ <97c2e517-6b7b-70f5-f8da-14145f00361c@broadcom.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <3fbfcab8-e6bc-a609-2162-d95ccb39501d@suse.de>
+Date:   Thu, 17 Sep 2020 07:37:24 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
- malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009170005
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
- adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0 phishscore=0
- spamscore=0 priorityscore=1501 suspectscore=1 impostorscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009170005
+In-Reply-To: <97c2e517-6b7b-70f5-f8da-14145f00361c@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 9/16/20 11:23 PM, James Smart wrote:
+> 
+> 
+> On 9/16/2020 1:50 AM, Hannes Reinecke wrote:
+>> The LS request callback requires a 'status' argument, but that one
+>> should be an NVMe error code, not a driver specific one which has
+>> no meaning in the nvme layer.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/lpfc/lpfc_nvme.c | 4 +++-
+>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c 
+>> b/drivers/scsi/lpfc/lpfc_nvme.c
+>> index e5be334d6a11..4b007a28014b 100644
+>> --- a/drivers/scsi/lpfc/lpfc_nvme.c
+>> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
+>> @@ -498,7 +498,9 @@ __lpfc_nvme_ls_req_cmp(struct lpfc_hba *phba,  
+>> struct lpfc_vport *vport,
+>>           cmdwqe->context3 = NULL;
+>>       }
+>>       if (pnvme_lsreq->done)
+>> -        pnvme_lsreq->done(pnvme_lsreq, status);
+>> +        pnvme_lsreq->done(pnvme_lsreq,
+>> +                  status == IOSTAT_SUCCESS ?
+>> +                  NVME_SC_SUCCESS : NVME_SC_INTERNAL);
+>>       else
+>>           lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
+>>                    "6046 NVMEx cmpl without done call back? "
+> 
+> No - it's not a nvme command, so doesn't need a nvme status code. It 
+> should be a -Exxx  value or a 0 (success).  nvme_fc_send_ls_req() for 
+> example calls __nvme_fc_send_ls_req(), which can return any number of 
+> -Exxx values, and the routine returns the value returned by the done 
+> call after waiting for it to complete - so they should all follow the 
+> same form.
+> 
+Right. But returning IOSTAT definitions is still wrong :->
 
-John,
+Will be updating the patch.
 
-> Have you had a chance to check these outstanding SCSI patches?
->
-> scsi: megaraid_sas: Added support for shared host tagset for cpuhotplug
-> scsi: scsi_debug: Support host tagset
-> scsi: hisi_sas: Switch v3 hw to MQ
-> scsi: core: Show nr_hw_queues in sysfs
-> scsi: Add host and host template flag 'host_tagset'
+Cheers,
 
-These look good to me.
-
-Jens, feel free to merge.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-
+Hannes
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
