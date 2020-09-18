@@ -5,54 +5,48 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B831C43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:49:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C150C43465
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:51:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDA8023772
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:49:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F07D23770
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:51:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600397373;
-	bh=+j2ZRsSpdWAd+sIN/Kapw0Gf/H6JDaOOG8n/Qn3yYyg=;
+	s=default; t=1600397504;
+	bh=IxCA4cikSGbdMv1b/t6Gfd0J3dPHUmZkz+mdtdpQs6M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GWxW/wA889DNuJbG4dj5a83x42hNIo/XK3lZIiIIXNBQWMSFwt510a+hssKbT1Ibn
-	 UWZYto3z8m8MwSexGGqTjkc4PVVcS/Nm5Qd8Y8LH6eUUB0UkVmteXDqSRFZQun64X2
-	 A0XF+Ut/psCdbgukJTuVysHf6zL7/4ARyztuCSK4=
+	b=VTZ3a3dXC/Cf936C5T+bjaWvsiBbY7BeUIPC1OWxgIfQ9JnDdi2v3VWbFOAxVuZIf
+	 vHTxVbcVaXU0qFTVJw7wWOzkZL5avs04B+xdw4T6F6p5GIlfoBAtfYunk8GDw59Sh0
+	 8PuXTl5lazgTKJmemUeD25t3aUvgnV4dJAYfqWK8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727386AbgIRCtd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:49:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60694 "EHLO mail.kernel.org"
+        id S1727495AbgIRCvn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:51:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59636 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727308AbgIRCJC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:09:02 -0400
+        id S1728082AbgIRCIX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:08:23 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 89E502389E;
-        Fri, 18 Sep 2020 02:09:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CC74B2388E;
+        Fri, 18 Sep 2020 02:08:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394941;
-        bh=+j2ZRsSpdWAd+sIN/Kapw0Gf/H6JDaOOG8n/Qn3yYyg=;
+        s=default; t=1600394902;
+        bh=IxCA4cikSGbdMv1b/t6Gfd0J3dPHUmZkz+mdtdpQs6M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m5tya8TG5506W05eFw/CHQByOHapSaDNRgiqpU2waDmr7cClJwrFu1Y3PsMFzazDU
-         TuW53Z1dHU1Aa0mD8Ea2RN79hRRmKk9GmR2QoF4qDshJsdY8M1f61gZzYVce7ODsRE
-         euU6UsLU0PCQ8S9/CQIWFYQ1BcvW2sWYM6dh1ZJw=
+        b=Yb+cIqMy+o8Zt29UmQwA5JfIt9SEmLN6HGgmDmeEAT9QAIvgIJTd0h5EoTEZ7nEjB
+         Wjsz78vhSYJV8zPaP3eDqM7AUxb8J+xmTRiKooqJgi6xwIvnK5l6aq48e5kBcaZPWS
+         Wtf68J5Y+/vfHGoxINFJnlNVScufjxydFzFaIIGI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 050/206] scsi: ufs: Make ufshcd_add_command_trace() easier to read
-Date:   Thu, 17 Sep 2020 22:05:26 -0400
-Message-Id: <20200918020802.2065198-50-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 016/206] scsi: lpfc: Fix kernel crash at lpfc_nvme_info_show during remote port bounce
+Date:   Thu, 17 Sep 2020 22:04:52 -0400
+Message-Id: <20200918020802.2065198-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
 References: <20200918020802.2065198-1-sashal@kernel.org>
@@ -64,68 +58,141 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit e4d2add7fd5bc64ee3e388eabe6b9e081cb42e11 ]
+[ Upstream commit 6c1e803eac846f886cd35131e6516fc51a8414b9 ]
 
-Since the lrbp->cmd expression occurs multiple times, introduce a new local
-variable to hold that pointer. This patch does not change any
-functionality.
+When reading sysfs nvme_info file while a remote port leaves and comes
+back, a NULL pointer is encountered. The issue is due to ndlp list
+corruption as the the nvme_info_show does not use the same lock as the rest
+of the code.
 
-Cc: Bean Huo <beanhuo@micron.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Avri Altman <avri.altman@wdc.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Link: https://lore.kernel.org/r/20191224220248.30138-3-bvanassche@acm.org
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Correct by removing the rcu_xxx_lock calls and replace by the host_lock and
+phba->hbaLock spinlocks that are used by the rest of the driver.  Given
+we're called from sysfs, we are safe to use _irq rather than _irqsave.
+
+Link: https://lore.kernel.org/r/20191105005708.7399-4-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index eb10a5cacd90c..faf1959981784 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -353,27 +353,27 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
- 	u8 opcode = 0;
- 	u32 intr, doorbell;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-+	struct scsi_cmnd *cmd = lrbp->cmd;
- 	int transfer_len = -1;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index fe084d47ed9e5..3447d19d4147a 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -332,7 +332,6 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 	if (strlcat(buf, "\nNVME Initiator Enabled\n", PAGE_SIZE) >= PAGE_SIZE)
+ 		goto buffer_done;
  
- 	if (!trace_ufshcd_command_enabled()) {
- 		/* trace UPIU W/O tracing command */
--		if (lrbp->cmd)
-+		if (cmd)
- 			ufshcd_add_cmd_upiu_trace(hba, tag, str);
- 		return;
- 	}
+-	rcu_read_lock();
+ 	scnprintf(tmp, sizeof(tmp),
+ 		  "XRI Dist lpfc%d Total %d NVME %d SCSI %d ELS %d\n",
+ 		  phba->brd_no,
+@@ -341,7 +340,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  phba->sli4_hba.scsi_xri_max,
+ 		  lpfc_sli4_get_els_iocb_cnt(phba));
+ 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-		goto rcu_unlock_buf_done;
++		goto buffer_done;
  
--	if (lrbp->cmd) { /* data phase exists */
-+	if (cmd) { /* data phase exists */
- 		/* trace UPIU also */
- 		ufshcd_add_cmd_upiu_trace(hba, tag, str);
--		opcode = (u8)(*lrbp->cmd->cmnd);
-+		opcode = cmd->cmnd[0];
- 		if ((opcode == READ_10) || (opcode == WRITE_10)) {
- 			/*
- 			 * Currently we only fully trace read(10) and write(10)
- 			 * commands
- 			 */
--			if (lrbp->cmd->request && lrbp->cmd->request->bio)
--				lba =
--				  lrbp->cmd->request->bio->bi_iter.bi_sector;
-+			if (cmd->request && cmd->request->bio)
-+				lba = cmd->request->bio->bi_iter.bi_sector;
- 			transfer_len = be32_to_cpu(
- 				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
+ 	/* Port state is only one of two values for now. */
+ 	if (localport->port_id)
+@@ -357,7 +356,9 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  wwn_to_u64(vport->fc_nodename.u.wwn),
+ 		  localport->port_id, statep);
+ 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-		goto rcu_unlock_buf_done;
++		goto buffer_done;
++
++	spin_lock_irq(shost->host_lock);
+ 
+ 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+ 		nrport = NULL;
+@@ -384,39 +385,39 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 
+ 		/* Tab in to show lport ownership. */
+ 		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 		if (phba->brd_no >= 10) {
+ 			if (strlcat(buf, " ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
  		}
+ 
+ 		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
+ 			  nrport->port_name);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 
+ 		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
+ 			  nrport->node_name);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 
+ 		scnprintf(tmp, sizeof(tmp), "DID x%06x ",
+ 			  nrport->port_id);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 
+ 		/* An NVME rport can have multiple roles. */
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR) {
+ 			if (strlcat(buf, "INITIATOR ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET) {
+ 			if (strlcat(buf, "TARGET ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY) {
+ 			if (strlcat(buf, "DISCSRVC ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
+ 					  FC_PORT_ROLE_NVME_TARGET |
+@@ -424,14 +425,14 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 			scnprintf(tmp, sizeof(tmp), "UNKNOWN ROLE x%x",
+ 				  nrport->port_role);
+ 			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 
+ 		scnprintf(tmp, sizeof(tmp), "%s\n", statep);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 	}
+-	rcu_read_unlock();
++	spin_unlock_irq(shost->host_lock);
+ 
+ 	if (!lport)
+ 		goto buffer_done;
+@@ -491,11 +492,11 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  atomic_read(&lport->cmpl_fcp_err));
+ 	strlcat(buf, tmp, PAGE_SIZE);
+ 
+-	/* RCU is already unlocked. */
++	/* host_lock is already unlocked. */
+ 	goto buffer_done;
+ 
+- rcu_unlock_buf_done:
+-	rcu_read_unlock();
++ unlock_buf_done:
++	spin_unlock_irq(shost->host_lock);
+ 
+  buffer_done:
+ 	len = strnlen(buf, PAGE_SIZE);
 -- 
 2.25.1
 
