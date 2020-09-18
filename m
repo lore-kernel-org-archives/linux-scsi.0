@@ -5,50 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF18C43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1DF3C43466
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:53:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C09E235F8
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0F87238E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600397541;
-	bh=R0cYLuCf/RXxmg0SWDR4nzFewjhj6tgTJf0VaNdYvKg=;
+	s=default; t=1600397595;
+	bh=TNuMXUSu/bR+ysoAQH0qwvA50BIrQ55XDiwSOXypyXY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CpyGVV41CsWNL2cts8l1no2fEzYYqd6wpe9FNza2ibIS5OZ0gcTsG9Q8UW5BoVmrC
-	 xfTpaOhjRgpWy5kgHs5oBQBCiWNAsNAHbYe5g6DneK4LMLecQBbqoWmnS2aNvtgr3P
-	 pWFBatb1QPxg5C8Tnqg+15JakwikccwHMeifuiv8=
+	b=0QHlB/6XcwQGRmqbJtLWXzI9XYMGfEDky8AJ2lwxkNcyqNZaklFpQZZegB5fW3YRf
+	 nQiZT1Q2WgyolDjYJav5RBkmSQEoP5Zzy+5pzqncRo4BT3l/DMrjg2SZ26PIZYPeIN
+	 yq4fFsrTIKTMImAA9BSQstcp6Hf0OaRMQThv/N0c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727308AbgIRCwU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:52:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59484 "EHLO mail.kernel.org"
+        id S1729240AbgIRCxP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:53:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58536 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728064AbgIRCIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:08:19 -0400
+        id S1728004AbgIRCHv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:07:51 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 83BEA2395C;
-        Fri, 18 Sep 2020 02:08:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B0477238E6;
+        Fri, 18 Sep 2020 02:07:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394892;
-        bh=R0cYLuCf/RXxmg0SWDR4nzFewjhj6tgTJf0VaNdYvKg=;
+        s=default; t=1600394870;
+        bh=TNuMXUSu/bR+ysoAQH0qwvA50BIrQ55XDiwSOXypyXY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hNXSfAGCsjV0mL9F7TEB5Rk1saFLl/mP1nkoskHtTOOlx9aaS2Ec0oT8sPnTMmGmn
-         5A+JKF6+78ESTDFxaLUNf/Z82WuBH46ldnGpPjsiCrUGdScQhLxbH3klqLu5SkpD0F
-         +Q3Hk5UjwhfFjRbeN/PBmQnwyUE9Rafrx74aTQto=
+        b=JFxrlI+wV/C7MbIrZd+7H7o7ltiTlaE8Z1s43kNDYpZFD9oD2H0gpbItgof1iJGd8
+         zhXZNHI8m5G9nmSQY6VQxxt0uOYhtSj7PA2BkxNnNHybJszsWPQlRMb9cF//yg8QHZ
+         Jmj6LksbZC629E55tGcGY7Sj8vEwUg0yWtjLr01g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Balsundar P <balsundar.p@microsemi.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 007/206] scsi: aacraid: fix illegal IO beyond last LBA
-Date:   Thu, 17 Sep 2020 22:04:43 -0400
-Message-Id: <20200918020802.2065198-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 322/330] scsi: qla2xxx: Retry PLOGI on FC-NVMe PRLI failure
+Date:   Thu, 17 Sep 2020 22:01:02 -0400
+Message-Id: <20200918020110.2063155-322-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
-References: <20200918020802.2065198-1-sashal@kernel.org>
+In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
+References: <20200918020110.2063155-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,57 +59,113 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Balsundar P <balsundar.p@microsemi.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit c86fbe484c10b2cd1e770770db2d6b2c88801c1d ]
+[ Upstream commit 983f127603fac650fa34ee69db363e4615eaf9e7 ]
 
-The driver fails to handle data when read or written beyond device reported
-LBA, which triggers kernel panic
+Current code will send PRLI with FC-NVMe bit set for the targets which
+support only FCP. This may result into issue with targets which do not
+understand NVMe and will go into a strange state. This patch would restart
+the login process by going back to PLOGI state. The PLOGI state will force
+the target to respond to correct PRLI request.
 
-Link: https://lore.kernel.org/r/1571120524-6037-2-git-send-email-balsundar.p@microsemi.com
-Signed-off-by: Balsundar P <balsundar.p@microsemi.com>
+Fixes: c76ae845ea836 ("scsi: qla2xxx: Add error handling for PLOGI ELS passthrough")
+Cc: stable@vger.kernel.org # 5.4
+Link: https://lore.kernel.org/r/20191105150657.8092-2-hmadhani@marvell.com
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aacraid/aachba.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 28 ++++------------------------
+ drivers/scsi/qla2xxx/qla_iocb.c |  6 +++++-
+ 2 files changed, 9 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 6e356325d8d98..54717fb84a54c 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2481,13 +2481,13 @@ static int aac_read(struct scsi_cmnd * scsicmd)
- 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
- 			SAM_STAT_CHECK_CONDITION;
- 		set_sense(&dev->fsa_dev[cid].sense_data,
--			  HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
-+			  ILLEGAL_REQUEST, SENCODE_LBA_OUT_OF_RANGE,
- 			  ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
- 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
- 			     SCSI_SENSE_BUFFERSIZE));
- 		scsicmd->scsi_done(scsicmd);
--		return 1;
-+		return 0;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2f2e059f4575e..62d2ee825c97a 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1911,33 +1911,13 @@ qla24xx_handle_prli_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 				"%s %d %8phC post fc4 prli\n",
+ 				__func__, __LINE__, ea->fcport->port_name);
+ 			ea->fcport->fc4f_nvme = 0;
+-			qla24xx_post_prli_work(vha, ea->fcport);
+ 			return;
+ 		}
+ 
+-		/* at this point both PRLI NVME & PRLI FCP failed */
+-		if (N2N_TOPO(vha->hw)) {
+-			if (ea->fcport->n2n_link_reset_cnt < 3) {
+-				ea->fcport->n2n_link_reset_cnt++;
+-				/*
+-				 * remote port is not sending Plogi. Reset
+-				 * link to kick start his state machine
+-				 */
+-				set_bit(N2N_LINK_RESET, &vha->dpc_flags);
+-			} else {
+-				ql_log(ql_log_warn, vha, 0x2119,
+-				    "%s %d %8phC Unable to reconnect\n",
+-				    __func__, __LINE__, ea->fcport->port_name);
+-			}
+-		} else {
+-			/*
+-			 * switch connect. login failed. Take connection
+-			 * down and allow relogin to retrigger
+-			 */
+-			ea->fcport->flags &= ~FCF_ASYNC_SENT;
+-			ea->fcport->keep_nport_handle = 0;
+-			qlt_schedule_sess_for_deletion(ea->fcport);
+-		}
++		ea->fcport->flags &= ~FCF_ASYNC_SENT;
++		ea->fcport->keep_nport_handle = 0;
++		ea->fcport->logout_on_delete = 1;
++		qlt_schedule_sess_for_deletion(ea->fcport);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 2e272fc858ed1..aed4ce66e6cf9 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2773,6 +2773,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, int res)
+ 			ea.sp = sp;
+ 			qla24xx_handle_plogi_done_event(vha, &ea);
+ 			break;
++
+ 		case CS_IOCB_ERROR:
+ 			switch (fw_status[1]) {
+ 			case LSC_SCODE_PORTID_USED:
+@@ -2843,6 +2844,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, int res)
+ 				    fw_status[0], fw_status[1], fw_status[2]);
+ 
+ 				fcport->flags &= ~FCF_ASYNC_SENT;
++				fcport->disc_state = DSC_LOGIN_FAILED;
+ 				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 				break;
+ 			}
+@@ -2855,6 +2857,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, int res)
+ 			    fw_status[0], fw_status[1], fw_status[2]);
+ 
+ 			sp->fcport->flags &= ~FCF_ASYNC_SENT;
++			sp->fcport->disc_state = DSC_LOGIN_FAILED;
+ 			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 			break;
+ 		}
+@@ -2890,11 +2893,12 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 		return -ENOMEM;
  	}
  
- 	dprintk((KERN_DEBUG "aac_read[cpu %d]: lba = %llu, t = %ld.\n",
-@@ -2573,13 +2573,13 @@ static int aac_write(struct scsi_cmnd * scsicmd)
- 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
- 			SAM_STAT_CHECK_CONDITION;
- 		set_sense(&dev->fsa_dev[cid].sense_data,
--			  HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
-+			  ILLEGAL_REQUEST, SENCODE_LBA_OUT_OF_RANGE,
- 			  ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
- 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
- 			     SCSI_SENSE_BUFFERSIZE));
- 		scsicmd->scsi_done(scsicmd);
--		return 1;
-+		return 0;
- 	}
++	fcport->flags |= FCF_ASYNC_SENT;
++	fcport->disc_state = DSC_LOGIN_PEND;
+ 	elsio = &sp->u.iocb_cmd;
+ 	ql_dbg(ql_dbg_io, vha, 0x3073,
+ 	    "Enter: PLOGI portid=%06x\n", fcport->d_id.b24);
  
- 	dprintk((KERN_DEBUG "aac_write[cpu %d]: lba = %llu, t = %ld.\n",
+-	fcport->flags |= FCF_ASYNC_SENT;
+ 	sp->type = SRB_ELS_DCMD;
+ 	sp->name = "ELS_DCMD";
+ 	sp->fcport = fcport;
 -- 
 2.25.1
 
