@@ -7,49 +7,46 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EBAC43465
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E82FFC43463
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:24:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 710CE23119
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:22:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4D7423119
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:24:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600395727;
-	bh=ucOmtZeITF/dY6mbGxmxz+56Hy8EPs5r8vwwvGxI0AI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mpwiOyJhQA6+9LuIdJ02vdHZooAtQitiYm0MPD1viRfLRrYB/TGZKwvLD5KAtDgSJ
-	 dNfS+IgB+iRcCfxhrREiGxP3Bv37wfSOjICws38Xcs2GoZCa+X3hfJt/pDXy6lPiw3
-	 QN2Z64bxn1d6e9KL/pQaz/qiIsVd+MdhNl/so+dQ=
+	s=default; t=1600395841;
+	bh=KZz5/GEJRjnSLNW7zLad0z702KP6WTlUtH0qtgQvhH0=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=pnP2rXIOIgIkG22jWmLJYHphesqqPmIvqylr89dpdEArvVAMwXn8RqSE+l3C9Milj
+	 wb/lpno4tS2F+cUExz3edlQYR5tqBUMX/igDkM2iB1JOd3AekAnRTbygZ1a6zfed21
+	 OuVbvs1zqwVMNQc46HYV9v+oAXJexH1139xK8YvM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbgIRCVs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:21:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47998 "EHLO mail.kernel.org"
+        id S1729311AbgIRCX6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:23:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46728 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727554AbgIRCRY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:17:24 -0400
+        id S1729442AbgIRCQq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:16:46 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 600C82396D;
-        Fri, 18 Sep 2020 02:17:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DEA66235F7;
+        Fri, 18 Sep 2020 02:16:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395436;
-        bh=ucOmtZeITF/dY6mbGxmxz+56Hy8EPs5r8vwwvGxI0AI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rbtn8Tfn3nouvaZePOti36Lvxr2JtRKD6ybl17sfp+igp0ZPVhJpfDwdojigf6Bf4
-         pAYDYcLI9b6OPCetLIQtMS4WLr9rkMb8Fc7htK0JHeRar1f6aHvupXHGUmHIt1KxXm
-         DOHmF19eC0nyPSbuutvTenZZWoSODBMASmmbovrs=
+        s=default; t=1600395405;
+        bh=KZz5/GEJRjnSLNW7zLad0z702KP6WTlUtH0qtgQvhH0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=JTttQceD2d5A1M5wTog4h1F1vAKTjD7NoVrc64KO7Tq2EtuWcpO6NRPJFNoohdR1G
+         ZUnyExzsEIL2gR4cg2m39UXOXaePYNuxr4TrJ+R34Y8lW1u6H6uJJcXEC8FpW77cNq
+         9NQR8wIX9EIuOJE7zrSWf1VmJLN97MiRT917d6cs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Balsundar P <balsundar.p@microsemi.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 26/64] scsi: lpfc: Fix RQ buffer leakage when no IOCBs available
-Date:   Thu, 17 Sep 2020 22:16:05 -0400
-Message-Id: <20200918021643.2067895-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 01/64] scsi: aacraid: fix illegal IO beyond last LBA
+Date:   Thu, 17 Sep 2020 22:15:40 -0400
+Message-Id: <20200918021643.2067895-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918021643.2067895-1-sashal@kernel.org>
-References: <20200918021643.2067895-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,56 +55,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Balsundar P <balsundar.p@microsemi.com>
 
-[ Upstream commit 39c4f1a965a9244c3ba60695e8ff8da065ec6ac4 ]
+[ Upstream commit c86fbe484c10b2cd1e770770db2d6b2c88801c1d ]
 
-The driver is occasionally seeing the following SLI Port error, requiring
-reset and reinit:
+The driver fails to handle data when read or written beyond device reported
+LBA, which triggers kernel panic
 
- Port Status Event: ... error 1=0x52004a01, error 2=0x218
-
-The failure means an RQ timeout. That is, the adapter had received
-asynchronous receive frames, ran out of buffer slots to place the frames,
-and the driver did not replenish the buffer slots before a timeout
-occurred. The driver should not be so slow in replenishing buffers that a
-timeout can occur.
-
-When the driver received all the frames of a sequence, it allocates an IOCB
-to put the frames in. In a situation where there was no IOCB available for
-the frame of a sequence, the RQ buffer corresponding to the first frame of
-the sequence was not returned to the FW. Eventually, with enough traffic
-encountering the situation, the timeout occurred.
-
-Fix by releasing the buffer back to firmware whenever there is no IOCB for
-the first frame.
-
-[mkp: typo]
-
-Link: https://lore.kernel.org/r/20200128002312.16346-2-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/1571120524-6037-2-git-send-email-balsundar.p@microsemi.com
+Signed-off-by: Balsundar P <balsundar.p@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/aacraid/aachba.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7a94c2d352390..97c0d79a2601f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -15445,6 +15445,10 @@ lpfc_prep_seq(struct lpfc_vport *vport, struct hbq_dmabuf *seq_dmabuf)
- 			list_add_tail(&iocbq->list, &first_iocbq->list);
- 		}
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index de33801ca31ea..0614d05a990a6 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1938,13 +1938,13 @@ static int aac_read(struct scsi_cmnd * scsicmd)
+ 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+ 			SAM_STAT_CHECK_CONDITION;
+ 		set_sense(&dev->fsa_dev[cid].sense_data,
+-			  HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
++			  ILLEGAL_REQUEST, SENCODE_LBA_OUT_OF_RANGE,
+ 			  ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
+ 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
+ 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
+ 			     SCSI_SENSE_BUFFERSIZE));
+ 		scsicmd->scsi_done(scsicmd);
+-		return 1;
++		return 0;
  	}
-+	/* Free the sequence's header buffer */
-+	if (!first_iocbq)
-+		lpfc_in_buf_free(vport->phba, &seq_dmabuf->dbuf);
-+
- 	return first_iocbq;
- }
  
+ 	dprintk((KERN_DEBUG "aac_read[cpu %d]: lba = %llu, t = %ld.\n",
+@@ -2035,13 +2035,13 @@ static int aac_write(struct scsi_cmnd * scsicmd)
+ 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+ 			SAM_STAT_CHECK_CONDITION;
+ 		set_sense(&dev->fsa_dev[cid].sense_data,
+-			  HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
++			  ILLEGAL_REQUEST, SENCODE_LBA_OUT_OF_RANGE,
+ 			  ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
+ 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
+ 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
+ 			     SCSI_SENSE_BUFFERSIZE));
+ 		scsicmd->scsi_done(scsicmd);
+-		return 1;
++		return 0;
+ 	}
+ 
+ 	dprintk((KERN_DEBUG "aac_write[cpu %d]: lba = %llu, t = %ld.\n",
 -- 
 2.25.1
 
