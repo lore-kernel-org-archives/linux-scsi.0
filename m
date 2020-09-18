@@ -7,46 +7,45 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C150C43465
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF18C43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F07D23770
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:51:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C09E235F8
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:52:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600397504;
-	bh=IxCA4cikSGbdMv1b/t6Gfd0J3dPHUmZkz+mdtdpQs6M=;
+	s=default; t=1600397541;
+	bh=R0cYLuCf/RXxmg0SWDR4nzFewjhj6tgTJf0VaNdYvKg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VTZ3a3dXC/Cf936C5T+bjaWvsiBbY7BeUIPC1OWxgIfQ9JnDdi2v3VWbFOAxVuZIf
-	 vHTxVbcVaXU0qFTVJw7wWOzkZL5avs04B+xdw4T6F6p5GIlfoBAtfYunk8GDw59Sh0
-	 8PuXTl5lazgTKJmemUeD25t3aUvgnV4dJAYfqWK8=
+	b=CpyGVV41CsWNL2cts8l1no2fEzYYqd6wpe9FNza2ibIS5OZ0gcTsG9Q8UW5BoVmrC
+	 xfTpaOhjRgpWy5kgHs5oBQBCiWNAsNAHbYe5g6DneK4LMLecQBbqoWmnS2aNvtgr3P
+	 pWFBatb1QPxg5C8Tnqg+15JakwikccwHMeifuiv8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727495AbgIRCvn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:51:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59636 "EHLO mail.kernel.org"
+        id S1727308AbgIRCwU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:52:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59484 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728082AbgIRCIX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:08:23 -0400
+        id S1728064AbgIRCIT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:08:19 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CC74B2388E;
-        Fri, 18 Sep 2020 02:08:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 83BEA2395C;
+        Fri, 18 Sep 2020 02:08:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394902;
-        bh=IxCA4cikSGbdMv1b/t6Gfd0J3dPHUmZkz+mdtdpQs6M=;
+        s=default; t=1600394892;
+        bh=R0cYLuCf/RXxmg0SWDR4nzFewjhj6tgTJf0VaNdYvKg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Yb+cIqMy+o8Zt29UmQwA5JfIt9SEmLN6HGgmDmeEAT9QAIvgIJTd0h5EoTEZ7nEjB
-         Wjsz78vhSYJV8zPaP3eDqM7AUxb8J+xmTRiKooqJgi6xwIvnK5l6aq48e5kBcaZPWS
-         Wtf68J5Y+/vfHGoxINFJnlNVScufjxydFzFaIIGI=
+        b=hNXSfAGCsjV0mL9F7TEB5Rk1saFLl/mP1nkoskHtTOOlx9aaS2Ec0oT8sPnTMmGmn
+         5A+JKF6+78ESTDFxaLUNf/Z82WuBH46ldnGpPjsiCrUGdScQhLxbH3klqLu5SkpD0F
+         +Q3Hk5UjwhfFjRbeN/PBmQnwyUE9Rafrx74aTQto=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Balsundar P <balsundar.p@microsemi.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 016/206] scsi: lpfc: Fix kernel crash at lpfc_nvme_info_show during remote port bounce
-Date:   Thu, 17 Sep 2020 22:04:52 -0400
-Message-Id: <20200918020802.2065198-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 007/206] scsi: aacraid: fix illegal IO beyond last LBA
+Date:   Thu, 17 Sep 2020 22:04:43 -0400
+Message-Id: <20200918020802.2065198-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
 References: <20200918020802.2065198-1-sashal@kernel.org>
@@ -58,141 +57,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Balsundar P <balsundar.p@microsemi.com>
 
-[ Upstream commit 6c1e803eac846f886cd35131e6516fc51a8414b9 ]
+[ Upstream commit c86fbe484c10b2cd1e770770db2d6b2c88801c1d ]
 
-When reading sysfs nvme_info file while a remote port leaves and comes
-back, a NULL pointer is encountered. The issue is due to ndlp list
-corruption as the the nvme_info_show does not use the same lock as the rest
-of the code.
+The driver fails to handle data when read or written beyond device reported
+LBA, which triggers kernel panic
 
-Correct by removing the rcu_xxx_lock calls and replace by the host_lock and
-phba->hbaLock spinlocks that are used by the rest of the driver.  Given
-we're called from sysfs, we are safe to use _irq rather than _irqsave.
-
-Link: https://lore.kernel.org/r/20191105005708.7399-4-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/1571120524-6037-2-git-send-email-balsundar.p@microsemi.com
+Signed-off-by: Balsundar P <balsundar.p@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 35 ++++++++++++++++++-----------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index fe084d47ed9e5..3447d19d4147a 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -332,7 +332,6 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 	if (strlcat(buf, "\nNVME Initiator Enabled\n", PAGE_SIZE) >= PAGE_SIZE)
- 		goto buffer_done;
- 
--	rcu_read_lock();
- 	scnprintf(tmp, sizeof(tmp),
- 		  "XRI Dist lpfc%d Total %d NVME %d SCSI %d ELS %d\n",
- 		  phba->brd_no,
-@@ -341,7 +340,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		  phba->sli4_hba.scsi_xri_max,
- 		  lpfc_sli4_get_els_iocb_cnt(phba));
- 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto rcu_unlock_buf_done;
-+		goto buffer_done;
- 
- 	/* Port state is only one of two values for now. */
- 	if (localport->port_id)
-@@ -357,7 +356,9 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		  wwn_to_u64(vport->fc_nodename.u.wwn),
- 		  localport->port_id, statep);
- 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto rcu_unlock_buf_done;
-+		goto buffer_done;
-+
-+	spin_lock_irq(shost->host_lock);
- 
- 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
- 		nrport = NULL;
-@@ -384,39 +385,39 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 
- 		/* Tab in to show lport ownership. */
- 		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >= PAGE_SIZE)
--			goto rcu_unlock_buf_done;
-+			goto unlock_buf_done;
- 		if (phba->brd_no >= 10) {
- 			if (strlcat(buf, " ", PAGE_SIZE) >= PAGE_SIZE)
--				goto rcu_unlock_buf_done;
-+				goto unlock_buf_done;
- 		}
- 
- 		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
- 			  nrport->port_name);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto rcu_unlock_buf_done;
-+			goto unlock_buf_done;
- 
- 		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
- 			  nrport->node_name);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto rcu_unlock_buf_done;
-+			goto unlock_buf_done;
- 
- 		scnprintf(tmp, sizeof(tmp), "DID x%06x ",
- 			  nrport->port_id);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto rcu_unlock_buf_done;
-+			goto unlock_buf_done;
- 
- 		/* An NVME rport can have multiple roles. */
- 		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR) {
- 			if (strlcat(buf, "INITIATOR ", PAGE_SIZE) >= PAGE_SIZE)
--				goto rcu_unlock_buf_done;
-+				goto unlock_buf_done;
- 		}
- 		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET) {
- 			if (strlcat(buf, "TARGET ", PAGE_SIZE) >= PAGE_SIZE)
--				goto rcu_unlock_buf_done;
-+				goto unlock_buf_done;
- 		}
- 		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY) {
- 			if (strlcat(buf, "DISCSRVC ", PAGE_SIZE) >= PAGE_SIZE)
--				goto rcu_unlock_buf_done;
-+				goto unlock_buf_done;
- 		}
- 		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
- 					  FC_PORT_ROLE_NVME_TARGET |
-@@ -424,14 +425,14 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 			scnprintf(tmp, sizeof(tmp), "UNKNOWN ROLE x%x",
- 				  nrport->port_role);
- 			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--				goto rcu_unlock_buf_done;
-+				goto unlock_buf_done;
- 		}
- 
- 		scnprintf(tmp, sizeof(tmp), "%s\n", statep);
- 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto rcu_unlock_buf_done;
-+			goto unlock_buf_done;
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 6e356325d8d98..54717fb84a54c 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -2481,13 +2481,13 @@ static int aac_read(struct scsi_cmnd * scsicmd)
+ 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+ 			SAM_STAT_CHECK_CONDITION;
+ 		set_sense(&dev->fsa_dev[cid].sense_data,
+-			  HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
++			  ILLEGAL_REQUEST, SENCODE_LBA_OUT_OF_RANGE,
+ 			  ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
+ 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
+ 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
+ 			     SCSI_SENSE_BUFFERSIZE));
+ 		scsicmd->scsi_done(scsicmd);
+-		return 1;
++		return 0;
  	}
--	rcu_read_unlock();
-+	spin_unlock_irq(shost->host_lock);
  
- 	if (!lport)
- 		goto buffer_done;
-@@ -491,11 +492,11 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		  atomic_read(&lport->cmpl_fcp_err));
- 	strlcat(buf, tmp, PAGE_SIZE);
+ 	dprintk((KERN_DEBUG "aac_read[cpu %d]: lba = %llu, t = %ld.\n",
+@@ -2573,13 +2573,13 @@ static int aac_write(struct scsi_cmnd * scsicmd)
+ 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+ 			SAM_STAT_CHECK_CONDITION;
+ 		set_sense(&dev->fsa_dev[cid].sense_data,
+-			  HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
++			  ILLEGAL_REQUEST, SENCODE_LBA_OUT_OF_RANGE,
+ 			  ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
+ 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
+ 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
+ 			     SCSI_SENSE_BUFFERSIZE));
+ 		scsicmd->scsi_done(scsicmd);
+-		return 1;
++		return 0;
+ 	}
  
--	/* RCU is already unlocked. */
-+	/* host_lock is already unlocked. */
- 	goto buffer_done;
- 
-- rcu_unlock_buf_done:
--	rcu_read_unlock();
-+ unlock_buf_done:
-+	spin_unlock_irq(shost->host_lock);
- 
-  buffer_done:
- 	len = strnlen(buf, PAGE_SIZE);
+ 	dprintk((KERN_DEBUG "aac_write[cpu %d]: lba = %llu, t = %ld.\n",
 -- 
 2.25.1
 
