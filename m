@@ -2,131 +2,137 @@ Return-Path: <SRS0=xkU+=C3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CACCC43466
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F05C43465
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:07:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FB0E22208
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:02:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600455722;
-	bh=rS84A/OaBg23yNAtPTq3plT5X3kOb7286omQM12f1Fk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=UJfEFU+fIbl6wqH/9DAZg/guTKGR7DOFf8iKF//YOpBW6MxnNn4ivrIqIkXEcB4uq
-	 FUuIoMQnb1QpbVTistRm2xXZaYlHaibjOaXDnGXCAd2Iknqxhz1a+nNiCI0RJZlk2M
-	 cb+vZh30aecpUZS7ExbRqbDYITdz6zfVoPiB9AAA=
+	by mail.kernel.org (Postfix) with ESMTP id 4277221707
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726205AbgIRTB7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Sep 2020 15:01:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56430 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726115AbgIRTB6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Sep 2020 15:01:58 -0400
-Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AE02222208;
-        Fri, 18 Sep 2020 19:01:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600455717;
-        bh=rS84A/OaBg23yNAtPTq3plT5X3kOb7286omQM12f1Fk=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=lBQ48smIRQIhIDWuplFGl2mJEcnYqMPakqetKj4pW2yatfyCMH9c1wXgyli7z/ZWn
-         d39s0E0thPumFHv24BQtFlkwIcPw+9x6/8zHIf3wONcRQKvVaYgCAcAnNhkzELO5Ha
-         C8pkBB5efZA4/zZ+GSLRZGH835T6n/Un3UenVLJ8=
-Received: by mail-ot1-f42.google.com with SMTP id q21so6340787ota.8;
-        Fri, 18 Sep 2020 12:01:57 -0700 (PDT)
-X-Gm-Message-State: AOAM531Jb/tm6KXclqaZDWkbJ2BJma/eMT9KBJlFxRdIktggCP9VRyLt
-        pW+AkTVm6W0i660/j08UDyysUqQET85EG6fMwA==
-X-Google-Smtp-Source: ABdhPJy5SRe4iLnIuK1LSlYLAhKMK7cdeAyXWOah9n6KqXUDNjHoxqZWwPaLaSunMfwZS1MlOrEAELY5ORhtsHG4Pek=
-X-Received: by 2002:a9d:6ada:: with SMTP id m26mr10145370otq.192.1600455716990;
- Fri, 18 Sep 2020 12:01:56 -0700 (PDT)
+        id S1726321AbgIRTHx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Sep 2020 15:07:53 -0400
+Received: from smtprelay0235.hostedemail.com ([216.40.44.235]:56080 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726139AbgIRTHx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Sep 2020 15:07:53 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay08.hostedemail.com (Postfix) with ESMTP id 680D8182CF666;
+        Fri, 18 Sep 2020 19:07:51 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: grape33_3e10a6e2712d
+X-Filterd-Recvd-Size: 6277
+Received: from XPS-9350 (unknown [172.58.19.71])
+        (Authenticated sender: joe@perches.com)
+        by omf09.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 18 Sep 2020 19:07:48 +0000 (UTC)
+Message-ID: <47b5bed0fc61fd9a4789816a5a836c7c3c2d41d2.camel@perches.com>
+Subject: Re: [PATCH] scsi: arcmsr: Remove the superfluous break
+From:   Joe Perches <joe@perches.com>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jing Xiangfeng <jingxiangfeng@huawei.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        lee.jones@linaro.org, colin.king@canonical.com,
+        mchehab+huawei@kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        kernel-janitors <kernel-janitors@vger.kernel.org>
+Date:   Fri, 18 Sep 2020 12:07:46 -0700
+In-Reply-To: <2ce1124d-7f83-d9aa-f62a-519c8914ad98@kernel.dk>
+References: <20200918093230.49050-1-jingxiangfeng@huawei.com>
+         <20200918145619.GA25599@embeddedor>
+         <e9320543ab6e7c8bd5ceae8cfa9d0912a0e962e0.camel@perches.com>
+         <2ce1124d-7f83-d9aa-f62a-519c8914ad98@kernel.dk>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-References: <cover.1598939393.git.nguyenb@codeaurora.org> <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
- <20200914183505.GA357@bogus> <d332e61cea4fef237507f1404efa724a@codeaurora.org>
-In-Reply-To: <d332e61cea4fef237507f1404efa724a@codeaurora.org>
-From:   Rob Herring <robh@kernel.org>
-Date:   Fri, 18 Sep 2020 13:01:45 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+YV-GjAhVVHtgNz6xFR=bEgSwWKY+QGixRQJ5Ov75pag@mail.gmail.com>
-Message-ID: <CAL_Jsq+YV-GjAhVVHtgNz6xFR=bEgSwWKY+QGixRQJ5Ov75pag@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for UFS
-To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>
-Cc:     Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        SCSI <linux-scsi@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Sep 15, 2020 at 2:10 AM <nguyenb@codeaurora.org> wrote:
->
-> On 2020-09-14 11:35, Rob Herring wrote:
-> > On Mon, Aug 31, 2020 at 11:00:47PM -0700, Bao D. Nguyen wrote:
-> >> UFS's specifications supports a range of Vcc operating
-> >> voltage levels. Add documentation for the UFS's Vcc voltage
-> >> levels setting.
-> >>
-> >> Signed-off-by: Can Guo <cang@codeaurora.org>
-> >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> >> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-> >> ---
-> >>  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
-> >>  1 file changed, 2 insertions(+)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> index 415ccdd..7257b32 100644
-> >> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> >> @@ -23,6 +23,8 @@ Optional properties:
-> >>                            with "phys" attribute, provides phandle to
-> >> UFS PHY node
-> >>  - vdd-hba-supply        : phandle to UFS host controller supply
-> >> regulator node
-> >>  - vcc-supply            : phandle to VCC supply regulator node
-> >> +- vcc-voltage-level     : specifies voltage levels for VCC supply.
-> >> +                          Should be specified in pairs (min, max),
-> >> units uV.
-> >
-> > The expectation is the regulator pointed to by 'vcc-supply' has the
-> > voltage constraints. Those constraints are supposed to be the board
-> > constraints, not the regulator operating design constraints. If that
-> > doesn't work for your case, then it should be addressed in a common way
-> > for the regulator binding.
-> The UFS regulator has a min_uV and max_uV limits. Currently, the min and
-> max are hardcoded
-> to UFS2.1 Spec allowed values of 2.7V and 3.6V respectively.
-> With this change, I am trying to fix a couple issues:
-> 1. The 2.7V min value only applies to UFS2.1 devices. with UFS3.0+
-> devices, the VCC min should be 2.4V.
-> Hardcoding the min_uV to 2.7V does not work for UFS3.0+ devices.
+On Fri, 2020-09-18 at 11:17 -0600, Jens Axboe wrote:
+> On 9/18/20 11:13 AM, Joe Perches wrote:
+> > On Fri, 2020-09-18 at 09:56 -0500, Gustavo A. R. Silva wrote:
+> > > On Fri, Sep 18, 2020 at 05:32:30PM +0800, Jing Xiangfeng wrote:
+> > > > Remove the superfluous break, as there is a 'return' before it.
+> > > > 
+> > > 
+> > > Apparently, the change is correct. Please, just add a proper Fixes tag by
+> > > yourself this time.
+> > 
+> > There's no need for a "Fixes:" here, it's purely cosmetic.
+> > 
+> > btw:
+> > 
+> > There are at least 150 instances of
+> > 	return foo(...);
+> > 	break;
+> > still in the kernel tree:
+> 
+> A lot of these are false positives, since they follow a pattern of:
+> 
+> if (some_condition)
+> 	return func();
+> break;
 
-Don't you know the device version attached and can adjust the voltage
-based on that? Or you have to set the voltage first?
+Ah, right. Thanks.
 
-> 2. Allow users to select a different Vcc voltage within the allowed
-> range.
-> Using the min value, the UFS device is operating at marginal Vcc
-> voltage.
-> In addition the PMIC and the board designs may add some variables
-> especially at extreme
-> temperatures. We observe stability issues when using the min Vcc
-> voltage.
+Refining the test a bit to make sure the number of tabs before the
+return and before the break are the same appears to show 42 instances.
 
-Again, we have standard regulator properties for this already that you
-can tune per board.
+$ grep-2.5.4 -rP --include=*.[ch] -n "^([\t]+)\breturn\s+\w+\s*\([^\)]+\)\s*;[ \t]*\n\1break\s*;\s*(case\s+\w+|default)\s*:" * | grep return | wc -l
+42
 
-Rob
+(the line numbering seems screwed up below,
+ but the instances listed seem right)
+
+$ grep-2.5.4 -rP --include=*.[ch] -n "^([\t]+)\breturn\s+\w+\s*\([^\)]+\)\s*;[ \t]*\n\1break\s*;\s*(case\s+\w+|default)\s*:" * | grep return
+arch/mips/loongson2ef/common/cs5536/cs5536_isa.c:275:		return pci_isa_read_bar(0);
+arch/mips/loongson2ef/common/cs5536/cs5536_isa.c:276:		return pci_isa_read_bar(1);
+arch/mips/loongson2ef/common/cs5536/cs5536_isa.c:277:		return pci_isa_read_bar(2);
+arch/mips/loongson2ef/common/cs5536/cs5536_isa.c:280:		return pci_isa_read_bar(4);
+arch/mips/loongson2ef/common/cs5536/cs5536_isa.c:281:		return pci_isa_read_bar(5);
+arch/x86/kvm/emulate.c:1863:		return segmented_write(ctxt,
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:2091:		return __rtl8821ae_phy_config_with_headerfile(hw,
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:2092:		return __rtl8821ae_phy_config_with_headerfile(hw,
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:2114:		return __rtl8821ae_phy_config_with_headerfile(hw,
+drivers/net/wireless/marvell/mwifiex/cfg80211.c:1210:			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
+drivers/net/wireless/marvell/mwifiex/cfg80211.c:1246:			return mwifiex_change_vif_to_sta_adhoc(dev, curr_iftype,
+drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c:1200:		return iwl_mvm_mac_ctxt_cmd_sta(mvm, vif, action,
+drivers/net/hyperv/netvsc.c:1275:		return netvsc_receive(ndev, net_device, nvchan,
+drivers/media/dvb-frontends/si21xx.c:466:		return si21_writereg(state, LNB_CTRL_REG_1, val | 0x40);
+drivers/media/usb/ttusb-dec/ttusb_dec.c:1104:		return ttusb_dec_start_ts_feed(dvbdmxfeed);
+drivers/media/usb/ttusb-dec/ttusb_dec.c:1105:		return ttusb_dec_start_sec_feed(dvbdmxfeed);
+drivers/media/usb/ttusb-dec/ttusb_dec.c:1153:		return ttusb_dec_stop_ts_feed(dvbdmxfeed);
+drivers/scsi/bfa/bfa_ioc.h:1000:		return bfi_image_cb_get_chunk(off);
+drivers/scsi/bfa/bfa_ioc.h:1001:		return bfi_image_ct_get_chunk(off);
+drivers/scsi/bfa/bfa_ioc.h:1002:		return bfi_image_ct2_get_chunk(off);
+drivers/scsi/be2iscsi/be_mgmt.c:1245:		return snprintf(buf, PAGE_SIZE,
+drivers/scsi/be2iscsi/be_mgmt.c:1247:		return snprintf(buf, PAGE_SIZE, "BE3-R Adapter Family\n");
+drivers/scsi/be2iscsi/be_mgmt.c:1248:		return snprintf(buf, PAGE_SIZE, "Skyhawk-R Adapter Family\n");
+drivers/scsi/arcmsr/arcmsr_hba.c:2701:		return arcmsr_hbaA_handle_isr(acb);
+drivers/scsi/arcmsr/arcmsr_hba.c:2702:		return arcmsr_hbaB_handle_isr(acb);
+drivers/iio/adc/meson_saradc.c:594:		return meson_sar_adc_get_sample(indio_dev, chan, NO_AVERAGING,
+drivers/iio/adc/meson_saradc.c:595:		return meson_sar_adc_get_sample(indio_dev, chan,
+drivers/s390/char/tape_34xx.c:653:					return tape_34xx_done(request);
+drivers/s390/char/tape_3590.c:945:		return tape_3590_erp_failed(device, request, irb, -EIO);
+drivers/nfc/st21nfca/core.c:792:		return nfc_hci_send_cmd_async(hdev, target->hci_reader_gate,
+drivers/gpu/drm/mgag200/mgag200_mode.c:796:		return mga_g200se_set_plls(mdev, clock);
+drivers/gpu/drm/mgag200/mgag200_mode.c:798:		return mga_g200wb_set_plls(mdev, clock);
+drivers/gpu/drm/mgag200/mgag200_mode.c:799:		return mga_g200ev_set_plls(mdev, clock);
+drivers/gpu/drm/mgag200/mgag200_mode.c:801:		return mga_g200eh_set_plls(mdev, clock);
+sound/soc/intel/skylake/skl-pcm.c:504:		return skl_run_pipe(skl, mconfig->pipe);
+sound/oss/dmasound/dmasound_core.c:1005:		return IOCTL_OUT(arg, fmt);
+sound/oss/dmasound/dmasound_core.c:1020:		return IOCTL_OUT(arg, size);
+sound/oss/dmasound/dmasound_core.c:1121:		return IOCTL_OUT(arg, data);
+tools/perf/ui/stdio/hist.c:392:		return callchain__fprintf_graph(fp, &he->sorted_chain, total_samples,
+tools/perf/ui/stdio/hist.c:393:		return callchain__fprintf_graph(fp, &he->sorted_chain, total_samples,
+tools/perf/ui/stdio/hist.c:394:		return callchain__fprintf_flat(fp, &he->sorted_chain, total_samples);
+tools/perf/ui/stdio/hist.c:395:		return callchain__fprintf_folded(fp, &he->sorted_chain, total_samples);
+
+
+
