@@ -2,121 +2,131 @@ Return-Path: <SRS0=xkU+=C3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9DAEC43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 18:41:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CACCC43466
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:02:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F313221EC
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 18:41:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QbpKicIQ"
+	by mail.kernel.org (Postfix) with ESMTP id 2FB0E22208
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:02:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600455722;
+	bh=rS84A/OaBg23yNAtPTq3plT5X3kOb7286omQM12f1Fk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=UJfEFU+fIbl6wqH/9DAZg/guTKGR7DOFf8iKF//YOpBW6MxnNn4ivrIqIkXEcB4uq
+	 FUuIoMQnb1QpbVTistRm2xXZaYlHaibjOaXDnGXCAd2Iknqxhz1a+nNiCI0RJZlk2M
+	 cb+vZh30aecpUZS7ExbRqbDYITdz6zfVoPiB9AAA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726290AbgIRSlg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Sep 2020 14:41:36 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37806 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726152AbgIRSlg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Sep 2020 14:41:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600454495;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I9p+JtuXsQ23wypNujclCplF7cCM4hzfI3iL0PTxMAY=;
-        b=QbpKicIQUdG72LNHCvBnVfSDQ6T3fZdHm/jiUH940IXp0F7R5KRxi83y6OYkRY+UXTVEGN
-        I/9B+9Gcx6BUfTSGQ6Iy4h3cHzU871wj79TY0dtt1cdhob74LsyysH15q7Ip/Dul2XHqvu
-        iqoZHAgCvKAsOJogXShMQJyWOseDrI8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-173-zY7y-42UP_uZ8dGDg5pdLQ-1; Fri, 18 Sep 2020 14:41:33 -0400
-X-MC-Unique: zY7y-42UP_uZ8dGDg5pdLQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726205AbgIRTB7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Sep 2020 15:01:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56430 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726115AbgIRTB6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Sep 2020 15:01:58 -0400
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 51E191007499;
-        Fri, 18 Sep 2020 18:41:32 +0000 (UTC)
-Received: from ovpn-114-103.phx2.redhat.com (ovpn-114-103.phx2.redhat.com [10.3.114.103])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0260B68D63;
-        Fri, 18 Sep 2020 18:41:31 +0000 (UTC)
-Message-ID: <3b86ce755e3b0b2b3d9e1a2cdf8c48b742f94265.camel@redhat.com>
-Subject: Re: [PATCH 1/1] scsi: scsi_dh_alua: do not set h->sdev to NULL
- before removing the list entry
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org
-Date:   Fri, 18 Sep 2020 14:41:31 -0400
-In-Reply-To: <8239CB66-1836-444D-A230-83714795D5DC@purestorage.com>
-References: <8239CB66-1836-444D-A230-83714795D5DC@purestorage.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id AE02222208;
+        Fri, 18 Sep 2020 19:01:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600455717;
+        bh=rS84A/OaBg23yNAtPTq3plT5X3kOb7286omQM12f1Fk=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=lBQ48smIRQIhIDWuplFGl2mJEcnYqMPakqetKj4pW2yatfyCMH9c1wXgyli7z/ZWn
+         d39s0E0thPumFHv24BQtFlkwIcPw+9x6/8zHIf3wONcRQKvVaYgCAcAnNhkzELO5Ha
+         C8pkBB5efZA4/zZ+GSLRZGH835T6n/Un3UenVLJ8=
+Received: by mail-ot1-f42.google.com with SMTP id q21so6340787ota.8;
+        Fri, 18 Sep 2020 12:01:57 -0700 (PDT)
+X-Gm-Message-State: AOAM531Jb/tm6KXclqaZDWkbJ2BJma/eMT9KBJlFxRdIktggCP9VRyLt
+        pW+AkTVm6W0i660/j08UDyysUqQET85EG6fMwA==
+X-Google-Smtp-Source: ABdhPJy5SRe4iLnIuK1LSlYLAhKMK7cdeAyXWOah9n6KqXUDNjHoxqZWwPaLaSunMfwZS1MlOrEAELY5ORhtsHG4Pek=
+X-Received: by 2002:a9d:6ada:: with SMTP id m26mr10145370otq.192.1600455716990;
+ Fri, 18 Sep 2020 12:01:56 -0700 (PDT)
+MIME-Version: 1.0
+References: <cover.1598939393.git.nguyenb@codeaurora.org> <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
+ <20200914183505.GA357@bogus> <d332e61cea4fef237507f1404efa724a@codeaurora.org>
+In-Reply-To: <d332e61cea4fef237507f1404efa724a@codeaurora.org>
+From:   Rob Herring <robh@kernel.org>
+Date:   Fri, 18 Sep 2020 13:01:45 -0600
+X-Gmail-Original-Message-ID: <CAL_Jsq+YV-GjAhVVHtgNz6xFR=bEgSwWKY+QGixRQJ5Ov75pag@mail.gmail.com>
+Message-ID: <CAL_Jsq+YV-GjAhVVHtgNz6xFR=bEgSwWKY+QGixRQJ5Ov75pag@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for UFS
+To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>
+Cc:     Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        SCSI <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-09-11 at 09:21 -0700, Brian Bunker wrote:
-> A race exists where the BUG_ON(!h->sdev) will fire if the detach
-> device handler
-> from one thread runs removing a list entry while another thread is
-> trying to
-> evaluate the target portal group state.
-> 
-> Do not set the h->sdev to NULL in the detach device handler. It is
-> freed at the
-> end of the function any way. Also remove the BUG_ON since the
-> condition
-> that causes them to fire has been removed.
-> 
-> Signed-off-by: Brian Bunker <brian@purestorage.com>
-> Acked-by: Krishna Kant <krishna.kant@purestorage.com>
-> ___
-> --- a/scsi/drivers/scsi/device_handler/scsi_dh_alua.c   2020-09-10
-> 12:29:03.000000000 -0700
-> +++ b/scsi/drivers/scsi/device_handler/scsi_dh_alua.c   2020-09-11
-> 09:14:15.000000000 -0700
-> @@ -658,8 +658,6 @@
->                                         rcu_read_lock();
->                                         list_for_each_entry_rcu(h,
->                                                 &tmp_pg->dh_list,
-> node) {
-> -                                               /* h->sdev should
-> always be valid */
-> -                                               BUG_ON(!h->sdev);
->                                                 h->sdev->access_state 
-> = desc[0];
->                                         }
->                                         rcu_read_unlock();
-> @@ -705,7 +703,6 @@
->                         pg->expiry = 0;
->                         rcu_read_lock();
->                         list_for_each_entry_rcu(h, &pg->dh_list,
-> node) {
-> -                               BUG_ON(!h->sdev);
->                                 h->sdev->access_state =
->                                         (pg->state &
-> SCSI_ACCESS_STATE_MASK);
->                                 if (pg->pref)
-> @@ -1147,7 +1144,6 @@
->         spin_lock(&h->pg_lock);
->         pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h-
-> >pg_lock));
->         rcu_assign_pointer(h->pg, NULL);
-> -       h->sdev = NULL;
->         spin_unlock(&h->pg_lock);
->         if (pg) {
->                 spin_lock_irq(&pg->lock);
-> 
+On Tue, Sep 15, 2020 at 2:10 AM <nguyenb@codeaurora.org> wrote:
+>
+> On 2020-09-14 11:35, Rob Herring wrote:
+> > On Mon, Aug 31, 2020 at 11:00:47PM -0700, Bao D. Nguyen wrote:
+> >> UFS's specifications supports a range of Vcc operating
+> >> voltage levels. Add documentation for the UFS's Vcc voltage
+> >> levels setting.
+> >>
+> >> Signed-off-by: Can Guo <cang@codeaurora.org>
+> >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> >> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> >> ---
+> >>  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
+> >>  1 file changed, 2 insertions(+)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> index 415ccdd..7257b32 100644
+> >> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> >> @@ -23,6 +23,8 @@ Optional properties:
+> >>                            with "phys" attribute, provides phandle to
+> >> UFS PHY node
+> >>  - vdd-hba-supply        : phandle to UFS host controller supply
+> >> regulator node
+> >>  - vcc-supply            : phandle to VCC supply regulator node
+> >> +- vcc-voltage-level     : specifies voltage levels for VCC supply.
+> >> +                          Should be specified in pairs (min, max),
+> >> units uV.
+> >
+> > The expectation is the regulator pointed to by 'vcc-supply' has the
+> > voltage constraints. Those constraints are supposed to be the board
+> > constraints, not the regulator operating design constraints. If that
+> > doesn't work for your case, then it should be addressed in a common way
+> > for the regulator binding.
+> The UFS regulator has a min_uV and max_uV limits. Currently, the min and
+> max are hardcoded
+> to UFS2.1 Spec allowed values of 2.7V and 3.6V respectively.
+> With this change, I am trying to fix a couple issues:
+> 1. The 2.7V min value only applies to UFS2.1 devices. with UFS3.0+
+> devices, the VCC min should be 2.4V.
+> Hardcoding the min_uV to 2.7V does not work for UFS3.0+ devices.
 
-We ran this change through fault insertion regression testing and
-did not see any new problems.  (Our tests didn't hit the original
-bug being fixed here though.)
+Don't you know the device version attached and can adjust the voltage
+based on that? Or you have to set the voltage first?
 
--Ewan
+> 2. Allow users to select a different Vcc voltage within the allowed
+> range.
+> Using the min value, the UFS device is operating at marginal Vcc
+> voltage.
+> In addition the PMIC and the board designs may add some variables
+> especially at extreme
+> temperatures. We observe stability issues when using the min Vcc
+> voltage.
 
+Again, we have standard regulator properties for this already that you
+can tune per board.
 
+Rob
