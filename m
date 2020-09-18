@@ -7,68 +7,67 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FFEFC43463
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:37:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4146BC43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:37:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57154208DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:37:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2021208DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:37:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="JLUoSVRF";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ebES07Kr"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nHZ4tmSV";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="FcHS8tdc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726093AbgIRAhm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 20:37:42 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:46985 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725987AbgIRAhm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 20:37:42 -0400
-X-Greylist: delayed 426 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 20:37:40 EDT
+        id S1726101AbgIRAhw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 20:37:52 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:36784 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725987AbgIRAhv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 20:37:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1600389461; x=1631925461;
+  t=1600389471; x=1631925471;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=V9LMB5/HWwOYJcCdyKAs8X314jcD8UXjuQ5Uwpznk/8=;
-  b=JLUoSVRF+HL1+N0b2PBqRt1ncdLOOs3+G/5Ct2kZGhK3FLZhYtHJV65A
-   oIAPXyXddUXUbn+KAsVGOKjGRfGgwqN5KbLY2F9RnR5M0yURRv/5AR+Cu
-   WH0oZRMW5fmTMsBQXLxE44SGSy2USrTRRdi42wcNmMAQ38m5g5sRAlMPp
-   9FgHE/vV3Dq9kIOE+0LOQgyGKGuns7AQJdLN/zlQ0krVr5oGmlizowKtl
-   IDYSGf+Ji2yJcfM3Tw6MhE8P5PcEiY5hKQL9a+Ll0/BEtsU2DYHoVSgeK
-   hcUHp/Jb0nfc4PHSXuLpUkabbZIwLZ/40MnCsJCAmMn/l43pwOH7duyEq
-   g==;
-IronPort-SDR: qf1Z41viSSvwepqQvtWG1RP6XNgp778rbwgW2EX4Bzh3+fJ38SQvbBjx7Ka3oUrmiBfZxOT0zS
- qQZSfVQ6a4rSHbUiiRY5v3emDSSY1nNWCz4SwyfrHOEWp85FesagYsJ1nVO6JTHtDCjBkb0GEY
- V9eiIBqINHlBU/u2y+uHYVzgc6FRi6bBH3YAT9Hz3ZfIuK5qHtUtzbdRlN8FGeg6HLMk4frQtK
- ckiw6YJUhEl1vD2zs/cgIEA0uQGrK7draeyIcLq2JwwkI1Of099pMylvMJDlqFWxRk3T5qKyHS
- oVs=
+  bh=SdQ+a9T7i6NNzaY5QysLkrVQr6p+rYhrMKmZPUhCVWo=;
+  b=nHZ4tmSVgzQSLUR5JvORTO6GzJRXO8iAOpDar15/q6ghTjtQmzYL5RqG
+   +JlUXZIWmNpwG2+40r3d4kZIbRk5LNjV93yWhEGeKkT5oHnGQeiQXvdQy
+   ZCi79PPFc4Y080CwMrBan+vJBCiHW5YLuNQmnzcu1NfokFfrLRQExrVo0
+   vjLo3QvD1Qz3rpVgdJXbbi86Fyts8F3qzT4GmBeXuvAvYrftHTwdPmF+n
+   2fb93K1UI6r78+3rTqkNkIEI0tpSeBHOE8q4T73ZxHBJvthMMI2Bc/Rnw
+   Jv+rsZtSecHSoVCHPD+w4klpveb5kT4Sf00i9yNxizfbGR23HZLVRoByf
+   Q==;
+IronPort-SDR: TbmZzufzTD0zvbwPKvEWFY+ThJ3V9zpI3hb6f/rxr+BGquBAez8NdIUyP+iQNB2wKOP2mw5iG+
+ SQ9WB8ULt/1GwnwG1p30gyS1jSjC4jDpH/bqbMtLMPdKDSRTp/1S/4n48G50HPZYnEJh8U0JOL
+ pSF3agh4RPz7oTY7weDnv2rq2rbYggcfu+mb18MYMQT+FGU7JYl+llh2aFyludte8w77qfu3aG
+ jDdCQhe0FIXbyfKZ+PWeOz1u4tTziyl2X8+em5w/mxiXaxhR2/68CAqJnEKm8I9eGsUIp6TmPS
+ mrU=
 X-IronPort-AV: E=Sophos;i="5.77,272,1596470400"; 
-   d="scan'208";a="148912400"
-Received: from mail-bl2nam02lp2056.outbound.protection.outlook.com (HELO NAM02-BL2-obe.outbound.protection.outlook.com) ([104.47.38.56])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Sep 2020 08:30:33 +0800
+   d="scan'208";a="152045615"
+Received: from mail-bn8nam12lp2176.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.176])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Sep 2020 08:37:49 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nHB/f2OxHfjZBjf+5qwAgQIVOU+OfY+ZkxJtD+zSeSuMkW2T2c8cPmsnY0pdz1VZ6beVIm2cjhEbjutJXt+tRbQyGNCKE+J+0q7ZNSAfImHYCU2oQA646PkhW7d/CAHLZ3q+eJmxEm9TWMo1YI1rWocT8gm8oGiwo6LtWuD477GUSjP0bdqU+m5V+SY5TBH7Fu/Ql+WbVP5Pq5NMBLorT4CfnBGdFr9g8UfyEn7wFof8b/4iBM0HqHp3JlztexRGOb5TvVWcHHRrRko56RmFtkJQtDlCal04S0p1gpbOez23SqLUWNta2JzsrYsxH/bFK61E4z2R2YbOkHlI/hBbXA==
+ b=I1zMC5pYmTLlcpjb95y1No5UiOl8WlSZxz6SZwrvqQjN/Y96yQkQp3ce+HzxEeTCszrfaIJSv+rqnp/RKd1gnKquQtjMJG9VdwlD4TVS2+QyXyb5G2vu3ngAT/7bcI0zP2+P3zkjxyX2VKmL3JSP/9Mpta41iuoPZPAE3661prGHPaG8Us2XPtQpoxhBQDCXP9Iwlou8ZQBrGXyyRQbBdY0YIE96CSczn4naucQxQ+7JHyYVkgWi2tXwz3EWYS84P0NBuVjsDOs9sKYIEruPsP30k5cm6zCmaK5H5YCkLLFRRQzBepLm/AbilEfHBlM4W4hD4D+JL3wfTzP/hz/pqw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ub/IM5AXkd9CH4YE1Wc9uwWc4eMXdekPRe0Qanl8Vng=;
- b=aVDXkr+XS6p5eHF2FPLpVEOlCJr1ihiDS2l51PRb709eBZOh8n8wO5JvBlXi/8jadnx4ik1JEEE1/AOf3CZ03mDu/z8uMpp03xASdJGicVBhqGN1eAa1IWeZoufJYRcU46yUMgtiSAxLxRDmyRsazFta4886LPMlsnheoXB67KO3ffoiBT/L+tVIaoClf8iJh057izmsJ5+vAm/a+NsV585UEJ3KuA9hSXvk0ffTXhoqUKvEzdgfqm9cm40dEv5XSZyrZjiyFXeS3jbyTumRDXX/Ny6PUlDkf7J5KJUGxTHK8FGYjoVqGN9GCCddCzlU9t3oLYrizy9ldTYbaw/7+Q==
+ bh=GtMaZla2pDwUHqmxVJrvaYxjDdYv407oHbLfM/sjZ+Y=;
+ b=ZCYkHc696wBL3oRvKu+QZey2yUU0T/gDZl0oIx1ipDOAqblwOkzQWGrI48AQTdA7yHJ7ViqiBFaxFw/X/Ar1t/EOVHs+/ziUSL5JyNFIlKHg5Q8hfI3kGpx1jy92gtpbyjZOGoKFMTIPBRK/D0bzz4SNjBH5A4L47aqi0J03UegfAxmmSQPuBh3JiYfg4doKEsuo+6fsJhWFCqyPK+UBAUKgf0V8Am/s5M7wK0x/3k88J9qBvVTagc82eXrijQrb/mz4NpJGJ4rIh+0ckqb4Ss9bbsMCPAz1XYPLMHrLlK+ofNVhOomq9bBkBu9zt5vXtE3EgAqjZ5eJTe1TkQftzg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ub/IM5AXkd9CH4YE1Wc9uwWc4eMXdekPRe0Qanl8Vng=;
- b=ebES07KrtIfnWUziMk9GX/k8n+NSB6axdmHnPDqgdAVgvhSIy+JFmz6U4G2/e+HQ9AN6iEgIXCeEoYZY1/opp6hM8G6oi9YL5pbELvqJ0s4E+0BD41KLwweCZ9FyGRF8GXPwXy6LW/5YT16+AG5yZaOO8OS4F7s30ElunlWHh18=
+ bh=GtMaZla2pDwUHqmxVJrvaYxjDdYv407oHbLfM/sjZ+Y=;
+ b=FcHS8tdcH86xch2XxZMd8d6JIC1F/e4BVnkip7D3yoixCP1VHnnbiMiURwQXB/gkwYPkwi7oN0Ra0yllGd9N0uOT2/pUvTFFqAOpTOWm9ya7DotaAHMvPzvHRlksgFOhKiCYAvr+4KKlRbqARk66XBrAWrj44IEIrc57wV1KmT0=
 Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
- by CY4PR04MB1225.namprd04.prod.outlook.com (2603:10b6:903:bc::8) with
+ by CY4PR04MB0760.namprd04.prod.outlook.com (2603:10b6:903:ea::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3391.11; Fri, 18 Sep
- 2020 00:30:32 +0000
+ 2020 00:37:48 +0000
 Received: from CY4PR04MB3751.namprd04.prod.outlook.com
  ([fe80::9124:2453:fe9c:9a7]) by CY4PR04MB3751.namprd04.prod.outlook.com
  ([fe80::9124:2453:fe9c:9a7%12]) with mapi id 15.20.3391.015; Fri, 18 Sep 2020
- 00:30:32 +0000
+ 00:37:48 +0000
 From:   Damien Le Moal <Damien.LeMoal@wdc.com>
 To:     Keith Busch <kbusch@kernel.org>,
         "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
@@ -78,13 +77,13 @@ CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: Re: [PATCHv3 2/4] nvme: translate zone resource errors
-Thread-Topic: [PATCHv3 2/4] nvme: translate zone resource errors
-Thread-Index: AQHWjUjpK3F9XEFLvUaN7nKRXw3OuQ==
-Date:   Fri, 18 Sep 2020 00:30:31 +0000
-Message-ID: <CY4PR04MB375186AFD0FD8260397262E2E73F0@CY4PR04MB3751.namprd04.prod.outlook.com>
+Subject: Re: [PATCHv3 4/4] scsi: handle zone resources errors
+Thread-Topic: [PATCHv3 4/4] scsi: handle zone resources errors
+Thread-Index: AQHWjUjprU6FjACCZkqMdOabMh4vgw==
+Date:   Fri, 18 Sep 2020 00:37:47 +0000
+Message-ID: <CY4PR04MB3751016C986A95E69AFCBCA4E73F0@CY4PR04MB3751.namprd04.prod.outlook.com>
 References: <20200917231841.4029747-1-kbusch@kernel.org>
- <20200917231841.4029747-3-kbusch@kernel.org>
+ <20200917231841.4029747-5-kbusch@kernel.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -94,65 +93,84 @@ authentication-results: kernel.org; dkim=none (message not signed)
 x-originating-ip: [2400:2411:43c0:6000:c162:b6b0:12c6:8cc]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 110587d6-2e32-4437-33d2-08d85b6a0d46
-x-ms-traffictypediagnostic: CY4PR04MB1225:
+x-ms-office365-filtering-correlation-id: db47a65c-d7b0-44e9-023b-08d85b6b112c
+x-ms-traffictypediagnostic: CY4PR04MB0760:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR04MB1225C17EE43C684A783C2815E73F0@CY4PR04MB1225.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <CY4PR04MB076050349A07F48104404528E73F0@CY4PR04MB0760.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:849;
+x-ms-oob-tlc-oobclassifiers: OLM:2733;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: IAeDCSO9sH/TqnnK9y6SG9l5CfTK1rEIE7lr06zgyJaHqHooEGIF1l/6jaQiRTGB75ThbVQ8ME5OW7AmyIP8IdEYYDxC53l6bYKrRRTbuV1rOMS0FIIZZxtn7W841Ht8vXG5gaT6oljHCe4GpqdV8/KvbfhgFQ8Uwo39R9VNBYUWe2enf+av39MrhKTo0uGTMOyOfxSf/wqiQkHUH8QFwJD6zrA6tgrG8so+rInGOWTAkddxLnnoy8aaSDeIo4VxhIt1BvUosOlw4nIMvfkt1Enf05sGwgBZ4AybcImlHcGEUwhJMnSGtRTzP5g3nn5GiPAIZKOqyfQIZiSPyb77dA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(136003)(346002)(376002)(39860400002)(66946007)(64756008)(52536014)(66476007)(66556008)(76116006)(4326008)(66446008)(91956017)(5660300002)(4744005)(478600001)(9686003)(8676002)(55016002)(316002)(54906003)(71200400001)(110136005)(186003)(53546011)(33656002)(8936002)(86362001)(7696005)(6506007)(2906002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: 4pJg0PZ6FwtX//asjdHXEQ+lTULwqyv4CArFirZrsHM+U4sOsJuV1DMPMP+G3xY8w2l1cPj57/m403SAt+lfdMirHCaUjDGCoxOsDZOVfDn/yYS7npWv6Kh0fBRJfKBXbJ3C4rRq67mlCvXrFfVCAJR7GeaxCyAP9WSeZ8fA/cTjp4Cbl2m8E6wB+LcNeC69zhKQBZ4jJecCTNSUQHe41YKz4mI8RR+QULEKhQhlXZTWlwamFcx23OoyyGtV9uMV+kg2g97IgqNA+4XC1pWhKiuxxKOvRaon+SoVSEo1T0g8k7qDfX3jz/f3XjiN3zsdTO5w6jJaJelMeGJNoYJ8KnOoVCv48rnmIulHW66FgXFxq5ZzrlREp0wR5yHwzXMrFN4AP/RwR/0UBZ/d1yk07dWhAG59olvYc2LRDq5/wNAzxLCX1X7QT91GAY/P/OoqEIWh7WyKuux4fQ4+2xX9FCnfsn5eBfh/MGIXn4/UHf4ref0uZp6aHn8jxPAhTmblBsesk6dtlWYIH5pwogY07fBuHZf/whMTvCaA/xPTDb7fi0glggrOD6kRY+/uYBx17uob+w8Zp5E5RMYCjsu5g66NcNtzzvEobzImd1oLM5LOHYhnPxdch7XsitHvkas+UC2Zl3vyYGpX60syYZ6UW8ytTnrgpYRH8U/DrD3rqhD7SaNBht/PfcUUUFnB+DkE+ouC/I9ceBp3jQLvSg1yfw==
+x-microsoft-antispam-message-info: ga8z2r5J1qcOiNtuzPB1wKPsFkCfwUZY/jaXbEgnq2UO5gLF9veIQXLq9TegRBoWCZvgGao2sbEOg8YbxsuNkmGk8/TTUny0t9yAZDpogSTWBWGzOiuk90q6zhFYWPbwamb+8sZ1y+AD9va89nC7jf8zNmZ1oJHrA/os5EkLlQajxjnUMJZi6EsQjs2NFpF0M6xvW2QjHn9jQ7WqDIMHpOT5Rw7PhSz8k0N56S4dSSQbd9+ZdbIP3kYxnx0lh72c7wEwiHH8WmPdC2tR2/Z6J/7mWYmtfRjIl6Ng6Uzi0Yah7PIFmf9QbZAX51Km9MU6hGhBHxZRboc+Vyzt7YA9bA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(396003)(376002)(39860400002)(136003)(366004)(66556008)(91956017)(76116006)(66476007)(64756008)(66446008)(54906003)(316002)(33656002)(186003)(478600001)(8936002)(110136005)(4326008)(7696005)(86362001)(83380400001)(52536014)(66946007)(71200400001)(55016002)(9686003)(53546011)(2906002)(5660300002)(6506007)(8676002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 8IqE1mY5SZ9rSqVpO8YZSht5rre9Wp46zwEhv/EwFrPFKSTyQy/C4Bl7A92M5PV1KBPpfiyuduzXRsNGED6g+WblIBQ7P97weA4u7tby8XBXxiSsRQTN0Xs75PgfX30+diEwVvRkWk2XaJS6uQNfrwCYzYXIqRRPe/A/PKVAZz+T1Rj29HzeoyrGDE8mDs0oEtvl7FWJcTBmHwPDRyGFs5EsYq5Xv2gqJ6mV55DZYqyvD0tq6jucxgU0aIjG2U0yIr00cjjHq9IlyNKt+6mCfq+ah6cOHEoOwgu3+0y/1TlMaSnRwsDSRQiPoW6Mv8ezLCsSCM/gWwppRlmkRxfsfDMdX9EXSrmlYQmcZLLx2LaLmBhoO0iEKsWUks5jkkfDAFCxat+On8DBbtx3fHZguRScV9z7Z57JRqnyh5gOHGFBHtbrS1XteXLwQBxBTrl6COGuA8SWpZTFpEbf/zY8rjDlN71qKkSPc6wAQcvQWGIscwd1/8YCgUtavgavULL/GJNeDLS6WW8Bwdi9el6Xh5WHFXuXHXLHp5cW2A6Rmsq6EVBaPvKPm4iGrmjhCObhBmzXEJCWZLjy6vWXg7H80n226S5DFxNbTvB6rJG9rRr5Lvq7I1paIZfik6aPAK+1GC7w23QQVlFZHVXvhuhZ7Y/m/BkxgZtcpJaqynW+B/FvhMMR6B9wNPVfpsUf9OAeYIYazkQKDgEtmZmsApGXcQ==
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 110587d6-2e32-4437-33d2-08d85b6a0d46
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Sep 2020 00:30:31.8531
+X-MS-Exchange-CrossTenant-Network-Message-Id: db47a65c-d7b0-44e9-023b-08d85b6b112c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Sep 2020 00:37:47.9570
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: oMB3AfLPI7CR+ynmBg9i77GQvRRMX9O2hF6ePsdF489DjSuOzU/5PQrKnOI52VSjnaD7OxPemf4WvxzkUPG4gw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB1225
+X-MS-Exchange-CrossTenant-userprincipalname: ipGZkZs5Oai3xA2C1GY4N0uOjRzzzeNo3RZFs56f9nSNRN/1a3XjxpYlCymNddjttr/4sLNulwzkMu2JoQs+0Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0760
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020/09/18 8:18, Keith Busch wrote:=0A=
-> Translate zoned resource errors to the appropriate blk_status_t.=0A=
+> From: Damien Le Moal <damien.lemoal@wdc.com>=0A=
+> =0A=
+> ZBC or ZAC disks that have a limit on the number of open zones may fail=
+=0A=
+> a zone open command or a write to a zone that is not already implicitly=
+=0A=
+> or explicitly open if the total number of open zones is already at the=0A=
+> maximum allowed.=0A=
+> =0A=
+> For these operations, instead of returning the generic BLK_STS_IOERR,=0A=
+> return BLK_STS_ZONE_OPEN_RESOURCE which is returned as -ETOOMANYREFS to=
+=0A=
+> the I/O issuer, allowing the device user to act appropriately on these=0A=
+> relatively benign zone resource errors.=0A=
 > =0A=
 > Cc: Christoph Hellwig <hch@lst.de>=0A=
-> Cc: Damien Le Moal <Damien.LeMoal@wdc.com>=0A=
 > Cc: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>=0A=
-> Signed-off-by: Keith Busch <kbusch@kernel.org>=0A=
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
+=0A=
+Shouldn't you add your signed-off-by here ?=0A=
+=0A=
 > ---=0A=
->  drivers/nvme/host/core.c | 4 ++++=0A=
->  1 file changed, 4 insertions(+)=0A=
+>  drivers/scsi/scsi_lib.c | 9 +++++++++=0A=
+>  1 file changed, 9 insertions(+)=0A=
 > =0A=
-> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c=0A=
-> index 614cd455836b..a0d26fcbf923 100644=0A=
-> --- a/drivers/nvme/host/core.c=0A=
-> +++ b/drivers/nvme/host/core.c=0A=
-> @@ -236,6 +236,10 @@ static blk_status_t nvme_error_status(u16 status)=0A=
->  		return BLK_STS_NEXUS;=0A=
->  	case NVME_SC_HOST_PATH_ERROR:=0A=
->  		return BLK_STS_TRANSPORT;=0A=
-> +	case NVME_SC_ZONE_TOO_MANY_ACTIVE:=0A=
-> +		return BLK_STS_ZONE_ACTIVE_RESOURCE;=0A=
-> +	case NVME_SC_ZONE_TOO_MANY_OPEN:=0A=
-> +		return BLK_STS_ZONE_OPEN_RESOURCE;=0A=
->  	default:=0A=
->  		return BLK_STS_IOERR;=0A=
->  	}=0A=
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c=0A=
+> index 7affaaf8b98e..c129ac6666da 100644=0A=
+> --- a/drivers/scsi/scsi_lib.c=0A=
+> +++ b/drivers/scsi/scsi_lib.c=0A=
+> @@ -758,6 +758,15 @@ static void scsi_io_completion_action(struct scsi_cm=
+nd *cmd, int result)=0A=
+>  			/* See SSC3rXX or current. */=0A=
+>  			action =3D ACTION_FAIL;=0A=
+>  			break;=0A=
+> +		case DATA_PROTECT:=0A=
+> +			action =3D ACTION_FAIL;=0A=
+> +			if ((sshdr.asc =3D=3D 0x0C && sshdr.ascq =3D=3D 0x12) ||=0A=
+> +			    (sshdr.asc =3D=3D 0x55 &&=0A=
+> +			     (sshdr.ascq =3D=3D 0x0E || sshdr.ascq =3D=3D 0x0F))) {=0A=
+> +				/* Insufficient zone resources */=0A=
+> +				blk_stat =3D BLK_STS_ZONE_OPEN_RESOURCE;=0A=
+> +			}=0A=
+> +			break;=0A=
+>  		default:=0A=
+>  			action =3D ACTION_FAIL;=0A=
+>  			break;=0A=
 > =0A=
 =0A=
-Looks good.=0A=
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
 =0A=
 -- =0A=
 Damien Le Moal=0A=
