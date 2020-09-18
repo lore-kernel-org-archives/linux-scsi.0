@@ -7,52 +7,46 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E679C43466
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:09:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7EDDC43463
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:09:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 176FB2083B
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:09:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D193206DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:09:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398574;
-	bh=Ittz/wxGC9/mPG2IeyB9vgmU2CwAvg/OtpsciejW1Ec=;
+	s=default; t=1600398593;
+	bh=GMw+bqGp8BdX5MfT9KbAYC9/xiPMzuV4Uj7wldM2kjc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hi+ywYRbyE8WaxxDg2XJuMrOc22rOGN8IGDnn0OEXTDltLWpr2l+KEmNhnGgYuYQp
-	 ms7E1FiYjhVHBB4/B0/h2+Y6CdP7cpPNeg5Uxq1h19mVqiMu6+jyY9KYQNIpVGjDJw
-	 WGBdLQvtrCm84Hf2oXWXVAJANuy1pv/6C0d1Bi48=
+	b=AhYjtdf3Ni9FgoORgptdeErYyxVIAREtLLyZDqcBSImf1IN+/3cV8jxtaq2FiCXhI
+	 V/cKFB9lcILfmnkitpm/CQXREVak+RAgsOI3Fav94Idxa9+4v4TIvw7MCNQxpuenoX
+	 UjF+yhi+Y8xxnYG99q8f3ych+dkswaQZ53ip01EY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728680AbgIRDJd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:09:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48866 "EHLO mail.kernel.org"
+        id S1730621AbgIRDJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 23:09:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48732 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726939AbgIRCDC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:03:02 -0400
+        id S1726918AbgIRCC7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:02:59 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A8DDB208DB;
-        Fri, 18 Sep 2020 02:03:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 47CDA235FD;
+        Fri, 18 Sep 2020 02:02:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394582;
-        bh=Ittz/wxGC9/mPG2IeyB9vgmU2CwAvg/OtpsciejW1Ec=;
+        s=default; t=1600394578;
+        bh=GMw+bqGp8BdX5MfT9KbAYC9/xiPMzuV4Uj7wldM2kjc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EiaBtlQ4mB26wh7aUWvfWbdXEzA5p9n/YC0YP2J8cLEYaTK0TcLcPOo59dmGZCS/D
-         xTYdQapgFXyQfQHqFBtTDj1oyKXio0l7t8o5mtCGNPXK/K/bGhFGMhB+I2QjgeAcI5
-         vfSAXsHcdna8fPoS55sCeTtURzLGuSmi/tMVEXE4=
+        b=1bjkgL7ch4YPV8y+DZyQPVGffY14vFrXFn4gFdMi/PN5VoVSz3t/JJCc6CCYEsrju
+         sGNxk5PoegWGj+YhU4pzmTTg7wMnBOEwmAeFB+YVktL1Kov/MMMQWrvHgMAQnpQr60
+         t+6OD4I59LI5j12WAL+Tbj7jtH0VjxAy0ZkP+n0M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.4 092/330] scsi: ufs: Make ufshcd_add_command_trace() easier to read
-Date:   Thu, 17 Sep 2020 21:57:12 -0400
-Message-Id: <20200918020110.2063155-92-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 089/330] scsi: lpfc: Fix incomplete NVME discovery when target
+Date:   Thu, 17 Sep 2020 21:57:09 -0400
+Message-Id: <20200918020110.2063155-89-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
 References: <20200918020110.2063155-1-sashal@kernel.org>
@@ -64,68 +58,212 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit e4d2add7fd5bc64ee3e388eabe6b9e081cb42e11 ]
+[ Upstream commit be0709e449ac9d9753a5c17e5b770d6e5e930e4a ]
 
-Since the lrbp->cmd expression occurs multiple times, introduce a new local
-variable to hold that pointer. This patch does not change any
-functionality.
+NVMe device re-discovery does not complete. Dev_loss_tmo messages seen on
+initiator after recovery from a link disturbance.
 
-Cc: Bean Huo <beanhuo@micron.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Avri Altman <avri.altman@wdc.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Link: https://lore.kernel.org/r/20191224220248.30138-3-bvanassche@acm.org
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+The failing case is the following:
+
+When the driver (as a NVME target) receives a PLOGI, the driver initiates
+an "unreg rpi" mailbox command. While the mailbox command is in progress,
+the driver requests that an ACC be sent to the initiator. The target's ACC
+is received by the initiator and the initiator then transmits a PLOGI. The
+driver receives the PLOGI prior to receiving the completion for the PLOGI
+response WQE that sent the ACC. (Different delivery sources from the hw so
+the race is very possible). Given the PLOGI is prior to the ACC completion
+(signifying PLOGI exchange complete), the driver LS_RJT's the PRLI. The
+"unreg rpi" mailbox then completes. Since PRLI has been received, the
+driver transmits a PLOGI to restart discovery, which the initiator then
+ACC's.  If the driver processes the (re)PLOGI ACC prior to the completing
+the handling for the earlier ACC it sent the intiators original PLOGI,
+there is no state change for completion of the (re)PLOGI. The ndlp remains
+in "PLOGI Sent" and the initiator continues sending PRLI's which are
+rejected by the target until timeout or retry is reached.
+
+Fix by: When in target mode, defer sending an ACC for the received PLOGI
+until unreg RPI completes.
+
+Link: https://lore.kernel.org/r/20191218235808.31922-2-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 108 ++++++++++++++++++++++++++---
+ 1 file changed, 99 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5e502e1605549..020a93a40a982 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -334,27 +334,27 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba,
- 	u8 opcode = 0;
- 	u32 intr, doorbell;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-+	struct scsi_cmnd *cmd = lrbp->cmd;
- 	int transfer_len = -1;
- 
- 	if (!trace_ufshcd_command_enabled()) {
- 		/* trace UPIU W/O tracing command */
--		if (lrbp->cmd)
-+		if (cmd)
- 			ufshcd_add_cmd_upiu_trace(hba, tag, str);
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 2a340624bfc99..590a49e847626 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -308,7 +308,7 @@ lpfc_defer_pt2pt_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *link_mbox)
+ 				mb->mbxStatus);
+ 		mempool_free(login_mbox, phba->mbox_mem_pool);
+ 		mempool_free(link_mbox, phba->mbox_mem_pool);
+-		lpfc_sli_release_iocbq(phba, save_iocb);
++		kfree(save_iocb);
  		return;
  	}
  
--	if (lrbp->cmd) { /* data phase exists */
-+	if (cmd) { /* data phase exists */
- 		/* trace UPIU also */
- 		ufshcd_add_cmd_upiu_trace(hba, tag, str);
--		opcode = (u8)(*lrbp->cmd->cmnd);
-+		opcode = cmd->cmnd[0];
- 		if ((opcode == READ_10) || (opcode == WRITE_10)) {
- 			/*
- 			 * Currently we only fully trace read(10) and write(10)
- 			 * commands
- 			 */
--			if (lrbp->cmd->request && lrbp->cmd->request->bio)
--				lba =
--				  lrbp->cmd->request->bio->bi_iter.bi_sector;
-+			if (cmd->request && cmd->request->bio)
-+				lba = cmd->request->bio->bi_iter.bi_sector;
- 			transfer_len = be32_to_cpu(
- 				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
- 		}
+@@ -325,7 +325,61 @@ lpfc_defer_pt2pt_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *link_mbox)
+ 	}
+ 
+ 	mempool_free(link_mbox, phba->mbox_mem_pool);
+-	lpfc_sli_release_iocbq(phba, save_iocb);
++	kfree(save_iocb);
++}
++
++/**
++ * lpfc_defer_tgt_acc - Progress SLI4 target rcv PLOGI handler
++ * @phba: Pointer to HBA context object.
++ * @pmb: Pointer to mailbox object.
++ *
++ * This function provides the unreg rpi mailbox completion handler for a tgt.
++ * The routine frees the memory resources associated with the completed
++ * mailbox command and transmits the ELS ACC.
++ *
++ * This routine is only called if we are SLI4, acting in target
++ * mode and the remote NPort issues the PLOGI after link up.
++ **/
++void
++lpfc_defer_acc_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
++{
++	struct lpfc_vport *vport = pmb->vport;
++	struct lpfc_nodelist *ndlp = pmb->ctx_ndlp;
++	LPFC_MBOXQ_t *mbox = pmb->context3;
++	struct lpfc_iocbq *piocb = NULL;
++	int rc;
++
++	if (mbox) {
++		pmb->context3 = NULL;
++		piocb = mbox->context3;
++		mbox->context3 = NULL;
++	}
++
++	/*
++	 * Complete the unreg rpi mbx request, and update flags.
++	 * This will also restart any deferred events.
++	 */
++	lpfc_nlp_get(ndlp);
++	lpfc_sli4_unreg_rpi_cmpl_clr(phba, pmb);
++
++	if (!piocb) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY | LOG_ELS,
++				 "4578 PLOGI ACC fail\n");
++		if (mbox)
++			mempool_free(mbox, phba->mbox_mem_pool);
++		goto out;
++	}
++
++	rc = lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, piocb, ndlp, mbox);
++	if (rc) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_DISCOVERY | LOG_ELS,
++				 "4579 PLOGI ACC fail %x\n", rc);
++		if (mbox)
++			mempool_free(mbox, phba->mbox_mem_pool);
++	}
++	kfree(piocb);
++out:
++	lpfc_nlp_put(ndlp);
+ }
+ 
+ static int
+@@ -345,6 +399,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	struct lpfc_iocbq *save_iocb;
+ 	struct ls_rjt stat;
+ 	uint32_t vid, flag;
++	u16 rpi;
+ 	int rc, defer_acc;
+ 
+ 	memset(&stat, 0, sizeof (struct ls_rjt));
+@@ -488,7 +543,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			link_mbox->vport = vport;
+ 			link_mbox->ctx_ndlp = ndlp;
+ 
+-			save_iocb = lpfc_sli_get_iocbq(phba);
++			save_iocb = kzalloc(sizeof(*save_iocb), GFP_KERNEL);
+ 			if (!save_iocb)
+ 				goto out;
+ 			/* Save info from cmd IOCB used in rsp */
+@@ -513,7 +568,36 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		goto out;
+ 
+ 	/* Registering an existing RPI behaves differently for SLI3 vs SLI4 */
+-	if (phba->sli_rev == LPFC_SLI_REV4)
++	if (phba->nvmet_support && !defer_acc) {
++		link_mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++		if (!link_mbox)
++			goto out;
++
++		/* As unique identifiers such as iotag would be overwritten
++		 * with those from the cmdiocb, allocate separate temporary
++		 * storage for the copy.
++		 */
++		save_iocb = kzalloc(sizeof(*save_iocb), GFP_KERNEL);
++		if (!save_iocb)
++			goto out;
++
++		/* Unreg RPI is required for SLI4. */
++		rpi = phba->sli4_hba.rpi_ids[ndlp->nlp_rpi];
++		lpfc_unreg_login(phba, vport->vpi, rpi, link_mbox);
++		link_mbox->vport = vport;
++		link_mbox->ctx_ndlp = ndlp;
++		link_mbox->mbox_cmpl = lpfc_defer_acc_rsp;
++
++		if (((ndlp->nlp_DID & Fabric_DID_MASK) != Fabric_DID_MASK) &&
++		    (!(vport->fc_flag & FC_OFFLINE_MODE)))
++			ndlp->nlp_flag |= NLP_UNREG_INP;
++
++		/* Save info from cmd IOCB used in rsp */
++		memcpy(save_iocb, cmdiocb, sizeof(*save_iocb));
++
++		/* Delay sending ACC till unreg RPI completes. */
++		defer_acc = 1;
++	} else if (phba->sli_rev == LPFC_SLI_REV4)
+ 		lpfc_unreg_rpi(vport, ndlp);
+ 
+ 	rc = lpfc_reg_rpi(phba, vport->vpi, icmd->un.rcvels.remoteID,
+@@ -553,6 +637,9 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	if ((vport->port_type == LPFC_NPIV_PORT &&
+ 	     vport->cfg_restrict_login)) {
+ 
++		/* no deferred ACC */
++		kfree(save_iocb);
++
+ 		/* In order to preserve RPIs, we want to cleanup
+ 		 * the default RPI the firmware created to rcv
+ 		 * this ELS request. The only way to do this is
+@@ -571,8 +658,12 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	}
+ 	if (defer_acc) {
+ 		/* So the order here should be:
+-		 * Issue CONFIG_LINK mbox
+-		 * CONFIG_LINK cmpl
++		 * SLI3 pt2pt
++		 *   Issue CONFIG_LINK mbox
++		 *   CONFIG_LINK cmpl
++		 * SLI4 tgt
++		 *   Issue UNREG RPI mbx
++		 *   UNREG RPI cmpl
+ 		 * Issue PLOGI ACC
+ 		 * PLOGI ACC cmpl
+ 		 * Issue REG_LOGIN mbox
+@@ -596,10 +687,9 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ out:
+ 	if (defer_acc)
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
+-				"4577 pt2pt discovery failure: %p %p %p\n",
++				"4577 discovery failure: %p %p %p\n",
+ 				save_iocb, link_mbox, login_mbox);
+-	if (save_iocb)
+-		lpfc_sli_release_iocbq(phba, save_iocb);
++	kfree(save_iocb);
+ 	if (link_mbox)
+ 		mempool_free(link_mbox, phba->mbox_mem_pool);
+ 	if (login_mbox)
 -- 
 2.25.1
 
