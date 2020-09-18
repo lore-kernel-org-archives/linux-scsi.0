@@ -4,52 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E44A0C43465
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C10BEC43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:43:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B370E23772
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:39:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 906CE23444
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:43:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600396759;
-	bh=J+DVPE/WCTi2SxBKzJYHwhm+7eW5FHl8NKJjIx3duh4=;
+	s=default; t=1600396982;
+	bh=23Jo1Tkt1KPyo/S63TYB6ybU+tXFKhZiLTe118m/j5k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rtT7JpGl0bg8No/9exgp5Dbf52wsNK3QnYTcy1uzo0Dc/54/VcE1APGQ03Sq3rrRk
-	 zl9cjbllktPRl8DgbNjHYqexIHmN01tTuBDYEzPVKuLL/AfaBrLvz1nMQPnMne8SR2
-	 aI4Jgo4ZHUmSzfqpGmR/N6B9KxG4pCRjlH2l69wY=
+	b=rmW1EDzIwF4W2Ub6XKKYM3vyKqhxC9v8JEIf4SAI0GU7SsyeYgN5O/pF6OGF1+6GF
+	 XMTzrq/J2EcmD00gHrmbVb/2bqC1MdgRi8iZ8aXnEFqRZyv7qbPR5aQjc1qQ9/BjOS
+	 vJz/bs22L0T8FJaXhLfWzSfp5/2JeV5VlyDw1Lts=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729218AbgIRCjC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:39:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38306 "EHLO mail.kernel.org"
+        id S1729481AbgIRCmp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:42:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36330 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728738AbgIRCMK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:12:10 -0400
+        id S1728561AbgIRCLF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:11:05 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4D2392376E;
-        Fri, 18 Sep 2020 02:12:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1E4522311D;
+        Fri, 18 Sep 2020 02:11:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395129;
-        bh=J+DVPE/WCTi2SxBKzJYHwhm+7eW5FHl8NKJjIx3duh4=;
+        s=default; t=1600395064;
+        bh=23Jo1Tkt1KPyo/S63TYB6ybU+tXFKhZiLTe118m/j5k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=j5sPRwlHAgBJsN/52A6EDH8xdFoayukGQP1ams+xSetI2lubp6l0rCoMMlFDL09oS
-         XhTq78WiKuh4Ro49UG8n1jR/O4VGDvFhoJFIXsQKcdeIhZizCg6x6TQeyEregQteKe
-         Il/gT+84Cu9cuF0hrIGBHrKbv3Ikg3ShZaXOMYug=
+        b=TQnWGgLLVxIuNOzqoRvCut25Yvzl+pQKNlm2jABzncEuWmOaKeSDVINB5hjh2kxwr
+         vlrVPFUiuZA+LHR3U5+GaJ4E4YDpi9e1CMkkO/84m36Lsp681RmuJLTl+nqa6zbwlJ
+         ojN3Xz/DVUd2Q2CSIFW2zjZt48Cgtb06kOs0d0bg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Girish Basrur <gbasrur@marvell.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Shyam Sundar <ssundar@marvell.com>,
+Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, fcoe-devel@open-fcoe.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 199/206] scsi: libfc: Skip additional kref updating work event
-Date:   Thu, 17 Sep 2020 22:07:55 -0400
-Message-Id: <20200918020802.2065198-199-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 150/206] scsi: aacraid: Fix error handling paths in aac_probe_one()
+Date:   Thu, 17 Sep 2020 22:07:06 -0400
+Message-Id: <20200918020802.2065198-150-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
 References: <20200918020802.2065198-1-sashal@kernel.org>
@@ -61,81 +57,70 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-[ Upstream commit 823a65409c8990f64c5693af98ce0e7819975cba ]
+[ Upstream commit f7854c382240c1686900b2f098b36430c6f5047e ]
 
-When an rport event (RPORT_EV_READY) is updated without work being queued,
-avoid taking an additional reference.
+If 'scsi_host_alloc()' or 'kcalloc()' fail, 'error' is known to be 0. Set
+it explicitly to -ENOMEM before branching to the error handling path.
 
-This issue was leading to memory leak. Trace from KMEMLEAK tool:
+While at it, remove 2 useless assignments to 'error'. These values are
+overwridden a few lines later.
 
-  unreferenced object 0xffff8888259e8780 (size 512):
-  comm "kworker/2:1", jiffies 4433237386 (age 113021.971s)
-    hex dump (first 32 bytes):
-	58 0a ec cf 83 88 ff ff 00 00 00 00 00 00 00 00
-	01 00 00 00 08 00 00 00 13 7d f0 1e 0e 00 00 10
-  backtrace:
-  [<000000006b25760f>] fc_rport_recv_req+0x3c6/0x18f0 [libfc]
-  [<00000000f208d994>] fc_lport_recv_els_req+0x120/0x8a0 [libfc]
-  [<00000000a9c437b8>] fc_lport_recv+0xb9/0x130 [libfc]
-  [<00000000a9c437b8>] fc_lport_recv+0xb9/0x130 [libfc]
-  [<00000000ad5be37b>] qedf_ll2_process_skb+0x73d/0xad0 [qedf]
-  [<00000000e0eb6893>] process_one_work+0x382/0x6c0
-  [<000000002dfd9e21>] worker_thread+0x57/0x5c0
-  [<00000000b648204f>] kthread+0x1a0/0x1c0
-  [<0000000072f5ab20>] ret_from_fork+0x35/0x40
-  [<000000001d5c05d8>] 0xffffffffffffffff
-
-Below is the log sequence which leads to memory leak.  Here we get the
-RPORT_EV_READY and RPORT_EV_STOP back to back, which lead to overwrite the
-event RPORT_EV_READY by event RPORT_EV_STOP.  Because of this, kref_count
-gets incremented by 1.
-
-  kernel: host0: rport fffce5: Received PLOGI request
-  kernel: host0: rport fffce5: Received PLOGI in INIT state
-  kernel: host0: rport fffce5: Port is Ready
-  kernel: host0: rport fffce5: Received PRLI request while in state Ready
-  kernel: host0: rport fffce5: PRLI rspp type 8 active 1 passive 0
-  kernel: host0: rport fffce5: Received LOGO request while in state Ready
-  kernel: host0: rport fffce5: Delete port
-  kernel: host0: rport fffce5: Received PLOGI request
-  kernel: host0: rport fffce5: Received PLOGI in state Delete - send busy
-  kernel: host0: rport fffce5: work event 3
-  kernel: host0: rport fffce5: lld callback ev 3
-  kernel: host0: rport fffce5: work delete
-
-Link: https://lore.kernel.org/r/20200626094959.32151-1-jhasan@marvell.com
-Reviewed-by: Girish Basrur <gbasrur@marvell.com>
-Reviewed-by: Saurav Kashyap <skashyap@marvell.com>
-Reviewed-by: Shyam Sundar <ssundar@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Link: https://lore.kernel.org/r/20200412094039.8822-1-christophe.jaillet@wanadoo.fr
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_rport.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/aacraid/linit.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index f39d2d62b002f..2b3239765c249 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -495,10 +495,11 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 0142547aaadd2..eecffc03084c0 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1620,7 +1620,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct Scsi_Host *shost;
+ 	struct aac_dev *aac;
+ 	struct list_head *insert = &aac_devices;
+-	int error = -ENODEV;
++	int error;
+ 	int unique_id = 0;
+ 	u64 dmamask;
+ 	int mask_bits = 0;
+@@ -1645,7 +1645,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	error = pci_enable_device(pdev);
+ 	if (error)
+ 		goto out;
+-	error = -ENODEV;
  
- 	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
+ 	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
+ 		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+@@ -1677,8 +1676,10 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	pci_set_master(pdev);
  
--	kref_get(&rdata->kref);
--	if (rdata->event == RPORT_EV_NONE &&
--	    !queue_work(rport_event_queue, &rdata->event_work))
--		kref_put(&rdata->kref, fc_rport_destroy);
-+	if (rdata->event == RPORT_EV_NONE) {
-+		kref_get(&rdata->kref);
-+		if (!queue_work(rport_event_queue, &rdata->event_work))
-+			kref_put(&rdata->kref, fc_rport_destroy);
+ 	shost = scsi_host_alloc(&aac_driver_template, sizeof(struct aac_dev));
+-	if (!shost)
++	if (!shost) {
++		error = -ENOMEM;
+ 		goto out_disable_pdev;
 +	}
  
- 	rdata->event = event;
- }
+ 	shost->irq = pdev->irq;
+ 	shost->unique_id = unique_id;
+@@ -1703,8 +1704,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	aac->fibs = kcalloc(shost->can_queue + AAC_NUM_MGT_FIB,
+ 			    sizeof(struct fib),
+ 			    GFP_KERNEL);
+-	if (!aac->fibs)
++	if (!aac->fibs) {
++		error = -ENOMEM;
+ 		goto out_free_host;
++	}
++
+ 	spin_lock_init(&aac->fib_lock);
+ 
+ 	mutex_init(&aac->ioctl_mutex);
 -- 
 2.25.1
 
