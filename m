@@ -5,48 +5,48 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3A1C43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7E7C43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:34:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1146C23770
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:32:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C633F23770
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:34:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600396356;
-	bh=W7CHTWds8Q3aC1I6qib44375xsp0WnJ0bs7AC2P7fmQ=;
+	s=default; t=1600396451;
+	bh=cnuao6vGGoRI0L+m/JtTfUT/fSfoRj6iIf6BDFAavtI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=G65h1jy/2syTviU5lOhSgjsAvcapQMlJMRLfyJjTfUpjhsKjLv3wU7N/4nR9ponGY
-	 O9e/DQY25DTpElF/XwVZmV5q3Ibc4tEVzme2yKdzYLGy4S+Kx+oKBzsCtrZ+5CLi/n
-	 f8psOO7U6M7kTdqfaQJE79jJiU/lkq3SNvBv2ZmE=
+	b=2knkENn1roStXFhppJiJ4UEw/ThNoRVNKqxMk9jq/TVJ1XdcsClTu3GGSxICXe/Ls
+	 2xChqgphwPb7TuzzZSIddtdgEMHJsSqIQh+uJ9MjHqkt7e0imlvGgn611FFjmTUOTx
+	 NUcl5dWPVrcruhgEOZYpE9e7prvKz7XG4QtvA8cM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729012AbgIRCcf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:32:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41764 "EHLO mail.kernel.org"
+        id S1729998AbgIRCd4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:33:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40966 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729023AbgIRCOC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:14:02 -0400
+        id S1727444AbgIRCNf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:13:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 500682388D;
-        Fri, 18 Sep 2020 02:14:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1BC82208E4;
+        Fri, 18 Sep 2020 02:13:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395242;
-        bh=W7CHTWds8Q3aC1I6qib44375xsp0WnJ0bs7AC2P7fmQ=;
+        s=default; t=1600395214;
+        bh=cnuao6vGGoRI0L+m/JtTfUT/fSfoRj6iIf6BDFAavtI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L3tYWbP8jOoddlj0qcywd2D3Q3x29xD1xaiO+U/1dVUbXzTooa5ZVLw3Oo6im7S7H
-         WsYxAuLbfBWkxCHqSBKeqojdsSZoL5kqlhikZsaxv+Dfz0FLz6Ydkc8a1qRjJ69eaA
-         Z6XkyJamhA9G7tnE/CF7Io4BjAz/xNHB2iG/juEY=
+        b=kbqCCgUcatWeMb9ZOZfiWCxRWTMzgxNARgx26aLzp2jckJVxpk8ZbbkQGulozCfpr
+         sLxzH2RQdr7Tqc07rhVBsNL4cRo9ywnEPfGOl1mXsDO2vBbVmiQAi8e96gg2dFJYM1
+         lxjOM9yzWEA+C0LNYlCHLs2+7v9UC2GmAMo40kTA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>, Lee Duncan <lduncan@suse.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
+Cc:     Sagar Biradar <Sagar.Biradar@microchip.com>,
+        Balsundar P <balsundar.p@microsemi.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 085/127] scsi: qedi: Fix termination timeouts in session logout
-Date:   Thu, 17 Sep 2020 22:11:38 -0400
-Message-Id: <20200918021220.2066485-85-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 062/127] scsi: aacraid: Disabling TM path and only processing IOP reset
+Date:   Thu, 17 Sep 2020 22:11:15 -0400
+Message-Id: <20200918021220.2066485-62-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918021220.2066485-1-sashal@kernel.org>
 References: <20200918021220.2066485-1-sashal@kernel.org>
@@ -58,37 +58,124 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nilesh Javali <njavali@marvell.com>
+From: Sagar Biradar <Sagar.Biradar@microchip.com>
 
-[ Upstream commit b9b97e6903032ec56e6dcbe137a9819b74a17fea ]
+[ Upstream commit bef18d308a2215eff8c3411a23d7f34604ce56c3 ]
 
-The destroy connection ramrod timed out during session logout.  Fix the
-wait delay for graceful vs abortive termination as per the FW requirements.
+Fixes the occasional adapter panic when sg_reset is issued with -d, -t, -b
+and -H flags.  Removal of command type HBA_IU_TYPE_SCSI_TM_REQ in
+aac_hba_send since iu_type, request_id and fib_flags are not populated.
+Device and target reset handlers are made to send TMF commands only when
+reset_state is 0.
 
-Link: https://lore.kernel.org/r/20200408064332.19377-7-mrangankar@marvell.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Link: https://lore.kernel.org/r/1581553771-25796-1-git-send-email-Sagar.Biradar@microchip.com
+Reviewed-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+Signed-off-by: Balsundar P <balsundar.p@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_iscsi.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/aacraid/commsup.c |  2 +-
+ drivers/scsi/aacraid/linit.c   | 34 +++++++++++++++++++++++++---------
+ 2 files changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index fb6439bc1d9a9..4d7971c3f339b 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -1072,6 +1072,9 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
- 		break;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index a284527999c55..65a5cd6a5f961 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -771,7 +771,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 		hbacmd->request_id =
+ 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
+ 		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
+-	} else if (command != HBA_IU_TYPE_SCSI_TM_REQ)
++	} else
+ 		return -EINVAL;
+ 
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 053a31c5485f3..e0e728d0dd5e7 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -736,7 +736,11 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 		status = aac_hba_send(HBA_IU_TYPE_SCSI_TM_REQ, fib,
+ 				  (fib_callback) aac_hba_callback,
+ 				  (void *) cmd);
+-
++		if (status != -EINPROGRESS) {
++			aac_fib_complete(fib);
++			aac_fib_free(fib);
++			return ret;
++		}
+ 		/* Wait up to 15 secs for completion */
+ 		for (count = 0; count < 15; ++count) {
+ 			if (cmd->SCp.sent_command) {
+@@ -915,11 +919,11 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 
+ 	info = &aac->hba_map[bus][cid];
+ 
+-	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
+-	    info->reset_state > 0)
++	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
++	 !(info->reset_state > 0)))
+ 		return FAILED;
+ 
+-	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++	pr_err("%s: Host device reset request. SCSI hang ?\n",
+ 	       AAC_DRIVERNAME);
+ 
+ 	fib = aac_fib_alloc(aac);
+@@ -934,7 +938,12 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 	status = aac_hba_send(command, fib,
+ 			      (fib_callback) aac_tmf_callback,
+ 			      (void *) info);
+-
++	if (status != -EINPROGRESS) {
++		info->reset_state = 0;
++		aac_fib_complete(fib);
++		aac_fib_free(fib);
++		return ret;
++	}
+ 	/* Wait up to 15 seconds for completion */
+ 	for (count = 0; count < 15; ++count) {
+ 		if (info->reset_state == 0) {
+@@ -973,11 +982,11 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 
+ 	info = &aac->hba_map[bus][cid];
+ 
+-	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
+-	    info->reset_state > 0)
++	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
++	 !(info->reset_state > 0)))
+ 		return FAILED;
+ 
+-	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++	pr_err("%s: Host target reset request. SCSI hang ?\n",
+ 	       AAC_DRIVERNAME);
+ 
+ 	fib = aac_fib_alloc(aac);
+@@ -994,6 +1003,13 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 			      (fib_callback) aac_tmf_callback,
+ 			      (void *) info);
+ 
++	if (status != -EINPROGRESS) {
++		info->reset_state = 0;
++		aac_fib_complete(fib);
++		aac_fib_free(fib);
++		return ret;
++	}
++
+ 	/* Wait up to 15 seconds for completion */
+ 	for (count = 0; count < 15; ++count) {
+ 		if (info->reset_state <= 0) {
+@@ -1046,7 +1062,7 @@ static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
+ 		}
  	}
  
-+	if (!abrt_conn)
-+		wait_delay += qedi->pf_params.iscsi_pf_params.two_msl_timer;
-+
- 	qedi_ep->state = EP_STATE_DISCONN_START;
- 	ret = qedi_ops->destroy_conn(qedi->cdev, qedi_ep->handle, abrt_conn);
- 	if (ret) {
+-	pr_err("%s: Host adapter reset request. SCSI hang ?\n", AAC_DRIVERNAME);
++	pr_err("%s: Host bus reset request. SCSI hang ?\n", AAC_DRIVERNAME);
+ 
+ 	/*
+ 	 * Check the health of the controller
 -- 
 2.25.1
 
