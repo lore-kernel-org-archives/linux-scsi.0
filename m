@@ -2,95 +2,231 @@ Return-Path: <SRS0=xkU+=C3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEDCC43463
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:26:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97432C43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:48:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D93B23718
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:26:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N2c8J+TX"
+	by mail.kernel.org (Postfix) with ESMTP id 5481E235FA
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:48:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726537AbgIRD0v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:26:51 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:51150 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726187AbgIRD0v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 23:26:51 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08I3P8DU042413;
-        Fri, 18 Sep 2020 03:26:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=u5Wc1Rpfr9jGdrhv1sc2/WJ6KhTGK1VbK75D+xbwxjk=;
- b=N2c8J+TX50ard6WzXvKuXvMzu8Ny7YDzu7hCLo9GwNodb31EWmpUrFl5bsuCytfsChSD
- WXI27EeNkCju8P8h0Wwlkx+J0Y8Ggg7Sp2V8yxp75zwDJMcCz4+IRu4yDBlI2SFItyqa
- WQvuKcbHV1D5ac8UuwmJt6bmyOoF6FmiS5fZIy/K6j8tdqpWTj2iDkbWRBQ1yo/OjKiS
- MMX8myPzkL8V0RBS7ytepYH9ryhKcZJXTH9+CDKLWRbMAwo1ykBeU7iM6RhwyUzmu8nX
- 0CqDLybVW3fRhxwllj96ymABnWTttDPznx11muMrX1vesyqzpjzZFP2zVf6YMWM9JFtF rw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 33j91dxctw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 18 Sep 2020 03:26:48 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08I3PvQF180306;
-        Fri, 18 Sep 2020 03:26:48 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 33hm361gdc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Sep 2020 03:26:48 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08I3QlSN009154;
-        Fri, 18 Sep 2020 03:26:47 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 18 Sep 2020 03:26:47 +0000
-To:     Alex Dewar <alex.dewar90@gmail.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC 0/3] scsi: mpt: Refactor and port to dma_* interface
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq15z8bu5v6.fsf@ca-mkp.ca.oracle.com>
-References: <20200903152832.484908-1-alex.dewar90@gmail.com>
-        <yq1ft7ixyg8.fsf@ca-mkp.ca.oracle.com>
-        <20200916164411.hkpmqigdhgdb66dl@lenovo-laptop>
-Date:   Thu, 17 Sep 2020 23:26:45 -0400
-In-Reply-To: <20200916164411.hkpmqigdhgdb66dl@lenovo-laptop> (Alex Dewar's
-        message of "Wed, 16 Sep 2020 17:44:11 +0100")
+        id S1726396AbgIRDsS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 23:48:18 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:13251 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726316AbgIRDsR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 23:48:17 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 944CB9C8843B0671D0EC;
+        Fri, 18 Sep 2020 11:48:15 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS405-HUB.china.huawei.com
+ (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Fri, 18 Sep 2020
+ 11:48:06 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <achim_leubner@adaptec.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <yanaijie@huawei.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     Hulk Robot <hulkci@huawei.com>
+Subject: [PATCH v2] scsi: gdth: make option_setup() static
+Date:   Fri, 18 Sep 2020 11:49:20 +0800
+Message-ID: <20200918034920.3199926-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9747 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
- malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009180028
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9747 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
- priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
- clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009180028
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+And move the two functions around the '__setup' macro which uses them to
+avoid a 'unused-function' warning.
 
-Alex,
+This addresses the following sparse warning:
 
->> Have you tested your changes?
->
-> No, as I'm afraid I don't have the hardware.
+drivers/scsi/gdth.c:3229:12: warning: symbol 'option_setup' was not
+declared. Should it be static?
 
-QEMU supports it, I propose you try testing with that.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ v2: move option_setup() and internal_setup() down to where it is used.
 
-I hesitate merging big changes to abandoned drivers unless they've been
-tested. It's too easy to miss things during review...
+ drivers/scsi/gdth.c | 151 ++++++++++++++++++++++----------------------
+ 1 file changed, 76 insertions(+), 75 deletions(-)
 
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index dc0e17729acf..5d801388680b 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -3168,81 +3168,6 @@ static inline void gdth_timer_init(void)
+ }
+ #endif
+ 
+-static void __init internal_setup(char *str,int *ints)
+-{
+-    int i;
+-    char *cur_str, *argv;
+-
+-    TRACE2(("internal_setup() str %s ints[0] %d\n", 
+-            str ? str:"NULL", ints ? ints[0]:0));
+-
+-    /* analyse string */
+-    argv = str;
+-    while (argv && (cur_str = strchr(argv, ':'))) {
+-        int val = 0, c = *++cur_str;
+-        
+-        if (c == 'n' || c == 'N')
+-            val = 0;
+-        else if (c == 'y' || c == 'Y')
+-            val = 1;
+-        else
+-            val = (int)simple_strtoul(cur_str, NULL, 0);
+-
+-        if (!strncmp(argv, "disable:", 8))
+-            disable = val;
+-        else if (!strncmp(argv, "reserve_mode:", 13))
+-            reserve_mode = val;
+-        else if (!strncmp(argv, "reverse_scan:", 13))
+-            reverse_scan = val;
+-        else if (!strncmp(argv, "hdr_channel:", 12))
+-            hdr_channel = val;
+-        else if (!strncmp(argv, "max_ids:", 8))
+-            max_ids = val;
+-        else if (!strncmp(argv, "rescan:", 7))
+-            rescan = val;
+-        else if (!strncmp(argv, "shared_access:", 14))
+-            shared_access = val;
+-        else if (!strncmp(argv, "reserve_list:", 13)) {
+-            reserve_list[0] = val;
+-            for (i = 1; i < MAX_RES_ARGS; i++) {
+-                cur_str = strchr(cur_str, ',');
+-                if (!cur_str)
+-                    break;
+-                if (!isdigit((int)*++cur_str)) {
+-                    --cur_str;          
+-                    break;
+-                }
+-                reserve_list[i] = 
+-                    (int)simple_strtoul(cur_str, NULL, 0);
+-            }
+-            if (!cur_str)
+-                break;
+-            argv = ++cur_str;
+-            continue;
+-        }
+-
+-        if ((argv = strchr(argv, ',')))
+-            ++argv;
+-    }
+-}
+-
+-int __init option_setup(char *str)
+-{
+-    int ints[MAXHA];
+-    char *cur = str;
+-    int i = 1;
+-
+-    TRACE2(("option_setup() str %s\n", str ? str:"NULL")); 
+-
+-    while (cur && isdigit(*cur) && i < MAXHA) {
+-        ints[i++] = simple_strtoul(cur, NULL, 0);
+-        if ((cur = strchr(cur, ',')) != NULL) cur++;
+-    }
+-
+-    ints[0] = i - 1;
+-    internal_setup(cur, ints);
+-    return 1;
+-}
+ 
+ static const char *gdth_ctr_name(gdth_ha_str *ha)
+ {
+@@ -4317,5 +4242,81 @@ module_init(gdth_init);
+ module_exit(gdth_exit);
+ 
+ #ifndef MODULE
++static void __init internal_setup(char *str,int *ints)
++{
++    int i;
++    char *cur_str, *argv;
++
++    TRACE2(("internal_setup() str %s ints[0] %d\n",
++            str ? str:"NULL", ints ? ints[0]:0));
++
++    /* analyse string */
++    argv = str;
++    while (argv && (cur_str = strchr(argv, ':'))) {
++        int val = 0, c = *++cur_str;
++
++        if (c == 'n' || c == 'N')
++            val = 0;
++        else if (c == 'y' || c == 'Y')
++            val = 1;
++        else
++            val = (int)simple_strtoul(cur_str, NULL, 0);
++
++        if (!strncmp(argv, "disable:", 8))
++            disable = val;
++        else if (!strncmp(argv, "reserve_mode:", 13))
++            reserve_mode = val;
++        else if (!strncmp(argv, "reverse_scan:", 13))
++            reverse_scan = val;
++        else if (!strncmp(argv, "hdr_channel:", 12))
++            hdr_channel = val;
++        else if (!strncmp(argv, "max_ids:", 8))
++            max_ids = val;
++        else if (!strncmp(argv, "rescan:", 7))
++            rescan = val;
++        else if (!strncmp(argv, "shared_access:", 14))
++            shared_access = val;
++        else if (!strncmp(argv, "reserve_list:", 13)) {
++            reserve_list[0] = val;
++            for (i = 1; i < MAX_RES_ARGS; i++) {
++                cur_str = strchr(cur_str, ',');
++                if (!cur_str)
++                    break;
++                if (!isdigit((int)*++cur_str)) {
++                    --cur_str;
++                    break;
++                }
++                reserve_list[i] =
++                    (int)simple_strtoul(cur_str, NULL, 0);
++            }
++            if (!cur_str)
++                break;
++            argv = ++cur_str;
++            continue;
++        }
++
++        if ((argv = strchr(argv, ',')))
++            ++argv;
++    }
++}
++
++static int __init option_setup(char *str)
++{
++    int ints[MAXHA];
++    char *cur = str;
++    int i = 1;
++
++    TRACE2(("option_setup() str %s\n", str ? str:"NULL"));
++
++    while (cur && isdigit(*cur) && i < MAXHA) {
++        ints[i++] = simple_strtoul(cur, NULL, 0);
++        if ((cur = strchr(cur, ',')) != NULL) cur++;
++    }
++
++    ints[0] = i - 1;
++    internal_setup(cur, ints);
++    return 1;
++}
++
+ __setup("gdth=", option_setup);
+ #endif
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.25.4
+
