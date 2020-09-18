@@ -2,98 +2,122 @@ Return-Path: <SRS0=xkU+=C3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,
+	DKIM_ADSP_CUSTOM_MED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC26C43463
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:52:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8E1DC43463
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 21:10:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 340AC22208
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 19:52:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 947F9221EC
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 21:10:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726174AbgIRTv6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Sep 2020 15:51:58 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:45268 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726154AbgIRTv6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2020 15:51:58 -0400
-Received: by mail-pf1-f194.google.com with SMTP id k15so4090756pfc.12;
-        Fri, 18 Sep 2020 12:51:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jwJFqifRVAKIV7cNFiI3hJtWYZIgH2Laudl3kyC7pSQ=;
-        b=Y79Ylw6oXwBBMLQ86h1WCITPSyTZJ3RXHZPjTOpk4VMfVHFWXc8c51OwkqM1YuHqED
-         fWFNXfAOHWgFhjxvei6XKX7mXLmXOg814XAg8/RLDMObZhKjSLWWXy9/c4+ogTYRbrBt
-         plf3L4Fd7iOfLu2vmkdehHdnPNbNjuHRpfip5BkJUqSiAXfeDBezEJsIooDBaHctMvEs
-         rCtybvsK1qRiQY7FtuvUH5LvUFCf0Yn6TSH3Rs5puTiygPJMsuwvgE8I+IYyXjhItzVU
-         RIwgzjpHp6cExQxYAoacw0yIJah+wfV+uH7QdR8b8gU7PhswDknyb8JRQ8XT1PzBawEP
-         87nA==
-X-Gm-Message-State: AOAM530koaCMAOnM1nli5NJvKdWWQZOECbq3gU06IcG6ALFDDCYW+wuc
-        p3yoZTDNIL0FDspIHQMtb7M=
-X-Google-Smtp-Source: ABdhPJzVciLn/oCo2sInI+EDeWE+Is9ojVhKgRldY01jQsB/CIJFydhY6sB7tPTYZUe7oqZr2zXqgA==
-X-Received: by 2002:a62:8607:0:b029:13c:1611:6593 with SMTP id x7-20020a6286070000b029013c16116593mr32701757pfd.16.1600458717129;
-        Fri, 18 Sep 2020 12:51:57 -0700 (PDT)
-Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id k28sm4002499pfh.196.2020.09.18.12.51.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Sep 2020 12:51:55 -0700 (PDT)
-Subject: Re: [PATCH v11 0/4] scsi: ufs: Add Host Performance Booster Support
-To:     Christoph Hellwig <hch@infradead.org>,
-        Daejun Park <daejun7.park@samsung.com>
-Cc:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        SEUNGUK SHIN <seunguk.shin@samsung.com>
-References: <231786897.01599016802080.JavaMail.epsvc@epcpadp1>
- <CGME20200902031713epcms2p664cebf386ba19d3d05895fec89aaf4fe@epcms2p3>
- <231786897.01600211401846.JavaMail.epsvc@epcpadp1>
- <20200916052208.GB12923@infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <2aecb02b-f845-b860-facd-e31bd964ac64@acm.org>
-Date:   Fri, 18 Sep 2020 12:51:53 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726168AbgIRVK0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Sep 2020 17:10:26 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54608 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726157AbgIRVK0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Sep 2020 17:10:26 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id CC580ACC2;
+        Fri, 18 Sep 2020 21:10:58 +0000 (UTC)
+Received: by localhost (Postfix, from userid 1000)
+        id CC91850CDA8; Fri, 18 Sep 2020 14:10:22 -0700 (PDT)
+From:   Lee Duncan <leeman.duncan@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     open-iscsi@googlegroups.com, Lee Duncan <lduncan@suse.com>
+Subject: [PATCH] scsi: libiscsi: fix NOP race condition
+Date:   Fri, 18 Sep 2020 14:09:47 -0700
+Message-Id: <20200918210947.23800-1-leeman.duncan@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <20200916052208.GB12923@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/15/20 10:22 PM, Christoph Hellwig wrote:
-> On Wed, Sep 16, 2020 at 08:05:17AM +0900, Daejun Park wrote:
->> Hi All,
->>
->> I want to know how to improve this patch.
-> 
-> Drop it and fix the actual UFS feature to not be so horrible?
+From: Lee Duncan <lduncan@suse.com>
 
-A new UFS specification could be defined and could be implemented for future UFS
-devices. I think this patch series is intended to support the millions of UFS
-devices that are already in use, e.g. in Android smartphones.
+iSCSI NOPs are sometimes "lost", mistakenly sent to the
+user-land iscsid daemon instead of handled in the kernel,
+as they should be, resulting in a message from the daemon like:
 
-Thanks,
+> iscsid: Got nop in, but kernel supports nop handling.
 
-Bart.
+This can occur because of the new forward- and back-locks,
+and the fact that an iSCSI NOP response can occur before
+processing of the NOP send is complete. This can result
+in "conn->ping_task" being NULL in iscsi_nop_out_rsp(),
+when the pointer is actually in the process of being set.
 
+To work around this, we add a new state to the "ping_task"
+pointer. In addition to NULL (not assigned) and a pointer
+(assigned), we add the state "being set", which is signaled
+with an INVALID pointer (using "-1").
+
+Signed-off-by: Lee Duncan <lduncan@suse.com>
+---
+ drivers/scsi/libiscsi.c | 11 ++++++++++-
+ include/scsi/libiscsi.h |  3 +++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 1e9c3171fa9f..5eb064787ee2 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -738,6 +738,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 						   task->conn->session->age);
+ 	}
+ 
++	if (unlikely(READ_ONCE(conn->ping_task) == INVALID_SCSI_TASK))
++		WRITE_ONCE(conn->ping_task, task);
++
+ 	if (!ihost->workq) {
+ 		if (iscsi_prep_mgmt_task(conn, task))
+ 			goto free_task;
+@@ -941,6 +944,11 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+         struct iscsi_nopout hdr;
+ 	struct iscsi_task *task;
+ 
++	if (!rhdr) {
++		if (READ_ONCE(conn->ping_task))
++			return -EINVAL;
++		WRITE_ONCE(conn->ping_task, INVALID_SCSI_TASK);
++	}
+ 	if (!rhdr && conn->ping_task)
+ 		return -EINVAL;
+ 
+@@ -957,11 +965,12 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 
+ 	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
+ 	if (!task) {
++		if (!rhdr)
++			WRITE_ONCE(conn->ping_task, NULL);
+ 		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
+ 		return -EIO;
+ 	} else if (!rhdr) {
+ 		/* only track our nops */
+-		conn->ping_task = task;
+ 		conn->last_ping = jiffies;
+ 	}
+ 
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index c25fb86ffae9..b3bbd10eb3f0 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -132,6 +132,9 @@ struct iscsi_task {
+ 	void			*dd_data;	/* driver/transport data */
+ };
+ 
++/* invalid scsi_task pointer */
++#define	INVALID_SCSI_TASK	(struct iscsi_task *)-1l
++
+ static inline int iscsi_task_has_unsol_data(struct iscsi_task *task)
+ {
+ 	return task->unsol_r2t.data_length > task->unsol_r2t.sent;
+-- 
+2.26.2
 
