@@ -4,48 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C10BEC43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 483ABC43465
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 906CE23444
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:43:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EB9D23444
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:43:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600396982;
-	bh=23Jo1Tkt1KPyo/S63TYB6ybU+tXFKhZiLTe118m/j5k=;
+	s=default; t=1600397001;
+	bh=/6/ywuTfxFzeUl/jPNuDskh3E5Zhq0WW41vYUNDZ/jU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rmW1EDzIwF4W2Ub6XKKYM3vyKqhxC9v8JEIf4SAI0GU7SsyeYgN5O/pF6OGF1+6GF
-	 XMTzrq/J2EcmD00gHrmbVb/2bqC1MdgRi8iZ8aXnEFqRZyv7qbPR5aQjc1qQ9/BjOS
-	 vJz/bs22L0T8FJaXhLfWzSfp5/2JeV5VlyDw1Lts=
+	b=mNoTJAummFbdd+h6/+xxuLIIa3zb2yFqkznwQbaqdEajYDXL4a4vvP3AEbeN5rBnf
+	 B7keQIVONJg9UwhsxqanUz9/Jp3CmupkFly/BJzRFDh8D94vIK27ytO5sDi8Irz4+H
+	 KsLvoZziflURvRjqAHOrMMOJmaA0n2p/hhaAHuEY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729481AbgIRCmp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:42:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36330 "EHLO mail.kernel.org"
+        id S1728779AbgIRCnU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:43:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35978 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728561AbgIRCLF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:11:05 -0400
+        id S1728534AbgIRCKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:10:55 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1E4522311D;
-        Fri, 18 Sep 2020 02:11:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1300C21D92;
+        Fri, 18 Sep 2020 02:10:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395064;
-        bh=23Jo1Tkt1KPyo/S63TYB6ybU+tXFKhZiLTe118m/j5k=;
+        s=default; t=1600395054;
+        bh=/6/ywuTfxFzeUl/jPNuDskh3E5Zhq0WW41vYUNDZ/jU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TQnWGgLLVxIuNOzqoRvCut25Yvzl+pQKNlm2jABzncEuWmOaKeSDVINB5hjh2kxwr
-         vlrVPFUiuZA+LHR3U5+GaJ4E4YDpi9e1CMkkO/84m36Lsp681RmuJLTl+nqa6zbwlJ
-         ojN3Xz/DVUd2Q2CSIFW2zjZt48Cgtb06kOs0d0bg=
+        b=07/nlAG6I3Susgp2pjnVIim31bbpr0jEtYba2A7lRjObCnzzI8nAF2LALkzoLhDE8
+         0zVe4+Ty4k2NU26o12LYZbkgDGIEPOVhs6vj4TcsgfbfQNQXIZWEGmDjuRWR8IZFuu
+         w4YohYZvvn+K3wepSGYRvDV34IQhynRFAPhnzcpA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+Cc:     Nilesh Javali <njavali@marvell.com>, Lee Duncan <lduncan@suse.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 150/206] scsi: aacraid: Fix error handling paths in aac_probe_one()
-Date:   Thu, 17 Sep 2020 22:07:06 -0400
-Message-Id: <20200918020802.2065198-150-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 142/206] scsi: qedi: Fix termination timeouts in session logout
+Date:   Thu, 17 Sep 2020 22:06:58 -0400
+Message-Id: <20200918020802.2065198-142-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
 References: <20200918020802.2065198-1-sashal@kernel.org>
@@ -57,70 +58,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: Nilesh Javali <njavali@marvell.com>
 
-[ Upstream commit f7854c382240c1686900b2f098b36430c6f5047e ]
+[ Upstream commit b9b97e6903032ec56e6dcbe137a9819b74a17fea ]
 
-If 'scsi_host_alloc()' or 'kcalloc()' fail, 'error' is known to be 0. Set
-it explicitly to -ENOMEM before branching to the error handling path.
+The destroy connection ramrod timed out during session logout.  Fix the
+wait delay for graceful vs abortive termination as per the FW requirements.
 
-While at it, remove 2 useless assignments to 'error'. These values are
-overwridden a few lines later.
-
-Link: https://lore.kernel.org/r/20200412094039.8822-1-christophe.jaillet@wanadoo.fr
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Link: https://lore.kernel.org/r/20200408064332.19377-7-mrangankar@marvell.com
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aacraid/linit.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/scsi/qedi/qedi_iscsi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 0142547aaadd2..eecffc03084c0 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1620,7 +1620,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct Scsi_Host *shost;
- 	struct aac_dev *aac;
- 	struct list_head *insert = &aac_devices;
--	int error = -ENODEV;
-+	int error;
- 	int unique_id = 0;
- 	u64 dmamask;
- 	int mask_bits = 0;
-@@ -1645,7 +1645,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	error = pci_enable_device(pdev);
- 	if (error)
- 		goto out;
--	error = -ENODEV;
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 751941a3ed303..aa451c8b49e56 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -1065,6 +1065,9 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
+ 		break;
+ 	}
  
- 	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
- 		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-@@ -1677,8 +1676,10 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	pci_set_master(pdev);
- 
- 	shost = scsi_host_alloc(&aac_driver_template, sizeof(struct aac_dev));
--	if (!shost)
-+	if (!shost) {
-+		error = -ENOMEM;
- 		goto out_disable_pdev;
-+	}
- 
- 	shost->irq = pdev->irq;
- 	shost->unique_id = unique_id;
-@@ -1703,8 +1704,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	aac->fibs = kcalloc(shost->can_queue + AAC_NUM_MGT_FIB,
- 			    sizeof(struct fib),
- 			    GFP_KERNEL);
--	if (!aac->fibs)
-+	if (!aac->fibs) {
-+		error = -ENOMEM;
- 		goto out_free_host;
-+	}
++	if (!abrt_conn)
++		wait_delay += qedi->pf_params.iscsi_pf_params.two_msl_timer;
 +
- 	spin_lock_init(&aac->fib_lock);
- 
- 	mutex_init(&aac->ioctl_mutex);
+ 	qedi_ep->state = EP_STATE_DISCONN_START;
+ 	ret = qedi_ops->destroy_conn(qedi->cdev, qedi_ep->handle, abrt_conn);
+ 	if (ret) {
 -- 
 2.25.1
 
