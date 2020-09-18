@@ -7,52 +7,49 @@ X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D8EFC43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:14:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EBAC43465
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 494C5238E6
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:14:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 710CE23119
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:22:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600395297;
-	bh=hZd/IcB4cD8T2+DK6lwBoe0pNDwO4mV5CW6l+OMgXiY=;
+	s=default; t=1600395727;
+	bh=ucOmtZeITF/dY6mbGxmxz+56Hy8EPs5r8vwwvGxI0AI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nU6eHpsKpCdQ96M59IR1QIgils7+kIPZ8nvhskqYqmWqHS8CgXyG9TNZg6/tzeKTm
-	 KAcby9xR+5Tzor+nlxHM8MTyM0Zm1ZirT+f7+s4wbJIJDmvdcygZtp/Ul3jbrmller
-	 +zwStZFbDBsVBGUYNjlkBGalo18Pde9+VBr0Qu8E=
+	b=mpwiOyJhQA6+9LuIdJ02vdHZooAtQitiYm0MPD1viRfLRrYB/TGZKwvLD5KAtDgSJ
+	 dNfS+IgB+iRcCfxhrREiGxP3Bv37wfSOjICws38Xcs2GoZCa+X3hfJt/pDXy6lPiw3
+	 QN2Z64bxn1d6e9KL/pQaz/qiIsVd+MdhNl/so+dQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728819AbgIRCO4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:14:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43268 "EHLO mail.kernel.org"
+        id S1727991AbgIRCVs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:21:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47998 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729142AbgIRCOv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:14:51 -0400
+        id S1727554AbgIRCRY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:17:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 916AF2376E;
-        Fri, 18 Sep 2020 02:14:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 600C82396D;
+        Fri, 18 Sep 2020 02:17:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600395290;
-        bh=hZd/IcB4cD8T2+DK6lwBoe0pNDwO4mV5CW6l+OMgXiY=;
+        s=default; t=1600395436;
+        bh=ucOmtZeITF/dY6mbGxmxz+56Hy8EPs5r8vwwvGxI0AI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CHhfkty7G9hy8qTWUjzfHURymZ0jcMEOsDbA6wIaqy338LHgw9veS7VO6O46Mt0JX
-         //VoPQen1T1F0xbZ57V12K5FkCi1T8YMdvITPpWTFRNAVk6BUd0A79+HQ8qNHr5Dln
-         pm82tivuJQlS3b0pIy1VpUZ3X8oiVvdxEJ3YMh0g=
+        b=rbtn8Tfn3nouvaZePOti36Lvxr2JtRKD6ybl17sfp+igp0ZPVhJpfDwdojigf6Bf4
+         pAYDYcLI9b6OPCetLIQtMS4WLr9rkMb8Fc7htK0JHeRar1f6aHvupXHGUmHIt1KxXm
+         DOHmF19eC0nyPSbuutvTenZZWoSODBMASmmbovrs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Girish Basrur <gbasrur@marvell.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Shyam Sundar <ssundar@marvell.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, fcoe-devel@open-fcoe.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 124/127] scsi: libfc: Skip additional kref updating work event
-Date:   Thu, 17 Sep 2020 22:12:17 -0400
-Message-Id: <20200918021220.2066485-124-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 26/64] scsi: lpfc: Fix RQ buffer leakage when no IOCBs available
+Date:   Thu, 17 Sep 2020 22:16:05 -0400
+Message-Id: <20200918021643.2067895-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918021220.2066485-1-sashal@kernel.org>
-References: <20200918021220.2066485-1-sashal@kernel.org>
+In-Reply-To: <20200918021643.2067895-1-sashal@kernel.org>
+References: <20200918021643.2067895-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,81 +58,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 823a65409c8990f64c5693af98ce0e7819975cba ]
+[ Upstream commit 39c4f1a965a9244c3ba60695e8ff8da065ec6ac4 ]
 
-When an rport event (RPORT_EV_READY) is updated without work being queued,
-avoid taking an additional reference.
+The driver is occasionally seeing the following SLI Port error, requiring
+reset and reinit:
 
-This issue was leading to memory leak. Trace from KMEMLEAK tool:
+ Port Status Event: ... error 1=0x52004a01, error 2=0x218
 
-  unreferenced object 0xffff8888259e8780 (size 512):
-  comm "kworker/2:1", jiffies 4433237386 (age 113021.971s)
-    hex dump (first 32 bytes):
-	58 0a ec cf 83 88 ff ff 00 00 00 00 00 00 00 00
-	01 00 00 00 08 00 00 00 13 7d f0 1e 0e 00 00 10
-  backtrace:
-  [<000000006b25760f>] fc_rport_recv_req+0x3c6/0x18f0 [libfc]
-  [<00000000f208d994>] fc_lport_recv_els_req+0x120/0x8a0 [libfc]
-  [<00000000a9c437b8>] fc_lport_recv+0xb9/0x130 [libfc]
-  [<00000000a9c437b8>] fc_lport_recv+0xb9/0x130 [libfc]
-  [<00000000ad5be37b>] qedf_ll2_process_skb+0x73d/0xad0 [qedf]
-  [<00000000e0eb6893>] process_one_work+0x382/0x6c0
-  [<000000002dfd9e21>] worker_thread+0x57/0x5c0
-  [<00000000b648204f>] kthread+0x1a0/0x1c0
-  [<0000000072f5ab20>] ret_from_fork+0x35/0x40
-  [<000000001d5c05d8>] 0xffffffffffffffff
+The failure means an RQ timeout. That is, the adapter had received
+asynchronous receive frames, ran out of buffer slots to place the frames,
+and the driver did not replenish the buffer slots before a timeout
+occurred. The driver should not be so slow in replenishing buffers that a
+timeout can occur.
 
-Below is the log sequence which leads to memory leak.  Here we get the
-RPORT_EV_READY and RPORT_EV_STOP back to back, which lead to overwrite the
-event RPORT_EV_READY by event RPORT_EV_STOP.  Because of this, kref_count
-gets incremented by 1.
+When the driver received all the frames of a sequence, it allocates an IOCB
+to put the frames in. In a situation where there was no IOCB available for
+the frame of a sequence, the RQ buffer corresponding to the first frame of
+the sequence was not returned to the FW. Eventually, with enough traffic
+encountering the situation, the timeout occurred.
 
-  kernel: host0: rport fffce5: Received PLOGI request
-  kernel: host0: rport fffce5: Received PLOGI in INIT state
-  kernel: host0: rport fffce5: Port is Ready
-  kernel: host0: rport fffce5: Received PRLI request while in state Ready
-  kernel: host0: rport fffce5: PRLI rspp type 8 active 1 passive 0
-  kernel: host0: rport fffce5: Received LOGO request while in state Ready
-  kernel: host0: rport fffce5: Delete port
-  kernel: host0: rport fffce5: Received PLOGI request
-  kernel: host0: rport fffce5: Received PLOGI in state Delete - send busy
-  kernel: host0: rport fffce5: work event 3
-  kernel: host0: rport fffce5: lld callback ev 3
-  kernel: host0: rport fffce5: work delete
+Fix by releasing the buffer back to firmware whenever there is no IOCB for
+the first frame.
 
-Link: https://lore.kernel.org/r/20200626094959.32151-1-jhasan@marvell.com
-Reviewed-by: Girish Basrur <gbasrur@marvell.com>
-Reviewed-by: Saurav Kashyap <skashyap@marvell.com>
-Reviewed-by: Shyam Sundar <ssundar@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+[mkp: typo]
+
+Link: https://lore.kernel.org/r/20200128002312.16346-2-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_rport.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index a9137f64befa0..669cf3553a77d 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -495,10 +495,11 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
- 
- 	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
- 
--	kref_get(&rdata->kref);
--	if (rdata->event == RPORT_EV_NONE &&
--	    !queue_work(rport_event_queue, &rdata->event_work))
--		kref_put(&rdata->kref, fc_rport_destroy);
-+	if (rdata->event == RPORT_EV_NONE) {
-+		kref_get(&rdata->kref);
-+		if (!queue_work(rport_event_queue, &rdata->event_work))
-+			kref_put(&rdata->kref, fc_rport_destroy);
-+	}
- 
- 	rdata->event = event;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 7a94c2d352390..97c0d79a2601f 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -15445,6 +15445,10 @@ lpfc_prep_seq(struct lpfc_vport *vport, struct hbq_dmabuf *seq_dmabuf)
+ 			list_add_tail(&iocbq->list, &first_iocbq->list);
+ 		}
+ 	}
++	/* Free the sequence's header buffer */
++	if (!first_iocbq)
++		lpfc_in_buf_free(vport->phba, &seq_dmabuf->dbuf);
++
+ 	return first_iocbq;
  }
+ 
 -- 
 2.25.1
 
