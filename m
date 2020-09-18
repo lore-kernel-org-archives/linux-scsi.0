@@ -4,24 +4,24 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69BBFC43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 12:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48B81C43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 12:16:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3378A2078D
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 12:15:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0732E20870
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 12:16:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726239AbgIRMPm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Sep 2020 08:15:42 -0400
-Received: from mout.kundenserver.de ([212.227.126.187]:55367 "EHLO
+        id S1726312AbgIRMQD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Sep 2020 08:16:03 -0400
+Received: from mout.kundenserver.de ([212.227.126.135]:37225 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726064AbgIRMPm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2020 08:15:42 -0400
+        with ESMTP id S1726064AbgIRMQD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2020 08:16:03 -0400
 Received: from threadripper.lan ([149.172.98.151]) by mrelayeu.kundenserver.de
- (mreue009 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MhlCa-1kwiqN2nei-00dnUh; Fri, 18 Sep 2020 14:15:27 +0200
+ (mreue012 [212.227.15.129]) with ESMTPA (Nemesis) id
+ 1MC0HF-1kBnB91zTx-00CUmb; Fri, 18 Sep 2020 14:15:46 +0200
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Kashyap Desai <kashyap.desai@broadcom.com>,
         Sumit Saxena <sumit.saxena@broadcom.com>,
@@ -30,97 +30,266 @@ To:     Kashyap Desai <kashyap.desai@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@infradead.org>, anand.lodnoor@broadcom.com,
         megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 2/3] scsi: megaraid_sas: check user-provided offsets
-Date:   Fri, 18 Sep 2020 14:15:22 +0200
-Message-Id: <20200918121522.1466028-1-arnd@arndb.de>
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 3/3] scsi: megaraid_sas: simplify compat_ioctl handling
+Date:   Fri, 18 Sep 2020 14:15:43 +0200
+Message-Id: <20200918121543.1466090-1-arnd@arndb.de>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200918120955.1465510-1-arnd@arndb.de>
 References: <20200918120955.1465510-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:6kJPcwuHge9uT864Zf5TyvhQnlmxeK+RpOYT34mVoK7SAncOfq9
- 1wvhRh03/TO74JK8VdAlLNISWQ5JFsbrhhGN08krYQ5ip4disf1Dbd4f2biDPp+wGScYwrk
- 2eqIMN9aKY5vKPnBcr335Ny6XSIVuPsdE2ZYCeV/dH1z1t5zLmiLylvjF/EJwebLxJi7oyz
- c/wyKFRfXQ+XgvvduDU/Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Y1hX+C4mHMY=:43H+a/hVFrzVJMDnWPMiay
- cx6NyNF/BlpGaJN2VMbhXKnFAUoAFIUL2o8vLIOvto/MOW22o0yxc6vbZrP+4pJ5ClXK0Jo5X
- pnr1oDmCnyoQr9dx7fzVXeiKj4sGLooEq5wEWP2c5e5zrTV5Sz/dtQU0vV4HsAPmVSeHIDqDv
- gEjwD7vIHAfesxccLMSReiW+X8cfXePqT5a8dfo6BYewocqUo/vhF+egLvLYZiUghSNzpefRj
- mWUdAu6vSbciUZaN8RgYVr9F4M1VC0mNRmvzehRL2oxJfgnTkueU0Gp+Ta5U6CbfVPAu+aPFq
- TxIbLHDZuMy0zd+P2n1ExQccEOoZiBZeZzYFasN6ToW0+01m//yuoNwnc5AsKdI6bDSJqecOx
- hqdkMmwYfDIkWiEDsi7QsPxbLraN59XYrbDKDO5aijgx/PBqCm2NCuyivOdy03b/X3DG0d/Td
- aYAhvgCm/KdBURelCzjc9ekESE4IrnNT8ORrcx7vIkSx95SupuvFT033NQ5hd3PkqW9sCSOZb
- ZkU1n1KGSztPAJj94sTngbby1LrqAM/VowTSXc57ml8oO1HhQoK/rXYXIZgJpSgxOuqmead/N
- Ssnw5VG1KbXAKySEc53MCZ6c5UQrfmu27A6z3Dt9ZjFq8AJEY+tij/Z0heNxrURLPBAWaAD24
- qq0ALub2s/SCZxpnf3kfQjYRv/pSioLhmkpWZd6+xZ7rdXVoR577B1aCazF+XXTnIJrDUTU9r
- iNzuzGiESeQFdIZd732y8c9SLlL26hd1lRDAPgdLIWTV3lob8LDc+HJp7m0TtC6Obl7uRa65f
- LP0PFw5RPoZFz4asTLDC4Qh9hBlFaMfn/h04eahR7OexB9VNaLfuq+SHRO88FAoTqjRYArz
+X-Provags-ID: V03:K1:z9AIGG+qS63xAkhNlR+tgy9b3xlu4k/PonUBJLNH95P0Poita0W
+ fWz2zaCv8oJCc8irsoaaVWIZqh6Z461i52DpIZsRIBRmm2Matu8bljNwTZuEp6pAayFItl7
+ MscbRKByL+0oLuwzRa9WN9NnJ3++ret0seWRJWKn1brE4BuXX/1jKinvZYv1k99Tkd1D9ua
+ ncUevfikahluC74aHNQsw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:AERzY+NEGTU=:Dkbr3VlSvDqGNAeMasPAMr
+ lK6edekI1h9ORqVKN2vq84L8Dat+Wpk0sT6UZBkAbyDcq/GisyUuYVQAHU5GAqtULUxdmWDlZ
+ pDOID+4rJJLII9OSid3H2K8OTJ0/L0fwEJ8dOOqAp/jFmWWS/DpO0xumOcM1vAvHZgtStiY5v
+ /6WVS5wWydkXEVotqWfoZBWzupLwRUfa1eSNgURal+1XlpUSU+la8iSaCh1ErXUU0i0dwQGjB
+ wREHC0y62hjY0CpUrN8XusrdrQ0neU+k0fPiJAjyVIp05Vc3klTMiU3ppZ0eFz72Lb3KQMZSL
+ uhLPkqaug1raIIcXQVOd99sv7JlmaRfZ19axnBGWcwVdOWPXXc6F1lzdhUqI3/Om24rgcg31U
+ rq+zua5VhWMMGqEvamUl8PiHaq9jSyBprh4IA7Om3PnCqJSW+oq1N0c1td9P/NN+RuGvi/cqf
+ fLG9v3/95mdTlzOV93YAIMoU83uxHufG/g35xLOZ/WE8j8YqOn0OwDC1BQHnnsJhtktiLs+fa
+ 6iBwMLCXxAwfLU2rHrnZzHrzD8u+lNUILwuLu3NaPsNrZJ67nJbpObkZdiBaqT9FOVNbFk4Iu
+ QWTDa9JicFrikkowRz+PU1mpTQCoMzFbso7ehTlEL7uu/Wzcl77/AxvHDtl+LpZLuvy4ShCdl
+ oC7epELAtUu3I8o65e6SOql6NaJEOHd5pSpvdF77U50flJh6lzibSzq9GdknUs1IGu86dzGEp
+ c5mBuLaTsZLspUlvCr5SpcNaCUFOJQ1WLWFPjvWOM0Ox9+EQyLvUax2MaValN/nAISBagSoqR
+ R6mYPfJ8/UjOSzqy+b89IBllvc4V/cQ8Smfbpx4KjcdIajgZZKMgdM2mrA7uZju409QTcMz
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It sounds unwise to let user space pass an unchecked 32-bit
-offset into a kernel structure in an ioctl. This is an unsigned
-variable, so checking the upper bound for the size of the structure
-it points into is sufficient to avoid data corruption, but as
-the pointer might also be unaligned, it has to be written carefully
-as well.
+There have been several attempts to fix serious problems
+in the compat handling in megasas_mgmt_compat_ioctl_fw(),
+and it also uses the compat_alloc_user_space() function.
 
-While I stumbled over this problem by reading the code, I did not
-continue checking the function for further problems like it.
+Folding the compat handling into the regular ioctl
+function with in_compat_syscall() simplifies it a lot and
+avoids some of the remaining problems:
 
-Cc: <stable@vger.kernel.org> # v2.6.15+
-Fixes: c4a3e0a529ab ("[SCSI] MegaRAID SAS RAID: new driver")
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+- missing handling of unaligned pointers
+- overflowing the ioc->frame.raw array from
+  invalid input
+- compat_alloc_user_space()
+
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+v2: address review comments from hch
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |   2 -
+ drivers/scsi/megaraid/megaraid_sas_base.c | 117 +++++++++-------------
+ include/linux/compat.h                    |  10 +-
+ 3 files changed, 50 insertions(+), 79 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 5e4137f10e0e..0f808d63580e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2605,7 +2605,6 @@ struct megasas_aen {
+ 	u32 class_locale_word;
+ } __attribute__ ((packed));
+ 
+-#ifdef CONFIG_COMPAT
+ struct compat_megasas_iocpacket {
+ 	u16 host_no;
+ 	u16 __pad1;
+@@ -2621,7 +2620,6 @@ struct compat_megasas_iocpacket {
+ } __attribute__ ((packed));
+ 
+ #define MEGASAS_IOC_FIRMWARE32	_IOWR('M', 1, struct compat_megasas_iocpacket)
+-#endif
+ 
+ #define MEGASAS_IOC_FIRMWARE	_IOWR('M', 1, struct megasas_iocpacket)
+ #define MEGASAS_IOC_GET_AEN	_IOW('M', 3, struct megasas_aen)
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 861f7140f52e..c3de69f3bee8 100644
+index c3de69f3bee8..d91951ee16ab 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -8095,7 +8095,7 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	int error = 0, i;
- 	void *sense = NULL;
- 	dma_addr_t sense_handle;
--	unsigned long *sense_ptr;
-+	void *sense_ptr;
- 	u32 opcode = 0;
- 	int ret = DCMD_SUCCESS;
- 
-@@ -8218,6 +8218,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	}
- 
+@@ -8279,16 +8279,18 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
+ 	 * copy out the sense
+ 	 */
  	if (ioc->sense_len) {
-+		/* make sure the pointer is part of the frame */
-+		if (ioc->sense_off > (sizeof(union megasas_frame) - sizeof(__le64))) {
-+			error = -EINVAL;
++		void __user *uptr;
+ 		/*
+ 		 * sense_ptr points to the location that has the user
+ 		 * sense buffer address
+ 		 */
+-		sense_ptr = (unsigned long *) ((unsigned long)ioc->frame.raw +
+-				ioc->sense_off);
++		sense_ptr = (void *)ioc->frame.raw + ioc->sense_off;
++		if (in_compat_syscall())
++			uptr = compat_ptr(get_unaligned((u32 *)sense_ptr));
++		else
++			uptr = get_unaligned((void __user **)sense_ptr);
+ 
+-		if (copy_to_user((void __user *)((unsigned long)
+-				 get_unaligned((unsigned long *)sense_ptr)),
+-				 sense, ioc->sense_len)) {
++		if (copy_to_user(uptr, sense, ioc->sense_len)) {
+ 			dev_err(&instance->pdev->dev, "Failed to copy out to user "
+ 					"sense data\n");
+ 			error = -EFAULT;
+@@ -8331,6 +8333,38 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
+ 	return error;
+ }
+ 
++static struct megasas_iocpacket *
++megasas_compat_iocpacket_get_user(void __user *arg)
++{
++	struct megasas_iocpacket *ioc;
++	struct compat_megasas_iocpacket __user *cioc = arg;
++	size_t size;
++	int err = -EFAULT;
++	int i;
++
++	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
++	if (!ioc)
++		return ERR_PTR(-ENOMEM);
++	size = offsetof(struct megasas_iocpacket, frame) + sizeof(ioc->frame);
++	if (copy_from_user(ioc, arg, size))
++		goto out;
++
++	for (i = 0; i < MAX_IOCTL_SGE; i++) {
++		compat_uptr_t iov_base;
++		if (get_user(iov_base, &cioc->sgl[i].iov_base) ||
++		    get_user(ioc->sgl[i].iov_len, &cioc->sgl[i].iov_len)) {
 +			goto out;
 +		}
++		ioc->sgl[i].iov_base = compat_ptr(iov_base);
++	}
 +
- 		sense = dma_alloc_coherent(&instance->pdev->dev, ioc->sense_len,
- 					     &sense_handle, GFP_KERNEL);
- 		if (!sense) {
-@@ -8225,12 +8231,11 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 			goto out;
- 		}
++	return ioc;
++out:
++	kfree(ioc);
++
++	return ERR_PTR(err);
++}
++
+ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ {
+ 	struct megasas_iocpacket __user *user_ioc =
+@@ -8339,7 +8373,11 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
+ 	struct megasas_instance *instance;
+ 	int error;
  
--		sense_ptr =
--		(unsigned long *) ((unsigned long)cmd->frame + ioc->sense_off);
-+		sense_ptr = (void *)cmd->frame + ioc->sense_off;
- 		if (instance->consistent_mask_64bit)
--			*sense_ptr = cpu_to_le64(sense_handle);
-+			put_unaligned_le64(sense_handle, sense_ptr);
- 		else
--			*sense_ptr = cpu_to_le32(sense_handle);
-+			put_unaligned_le32(sense_handle, sense_ptr);
+-	ioc = memdup_user(user_ioc, sizeof(*ioc));
++	if (in_compat_syscall())
++		ioc = megasas_compat_iocpacket_get_user(user_ioc);
++	else
++		ioc = memdup_user(user_ioc, sizeof(struct megasas_iocpacket));
++
+ 	if (IS_ERR(ioc))
+ 		return PTR_ERR(ioc);
+ 
+@@ -8444,78 +8482,13 @@ megasas_mgmt_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ }
+ 
+ #ifdef CONFIG_COMPAT
+-static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
+-{
+-	struct compat_megasas_iocpacket __user *cioc =
+-	    (struct compat_megasas_iocpacket __user *)arg;
+-	struct megasas_iocpacket __user *ioc =
+-	    compat_alloc_user_space(sizeof(struct megasas_iocpacket));
+-	int i;
+-	int error = 0;
+-	compat_uptr_t ptr;
+-	u32 local_sense_off;
+-	u32 local_sense_len;
+-	u32 user_sense_off;
+-
+-	if (clear_user(ioc, sizeof(*ioc)))
+-		return -EFAULT;
+-
+-	if (copy_in_user(&ioc->host_no, &cioc->host_no, sizeof(u16)) ||
+-	    copy_in_user(&ioc->sgl_off, &cioc->sgl_off, sizeof(u32)) ||
+-	    copy_in_user(&ioc->sense_off, &cioc->sense_off, sizeof(u32)) ||
+-	    copy_in_user(&ioc->sense_len, &cioc->sense_len, sizeof(u32)) ||
+-	    copy_in_user(ioc->frame.raw, cioc->frame.raw, 128) ||
+-	    copy_in_user(&ioc->sge_count, &cioc->sge_count, sizeof(u32)))
+-		return -EFAULT;
+-
+-	/*
+-	 * The sense_ptr is used in megasas_mgmt_fw_ioctl only when
+-	 * sense_len is not null, so prepare the 64bit value under
+-	 * the same condition.
+-	 */
+-	if (get_user(local_sense_off, &ioc->sense_off) ||
+-		get_user(local_sense_len, &ioc->sense_len) ||
+-		get_user(user_sense_off, &cioc->sense_off))
+-		return -EFAULT;
+-
+-	if (local_sense_off != user_sense_off)
+-		return -EINVAL;
+-
+-	if (local_sense_len) {
+-		void __user **sense_ioc_ptr =
+-			(void __user **)((u8 *)((unsigned long)&ioc->frame.raw) + local_sense_off);
+-		compat_uptr_t *sense_cioc_ptr =
+-			(compat_uptr_t *)(((unsigned long)&cioc->frame.raw) + user_sense_off);
+-		if (get_user(ptr, sense_cioc_ptr) ||
+-		    put_user(compat_ptr(ptr), sense_ioc_ptr))
+-			return -EFAULT;
+-	}
+-
+-	for (i = 0; i < MAX_IOCTL_SGE; i++) {
+-		if (get_user(ptr, &cioc->sgl[i].iov_base) ||
+-		    put_user(compat_ptr(ptr), &ioc->sgl[i].iov_base) ||
+-		    copy_in_user(&ioc->sgl[i].iov_len,
+-				 &cioc->sgl[i].iov_len, sizeof(compat_size_t)))
+-			return -EFAULT;
+-	}
+-
+-	error = megasas_mgmt_ioctl_fw(file, (unsigned long)ioc);
+-
+-	if (copy_in_user(&cioc->frame.hdr.cmd_status,
+-			 &ioc->frame.hdr.cmd_status, sizeof(u8))) {
+-		printk(KERN_DEBUG "megasas: error copy_in_user cmd_status\n");
+-		return -EFAULT;
+-	}
+-	return error;
+-}
+-
+ static long
+ megasas_mgmt_compat_ioctl(struct file *file, unsigned int cmd,
+ 			  unsigned long arg)
+ {
+ 	switch (cmd) {
+ 	case MEGASAS_IOC_FIRMWARE32:
+-		return megasas_mgmt_compat_ioctl_fw(file, arg);
++		return megasas_mgmt_ioctl_fw(file, arg);
+ 	case MEGASAS_IOC_GET_AEN:
+ 		return megasas_mgmt_ioctl_aen(file, arg);
  	}
+diff --git a/include/linux/compat.h b/include/linux/compat.h
+index 1a530e1aa15a..a7a5a0ff59ef 100644
+--- a/include/linux/compat.h
++++ b/include/linux/compat.h
+@@ -91,6 +91,11 @@
+ 	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ #endif /* COMPAT_SYSCALL_DEFINEx */
  
- 	/*
++struct compat_iovec {
++	compat_uptr_t	iov_base;
++	compat_size_t	iov_len;
++};
++
+ #ifdef CONFIG_COMPAT
+ 
+ #ifndef compat_user_stack_pointer
+@@ -248,11 +253,6 @@ typedef struct compat_siginfo {
+ 	} _sifields;
+ } compat_siginfo_t;
+ 
+-struct compat_iovec {
+-	compat_uptr_t	iov_base;
+-	compat_size_t	iov_len;
+-};
+-
+ struct compat_rlimit {
+ 	compat_ulong_t	rlim_cur;
+ 	compat_ulong_t	rlim_max;
 -- 
 2.27.0
 
