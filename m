@@ -2,171 +2,208 @@ Return-Path: <SRS0=xkU+=C3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 490EEC43465
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:56:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B44FC43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:03:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB406208DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 00:56:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ppZa7vQP";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Otj+otm8"
+	by mail.kernel.org (Postfix) with ESMTP id DBD2E221EC
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:02:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600394579;
+	bh=JFGEpZLpPHzMDKTeFQbeHcdCovvkCDJKqX0Y+ymn4TI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=f0Efvn5aQJEujR/zu2DCqmnu9TLKQo5Z6B9NoHfOpc7bPg2uAdy39ai94fQFa/k8Z
+	 O+lIa2DRLviic6oYDbZuiLEOJJsuN+2HmaE2Nr0fmizEsmnWJTC+nK3ph9i14Kd36i
+	 g4zGOv6TXFo6WvHa/0pbWGMOkVPHTdKvLFzslzcY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726102AbgIRA4b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 20:56:31 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:22824 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbgIRA4a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2020 20:56:30 -0400
-X-Greylist: delayed 426 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 20:56:30 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1600390590; x=1631926590;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=Mp9dTDqKFM6XEjLjRA/16WMqL9oWh2BLRR6lriUCKBE=;
-  b=ppZa7vQPWwiB49VZL+rZsA+202e/e4bqCct1KraA6bBvngyf7OjqzVVa
-   S6/i9YdZWLEeVtPu4kAZnAe6u6rKl7of0X7OrWSAvMeEQaYWltpTG+1FP
-   0V0rcmQO94Lj0RPDzRv1pxX9+1PT3B/+ddW8AxapLWn9rkWBE9MckjG90
-   Skpvog/StNr0PiQ9K8JQLlAj/3YfhsObKG6O6FQJa3lfhOyoeW6hgct7/
-   qw30JiUwtmuSjTWkBTMz5r9L+NdMfXoS5yc3rn40PwJr6qz/nHg/wXX4S
-   aHXUM2W4yQgKgsXA2WRitzB9wn03N1m3eiE6V9Jx+cnpSYbTD3YPt7d+h
-   g==;
-IronPort-SDR: vKiCDCfUXuzHVcpF/ngag3cLKM7RS9YW/E76HE0n5M/jQ0vyTQO4/u+DDgW/09HpqwHlapBH77
- 11JosnVN8Pqf7vBa+HL7XLiDKWmN3cW3CY14MGhsmaH471fCCjjTYOlcRD7EO5MOjHdNqM0M1u
- /vba8wgzYnvTXQUzQZzB9ylo6SZSmHiiXGhzY6KMUkpndkRiALi3Vv2/45wukQp/dCAJh+GIxn
- Tq4yegnyfyjr/Nc0hyTP1zT98gpxzS1PwRBgYHAs0J5BFauSKc6gADkAjRoHxgTL9zDBjj6MYm
- MNQ=
-X-IronPort-AV: E=Sophos;i="5.77,272,1596470400"; 
-   d="scan'208";a="257345782"
-Received: from mail-dm6nam12lp2175.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.175])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Sep 2020 08:49:23 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bA6waQ7xgaMQit/l2EDxUeNWURS4fymrwj+xF8lGFEx1mfEHMGcPItY33VSnxlFT/T7GyG4mB+Iv1qUbc/DcghvQOgU4WBW30mQDUXdhSNebnZUbcfjicYV6W7NlIzGkrbiOE/739+zzbvgNzmkOdUcX6DjrMo9hGA9woiqIOSFfPrF6E6ik4bjFxhqwdQfBPOzzZh9EDfgdRP+cSMHA/4MTMVij/v2e63TgV+Ojd1MDRoHlPT89NWMhbtWyTt08eXzvoBroEQvHuzVtOGKe0Pi2flRkgMiveoDZ8QrdHPqPS3SYWlDUc+OTbdcLrq3pXG6prwvza1RPB5u0eFDBkQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7JqR7pXh+Xz6PKBzCPTporzsN35nwkn5FNiRuZJmZlA=;
- b=caMnVtmHSxdrwzUwsBNTISvUjeSy8/fZaj9s/1eJOwoOEwE2byvjXZ84kiGdygxLQvVIILjcxBB1lkVjgVPU7bK2SpliFCQwuKk3uPKTKC8euHVB83NaxPfyPaC5+DNubPWEig7g/FjoRDpA/3mcSUt20P+B8n9SjomXX3o6bwMODJ7ycn4lhIncnebxEWf2hzlEcearoSLTMwNqoCMVYj58Ck2d1TNGiWmkRNdm2WmsvCacpzyVB1lBgKkUsQdxAy1D6UeDN/EDHV9Yjsve0Bj/DvQJLIov4GwUzNCHvaRXkX6ae0CPqgUHOF+mG+dOQqn6Jp5m4mi0R8418UgIVg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7JqR7pXh+Xz6PKBzCPTporzsN35nwkn5FNiRuZJmZlA=;
- b=Otj+otm8AhRGFHhTowg9UXAxqLIMPAdwySvn9r16g+wEw6N3ILJJOZ/EBsQ8c/O7fVxGNDpbcIK2EJHU4tADoRlD1emLS8S4WgF7Mtgh7JoxL29xrJeQ80MnHhIjkW+3QU7NjDdzNuX82bUWCmZyq9Xkx04ea8ACDrrJB26bORc=
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
- by CY4PR04MB0424.namprd04.prod.outlook.com (2603:10b6:903:b3::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3370.16; Fri, 18 Sep
- 2020 00:49:22 +0000
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::9124:2453:fe9c:9a7]) by CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::9124:2453:fe9c:9a7%12]) with mapi id 15.20.3391.015; Fri, 18 Sep 2020
- 00:49:22 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Keith Busch <kbusch@kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>, "hch@lst.de" <hch@lst.de>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>
-CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv3 0/4] zoned block device specific errors
-Thread-Topic: [PATCHv3 0/4] zoned block device specific errors
-Thread-Index: AQHWjUjqfcSUOcFBsE6UeZD54mM7SQ==
-Date:   Fri, 18 Sep 2020 00:49:22 +0000
-Message-ID: <CY4PR04MB37517EE05467F208E3A395D0E73F0@CY4PR04MB3751.namprd04.prod.outlook.com>
-References: <20200917231841.4029747-1-kbusch@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2400:2411:43c0:6000:c162:b6b0:12c6:8cc]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 451f07ad-f805-4b6c-50e0-08d85b6caf43
-x-ms-traffictypediagnostic: CY4PR04MB0424:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR04MB0424960B52624E18A68EC5F1E73F0@CY4PR04MB0424.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: F15kx66VT3RJEGMwXfdCP3htFikpJqFXKSZc3dHFzmE26vR0jpXNAnZEpWmqTfwgRS95sLLJzlChVjJtE5REIuDvmjC0whgZlLWQDPAqTr4vqTBi2j81sn8vEwBKZ3kK+xeX7knMe0oWELvBvSkRVGBZiS17GVFg+745rd0E78B57QVDclAPcmXdfLhMVJrFXyHQ/0ZOea9YYeIdxoMfVCn9x8t2jrIIP1nH1AJYbwIVawHSslKDKnB1IL/olk9b9c5CFt5hICZ9HsY2GkjPEHIFCeFDhukd2Y5dcA/5TpL15SH/Se8IwHS5nzU648AO
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(366004)(376002)(39860400002)(346002)(71200400001)(66476007)(5660300002)(64756008)(91956017)(6506007)(53546011)(66446008)(76116006)(66946007)(66556008)(316002)(52536014)(9686003)(186003)(2906002)(8676002)(55016002)(8936002)(33656002)(478600001)(83380400001)(54906003)(4326008)(7696005)(86362001)(6636002)(110136005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: NIrXdcsWUWlOc7APspJ9nd07bX3Jg7jhoWOhigg8i0DHLtLBg6wePWpkdRwuzXIlBUzdJwQXNOcs1QXYOn0RuYUdzKbu2Vm+bR/3hpV9lSKcPFt564OgwXNXRgWOFJ3NU4nifQ98qL/EsuPv0scE8uRcODASowTmEAvu2iyn17TXdvNyb4o4UGpmq/3kxgOOZrc9/6ryW9gHElnI5I8d7bKp1MEvAke+ewdgFsjH/hoUZ9iYOs1/JKw8FsROSn+UbvHa5/b7eXcO3Sks2anugwb0V2SBSAN35KmKcVndpc97yGU12gqu0QrgL3hTw6fB37v4WsXuutriLsqlByszL86+gaomEj0NsEFrJmWXR5ckEIeD4K9sFjqd16wlHUYkO/fDmzz/sSE31TPMkaTtIuuGEfqhflBgNgvHArULW6wKYWCixz3uV8mD6E1MlNiETAiwuFuUk+zB9FbrOcP/j7havSjFNMKYyMpzD7oi3mqBYjcOYyGOgwfwpLLpsIc3wLDv9OsP5gjvC5anf85ZnPx3j8X0wgKcBGDiLYCtTkCK0Fh2no+mIh5SPqooxr8uQhyrYAnqFLoFDlMFn67PIYOkxa5AlxruYDzR3Nb+8/ZYJyad08dFQuj3l+k+M0Nngec8KI6ijWKEiZqtI5omsT0zulzIgMtiWyuQ3uCqk4FY5ezPvhwbQ97u2dpHcmifyGk1i10UgFQwjxGp1l7PPw==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726921AbgIRCC6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:02:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48698 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726906AbgIRCC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:02:57 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 23BC422211;
+        Fri, 18 Sep 2020 02:02:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600394576;
+        bh=JFGEpZLpPHzMDKTeFQbeHcdCovvkCDJKqX0Y+ymn4TI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ve+EdNPiwapXdWqcfJVEnoPcmfduI2i35D/Q6aPFFyoHkG55WCLAr7MdsyaTBCf6N
+         sQ8llVkYeVeUJ2VJoWPdOl8XsU2vl0duK6cfsJ5QX7hTf9BWDv/wCyw57E6CRSlvGr
+         Wi7H4Wrc1crMxp9cJpp4wJYyAx8wtHUGhaPWUu+o=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 088/330] scsi: qla2xxx: Fix stuck session in GNL
+Date:   Thu, 17 Sep 2020 21:57:08 -0400
+Message-Id: <20200918020110.2063155-88-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
+References: <20200918020110.2063155-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 451f07ad-f805-4b6c-50e0-08d85b6caf43
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Sep 2020 00:49:22.6695
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ZWJNYzOTZChPL7vOsw4dsL06PDhJ4bAIkyVQhYG7QE2RjQfLltal2t+++8q8pFt5VLelQ1wdgPXZVWPVdUHUCw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0424
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020/09/18 8:18, Keith Busch wrote:=0A=
-> Zone block devices may have some limits that require special handling.=0A=
-> This series provides a way for drivers to notify of these conditions.=0A=
-> =0A=
-> v2->v3:=0A=
-> =0A=
->   Split status for max open vs max active errors (Christoph)=0A=
-> =0A=
->   Include scsi use for the new status (Damien)=0A=
-> =0A=
->   Update documentation for the new status inline with the request_queue=
-=0A=
->   properties they relate to=0A=
-> =0A=
-> Damien Le Moal (2):=0A=
->   scsi: update additional sense codes list=0A=
->   scsi: handle zone resources errors=0A=
-> =0A=
-> Keith Busch (2):=0A=
->   block: add zone specific block statuses=0A=
->   nvme: translate zone resource errors=0A=
-> =0A=
->  Documentation/block/queue-sysfs.rst |  8 +++++=0A=
->  block/blk-core.c                    |  4 +++=0A=
->  drivers/nvme/host/core.c            |  4 +++=0A=
->  drivers/scsi/scsi_lib.c             |  9 +++++=0A=
->  drivers/scsi/sense_codes.h          | 54 ++++++++++++++++++++++++++++-=
-=0A=
->  include/linux/blk_types.h           | 18 ++++++++++=0A=
->  6 files changed, 96 insertions(+), 1 deletion(-)=0A=
-> =0A=
-=0A=
-+Niklas=0A=
-=0A=
-We will also need to send an update for nullblk on top of Miklas patch that=
- adds=0A=
-MAR/MOR emulation, to have everything in sync. But Jens has not pulled that=
- one=0A=
-in yet I think.=0A=
-=0A=
-Jens,=0A=
-=0A=
-We could add Niklas patch, modified, to this series too. Or do you prefer a=
-n=0A=
-incremental update for it ?=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+From: Quinn Tran <qutran@marvell.com>
+
+[ Upstream commit e1217dc3edce62895595cf484af33b9e0379b7f3 ]
+
+Fix race condition between GNL completion processing and GNL request. Late
+submission of GNL request was not seen by the GNL completion thread. This
+patch will re-submit the GNL request for late submission fcport.
+
+Link: https://lore.kernel.org/r/20191217220617.28084-13-hmadhani@marvell.com
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_init.c   | 15 +++++++++++++--
+ drivers/scsi/qla2xxx/qla_target.c | 21 +++++++++++++++------
+ 2 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ac4c47fc5f4c1..2f2e059f4575e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1002,7 +1002,7 @@ static void qla24xx_async_gnl_sp_done(srb_t *sp, int res)
+ 		set_bit(loop_id, vha->hw->loop_id_map);
+ 		wwn = wwn_to_u64(e->port_name);
+ 
+-		ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0x20e8,
++		ql_dbg(ql_dbg_disc, vha, 0x20e8,
+ 		    "%s %8phC %02x:%02x:%02x CLS %x/%x lid %x \n",
+ 		    __func__, (void *)&wwn, e->port_id[2], e->port_id[1],
+ 		    e->port_id[0], e->current_login_state, e->last_login_state,
+@@ -1061,6 +1061,16 @@ static void qla24xx_async_gnl_sp_done(srb_t *sp, int res)
+ 
+ 	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+ 	vha->gnl.sent = 0;
++	if (!list_empty(&vha->gnl.fcports)) {
++		/* retrigger gnl */
++		list_for_each_entry_safe(fcport, tf, &vha->gnl.fcports,
++		    gnl_entry) {
++			list_del_init(&fcport->gnl_entry);
++			fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
++			if (qla24xx_post_gnl_work(vha, fcport) == QLA_SUCCESS)
++				break;
++		}
++	}
+ 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+ 
+ 	sp->free(sp);
+@@ -1995,7 +2005,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 			qla24xx_post_prli_work(vha, ea->fcport);
+ 		} else {
+ 			ql_dbg(ql_dbg_disc, vha, 0x20ea,
+-			    "%s %d %8phC LoopID 0x%x in use with %06x. post gnl\n",
++			    "%s %d %8phC LoopID 0x%x in use with %06x. post gpdb\n",
+ 			    __func__, __LINE__, ea->fcport->port_name,
+ 			    ea->fcport->loop_id, ea->fcport->d_id.b24);
+ 
+@@ -2066,6 +2076,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
+ 			set_bit(lid, vha->hw->loop_id_map);
+ 			ea->fcport->loop_id = lid;
+ 			ea->fcport->keep_nport_handle = 0;
++			ea->fcport->logout_on_delete = 1;
+ 			qlt_schedule_sess_for_deletion(ea->fcport);
+ 		}
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b75e6e4d58c06..a7acc266cec06 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -957,7 +957,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 	struct qlt_plogi_ack_t *own =
+ 		sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN];
+ 
+-	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf084,
++	ql_dbg(ql_dbg_disc, vha, 0xf084,
+ 		"%s: se_sess %p / sess %p from port %8phC loop_id %#04x"
+ 		" s_id %02x:%02x:%02x logout %d keep %d els_logo %d\n",
+ 		__func__, sess->se_sess, sess, sess->port_name, sess->loop_id,
+@@ -1024,7 +1024,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 
+ 		while (!READ_ONCE(sess->logout_completed)) {
+ 			if (!traced) {
+-				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf086,
++				ql_dbg(ql_dbg_disc, vha, 0xf086,
+ 					"%s: waiting for sess %p logout\n",
+ 					__func__, sess);
+ 				traced = true;
+@@ -1045,6 +1045,10 @@ void qlt_free_session_done(struct work_struct *work)
+ 			(struct imm_ntfy_from_isp *)sess->iocb, SRB_NACK_LOGO);
+ 	}
+ 
++	spin_lock_irqsave(&vha->work_lock, flags);
++	sess->flags &= ~FCF_ASYNC_SENT;
++	spin_unlock_irqrestore(&vha->work_lock, flags);
++
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+ 	if (sess->se_sess) {
+ 		sess->se_sess = NULL;
+@@ -1108,7 +1112,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 	sess->free_pending = 0;
+ 
+-	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf001,
++	ql_dbg(ql_dbg_disc, vha, 0xf001,
+ 	    "Unregistration of sess %p %8phC finished fcp_cnt %d\n",
+ 		sess, sess->port_name, vha->fcport_count);
+ 
+@@ -1151,6 +1155,11 @@ void qlt_unreg_sess(struct fc_port *sess)
+ 		return;
+ 	}
+ 	sess->free_pending = 1;
++	/*
++	 * Use FCF_ASYNC_SENT flag to block other cmds used in sess
++	 * management from being sent.
++	 */
++	sess->flags |= FCF_ASYNC_SENT;
+ 	spin_unlock_irqrestore(&sess->vha->work_lock, flags);
+ 
+ 	if (sess->se_sess)
+@@ -4580,7 +4589,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
+ 		/* find other sess with nport_id collision */
+ 		if (port_id.b24 == other_sess->d_id.b24) {
+ 			if (loop_id != other_sess->loop_id) {
+-				ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000c,
++				ql_dbg(ql_dbg_disc, vha, 0x1000c,
+ 				    "Invalidating sess %p loop_id %d wwn %llx.\n",
+ 				    other_sess, other_sess->loop_id, other_wwn);
+ 
+@@ -4596,7 +4605,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
+ 				 * Another wwn used to have our s_id/loop_id
+ 				 * kill the session, but don't free the loop_id
+ 				 */
+-				ql_dbg(ql_dbg_tgt_tmr, vha, 0xf01b,
++				ql_dbg(ql_dbg_disc, vha, 0xf01b,
+ 				    "Invalidating sess %p loop_id %d wwn %llx.\n",
+ 				    other_sess, other_sess->loop_id, other_wwn);
+ 
+@@ -4611,7 +4620,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
+ 		/* find other sess with nport handle collision */
+ 		if ((loop_id == other_sess->loop_id) &&
+ 			(loop_id != FC_NO_LOOP_ID)) {
+-			ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000d,
++			ql_dbg(ql_dbg_disc, vha, 0x1000d,
+ 			       "Invalidating sess %p loop_id %d wwn %llx.\n",
+ 			       other_sess, other_sess->loop_id, other_wwn);
+ 
+-- 
+2.25.1
+
