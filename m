@@ -5,51 +5,48 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C7BC43466
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:12:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F56EC43464
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A8762083B
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:12:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F35D208C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398721;
-	bh=c/L8j8VEhAr71cncFsoYSautMCqDG9hga+JTrHmg8Kg=;
+	s=default; t=1600398860;
+	bh=NoFLztq/Xlxx/yVNGOogB1MmtIYPvZpjnzndrmpIhpU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nBeA9hcKXZYh1h2ZrTgb6NKMo1HT+mry5+b+ch8C7SM7C0zIqI5el4r6gJf2mH3ZB
-	 kTeYHowdaDe2mI34nycn1rV89Hs2SFmUvLGWX2bTkgmTJT9Cs1TndWxPTBWKW4pvKD
-	 EpQ1U7u70PcqD0PhUAlEXMw1AppK+2XxL9qDy2Vc=
+	b=m6KtqGAcOstR4LZFRaWlHE1u7pwH1V7YCGNOGEP8PkJTIsbjOLcdRznqsCLlZGmdn
+	 QzNhVZQ1Z4H+QnIjUES3FsHePrA5fZTwyG0jbLsgJgI27oDE53QTiIzEzluVUT0rzA
+	 yARn+acFsy49q0/G4shdq6n3mSQCJGoO09mQo5Lg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729227AbgIRDLo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:11:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47382 "EHLO mail.kernel.org"
+        id S1726908AbgIRDOS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 23:14:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46366 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726728AbgIRCCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:02:20 -0400
+        id S1726492AbgIRCBq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:01:46 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 21C28208DB;
-        Fri, 18 Sep 2020 02:02:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 20EC721D40;
+        Fri, 18 Sep 2020 02:01:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394539;
-        bh=c/L8j8VEhAr71cncFsoYSautMCqDG9hga+JTrHmg8Kg=;
+        s=default; t=1600394505;
+        bh=NoFLztq/Xlxx/yVNGOogB1MmtIYPvZpjnzndrmpIhpU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bVjdW9zRG7kNKZqrBHMEInABoYE4qiZ8R1s4IuaNNPkv8uHq6DXZDW+kfLPiVNdci
-         63AgPapz5P5wsttXVVSNxknKroWjoWzDXQARKYo90kXNkL7V+2XlWNEBqoeaLapu6E
-         MfyEb/DTTFUJ0xFr0bITSyQDzBNCfrMtsfOWZUA0=
+        b=IWlX0kCzOWl4SXqguBBFQddtq5JYb1yjQHEp9WFH+NJE73gRJLHrDfNjykQPMOYeu
+         IAGNlaN7utSGlphSXgtzDAu9uKbvAitl32aTG2f/SUqlxeXe9yr5YVO9mjx5PkDs2P
+         a7RIw8MsZ5wKuegikVTqOzYvqL7sewU+cvd83pzM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     peter chang <dpf@google.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Deepak Ukey <deepak.ukey@microchip.com>,
-        Viswas G <Viswas.G@microchip.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, pmchba@pmcs.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 057/330] scsi: pm80xx: Cleanup command when a reset times out
-Date:   Thu, 17 Sep 2020 21:56:37 -0400
-Message-Id: <20200918020110.2063155-57-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 029/330] scsi: lpfc: Fix kernel crash at lpfc_nvme_info_show during remote port bounce
+Date:   Thu, 17 Sep 2020 21:56:09 -0400
+Message-Id: <20200918020110.2063155-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
 References: <20200918020110.2063155-1-sashal@kernel.org>
@@ -61,103 +58,159 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: peter chang <dpf@google.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 51c1c5f6ed64c2b65a8cf89dac136273d25ca540 ]
+[ Upstream commit 6c1e803eac846f886cd35131e6516fc51a8414b9 ]
 
-Added the fix so the if driver properly sent the abort it tries to remove
-it from the firmware's list of outstanding commands regardless of the abort
-status. This means that the task gets freed 'now' rather than possibly
-getting freed later when the scsi layer thinks it's leaked but still valid.
+When reading sysfs nvme_info file while a remote port leaves and comes
+back, a NULL pointer is encountered. The issue is due to ndlp list
+corruption as the the nvme_info_show does not use the same lock as the rest
+of the code.
 
-Link: https://lore.kernel.org/r/20191114100910.6153-10-deepak.ukey@microchip.com
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Signed-off-by: peter chang <dpf@google.com>
-Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Correct by removing the rcu_xxx_lock calls and replace by the host_lock and
+phba->hbaLock spinlocks that are used by the rest of the driver.  Given
+we're called from sysfs, we are safe to use _irq rather than _irqsave.
+
+Link: https://lore.kernel.org/r/20191105005708.7399-4-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 50 +++++++++++++++++++++++---------
- 1 file changed, 37 insertions(+), 13 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 40 +++++++++++++++++------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 7e48154e11c36..7912ed64d3b9c 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1202,8 +1202,8 @@ int pm8001_abort_task(struct sas_task *task)
- 	pm8001_dev = dev->lldd_dev;
- 	pm8001_ha = pm8001_find_ha_by_dev(dev);
- 	phy_id = pm8001_dev->attached_phy;
--	rc = pm8001_find_tag(task, &tag);
--	if (rc == 0) {
-+	ret = pm8001_find_tag(task, &tag);
-+	if (ret == 0) {
- 		pm8001_printk("no tag for task:%p\n", task);
- 		return TMF_RESP_FUNC_FAILED;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 25aa7a53d255e..bb973901b672d 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -176,7 +176,6 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 	int i;
+ 	int len = 0;
+ 	char tmp[LPFC_MAX_NVME_INFO_TMP_LEN] = {0};
+-	unsigned long iflags = 0;
+ 
+ 	if (!(vport->cfg_enable_fc4_type & LPFC_ENABLE_NVME)) {
+ 		len = scnprintf(buf, PAGE_SIZE, "NVME Disabled\n");
+@@ -347,7 +346,6 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 	if (strlcat(buf, "\nNVME Initiator Enabled\n", PAGE_SIZE) >= PAGE_SIZE)
+ 		goto buffer_done;
+ 
+-	rcu_read_lock();
+ 	scnprintf(tmp, sizeof(tmp),
+ 		  "XRI Dist lpfc%d Total %d IO %d ELS %d\n",
+ 		  phba->brd_no,
+@@ -355,7 +353,7 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  phba->sli4_hba.io_xri_max,
+ 		  lpfc_sli4_get_els_iocb_cnt(phba));
+ 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-		goto rcu_unlock_buf_done;
++		goto buffer_done;
+ 
+ 	/* Port state is only one of two values for now. */
+ 	if (localport->port_id)
+@@ -371,15 +369,17 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  wwn_to_u64(vport->fc_nodename.u.wwn),
+ 		  localport->port_id, statep);
+ 	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-		goto rcu_unlock_buf_done;
++		goto buffer_done;
++
++	spin_lock_irq(shost->host_lock);
+ 
+ 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+ 		nrport = NULL;
+-		spin_lock_irqsave(&vport->phba->hbalock, iflags);
++		spin_lock(&vport->phba->hbalock);
+ 		rport = lpfc_ndlp_get_nrport(ndlp);
+ 		if (rport)
+ 			nrport = rport->remoteport;
+-		spin_unlock_irqrestore(&vport->phba->hbalock, iflags);
++		spin_unlock(&vport->phba->hbalock);
+ 		if (!nrport)
+ 			continue;
+ 
+@@ -398,39 +398,39 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 
+ 		/* Tab in to show lport ownership. */
+ 		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 		if (phba->brd_no >= 10) {
+ 			if (strlcat(buf, " ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 
+ 		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
+ 			  nrport->port_name);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 
+ 		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
+ 			  nrport->node_name);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 
+ 		scnprintf(tmp, sizeof(tmp), "DID x%06x ",
+ 			  nrport->port_id);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
+ 
+ 		/* An NVME rport can have multiple roles. */
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR) {
+ 			if (strlcat(buf, "INITIATOR ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET) {
+ 			if (strlcat(buf, "TARGET ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY) {
+ 			if (strlcat(buf, "DISCSRVC ", PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
+ 					  FC_PORT_ROLE_NVME_TARGET |
+@@ -438,14 +438,14 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 			scnprintf(tmp, sizeof(tmp), "UNKNOWN ROLE x%x",
+ 				  nrport->port_role);
+ 			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-				goto rcu_unlock_buf_done;
++				goto unlock_buf_done;
+ 		}
+ 
+ 		scnprintf(tmp, sizeof(tmp), "%s\n", statep);
+ 		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
+-			goto rcu_unlock_buf_done;
++			goto unlock_buf_done;
  	}
-@@ -1241,26 +1241,50 @@ int pm8001_abort_task(struct sas_task *task)
+-	rcu_read_unlock();
++	spin_unlock_irq(shost->host_lock);
  
- 			/* 2. Send Phy Control Hard Reset */
- 			reinit_completion(&completion);
-+			phy->port_reset_status = PORT_RESET_TMO;
- 			phy->reset_success = false;
- 			phy->enable_completion = &completion;
- 			phy->reset_completion = &completion_reset;
- 			ret = PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
- 				PHY_HARD_RESET);
--			if (ret)
--				goto out;
--			PM8001_MSG_DBG(pm8001_ha,
--				pm8001_printk("Waiting for local phy ctl\n"));
--			wait_for_completion(&completion);
--			if (!phy->reset_success)
-+			if (ret) {
-+				phy->enable_completion = NULL;
-+				phy->reset_completion = NULL;
- 				goto out;
-+			}
+ 	if (!lport)
+ 		goto buffer_done;
+@@ -505,11 +505,11 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
+ 		  atomic_read(&lport->cmpl_fcp_err));
+ 	strlcat(buf, tmp, PAGE_SIZE);
  
--			/* 3. Wait for Port Reset complete / Port reset TMO */
-+			/* In the case of the reset timeout/fail we still
-+			 * abort the command at the firmware. The assumption
-+			 * here is that the drive is off doing something so
-+			 * that it's not processing requests, and we want to
-+			 * avoid getting a completion for this and either
-+			 * leaking the task in libsas or losing the race and
-+			 * getting a double free.
-+			 */
- 			PM8001_MSG_DBG(pm8001_ha,
-+				pm8001_printk("Waiting for local phy ctl\n"));
-+			ret = wait_for_completion_timeout(&completion,
-+					PM8001_TASK_TIMEOUT * HZ);
-+			if (!ret || !phy->reset_success) {
-+				phy->enable_completion = NULL;
-+				phy->reset_completion = NULL;
-+			} else {
-+				/* 3. Wait for Port Reset complete or
-+				 * Port reset TMO
-+				 */
-+				PM8001_MSG_DBG(pm8001_ha,
- 				pm8001_printk("Waiting for Port reset\n"));
--			wait_for_completion(&completion_reset);
--			if (phy->port_reset_status) {
--				pm8001_dev_gone_notify(dev);
--				goto out;
-+				ret = wait_for_completion_timeout(
-+					&completion_reset,
-+					PM8001_TASK_TIMEOUT * HZ);
-+				if (!ret)
-+					phy->reset_completion = NULL;
-+				WARN_ON(phy->port_reset_status ==
-+						PORT_RESET_TMO);
-+				if (phy->port_reset_status == PORT_RESET_TMO) {
-+					pm8001_dev_gone_notify(dev);
-+					goto out;
-+				}
- 			}
+-	/* RCU is already unlocked. */
++	/* host_lock is already unlocked. */
+ 	goto buffer_done;
  
- 			/*
+- rcu_unlock_buf_done:
+-	rcu_read_unlock();
++ unlock_buf_done:
++	spin_unlock_irq(shost->host_lock);
+ 
+  buffer_done:
+ 	len = strnlen(buf, PAGE_SIZE);
 -- 
 2.25.1
 
