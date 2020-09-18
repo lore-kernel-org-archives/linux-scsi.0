@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1972DC43464
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08190C43463
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:08:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1F92239D0
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:06:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9F5F23977
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Sep 2020 02:08:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600394787;
-	bh=UTORA0vFhKrSQVJFeXxzWe2A2a4craZybvPVO4CRqC8=;
+	s=default; t=1600394913;
+	bh=0PFevT8Ecj189Ns/LRiQZ0G7i1mRuO/gYaYyhY09J34=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MTd7K9mWnUDdmFTteC6CwF8z5AYStVhaQLEWbqUF0KqmjyS/GQmCpPdV4W/+aAoIG
-	 Y9Z3R2CEiLQpAsL6wQuJLMIFgvzPo1iU4dSoclvUvU/rfFNIxuZx4MnPJEJ/2r0KqK
-	 AnoSxkxG3Gz6maqpJe+Fwnd7LF3791Ayq6NNMNT8=
+	b=VMG1Mp8CjrBBafwFMhB2RCz60zrFlDvLwvb1AsUM5yV1hV/AtnUfr7LJg7QDORF1j
+	 9kaGFpBvom/4fQgO+ryX2N7aw8G2nHIt6c8j13EFWAgtC+0/F3/UDaBtpQqJRrsWJw
+	 Dodf47xmUd2QqwVWpWbKCUuLj5URegDB7x0NTVRE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726808AbgIRCGQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Sep 2020 22:06:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55302 "EHLO mail.kernel.org"
+        id S1726183AbgIRCId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:08:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59566 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727720AbgIRCGL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:06:11 -0400
+        id S1726799AbgIRCIV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:08:21 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0364A238E2;
-        Fri, 18 Sep 2020 02:06:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A773E2395A;
+        Fri, 18 Sep 2020 02:08:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394770;
-        bh=UTORA0vFhKrSQVJFeXxzWe2A2a4craZybvPVO4CRqC8=;
+        s=default; t=1600394901;
+        bh=0PFevT8Ecj189Ns/LRiQZ0G7i1mRuO/gYaYyhY09J34=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wbVVJfYMUsyjwVw4qyiI4nxUAlNqTXqNDlyWvWM4sKTxh/2GjvSxiTsKQYAs/yhio
-         ia9rPyeGrUAkpBFoS+HbYA1ty6RqAdR8pqgqzcCSKpJQ/DF0nuPnCXZKeMNjpg7WCc
-         WSAs5SD+BiUqckms/9oR+t3HJ3DYbQgyY42z5kG4=
+        b=q2LOwuXT7uk8QSmFbGUj/ItixkTr4oca/JWe2T6RWG/T0bI2dMSGSqaDeeUWTSs4/
+         yOF/DNc6JmKPaCMAiTup+2DY4TQYi9A7/S/defBYep7UOKEbSTRcWYknvXM9e4cIs2
+         mEePzIv3eBVMZN99CtgOfVWvxp3NhvZO7JcVw3+M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+Cc:     Pan Bian <bianpan2016@163.com>, Satish Kharat <satishkh@cisco.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 245/330] scsi: aacraid: Fix error handling paths in aac_probe_one()
-Date:   Thu, 17 Sep 2020 21:59:45 -0400
-Message-Id: <20200918020110.2063155-245-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 015/206] scsi: fnic: fix use after free
+Date:   Thu, 17 Sep 2020 22:04:51 -0400
+Message-Id: <20200918020802.2065198-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
-References: <20200918020110.2063155-1-sashal@kernel.org>
+In-Reply-To: <20200918020802.2065198-1-sashal@kernel.org>
+References: <20200918020802.2065198-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,70 +57,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: Pan Bian <bianpan2016@163.com>
 
-[ Upstream commit f7854c382240c1686900b2f098b36430c6f5047e ]
+[ Upstream commit ec990306f77fd4c58c3b27cc3b3c53032d6e6670 ]
 
-If 'scsi_host_alloc()' or 'kcalloc()' fail, 'error' is known to be 0. Set
-it explicitly to -ENOMEM before branching to the error handling path.
+The memory chunk io_req is released by mempool_free. Accessing
+io_req->start_time will result in a use after free bug. The variable
+start_time is a backup of the timestamp. So, use start_time here to
+avoid use after free.
 
-While at it, remove 2 useless assignments to 'error'. These values are
-overwridden a few lines later.
-
-Link: https://lore.kernel.org/r/20200412094039.8822-1-christophe.jaillet@wanadoo.fr
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Link: https://lore.kernel.org/r/1572881182-37664-1-git-send-email-bianpan2016@163.com
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+Reviewed-by: Satish Kharat <satishkh@cisco.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aacraid/linit.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 514aed38b5afe..1035f947f1bcf 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1607,7 +1607,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct Scsi_Host *shost;
- 	struct aac_dev *aac;
- 	struct list_head *insert = &aac_devices;
--	int error = -ENODEV;
-+	int error;
- 	int unique_id = 0;
- 	u64 dmamask;
- 	int mask_bits = 0;
-@@ -1632,7 +1632,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	error = pci_enable_device(pdev);
- 	if (error)
- 		goto out;
--	error = -ENODEV;
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 73ffc16ec0225..b521fc7650cb9 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -1034,7 +1034,8 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic,
+ 		atomic64_inc(&fnic_stats->io_stats.io_completions);
  
- 	if (!(aac_drivers[index].quirks & AAC_QUIRK_SRC)) {
- 		error = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-@@ -1664,8 +1663,10 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	pci_set_master(pdev);
  
- 	shost = scsi_host_alloc(&aac_driver_template, sizeof(struct aac_dev));
--	if (!shost)
-+	if (!shost) {
-+		error = -ENOMEM;
- 		goto out_disable_pdev;
-+	}
+-	io_duration_time = jiffies_to_msecs(jiffies) - jiffies_to_msecs(io_req->start_time);
++	io_duration_time = jiffies_to_msecs(jiffies) -
++						jiffies_to_msecs(start_time);
  
- 	shost->irq = pdev->irq;
- 	shost->unique_id = unique_id;
-@@ -1690,8 +1691,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	aac->fibs = kcalloc(shost->can_queue + AAC_NUM_MGT_FIB,
- 			    sizeof(struct fib),
- 			    GFP_KERNEL);
--	if (!aac->fibs)
-+	if (!aac->fibs) {
-+		error = -ENOMEM;
- 		goto out_free_host;
-+	}
-+
- 	spin_lock_init(&aac->fib_lock);
- 
- 	mutex_init(&aac->ioctl_mutex);
+ 	if(io_duration_time <= 10)
+ 		atomic64_inc(&fnic_stats->io_stats.io_btw_0_to_10_msec);
 -- 
 2.25.1
 
