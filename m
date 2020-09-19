@@ -2,72 +2,101 @@ Return-Path: <SRS0=lXoO=C4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B30C43465
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 09:31:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E21C43464
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 14:31:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A0C421741
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 09:31:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A488421741
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 14:31:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726174AbgISJby (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Sep 2020 05:31:54 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:40258 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726129AbgISJby (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 19 Sep 2020 05:31:54 -0400
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id B044449D66C75A6A7B2A;
-        Sat, 19 Sep 2020 17:31:37 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
- 14.3.487.0; Sat, 19 Sep 2020 17:31:29 +0800
-From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <lee.jones@linaro.org>, <gustavoars@kernel.org>, <axboe@kernel.dk>,
-        <colin.king@canonical.com>, <thenzl@redhat.com>,
-        <ching2048@areca.com.tw>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jingxiangfeng@huawei.com>
-Subject: [PATCH v2] scsi: arcmsr: Remove the superfluous break
-Date:   Sat, 19 Sep 2020 17:31:51 +0800
-Message-ID: <20200919093151.167830-1-jingxiangfeng@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S1726532AbgISObH convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Sep 2020 10:31:07 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:57548 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726474AbgISObF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 19 Sep 2020 10:31:05 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-281-bAjbsE6rN1eTAY15huzJqA-1; Sat, 19 Sep 2020 15:24:11 +0100
+X-MC-Unique: bAjbsE6rN1eTAY15huzJqA-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Sat, 19 Sep 2020 15:24:10 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Sat, 19 Sep 2020 15:24:10 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Christoph Hellwig' <hch@lst.de>,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+CC:     Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "x86@kernel.org" <x86@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
+        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-aio@kvack.org" <linux-aio@kvack.org>,
+        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
+        "linux-security-module@vger.kernel.org" 
+        <linux-security-module@vger.kernel.org>
+Subject: RE: let import_iovec deal with compat_iovecs as well
+Thread-Topic: let import_iovec deal with compat_iovecs as well
+Thread-Index: AQHWjbnKEn35LxofhEeT1lmdzdUiWqlwBNiw
+Date:   Sat, 19 Sep 2020 14:24:10 +0000
+Message-ID: <2c7bf42ee4314484ae0177280cd8f5f3@AcuMS.aculab.com>
+References: <20200918124533.3487701-1-hch@lst.de>
+In-Reply-To: <20200918124533.3487701-1-hch@lst.de>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove the superfluous break, as there is a 'return' before it.
+From: Christoph Hellwig
+> Sent: 18 September 2020 13:45
+> 
+> this series changes import_iovec to transparently deal with comat iovec
+> structures, and then cleanups up a lot of code dupliation.  But to get
+> there it first has to fix the pre-existing bug that io_uring compat
+> contexts don't trigger the in_compat_syscall() check.  This has so far
+> been relatively harmless as very little code callable from io_uring used
+> the check, and even that code that could be called usually wasn't.
 
-Fixes: 6b3937227479 ("arcmsr: fix command timeout under heavy load")
-Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 2 --
- 1 file changed, 2 deletions(-)
+I thought about that change while writing my import_iovec() => iovec_import()
+patch - and thought that the io_uring code would (as usual) cause grief.
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index ec895d0319f0..74add6d247d5 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2699,10 +2699,8 @@ static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb)
- 	switch (acb->adapter_type) {
- 	case ACB_ADAPTER_TYPE_A:
- 		return arcmsr_hbaA_handle_isr(acb);
--		break;
- 	case ACB_ADAPTER_TYPE_B:
- 		return arcmsr_hbaB_handle_isr(acb);
--		break;
- 	case ACB_ADAPTER_TYPE_C:
- 		return arcmsr_hbaC_handle_isr(acb);
- 	case ACB_ADAPTER_TYPE_D:
--- 
-2.17.1
+Christoph - did you see those patches?
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
