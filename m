@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A797C43465
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 01:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EB5CC43464
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 02:32:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0118223447
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 01:52:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2695D21D43
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 02:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726151AbgISBwX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Sep 2020 21:52:23 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:13269 "EHLO huawei.com"
+        id S1726267AbgISCcg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Sep 2020 22:32:36 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:59796 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726054AbgISBwX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Sep 2020 21:52:23 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id E0558EA567EBE1343187;
-        Sat, 19 Sep 2020 09:52:21 +0800 (CST)
-Received: from [10.174.178.248] (10.174.178.248) by smtp.huawei.com
- (10.3.19.214) with Microsoft SMTP Server (TLS) id 14.3.487.0; Sat, 19 Sep
- 2020 09:52:21 +0800
-Subject: Re: [PATCH] scsi: arcmsr: Remove the superfluous break
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-References: <20200918093230.49050-1-jingxiangfeng@huawei.com>
- <20200918145619.GA25599@embeddedor>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <lee.jones@linaro.org>, <colin.king@canonical.com>,
-        <axboe@kernel.dk>, <mchehab+huawei@kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
-Message-ID: <5F656454.7000407@huawei.com>
-Date:   Sat, 19 Sep 2020 09:52:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+        id S1726009AbgISCcg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Sep 2020 22:32:36 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 6066E8360B6A16BA0088;
+        Sat, 19 Sep 2020 10:32:34 +0800 (CST)
+Received: from [10.174.179.91] (10.174.179.91) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.487.0; Sat, 19 Sep 2020 10:32:24 +0800
+Subject: Re: [PATCH -next] scsi: hisi_sas: Convert to DEFINE_SHOW_ATTRIBUTE
+To:     luojiaxing <luojiaxing@huawei.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        John Garry <john.garry@huawei.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20200716084714.7872-1-miaoqinglang@huawei.com>
+ <c3bc1f66-2eae-1f9b-58bf-7eacb25739e1@huawei.com>
+From:   miaoqinglang <miaoqinglang@huawei.com>
+Message-ID: <af4ef34b-efbe-ba8f-e988-4b8b7f682814@huawei.com>
+Date:   Sat, 19 Sep 2020 10:32:24 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200918145619.GA25599@embeddedor>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.248]
+In-Reply-To: <c3bc1f66-2eae-1f9b-58bf-7eacb25739e1@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.91]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -50,44 +49,281 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 
-On 2020/9/18 22:56, Gustavo A. R. Silva wrote:
-> On Fri, Sep 18, 2020 at 05:32:30PM +0800, Jing Xiangfeng wrote:
->> Remove the superfluous break, as there is a 'return' before it.
+在 2020/7/16 20:39, luojiaxing 写道:
+> Hi, Qinglang
+> 
+> On 2020/7/16 16:47, Qinglang Miao wrote:
+>> From: Yongqiang Liu <liuyongqiang13@huawei.com>
 >>
->
-> Apparently, the change is correct. Please, just add a proper Fixes tag by
-> yourself this time.
-
-Thanks for comments! I'll resend with the following Fixes tag:
-
-Fixes: 6b3937227479 ("arcmsr: fix command timeout under heavy load")
->
-> Thanks
-> --
-> Gustavo
->
->> Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+>> Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
+>>
+>> Signed-off-by: Yongqiang Liu <liuyongqiang13@huawei.com>
 >> ---
->>   drivers/scsi/arcmsr/arcmsr_hba.c | 2 --
->>   1 file changed, 2 deletions(-)
+>>   drivers/scsi/hisi_sas/hisi_sas_main.c | 137 ++------------------------
+>>   1 file changed, 10 insertions(+), 127 deletions(-)
 >>
->> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
->> index ec895d0319f0..74add6d247d5 100644
->> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
->> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
->> @@ -2699,10 +2699,8 @@ static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb)
->>   	switch (acb->adapter_type) {
->>   	case ACB_ADAPTER_TYPE_A:
->>   		return arcmsr_hbaA_handle_isr(acb);
->> -		break;
->>   	case ACB_ADAPTER_TYPE_B:
->>   		return arcmsr_hbaB_handle_isr(acb);
->> -		break;
->>   	case ACB_ADAPTER_TYPE_C:
->>   		return arcmsr_hbaC_handle_isr(acb);
->>   	case ACB_ADAPTER_TYPE_D:
->> --
->> 2.17.1
->>
+>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c 
+>> b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>> index 852d2620e..f50b0c78f 100644
+>> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+>> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>> @@ -2870,19 +2870,7 @@ static int hisi_sas_debugfs_global_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_global_open(struct inode *inode, struct 
+>> file *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_global_show,
+>> -               inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_global_fops = {
+>> -    .open = hisi_sas_debugfs_global_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+> 
+> 
+> I saw that your code is different from code in kernel 5.8-rc4, and it 
+> should be as follow:
+> 
+> static const struct file_operations hisi_sas_debugfs_global_fops = {
+>      .open = hisi_sas_debugfs_global_open,
+>      .read = seq_read,
+>      .llseek = seq_lseek,
+>      .release = single_release,
+>      .owner = THIS_MODULE,
+> };
+> 
+> 
+> Plus, if we use this macro directly when we write this code, it really 
+> makes the code simpler. But if we accept the cleanup now,
+> 
+> we might need to consider evading compilation failures when we merge 
+> these code back to some older kernel (e.g kernel 4.14 for centOS 7.6).
+> 
+> I think this marco is introduced into kernel 4.16-rc2.
+> 
+> 
+> So I don't see much additional benefit to us from this simplification. 
+> But this marco is quite helpful and I think I will use it somewhere else.
+> 
+> Thanks
+> 
+> Jiaxing
+Hi Jiaxing,
+
+I think the 'clean-up' patch means to standardize codes, which can also 
+make readers understand codes better.
+
+As for 'merge back', if this situation really exists, evading 
+compilation failures should be necessary. But all you need to do is to 
+introduce the macro.
+
+I respect your opnion anyhow. But I still resent a new patch based 
+against linux-next(20200917) which can be applied to mainline cleanly 
+now just in case you need it.
+
+Thanks.
+
+> 
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_global);
+>>   static int hisi_sas_debugfs_axi_show(struct seq_file *s, void *p)
+>>   {
+>> @@ -2897,19 +2885,7 @@ static int hisi_sas_debugfs_axi_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_axi_open(struct inode *inode, struct file 
+>> *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_axi_show,
+>> -               inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_axi_fops = {
+>> -    .open = hisi_sas_debugfs_axi_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_axi);
+>>   static int hisi_sas_debugfs_ras_show(struct seq_file *s, void *p)
+>>   {
+>> @@ -2924,19 +2900,7 @@ static int hisi_sas_debugfs_ras_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_ras_open(struct inode *inode, struct file 
+>> *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_ras_show,
+>> -               inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_ras_fops = {
+>> -    .open = hisi_sas_debugfs_ras_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_ras);
+>>   static int hisi_sas_debugfs_port_show(struct seq_file *s, void *p)
+>>   {
+>> @@ -2951,18 +2915,7 @@ static int hisi_sas_debugfs_port_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_port_open(struct inode *inode, struct 
+>> file *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_port_show, 
+>> inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_port_fops = {
+>> -    .open = hisi_sas_debugfs_port_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_port);
+>>   static void hisi_sas_show_row_64(struct seq_file *s, int index,
+>>                    int sz, __le64 *ptr)
+>> @@ -3019,18 +2972,7 @@ static int hisi_sas_debugfs_cq_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_cq_open(struct inode *inode, struct file 
+>> *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_cq_show, 
+>> inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_cq_fops = {
+>> -    .open = hisi_sas_debugfs_cq_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_cq);
+>>   static void hisi_sas_dq_show_slot(struct seq_file *s, int slot, void 
+>> *dq_ptr)
+>>   {
+>> @@ -3052,18 +2994,7 @@ static int hisi_sas_debugfs_dq_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_dq_open(struct inode *inode, struct file 
+>> *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_dq_show, 
+>> inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_dq_fops = {
+>> -    .open = hisi_sas_debugfs_dq_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_dq);
+>>   static int hisi_sas_debugfs_iost_show(struct seq_file *s, void *p)
+>>   {
+>> @@ -3080,18 +3011,7 @@ static int hisi_sas_debugfs_iost_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_iost_open(struct inode *inode, struct 
+>> file *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_iost_show, 
+>> inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_iost_fops = {
+>> -    .open = hisi_sas_debugfs_iost_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_iost);
+>>   static int hisi_sas_debugfs_iost_cache_show(struct seq_file *s, void 
+>> *p)
+>>   {
+>> @@ -3117,20 +3037,7 @@ static int 
+>> hisi_sas_debugfs_iost_cache_show(struct seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_iost_cache_open(struct inode *inode,
+>> -                        struct file *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_iost_cache_show,
+>> -               inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_iost_cache_fops = {
+>> -    .open = hisi_sas_debugfs_iost_cache_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_iost_cache);
+>>   static int hisi_sas_debugfs_itct_show(struct seq_file *s, void *p)
+>>   {
+>> @@ -3147,18 +3054,7 @@ static int hisi_sas_debugfs_itct_show(struct 
+>> seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_itct_open(struct inode *inode, struct 
+>> file *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_itct_show, 
+>> inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_itct_fops = {
+>> -    .open = hisi_sas_debugfs_itct_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_itct);
+>>   static int hisi_sas_debugfs_itct_cache_show(struct seq_file *s, void 
+>> *p)
+>>   {
+>> @@ -3184,20 +3080,7 @@ static int 
+>> hisi_sas_debugfs_itct_cache_show(struct seq_file *s, void *p)
+>>       return 0;
+>>   }
+>> -static int hisi_sas_debugfs_itct_cache_open(struct inode *inode,
+>> -                        struct file *filp)
+>> -{
+>> -    return single_open(filp, hisi_sas_debugfs_itct_cache_show,
+>> -               inode->i_private);
+>> -}
+>> -
+>> -static const struct file_operations hisi_sas_debugfs_itct_cache_fops = {
+>> -    .open = hisi_sas_debugfs_itct_cache_open,
+>> -    .read_iter = seq_read_iter,
+>> -    .llseek = seq_lseek,
+>> -    .release = single_release,
+>> -    .owner = THIS_MODULE,
+>> -};
+>> +DEFINE_SHOW_ATTRIBUTE(hisi_sas_debugfs_itct_cache);
+>>   static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+>>   {
+> 
 > .
->
