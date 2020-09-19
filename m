@@ -2,121 +2,98 @@ Return-Path: <SRS0=lXoO=C4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B67D0C43463
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 15:05:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C3CC43463
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 16:21:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69123208B8
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 15:05:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B34882158C
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Sep 2020 16:21:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600532518;
+	bh=tnnKVle7uGlb4ye6ETfPhESD0icbWeK+NnxFIW79sro=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=y06qsfKqvq5TJvXCFDc+yGMdWRzQFMEViFOKAFBkd0OADicUCwXqoCO7o8uTbO7sX
+	 A4rO7nOiUXY78nM79OARz0O3nEitgPqmwPm7Bmem/rRsuSFRI5RNRZ4792KQjHFcQP
+	 y9rcndZvcFYs6DI0dD9yfdRz/6OFi0gEWVNsC2LQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726438AbgISPFU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Sep 2020 11:05:20 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48136 "EHLO mx2.suse.de"
+        id S1726625AbgISQV6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Sep 2020 12:21:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59008 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726400AbgISPFU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 19 Sep 2020 11:05:20 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 0E0EFAD20;
-        Sat, 19 Sep 2020 15:05:53 +0000 (UTC)
-Received: by localhost (Postfix, from userid 1000)
-        id 80B1650D8B5; Sat, 19 Sep 2020 08:05:16 -0700 (PDT)
-From:   <lduncan@suse.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     open-iscsi@googlegroups.com, Lee Duncan <lduncan@suse.com>
-Subject: [RESEND] [PATCH] scsi: libiscsi: fix NOP race condition
-Date:   Sat, 19 Sep 2020 08:05:09 -0700
-Message-Id: <20200919150509.1284-1-lduncan@suse.com>
-X-Mailer: git-send-email 2.26.2
+        id S1726493AbgISQV6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 19 Sep 2020 12:21:58 -0400
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6AD7F23119
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2020 16:21:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600532517;
+        bh=tnnKVle7uGlb4ye6ETfPhESD0icbWeK+NnxFIW79sro=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=QrIUAAqT1dp8+jrXrF0kfdV5PIOJITY8xSkYh8pnrNFPmM98EPjnnqgiUheWM3Zz4
+         0qTg36uFIa2gFwlgsZXnXxJdaWIK0Dls7hdq0zd60qlpvRgxcHCvRNqCi9kc1myB6l
+         slKQU2ILvCXePIOP8ZGSdUV9ciTDnkbyjJ8h5bj0=
+Received: by mail-wr1-f44.google.com with SMTP id e16so8577337wrm.2
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2020 09:21:57 -0700 (PDT)
+X-Gm-Message-State: AOAM533l0VKgdZLu23rH9WAmcUYV75dmzPhxvF0aQDh9UG6pswQ+3xdF
+        zk/j3rctL39//wxLPNQl3V4cVQxhecaAVRyOG3oKSg==
+X-Google-Smtp-Source: ABdhPJwBFQKjUG5Ajrf8DpZFR91CZN4BHC9/gKbhMJfUTwAnV0GCUbZx28T5SkvcVSnD9FMlBdmx1p4waD7HgdNSIPM=
+X-Received: by 2002:a5d:5281:: with SMTP id c1mr43283094wrv.184.1600532515963;
+ Sat, 19 Sep 2020 09:21:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20200918124533.3487701-1-hch@lst.de> <20200918124533.3487701-2-hch@lst.de>
+ <20200918134012.GY3421308@ZenIV.linux.org.uk> <20200918134406.GA17064@lst.de>
+ <20200918135822.GZ3421308@ZenIV.linux.org.uk> <20200918151615.GA23432@lst.de>
+In-Reply-To: <20200918151615.GA23432@lst.de>
+From:   Andy Lutomirski <luto@kernel.org>
+Date:   Sat, 19 Sep 2020 09:21:44 -0700
+X-Gmail-Original-Message-ID: <CALCETrW=BzodXeTAjSvpCoUQoL+MKaKPEeSTRWnB=-C9jMotbQ@mail.gmail.com>
+Message-ID: <CALCETrW=BzodXeTAjSvpCoUQoL+MKaKPEeSTRWnB=-C9jMotbQ@mail.gmail.com>
+Subject: Re: [PATCH 1/9] kernel: add a PF_FORCE_COMPAT flag
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        X86 ML <x86@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        "open list:MIPS" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-aio@kvack.org, io-uring@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        keyrings@vger.kernel.org,
+        LSM List <linux-security-module@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Lee Duncan <lduncan@suse.com>
+On Fri, Sep 18, 2020 at 8:16 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Fri, Sep 18, 2020 at 02:58:22PM +0100, Al Viro wrote:
+> > Said that, why not provide a variant that would take an explicit
+> > "is it compat" argument and use it there?  And have the normal
+> > one pass in_compat_syscall() to that...
+>
+> That would help to not introduce a regression with this series yes.
+> But it wouldn't fix existing bugs when io_uring is used to access
+> read or write methods that use in_compat_syscall().  One example that
+> I recently ran into is drivers/scsi/sg.c.
 
-iSCSI NOPs are sometimes "lost", mistakenly sent to the
-user-land iscsid daemon instead of handled in the kernel,
-as they should be, resulting in a message from the daemon like:
-
-> iscsid: Got nop in, but kernel supports nop handling.
-
-This can occur because of the new forward- and back-locks,
-and the fact that an iSCSI NOP response can occur before
-processing of the NOP send is complete. This can result
-in "conn->ping_task" being NULL in iscsi_nop_out_rsp(),
-when the pointer is actually in the process of being set.
-
-To work around this, we add a new state to the "ping_task"
-pointer. In addition to NULL (not assigned) and a pointer
-(assigned), we add the state "being set", which is signaled
-with an INVALID pointer (using "-1").
-
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/libiscsi.c | 11 ++++++++++-
- include/scsi/libiscsi.h |  3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 1e9c3171fa9f..5eb064787ee2 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -738,6 +738,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 						   task->conn->session->age);
- 	}
- 
-+	if (unlikely(READ_ONCE(conn->ping_task) == INVALID_SCSI_TASK))
-+		WRITE_ONCE(conn->ping_task, task);
-+
- 	if (!ihost->workq) {
- 		if (iscsi_prep_mgmt_task(conn, task))
- 			goto free_task;
-@@ -941,6 +944,11 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
-         struct iscsi_nopout hdr;
- 	struct iscsi_task *task;
- 
-+	if (!rhdr) {
-+		if (READ_ONCE(conn->ping_task))
-+			return -EINVAL;
-+		WRITE_ONCE(conn->ping_task, INVALID_SCSI_TASK);
-+	}
- 	if (!rhdr && conn->ping_task)
- 		return -EINVAL;
- 
-@@ -957,11 +965,12 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
- 
- 	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
- 	if (!task) {
-+		if (!rhdr)
-+			WRITE_ONCE(conn->ping_task, NULL);
- 		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
- 		return -EIO;
- 	} else if (!rhdr) {
- 		/* only track our nops */
--		conn->ping_task = task;
- 		conn->last_ping = jiffies;
- 	}
- 
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index c25fb86ffae9..b3bbd10eb3f0 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -132,6 +132,9 @@ struct iscsi_task {
- 	void			*dd_data;	/* driver/transport data */
- };
- 
-+/* invalid scsi_task pointer */
-+#define	INVALID_SCSI_TASK	(struct iscsi_task *)-1l
-+
- static inline int iscsi_task_has_unsol_data(struct iscsi_task *task)
- {
- 	return task->unsol_r2t.data_length > task->unsol_r2t.sent;
--- 
-2.26.2
-
+Aside from the potentially nasty use of per-task variables, one thing
+I don't like about PF_FORCE_COMPAT is that it's one-way.  If we're
+going to have a generic mechanism for this, shouldn't we allow a full
+override of the syscall arch instead of just allowing forcing compat
+so that a compat syscall can do a non-compat operation?
