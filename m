@@ -2,83 +2,77 @@ Return-Path: <SRS0=3eE7=C6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FC8C43465
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 13:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08ED6C43464
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 13:11:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4334321789
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 13:06:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD26921789
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 13:11:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726501AbgIUNG2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 09:06:28 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2904 "EHLO huawei.com"
+        id S1727590AbgIUNLp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 09:11:45 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:14201 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726341AbgIUNG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Sep 2020 09:06:27 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 14C2077031D4F8552A14;
-        Mon, 21 Sep 2020 14:06:25 +0100 (IST)
-Received: from [127.0.0.1] (10.210.166.25) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1913.5; Mon, 21 Sep
- 2020 14:06:24 +0100
-Subject: Re: [PATCH -next] scsi: libsas: simplify the return expression of
- sas_discover_end_dev
-To:     Liu Shixin <liushixin2@huawei.com>,
+        id S1727386AbgIUNKs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Sep 2020 09:10:48 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 50707B989B32189575AF;
+        Mon, 21 Sep 2020 21:10:44 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
+ 14.3.487.0; Mon, 21 Sep 2020 21:10:38 +0800
+From:   Qinglang Miao <miaoqinglang@huawei.com>
+To:     Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20200921082453.2592137-1-liushixin2@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <d44beaa3-6338-9188-7cf3-338cc0120305@huawei.com>
-Date:   Mon, 21 Sep 2020 14:03:34 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Qinglang Miao" <miaoqinglang@huawei.com>
+Subject: [PATCH -next] scsi: fcoe: simplify the return expression of fcoe_sysfs_setup
+Date:   Mon, 21 Sep 2020 21:11:02 +0800
+Message-ID: <20200921131102.93084-1-miaoqinglang@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <20200921082453.2592137-1-liushixin2@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.166.25]
-X-ClientProxiedBy: lhreml701-chm.china.huawei.com (10.201.108.50) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/09/2020 09:24, Liu Shixin wrote:
-> Simplify the return expression.
-> 
-> Signed-off-by: Liu Shixin <liushixin2@huawei.com>
-> ---
->   drivers/scsi/libsas/sas_discover.c | 8 +-------
->   1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index d0f9e90e3279..161c9b387da7 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -278,13 +278,7 @@ static void sas_resume_devices(struct work_struct *work)
->    */
->   int sas_discover_end_dev(struct domain_device *dev)
->   {
-> -	int res;
-> -
-> -	res = sas_notify_lldd_dev_found(dev);
-> -	if (res)
-> -		return res;
-> -
-> -	return 0;
-> +	return sas_notify_lldd_dev_found(dev);
->   }
->   
->   /* ---------- Device registration and unregistration ---------- */
-> 
+Simplify the return expression.
 
-You can make a similar change at the end of sas_discover_data() [and 
-include in the same patch]
+Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+---
+ drivers/scsi/fcoe/fcoe_sysfs.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 2cb7a8c93..ffef2c8ed 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -1053,16 +1053,10 @@ EXPORT_SYMBOL_GPL(fcoe_fcf_device_add);
+ 
+ int __init fcoe_sysfs_setup(void)
+ {
+-	int error;
+-
+ 	atomic_set(&ctlr_num, 0);
+ 	atomic_set(&fcf_num, 0);
+ 
+-	error = bus_register(&fcoe_bus_type);
+-	if (error)
+-		return error;
+-
+-	return 0;
++	return bus_register(&fcoe_bus_type);
+ }
+ 
+ void __exit fcoe_sysfs_teardown(void)
+-- 
+2.23.0
+
