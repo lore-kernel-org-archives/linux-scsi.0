@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C16FC4346A
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA6CFC4346E
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:36:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0613C20735
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:36:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9504A20BED
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:36:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FaYNCJyy"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mbONURe7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727837AbgIUOf5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 10:35:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42190 "EHLO
+        id S1727871AbgIUOgP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 10:36:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727131AbgIUOef (ORCPT
+        with ESMTP id S1727124AbgIUOef (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 10:34:35 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E11FC061755;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AFE2C0613CF;
         Mon, 21 Sep 2020 07:34:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=HMS3wpmHJ08+TjASQ52pDgUhrjMpeVTpap30GBFvOAE=; b=FaYNCJyyME4i3uvXayjfkbvAqj
-        z7tJWyj7bZEt0QdENw0WQ7ww4hTah5nBc2c2ZYSSjANmXgH5MhdZkY2vwwLERNLSdqHgqDMYrbdhA
-        7Y1IUhSVsaLoqQXCT2FYvxcvjkCIZhdAnxRI60M1X9M+kWvZdxBNBkB6Tt0V4O0MvwNMj3L5s1NAl
-        mjajE+5ZNJkcQm0JWVF9Efr6csREsE6r4SgdAjoDPcoC0HRp6t6pHecWQaQy8HBQFVDyodVwJe0bV
-        Mzfpqr3Grxf3py+y+PrDRx4RHgYCqvX+UhqY27e2Y9L07pRI7fUC4KFQt/YUN1imvNFX0qVSNi19y
-        tDqOx4sw==;
+        bh=LCXn2FJbni+/tCTK8D6nVLYSdWCMV5d/zHCD2VrYDAs=; b=mbONURe77St7uQ3PnKdyMO8YWN
+        lHHxh8Rej95j3EcLKqhP+y4tGyd99cd/ffdxqZV8yebCrwLM4eoxys1lPtV4nVdcd41zESCOCPd2p
+        95UzbhUrv2C0Zdd6/UauA1rhV5yGsydVTGeKguxbWl7TGmSbLoMHa4oxCvrISI4jXTzJPl9t/ozf0
+        3zgYR6Q2PTzlKw8BHxuK6Qw05qaz8+AyJOCrLu1xBMHb4joZOGQAT0ZIWIWSX26qT2lyaclnBdPz4
+        K58eZEN+KtEyvxIyL1cW01OE8EcmQ61Ns90iHf2WcQeGgqx1xswzI6xvrLYFrpcdHJHk8/G7gWXzW
+        SBn8XVIg==;
 Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kKMte-0007rq-Pi; Mon, 21 Sep 2020 14:34:27 +0000
+        id 1kKMta-0007rG-G7; Mon, 21 Sep 2020 14:34:23 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>
 Cc:     Andrew Morton <akpm@linux-foundation.org>,
@@ -51,10 +51,12 @@ Cc:     Andrew Morton <akpm@linux-foundation.org>,
         linux-aio@kvack.org, io-uring@vger.kernel.org,
         linux-arch@vger.kernel.org, linux-mm@kvack.org,
         netdev@vger.kernel.org, keyrings@vger.kernel.org,
-        linux-security-module@vger.kernel.org
-Subject: [PATCH 06/11] iov_iter: handle the compat case in import_iovec
-Date:   Mon, 21 Sep 2020 16:34:29 +0200
-Message-Id: <20200921143434.707844-7-hch@lst.de>
+        linux-security-module@vger.kernel.org,
+        David Laight <David.Laight@ACULAB.COM>,
+        David Laight <david.laight@aculab.com>
+Subject: [PATCH 03/11] iov_iter: move rw_copy_check_uvector() into lib/iov_iter.c and mark it static
+Date:   Mon, 21 Sep 2020 16:34:26 +0200
+Message-Id: <20200921143434.707844-4-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200921143434.707844-1-hch@lst.de>
 References: <20200921143434.707844-1-hch@lst.de>
@@ -65,395 +67,431 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use in compat_syscall to import either native or the compat iovecs, and
-remove the now superflous compat_import_iovec, which removes the need for
-special compat logic in most callers.  Only io_uring needs special
-treatment given that it can call import_iovec from kernel threads acting
-on behalf of native or compat syscalls.  Expose the low-level
-__import_iovec helper and use it in io_uring to explicitly pick a iovec
-layout.
+From: David Laight <David.Laight@ACULAB.COM>
 
+This lets the compiler inline it into import_iovec() generating
+much better code.
+
+Signed-off-by: David Laight <david.laight@aculab.com>
+[hch: drop the now pointless kerneldoc for a static function, and update
+      a few other comments]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/scsi_ioctl.c     | 12 ++----------
- drivers/scsi/sg.c      |  9 +--------
- fs/aio.c               | 38 ++++++++++++++------------------------
- fs/io_uring.c          | 20 ++++++++------------
- fs/read_write.c        |  6 ++++--
- fs/splice.c            |  2 +-
- include/linux/uio.h    | 10 +++-------
- lib/iov_iter.c         | 17 +++--------------
- mm/process_vm_access.c |  7 ++++---
- net/compat.c           |  4 ++--
- security/keys/compat.c |  5 ++---
- 11 files changed, 44 insertions(+), 86 deletions(-)
+ fs/read_write.c        | 179 -----------------------------------------
+ include/linux/compat.h |   6 --
+ include/linux/fs.h     |  11 +--
+ lib/iov_iter.c         | 150 +++++++++++++++++++++++++++++++++-
+ 4 files changed, 151 insertions(+), 195 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index ef722f04f88a93..e08df86866ee5d 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -333,16 +333,8 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
- 		struct iov_iter i;
- 		struct iovec *iov = NULL;
- 
--#ifdef CONFIG_COMPAT
--		if (in_compat_syscall())
--			ret = compat_import_iovec(rq_data_dir(rq),
--				   hdr->dxferp, hdr->iovec_count,
--				   0, &iov, &i);
--		else
--#endif
--			ret = import_iovec(rq_data_dir(rq),
--				   hdr->dxferp, hdr->iovec_count,
--				   0, &iov, &i);
-+		ret = import_iovec(rq_data_dir(rq), hdr->dxferp,
-+				   hdr->iovec_count, 0, &iov, &i);
- 		if (ret < 0)
- 			goto out_free_cdb;
- 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 20472aaaf630a4..bfa8d77322d732 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1820,14 +1820,7 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
- 		struct iovec *iov = NULL;
- 		struct iov_iter i;
- 
--#ifdef CONFIG_COMPAT
--		if (in_compat_syscall())
--			res = compat_import_iovec(rw, hp->dxferp, iov_count,
--						  0, &iov, &i);
--		else
--#endif
--			res = import_iovec(rw, hp->dxferp, iov_count,
--					   0, &iov, &i);
-+		res = import_iovec(rw, hp->dxferp, iov_count, 0, &iov, &i);
- 		if (res < 0)
- 			return res;
- 
-diff --git a/fs/aio.c b/fs/aio.c
-index d5ec303855669d..b377f5c2048e18 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1478,8 +1478,7 @@ static int aio_prep_rw(struct kiocb *req, const struct iocb *iocb)
- }
- 
- static ssize_t aio_setup_rw(int rw, const struct iocb *iocb,
--		struct iovec **iovec, bool vectored, bool compat,
--		struct iov_iter *iter)
-+		struct iovec **iovec, bool vectored, struct iov_iter *iter)
- {
- 	void __user *buf = (void __user *)(uintptr_t)iocb->aio_buf;
- 	size_t len = iocb->aio_nbytes;
-@@ -1489,11 +1488,6 @@ static ssize_t aio_setup_rw(int rw, const struct iocb *iocb,
- 		*iovec = NULL;
- 		return ret;
- 	}
--#ifdef CONFIG_COMPAT
--	if (compat)
--		return compat_import_iovec(rw, buf, len, UIO_FASTIOV, iovec,
--				iter);
--#endif
- 	return import_iovec(rw, buf, len, UIO_FASTIOV, iovec, iter);
- }
- 
-@@ -1517,8 +1511,7 @@ static inline void aio_rw_done(struct kiocb *req, ssize_t ret)
- 	}
- }
- 
--static int aio_read(struct kiocb *req, const struct iocb *iocb,
--			bool vectored, bool compat)
-+static int aio_read(struct kiocb *req, const struct iocb *iocb, bool vectored)
- {
- 	struct iovec inline_vecs[UIO_FASTIOV], *iovec = inline_vecs;
- 	struct iov_iter iter;
-@@ -1535,7 +1528,7 @@ static int aio_read(struct kiocb *req, const struct iocb *iocb,
- 	if (unlikely(!file->f_op->read_iter))
- 		return -EINVAL;
- 
--	ret = aio_setup_rw(READ, iocb, &iovec, vectored, compat, &iter);
-+	ret = aio_setup_rw(READ, iocb, &iovec, vectored, &iter);
- 	if (ret < 0)
- 		return ret;
- 	ret = rw_verify_area(READ, file, &req->ki_pos, iov_iter_count(&iter));
-@@ -1545,8 +1538,7 @@ static int aio_read(struct kiocb *req, const struct iocb *iocb,
- 	return ret;
- }
- 
--static int aio_write(struct kiocb *req, const struct iocb *iocb,
--			 bool vectored, bool compat)
-+static int aio_write(struct kiocb *req, const struct iocb *iocb, bool vectored)
- {
- 	struct iovec inline_vecs[UIO_FASTIOV], *iovec = inline_vecs;
- 	struct iov_iter iter;
-@@ -1563,7 +1555,7 @@ static int aio_write(struct kiocb *req, const struct iocb *iocb,
- 	if (unlikely(!file->f_op->write_iter))
- 		return -EINVAL;
- 
--	ret = aio_setup_rw(WRITE, iocb, &iovec, vectored, compat, &iter);
-+	ret = aio_setup_rw(WRITE, iocb, &iovec, vectored, &iter);
- 	if (ret < 0)
- 		return ret;
- 	ret = rw_verify_area(WRITE, file, &req->ki_pos, iov_iter_count(&iter));
-@@ -1799,8 +1791,7 @@ static int aio_poll(struct aio_kiocb *aiocb, const struct iocb *iocb)
- }
- 
- static int __io_submit_one(struct kioctx *ctx, const struct iocb *iocb,
--			   struct iocb __user *user_iocb, struct aio_kiocb *req,
--			   bool compat)
-+			   struct iocb __user *user_iocb, struct aio_kiocb *req)
- {
- 	req->ki_filp = fget(iocb->aio_fildes);
- 	if (unlikely(!req->ki_filp))
-@@ -1833,13 +1824,13 @@ static int __io_submit_one(struct kioctx *ctx, const struct iocb *iocb,
- 
- 	switch (iocb->aio_lio_opcode) {
- 	case IOCB_CMD_PREAD:
--		return aio_read(&req->rw, iocb, false, compat);
-+		return aio_read(&req->rw, iocb, false);
- 	case IOCB_CMD_PWRITE:
--		return aio_write(&req->rw, iocb, false, compat);
-+		return aio_write(&req->rw, iocb, false);
- 	case IOCB_CMD_PREADV:
--		return aio_read(&req->rw, iocb, true, compat);
-+		return aio_read(&req->rw, iocb, true);
- 	case IOCB_CMD_PWRITEV:
--		return aio_write(&req->rw, iocb, true, compat);
-+		return aio_write(&req->rw, iocb, true);
- 	case IOCB_CMD_FSYNC:
- 		return aio_fsync(&req->fsync, iocb, false);
- 	case IOCB_CMD_FDSYNC:
-@@ -1852,8 +1843,7 @@ static int __io_submit_one(struct kioctx *ctx, const struct iocb *iocb,
- 	}
- }
- 
--static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
--			 bool compat)
-+static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb)
- {
- 	struct aio_kiocb *req;
- 	struct iocb iocb;
-@@ -1882,7 +1872,7 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 	if (unlikely(!req))
- 		return -EAGAIN;
- 
--	err = __io_submit_one(ctx, &iocb, user_iocb, req, compat);
-+	err = __io_submit_one(ctx, &iocb, user_iocb, req);
- 
- 	/* Done with the synchronous reference */
- 	iocb_put(req);
-@@ -1941,7 +1931,7 @@ SYSCALL_DEFINE3(io_submit, aio_context_t, ctx_id, long, nr,
- 			break;
- 		}
- 
--		ret = io_submit_one(ctx, user_iocb, false);
-+		ret = io_submit_one(ctx, user_iocb);
- 		if (ret)
- 			break;
- 	}
-@@ -1983,7 +1973,7 @@ COMPAT_SYSCALL_DEFINE3(io_submit, compat_aio_context_t, ctx_id,
- 			break;
- 		}
- 
--		ret = io_submit_one(ctx, compat_ptr(user_iocb), true);
-+		ret = io_submit_one(ctx, compat_ptr(user_iocb));
- 		if (ret)
- 			break;
- 	}
-diff --git a/fs/io_uring.c b/fs/io_uring.c
-index 3790c7fe9fee22..ba84ecea7cb1a4 100644
---- a/fs/io_uring.c
-+++ b/fs/io_uring.c
-@@ -2837,13 +2837,8 @@ static ssize_t __io_import_iovec(int rw, struct io_kiocb *req,
- 		return ret;
- 	}
- 
--#ifdef CONFIG_COMPAT
--	if (req->ctx->compat)
--		return compat_import_iovec(rw, buf, sqe_len, UIO_FASTIOV,
--						iovec, iter);
--#endif
--
--	return import_iovec(rw, buf, sqe_len, UIO_FASTIOV, iovec, iter);
-+	return __import_iovec(rw, buf, sqe_len, UIO_FASTIOV, iovec, iter,
-+			      req->ctx->compat);
- }
- 
- static ssize_t io_import_iovec(int rw, struct io_kiocb *req,
-@@ -4179,8 +4174,9 @@ static int __io_recvmsg_copy_hdr(struct io_kiocb *req,
- 				sr->len);
- 		iomsg->iov = NULL;
- 	} else {
--		ret = import_iovec(READ, uiov, iov_len, UIO_FASTIOV,
--					&iomsg->iov, &iomsg->msg.msg_iter);
-+		ret = __import_iovec(READ, uiov, iov_len, UIO_FASTIOV,
-+				     &iomsg->iov, &iomsg->msg.msg_iter,
-+				     false);
- 		if (ret > 0)
- 			ret = 0;
- 	}
-@@ -4220,9 +4216,9 @@ static int __io_compat_recvmsg_copy_hdr(struct io_kiocb *req,
- 		sr->len = iomsg->iov[0].iov_len;
- 		iomsg->iov = NULL;
- 	} else {
--		ret = compat_import_iovec(READ, uiov, len, UIO_FASTIOV,
--						&iomsg->iov,
--						&iomsg->msg.msg_iter);
-+		ret = __import_iovec(READ, (struct iovec __user *)uiov, len,
-+				   UIO_FASTIOV, &iomsg->iov,
-+				   &iomsg->msg.msg_iter, true);
- 		if (ret < 0)
- 			return ret;
- 	}
 diff --git a/fs/read_write.c b/fs/read_write.c
-index e5e891a88442ef..0a68037580b455 100644
+index 5db58b8c78d0dd..e5e891a88442ef 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1078,7 +1078,8 @@ static size_t compat_readv(struct file *file,
- 	struct iov_iter iter;
- 	ssize_t ret;
- 
--	ret = compat_import_iovec(READ, vec, vlen, UIO_FASTIOV, &iov, &iter);
-+	ret = import_iovec(READ, (const struct iovec __user *)vec, vlen,
-+			   UIO_FASTIOV, &iov, &iter);
- 	if (ret >= 0) {
- 		ret = do_iter_read(file, &iter, pos, flags);
- 		kfree(iov);
-@@ -1186,7 +1187,8 @@ static size_t compat_writev(struct file *file,
- 	struct iov_iter iter;
- 	ssize_t ret;
- 
--	ret = compat_import_iovec(WRITE, vec, vlen, UIO_FASTIOV, &iov, &iter);
-+	ret = import_iovec(WRITE, (const struct iovec __user *)vec, vlen,
-+			   UIO_FASTIOV, &iov, &iter);
- 	if (ret >= 0) {
- 		file_start_write(file);
- 		ret = do_iter_write(file, &iter, pos, flags);
-diff --git a/fs/splice.c b/fs/splice.c
-index d7c8a7c4db07ff..132d42b9871f9b 100644
---- a/fs/splice.c
-+++ b/fs/splice.c
-@@ -1387,7 +1387,7 @@ COMPAT_SYSCALL_DEFINE4(vmsplice, int, fd, const struct compat_iovec __user *, io
- 	if (error)
- 		return error;
- 
--	error = compat_import_iovec(type, iov32, nr_segs,
-+	error = import_iovec(type, (struct iovec __user *)iov32, nr_segs,
- 			     ARRAY_SIZE(iovstack), &iov, &iter);
- 	if (error >= 0) {
- 		error = do_vmsplice(f.file, &iter, flags);
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index 3835a8a8e9eae0..fff5d49dd0d53e 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -269,13 +269,9 @@ size_t hash_and_copy_to_iter(const void *addr, size_t bytes, void *hashp,
- ssize_t import_iovec(int type, const struct iovec __user * uvector,
- 		 unsigned nr_segs, unsigned fast_segs,
- 		 struct iovec **iov, struct iov_iter *i);
--
--#ifdef CONFIG_COMPAT
--struct compat_iovec;
--ssize_t compat_import_iovec(int type, const struct compat_iovec __user * uvector,
--		 unsigned nr_segs, unsigned fast_segs,
--		 struct iovec **iov, struct iov_iter *i);
--#endif
-+ssize_t __import_iovec(int type, const struct iovec __user *uvector,
-+		unsigned nr_segs, unsigned fast_segs, struct iovec **iovp,
-+		struct iov_iter *i, bool compat);
- 
- int import_single_range(int type, void __user *buf, size_t len,
- 		 struct iovec *iov, struct iov_iter *i);
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 8bfa47b63d39aa..632265178d8737 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -1683,7 +1683,7 @@ static int compat_copy_iovecs_from_user(struct iovec *iov,
+@@ -752,185 +752,6 @@ static ssize_t do_loop_readv_writev(struct file *filp, struct iov_iter *iter,
  	return ret;
  }
  
--static ssize_t __import_iovec(int type, const struct iovec __user *uvector,
-+ssize_t __import_iovec(int type, const struct iovec __user *uvector,
- 		unsigned nr_segs, unsigned fast_segs, struct iovec **iovp,
- 		struct iov_iter *i, bool compat)
- {
-@@ -1793,22 +1793,11 @@ ssize_t import_iovec(int type, const struct iovec __user * uvector,
- 		 unsigned nr_segs, unsigned fast_segs,
- 		 struct iovec **iov, struct iov_iter *i)
- {
--	return __import_iovec(type, uvector, nr_segs, fast_segs, iov, i, false);
-+	return __import_iovec(type, uvector, nr_segs, fast_segs, iov, i,
-+			      in_compat_syscall());
- }
- EXPORT_SYMBOL(import_iovec);
- 
--#ifdef CONFIG_COMPAT
--ssize_t compat_import_iovec(int type,
--		const struct compat_iovec __user * uvector,
--		unsigned nr_segs, unsigned fast_segs,
--		struct iovec **iov, struct iov_iter *i)
+-/**
+- * rw_copy_check_uvector() - Copy an array of &struct iovec from userspace
+- *     into the kernel and check that it is valid.
+- *
+- * @type: One of %CHECK_IOVEC_ONLY, %READ, or %WRITE.
+- * @uvector: Pointer to the userspace array.
+- * @nr_segs: Number of elements in userspace array.
+- * @fast_segs: Number of elements in @fast_pointer.
+- * @fast_pointer: Pointer to (usually small on-stack) kernel array.
+- * @ret_pointer: (output parameter) Pointer to a variable that will point to
+- *     either @fast_pointer, a newly allocated kernel array, or NULL,
+- *     depending on which array was used.
+- *
+- * This function copies an array of &struct iovec of @nr_segs from
+- * userspace into the kernel and checks that each element is valid (e.g.
+- * it does not point to a kernel address or cause overflow by being too
+- * large, etc.).
+- *
+- * As an optimization, the caller may provide a pointer to a small
+- * on-stack array in @fast_pointer, typically %UIO_FASTIOV elements long
+- * (the size of this array, or 0 if unused, should be given in @fast_segs).
+- *
+- * @ret_pointer will always point to the array that was used, so the
+- * caller must take care not to call kfree() on it e.g. in case the
+- * @fast_pointer array was used and it was allocated on the stack.
+- *
+- * Return: The total number of bytes covered by the iovec array on success
+- *   or a negative error code on error.
+- */
+-ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+-			      unsigned long nr_segs, unsigned long fast_segs,
+-			      struct iovec *fast_pointer,
+-			      struct iovec **ret_pointer)
 -{
--	return __import_iovec(type, (const struct iovec __user *)uvector,
--			      nr_segs, fast_segs, iov, i, true);
+-	unsigned long seg;
+-	ssize_t ret;
+-	struct iovec *iov = fast_pointer;
+-
+-	/*
+-	 * SuS says "The readv() function *may* fail if the iovcnt argument
+-	 * was less than or equal to 0, or greater than {IOV_MAX}.  Linux has
+-	 * traditionally returned zero for zero segments, so...
+-	 */
+-	if (nr_segs == 0) {
+-		ret = 0;
+-		goto out;
+-	}
+-
+-	/*
+-	 * First get the "struct iovec" from user memory and
+-	 * verify all the pointers
+-	 */
+-	if (nr_segs > UIO_MAXIOV) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-	if (nr_segs > fast_segs) {
+-		iov = kmalloc_array(nr_segs, sizeof(struct iovec), GFP_KERNEL);
+-		if (iov == NULL) {
+-			ret = -ENOMEM;
+-			goto out;
+-		}
+-	}
+-	if (copy_from_user(iov, uvector, nr_segs*sizeof(*uvector))) {
+-		ret = -EFAULT;
+-		goto out;
+-	}
+-
+-	/*
+-	 * According to the Single Unix Specification we should return EINVAL
+-	 * if an element length is < 0 when cast to ssize_t or if the
+-	 * total length would overflow the ssize_t return value of the
+-	 * system call.
+-	 *
+-	 * Linux caps all read/write calls to MAX_RW_COUNT, and avoids the
+-	 * overflow case.
+-	 */
+-	ret = 0;
+-	for (seg = 0; seg < nr_segs; seg++) {
+-		void __user *buf = iov[seg].iov_base;
+-		ssize_t len = (ssize_t)iov[seg].iov_len;
+-
+-		/* see if we we're about to use an invalid len or if
+-		 * it's about to overflow ssize_t */
+-		if (len < 0) {
+-			ret = -EINVAL;
+-			goto out;
+-		}
+-		if (type >= 0
+-		    && unlikely(!access_ok(buf, len))) {
+-			ret = -EFAULT;
+-			goto out;
+-		}
+-		if (len > MAX_RW_COUNT - ret) {
+-			len = MAX_RW_COUNT - ret;
+-			iov[seg].iov_len = len;
+-		}
+-		ret += len;
+-	}
+-out:
+-	*ret_pointer = iov;
+-	return ret;
 -}
--EXPORT_SYMBOL(compat_import_iovec);
+-
+-#ifdef CONFIG_COMPAT
+-ssize_t compat_rw_copy_check_uvector(int type,
+-		const struct compat_iovec __user *uvector, unsigned long nr_segs,
+-		unsigned long fast_segs, struct iovec *fast_pointer,
+-		struct iovec **ret_pointer)
+-{
+-	compat_ssize_t tot_len;
+-	struct iovec *iov = *ret_pointer = fast_pointer;
+-	ssize_t ret = 0;
+-	int seg;
+-
+-	/*
+-	 * SuS says "The readv() function *may* fail if the iovcnt argument
+-	 * was less than or equal to 0, or greater than {IOV_MAX}.  Linux has
+-	 * traditionally returned zero for zero segments, so...
+-	 */
+-	if (nr_segs == 0)
+-		goto out;
+-
+-	ret = -EINVAL;
+-	if (nr_segs > UIO_MAXIOV)
+-		goto out;
+-	if (nr_segs > fast_segs) {
+-		ret = -ENOMEM;
+-		iov = kmalloc_array(nr_segs, sizeof(struct iovec), GFP_KERNEL);
+-		if (iov == NULL)
+-			goto out;
+-	}
+-	*ret_pointer = iov;
+-
+-	ret = -EFAULT;
+-	if (!access_ok(uvector, nr_segs*sizeof(*uvector)))
+-		goto out;
+-
+-	/*
+-	 * Single unix specification:
+-	 * We should -EINVAL if an element length is not >= 0 and fitting an
+-	 * ssize_t.
+-	 *
+-	 * In Linux, the total length is limited to MAX_RW_COUNT, there is
+-	 * no overflow possibility.
+-	 */
+-	tot_len = 0;
+-	ret = -EINVAL;
+-	for (seg = 0; seg < nr_segs; seg++) {
+-		compat_uptr_t buf;
+-		compat_ssize_t len;
+-
+-		if (__get_user(len, &uvector->iov_len) ||
+-		   __get_user(buf, &uvector->iov_base)) {
+-			ret = -EFAULT;
+-			goto out;
+-		}
+-		if (len < 0)	/* size_t not fitting in compat_ssize_t .. */
+-			goto out;
+-		if (type >= 0 &&
+-		    !access_ok(compat_ptr(buf), len)) {
+-			ret = -EFAULT;
+-			goto out;
+-		}
+-		if (len > MAX_RW_COUNT - tot_len)
+-			len = MAX_RW_COUNT - tot_len;
+-		tot_len += len;
+-		iov->iov_base = compat_ptr(buf);
+-		iov->iov_len = (compat_size_t) len;
+-		uvector++;
+-		iov++;
+-	}
+-	ret = tot_len;
+-
+-out:
+-	return ret;
+-}
 -#endif
 -
- int import_single_range(int rw, void __user *buf, size_t len,
- 		 struct iovec *iov, struct iov_iter *i)
+ static ssize_t do_iter_read(struct file *file, struct iov_iter *iter,
+ 		loff_t *pos, rwf_t flags)
  {
-diff --git a/mm/process_vm_access.c b/mm/process_vm_access.c
-index 40cd502c337534..b759ed264840d8 100644
---- a/mm/process_vm_access.c
-+++ b/mm/process_vm_access.c
-@@ -331,13 +331,14 @@ compat_process_vm_rw(compat_pid_t pid,
- 	if (flags != 0)
- 		return -EINVAL;
+diff --git a/include/linux/compat.h b/include/linux/compat.h
+index 654c1ec36671a4..b930de791ff16b 100644
+--- a/include/linux/compat.h
++++ b/include/linux/compat.h
+@@ -451,12 +451,6 @@ extern long compat_arch_ptrace(struct task_struct *child, compat_long_t request,
  
--	rc = compat_import_iovec(dir, lvec, liovcnt, UIO_FASTIOV, &iov_l, &iter_l);
-+	rc = import_iovec(dir, (const struct iovec __user *)iov_l, liovcnt,
-+			  UIO_FASTIOV, &iov_l, &iter_l);
- 	if (rc < 0)
- 		return rc;
- 	if (!iov_iter_count(&iter_l))
- 		goto free_iovecs;
--	rc = compat_import_iovec(CHECK_IOVEC_ONLY, rvec, riovcnt, UIO_FASTIOV,
--				 &iov_r, &iter_r);
-+	rc = import_iovec(CHECK_IOVEC_ONLY, iov_r, riovcnt, UIO_FASTIOV, &iov_r,
-+			  &iter_r);
- 	if (rc <= 0)
- 		goto free_iovecs;
+ struct epoll_event;	/* fortunately, this one is fixed-layout */
  
-diff --git a/net/compat.c b/net/compat.c
-index 95ce707a30a31d..ddd15af3a2837b 100644
---- a/net/compat.c
-+++ b/net/compat.c
-@@ -98,8 +98,8 @@ int get_compat_msghdr(struct msghdr *kmsg,
- 	if (err)
- 		return err;
+-extern ssize_t compat_rw_copy_check_uvector(int type,
+-		const struct compat_iovec __user *uvector,
+-		unsigned long nr_segs,
+-		unsigned long fast_segs, struct iovec *fast_pointer,
+-		struct iovec **ret_pointer);
+-
+ extern void __user *compat_alloc_user_space(unsigned long len);
  
--	err = compat_import_iovec(save_addr ? READ : WRITE, compat_ptr(ptr),
--				   len, UIO_FASTIOV, iov, &kmsg->msg_iter);
-+	err = import_iovec(save_addr ? READ : WRITE, compat_ptr(ptr), len,
-+			   UIO_FASTIOV, iov, &kmsg->msg_iter);
- 	return err < 0 ? err : 0;
+ int compat_restore_altstack(const compat_stack_t __user *uss);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7519ae003a082c..5420822104a99d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -179,10 +179,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+ #define FMODE_BUF_RASYNC	((__force fmode_t)0x40000000)
+ 
+ /*
+- * Flag for rw_copy_check_uvector and compat_rw_copy_check_uvector
+- * that indicates that they should check the contents of the iovec are
+- * valid, but not check the memory that the iovec elements
+- * points too.
++ * Flag for import_iovec that indicates that it should check the contents of the
++ * iovec is valid, but not check the memory that the iovec elements points too.
+  */
+ #define CHECK_IOVEC_ONLY -1
+ 
+@@ -1887,11 +1885,6 @@ static inline int call_mmap(struct file *file, struct vm_area_struct *vma)
+ 	return file->f_op->mmap(file, vma);
  }
  
-diff --git a/security/keys/compat.c b/security/keys/compat.c
-index 6ee9d8f6a4a5bb..7ae531db031cf8 100644
---- a/security/keys/compat.c
-+++ b/security/keys/compat.c
-@@ -33,9 +33,8 @@ static long compat_keyctl_instantiate_key_iov(
- 	if (!_payload_iov)
- 		ioc = 0;
+-ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+-			      unsigned long nr_segs, unsigned long fast_segs,
+-			      struct iovec *fast_pointer,
+-			      struct iovec **ret_pointer);
+-
+ extern ssize_t vfs_read(struct file *, char __user *, size_t, loff_t *);
+ extern ssize_t vfs_write(struct file *, const char __user *, size_t, loff_t *);
+ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index db54588406dfae..d7e72343c360eb 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -1650,12 +1650,87 @@ const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t flags)
+ }
+ EXPORT_SYMBOL(dup_iter);
  
--	ret = compat_import_iovec(WRITE, _payload_iov, ioc,
--				  ARRAY_SIZE(iovstack), &iov,
--				  &from);
-+	ret = import_iovec(WRITE, (const struct iovec __user *)_payload_iov,
-+			   ioc, ARRAY_SIZE(iovstack), &iov, &from);
- 	if (ret < 0)
- 		return ret;
++static ssize_t rw_copy_check_uvector(int type,
++		const struct iovec __user *uvector, unsigned long nr_segs,
++		unsigned long fast_segs, struct iovec *fast_pointer,
++		struct iovec **ret_pointer)
++{
++	unsigned long seg;
++	ssize_t ret;
++	struct iovec *iov = fast_pointer;
++
++	/*
++	 * SuS says "The readv() function *may* fail if the iovcnt argument
++	 * was less than or equal to 0, or greater than {IOV_MAX}.  Linux has
++	 * traditionally returned zero for zero segments, so...
++	 */
++	if (nr_segs == 0) {
++		ret = 0;
++		goto out;
++	}
++
++	/*
++	 * First get the "struct iovec" from user memory and
++	 * verify all the pointers
++	 */
++	if (nr_segs > UIO_MAXIOV) {
++		ret = -EINVAL;
++		goto out;
++	}
++	if (nr_segs > fast_segs) {
++		iov = kmalloc_array(nr_segs, sizeof(struct iovec), GFP_KERNEL);
++		if (iov == NULL) {
++			ret = -ENOMEM;
++			goto out;
++		}
++	}
++	if (copy_from_user(iov, uvector, nr_segs*sizeof(*uvector))) {
++		ret = -EFAULT;
++		goto out;
++	}
++
++	/*
++	 * According to the Single Unix Specification we should return EINVAL
++	 * if an element length is < 0 when cast to ssize_t or if the
++	 * total length would overflow the ssize_t return value of the
++	 * system call.
++	 *
++	 * Linux caps all read/write calls to MAX_RW_COUNT, and avoids the
++	 * overflow case.
++	 */
++	ret = 0;
++	for (seg = 0; seg < nr_segs; seg++) {
++		void __user *buf = iov[seg].iov_base;
++		ssize_t len = (ssize_t)iov[seg].iov_len;
++
++		/* see if we we're about to use an invalid len or if
++		 * it's about to overflow ssize_t */
++		if (len < 0) {
++			ret = -EINVAL;
++			goto out;
++		}
++		if (type >= 0
++		    && unlikely(!access_ok(buf, len))) {
++			ret = -EFAULT;
++			goto out;
++		}
++		if (len > MAX_RW_COUNT - ret) {
++			len = MAX_RW_COUNT - ret;
++			iov[seg].iov_len = len;
++		}
++		ret += len;
++	}
++out:
++	*ret_pointer = iov;
++	return ret;
++}
++
+ /**
+  * import_iovec() - Copy an array of &struct iovec from userspace
+  *     into the kernel, check that it is valid, and initialize a new
+  *     &struct iov_iter iterator to access it.
+  *
+- * @type: One of %READ or %WRITE.
++ * @type: One of %CHECK_IOVEC_ONLY, %READ, or %WRITE.
+  * @uvector: Pointer to the userspace array.
+  * @nr_segs: Number of elements in userspace array.
+  * @fast_segs: Number of elements in @iov.
+@@ -1695,6 +1770,79 @@ EXPORT_SYMBOL(import_iovec);
+ #ifdef CONFIG_COMPAT
+ #include <linux/compat.h>
  
++static ssize_t compat_rw_copy_check_uvector(int type,
++		const struct compat_iovec __user *uvector, unsigned long nr_segs,
++		unsigned long fast_segs, struct iovec *fast_pointer,
++		struct iovec **ret_pointer)
++{
++	compat_ssize_t tot_len;
++	struct iovec *iov = *ret_pointer = fast_pointer;
++	ssize_t ret = 0;
++	int seg;
++
++	/*
++	 * SuS says "The readv() function *may* fail if the iovcnt argument
++	 * was less than or equal to 0, or greater than {IOV_MAX}.  Linux has
++	 * traditionally returned zero for zero segments, so...
++	 */
++	if (nr_segs == 0)
++		goto out;
++
++	ret = -EINVAL;
++	if (nr_segs > UIO_MAXIOV)
++		goto out;
++	if (nr_segs > fast_segs) {
++		ret = -ENOMEM;
++		iov = kmalloc_array(nr_segs, sizeof(struct iovec), GFP_KERNEL);
++		if (iov == NULL)
++			goto out;
++	}
++	*ret_pointer = iov;
++
++	ret = -EFAULT;
++	if (!access_ok(uvector, nr_segs*sizeof(*uvector)))
++		goto out;
++
++	/*
++	 * Single unix specification:
++	 * We should -EINVAL if an element length is not >= 0 and fitting an
++	 * ssize_t.
++	 *
++	 * In Linux, the total length is limited to MAX_RW_COUNT, there is
++	 * no overflow possibility.
++	 */
++	tot_len = 0;
++	ret = -EINVAL;
++	for (seg = 0; seg < nr_segs; seg++) {
++		compat_uptr_t buf;
++		compat_ssize_t len;
++
++		if (__get_user(len, &uvector->iov_len) ||
++		   __get_user(buf, &uvector->iov_base)) {
++			ret = -EFAULT;
++			goto out;
++		}
++		if (len < 0)	/* size_t not fitting in compat_ssize_t .. */
++			goto out;
++		if (type >= 0 &&
++		    !access_ok(compat_ptr(buf), len)) {
++			ret = -EFAULT;
++			goto out;
++		}
++		if (len > MAX_RW_COUNT - tot_len)
++			len = MAX_RW_COUNT - tot_len;
++		tot_len += len;
++		iov->iov_base = compat_ptr(buf);
++		iov->iov_len = (compat_size_t) len;
++		uvector++;
++		iov++;
++	}
++	ret = tot_len;
++
++out:
++	return ret;
++}
++
+ ssize_t compat_import_iovec(int type,
+ 		const struct compat_iovec __user * uvector,
+ 		unsigned nr_segs, unsigned fast_segs,
 -- 
 2.28.0
 
