@@ -2,72 +2,186 @@ Return-Path: <SRS0=3eE7=C6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0AEBC43466
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:26:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 893AEC43465
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:34:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73412221EC
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:26:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55427222BB
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:34:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GRkfTBxW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727245AbgIUO00 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 10:26:26 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:34334 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727131AbgIUO0Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Sep 2020 10:26:25 -0400
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id DE0F9E5D82397CE79280;
-        Mon, 21 Sep 2020 22:26:23 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS405-HUB.china.huawei.com
- (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Mon, 21 Sep 2020
- 22:26:16 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <intel-linux-scu@intel.com>, <artur.paszkiewicz@intel.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] scsi: isci: make isci_remote_device_wait_for_resume_from_abort() static
-Date:   Mon, 21 Sep 2020 22:27:24 +0800
-Message-ID: <20200921142724.875048-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.25.4
+        id S1727440AbgIUOej (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 10:34:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42186 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726501AbgIUOed (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 10:34:33 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15CFCC0613D0;
+        Mon, 21 Sep 2020 07:34:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=puJFCdMF2FXbv89uAHf/KkyLCkpGKdSCiHzE06eX0/Y=; b=GRkfTBxWaYN59mWczbVBJZ/J4z
+        kVM8Nphlbf3FY02zkGWWBVM283NPs2K9y+IDVdwyxNN1Q6a4B7YoCyWtJodiottCcy6XpP96dRyGn
+        JHkp6fow0Ism2aY5WYKFck/rP6z+BMXBmYaJqqKRA5DWZwKptXaUZhs1y+Gx9Hcs78ge5sNfRyKIN
+        h2HYTgdyzISCw5GbBnBiQ0zAOMx4TZdmJQTPfx5COcVblaZe9D1Cqm0YVjyEpK04tgDaqtazmJ5UR
+        ftg8Mk3Zj7g+8AAriBQApIZOIJYX0rTvWCnxH8RgTXNwePT8RLDRBDPDY+Cv19f1nEHzB8vcryJzp
+        d7oTPRIQ==;
+Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kKMtZ-0007rC-EL; Mon, 21 Sep 2020 14:34:21 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Alexander Viro <viro@zeniv.linux.org.uk>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        David Laight <David.Laight@aculab.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-aio@kvack.org, io-uring@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-mm@kvack.org,
+        netdev@vger.kernel.org, keyrings@vger.kernel.org,
+        linux-security-module@vger.kernel.org,
+        David Laight <David.Laight@ACULAB.COM>,
+        David Laight <david.laight@aculab.com>
+Subject: [PATCH 02/11] mm: call import_iovec() instead of rw_copy_check_uvector() in process_vm_rw()
+Date:   Mon, 21 Sep 2020 16:34:25 +0200
+Message-Id: <20200921143434.707844-3-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200921143434.707844-1-hch@lst.de>
+References: <20200921143434.707844-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This addresses the following sparse warning:
+From: David Laight <David.Laight@ACULAB.COM>
 
-drivers/scsi/isci/remote_device.c:1387:6: warning: symbol
-'isci_remote_device_wait_for_resume_from_abort' was not declared. Should
-it be static?
+This is the only direct call of rw_copy_check_uvector().  Removing it
+will allow rw_copy_check_uvector() to be inlined into import_iovec(),
+while only paying a minor price by setting up an otherwise unused
+iov_iter in the process_vm_readv/process_vm_writev syscalls that aren't
+in a super hot path.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: David Laight <david.laight@aculab.com>
+[hch: expanded the commit log, pass CHECK_IOVEC_ONLY instead of 0 for the
+      compat case, handle CHECK_IOVEC_ONLY in iov_iter_init]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/isci/remote_device.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ lib/iov_iter.c         |  2 +-
+ mm/process_vm_access.c | 33 ++++++++++++++++++---------------
+ 2 files changed, 19 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index c3f540b55689..b1276f7e49c8 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -1384,7 +1384,7 @@ static bool isci_remote_device_test_resume_done(
- 	return done;
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 5e40786c8f1232..db54588406dfae 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -443,7 +443,7 @@ void iov_iter_init(struct iov_iter *i, unsigned int direction,
+ 			const struct iovec *iov, unsigned long nr_segs,
+ 			size_t count)
+ {
+-	WARN_ON(direction & ~(READ | WRITE));
++	WARN_ON(direction & ~(READ | WRITE | CHECK_IOVEC_ONLY));
+ 	direction &= READ | WRITE;
+ 
+ 	/* It will get better.  Eventually... */
+diff --git a/mm/process_vm_access.c b/mm/process_vm_access.c
+index 29c052099affdc..40cd502c337534 100644
+--- a/mm/process_vm_access.c
++++ b/mm/process_vm_access.c
+@@ -264,7 +264,7 @@ static ssize_t process_vm_rw(pid_t pid,
+ 	struct iovec iovstack_r[UIO_FASTIOV];
+ 	struct iovec *iov_l = iovstack_l;
+ 	struct iovec *iov_r = iovstack_r;
+-	struct iov_iter iter;
++	struct iov_iter iter_l, iter_r;
+ 	ssize_t rc;
+ 	int dir = vm_write ? WRITE : READ;
+ 
+@@ -272,23 +272,25 @@ static ssize_t process_vm_rw(pid_t pid,
+ 		return -EINVAL;
+ 
+ 	/* Check iovecs */
+-	rc = import_iovec(dir, lvec, liovcnt, UIO_FASTIOV, &iov_l, &iter);
++	rc = import_iovec(dir, lvec, liovcnt, UIO_FASTIOV, &iov_l, &iter_l);
+ 	if (rc < 0)
+ 		return rc;
+-	if (!iov_iter_count(&iter))
++	if (!iov_iter_count(&iter_l))
+ 		goto free_iovecs;
+ 
+-	rc = rw_copy_check_uvector(CHECK_IOVEC_ONLY, rvec, riovcnt, UIO_FASTIOV,
+-				   iovstack_r, &iov_r);
++	rc = import_iovec(CHECK_IOVEC_ONLY, rvec, riovcnt, UIO_FASTIOV, &iov_r,
++			  &iter_r);
+ 	if (rc <= 0)
+ 		goto free_iovecs;
+ 
+-	rc = process_vm_rw_core(pid, &iter, iov_r, riovcnt, flags, vm_write);
++	rc = process_vm_rw_core(pid, &iter_l, iter_r.iov, iter_r.nr_segs,
++				flags, vm_write);
+ 
+ free_iovecs:
+ 	if (iov_r != iovstack_r)
+ 		kfree(iov_r);
+-	kfree(iov_l);
++	if (iov_l != iovstack_l)
++		kfree(iov_l);
+ 
+ 	return rc;
+ }
+@@ -322,30 +324,31 @@ compat_process_vm_rw(compat_pid_t pid,
+ 	struct iovec iovstack_r[UIO_FASTIOV];
+ 	struct iovec *iov_l = iovstack_l;
+ 	struct iovec *iov_r = iovstack_r;
+-	struct iov_iter iter;
++	struct iov_iter iter_l, iter_r;
+ 	ssize_t rc = -EFAULT;
+ 	int dir = vm_write ? WRITE : READ;
+ 
+ 	if (flags != 0)
+ 		return -EINVAL;
+ 
+-	rc = compat_import_iovec(dir, lvec, liovcnt, UIO_FASTIOV, &iov_l, &iter);
++	rc = compat_import_iovec(dir, lvec, liovcnt, UIO_FASTIOV, &iov_l, &iter_l);
+ 	if (rc < 0)
+ 		return rc;
+-	if (!iov_iter_count(&iter))
++	if (!iov_iter_count(&iter_l))
+ 		goto free_iovecs;
+-	rc = compat_rw_copy_check_uvector(CHECK_IOVEC_ONLY, rvec, riovcnt,
+-					  UIO_FASTIOV, iovstack_r,
+-					  &iov_r);
++	rc = compat_import_iovec(CHECK_IOVEC_ONLY, rvec, riovcnt, UIO_FASTIOV,
++				 &iov_r, &iter_r);
+ 	if (rc <= 0)
+ 		goto free_iovecs;
+ 
+-	rc = process_vm_rw_core(pid, &iter, iov_r, riovcnt, flags, vm_write);
++	rc = process_vm_rw_core(pid, &iter_l, iter_r.iov, iter_r.nr_segs,
++				flags, vm_write);
+ 
+ free_iovecs:
+ 	if (iov_r != iovstack_r)
+ 		kfree(iov_r);
+-	kfree(iov_l);
++	if (iov_l != iovstack_l)
++		kfree(iov_l);
+ 	return rc;
  }
  
--void isci_remote_device_wait_for_resume_from_abort(
-+static void isci_remote_device_wait_for_resume_from_abort(
- 	struct isci_host *ihost,
- 	struct isci_remote_device *idev)
- {
 -- 
-2.25.4
+2.28.0
 
