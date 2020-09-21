@@ -2,77 +2,119 @@ Return-Path: <SRS0=3eE7=C6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A93F1C43465
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 06:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2665FC43463
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 06:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59ABF20866
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 06:00:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDCFE20758
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 06:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726265AbgIUGAx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 02:00:53 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55726 "EHLO mx2.suse.de"
+        id S1726430AbgIUGgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 02:36:36 -0400
+Received: from verein.lst.de ([213.95.11.211]:38634 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726149AbgIUGAx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Sep 2020 02:00:53 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 31897B6C4;
-        Mon, 21 Sep 2020 06:01:27 +0000 (UTC)
-Subject: Re: [PATCH 0/9] Rework runtime suspend and SCSI domain validation
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-References: <20200906012219.17893-1-bvanassche@acm.org>
- <f4ff6be8-84b6-6f08-8657-21238c99df9c@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <ab848686-fe88-7b79-f75a-e192f3e3f3eb@suse.de>
-Date:   Mon, 21 Sep 2020 08:00:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1726011AbgIUGge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Sep 2020 02:36:34 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id B25CE68AFE; Mon, 21 Sep 2020 08:36:28 +0200 (CEST)
+Date:   Mon, 21 Sep 2020 08:36:28 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Tomasz Figa <tfiga@chromium.org>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
+Cc:     alsa-devel@alsa-project.org, linux-samsung-soc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linux-doc@vger.kernel.org, nouveau@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-mm@kvack.org, Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
+Subject: Re: a saner API for allocating DMA addressable pages v3
+Message-ID: <20200921063628.GB18349@lst.de>
+References: <20200915155122.1768241-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <f4ff6be8-84b6-6f08-8657-21238c99df9c@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200915155122.1768241-1-hch@lst.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/19/20 5:45 AM, Bart Van Assche wrote:
-> On 2020-09-05 18:22, Bart Van Assche wrote:
->> The SCSI runtime suspend and domain validation mechanisms both use
->> scsi_device_quiesce(). scsi_device_quiesce() restricts blk_queue_enter() to
->> BLK_MQ_REQ_PREEMPT requests. There is a conflict between the requirements
->> of runtime suspend and SCSI domain validation: no requests must be sent to
->> runtime suspended devices that are in the state RPM_SUSPENDED while
->> BLK_MQ_REQ_PREEMPT requests must be processed during SCSI domain
->> validation. This conflict is resolved by reworking the SCSI domain
->> validation implementation.
->>
->> Hybernation and runtime suspend have been retested but SCSI domain
->> validation not yet.
-> 
-> Hi Martin and James,
-> 
-> Please advise how to proceed with this patch series. This patch series
-> includes an important fix for runtime power management. Unfortunately
-> the only way to fix runtime powermanagement is by reworking SPI DV and
-> I don't have access to a setup on which I can test the SPI DV changes.
-> 
-I'll check if I can resurrect my setup.
+Any comments?
 
-Cheers,
+Thomas: this should be identical to the git tree I gave you for mips
+testing, and you add your tested-by (and reviewd-by tags where
+applicable)?
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Helge: for parisc this should effectively be the same as the first
+version, but I've dropped the tested-by tags due to the reshuffle,
+and chance you could retest it?
+
+On Tue, Sep 15, 2020 at 05:51:04PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series replaced the DMA_ATTR_NON_CONSISTENT flag to dma_alloc_attrs
+> with a separate new dma_alloc_pages API, which is available on all
+> platforms.  In addition to cleaning up the convoluted code path, this
+> ensures that other drivers that have asked for better support for
+> non-coherent DMA to pages with incurring bounce buffering over can finally
+> be properly supported.
+> 
+> As a follow up I plan to move the implementation of the
+> DMA_ATTR_NO_KERNEL_MAPPING flag over to this framework as well, given
+> that is also is a fundamentally non coherent allocation.  The replacement
+> for that flag would then return a struct page, as it is allowed to
+> actually return pages without a kernel mapping as the name suggested
+> (although most of the time they will actually have a kernel mapping..)
+> 
+> In addition to the conversions of the existing non-coherent DMA users,
+> I've also added a patch to convert the firewire ohci driver to use
+> the new dma_alloc_pages API.
+> 
+> The first patch is queued up for 5.9 in the media tree, but included here
+> for completeness.
+> 
+> 
+> A git tree is available here:
+> 
+>     git://git.infradead.org/users/hch/misc.git dma_alloc_pages
+> 
+> Gitweb:
+> 
+>     http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dma_alloc_pages
+> 
+> 
+> Changes since v2:
+>  - fix up the patch reshuffle which wasn't quite correct
+>  - fix up a few commit messages
+> 
+> Changes since v1:
+>  - rebased on the latests dma-mapping tree, which merged many of the
+>    cleanups
+>  - fix an argument passing typo in 53c700, caught by sparse
+>  - rename a few macro arguments in 53c700
+>  - pass the right device to the DMA API in the lib82596 drivers
+>  - fix memory ownershiptransfers in sgiseeq
+>  - better document what a page in the direct kernel mapping means
+>  - split into dma_alloc_pages that returns a struct page and is in the
+>    direct mapping vs dma_alloc_noncoherent that can be vmapped
+>  - conver the firewire ohci driver to dma_alloc_pages
+> 
+> Diffstat:
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+---end quoted text---
