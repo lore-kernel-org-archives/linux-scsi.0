@@ -2,113 +2,85 @@ Return-Path: <SRS0=3eE7=C6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F595C43468
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 13:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7D61C43466
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:26:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 378052084C
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 13:46:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B97E21D95
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Sep 2020 14:26:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727569AbgIUNqn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 09:46:43 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:13813 "EHLO huawei.com"
+        id S1727231AbgIUO0L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 10:26:11 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:33776 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727560AbgIUNqm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Sep 2020 09:46:42 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 79D1372461913A9B08DF;
-        Mon, 21 Sep 2020 21:46:38 +0800 (CST)
-Received: from [10.174.179.92] (10.174.179.92) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.487.0; Mon, 21 Sep 2020 21:46:32 +0800
-Subject: Re: [PATCH -next] scsi: libsas: simplify the return expression of
- sas_discover_* functions
-To:     Liu Shixin <liushixin2@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <d44beaa3-6338-9188-7cf3-338cc0120305@huawei.com>
- <20200921134558.3478922-1-liushixin2@huawei.com>
+        id S1726395AbgIUO0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Sep 2020 10:26:11 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 2C6AA2AC8C39EDCA7888;
+        Mon, 21 Sep 2020 22:25:56 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Mon, 21 Sep 2020
+ 22:25:48 +0800
 From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <95502ce3-27aa-0298-21c6-b5ea9d05b478@huawei.com>
-Date:   Mon, 21 Sep 2020 21:46:31 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+To:     <skashyap@marvell.com>, <jhasan@marvell.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
+Subject: [PATCH] scsi: bnx2fc: move declaration of 'bnx2fc_percpu' to bnx2fc.h
+Date:   Mon, 21 Sep 2020 22:26:58 +0800
+Message-ID: <20200921142658.874807-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-In-Reply-To: <20200921134558.3478922-1-liushixin2@huawei.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.92]
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This addresses the following sparse warning:
 
-ÔÚ 2020/9/21 21:45, Liu Shixin Ð´µÀ:
-> Simplify the return expression.
-> 
-> Signed-off-by: Liu Shixin <liushixin2@huawei.com>
-> ---
->   drivers/scsi/libsas/sas_ata.c      | 8 +-------
->   drivers/scsi/libsas/sas_discover.c | 8 +-------
->   2 files changed, 2 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index a4887985aad6..024e5a550759 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -726,19 +726,13 @@ void sas_resume_sata(struct asd_sas_port *port)
->    */
->   int sas_discover_sata(struct domain_device *dev)
->   {
-> -	int res;
-> -
->   	if (dev->dev_type == SAS_SATA_PM)
->   		return -ENODEV;
->   
->   	dev->sata_dev.class = sas_get_ata_command_set(dev);
->   	sas_fill_in_rphy(dev, dev->rphy);
->   
-> -	res = sas_notify_lldd_dev_found(dev);
-> -	if (res)
-> -		return res;
-> -
-> -	return 0;
-> +	return sas_notify_lldd_dev_found(dev);
->   }
->   
->   static void async_sas_ata_eh(void *data, async_cookie_t cookie)
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index d0f9e90e3279..161c9b387da7 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -278,13 +278,7 @@ static void sas_resume_devices(struct work_struct *work)
->    */
->   int sas_discover_end_dev(struct domain_device *dev)
->   {
-> -	int res;
-> -
-> -	res = sas_notify_lldd_dev_found(dev);
-> -	if (res)
-> -		return res;
-> -
-> -	return 0;
-> +	return sas_notify_lldd_dev_found(dev);
->   }
->   
->   /* ---------- Device registration and unregistration ---------- */
-> 
+drivers/scsi/bnx2fc/bnx2fc_fcoe.c:23:1: warning: symbol
+'__pcpu_scope_bnx2fc_percpu' was not declared. Should it be static?
 
-Please add a version descriptor and describe the change against the
-first version next time . Otherwise this looks good to me.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc.h     | 2 ++
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index b6e8ed757252..41b99a74613a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -175,6 +175,8 @@ struct bnx2fc_percpu_s {
+ 	spinlock_t fp_work_lock;
+ };
+ 
++DECLARE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
++
+ struct bnx2fc_fw_stats {
+ 	u64	fc_crc_cnt;
+ 	u64	fcoe_tx_pkt_cnt;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 08992095ce7a..cee66fcf8dec 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -15,8 +15,6 @@
+ 
+ #include "bnx2fc.h"
+ 
+-DECLARE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+-
+ static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
+ 					struct fcoe_kcqe *new_cqe_kcqe);
+ static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
+-- 
+2.25.4
 
-Thanks,
-Jason
