@@ -7,162 +7,118 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 053D3C4346E
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45199C4346E
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:02:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7AFB23A60
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:01:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01CE623A74
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:02:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dMJ+3jBe"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NlernS3Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729315AbgIVCB1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 22:01:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40994 "EHLO
+        id S1729421AbgIVCC3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 22:02:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59604 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729307AbgIVCB1 (ORCPT
+        by vger.kernel.org with ESMTP id S1729007AbgIVCC3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Sep 2020 22:01:27 -0400
+        Mon, 21 Sep 2020 22:02:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600740085;
+        s=mimecast20190719; t=1600740148;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Tzo+iSLdl/HV45jduxk4SIxbpvPEBNGD2dSVt98peB0=;
-        b=dMJ+3jBeerqRU7TOo1ycVwONGDB9FNTLRuT6nouDHM6ZuDBZ51mifeu1dEwNVQGrfuwq3v
-        gX7EtLuKxHOGUK9zwMhzC3e542wlIRA2YdwAT5YvpFU73UkcyylFyBGAxUwqB/WrrInm4a
-        EkAw/5RGdMbXO1kDKho28EO2YBX807I=
+        bh=W1QhFiJpeL+8vBbjBr4sETQTmp+yKXR4gMOOBx8WCao=;
+        b=NlernS3Y9dY3f7sHPn2yngIt23jCyozJ92tcbzm8pC9ErK1foCG6FN4hIALLkkGplrDLPg
+        NbWqyvnFaqxL43LvyyJaVHHGL7mPB4NDMINGjUckbqfiHSLAPPSv1Vp5c0RpLU7Qe2ql2F
+        +oDi+P+PqlyayoFLeGzbWZzupwPwmFI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-147-UvOzHbDKNpaWiXKnNTsUJw-1; Mon, 21 Sep 2020 22:01:21 -0400
-X-MC-Unique: UvOzHbDKNpaWiXKnNTsUJw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-222-SLjUKDTTPcO_OkI5t8g0kg-1; Mon, 21 Sep 2020 22:02:26 -0400
+X-MC-Unique: SLjUKDTTPcO_OkI5t8g0kg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 33292107464B;
-        Tue, 22 Sep 2020 02:01:20 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 428401005E64;
+        Tue, 22 Sep 2020 02:02:25 +0000 (UTC)
 Received: from [10.72.13.139] (ovpn-13-139.pek2.redhat.com [10.72.13.139])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4A08573670;
-        Tue, 22 Sep 2020 02:01:10 +0000 (UTC)
-Subject: Re: [PATCH 7/8] vhost: remove work arg from vhost_work_flush
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 209CB5DA30;
+        Tue, 22 Sep 2020 02:02:16 +0000 (UTC)
+Subject: Re: [PATCH 2/8] vhost: add helper to check if a vq has been setup
 To:     Mike Christie <michael.christie@oracle.com>,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, mst@redhat.com, pbonzini@redhat.com,
         stefanha@redhat.com, virtualization@lists.linux-foundation.org
 References: <1600712588-9514-1-git-send-email-michael.christie@oracle.com>
- <1600712588-9514-8-git-send-email-michael.christie@oracle.com>
+ <1600712588-9514-3-git-send-email-michael.christie@oracle.com>
 From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <ce8af213-1eff-7c4e-b5e8-660267b8ff31@redhat.com>
-Date:   Tue, 22 Sep 2020 10:01:09 +0800
+Message-ID: <e2d16333-d5ed-4c5c-58b3-7b5d0a9da47a@redhat.com>
+Date:   Tue, 22 Sep 2020 10:02:15 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <1600712588-9514-8-git-send-email-michael.christie@oracle.com>
+In-Reply-To: <1600712588-9514-3-git-send-email-michael.christie@oracle.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
 On 2020/9/22 上午2:23, Mike Christie wrote:
-> vhost_work_flush doesn't do anything with the work arg. This patch drops
-> it and then renames vhost_work_flush to vhost_work_dev_flush to reflect
-> that the function flushes all the works in the dev and not just a
-> specific queue or work item.
+> This adds a helper check if a vq has been setup. The next patches
+> will use this when we move the vhost scsi cmd preallocation from per
+> session to per vq. In the per vq case, we only want to allocate cmds
+> for vqs that have actually been setup and not for all the possible
+> vqs.
 >
 > Signed-off-by: Mike Christie <michael.christie@oracle.com>
-
-
-Acked-by: Jason Wang <jasowang@redhat.com>
-
-
 > ---
->   drivers/vhost/scsi.c  | 4 ++--
->   drivers/vhost/vhost.c | 8 ++++----
->   drivers/vhost/vhost.h | 2 +-
->   drivers/vhost/vsock.c | 2 +-
->   4 files changed, 8 insertions(+), 8 deletions(-)
+>   drivers/vhost/vhost.c | 9 +++++++++
+>   drivers/vhost/vhost.h | 1 +
+>   2 files changed, 10 insertions(+)
 >
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 8791db8..5833059 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -1469,8 +1469,8 @@ static void vhost_scsi_flush(struct vhost_scsi *vs)
->   	/* Flush both the vhost poll and vhost work */
->   	for (i = 0; i < VHOST_SCSI_MAX_VQ; i++)
->   		vhost_scsi_flush_vq(vs, i);
-> -	vhost_work_flush(&vs->dev, &vs->vs_completion_work);
-> -	vhost_work_flush(&vs->dev, &vs->vs_event_work);
-> +	vhost_work_dev_flush(&vs->dev);
-> +	vhost_work_dev_flush(&vs->dev);
->   
->   	/* Wait for all reqs issued before the flush to be finished */
->   	for (i = 0; i < VHOST_SCSI_MAX_VQ; i++)
 > diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
-> index 5dd9eb1..f83674e 100644
+> index b45519c..5dd9eb1 100644
 > --- a/drivers/vhost/vhost.c
 > +++ b/drivers/vhost/vhost.c
-> @@ -231,7 +231,7 @@ void vhost_poll_stop(struct vhost_poll *poll)
+> @@ -305,6 +305,15 @@ static void vhost_vring_call_reset(struct vhost_vring_call *call_ctx)
+>   	spin_lock_init(&call_ctx->ctx_lock);
 >   }
->   EXPORT_SYMBOL_GPL(vhost_poll_stop);
 >   
-> -void vhost_work_flush(struct vhost_dev *dev, struct vhost_work *work)
-> +void vhost_work_dev_flush(struct vhost_dev *dev)
+> +bool vhost_vq_is_setup(struct vhost_virtqueue *vq)
+> +{
+> +	if (vq->avail && vq->desc && vq->used && vhost_vq_access_ok(vq))
+> +		return true;
+> +	else
+> +		return false;
+> +}
+> +EXPORT_SYMBOL_GPL(vhost_vq_is_setup);
+
+
+This is probably ok but I wonder maybe we should have something like 
+what vDPA did (VHOST_SET_VRING_ENABLE) to match virtio 1.0 device 
+definition.
+
+Thanks
+
+
+> +
+>   static void vhost_vq_reset(struct vhost_dev *dev,
+>   			   struct vhost_virtqueue *vq)
 >   {
->   	struct vhost_flush_struct flush;
->   
-> @@ -243,13 +243,13 @@ void vhost_work_flush(struct vhost_dev *dev, struct vhost_work *work)
->   		wait_for_completion(&flush.wait_event);
->   	}
->   }
-> -EXPORT_SYMBOL_GPL(vhost_work_flush);
-> +EXPORT_SYMBOL_GPL(vhost_work_dev_flush);
->   
->   /* Flush any work that has been scheduled. When calling this, don't hold any
->    * locks that are also used by the callback. */
->   void vhost_poll_flush(struct vhost_poll *poll)
->   {
-> -	vhost_work_flush(poll->dev, &poll->work);
-> +	vhost_work_dev_flush(poll->dev);
->   }
->   EXPORT_SYMBOL_GPL(vhost_poll_flush);
->   
-> @@ -542,7 +542,7 @@ static int vhost_attach_cgroups(struct vhost_dev *dev)
->   	attach.owner = current;
->   	vhost_work_init(&attach.work, vhost_attach_cgroups_work);
->   	vhost_work_queue(dev, &attach.work);
-> -	vhost_work_flush(dev, &attach.work);
-> +	vhost_work_dev_flush(dev);
->   	return attach.ret;
->   }
->   
 > diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-> index 3d30b3d..b91efb5 100644
+> index 9032d3c..3d30b3d 100644
 > --- a/drivers/vhost/vhost.h
 > +++ b/drivers/vhost/vhost.h
-> @@ -46,7 +46,7 @@ void vhost_poll_init(struct vhost_poll *poll, vhost_work_fn_t fn,
->   void vhost_poll_stop(struct vhost_poll *poll);
->   void vhost_poll_flush(struct vhost_poll *poll);
->   void vhost_poll_queue(struct vhost_poll *poll);
-> -void vhost_work_flush(struct vhost_dev *dev, struct vhost_work *work);
-> +void vhost_work_dev_flush(struct vhost_dev *dev);
->   long vhost_vring_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *argp);
+> @@ -190,6 +190,7 @@ int vhost_get_vq_desc(struct vhost_virtqueue *,
+>   		      struct vhost_log *log, unsigned int *log_num);
+>   void vhost_discard_vq_desc(struct vhost_virtqueue *, int n);
 >   
->   struct vhost_log {
-> diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c
-> index a483cec..f40205f 100644
-> --- a/drivers/vhost/vsock.c
-> +++ b/drivers/vhost/vsock.c
-> @@ -652,7 +652,7 @@ static void vhost_vsock_flush(struct vhost_vsock *vsock)
->   	for (i = 0; i < ARRAY_SIZE(vsock->vqs); i++)
->   		if (vsock->vqs[i].handle_kick)
->   			vhost_poll_flush(&vsock->vqs[i].poll);
-> -	vhost_work_flush(&vsock->dev, &vsock->send_pkt_work);
-> +	vhost_work_dev_flush(&vsock->dev);
->   }
->   
->   static void vhost_vsock_reset_orphans(struct sock *sk)
+> +bool vhost_vq_is_setup(struct vhost_virtqueue *vq);
+>   int vhost_vq_init_access(struct vhost_virtqueue *);
+>   int vhost_add_used(struct vhost_virtqueue *, unsigned int head, int len);
+>   int vhost_add_used_n(struct vhost_virtqueue *, struct vring_used_elem *heads,
 
