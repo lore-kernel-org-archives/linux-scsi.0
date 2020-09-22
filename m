@@ -8,92 +8,89 @@ X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F6F4C4363D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E152C2D0E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 397D123A32
+	by mail.kernel.org (Postfix) with ESMTP id CB8A423A34
 	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:59:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ukwbl2QP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WL3P0Vz8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727231AbgIVD7u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727393AbgIVD7u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 21 Sep 2020 23:59:50 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:42750 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726486AbgIVD7t (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:50058 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726982AbgIVD7t (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 23:59:49 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3xSO3159665;
-        Tue, 22 Sep 2020 03:59:28 GMT
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3nm0t077591;
+        Tue, 22 Sep 2020 03:57:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=BlB4SirmUzT+hbV8tdiNS/jKLeEqpu5Vcyw29ARym40=;
- b=ukwbl2QP86ushK48191q+k+94FMGyVa1bu9RR1i9Vt0ybY8scdTQb0JxaUWHhlq8Im9b
- oqnogoYgWgYG7Zjo+7vbVJ30V0L4hHtN2PSNFfXUv86y5AYfASr5W3EkjOJOhfendPvW
- BIyfWXM/eGT4bMA1WQN3necmpae8uhqHVS5tKgUlo6rPPDMdhhTKAWVbcPw8qFI9KoTT
- f2p6vhmEdUWuGWO0222WV7UbB1MJRXGkCJU7IJceN4f3e3I9aTPqwcfo4K3e9wyojZUD
- saZ/4JKlKrwcrZUAqDBhL+teIz64/HZQmfDR3CDytPTGqme6Pf6oqBLldeBJMppKYNK6 mQ== 
+ bh=uOeI0mEZoGzoHJH2NFV/v6sDrEmLIbUfKfJoYdr+VO4=;
+ b=WL3P0Vz8m0irk9trD3wjDVRM55ChvJg3BsMZxyFAkAQDqhLpKD8fnZCkNpamgJSXtSBj
+ BMXQWd2+ifQFcMkGxkJ/YnsF4yP9eYeq1Au+wyNahPOIS47bMe6QYeKuX3soXMOnOPx1
+ dwEJ0mpzIY8OEOqcklaaBgyisvQmAG9dj1S5oAjalAGkitpCPNeawRD7ogvHRKUvgw9x
+ 7HVN+THqIkfIl3NpsNm3uaVw/H42TdCLAC++Dh9hlYMv0QhZQIqhKfdY7PqsB95S9orZ
+ RagCchkvzsMvzldgz62gM3lscXUY3TNGgPzoOuFjcVxh2h5/ycJX4qjlreDU8spXiAfx 3A== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 33n7gad5yb-1
+        by aserp2120.oracle.com with ESMTP id 33q5rg8t7v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 22 Sep 2020 03:59:27 +0000
+        Tue, 22 Sep 2020 03:57:39 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3uLVa073541;
-        Tue, 22 Sep 2020 03:57:27 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 33nurs30x5-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3uKsW073498;
+        Tue, 22 Sep 2020 03:57:39 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 33nurs31bn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Sep 2020 03:57:27 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08M3vPac032582;
-        Tue, 22 Sep 2020 03:57:25 GMT
+        Tue, 22 Sep 2020 03:57:39 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08M3vbJm019282;
+        Tue, 22 Sep 2020 03:57:37 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 21 Sep 2020 20:57:25 -0700
+        with ESMTP ; Mon, 21 Sep 2020 20:57:36 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, Jason Yan <yanaijie@huawei.com>,
-        hare@suse.de, aacraid@microsemi.com, jejb@linux.ibm.com
+To:     linux-scsi@vger.kernel.org, yokota@netlab.is.tsukuba.ac.jp,
+        Jason Yan <yanaijie@huawei.com>, gotom@debian.or.jp,
+        jejb@linux.ibm.com
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH] scsi: aacraid: make some symbols static in aachba.c
-Date:   Mon, 21 Sep 2020 23:56:56 -0400
-Message-Id: <160074695010.411.572643806473768937.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: nsp32: remove unneeded semicolon
+Date:   Mon, 21 Sep 2020 23:57:04 -0400
+Message-Id: <160074695007.411.3281798407245420346.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200912033749.142488-1-yanaijie@huawei.com>
-References: <20200912033749.142488-1-yanaijie@huawei.com>
+In-Reply-To: <20200911091049.2938158-1-yanaijie@huawei.com>
+References: <20200911091049.2938158-1-yanaijie@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9751 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxlogscore=863 bulkscore=0 mlxscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=961 bulkscore=0 mlxscore=0 suspectscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2009220031
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9751 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
- mlxscore=0 suspectscore=0 impostorscore=0 malwarescore=0 spamscore=0
- phishscore=0 mlxlogscore=877 clxscore=1015 adultscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009220031
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 impostorscore=0
+ clxscore=1015 suspectscore=0 phishscore=0 malwarescore=0
+ priorityscore=1501 mlxlogscore=993 adultscore=0 bulkscore=0 mlxscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009220030
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 12 Sep 2020 11:37:49 +0800, Jason Yan wrote:
+On Fri, 11 Sep 2020 17:10:49 +0800, Jason Yan wrote:
 
-> This eliminates the following sparse warning:
+> This addresses the following coccinelle warning:
 > 
-> drivers/scsi/aacraid/aachba.c:245:5: warning: symbol 'aac_convert_sgl'
-> was not declared. Should it be static?
-> drivers/scsi/aacraid/aachba.c:293:5: warning: symbol 'acbsize' was not
-> declared. Should it be static?
-> drivers/scsi/aacraid/aachba.c:324:5: warning: symbol 'aac_wwn' was not
-> declared. Should it be static?
+> drivers/scsi/nsp32.c:1250:4-5: Unneeded semicolon
+> drivers/scsi/nsp32.c:1842:2-3: Unneeded semicolon
 
 Applied to 5.10/scsi-queue, thanks!
 
-[1/1] scsi: aacraid: Make some symbols static in aachba.c
-      https://git.kernel.org/mkp/scsi/c/571e15688628
+[1/1] scsi: nsp32: Remove unneeded semicolon
+      https://git.kernel.org/mkp/scsi/c/94e476520e1e
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
