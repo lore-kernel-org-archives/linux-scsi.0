@@ -2,106 +2,155 @@ Return-Path: <SRS0=VSHB=C7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 601FAC4727C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:16:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE99C4727D
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:20:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 208102395C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:16:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C7D023A1B
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:20:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=amacapital-net.20150623.gappssmtp.com header.i=@amacapital-net.20150623.gappssmtp.com header.b="vkrTbtOH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726632AbgIVQQb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Sep 2020 12:16:31 -0400
-Received: from 167-88-115-53.cloud.ramnode.com ([167.88.115.53]:60450 "EHLO
-        durga.tabris.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1726508AbgIVQQb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 12:16:31 -0400
-Received: from bragi.tabris.net (localhost [127.0.0.1])
-        (Authenticated sender: mailrelay)
-        by durga.tabris.net (Postfix) with ESMTPA id 81F85C3202F;
-        Tue, 22 Sep 2020 09:16:30 -0700 (PDT)
-Received: from sif.tabris.net (bragi.tabris.net [192.168.88.8])
-        (Authenticated sender: tabris)
-        by bragi.tabris.net (Postfix) with ESMTPA id 857DEC2C8525;
-        Tue, 22 Sep 2020 12:16:29 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 bragi.tabris.net 857DEC2C8525
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by sif.tabris.net (Postfix) with ESMTP id 13B1320144;
-        Tue, 22 Sep 2020 12:16:29 -0400 (EDT)
-Subject: Re: bug in mpt3sas vs Lenovo 530-8i
-To:     Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-References: <a29522ab-6246-00b6-57b9-cd8d7c8766dc@domedata.com>
- <CA+RiK66O-0giupGduKOvTEoSmn1H21u_1ROjqZRGFy4+JX2gmA@mail.gmail.com>
- <caf5a889-4235-1610-6476-305898d01a75@domedata.com>
- <CA+RiK67Jt8QP-TMNi_QzcO=12Q51Nqm7UmwGgHP6jOdnu92=-Q@mail.gmail.com>
- <5f228767-c31e-4718-e1b7-23e94d5ead02@domedata.com>
- <CA+RiK64_gYKqcupxSvp2DhqNPsu-RFnNVG=4Zo8vLUdRAKahRg@mail.gmail.com>
- <CA+RiK66LMANSDhVqn0kwqdcerTfZDaORo_spV5W1mb1n99mU_g@mail.gmail.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>
-From:   Adam Schrotenboer <adam@domedata.com>
-Message-ID: <9e4bd483-1984-baf9-56b5-8b58092aae03@domedata.com>
-Date:   Tue, 22 Sep 2020 12:16:28 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
-MIME-Version: 1.0
-In-Reply-To: <CA+RiK66LMANSDhVqn0kwqdcerTfZDaORo_spV5W1mb1n99mU_g@mail.gmail.com>
+        id S1726661AbgIVQUO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Sep 2020 12:20:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54886 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726672AbgIVQUO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 12:20:14 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F140BC0613D0
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 09:20:13 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id l71so12368455pge.4
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 09:20:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
+        h=content-transfer-encoding:from:mime-version:subject:date:message-id
+         :references:cc:in-reply-to:to;
+        bh=OuYZ36WnxwIp9b6camA1INonBCd7PS5F7n5lbvDtQoE=;
+        b=vkrTbtOH4vHnR/84aYqVDHrQ5AGvI5gJZ+epaaRbPDginNWZ7IQOaHp0KiQGLoRIqK
+         lCtpCBfEppwh5xdm5Fg2E09yGBsQ1omUh0FsVnB0AGbc0KabsZevsMs5kdugIv8CVE5/
+         WA4g4A2X6yhuybhLsZ26G3b/9jK9koGpq3H8xumPWJXJrnSzbLUYbfDR++IgN0bKoBQq
+         n0DG/oDelKPnE35WpGCvEELD66Jz17cs7lC56sr6mITihQA1DVJ1mt9BGhniHUyWF6Lh
+         zzYPOu4uBf4nQ34xtWqSlA6XpnJ8NFviCNNpjE2H0nhrpatshwJ5hPmeTiRqtrX3VMpc
+         QmhQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:content-transfer-encoding:from:mime-version
+         :subject:date:message-id:references:cc:in-reply-to:to;
+        bh=OuYZ36WnxwIp9b6camA1INonBCd7PS5F7n5lbvDtQoE=;
+        b=QwY+lsHcjhEyUwqWMxtYOzTiY9wnV4XnARwQg5/O/BfXt6QR/G+8Gr8BQeZo7Y9/oD
+         RrUV7fNY4awwGG/eN8tAlnMjgtHN884NBlLUiYA0EGBKDYEXULsjKrHoaIdKuFixWnt0
+         zgpbIp1KUFkuYICujg6OOjBMtEREWnwINXpvEYseF1Upg0VjXygiOu1o+nRAzcc5aw7J
+         PMqoRuY69VdwkE+Qb1E1zEPIerdJjDrl/B0h+oNC8QVuAk5QIHlypctgUDB99jT/5jV9
+         kmyrZTcthFG72vL4WW6MZMCd6kIshxJiak9hU5dHDLtQWe2pu6QbjzOlLzS3h1Jdae+e
+         mXNg==
+X-Gm-Message-State: AOAM5317CFkx+63BpNuAbQeCVlE8hVhYnh+FHXRXfHXlI6KIi8+Sq8I4
+        yfUHXYgRMnbg243cEpZs3oKDCg==
+X-Google-Smtp-Source: ABdhPJzVdW+N5Ufbpna8vjsXyt2h2YPelrT15cDlhJa791IGnC+04vroQZTdEBrKNKjccVmTF6OthA==
+X-Received: by 2002:a17:902:fe88:b029:d2:2a16:254 with SMTP id x8-20020a170902fe88b02900d22a160254mr5598643plm.23.1600791613205;
+        Tue, 22 Sep 2020 09:20:13 -0700 (PDT)
+Received: from localhost.localdomain ([2601:646:c200:1ef2:f4bd:fe2:85ed:ea92])
+        by smtp.gmail.com with ESMTPSA id gk14sm2982522pjb.41.2020.09.22.09.20.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Sep 2020 09:20:12 -0700 (PDT)
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+From:   Andy Lutomirski <luto@amacapital.net>
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH 1/9] kernel: add a PF_FORCE_COMPAT flag
+Date:   Tue, 22 Sep 2020 09:20:07 -0700
+Message-Id: <446566DF-ECBC-449C-92A1-A7D5AEBE9935@amacapital.net>
+References: <CAK8P3a39jN+t2hhLg0oKZnbYATQXmYE2-Z1JkmFyc1EPdg1HXw@mail.gmail.com>
+Cc:     Pavel Begunkov <asml.silence@gmail.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        David Howells <dhowells@redhat.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        X86 ML <x86@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        "open list:MIPS" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-aio <linux-aio@kvack.org>, io-uring@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        keyrings@vger.kernel.org,
+        LSM List <linux-security-module@vger.kernel.org>
+In-Reply-To: <CAK8P3a39jN+t2hhLg0oKZnbYATQXmYE2-Z1JkmFyc1EPdg1HXw@mail.gmail.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+X-Mailer: iPhone Mail (18A373)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/22/2020 06:55 AM, Suganath Prabu Subramani wrote:
 
->
->> User space utilities should be sending fw upload /ioctl commands.
->> In case if you are using an older utility, please switch to storcli/scrtnycli.
->> Also let us know the utility used in your server.
 
-Eventually found sas2ircu.
-removing it from my system appears to have made the crashes disappear.
-Unclear if this means that it was loading/using the ioctl incorrectly or
-this remains a kernel bug.
+> On Sep 22, 2020, at 2:01 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>=20
+> =EF=BB=BFOn Tue, Sep 22, 2020 at 9:59 AM Pavel Begunkov <asml.silence@gmai=
+l.com> wrote:
+>>> On 22/09/2020 10:23, Arnd Bergmann wrote:
+>>> On Tue, Sep 22, 2020 at 8:32 AM Pavel Begunkov <asml.silence@gmail.com> w=
+rote:
+>>>> On 22/09/2020 03:58, Andy Lutomirski wrote:
+>>>>> On Mon, Sep 21, 2020 at 5:24 PM Pavel Begunkov <asml.silence@gmail.com=
+> wrote:
+>>>>> I may be looking at a different kernel than you, but aren't you
+>>>>> preventing creating an io_uring regardless of whether SQPOLL is
+>>>>> requested?
+>>>>=20
+>>>> I diffed a not-saved file on a sleepy head, thanks for noticing.
+>>>> As you said, there should be an SQPOLL check.
+>>>>=20
+>>>> ...
+>>>> if (ctx->compat && (p->flags & IORING_SETUP_SQPOLL))
+>>>>        goto err;
+>>>=20
+>>> Wouldn't that mean that now 32-bit containers behave differently
+>>> between compat and native execution?
+>>>=20
+>>> I think if you want to prevent 32-bit applications from using SQPOLL,
+>>> it needs to be done the same way on both to be consistent:
+>>=20
+>> The intention was to disable only compat not native 32-bit.
+>=20
+> I'm not following why that would be considered a valid option,
+> as that clearly breaks existing users that update from a 32-bit
+> kernel to a 64-bit one.
+>=20
+> Taking away the features from users that are still on 32-bit kernels
+> already seems questionable to me, but being inconsistent
+> about it seems much worse, in particular when the regression
+> is on the upgrade path.
+>=20
+>>> Can we expect all existing and future user space to have a sane
+>>> fallback when IORING_SETUP_SQPOLL fails?
+>>=20
+>> SQPOLL has a few differences with non-SQPOLL modes, but it's easy
+>> to convert between them. Anyway, SQPOLL is a privileged special
+>> case that's here for performance/latency reasons, I don't think
+>> there will be any non-accidental users of it.
+>=20
+> Ok, so the behavior of 32-bit tasks would be the same as running
+> the same application as unprivileged 64-bit tasks, with applications
+> already having to implement that fallback, right?
+>=20
+>=20
 
-root@mercury:/etc# !lsof
-lsof|grep mpt
-poll_mpt3  612                     root  cwd       DIR               
-8,3      312        128 /
-poll_mpt3  612                     root  rtd       DIR               
-8,3      312        128 /
-poll_mpt3  612                     root  txt  
-unknown                                        /proc/612/exe
-sas2ircu  1096                     root    3u      CHR            
-10,222      0t0      11796 /dev/mpt3ctl
-root@mercury:/etc# dpkg -S sas2ircu
-sas2ircu-status: /usr/share/doc/sas2ircu-status/copyright
-sas2ircu-status: /usr/share/doc/sas2ircu-status/README.Debian
-sas2ircu-status: /usr/share/doc/sas2ircu-status
-sas2ircu-status: /usr/share/doc/sas2ircu-status/changelog.gz
-sas2ircu: /usr/share/doc/sas2ircu/copyright
-sas2ircu: /usr/share/doc/sas2ircu/changelog.Debian.gz
-sas2ircu-status: /usr/sbin/sas2ircu-status
-sas2ircu-status: /etc/init.d/sas2ircu-statusd
-sas2ircu: /usr/share/doc/sas2ircu
-sas2ircu: /usr/share/doc/sas2ircu/changelog.gz
-sas2ircu-status: /usr/share/man/man8/sas2ircu-status.8.gz
-sas2ircu: /usr/share/doc/sas2ircu/SAS2IRCU_User_Guide.pdf
-sas2ircu: /usr/sbin/sas2ircu
-root@mercury:/etc# apt show sas2ircu
-Package: sas2ircu
-Version: 16.00.00.00-2+Debian.buster.10
-Priority: optional
-Section: admin
-Source: sas2ircu (16.00.00.00-2)
-Maintainer: Adam Cécile (Le_Vert) <gandalf@le-vert.net>
-Installed-Size: 1,495 kB
-Download-Size: 883 kB
-APT-Manual-Installed: yes
-APT-Sources: http://hwraid.le-vert.net/debian buster/main amd64 Packages
-Description: LSI Logic Fusion MPT SAS2 command line management tool
- Tool to read and setup LSI Logic Fusion MTP SAS2 HW RAID HBAs (mpt2sas
- driver).
+I don=E2=80=99t have any real preference wrt SQPOLL, and it may be that we h=
+ave a problem even without SQPOLL when IO gets punted without one of the fix=
+es discussed.
 
+But banning the mismatched io_uring and io_uring_enter seems like it may be w=
+orthwhile regardless.=
