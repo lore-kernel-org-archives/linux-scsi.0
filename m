@@ -6,49 +6,49 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45222C4346E
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA328C4346E
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:48:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA7E021941
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:45:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEBBE22262
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 02:48:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728750AbgIVCpQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 22:45:16 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:40511 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728575AbgIVCpP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 22:45:15 -0400
-Received: by mail-pj1-f65.google.com with SMTP id gf14so741667pjb.5;
-        Mon, 21 Sep 2020 19:45:15 -0700 (PDT)
+        id S1729620AbgIVCsN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 22:48:13 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:51724 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729572AbgIVCsH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 22:48:07 -0400
+Received: by mail-pj1-f66.google.com with SMTP id a9so777710pjg.1;
+        Mon, 21 Sep 2020 19:48:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=lebGQ0WgPCez2R35wa3urhdXxY/Bn5Nlo8FdNbn1LQ8=;
-        b=XqPffxEsBqCLR+pCQ0ggC5HWrnzN0wmJBOgYClrpILlc4oi29NTnajgTC3V7C65F3R
-         E6Evzb6P1dqczHQdshOkJZ8ARpIynKmWOlU/lByxVK9FLLu99W0sG44Fxl81ZWzDQTj/
-         xVnRMd+158Eh6GuDxnxFgfVhAcrnamn3CmZ2c06MBfuxWjYdI7dqHVV7LnQyO+Y2h37e
-         IexLJhW/TL8GEIhDgQE1KPEWblVf3dEjbzNRGU7gs5rucYnH6LWDiQWEmNOAq98Y086D
-         Q7oNkQMvBmNhYH/zm/jXYIMZTtDSz5DOUo1OV7CjNd2KetVpjxqJaW/PF9BDQOw0iope
-         x+/g==
-X-Gm-Message-State: AOAM533/hci9u7ljs3XYM1NvERc4JVuEMQOrWWBcxaMbMFCzZkj2Ow4Y
-        xmpxa35NnYbuUYGE/7VCmLI=
-X-Google-Smtp-Source: ABdhPJx1GFSufCEXFHwvrnyZqsBLdfFAJf+3amrY8P7gTNNNAQW9ZHB/Zk1bFJXKuO94vvn4SLP1aw==
-X-Received: by 2002:a17:90a:ed8e:: with SMTP id k14mr2003130pjy.178.1600742714879;
-        Mon, 21 Sep 2020 19:45:14 -0700 (PDT)
+        bh=3TVQRlLIwo6pFNEjT7YYd7yU5ajthHTiel3UE6DCXq4=;
+        b=INFGYdDyybcpufrVYxx/82bVqXKAdHuksa2JedCJwezrtluWuJ5xu1eP8eRNcJ7quM
+         NlEXidyRvCpzsNgGvjFF/cBLmpMSaoN3DbJb6O8ijFayVnq9PIUxo7U/TxvZ4VRZ/Ef0
+         4uxW91UWrNcHlnSPjAP0yRWjFSWq1A34Q4W64q+Mq359p0pNnSBGHOBibZKFeJZP0HqG
+         UkyTgch7wU2ADvVLDyeCKYq04oftIXw6jkrgnEuu3fS4n1OMCAX2Aqawl6Bq+6nc3/CI
+         cjiqT+9sBzIicjzdki5wL9Wsr/v9c8RxsacGGHG0emrYJRlos2Zph9yXFIgMQBVFSF9J
+         Wjgw==
+X-Gm-Message-State: AOAM5304aIkL450e4E5qQH3lslAMilRNIWY4XmhtD7Jl0dgz1sJhVJFC
+        UauSsxBzkErtp/1GJxkYsoQ=
+X-Google-Smtp-Source: ABdhPJxk5EP7QY4Q94Hxa9jFIomYpClQyz42Yh5wl7CpLijNh7pXzf5iOjaRviQwsIONP665auPvAw==
+X-Received: by 2002:a17:90a:49c8:: with SMTP id l8mr1895046pjm.24.1600742886378;
+        Mon, 21 Sep 2020 19:48:06 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:5e05:892c:575b:24c7? ([2601:647:4000:d7:5e05:892c:575b:24c7])
-        by smtp.gmail.com with ESMTPSA id a18sm12420584pgw.50.2020.09.21.19.45.13
+        by smtp.gmail.com with ESMTPSA id k5sm13599229pfp.214.2020.09.21.19.48.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Sep 2020 19:45:13 -0700 (PDT)
-Subject: Re: [PATCH 2/8] vhost: add helper to check if a vq has been setup
+        Mon, 21 Sep 2020 19:48:05 -0700 (PDT)
+Subject: Re: [PATCH 4/8] vhost scsi: fix cmd completion race
 To:     Mike Christie <michael.christie@oracle.com>,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
         pbonzini@redhat.com, stefanha@redhat.com,
         virtualization@lists.linux-foundation.org
 References: <1600712588-9514-1-git-send-email-michael.christie@oracle.com>
- <1600712588-9514-3-git-send-email-michael.christie@oracle.com>
+ <1600712588-9514-5-git-send-email-michael.christie@oracle.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -73,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <ce73f019-a247-7913-47fd-b3e5e7bdf81f@acm.org>
-Date:   Mon, 21 Sep 2020 19:45:12 -0700
+Message-ID: <cf8e5b11-dfd2-4570-1dab-25486c591dde@acm.org>
+Date:   Mon, 21 Sep 2020 19:48:04 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <1600712588-9514-3-git-send-email-michael.christie@oracle.com>
+In-Reply-To: <1600712588-9514-5-git-send-email-michael.christie@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -87,18 +87,18 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-09-21 11:23, Mike Christie wrote:
-> +bool vhost_vq_is_setup(struct vhost_virtqueue *vq)
-> +{
-> +	if (vq->avail && vq->desc && vq->used && vhost_vq_access_ok(vq))
-> +		return true;
-> +	else
-> +		return false;
-> +}
+> We might not do the final se_cmd put from vhost_scsi_complete_cmd_work.
+> If the last put happens a little later then we could race where
+> vhost_scsi_complete_cmd_work does vhost_signal, the guest runs and sends
+> more IO, and vhost_scsi_handle_vq runs but does not find any free cmds.
+> 
+> This patch has us delay completing the cmd until the last lio core ref
+> is dropped. We then know that once we signal to the guest that the cmd
+> is completed that if it queues a new command it will find a free cmd.
 
-Has it been considered changing the body of this function into
-"return vq->avail && vq->desc && vq->used && vhost_vq_access_ok(vq)"? I'm
-concerned otherwise one or another build bot will suggest to make that
-change.
+It seems weird to me to see a reference to LIO in the description of a
+vhost patch? Since this driver supports more backends than LIO, shouldn't
+the patch description be made more generic?
 
 Thanks,
 
