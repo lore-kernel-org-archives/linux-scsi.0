@@ -2,94 +2,120 @@ Return-Path: <SRS0=VSHB=C7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A30C2D0E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 07:13:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D95EC2D0E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 07:24:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F150223A61
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 07:13:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0472621548
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 07:24:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729676AbgIVHNN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Sep 2020 03:13:13 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:9654 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728526AbgIVHNN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 03:13:13 -0400
-IronPort-SDR: e7YpYL10wF24JN8gGfcVAhUbG85jKVpKaDX25U3G+TtfcH+0agOiqCM1tlBnKKscgFdsFUueFj
- FfykhwMzS1WXRbUaQ/IpQhySUMYX7yw4d0DYh3ztmebWHCUctl/p/m2cjElqemzh5AFN5pjjBu
- lVqgVDvqaDsdoYqumvrJOENQM+Zxe2J9IQGgGyV/hl3k4kXt5JeqD52PzS14prcvXR0+Ml2Ibo
- xmlXtiqdpCmqu/LHTOaZO/rv/YPTvMWfYn+5lkidd05zU7iWPjvc+FouVdA+6K4yNbHZq956fp
- +Vs=
-X-IronPort-AV: E=Sophos;i="5.77,289,1596524400"; 
-   d="scan'208";a="47332985"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 22 Sep 2020 00:09:12 -0700
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 22 Sep 2020 00:09:10 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id C9F3B21653; Tue, 22 Sep 2020 00:09:09 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: ufs: Make sure clk scaling happens only when hba is runtime ACTIVE
-Date:   Tue, 22 Sep 2020 00:09:04 -0700
-Message-Id: <1600758548-28576-1-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S1729906AbgIVHYA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Sep 2020 03:24:00 -0400
+Received: from mout.kundenserver.de ([212.227.126.187]:49235 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729735AbgIVHX7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 03:23:59 -0400
+Received: from mail-qv1-f46.google.com ([209.85.219.46]) by
+ mrelayeu.kundenserver.de (mreue012 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1MgzWP-1kwjIH0sNp-00hNUS; Tue, 22 Sep 2020 09:23:56 +0200
+Received: by mail-qv1-f46.google.com with SMTP id cy2so9001474qvb.0;
+        Tue, 22 Sep 2020 00:23:54 -0700 (PDT)
+X-Gm-Message-State: AOAM530Ji4p6SqJlsqlAIhXa/mehEohMOm/qYFKdMQf1jU7KsXMjThoF
+        zhEaydElHAkD1HY8suM9/IFXSKaiuthCjdj0j8g=
+X-Google-Smtp-Source: ABdhPJx2+lYoTA/KUzOktg9GCEROrxWzhLaiei0nYKlXvAWkeVBXqnjogbknJct+KWfdqdHtsSEC4gKbjbjELvczheY=
+X-Received: by 2002:ad4:4594:: with SMTP id x20mr4471122qvu.4.1600759433835;
+ Tue, 22 Sep 2020 00:23:53 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAK8P3a2Mi+1yttyGk4k7HxRVrMtmFqJewouVhynqUL0PJycmog@mail.gmail.com>
+ <D0791499-1190-4C3F-A984-0A313ECA81C7@amacapital.net> <563138b5-7073-74bc-f0c5-b2bad6277e87@gmail.com>
+ <486c92d0-0f2e-bd61-1ab8-302524af5e08@gmail.com> <CALCETrW3rwGsgfLNnu_0JAcL5jvrPVTLTWM3JpbB5P9Hye6Fdw@mail.gmail.com>
+ <d5c6736a-2cb4-4e22-78da-a667bda5c05a@gmail.com> <CALCETrUEC81va8-fuUXG1uA5rbKxnKDYsDOXC70_HtKD4LAeAg@mail.gmail.com>
+ <e0a1b4d1-ff47-18d1-d535-c62812cb3105@gmail.com>
+In-Reply-To: <e0a1b4d1-ff47-18d1-d535-c62812cb3105@gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Tue, 22 Sep 2020 09:23:37 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a2-6JNS38EbZcLrk=cTT526oP=Rf0aoqWNSJ-k4XTYehQ@mail.gmail.com>
+Message-ID: <CAK8P3a2-6JNS38EbZcLrk=cTT526oP=Rf0aoqWNSJ-k4XTYehQ@mail.gmail.com>
+Subject: Re: [PATCH 1/9] kernel: add a PF_FORCE_COMPAT flag
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        David Howells <dhowells@redhat.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        X86 ML <x86@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        "open list:MIPS" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-aio <linux-aio@kvack.org>, io-uring@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        keyrings@vger.kernel.org,
+        LSM List <linux-security-module@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:AjHYUanKdOfbecE9w+B9Z4N6BZ2b/6C3GC/ZT1GJo80TVMT1TiT
+ B7v2YHekGwErZe59Y8I5SN6nA+wzRAtAzQV1alKD4cIBzMUtp+uCtDl7yXziqEx66eHXl+8
+ 5YaL/7KLJywdo7o6ruzdrm03FhbTCMOpxp+6Gjsv8I+DI1w9YYa5HKbByc2HjGMgB5rmpQw
+ GI2KocTAr9puH1Zbmwgvw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:9U7HyB6Ug10=:7VkgnZRSuXPXxCph3JiICU
+ vGLCkcH/ucwoA0af9e3nwxzDrSU4qHHl5LbVNZE9fwRlf3BxRnIxChhoUWY/pbGK9kbUMnPn6
+ iOxC7987sYhrLc/wR5FOOl9AmSFlJBCSkq0ECTVJJpJ1zAxFuSujqohHO71ms6fcLmkaP+68S
+ a0y2dx03p+yQJTxCFfxZOllLfzHK80WYos1HroZHejUrF2/VDsLfCxxtFN6y520PH/aUVeNvX
+ l/r1mWP7DXSVu7yUeClrfFvYtyE6idWsIDiC+H5wv241L9aUyE9A1wYt26cS3oRTT1aDX3vMZ
+ lF5PgAd9+uS16D5p+mk7jnRYYYSNrgwHLffuwCYE2JUBFqA2ujr4MluvOT2GRH9b6unq2dzUt
+ 517RcTi/d6VNGTxLnkFU+xqDBgZ1yVXhchRfVaiepT1jCj8BgkHRkV9OoGDBdyP1nmyz0sll2
+ VQ2xFLSS96OSw2POSPIhQsLbgTDcNO1bJhekhO3rGilcenA0dj9a+7SWVb/8O+ZUaB/SmF73C
+ H3ua4oRbYBwYWG4ccj0SutXeHYh6UzX5exeOaMAbrFEBOHq90MPJxZr9OpBKopwpfZg7TSiRi
+ zSapc09tG64gvk/y30gK+i9n1y1+Z0hVsj881DVR15Z8IRzOaiwsXHPRYtDWn/5Id1OXfXYUM
+ GQLtid6DrtgYOV0t1yQLdUOtxCEHIcKjbkyzeUWon4rvW/O2PJ+LPGuX+cT3Y0mJX/3TaOO54
+ m56BSGeq93F8uHja3JT2cGnNBOb+bVlrVofywZOAznpqgdVcbwKfyV9CySRC23EhkF1Ux3+P4
+ ZUOrZnEIgtbSpmA2VFcNm2AcUo/kCY3kPrBkDXiWyRHUmv7uuCFJ1dmKR0zxr3hNe7SRSUTeV
+ e6nWK/ehurPAIaliTaLQ6/+QvEa//1a77RtpYjE1Mq+j6mZVIEO8F7N+t+EVsiOGMFjG5zlvk
+ 7US7In7QKaLgmPwktYFz4b9g/6ZdT94cvaUrc7hXk0N9in6iyc/wh
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If someone plays with the UFS clk scaling devfreq governor through sysfs,
-ufshcd_devfreq_scale may be called even when hba is not runtime ACTIVE,
-which can lead to unexpected error. We cannot just protect it by calling
-pm_runtime_get_sync, because that may cause racing problem since hba
-runtime suspend ops needs to suspend clk scaling. In order to fix it, call
-pm_runtime_get_noresume and check hba's runtime status, then only proceed
-if hba is runtime ACTIVE, otherwise just bail.
+On Tue, Sep 22, 2020 at 8:32 AM Pavel Begunkov <asml.silence@gmail.com> wrote:
+> On 22/09/2020 03:58, Andy Lutomirski wrote:
+> > On Mon, Sep 21, 2020 at 5:24 PM Pavel Begunkov <asml.silence@gmail.com> wrote:
+> > I may be looking at a different kernel than you, but aren't you
+> > preventing creating an io_uring regardless of whether SQPOLL is
+> > requested?
+>
+> I diffed a not-saved file on a sleepy head, thanks for noticing.
+> As you said, there should be an SQPOLL check.
+>
+> ...
+> if (ctx->compat && (p->flags & IORING_SETUP_SQPOLL))
+>         goto err;
 
-governor_store
- devfreq_performance_handler
-  update_devfreq
-   devfreq_set_target
-    ufshcd_devfreq_target
-     ufshcd_devfreq_scale
+Wouldn't that mean that now 32-bit containers behave differently
+between compat and native execution?
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+I think if you want to prevent 32-bit applications from using SQPOLL,
+it needs to be done the same way on both to be consistent:
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e4cb994..847f355 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1294,8 +1294,15 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	}
- 	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
- 
-+	pm_runtime_get_noresume(hba->dev);
-+	if (!pm_runtime_active(hba->dev)) {
-+		pm_runtime_put_noidle(hba->dev);
-+		ret = -EAGAIN;
-+		goto out;
-+	}
- 	start = ktime_get();
- 	ret = ufshcd_devfreq_scale(hba, scale_up);
-+	pm_runtime_put(hba->dev);
- 
- 	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
- 		(scale_up ? "up" : "down"),
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+   if ((!IS_ENABLED(CONFIG_64BIT) || ctx->compat) &&
+        (p->flags & IORING_SETUP_SQPOLL))
+            goto err;
 
+I don't really see how taking away SQPOLL from 32-bit tasks is
+any better than just preventing access to the known-broken files
+as Al suggested, or adding the hack to make it work as in
+Christoph's original patch.
+
+Can we expect all existing and future user space to have a sane
+fallback when IORING_SETUP_SQPOLL fails?
+
+      Arnd
