@@ -2,159 +2,298 @@ Return-Path: <SRS0=VSHB=C7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41852C4727F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 05:30:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 733C7C2D0E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 05:38:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA88123A5F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 05:30:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lLBHVF5w"
+	by mail.kernel.org (Postfix) with ESMTP id 3C45623A9C
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 05:38:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728719AbgIVFaj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Sep 2020 01:30:39 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:55798 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728655AbgIVFai (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Sep 2020 01:30:38 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1600752638; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=pi/Sw7He2cwNd088blGSKEwyilcs30+0qPagftWle0o=;
- b=lLBHVF5w83vRah8xwfdz5MihLnHHz5eXDBm1OgzG0blp28NAyLFP8vUnhsUADcmS9ympWgtC
- WSkXh4A5j9BAu042mL+ySeI1LdPJE8SrSy/fPnC/k9whpM5AQi4pbwsoSyIjxi7S71jiGBfk
- lr17BpUOgPMyze+Bo+APV8/gxDw=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5f698bfd4a8a578ddcebb2f6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 22 Sep 2020 05:30:37
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9B5B7C433F1; Tue, 22 Sep 2020 05:30:37 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C3038C433CA;
-        Tue, 22 Sep 2020 05:30:36 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 22 Sep 2020 13:30:36 +0800
+        id S1728432AbgIVFin (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Sep 2020 01:38:43 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:1081 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726497AbgIVFin (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 01:38:43 -0400
+X-Greylist: delayed 364 seconds by postgrey-1.27 at vger.kernel.org; Tue, 22 Sep 2020 01:38:41 EDT
+IronPort-SDR: GlTueeVaXkGCNQPtWgEIE6UuGTtkusP4llbyBUbi4M9vfcuv70AQI5RmLwHJNfwpJ3Vv3UBGpD
+ iDjuz9RyZC7jUlIfWBkhfhMAONVnYEs0VTlVRwWIiUj/+ASCvpe9Pi6Qq1i6x8Ind13MvBaSGE
+ DHFMFl5MeFxauCNHAk4R1cS/FUx4NCaKG3ADWxl+d2/kX7HvKtF+iEB3POSG/v4zkt/Yctf7ZD
+ TaNd2SpMNUYvDBvPYV6DVU322n1vJK8UmzKybBmxtXP6EfGwL5XcBuQQrjLnSmTuw8hXMWfvBz
+ FRM=
+X-IronPort-AV: E=Sophos;i="5.77,289,1596524400"; 
+   d="scan'208";a="47332957"
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by labrats.qualcomm.com with ESMTP; 21 Sep 2020 22:32:37 -0700
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg03-sd.qualcomm.com with ESMTP; 21 Sep 2020 22:32:36 -0700
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id 9A23321547; Mon, 21 Sep 2020 22:32:36 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
-To:     Jaegeuk Kim <jaegeuk@kernel.org>
-Cc:     Bean Huo <huobean@gmail.com>, linux-kernel@vger.kernel.org,
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: Re: [PATCH 5/6] scsi: ufs: show ufs part info in error case
-In-Reply-To: <20200918041355.GB3300389@google.com>
-References: <20200915204532.1672300-1-jaegeuk@kernel.org>
- <20200915204532.1672300-5-jaegeuk@kernel.org>
- <bdc48d03dae86abef158aa33468f6c2f8e669ce8.camel@gmail.com>
- <20200916160533.GA1011272@google.com>
- <06eb20588007cf87181446ab3946e8b2@codeaurora.org>
- <20200918041355.GB3300389@google.com>
-Message-ID: <c2daa34823b0102d28cafe7fcd741344@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v1 1/2] scsi: ufs: Serialize eh_work with system PM events and async scan
+Date:   Mon, 21 Sep 2020 22:32:25 -0700
+Message-Id: <1600752747-31881-2-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1600752747-31881-1-git-send-email-cang@codeaurora.org>
+References: <1600752747-31881-1-git-send-email-cang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-18 12:13, Jaegeuk Kim wrote:
-> On 09/17, Can Guo wrote:
->> On 2020-09-17 00:05, Jaegeuk Kim wrote:
->> > On 09/16, Bean Huo wrote:
->> > > On Tue, 2020-09-15 at 13:45 -0700, Jaegeuk Kim wrote:
->> > > > Cc: Avri Altman <avri.altman@wdc.com>
->> > > > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
->> > > > ---
->> > > >  drivers/scsi/ufs/ufshcd.c | 8 ++++++++
->> > > >  1 file changed, 8 insertions(+)
->> > > >
->> > > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> > > > index bdc82cc3824aa..b81c116b976ff 100644
->> > > > --- a/drivers/scsi/ufs/ufshcd.c
->> > > > +++ b/drivers/scsi/ufs/ufshcd.c
->> > > > @@ -500,6 +500,14 @@ static void ufshcd_print_tmrs(struct ufs_hba
->> > > > *hba, unsigned long bitmap)
->> > > >  static void ufshcd_print_host_state(struct ufs_hba *hba)
->> > > >  {
->> > > >         dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
->> > > > +       if (hba->sdev_ufs_device) {
->> > > > +               dev_err(hba->dev, " vendor = %.8s\n",
->> > > > +                                       hba->sdev_ufs_device-
->> > > > >vendor);
->> > > > +               dev_err(hba->dev, " model = %.16s\n",
->> > > > +                                       hba->sdev_ufs_device->model);
->> > > > +               dev_err(hba->dev, " rev = %.4s\n",
->> > > > +                                       hba->sdev_ufs_device->rev);
->> > > > +       }
->> > >
->> > > Hi Jaegeuk
->> > > these prints have been added since this change:
->> > >
->> > > commit 3f8af6044713 ("scsi: ufs: Add some debug information to
->> > > ufshcd_print_host_state()")
->> > >
->> > > https://patchwork.kernel.org/patch/11694371/
->> >
->> > Cool, thank you for pointing this out. BTW, which branch can I see the
->> > -next
->> > patches?
->> >
->> 
->> Hi Jaegeuk,
->> 
->> This patch comes from a series of changes trying to fix and simplify
->> the UFS error handling. You can find the whole series here - they are
->> picked up on scsi-queue-5.10
->> 
->> https://lore.kernel.org/linux-scsi/1596975355-39813-10-git-send-email-cang@codeaurora.org/
->> 
->> Besides, several more fixes for error handling based on above series 
->> are
->> 
->> https://lore.kernel.org/patchwork/patch/1290405/
->> &
->> https://lore.kernel.org/linux-scsi/159961731708.5787.8825955850640714260.b4-ty@oracle.com/
->> 
->> I've mainline all above changes to Android12-5.4 and Android11-5.4.
-> 
-> I've seen the patches in Android branches. Thank you for the 
-> explanation.
-> 
->> 
->> Moreover, there are 2 more fixes on the way for error handling, I
->> will push them soon.
-> 
-> BTW, could you please take a look at these patches?
-> 
-> Thanks,
-> 
+Serialize eh_work with system PM events and async scan to make sure eh_work
+does not run in parallel with them.
 
-Sure, but since I am not in your cc or to list, so I don't know which
-patches. Maybe you can add me when you push the next version? Thanks.
+Change-Id: I33012c68e2ea443950313c59a4a46ad88cf3c82d
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 64 +++++++++++++++++++++++++++++------------------
+ drivers/scsi/ufs/ufshcd.h |  1 +
+ 2 files changed, 41 insertions(+), 24 deletions(-)
 
-Regards,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1d8134e..7e764e8 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5597,7 +5597,9 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ {
+ 	pm_runtime_get_sync(hba->dev);
+-	if (pm_runtime_suspended(hba->dev)) {
++	if (pm_runtime_status_suspended(hba->dev) || hba->is_sys_suspended) {
++		enum ufs_pm_op pm_op;
++
+ 		/*
+ 		 * Don't assume anything of pm_runtime_get_sync(), if
+ 		 * resume fails, irq and clocks can be OFF, and powers
+@@ -5612,7 +5614,8 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ 		if (!ufshcd_is_clkgating_allowed(hba))
+ 			ufshcd_setup_clocks(hba, true);
+ 		ufshcd_release(hba);
+-		ufshcd_vops_resume(hba, UFS_RUNTIME_PM);
++		pm_op = hba->is_sys_suspended ? UFS_RUNTIME_PM : UFS_SYSTEM_PM;
++		ufshcd_vops_resume(hba, pm_op);
+ 	} else {
+ 		ufshcd_hold(hba, false);
+ 		if (hba->clk_scaling.is_allowed) {
+@@ -5633,7 +5636,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+ 
+ static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
+ {
+-	return (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
++	return (!hba->is_powered || hba->ufshcd_state == UFSHCD_STATE_ERROR ||
+ 		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
+ 			ufshcd_is_link_broken(hba))));
+ }
+@@ -5646,6 +5649,7 @@ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
+ 	struct request_queue *q;
+ 	int ret;
+ 
++	hba->is_sys_suspended = false;
+ 	/*
+ 	 * Set RPM status of hba device to RPM_ACTIVE,
+ 	 * this also clears its runtime error.
+@@ -5704,11 +5708,13 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 
+ 	hba = container_of(work, struct ufs_hba, eh_work);
+ 
++	down(&hba->eh_sem);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	if (ufshcd_err_handling_should_stop(hba)) {
+ 		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+ 			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		up(&hba->eh_sem);
+ 		return;
+ 	}
+ 	ufshcd_set_eh_in_progress(hba);
+@@ -5716,20 +5722,18 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	ufshcd_err_handling_prepare(hba);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_scsi_block_requests(hba);
+-	/*
+-	 * A full reset and restore might have happened after preparation
+-	 * is finished, double check whether we should stop.
+-	 */
+-	if (ufshcd_err_handling_should_stop(hba)) {
+-		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+-			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+-		goto out;
+-	}
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 
+ 	/* Complete requests that have door-bell cleared by h/w */
+ 	ufshcd_complete_requests(hba);
+ 
++	/*
++	 * A full reset and restore might have happened after preparation
++	 * is finished, double check whether we should stop.
++	 */
++	if (ufshcd_err_handling_should_stop(hba))
++		goto skip_err_handling;
++
+ 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
+ 		bool ret;
+ 
+@@ -5737,17 +5741,10 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
+ 		ret = ufshcd_quirk_dl_nac_errors(hba);
+ 		spin_lock_irqsave(hba->host->host_lock, flags);
+-		if (!ret && !hba->force_reset && ufshcd_is_link_active(hba))
++		if (!ret && ufshcd_err_handling_should_stop(hba))
+ 			goto skip_err_handling;
+ 	}
+ 
+-	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
+-	    ufshcd_is_saved_err_fatal(hba) ||
+-	    ((hba->saved_err & UIC_ERROR) &&
+-	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
+-				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
+-		needs_reset = true;
+-
+ 	if ((hba->saved_err & (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) ||
+ 	    (hba->saved_uic_err &&
+ 	     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
+@@ -5767,8 +5764,14 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	 * transfers forcefully because they will get cleared during
+ 	 * host reset and restore
+ 	 */
+-	if (needs_reset)
++	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
++	    ufshcd_is_saved_err_fatal(hba) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
++				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))) {
++		needs_reset = true;
+ 		goto do_reset;
++	}
+ 
+ 	/*
+ 	 * If LINERESET was caught, UFS might have been put to PWM mode,
+@@ -5876,12 +5879,11 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
+ 			    __func__, hba->saved_err, hba->saved_uic_err);
+ 	}
+-
+-out:
+ 	ufshcd_clear_eh_in_progress(hba);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_err_handling_unprepare(hba);
++	up(&hba->eh_sem);
+ }
+ 
+ /**
+@@ -6856,6 +6858,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
+ 	 */
+ 	scsi_report_bus_reset(hba->host, 0);
+ 	if (err) {
++		hba->ufshcd_state = UFSHCD_STATE_ERROR;
+ 		hba->saved_err |= saved_err;
+ 		hba->saved_uic_err |= saved_uic_err;
+ 	}
+@@ -7704,8 +7707,10 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	struct ufs_hba *hba = (struct ufs_hba *)data;
+ 	int ret;
+ 
++	down(&hba->eh_sem);
+ 	/* Initialize hba, detect and initialize UFS device */
+ 	ret = ufshcd_probe_hba(hba, true);
++	up(&hba->eh_sem);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -8718,6 +8723,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 	int ret = 0;
+ 	ktime_t start = ktime_get();
+ 
++	down(&hba->eh_sem);
+ 	if (!hba || !hba->is_powered)
+ 		return 0;
+ 
+@@ -8748,6 +8754,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = true;
++	else
++		up(&hba->eh_sem);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_suspend);
+@@ -8764,8 +8772,10 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 	int ret = 0;
+ 	ktime_t start = ktime_get();
+ 
+-	if (!hba)
++	if (!hba) {
++		up(&hba->eh_sem);
+ 		return -EINVAL;
++	}
+ 
+ 	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
+ 		/*
+@@ -8781,6 +8791,7 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = false;
++	up(&hba->eh_sem);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_resume);
+@@ -8872,6 +8883,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+ 
++	down(&hba->eh_sem);
+ 	if (!hba->is_powered)
+ 		goto out;
+ 
+@@ -8888,6 +8900,8 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ out:
+ 	if (ret)
+ 		dev_err(hba->dev, "%s failed, err %d\n", __func__, ret);
++	hba->is_powered = false;
++	up(&hba->eh_sem);
+ 	/* allow force shutdown even in case of errors */
+ 	return 0;
+ }
+@@ -9082,6 +9096,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
+ 	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
+ 
++	sema_init(&hba->eh_sem, 1);
++
+ 	/* Initialize UIC command mutex */
+ 	mutex_init(&hba->uic_cmd_mutex);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 47eb143..1e680bf 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -728,6 +728,7 @@ struct ufs_hba {
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+ 	bool is_powered;
++	struct semaphore eh_sem;
+ 
+ 	/* Work Queues */
+ 	struct workqueue_struct *eh_wq;
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-Can Guo.
-
->> 
->> Thanks,
->> 
->> Can Guo.
->> 
->> > >
->> > > Thanks,
->> > > Bean
