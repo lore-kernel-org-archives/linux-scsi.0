@@ -5,105 +5,92 @@ X-Spam-Level:
 X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB308C2D0E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85BC7C4363D
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:57:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6DE823A5F
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4860623A32
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 03:57:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="l8hzRE4e"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="o3vQBw/P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728599AbgIVD5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 23:57:33 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60668 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728574AbgIVD5b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 23:57:31 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3n0bl040825;
-        Tue, 22 Sep 2020 03:57:22 GMT
+        id S1728649AbgIVD5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 23:57:39 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:42022 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728445AbgIVD5i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 23:57:38 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3nxFM149327;
+        Tue, 22 Sep 2020 03:57:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=54syU8j8eHmmZ9ZJeNZIlFzAfcYFNhwG2ub6nWKqMb8=;
- b=l8hzRE4eLx/5vlMZgn2HuFhbW4OXkR0h93xZbeNQdq3UxYxeS2YUGa2X6sf8v0JvWTGF
- 65qa39axurFHyZu8mwJi8vAoFfnTmBDqJmE1OIYDFOc69aKbNKSm2FvZG7N1ptDFxDq1
- gRdrrtLbLJ5jHWf4bIsnTynPJXh9OelGAbKFmqQUb/kb0mfk/nHDTOB6U8hgGlxTi83w
- SWdjubWTzneW1FyiRnFD0rmcpalu2ewUOCx3WpfuzhVOjnL/zidh/RcT1fb026L+qIbk
- dt+IWH+MzQilJf4/SOKlZCkESkbuDQATDEyyL6o6lN9geyxkX0nKB//cB8mN65uiHujK JA== 
+ bh=ENsNdIxngoDD2Ep7VAATIU/SioAPOAeynj5qP1cu2HI=;
+ b=o3vQBw/PIIzShbmbxV1Kwh+BSFd0/D1vC45X1I2z9IIq95U5f2YqpQRXF2Tn7P0Cw24E
+ aqLKBXxYFy4m1B3OPOeHNOyXfLeOJ+a1G+4RpRr2c4wNdJsy24NOmxT4oqDl58zaTLr3
+ /5Zl5GpBwZocWO4YC1AvXDz1GNvk6ZcsNYEaRk7qx9AzTRuOSdRzGVBgKf+ckQ9gcqB7
+ CimFFeHtzTcjVXcnyMRV0uTpFnezfM3wZ2nUBSBrRaNDzgeiYfsG8ub7quvcR8CojFaZ
+ 14nrv6pncQojyZVcX/PWAYBRKMsyXOGLSApCI71a41WVw36o50UBsx/dLpj2oEFXgSOp yA== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 33ndnuagng-1
+        by aserp2130.oracle.com with ESMTP id 33n7gad5t0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 22 Sep 2020 03:57:22 +0000
+        Tue, 22 Sep 2020 03:57:26 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3tKsQ020609;
-        Tue, 22 Sep 2020 03:57:21 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 33nuwxk72v-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08M3tKTO020619;
+        Tue, 22 Sep 2020 03:57:25 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 33nuwxk741-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Sep 2020 03:57:21 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08M3vJT8009443;
-        Tue, 22 Sep 2020 03:57:19 GMT
+        Tue, 22 Sep 2020 03:57:25 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08M3vOga032579;
+        Tue, 22 Sep 2020 03:57:24 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 21 Sep 2020 20:57:19 -0700
+        with ESMTP ; Mon, 21 Sep 2020 20:57:24 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Matej Genci <matej.genci@nutanix.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To:     Xiongfeng Wang <wangxiongfeng2@huawei.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "stefanha@redhat.com" <stefanha@redhat.com>,
-        "pbonzini@redhat.com" <pbonzini@redhat.com>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "mst@redhat.com" <mst@redhat.com>,
-        Felipe Franciosi <felipe@nutanix.com>
-Subject: Re: [PATCH] Rescan the entire target on transport reset when LUN is 0
-Date:   Mon, 21 Sep 2020 23:56:50 -0400
-Message-Id: <160074695011.411.12240453136529320837.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: tcmu: add a missing newline when printing parameters
+Date:   Mon, 21 Sep 2020 23:56:55 -0400
+Message-Id: <160074695010.411.10221836550956633689.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
-References: <CY4PR02MB33354370E0A81E75DD9DFE74FB520@CY4PR02MB3335.namprd02.prod.outlook.com>
+In-Reply-To: <1599132573-33818-1-git-send-email-wangxiongfeng2@huawei.com>
+References: <1599132573-33818-1-git-send-email-wangxiongfeng2@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9751 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 adultscore=0
- bulkscore=0 mlxlogscore=999 phishscore=0 suspectscore=0 spamscore=0
+ bulkscore=0 mlxlogscore=854 phishscore=0 suspectscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2009220031
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9751 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 phishscore=0 adultscore=0 suspectscore=0 bulkscore=0
- clxscore=1015 impostorscore=0 mlxlogscore=999 mlxscore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
+ mlxscore=0 suspectscore=0 impostorscore=0 malwarescore=0 spamscore=0
+ phishscore=0 mlxlogscore=868 clxscore=1015 adultscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2009220030
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 28 Aug 2020 12:21:35 +0000, Matej Genci wrote:
+On Thu, 3 Sep 2020 19:29:33 +0800, Xiongfeng Wang wrote:
 
-> VirtIO 1.0 spec says
->     The removed and rescan events ... when sent for LUN 0, they MAY
->     apply to the entire target so the driver can ask the initiator
->     to rescan the target to detect this.
+> When I cat module paramter 'global_max_data_area_mb' by sysfs, it
+> displays as follows. It's better to add a newline for easy reading.
 > 
-> This change introduces the behaviour described above by scanning the
-> entire scsi target when LUN is set to 0. This is both a functional and a
-> performance fix. It aligns the driver with the spec and allows control
-> planes to hotplug targets with large numbers of LUNs without having to
-> request a RESCAN for each one of them.
+> root@(none):/# cat /sys/module/target_core_user/parameters/global_max_data_area_mb
+> 2048noneroot@(none):/#
 
 Applied to 5.10/scsi-queue, thanks!
 
-[1/1] scsi: virtio_scsi: Rescan the entire target on transport reset when LUN is 0
-      https://git.kernel.org/mkp/scsi/c/beef6fd02b90
+[1/1] scsi: target: tcmu: Add missing newline when printing parameters
+      https://git.kernel.org/mkp/scsi/c/6d70cb343484
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
