@@ -2,155 +2,102 @@ Return-Path: <SRS0=VSHB=C7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE99C4727D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDBD3C4363D
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:20:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C7D023A1B
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:20:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B02A239D2
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 16:20:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=amacapital-net.20150623.gappssmtp.com header.i=@amacapital-net.20150623.gappssmtp.com header.b="vkrTbtOH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="V42mT00w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726661AbgIVQUO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Sep 2020 12:20:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54886 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726672AbgIVQUO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 12:20:14 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F140BC0613D0
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 09:20:13 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id l71so12368455pge.4
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 09:20:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amacapital-net.20150623.gappssmtp.com; s=20150623;
-        h=content-transfer-encoding:from:mime-version:subject:date:message-id
-         :references:cc:in-reply-to:to;
-        bh=OuYZ36WnxwIp9b6camA1INonBCd7PS5F7n5lbvDtQoE=;
-        b=vkrTbtOH4vHnR/84aYqVDHrQ5AGvI5gJZ+epaaRbPDginNWZ7IQOaHp0KiQGLoRIqK
-         lCtpCBfEppwh5xdm5Fg2E09yGBsQ1omUh0FsVnB0AGbc0KabsZevsMs5kdugIv8CVE5/
-         WA4g4A2X6yhuybhLsZ26G3b/9jK9koGpq3H8xumPWJXJrnSzbLUYbfDR++IgN0bKoBQq
-         n0DG/oDelKPnE35WpGCvEELD66Jz17cs7lC56sr6mITihQA1DVJ1mt9BGhniHUyWF6Lh
-         zzYPOu4uBf4nQ34xtWqSlA6XpnJ8NFviCNNpjE2H0nhrpatshwJ5hPmeTiRqtrX3VMpc
-         QmhQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:content-transfer-encoding:from:mime-version
-         :subject:date:message-id:references:cc:in-reply-to:to;
-        bh=OuYZ36WnxwIp9b6camA1INonBCd7PS5F7n5lbvDtQoE=;
-        b=QwY+lsHcjhEyUwqWMxtYOzTiY9wnV4XnARwQg5/O/BfXt6QR/G+8Gr8BQeZo7Y9/oD
-         RrUV7fNY4awwGG/eN8tAlnMjgtHN884NBlLUiYA0EGBKDYEXULsjKrHoaIdKuFixWnt0
-         zgpbIp1KUFkuYICujg6OOjBMtEREWnwINXpvEYseF1Upg0VjXygiOu1o+nRAzcc5aw7J
-         PMqoRuY69VdwkE+Qb1E1zEPIerdJjDrl/B0h+oNC8QVuAk5QIHlypctgUDB99jT/5jV9
-         kmyrZTcthFG72vL4WW6MZMCd6kIshxJiak9hU5dHDLtQWe2pu6QbjzOlLzS3h1Jdae+e
-         mXNg==
-X-Gm-Message-State: AOAM5317CFkx+63BpNuAbQeCVlE8hVhYnh+FHXRXfHXlI6KIi8+Sq8I4
-        yfUHXYgRMnbg243cEpZs3oKDCg==
-X-Google-Smtp-Source: ABdhPJzVdW+N5Ufbpna8vjsXyt2h2YPelrT15cDlhJa791IGnC+04vroQZTdEBrKNKjccVmTF6OthA==
-X-Received: by 2002:a17:902:fe88:b029:d2:2a16:254 with SMTP id x8-20020a170902fe88b02900d22a160254mr5598643plm.23.1600791613205;
-        Tue, 22 Sep 2020 09:20:13 -0700 (PDT)
-Received: from localhost.localdomain ([2601:646:c200:1ef2:f4bd:fe2:85ed:ea92])
-        by smtp.gmail.com with ESMTPSA id gk14sm2982522pjb.41.2020.09.22.09.20.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Sep 2020 09:20:12 -0700 (PDT)
+        id S1726654AbgIVQUy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Sep 2020 12:20:54 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:37184 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726567AbgIVQUy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 12:20:54 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08MGJWlB085329;
+        Tue, 22 Sep 2020 16:20:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=dCFWRfWECqmX8nHjc16FkUwgcgwrpp4Azy2vtcSDC7E=;
+ b=V42mT00wcf/4C7vpn1OHmblFQ0uKCXyuFnqgMS0Qf0zn3x+ikAQ0ZiVz2z6Hoh05mZ+6
+ BtreBzJIFciGHR0U4M1l/DXOH0xhBqdPghT0JJ8F0XpqCMh54+wog3H2CT7VeJ39M6XL
+ +BSsDgfyFdD3t8072SGG7AdBhyqB3rON3sR1wEzocHBeLhszAMVfxoGaceOptybGcICg
+ tASicC0o9Y0HE/ZtJSH88fHplZg16sPuhrqelTVLy6TdclpX+s3rN1Euysg5yJMWUyko
+ JSociGXXcZ6KRBRi2oM/Zr+8MSLOc1+0pb2N6lk7gG1H7cfKwjGO6+9i1Ic4VLVUKm49 UA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 33qcpttqmp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 22 Sep 2020 16:20:51 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08MGFM3N122491;
+        Tue, 22 Sep 2020 16:20:50 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 33nuwymnqa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Sep 2020 16:20:50 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08MGKnnq020189;
+        Tue, 22 Sep 2020 16:20:49 GMT
+Received: from [20.15.0.202] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 22 Sep 2020 09:20:49 -0700
+Subject: Re: [PATCH 0/3] target: scsi: tcmu: code rework and speed up of read
+ data handling
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20200910155041.17654-1-bstroesser@ts.fujitsu.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <2ba4d645-02b2-acd4-f009-ad1aade5f048@oracle.com>
+Date:   Tue, 22 Sep 2020 11:20:48 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <20200910155041.17654-1-bstroesser@ts.fujitsu.com>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-From:   Andy Lutomirski <luto@amacapital.net>
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH 1/9] kernel: add a PF_FORCE_COMPAT flag
-Date:   Tue, 22 Sep 2020 09:20:07 -0700
-Message-Id: <446566DF-ECBC-449C-92A1-A7D5AEBE9935@amacapital.net>
-References: <CAK8P3a39jN+t2hhLg0oKZnbYATQXmYE2-Z1JkmFyc1EPdg1HXw@mail.gmail.com>
-Cc:     Pavel Begunkov <asml.silence@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        David Howells <dhowells@redhat.com>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        X86 ML <x86@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        sparclinux <sparclinux@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        linux-aio <linux-aio@kvack.org>, io-uring@vger.kernel.org,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>,
-        Network Development <netdev@vger.kernel.org>,
-        keyrings@vger.kernel.org,
-        LSM List <linux-security-module@vger.kernel.org>
-In-Reply-To: <CAK8P3a39jN+t2hhLg0oKZnbYATQXmYE2-Z1JkmFyc1EPdg1HXw@mail.gmail.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-X-Mailer: iPhone Mail (18A373)
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9752 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 adultscore=0
+ bulkscore=0 mlxlogscore=999 phishscore=0 suspectscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009220124
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9752 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ adultscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 priorityscore=1501
+ phishscore=0 spamscore=0 malwarescore=0 clxscore=1015 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009220125
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 9/10/20 10:50 AM, Bodo Stroesser wrote:
+> This small series is made on top of Martin's 5.10/scsi-queue branch.
+> 
+> The patches simplify some code, splits off new helper functions
+> or implement a cleaner code sequence to prevent double work.
+> The 3rd patch speeds up buffer preparation for SCSI commands with
+> long read data.
+> The series is also base for cleaned up version v3 of my patch
+>   scsi: target: tcmu: add compat mode for 32bit userspace on 64bit kernel
+> 
+> Bodo Stroesser (3):
+>   scsi: target: tcmu: join tcmu_cmd_get_data_length and tcmu_cmd_get_block_cnt
+>   scsi: target: tcmu: optimize queue_cmd_ring
+>   scsi: target: tcmu: optimize scatter_data_area
+> 
+>  drivers/target/target_core_user.c | 340 +++++++++++++++++++-------------------
+>  1 file changed, 170 insertions(+), 170 deletions(-)
+> 
 
-
-> On Sep 22, 2020, at 2:01 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->=20
-> =EF=BB=BFOn Tue, Sep 22, 2020 at 9:59 AM Pavel Begunkov <asml.silence@gmai=
-l.com> wrote:
->>> On 22/09/2020 10:23, Arnd Bergmann wrote:
->>> On Tue, Sep 22, 2020 at 8:32 AM Pavel Begunkov <asml.silence@gmail.com> w=
-rote:
->>>> On 22/09/2020 03:58, Andy Lutomirski wrote:
->>>>> On Mon, Sep 21, 2020 at 5:24 PM Pavel Begunkov <asml.silence@gmail.com=
-> wrote:
->>>>> I may be looking at a different kernel than you, but aren't you
->>>>> preventing creating an io_uring regardless of whether SQPOLL is
->>>>> requested?
->>>>=20
->>>> I diffed a not-saved file on a sleepy head, thanks for noticing.
->>>> As you said, there should be an SQPOLL check.
->>>>=20
->>>> ...
->>>> if (ctx->compat && (p->flags & IORING_SETUP_SQPOLL))
->>>>        goto err;
->>>=20
->>> Wouldn't that mean that now 32-bit containers behave differently
->>> between compat and native execution?
->>>=20
->>> I think if you want to prevent 32-bit applications from using SQPOLL,
->>> it needs to be done the same way on both to be consistent:
->>=20
->> The intention was to disable only compat not native 32-bit.
->=20
-> I'm not following why that would be considered a valid option,
-> as that clearly breaks existing users that update from a 32-bit
-> kernel to a 64-bit one.
->=20
-> Taking away the features from users that are still on 32-bit kernels
-> already seems questionable to me, but being inconsistent
-> about it seems much worse, in particular when the regression
-> is on the upgrade path.
->=20
->>> Can we expect all existing and future user space to have a sane
->>> fallback when IORING_SETUP_SQPOLL fails?
->>=20
->> SQPOLL has a few differences with non-SQPOLL modes, but it's easy
->> to convert between them. Anyway, SQPOLL is a privileged special
->> case that's here for performance/latency reasons, I don't think
->> there will be any non-accidental users of it.
->=20
-> Ok, so the behavior of 32-bit tasks would be the same as running
-> the same application as unprivileged 64-bit tasks, with applications
-> already having to implement that fallback, right?
->=20
->=20
-
-I don=E2=80=99t have any real preference wrt SQPOLL, and it may be that we h=
-ave a problem even without SQPOLL when IO gets punted without one of the fix=
-es discussed.
-
-But banning the mismatched io_uring and io_uring_enter seems like it may be w=
-orthwhile regardless.=
+Acked-by: Mike Christie <michael.christie@oracle.com>
