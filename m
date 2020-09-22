@@ -2,175 +2,204 @@ Return-Path: <SRS0=VSHB=C7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F1BAC4727C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 00:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40E64C4727E
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 00:58:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20C0D23A7B
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 00:36:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bGE5yCUm"
+	by mail.kernel.org (Postfix) with ESMTP id 0D1AA23A62
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Sep 2020 00:58:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600736321;
+	bh=mO4DYr7N0RLjWZa37eU/VgHJpvS4aRf2iPegAH0iEtc=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=CUYEGcbOr2g3s0DtKCY8DApQ4gUtdyRX3zMpNmGcw/buiYRbu0GMhM5FtCXoBhYbM
+	 fZ83bB6IBQc7ti59amwfDR5DI6wcFDyKLO7XDpp54TXjRgV2//VdI6Olrvgksow/ss
+	 vAyNQ+LZ97G0iRWF8IR5Ha2R2uMQ1RuD3mB6fRy8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728960AbgIVAgK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Sep 2020 20:36:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50410 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728565AbgIVAgJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Sep 2020 20:36:09 -0400
-Received: from mail-oi1-x242.google.com (mail-oi1-x242.google.com [IPv6:2607:f8b0:4864:20::242])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5A4AC0613CF
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2020 17:36:09 -0700 (PDT)
-Received: by mail-oi1-x242.google.com with SMTP id n2so19127391oij.1
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2020 17:36:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=c7d1ZHf6hruUfheuX8IrRgfyoHv969LCspu96Gk4jWw=;
-        b=bGE5yCUmr0pws3QG29/8q+aHDyYYYNNc0WDpPBYqLlP5eBQN1C81DRyriyDz/PUBWq
-         0PnLvXuaWQDvYbTUusp0Wxy4hbGxL6J4wKE4e2YlpBm+/Bffb4HO+iMM/kv3XKNio3fh
-         ZJQWkRorKSfkk8+XHv99H3Cksd1nfRbmJB+Vwydug6Hupt5I5/uCbT7536vK+JmObKCu
-         6vsrYuSlIuw1O89pqRLnuO0P0uf8MPedPN7+9GbmEFyvWPnZJJ35ZIYzRkiYcfiUHOGU
-         OkUyTmZpRkVRvasaxIL6Wa+/h8sWYuNOtCrADUKRu/tEPIzsSP1GSs1/0+v2TrcghqL1
-         e4XA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=c7d1ZHf6hruUfheuX8IrRgfyoHv969LCspu96Gk4jWw=;
-        b=ldZz4e3yQxQhz2eLZGQb/N4F/vMz5+O1yFCbvXz+K3S3JGltct8kPAq81pIhmiQqhx
-         ux7tL5Co6nlROFq0JT3HQ+PQhJKSsejdmyrkwUG1OvkZpQ1mJ6EXMgJCQ4hMa2io7A3n
-         fYCYT0OFFYTCns0bsPzs/CkbJlAJGUCx+xvvMbPEA8uG5Jv2n3pjk7ond9Mo5f5KCAaV
-         HALg750EzZpR9JgyFQ94zokM+rXOcXY6kk7YbNiF+FHTgUPISzjd9zEclP8XR44WrB51
-         1Rmp+9U8Pc2gIq9FrKtAF1FQciFG0YTDw0kJEdwZ17iQ2AtgXn7yYvU+x593gdyDoPu3
-         wR6g==
-X-Gm-Message-State: AOAM531dNKfy8qfRfqr1M4j3Q6YeFz/r5uhA1fv2jkMEd5PHsQwdRxdT
-        rbkauqxQxUyAodY0FoJqkGMrGA==
-X-Google-Smtp-Source: ABdhPJzRh/kSLe9FlVRP8uOIfw614cbOwwASFz3QQg3rNYhkKb5K0FpVQgh+cY1XdsQU3gFoNRbJRQ==
-X-Received: by 2002:a54:411a:: with SMTP id l26mr1109432oic.12.1600734968942;
-        Mon, 21 Sep 2020 17:36:08 -0700 (PDT)
-Received: from yoga (99-135-181-32.lightspeed.austtx.sbcglobal.net. [99.135.181.32])
-        by smtp.gmail.com with ESMTPSA id 187sm7181376oie.42.2020.09.21.17.36.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Sep 2020 17:36:08 -0700 (PDT)
-Date:   Mon, 21 Sep 2020 19:36:06 -0500
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     nguyenb@codeaurora.org
-Cc:     Rob Herring <robh@kernel.org>, Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        SCSI <linux-scsi@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] scsi: dt-bindings: ufs: Add vcc-voltage-level for
- UFS
-Message-ID: <20200922003606.GA40811@yoga>
-References: <cover.1598939393.git.nguyenb@codeaurora.org>
- <0a9d395dc38433501f9652a9236856d0ac840b77.1598939393.git.nguyenb@codeaurora.org>
- <20200914183505.GA357@bogus>
- <d332e61cea4fef237507f1404efa724a@codeaurora.org>
- <CAL_Jsq+YV-GjAhVVHtgNz6xFR=bEgSwWKY+QGixRQJ5Ov75pag@mail.gmail.com>
- <e489cee219d48e9f5e48dc30518f445b@codeaurora.org>
+        id S1729428AbgIVA6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Sep 2020 20:58:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728879AbgIVA6f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Sep 2020 20:58:35 -0400
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2C30523A9A
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 00:58:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600736314;
+        bh=mO4DYr7N0RLjWZa37eU/VgHJpvS4aRf2iPegAH0iEtc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ZvsltSwjMQQjZiYWUVNiO25TW5AUeBh08HcndWK7Xe35RS/hY9lrzTe2a+eWc93Vs
+         W63+BpGaM0/hEmj0H5NNiiF+B4Dto3ZfhGCuYSg/VL/ifmFADrmP21pnAjqQPEbpTf
+         GPIWfRyXGAJ/aoCVrG5ZycMOv5bit2MDE6Nn2vFw=
+Received: by mail-wm1-f44.google.com with SMTP id z9so1621431wmk.1
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2020 17:58:34 -0700 (PDT)
+X-Gm-Message-State: AOAM533eQY3BPbUy/PLve5SGEtgjwhTTqrthQVWQA0NmUUzQVn6lxNs8
+        y4lGiseQLIjzWADIAQbVwVV7CeWkQ5W5UCS639n6vA==
+X-Google-Smtp-Source: ABdhPJzzXZz8FGhOqJIy3SOg0uhFjle8bEWKILqBSG3M41u7cJLjsHkjpP4JLeSfHDUPrx8gGM2D3rP9PVKnU83D0i8=
+X-Received: by 2002:a1c:740c:: with SMTP id p12mr1761323wmc.176.1600736312695;
+ Mon, 21 Sep 2020 17:58:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e489cee219d48e9f5e48dc30518f445b@codeaurora.org>
+References: <CAK8P3a2Mi+1yttyGk4k7HxRVrMtmFqJewouVhynqUL0PJycmog@mail.gmail.com>
+ <D0791499-1190-4C3F-A984-0A313ECA81C7@amacapital.net> <563138b5-7073-74bc-f0c5-b2bad6277e87@gmail.com>
+ <486c92d0-0f2e-bd61-1ab8-302524af5e08@gmail.com> <CALCETrW3rwGsgfLNnu_0JAcL5jvrPVTLTWM3JpbB5P9Hye6Fdw@mail.gmail.com>
+ <d5c6736a-2cb4-4e22-78da-a667bda5c05a@gmail.com>
+In-Reply-To: <d5c6736a-2cb4-4e22-78da-a667bda5c05a@gmail.com>
+From:   Andy Lutomirski <luto@kernel.org>
+Date:   Mon, 21 Sep 2020 17:58:20 -0700
+X-Gmail-Original-Message-ID: <CALCETrUEC81va8-fuUXG1uA5rbKxnKDYsDOXC70_HtKD4LAeAg@mail.gmail.com>
+Message-ID: <CALCETrUEC81va8-fuUXG1uA5rbKxnKDYsDOXC70_HtKD4LAeAg@mail.gmail.com>
+Subject: Re: [PATCH 1/9] kernel: add a PF_FORCE_COMPAT flag
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     Andy Lutomirski <luto@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Christoph Hellwig <hch@lst.de>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        David Howells <dhowells@redhat.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        X86 ML <x86@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        "open list:MIPS" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-aio <linux-aio@kvack.org>, io-uring@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        keyrings@vger.kernel.org,
+        LSM List <linux-security-module@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon 21 Sep 19:22 CDT 2020, nguyenb@codeaurora.org wrote:
+On Mon, Sep 21, 2020 at 5:24 PM Pavel Begunkov <asml.silence@gmail.com> wro=
+te:
+>
+>
+>
+> On 22/09/2020 02:51, Andy Lutomirski wrote:
+> > On Mon, Sep 21, 2020 at 9:15 AM Pavel Begunkov <asml.silence@gmail.com>=
+ wrote:
+> >>
+> >> On 21/09/2020 19:10, Pavel Begunkov wrote:
+> >>> On 20/09/2020 01:22, Andy Lutomirski wrote:
+> >>>>
+> >>>>> On Sep 19, 2020, at 2:16 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >>>>>
+> >>>>> =EF=BB=BFOn Sat, Sep 19, 2020 at 6:21 PM Andy Lutomirski <luto@kern=
+el.org> wrote:
+> >>>>>>> On Fri, Sep 18, 2020 at 8:16 AM Christoph Hellwig <hch@lst.de> wr=
+ote:
+> >>>>>>> On Fri, Sep 18, 2020 at 02:58:22PM +0100, Al Viro wrote:
+> >>>>>>>> Said that, why not provide a variant that would take an explicit
+> >>>>>>>> "is it compat" argument and use it there?  And have the normal
+> >>>>>>>> one pass in_compat_syscall() to that...
+> >>>>>>>
+> >>>>>>> That would help to not introduce a regression with this series ye=
+s.
+> >>>>>>> But it wouldn't fix existing bugs when io_uring is used to access
+> >>>>>>> read or write methods that use in_compat_syscall().  One example =
+that
+> >>>>>>> I recently ran into is drivers/scsi/sg.c.
+> >>>>>
+> >>>>> Ah, so reading /dev/input/event* would suffer from the same issue,
+> >>>>> and that one would in fact be broken by your patch in the hypotheti=
+cal
+> >>>>> case that someone tried to use io_uring to read /dev/input/event on=
+ x32...
+> >>>>>
+> >>>>> For reference, I checked the socket timestamp handling that has a
+> >>>>> number of corner cases with time32/time64 formats in compat mode,
+> >>>>> but none of those appear to be affected by the problem.
+> >>>>>
+> >>>>>> Aside from the potentially nasty use of per-task variables, one th=
+ing
+> >>>>>> I don't like about PF_FORCE_COMPAT is that it's one-way.  If we're
+> >>>>>> going to have a generic mechanism for this, shouldn't we allow a f=
+ull
+> >>>>>> override of the syscall arch instead of just allowing forcing comp=
+at
+> >>>>>> so that a compat syscall can do a non-compat operation?
+> >>>>>
+> >>>>> The only reason it's needed here is that the caller is in a kernel
+> >>>>> thread rather than a system call. Are there any possible scenarios
+> >>>>> where one would actually need the opposite?
+> >>>>>
+> >>>>
+> >>>> I can certainly imagine needing to force x32 mode from a kernel thre=
+ad.
+> >>>>
+> >>>> As for the other direction: what exactly are the desired bitness/arc=
+h semantics of io_uring?  Is the operation bitness chosen by the io_uring c=
+reation or by the io_uring_enter() bitness?
+> >>>
+> >>> It's rather the second one. Even though AFAIR it wasn't discussed
+> >>> specifically, that how it works now (_partially_).
+> >>
+> >> Double checked -- I'm wrong, that's the former one. Most of it is base=
+d
+> >> on a flag that was set an creation.
+> >>
+> >
+> > Could we get away with making io_uring_enter() return -EINVAL (or
+> > maybe -ENOTTY?) if you try to do it with bitness that doesn't match
+> > the io_uring?  And disable SQPOLL in compat mode?
+>
+> Something like below. If PF_FORCE_COMPAT or any other solution
+> doesn't lend by the time, I'll take a look whether other io_uring's
+> syscalls need similar checks, etc.
+>
+>
+> diff --git a/fs/io_uring.c b/fs/io_uring.c
+> index 0458f02d4ca8..aab20785fa9a 100644
+> --- a/fs/io_uring.c
+> +++ b/fs/io_uring.c
+> @@ -8671,6 +8671,10 @@ SYSCALL_DEFINE6(io_uring_enter, unsigned int, fd, =
+u32, to_submit,
+>         if (ctx->flags & IORING_SETUP_R_DISABLED)
+>                 goto out;
+>
+> +       ret =3D -EINVAl;
+> +       if (ctx->compat !=3D in_compat_syscall())
+> +               goto out;
+> +
 
-> On 2020-09-18 12:01, Rob Herring wrote:
-> > On Tue, Sep 15, 2020 at 2:10 AM <nguyenb@codeaurora.org> wrote:
-> > > 
-> > > On 2020-09-14 11:35, Rob Herring wrote:
-> > > > On Mon, Aug 31, 2020 at 11:00:47PM -0700, Bao D. Nguyen wrote:
-> > > >> UFS's specifications supports a range of Vcc operating
-> > > >> voltage levels. Add documentation for the UFS's Vcc voltage
-> > > >> levels setting.
-> > > >>
-> > > >> Signed-off-by: Can Guo <cang@codeaurora.org>
-> > > >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> > > >> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-> > > >> ---
-> > > >>  Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt | 2 ++
-> > > >>  1 file changed, 2 insertions(+)
-> > > >>
-> > > >> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> > > >> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> > > >> index 415ccdd..7257b32 100644
-> > > >> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> > > >> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> > > >> @@ -23,6 +23,8 @@ Optional properties:
-> > > >>                            with "phys" attribute, provides phandle to
-> > > >> UFS PHY node
-> > > >>  - vdd-hba-supply        : phandle to UFS host controller supply
-> > > >> regulator node
-> > > >>  - vcc-supply            : phandle to VCC supply regulator node
-> > > >> +- vcc-voltage-level     : specifies voltage levels for VCC supply.
-> > > >> +                          Should be specified in pairs (min, max),
-> > > >> units uV.
-> > > >
-> > > > The expectation is the regulator pointed to by 'vcc-supply' has the
-> > > > voltage constraints. Those constraints are supposed to be the board
-> > > > constraints, not the regulator operating design constraints. If that
-> > > > doesn't work for your case, then it should be addressed in a common way
-> > > > for the regulator binding.
-> > > The UFS regulator has a min_uV and max_uV limits. Currently, the min
-> > > and
-> > > max are hardcoded
-> > > to UFS2.1 Spec allowed values of 2.7V and 3.6V respectively.
-> > > With this change, I am trying to fix a couple issues:
-> > > 1. The 2.7V min value only applies to UFS2.1 devices. with UFS3.0+
-> > > devices, the VCC min should be 2.4V.
-> > > Hardcoding the min_uV to 2.7V does not work for UFS3.0+ devices.
-> > 
-> > Don't you know the device version attached and can adjust the voltage
-> > based on that? Or you have to set the voltage first?
-> Yes it is one of the solutions. Once detect the UFS device is version 3.0+,
-> you can lower
-> the voltage to 2.5V from the hardcoded value used by the driver. However, to
-> change the
-> Vcc voltage, the host needs to follow a sequence to ensure safe operations
-> after Vcc change
-> (device has to be in sleep mode, Vcc needs to go down to 0 then up to 2.5V.)
-> Also same sequence is repeated for every host initialization which is
-> inconvenient.
-> 
+This seems entirely reasonable to me.  Sharing an io_uring ring
+between programs with different ABIs seems a bit nutty.
 
-It sounds like you're suggesting that we detect the UFS device using
-some voltage, then depending on version we might lower it to 2.5V.
+>         /*
+>          * For SQ polling, the thread will do all submissions and complet=
+ions.
+>          * Just return the requested submit count, and wake the thread if
+> @@ -9006,6 +9010,10 @@ static int io_uring_create(unsigned entries, struc=
+t io_uring_params *p,
+>         if (ret)
+>                 goto err;
+>
+> +       ret =3D -EINVAL;
+> +       if (ctx->compat)
+> +               goto err;
+> +
 
-I'm afraid I don't see any of this either documented or implemented in
-these patches.
+I may be looking at a different kernel than you, but aren't you
+preventing creating an io_uring regardless of whether SQPOLL is
+requested?
 
-What is this initial detection voltage and how to you configure it?
-
-Regards,
-Bjorn
-
-> > 
-> > > 2. Allow users to select a different Vcc voltage within the allowed
-> > > range.
-> > > Using the min value, the UFS device is operating at marginal Vcc
-> > > voltage.
-> > > In addition the PMIC and the board designs may add some variables
-> > > especially at extreme
-> > > temperatures. We observe stability issues when using the min Vcc
-> > > voltage.
-> > 
-> > Again, we have standard regulator properties for this already that you
-> > can tune per board.
-> Thank you for the suggestion.
-> 
-> > 
-> > Rob
+>         /* Only gets the ring fd, doesn't install it in the file table */
+>         fd =3D io_uring_get_fd(ctx, &file);
+>         if (fd < 0) {
+> --
+> Pavel Begunkov
