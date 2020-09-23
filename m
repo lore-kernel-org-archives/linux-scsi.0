@@ -2,102 +2,90 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3774C4363D
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 05:53:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C11C47425
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 06:06:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C31A221EB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 05:53:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26F502223E
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 06:06:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CH3Se/5E"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uvDI5uJj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726945AbgIWFxA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 01:53:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38796 "EHLO
+        id S1726686AbgIWGGD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 02:06:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726931AbgIWFw7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 01:52:59 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AAF4C061755
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 22:52:59 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id bw23so2648926pjb.2
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 22:52:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=dyqT5DAvLDgsGMi6Y/ooNL+LKnGqQcxgtFjfUSbSM2I=;
-        b=CH3Se/5EJCMjBzsjprzZ0piXXnGcN1kFDC+AvG79KsBkcl9hYso65JQlWurB81YV3p
-         WhBEJMjM4qr4fyU9IR1I/ehz7iNTxXqcaGo+R20qr5+hxZnj6+esBWwsyk02kDwXq8MY
-         sfILrYJEwyd0WVt9uLFJip/lAK/f5Pu4yfRUchIJLdRRp+s0WzKMLNuoYhyQHd4yOFVr
-         jHQXKDeXEYgRPEBvL0asNHrAexroqk+2NgFTBNs80eWmwtQ8tlzQOHggWqAnGZ4GWvQ3
-         EL+zJVsAvYeyGANqPHRs2PWSA4PzboSMnlyC9hDhIsO7ETNU3ldTw4P5IGbCsCRnAQyS
-         kZFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=dyqT5DAvLDgsGMi6Y/ooNL+LKnGqQcxgtFjfUSbSM2I=;
-        b=eFU/xxbQCX88nMyLvfakXOX7LRlEmG1AJi4Oky7fJNVMcVCmeSsfAjYwiVMcEtUBgn
-         hCMosN+P10jyAYd9xaCimPeM2Prx8H2pj5GRZFBu6wRHDEVKJiuqRYMg2uCIKWPP/NNs
-         bDgZoXdVozJOmNVHjWjux78T2/0P508xwcZBpoF+Vgh4UW1mZfBkAHRETNBuHJAFbjM8
-         jq4H+dLr/bVjrddSZW47Bap796OrPR1Uwc9cVfeq1EXMxtPBAdJm/jvbzOgWGVRQVO31
-         Yn9zJxfEq2T6+hD5OOXXx14ag0JWXv745iMd/+QfZUGzuTl0c8zjrYdgOtR91QwDGkbB
-         NspA==
-X-Gm-Message-State: AOAM533kv0acaPNXOrxF0e65ABf8kU1LjctnwZC/SEY4GS4froI6WxAt
-        VeMbgj87NICHz1ILrRsB+B6oRVLQZHgQmA==
-X-Google-Smtp-Source: ABdhPJzpo1RO0xCcOR+10lbhN73Pr8wdvEqa5/Z9WNlQXcWuQ5562WiPZf4h3qKcv37HjrYvxqo5kQ==
-X-Received: by 2002:a17:90a:120f:: with SMTP id f15mr7027092pja.120.1600840378732;
-        Tue, 22 Sep 2020 22:52:58 -0700 (PDT)
-Received: from localhost.localdomain ([161.81.44.186])
-        by smtp.gmail.com with ESMTPSA id hg16sm3719883pjb.37.2020.09.22.22.52.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2020 22:52:57 -0700 (PDT)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH 2/2] block/scsi_ioctl.c: use queue_logical_block_size() in max_sectors_bytes()
-Date:   Wed, 23 Sep 2020 13:52:48 +0800
-Message-Id: <20200923055248.1901-2-tom.ty89@gmail.com>
+        with ESMTP id S1726179AbgIWGGC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 02:06:02 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C292C061755;
+        Tue, 22 Sep 2020 23:06:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=tfXqHGtFwgmM6UcSRx58+EM7ODTSdMOtwKoRg1u1yAY=; b=uvDI5uJjUUyytfSIz9Fh9itDBb
+        timhA1QL0/NVl3J6u5M2HW3nARnp+nrUU6+ecCci6CsZKmYqfYuR8gyHxpqyVNqrn3MdPeOsJJWvy
+        950qhPb+/2DfbCQgKlhKDtU5vmvNF+PDbFkHMp1mkRP3rWH8u6qUenY44fQojX6Uqtm4THbw20WLL
+        GWMBkRDZ1GR/JQbS9MCzRO2VxzTVrNvmchBhMbPURHpWCdmaGljvUGEu39WuHYi9z2ZiSxt+gaQQ+
+        D4nj+9YtljE0KpYVnHjo1Gui3cPa2uMIL3iJJ7yzazD7tzFlk3mevDknnUo1gBGah7VrboHOaGe8J
+        //9F2Zlw==;
+Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kKxua-0003TG-5D; Wed, 23 Sep 2020 06:05:52 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Alexander Viro <viro@zeniv.linux.org.uk>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        David Laight <David.Laight@aculab.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-aio@kvack.org, io-uring@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-mm@kvack.org,
+        netdev@vger.kernel.org, keyrings@vger.kernel.org,
+        linux-security-module@vger.kernel.org
+Subject: [PATCH 1/9] compat.h: fix a spelling error in <linux/compat.h>
+Date:   Wed, 23 Sep 2020 08:05:39 +0200
+Message-Id: <20200923060547.16903-2-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200923055248.1901-1-tom.ty89@gmail.com>
-References: <20200923055248.1901-1-tom.ty89@gmail.com>
+In-Reply-To: <20200923060547.16903-1-hch@lst.de>
+References: <20200923060547.16903-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Logical block size was never / is no longer necessarily 512.
+There is no compat_sys_readv64v2 syscall, only a compat_sys_preadv64v2
+one.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/scsi_ioctl.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ include/linux/compat.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index ef722f04f88a..82ed73f07460 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -73,10 +73,11 @@ static int sg_set_timeout(struct request_queue *q, int __user *p)
- static int max_sectors_bytes(struct request_queue *q)
- {
- 	unsigned int max_sectors = queue_max_sectors(q);
-+	max_sectors *= queue_logical_block_size(q);
- 
--	max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
-+	max_sectors = min_t(unsigned int, max_sectors, INT_MAX);
- 
--	return max_sectors << 9;
-+	return max_sectors;
- }
- 
- static int sg_get_reserved_size(struct request_queue *q, int __user *p)
+diff --git a/include/linux/compat.h b/include/linux/compat.h
+index b354ce58966e2d..654c1ec36671a4 100644
+--- a/include/linux/compat.h
++++ b/include/linux/compat.h
+@@ -812,7 +812,7 @@ asmlinkage ssize_t compat_sys_pwritev2(compat_ulong_t fd,
+ 		const struct compat_iovec __user *vec,
+ 		compat_ulong_t vlen, u32 pos_low, u32 pos_high, rwf_t flags);
+ #ifdef __ARCH_WANT_COMPAT_SYS_PREADV64V2
+-asmlinkage long  compat_sys_readv64v2(unsigned long fd,
++asmlinkage long  compat_sys_preadv64v2(unsigned long fd,
+ 		const struct compat_iovec __user *vec,
+ 		unsigned long vlen, loff_t pos, rwf_t flags);
+ #endif
 -- 
 2.28.0
 
