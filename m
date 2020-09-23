@@ -2,44 +2,94 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F7DC4363D
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:54:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B35AAC4363D
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:59:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C258221D43
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85707206FB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:59:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726718AbgIWOyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 10:54:15 -0400
-Received: from verein.lst.de ([213.95.11.211]:48769 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726332AbgIWOyO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Sep 2020 10:54:14 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id D27F86736F; Wed, 23 Sep 2020 16:54:11 +0200 (CEST)
-Date:   Wed, 23 Sep 2020 16:54:11 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Marc Hartmayer <mhartmay@linux.ibm.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Block Mailing List <linux-block@vger.kernel.org>,
-        Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
-Subject: Re: linux-next: possible bug in 'block: remove the BIO_NULL_MAPPED
- flag'
-Message-ID: <20200923145411.GA15735@lst.de>
-References: <87tuvo8xjo.fsf@linux.ibm.com>
+        id S1726636AbgIWO7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 10:59:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37958 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726130AbgIWO7M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 10:59:12 -0400
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B643C0613CE;
+        Wed, 23 Sep 2020 07:59:12 -0700 (PDT)
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kL6EX-004bOc-Io; Wed, 23 Sep 2020 14:59:01 +0000
+Date:   Wed, 23 Sep 2020 15:59:01 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        David Laight <David.Laight@aculab.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-aio@kvack.org, io-uring@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-mm@kvack.org,
+        netdev@vger.kernel.org, keyrings@vger.kernel.org,
+        linux-security-module@vger.kernel.org
+Subject: Re: [PATCH 5/9] fs: remove various compat readv/writev helpers
+Message-ID: <20200923145901.GN3421308@ZenIV.linux.org.uk>
+References: <20200923060547.16903-1-hch@lst.de>
+ <20200923060547.16903-6-hch@lst.de>
+ <20200923142549.GK3421308@ZenIV.linux.org.uk>
+ <20200923143251.GA14062@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87tuvo8xjo.fsf@linux.ibm.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20200923143251.GA14062@lst.de>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I've reproduced this on x86 and am looking into the issue now.
+On Wed, Sep 23, 2020 at 04:32:51PM +0200, Christoph Hellwig wrote:
+> On Wed, Sep 23, 2020 at 03:25:49PM +0100, Al Viro wrote:
+> > On Wed, Sep 23, 2020 at 08:05:43AM +0200, Christoph Hellwig wrote:
+> > >  COMPAT_SYSCALL_DEFINE3(readv, compat_ulong_t, fd,
+> > > -		const struct compat_iovec __user *,vec,
+> > > +		const struct iovec __user *, vec,
+> > 
+> > Um...  Will it even compile?
+> > 
+> > >  #ifdef __ARCH_WANT_COMPAT_SYS_PREADV64
+> > >  COMPAT_SYSCALL_DEFINE4(preadv64, unsigned long, fd,
+> > > -		const struct compat_iovec __user *,vec,
+> > > +		const struct iovec __user *, vec,
+> > 
+> > Ditto.  Look into include/linux/compat.h and you'll see
+> > 
+> > asmlinkage long compat_sys_preadv64(unsigned long fd,
+> >                 const struct compat_iovec __user *vec,
+> >                 unsigned long vlen, loff_t pos);
+> > 
+> > How does that manage to avoid the compiler screaming bloody
+> > murder?
+> 
+> That's a very good question.  But it does not just compile but actually
+> works.  Probably because all the syscall wrappers mean that we don't
+> actually generate the normal names.  I just tried this:
+> 
+> --- a/include/linux/syscalls.h
+> +++ b/include/linux/syscalls.h
+> @@ -468,7 +468,7 @@ asmlinkage long sys_lseek(unsigned int fd, off_t offset,
+>  asmlinkage long sys_read(unsigned int fd, char __user *buf, size_t count);
+>  asmlinkage long sys_write(unsigned int fd, const char __user *buf,
+>                             size_t count);
+> -asmlinkage long sys_readv(unsigned long fd,
+> +asmlinkage long sys_readv(void *fd,
+> 
+> for fun, and the compiler doesn't care either..
+
+Try to build it for sparc or ppc...
