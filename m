@@ -2,239 +2,121 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECCF3C2D0A8
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 17:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8380CC2D0A8
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 18:46:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A14E32075B
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 17:53:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vfINUwad"
+	by mail.kernel.org (Postfix) with ESMTP id 3E54D23772
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 18:46:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726422AbgIWRxI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 13:53:08 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60358 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726234AbgIWRxI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 13:53:08 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08NHcs3u157171;
-        Wed, 23 Sep 2020 17:52:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=R0WIWXE9Jw6freD30baoZqYmOjuxIDoik6bbDW28r74=;
- b=vfINUwadi/DIJe4KexCFjgO6PKLJ4kddZJK506HARCyOhdrk2wshmf7nsXPpIo1BjYZV
- 2khflhE8gLqYEZnb/PUgojTeJk5xKQ/bRiWuLrtQ7i7fIEu0u6DiYcvx3lRbJ2XEcKe4
- Q+9mWfGm1cgclJN2LTnukuTBgAXcY+DOG4N2RabDsuNa83v94n/tuatghK68yU1xp1Sp
- x0ctmrPHHfI6yFzYAONdRaNTkgSriU0/zlAXQe9L8k6kmWwfDdrQIoFPeNz2AxlOVPIp
- 72rrcMkyR0wqUkjZeCvPGOMBpFD6wSykaz701G/iIX0CYQKPtSIDfQGC0EDvfGBlUwZw bg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 33ndnum0p5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 23 Sep 2020 17:52:57 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08NHePYX176117;
-        Wed, 23 Sep 2020 17:50:56 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 33nujpvtme-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 23 Sep 2020 17:50:56 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08NHotgw002805;
-        Wed, 23 Sep 2020 17:50:56 GMT
-Received: from [10.76.36.88] (/10.76.36.88)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 23 Sep 2020 10:50:55 -0700
-Subject: Re: [PATCH] scsi: alua: fix the race between alua_bus_detach and
- alua_rtpg
-To:     Hannes Reinecke <hare@suse.de>,
-        "Ewan D. Milne" <emilne@redhat.com>, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, hare@suse.com, loberman@redhat.com
-Cc:     joe.jin@oracle.com, junxiao.bi@oracle.com,
-        gulam.mohamed@oracle.com, RITIKA.SRIVASTAVA@oracle.com,
-        linux-scsi@vger.kernel.org
-References: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
- <c5e0700bb192a422541d1328db7ca0146edf7a81.camel@redhat.com>
- <c58d1877-1d30-e81d-f10f-3571e3a248b9@oracle.com>
- <d21e4a7c-9668-23db-c470-596a8e1e3af6@suse.de>
-From:   jitendra.khasdev@oracle.com
-Organization: Oracle Corporation
-Message-ID: <a62fc767-6489-0093-d4ed-72e25f89782c@oracle.com>
-Date:   Wed, 23 Sep 2020 23:20:49 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727021AbgIWSqP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 14:46:15 -0400
+Received: from mout.kundenserver.de ([212.227.126.131]:35555 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726665AbgIWSqO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 14:46:14 -0400
+Received: from mail-qt1-f182.google.com ([209.85.160.182]) by
+ mrelayeu.kundenserver.de (mreue009 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1M89P1-1kOi931zbn-005Hlb; Wed, 23 Sep 2020 20:46:10 +0200
+Received: by mail-qt1-f182.google.com with SMTP id a4so831862qth.0;
+        Wed, 23 Sep 2020 11:46:09 -0700 (PDT)
+X-Gm-Message-State: AOAM531B6RKNkGQC/NDN1KVy6L7ZJDh/eTh8x/vyn/fCGays+viehdTH
+        kYMDsdGq5j5wMlrpbikXGrM/muVRkR5VaFZOmUo=
+X-Google-Smtp-Source: ABdhPJwsvaOBWtaZA0D/OVEHB/gCWu247kr3QZZFrdP10NBc4wqx9Hcp+T5ZYDolhQMYUd20W7JjEkRUKsdbgp0ivyQ=
+X-Received: by 2002:ac8:64a:: with SMTP id e10mr1527617qth.142.1600886767946;
+ Wed, 23 Sep 2020 11:46:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <d21e4a7c-9668-23db-c470-596a8e1e3af6@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
- mlxlogscore=999 phishscore=0 adultscore=0 spamscore=0 suspectscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009230135
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 phishscore=0 adultscore=0 suspectscore=0 bulkscore=0
- clxscore=1011 impostorscore=0 mlxlogscore=999 mlxscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009230135
+References: <20200923060547.16903-1-hch@lst.de> <20200923060547.16903-6-hch@lst.de>
+ <20200923142549.GK3421308@ZenIV.linux.org.uk> <20200923143251.GA14062@lst.de>
+ <20200923145901.GN3421308@ZenIV.linux.org.uk> <20200923163831.GO3421308@ZenIV.linux.org.uk>
+In-Reply-To: <20200923163831.GO3421308@ZenIV.linux.org.uk>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 23 Sep 2020 20:45:51 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3nkLUOkR+jwz2_2LcYTUTqdVf8JOtZqKWbtEDotNhFZA@mail.gmail.com>
+Message-ID: <CAK8P3a3nkLUOkR+jwz2_2LcYTUTqdVf8JOtZqKWbtEDotNhFZA@mail.gmail.com>
+Subject: Re: [PATCH 5/9] fs: remove various compat readv/writev helpers
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        David Howells <dhowells@redhat.com>,
+        David Laight <David.Laight@aculab.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        linux-aio <linux-aio@kvack.org>, io-uring@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Networking <netdev@vger.kernel.org>, keyrings@vger.kernel.org,
+        LSM List <linux-security-module@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:mMkQRAJUWfdk4a4PEkmTkMjSEPbcbr4OqrN3fUr4LQ2AQqlPl0n
+ bOWryggRLru9T6JJoTMuOGI9kvl/I6BtMLB/VbJVDYLH2lraHpn3UOgXAQiZMVZJ9Wt6/3q
+ dgtI834LPxJGojFQwlbq6VqcE61sUtAzG9Asu4SnN3A1f/GYReptJqFvli47ZUGxJu1McD6
+ wXqFv/2sZdtXtrzvqb6Gw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:ARXrn3BJvHg=:OaZDrHRji4s3F+Z4R525Bn
+ agD8Hjw3INq7irUQDHIrs31n4HiItPG1qRH9sCOQsBDzKfQ2GBPxOe8cQiCUK6etjcRZgS5uz
+ ltu+yxAg8SdJB7S6UrMx8x4gZIRJZNx/h1Pd359G8hRQEWUkB77c3Uu7iX6+oWPogrXiRLcyE
+ Ay+LH2roCsVe74rsugu9p8r/jxgEYoo6ke7HkJiyLsrJx77n+/GWpX9PQTbGXJGYCmPKo03Dx
+ 7rZxQHvz4lzlsQGvZ22Lw1H85lBROKXGp/T1YCWt7CkiGs0Y/R3V3UonSnBX41Bf98v3feicD
+ RYBnkyjEcAUUQRR5u9cw067xVVV2JdvUKInxkNdutFVn0CM66u/fDJxueg1uLRW9RPYp7DjVs
+ Mx/HRUmO0wQonj6taqWhVCgSUthPIg1jpw3qykbSoDJ96MDdaz8DcUt+7qpkA5t/+tGOD+rWW
+ Bn0ajxwLkORS0R61/JXIJExhw4SvyLBTVKDr7LI7QuYFV9tfgKH3fZzLZmBkdPEqiGd2kyAMe
+ 0agELAyDb5Rehyc/3jcYzTGZyQ9nlXuD/YYv4vEmC1CRzjxWF4KIZFY6D3HWoeuUMlzvMCijI
+ ue6FAYnnAerqxzrTow74a1x9I80VfvnWRTz0xYpnoiGRegiq0P5uWv1YSyriRyFortckburp8
+ xW1/xnziTC/+/JUjrApbsItKfFZpj/Vffo23zPwOLXvOArj8zkutkvZ9h8hGYgo934l9OKJGu
+ P5NJw1LlqSAdgmNcPhTbFVxjnCSs1G9+5tq34fiY8XA66+2tLlwvaAnYp+zv5HOWn5OOwlMar
+ YndfSM38x1BkZ1kFiYikEr51lnNKUep3VIupblSMr1ljcWZWbNW0XzKu+xNzfuUJBnp9WMfFy
+ 7T3ELZ0Iq8IWSMYb0u7TCVmN4B9t5+iKBzUQ+0CqaqKkDuOmWY7NnBHAU/IZ6fceZMEkzvN4O
+ Id5+SP2sVY8Io6R5XqdC6M9inrRybKQ1OIWUL/7Bpv8x4eU8nqVGM
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Sep 23, 2020 at 6:38 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> I wonder if we should do something like
+>
+> SYSCALL_DECLARE3(readv, unsigned long, fd, const struct iovec __user *, vec,
+>                  unsigned long, vlen);
+> in syscalls.h instead, and not under that ifdef.
+>
+> Let it expand to declaration of sys_...() in generic case and, on x86, into
+> __do_sys_...() and __ia32_sys_...()/__x64_sys_...(), with types matching
+> what SYSCALL_DEFINE ends up using.
+>
+> Similar macro would cover compat_sys_...() declarations.  That would
+> restore mismatch checking for x86 and friends.  AFAICS, the cost wouldn't
+> be terribly high - cpp would have more to chew through in syscalls.h,
+> but it shouldn't be all that costly.  Famous last words, of course...
+>
+> Does anybody see fundamental problems with that?
 
+I've had some ideas along those lines in the past and I think it should work.
 
-On 9/23/20 1:47 PM, Hannes Reinecke wrote:
-> On 9/18/20 5:49 AM, jitendra.khasdev@oracle.com wrote:
->>
->>
->> On 9/17/20 11:00 PM, Ewan D. Milne wrote:
->>> On Tue, 2020-09-15 at 16:28 +0530, Jitendra Khasdev wrote:
->>>> This is patch to fix the race occurs between bus detach and alua_rtpg.
->>>>
->>>> It fluses the all pending workqueue in bus detach handler, so it can avoid
->>>> race between alua_bus_detach and alua_rtpg.
->>>>
->>>> Here is call trace where race got detected.
->>>>
->>>> multipathd call stack:
->>>> [exception RIP: native_queued_spin_lock_slowpath+100]
->>>> --- <NMI exception stack> ---
->>>> native_queued_spin_lock_slowpath at ffffffff89307f54
->>>> queued_spin_lock_slowpath at ffffffff89307c18
->>>> _raw_spin_lock_irq at ffffffff89bd797b
->>>> alua_bus_detach at ffffffff8984dcc8
->>>> scsi_dh_release_device at ffffffff8984b6f2
->>>> scsi_device_dev_release_usercontext at ffffffff89846edf
->>>> execute_in_process_context at ffffffff892c3e60
->>>> scsi_device_dev_release at ffffffff8984637c
->>>> device_release at ffffffff89800fbc
->>>> kobject_cleanup at ffffffff89bb1196
->>>> kobject_put at ffffffff89bb12ea
->>>> put_device at ffffffff89801283
->>>> scsi_device_put at ffffffff89838d5b
->>>> scsi_disk_put at ffffffffc051f650 [sd_mod]
->>>> sd_release at ffffffffc051f8a2 [sd_mod]
->>>> __blkdev_put at ffffffff8952c79e
->>>> blkdev_put at ffffffff8952c80c
->>>> blkdev_close at ffffffff8952c8b5
->>>> __fput at ffffffff894e55e6
->>>> ____fput at ffffffff894e57ee
->>>> task_work_run at ffffffff892c94dc
->>>> exit_to_usermode_loop at ffffffff89204b12
->>>> do_syscall_64 at ffffffff892044da
->>>> entry_SYSCALL_64_after_hwframe at ffffffff89c001b8
->>>>
->>>> kworker:
->>>> [exception RIP: alua_rtpg+2003]
->>>> account_entity_dequeue at ffffffff892e42c1
->>>> alua_rtpg_work at ffffffff8984f097
->>>> process_one_work at ffffffff892c4c29
->>>> worker_thread at ffffffff892c5a4f
->>>> kthread at ffffffff892cb135
->>>> ret_from_fork at ffffffff89c00354
->>>>
->>>> Signed-off-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
->>>> ---
->>>>   drivers/scsi/device_handler/scsi_dh_alua.c | 3 +++
->>>>   1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
->>>> index f32da0c..024a752 100644
->>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->>>> @@ -1144,6 +1144,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
->>>>       struct alua_dh_data *h = sdev->handler_data;
->>>>       struct alua_port_group *pg;
->>>>   +    sdev_printk(KERN_INFO, sdev, "%s: flushing workqueues\n", ALUA_DH_NAME);
->>>> +    flush_workqueue(kaluad_wq);
->>>> +
->>>>       spin_lock(&h->pg_lock);
->>>>       pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
->>>>       rcu_assign_pointer(h->pg, NULL);
->>>
->>> I'm not sure this is the best solution.  The current code
->>> references h->sdev when the dh_list is traversed.  So it needs
->>> to remain valid.  Fixing it by flushing the workqueue to avoid
->>> the list traversal code running leaves open the possibility that
->>> future code alterations may expose this problem again.
->>>
->>> -Ewan
->>>
->>>
->>
->> I see your point, but as we are in detach handler and this code path
->> only execute when device is being detached. So, before detaching, flush
->> work-queue will take care of any current code references h->sdev where
->> dh_list is being traversed.
->>
-> Flushing the workqueue is a bit of an overkill, seeing that we know exactly which workqueue element we're waiting for.
-> 
->> IMO, I do not think it would create any problem for future code
->> alterations. Or may be I am missing something over here, what could
->> be possible scenario for that?
->>
-> Problem is more that I'd like to understand where exactly the race condition is. Can you figure out which spinlock is triggering in your stack trace?
-> 
-> Cheers,
-> 
-> Hannes
+As a variation of this, the SYSCALL_DEFINEx() macros could go away
+entirely, leaving only the macro instantiations from the header to
+require that syntax. It would require first changing the remaining
+architectures to build the syscall table from C code instead of
+assembler though.
 
-Hannes,
+Regardless of that, another advantage of having the SYSCALL_DECLAREx()
+would be the ability to include that header file from elsewhere with a different
+macro definition to create a machine-readable version of the interface when
+combined with the syscall.tbl files. This could be used to create a user
+space stub for calling into the low-level syscall regardless of the
+libc interfaces,
+or for synchronizing the interfaces with strace, qemu-user, or anything that
+needs to deal with the low-level interface.
 
-Race is between "alua_bus_detach" and "alua_rtpg_work". 
-
-Whenever we perform fail-over or turn off the switch, the path goes down, which eventually triggers
-blkdev_put -> .. -> scsi_device_dev_release -> .. ->  alua_bus_detach meanwhile another thread of alua_rtpg_work also running in parallel. Both threads are using sdev.
-
-In alua_bus_detach, we are setting null to sdev. From above call trace (multipathd) we can see alua_bus_deatch ran first and set sdev to null. It keeps its execution continue and it does not have any problem.  
-
-1138 /*                                                                              
-1139  * alua_bus_detach - Detach device handler                                      
-1140  * @sdev: device to be detached from                                            
-1141  */                                                                             
-1142 static void alua_bus_detach(struct scsi_device *sdev)                           
-1143 {                                                                               
-1144         struct alua_dh_data *h = sdev->handler_data;                            
-1145         struct alua_port_group *pg;                                             
-1146                                                                                 
-1147         spin_lock(&h->pg_lock);                                                 
-1148         pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));    
-1149         rcu_assign_pointer(h->pg, NULL);                                        
-*1150*         h->sdev = NULL;  << Looks detach handler won the race and set sdev to null                                                         
-1151         spin_unlock(&h->pg_lock);                                               
-1152         if (pg) {                                                               
-1153                 spin_lock_irq(&pg->lock); <<< from the call trace we can see that we just acquired the lock and got NMI 
-exception because we encountered a BUG_ON from different thread.                                        
-1154                 list_del_rcu(&h->node);        
-
-
-Meanwhile alua_rtpg try to check for BUG_ON(!h->sdev); 
-
-alua_rtpg_work -> alua_rtpg
-----
- 505 static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 506 {
- .
- .
- .
- 659                                         list_for_each_entry_rcu(h,              
- 660                                                 &tmp_pg->dh_list, node) {       
- 661                                                 /* h->sdev should always be valid */
- *662*                                                 BUG_ON(!h->sdev); <<<< 2nd call trace caused the panic due to this bug on.              
- 663                                                 h->sdev->access_state = desc[0];
- 664                                         }                                       
- 665                                         rcu_read_unlock();                      
- 666                                 }                                 
-----
-
-So it looks, alua_rtpg_work triggered to alua_rtpg. alua_rtpg function is in its initial execution but didn't reach to line number 662. Meanwhile alua_bus_detach thread comes in and executes line no. 1150 which set sdev to null. Now, if alua_rtpg reaches to line 662 then it would cause the BUG_ON which will result in panic.
-
----
-Jitendra
+      Arnd
