@@ -2,128 +2,111 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B1BC52D7C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 10:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC35BC2D0A8
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 12:53:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97D8423787
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 10:23:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EA0321BE5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 12:53:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Yd0IdmQT"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="X10kQhDh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726665AbgIWKXT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 06:23:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22754 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726485AbgIWKXL (ORCPT
+        id S1726662AbgIWMxL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 08:53:11 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59202 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726606AbgIWMxK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Sep 2020 06:23:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600856590;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VFgJToirjL1LcUbMYxqpCEwKfTDu3I+1Nj36cIZeHgU=;
-        b=Yd0IdmQTpH+5D0QQ1w/Mb0SJ3HD/w1q6wrLgrcj+8ir03so6qzuOax5OWqOWdbB8APf+sJ
-        KUQBtls6bZL0rRggnw5zrvIqY3v6COVWbj5mQyHhw12ZBj2Eayd3CvCZngbSHa2VeParIx
-        XK+zJcHcDbxHiZ0MO1hT1H8KdcnAuFc=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-391-HnWJ9N3oPw2XUXV1qWn7ow-1; Wed, 23 Sep 2020 06:23:08 -0400
-X-MC-Unique: HnWJ9N3oPw2XUXV1qWn7ow-1
-Received: by mail-wr1-f72.google.com with SMTP id o6so8626742wrp.1
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2020 03:23:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VFgJToirjL1LcUbMYxqpCEwKfTDu3I+1Nj36cIZeHgU=;
-        b=FqsjeLbe0SC4cPXVKBrj2FkwKm3bBjKeRgChU2IQ53ueXcYAo8u5A/9/TLEHGGdtBQ
-         AzL9uxktsXeXjHWBMBxWSTciwTrEtwB2OZPyvlm2YUVqGXQHcPZoEaH9UmoiSHF5FmUA
-         /Q7Og9ZW4dDWHdI6OgTqgqBH7tPbKdYJx5L+5iteDzqkvduVu3PJKybL40TNkc/aGnri
-         AWUvqbJib2Bv8YpibQ+zNAucI5y+IqRRzPxgeFHzeSkk7W6HZLPwuO1EQm5C/qcjLFLP
-         1Gfx/8KopRSVnI4lkoHwU/C0evouuSjDZpsoPPmdIx8zZMdGw2B1KwpzX4WTbkGAeNJt
-         t/PA==
-X-Gm-Message-State: AOAM5314Jdaukf2MbYDPgBaL3b3tFC0PAuuTZSOTq6fdPoqCI3RBLk6I
-        Bn//5FLPSNL3rLVldn0hiBrddRaSuXe+1D6nB22D5JAWibq0Pnt9oMAZYPRqUH2+tRq69fmKoEB
-        T4LSxLVNtjOX5XWtj55R5RA==
-X-Received: by 2002:a05:600c:20c:: with SMTP id 12mr4741714wmi.40.1600856587510;
-        Wed, 23 Sep 2020 03:23:07 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwvwid4yBpJLIUdhmHJZC1dioF+qkVR7rcecEnmaK5giSVtQGS8/+Yh8i8w9490r84enyaBxw==
-X-Received: by 2002:a05:600c:20c:: with SMTP id 12mr4741681wmi.40.1600856587231;
-        Wed, 23 Sep 2020 03:23:07 -0700 (PDT)
-Received: from ?IPv6:2001:b07:6468:f312:15f1:648d:7de6:bad9? ([2001:b07:6468:f312:15f1:648d:7de6:bad9])
-        by smtp.gmail.com with ESMTPSA id y6sm30308257wrn.41.2020.09.23.03.23.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 23 Sep 2020 03:23:06 -0700 (PDT)
-Subject: Re: [PATCH 5/8] vhost scsi: add lun parser helper
-To:     Mike Christie <michael.christie@oracle.com>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
-        stefanha@redhat.com, virtualization@lists.linux-foundation.org
-References: <1600712588-9514-1-git-send-email-michael.christie@oracle.com>
- <1600712588-9514-6-git-send-email-michael.christie@oracle.com>
-From:   Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <c981b20e-895a-d5ce-9973-ffe7b21bd724@redhat.com>
-Date:   Wed, 23 Sep 2020 12:23:05 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        Wed, 23 Sep 2020 08:53:10 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 08NCWvgP155709;
+        Wed, 23 Sep 2020 08:53:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=pp1;
+ bh=Z8mPk36VOce+KlKDpk8jJO4I7+ATiLIwcpb4W6Wl/mQ=;
+ b=X10kQhDhAVJx9QlHu9KXpP16n0+0avj7fF2vo2AxUZva6aFKGF83CwVdIv9cuj6djNc6
+ BtYzYGS23UamJ4SP4pX0oRSRlapYUQlX+9/b/mnj7fWwjADhK5xjHr2jRxAtG4h+dDnl
+ lAMZya9iXkFMW36DvyA6ky8vdSi1gUIDM8I8QwRmz19I9T1Vk5giql7c6jXYME3SZvPT
+ twpJ/MTPEozK2tJ7cQNNkucnrnBThh3x/Jscgc3wqLrxbYuoDk84fG8/sCplztzH22Id
+ lVrcxt7+BAhxPKyKEsv028mmvhpt9SpdGsyElu5Yv6Krk6SgcAPCXlVla1fchPyv+xue 9A== 
+Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 33r5dy2p90-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 23 Sep 2020 08:53:06 -0400
+Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
+        by ppma05fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 08NChkh9019993;
+        Wed, 23 Sep 2020 12:53:04 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma05fra.de.ibm.com with ESMTP id 33n9m7t5bh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 23 Sep 2020 12:53:04 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 08NCr1XF23068940
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 23 Sep 2020 12:53:01 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3E14642047;
+        Wed, 23 Sep 2020 12:53:01 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7BAC94203F;
+        Wed, 23 Sep 2020 12:53:00 +0000 (GMT)
+Received: from marcibm (unknown [9.145.64.218])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Wed, 23 Sep 2020 12:53:00 +0000 (GMT)
+From:   Marc Hartmayer <mhartmay@linux.ibm.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Cc:     Christian Borntraeger <borntraeger@de.ibm.com>,
+        Marc Hartmayer <mhartmay@linux.ibm.com>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Block Mailing List <linux-block@vger.kernel.org>,
+        Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Subject: linux-next: possible bug in 'block: remove the BIO_NULL_MAPPED flag'
+Date:   Wed, 23 Sep 2020 14:52:59 +0200
+Message-ID: <87tuvo8xjo.fsf@linux.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1600712588-9514-6-git-send-email-michael.christie@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-09-23_07:2020-09-23,2020-09-23 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxlogscore=999
+ impostorscore=0 clxscore=1011 phishscore=0 bulkscore=0 malwarescore=0
+ suspectscore=1 priorityscore=1501 adultscore=0 lowpriorityscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009230098
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/09/20 20:23, Mike Christie wrote:
-> Move code to parse lun from req's lun_buf to helper, so tmf code
-> can use it in the next patch.
-> 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->  drivers/vhost/scsi.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index 26d0f75..736ce19 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -899,6 +899,11 @@ static void vhost_scsi_submission_work(struct work_struct *work)
->  	return ret;
->  }
->  
-> +static u16 vhost_buf_to_lun(u8 *lun_buf)
-> +{
-> +	return ((lun_buf[2] << 8) | lun_buf[3]) & 0x3FFF;
-> +}
-> +
->  static void
->  vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
->  {
-> @@ -1037,12 +1042,12 @@ static void vhost_scsi_submission_work(struct work_struct *work)
->  			tag = vhost64_to_cpu(vq, v_req_pi.tag);
->  			task_attr = v_req_pi.task_attr;
->  			cdb = &v_req_pi.cdb[0];
-> -			lun = ((v_req_pi.lun[2] << 8) | v_req_pi.lun[3]) & 0x3FFF;
-> +			lun = vhost_buf_to_lun(v_req_pi.lun);
->  		} else {
->  			tag = vhost64_to_cpu(vq, v_req.tag);
->  			task_attr = v_req.task_attr;
->  			cdb = &v_req.cdb[0];
-> -			lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
-> +			lun = vhost_buf_to_lun(v_req.lun);
->  		}
->  		/*
->  		 * Check that the received CDB size does not exceeded our
-> 
+Hi Christoph, Jens,
 
-Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+I found an interesting bug in my KVM guest (tested on s390x). The guest
+uses a virtio-scsi disk and the current linux-next kernel. The problem
+is that I cannot get the SCSI ID of the attached SCSI disk. Running the
+command `lsscsi --scsi_id` in the guest returns:
 
+root@qemus390x:~# lsscsi --scsi_id
+[0:0:0:0]    disk    Linux    scsi_debug       0190  /dev/sda   -
+
+but the expected result is something like:
+
+root@qemus390x:~# lsscsi --scsi_id
+[0:0:0:0]    disk    Linux    scsi_debug       0190  /dev/sda   33333333000002710
+
+Also there is no /dev/disk/by-id/scsi-* path created. I bisected the
+problem to...
+
+commit f3256075ba49d80835b601bfbff350a2140b2924 (HEAD, refs/bisect/bad)
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Thu Aug 27 17:37:45 2020 +0200
+
+    block: remove the BIO_NULL_MAPPED flag
+
+When I reverted this commit the problem was gone. Any ideas what the
+problem is? Thanks in advance.
+
+Best regards,
+ Marc
