@@ -2,163 +2,128 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 369B8C2D0A8
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 09:25:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B1BC52D7C
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 10:23:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5C672137B
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 09:25:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97D8423787
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 10:23:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=dupond.be header.i=@dupond.be header.b="SFl8Kep0"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Yd0IdmQT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726412AbgIWJZn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 05:25:43 -0400
-Received: from apollo.dupie.be ([51.159.20.238]:54186 "EHLO apollo.dupie.be"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726178AbgIWJZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Sep 2020 05:25:43 -0400
-X-Greylist: delayed 490 seconds by postgrey-1.27 at vger.kernel.org; Wed, 23 Sep 2020 05:25:42 EDT
-Received: from [IPv6:2a02:a03f:fa89:ff01:be0d:d770:d9ac:6ca4] (unknown [IPv6:2a02:a03f:fa89:ff01:be0d:d770:d9ac:6ca4])
-        by apollo.dupie.be (Postfix) with ESMTPSA id 0D9F41520EAE
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2020 11:17:29 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dupond.be; s=dkim;
-        t=1600852649;
+        id S1726665AbgIWKXT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 06:23:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22754 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726485AbgIWKXL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Sep 2020 06:23:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600856590;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=ODTW5Xfe3y+UK/0lB7GRPsY1MowcEQMi6K9U2J5weHY=;
-        b=SFl8Kep0U3cCLeuPYMj0BJVw/+VWXTRdNo/ELkR4dbyuhQk0ICNHhdUJ8W6FshcJMdeHPv
-        1qdhwNBrCxCZM4ojR0xm5WFNbd/B3qIpVQZw7mc1Pd4YHKjv48g58zX+xGCx7VsO42VSDO
-        4GLymNvDNXpiCoOvwjcSAXWrqCe3w6mNQSmyAZs0hKvVgX0ycR5TDqouWta3QV5YTqwZUn
-        z48NXz4F3MeYolkO8hLxFMekAp5AZdvN3HuumOCJswMZd0Iv/7CzVVel3OqUkRLjui9CyK
-        rkAlLcARvTqLJQnYvWw22SR5Jtix4k34fNz/ipgjXcd8Yo/SOBmdsB27SPTpkg==
-To:     linux-scsi@vger.kernel.org
-From:   Jean-Louis Dupond <jean-louis@dupond.be>
-Subject: "Power-on or device reset occurred" after a LUN resize
-Message-ID: <a87b6e6e-d35e-2336-4593-c28872760c75@dupond.be>
-Date:   Wed, 23 Sep 2020 11:17:28 +0200
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VFgJToirjL1LcUbMYxqpCEwKfTDu3I+1Nj36cIZeHgU=;
+        b=Yd0IdmQTpH+5D0QQ1w/Mb0SJ3HD/w1q6wrLgrcj+8ir03so6qzuOax5OWqOWdbB8APf+sJ
+        KUQBtls6bZL0rRggnw5zrvIqY3v6COVWbj5mQyHhw12ZBj2Eayd3CvCZngbSHa2VeParIx
+        XK+zJcHcDbxHiZ0MO1hT1H8KdcnAuFc=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-391-HnWJ9N3oPw2XUXV1qWn7ow-1; Wed, 23 Sep 2020 06:23:08 -0400
+X-MC-Unique: HnWJ9N3oPw2XUXV1qWn7ow-1
+Received: by mail-wr1-f72.google.com with SMTP id o6so8626742wrp.1
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2020 03:23:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=VFgJToirjL1LcUbMYxqpCEwKfTDu3I+1Nj36cIZeHgU=;
+        b=FqsjeLbe0SC4cPXVKBrj2FkwKm3bBjKeRgChU2IQ53ueXcYAo8u5A/9/TLEHGGdtBQ
+         AzL9uxktsXeXjHWBMBxWSTciwTrEtwB2OZPyvlm2YUVqGXQHcPZoEaH9UmoiSHF5FmUA
+         /Q7Og9ZW4dDWHdI6OgTqgqBH7tPbKdYJx5L+5iteDzqkvduVu3PJKybL40TNkc/aGnri
+         AWUvqbJib2Bv8YpibQ+zNAucI5y+IqRRzPxgeFHzeSkk7W6HZLPwuO1EQm5C/qcjLFLP
+         1Gfx/8KopRSVnI4lkoHwU/C0evouuSjDZpsoPPmdIx8zZMdGw2B1KwpzX4WTbkGAeNJt
+         t/PA==
+X-Gm-Message-State: AOAM5314Jdaukf2MbYDPgBaL3b3tFC0PAuuTZSOTq6fdPoqCI3RBLk6I
+        Bn//5FLPSNL3rLVldn0hiBrddRaSuXe+1D6nB22D5JAWibq0Pnt9oMAZYPRqUH2+tRq69fmKoEB
+        T4LSxLVNtjOX5XWtj55R5RA==
+X-Received: by 2002:a05:600c:20c:: with SMTP id 12mr4741714wmi.40.1600856587510;
+        Wed, 23 Sep 2020 03:23:07 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwvwid4yBpJLIUdhmHJZC1dioF+qkVR7rcecEnmaK5giSVtQGS8/+Yh8i8w9490r84enyaBxw==
+X-Received: by 2002:a05:600c:20c:: with SMTP id 12mr4741681wmi.40.1600856587231;
+        Wed, 23 Sep 2020 03:23:07 -0700 (PDT)
+Received: from ?IPv6:2001:b07:6468:f312:15f1:648d:7de6:bad9? ([2001:b07:6468:f312:15f1:648d:7de6:bad9])
+        by smtp.gmail.com with ESMTPSA id y6sm30308257wrn.41.2020.09.23.03.23.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Sep 2020 03:23:06 -0700 (PDT)
+Subject: Re: [PATCH 5/8] vhost scsi: add lun parser helper
+To:     Mike Christie <michael.christie@oracle.com>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
+        stefanha@redhat.com, virtualization@lists.linux-foundation.org
+References: <1600712588-9514-1-git-send-email-michael.christie@oracle.com>
+ <1600712588-9514-6-git-send-email-michael.christie@oracle.com>
+From:   Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <c981b20e-895a-d5ce-9973-ffe7b21bd724@redhat.com>
+Date:   Wed, 23 Sep 2020 12:23:05 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1600712588-9514-6-git-send-email-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 21/09/20 20:23, Mike Christie wrote:
+> Move code to parse lun from req's lun_buf to helper, so tmf code
+> can use it in the next patch.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/vhost/scsi.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index 26d0f75..736ce19 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -899,6 +899,11 @@ static void vhost_scsi_submission_work(struct work_struct *work)
+>  	return ret;
+>  }
+>  
+> +static u16 vhost_buf_to_lun(u8 *lun_buf)
+> +{
+> +	return ((lun_buf[2] << 8) | lun_buf[3]) & 0x3FFF;
+> +}
+> +
+>  static void
+>  vhost_scsi_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+>  {
+> @@ -1037,12 +1042,12 @@ static void vhost_scsi_submission_work(struct work_struct *work)
+>  			tag = vhost64_to_cpu(vq, v_req_pi.tag);
+>  			task_attr = v_req_pi.task_attr;
+>  			cdb = &v_req_pi.cdb[0];
+> -			lun = ((v_req_pi.lun[2] << 8) | v_req_pi.lun[3]) & 0x3FFF;
+> +			lun = vhost_buf_to_lun(v_req_pi.lun);
+>  		} else {
+>  			tag = vhost64_to_cpu(vq, v_req.tag);
+>  			task_attr = v_req.task_attr;
+>  			cdb = &v_req.cdb[0];
+> -			lun = ((v_req.lun[2] << 8) | v_req.lun[3]) & 0x3FFF;
+> +			lun = vhost_buf_to_lun(v_req.lun);
+>  		}
+>  		/*
+>  		 * Check that the received CDB size does not exceeded our
+> 
 
-Last week some action that we do regularly caused some issues.
-
-00:50:31 CEST -> We resized a iSCSI LUN on a SAN from 3TB -> 4TB.
-
-The clients did detect the change fine, and resized it devices:
-
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: Capacity data has changed
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: Inquiry data has changed
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: alua: supports implicit 
-> TPGS
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: alua: device 
-> t10.NETAPP   LUN 80Vcx]PVRq4F        port group 3e9 rel port 8
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: Capacity data has changed
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: [sdf] 8589934592 
-> 512-byte logical blocks: (4.40 TB/4.00 TiB)
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: [sdf] 4096-byte 
-> physical blocks
-> Sep 22 00:51:07 server001 kernel: sdf: detected capacity change from 
-> 3298534883328 to 4398046511104
-> Sep 22 00:51:07 server001 kernel: sd 16:0:0:1: alua: port group 3e9 
-> state A non-preferred supports TolUsNA
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: Inquiry data has changed
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: alua: supports implicit 
-> TPGS
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: alua: device 
-> t10.NETAPP   LUN 80Vcx]PVRq4F        port group 3e9 rel port 7
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: [sdi] 8589934592 
-> 512-byte logical blocks: (4.40 TB/4.00 TiB)
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: [sdi] 4096-byte 
-> physical blocks
-> Sep 22 00:51:07 server001 kernel: sdi: detected capacity change from 
-> 3298534883328 to 4398046511104
-> Sep 22 00:51:07 server001 kernel: sd 17:0:0:1: alua: port group 3e9 
-> state A non-preferred supports TolUsNA
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: Capacity data has changed
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: Inquiry data has changed
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: alua: supports implicit 
-> TPGS
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: alua: device 
-> t10.NETAPP   LUN 80Vcx]PVRq4F        port group 3e8 rel port 6
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: [sdl] 8589934592 
-> 512-byte logical blocks: (4.40 TB/4.00 TiB)
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: [sdl] 4096-byte 
-> physical blocks
-> Sep 22 00:51:12 server001 kernel: sdl: detected capacity change from 
-> 3298534883328 to 4398046511104
-> Sep 22 00:51:12 server001 kernel: sd 18:0:0:1: alua: port group 3e8 
-> state N non-preferred supports TolUsNA
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: Capacity data has changed
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: Inquiry data has changed
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: alua: supports implicit 
-> TPGS
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: alua: device 
-> t10.NETAPP   LUN 80Vcx]PVRq4F        port group 3e8 rel port 5
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: [sdc] 8589934592 
-> 512-byte logical blocks: (4.40 TB/4.00 TiB)
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: [sdc] 4096-byte 
-> physical blocks
-> Sep 22 00:51:18 server001 kernel: sdc: detected capacity change from 
-> 3298534883328 to 4398046511104
-> Sep 22 00:51:18 server001 kernel: sd 15:0:0:1: alua: port group 3e8 
-> state N non-preferred supports TolUsNA
-> Sep 22 00:52:09 server001 kernel: sd 16:0:0:1: Power-on or device 
-> reset occurred
-> Sep 22 00:52:09 server001 kernel: sd 16:0:0:1: alua: port group 3e9 
-> state A non-preferred supports TolUsNA
-> Sep 22 00:52:09 server001 kernel: sd 17:0:0:1: Power-on or device 
-> reset occurred
-
-But then it kept doing resets:
-> Sep 22 00:54:39 server001 kernel: sd 16:0:0:1: Power-on or device 
-> reset occurred
-> Sep 22 00:54:39 server001 kernel: sd 16:0:0:1: alua: port group 3e9 
-> state A non-preferred supports TolUsNA
-> Sep 22 00:54:39 server001 kernel: sd 17:0:0:1: Power-on or device 
-> reset occurred
-> Sep 22 00:54:39 server001 kernel: sd 17:0:0:1: alua: port group 3e9 
-> state A non-preferred supports TolUsNA
-> Sep 22 00:54:42 server001 kernel: sd 15:0:0:1: Power-on or device 
-> reset occurred
-> Sep 22 00:54:42 server001 kernel: sd 15:0:0:1: alua: port group 3e8 
-> state N non-preferred supports TolUsNA
-
-This caused some multipath failovers until it stopped after ~10 minutes.
-
-We do use ALUA multipath:
-3600a098038305663785d505652713446 dm-15 NETAPP,LUN C-Mode
-size=4.0T features='3 queue_if_no_path pg_init_retries 50' hwhandler='1 
-alua' wp=rw
-|-+- policy='service-time 0' prio=50 status=active
-| |- 16:0:0:1 sdf 8:80  active ready running
-| `- 17:0:0:1 sdi 8:128 active ready running
-`-+- policy='service-time 0' prio=10 status=enabled
-   |- 15:0:0:1 sdc 8:32  active ready running
-   `- 18:0:0:1 sdl 8:176 active ready running
-
-
-Who is sending the Power-on or device reset?
-Is that the SAN?
-Or does the client trigger a reset (for which reason then?)?
-The LUN is attachted to multiple servers (all CentOS 8), and all showed 
-the same resets.
-
-It would be nice to find out what caused this!
-
-Thanks for having a look :)
-Jean-Louis
-
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
 
