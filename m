@@ -2,113 +2,104 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6C40C4727E
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05264C4727D
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 16:38:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E0E3235F7
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=reintjes.nrw header.i=@reintjes.nrw header.b="dp1Mqe/6"
+	by mail.kernel.org (Postfix) with ESMTP id CC61220791
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 16:38:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgIWPWj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 11:22:39 -0400
-Received: from mo4-p01-ob.smtp.rzone.de ([81.169.146.167]:16771 "EHLO
-        mo4-p01-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726687AbgIWPWi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 11:22:38 -0400
-X-Greylist: delayed 714 seconds by postgrey-1.27 at vger.kernel.org; Wed, 23 Sep 2020 11:22:37 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1600874556;
-        s=strato-dkim-0002; d=reintjes.nrw;
-        h=In-Reply-To:Date:Message-ID:From:References:Cc:To:Subject:
-        X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=R7hI6d/NmZuNcg1vUXN4expafaD5dS9k1NOlJgVsfQ0=;
-        b=dp1Mqe/64HM6YGzNzDXBEueF2uqjSRXsh9r683SD7yUe6T9JvBM6sqMywZcovO8Qg1
-        fww3xowQG7M2UjpxOcIe0TQcF3oXBSC9CyeOcR4GnBImR8VQAeAJWw1WiXn8IijzQsN6
-        6CYz5MVtp3BLiWwwyTGjOq2HmQM8LWv9zt2aLH+DBjFjdhMUB/svYpWhY/ZmGVPYJf3B
-        5XuMt1QDbe0lARAfiDzgRPGLIky4s7vRHiej5pvUrGm0p+0ZFqZnFM7WQJsgFVxycdAr
-        wcHZg2PO7WTSlkBBmGIhgqm6L1zaTf6Ny+VAi+h0GqwvXnWaJMK+3fe7DzBbhgIfJGJr
-        zHlw==
-X-RZG-AUTH: ":IGUXYVP6Ne1lB7nQNv+YSUx4qaxF0YAcTeeZr8criwvl+4OoAsy1YB7b8FzONHo5ckdw3KGGkZZ/Zu8="
-X-RZG-CLASS-ID: mo00
-Received: from [192.168.0.198]
-        by smtp.strato.de (RZmta 46.10.7 DYNA|AUTH)
-        with ESMTPSA id Y04b60w8NFAYy22
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-        Wed, 23 Sep 2020 17:10:34 +0200 (CEST)
-Subject: Re: [PATCH 00/14] drop double zeroing
-To:     Mark Brown <broonie@kernel.org>, linux-spi@vger.kernel.org,
-        Julia Lawall <Julia.Lawall@inria.fr>
-Cc:     linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-block@vger.kernel.org,
-        Yossi Leybovich <sleybo@amazon.com>,
-        linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-rdma@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        rds-devel@oss.oracle.com
-References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
- <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
-From:   Rolf Reintjes <lists2.rolf@reintjes.nrw>
-Message-ID: <c3b33526-936d-ffa4-c301-4d0485822be1@reintjes.nrw>
-Date:   Wed, 23 Sep 2020 17:10:33 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726744AbgIWQio (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 12:38:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53324 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726419AbgIWQin (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 12:38:43 -0400
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C33F6C0613CE;
+        Wed, 23 Sep 2020 09:38:42 -0700 (PDT)
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kL7mp-004f4D-Mx; Wed, 23 Sep 2020 16:38:31 +0000
+Date:   Wed, 23 Sep 2020 17:38:31 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        David Laight <David.Laight@aculab.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-aio@kvack.org, io-uring@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-mm@kvack.org,
+        netdev@vger.kernel.org, keyrings@vger.kernel.org,
+        linux-security-module@vger.kernel.org
+Subject: Re: [PATCH 5/9] fs: remove various compat readv/writev helpers
+Message-ID: <20200923163831.GO3421308@ZenIV.linux.org.uk>
+References: <20200923060547.16903-1-hch@lst.de>
+ <20200923060547.16903-6-hch@lst.de>
+ <20200923142549.GK3421308@ZenIV.linux.org.uk>
+ <20200923143251.GA14062@lst.de>
+ <20200923145901.GN3421308@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200923145901.GN3421308@ZenIV.linux.org.uk>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Mark,
+On Wed, Sep 23, 2020 at 03:59:01PM +0100, Al Viro wrote:
 
-On 21.09.20 18:58, Mark Brown wrote:
-> On Sun, 20 Sep 2020 13:26:12 +0200, Julia Lawall wrote:
->> sg_init_table zeroes its first argument, so the allocation of that argument
->> doesn't have to.
+> > That's a very good question.  But it does not just compile but actually
+> > works.  Probably because all the syscall wrappers mean that we don't
+> > actually generate the normal names.  I just tried this:
+> > 
+> > --- a/include/linux/syscalls.h
+> > +++ b/include/linux/syscalls.h
+> > @@ -468,7 +468,7 @@ asmlinkage long sys_lseek(unsigned int fd, off_t offset,
+> >  asmlinkage long sys_read(unsigned int fd, char __user *buf, size_t count);
+> >  asmlinkage long sys_write(unsigned int fd, const char __user *buf,
+> >                             size_t count);
+> > -asmlinkage long sys_readv(unsigned long fd,
+> > +asmlinkage long sys_readv(void *fd,
+> > 
+> > for fun, and the compiler doesn't care either..
 > 
-> Applied to
-> 
->     https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
-> 
-> Thanks!
+> Try to build it for sparc or ppc...
 
-I do not understand which of the 14 patches you applied. Your mail 
-responds to the 00/14 mail.
+FWIW, declarations in syscalls.h used to serve 4 purposes:
+	1) syscall table initializers needed symbols declared
+	2) direct calls needed the same
+	3) catching mismatches between the declarations and definitions
+	4) centralized list of all syscalls
 
-Rolf
+(2) has been (thankfully) reduced for some time; in any case, ksys_... is
+used for the remaining ones.
 
-> 
-> [1/1] spi/topcliff-pch: drop double zeroing
->        commit: ca03dba30f2b8ff45a2972c6691e4c96d8c52b3b
-> 
-> All being well this means that it will be integrated into the linux-next
-> tree (usually sometime in the next 24 hours) and sent to Linus during
-> the next merge window (or sooner if it is a bug fix), however if
-> problems are discovered then the patch may be dropped or reverted.
-> 
-> You may get further e-mails resulting from automated or manual testing
-> and review of the tree, please engage with people reporting problems and
-> send followup patches addressing any issues that are reported if needed.
-> 
-> If any updates are required or you are submitting further changes they
-> should be sent as incremental updates against current git, existing
-> patches will not be replaced.
-> 
-> Please add any relevant lists and maintainers to the CCs when replying
-> to this mail.
-> 
-> Thanks,
-> Mark
-> 
+(1) and (3) are served by syscalls.h in architectures other than x86, arm64
+and s390.  On those 3 (1) is done otherwise (near the syscall table initializer)
+and (3) is not done at all.
 
+I wonder if we should do something like
+
+SYSCALL_DECLARE3(readv, unsigned long, fd, const struct iovec __user *, vec,
+		 unsigned long, vlen);
+in syscalls.h instead, and not under that ifdef.
+
+Let it expand to declaration of sys_...() in generic case and, on x86, into
+__do_sys_...() and __ia32_sys_...()/__x64_sys_...(), with types matching
+what SYSCALL_DEFINE ends up using.
+
+Similar macro would cover compat_sys_...() declarations.  That would
+restore mismatch checking for x86 and friends.  AFAICS, the cost wouldn't
+be terribly high - cpp would have more to chew through in syscalls.h,
+but it shouldn't be all that costly.  Famous last words, of course...
+
+Does anybody see fundamental problems with that?
