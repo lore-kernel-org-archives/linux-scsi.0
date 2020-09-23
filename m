@@ -8,74 +8,73 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73AB9C2D0E2
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 00:01:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BDF4C4727D
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 00:16:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0991D20757
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 00:01:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8E532085B
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 00:16:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Uq/WbUvc"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="h50yZKfe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726923AbgIWABf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Sep 2020 20:01:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41070 "EHLO
+        id S1727015AbgIWAQB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Sep 2020 20:16:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726625AbgIWABd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 20:01:33 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7298C061755
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 17:01:32 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id z19so13909844pfn.8
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 17:01:32 -0700 (PDT)
+        with ESMTP id S1727004AbgIWAQB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2020 20:16:01 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59917C061755
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 17:16:01 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id k133so8503639pgc.7
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2020 17:16:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:subject:to:cc:references:message-id:date:user-agent
+        h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to;
-        bh=mTygZ9kN4WHDhv85TH9eddenLeZoOK/ucVcHg+3UwZ8=;
-        b=Uq/WbUvccA1i9sGwuJMmiMC0k++VbV89bjSZcs8MZWkvbfwPXpri1qVKPy2wnTKf+e
-         ebIQ3ygLgig2KcCVJ0j9wBXy7t1t+q6zaaeV8NvpBXFfagz7hechVmVbgmjoriJDZ4ZM
-         H7NOj2zb3l+N4e+JEwvSuGoC7ZWtPzw0GFXdw=
+        bh=R/edugTFyx8VkZ4bEmTNtFm+liJwmpZPAdCt00EFRaA=;
+        b=h50yZKfecrWCp7cXyRtzSEngolYuNBsNUc8JaY9CkdXt2S3n7y6pipPE28CsR7vxAq
+         qRCK2xaoNL2l0EnQAbDC1M5qNccTrdBJpLXo8kguLf91NLgHgSsVuTySmsJz7GEkameN
+         F6G2FjXcH5Pb+eoNMazqQURsSV3A+X4GKTwiA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to;
-        bh=mTygZ9kN4WHDhv85TH9eddenLeZoOK/ucVcHg+3UwZ8=;
-        b=rDKuh+hRv5yapXNJy1esKWZFn27w90N+224S0xnRKt+pTW1885jKrJEnfwfdbw/Dc8
-         dmL5v6LcoLeLV7ZfzcylMUmT7AQiQRtJB+s9ibA8Y4/nAEV9/4SvEOGie6AOa1OxDiAN
-         ZzKCsjEB2kjDxEaY1u/PYEblrtbO6nXApvL0r0Lqiw0zIgIRkhi1yswmQdIxqvxsWkIK
-         s7ROdFnz8iQTaL7+z+vpDjXpHQ5Jsc+sGviMj31tlE+fT/YEgl16bgxh9wi0S8XaWqnJ
-         3ryw6YMMAMfX5W7JNRZaDdHqHdU+5Y27kPMTpsbJWJxDJTdgWtEMx4AJ4iztx/cKW4kb
-         d1Vg==
-X-Gm-Message-State: AOAM532Q9S6gVvoHOtOcXPhnxzfMRdSZxvCCXWQE2+ALgK4HruePdt1T
-        p074CBJ8IBFiqGobsHRB0+bMri1kFKpGuyGS
-X-Google-Smtp-Source: ABdhPJzQpZyMvNY/VCiV9mKVC6vOtQssF/SzNn/UV0zmBnzKinBv6i58VKo9CY5mKv9vGwd0UW+KlQ==
-X-Received: by 2002:aa7:9583:0:b029:142:2501:35cd with SMTP id z3-20020aa795830000b0290142250135cdmr1044606pfj.45.1600819291413;
-        Tue, 22 Sep 2020 17:01:31 -0700 (PDT)
+        bh=R/edugTFyx8VkZ4bEmTNtFm+liJwmpZPAdCt00EFRaA=;
+        b=dOa0X630qhECGX67pRw1trXI8YA4OCqgLIl+Jaer2C2KnCgaumG1FqTKmXHEtcxbiN
+         ja16uZFRM2xPQkrtcacLZgw7yZJR/b76HKZYjVMk+XqVpOn2gAMo3hN1Y3nHuinsVJid
+         MXgLkrLMqk3DXjHsfrP5exPzk5YCzBMzvfJ8mYj0pm0E+2x2EtdfpSbdf2xkEQSZf/08
+         FsPzwb9SO52qvLATL3WdGSVEwty81zHdcWAVKynifYgktHcUCnRRbZGzvWyFTaupOzL5
+         WMmhrHdCezLpyfoEtFd0O4bx2P2fLVk8pUW9gN5oGXV/T0NfLuojgRzKDi7ZlcxLd8Yy
+         QWGw==
+X-Gm-Message-State: AOAM532yqmsJogccGRhnZHFYO7EQlF7MzQb0rblFIp7iEwbdU9y0zT8R
+        8fbd/STUJFWJKjDDawH8Hd7hXA==
+X-Google-Smtp-Source: ABdhPJxsPxIiudnpfCbvaGl0B5+mDjrLuYPubbAvH2NQ0iMSqo19p1hLgLXeuYZA3WqAkHHyDXiTsA==
+X-Received: by 2002:aa7:99c7:0:b029:13e:d13d:a056 with SMTP id v7-20020aa799c70000b029013ed13da056mr6319165pfi.28.1600820160463;
+        Tue, 22 Sep 2020 17:16:00 -0700 (PDT)
 Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id b4sm3265728pjz.22.2020.09.22.17.01.30
+        by smtp.gmail.com with ESMTPSA id x3sm15715900pgg.54.2020.09.22.17.15.59
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Sep 2020 17:01:30 -0700 (PDT)
-From:   James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH 1/2] scsi: fc: Update statistics for host and rport on
- FPIN reception.
+        Tue, 22 Sep 2020 17:15:59 -0700 (PDT)
+Subject: Re: [PATCH 2/2] scsi: fc: Update documentation of sysfs nodes for
+ FPIN stats
 To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        James Smart <james.smart@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 References: <20200730061116.20111-1-njavali@marvell.com>
- <20200730061116.20111-2-njavali@marvell.com>
-Message-ID: <31d735ac-90d6-a601-0d8e-c15739684d23@broadcom.com>
-Date:   Tue, 22 Sep 2020 17:01:28 -0700
+ <20200730061116.20111-3-njavali@marvell.com>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <6650af6f-fda9-e2fc-2543-9911f83b5598@broadcom.com>
+Date:   Tue, 22 Sep 2020 17:15:58 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.2.2
 MIME-Version: 1.0
-In-Reply-To: <20200730061116.20111-2-njavali@marvell.com>
+In-Reply-To: <20200730061116.20111-3-njavali@marvell.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000047fe2a05afefc913"
+        boundary="0000000000000b23b205afeffd65"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000047fe2a05afefc913
+--0000000000000b23b205afeffd65
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -83,583 +82,91 @@ Content-Language: en-US
 
 
 On 7/29/2020 11:11 PM, Nilesh Javali wrote:
-> From: Shyam Sundar<ssundar@marvell.com>
+> From: Shyam Sundar <ssundar@marvell.com>
 >
->   Add Fabric Performance Impact Notification (FPIN) stats structure to
->   fc_host_attr and the fc_rport structures to maintain FPIN statistics
->   for the respective entities when the LLD notifies the transport of an
->   FPIN ELS.
+> Update documentation for sysfs nodes within,
+>         /sys/class/fc_host
+>         /sys/class/fc_remote_ports
 >
->   Add sysfs nodes to display FPIN statistics
->
->   Specifically, this patch:
->
-> - Adds the formal definition of FPIN descriptors
-> 	* Delivery Notification Descriptor
-> 	* Peer Congestion Notification Descriptor
-> 	* Congestion Notification Descriptor
->
-> - Adds the formal definition of the event types associated with them
->
-> - Adds a structure for holding fpin stats for host & rport
->
-> - Adds functions to parse the FPIN ELS and update the stats
->
-> - Adds sysfs nodes to maintain FPIN stats:
-> 	/sys/class/fc_host/hostXX/statistics/
-> 	/sys/class/fc_remote_ports/rport-XX\:Y-Z/statistics/
->
-> - Add stats for Congestion Signals, that are delivered to the host as
->   interrupt signals, under fc_host_statistics.
-
-This much separate functionality hints that this should be broken into 
-several patches.
-Recommendation:
-- patch on fc_els.h additions for FPINs
-- patch for framework - adding statistics to fc_host and fc_rport objects
-- patch for the fpin parsing and statistics setting
-- patch for cn_sign additions
-
-
-> Signed-off-by: Shyam Sundar<ssundar@marvell.com>
-> Signed-off-by: Nilesh Javali<njavali@marvell.com>
+> Signed-off-by: Shyam Sundar <ssundar@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   drivers/scsi/lpfc/lpfc_attr.c    |   2 +
->   drivers/scsi/qla2xxx/qla_attr.c  |   2 +
->   drivers/scsi/scsi_transport_fc.c | 410 ++++++++++++++++++++++++++++++-
->   include/scsi/scsi_transport_fc.h |  34 ++-
->   include/uapi/scsi/fc/fc_els.h    | 114 +++++++++
->   5 files changed, 559 insertions(+), 3 deletions(-)
+>   Documentation/ABI/testing/sysfs-class-fc_host | 23 +++++++++++++++++++
+>   .../ABI/testing/sysfs-class-fc_remote_ports   | 23 +++++++++++++++++++
+>   2 files changed, 46 insertions(+)
+>   create mode 100644 Documentation/ABI/testing/sysfs-class-fc_host
+>   create mode 100644 Documentation/ABI/testing/sysfs-class-fc_remote_ports
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index a62c60ca6477..9fd35b90cb53 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -7158,6 +7158,8 @@ struct fc_function_template lpfc_transport_functions = {
->   	.set_rport_dev_loss_tmo = lpfc_set_rport_loss_tmo,
->   	.show_rport_dev_loss_tmo = 1,
->   
-> +	.show_rport_statistics = 1,
+> diff --git a/Documentation/ABI/testing/sysfs-class-fc_host b/Documentation/ABI/testing/sysfs-class-fc_host
+> new file mode 100644
+> index 000000000000..a1e6ab89b86f
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-class-fc_host
+> @@ -0,0 +1,23 @@
+> +What:		/sys/class/fc_host/hostX/statistics/fpin_cn_yyy
+> +Date:		July 2020
+> +Contact:	Shyam Sundar <ssundar@marvell.com>
+> +Description:
+> +		These files contain the number of Fabric Performance Impact
+> +		Notification (FPIN) events generated by the fabric, to indicate
+> +		congestion detected on this host.
 > +
->   	.get_starget_port_id  = lpfc_get_starget_port_id,
->   	.show_starget_port_id = 1,
->   
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-> index 5d93ccc73153..e34623b7cb6f 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -3143,6 +3143,8 @@ struct fc_function_template qla2xxx_transport_functions = {
->   	.set_rport_dev_loss_tmo = qla2x00_set_rport_loss_tmo,
->   	.show_rport_dev_loss_tmo = 1,
->   
-> +	.show_rport_statistics = 1,
+> +What:		/sys/class/fc_host/hostX/statistics/fpin_li_yyy
+> +Date:		July 2020
+> +Contact:	Shyam Sundar <ssundar@marvell.com>
+> +Description:
+> +		These files contain the number of Fabric Performance Impact
+> +		Notification (FPIN) events generated by the fabric, to indicate
+> +		Link Integrity errors between the fabric and this host.
 > +
->   	.issue_fc_host_lip = qla2x00_issue_lip,
->   	.dev_loss_tmo_callbk = qla2x00_dev_loss_tmo_callbk,
->   	.terminate_rport_io = qla2x00_terminate_rport_io,
+> +What:		/sys/class/fc_host/hostX/statistics/fpin_dn_yyy
+> +Date:		July 2020
+> +Contact:	Shyam Sundar <ssundar@marvell.com>
+> +Description:
+> +		These files contain the number of Fabric Performance Impact
+> +		Notification (FPIN) events generated by the fabric, to indicate
+> +		Delivery related errors between the fabric and this host.
+> diff --git a/Documentation/ABI/testing/sysfs-class-fc_remote_ports b/Documentation/ABI/testing/sysfs-class-fc_remote_ports
+> new file mode 100644
+> index 000000000000..185db8ec6c05
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-class-fc_remote_ports
+> @@ -0,0 +1,23 @@
+> +What:		/sys/class/fc_remote_ports/rport-X:Y-Z/statistics/fpin_cn_yyy
+> +Date:		July 2020
+> +Contact:	Shyam Sundar <ssundar@marvell.com>
+> +Description:
+> +		These files contain the number of Fabric Performance Impact
+> +		Notification (FPIN) events generated by the fabric, to indicate
+> +		congestion detected on this rport.
+> +
+> +What:		/sys/class/fc_remote_ports/rport-X:Y-Z/statistics/fpin_li_yyy
+> +Date:		July 2020
+> +Contact:	Shyam Sundar <ssundar@marvell.com>
+> +Description:
+> +		These files contain the number of Fabric Performance Impact
+> +		Notification (FPIN) events generated by the fabric, to indicate
+> +		Link Integrity errors between the fabric and this rport.
+> +
+> +What:		/sys/class/fc_remote_ports/rport-X:Y-Z/statistics/fpin_dn_yyy
+> +Date:		July 2020
+> +Contact:	Shyam Sundar <ssundar@marvell.com>
+> +Description:
+> +		These files contain the number of Fabric Performance Impact
+> +		Notification (FPIN) events generated by the fabric, to indicate
+> +		Delivery related errors between the fabric and this rport.
 
-Given this really doesn't interact with the driver (transport can export 
-statistics and as transport routines do all the stats update), I think 
-we should code it such that there does not need to be a 
-show_xport_statistics flags.  They'll just be 0 if the lldd doesn't call 
-the fpin_rcv routine.
-
-
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 2732fa65119c..587b610e13a2 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -22,6 +22,7 @@
->   #include <net/netlink.h>
->   #include <scsi/scsi_netlink_fc.h>
->   #include <scsi/scsi_bsg_fc.h>
-> +#include <uapi/scsi/fc/fc_els.h>
->   #include "scsi_priv.h"
->   
->   static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
-> @@ -33,6 +34,10 @@ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
->   static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
->   static void fc_bsg_remove(struct request_queue *);
->   static void fc_bsg_goose_queue(struct fc_rport *);
-> +static void fc_li_stats_update(struct fc_fn_li_desc *li_desc,
-> +			       struct fpin_stats *stats);
-> +static void fc_deli_stats_update(u32 reason_code, struct fpin_stats *stats);
-> +static void fc_cn_stats_update(u16 event_type, struct fpin_stats *stats);
->   
->   /*
->    * Module Parameters
-> @@ -418,6 +423,7 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
->   	fc_host->fabric_name = -1;
->   	memset(fc_host->symbolic_name, 0, sizeof(fc_host->symbolic_name));
->   	memset(fc_host->system_hostname, 0, sizeof(fc_host->system_hostname));
-> +	memset(&fc_host->stats, 0, sizeof(struct fpin_stats));
-
-I'd prefer the fc_host field were named fpin_stats or something 
-similar.  "stats" alone implies it may contain other kinds of statistics 
-and "stats" with a "struct fpin_stats" isn't clean.
-
->   
->   	fc_host->tgtid_bind_type = FC_TGTID_BIND_BY_WWPN;
->   
-> @@ -627,6 +633,266 @@ fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
->   }
->   EXPORT_SYMBOL(fc_host_post_vendor_event);
->   
-> +/**
-> + * fc_find_rport_by_wwpn - find the fc_rport pointer for a given wwpn
-> + * @shost:		host the fc_rport is associated with
-> + * @wwpn:		wwpn of the fc_rport device
-> + *
-> + * Notes:
-> + *	This routine assumes no locks are held on entry.
-> + */
-> +struct fc_rport *
-> +fc_find_rport_by_wwpn(struct Scsi_Host *shost, u64 wwpn)
-> +{
-> +	struct fc_rport *rport, *found = NULL;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +
-> +	list_for_each_entry(rport, &fc_host_rports(shost), peers) {
-> +		if (rport->scsi_target_id == -1)
-> +			continue;
-> +
-> +		if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +			continue;
-> +
-> +		if (rport->port_name == wwpn)
-> +			found = rport;
-tighten it up and exit when found:
-           if (rport->scsi_target_id == -1 || rport->port_state != 
-FC_PORTSTATE_ONLINE)
-               continue;
-           if (rport->port_name == wwpn) {
-                found = rport;
-                break;
-           }
-
-
-Given how generic this routine is - it's a little odd that it's 
-validating the scsi target id - meaning it will bypass well known fabric 
-rports (ok) but also nvme devices.  I think it needs to be matching nvme 
-rports as well.  I recommend not validating scsi_target_id (so this is 
-very generic and matches anything with the wwpn), and in the caller 
-apply the validations to either the address or the role.
-
-> +	}
-> +
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +	return found;
-> +}
-> +EXPORT_SYMBOL(fc_find_rport_by_wwpn);
-> +
-> +static void
-> +fc_li_stats_update(struct fc_fn_li_desc *li_desc,
-> +		   struct fpin_stats *stats)
-> +{
-> +	switch (be16_to_cpu(li_desc->event_type)) {
-> +	case FPIN_LI_UNKNOWN:
-> +		stats->li_failure_unknown +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_LINK_FAILURE:
-> +		stats->li_link_failure_count +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_LOSS_OF_SYNC:
-> +		stats->li_loss_of_sync_count +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_LOSS_OF_SIG:
-> +		stats->li_loss_of_signals_count +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_PRIM_SEQ_ERR:
-> +		stats->li_prim_seq_err_count +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_INVALID_TX_WD:
-> +		stats->li_invalid_tx_word_count +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_INVALID_CRC:
-> +		stats->li_invalid_crc_count +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	case FPIN_LI_DEVICE_SPEC:
-> +		stats->li_device_specific +=
-> +		    be32_to_cpu(li_desc->event_count);
-> +		break;
-> +	}
-> +}
-> +
-> +static void
-> +fc_deli_stats_update(u32 deli_reason_code, struct fpin_stats *stats)
-
-nit: at least name the routine "fc_delivery_status_update" - deli is 
-cute but not clear.
-
-> +{
-> +	switch (deli_reason_code) {
-> +	case FPIN_DELI_UNKNOWN:
-> +		stats->dn_unknown++;
-> +		break;
-> +	case FPIN_DELI_TIMEOUT:
-> +		stats->dn_timeout++;
-> +		break;
-> +	case FPIN_DELI_UNABLE_TO_ROUTE:
-> +		stats->dn_unable_to_route++;
-> +		break;
-> +	case FPIN_DELI_DEVICE_SPEC:
-> +		stats->dn_device_specific++;
-> +		break;
-> +	}
-> +}
-> +
-> +static void
-> +fc_cn_stats_update(u16 event_type, struct fpin_stats *stats)
-> +{
-> +	switch (event_type) {
-> +	case FPIN_CONGN_CLEAR:
-> +		stats->cn_clear++;
-> +		break;
-> +	case FPIN_CONGN_LOST_CREDIT:
-> +		stats->cn_lost_credit++;
-> +		break;
-> +	case FPIN_CONGN_CREDIT_STALL:
-> +		stats->cn_credit_stall++;
-> +		break;
-> +	case FPIN_CONGN_OVERSUBSCRIPTION:
-> +		stats->cn_oversubscription++;
-> +		break;
-> +	case FPIN_CONGN_DEVICE_SPEC:
-> +		stats->cn_device_specific++;
-> +	}
-> +}
-> +
-> +/*
-> + * fc_fpin_li_stats_update - routine to update Link Integrity
-> + * event statistics.
-> + * @shost:		host the FPIN was received on
-> + * @tlv:		pointer to link integrity descriptor
-> + *
-> + */
-> +static void
-> +fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
-> +{
-> +	u8 i;
-> +	struct fc_rport *rport = NULL;
-> +	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
-> +	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-> +	struct fc_fn_li_desc *li_desc = (struct fc_fn_li_desc *)tlv;
-> +	u64 wwpn;
-> +
-> +	rport = fc_find_rport_by_wwpn(shost,
-> +				      be64_to_cpu(li_desc->detecting_wwpn));
-> +	if (rport) {
-> +		det_rport = rport;
-> +		fc_li_stats_update(li_desc, &det_rport->stats);
-
-this looks odd - why are the stats counting against both the detecting 
-and attached ports - I would think it only counts against the "attached" 
-port.
-
-As it's the same counters - you loose the distinction of what it 
-detected vs what it is generating.  My guess is most of the detecting 
-ports would have been a switch port and it wouldn't have been found by 
-the rport_by_wwpn, so this block wasn't getting executed.
-
-> +	}
-> +
-> +	rport = fc_find_rport_by_wwpn(shost,
-> +				      be64_to_cpu(li_desc->attached_wwpn));
-> +	if (rport) {
-> +		attach_rport = rport;
-> +		fc_li_stats_update(li_desc, &attach_rport->stats);
-> +	}
-> +
-> +	if (be32_to_cpu(li_desc->pname_count) > 0) {
-> +		for (i = 0;
-> +		    i < be32_to_cpu(li_desc->pname_count);
-> +		    i++) {
-> +			wwpn = be64_to_cpu(li_desc->pname_list[i]);
-> +			rport = fc_find_rport_by_wwpn(shost, wwpn);
-> +			if (rport && rport != det_rport &&
-> +			    rport != attach_rport) {
-> +				fc_li_stats_update(li_desc, &rport->stats);
-
-I guess this is ok - but it makes it hard for administrators.  I believe 
-this is the list of the other nports (aka npiv) on the "attached port" 
-that is generating the error.  In that respect, it is correct to 
-increment their counters - but I hope that an administrator knows that 
-may resolve to a single physical port with only 1/N the error count.  
- From our use case in linux, as an initiator, to match an rport it must 
-be a target port using npiv and from our point of view we don't know 
-that they are all sharing the same physical port.
-
-
-> +			}
-> +		}
-> +	}
-> +
-> +	if (fc_host->port_name == be64_to_cpu(li_desc->attached_wwpn))
-> +		fc_li_stats_update(li_desc, &fc_host->stats);
-
-looks good
-
-> +}
-> +
-> +/*
-> + * fc_fpin_deli_stats_update - routine to update Delivery Notification
-> + * event statistics.
-> + * @shost:		host the FPIN was received on
-> + * @tlv:		pointer to delivery descriptor
-> + *
-> + */
-> +static void
-> +fc_fpin_deli_stats_update(struct Scsi_Host *shost,
-> +			  struct fc_tlv_desc *tlv)
-
-same nit comment
-
-> +{
-> +	struct fc_rport *rport = NULL;
-> +	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
-> +	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-> +	struct fc_fn_deli_desc *deli_desc = (struct fc_fn_deli_desc *)tlv;
-> +	u32 reason_code = be32_to_cpu(deli_desc->deli_reason_code);
-> +
-> +	rport = fc_find_rport_by_wwpn(shost,
-> +				      be64_to_cpu(deli_desc->detecting_wwpn));
-> +	if (rport) {
-> +		det_rport = rport;
-> +		fc_deli_stats_update(reason_code, &det_rport->stats);
-> +	}
-
-repeat of li comment - detecting port shouldn't be having stats counted 
-against it.
-
-> +
-> +	rport = fc_find_rport_by_wwpn(shost,
-> +				      be64_to_cpu(deli_desc->attached_wwpn));
-> +	if (rport) {
-> +		attach_rport = rport;
-> +		fc_deli_stats_update(reason_code, &attach_rport->stats);
-> +	}
-> +
-> +	if (fc_host->port_name == be64_to_cpu(deli_desc->attached_wwpn))
-> +		fc_deli_stats_update(reason_code, &fc_host->stats);
-> +}
-> +
-> +/*
-> + * fc_fpin_peer_congn_stats_update - routine to update Peer Congestion
-> + * event statistics.
-> + * @shost:		host the FPIN was received on
-> + * @tlv:		pointer to peer congestion descriptor
-> + *
-> + */
-> +static void
-> +fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
-> +				struct fc_tlv_desc *tlv)
-> +{
-> +	u8 i;
-> +	struct fc_rport *rport = NULL;
-> +	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
-> +	struct fc_fn_peer_congn_desc *pc_desc =
-> +	    (struct fc_fn_peer_congn_desc *)tlv;
-> +	u16 event_type = be16_to_cpu(pc_desc->event_type);
-> +	u64 wwpn;
-> +
-> +	rport = fc_find_rport_by_wwpn(shost,
-> +				      be64_to_cpu(pc_desc->detecting_wwpn));
-> +	if (rport) {
-> +		det_rport = rport;
-> +		fc_cn_stats_update(event_type, &det_rport->stats);
-> +	}
-
-same comment - don't add stats to detecting port name.
-
-> +
-> +	rport = fc_find_rport_by_wwpn(shost,
-> +				      be64_to_cpu(pc_desc->attached_wwpn));
-> +	if (rport) {
-> +		attach_rport = rport;
-> +		fc_cn_stats_update(event_type, &attach_rport->stats);
-> +	}
-> +
-> +	if (be32_to_cpu(pc_desc->pname_count) > 0) {
-> +		for (i = 0;
-> +		    i < be32_to_cpu(pc_desc->pname_count);
-> +		    i++) {
-> +			wwpn = be64_to_cpu(pc_desc->pname_list[i]);
-> +			rport = fc_find_rport_by_wwpn(shost, wwpn);
-> +			if (rport && rport != det_rport &&
-> +			    rport != attach_rport) {
-> +				fc_cn_stats_update(event_type,
-> +						   &rport->stats);
-
-same comment as li - good that we're adding to all rports, but admin 
-must understand the multiplier if all on same port.
-
-> +			}
-> +		}
-> +	}
-> +}
-> +
-> +/*
-> + * fc_fpin_congn_stats_update - routine to update Congestion
-> + * event statistics.
-> + * @shost:		host the FPIN was received on
-> + * @tlv:		pointer to congestion descriptor
-> + *
-> + */
-> +static void
-> +fc_fpin_congn_stats_update(struct Scsi_Host *shost,
-> +			   struct fc_tlv_desc *tlv)
-> +{
-> +	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-> +	struct fc_fn_congn_desc *congn = (struct fc_fn_congn_desc *)tlv;
-> +
-> +	fc_cn_stats_update(be16_to_cpu(congn->event_type), &fc_host->stats);
-> +}
-> +
->   /**
->    * fc_host_rcv_fpin - routine to process a received FPIN.
->    * @shost:		host the FPIN was received on
-> @@ -639,8 +905,41 @@ EXPORT_SYMBOL(fc_host_post_vendor_event);
->   void
->   fc_host_fpin_rcv(struct Scsi_Host *shost, u32 fpin_len, char *fpin_buf)
->   {
-> +	struct fc_els_fpin *fpin = (struct fc_els_fpin *)fpin_buf;
-> +	struct fc_tlv_desc *tlv;
-> +	u32 desc_cnt = 0, bytes_remain;
-> +	u32 dtag;
-> +
-> +	/* Update Statistics */
-> +	tlv = (struct fc_tlv_desc *)&fpin->fpin_desc[0];
-> +	bytes_remain = fpin_len - offsetof(struct fc_els_fpin, fpin_desc);
-> +	bytes_remain = min_t(u32, bytes_remain, be32_to_cpu(fpin->desc_len));
-> +
-> +	while (bytes_remain >= FC_TLV_DESC_HDR_SZ &&
-> +	       bytes_remain >= FC_TLV_DESC_SZ_FROM_LENGTH(tlv)) {
-> +		dtag = be32_to_cpu(tlv->desc_tag);
-> +		switch (dtag) {
-> +		case ELS_DTAG_LNK_INTEGRITY:
-> +			fc_fpin_li_stats_update(shost, tlv);
-> +			break;
-> +		case ELS_DTAG_DELIVERY:
-> +			fc_fpin_deli_stats_update(shost, tlv);
-> +			break;
-> +		case ELS_DTAG_PEER_CONGEST:
-> +			fc_fpin_peer_congn_stats_update(shost, tlv);
-> +			break;
-> +		case ELS_DTAG_CONGESTION:
-> +			fc_fpin_congn_stats_update(shost, tlv);
-> +		}
-> +
-> +		desc_cnt++;
-> +		bytes_remain -= FC_TLV_DESC_SZ_FROM_LENGTH(tlv);
-> +		tlv = fc_tlv_next_desc(tlv);
-> +	}
-> +
->   	fc_host_post_fc_event(shost, fc_get_event_number(),
-> -				FCH_EVT_LINK_FPIN, fpin_len, fpin_buf, 0);
-> +			      FCH_EVT_LINK_FPIN, fpin_len, fpin_buf, 0);
-> +
->   }
->   EXPORT_SYMBOL(fc_host_fpin_rcv);
-
-Question: I know we've been asked to log the fpins to the kernel log.  
-Holding on to the counts and so is good, but it still loses some of the 
-relationship of the detected port (what detected what attached port).  
-What's your thinking on it. Should it be something in these common 
-routines and enabled/disabled by a sysfs toggle ?
-
->   
-> @@ -990,6 +1289,61 @@ store_fc_rport_fast_io_fail_tmo(struct device *dev,
->   static FC_DEVICE_ATTR(rport, fast_io_fail_tmo, S_IRUGO | S_IWUSR,
->   	show_fc_rport_fast_io_fail_tmo, store_fc_rport_fast_io_fail_tmo);
->   
-> +#define fc_rport_fpin_statistic(name)					\
-> +static ssize_t fc_rport_fpinstat_##name(struct device *cd,		\
-> +				  struct device_attribute *attr,	\
-> +				  char *buf)				\
-> +{									\
-> +	struct fc_rport *rport = transport_class_to_rport(cd);		\
-> +									\
-> +	return snprintf(buf, 20, "0x%llx\n", rport->stats.name);	\
-> +}									\
-> +static FC_DEVICE_ATTR(rport, fpin_##name, 0444, fc_rport_fpinstat_##name, NULL)
-> +
-> +fc_rport_fpin_statistic(dn_unknown);
-> +fc_rport_fpin_statistic(dn_timeout);
-> +fc_rport_fpin_statistic(dn_unable_to_route);
-> +fc_rport_fpin_statistic(dn_device_specific);
-> +fc_rport_fpin_statistic(cn_clear);
-> +fc_rport_fpin_statistic(cn_lost_credit);
-> +fc_rport_fpin_statistic(cn_credit_stall);
-> +fc_rport_fpin_statistic(cn_oversubscription);
-> +fc_rport_fpin_statistic(cn_device_specific);
-> +fc_rport_fpin_statistic(li_failure_unknown);
-> +fc_rport_fpin_statistic(li_link_failure_count);
-> +fc_rport_fpin_statistic(li_loss_of_sync_count);
-> +fc_rport_fpin_statistic(li_loss_of_signals_count);
-> +fc_rport_fpin_statistic(li_prim_seq_err_count);
-> +fc_rport_fpin_statistic(li_invalid_tx_word_count);
-> +fc_rport_fpin_statistic(li_invalid_crc_count);
-> +fc_rport_fpin_statistic(li_device_specific);
-> +
-> +static struct attribute *fc_rport_statistics_attrs[] = {
-> +	&device_attr_rport_fpin_dn_unknown.attr,
-> +	&device_attr_rport_fpin_dn_timeout.attr,
-> +	&device_attr_rport_fpin_dn_unable_to_route.attr,
-> +	&device_attr_rport_fpin_dn_device_specific.attr,
-> +	&device_attr_rport_fpin_li_failure_unknown.attr,
-> +	&device_attr_rport_fpin_li_link_failure_count.attr,
-> +	&device_attr_rport_fpin_li_loss_of_sync_count.attr,
-> +	&device_attr_rport_fpin_li_loss_of_signals_count.attr,
-> +	&device_attr_rport_fpin_li_prim_seq_err_count.attr,
-> +	&device_attr_rport_fpin_li_invalid_tx_word_count.attr,
-> +	&device_attr_rport_fpin_li_invalid_crc_count.attr,
-> +	&device_attr_rport_fpin_li_device_specific.attr,
-> +	&device_attr_rport_fpin_cn_clear.attr,
-> +	&device_attr_rport_fpin_cn_lost_credit.attr,
-> +	&device_attr_rport_fpin_cn_credit_stall.attr,
-> +	&device_attr_rport_fpin_cn_oversubscription.attr,
-> +	&device_attr_rport_fpin_cn_device_specific.attr,
-> +	NULL
-> +};
-> +
-> +static struct attribute_group fc_rport_statistics_group = {
-> +	.name = "statistics",
-> +	.attrs = fc_rport_statistics_attrs,
-> +};
-> +
->   
->   /*
->    * FC SCSI Target Attribute Management
-> @@ -1743,6 +2097,38 @@ fc_host_statistic(fc_xid_not_found);
->   fc_host_statistic(fc_xid_busy);
->   fc_host_statistic(fc_seq_not_found);
->   fc_host_statistic(fc_non_bls_resp);
-> +fc_host_statistic(cn_sig_warn);
-> +fc_host_statistic(cn_sig_alarm);
-
-Please add statistics for the # of each type of fpin descriptor received 
-on the shost.  Increment by 1 in each of the descriptor-based update 
-routines.
-
-
-Rest looks good.
-
-Thanks
+Can you rework these a little. As it's written, it's implying that it's 
+counting the FPINs, when it's really summing the number of integrity 
+events reported by FPINs.  The number of events may not be the total 
+number as it may have had to reach a threshold within a time window in 
+order to have an FPIN generated.
 
 -- james
 
 
 
---00000000000047fe2a05afefc913
+--0000000000000b23b205afeffd65
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -729,14 +236,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgUijrVbJnjkhnNbKf
-SUvty2kqVXZXsUmVN3/Qoi+hEegwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAwOTIzMDAwMTMyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgy/pw+Ib1OqhHYfNY
+0Qka3pZJW/7syJT0AFVvNqjBp7wwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAwOTIzMDAxNjAwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKZPFlKCiEKzK+EzPteyA4oGnAJ2xqeiFA/w
-TTyP9ItTA926qSvWDvukK7IRbamtYVAzTUVSyXpxNYcuJQ/6xvUQNE3G9J2GeQzZQu1vxA7k6+Vn
-xA8igo2k2CJgry6oOJrkytEW+GGZiCNRqMDeZBieo2gopdVGkgQfgm8ddXqQJeE7yhbvPnc3hh/7
-h+NmQcEryVswKCVbkacjaJ2KhrvAzTNop7M4PCvIJX8nLP92dJq5xelgb3CPby8KHB7YZCWAmn4N
-LhmDqjsDwq5CZ4FST57Sk1b7KDEFczez1u9MMK8+uCO8JqzGkPTCAgYado5zp7m10BAOLGc6v8j0
-rzA=
---00000000000047fe2a05afefc913--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAI6s1N/SbYOhfS8+cCSWjTS8xBkVy77ZnaRY
+kOM1Wut3EKLbhWjNjNm/7CznoOenVpIyCxORv2bLgwRNS+3cbc0SRpRRfbqWddLFLASJcLowVG4o
++M+cHlopzbdJA6CqWJrjASq3mKZNJ7yuXpNYGfTYV2PYvi7sNg2F686k5imW/6uVUtNDpCKWH5m7
+xxYvO8arbd+M0z1Uize916KhzwNxkjkGOE4KDOVR2jMytZCQRBQGRTm+nSYv6sEg+tWcVd6OMtlw
+U0syf37+OvIEx44I9LVuh0Gma/gfWTTyeVbLPsNJ+fm/Uiq7erVpHSAUPfxtVn8jIZoUyTC9APR7
+WpA=
+--0000000000000b23b205afeffd65--
