@@ -2,111 +2,81 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC35BC2D0A8
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 12:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77092C2D0A8
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 13:23:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EA0321BE5
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 12:53:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="X10kQhDh"
+	by mail.kernel.org (Postfix) with ESMTP id 2E187235FD
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 13:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726662AbgIWMxL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 08:53:11 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59202 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726606AbgIWMxK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Sep 2020 08:53:10 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 08NCWvgP155709;
-        Wed, 23 Sep 2020 08:53:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=pp1;
- bh=Z8mPk36VOce+KlKDpk8jJO4I7+ATiLIwcpb4W6Wl/mQ=;
- b=X10kQhDhAVJx9QlHu9KXpP16n0+0avj7fF2vo2AxUZva6aFKGF83CwVdIv9cuj6djNc6
- BtYzYGS23UamJ4SP4pX0oRSRlapYUQlX+9/b/mnj7fWwjADhK5xjHr2jRxAtG4h+dDnl
- lAMZya9iXkFMW36DvyA6ky8vdSi1gUIDM8I8QwRmz19I9T1Vk5giql7c6jXYME3SZvPT
- twpJ/MTPEozK2tJ7cQNNkucnrnBThh3x/Jscgc3wqLrxbYuoDk84fG8/sCplztzH22Id
- lVrcxt7+BAhxPKyKEsv028mmvhpt9SpdGsyElu5Yv6Krk6SgcAPCXlVla1fchPyv+xue 9A== 
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 33r5dy2p90-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 23 Sep 2020 08:53:06 -0400
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 08NChkh9019993;
-        Wed, 23 Sep 2020 12:53:04 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma05fra.de.ibm.com with ESMTP id 33n9m7t5bh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 23 Sep 2020 12:53:04 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 08NCr1XF23068940
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 23 Sep 2020 12:53:01 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3E14642047;
-        Wed, 23 Sep 2020 12:53:01 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7BAC94203F;
-        Wed, 23 Sep 2020 12:53:00 +0000 (GMT)
-Received: from marcibm (unknown [9.145.64.218])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Wed, 23 Sep 2020 12:53:00 +0000 (GMT)
-From:   Marc Hartmayer <mhartmay@linux.ibm.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Cc:     Christian Borntraeger <borntraeger@de.ibm.com>,
-        Marc Hartmayer <mhartmay@linux.ibm.com>,
-        Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Block Mailing List <linux-block@vger.kernel.org>,
-        Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
-Subject: linux-next: possible bug in 'block: remove the BIO_NULL_MAPPED flag'
-Date:   Wed, 23 Sep 2020 14:52:59 +0200
-Message-ID: <87tuvo8xjo.fsf@linux.ibm.com>
+        id S1726587AbgIWNXJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 09:23:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51380 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726130AbgIWNXI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 09:23:08 -0400
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A9BC0613CE;
+        Wed, 23 Sep 2020 06:23:08 -0700 (PDT)
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kL4jW-004YbY-CV; Wed, 23 Sep 2020 13:22:54 +0000
+Date:   Wed, 23 Sep 2020 14:22:54 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Andy Lutomirski <luto@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        David Howells <dhowells@redhat.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        X86 ML <x86@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        "open list:MIPS" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        linux-aio <linux-aio@kvack.org>, io-uring@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        keyrings@vger.kernel.org,
+        LSM List <linux-security-module@vger.kernel.org>
+Subject: Re: [PATCH 1/9] kernel: add a PF_FORCE_COMPAT flag
+Message-ID: <20200923132254.GI3421308@ZenIV.linux.org.uk>
+References: <563138b5-7073-74bc-f0c5-b2bad6277e87@gmail.com>
+ <486c92d0-0f2e-bd61-1ab8-302524af5e08@gmail.com>
+ <CALCETrW3rwGsgfLNnu_0JAcL5jvrPVTLTWM3JpbB5P9Hye6Fdw@mail.gmail.com>
+ <d5c6736a-2cb4-4e22-78da-a667bda5c05a@gmail.com>
+ <CALCETrUEC81va8-fuUXG1uA5rbKxnKDYsDOXC70_HtKD4LAeAg@mail.gmail.com>
+ <e0a1b4d1-ff47-18d1-d535-c62812cb3105@gmail.com>
+ <CAK8P3a2-6JNS38EbZcLrk=cTT526oP=Rf0aoqWNSJ-k4XTYehQ@mail.gmail.com>
+ <f25b4708-eba6-78d6-03f9-5bfb04e07627@gmail.com>
+ <CAK8P3a39jN+t2hhLg0oKZnbYATQXmYE2-Z1JkmFyc1EPdg1HXw@mail.gmail.com>
+ <91209170-dcb4-d9ee-afa0-a819f8877b86@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-09-23_07:2020-09-23,2020-09-23 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxlogscore=999
- impostorscore=0 clxscore=1011 phishscore=0 bulkscore=0 malwarescore=0
- suspectscore=1 priorityscore=1501 adultscore=0 lowpriorityscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009230098
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <91209170-dcb4-d9ee-afa0-a819f8877b86@gmail.com>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph, Jens,
+On Wed, Sep 23, 2020 at 11:01:34AM +0300, Pavel Begunkov wrote:
 
-I found an interesting bug in my KVM guest (tested on s390x). The guest
-uses a virtio-scsi disk and the current linux-next kernel. The problem
-is that I cannot get the SCSI ID of the attached SCSI disk. Running the
-command `lsscsi --scsi_id` in the guest returns:
+> > I'm not following why that would be considered a valid option,
+> > as that clearly breaks existing users that update from a 32-bit
+> > kernel to a 64-bit one.
+> 
+> Do you mean users who move 32-bit binaries (without recompiling) to a
+> new x64 kernel? Does the kernel guarantees that to work?
 
-root@qemus390x:~# lsscsi --scsi_id
-[0:0:0:0]    disk    Linux    scsi_debug       0190  /dev/sda   -
+Yes.
 
-but the expected result is something like:
-
-root@qemus390x:~# lsscsi --scsi_id
-[0:0:0:0]    disk    Linux    scsi_debug       0190  /dev/sda   33333333000002710
-
-Also there is no /dev/disk/by-id/scsi-* path created. I bisected the
-problem to...
-
-commit f3256075ba49d80835b601bfbff350a2140b2924 (HEAD, refs/bisect/bad)
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Thu Aug 27 17:37:45 2020 +0200
-
-    block: remove the BIO_NULL_MAPPED flag
-
-When I reverted this commit the problem was gone. Any ideas what the
-problem is? Thanks in advance.
-
-Best regards,
- Marc
+No further (printable) comments for now...
