@@ -2,94 +2,100 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B35AAC4363D
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:59:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B932C4727E
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 15:17:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85707206FB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1B1E21D43
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 15:17:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600874241;
+	bh=/QQofHRADGAYxOtJIce3d38QkMvme+6u661AK0sTIww=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=072CzonK1QMKu2AB59fr0OXIjQt8gKwPleuIIDJT7HRdS1dqg2yhZqfjqm7YVzpA7
+	 izHj8sJd9eBYvA7dbxUNGkIUlmsVlXCWVmE6m2eQJi03MGiEmGVG+xLoQcyiFhKaC9
+	 cv4saH0FUHHEcjSJl0GgD4DnRJbo6R7iXA555MJ8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726636AbgIWO7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 10:59:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37958 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726130AbgIWO7M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 10:59:12 -0400
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B643C0613CE;
-        Wed, 23 Sep 2020 07:59:12 -0700 (PDT)
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kL6EX-004bOc-Io; Wed, 23 Sep 2020 14:59:01 +0000
-Date:   Wed, 23 Sep 2020 15:59:01 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        David Laight <David.Laight@aculab.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-aio@kvack.org, io-uring@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-mm@kvack.org,
-        netdev@vger.kernel.org, keyrings@vger.kernel.org,
-        linux-security-module@vger.kernel.org
-Subject: Re: [PATCH 5/9] fs: remove various compat readv/writev helpers
-Message-ID: <20200923145901.GN3421308@ZenIV.linux.org.uk>
-References: <20200923060547.16903-1-hch@lst.de>
- <20200923060547.16903-6-hch@lst.de>
- <20200923142549.GK3421308@ZenIV.linux.org.uk>
- <20200923143251.GA14062@lst.de>
+        id S1726877AbgIWPRQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 11:17:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60766 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726156AbgIWPRP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Sep 2020 11:17:15 -0400
+Received: from localhost (fw-tnat.cambridge.arm.com [217.140.96.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6077C2075B;
+        Wed, 23 Sep 2020 15:17:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600874234;
+        bh=/QQofHRADGAYxOtJIce3d38QkMvme+6u661AK0sTIww=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qaL+99AxNSM+PUkApT/4Pupcbe3cWXnIOAQs/ZT35oiBfgpa53MHX/m6TMpBock3a
+         fQSnODIgnUVdnSkWJ0pBplNyHoTqkHuo7hhaFUgOEQ4u+Awe/y3f+CYmaRRBSsJrRv
+         ycipz9I2nQvfISAkNRMDRLNIxu8SAq09SP1ymhKs=
+Date:   Wed, 23 Sep 2020 16:16:20 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     Rolf Reintjes <lists2.rolf@reintjes.nrw>
+Cc:     linux-spi@vger.kernel.org, Julia Lawall <Julia.Lawall@inria.fr>,
+        linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-block@vger.kernel.org,
+        Yossi Leybovich <sleybo@amazon.com>,
+        linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-rdma@vger.kernel.org,
+        Dan Williams <dan.j.williams@intel.com>,
+        rds-devel@oss.oracle.com
+Subject: Re: [PATCH 00/14] drop double zeroing
+Message-ID: <20200923151620.GC5707@sirena.org.uk>
+References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
+ <160070750168.56292.17961674601916397869.b4-ty@kernel.org>
+ <c3b33526-936d-ffa4-c301-4d0485822be1@reintjes.nrw>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="NU0Ex4SbNnrxsi6C"
 Content-Disposition: inline
-In-Reply-To: <20200923143251.GA14062@lst.de>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <c3b33526-936d-ffa4-c301-4d0485822be1@reintjes.nrw>
+X-Cookie: This report is filled with omissions.
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 04:32:51PM +0200, Christoph Hellwig wrote:
-> On Wed, Sep 23, 2020 at 03:25:49PM +0100, Al Viro wrote:
-> > On Wed, Sep 23, 2020 at 08:05:43AM +0200, Christoph Hellwig wrote:
-> > >  COMPAT_SYSCALL_DEFINE3(readv, compat_ulong_t, fd,
-> > > -		const struct compat_iovec __user *,vec,
-> > > +		const struct iovec __user *, vec,
-> > 
-> > Um...  Will it even compile?
-> > 
-> > >  #ifdef __ARCH_WANT_COMPAT_SYS_PREADV64
-> > >  COMPAT_SYSCALL_DEFINE4(preadv64, unsigned long, fd,
-> > > -		const struct compat_iovec __user *,vec,
-> > > +		const struct iovec __user *, vec,
-> > 
-> > Ditto.  Look into include/linux/compat.h and you'll see
-> > 
-> > asmlinkage long compat_sys_preadv64(unsigned long fd,
-> >                 const struct compat_iovec __user *vec,
-> >                 unsigned long vlen, loff_t pos);
-> > 
-> > How does that manage to avoid the compiler screaming bloody
-> > murder?
-> 
-> That's a very good question.  But it does not just compile but actually
-> works.  Probably because all the syscall wrappers mean that we don't
-> actually generate the normal names.  I just tried this:
-> 
-> --- a/include/linux/syscalls.h
-> +++ b/include/linux/syscalls.h
-> @@ -468,7 +468,7 @@ asmlinkage long sys_lseek(unsigned int fd, off_t offset,
->  asmlinkage long sys_read(unsigned int fd, char __user *buf, size_t count);
->  asmlinkage long sys_write(unsigned int fd, const char __user *buf,
->                             size_t count);
-> -asmlinkage long sys_readv(unsigned long fd,
-> +asmlinkage long sys_readv(void *fd,
-> 
-> for fun, and the compiler doesn't care either..
 
-Try to build it for sparc or ppc...
+--NU0Ex4SbNnrxsi6C
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Wed, Sep 23, 2020 at 05:10:33PM +0200, Rolf Reintjes wrote:
+> On 21.09.20 18:58, Mark Brown wrote:
+
+> I do not understand which of the 14 patches you applied. Your mail responds
+> to the 00/14 mail.
+
+As the mail you're replying to says:
+
+> > [1/1] spi/topcliff-pch: drop double zeroing
+> >        commit: ca03dba30f2b8ff45a2972c6691e4c96d8c52b3b
+
+--NU0Ex4SbNnrxsi6C
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAl9rZsMACgkQJNaLcl1U
+h9AxAgf/UlZBlBEQmArmMghyqM+HNmgNqZcFWWNnNQSmBBrgl8128+pLwAgIeZLw
+0l6J3hL0JAr1ozAMpm1RGS/xj2CD8a6QFiRw+9wAgL9eY3DAdognRwtwLJlW6zq3
+nj2VF+7+R6LhZGxqub8TnxUZLSdlop3wn9ZuAnTRZjjhPq2iidr4iYPWYsGqo+j5
+svVy+eYILC3/Y6X31PpT2OXujQXkrrCGlONZz2ieOMTLSLNQhL8pZh8tkJB9s/F5
+U60+SPDeI7yrVh6k5/iCldI5JHQyjXAmHza4R6BzKTc6kgSDvUlzrVOZxw1aaGy+
+EFLE4qdwQYEPaeRMZ+XVpSUbf3dGUw==
+=Rrao
+-----END PGP SIGNATURE-----
+
+--NU0Ex4SbNnrxsi6C--
