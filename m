@@ -2,101 +2,44 @@ Return-Path: <SRS0=SJ7r=DA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DED84C2D0A8
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F7DC4363D
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:54:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6935206FB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:49:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C258221D43
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Sep 2020 14:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726785AbgIWOtZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Sep 2020 10:49:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36428 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726572AbgIWOtZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2020 10:49:25 -0400
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA320C0613CE;
-        Wed, 23 Sep 2020 07:49:24 -0700 (PDT)
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kL657-004bBq-D5; Wed, 23 Sep 2020 14:49:17 +0000
-Date:   Wed, 23 Sep 2020 15:49:17 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     David Laight <David.Laight@aculab.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-aio@kvack.org" <linux-aio@kvack.org>,
-        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
-        "linux-security-module@vger.kernel.org" 
-        <linux-security-module@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 3/9] iov_iter: refactor rw_copy_check_uvector and
- import_iovec
-Message-ID: <20200923144917.GM3421308@ZenIV.linux.org.uk>
-References: <20200923060547.16903-1-hch@lst.de>
- <20200923060547.16903-4-hch@lst.de>
- <20200923141654.GJ3421308@ZenIV.linux.org.uk>
- <200cf2b9ce5e408f8838948fda7ce9a0@AcuMS.aculab.com>
+        id S1726718AbgIWOyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Sep 2020 10:54:15 -0400
+Received: from verein.lst.de ([213.95.11.211]:48769 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726332AbgIWOyO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Sep 2020 10:54:14 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id D27F86736F; Wed, 23 Sep 2020 16:54:11 +0200 (CEST)
+Date:   Wed, 23 Sep 2020 16:54:11 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Marc Hartmayer <mhartmay@linux.ibm.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Block Mailing List <linux-block@vger.kernel.org>,
+        Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Subject: Re: linux-next: possible bug in 'block: remove the BIO_NULL_MAPPED
+ flag'
+Message-ID: <20200923145411.GA15735@lst.de>
+References: <87tuvo8xjo.fsf@linux.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <200cf2b9ce5e408f8838948fda7ce9a0@AcuMS.aculab.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <87tuvo8xjo.fsf@linux.ibm.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 02:38:24PM +0000, David Laight wrote:
-> From: Al Viro
-> > Sent: 23 September 2020 15:17
-> > 
-> > On Wed, Sep 23, 2020 at 08:05:41AM +0200, Christoph Hellwig wrote:
-> > 
-> > > +struct iovec *iovec_from_user(const struct iovec __user *uvec,
-> > > +		unsigned long nr_segs, unsigned long fast_segs,
-> > 
-> > Hmm...  For fast_segs unsigned long had always been ridiculous
-> > (4G struct iovec on caller stack frame?), but that got me wondering about
-> > nr_segs and I wish I'd thought of that when introducing import_iovec().
-> > 
-> > The thing is, import_iovec() takes unsigned int there.  Which is fine
-> > (hell, the maximal value that can be accepted in 1024), except that
-> > we do pass unsigned long syscall argument to it in some places.
-> 
-> It will make diddly-squit difference.
-> The parameters end up in registers on most calling conventions.
-> Plausibly you get an extra 'REX' byte on x86 for the 64bit value.
-> What you want to avoid is explicit sign/zero extension and value
-> masking after arithmetic.
-
-Don't tell me what I want; your telepathic abilities are consistently sucky.
-
-I am *NOT* talking about microoptimization here.  I have described
-the behaviour change of syscall caused by commit 5 years ago.  Which is
-generally considered a problem.  Then I asked whether that behaviour
-change would fall under the "if nobody noticed, it's not a userland ABI
-breakage" exception.
-
-Could you show me the point where I have expressed concerns about
-the quality of amd64 code generated for that thing, before or after
-the change in question?
+I've reproduced this on x86 and am looking into the issue now.
