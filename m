@@ -5,49 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0265C47423
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 20:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10333C47425
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 20:53:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3E7222208
+	by mail.kernel.org (Postfix) with ESMTP id D4858221EB
 	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 20:53:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1600980820;
-	bh=TjZ/h/RB5ENBHC8z4Y+xgQryaV4G3HwztlJFGYzWI5s=;
+	bh=RTSrivTd6OMf4V1bDzbMTqfScOTrO/ODyL9xIDVOP5Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=E7UmJGlicVIY85yI1edFL3d38HZf6Qwfijkq2cEyYhScKs4CmB50NF9f3soJy3Pv2
-	 72TxKV8b9ZBZ4Y8sd0zIubn92wDVbfrU2w45tDezc0LflkzIL6mRU4h1V+DHFbOxwl
-	 7ZjgbbQnefrhlGb3tt1AtpJ8k8/H5GGv3dVgIkV4=
+	b=O5vug0wwtZLWPWui9lDkWb/mWh082Z///kQfF2VTj0ViIrrPCD35lCCmO9Rp4GtAa
+	 /+kSMp/swCA+LCCbg8mulAR6r8dQRW5NImgHxjiznRtjODju6CMr8WT4oFE7E5HxKc
+	 7SGbweMuBJhBWXrjYPRO76Xv9WDEhCeNwBdJif0A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726638AbgIXUxj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Sep 2020 16:53:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45922 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726614AbgIXUxi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726634AbgIXUxi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 24 Sep 2020 16:53:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726613AbgIXUxh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Sep 2020 16:53:37 -0400
 Received: from dhcp-10-100-145-180.wdl.wdc.com (unknown [199.255.45.60])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6C542239CF;
-        Thu, 24 Sep 2020 20:53:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A574422208;
+        Thu, 24 Sep 2020 20:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600980818;
-        bh=TjZ/h/RB5ENBHC8z4Y+xgQryaV4G3HwztlJFGYzWI5s=;
+        s=default; t=1600980816;
+        bh=RTSrivTd6OMf4V1bDzbMTqfScOTrO/ODyL9xIDVOP5Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZDvOMvrwNw/XuF6F2CX6aUa9gg7WrJUWG2LvHs5+7kRSnZS16OyH3eILgSuf7mHEB
-         ud2Miar6qUIa/cDNPnMtvdrw9Yro0kl5Zsf87JJOlMu1v2X2lkNSHZTwbnSXDRNT+5
-         1gpsN9i2QSDJ8N8ZDWjI07s0pEynF0+EFfPzlBNA=
+        b=aG1XLividHHwLSM3cHx7fT3BCC7812DwzHOca3Z0IINQ8f2C4c7PVVDmAc8K7aVfC
+         +be6uzYzzyh4srlXCWWTPLbV8ZzLb9EmNtdlp5mj1BQp6qOgX/64qL60iklNfxM8Rv
+         NLDAnC9FlhVGa3L13PxCSTcRUDocSwsIBEtl3FPE=
 From:   Keith Busch <kbusch@kernel.org>
 To:     axboe@kernel.dk
 Cc:     linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
         linux-scsi@vger.kernel.org, hch@lst.de,
+        Keith Busch <kbusch@kernel.org>, linux-api@vger.kernel.org,
+        Niklas Cassel <niklas.cassel@wdc.com>,
         Damien Le Moal <damien.lemoal@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Keith Busch <kbusch@kernel.org>
-Subject: [PATCHv4 3/3] scsi: handle zone resources errors
-Date:   Thu, 24 Sep 2020 13:53:30 -0700
-Message-Id: <20200924205330.4043232-4-kbusch@kernel.org>
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCHv4 1/3] block: add zone specific block statuses
+Date:   Thu, 24 Sep 2020 13:53:28 -0700
+Message-Id: <20200924205330.4043232-2-kbusch@kernel.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200924205330.4043232-1-kbusch@kernel.org>
 References: <20200924205330.4043232-1-kbusch@kernel.org>
@@ -57,46 +59,96 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+A zoned device with limited resources to open or activate zones may
+return an error when the host exceeds those limits. The same command may
+be successful if retried later, but the host needs to wait for specific
+zone states before it should expect a retry to succeed. Have the block
+layer provide an appropriate status for these conditions so applications
+can distinuguish this error for special handling.
 
-ZBC or ZAC disks that have a limit on the number of open zones may fail
-a zone open command or a write to a zone that is not already implicitly
-or explicitly open if the total number of open zones is already at the
-maximum allowed.
-
-For these operations, instead of returning the generic BLK_STS_IOERR,
-return BLK_STS_ZONE_OPEN_RESOURCE which is returned as -ETOOMANYREFS to
-the I/O issuer, allowing the device user to act appropriately on these
-relatively benign zone resource errors.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: linux-api@vger.kernel.org
+Cc: Niklas Cassel <niklas.cassel@wdc.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Keith Busch <kbusch@kernel.org>
 ---
- drivers/scsi/scsi_lib.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ Documentation/block/queue-sysfs.rst |  8 ++++++++
+ block/blk-core.c                    |  4 ++++
+ include/linux/blk_types.h           | 18 ++++++++++++++++++
+ 3 files changed, 30 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7affaaf8b98e..c129ac6666da 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -758,6 +758,15 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 			/* See SSC3rXX or current. */
- 			action = ACTION_FAIL;
- 			break;
-+		case DATA_PROTECT:
-+			action = ACTION_FAIL;
-+			if ((sshdr.asc == 0x0C && sshdr.ascq == 0x12) ||
-+			    (sshdr.asc == 0x55 &&
-+			     (sshdr.ascq == 0x0E || sshdr.ascq == 0x0F))) {
-+				/* Insufficient zone resources */
-+				blk_stat = BLK_STS_ZONE_OPEN_RESOURCE;
-+			}
-+			break;
- 		default:
- 			action = ACTION_FAIL;
- 			break;
+diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
+index f261a5c84170..2638d3446b79 100644
+--- a/Documentation/block/queue-sysfs.rst
++++ b/Documentation/block/queue-sysfs.rst
+@@ -124,6 +124,10 @@ For zoned block devices (zoned attribute indicating "host-managed" or
+ EXPLICIT OPEN, IMPLICIT OPEN or CLOSED, is limited by this value.
+ If this value is 0, there is no limit.
+ 
++If the host attempts to exceed this limit, the driver should report this error
++with BLK_STS_ZONE_ACTIVE_RESOURCE, which user space may see as the EOVERFLOW
++errno.
++
+ max_open_zones (RO)
+ -------------------
+ For zoned block devices (zoned attribute indicating "host-managed" or
+@@ -131,6 +135,10 @@ For zoned block devices (zoned attribute indicating "host-managed" or
+ EXPLICIT OPEN or IMPLICIT OPEN, is limited by this value.
+ If this value is 0, there is no limit.
+ 
++If the host attempts to exceed this limit, the driver should report this error
++with BLK_STS_ZONE_OPEN_RESOURCE, which user space may see as the ETOOMANYREFS
++errno.
++
+ max_sectors_kb (RW)
+ -------------------
+ This is the maximum number of kilobytes that the block layer will allow
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 10c08ac50697..8bffc7732e37 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -186,6 +186,10 @@ static const struct {
+ 	/* device mapper special case, should not leak out: */
+ 	[BLK_STS_DM_REQUEUE]	= { -EREMCHG, "dm internal retry" },
+ 
++	/* zone device specific errors */
++	[BLK_STS_ZONE_OPEN_RESOURCE]	= { -ETOOMANYREFS, "open zones exceeded" },
++	[BLK_STS_ZONE_ACTIVE_RESOURCE]	= { -EOVERFLOW, "active zones exceeded" },
++
+ 	/* everything else not covered above: */
+ 	[BLK_STS_IOERR]		= { -EIO,	"I/O" },
+ };
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 4ecf4fed171f..8603fc5f86a3 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -103,6 +103,24 @@ typedef u8 __bitwise blk_status_t;
+  */
+ #define BLK_STS_ZONE_RESOURCE	((__force blk_status_t)14)
+ 
++/*
++ * BLK_STS_ZONE_OPEN_RESOURCE is returned from the driver in the completion
++ * path if the device returns a status indicating that too many zone resources
++ * are currently open. The same command should be successful if resubmitted
++ * after the number of open zones decreases below the device's limits, which is
++ * reported in the request_queue's max_open_zones.
++ */
++#define BLK_STS_ZONE_OPEN_RESOURCE	((__force blk_status_t)15)
++
++/*
++ * BLK_STS_ZONE_ACTIVE_RESOURCE is returned from the driver in the completion
++ * path if the device returns a status indicating that too many zone resources
++ * are currently active. The same command should be successful if resubmitted
++ * after the number of active zones decreases below the device's limits, which
++ * is reported in the request_queue's max_active_zones.
++ */
++#define BLK_STS_ZONE_ACTIVE_RESOURCE	((__force blk_status_t)16)
++
+ /**
+  * blk_path_error - returns true if error may be path related
+  * @error: status the request was completed with
 -- 
 2.24.1
 
