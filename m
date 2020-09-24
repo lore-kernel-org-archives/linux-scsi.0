@@ -2,130 +2,117 @@ Return-Path: <SRS0=Lz4Y=DB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A700C4346E
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 07:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8292C4346E
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 08:59:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C4D52376F
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 07:23:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D76C23772
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 08:59:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZUlQ7dIL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ebm/7LL7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727080AbgIXHXF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Sep 2020 03:23:05 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44018 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726993AbgIXHXF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Sep 2020 03:23:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600932183;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=n9ho7ZxUFjV5yAYuN8t5tarm5DyMHoZty06HftqxrjU=;
-        b=ZUlQ7dILxAKN6ZN0F/HR6eRUmeo8x8UXUT0Q9yz5aKfSdJZiNkv3x9CR4vLVWrFXD42+ok
-        z1ua/GbLiNULoVflJdX761qRg/RYviNQknuZh++zDQbAM6D0EG/yLUd2aLuuPNroAc6tl7
-        mjbYSgcEQBTber20p7c5L4aEmEEhHlo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-244-O94fTBLHNcOBCXemmv_D7Q-1; Thu, 24 Sep 2020 03:22:59 -0400
-X-MC-Unique: O94fTBLHNcOBCXemmv_D7Q-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A38578015A5;
-        Thu, 24 Sep 2020 07:22:58 +0000 (UTC)
-Received: from [10.72.13.193] (ovpn-13-193.pek2.redhat.com [10.72.13.193])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6CA421002C01;
-        Thu, 24 Sep 2020 07:22:49 +0000 (UTC)
-Subject: Re: [PATCH 2/8] vhost: add helper to check if a vq has been setup
-To:     Mike Christie <michael.christie@oracle.com>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, pbonzini@redhat.com,
-        stefanha@redhat.com, virtualization@lists.linux-foundation.org
-References: <1600712588-9514-1-git-send-email-michael.christie@oracle.com>
- <1600712588-9514-3-git-send-email-michael.christie@oracle.com>
- <e2d16333-d5ed-4c5c-58b3-7b5d0a9da47a@redhat.com>
- <63094bae-1f26-c21e-9b3c-3a6aa99a7e24@oracle.com>
-From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <e81db364-8b9e-bd01-5d22-3fd52375c8d3@redhat.com>
-Date:   Thu, 24 Sep 2020 15:22:47 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1727293AbgIXI74 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Sep 2020 04:59:56 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42664 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726064AbgIXI7z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2020 04:59:55 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08O8x8r5195318;
+        Thu, 24 Sep 2020 08:59:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=dE2Lou7hZbnLtRutIaHG2ToxInouGVpJfq9Vzf5Lv1g=;
+ b=Ebm/7LL7I9IjIYfhxiSrhlxooWKIXQMmCS9YXhUNNbuykf0/fjbvgc8pLPZ0rGXZGdbL
+ dPUj9f98JxS2fF9YqBla3QYXWdRoc6W2kkfMnLI7LiUjewBp8D2bqsW/Aqs+7BlI9f2d
+ /+Ho2tJb1dG1oFgUIs+a0e+y1mfZsEsqP/YgRByCToyKpZyuBsVCSTcX320Qr5GLyjha
+ DxEXQjkc17rsO0Ub97W19tw1GLkLSQmuXlkXXGxhMs/0/dzzklMT8gHfv6IwFk/TqOOy
+ FuoFXwX4dqbOQflbzM1+CMX0bwYPWW5SNtVlqWJeMKGx74oSHGMlF6tfe7GX1jnNLsic 8Q== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 33ndnuq2a5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 24 Sep 2020 08:59:52 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08O8sQH6162135;
+        Thu, 24 Sep 2020 08:59:52 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 33nujqn6vm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Sep 2020 08:59:52 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08O8xoKV010346;
+        Thu, 24 Sep 2020 08:59:51 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 24 Sep 2020 01:59:50 -0700
+Date:   Thu, 24 Sep 2020 11:59:45 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     aeasi@marvell.com
+Cc:     linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: qla2xxx: Setup debugfs entries for remote ports
+Message-ID: <20200924085945.GA1569340@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <63094bae-1f26-c21e-9b3c-3a6aa99a7e24@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
+ mlxlogscore=999 phishscore=0 adultscore=0 spamscore=0 suspectscore=3
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009240071
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ lowpriorityscore=0 phishscore=0 adultscore=0 suspectscore=3 bulkscore=0
+ clxscore=1011 impostorscore=0 mlxlogscore=999 mlxscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009240072
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hello Arun Easi,
 
-On 2020/9/24 上午3:12, Mike Christie wrote:
-> On 9/21/20 9:02 PM, Jason Wang wrote:
->> On 2020/9/22 上午2:23, Mike Christie wrote:
->>> This adds a helper check if a vq has been setup. The next patches
->>> will use this when we move the vhost scsi cmd preallocation from per
->>> session to per vq. In the per vq case, we only want to allocate cmds
->>> for vqs that have actually been setup and not for all the possible
->>> vqs.
->>>
->>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->>> ---
->>>    drivers/vhost/vhost.c | 9 +++++++++
->>>    drivers/vhost/vhost.h | 1 +
->>>    2 files changed, 10 insertions(+)
->>>
->>> diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
->>> index b45519c..5dd9eb1 100644
->>> --- a/drivers/vhost/vhost.c
->>> +++ b/drivers/vhost/vhost.c
->>> @@ -305,6 +305,15 @@ static void vhost_vring_call_reset(struct vhost_vring_call *call_ctx)
->>>        spin_lock_init(&call_ctx->ctx_lock);
->>>    }
->>>    +bool vhost_vq_is_setup(struct vhost_virtqueue *vq)
->>> +{
->>> +    if (vq->avail && vq->desc && vq->used && vhost_vq_access_ok(vq))
->>> +        return true;
->>> +    else
->>> +        return false;
->>> +}
->>> +EXPORT_SYMBOL_GPL(vhost_vq_is_setup);
->>
->> This is probably ok but I wonder maybe we should have something like what vDPA did (VHOST_SET_VRING_ENABLE) to match virtio 1.0 device definition.
-> It looks like I can make that work. Some questions:
->
-> 1. Do you mean a generic VHOST_SET_VRING_ENABLE or a SCSI specific one VHOST_SCSI_SET_VRING_ENABLE?
+The patch 1e98fb0f9208: "scsi: qla2xxx: Setup debugfs entries for
+remote ports" from Sep 3, 2020, leads to the following static checker
+warning:
 
+	drivers/scsi/qla2xxx/qla_dfs.c:119 qla2x00_dfs_create_rport()
+	warn: 'fp->dfs_rport_dir' is an error pointer or valid
 
-It would be better if we can make it generic.
+drivers/scsi/qla2xxx/qla_dfs.c
+   106  qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp)
+   107  {
+   108          char wwn[32];
+   109  
+   110  #define QLA_CREATE_RPORT_FIELD_ATTR(_attr)                      \
+   111          debugfs_create_file(#_attr, 0400, fp->dfs_rport_dir,    \
+   112                  fp, &qla_dfs_rport_field_##_attr##_fops)
+   113  
+   114          if (!vha->dfs_rport_root || fp->dfs_rport_dir)
+   115                  return;
+   116  
+   117          sprintf(wwn, "pn-%016llx", wwn_to_u64(fp->port_name));
+   118          fp->dfs_rport_dir = debugfs_create_dir(wwn, vha->dfs_rport_root);
+   119          if (!fp->dfs_rport_dir)
 
+Just delete this test.  Debugfs functions are not supposed to be checked
+in the normal case.
 
->
-> 2. I can see the VHOST_VDPA_SET_VRING_ENABLE kernel code and the vhost_set_vring_enable qemu code, so I have an idea of how it should work for vhost scsi. However, I'm not sure the requirements for a generic VHOST_SET_VRING_ENABLE if that is what you meant. I could not find it in the spec either. Could you send me a pointer to the section?
+   120                  return;
+   121          if (NVME_TARGET(vha->hw, fp))
+   122                  debugfs_create_file("dev_loss_tmo", 0600, fp->dfs_rport_dir,
 
+The debugfs_create_file() function has it's own checks built in so no
+need to check.
 
-In the spec, for PCI, it's the queue_enable for modern device.
+   123                                      fp, &qla_dfs_rport_dev_loss_tmo_fops);
+   124  
+   125          QLA_CREATE_RPORT_FIELD_ATTR(disc_state);
+   126          QLA_CREATE_RPORT_FIELD_ATTR(scan_state);
+   127          QLA_CREATE_RPORT_FIELD_ATTR(fw_login_state);
 
-
->
-> For example, for vhost-net we seem to enable a device in the VHOST_NET_SET_BACKEND ioctl, so I'm not sure what behavior should be or needs to be implemented for net and vsock.
-
-
-Yes, but VHOST_NET_SET_BACKEND is for the whole device not a specific 
-virtqueue.
-
-
-Thanks
-
-
->
-
+regards,
+dan carpenter
