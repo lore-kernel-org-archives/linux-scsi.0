@@ -2,203 +2,242 @@ Return-Path: <SRS0=Lz4Y=DB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E043EC4346E
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 15:33:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E29C4363D
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 16:31:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95B2C2311A
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 15:33:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF815238E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 16:31:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HjEMEvNb"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YrAOWx9q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728478AbgIXPdv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:33:51 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55000 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728333AbgIXPdv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2020 11:33:51 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OFElqh122833;
-        Thu, 24 Sep 2020 15:33:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=3QoIa80vjBXbMTD8oILmbPH0nePlE98HPxpyod5LC3Y=;
- b=HjEMEvNbDj/CL2d0izKC/ztKN4kTT/sIdskM5Jl04xQSWf/MoUelrYQp4ENeMGJExbFL
- IKgvcJMB48wxDaglHatNL7nCz53oU1GUuM3dC2jy1bvd+a5VGxPDdShuY8M+Gn3QXNwM
- AO1/P+FLCpgOMoZUe3AGwYDU7dS8qgj52grfGEshlgzZqLAvzP3NXFt/NeQxVUC8tFDd
- C9aMNVLSagaJXF8sMjYD11kBxkmfVCC+r3fZ6M8R0o892va2WBsEq54M87qZUIx0qmr9
- E9mz2RyJTjrguXEFZ8XFne4NEYvbUVEn5Ye1wNso+OXD/sjqWLtQwv1L3Imoqsm8lbwa iQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 33ndnus2h1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 24 Sep 2020 15:33:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OFUYFf054252;
-        Thu, 24 Sep 2020 15:31:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 33nurwb7fr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Sep 2020 15:31:34 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08OFVXVQ020397;
-        Thu, 24 Sep 2020 15:31:33 GMT
-Received: from [20.15.0.8] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Sep 2020 08:31:33 -0700
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.1\))
-Subject: Re: [PATCH 3/8] vhost scsi: alloc cmds per vq instead of session
-From:   Michael Christie <michael.christie@oracle.com>
-In-Reply-To: <20200924022107-mutt-send-email-mst@kernel.org>
-Date:   Thu, 24 Sep 2020 10:31:30 -0500
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        jasowang@redhat.com, pbonzini@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <BE3F7F89-D0BF-44BA-921A-112E104C96C5@oracle.com>
-References: <1600712588-9514-1-git-send-email-michael.christie@oracle.com>
- <1600712588-9514-4-git-send-email-michael.christie@oracle.com>
- <20200924022107-mutt-send-email-mst@kernel.org>
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-X-Mailer: Apple Mail (2.3608.120.23.2.1)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 suspectscore=2
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009240118
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- phishscore=0 lowpriorityscore=0 suspectscore=2 bulkscore=0 mlxlogscore=999
- spamscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009240117
+        id S1726697AbgIXQbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Sep 2020 12:31:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48522 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726458AbgIXQbD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2020 12:31:03 -0400
+Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 007CEC0613CE
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2020 09:31:02 -0700 (PDT)
+Received: by mail-qv1-xf30.google.com with SMTP id j3so2186901qvi.7
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2020 09:31:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:mime-version:thread-index:date:message-id:subject:to:cc;
+        bh=s+FarfKRLQcAOJ95Xd8X2s476CeHPw+H32WavNfg3Qo=;
+        b=YrAOWx9qpyq7/lvxsVRhK7rneFtUK2bOyTFO1Dzx5lWUHz98kPDur+fCjoC3gOa79o
+         kPq1QKGJQOvqQUjAUeo51qMmgj6LG0kRow0wNQfHU/aIVe6bRCbX54dk8iDmL4wltbFT
+         n1tsZsl12c/GFm6WaIPReviZC0kt48XnliNLE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:mime-version:thread-index:date:message-id
+         :subject:to:cc;
+        bh=s+FarfKRLQcAOJ95Xd8X2s476CeHPw+H32WavNfg3Qo=;
+        b=RmbfCf7JNG16H/kWWAnwrLnGdHH4lbqonKTCjcaD8Y+qbv8mfNYyVzPtTmMIQpTbc4
+         lqmXTmMq0yxPMSeaYwNIhGIIGgsHuMYrj8F74YAAsbXj2Nw8LmJ/VDqzYB/2vJCi+AAM
+         qDDjBuZgOze0w7U1/X/1yctamAbZ76EeLnFTHeNjSN+9NGvQ/QwhSKLmqmhVbEVZLZly
+         8PAzomIRwxZOczrajhYxa6q+RzeOZ4pm8fRH/WLReI9eHYRZk0tzzJLCObEGqSCW+S3r
+         soqM2Neqt/NGWwmPhdTqvbpSIZ2LYkawuQCdG9QdHNXvUEspFOYjf3xdOsjuHwagHTJw
+         jloQ==
+X-Gm-Message-State: AOAM532tNSLRG8lxGRMTkK57lWA3+D28dEu+zQDtKQV+uEMTHmBGPqiN
+        Tm+sQGI6RPFkVZh/+I3DuwEEQ9i6TFdz3s2J254+6RKoJAZHwogF
+X-Google-Smtp-Source: ABdhPJyXTt5niwx0sgM9B4UYF/bTEygF1b2efNcuCw6JcahUZ1Sj+gz9sl7kVj5pDaZSEbEyUZptfQ9/Mb0gnKwDZqk=
+X-Received: by 2002:ad4:408f:: with SMTP id l15mr63288qvp.4.1600965061534;
+ Thu, 24 Sep 2020 09:31:01 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AdaSjq9R2SPHjGPRR3eT1ulUKAKjSw==
+Date:   Thu, 24 Sep 2020 22:00:58 +0530
+Message-ID: <bb7d75ce38d5c6e2f19f467b17d67f26@mail.gmail.com>
+Subject: [RFC] Introducing mpi3mr driver
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        jejb@linux.ibm.com
+Cc:     Steve Hagan <steve.hagan@broadcom.com>,
+        Peter Rivera <peter.rivera@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000d325d505b011b92f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+--000000000000d325d505b011b92f
+Content-Type: text/plain; charset="UTF-8"
+
+Hi Everyone -
+
+Broadcom  RAID controller division has designed and manufactured the next
+generation high performance storage I/O  and RAID controllers which are
+significantly different from existing IT HBA controller and MegaRAID
+controller and they are architected with significant redesign from the
+previous generation of controllers to meet performance needs + simplified
+Raid IO path for driver and OS stack (all complex part of RAID is now
+handled by h/w in new architecture ).
+
+Broadcom currently has Fusion-MPT (Fusion Message Passing Technology)
+based I/O controllers (IT/IR HBA)  primarily managed  by mptsas,mpt3sas
+drivers based on MPT generations and MegaRAID product family of RAID
+controllers primarily managed by megaraid_sas driver, The MegaRAID
+controllers are based on a mix of MPI and MFI interfaces.  IT/IR HBA and
+MegaRAID firmware are tightly coupled in some cases but use proprietary
+interfaces while interacting with the drivers. In the past, these two
+product lines were developed in parallel and hence diverged into two
+different user interfaces and different IO path stack.  The existing
+products are compliant with one of the MPI versions from 1.0, 2.0, 2.5 and
+2.6.
+
+There were certain challenges in MegaRAID controller product architecture
+which made it difficult to extend to its next generation of product.
+Broadcom decided to re-architect hardware and firmware's components
+completely to overcome the extendibility issues of existing controllers
+and derived a new interface specification named MPI3.0 and transport
+technology named MPI3.0.  Original idea of this new design is to extend
+performance and functional requirements to the next level as current
+design has already saturated this goal. Even though the name of this new
+interface is MPI revision 3.0, it is a significant lift from the current
+MPI2.6. I will cover some of the key differences in next session.
+
+Broadcom has evaluated thoroughly on the merits and drawbacks of managing
+the new controllers based on MPI3.0 using existing drivers vs a brand new
+driver  and decided to develop  a new  driver called <mpi3mr> to manage
+it's MPI3.0 generation of controllers onwards for next decade.
+
+A key feature of this new driver is to deliver a single, unified driver
+that covers both our tri-mode HBA and RAID Controller families. This
+simplification is an important aspect of Broadcom's next generation
+tri-mode controllers to achieve unified software stack and to enhance
+overall performance of the controller.
+
+Hence, we are looking towards submitting a brand new driver for the
+Broadcom new generation unified tri-mode HBA and RAID controllers.
+This Introduction is submitted as a heads-up prior to submitting the
+driver patches and soliciting feedback for the new driver submission.
+
+New driver named - <mpi3mr> driver will manage both HBA and RAID mode of
+new controller products and it is a unified driver playing the role of
+megaraid_sas and mpt3sas driver for future generation of Broadcom's
+RAID/HBA controllers.
+
+Broadcom believes that the key advantages of a new driver to manage the
+next generation storage controllers are -
+
+-         Unified host interface for both RAID and HBA modes of the
+controller
+-         Heavy automated I/O handling at the hardware level to enhance
+the performance and to have thin driver stack
+-         Exposes dedicated Admin queue and IO queue pairs.
+-         Different system interface registers exposed to bring up, reset
+and shutdown the controller similar to NVMe.
+-         Improved memory requirement constraints.  For example - No
+constraint of the same 4GB memory region requirement for request frame
+pool.  The controller can support segmented request frame pool etc.
+-         Firmware Diagnostic buffer interface is redesigned.
+-         No requirement of Fast Path and LDIO path in driver (primarily
+all megaraid_sas_fp.c code is no more required)
+-         Multiple IO submission and completion queue concept.
+-          Does not use the doorbell mechanism for handshake with FW prior
+to interrupt setup.  All management communication will happen through
+dedicated Admin Queue.
+-          IOCTL interface is not similar to the older generation of
+controllers.
+-          No difference between SGE vs PRP creation of NVME drives. It is
+all IEEE SGE.
+-          There is no significant logic change in the driver for handling
+bare drives and volumes and those are encapsulated in the
+hardware/firmware level.
+-          Because of the new h/w interface (admin, submission queues),
+memory allocation requirements are significantly changed.
 
 
-> On Sep 24, 2020, at 1:22 AM, Michael S. Tsirkin <mst@redhat.com> =
-wrote:
->=20
-> On Mon, Sep 21, 2020 at 01:23:03PM -0500, Mike Christie wrote:
->> We currently are limited to 256 cmds per session. This leads to =
-problems
->> where if the user has increased virtqueue_size to more than 2 or
->> cmd_per_lun to more than 256 vhost_scsi_get_tag can fail and the =
-guest
->> will get IO errors.
->>=20
->> This patch moves the cmd allocation to per vq so we can easily match
->> whatever the user has specified for num_queues and
->> virtqueue_size/cmd_per_lun. It also makes it easier to control how =
-much
->> memory we preallocate. For cases, where perf is not as important and
->> we can use the current defaults (1 vq and 128 cmds per vq) memory use
->> from preallocate cmds is cut in half. For cases, where we are willing
->> to use more memory for higher perf, cmd mem use will now increase as
->> the num queues and queue depth increases.
->>=20
->> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->> ---
->> drivers/vhost/scsi.c | 204 =
-++++++++++++++++++++++++++++++++-------------------
->> 1 file changed, 127 insertions(+), 77 deletions(-)
->>=20
->> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
->> index b22adf0..13311b8 100644
->> --- a/drivers/vhost/scsi.c
->> +++ b/drivers/vhost/scsi.c
->> @@ -52,7 +52,6 @@
->> #define VHOST_SCSI_VERSION  "v0.1"
->> #define VHOST_SCSI_NAMELEN 256
->> #define VHOST_SCSI_MAX_CDB_SIZE 32
->> -#define VHOST_SCSI_DEFAULT_TAGS 256
->> #define VHOST_SCSI_PREALLOC_SGLS 2048
->> #define VHOST_SCSI_PREALLOC_UPAGES 2048
->> #define VHOST_SCSI_PREALLOC_PROT_SGLS 2048
->> @@ -189,6 +188,9 @@ struct vhost_scsi_virtqueue {
->> 	 * Writers must also take dev mutex and flush under it.
->> 	 */
->> 	int inflight_idx;
->> +	struct vhost_scsi_cmd *scsi_cmds;
->> +	struct sbitmap scsi_tags;
->> +	int max_cmds;
->> };
->>=20
->> struct vhost_scsi {
->> @@ -324,7 +326,9 @@ static void vhost_scsi_release_cmd(struct se_cmd =
-*se_cmd)
->> {
->> 	struct vhost_scsi_cmd *tv_cmd =3D container_of(se_cmd,
->> 				struct vhost_scsi_cmd, tvc_se_cmd);
->> -	struct se_session *se_sess =3D tv_cmd->tvc_nexus->tvn_se_sess;
->> +	struct vhost_scsi_virtqueue *svq =3D =
-container_of(tv_cmd->tvc_vq,
->> +				struct vhost_scsi_virtqueue, vq);
->> +	struct vhost_scsi_inflight *inflight =3D tv_cmd->inflight;
->> 	int i;
->>=20
->> 	if (tv_cmd->tvc_sgl_count) {
->> @@ -336,8 +340,8 @@ static void vhost_scsi_release_cmd(struct se_cmd =
-*se_cmd)
->> 			put_page(sg_page(&tv_cmd->tvc_prot_sgl[i]));
->> 	}
->>=20
->> -	vhost_scsi_put_inflight(tv_cmd->inflight);
->> -	target_free_tag(se_sess, se_cmd);
->> +	sbitmap_clear_bit(&svq->scsi_tags, se_cmd->map_tag);
->> +	vhost_scsi_put_inflight(inflight);
->> }
->>=20
->> static u32 vhost_scsi_sess_get_index(struct se_session *se_sess)
->> @@ -566,13 +570,14 @@ static void vhost_scsi_complete_cmd_work(struct =
-vhost_work *work)
->> }
->>=20
->> static struct vhost_scsi_cmd *
->> -vhost_scsi_get_tag(struct vhost_virtqueue *vq, struct vhost_scsi_tpg =
-*tpg,
->> +vhost_scsi_get_cmd(struct vhost_virtqueue *vq, struct vhost_scsi_tpg =
-*tpg,
->> 		   unsigned char *cdb, u64 scsi_tag, u16 lun, u8 =
-task_attr,
->> 		   u32 exp_data_len, int data_direction)
->> {
->> +	struct vhost_scsi_virtqueue *svq =3D container_of(vq,
->> +					struct vhost_scsi_virtqueue, =
-vq);
->> 	struct vhost_scsi_cmd *cmd;
->> 	struct vhost_scsi_nexus *tv_nexus;
->> -	struct se_session *se_sess;
->> 	struct scatterlist *sg, *prot_sg;
->> 	struct page **pages;
->> 	int tag, cpu;
->> @@ -582,15 +587,14 @@ static void vhost_scsi_complete_cmd_work(struct =
-vhost_work *work)
->> 		pr_err("Unable to locate active struct =
-vhost_scsi_nexus\n");
->> 		return ERR_PTR(-EIO);
->> 	}
->> -	se_sess =3D tv_nexus->tvn_se_sess;
->>=20
->> -	tag =3D sbitmap_queue_get(&se_sess->sess_tag_pool, &cpu);
->> +	tag =3D sbitmap_get(&svq->scsi_tags, 0, false);
->> 	if (tag < 0) {
->> 		pr_err("Unable to obtain tag for vhost_scsi_cmd\n");
->> 		return ERR_PTR(-ENOMEM);
->> 	}
->=20
->=20
-> After this change, cpu is uninitialized.
+We will be submitting PATCH/RFC soon for upstream review.
 
-I=E2=80=99ve fixed this.
+Thanks, Kashyap
 
-We don=E2=80=99t use the cmd=E2=80=99s map_cpu field anymore, so I have =
-deleted it and the cpu var above.=
+--000000000000d325d505b011b92f
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
+AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
+MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
+YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
+ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
+FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
+HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
+MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
+BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
+Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
+YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
+pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
+8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
+M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
+1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
+IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgLUsuiPL1
+nH+/P9ogSP7/fhz37HtiEZtc0LYqrh6Y0CQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAwOTI0MTYzMTAyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBADm+CJKnHFDsJ+Wx34Q45Mnzm0i+
+tQdMNjBn0Acy6awzd6PH0t02w9azFAc3eiKuo8v7HGgNXSQHQQA/glYRjeqydDYO/bId62luhu+h
+gPNRHEi8fabFrX2SND1t8G4xO3b5CM2D0jWERNGQYlqHKUr+L8KyiC0WgsG+T5VuYZm9t1Z76F5v
+djD2szCWiZ4GtiiPcLYnPjIMcSo2Veyk3LAAIRS3ab6VZ3mjZTePBo9JpGU03mf5K3RFZGE6pPzb
+j7ZzPnSgj71oTTXmTLjPcHbyrO4N7+YRFLh0ma+gm4GRrHQ4zWswtsEmpVa68qR34UraJErUOb8a
+hNb9Ex3ZO0g=
+--000000000000d325d505b011b92f--
