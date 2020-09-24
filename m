@@ -2,81 +2,98 @@ Return-Path: <SRS0=Lz4Y=DB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F3DFC4363D
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 10:42:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD13C4363D
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 10:46:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0900E23772
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 10:42:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 688E823977
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Sep 2020 10:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726652AbgIXKmo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Sep 2020 06:42:44 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48252 "EHLO mx2.suse.de"
+        id S1726424AbgIXKqM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Sep 2020 06:46:12 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55218 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726615AbgIXKmo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Sep 2020 06:42:44 -0400
+        id S1726303AbgIXKqM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Sep 2020 06:46:12 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 28507B117;
-        Thu, 24 Sep 2020 10:43:21 +0000 (UTC)
-Subject: Re: [PATCH 1/1] scsi: scsi_dh_alua: do not set h->sdev to NULL before
- removing the list entry
-To:     Brian Bunker <brian@purestorage.com>
-Cc:     "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
-References: <8239CB66-1836-444D-A230-83714795D5DC@purestorage.com>
- <3b86ce755e3b0b2b3d9e1a2cdf8c48b742f94265.camel@redhat.com>
- <D047536E-9A0E-430D-BD0C-634DC7594033@purestorage.com>
- <be7e6061-5b10-25a7-e8bb-aa4008c04e22@suse.de>
- <F861B128-F3AC-4928-9B9C-14DE921F70FD@purestorage.com>
+        by mx2.suse.de (Postfix) with ESMTP id D8E4BAD83;
+        Thu, 24 Sep 2020 10:46:48 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <ec422868-3c9d-f9de-5bed-14e9d6093ebb@suse.de>
-Date:   Thu, 24 Sep 2020 12:42:43 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
-MIME-Version: 1.0
-In-Reply-To: <F861B128-F3AC-4928-9B9C-14DE921F70FD@purestorage.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        "Ewan D . Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>,
+        Brian Bunker <brian@purestorage.com>
+Subject: [PATCH] scsi_dh_alua: avoid crash during alua_bus_detach()
+Date:   Thu, 24 Sep 2020 12:45:59 +0200
+Message-Id: <20200924104559.26753-1-hare@suse.de>
+X-Mailer: git-send-email 2.16.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/24/20 12:21 AM, Brian Bunker wrote:
-> We have tried with our patch here and it works. We have not tried with our patch at the
-> customer site where they hit the crash. Since they hit the BUG_ON line which we
-> can see in the logs we have, we expect that removing the race as we did
-> would avoid the crash. We also remove the BUG_ON’s in our patch so it can’t hit
-> the same crash. If there is another similar race a null pointer deference could still
-> happen in our patch. I saw you had a patch to only use the value if the pointer is not
-> null. That would also work to stop the crash, but it would hide the race where the
-> BUG_ON was helpful in finding it.
-> 
-> Trying our fix at the customer site for us would be more difficult since the operating
-> system crash belongs to Oracle. That is why you see their patch for the same
-> issue. Our interest in getting this fixed goes beyond this customer since more
-> Linux vendors as they move forward in kernel version inherit this code, and
-> we are reliant on ALUA. We hope to catch it here.
-> 
-> Should I put together a patch with the h->sdev set to null removed from the
-> detach function along the syncrhronize_rcu and removing the BUG_ON, or
-> did you want me to diff against your checkin where you have already removed
-> the BUG_ON?
-> 
-No need, I already sent a patch attached to another mail to the oracle 
-folks.
-Guess I'll be sending an 'official' patch now, seeing that I have 
-confirmation.
+alua_bus_detach() might be running concurrently with alua_rtpg_work(),
+so we might trip over h->sdev == NULL and call BUG_ON().
+The correct way of handling it would be to not set h->sdev to NULL
+in alua_bus_detach(), and call rcu_synchronize() before the final
+delete to ensure that all concurrent threads have left the critical
+section.
+Then we can get rid of the BUG_ON(), and replace it with a simple
+if condition.
 
-Cheers,
+Cc: Brian Bunker <brian@purestorage.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index f32da0ca529e..308bda2e9c00 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -658,8 +658,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 					rcu_read_lock();
+ 					list_for_each_entry_rcu(h,
+ 						&tmp_pg->dh_list, node) {
+-						/* h->sdev should always be valid */
+-						BUG_ON(!h->sdev);
++						if (!h->sdev)
++							continue;
+ 						h->sdev->access_state = desc[0];
+ 					}
+ 					rcu_read_unlock();
+@@ -705,7 +705,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			pg->expiry = 0;
+ 			rcu_read_lock();
+ 			list_for_each_entry_rcu(h, &pg->dh_list, node) {
+-				BUG_ON(!h->sdev);
++				if (!h->sdev)
++					continue;
+ 				h->sdev->access_state =
+ 					(pg->state & SCSI_ACCESS_STATE_MASK);
+ 				if (pg->pref)
+@@ -1147,7 +1148,6 @@ static void alua_bus_detach(struct scsi_device *sdev)
+ 	spin_lock(&h->pg_lock);
+ 	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+ 	rcu_assign_pointer(h->pg, NULL);
+-	h->sdev = NULL;
+ 	spin_unlock(&h->pg_lock);
+ 	if (pg) {
+ 		spin_lock_irq(&pg->lock);
+@@ -1156,6 +1156,7 @@ static void alua_bus_detach(struct scsi_device *sdev)
+ 		kref_put(&pg->kref, release_port_group);
+ 	}
+ 	sdev->handler_data = NULL;
++	synchronize_rcu();
+ 	kfree(h);
+ }
+ 
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.16.4
+
