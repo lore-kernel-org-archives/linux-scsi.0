@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE18C4363D
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 09:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41559C4363D
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 09:59:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C1942083B
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 09:17:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F34BC2085B
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 09:59:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727795AbgIYJRE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Sep 2020 05:17:04 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2917 "EHLO huawei.com"
+        id S1727960AbgIYJ7e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Sep 2020 05:59:34 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2918 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727290AbgIYJRD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Sep 2020 05:17:03 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id B10E7B7FA071A95DE9EE;
-        Fri, 25 Sep 2020 10:17:01 +0100 (IST)
+        id S1727520AbgIYJ7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Sep 2020 05:59:34 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 8ADAA672542A80207087;
+        Fri, 25 Sep 2020 10:59:32 +0100 (IST)
 Received: from [127.0.0.1] (10.47.7.140) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Fri, 25 Sep
- 2020 10:17:00 +0100
-Subject: Re: [PATCH 1/4] pm80xx : Increase number of supported queues.
+ 2020 10:59:31 +0100
+Subject: Re: [PATCH 3/4] pm80xx : Increase the number of outstanding IO
+ supported
 To:     Viswas G <Viswas.G@microchip.com.com>, <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
         Jinpu Wang <jinpu.wang@cloud.ionos.com>
 References: <20200925061605.31628-1-Viswas.G@microchip.com.com>
- <20200925061605.31628-2-Viswas.G@microchip.com.com>
+ <20200925061605.31628-4-Viswas.G@microchip.com.com>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <28f395b6-42ca-0c2f-db09-6bef15178b55@huawei.com>
-Date:   Fri, 25 Sep 2020 10:14:07 +0100
+Message-ID: <c0603b76-28a6-4fe7-89c5-129ea0d6b344@huawei.com>
+Date:   Fri, 25 Sep 2020 10:56:38 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20200925061605.31628-2-Viswas.G@microchip.com.com>
+In-Reply-To: <20200925061605.31628-4-Viswas.G@microchip.com.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -54,22 +55,17 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 25/09/2020 07:16, Viswas G wrote:
 > From: Viswas G<Viswas.G@microchip.com>
 > 
-> The number of supported Inbound and outbound queues is increased to 64,
-> and the number of queues used are decided based on number of CPU cores
-> online and number of msix allocated. Added locks per queue instead of
-> global lock.
+> Increasing the number of Outstanding IOs from 256 to 1024.
+> CCB and tag are allocated according to outstanding IOs.
+> Also updating the can_queue value (max_out_io - PM8001_RESERVE_SLOT)
+> to scsi midlayer.
 > 
 > Signed-off-by: Viswas G<Viswas.G@microchip.com>
 > Signed-off-by: Ruksar Devadi<Ruksar.devadi@microchip.com>
 
-
-In this series 
-https://lore.kernel.org/linux-scsi/655385f6-ac59-da3b-11f9-1f8382e5c35b@huawei.com/T/#m174b66e43cb437b3fd0845742be6b011a69abb11, 
-we allow the LLDD to expose hw queues to the upper layer for when the 
-host requires a unique hostwide tag (which pm80xx seems to). This has 
-certain advantages.
-
-Have you considered making a similar change here?
+Any reason you can't also use the request->tag (instead of generating 
+tags internally) for added performance boost? Many other LLDDs do this, 
+as managing tags has a performance overhead.
 
 Thanks,
 John
