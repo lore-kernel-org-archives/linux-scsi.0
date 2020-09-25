@@ -5,51 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB93DC47420
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D227C4742B
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B9CB21D7A
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9E4622B2D
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g5VPU+kj"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d8DpOf+w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729540AbgIYQTs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Sep 2020 12:19:48 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:31038 "EHLO
+        id S1729530AbgIYQTu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Sep 2020 12:19:50 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46060 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729480AbgIYQTn (ORCPT
+        by vger.kernel.org with ESMTP id S1729354AbgIYQTr (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Sep 2020 12:19:43 -0400
+        Fri, 25 Sep 2020 12:19:47 -0400
 Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601050782;
+        s=mimecast20190719; t=1601050786;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ANY2qnzvW5slLXQEnRPDZ8OvNs0Obq0WqgEdDcyBR9E=;
-        b=g5VPU+kj5IERHKjczBgRvQPuSJa325X8+lwnD+Q/UtbJM7RMZTbMhndQrM9972pMF7ews0
-        a2U0B4vvc6FUWHBCWFyhBuI6GiKrcBHIvU/3EUuu/1D3XwdKTz2FMNpr5r0vDtvQPRlm5Q
-        u/eSWlzEXDUiGD50dfxap4nJ+UxfAO0=
+        bh=36St5Oeqqpx9UTR9cd+r4hzn7jyQrQgdXE6WFtjZ9NY=;
+        b=d8DpOf+wxiLFIzDok497bSG+hr17mrL4ah26onXo/cxMbdmvLAxi5nTih/Hynm3wMMV4g3
+        QSuop1zg5H8PuCn0xxC43YpQY/NlJ4+HQpMbZFSxa2rQRGogkQL+sYdR3zP+5qCFS/Bhr1
+        ULoP+vo+P+8czWbsygfBwJzpw6E4Edg=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-582-Xdn-GAWHPDq-o_t1u0PIGQ-1; Fri, 25 Sep 2020 12:19:38 -0400
-X-MC-Unique: Xdn-GAWHPDq-o_t1u0PIGQ-1
+ us-mta-505-zhfDJ7mRODmiJN2qUJywsg-1; Fri, 25 Sep 2020 12:19:44 -0400
+X-MC-Unique: zhfDJ7mRODmiJN2qUJywsg-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D93E210BBED2;
-        Fri, 25 Sep 2020 16:19:37 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5153810BBECD;
+        Fri, 25 Sep 2020 16:19:43 +0000 (UTC)
 Received: from sulaco.redhat.com (unknown [10.10.110.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 162515D9DC;
-        Fri, 25 Sep 2020 16:19:36 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 833095D9DC;
+        Fri, 25 Sep 2020 16:19:42 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org
-Subject: [v5 06/12] libata: Add ata_scsi_durable_name
-Date:   Fri, 25 Sep 2020 11:19:23 -0500
-Message-Id: <20200925161929.1136806-7-tasleson@redhat.com>
+Subject: [v5 11/12] print_req_error: Use durable_name_printk_ratelimited
+Date:   Fri, 25 Sep 2020 11:19:28 -0500
+Message-Id: <20200925161929.1136806-12-tasleson@redhat.com>
 In-Reply-To: <20200925161929.1136806-1-tasleson@redhat.com>
 References: <20200925161929.1136806-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -59,54 +59,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Function used to create the durable name for ata scsi.
+Replace printk_ratelimited with one that adds the key/value
+durable name to log entry.
 
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- drivers/ata/libata-scsi.c | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ block/blk-core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 46336084b1a9..194dac7dbdca 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1086,6 +1086,13 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- 	return 0;
- }
- 
-+int ata_scsi_durable_name(const struct device *dev, char *buf, size_t len)
-+{
-+	struct ata_device *ata_dev = container_of(dev, struct ata_device, tdev);
-+
-+	return scsi_durable_name(ata_dev->sdev, buf, len);
-+}
-+
- /**
-  *	ata_scsi_slave_config - Set SCSI device attributes
-  *	@sdev: SCSI device to examine
-@@ -1102,14 +1109,19 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 03252af8c82c..59e0ff583eb6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -218,12 +218,15 @@ EXPORT_SYMBOL_GPL(blk_status_to_errno);
+ static void print_req_error(struct request *req, blk_status_t status,
+ 		const char *caller)
  {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
- 	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
--	int rc = 0;
-+	int rc;
++	struct device *dev;
+ 	int idx = (__force int)status;
  
- 	ata_scsi_sdev_config(sdev);
+ 	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(blk_errors)))
+ 		return;
  
--	if (dev)
-+	if (dev) {
- 		rc = ata_scsi_dev_config(sdev, dev);
-+		if (rc)
-+			return rc;
- 
--	return rc;
-+		dev->tdev.durable_name = ata_scsi_durable_name;
-+	}
+-	printk_ratelimited(KERN_ERR
++	dev = req->rq_disk ? disk_to_dev(req->rq_disk) : NULL;
 +
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
- 
++	durable_name_printk_ratelimited(KERN_ERR, dev,
+ 		"%s: %s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
+ 		"phys_seg %u prio class %u\n",
+ 		caller, blk_errors[idx].name,
 -- 
 2.26.2
 
