@@ -2,82 +2,134 @@ Return-Path: <SRS0=8X05=DC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47F5FC4741F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 18:42:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A91FAC4727E
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 18:46:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08D92221E5
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 18:42:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70ACC221E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 18:46:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="dkHgCknQ"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="hNVaqgoi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729732AbgIYSma (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Sep 2020 14:42:30 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59724 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727151AbgIYSm3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Sep 2020 14:42:29 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1601059348;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=2Kq1FxqxZLYWoE4X3kI+VDC0KjL+XQlYmdMO7aSdeHQ=;
-        b=dkHgCknQrtNzIYbkAY8Us9mQ2+Tq1RzmidcCoO1f3HYCZt1i4S6y1N0EJ70GLPz5IMBIY6
-        4cdsdmYXSZeICVm7DV3EKThU9lnjCV+jmB72s6SeDQKJq2DgdwYFvejEOjDv7Vk26Jo17T
-        s4PAgBX4TjKRKJk6pcKTZMB6JUN0Z00=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 2F349AC68;
-        Fri, 25 Sep 2020 18:42:28 +0000 (UTC)
-Received: by localhost (Postfix, from userid 1000)
-        id 8D666514D99; Fri, 25 Sep 2020 11:42:26 -0700 (PDT)
-From:   <lduncan@suse.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com,
-        martin.petersen@oracle.com, mchristi@redhat.com, hare@suse.com,
-        Lee Duncan <lduncan@suse.com>
-Subject: [PATCH v2 0/1] scsi: libiscsi: fix NOP race condition
-Date:   Fri, 25 Sep 2020 11:41:47 -0700
-Message-Id: <cover.1601058301.git.lduncan@suse.com>
-X-Mailer: git-send-email 2.26.2
+        id S1729727AbgIYSq0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Sep 2020 14:46:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37486 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729593AbgIYSq0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2020 14:46:26 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFA69C0613CE
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2020 11:46:25 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id s12so4718005wrw.11
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2020 11:46:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=AlDiV2I2Pb3l4Sw1FS8MXXmwraDk5F1rgxliXh5N5CM=;
+        b=hNVaqgoiF4i4BUKziRlpXfyKzDqaE2Y0RasEA7QnYZaUqmrhYmxmR65VR3QsZGT0/N
+         elfdI2ZtE21gOt8NsKBS76ANRONmfTntZIUBb37OAepaErQ4mHfX26H/avNX5Om2F5Th
+         iF/y4L9RdXJwUeLTzBdv6H/xNDzBbfk+2GMdQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=AlDiV2I2Pb3l4Sw1FS8MXXmwraDk5F1rgxliXh5N5CM=;
+        b=G/YOJfFh7gF1wAv5fcTEaHoJ+K6Ti+oErFSp2BWeuiKvkRM67q5WsG3oD3BwbS8J5f
+         XESbght4kmr/zJsRusKU/C2HOME++IDM/Ahsq/x2nDkTJDx2jXzyIEt8GXR9Y0ImgcqN
+         nqsc2htSxD+jP4K3S+vidQ8TOb8b2GNZPEJM6y1hLtBSyvOHK04Wrn3a9rDwInSZIL3h
+         QOCMljiq7qkHZjpbqzi5Nk8+tHhTVK/lMbNwXueX1/+hQltgWWraTrMvfzIATO1YOtfo
+         pH5vWs6VAUqZVofUAa+IyGNVPbYWcpX0rZtwOhqNJTVpL7cZ3qr6PRiplfajgy5vV/Az
+         V27g==
+X-Gm-Message-State: AOAM533uTZvku4Cc0JEkGwgUOk0/q83u1+RRvfcBfrHthVyRdM96m5XN
+        bd3+/HjSt86VGfoqkdf2HjQfZg==
+X-Google-Smtp-Source: ABdhPJywG75RJx/fVTLzqgivIcRb/Gp708YyNw5VwVyHEf689ET8en+rXMvfgfeOwhu5XQytInH4aQ==
+X-Received: by 2002:a5d:56cd:: with SMTP id m13mr5730549wrw.261.1601059584552;
+        Fri, 25 Sep 2020 11:46:24 -0700 (PDT)
+Received: from chromium.org (216.131.76.34.bc.googleusercontent.com. [34.76.131.216])
+        by smtp.gmail.com with ESMTPSA id z8sm3728264wrl.11.2020.09.25.11.46.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2020 11:46:23 -0700 (PDT)
+Date:   Fri, 25 Sep 2020 18:46:22 +0000
+From:   Tomasz Figa <tfiga@chromium.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        linux1394-devel@lists.sourceforge.net, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [PATCH 17/18] dma-iommu: implement ->alloc_noncoherent
+Message-ID: <20200925184622.GB3607091@chromium.org>
+References: <20200915155122.1768241-1-hch@lst.de>
+ <20200915155122.1768241-18-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200915155122.1768241-18-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Lee Duncan <lduncan@suse.com>
+Hi Christoph,
 
-A customer that uses iSCSI NOPs extensively found a race
-condition caused in part by the two-lock system used in
-iscsi (a forward and a back lock), since sending an iSCSI
-NOP uses the forward lock, and receiving one uses the
-back lock. Because of this, processing of the "send"
-can still be in progress when the "receive" occurs, on
-a sufficiently fast multicore system.
+On Tue, Sep 15, 2020 at 05:51:21PM +0200, Christoph Hellwig wrote:
+> Implement the alloc_noncoherent method to provide memory that is neither
+> coherent not contiguous.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/iommu/dma-iommu.c | 41 +++++++++++++++++++++++++++++++++++----
+>  1 file changed, 37 insertions(+), 4 deletions(-)
+> 
 
-To handle this case, we add a new state to the "ping_task"
-pointer besides unassigned and assigned, called "invalid",
-which means the "not yet completed sending". Tests show
-this closes this race condition hole.
+Sorry for being late to the party and thanks a lot for the patch. Please see my
+comments inline.
 
-Changes since V1:
-- Removed two redundant lines in iscsi_send_nopout()
-- Updated commit text to be more clear
-- Added this cover letter with even more info
+[snip]
+> @@ -1052,6 +1055,34 @@ static void *iommu_dma_alloc(struct device *dev, size_t size,
+>  	return cpu_addr;
+>  }
+>  
+> +#ifdef CONFIG_DMA_REMAP
+> +static void *iommu_dma_alloc_noncoherent(struct device *dev, size_t size,
+> +		dma_addr_t *handle, enum dma_data_direction dir, gfp_t gfp)
+> +{
+> +	if (!gfpflags_allow_blocking(gfp)) {
+> +		struct page *page;
+> +
+> +		page = dma_common_alloc_pages(dev, size, handle, dir, gfp);
+> +		if (!page)
+> +			return NULL;
+> +		return page_address(page);
+> +	}
+> +
+> +	return iommu_dma_alloc_remap(dev, size, handle, gfp | __GFP_ZERO,
+> +				     PAGE_KERNEL, 0);
 
-Lee Duncan (1):
-  scsi: libiscsi: fix NOP race condition
+iommu_dma_alloc_remap() makes use of the DMA_ATTR_ALLOC_SINGLE_PAGES attribute
+to optimize the allocations for devices which don't care about how contiguous
+the backing memory is. Do you think we could add an attrs argument to this
+function and pass it there?
 
- drivers/scsi/libiscsi.c | 13 ++++++++++---
- include/scsi/libiscsi.h |  3 +++
- 2 files changed, 13 insertions(+), 3 deletions(-)
+As ARM is being moved to the common iommu-dma layer as well, we'll probably
+make use of the argument to support the DMA_ATTR_NO_KERNEL_MAPPING attribute to
+conserve the vmalloc area.
 
--- 
-2.26.2
-
+Best regards,
+Tomasz
