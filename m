@@ -2,153 +2,106 @@ Return-Path: <SRS0=8X05=DC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA99C4727E
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 01:28:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 409C2C4346E
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 01:56:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1061F2083B
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 01:28:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600997327;
-	bh=RTSrivTd6OMf4V1bDzbMTqfScOTrO/ODyL9xIDVOP5Y=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=i7Y01fwnlNcT3QzgbLBfraNbrex9phZEO7glcGFBVRdO4RHQfcQd5NFXXl6gcBYBk
-	 +dwxRyzQVi1wQ/MlYOSbrqn6XyPSoAf8GhvYtfVRqPLCUgoSwzHrqBsEzoc7sKiU6B
-	 VQ/vHGGJ1AMRaTNq6Tbwo2lzTZNXPh9NVUDFITo4=
+	by mail.kernel.org (Postfix) with ESMTP id 0EF9C20874
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 01:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726980AbgIYB2o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Sep 2020 21:28:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34288 "EHLO mail.kernel.org"
+        id S1726990AbgIYB4B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Sep 2020 21:56:01 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:55694 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726921AbgIYB2l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Sep 2020 21:28:41 -0400
-Received: from dhcp-10-100-145-180.wdl.wdc.com (unknown [199.255.45.60])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C0B072083B;
-        Fri, 25 Sep 2020 01:28:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600997320;
-        bh=RTSrivTd6OMf4V1bDzbMTqfScOTrO/ODyL9xIDVOP5Y=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VyMWIQR6AVkox/VeNcte3tjcqq4VRWrsQIbYYgiI0qy9ziwWb0pWPeboWVh7mmp+Y
-         Eoiav98dqPsynOoisKvda+ZRVhtlLNo5Fh61Rq0ODiArmNS9LyMwdiAhevATzh7bGQ
-         bLF36rj7pxTGQlY3rOefGPJXz7f+SaCgcqpjFaoI=
-From:   Keith Busch <kbusch@kernel.org>
-To:     axboe@kernel.dk
-Cc:     linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, hch@lst.de,
-        Keith Busch <kbusch@kernel.org>, linux-api@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCHv4 1/3] block: add zone specific block statuses
-Date:   Thu, 24 Sep 2020 18:28:36 -0700
-Message-Id: <20200925012838.4043473-2-kbusch@kernel.org>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200925012838.4043473-1-kbusch@kernel.org>
-References: <20200925012838.4043473-1-kbusch@kernel.org>
+        id S1726704AbgIYBz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Sep 2020 21:55:57 -0400
+X-Greylist: delayed 584 seconds by postgrey-1.27 at vger.kernel.org; Thu, 24 Sep 2020 21:55:56 EDT
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 8B9AE20418F;
+        Fri, 25 Sep 2020 03:46:10 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id Hf1Ab6sUrTjO; Fri, 25 Sep 2020 03:46:08 +0200 (CEST)
+Received: from [192.168.48.23] (host-45-78-251-166.dyn.295.ca [45.78.251.166])
+        by smtp.infotech.no (Postfix) with ESMTPA id E20F7204165;
+        Fri, 25 Sep 2020 03:46:07 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+To:     SCSI development list <linux-scsi@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@ORACLE.COM>,
+        USB list <linux-usb@vger.kernel.org>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: lib/scatterlist.c : sgl_alloc_order promises more than it delivers
+Message-ID: <b9f5c065-7662-30e0-8cbd-27a77d28611e@interlog.com>
+Date:   Thu, 24 Sep 2020 21:46:05 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A zoned device with limited resources to open or activate zones may
-return an error when the host exceeds those limits. The same command may
-be successful if retried later, but the host needs to wait for specific
-zone states before it should expect a retry to succeed. Have the block
-layer provide an appropriate status for these conditions so applications
-can distinuguish this error for special handling.
+The signature of this exported function is:
 
-Cc: linux-api@vger.kernel.org
-Cc: Niklas Cassel <niklas.cassel@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- Documentation/block/queue-sysfs.rst |  8 ++++++++
- block/blk-core.c                    |  4 ++++
- include/linux/blk_types.h           | 18 ++++++++++++++++++
- 3 files changed, 30 insertions(+)
+struct scatterlist *sgl_alloc_order(unsigned long long length,
+                                     unsigned int order, bool chainable,
+                                     gfp_t gfp, unsigned int *nent_p)
 
-diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
-index f261a5c84170..2638d3446b79 100644
---- a/Documentation/block/queue-sysfs.rst
-+++ b/Documentation/block/queue-sysfs.rst
-@@ -124,6 +124,10 @@ For zoned block devices (zoned attribute indicating "host-managed" or
- EXPLICIT OPEN, IMPLICIT OPEN or CLOSED, is limited by this value.
- If this value is 0, there is no limit.
- 
-+If the host attempts to exceed this limit, the driver should report this error
-+with BLK_STS_ZONE_ACTIVE_RESOURCE, which user space may see as the EOVERFLOW
-+errno.
-+
- max_open_zones (RO)
- -------------------
- For zoned block devices (zoned attribute indicating "host-managed" or
-@@ -131,6 +135,10 @@ For zoned block devices (zoned attribute indicating "host-managed" or
- EXPLICIT OPEN or IMPLICIT OPEN, is limited by this value.
- If this value is 0, there is no limit.
- 
-+If the host attempts to exceed this limit, the driver should report this error
-+with BLK_STS_ZONE_OPEN_RESOURCE, which user space may see as the ETOOMANYREFS
-+errno.
-+
- max_sectors_kb (RW)
- -------------------
- This is the maximum number of kilobytes that the block layer will allow
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 10c08ac50697..8bffc7732e37 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -186,6 +186,10 @@ static const struct {
- 	/* device mapper special case, should not leak out: */
- 	[BLK_STS_DM_REQUEUE]	= { -EREMCHG, "dm internal retry" },
- 
-+	/* zone device specific errors */
-+	[BLK_STS_ZONE_OPEN_RESOURCE]	= { -ETOOMANYREFS, "open zones exceeded" },
-+	[BLK_STS_ZONE_ACTIVE_RESOURCE]	= { -EOVERFLOW, "active zones exceeded" },
-+
- 	/* everything else not covered above: */
- 	[BLK_STS_IOERR]		= { -EIO,	"I/O" },
- };
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 4ecf4fed171f..8603fc5f86a3 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -103,6 +103,24 @@ typedef u8 __bitwise blk_status_t;
-  */
- #define BLK_STS_ZONE_RESOURCE	((__force blk_status_t)14)
- 
-+/*
-+ * BLK_STS_ZONE_OPEN_RESOURCE is returned from the driver in the completion
-+ * path if the device returns a status indicating that too many zone resources
-+ * are currently open. The same command should be successful if resubmitted
-+ * after the number of open zones decreases below the device's limits, which is
-+ * reported in the request_queue's max_open_zones.
-+ */
-+#define BLK_STS_ZONE_OPEN_RESOURCE	((__force blk_status_t)15)
-+
-+/*
-+ * BLK_STS_ZONE_ACTIVE_RESOURCE is returned from the driver in the completion
-+ * path if the device returns a status indicating that too many zone resources
-+ * are currently active. The same command should be successful if resubmitted
-+ * after the number of active zones decreases below the device's limits, which
-+ * is reported in the request_queue's max_active_zones.
-+ */
-+#define BLK_STS_ZONE_ACTIVE_RESOURCE	((__force blk_status_t)16)
-+
- /**
-  * blk_path_error - returns true if error may be path related
-  * @error: status the request was completed with
--- 
-2.24.1
+That first argument would be better named num_bytes (rather than length).
+Its type (unsigned long long) seems to promise large allocations (is that
+64 or 128 bits?). Due to the implementation it doesn't matter due to this
+check in that function's definition:
+
+         /* Check for integer overflow */
+         if (length > (nent << (PAGE_SHIFT + order)))
+                 return NULL;
+
+Well _integers_ don't wrap, but that pedantic point aside, 'nent' is an
+unsigned int which means the rhs expression cannot represent 2^32 or
+higher. So if length >= 2^32 the function fails (i.e. returns NULL).
+
+On 8 GiB and 16 GiB machines I can easily build 6 or 12 GiB sgl_s (with
+scsi_debug) but only if no single allocation is >= 4 GiB due to the
+above check.
+
+So is the above check intended to do that or is it a bug?
+
+
+Any progress with the "[PATCH] sgl_alloc_order: memory leak" bug fix
+posted on 20200920 ?
+sgl_free() is badly named as it leaks for order > 0 .
+
+Doug Gilbert
+
+
+PS1  vmalloc() which I would like to replace with sgl_alloc_order() in the
+      scsi_debug driver, does not have a 4 GB limit.
+
+PS2  Here are the users of sgl_free() under the drivers directory:
+
+find . -name '*.c' -exec grep "sgl_free(" {} \; -print
+	sgl_free(cmd->req.sg);
+		sgl_free(cmd->req.sg);
+	sgl_free(cmd->req.sg);
+	sgl_free(cmd->req.sg);
+./nvme/target/tcp.c
+	sgl_free(req->sg);
+		sgl_free(req->sg);
+			sgl_free(req->metadata_sg);
+./nvme/target/core.c
+	sgl_free(fod->data_sg);
+./nvme/target/fc.c
+	sgl_free(sgl);
+./usb/usbip/stub_rx.c
+			sgl_free(urb->sg);
+		sgl_free(priv->sgl);
+./usb/usbip/stub_main.c
 
