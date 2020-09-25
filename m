@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 350A9C4363D
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B99D9C4741F
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBF7620809
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76FB822B2D
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GiCp44yq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hVavjcj6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729134AbgIYQTg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Sep 2020 12:19:36 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58666 "EHLO
+        id S1727874AbgIYQTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Sep 2020 12:19:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:33991 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728996AbgIYQTg (ORCPT
+        by vger.kernel.org with ESMTP id S1728996AbgIYQTh (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Sep 2020 12:19:36 -0400
+        Fri, 25 Sep 2020 12:19:37 -0400
 Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601050775;
+        s=mimecast20190719; t=1601050776;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=juqylsxeQnN8xlFt8c6sVAPHOTqPVpJEMIV/U4qDUJ8=;
-        b=GiCp44yqCMIo95SShtDiM0rrFD2jxnlozPShXkFzJHfkVjkba0n2x57BNVwR7cTrf+NRR/
-        I8wgIr7T36ZFWvG3CTgq+fvyExYyIitkuwtVMtNsAoOdVquvGX36P0tm7pwuGwVq4HhAF/
-        V94kDUD5k2r7cLinR+QDcrj1oOJd38Y=
+        bh=NmMNFZem4zxwx8zsacxizdBtvT6u9qJjyTu6Rji6vJI=;
+        b=hVavjcj6bTQgFGcbQ9n8AkmVcmzHdw4q6QORhGmn+Ncy/40jhO98uFDP65J3AvbXgC3Pyp
+        lWCOTCuQmXkMICCuCDAOh6+gT8zCWEChRp0KaDe5xv79Y43mAJLBuqjB1ZCCrmaCMmLb8V
+        45feOp53EwVqzacSNqtNQB1ToChxiXY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-231-BJlZSyQYPdyld3HWcjUD-w-1; Fri, 25 Sep 2020 12:19:33 -0400
-X-MC-Unique: BJlZSyQYPdyld3HWcjUD-w-1
+ us-mta-164-WgbhSpbDOseWmP0nrURg3A-1; Fri, 25 Sep 2020 12:19:34 -0400
+X-MC-Unique: WgbhSpbDOseWmP0nrURg3A-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4DA8281F03D;
-        Fri, 25 Sep 2020 16:19:32 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5E649801AAC;
+        Fri, 25 Sep 2020 16:19:33 +0000 (UTC)
 Received: from sulaco.redhat.com (unknown [10.10.110.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7EB5D5D9DC;
-        Fri, 25 Sep 2020 16:19:31 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 90F2D5D9DC;
+        Fri, 25 Sep 2020 16:19:32 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org
-Subject: [v5 01/12] struct device: Add function callback durable_name
-Date:   Fri, 25 Sep 2020 11:19:18 -0500
-Message-Id: <20200925161929.1136806-2-tasleson@redhat.com>
+Subject: [v5 02/12] create_syslog_header: Add durable name
+Date:   Fri, 25 Sep 2020 11:19:19 -0500
+Message-Id: <20200925161929.1136806-3-tasleson@redhat.com>
 In-Reply-To: <20200925161929.1136806-1-tasleson@redhat.com>
 References: <20200925161929.1136806-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -59,74 +59,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Function callback and function to be used to write a persistent
-durable name to the supplied character buffer.  This will be used to add
-structured key-value data to log messages for hardware related errors
-which allows end users to correlate message and specific hardware.
+This gets us a persistent durable name for code that logs messages in the
+block layer that have the appropriate callbacks setup for durable name.
 
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- drivers/base/core.c    | 24 ++++++++++++++++++++++++
- include/linux/device.h |  4 ++++
- 2 files changed, 28 insertions(+)
+ drivers/base/core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 05d414e9e8a4..88696ade8bfc 100644
+index 88696ade8bfc..adef36d4b475 100644
 --- a/drivers/base/core.c
 +++ b/drivers/base/core.c
-@@ -2489,6 +2489,30 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
- }
- EXPORT_SYMBOL_GPL(dev_set_name);
- 
-+/**
-+ * dev_durable_name - Write "DURABLE_NAME"=<durable name> in buffer
-+ * @dev: device
-+ * @buffer: character buffer to write results
-+ * @len: length of buffer
-+ * @return: Number of bytes written to buffer
-+ */
-+int dev_durable_name(const struct device *dev, char *buffer, size_t len)
-+{
-+	int tmp, dlen;
-+
-+	if (dev && dev->durable_name) {
-+		tmp = snprintf(buffer, len, "DURABLE_NAME=");
-+		if (tmp < len) {
-+			dlen = dev->durable_name(dev, buffer + tmp,
-+							len - tmp);
-+			if (dlen > 0 && ((dlen + tmp) < len))
-+				return dlen + tmp;
-+		}
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(dev_durable_name);
-+
- /**
-  * device_to_dev_kobj - select a /sys/dev/ directory for the device
-  * @dev: device
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 5efed864b387..074125999dd8 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -614,6 +614,8 @@ struct device {
- 	struct iommu_group	*iommu_group;
- 	struct dev_iommu	*iommu;
- 
-+	int (*durable_name)(const struct device *dev, char *buff, size_t len);
-+
- 	bool			offline_disabled:1;
- 	bool			offline:1;
- 	bool			of_node_reused:1;
-@@ -655,6 +657,8 @@ static inline const char *dev_name(const struct device *dev)
- extern __printf(2, 3)
- int dev_set_name(struct device *dev, const char *name, ...);
- 
-+int dev_durable_name(const struct device *d, char *buffer, size_t len);
-+
- #ifdef CONFIG_NUMA
- static inline int dev_to_node(struct device *dev)
+@@ -3864,6 +3864,7 @@ create_syslog_header(const struct device *dev, char *hdr, size_t hdrlen)
  {
+ 	const char *subsys;
+ 	size_t pos = 0;
++	int dlen;
+ 
+ 	if (dev->class)
+ 		subsys = dev->class->name;
+@@ -3906,6 +3907,10 @@ create_syslog_header(const struct device *dev, char *hdr, size_t hdrlen)
+ 				"DEVICE=+%s:%s", subsys, dev_name(dev));
+ 	}
+ 
++	dlen = dev_durable_name(dev, hdr + (pos + 1), hdrlen - (pos + 1));
++	if (dlen)
++		pos += dlen + 1;
++
+ 	if (pos >= hdrlen)
+ 		goto overflow;
+ 
 -- 
 2.26.2
 
