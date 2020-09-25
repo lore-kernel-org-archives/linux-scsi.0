@@ -2,125 +2,132 @@ Return-Path: <SRS0=8X05=DC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32C2DC4727F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 18:47:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E19DFC47420
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 20:17:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E65E920878
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 18:47:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 832EC239D1
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 20:17:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="dRgYAI+I"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WcXKUonk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729812AbgIYSrQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Sep 2020 14:47:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37636 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729772AbgIYSrQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2020 14:47:16 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07867C0613D8
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2020 11:47:16 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id q9so4097475wmj.2
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2020 11:47:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=g/BH1U9GUunsIrnO/GbdPQWxTeH46s0MtJm8Rv2PmQg=;
-        b=dRgYAI+Il/XnGvkuGcGG/lsBUKoJIpFGsPVq7bdfwYbSWBuKZWhEyZ/C6V2T06d7l+
-         MlGVte7aAMEe5kn/Xzgvbo6wkmehHB6utltBuTWLjuy10bgK9jfUtimOpRmqNVZ/PDb7
-         pPEsfddSQturiPpnwk/9j/tF8/GG+ViphzAqQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=g/BH1U9GUunsIrnO/GbdPQWxTeH46s0MtJm8Rv2PmQg=;
-        b=GIPGYwxQb7wvfcYq6A7kt7HiLhp4WrjQl6Ydk1S5bIBDWMbbZQ7tIQsQoltmDlEpSM
-         uVS5qQQDCQ6ztP8D1K6fraiIW1QWe9O/yzq5wcn+DRh4jx5+IipHm4p7qUfYYric5QZ2
-         sXdPiNr+V+ub9bLknzZg6guyDF1t4caHVt8CaYNrRSoCnop6nKSGmsXcc0ILhK53+TsO
-         YZHE1xDFzBaozAVubnI/+3sYCbOuoNCFbysY1DhTdFvpI1etxvM25LiucN+lpLboOFTS
-         MrKv0xDT7SjiUpBSo4g+PSzj5AR6jj3kIgDMYLBqfGfpGQ/UmQAjk0Iiwoo+4bi4XqXa
-         PRAg==
-X-Gm-Message-State: AOAM531gouZ4PsMtf0KDfItsP+U8WmGuWMfyW2VMBsVnllNyU4nkyb73
-        Ll8UFfTg+pO3IslK8mOj5lrvDw==
-X-Google-Smtp-Source: ABdhPJwizv9lDNCgaSezSHmDHMwhCyQSsePLifiuaYRBnBvcSMHXRWloRU3D/0rZv64JO/qSChFcJg==
-X-Received: by 2002:a1c:2d86:: with SMTP id t128mr4754086wmt.189.1601059634661;
-        Fri, 25 Sep 2020 11:47:14 -0700 (PDT)
-Received: from chromium.org (216.131.76.34.bc.googleusercontent.com. [34.76.131.216])
-        by smtp.gmail.com with ESMTPSA id w15sm3841044wro.46.2020.09.25.11.47.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Sep 2020 11:47:13 -0700 (PDT)
-Date:   Fri, 25 Sep 2020 18:47:12 +0000
-From:   Tomasz Figa <tfiga@chromium.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Joonyoung Shim <jy0922.shim@samsung.com>,
-        Seung-Woo Kim <sw0312.kim@samsung.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        iommu@lists.linux-foundation.org,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        linux1394-devel@lists.sourceforge.net, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
-        linux-parisc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
-        alsa-devel@alsa-project.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH 01/18] media/v4l2: remove V4L2-FLAG-MEMORY-NON-CONSISTENT
- flag
-Message-ID: <20200925184712.GC3607091@chromium.org>
-References: <20200915155122.1768241-1-hch@lst.de>
- <20200915155122.1768241-2-hch@lst.de>
+        id S1727495AbgIYUR2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Sep 2020 16:17:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:38047 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726281AbgIYUP2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Sep 2020 16:15:28 -0400
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601064926;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=kEmnlmchPR9vS1orvoNm0OXoq6QCMFirGMz7PpRHNOE=;
+        b=WcXKUonkMaXc+dgKBP7kzoSikhAngVqio6cDmIjbg1pbAeQcLBodW+4xWJZxrjKVkiLotF
+        jzYJAMeN6rI9QjY1REZWTjw7ntt5dvlFv+GOgwndHtyIWZbyBZqq2CnRZ7M3GCLdL7exi+
+        yqKnR0g1DRHZUoGss5NPkiECQy/Sk88=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-300-GAvbEu2YM96RiYpkhr_MNw-1; Fri, 25 Sep 2020 16:15:22 -0400
+X-MC-Unique: GAvbEu2YM96RiYpkhr_MNw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4EDDBAD503;
+        Fri, 25 Sep 2020 20:15:20 +0000 (UTC)
+Received: from localhost (unknown [10.18.25.174])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 446D95C1BB;
+        Fri, 25 Sep 2020 20:15:13 +0000 (UTC)
+Date:   Fri, 25 Sep 2020 16:15:12 -0400
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        "ssudhakarp@gmail.com" <ssudhakarp@gmail.com>,
+        "dm-crypt@saout.de" <dm-crypt@saout.de>,
+        Eric Biggers <ebiggers@kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        Shirley Ma <shirley.ma@oracle.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        Milan Broz <gmazyland@gmail.com>,
+        "agk@redhat.com" <agk@redhat.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, mst@redhat.com
+Subject: Re: [RFC PATCH 0/2] dm crypt: Allow unaligned buffer lengths for
+ skcipher devices
+Message-ID: <20200925201512.GA6025@redhat.com>
+References: <20200924012732.GA10766@redhat.com>
+ <20200924051419.GA16103@sol.localdomain>
+ <252587bb-c0b7-47c9-a97b-91422f8f9c47@default>
+ <alpine.LRH.2.02.2009241314280.28814@file01.intranet.prod.int.rdu2.redhat.com>
+ <7b6fdfd5-0160-4bcf-b7ed-d0e51553c678@default>
+ <alpine.LRH.2.02.2009241345370.4229@file01.intranet.prod.int.rdu2.redhat.com>
+ <fd512a7d-c064-4812-a794-5274c10687db@default>
+ <alpine.LRH.2.02.2009241421170.8544@file01.intranet.prod.int.rdu2.redhat.com>
+ <eb43742e-bdfe-4567-8240-1d8e083d76a2@default>
+ <MWHPR04MB37588DF8C3FFF4BD0C3CD543E7360@MWHPR04MB3758.namprd04.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200915155122.1768241-2-hch@lst.de>
+In-Reply-To: <MWHPR04MB37588DF8C3FFF4BD0C3CD543E7360@MWHPR04MB3758.namprd04.prod.outlook.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph,
+On Thu, Sep 24 2020 at  9:09pm -0400,
+Damien Le Moal <Damien.LeMoal@wdc.com> wrote:
 
-On Tue, Sep 15, 2020 at 05:51:05PM +0200, Christoph Hellwig wrote:
-> From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> On 2020/09/25 4:14, Sudhakar Panneerselvam wrote:
+> >>
+> >> On Thu, 24 Sep 2020, Sudhakar Panneerselvam wrote:
+> >>
+> >>>> By copying it to a temporary aligned buffer and issuing I/O on this
+> >>>> buffer.
+> >>>
+> >>> I don't like this idea. Because, you need to allocate additional pages
+> >>> for the entire I/O size(for the misaligned case, if you think through
+> >>
+> >> You can break the I/O to smaller pieces. You can use mempool for
+> >> pre-allocation of the pages.
+> > 
+> > Assuming we do this, how is this code simpler(based on your
+> > comment below) than the fix in dm-crypt? In fact, this approach 
+> > would make the code change look bad in vhost, at the same time
+> > having performance penalty. By doing this, we are just moving the 
+> > responsibility to other unrelated component.
 > 
-> The patch partially reverts some of the UAPI bits of the buffer
-> cache management hints. Namely, the queue consistency (memory
-> coherency) user-space hint because, as it turned out, the kernel
-> implementation of this feature was misusing DMA_ATTR_NON_CONSISTENT.
-> 
-> The patch revers both kernel and user space parts: removes the
-> DMA consistency attr functions, rollbacks changes to v4l2_requestbuffers,
-> v4l2_create_buffers structures and corresponding UAPI functions
-> (plus compat32 layer) and cleanups the documentation.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  .../userspace-api/media/v4l/buffer.rst        | 17 -------
->  .../media/v4l/vidioc-create-bufs.rst          |  6 +--
->  .../media/v4l/vidioc-reqbufs.rst              | 12 +----
->  .../media/common/videobuf2/videobuf2-core.c   | 46 +++----------------
->  .../common/videobuf2/videobuf2-dma-contig.c   | 19 --------
->  .../media/common/videobuf2/videobuf2-dma-sg.c |  3 +-
->  .../media/common/videobuf2/videobuf2-v4l2.c   | 18 +-------
->  drivers/media/v4l2-core/v4l2-compat-ioctl32.c | 10 +---
->  drivers/media/v4l2-core/v4l2-ioctl.c          |  5 +-
->  include/media/videobuf2-core.h                |  7 +--
->  include/uapi/linux/videodev2.h                | 13 +-----
->  11 files changed, 22 insertions(+), 134 deletions(-)
+> Because vhost is at the top of the block-io food chain. Fixing the unaligned
+> segments there will ensure that it does not matter what device is under it. It
+> will work.
 
-Acked-by: Tomasz Figa <tfiga@chromium.org>
+Right, I agree. This should be addressed in vhost-scsi.  And vhost-scsi
+probably needs to be interfacing through block core to submit IO that
+respects the limits of its underlying block device.
 
-Best regards,
-Tomasz
+So please lift your proposed dm-crypt changes to vhost-scsi:
+https://patchwork.kernel.org/patch/11781207/
+https://patchwork.kernel.org/patch/11781053/
+
+Maybe work with vhost-scsi maintainers to see about making the code
+reusable in block core; so that any future unaligned application IO is
+dealt in other drivers using the same common code.
+
+But I'm not interested in taking these changes into dm-crypt:
+
+NAK
+
+> I am still baffled that the unaligned segments go through in the first place...
+> Do we have something missing in the BIO code ?
+
+Cc'ing linux-block, could be.
+
+Thanks,
+Mike
+
