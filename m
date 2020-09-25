@@ -2,85 +2,94 @@ Return-Path: <SRS0=8X05=DC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A21C4727D
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 11:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AAD1C4363D
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 14:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D2C9208A9
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 11:15:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0539D208A9
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Sep 2020 14:19:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="QZx7q7gI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728085AbgIYLPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Sep 2020 07:15:44 -0400
-Received: from foss.arm.com ([217.140.110.172]:42402 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727132AbgIYLPn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Sep 2020 07:15:43 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 34B1D101E;
-        Fri, 25 Sep 2020 04:15:42 -0700 (PDT)
-Received: from [10.57.48.76] (unknown [10.57.48.76])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 986323F70D;
-        Fri, 25 Sep 2020 04:15:38 -0700 (PDT)
-Subject: Re: [PATCH 08/18] dma-mapping: add a new dma_alloc_noncoherent API
-To:     Christoph Hellwig <hch@lst.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Joonyoung Shim <jy0922.shim@samsung.com>,
-        Seung-Woo Kim <sw0312.kim@samsung.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Tomasz Figa <tfiga@chromium.org>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        iommu@lists.linux-foundation.org
-Cc:     alsa-devel@alsa-project.org, linux-samsung-soc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-doc@vger.kernel.org, nouveau@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-mm@kvack.org, Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
-References: <20200915155122.1768241-1-hch@lst.de>
- <20200915155122.1768241-9-hch@lst.de>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <c8ea4023-3e19-d63b-d936-46a04f502a61@arm.com>
-Date:   Fri, 25 Sep 2020 12:15:37 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101
- Thunderbird/78.2.2
+        id S1728905AbgIYOTL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Sep 2020 10:19:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52110 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727290AbgIYOTL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Sep 2020 10:19:11 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 014C4C0613CE
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2020 07:19:11 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id 34so2687682pgo.13
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2020 07:19:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Izvn14aXCOd8rlHi8gt8/prckjwG/92/E8+p6vMMqzM=;
+        b=QZx7q7gI1poaxI+iNpfTHOEPysawBMN6ILpWj8VDRHvig1MWbXDH9Q/Ejh/VGdMY6V
+         XhsSRSgLJ3vyBUW4G6v5lGczlnBrfrfGUTY6Io4kTHSOwwPeeq67+GUlO0pvSbpcSc8G
+         UQSaYijRBt6BeZMDv8AdtAKiNqO1VevLatKGi1HCrNW5g8jU/dNWe2se7vKcQ5smC1Kh
+         pE6mdkVNLv/zO4pT+cJM9rz/VL4qgjegnLWF0CSvnNA3YX8nzt9KdJQrxarNDFpNgyxb
+         mdM7GAKDG1dsnTN8AV+yDCM9QF/vXMl36U6209JvGiLAPdEQelB4a/A4/bJ7gb2XykBg
+         PFCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Izvn14aXCOd8rlHi8gt8/prckjwG/92/E8+p6vMMqzM=;
+        b=pj89B76aIRTvyDD6UsZIgbMNbNMVgi/imS2sxH7MtNIaR4+hx7vfhyK9+qYQFFwmji
+         gV8XeA1pzRwjG3ruvta429zBW1W0FWTdaQhIVR0nmZvPADXnwDto6culYt2d0oKmNsHA
+         SVGHr5npVCkAtbu3+2CMkoDOuFY8hzb4so+NPi0xV2OKIRBTR4GsIYNy2eHdcNAIBilP
+         Cet0ph9LM7NuBHpXv1Jtnor8TpFNvKRVJp2eoV0Gpuq3S05qvQgP/FzY5cOr/rmxhO3T
+         NjicQ/2UFAmQ3t/euRnzuwTAKrvbK5g3LmujQUJ/xEggkedAqrs4XekAYIAlPWZHIHLV
+         T4gA==
+X-Gm-Message-State: AOAM532IMBlJ57yBriFXfNH3lRYX3zOqLyr4d1HIi8Xc6zLT6ywUNOmW
+        QElV2eN9JGT6UayIXtB/dBbV2/LLRVt0VA==
+X-Google-Smtp-Source: ABdhPJwRr/FwQpe7dKk8pmg8H/cUjDmWIFuRPHGSosKhPuxMlj+z/HBIhpQTLB9cSGSc+hfMahv5og==
+X-Received: by 2002:a63:e057:: with SMTP id n23mr213338pgj.87.1601043550492;
+        Fri, 25 Sep 2020 07:19:10 -0700 (PDT)
+Received: from [192.168.1.30] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id j19sm2930829pfe.108.2020.09.25.07.19.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Sep 2020 07:19:09 -0700 (PDT)
+Subject: Re: clean up is partition checks
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     dm-devel@redhat.com, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+References: <20200903054104.228829-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <7a0600d8-d886-c546-378c-5298a16e979c@kernel.dk>
+Date:   Fri, 25 Sep 2020 08:19:08 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200915155122.1768241-9-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
+In-Reply-To: <20200903054104.228829-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-09-15 16:51, Christoph Hellwig wrote:
-[...]
-> +These APIs allow to allocate pages in the kernel direct mapping that are
-> +guaranteed to be DMA addressable.  This means that unlike dma_alloc_coherent,
-> +virt_to_page can be called on the resulting address, and the resulting
+On 9/2/20 11:40 PM, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> this series add a new helepr to check if a struct block_device represents
+> a parition, and removes most direct access to ->bd_contained from
+> drivers.
 
-Nit: if we explicitly describe this as if it's a guarantee that can be 
-relied upon...
+Applied, thanks.
 
-> +struct page can be used for everything a struct page is suitable for.
+-- 
+Jens Axboe
 
-[...]
-> +This routine allocates a region of <size> bytes of consistent memory.  It
-> +returns a pointer to the allocated region (in the processor's virtual address
-> +space) or NULL if the allocation failed.  The returned memory may or may not
-> +be in the kernels direct mapping.  Drivers must not call virt_to_page on
-> +the returned memory region.
-
-...then forbid this document's target audience from relying on it, 
-something seems off. At the very least it's unhelpfully unclear :/
-
-Given patch #17, I suspect that the first paragraph is the one that's no 
-longer true.
-
-Robin.
