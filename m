@@ -2,102 +2,81 @@ Return-Path: <SRS0=SrIF=DD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3880C4741F
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 14:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E94ABC2D0A8
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 15:00:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A09A3208A9
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 14:18:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DEB921D7F
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 15:00:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RiKSMVrS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TE9tZPLM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726239AbgIZOSB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 26 Sep 2020 10:18:01 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:54022 "EHLO
+        id S1729186AbgIZPAZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 26 Sep 2020 11:00:25 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21174 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726244AbgIZOSB (ORCPT
+        by vger.kernel.org with ESMTP id S1726210AbgIZPAY (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 26 Sep 2020 10:18:01 -0400
+        Sat, 26 Sep 2020 11:00:24 -0400
 Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601129880;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=M3C2rzUfmTv9LIjiD5/Deh9yM3/rtsekjDrjAJPBZpA=;
-        b=RiKSMVrSdCcm5pvQvfuDsqvtdMVcLByu+X3AvB1J61FTDWVH78sLGi5O/Py/9ptBCaK9R+
-        odu6pUPfDICbujjVun3wE4WKkAJ44OExZfvFGBAtCCrPB8TwhJlcwVs7hdkCCu9HljaQKw
-        8vzepTu9gdIZvmFdVvY6lbEgCFuo4zo=
+        s=mimecast20190719; t=1601132423;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=LUAzUOLpm/8qENDMFglIWRX6RjLDvBiKfDpGj67d+bM=;
+        b=TE9tZPLMOyXDebFjkrsVarzhDnyEupj+4UvG7kTriBAtjmCy/Kvx/10HOMAWEappqeGpvw
+        Sp4XLL8eiEri80qFT7SB6bobchpttd1nrIRjgFJlNZ2dBaFgtLoX948SZBFYMYr/oosk1c
+        YUp12C5dbQiDYA1h+Dr2iOpKUgynSvI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-587-xQIMg37GPWmWL8qEVtf6DQ-1; Sat, 26 Sep 2020 10:17:56 -0400
-X-MC-Unique: xQIMg37GPWmWL8qEVtf6DQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-278-ezDT77fsMJeMCWmIbquRzQ-1; Sat, 26 Sep 2020 11:00:19 -0400
+X-MC-Unique: ezDT77fsMJeMCWmIbquRzQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B07FC801AC3;
-        Sat, 26 Sep 2020 14:17:55 +0000 (UTC)
-Received: from [10.10.110.11] (unknown [10.10.110.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B291D55787;
-        Sat, 26 Sep 2020 14:17:54 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [v5 07/12] libata: Make ata_scsi_durable_name static
-To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <20200925161929.1136806-1-tasleson@redhat.com>
- <20200925161929.1136806-8-tasleson@redhat.com>
- <ec0479bf-e5ac-58f1-248a-2d4c29ae3efa@gmail.com>
-From:   Tony Asleson <tasleson@redhat.com>
-Organization: Red Hat
-Message-ID: <b95e0b6f-dcc1-8032-ebcd-29ae594fcbaf@redhat.com>
-Date:   Sat, 26 Sep 2020 09:17:53 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B02641074648;
+        Sat, 26 Sep 2020 15:00:17 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.192.35])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 429B31A3D6;
+        Sat, 26 Sep 2020 15:00:16 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     aacraid@microsemi.com, Balsundar.P@microchip.com,
+        Sagar.Biradar@microchip.com, Dave.Carroll@microchip.com,
+        Mahesh.Rajashekhara@microchip.com
+Subject: [PATCH] aacraid: add a missing iounmap call
+Date:   Sat, 26 Sep 2020 17:00:15 +0200
+Message-Id: <20200926150015.6187-1-thenzl@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <ec0479bf-e5ac-58f1-248a-2d4c29ae3efa@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/26/20 3:40 AM, Sergei Shtylyov wrote:
-> Hello!
-> 
-> On 25.09.2020 19:19, Tony Asleson wrote:
-> 
->> Signed-off-by: Tony Asleson <tasleson@redhat.com>
->> Signed-off-by: kernel test robot <lkp@intel.com>
->> ---
->>   drivers/ata/libata-scsi.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->> index 194dac7dbdca..13a58ed7184c 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
->> @@ -1086,7 +1086,7 @@ int ata_scsi_dev_config(struct scsi_device
->> *sdev, struct ata_device *dev)
->>       return 0;
->>   }
->>   -int ata_scsi_durable_name(const struct device *dev, char *buf,
->> size_t len)
->> +static int ata_scsi_durable_name(const struct device *dev, char *buf,
->> size_t len)
-> 
->    Why not do it in patch #6 -- when introducing the function?
+Add a missing resource cleanup in _aac_reset_adapter
 
-This issue was found by the intel kernel test robot in v4 patch series.
-I thought it was better to have a separate commit with the correction
-that matched it's signed off.  Maybe that's not the correct approach?
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/aacraid/commsup.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 7c0710417d37..6cc7dabe5e11 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1551,6 +1551,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	aac_fib_map_free(aac);
+ 	dma_free_coherent(&aac->pdev->dev, aac->comm_size, aac->comm_addr,
+ 			  aac->comm_phys);
++	aac_adapter_ioremap(aac, 0);
+ 	aac->comm_addr = NULL;
+ 	aac->comm_phys = 0;
+ 	kfree(aac->queues);
+-- 
+2.25.4
 
