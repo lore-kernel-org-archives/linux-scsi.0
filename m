@@ -2,81 +2,146 @@ Return-Path: <SRS0=SrIF=DD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E94ABC2D0A8
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 15:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9631C2D0A8
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 15:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DEB921D7F
-	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 15:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D4A621527
+	for <linux-scsi@archiver.kernel.org>; Sat, 26 Sep 2020 15:31:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TE9tZPLM"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IgNtiCGT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729186AbgIZPAZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 26 Sep 2020 11:00:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21174 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726210AbgIZPAY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 26 Sep 2020 11:00:24 -0400
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601132423;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=LUAzUOLpm/8qENDMFglIWRX6RjLDvBiKfDpGj67d+bM=;
-        b=TE9tZPLMOyXDebFjkrsVarzhDnyEupj+4UvG7kTriBAtjmCy/Kvx/10HOMAWEappqeGpvw
-        Sp4XLL8eiEri80qFT7SB6bobchpttd1nrIRjgFJlNZ2dBaFgtLoX948SZBFYMYr/oosk1c
-        YUp12C5dbQiDYA1h+Dr2iOpKUgynSvI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-278-ezDT77fsMJeMCWmIbquRzQ-1; Sat, 26 Sep 2020 11:00:19 -0400
-X-MC-Unique: ezDT77fsMJeMCWmIbquRzQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B02641074648;
-        Sat, 26 Sep 2020 15:00:17 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.40.192.35])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 429B31A3D6;
-        Sat, 26 Sep 2020 15:00:16 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     aacraid@microsemi.com, Balsundar.P@microchip.com,
-        Sagar.Biradar@microchip.com, Dave.Carroll@microchip.com,
-        Mahesh.Rajashekhara@microchip.com
-Subject: [PATCH] aacraid: add a missing iounmap call
-Date:   Sat, 26 Sep 2020 17:00:15 +0200
-Message-Id: <20200926150015.6187-1-thenzl@redhat.com>
+        id S1729363AbgIZPbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 26 Sep 2020 11:31:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59972 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726956AbgIZPbb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Sep 2020 11:31:31 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A69C0613CE
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2020 08:31:31 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id i26so2543178ejb.12
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2020 08:31:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NyijGOIcOg0IQ8xJ7tRK9WXb8VbwFr7joS3ngRxTFtY=;
+        b=IgNtiCGTIRw+9Jq9+OugAEUgOtWjA8eNb9N0lGKIZhSzq8+Nq6i8p6dAPgDSw3WCu5
+         5zLCQcy1nGd484dN8MEuuVSYHqucVtHjEfU81Ws4/lYX/HOp4JbMrZzXbrOql6BtdQAy
+         +hEnD/Pr6tT/viPh9YkxxEEc7eplb0NwJB92c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NyijGOIcOg0IQ8xJ7tRK9WXb8VbwFr7joS3ngRxTFtY=;
+        b=duz+OhgwRtL4ZFwdv+2PeNjlwg2LQVcuowVAv1q21mGQgioGJLr2jwpSbnzNsSLgkN
+         4X07nBFLaUiFKeUXjwR4n9LPoq4lKDYdVVeQo0gG0FSJU1M9im4ZygjiuqT2jCEOYJ0d
+         dlXn21SXUpG1dp0GXijXOXOPBgMmaIF3AVI7H0tlI84xHpSgVOpyiChf3WXHyiYq4dwl
+         kQFtwgcILfaGCrC1AIgYtcY2YtmIHExTcmVCUH/IUgO7BiITwpGToKTB8DSqALsemaY0
+         mGSzjrGy/fJq5aMZmmOzAdMU2ry9Y1GzNPOY/ZpC/Mo3sLn5e5hMwLBNdVGQwvwTqXr3
+         Xk2A==
+X-Gm-Message-State: AOAM533Pexk96B1Z/z2c0gROrmGssvyzc43ndgEvSqAazcqi7t+BUwmI
+        Wt4yrwg/QdR/ZwRq/FWBCrsXBIvCq0G3CxFE
+X-Google-Smtp-Source: ABdhPJwkz9d9ko6vRT872HyvTdEv0338pih7KJrTfF4dlCVH0yKhP9rjSKwsfAmMpoXPDB4v20kJmg==
+X-Received: by 2002:a17:907:3301:: with SMTP id ym1mr8311876ejb.367.1601134290036;
+        Sat, 26 Sep 2020 08:31:30 -0700 (PDT)
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com. [209.85.128.48])
+        by smtp.gmail.com with ESMTPSA id dv25sm4336211ejb.69.2020.09.26.08.31.29
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 26 Sep 2020 08:31:29 -0700 (PDT)
+Received: by mail-wm1-f48.google.com with SMTP id w2so2186445wmi.1
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2020 08:31:29 -0700 (PDT)
+X-Received: by 2002:a7b:c925:: with SMTP id h5mr2968012wml.28.1601133943201;
+ Sat, 26 Sep 2020 08:25:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+References: <20200915155122.1768241-1-hch@lst.de> <20200915155122.1768241-18-hch@lst.de>
+ <20200925184622.GB3607091@chromium.org> <20200926141428.GB10379@lst.de>
+In-Reply-To: <20200926141428.GB10379@lst.de>
+From:   Tomasz Figa <tfiga@chromium.org>
+Date:   Sat, 26 Sep 2020 17:25:27 +0200
+X-Gmail-Original-Message-ID: <CAAFQd5CjSKswdc3qOEZy73cyYJ9kfaXsSFyxkOHA+buh-J12UA@mail.gmail.com>
+Message-ID: <CAAFQd5CjSKswdc3qOEZy73cyYJ9kfaXsSFyxkOHA+buh-J12UA@mail.gmail.com>
+Subject: Re: [PATCH 17/18] dma-iommu: implement ->alloc_noncoherent
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Joonyoung Shim <jy0922.shim@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <iommu@lists.linux-foundation.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        linux1394-devel@lists.sourceforge.net,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <linux-arm-kernel@lists.infradead.org>,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        nouveau@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
+        alsa-devel@alsa-project.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a missing resource cleanup in _aac_reset_adapter
+On Sat, Sep 26, 2020 at 4:14 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Fri, Sep 25, 2020 at 06:46:22PM +0000, Tomasz Figa wrote:
+> > > +static void *iommu_dma_alloc_noncoherent(struct device *dev, size_t size,
+> > > +           dma_addr_t *handle, enum dma_data_direction dir, gfp_t gfp)
+> > > +{
+> > > +   if (!gfpflags_allow_blocking(gfp)) {
+> > > +           struct page *page;
+> > > +
+> > > +           page = dma_common_alloc_pages(dev, size, handle, dir, gfp);
+> > > +           if (!page)
+> > > +                   return NULL;
+> > > +           return page_address(page);
+> > > +   }
+> > > +
+> > > +   return iommu_dma_alloc_remap(dev, size, handle, gfp | __GFP_ZERO,
+> > > +                                PAGE_KERNEL, 0);
+> >
+> > iommu_dma_alloc_remap() makes use of the DMA_ATTR_ALLOC_SINGLE_PAGES attribute
+> > to optimize the allocations for devices which don't care about how contiguous
+> > the backing memory is. Do you think we could add an attrs argument to this
+> > function and pass it there?
+> >
+> > As ARM is being moved to the common iommu-dma layer as well, we'll probably
+> > make use of the argument to support the DMA_ATTR_NO_KERNEL_MAPPING attribute to
+> > conserve the vmalloc area.
+>
+> We could probably at it.  However I wonder why this is something the
+> drivers should care about.  Isn't this really something that should
+> be a kernel-wide policy for a given system?
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/aacraid/commsup.c | 1 +
- 1 file changed, 1 insertion(+)
+There are IOMMUs out there which support huge pages and those can
+benefit *some* hardware depending on what kind of accesses they
+perform, possibly on a per-buffer basis. At the same time, order > 0
+allocations can be expensive, significantly affecting allocation
+latency, so for devices which don't care about huge pages anyone would
+prefer simple single-page allocations. Currently the drivers know the
+best on whether the hardware they drive would care. There are some
+decision factors listed in the documentation [1].
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 7c0710417d37..6cc7dabe5e11 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1551,6 +1551,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	aac_fib_map_free(aac);
- 	dma_free_coherent(&aac->pdev->dev, aac->comm_size, aac->comm_addr,
- 			  aac->comm_phys);
-+	aac_adapter_ioremap(aac, 0);
- 	aac->comm_addr = NULL;
- 	aac->comm_phys = 0;
- 	kfree(aac->queues);
--- 
-2.25.4
+I can imagine cases where drivers could not be the best to decide
+about this - for example, the workload could vary depending on the
+userspace or a product decision regarding the performance vs
+allocation latency, but we haven't seen such cases in practice yet.
 
+[1] https://www.kernel.org/doc/html/latest/core-api/dma-attributes.html?highlight=dma_attr_alloc_single_pages#dma-attr-alloc-single-pages
+
+Best regards,
+Tomasz
