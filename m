@@ -2,151 +2,111 @@ Return-Path: <SRS0=qC8i=DE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A88AFC47423
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Sep 2020 12:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4932CC4346E
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Sep 2020 14:22:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7949F23A31
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Sep 2020 12:21:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601209271;
-	bh=FdSjEiIOfosty1A1hNpYjx+LCe0c93peV/xVsFD6r/o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=oYjiCFmJlAzUANK/StFVWBo4UCQ1PJg+3QiTj8+1xEH7fIgUasR26TnYlusH3KjhB
-	 cvzBnLm9RtivGJcuUj1YapKUQn9h8T6taeyFHzAVQ53q3zTfcmhENKLK4z8J6j5lOH
-	 hrBkllPuE8NaXdYEtf4yai9sW+PK+cdTWNvZDFuI=
+	by mail.kernel.org (Postfix) with ESMTP id C7A4523976
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Sep 2020 14:22:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WJ2++d3A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726483AbgI0MVG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Sep 2020 08:21:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36964 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726185AbgI0MVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 27 Sep 2020 08:21:06 -0400
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726252AbgI0OWI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Sep 2020 10:22:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28344 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726149AbgI0OWI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 27 Sep 2020 10:22:08 -0400
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601216527;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OUe//uWHNQiAq9CvrOz3zdHn3WpUTW3S6JPfTt5/D7M=;
+        b=WJ2++d3Ag75NaCE5/KgIk2bcoNvI32GvFrS//9eF+OBi79WgeuCWtFj2ncchOd206v9jxb
+        mwecTWgWe9zez/TMVeBtbq2waqiJEthMJhsf6P1dLKukVxaFLYc8KGQ5FMLDFp1QhAK/Kx
+        a8gsmW6KaGKrVQlw3mEebyn21xrZDRk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-164-tJum9GvUOdyLsdF0jCgchA-1; Sun, 27 Sep 2020 10:22:05 -0400
+X-MC-Unique: tJum9GvUOdyLsdF0jCgchA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 74316208FE;
-        Sun, 27 Sep 2020 12:21:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601209265;
-        bh=FdSjEiIOfosty1A1hNpYjx+LCe0c93peV/xVsFD6r/o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FtJG2gRJohbsXmjTGZLvssQG1XF1/EDPa+Sxt7uDN386HN/YFfrvpzrv4+5S2OGee
-         WwgbRJn5W6gVfWdvXi4OwSNypTgoQvpwd2ypZNN7rw+jr66jN5W1yoJ984HbBn313O
-         5EwO+4+ECjBUiIjNR1+7fPf+BlbKDjiL9nYij4XI=
-Date:   Sun, 27 Sep 2020 14:21:15 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Coly Li <colyli@suse.de>
-Cc:     linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        netdev@vger.kernel.org, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Jan Kara <jack@suse.com>, Jens Axboe <axboe@kernel.dk>,
-        Mikhail Skorzhinskii <mskorzhinskiy@solarflare.com>,
-        Philipp Reisner <philipp.reisner@linbit.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Vlastimil Babka <vbabka@suse.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v8 1/7] net: introduce helper sendpage_ok() in
- include/linux/net.h
-Message-ID: <20200927122115.GA178781@kroah.com>
-References: <20200925150119.112016-1-colyli@suse.de>
- <20200925150119.112016-2-colyli@suse.de>
- <20200925151812.GA3182427@kroah.com>
- <7b0d4f63-2fe5-9032-3b88-97619d8c5081@suse.de>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 221488030BA;
+        Sun, 27 Sep 2020 14:22:04 +0000 (UTC)
+Received: from [10.10.110.11] (unknown [10.10.110.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3F9AE73662;
+        Sun, 27 Sep 2020 14:22:03 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [v5 01/12] struct device: Add function callback durable_name
+To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <20200925161929.1136806-1-tasleson@redhat.com>
+ <20200925161929.1136806-2-tasleson@redhat.com>
+ <1cfc145b-180a-d906-5d9b-638c483177c7@gmail.com>
+From:   Tony Asleson <tasleson@redhat.com>
+Organization: Red Hat
+Message-ID: <90ef294c-2f37-2299-6253-68ea27e312b4@redhat.com>
+Date:   Sun, 27 Sep 2020 09:22:02 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7b0d4f63-2fe5-9032-3b88-97619d8c5081@suse.de>
+In-Reply-To: <1cfc145b-180a-d906-5d9b-638c483177c7@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Sep 26, 2020 at 09:28:03PM +0800, Coly Li wrote:
-> On 2020/9/25 23:18, Greg KH wrote:
-> > On Fri, Sep 25, 2020 at 11:01:13PM +0800, Coly Li wrote:
-> >> The original problem was from nvme-over-tcp code, who mistakenly uses
-> >> kernel_sendpage() to send pages allocated by __get_free_pages() without
-> >> __GFP_COMP flag. Such pages don't have refcount (page_count is 0) on
-> >> tail pages, sending them by kernel_sendpage() may trigger a kernel panic
-> >> from a corrupted kernel heap, because these pages are incorrectly freed
-> >> in network stack as page_count 0 pages.
-> >>
-> >> This patch introduces a helper sendpage_ok(), it returns true if the
-> >> checking page,
-> >> - is not slab page: PageSlab(page) is false.
-> >> - has page refcount: page_count(page) is not zero
-> >>
-> >> All drivers who want to send page to remote end by kernel_sendpage()
-> >> may use this helper to check whether the page is OK. If the helper does
-> >> not return true, the driver should try other non sendpage method (e.g.
-> >> sock_no_sendpage()) to handle the page.
-> >>
-> >> Signed-off-by: Coly Li <colyli@suse.de>
-> >> Cc: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-> >> Cc: Christoph Hellwig <hch@lst.de>
-> >> Cc: Hannes Reinecke <hare@suse.de>
-> >> Cc: Jan Kara <jack@suse.com>
-> >> Cc: Jens Axboe <axboe@kernel.dk>
-> >> Cc: Mikhail Skorzhinskii <mskorzhinskiy@solarflare.com>
-> >> Cc: Philipp Reisner <philipp.reisner@linbit.com>
-> >> Cc: Sagi Grimberg <sagi@grimberg.me>
-> >> Cc: Vlastimil Babka <vbabka@suse.com>
-> >> Cc: stable@vger.kernel.org
-> >> ---
-> >>  include/linux/net.h | 16 ++++++++++++++++
-> >>  1 file changed, 16 insertions(+)
-> >>
-> >> diff --git a/include/linux/net.h b/include/linux/net.h
-> >> index d48ff1180879..05db8690f67e 100644
-> >> --- a/include/linux/net.h
-> >> +++ b/include/linux/net.h
-> >> @@ -21,6 +21,7 @@
-> >>  #include <linux/rcupdate.h>
-> >>  #include <linux/once.h>
-> >>  #include <linux/fs.h>
-> >> +#include <linux/mm.h>
-> >>  #include <linux/sockptr.h>
-> >>  
-> >>  #include <uapi/linux/net.h>
-> >> @@ -286,6 +287,21 @@ do {									\
-> >>  #define net_get_random_once_wait(buf, nbytes)			\
-> >>  	get_random_once_wait((buf), (nbytes))
-> >>  
-> >> +/*
-> >> + * E.g. XFS meta- & log-data is in slab pages, or bcache meta
-> >> + * data pages, or other high order pages allocated by
-> >> + * __get_free_pages() without __GFP_COMP, which have a page_count
-> >> + * of 0 and/or have PageSlab() set. We cannot use send_page for
-> >> + * those, as that does get_page(); put_page(); and would cause
-> >> + * either a VM_BUG directly, or __page_cache_release a page that
-> >> + * would actually still be referenced by someone, leading to some
-> >> + * obscure delayed Oops somewhere else.
-> >> + */
-> >> +static inline bool sendpage_ok(struct page *page)
-> >> +{
-> >> +	return  !PageSlab(page) && page_count(page) >= 1;
-> > 
-> > Do you have one extra ' ' after "return" there?
+On 9/26/20 4:08 AM, Sergei Shtylyov wrote:
+> On 25.09.2020 19:19, Tony Asleson wrote:
 > 
-> It should be fixed in next version.
+>> Function callback and function to be used to write a persistent
+>> durable name to the supplied character buffer.  This will be used to add
+>> structured key-value data to log messages for hardware related errors
+>> which allows end users to correlate message and specific hardware.
+>>
+>> Signed-off-by: Tony Asleson <tasleson@redhat.com>
+>> ---
+>>   drivers/base/core.c    | 24 ++++++++++++++++++++++++
+>>   include/linux/device.h |  4 ++++
+>>   2 files changed, 28 insertions(+)
+>>
+>> diff --git a/drivers/base/core.c b/drivers/base/core.c
+>> index 05d414e9e8a4..88696ade8bfc 100644
+>> --- a/drivers/base/core.c
+>> +++ b/drivers/base/core.c
+>> @@ -2489,6 +2489,30 @@ int dev_set_name(struct device *dev, const char
+>> *fmt, ...)
+>>   }
+>>   EXPORT_SYMBOL_GPL(dev_set_name);
+>>   +/**
+>> + * dev_durable_name - Write "DURABLE_NAME"=<durable name> in buffer
+>> + * @dev: device
+>> + * @buffer: character buffer to write results
+>> + * @len: length of buffer
+>> + * @return: Number of bytes written to buffer
 > 
-> > 
-> > And this feels like a mm thing, why put it in net.h and not mm.h?
-> 
-> This check is specific for kernel_sendpage(), so I want to place it
-> closer to where kernel_sendpage() is declared.
-> 
-> And indeed there was similar discussion about why this helper is not in
-> mm code in v5 series. Christoph supported to place sendpage_ok() in
-> net.h, an uncompleted piece of his opinion was "It is not a mm bug, it
-> is a networking quirk."
+>    This is not how the kernel-doc commenta describe the function result,
+> IIRC...
 
-Ah, nevermind then, sorry for the noise :)
+I did my compile with `make  W=1` and there isn't any warnings/error
+with source documentation, but the documentation does indeed outline a
+different syntax.  It's interesting how common the @return syntax is in
+the existing code base.
 
-greg k-h
+I'll re-work the function documentation return.
+
+Thanks
+
