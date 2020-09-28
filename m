@@ -2,128 +2,134 @@ Return-Path: <SRS0=JIM3=DF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 441E4C2D0A8
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 09:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 757D7C4727F
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 09:13:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DF7A20E65
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 09:00:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601283601;
-	bh=J8AGSuOePgg2yrZlK46It9heN1gV9iU2u9S5eJvmUU8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=mSw7Z+rmNFbAIe+EaJdykzsO0BwOWwxcbJP98maeN3Wtb5yNPdVmB1DEX2vcsBl0z
-	 k5JcxmovQYj9hLpJvgsgUnw6wUsdH6nTZE5aIpqwqCG3lgS3e6tjfB4JBv/u8/XOPf
-	 M9rIRYm/uQhHOVfjtDEajaY2Sh6JcEUSff1pvPAQ=
+	by mail.kernel.org (Postfix) with ESMTP id 19A4721D95
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 09:13:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yfIqhgkD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726668AbgI1I76 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Sep 2020 04:59:58 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:50929 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726461AbgI1I75 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2020 04:59:57 -0400
-Received: by mail-wm1-f67.google.com with SMTP id e17so255581wme.0;
-        Mon, 28 Sep 2020 01:59:55 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Z1pXiZu8/lbpcC5OOR1HHt+WJc9Zi03GtYctvtdplD4=;
-        b=QtJN08lBetwcbva9VVuCfbu/bYexVNzn/WRCo/mDHqd/XFSGOh/vFGwOB+aNSKW98q
-         uAHe6hqAfbgXL2UzxNc++8KQdBFzMrsl1FPmCZ9exIoHyyRvwwTAHeXhw/QzkoPzXcE5
-         l7cK+9kX5DMup3/SBTby2HuKPm6qji0Q+NAwKCPhyNefi1Vm7HI5y2d3Zp0H3d3O5d58
-         iqMXpbLN0ZQjHrpdhRY+o1TP4xGrqVEGtkOU3AY/iNne0wVWH+J4pPI+G7zsSNzjfL20
-         B+w6QBy9O6z/pf7HlRjD8t+ZTRK4Suwis9iZTwHG4WaKLlP4kinhMBCvzCJ4LVfdeOFz
-         I8Jw==
-X-Gm-Message-State: AOAM532o6whpm+lqnLPdqZe8ILKqe2o1IvGCekdIlq7Gscf7GSN6FuHq
-        J314nIfhVL4DRhAZQAzJe7o=
-X-Google-Smtp-Source: ABdhPJwTUznMg4qU1PpK1jW4iQ8NBXUE7lDRIOJNIqN9idOI7XE143sfOo/KuA6ckcfJJXr8isESDg==
-X-Received: by 2002:a1c:7e15:: with SMTP id z21mr528843wmc.21.1601283594850;
-        Mon, 28 Sep 2020 01:59:54 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id i3sm548308wrs.4.2020.09.28.01.59.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2020 01:59:54 -0700 (PDT)
-Date:   Mon, 28 Sep 2020 08:59:52 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Boqun Feng <boqun.feng@gmail.com>
-Cc:     linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        id S1726665AbgI1JNP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Sep 2020 05:13:15 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:47812 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726640AbgI1JNP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2020 05:13:15 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08S98xjn021122;
+        Mon, 28 Sep 2020 09:13:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=onqFxvuNgmSWxb5TyttFFh60aQyyoipjjSNj0YfQXFk=;
+ b=yfIqhgkDTFTf+awz5zS7P76xGfYWPpWuEvoSzoKf4BTDGR+JRR5e2DrXvSPVmJyvJn5f
+ flj8gl2lBcthRxySyQLW6edl37FyZ9IBK5N9QFlaMp+aSoM8XeLS7IrD/o2x2enKp2oU
+ 2SOepugO+XxQVA5sTO0C4tXFnE1F2zr+SvW/pHgVKxPAF/R1PegCK5J1bQhNAJtP3qbQ
+ mFcqFFmBNZ3sOxi3Um/nqpBj1xNEKjvkvFTzB7vUXmKutGsLHndmf93mSReZLrRdXZa9
+ lm6aw7dXnQRhDNlCtWD60ZQFcZ+wA7/k67YANPJPCGFYIJx/jqix41fx1IwQuju+TfWL vA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 33sx9muvuv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 28 Sep 2020 09:13:10 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08S9AekY176903;
+        Mon, 28 Sep 2020 09:13:09 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 33tfdprgmb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 28 Sep 2020 09:13:09 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08S9D8n4030911;
+        Mon, 28 Sep 2020 09:13:08 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 28 Sep 2020 02:13:07 -0700
+Date:   Mon, 28 Sep 2020 12:13:00 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Subbu Seetharaman <subbu.seetharaman@broadcom.com>
+Cc:     Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Michael Kelley <mikelley@microsoft.com>, will@kernel.org,
-        ardb@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
-        mark.rutland@arm.com, maz@kernel.org
-Subject: Re: [PATCH v4 00/11] Hyper-V: Support PAGE_SIZE larger than 4K
-Message-ID: <20200928085952.t5ji5rjl3h6g7zks@liuwe-devbox-debian-v2>
-References: <20200916034817.30282-1-boqun.feng@gmail.com>
+        James Bottomley <James.Bottomley@suse.de>,
+        Jayamohan Kallickal 
+        <jayamohank@HDRedirect-LB5-1afb6e2973825a56.elb.us-east-1.amazonaws.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: be2iscsi: Fix a theoretical leak in
+ beiscsi_create_eqs()
+Message-ID: <20200928091300.GD377727@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200916034817.30282-1-boqun.feng@gmail.com>
-User-Agent: NeoMutt/20180716
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9757 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ adultscore=0 malwarescore=0 spamscore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009280077
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9757 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ phishscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 clxscore=1011
+ spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009280077
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 11:48:06AM +0800, Boqun Feng wrote:
-> This patchset add the necessary changes to support guests whose page
-> size is larger than 4K. And the main architecture which we develop this
-> for is ARM64 (also it's the architecture that I use to test this
-> feature).
-> 
-> Previous version:
-> v1: https://lore.kernel.org/lkml/20200721014135.84140-1-boqun.feng@gmail.com/
-> v2: https://lore.kernel.org/lkml/20200902030107.33380-1-boqun.feng@gmail.com
-> v3: https://lore.kernel.org/lkml/20200910143455.109293-1-boqun.feng@gmail.com/
-> 
-> Changes since v3:
-> 
-> *	Fix a bug that ringbuffer sizes are not page-aligned when
-> 	PAGE_SIZE = 16k. Drop the Acked-by and Reviewed-by tags for
-> 	those patches accordingly.
-> 
-> *	Code improvement as per suggestion from Michael Kelley.
-> 
-> I've done some tests with PAGE_SIZE=64k and PAGE_SIZE=16k configurations
-> on ARM64 guests (with Michael's patchset[1] for ARM64 Hyper-V guest
-> support), everything worked fine ;-)
-> 
-> Looking forwards to comments and suggestions!
-> 
-> Regards,
-> Boqun
-> 
-> [1]: https://lore.kernel.org/lkml/1598287583-71762-1-git-send-email-mikelley@microsoft.com/
-> 
-> Boqun Feng (11):
->   Drivers: hv: vmbus: Always use HV_HYP_PAGE_SIZE for gpadl
->   Drivers: hv: vmbus: Move __vmbus_open()
->   Drivers: hv: vmbus: Introduce types of GPADL
->   Drivers: hv: Use HV_HYP_PAGE in hv_synic_enable_regs()
->   Drivers: hv: vmbus: Move virt_to_hvpfn() to hyperv header
->   hv: hyperv.h: Introduce some hvpfn helper functions
->   hv_netvsc: Use HV_HYP_PAGE_SIZE for Hyper-V communication
->   Input: hyperv-keyboard: Use VMBUS_RING_SIZE() for ringbuffer sizes
->   HID: hyperv: Use VMBUS_RING_SIZE() for ringbuffer sizes
->   Driver: hv: util: Use VMBUS_RING_SIZE() for ringbuffer sizes
->   scsi: storvsc: Support PAGE_SIZE larger than 4K
+The be_fill_queue() function can only fail when "eq_vaddress" is NULL
+and since it's non-NULL here that means the function call can't fail.
+But imagine if it could, then in that situation we would want to store
+the "paddr" so that dma memory can be released.
 
-Series applied to hyperv-next.
+Fixes: bfead3b2cb46 ("[SCSI] be2iscsi: Adding msix and mcc_rings V3")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/scsi/be2iscsi/be_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I also replaced the tabs with spaces in the commit messages of patch 8
-through patch 10.
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 5c3513a4b450..202ba925c494 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3020,6 +3020,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 			goto create_eq_error;
+ 		}
+ 
++		mem->dma = paddr;
+ 		mem->va = eq_vaddress;
+ 		ret = be_fill_queue(eq, phba->params.num_eq_entries,
+ 				    sizeof(struct be_eq_entry), eq_vaddress);
+@@ -3029,7 +3030,6 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 			goto create_eq_error;
+ 		}
+ 
+-		mem->dma = paddr;
+ 		ret = beiscsi_cmd_eq_create(&phba->ctrl, eq,
+ 					    BEISCSI_EQ_DELAY_DEF);
+ 		if (ret) {
+@@ -3086,6 +3086,7 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
+ 			goto create_cq_error;
+ 		}
+ 
++		mem->dma = paddr;
+ 		ret = be_fill_queue(cq, phba->params.num_cq_entries,
+ 				    sizeof(struct sol_cqe), cq_vaddress);
+ 		if (ret) {
+@@ -3095,7 +3096,6 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
+ 			goto create_cq_error;
+ 		}
+ 
+-		mem->dma = paddr;
+ 		ret = beiscsi_cmd_cq_create(&phba->ctrl, cq, eq, false,
+ 					    false, 0);
+ 		if (ret) {
+-- 
+2.28.0
 
-Wei.
