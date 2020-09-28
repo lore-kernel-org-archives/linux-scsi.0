@@ -1,131 +1,104 @@
-Return-Path: <SRS0=qC8i=DE=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=JIM3=DF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BF0C4741F
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Sep 2020 16:15:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC494C4346E
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 01:44:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC8AF23899
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Sep 2020 16:15:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99C1A23A33
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 01:44:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VdQBUzc/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CBTzkvVC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726335AbgI0QP0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Sep 2020 12:15:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60876 "EHLO
+        id S1726444AbgI1Bof (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Sep 2020 21:44:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726239AbgI0QPZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Sep 2020 12:15:25 -0400
-Received: from mail-lf1-x143.google.com (mail-lf1-x143.google.com [IPv6:2a00:1450:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82FE6C0613CE;
-        Sun, 27 Sep 2020 09:15:25 -0700 (PDT)
-Received: by mail-lf1-x143.google.com with SMTP id x69so8303592lff.3;
-        Sun, 27 Sep 2020 09:15:25 -0700 (PDT)
+        with ESMTP id S1726440AbgI1Bof (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Sep 2020 21:44:35 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A853BC0613CE
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2020 18:44:34 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id a12so8315974eds.13
+        for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2020 18:44:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:references:from:organization:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=L/xc46eYC0rZns9hNBhr248U6alDhReApEPhDLkCO6E=;
-        b=VdQBUzc/6LpyDv2Xp8olbr6AbUms+2N2G53yQPXbznI2rqUR7RoPQd63+zLAC2VKRT
-         krG6jeEqUHdq7uW+rPYqX6XC1xOaKONLfJ15kR+JwWGr9CJaCqXfTzsR3OkQ3jsShKA2
-         +WwPvBMPm1B1Bo58AymftI3xbbco3d9uZPNHTe6pu+YzhAhkzn4TL+UJmpOfp8NWpXGb
-         td3K6BsTCc/bV0JobIvZ8bddmrlz7lVZpSXTyexbITeMbFXnTZLZm3bATnXBtcbQCM45
-         3A5WUwlwCxfNj4R0EE+9vd3V0qf+h4mJUM4tbvZMk22xAYWeYtMeDdsVX7wGtNj6Lsyw
-         E3ng==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=itJ/3WUujIWyzLEIfgrjeLw+zqf5VU5ZcmDS3CYoLYg=;
+        b=CBTzkvVCUYUzxSS85OwJ9p7pFrq5bC8InvXnmedkeHVxMdmovolbgQM3JoKIm/CnfQ
+         C50ZjC+Owy85eX9K3Chb0auejHZXvaQTlfDVwQ55XWZddW/w7QeUwxPNvWLhRira6Owv
+         0vDIqBMoZmEx/fMM5aJCF57yxPNs2INhZiZDNu/BwrWYJN9XPOpAq7zDLB4KYWHITTdl
+         048GvGjB+XqPkD0YFyhSvVbTJ3RQ3TLSd7AEBnYe1q36i0luOoPDzZn1LyAfMGxrpGBT
+         UkX/Rcb7m8peXfCGpNv+LChZAxoa9Uf9hZYHwuCAJVPeGsq3rxKYu+hleEgmUoRPPJYj
+         pkPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=L/xc46eYC0rZns9hNBhr248U6alDhReApEPhDLkCO6E=;
-        b=e3XMf3hmjdUt9VqgNFZIMyOaHSOa9rXraloO/41qpsWHNTHm8vENLLPHSB/svcwr7y
-         3/Dj1sVO8APlf893IjFVH3zNnEt8phlI8v3Oh6zTYwXPXDcDYxuHg4Jv2wFMopZkgW48
-         HkrsjKQut7xsOmyRSHhA27Q32SEs5QD6OWyzD8LuJa+R7hC51OPL6Payrltr1PNi0P+U
-         uszivldakKmZryU4fN1TvACRw6pliF1Ix9aRiXYT4AzJmTgKB21J5sP7DGKBh2LM7eRr
-         1EZRb6i3c4nmCxbirgot4uw1kwBfN3xZFHQjN76qJTwzyxXoYQFyrUsWDYa4d4IDezV7
-         CR4g==
-X-Gm-Message-State: AOAM531LyzmebaJd0iqHBnPzsXOOU0DRwI+gYzV6SXYg9J6FS3CwF5GS
-        T3oXVnpGOyh4ezASmtSn21HhJUCLN68=
-X-Google-Smtp-Source: ABdhPJweeGA3s6tWwyWwovw6Rhzh1m2PRjg8htzqpYDmOK4ZLzVRz1hasBUTiHMhlNCsxJ185rYUew==
-X-Received: by 2002:a19:8386:: with SMTP id f128mr2390970lfd.78.1601223323824;
-        Sun, 27 Sep 2020 09:15:23 -0700 (PDT)
-Received: from ?IPv6:2a00:1fa0:42b8:5974:65f4:959a:46a2:f702? ([2a00:1fa0:42b8:5974:65f4:959a:46a2:f702])
-        by smtp.gmail.com with ESMTPSA id p9sm3134414ljj.52.2020.09.27.09.15.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 27 Sep 2020 09:15:23 -0700 (PDT)
-Subject: Re: [v5 01/12] struct device: Add function callback durable_name
-To:     tasleson@redhat.com, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20200925161929.1136806-1-tasleson@redhat.com>
- <20200925161929.1136806-2-tasleson@redhat.com>
- <1cfc145b-180a-d906-5d9b-638c483177c7@gmail.com>
- <90ef294c-2f37-2299-6253-68ea27e312b4@redhat.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Organization: Brain-dead Software
-Message-ID: <f276f116-a80c-fb98-0569-d7a6799868d4@gmail.com>
-Date:   Sun, 27 Sep 2020 19:15:18 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=itJ/3WUujIWyzLEIfgrjeLw+zqf5VU5ZcmDS3CYoLYg=;
+        b=nkge7ThdxMpIe8sfzUu8/A8dogbT4zM8U+rnSTDRD1pC/pSHywLreX9mDrrCprEOv2
+         QLA8rncdHf2eYAVoCyR4iPmO1FZuT3zv/Ng59tkDH7A9mB8S6uybvSkHiziHG3F86YvY
+         rsj3fDpz86YW1AIDno4s0fvIq+8MKXCZU51/p1QGADPW8nFADqFdm74tCFUMQx9XiL+T
+         U6GZF6fELxU6BiCE02mOiHbKk+YlVmBNA3mXaXEetQQFyCZRyIYKFY0i64VJGR4146xB
+         0jWfinmLSsGCb0NA1D97qE+zkn0QTWctHzWuj9n0evurnTsm7x59e4lyI/YdgXqa0iJH
+         IiSA==
+X-Gm-Message-State: AOAM531WuaqRFplP4cm2/z+PadRWIMv1G5wO4gDiVfBcAH95S14URwgg
+        fBL4lWITR8pQg+1ZOOaJGvgHsblD08suocZS6Ec=
+X-Google-Smtp-Source: ABdhPJx2FHi7ncC2vYamDJtLi3rI8Zhjb1w0RaWeohtEK/4WwSJL/2tBfaauOYQfFeDFVZ5jygKvSnlB05shgYO//oE=
+X-Received: by 2002:a05:6402:1593:: with SMTP id c19mr13421329edv.33.1601257473276;
+ Sun, 27 Sep 2020 18:44:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <90ef294c-2f37-2299-6253-68ea27e312b4@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20200923055248.1901-1-tom.ty89@gmail.com> <ca33b6af-6523-821d-5dc9-28ef6d8e7228@acm.org>
+In-Reply-To: <ca33b6af-6523-821d-5dc9-28ef6d8e7228@acm.org>
+From:   Tom Yan <tom.ty89@gmail.com>
+Date:   Mon, 28 Sep 2020 09:44:21 +0800
+Message-ID: <CAGnHSEmQQVex4Xa0sYDyRHKZN56L4nk840BYOBTcgm8pAvmstw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: sg: use queue_logical_block_size() in max_sectors_bytes()
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27.09.2020 17:22, Tony Asleson wrote:
+Oh right, that's what logical_to_sectors()'s for. Thanks! :-)
 
->>> Function callback and function to be used to write a persistent
->>> durable name to the supplied character buffer.  This will be used to add
->>> structured key-value data to log messages for hardware related errors
->>> which allows end users to correlate message and specific hardware.
->>>
->>> Signed-off-by: Tony Asleson <tasleson@redhat.com>
->>> ---
->>>    drivers/base/core.c    | 24 ++++++++++++++++++++++++
->>>    include/linux/device.h |  4 ++++
->>>    2 files changed, 28 insertions(+)
->>>
->>> diff --git a/drivers/base/core.c b/drivers/base/core.c
->>> index 05d414e9e8a4..88696ade8bfc 100644
->>> --- a/drivers/base/core.c
->>> +++ b/drivers/base/core.c
->>> @@ -2489,6 +2489,30 @@ int dev_set_name(struct device *dev, const char
->>> *fmt, ...)
->>>    }
->>>    EXPORT_SYMBOL_GPL(dev_set_name);
->>>    +/**
->>> + * dev_durable_name - Write "DURABLE_NAME"=<durable name> in buffer
->>> + * @dev: device
->>> + * @buffer: character buffer to write results
->>> + * @len: length of buffer
->>> + * @return: Number of bytes written to buffer
->>
->>     This is not how the kernel-doc commenta describe the function result,
->> IIRC...
-> 
-> I did my compile with `make  W=1` and there isn't any warnings/error
-> with source documentation, but the documentation does indeed outline a
-
-    IIRC, you only get the warnings when you try to build the kernel-docs.
-
-> different syntax.  It's interesting how common the @return syntax is in
-> the existing code base.
-
-    FWIW, I'm seeing @return: for the 1st time in my Linux tenure (since 2004).
-
-> I'll re-work the function documentation return.
-
-    OK, thanks. :-)
-
-> Thanks
-
-MBR, Sergei
+On Fri, 25 Sep 2020 at 01:52, Bart Van Assche <bvanassche@acm.org> wrote:
+>
+> On 2020-09-22 22:52, Tom Yan wrote:
+> > Logical block size was never / is no longer necessarily 512.
+> >
+> > Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> > ---
+> >  drivers/scsi/sg.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> > index 20472aaaf630..8a2cca71017f 100644
+> > --- a/drivers/scsi/sg.c
+> > +++ b/drivers/scsi/sg.c
+> > @@ -848,10 +848,11 @@ static int srp_done(Sg_fd *sfp, Sg_request *srp)
+> >  static int max_sectors_bytes(struct request_queue *q)
+> >  {
+> >       unsigned int max_sectors = queue_max_sectors(q);
+> > +     max_sectors *= queue_logical_block_size(q);
+> >
+> > -     max_sectors = min_t(unsigned int, max_sectors, INT_MAX >> 9);
+> > +     max_sectors = min_t(unsigned int, max_sectors, INT_MAX);
+> >
+> > -     return max_sectors << 9;
+> > +     return max_sectors;
+> >  }
+>
+> I think the above patch is wrong and also that it breaks code that is
+> correct. In the Linux kernel, "one sector" is by definition 512 bytes.
+> See also the definition of the SECTOR_SIZE and SECTOR_SHIFT constants.
+>
+> Bart.
