@@ -9,105 +9,101 @@ X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B59DEC2D0A8
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 11:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30BE3C2D0A8
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 11:44:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62B472100A
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 11:44:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D46472100A
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Sep 2020 11:44:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aCS3nyJq"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hDTBfIK1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726608AbgI1Loe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Sep 2020 07:44:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42776 "EHLO
+        id S1726614AbgI1Log (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Sep 2020 07:44:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726477AbgI1Lod (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2020 07:44:33 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C846EC061755
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2020 04:44:33 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id o20so739494pfp.11
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2020 04:44:33 -0700 (PDT)
+        with ESMTP id S1726477AbgI1Log (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2020 07:44:36 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38184C061755
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2020 04:44:36 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id fa1so511867pjb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2020 04:44:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=KUpNaFgRl0HDw2e/wlfHjsxjrP9lxzT7gZCGVc2ORy0=;
-        b=aCS3nyJqxTtO/FJVIt5ndajM5XThEEu9CgCky/KofpSZQGfnqxtpGus9leXPyXAHc/
-         +G4B0DTyIyBqKLbpT217fppxGLenGgLM9w5EGnGd2CRgjItB/NWSVwRBzD0Tom+I1ku0
-         vvgL4k+WaZ39d0JrxrsKas8fCs5Dhk3JCWHBQ=
+        bh=PVhyCb1ClUd2x29vbOG/lyaoO7ChYmggcP68w7jtmQI=;
+        b=hDTBfIK18kmNtE/Ab62r7Um8pxxg5HXv3hbzCIAc0hjl6MJNSfmdvTvHeReaAIe0tf
+         f03wjGualp13pfdd90ZEoZQsge+EVD5WNOxvR87F49NAOgiREJolYh8aRBEDfoDT/+te
+         aGTZg/X/NGHAPzkDwbtIJGMYDed6LZx+DfQfY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=KUpNaFgRl0HDw2e/wlfHjsxjrP9lxzT7gZCGVc2ORy0=;
-        b=PeoXtC0JYyhOYo0Hr6yeX7Tm2ol365ay/DjSljmylAcHdc2ejG8923fWUc/eOK7dTN
-         s+pCjq09DFvX/rxEbT9ktt4LGU3I7oXqfBB82OLG2wkl2TOUz/+mv671eSU/7Vj38OdV
-         90Xw3qAZCvg5SWqMa++mdP6y2xZ6wySkliGGtdWXctfn8LJLZzwWpZVT/4AUOLhsfB2N
-         1eJmzp+3uixvuXS+6tgaYGvODyiZztCz0+QxkR6Vb81IpcdgL6nxNEaGx88O3zxBuJsx
-         TZnUFRPDydMn/IdGm7FzfqqDQbDlfrB0lRhOSHWN1xghwItChDEVQDZ94tYyJFGM7eHw
-         Hg3A==
-X-Gm-Message-State: AOAM533/fQosMPSDUeEt8ChUR9JipM20YHHwU0NIT8NacQcBJTLASKGW
-        rigE506UIJPav0q18QmRrc+bECf9jQNRW44S/xueD5sQ4aodi6oCcMNQMqD1yoFySipHnLGf1n1
-        cmj7BwAdNtTkW8DACnVJqZSm/9BpuVeH4CWCLt0o7E53mQ5NznWtU1/UhCpCO6UqYyQjowiUHvu
-        UKIID3UWky
-X-Google-Smtp-Source: ABdhPJwdUuEPkTAFp3iFLjHD0nJ+a5RGRhooOzo1nyz4p1qQFxgx5YrOaBD4yF0FjOtGChQuo+AzHg==
-X-Received: by 2002:a62:3585:0:b029:142:2501:3985 with SMTP id c127-20020a6235850000b029014225013985mr1100489pfa.74.1601293472794;
-        Mon, 28 Sep 2020 04:44:32 -0700 (PDT)
+        bh=PVhyCb1ClUd2x29vbOG/lyaoO7ChYmggcP68w7jtmQI=;
+        b=teem1Vk87UgvvCDGUhcFnSzaKUwJPyUdFIFwj99iTErbuxAdTYfSRSXcepkJwRSKP2
+         FlYIDqxp2lNNVg5pojkiUIz/lTj1aC8fQe99ogHHEA9QCRPpLopUnOblA8aulrSrmj8y
+         m5HNBEYw+OyIwfzgM7+8E1k9iCm7M2YUGnBSF+t13UejW5VeyvgElv/amnatvnmu/vJH
+         OEo2Jpra9Tekqw7Gljk+PZtfI5tRw3xy0jqhrX/SGs3sWsxPRHyk492qeEnPRfIb3yDB
+         mMb2d8nYoKy7njAk1VBydIshvPLy48DBTo8bvm5LDMXdIVFPEtd0K6MOIl9HfISWVIWn
+         3m8w==
+X-Gm-Message-State: AOAM533Jyo2Di48kfmUSxseEkER2ZbjMdoxzhLc3+FlGE1Qfttwu3iJi
+        VBBSTh71wcS2fM5wFSmhHczcRZFRoLR0FCkPj9fThSsxPC0prkw1/fZu+3CbaZH/G4+ICtkI0x4
+        F7R6ynCGupkh6fbFcZH0yBkFuPumsH4fVuDlGJH6K0kCtts1SlMAxeENhv+b9lxkENHozKdXikP
+        ywUoSrwisX
+X-Google-Smtp-Source: ABdhPJz5Yfrveov23+k8vnpG9EEyxlrlJfQrOXghCTyqUfIZm1O5TDQMBfNzj6az4Z7dsGpNM1YD0g==
+X-Received: by 2002:a17:90a:fc1:: with SMTP id 59mr1047039pjz.156.1601293475393;
+        Mon, 28 Sep 2020 04:44:35 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w19sm1468866pfq.60.2020.09.28.04.44.30
+        by smtp.gmail.com with ESMTPSA id w19sm1468866pfq.60.2020.09.28.04.44.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 28 Sep 2020 04:44:32 -0700 (PDT)
+        Mon, 28 Sep 2020 04:44:34 -0700 (PDT)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v2 1/8] scsi: Added a new definition in scsi_cmnd.h
-Date:   Mon, 28 Sep 2020 10:20:50 +0530
-Message-Id: <1601268657-940-2-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v2 2/8] scsi: Added a new error code in scsi.h
+Date:   Mon, 28 Sep 2020 10:20:51 +0530
+Message-Id: <1601268657-940-3-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1601268657-940-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1601268657-940-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000a8da9a05b05e3077"
+        boundary="000000000000cdb6a905b05e30f7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000a8da9a05b05e3077
+--000000000000cdb6a905b05e30f7
 
-Added a new definition SCMD_NORETRIES_ABORT in scsi_cmnd.h
-
-The SCMD_NORETRIES_ABORT defines the third bit postion
-in scmd->state
+Added a new error code DID_TRANSPORT_MARGINAL to handle marginal
+errors in scsi.h
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
 ---
 v2:
-Modified the commit log
+New patch
 ---
- include/scsi/scsi_cmnd.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/scsi/scsi.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index e76bac4d14c5..e1883fee7659 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -64,6 +64,9 @@ struct scsi_pointer {
- /* for scmd->state */
- #define SCMD_STATE_COMPLETE	0
- #define SCMD_STATE_INFLIGHT	1
-+#define SCMD_NORETRIES_ABORT	2 /* If this bit is set then there won't be any
-+				   * retries of scmd on abort success
-+				   */
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 5339baadc082..5b287ad8b727 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -159,6 +159,7 @@ static inline int scsi_is_wlun(u64 lun)
+ 				 * paths might yield different results */
+ #define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
+ #define DID_MEDIUM_ERROR  0x13  /* Medium error */
++#define DID_TRANSPORT_MARGINAL 0x14 /* Transport marginal errors */
+ #define DRIVER_OK       0x00	/* Driver status                           */
  
- struct scsi_cmnd {
- 	struct scsi_request req;
+ /*
 -- 
 2.26.2
 
 
---000000000000a8da9a05b05e3077
+--000000000000cdb6a905b05e30f7
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -178,13 +174,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDQ9B060OczrsCn8IfOsyC4RaMbCgGqfC/OcdM+sd4YLjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDA5MjgxMTQ0MzNaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCAWc11i3OqOH1PEwOKJ8ZKaVft97Ks0ljsSfhKmefEkQzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDA5MjgxMTQ0MzVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAkOHJBZo2yP1WF9rg
-0Z+4Z/KgIHX3lXQXXtdYYejYNsCvNSEXZ0KYzwdXle/XHINck6f5sXKS7sj1j/kcOOhUF4uVbhl8
-lDCIVTu/a9ARtLcVjHMrWf69sVUW7++tXCz0HY2gs0UlRe/LTkE09eMbESyfJ7SiE4V0KlcCia4g
-ARhE20K45qxvMs2s1wxXeexHLzKbnqcZXxLfXy7k8DH5xK8HPbGl9kKPZHONHGrS8XY/RoNrBeXA
-Cq3mGUt3MTYUXQjKjEA1EzvrdQIVe0CwDjaes2XlPk5sMLuyeKDNPDdPCBoE3RurEN1MgIVvqwo4
-X76becgP3jRCoUvC9KRmIw==
---000000000000a8da9a05b05e3077--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAQ5fVdebBqi+rGDU7
+CJw+4Nyt5hhpdFHrIx1meLE0AWZfxL1GGDM4B/6SKAZiWYeyAitKtzzvY1cqmBuynX4uHSDEnmAW
+dM+wwKGqqZC/+floAYzoINx0EWRYJh+OTIb3vObVn7NdjneGjMjexFKybhpSx8jBuvwENmPW778+
+2AZBVDTLttVsVJk8qpmgpCNTMqbN8waABaJXSt7EPgL0PyDLzLHumJYB6h2XXhMsslNn7yobnp19
+Ap0pANDeqskisChSYDjs6CjqpJPkVZlgQDBufoINVpWkkSqjilF6ejLU5NEYmZR9EiJeEw2s8HXs
+HQuEsf70TIYl6YI4wLYL2g==
+--000000000000cdb6a905b05e30f7--
