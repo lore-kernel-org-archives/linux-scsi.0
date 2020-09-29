@@ -2,239 +2,162 @@ Return-Path: <SRS0=Opo1=DG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F052C4346E
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 10:53:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C01D8C47425
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 11:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC451207C4
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 10:53:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 812262075F
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 11:55:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DnHZ+04M"
+	dkim=permerror (0-bit key) header.d=wdc.com header.i=@wdc.com header.b="WA2ZYFX4";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="wWwzdCc0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725826AbgI2KxT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Sep 2020 06:53:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59314 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725536AbgI2KxT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2020 06:53:19 -0400
-Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5662DC061755
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2020 03:53:19 -0700 (PDT)
-Received: by mail-il1-x144.google.com with SMTP id t12so4385291ilh.3
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2020 03:53:19 -0700 (PDT)
+        id S1731125AbgI2Lyz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Sep 2020 07:54:55 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:41971 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730426AbgI2Lyh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2020 07:54:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1601381257; x=1632917257;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=VpYaatWRBTgIADFT4VpUUpHV0hbtu2L7RhXCauNw2dU=;
+  b=WA2ZYFX43IKXEfQrmzu2QJFz0Wj2LYa5A+HAtOTdLRQpaX3vvEXCFyhl
+   7xKjr0dU75551METBY5tNv+86FBmvaQPj1AqeP5MYqjm+HusTfZtzJBzJ
+   1I1eO3yn4aip1Nafy/T99gx/mCXyZJvcNAKoxDhX7Ka/RqiMaerHhYDRn
+   zbXUyvtyOyCKPWw34L+KqfZdgIbQ8xKNsc7t+oElU8sIsKZy7IBwPr9nw
+   wU2yt9Obdr2RSt9Ehd+BqcTEdRtJ1aucJYnPXcFzw6CKeo/JU5c0Z0Y7x
+   qiyMDFaUivlKotV4ahd0dpCqVnkDxR/PtQsPSKW/CQStaXr9tCYeZ0w8C
+   A==;
+IronPort-SDR: FMQuFLFbWihNy1nQ/QdOcfTo4ijt4T28LHj9OGaS7cWVDoQrvfmOoI5bmjVT5fQX1C9cYFx+VC
+ mMh/Rtp9/8pB8iQishQuzut9v1gYGl0abuT4bftTcrvOV7MyyDmYZkc5RoBR7SkI1XWm4o1o26
+ +d1DlTm/eygSTLg92O+uH61VWTmY/Pn6q2ZiVHYCXhCBAuQKT+5K0UrC9yB2cp9D5H1VIhySYC
+ 2kC+LAk3Lha2lXN066IHRznbJKiL46EmVCgBF4Q0YJ3WVj24+ISu4Rrej5T9ZcrqE2eVFMP9l8
+ IvA=
+X-IronPort-AV: E=Sophos;i="5.77,318,1596470400"; 
+   d="scan'208";a="251949948"
+Received: from mail-bn7nam10lp2105.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.105])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2020 20:07:33 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TJQgvpGqJbd+uOvHyhEBv5lG3zJ5qASTNn+1EVgqcOKq9nmx0YbNJKDz+j/nyGiiZ4YhA1qjcvew0i4AXUTviBM5g40R+DQjOzdxLJQq+Y98C7CiRJ7h8xmrPN8PR+Fkl/MgifEM/si7kqG5/P3KWMllheTeanDDrAeJ3MHvnj2jr1c4nMF0rEZNTdyQxD3e9PLTT429ajnvR7Fe6pmp0SRvlGEhoLVQrW4gCfcA51Lp+ioMYJSQhhQbsIOoexUqgjt19VwZsZeKCbAmOv7V69/msPr6UcwXuhv9TbvqA6VSypvN3tP18zfJwoJ87wCrmnqXU7Qb4VCaJ3oD/XUbWQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jXKAJeCwzBd2FMLiHxP+hr4uDpxxNEop/tOnmKg6MVs=;
+ b=eVnBgNjMkF5SHtc43qEQ5Vwb2yh2r33J+uza8WMtjlLxG2Q9BuOQ5OvlQU7jsyLDGuF56B03mAtc463r2MLZm+nGsGKYmxpvNoDy+4RI0oWQjL9Nrlq1Eth1JPVLOHFIreB9mjtQ3vk2NaV8UtZ5wKosjG4nrNPLczS285dGAhhoyJyHxdbodFy3XeFwS2SVq3kHTtA79zgF1pvTvbOmZRIuoCp9831a6op7q2m7ZQCCMgK0xzcCCjCWUJPJ0I7Z34hratR7PbyA+a1j4aWq7qHIdqoMd3EOzNyVGqsxjwQI1UkbfPWOp7VPHZpoPeK//ZOP0v3860LlozIyrKXdHA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=Bif4uQP4ud0IVC4ZhPgsF1wwhnpcs8sdMQUIko7U2bY=;
-        b=DnHZ+04M4GJKBNDz+m7iCiwHgwlfly98g0hq2m1WapJsf4Byad36ex0LW1k/33K7XE
-         aDcrWb2MIFsHtlTVJ4OUsWzuQ33/iLHfJDOYkZW+t/K4eN3xT7DQECFXUFlrtcKNO+3c
-         gPmkk4aPs8b++n6B6Jc+4+dGkodlIcJOtevdDnMoYlgV47sIQBDWHv3o6QT5HKQKU1A5
-         2ICKiXXF+YwsFTwDIOaiiZXT4eKLbOQP+BwUI/xbwaDSQqLh3ZsrexRQV/W6QyjDuvw+
-         QhVgVioyezFPOGNyUcOPLOJjxyGfxVeEFvZyKmqaZ/p9kRyd90iIaiy1P3Lu0nP8m0nm
-         lCSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=Bif4uQP4ud0IVC4ZhPgsF1wwhnpcs8sdMQUIko7U2bY=;
-        b=jPNgzG1OvhlrKApb0TtPAzMr4NEgYAeCKVg8OYMs0RcELbPDjOv7hYpTmhCZpQHZOU
-         7I+BHlZ4vVhnG9eSQy1fA7mfQhpTtBWfPTT2rO52FPMIqz+QCaGW73p+34McJ2Cdzil3
-         +I/4XVoEFtH6FwlDPUzo/IB/HcvU52NBwEhvzwZpMmK/7zoAZqMU3YuSHFS1zXwdeziI
-         Jq4YzqjWgpsVrXtgQiZtZ4RXwdk1hqQVlFc2bJ857SqS5mEEeicD4sHWwwbOAWUZhlEr
-         XEA1zty7lcU/9M7I73+rE0vJ9vzRA2hr4CZMXfSTOQ7OW6lgCYzy28oRIlKed4X1KUL1
-         tiVQ==
-X-Gm-Message-State: AOAM53281gPaxQglEc2fNCdxqe7M0XCZXB8u1+D4g4ZSiwdLyiWncLEQ
-        Geed5vYPlye8nncHRxW66rKLle2ZVCmolZO45Q6QEXDNdj7o7A==
-X-Google-Smtp-Source: ABdhPJy93XRtEaoYoTk3FA/4XTN971JiEyr7oTJREPdww0K4FertKL6WXZZYmSF0rznSWrl0AH7PPOHh1IheIOL0O0k=
-X-Received: by 2002:a92:1303:: with SMTP id 3mr2340797ilt.117.1601376798284;
- Tue, 29 Sep 2020 03:53:18 -0700 (PDT)
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jXKAJeCwzBd2FMLiHxP+hr4uDpxxNEop/tOnmKg6MVs=;
+ b=wWwzdCc03nxWvjKhcq7zVS9ITLuRu3Qkj9aYO3ENRuZ2j9x531b9OVeh1zULu8t/dGhce9THOJSTYlZMKEUrHcQ2l8DdOmAjsFwMm8BH9F8HAIhMpunTb8QAzZvWRhvyWTO5GVCUJcAa0F8hZKBFAcXRhRfGmK20jF5i68ttN7w=
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
+ by BY5PR04MB6312.namprd04.prod.outlook.com (2603:10b6:a03:1e3::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3412.22; Tue, 29 Sep
+ 2020 11:54:32 +0000
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::2c49:48e2:e9fb:d5a0]) by BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::2c49:48e2:e9fb:d5a0%9]) with mapi id 15.20.3412.029; Tue, 29 Sep 2020
+ 11:54:31 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+CC:     "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
+        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
+        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
+Subject: RE: [PATCH 4/4] scsi: ufs-mediatek: Add host reset mechanism
+Thread-Topic: [PATCH 4/4] scsi: ufs-mediatek: Add host reset mechanism
+Thread-Index: AQHWhauhM77uE6w2t0y0fOl12ucOUql/osKg
+Date:   Tue, 29 Sep 2020 11:54:31 +0000
+Message-ID: <BY5PR04MB6705873E1F5DBCE7C97D12AEFC320@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <20200908064507.30774-1-stanley.chu@mediatek.com>
+ <20200908064507.30774-5-stanley.chu@mediatek.com>
+In-Reply-To: <20200908064507.30774-5-stanley.chu@mediatek.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: mediatek.com; dkim=none (message not signed)
+ header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: f27844c8-661f-4fc9-30ae-08d8646e6d8c
+x-ms-traffictypediagnostic: BY5PR04MB6312:
+x-microsoft-antispam-prvs: <BY5PR04MB6312D9EB78AC4DBF3BF22333FC320@BY5PR04MB6312.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:6430;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: qR2bEb2cxUGPS8T+zT4J4G/mkBDaoqpYJwQARlBm39lYANuOEjPjxJswl50wwekC1DAqr9bFR26o4Z3lf9Hdw7fE8I64avuvKydcrzRRJ1wh+8ZA3Hhg1/fqiaeIvg08MmwRUaZNnzibAv8sK112RrxjDbUAq2PQolJSiXW/ebC62ebUffk0x0kDMRgsxHb6ae7qTzGeFr0Dj+D36q+UjNssfXtBlxPPJuxSk2iwmTbcI/UB+uCqGuy9PsiTlskNeZY1a3Of/uSxXmhq0R6KdhhcxyxOPz3bYfuNbzvOzW3HgZz5Y5Lvkkt/fl6w2qTF9vlGIPkfLaS9npJ3mnwP8N/nU6wgHYMg3A7ov4Ni/EMKz9YUUcB5MBtMSjdRP3ON
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(6506007)(498600001)(5660300002)(71200400001)(4326008)(7416002)(66946007)(66476007)(66556008)(54906003)(7696005)(76116006)(52536014)(2906002)(33656002)(4744005)(8936002)(66446008)(86362001)(8676002)(186003)(110136005)(9686003)(26005)(55016002)(83380400001)(64756008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: /2NhCWPA0++LDwuEHPdjnrvhCdz19AD05AjQ/6w7TnGuqSmEQPRgqqof6tGahPwwivNexOyNn862kedX5Neaz9bnUmu8JZ0pl7hZyV+EqdCO1B5A1MPgxsI+cLPzMffwywTHo+FJXZg8/KYDj2tYCGXFAiJt9iVe2paZGlyP76CFdJ7wnOEKhNwB2uomL2hszjamJo9JU6whOtbtCeq+mRevvWlfIqvcBzUbWeK/PVGcgIuT8kqxMz+ZGWbS1JdR9WAxewytcTfkn7qI5e0AwIGCOnF1BLkOGvF2e50xnZKYqEpeK8gdLQKPK8DUy9r8nnq3XVIAOawyLD7kAJDF4v27kajhuxDjUX7YiXFnMZPTF9yBqPyWfOvoszE9XQ3J20j64ZiBfF856TkFQ1zqQwj7clVpj31kH3ppxGlB7rYZxGmSqPQIR871ZGfQ3bwj9ZfSy6eGJYITsQOP0wFoltvYuk1cKKTxv2Lrr8760iY4WcHEI6poLWdFR99i9NRA1KwQfsyrLpAZAH/evi2sk4JVML//b/ao28ipchWP87eHbm+iOG1caWNOGGDdryZPdbEksfX1PoKgGBDPMUoIpg1IAZWaXtOrITbqyLx+o6mP49R/kEmhR42T8pRw5/Hy6H9LJjOEs7TQe0kOTxaFEw==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-From:   Sundar Nagarajan <sun.nagarajan@gmail.com>
-Date:   Tue, 29 Sep 2020 03:53:07 -0700
-Message-ID: <CALnajPDasSABjqXBhzs+ACdsxQ02Nk4CoS26X_nYOuCfC-GJdg@mail.gmail.com>
-Subject: Bug 209177 - mpt2sas_cm0: failure at drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
-To:     linux-scsi@vger.kernel.org,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f27844c8-661f-4fc9-30ae-08d8646e6d8c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Sep 2020 11:54:31.8406
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: yIW+v/RUrIXMbQ/jSAQSwlU5JmvZzDjNtGi18DSrRCF7Cw8Ebs1+QACTUPySMAiEQutjJPy22tRZ1koS+VIC3Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6312
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sorry if I am mailing too many people.
-Copying additional people in the hope that someone has the time to
-guide me on how to report, debug and fix this bug in the 5.8 kernel.
+>=20
+>=20
+> Add host reset mechanism to try to recover host-side errors
+> during recovery flow.
+>=20
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by Avri Altman <avri.altman@wdc.com>
 
-bugzilla.kernel org bug report:
-https://bugzilla.kernel.org/show_bug.cgi?id=209177
+See some nit below as well.
+Thanks,
+Avri
 
-Hardware:
+> +static void ufs_mtk_init_reset_control(struct ufs_hba *hba,
+> +                                      struct reset_control **rc,
+> +                                      char *str)
+> +{
+> +       *rc =3D devm_reset_control_get(hba->dev, str);
+> +       if (IS_ERR(*rc)) {
+How about verifying that the line is not shared as well?
+Although this might not be an issue on your current platforms,
+it might save you aggravation in the future..
 
-Mainboard: Intel S2600CPj
-SAS HBA card: LSI SAS9200-16e 16-port PCIe HBA
-    VID:PID: 1000:0064
-
-Problem: Does not detect any disks in enclosure
-Works in: kernel 5.7.11 (stock, from kernel.org)
-
-Kernel trace:
-
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: scatter gather:
-sge_in_main_msg(1), sge_per_chain(9), sge_per_io(128),
-chains_per_io(15)
-Sep 06 13:41:45 fili kernel: ------------[ cut here ]------------
-Sep 06 13:41:45 fili kernel: WARNING: CPU: 0 PID: 13 at
-mm/page_alloc.c:4831 __alloc_pages_nodemask+0x1ce/0x310
-Sep 06 13:41:45 fili kernel: Modules linked in: crc32_pclmul
-hid_generic(+) ghash_clmulni_intel usbhid igb(+) dca hid aesni_intel
-mpt3sas(+) ptp crypto_simd ahci mlx4_core(+) raid_class cryptd
-glue_helper x
-Sep 06 13:41:45 fili kernel: CPU: 0 PID: 13 Comm: kworker/0:1 Not
-tainted 5.8.6 #1
-Sep 06 13:41:45 fili kernel: Hardware name: ZTSYSTEM CYPRESS11
-/S2600CP   , BIOS SE5C600.86B.02.06.0006.032420170950 03/24/2017
-Sep 06 13:41:45 fili kernel: Workqueue: events work_for_cpu_fn
-Sep 06 13:41:45 fili kernel: RIP: 0010:__alloc_pages_nodemask+0x1ce/0x310
-Sep 06 13:41:45 fili kernel: Code: ff ff ff 65 48 8b 04 25 c0 7b 01 00
-48 05 78 08 00 00 41 bd 01 00 00 00 48 89 44 24 08 e9 05 ff ff ff 81
-e7 00 20 00 00 75 02 <0f> 0b 45 31 ed eb 95 44 8b 64 24 18 65 8b 0
-Sep 06 13:41:45 fili kernel: RSP: 0018:ffffacb9400fbc98 EFLAGS: 00010246
-Sep 06 13:41:45 fili kernel: RAX: 0000000000000000 RBX:
-0000000000000cc0 RCX: 0000000000000000
-Sep 06 13:41:45 fili kernel: RDX: 0000000000000000 RSI:
-000000000000000b RDI: 0000000000000000
-Sep 06 13:41:45 fili kernel: RBP: 000000000075d000 R08:
-000000000075d000 R09: ffffffffffffffff
-Sep 06 13:41:45 fili kernel: R10: 0000000000000000 R11:
-ffff9848de06b1e8 R12: ffffffffffffffff
-Sep 06 13:41:45 fili kernel: R13: 0000000000000000 R14:
-ffff9848ca1d65d8 R15: ffff9860d65130b0
-Sep 06 13:41:45 fili kernel: FS:  0000000000000000(0000)
-GS:ffff9848dea00000(0000) knlGS:0000000000000000
-Sep 06 13:41:45 fili kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-Sep 06 13:41:45 fili kernel: CR2: 00005651c521b0e8 CR3:
-0000001ed260a005 CR4: 00000000000606f0
-Sep 06 13:41:45 fili kernel: Call Trace:
-Sep 06 13:41:45 fili kernel:  dma_direct_alloc_pages+0x171/0x2a0
-Sep 06 13:41:45 fili kernel:  dma_pool_alloc+0xd0/0x1c0
-Sep 06 13:41:45 fili kernel:  base_alloc_rdpq_dma_pool+0x118/0x1d0 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  _base_allocate_memory_pools+0x2d6/0x1240 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  mpt3sas_base_attach+0x4a4/0x930 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  _scsih_probe+0x4e3/0x920 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  local_pci_probe+0x42/0x90
-Sep 06 13:41:45 fili kernel:  work_for_cpu_fn+0x16/0x20
-Sep 06 13:41:45 fili kernel:  process_one_work+0x208/0x400
-Sep 06 13:41:45 fili kernel:  worker_thread+0x221/0x3e0
-Sep 06 13:41:45 fili kernel:  ? process_one_work+0x400/0x400
-Sep 06 13:41:45 fili kernel:  kthread+0x117/0x130
-Sep 06 13:41:45 fili kernel:  ? kthread_park+0x90/0x90
-Sep 06 13:41:45 fili kernel:  ret_from_fork+0x22/0x30
-Sep 06 13:41:45 fili kernel: ---[ end trace 38d2eb3ff4b32c0c ]---
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: failure at
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
-
-
-On kernel 5.8.6 - mpt[23]sas NOT working:
-Only lines with mpt[23]sas:
-
-
-Sep 06 13:41:45 fili kernel: Command line:
-BOOT_IMAGE=/boot/vmlinuz-5.8.6 root=/dev/mapper/fili0-rootfs ro
-console=ttyS0,115200n1 console=tty0 mpt2sas.msix_disable=1
-mpt3sas.msix_disable=1
-Sep 06 13:41:45 fili kernel: Kernel command line:
-BOOT_IMAGE=/boot/vmlinuz-5.8.6 root=/dev/mapper/fili0-rootfs ro
-console=ttyS0,115200n1 console=tty0 mpt2sas.msix_disable=1
-mpt3sas.msix_disable=1
-Sep 06 13:41:45 fili kernel: mpt3sas version 34.100.00.00 loaded
-Sep 06 13:41:45 fili kernel: mpt3sas 0000:02:00.0: can't disable ASPM;
-OS doesn't have ASPM control
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: 64 BIT PCI BUS DMA
-ADDRESSING SUPPORTED, total mem (197972228 kB)
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: CurrentHostPageSize is 0:
-Setting default host page size to 4k
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: High IOPs queues : disabled
-Sep 06 13:41:45 fili kernel: mpt2sas0: IO-APIC enabled: IRQ 54
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: iomem(0x00000000d1380000),
-mapped(0x(____ptrval____)), size(16384)
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: ioport(0x0000000000002000), size(256)
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: CurrentHostPageSize is 0:
-Setting default host page size to 4k
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: scatter gather:
-sge_in_main_msg(1), sge_per_chain(9), sge_per_io(128),
-chains_per_io(15)
-Sep 06 13:41:45 fili kernel: Modules linked in: crc32_pclmul
-hid_generic(+) ghash_clmulni_intel usbhid igb(+) dca hid aesni_intel
-mpt3sas(+) ptp crypto_simd ahci mlx4_core(+) raid_class cryptd
-glue_helper xhci_pci pps_core uas libahci i2c_algo_bit
-xhci_pci_renesas scsi_transport_sas wmi usb_storage deflate
-Sep 06 13:41:45 fili kernel:  base_alloc_rdpq_dma_pool+0x118/0x1d0 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  _base_allocate_memory_pools+0x2d6/0x1240 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  mpt3sas_base_attach+0x4a4/0x930 [mpt3sas]
-Sep 06 13:41:45 fili kernel:  _scsih_probe+0x4e3/0x920 [mpt3sas]
-Sep 06 13:41:45 fili kernel: mpt2sas_cm0: failure at
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
-
-
-On kernel 5.7.11 - mpt[23]sas IS working
-Only lines with mpt[23]sas:
-
-
-Sep 06 13:49:36 fili kernel: Command line:
-BOOT_IMAGE=/boot/vmlinuz-5.7.11 root=/dev/mapper/fili0-rootfs ro
-console=ttyS0,115200n1 console=tty0 mpt2sas.msix_disable=1
-mpt3sas.msix_disable=1
-Sep 06 13:49:36 fili kernel: Kernel command line:
-BOOT_IMAGE=/boot/vmlinuz-5.7.11 root=/dev/mapper/fili0-rootfs ro
-console=ttyS0,115200n1 console=tty0 mpt2sas.msix_disable=1
-mpt3sas.msix_disable=1
-Sep 06 13:49:36 fili kernel: mpt3sas version 33.100.00.00 loaded
-Sep 06 13:49:36 fili kernel: mpt3sas 0000:02:00.0: can't disable ASPM;
-OS doesn't have ASPM control
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: 64 BIT PCI BUS DMA
-ADDRESSING SUPPORTED, total mem (197972264 kB)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: CurrentHostPageSize is 0:
-Setting default host page size to 4k
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: High IOPs queues : disabled
-Sep 06 13:49:36 fili kernel: mpt2sas0: IO-APIC enabled: IRQ 55
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: iomem(0x00000000d1380000),
-mapped(0x(____ptrval____)), size(16384)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: ioport(0x0000000000002000), size(256)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: CurrentHostPageSize is 0:
-Setting default host page size to 4k
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: scatter gather:
-sge_in_main_msg(1), sge_per_chain(9), sge_per_io(128),
-chains_per_io(15)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: request
-pool(0x(____ptrval____)) - dma(0x17c9400000): depth(30127),
-frame_size(128), pool_size(3765 kB)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: sense
-pool(0x(____ptrval____))- dma(0x17c4c00000):
-depth(29868),element_size(96), pool_size(2800 kB)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: config
-page(0x(____ptrval____)) - dma(0x17c509c000): size(512)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: Allocated physical memory:
-size(14663 kB)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: Current Controller Queue
-Depth(29865),Max Controller Queue Depth(32455)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: Scatter Gather Elements per IO(128)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: overriding NVDATA EEDPTagMode setting
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: LSISAS2116:
-FWVersion(20.00.06.00), ChipRevision(0x02), BiosVersion(00.00.00.00)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: Protocol=(Initiator,Target),
-Capabilities=(TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set
-Full,NCQ)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: sending port enable !!
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: host_add: handle(0x0001),
-sas_addr(0x500062b20038b300), phys(16)
-Sep 06 13:49:36 fili kernel: mpt2sas_cm0: expander_add:
-handle(0x0011), parent(0x0001), sas_addr(0x5001940000d2c23f), phys(25)
-Sep 06 13:49:37 fili kernel: mpt2sas_cm0: port enable: SUCCESS
+> +               dev_info(hba->dev, "Failed to get reset control %s: %d\n"=
+,
+> +                        str, PTR_ERR(*rc));
+> +               *rc =3D NULL;
+> +       }
+> +}
