@@ -2,144 +2,176 @@ Return-Path: <SRS0=Opo1=DG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3F1C4741F
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 18:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95417C47420
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 19:48:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BB91221E7
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 18:15:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 363B520848
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 19:48:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="uT3fprST"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tg/uX+BC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728086AbgI2SPX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Sep 2020 14:15:23 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:54121 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725320AbgI2SPW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2020 14:15:22 -0400
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200929181519epoutp0434a37e97b0b37b2c08b70bab8271dd3f~5U9WnoQLW2002720027epoutp049
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2020 18:15:19 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200929181519epoutp0434a37e97b0b37b2c08b70bab8271dd3f~5U9WnoQLW2002720027epoutp049
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1601403319;
-        bh=10/3mZvnT6czyDROBY36NFnpEJ7qJhK8MMPG5Yn9VQs=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=uT3fprSTyByRvA/WVZ/T/mnnZycao+gweF4OOnxaZ/RH3tsaiaEi4rlZdG5AwgHwq
-         Pyg9OZCqUq7nXSwNcksvwJvfhmRlG5j2sk8KgfPVqx/fefCFCef3YX4ioIdsfpKL6B
-         E469X7wuRDc1FAOXYufke9pxmtM2tgS11jTA6Cck=
-Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20200929181518epcas5p433e8f0a1dbbd105df6dae6a3ae20ae3f~5U9VcJFZc2633926339epcas5p4O;
-        Tue, 29 Sep 2020 18:15:18 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        97.4A.09573.6B9737F5; Wed, 30 Sep 2020 03:15:18 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200929181517epcas5p2f87d7cd32fda98c1e85622350b9a438b~5U9UPTFbm1492014920epcas5p2B;
-        Tue, 29 Sep 2020 18:15:17 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200929181517epsmtrp27bcf45382c6199086444fc38253abdcc~5U9UN6Lih1019110191epsmtrp2o;
-        Tue, 29 Sep 2020 18:15:17 +0000 (GMT)
-X-AuditID: b6c32a49-a67ff70000002565-bb-5f7379b60c41
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        01.EB.08745.4B9737F5; Wed, 30 Sep 2020 03:15:16 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.122.12.5]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20200929181515epsmtip179251a9da5e38195affe0eb1c8996627~5U9SWDQ0Y0423504235epsmtip1m;
-        Tue, 29 Sep 2020 18:15:14 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Bean Huo'" <huobean@gmail.com>, <avri.altman@wdc.com>,
-        <asutoshd@codeaurora.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <stanley.chu@mediatek.com>,
-        <beanhuo@micron.com>, <bvanassche@acm.org>,
-        <tomas.winkler@intel.com>, <cang@codeaurora.org>
-Cc:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "'Alim Akhtar'" <alim.akhtar@samsung.com>
-In-Reply-To: <20200916084017.14086-1-huobean@gmail.com>
-Subject: RE: [PATCH v2] scsi: ufs-exynos: use
- devm_platform_ioremap_resource_byname()
-Date:   Tue, 29 Sep 2020 23:45:13 +0530
-Message-ID: <000b01d6968c$7ba0ec60$72e2c520$@samsung.com>
+        id S1728914AbgI2Tss (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Sep 2020 15:48:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58130 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727700AbgI2Tsp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2020 15:48:45 -0400
+Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72759C061755;
+        Tue, 29 Sep 2020 12:48:45 -0700 (PDT)
+Received: by mail-ej1-x644.google.com with SMTP id q13so16857893ejo.9;
+        Tue, 29 Sep 2020 12:48:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EfV9n3jCAY5e7p3ZDi51z+9ZxQ5VOAS4PnGR9TPcCJE=;
+        b=Tg/uX+BCrdziC/0U0xQ9DUNRneekSaNt89qrGtZKVWr0gDy714YxYxv7oYqtnh1rLg
+         evm9dVAj+mlS7k9NsfRsDAsWI2wNsS2pbVvMetBbqKAYasrq59rUmxM9Vuui4+WKbSGP
+         VWDdiM1pyyh20kphoBxaFKL6Kz8/qHFVT8aKWTb2rJF5a4f07mzvIxWPp/l7K/1bX4yd
+         VmgthGmTNo1MK8uAuTPhEkWB0rs7FqipF0q1DqKoGSTeAv5Ojs7JhqxM12ar+at24ccp
+         oaIrRqaFFaHr+GuAnXn2x//Y4VIxUzgnu3BrF5nCN6WFu7D/w7b0ksoSZSFmfJFguiJX
+         /ekQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EfV9n3jCAY5e7p3ZDi51z+9ZxQ5VOAS4PnGR9TPcCJE=;
+        b=I14mFIpsDuFXf4Rm6bZiNPpJqIGlCvF+jsoyZb9a57VyM34iLbQMACB3frZvEhwuOz
+         ZWcnVxpNMvSU1OndgUEdu7W3yY/BEZA+gOrH5b2O6XNoZAnwD0qkyIgZyTM5b935Y2rJ
+         +IlIXIx7M9ohwGEHxpUz5OTzs8EkN+Khd7DpQl7TcOiQpX+FVzxQGMl5tKpVsezPMKEB
+         EPln0V7EPQAXvt8/TiurnhMx+O+KsYYhnswZ/kMrPsl5ZhUzxQFL2eImya6owbInYSXA
+         RXCLYyoQL09wOqwSDVauJp0H00gx0SiO9nexqPjT+JeGUrdL5yGkrFZ5bJA7O3wUBvdJ
+         urcQ==
+X-Gm-Message-State: AOAM533k+Cd03a113ZfeNZa4ge44v2K5UDsJgKhyrRQVEMfEPRN7r2xI
+        QO9tu4XXvU0AKgvT5SeR+fhirGaNFQOLBYXUB78=
+X-Google-Smtp-Source: ABdhPJwYlYPE1fi96p1hcpNgqHFGUf7tTTqgoMg6O5rCyHechmLOcELaQlqm+9099tKeePaLN+CjUWw6OycJO5BQj9w=
+X-Received: by 2002:a17:906:fa0a:: with SMTP id lo10mr3262551ejb.22.1601408924109;
+ Tue, 29 Sep 2020 12:48:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQLMFSyO1kZ5iiZoqB9dkEqiP/xkqwJk+P5vp4HGHPA=
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrBKsWRmVeSWpSXmKPExsWy7bCmhu62yuJ4g4cNvBYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFnPONjBZLLqxjcni8q45bBbd13ewWSw//o/JYunWm4wW
-        H3rqHHg9Ll/x9rjc18vksXPWXXaPxXteMnlMWHSA0aPl5H4Wj+/rO9g8Pj69xeLRt2UVo8fn
-        TXIe7Qe6mQK4o7hsUlJzMstSi/TtErgylp67wVqwiK3izfTfjA2Ma1m7GDk5JARMJP5fWsHe
-        xcjFISSwm1Fi78mvUM4nRomWjZNYIJzPjBL7z8xnh2l59OAKM0RiF6PEvO1rmEESQgIvGSVW
-        7jcCsdkEdCV2LG5jAykSEehhktj44wALSIJZIFfi9u57QAkODk4Bc4l3V0tBwsIC4RK7Hzxm
-        A7FZBFQlNl+Zxwhi8wpYSjxv/M8GYQtKnJz5BGqMvMT2t3OYIQ5SkPj5dBnYPyICVhJ/lz9h
-        g6gRlzj6swfsUAmBNxwSF5ZdgPrAReLijF/QABCWeHV8C1RcSuLzu71gt0kIZEv07DKGCNdI
-        LJ13jAXCtpc4cGUOC0gJs4CmxPpd+hCr+CR6fz9hgujklehoE4KoVpVofncVqlNaYmJ3N9RS
-        D4m7DztZJzAqzkLy2Cwkj81C8sAshGULGFlWMUqmFhTnpqcWmxYY5qWW6xUn5haX5qXrJefn
-        bmIEJz4tzx2Mdx980DvEyMTBeIhRgoNZSYTXN6cgXog3JbGyKrUoP76oNCe1+BCjNAeLkjiv
-        0o8zcUIC6YklqdmpqQWpRTBZJg5OqQam/ArBd7s+3OeNW2o7OzMrKuOHrV13t+7OqKn+F/xv
-        rP/0SGL3fXnz+uLP3v6inMmHjjhd3blW9Xc5s6sZ8289l7xVpqcfHCq6u+iq5x/H30ynzm03
-        3mTWpbPv71JeNkbrRSdmPtLa16985qDaJbvdEyt5Kzjqbkiv5l6k9ugqz9sDh54+2c/QVWfN
-        zbC9y2qGcE2AebXNPtHaJXPm2Lgcn7pMLk294ZDklq6tJWxsglk5KpuT/81vFvtUdtnkpuV0
-        n+nG8ZOOhP09NvfJzO8Stcc1PnIblHBY31zo+U44dOGb0sxpL0LlDty9wpPg+m9v27SQmww3
-        +0Js9PhDjq18XVvM1RDP6B4V+W9ykkKMEktxRqKhFnNRcSIA4t3QqesDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDIsWRmVeSWpSXmKPExsWy7bCSnO6WyuJ4g5aF5hYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFnPONjBZLLqxjcni8q45bBbd13ewWSw//o/JYunWm4wW
-        H3rqHHg9Ll/x9rjc18vksXPWXXaPxXteMnlMWHSA0aPl5H4Wj+/rO9g8Pj69xeLRt2UVo8fn
-        TXIe7Qe6mQK4o7hsUlJzMstSi/TtErgylp67wVqwiK3izfTfjA2Ma1m7GDk5JARMJB49uMLc
-        xcjFISSwg1Fi299XUAlpiesbJ7BD2MISK/89Z4coes4oseTAc0aQBJuArsSOxW1sIAkRgWlM
-        EnuWHWEGSTAL5Etc3fWGBaKjg1Fiy/7DQB0cHJwC5hLvrpaC1AgLhEr0Hd4Gto1FQFVi85V5
-        YEN5BSwlnjf+Z4OwBSVOznzCAtLKLKAn0baREWK8vMT2t3OYIY5TkPj5dBnYGBEBK4m/y5+w
-        QdSISxz92cM8gVF4FpJJsxAmzUIyaRaSjgWMLKsYJVMLinPTc4sNC4zyUsv1ihNzi0vz0vWS
-        83M3MYIjWEtrB+OeVR/0DjEycTAeYpTgYFYS4fXNKYgX4k1JrKxKLcqPLyrNSS0+xCjNwaIk
-        zvt11sI4IYH0xJLU7NTUgtQimCwTB6dUA5O4bAqLUHqmxsKvxukL/+6pcNt24oXxFpdnfyUO
-        i8vpTbLtvMj7yVCJ7dzLtrfT1xd72mca+hXOf5na8GiJ7gsZ+S2ZKmc5ru9wvp4w9fD2LJGO
-        +1+csk0DPfbqaERzM75jC/wmlq4XqsE3w5K/uJu3zUrPt+P5lh6JUPW/jwob317i9Dha9etE
-        ZdB/lTO/3d0fMuW3LZh79MryS9safx/4/ars7unas/OZKzo1fij+L+k8/+uxIjvTtwMVBlM7
-        7jbn2+2cVuhSpB5XKRnOkLJeNyW0YOn/JGm+R3oNNsE7c5yutnEJP5mWIO9gffzn6ai1W7RO
-        iGo9s9vpcP6o6e9Ds90/xTReklyzznSxtBJLcUaioRZzUXEiAKwbvOpPAwAA
-X-CMS-MailID: 20200929181517epcas5p2f87d7cd32fda98c1e85622350b9a438b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200916084036epcas5p3420a185827331c7dd4494f2adb115ead
-References: <CGME20200916084036epcas5p3420a185827331c7dd4494f2adb115ead@epcas5p3.samsung.com>
-        <20200916084017.14086-1-huobean@gmail.com>
+References: <20200928043329.606781-1-mark.mielke@gmail.com>
+In-Reply-To: <20200928043329.606781-1-mark.mielke@gmail.com>
+From:   Marc Dionne <marc.c.dionne@gmail.com>
+Date:   Tue, 29 Sep 2020 16:48:32 -0300
+Message-ID: <CAB9dFdvK2y==KjSfL6m+XOzBDP8kJmQX33Jf7m+5Ys762FPx2w@mail.gmail.com>
+Subject: Re: [PATCH] iscsi: iscsi_tcp: Avoid holding spinlock while calling getpeername
+To:     Mark Mielke <mark.mielke@gmail.com>
+Cc:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bean,
-
-> -----Original Message-----
-> From: Bean Huo <huobean@gmail.com>
-> Sent: 16 September 2020 14:10
-> To: alim.akhtar@samsung.com; avri.altman@wdc.com;
-> asutoshd@codeaurora.org; jejb@linux.ibm.com;
-> martin.petersen@oracle.com; stanley.chu@mediatek.com;
-> beanhuo@micron.com; bvanassche@acm.org; tomas.winkler@intel.com;
-> cang@codeaurora.org
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH v2] scsi: ufs-exynos: use
-> devm_platform_ioremap_resource_byname()
-> 
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> Use devm_platform_ioremap_resource_byname() to simplify the code.
-> 
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
+On Mon, Sep 28, 2020 at 1:34 AM Mark Mielke <mark.mielke@gmail.com> wrote:
+>
+> Kernel may fail to boot or devices may fail to come up when
+> initializing iscsi_tcp devices starting with Linux 5.8.
+>
+> Marc Dionne identified the cause in RHBZ#1877345.
+>
+> Commit a79af8a64d39 ("[SCSI] iscsi_tcp: use iscsi_conn_get_addr_param
+> libiscsi function") introduced getpeername() within the session spinlock.
+>
+> Commit 1b66d253610c ("bpf: Add get{peer, sock}name attach types for
+> sock_addr") introduced BPF_CGROUP_RUN_SA_PROG_LOCK() within getpeername,
+> which acquires a mutex and when used from iscsi_tcp devices can now lead
+> to "BUG: scheduling while atomic:" and subsequent damage.
+>
+> This commit ensures that the spinlock is released before calling
+> getpeername() or getsockname(). sock_hold() and sock_put() are
+> used to ensure that the socket reference is preserved until after
+> the getpeername() or getsockname() complete.
+>
+> Reported-by: Marc Dionne <marc.c.dionne@gmail.com>
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1877345
+> Link: https://lkml.org/lkml/2020/7/28/1085
+> Link: https://lkml.org/lkml/2020/8/31/459
+> Fixes: a79af8a64d39 ("[SCSI] iscsi_tcp: use iscsi_conn_get_addr_param libiscsi function")
+> Fixes: 1b66d253610c ("bpf: Add get{peer, sock}name attach types for sock_addr")
+> Signed-off-by: Mark Mielke <mark.mielke@gmail.com>
+> Cc: stable@vger.kernel.org
 > ---
-Thanks! 
-Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
+>  drivers/scsi/iscsi_tcp.c | 22 +++++++++++++++-------
+>  1 file changed, 15 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index b5dd1caae5e9..d10efb66cf19 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -736,6 +736,7 @@ static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+>         struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+>         struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
+>         struct sockaddr_in6 addr;
+> +       struct socket *sock;
+>         int rc;
+>
+>         switch(param) {
+> @@ -747,13 +748,17 @@ static int iscsi_sw_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
+>                         spin_unlock_bh(&conn->session->frwd_lock);
+>                         return -ENOTCONN;
+>                 }
+> +               sock = tcp_sw_conn->sock;
+> +               sock_hold(sock->sk);
+> +               spin_unlock_bh(&conn->session->frwd_lock);
+> +
+>                 if (param == ISCSI_PARAM_LOCAL_PORT)
+> -                       rc = kernel_getsockname(tcp_sw_conn->sock,
+> +                       rc = kernel_getsockname(sock,
+>                                                 (struct sockaddr *)&addr);
+>                 else
+> -                       rc = kernel_getpeername(tcp_sw_conn->sock,
+> +                       rc = kernel_getpeername(sock,
+>                                                 (struct sockaddr *)&addr);
+> -               spin_unlock_bh(&conn->session->frwd_lock);
+> +               sock_put(sock->sk);
+>                 if (rc < 0)
+>                         return rc;
+>
+> @@ -775,6 +780,7 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+>         struct iscsi_tcp_conn *tcp_conn;
+>         struct iscsi_sw_tcp_conn *tcp_sw_conn;
+>         struct sockaddr_in6 addr;
+> +       struct socket *sock;
+>         int rc;
+>
+>         switch (param) {
+> @@ -789,16 +795,18 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+>                         return -ENOTCONN;
+>                 }
+>                 tcp_conn = conn->dd_data;
+> -
+>                 tcp_sw_conn = tcp_conn->dd_data;
+> -               if (!tcp_sw_conn->sock) {
+> +               sock = tcp_sw_conn->sock;
+> +               if (!sock) {
+>                         spin_unlock_bh(&session->frwd_lock);
+>                         return -ENOTCONN;
+>                 }
+> +               sock_hold(sock->sk);
+> +               spin_unlock_bh(&session->frwd_lock);
+>
+> -               rc = kernel_getsockname(tcp_sw_conn->sock,
+> +               rc = kernel_getsockname(sock,
+>                                         (struct sockaddr *)&addr);
+> -               spin_unlock_bh(&session->frwd_lock);
+> +               sock_put(sock->sk);
+>                 if (rc < 0)
+>                         return rc;
+>
+> --
+> 2.28.0
+>
 
-> 
-> v1-v2: change the patch commit subject
-> 
+Works for me and prevents the iscsid crash.
 
+Tested-by: Marc Dionne <marc.c.dionne@gmail.com>
