@@ -2,162 +2,170 @@ Return-Path: <SRS0=Opo1=DG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C01D8C47425
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 11:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C80C6C4727F
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 12:42:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 812262075F
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 11:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 295F420725
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Sep 2020 12:42:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=permerror (0-bit key) header.d=wdc.com header.i=@wdc.com header.b="WA2ZYFX4";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="wWwzdCc0"
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="atzfq9Jd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731125AbgI2Lyz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Sep 2020 07:54:55 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:41971 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730426AbgI2Lyh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2020 07:54:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1601381257; x=1632917257;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=VpYaatWRBTgIADFT4VpUUpHV0hbtu2L7RhXCauNw2dU=;
-  b=WA2ZYFX43IKXEfQrmzu2QJFz0Wj2LYa5A+HAtOTdLRQpaX3vvEXCFyhl
-   7xKjr0dU75551METBY5tNv+86FBmvaQPj1AqeP5MYqjm+HusTfZtzJBzJ
-   1I1eO3yn4aip1Nafy/T99gx/mCXyZJvcNAKoxDhX7Ka/RqiMaerHhYDRn
-   zbXUyvtyOyCKPWw34L+KqfZdgIbQ8xKNsc7t+oElU8sIsKZy7IBwPr9nw
-   wU2yt9Obdr2RSt9Ehd+BqcTEdRtJ1aucJYnPXcFzw6CKeo/JU5c0Z0Y7x
-   qiyMDFaUivlKotV4ahd0dpCqVnkDxR/PtQsPSKW/CQStaXr9tCYeZ0w8C
-   A==;
-IronPort-SDR: FMQuFLFbWihNy1nQ/QdOcfTo4ijt4T28LHj9OGaS7cWVDoQrvfmOoI5bmjVT5fQX1C9cYFx+VC
- mMh/Rtp9/8pB8iQishQuzut9v1gYGl0abuT4bftTcrvOV7MyyDmYZkc5RoBR7SkI1XWm4o1o26
- +d1DlTm/eygSTLg92O+uH61VWTmY/Pn6q2ZiVHYCXhCBAuQKT+5K0UrC9yB2cp9D5H1VIhySYC
- 2kC+LAk3Lha2lXN066IHRznbJKiL46EmVCgBF4Q0YJ3WVj24+ISu4Rrej5T9ZcrqE2eVFMP9l8
- IvA=
-X-IronPort-AV: E=Sophos;i="5.77,318,1596470400"; 
-   d="scan'208";a="251949948"
-Received: from mail-bn7nam10lp2105.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.105])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Sep 2020 20:07:33 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TJQgvpGqJbd+uOvHyhEBv5lG3zJ5qASTNn+1EVgqcOKq9nmx0YbNJKDz+j/nyGiiZ4YhA1qjcvew0i4AXUTviBM5g40R+DQjOzdxLJQq+Y98C7CiRJ7h8xmrPN8PR+Fkl/MgifEM/si7kqG5/P3KWMllheTeanDDrAeJ3MHvnj2jr1c4nMF0rEZNTdyQxD3e9PLTT429ajnvR7Fe6pmp0SRvlGEhoLVQrW4gCfcA51Lp+ioMYJSQhhQbsIOoexUqgjt19VwZsZeKCbAmOv7V69/msPr6UcwXuhv9TbvqA6VSypvN3tP18zfJwoJ87wCrmnqXU7Qb4VCaJ3oD/XUbWQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jXKAJeCwzBd2FMLiHxP+hr4uDpxxNEop/tOnmKg6MVs=;
- b=eVnBgNjMkF5SHtc43qEQ5Vwb2yh2r33J+uza8WMtjlLxG2Q9BuOQ5OvlQU7jsyLDGuF56B03mAtc463r2MLZm+nGsGKYmxpvNoDy+4RI0oWQjL9Nrlq1Eth1JPVLOHFIreB9mjtQ3vk2NaV8UtZ5wKosjG4nrNPLczS285dGAhhoyJyHxdbodFy3XeFwS2SVq3kHTtA79zgF1pvTvbOmZRIuoCp9831a6op7q2m7ZQCCMgK0xzcCCjCWUJPJ0I7Z34hratR7PbyA+a1j4aWq7qHIdqoMd3EOzNyVGqsxjwQI1UkbfPWOp7VPHZpoPeK//ZOP0v3860LlozIyrKXdHA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jXKAJeCwzBd2FMLiHxP+hr4uDpxxNEop/tOnmKg6MVs=;
- b=wWwzdCc03nxWvjKhcq7zVS9ITLuRu3Qkj9aYO3ENRuZ2j9x531b9OVeh1zULu8t/dGhce9THOJSTYlZMKEUrHcQ2l8DdOmAjsFwMm8BH9F8HAIhMpunTb8QAzZvWRhvyWTO5GVCUJcAa0F8hZKBFAcXRhRfGmK20jF5i68ttN7w=
-Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
- by BY5PR04MB6312.namprd04.prod.outlook.com (2603:10b6:a03:1e3::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3412.22; Tue, 29 Sep
- 2020 11:54:32 +0000
-Received: from BY5PR04MB6705.namprd04.prod.outlook.com
- ([fe80::2c49:48e2:e9fb:d5a0]) by BY5PR04MB6705.namprd04.prod.outlook.com
- ([fe80::2c49:48e2:e9fb:d5a0%9]) with mapi id 15.20.3412.029; Tue, 29 Sep 2020
- 11:54:31 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Stanley Chu <stanley.chu@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-CC:     "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
-Subject: RE: [PATCH 4/4] scsi: ufs-mediatek: Add host reset mechanism
-Thread-Topic: [PATCH 4/4] scsi: ufs-mediatek: Add host reset mechanism
-Thread-Index: AQHWhauhM77uE6w2t0y0fOl12ucOUql/osKg
-Date:   Tue, 29 Sep 2020 11:54:31 +0000
-Message-ID: <BY5PR04MB6705873E1F5DBCE7C97D12AEFC320@BY5PR04MB6705.namprd04.prod.outlook.com>
-References: <20200908064507.30774-1-stanley.chu@mediatek.com>
- <20200908064507.30774-5-stanley.chu@mediatek.com>
-In-Reply-To: <20200908064507.30774-5-stanley.chu@mediatek.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: mediatek.com; dkim=none (message not signed)
- header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: f27844c8-661f-4fc9-30ae-08d8646e6d8c
-x-ms-traffictypediagnostic: BY5PR04MB6312:
-x-microsoft-antispam-prvs: <BY5PR04MB6312D9EB78AC4DBF3BF22333FC320@BY5PR04MB6312.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: qR2bEb2cxUGPS8T+zT4J4G/mkBDaoqpYJwQARlBm39lYANuOEjPjxJswl50wwekC1DAqr9bFR26o4Z3lf9Hdw7fE8I64avuvKydcrzRRJ1wh+8ZA3Hhg1/fqiaeIvg08MmwRUaZNnzibAv8sK112RrxjDbUAq2PQolJSiXW/ebC62ebUffk0x0kDMRgsxHb6ae7qTzGeFr0Dj+D36q+UjNssfXtBlxPPJuxSk2iwmTbcI/UB+uCqGuy9PsiTlskNeZY1a3Of/uSxXmhq0R6KdhhcxyxOPz3bYfuNbzvOzW3HgZz5Y5Lvkkt/fl6w2qTF9vlGIPkfLaS9npJ3mnwP8N/nU6wgHYMg3A7ov4Ni/EMKz9YUUcB5MBtMSjdRP3ON
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(6506007)(498600001)(5660300002)(71200400001)(4326008)(7416002)(66946007)(66476007)(66556008)(54906003)(7696005)(76116006)(52536014)(2906002)(33656002)(4744005)(8936002)(66446008)(86362001)(8676002)(186003)(110136005)(9686003)(26005)(55016002)(83380400001)(64756008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: /2NhCWPA0++LDwuEHPdjnrvhCdz19AD05AjQ/6w7TnGuqSmEQPRgqqof6tGahPwwivNexOyNn862kedX5Neaz9bnUmu8JZ0pl7hZyV+EqdCO1B5A1MPgxsI+cLPzMffwywTHo+FJXZg8/KYDj2tYCGXFAiJt9iVe2paZGlyP76CFdJ7wnOEKhNwB2uomL2hszjamJo9JU6whOtbtCeq+mRevvWlfIqvcBzUbWeK/PVGcgIuT8kqxMz+ZGWbS1JdR9WAxewytcTfkn7qI5e0AwIGCOnF1BLkOGvF2e50xnZKYqEpeK8gdLQKPK8DUy9r8nnq3XVIAOawyLD7kAJDF4v27kajhuxDjUX7YiXFnMZPTF9yBqPyWfOvoszE9XQ3J20j64ZiBfF856TkFQ1zqQwj7clVpj31kH3ppxGlB7rYZxGmSqPQIR871ZGfQ3bwj9ZfSy6eGJYITsQOP0wFoltvYuk1cKKTxv2Lrr8760iY4WcHEI6poLWdFR99i9NRA1KwQfsyrLpAZAH/evi2sk4JVML//b/ao28ipchWP87eHbm+iOG1caWNOGGDdryZPdbEksfX1PoKgGBDPMUoIpg1IAZWaXtOrITbqyLx+o6mP49R/kEmhR42T8pRw5/Hy6H9LJjOEs7TQe0kOTxaFEw==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1733205AbgI2Mlx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Sep 2020 08:41:53 -0400
+Received: from mout02.posteo.de ([185.67.36.66]:44587 "EHLO mout02.posteo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728955AbgI2Mlb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Sep 2020 08:41:31 -0400
+X-Greylist: delayed 471 seconds by postgrey-1.27 at vger.kernel.org; Tue, 29 Sep 2020 08:41:29 EDT
+Received: from submission (posteo.de [89.146.220.130]) 
+        by mout02.posteo.de (Postfix) with ESMTPS id 5B5C92400FF
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2020 14:33:34 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.de; s=2017;
+        t=1601382814; bh=JhiafdWzbNBFiKNlwk84Fpb+ya/blUc/kQW4uR1VtEQ=;
+        h=Subject:To:Cc:From:Autocrypt:Date:From;
+        b=atzfq9JdaJe1mj+GZMTS2cyYriibkJI7Zy7/QmOPjND6cJ1Qa6EJedv/O5Tlmw/n6
+         MzBoL6v46+rlVCQyyLW0c9o6HSX5FWKgaLe5x9aN58SV2/Wljjuw6qWEp+b3fAnZcv
+         wFYc3uQmVvlBo/jMQfSyvDC9GrXkViollZ3cYuec2/XiSM7ZOobxZuKjd011cackTh
+         oj7s7lH05Xpt6XrbekuUu66ikvHCTHPmnJNW5mD1RDCStlhU2pzdJ5F41PAUwC9D8z
+         8hgcpi+dspQeF4NYfhxmwsCbVtDbebjyuuW8eoXhfsy84rV+VL0dVos0s8JCoVP6Qb
+         nQXxmsbk5+3Tw==
+Received: from customer (localhost [127.0.0.1])
+        by submission (posteo.de) with ESMTPSA id 4C0zMK0P69z6tm5;
+        Tue, 29 Sep 2020 14:33:32 +0200 (CEST)
+Subject: Re: [PATCH 0/9] Rework runtime suspend and SCSI domain validation
+To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+References: <20200906012219.17893-1-bvanassche@acm.org>
+ <f4ff6be8-84b6-6f08-8657-21238c99df9c@acm.org>
+From:   Martin Kepplinger <martink@posteo.de>
+Autocrypt: addr=martink@posteo.de; keydata=
+ mQINBFULfZABEADRxJqDOYAHfrp1w8Egcv88qoru37k1x0Ugy8S6qYtKLAAt7boZW+q5gPv3
+ Sj2KjfkWA7gotXpASN21OIfE/puKGwhDLAySY1DGNMQ0gIVakUO0ji5GJPjeB9JlmN5hbA87
+ Si9k3yKQQfv7Cf9Lr1iZaV4A4yjLP/JQMImaCVdC5KyqJ98Luwci1GbsLIGX3EEjfg1+MceO
+ dnJTKZpBAKd1J7S2Ib3dRwvALdiD7zqMGqkw5xrtwasatS7pc6o/BFgA9GxbeIzKmvW/hc3Q
+ amS/sB12BojyzdUJ3TnIoAqvwKTGcv5VYo2Z+3FV+/MJVXPo8cj2vmfxQx1WG4n6X0pK4X8A
+ BkCKw2N/evMZblNqAzzGVtoJvqQYkzQ20Fm+d3wFl6lS1db4MB+kU13G8kEIE22Q3i6kx4NA
+ N49FLlPeDabGfJUyDaZp5pmKdcd7/FIGH/HjShjx7g+LKSwWNMkDygr4WARAP4h8zYDZuNqe
+ ofPvMLqJxHeexBPIGF/+OwMyTvM7otP5ODuFmq6OqjNPf1irJmkiFv3yEa+Ip0vZzwl4XvrZ
+ U0IKjSy2rbRLg22NsJT0XVZJbutIXYSvIHGqSxzzfiOOLnRjR++fbeEoVlRJ4NZHDKCh3pJv
+ LNd+j03jXr4Rm058YLgO7164yr7FhMZniBJw6z648rk8/8gGPQARAQABtCVNYXJ0aW4gS2Vw
+ cGxpbmdlciA8bWFydGlua0Bwb3N0ZW8uZGU+iQI6BBMBAgAkAhsDAh4BAheABQsJCAcDBRUK
+ CQgLBRYCAwEABQJVC4DBAhkBAAoJEFADmN9as4fTpYwQAIqwZ2arvCsfwiZqr/KyJ4ewhn2/
+ 7JVR/kvx5G6nfPI55XtNDmd2Lt7xNvY5LbLwGp2c3JMD1rZ2FhbWXC39SA0yxeE4U0NTlxDg
+ RGx20k85pZTFvxyPfz9c7dAFTLMajpzLvpjBjEaqVm6KnS/UBBaGHOu0999siD1EDaSBWUiO
+ HPMXNYkcFt96p55LYNAgzSsd+zTjknxCnmzUMiDKzjFn6LdqdlyPyMj6IXpeiAFHV43SAGb6
+ 8miE+S61pq9pTapt+E5qf3zfuKATK0dfZkkMFaC+Vmv6DvcpR7G1ilpmjkR6o/mDM6dtm21T
+ 5jpYrEmb7hgigFl9Pg01mJLwSGm1GYf45aKQH/VZff+sYsDDNQUHwabG9DVV/edSRJGzCu3R
+ W/xqeF3Ll44Bhaa9LaVQuN7Yuqixhxm8flJNcfnknYd9TBQYLIZLcUyN3bbaABbCv6xkHaB6
+ ZUUQPhpVGoLANrLtTSEtYBYzktSmeARLTtVt5wJ0Q8gQ6h5a0VC6zHv37cRUYqsEwwRwbG+h
+ aBs907W8hH4etQtbbXBbbbXnOOl/QnpShjyWYe02A/f/QWpgZD5SPsB6RVQdWnP8ZN7OngzE
+ RACA2ftyBnp/0ESKMDLYJDRGm3oM01hZSZHnFBt/aggx3FOM39bmu565xg21hO7I7s9xkvbZ
+ Czz2iSRTuQINBFULfZABEADFNrM9n2N+nq4L4FKIi2PCSsWWU0RUqm26b3wkmi9anWSJsz6m
+ GXqJWj7AoV6w2ybnry+IzYIDN7NWUyvsXS7o1A0rqm7Tzhb3IdJQpE4UWvzdSKfq3ThTzy1w
+ KIFgtDkb5OtW4Zf/mpjV6tVYjjJx2SpDNvwA9swWtb+xFvvzV/zAZdaEOzoF3g81goe/sLSv
+ xdijvs95KoZJX/nmWlKyagTb7NHcxblNWhoTzdnGF+qC1MhYx/zyaD/bQQiFgJEbSI6aNfK1
+ Z/77Eub3Gkx4qcp9ZdDFFt+8qDf4rMXfQDSE7dgHIoQ1ifC1IHPyh3fY3uicbn75rPF+6Fhk
+ bkyRo14k8so9CnIYxzY+ienQGEJlO/EhsjzVl5fpML45lt5b7TeIacLsSjjIn3dBSTNYU6EY
+ YTHQUeP6oGQNAuxEQRjCx3Gqqv2TUpQPUYVUOXSDO4qqJXhiOUmIV8eH19tMPO2vc2X+tpY0
+ 3EDcy1f2ey06vtv4+gDiAfUZcv1hKVd18E9WeuGCm64lhyovLTaLf/3RSSKL33SeaLkLPOEF
+ UXA2OxlNfDs1FK0is+0oJr55ZEI7N9o6oFQp+bNcQeAyXh6yqTIW7YxK9tHpyUhVqOQGZzj5
+ 0SC/XdEn1VZbqo11DDupNsMlp+BBRuY5QwjKANGMIAvay38uICLYxaCXzQARAQABiQIfBBgB
+ AgAJBQJVC32QAhsMAAoJEFADmN9as4fTBJkQAKl9A9gUvgiLgilK6OoR9vX+cv4yL7c0uubw
+ eneL+ZWAytTAF3jHT6cPFzv4rD8iJc1yhAFDc0LW+yywnoP7Tok6cYlYH1DCjIQsZ1Du1Jad
+ rjTmvAPFyzKc2dcNPR3f1DAU3adcLLKz7v4+uLmBPI4HIn4TnYXbttfb0vTmJVJFERV7XMsu
+ NiQVDgsM1K1Sn9xqYPoU59v725VzOwyhNnV2jZC2MkyVGWFKEbPcZhTDnaFpYp83e2y+sgeN
+ l/YXkBjLnM4SCt/w7eObYsM2J2KfzfT5QdtqglWJsJMm91tWqn8GUDUgqnWz9jzzKVKDEMXA
+ W5dQSUkD0aWY0cDNkFqs8QlWRgFMelG0gqnCqZRMf/IfSnN23yGK0j5EENjKdifSdTGItlQ8
+ B4znBEu3VdpDZANzRAlHxXAEJVJ7z7fmAQ9079CauV43mIDeo4cxbxfBcmiR3sxpLoUkoZ0W
+ ONk8MxHhCLw9OfYubU2QMekS1oSOMqZ2u3/g6kTp9XiIq0LWRy862+rE1fOYWf3JpsdWVszB
+ NjZPEXwiZ9m+v/VJ3NuzrLOJqw1F/FMaaZgbauYH9c7oAx1qXl7BYMV9WYiJGiJV0xK5UzpD
+ GsOfIJ8/tbwPSs6pNZDAJata///+/Py99NtaU3bUYhyluAGZ/2UHygGkuyZnJc2mWFBWYWWi
+ uQINBFz0prUBEADX9qwu29Osr6evt73dlU3Esh807gvvROUFASNR2do560FZChk0fX+9qrzg
+ i3hk0ad3Q9DjMKRb5n3S0x+1kiVsvY0C5PWJDog2eaCc6l82ARqDb8xvjVrnuF8/1O6lYvl3
+ bM60J19MtMRXCeS8MTHlNWG6PFt2sRYtZ/HQOasj6Mtt20J6d7uQNX7ohgoMx1cpXJPMcaa2
+ mfmNmdepY3gU4R2NDQg8c6VzUFPSWkyCZPpxIyazmkfdlh/20cb3hfEpKlGl56ZNM18xSQUi
+ 1Tr6BvD0YijHpWpu/pkS/Q8CFso+gSOtuukVnD2TTJR6lfR7yevR4PiR5DILpYNZZ0MpXIUW
+ iGVwGIVFvoFyEkqb/7cQpm7j4vUgS1QwS0kCCfV6IDjYE4OnY4bgUFP/C0cTsJiEfHPIqT+X
+ HFfLZBYZe0IEgrcs89yUwOBiHTHRuixjtu7e1fiOJKzRP3kgvdiXjB4wKUDFBFBi3jkSIRJZ
+ 44GeXwAdXxgPDL47u4hPY4enG91jtgrWAc2LkTfJojRcJde3LDzYsgA7FwJS4yS40ywE60Ez
+ eAcOi6vGs2djFkQM/pRygmfd9PJ69EGoxFpDBRIe6jTHrK+PNjYeE4fOuDdCHtcufybEiv/P
+ zaSf75wP+rd7AR7q4BeS3sjXYxHSNuKEbBvwplaXAr2tgC18IwARAQABiQRyBBgBCAAmFiEE
+ 8ggriA+eQjk0aG4/UAOY31qzh9MFAlz0prUCGwIFCQPCZwACQAkQUAOY31qzh9PBdCAEGQEI
+ AB0WIQRHcgjP+zRoMgCGPgZ+LO3NP1SshQUCXPSmtQAKCRB+LO3NP1SshR+IEAC3c3xtRQfZ
+ lBqG1U7YK4SIfJzcfR/wGYRUbO+cNyagkR8fq5L/SQXRjTlpf5TqhiD8T1VbO0DoTqC4LsHP
+ 3Ovp9hloucN5/OS4NFADNnME2nFxSsmF46RgMBr/x85EhBck7XYNI6riD1fZFKohyZCDHb8q
+ hbhQbd7g4CuqAxLsRINPq5PVYVyxx+qM8leNcogfe2D9ontkOQYwVqdiwNqIgjVkqmiv1ZkC
+ x8iY+LSfZRlI0Rlm1ehHqu2nhRP47dCsyucxlCU4GS/YcOrUV7U9cyIWy3mQBRyCEh5vId1G
+ FAAEjussV5SoegRUa4DK5rJOxU15wyx7ukU7jii2nAVl77l4NOwSKFjUt5a5ciSMGCjSSY1N
+ k5PCM14vZoN2lnM3vQfgK2/r6vbjbjxEUyLLVhSiwgb9Sfo4pjiFVKEu5c6qxQvjWPhQkpEK
+ UcRYQgUVSFSB6Pc+zWlTEtU4j66SEBQnBbAFqCwqr8ZvxP8CEfeeiiwIcFd4/lnJPm8yYeTZ
+ m/DBZCdQlUcEC/Z72leg5Yx6nJpOz8327i7ccbf+thKdgWOCXjDM9nvdBS8LERh8mL1XhjOW
+ f4X2ErqEqPdsocBCK/H4Tc28W4ggzVp2JGGFAKWHYxplXL3jFTpJ+2X1yjcGyKVXcfvCtZ3n
+ ++59mVkO0eY+h1p7u/kAWZq+shcXEACybhk7DDOEbqLP72YZqQkFaNcQrGcCi24jYUItZlX9
+ mzy1+GRt6pgU7xWXPejSyP6vrexYWRVNc5tfuMJBTBbsdcR0xoJoN8Lo1SSQpPU8kgEL6Slx
+ U9Kri/82yf7KD4r44ZRseN6aGO9LvsHJms38gFk6b3gNJiBlAlFOZNVh33ob77Z0w85pS1aO
+ qYLO7fE5+mW4vV1HX2oJmMPX6YDHl6WouLsGtmAk5SOZRv9cj+sMsGmgVD/rE0m4MDhROLV3
+ 54Rl5w4S7uZjXEFCS8o1cvp6yrHuV2J5os0B/jBSSwD5MRSXZc+7zimMsxRubQUD6xSca8yS
+ EKfxh1C0RtyA1irh4iU6Mdb6HvNTYbn+mb4WbE0AnHuKJdpRj0pDeyegTPevftHEQNy9Nj0o
+ pqHDETOTYx/nw49VpXg8SxGJqeuYStJR+amX3dqBu1krWvktrF4i0U6P47aFYUs0N6clGUFj
+ BfCUkKIfEz87bveFlk+g/wvmnni5eFpLkQm5XZfOBuLdURvDcZmv4ScMLtc0TbBSueUP/DZb
+ pHNViNVPohfhJqY2VX4xZfT/V9gK61+pmXzoFIqYmOVal+Q8rPLOOEZBVmtNlicoC7jvWFG/
+ z/oPHkm5kmAMKdhqc3HcMOt5Ey7+erpN9o56Qy3GA1hv/ygOvLT1QUdsYcuxafqgGg==
+Message-ID: <bd942251-fc86-912e-24c3-8fe695812c04@posteo.de>
+Date:   Tue, 29 Sep 2020 14:33:32 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f27844c8-661f-4fc9-30ae-08d8646e6d8c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Sep 2020 11:54:31.8406
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: yIW+v/RUrIXMbQ/jSAQSwlU5JmvZzDjNtGi18DSrRCF7Cw8Ebs1+QACTUPySMAiEQutjJPy22tRZ1koS+VIC3Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6312
+In-Reply-To: <f4ff6be8-84b6-6f08-8657-21238c99df9c@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
->=20
-> Add host reset mechanism to try to recover host-side errors
-> during recovery flow.
->=20
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by Avri Altman <avri.altman@wdc.com>
+On 19.09.20 05:45, Bart Van Assche wrote:
+> On 2020-09-05 18:22, Bart Van Assche wrote:
+>> The SCSI runtime suspend and domain validation mechanisms both use
+>> scsi_device_quiesce(). scsi_device_quiesce() restricts blk_queue_enter() to
+>> BLK_MQ_REQ_PREEMPT requests. There is a conflict between the requirements
+>> of runtime suspend and SCSI domain validation: no requests must be sent to
+>> runtime suspended devices that are in the state RPM_SUSPENDED while
+>> BLK_MQ_REQ_PREEMPT requests must be processed during SCSI domain
+>> validation. This conflict is resolved by reworking the SCSI domain
+>> validation implementation.
+>>
+>> Hybernation and runtime suspend have been retested but SCSI domain
+>> validation not yet.
+> 
+> Hi Martin and James,
+> 
+> Please advise how to proceed with this patch series. This patch series
+> includes an important fix for runtime power management. Unfortunately
+> the only way to fix runtime powermanagement is by reworking SPI DV and
+> I don't have access to a setup on which I can test the SPI DV changes.
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
-See some nit below as well.
-Thanks,
-Avri
+I only have my setup: SD cardreader connected via USB. I run this series
+which fixes runtime PM in the block layer for me.
 
-> +static void ufs_mtk_init_reset_control(struct ufs_hba *hba,
-> +                                      struct reset_control **rc,
-> +                                      char *str)
-> +{
-> +       *rc =3D devm_reset_control_get(hba->dev, str);
-> +       if (IS_ERR(*rc)) {
-How about verifying that the line is not shared as well?
-Although this might not be an issue on your current platforms,
-it might save you aggravation in the future..
+Sidenote: I need the following hack for my particular device too:
+https://lore.kernel.org/linux-scsi/20200824190400.12339-1-martin.kepplinger@puri.sm/
 
-> +               dev_info(hba->dev, "Failed to get reset control %s: %d\n"=
-,
-> +                        str, PTR_ERR(*rc));
-> +               *rc =3D NULL;
-> +       }
-> +}
+I hope someone else can test the rest for us!
+
+thanks for working on this,
+
+                                martin
