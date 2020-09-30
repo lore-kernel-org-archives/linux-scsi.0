@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D53D6C4741F
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E14DFC47423
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:24:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99F4220773
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:24:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6CA320936
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:24:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729898AbgI3CY2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729902AbgI3CY2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 29 Sep 2020 22:24:28 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:49592 "EHLO huawei.com"
+Received: from szxga07-in.huawei.com ([45.249.212.35]:49600 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729665AbgI3CY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729798AbgI3CY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 29 Sep 2020 22:24:27 -0400
 Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id CA44BC44A70D4C4316F2;
+        by Forcepoint Email with ESMTP id CE87A994562064576D92;
         Wed, 30 Sep 2020 10:24:25 +0800 (CST)
 Received: from huawei.com (10.175.127.227) by DGGEMS406-HUB.china.huawei.com
  (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Wed, 30 Sep 2020
- 10:24:19 +0800
+ 10:24:18 +0800
 From:   Ye Bin <yebin10@huawei.com>
 To:     <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <linux-scsi@vger.kernel.org>
 CC:     Ye Bin <yebin10@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH 2/3] scsi: qla2xxx: Fix inconsistent of format with argument type in qla_os.c
-Date:   Wed, 30 Sep 2020 10:25:14 +0800
-Message-ID: <20200930022515.2862532-3-yebin10@huawei.com>
+Subject: [PATCH 1/3] scsi: qla2xxx: Fix inconsistent of format with argument type in tcm_qla2xxx.c
+Date:   Wed, 30 Sep 2020 10:25:13 +0800
+Message-ID: <20200930022515.2862532-2-yebin10@huawei.com>
 X-Mailer: git-send-email 2.25.4
 In-Reply-To: <20200930022515.2862532-1-yebin10@huawei.com>
 References: <20200930022515.2862532-1-yebin10@huawei.com>
@@ -44,40 +44,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix follow warning:
-[drivers/scsi/qla2xxx/qla_os.c:4882]: (warning) %ld in format string (no. 2)
-	requires 'long' but the argument type is 'unsigned long'.
-[drivers/scsi/qla2xxx/qla_os.c:5011]: (warning) %ld in format string (no. 1)
-	requires 'long' but the argument type is 'unsigned long'.
+Fix follow warnings:
+[drivers/scsi/qla2xxx/tcm_qla2xxx.c:884]: (warning) %u in format string (no. 1)
+	requires 'unsigned int' but the argument type is 'signed int'.
+[drivers/scsi/qla2xxx/tcm_qla2xxx.c:885]: (warning) %u in format string (no. 1)
+	requires 'unsigned int' but the argument type is 'signed int'.
+[drivers/scsi/qla2xxx/tcm_qla2xxx.c:886]: (warning) %u in format string (no. 1)
+	requires 'unsigned int' but the argument type is 'signed int'.
+[drivers/scsi/qla2xxx/tcm_qla2xxx.c:887]: (warning) %u in format string (no. 1)
+	requires 'unsigned int' but the argument type is 'signed int'.
+[drivers/scsi/qla2xxx/tcm_qla2xxx.c:888]: (warning) %u in format string (no. 1)
+	requires 'unsigned int' but the argument type is 'signed int'.
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: Ye Bin <yebin10@huawei.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 910a6ed0ccc7..473a02603697 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4879,7 +4879,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
- 	}
- 	INIT_DELAYED_WORK(&vha->scan.scan_work, qla_scan_work_fn);
- 
--	sprintf(vha->host_str, "%s_%ld", QLA2XXX_DRIVER_NAME, vha->host_no);
-+	sprintf(vha->host_str, "%s_%lu", QLA2XXX_DRIVER_NAME, vha->host_no);
- 	ql_dbg(ql_dbg_init, vha, 0x0041,
- 	    "Allocated the host=%p hw=%p vha=%p dev_name=%s",
- 	    vha->host, vha->hw, vha,
-@@ -5008,7 +5008,7 @@ qla2x00_uevent_emit(struct scsi_qla_host *vha, u32 code)
- 
- 	switch (code) {
- 	case QLA_UEVENT_CODE_FW_DUMP:
--		snprintf(event_string, sizeof(event_string), "FW_DUMP=%ld",
-+		snprintf(event_string, sizeof(event_string), "FW_DUMP=%lu",
- 		    vha->host_no);
- 		break;
- 	default:
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 44bfe162654a..61017acd3458 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -850,7 +850,7 @@ static ssize_t tcm_qla2xxx_tpg_attrib_##name##_show(			\
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,		\
+ 			struct tcm_qla2xxx_tpg, se_tpg);		\
+ 									\
+-	return sprintf(page, "%u\n", tpg->tpg_attrib.name);	\
++	return sprintf(page, "%d\n", tpg->tpg_attrib.name);	\
+ }									\
+ 									\
+ static ssize_t tcm_qla2xxx_tpg_attrib_##name##_store(			\
 -- 
 2.25.4
 
