@@ -2,177 +2,243 @@ Return-Path: <SRS0=FF5A=DH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 674E6C4727C
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 14:36:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93BACC4727C
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 15:51:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED8372076B
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 14:36:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E30DD2085B
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 15:51:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aXXmZ0eJ"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=sslab.ics.keio.ac.jp header.i=@sslab.ics.keio.ac.jp header.b="f3RBVLLI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729767AbgI3OgC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Sep 2020 10:36:02 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:30596 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730410AbgI3OgA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Sep 2020 10:36:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601476558;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=/a9Tpj+6eiviKN9p7WLK/3O42gTjbbcwJ+HjUyyeSGY=;
-        b=aXXmZ0eJbiriMhGoK1QEXjINBXrOcA8jvoXLJ2MtqcYfD3nOyjVK/gT798svvRNCuApCi4
-        kdRiTl0B0qv4QcReTCq8SJRCan+8UBGxX2tQosBoY7z1sZpi5Q42f6gnzNX0rw3nddJe8p
-        cdVq+FgKPxP+CqGLGWoxx6HkpSgBumw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-64-4J5aQA2gPfqxq8HFKRcBUQ-1; Wed, 30 Sep 2020 10:35:56 -0400
-X-MC-Unique: 4J5aQA2gPfqxq8HFKRcBUQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F166B109106A;
-        Wed, 30 Sep 2020 14:35:54 +0000 (UTC)
-Received: from [10.10.110.11] (unknown [10.10.110.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A70B85D9D3;
-        Wed, 30 Sep 2020 14:35:53 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [v5 01/12] struct device: Add function callback durable_name
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-References: <20200925161929.1136806-1-tasleson@redhat.com>
- <20200925161929.1136806-2-tasleson@redhat.com>
- <20200929175102.GA1613@infradead.org> <20200929180415.GA1400445@kroah.com>
- <20e220a6-4bde-2331-6e5e-24de39f9aa3b@redhat.com>
- <20200930073859.GA1509708@kroah.com>
-From:   Tony Asleson <tasleson@redhat.com>
-Organization: Red Hat
-Message-ID: <c6b031b8-f617-0580-52a5-26532da4ee03@redhat.com>
-Date:   Wed, 30 Sep 2020 09:35:52 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <20200930073859.GA1509708@kroah.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+        id S1726534AbgI3PvO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Sep 2020 11:51:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45714 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725872AbgI3PvO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2020 11:51:14 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DD14C061755
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2020 08:51:14 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id x5so1281406plo.6
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2020 08:51:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sslab.ics.keio.ac.jp; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=vpAOYUtfsOyAnKG5VAGbK9i/Ip7+aawrrhrrv5e7Aow=;
+        b=f3RBVLLIxzZH0O+nmMeo4aAZ/5pDTI5pFFd7hPJEQNI4d9h2/IXnVGAS9oy1GRMLPv
+         22WHfdrYrR2Xze3Ubmk8qql6DTlpb54OUs6KVISU4qZJRzgwVvKAWRcAWjVH9X8CQJ5w
+         YMSKo3P5PgDvF5nzhm0i/FvAeTUnRvw9gNxAo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=vpAOYUtfsOyAnKG5VAGbK9i/Ip7+aawrrhrrv5e7Aow=;
+        b=KaDQZn6zQLBRbp2mOLMEe+61YJrX9HVCB78CiEG6yiWD59ZpLe9oa77VMVxNmydS3Z
+         PaYPgEpwxqXmsSkFf+3qZ9N8Q/TaTVtGjfTgRJtoP4rckWpwvLsM52vBRjovQROWWWUZ
+         eIFiVe0jh2NgovTdiAd2CsqZrsDIrQiRQxiUssSq/u8vXp+gia4yKCtv7pxLtSmvxBY/
+         2tO0fiV9txN5g0r5giiJ99Z0gcTzDU7uws1Teo4dfZRhytMgonS1pBSDqLxFM1KzfWFk
+         Fz/Vo32gKXDz3GlUtaUrhVB7u7UeaOvp07V58tPsvo0Ib414trU6/1QdbVrhSxlYTheh
+         Gy9Q==
+X-Gm-Message-State: AOAM533YZmKwnCA1cO/WWH8BJV2sacevgL9metmbyRYi+lAsKmxdlF+A
+        v9QIqKNhxFxntOWPmECGHtiNlQ==
+X-Google-Smtp-Source: ABdhPJzHs0GayQ9rUgfEDKB4ax/PNP+Us+d3WU+XwlorKT3a0zGMeb844e3NFc+EANxiNp6A1d4CtA==
+X-Received: by 2002:a17:90a:ee0d:: with SMTP id e13mr3287288pjy.227.1601481073583;
+        Wed, 30 Sep 2020 08:51:13 -0700 (PDT)
+Received: from brooklyn.i.sslab.ics.keio.ac.jp (sslab-relay.ics.keio.ac.jp. [131.113.126.173])
+        by smtp.googlemail.com with ESMTPSA id a18sm2505677pgw.50.2020.09.30.08.51.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Sep 2020 08:51:12 -0700 (PDT)
+From:   Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Cc:     keitasuzuki.park@sslab.ics.keio.ac.jp,
+        takafumi@sslab.ics.keio.ac.jp, Don Brace <don.brace@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kevin Barnett <kevin.barnett@microsemi.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Scott Teel <scott.teel@microsemi.com>,
+        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH v2] scsi: hpsa: fix memory leak in hpsa_init_one
+Date:   Wed, 30 Sep 2020 15:50:59 +0000
+Message-Id: <20200930155100.11528-1-keitasuzuki.park@sslab.ics.keio.ac.jp>
+X-Mailer: git-send-email 2.17.1
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/30/20 2:38 AM, Greg Kroah-Hartman wrote:
-> On Tue, Sep 29, 2020 at 05:04:32PM -0500, Tony Asleson wrote:
->> I'm trying to figure out a way to positively identify which storage
->> device an error belongs to over time.
-> 
-> "over time" is not the kernel's responsibility.
-> 
-> This comes up every 5 years or so. The kernel provides you, at runtime,
-> a mapping between a hardware device and a "logical" device.  It can
-> provide information to userspace about this mapping, but once that
-> device goes away, the kernel is free to reuse that logical device again.
-> 
-> If you want to track what logical devices match up to what physical
-> device, then do it in userspace, by parsing the log files.
+When hpsa_scsi_add_host fails, h->lastlogicals is leaked since it lacks
+free in the error handler.
 
-I don't understand why people think it's acceptable to ask user space to
-parse text that is subject to change.
+Fix this by adding free when hpsa_scsi_add_host fails.
 
->> Thank you for supplying some feedback and asking questions.  I've been
->> asking for suggestions and would very much like to have a discussion on
->> how this issue is best solved.  I'm not attached to what I've provided.
->> I'm just trying to get towards a solution.
-> 
-> Again, solve this in userspace, you have the information there at
-> runtime, why not use it?
+This patch also renames the numbered labels to detailed names.
 
-We usually don't have the needed information if you remove the
-expectation that user space should parse the human readable portion of
-the error message.
+Fixes: cf47723763a7 ("hpsa: correct initialization order issue")
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+---
+ drivers/scsi/hpsa.c | 52 +++++++++++++++++++++++----------------------
+ 1 file changed, 27 insertions(+), 25 deletions(-)
 
->> We've looked at user space quite a bit and there is an inherit race
->> condition with trying to fetch the unique hardware id for a message when
->> it gets emitted from the kernel as udev rules haven't even run (assuming
->> we even have the meta-data to make the association).
-> 
-> But one moment later you do have the information, so you can properly
-> correlate it, right?
-
-We could have the information if all the storage paths went through
-dev_printk.  Here is what we get today when we encounter a read error
-which uses printk in the block layer:
-
-{
-        "_HOSTNAME" : "pn",
-        "_TRANSPORT" : "kernel",
-        "__MONOTONIC_TIMESTAMP" : "1806379233",
-        "SYSLOG_IDENTIFIER" : "kernel",
-        "_SOURCE_MONOTONIC_TIMESTAMP" : "1805611354",
-        "SYSLOG_FACILITY" : "0",
-        "MESSAGE" : "blk_update_request: critical medium error, dev
-nvme0n1, sector 10000 op 0x0:(READ) flags 0x80700 phys_seg 3 prio class 0",
-        "PRIORITY" : "3",
-        "_MACHINE_ID" : "3f31a0847cea4c95b7a9cec13d07deeb",
-        "__REALTIME_TIMESTAMP" : "1601471260802301",
-        "_BOOT_ID" : "b03ed610f21d46ab8243a495ba5a0058",
-        "__CURSOR" :
-"s=a063a22bbb384da0b0412e8f652deabb;i=23c2;b=b03ed610f21d46ab8243a495ba5a0058;m=6bab28e1;t=5b087959e3cfd;x=20528862f8f765c9"
-}
-
-Unless you parse the message text you cannot make the association.  If
-the same message was changed to dev_printk we would get:
-
-
-{
-        "__REALTIME_TIMESTAMP" : "1589401901093443",
-        "__CURSOR" :
-"s=caac9703b34a48fd92f7875adae55a2f;i=1c713;b=e2ae14a9def345aa803a13648b95429c;m=7d25b4f;t=5a58d77b85243;x=b034c2d3fb853870",
-        "SYSLOG_IDENTIFIER" : "kernel",
-        "_KERNEL_DEVICE" : "b259:917504",
-        "__MONOTONIC_TIMESTAMP" : "131226447",
-        "_UDEV_SYSNAME" : "nvme0n1",
-        "PRIORITY" : "3",
-        "_KERNEL_SUBSYSTEM" : "block",
-        "_SOURCE_MONOTONIC_TIMESTAMP" : "130941917",
-        "_TRANSPORT" : "kernel",
-        "_MACHINE_ID" : "3f31a0847cea4c95b7a9cec13d07deeb",
-        "_HOSTNAME" : "pn",
-        "SYSLOG_FACILITY" : "0",
-        "_BOOT_ID" : "e2ae14a9def345aa803a13648b95429c",
-        "_UDEV_DEVLINK" : [
-                "/dev/disk/by-uuid/22fc262a-d621-452a-a951-7761d9fcf0dc",
-                "/dev/disk/by-path/pci-0000:00:05.0-nvme-1",
-
-"/dev/disk/by-id/nvme-nvme.8086-4445414442454546-51454d55204e564d65204374726c-00000001",
-                "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_DEADBEEF"
-        ],
-        "MESSAGE" : "block nvme0n1: blk_update_request: critical medium
-error, dev nvme0n1, sector 10000 op 0x0:(READ) flags 0x0 phys_seg 1 prio
-class 0",
-        "_UDEV_DEVNODE" : "/dev/nvme0n1"
-}
-
-
-Journald already knows how to utilize the dev_printk meta data.
-
-One idea that I've suggested along the way is creating a dev_printk
-function that doesn't change the message text.  We then avoid breaking
-people that are parsing.  Is this something that would be acceptable to
-folks?  It doesn't solve early boot where udev rules haven't even run,
-but it's better.
-
-Thanks,
-Tony
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 48d5da59262b..4911ca22efe4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8691,19 +8691,19 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!h->lockup_detected) {
+ 		dev_err(&h->pdev->dev, "Failed to allocate lockup detector\n");
+ 		rc = -ENOMEM;
+-		goto clean1;	/* aer/h */
++		goto out_destroy_workqueue;	/* aer/h */
+ 	}
+ 	set_lockup_detected_for_all_cpus(h, 0);
+ 
+ 	rc = hpsa_pci_init(h);
+ 	if (rc)
+-		goto clean2;	/* lu, aer/h */
++		goto out_free_lockup_detected;	/* lu, aer/h */
+ 
+ 	/* relies on h-> settings made by hpsa_pci_init, including
+ 	 * interrupt_mode h->intr */
+ 	rc = hpsa_scsi_host_alloc(h);
+ 	if (rc)
+-		goto clean2_5;	/* pci, lu, aer/h */
++		goto out_free_pci_init;	/* pci, lu, aer/h */
+ 
+ 	sprintf(h->devname, HPSA "%d", h->scsi_host->host_no);
+ 	h->ctlr = number_of_controllers;
+@@ -8719,7 +8719,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			dac = 0;
+ 		} else {
+ 			dev_err(&pdev->dev, "no suitable DMA available\n");
+-			goto clean3;	/* shost, pci, lu, aer/h */
++			goto out_scsi_host_put;	/* shost, pci, lu, aer/h */
+ 		}
+ 	}
+ 
+@@ -8728,13 +8728,13 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	rc = hpsa_request_irqs(h, do_hpsa_intr_msi, do_hpsa_intr_intx);
+ 	if (rc)
+-		goto clean3;	/* shost, pci, lu, aer/h */
++		goto out_scsi_host_put;	/* shost, pci, lu, aer/h */
+ 	rc = hpsa_alloc_cmd_pool(h);
+ 	if (rc)
+-		goto clean4;	/* irq, shost, pci, lu, aer/h */
++		goto out_free_irqs;	/* irq, shost, pci, lu, aer/h */
+ 	rc = hpsa_alloc_sg_chain_blocks(h);
+ 	if (rc)
+-		goto clean5;	/* cmd, irq, shost, pci, lu, aer/h */
++		goto out_free_cmd_pool;	/* cmd, irq, shost, pci, lu, aer/h */
+ 	init_waitqueue_head(&h->scan_wait_queue);
+ 	init_waitqueue_head(&h->event_sync_wait_queue);
+ 	mutex_init(&h->reset_mutex);
+@@ -8747,25 +8747,25 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	spin_lock_init(&h->devlock);
+ 	rc = hpsa_put_ctlr_into_performant_mode(h);
+ 	if (rc)
+-		goto clean6; /* sg, cmd, irq, shost, pci, lu, aer/h */
++		goto out_free_sg_chain_blocks; /* sg, cmd, irq, shost, pci, lu, aer/h */
+ 
+ 	/* create the resubmit workqueue */
+ 	h->rescan_ctlr_wq = hpsa_create_controller_wq(h, "rescan");
+ 	if (!h->rescan_ctlr_wq) {
+ 		rc = -ENOMEM;
+-		goto clean7;
++		goto out_free_performant_mode;
+ 	}
+ 
+ 	h->resubmit_wq = hpsa_create_controller_wq(h, "resubmit");
+ 	if (!h->resubmit_wq) {
+ 		rc = -ENOMEM;
+-		goto clean7;	/* aer/h */
++		goto out_free_performant_mode;	/* aer/h */
+ 	}
+ 
+ 	h->monitor_ctlr_wq = hpsa_create_controller_wq(h, "monitor");
+ 	if (!h->monitor_ctlr_wq) {
+ 		rc = -ENOMEM;
+-		goto clean7;
++		goto out_free_performant_mode;
+ 	}
+ 
+ 	/*
+@@ -8795,20 +8795,20 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			 * cannot goto clean7 or free_irqs will be called
+ 			 * again. Instead, do its work
+ 			 */
+-			hpsa_free_performant_mode(h);	/* clean7 */
+-			hpsa_free_sg_chain_blocks(h);	/* clean6 */
+-			hpsa_free_cmd_pool(h);		/* clean5 */
++			hpsa_free_performant_mode(h);	/* out_free_performant_mode */
++			hpsa_free_sg_chain_blocks(h);	/* out_free_sg_chain_blocks */
++			hpsa_free_cmd_pool(h);		/* out_free_cmd_pool */
+ 			/*
+ 			 * skip hpsa_free_irqs(h) clean4 since that
+ 			 * was just called before request_irqs failed
+ 			 */
+-			goto clean3;
++			goto out_scsi_host_put;
+ 		}
+ 
+ 		rc = hpsa_kdump_soft_reset(h);
+ 		if (rc)
+ 			/* Neither hard nor soft reset worked, we're hosed. */
+-			goto clean7;
++			goto out_free_performant_mode;
+ 
+ 		dev_info(&h->pdev->dev, "Board READY.\n");
+ 		dev_info(&h->pdev->dev,
+@@ -8854,7 +8854,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* hook into SCSI subsystem */
+ 	rc = hpsa_scsi_add_host(h);
+ 	if (rc)
+-		goto clean7; /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
++		goto out_free_lastlogicals; /* ll, perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 
+ 	/* Monitor the controller for firmware lockups */
+ 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+@@ -8869,26 +8869,28 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 				HPSA_EVENT_MONITOR_INTERVAL);
+ 	return 0;
+ 
+-clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
++out_free_lastlogicals: /* ll, perf, sg, cmd, irq, shost, pci, lu, aer/h */
++	kfree(h->lastlogicals);
++out_free_performant_mode: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_performant_mode(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+-clean6: /* sg, cmd, irq, pci, lockup, wq/aer/h */
++out_free_sg_chain_blocks: /* sg, cmd, irq, pci, lockup, wq/aer/h */
+ 	hpsa_free_sg_chain_blocks(h);
+-clean5: /* cmd, irq, shost, pci, lu, aer/h */
++out_free_cmd_pool: /* cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_cmd_pool(h);
+-clean4: /* irq, shost, pci, lu, aer/h */
++out_free_irqs: /* irq, shost, pci, lu, aer/h */
+ 	hpsa_free_irqs(h);
+-clean3: /* shost, pci, lu, aer/h */
++out_scsi_host_put: /* shost, pci, lu, aer/h */
+ 	scsi_host_put(h->scsi_host);
+ 	h->scsi_host = NULL;
+-clean2_5: /* pci, lu, aer/h */
++out_free_pci_init: /* pci, lu, aer/h */
+ 	hpsa_free_pci_init(h);
+-clean2: /* lu, aer/h */
++out_free_lockup_detected: /* lu, aer/h */
+ 	if (h->lockup_detected) {
+ 		free_percpu(h->lockup_detected);
+ 		h->lockup_detected = NULL;
+ 	}
+-clean1:	/* wq/aer/h */
++out_destroy_workqueue:	/* wq/aer/h */
+ 	if (h->resubmit_wq) {
+ 		destroy_workqueue(h->resubmit_wq);
+ 		h->resubmit_wq = NULL;
+-- 
+2.17.1
 
