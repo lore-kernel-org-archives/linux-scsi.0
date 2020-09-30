@@ -2,36 +2,35 @@ Return-Path: <SRS0=FF5A=DH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C563C4727C
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:21:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70CEFC4727C
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:24:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00D8520773
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:21:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DC5A20773
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729747AbgI3CVj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Sep 2020 22:21:39 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:14730 "EHLO huawei.com"
+        id S1729860AbgI3CY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Sep 2020 22:24:27 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:49572 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726689AbgI3CVj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Sep 2020 22:21:39 -0400
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id BFABEFEDE23BB8A9F0FF;
-        Wed, 30 Sep 2020 10:21:37 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS407-HUB.china.huawei.com
- (10.3.19.207) with Microsoft SMTP Server id 14.3.487.0; Wed, 30 Sep 2020
- 10:21:30 +0800
+        id S1729446AbgI3CY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Sep 2020 22:24:26 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id C61A98340C1FD4113CDA;
+        Wed, 30 Sep 2020 10:24:25 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Wed, 30 Sep 2020
+ 10:24:18 +0800
 From:   Ye Bin <yebin10@huawei.com>
-To:     <njavali@marvell.com>, <mrangankar@marvell.com>,
+To:     <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <linux-scsi@vger.kernel.org>
-CC:     Ye Bin <yebin10@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] scsi: qla4xxx: Fix Fix inconsistent of format with argument type in ql4_nx.c
-Date:   Wed, 30 Sep 2020 10:22:28 +0800
-Message-ID: <20200930022228.2840587-1-yebin10@huawei.com>
+CC:     Ye Bin <yebin10@huawei.com>
+Subject: [PATCH 0/3] Fix inconsistent of format with argument type
+Date:   Wed, 30 Sep 2020 10:25:12 +0800
+Message-ID: <20200930022515.2862532-1-yebin10@huawei.com>
 X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -42,29 +41,19 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix follow warning:
-[drivers/scsi/qla4xxx/ql4_nx.c:3228]: (warning) %ld in format string (no. 1)
-	requires 'long' but the argument type is 'unsigned long'.
+Ye Bin (3):
+  scsi: qla2xxx: Fix inconsistent of format with argument type in
+    tcm_qla2xxx.c
+  scsi: qla2xxx: Fix inconsistent of format with argument type in
+    qla_os.c
+  scsi: qla2xxx: Fix inconsistent of format with argument type in
+    qla_dbg.c
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Ye Bin <yebin10@huawei.com>
----
- drivers/scsi/qla4xxx/ql4_nx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_dbg.c     | 2 +-
+ drivers/scsi/qla2xxx/qla_os.c      | 4 ++--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index fd3aabb6a190..f1767b21076f 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -3225,7 +3225,7 @@ static void qla4_8xxx_uevent_emit(struct scsi_qla_host *ha, u32 code)
- 
- 	switch (code) {
- 	case QL4_UEVENT_CODE_FW_DUMP:
--		snprintf(event_string, sizeof(event_string), "FW_DUMP=%ld",
-+		snprintf(event_string, sizeof(event_string), "FW_DUMP=%lu",
- 			 ha->host_no);
- 		break;
- 	default:
 -- 
 2.25.4
 
