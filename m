@@ -2,63 +2,70 @@ Return-Path: <SRS0=FF5A=DH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.9 required=3.0 tests=BAYES_00,DATE_IN_PAST_96_XX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A397C4727C
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 00:50:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06521C4727C
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:14:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B48D20759
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 00:50:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C465520773
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 02:14:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729272AbgI3AuH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Sep 2020 20:50:07 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:40476 "EHLO huawei.com"
+        id S1729789AbgI3COl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Sep 2020 22:14:41 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:14726 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726806AbgI3AuG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Sep 2020 20:50:06 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 901CC35C07DAD9C4034E;
-        Wed, 30 Sep 2020 08:50:04 +0800 (CST)
-Received: from [10.174.179.1] (10.174.179.1) by smtp.huawei.com (10.3.19.201)
- with Microsoft SMTP Server (TLS) id 14.3.487.0; Wed, 30 Sep 2020 08:49:59
- +0800
-Subject: Re: [PATCH] scsi: esas2r: prevent a potential NULL dereference in
- esas2r_probe()
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20200909084653.79341-1-jingxiangfeng@huawei.com>
- <yq11rj267ij.fsf@ca-mkp.ca.oracle.com>
-CC:     <linuxdrivers@attotech.com>, <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
-Message-ID: <5F620166.7070305@huawei.com>
-Date:   Wed, 16 Sep 2020 20:13:26 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+        id S1729322AbgI3COl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Sep 2020 22:14:41 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 02F3FF4909FD708AF7BF;
+        Wed, 30 Sep 2020 10:14:37 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS411-HUB.china.huawei.com
+ (10.3.19.211) with Microsoft SMTP Server id 14.3.487.0; Wed, 30 Sep 2020
+ 10:14:29 +0800
+From:   Ye Bin <yebin10@huawei.com>
+To:     <linuxdrivers@attotech.com>, <linux-scsi@vger.kernel.org>
+CC:     Ye Bin <yebin10@huawei.com>, Hulk Robot <hulkci@huawei.com>
+Subject: [PATCH] scsi: esas2r: Fix inconsistent of format with argument type
+Date:   Wed, 30 Sep 2020 10:15:27 +0800
+Message-ID: <20200930021527.2831077-1-yebin10@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-In-Reply-To: <yq11rj267ij.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.1]
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Fix follow warnings:
+[drivers/scsi/esas2r/esas2r_vda.c:313]: (warning) %u in format string (no. 1)
+	requires 'unsigned int' but the argument type is 'signed int'.
+[drivers/scsi/esas2r/esas2r_vda.c:313]: (warning) %u in format string (no. 2)
+	requires 'unsigned int' but the argument type is 'signed int'.
 
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Ye Bin <yebin10@huawei.com>
+---
+ drivers/scsi/esas2r/esas2r_vda.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 2020/9/16 5:44, Martin K. Petersen wrote:
->
-> Jing,
->
->> esas2r_probe() calls scsi_host_put() in an error path. However,
->> esas2r_log_dev() may hit a potential NULL dereference. So use NUll instead.
->
-> Wouldn't it be better to move the scsi_host_put() call after the error
-> message?
+diff --git a/drivers/scsi/esas2r/esas2r_vda.c b/drivers/scsi/esas2r/esas2r_vda.c
+index 30028e56df63..e655b87ddb6b 100644
+--- a/drivers/scsi/esas2r/esas2r_vda.c
++++ b/drivers/scsi/esas2r/esas2r_vda.c
+@@ -310,7 +310,7 @@ static void esas2r_complete_vda_ioctl(struct esas2r_adapter *a,
+ 				le32_to_cpu(rsp->vda_version);
+ 			cfg->data.init.fw_build = rsp->fw_build;
+ 
+-			snprintf(buf, sizeof(buf), "%1.1u.%2.2u",
++			snprintf(buf, sizeof(buf), "%1.1d.%2.2d",
+ 				 (int)LOBYTE(le16_to_cpu(rsp->fw_release)),
+ 				 (int)HIBYTE(le16_to_cpu(rsp->fw_release)));
+ 
+-- 
+2.25.4
 
-There is already a message before the scsi_host_put() call. It is used 
-to record calling function.
-
->
