@@ -1,199 +1,146 @@
-Return-Path: <SRS0=FF5A=DH=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=33X3=DI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BEAC4363D
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 22:25:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF5FC4363D
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 02:44:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 428892075F
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Sep 2020 22:25:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="auvLQ6N6";
-	dkim=pass (1024-bit key) header.d=cisco.onmicrosoft.com header.i=@cisco.onmicrosoft.com header.b="OFRmF0pC"
+	by mail.kernel.org (Postfix) with ESMTP id 8074B21531
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 02:44:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731520AbgI3WZT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Sep 2020 18:25:19 -0400
-Received: from alln-iport-1.cisco.com ([173.37.142.88]:40523 "EHLO
-        alln-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731067AbgI3WZH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2020 18:25:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=2135; q=dns/txt; s=iport;
-  t=1601504706; x=1602714306;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=55IUn+Bu5UrLKgLKxa5UNgZhgYCW4CMWY9jXFdvvP1s=;
-  b=auvLQ6N6/p4sMLJS1UOzi72RBXOop6hjYoUy50KPbOHdrw+jG4yWzrNa
-   UJPftGrvPZIKi5ANR7PESGy5dGTeSXk6+4LGwS1d+B8bQ962Mffj75jj1
-   AxiZ2t7h9mZ7eBE4UBxK34pr6HewPrMlopiD6oN8J9Ytq9Fluk/P145de
-   Y=;
-IronPort-PHdr: =?us-ascii?q?9a23=3AkmN/WRXFPTbTuhtz4ePWbcABvUXV8LGuZFwc94?=
- =?us-ascii?q?YnhrRSc6+q45XlOgnF6O5wiEPSBNyFufJZgvXbsubrXmlTqZqCsXVXdptKWl?=
- =?us-ascii?q?dFjMgNhAUvDYaDDlGzN//laSE2XaEgHF9o9n22Kw5ZTcD5YVCBomC78jMTXB?=
- =?us-ascii?q?74MFk9KuH8AIWHicOx2qi78IHSZAMdgj27bPtyIRy6oB+XuNMRhN5pK706zV?=
- =?us-ascii?q?3CpX4bdg=3D=3D?=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A0CgDgBeBXVf/40NJK1ggQmBUYFQUQe?=
- =?us-ascii?q?BSS8siAMDjX+Yd4JTA1ULAQEBDQEBLQIEAQGESwKCMQIlOQUNAgMBAQsBAQU?=
- =?us-ascii?q?BAQECAQYEbYVcDIVyAQEBBBIVEwYBATcBCwQCAQgRBAEBHxAyHQgCBAENBQg?=
- =?us-ascii?q?ahVADLgGqdAKBOYhhdIEBM4MBAQEFhQcYghAJgTiCcoo8G4IAgVSCHy4+hD+?=
- =?us-ascii?q?DSIItt0cKgmeaeoMOjzqOTS2SXaAOAgQCBAUCDgEBBYFsIoFXcBWDJFAXAg2?=
- =?us-ascii?q?OVoM6ilZ0NwIGCgEBAwl8jgsBAQ?=
-X-IronPort-AV: E=Sophos;i="5.77,322,1596499200"; 
-   d="scan'208";a="551078211"
-Received: from alln-core-8.cisco.com ([173.36.13.141])
-  by alln-iport-1.cisco.com with ESMTP/TLS/DHE-RSA-SEED-SHA; 30 Sep 2020 22:25:05 +0000
-Received: from XCH-RCD-002.cisco.com (xch-rcd-002.cisco.com [173.37.102.12])
-        by alln-core-8.cisco.com (8.15.2/8.15.2) with ESMTPS id 08UMP5Hl009687
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=FAIL);
-        Wed, 30 Sep 2020 22:25:05 GMT
-Received: from xhs-aln-002.cisco.com (173.37.135.119) by XCH-RCD-002.cisco.com
- (173.37.102.12) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 30 Sep
- 2020 17:25:04 -0500
-Received: from xhs-aln-003.cisco.com (173.37.135.120) by xhs-aln-002.cisco.com
- (173.37.135.119) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 30 Sep
- 2020 17:25:03 -0500
-Received: from NAM02-CY1-obe.outbound.protection.outlook.com (173.37.151.57)
- by xhs-aln-003.cisco.com (173.37.135.120) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Wed, 30 Sep 2020 17:25:03 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S5fCV7gLKc65344pIG8NnP3rbcs0QBKcJupZI+h3FTnuOLDFw0+ctVHK9W4TmLHutrbTUboYzI92VeEbaENyjSLZgSsnvl2f4dEhthRGD+hYPO+VWhmtWt/BiCBlM0RzDAdwnsVuu4dR6NeBa2tmOpa3v4ZOPMShhHRymYoZOSDZF19KH5LOWatxmLXtHL81sXzNAqanRXjUUZaWaMOJ63qMQ2xk3+uhXkRlo3wuLoR//kM7fDGA8O6qY542kbaO0RiXUM11cae+o5tZYgrt3F0sMN9ttQiBQFPXMYNRU6mzGN7DFnfEqdqi1hW0byERs+fctqm3BXVIxOlStxuU7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WsEoeeS1c0LBhW3cCFzdJhVa2r2z85vx0Es5Bg8cV5Y=;
- b=G+G6iGXxcmpYyOuXLcauN61TfkH2pBt8IKHOe90J5dbRQ0TvtvNUR5TnOiFtmLvOQ2Y+oC4OAm3J2/vaFbmP2CHOj1H2BZqQU4o1V7XzeRvnoMt42CVBiQlPNdHogz1DZYYFaJHK1WgNoVmP863ywh4WWuNCe27Ciq/bZiFtX6XNzLSUqePkjEi/ysVBk9N3ikeLN9oiyLDg+WYKjY2+nO30JHLUKjI8OClKo47i24ugUP3IwOcRz3W5ya3eGzuo40ZavvWMksmccOuSYZ6shHecIVZ15ksZgAuhHj1dox0tWIlyI4ziTOxnOM5pZ4XhpNAZqbI3EqPtwLoPph3jBg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
- dkim=pass header.d=cisco.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cisco.onmicrosoft.com;
- s=selector2-cisco-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WsEoeeS1c0LBhW3cCFzdJhVa2r2z85vx0Es5Bg8cV5Y=;
- b=OFRmF0pCgSOPj6j9L5YTYGf4lXrGC7hGbwfU0CgNhDVc83ckjkKfS6rhP4dE4Hh7vIVocwjD6khhCwMqZ5P4uFihKoFupaoKMM18ZBgy69lr1RkdfI6jryGfXwvQgCGZ/5PlebhA/TximU9KLo+Qce8Kl8inBJ/2Ebo2a0ZdP5o=
-Received: from BY5PR11MB3863.namprd11.prod.outlook.com (2603:10b6:a03:18a::28)
- by BYAPR11MB2709.namprd11.prod.outlook.com (2603:10b6:a02:be::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.35; Wed, 30 Sep
- 2020 22:25:02 +0000
-Received: from BY5PR11MB3863.namprd11.prod.outlook.com
- ([fe80::6cf2:4989:a3a6:7f95]) by BY5PR11MB3863.namprd11.prod.outlook.com
- ([fe80::6cf2:4989:a3a6:7f95%7]) with mapi id 15.20.3412.025; Wed, 30 Sep 2020
- 22:25:02 +0000
-From:   "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-To:     Ye Bin <yebin10@huawei.com>,
-        "Satish Kharat (satishkh)" <satishkh@cisco.com>,
-        "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     Hulk Robot <hulkci@huawei.com>
-Subject: RE: [PATCH] scsi: fnic: Fix inconsistent of format with argument type
- in fnic_debugfs.c
-Thread-Topic: [PATCH] scsi: fnic: Fix inconsistent of format with argument
- type in fnic_debugfs.c
-Thread-Index: AQHWltAWq4py2DrvrEOqrQZRgOgLVKmAcpSAgAFQmsA=
-Date:   Wed, 30 Sep 2020 22:25:02 +0000
-Message-ID: <BY5PR11MB386360CB684157B0F9F48864C3330@BY5PR11MB3863.namprd11.prod.outlook.com>
-References: <20200930021919.2832860-1-yebin10@huawei.com>
- <20200930021919.2832860-2-yebin10@huawei.com>
-In-Reply-To: <20200930021919.2832860-2-yebin10@huawei.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=cisco.com;
-x-originating-ip: [2600:1700:ce00:1710:4dd0:6a3f:6895:7d53]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 089c90e0-0b36-4e53-0fa8-08d8658face3
-x-ms-traffictypediagnostic: BYAPR11MB2709:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR11MB2709EC98CF4898B80FF661DAC3330@BYAPR11MB2709.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:177;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: cEirw/t84+Ti6y57Gdhh8SBxBon8LT9RgQliwp7Sr09e9OdkeHqDvc/rRXT5AeQt5u0CHpC7TnuRc3jMsLY1jwzjMYIk/1CH3NGTf4vyEH8B09nlDoudBu9HzcKg5nFZuwVtW5LWVWq4iPQf27g4pEmUBa5fHY1j2vQHE9og4FZ9iTcT7QL+BJYmP/18CSzJrStCNjo+F7GgFP7PA8L9/Ay5+Kqj3A5BRWZe5rScvhiFnOkllUTNassm+NgjSP1i+1M5PdI1Aq7m1Ai9KkFthYohNylQmmh9sriQN9iEbtUfMcKCAji+E7/A49CoZnPpJFYtXeBtH70CDjwqWFf8Xg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR11MB3863.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(366004)(136003)(396003)(346002)(39860400002)(52536014)(110136005)(33656002)(64756008)(76116006)(66556008)(66476007)(2906002)(66446008)(66946007)(4326008)(71200400001)(8936002)(8676002)(316002)(478600001)(53546011)(6506007)(86362001)(5660300002)(55016002)(9686003)(7696005)(186003)(83380400001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: fCmzrkiIVV5j0/2S5kAjC99smOk+HxgGd3W/vB9OmSs/KYNDQr5hmcVOXheMy14LBXBOo/vqGvaUAJUC/ad0GQUigPXzdLVnjRiPFVXUHYjjseKmN5rZIWGLcjZnPB99olIBW7ko/mHGrKiMuGZULF2wk+5n2qloNgZ/ipHGwEDjZ4TaVzDBTHmu9WB1qhzu4rtLXOEFn/ugD/W4T4vRifTmmLvLOptqDJt3S9MUJomkYpo1HEp3jMgFfC7RG9bgXsqLoJYdewqXv4Isl5PXIIH2BwmgY6YS8jASOdEnpvn/mkI6cWk1mkXitPWxB6uQIRVKdwaIWj5kkhgSG/zXz6PiYhnQkeLYvzAcMACJ+9ZkEuu1lOcPVwpVi2vHivfMkiMuqDe5UaHvKWrUZDaX+juIoTusCe/zxzsAr6rFO8Pwbm31ykSSzRzpZNcSFEvYC2fbLa0uBBLTXr7I/pf8IxIMQlS13mYIj0iArMEEcoGkCov5GJ5PwEX4gLe3hlvyvbw9X9BKp7I50/K6QmEqVwVOG5P6lXWJG4OPZIcrtqNqDJ/E8RYo3l/TR2s3GLZ9v/WSs6x7bVvldug7PjcLnYchx24akdXxlZURvpg+/1Ilgsr36Rftp/PxDXw2t6a2QuglXAmgLDl3OVXdqwRU3AH5DhrL/GQ7lWjNw6xXe9npkzI1sxuZAW/2CL7mIxd6ro5rq911OBEXCjIizf7uwg==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1725800AbgJACoF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Sep 2020 22:44:05 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:35855 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725372AbgJACoF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2020 22:44:05 -0400
+Received: by mail-pf1-f196.google.com with SMTP id d9so3021351pfd.3
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2020 19:44:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=Ke0TKP8lQfI5Dj3EHGvZ26tLHgEa3R4DcSNMY/KkU18=;
+        b=AV0HF5IKd18TOYrLUkWqfVD5Q4DCjcBCam3d9mFbe6zOROjZOkbmr5zmIX/rCiFUSr
+         TjbySZ2h8WUi8LJc3ZsLXZOmZjyt8bBDUUGoXgK86r6La/HxMCsl1VKkuWhtz/W0XbVa
+         ZnXBfbjOdlBgWPDgFsXiQUy54NK63ZGEZaFSZ7tmX8djaauyonD1fABcUxHNaDj0RvpS
+         sl7uMiWlFaFMGVy2kRjIgFpKVQsuz87i/ydUnlCQ1ZLv9Qy7zqAiEFR7kcDdZnanVmSl
+         0HSfjdIcCAKacUysNaI8UHxMMOCM2B6tZw64Z3Ls1BIpEx83CbqU50CdRkT1MVF4W971
+         tYRQ==
+X-Gm-Message-State: AOAM532lLYn3ochXDeN3dQA4TuhZYvcdfECJoIUiIgvZ8MFEL4hu0Clk
+        wqIKfYdaAy54qznMno8Pvf3pQNls7G4=
+X-Google-Smtp-Source: ABdhPJxdY0wQ96sw5VKR2JbB+8qLanEuZcq6XLAxzCUJrLdhfXEBGFl56/9M8NE6v/Ardg8rP+FnFw==
+X-Received: by 2002:a62:fc51:0:b029:142:4506:9a7b with SMTP id e78-20020a62fc510000b029014245069a7bmr5026969pfh.28.1601520243498;
+        Wed, 30 Sep 2020 19:44:03 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:74c0:38d3:8092:91f1? ([2601:647:4000:d7:74c0:38d3:8092:91f1])
+        by smtp.gmail.com with ESMTPSA id q24sm3926190pfs.206.2020.09.30.19.44.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 30 Sep 2020 19:44:02 -0700 (PDT)
+Subject: Re: [PATCH 2/4] scsi_dh_alua: return BLK_STS_AGAIN for ALUA
+ transitioning state
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20200930080256.90964-1-hare@suse.de>
+ <20200930080256.90964-3-hare@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <10c29e0a-688c-9cc0-3329-8f97300b8827@acm.org>
+Date:   Wed, 30 Sep 2020 19:44:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR11MB3863.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 089c90e0-0b36-4e53-0fa8-08d8658face3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Sep 2020 22:25:02.6216
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 6j1JhILsMhxzaDjMZSrE9FYqe9iO89Tm+Cdi/j6O9Sjww2A7WnLAyOOjPXDgZISY1urEEEPCXgL6aEDnbHr4yg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB2709
-X-OriginatorOrg: cisco.com
-X-Outbound-SMTP-Client: 173.37.102.12, xch-rcd-002.cisco.com
-X-Outbound-Node: alln-core-8.cisco.com
+In-Reply-To: <20200930080256.90964-3-hare@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The fix looks good. Approved.
+On 2020-09-30 01:02, Hannes Reinecke wrote:
+> When the ALUA state indicates transitioning we should not retry
+> the command immediately, but rather complete the command with
+> BLK_STS_AGAIN to signal the completion handler that it might
+> be retried.
+> This allows multipathing to redirect the command to another path
+> if possible, and avoid stalls during lengthy transitioning times.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
+>  drivers/scsi/scsi_lib.c                    | 5 +++++
+>  2 files changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 308bda2e9c00..a68222e324e9 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -1092,7 +1092,7 @@ static blk_status_t alua_prep_fn(struct scsi_device *sdev, struct request *req)
+>  	case SCSI_ACCESS_STATE_LBA:
+>  		return BLK_STS_OK;
+>  	case SCSI_ACCESS_STATE_TRANSITIONING:
+> -		return BLK_STS_RESOURCE;
+> +		return BLK_STS_AGAIN;
+>  	default:
+>  		req->rq_flags |= RQF_QUIET;
+>  		return BLK_STS_IOERR;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index f0ee11dc07e4..b628aa0d824c 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1726,6 +1726,11 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>  		    scsi_device_blocked(sdev))
+>  			ret = BLK_STS_DEV_RESOURCE;
+>  		break;
+> +	case BLK_STS_AGAIN:
+> +		scsi_req(req)->result = DID_BUS_BUSY << 16;
+> +		if (req->rq_flags & RQF_DONTPREP)
+> +			scsi_mq_uninit_cmd(cmd);
+> +		break;
+>  	default:
+>  		if (unlikely(!scsi_device_online(sdev)))
+>  			scsi_req(req)->result = DID_NO_CONNECT << 16;
 
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+Hi Hannes,
 
-Regards,
-Karan
+What will happen if all remote ports have the state "transitioning"?
+Does the above code resubmit a request immediately in that case? Can
+this cause spinning with 100% CPU usage if the ALUA device handler
+notices the transitioning state before multipathd does?
 
------Original Message-----
-From: Ye Bin <yebin10@huawei.com>=20
-Sent: Tuesday, September 29, 2020 7:19 PM
-To: Satish Kharat (satishkh) <satishkh@cisco.com>; Sesidhar Baddela (sebadd=
-el) <sebaddel@cisco.com>; Karan Tilak Kumar (kartilak) <kartilak@cisco.com>=
-; linux-scsi@vger.kernel.org
-Cc: Ye Bin <yebin10@huawei.com>; Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] scsi: fnic: Fix inconsistent of format with argument type =
-in fnic_debugfs.c
+Thanks,
 
-fix follow warnings:
-[drivers/scsi/fnic/fnic_debugfs.c:123]: (warning) %u in format string (no. =
-1)
-	requires 'unsigned int' but the argument type is 'int'.
-[drivers/scsi/fnic/fnic_debugfs.c:125]: (warning) %u in format string (no. =
-1)
-	requires 'unsigned int' but the argument type is 'int'.
-[drivers/scsi/fnic/fnic_debugfs.c:127]: (warning) %u in format string (no. =
-1)
-	requires 'unsigned int' but the argument type is 'int'.
+Bart.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Ye Bin <yebin10@huawei.com>
----
- drivers/scsi/fnic/fnic_debugfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debu=
-gfs.c
-index 13f7d88d6e57..6c049360f136 100644
---- a/drivers/scsi/fnic/fnic_debugfs.c
-+++ b/drivers/scsi/fnic/fnic_debugfs.c
-@@ -120,11 +120,11 @@ static ssize_t fnic_trace_ctrl_read(struct file *filp=
-,
- 	len =3D 0;
- 	trace_type =3D (u8 *)filp->private_data;
- 	if (*trace_type =3D=3D fc_trc_flag->fnic_trace)
--		len =3D sprintf(buf, "%u\n", fnic_tracing_enabled);
-+		len =3D sprintf(buf, "%d\n", fnic_tracing_enabled);
- 	else if (*trace_type =3D=3D fc_trc_flag->fc_trace)
--		len =3D sprintf(buf, "%u\n", fnic_fc_tracing_enabled);
-+		len =3D sprintf(buf, "%d\n", fnic_fc_tracing_enabled);
- 	else if (*trace_type =3D=3D fc_trc_flag->fc_clear)
--		len =3D sprintf(buf, "%u\n", fnic_fc_trace_cleared);
-+		len =3D sprintf(buf, "%d\n", fnic_fc_trace_cleared);
- 	else
- 		pr_err("fnic: Cannot read to any debugfs file\n");
-=20
---=20
-2.25.4
 
