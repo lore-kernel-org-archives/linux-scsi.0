@@ -2,186 +2,118 @@ Return-Path: <SRS0=33X3=DI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA7EC47420
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 08:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BE0C4727C
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 09:58:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7330220BED
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 08:59:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Bwgk935f"
+	by mail.kernel.org (Postfix) with ESMTP id 642BC206D9
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 09:58:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731243AbgJAI7a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Oct 2020 04:59:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35290 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725894AbgJAI7a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2020 04:59:30 -0400
-Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43958C0613D0
-        for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2020 01:59:30 -0700 (PDT)
-Received: by mail-oi1-x22c.google.com with SMTP id x69so4802542oia.8
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2020 01:59:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=+iVfQ8ztYs1JxgBj/781ZlAkR1gplZM/+esCLmA37vo=;
-        b=Bwgk935f+PwqM9DxZZr0D6TU+oz3Q5VtzcBChjZb65kfwF1csSi6jil9OMgpYyt+Ma
-         HnR3C9YmbHJXVE+ENxf6/m+AXFtsy1/DUl+WmcOXNaFp06vgnNj4Htnt9JQ9gkQuj2vv
-         U5jvfImxYVJM7puXknC8GQGLPja8/nUrmRgyw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=+iVfQ8ztYs1JxgBj/781ZlAkR1gplZM/+esCLmA37vo=;
-        b=Cyst5ML+om2Tf5ZzuvmTjleCN7LRjUr+Q3TgEHVMURTkjvUITwbwByknVyRzbFcige
-         kVFhtb1gpMb8nZmHy+QDxcwqt6kEiaXxiXDT5DKnhBxQG7EwfRaOk0CaP0ba2zPOZygU
-         WFdmf35uTBB63az0NquH28TxqfuU5yqrXXboYBt955OA6lUAnST0IZXyVeO6xcbFaoJz
-         8VQeXsbr6DkXatHkI20pgkcRWVZV2QiIVFHSLowsP2yfUtYsPu/O6oWc1V4qRCDIuyPi
-         6/zXOoyhmaYQWnzczAh2/Fl3Jtg03MCbIGjyEZ3Xi3OH+VQwmaRaIUk61cRNjsjFBMjp
-         IgRw==
-X-Gm-Message-State: AOAM531u41bp7MyKEvcaSzBljl/oYXB5jEjUS1LVV8V5eZX8zAuz2QmL
-        v5/zJD9Vie1jXIs7ocW19AiR1UV6WuFaSi1Jx6zsww==
-X-Google-Smtp-Source: ABdhPJxY9+8McGNwLkVlnqYXgX3jL2oqERee5IEPcfBKq54GHRRCo0P+ezp0JNwSugjY02InU9xmLEgYjL0IFB/MYMQ=
-X-Received: by 2002:aca:fc95:: with SMTP id a143mr3664866oii.104.1601542769636;
- Thu, 01 Oct 2020 01:59:29 -0700 (PDT)
-From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
-References: <1601268657-940-1-git-send-email-muneendra.kumar@broadcom.com>
- <1601268657-940-9-git-send-email-muneendra.kumar@broadcom.com>
- <a0fb7bae-b6e7-8f28-f45f-0453311f383e@suse.de> <ce3d51fbc3fe51b29e82f6a3e317388b@mail.gmail.com>
- <dbda3941-727b-293f-97f8-4c67342c7920@suse.de> d113192920ae65d1b94ffe8dadd9d5ad@mail.gmail.com
-In-Reply-To: d113192920ae65d1b94ffe8dadd9d5ad@mail.gmail.com
+        id S1731670AbgJAJ6t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Oct 2020 05:58:49 -0400
+Received: from mx2.suse.de ([195.135.220.15]:57592 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726992AbgJAJ6t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Oct 2020 05:58:49 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 15A32ACAC;
+        Thu,  1 Oct 2020 09:58:48 +0000 (UTC)
+Subject: Re: [PATCH 2/4] scsi_dh_alua: return BLK_STS_AGAIN for ALUA
+ transitioning state
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20200930080256.90964-1-hare@suse.de>
+ <20200930080256.90964-3-hare@suse.de>
+ <10c29e0a-688c-9cc0-3329-8f97300b8827@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <c51ffe04-0c4a-b968-109a-b1cddb308d8e@suse.de>
+Date:   Thu, 1 Oct 2020 11:58:47 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQHCNtb+JUCHm5+nw84r+9ykkbRKNAEWqyatAe56aFIBc84lOAHMySvLqXkBMqCAAAVpwA==
-Date:   Thu, 1 Oct 2020 14:29:27 +0530
-Message-ID: <a3bf7bf7f24eeab2dcbc6cdbe21bd296@mail.gmail.com>
-Subject: RE: [PATCH v2 8/8] lpfc: Added support to handle marginal state
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000e4453205b0983b1c"
+In-Reply-To: <10c29e0a-688c-9cc0-3329-8f97300b8827@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000e4453205b0983b1c
-Content-Type: text/plain; charset="UTF-8"
+On 10/1/20 4:44 AM, Bart Van Assche wrote:
+> On 2020-09-30 01:02, Hannes Reinecke wrote:
+>> When the ALUA state indicates transitioning we should not retry
+>> the command immediately, but rather complete the command with
+>> BLK_STS_AGAIN to signal the completion handler that it might
+>> be retried.
+>> This allows multipathing to redirect the command to another path
+>> if possible, and avoid stalls during lengthy transitioning times.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
+>>   drivers/scsi/scsi_lib.c                    | 5 +++++
+>>   2 files changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> index 308bda2e9c00..a68222e324e9 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -1092,7 +1092,7 @@ static blk_status_t alua_prep_fn(struct scsi_device *sdev, struct request *req)
+>>   	case SCSI_ACCESS_STATE_LBA:
+>>   		return BLK_STS_OK;
+>>   	case SCSI_ACCESS_STATE_TRANSITIONING:
+>> -		return BLK_STS_RESOURCE;
+>> +		return BLK_STS_AGAIN;
+>>   	default:
+>>   		req->rq_flags |= RQF_QUIET;
+>>   		return BLK_STS_IOERR;
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index f0ee11dc07e4..b628aa0d824c 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1726,6 +1726,11 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>>   		    scsi_device_blocked(sdev))
+>>   			ret = BLK_STS_DEV_RESOURCE;
+>>   		break;
+>> +	case BLK_STS_AGAIN:
+>> +		scsi_req(req)->result = DID_BUS_BUSY << 16;
+>> +		if (req->rq_flags & RQF_DONTPREP)
+>> +			scsi_mq_uninit_cmd(cmd);
+>> +		break;
+>>   	default:
+>>   		if (unlikely(!scsi_device_online(sdev)))
+>>   			scsi_req(req)->result = DID_NO_CONNECT << 16;
+> 
+> Hi Hannes,
+> 
+> What will happen if all remote ports have the state "transitioning"?
+> Does the above code resubmit a request immediately in that case? Can
+> this cause spinning with 100% CPU usage if the ALUA device handler
+> notices the transitioning state before multipathd does?
+> 
+Curiously this patch only improves the current situation :-)
+With the current behaviour we will return 
+BLK_STS_DEV_RESOURCE/BLK_STS_RESOURCE, causing an _immediate_ retry on 
+the same queue.
+This patch will cause the I/O to be _completed_, to be requeued via the 
+end_request() path.
+So yes, we will requeue (that's kinda the point of 'transitioning' ...), 
+but with a lower frequency as originally. _And_ with a chance of 
+multipath intercepting the I/O, which didn't happen previously.
 
-Hi Hannes,
+Cheers,
 
->>> +     * If port state is marginal
->>> +     * Set the SCMD_NORETRIES_ABORT bit in scmd->state
->>> +     */
->>> +               fc_rport_chkmarginal_set_noretries(rport, cmnd);
->>>        ndlp = rdata->pnode;
->>>
->>>        if ((scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) &&
->>>
->> This really should be moved into the transport class;
->> fc_block_rport() would be an ideal place for it.
->
->> [Muneendra]Correct me if I didn't understand correctly.
->> As fc_block_rport cannot take arg of scsi_cmd can we add it as part of
->> fc_block_scsi_eh ?
-> >
->>Ah, right.
->>Actually I meant 'fc_remote_port_chkready()'.
->>That doesnt' take an scmd as argument, but I don't see why we can't modify
->>it to have an additonal 'sdev' parameter...
-
-fc_remote_port_chkready function is even getting called in slave alloc
-(lpfc_slave_alloc, qla2xxx_slave_alloc,...)  and few ELS initiative
-functions
-bnx2fc_initiate_els, qedf_initiate_els.. where scsi_cmnd cannot be passed.
-In these cases we need to pass NULL for scsi_cmnd ?
-
-Regards,
-Muneendra.
-
---000000000000e4453205b0983b1c
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
-Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
-KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
-aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
-b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
-AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
-MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
-Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
-A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
-DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
-hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
-LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
-9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
-/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
-EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
-b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
-SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCC9l7ZrF5OeDQ2cFUTVGkhRzbMPFMFwoaUGn4VKARu2lTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMDEwODU5MjlaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
-AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAxtF/1L3xvqNpFCmI
-G0XHnYEictx69ZsHfI4SwXZcjHYpyRYhxc+Ux9MeTSkuHoV3tVKtDt7YKVxTOdlE3cdqu8ITH6Bt
-BRS6RFmjjFwYwQ7iOHIvqcD7aFYzhP3RUt79NMXqvFiZXvRHCLk8eC3yfELHcjy7QIIqjiu6pcdu
-Fn8Q2k8/wYoivI5Hc0rTABy3eu92fLFjaBdbBmiWWWzmdiwFeJ7144dTYKsRx6yOOZ8lI4UgToi5
-CbR7mqas0S65uepTJzdt5XHbBGn4lzfXhB8nd/MvIzELCVjrQy9bkuu3/i71OgfiY8a2jaOIOgE5
-aIMdAYPBFlrOEQ9Ray49ig==
---000000000000e4453205b0983b1c--
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
