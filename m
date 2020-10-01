@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B25F3C4363D
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 02:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85309C4363D
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 02:54:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62EB22087D
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 02:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EB1821531
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 02:54:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725800AbgJACwU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Sep 2020 22:52:20 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:37847 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725372AbgJACwU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2020 22:52:20 -0400
-Received: by mail-pg1-f195.google.com with SMTP id e18so2802416pgd.4
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2020 19:52:20 -0700 (PDT)
+        id S1730481AbgJACyy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Sep 2020 22:54:54 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:34595 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725800AbgJACyy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2020 22:54:54 -0400
+Received: by mail-pf1-f196.google.com with SMTP id k13so3065300pfg.1
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2020 19:54:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=LHkV585ufBqt86BSJcpAVk3Z2UHR6MbpfaK5XaFxfFo=;
-        b=I5ucgU7mvyHJIadwClfFfPvnbv2srlRPYgiVpPq3jfcXEGwnA26bnaSdCVajJ63xxq
-         qgHRTkrliHoj+ZfLj69aTrUIMuwDYgATxRKZJ7j3yEMls4fSKdVPalBOB2i02xtBe0t9
-         u4fG0JWdLaQP74iiIljajDqb98KTU/2WTGoB0pmXeO+VdUD5dQH7mi4jdt+QmW7Jf7yN
-         hQdRF8NTaffrUKc03KCrWyw0YGFqrwPFcZsK4akfXlnBNcU/E6047PQXaWIuKcy4Bu+Z
-         ufrUgQ0grpsrMvz25WuXc+MpI9QCVw0CqOJOfYKX6vJuQdQFF2nO7ikHAbxNNDL17U1X
-         1Aew==
-X-Gm-Message-State: AOAM5329KG4X4uJRk8EeVo52uTg+VSZcPcJVo17UOVqJF2Wt17fwZAt0
-        yEnrKWdY8dAOz3rP9xalpbCMSimBa5w=
-X-Google-Smtp-Source: ABdhPJyidJmiipgkQb6KqBPI1dMXH30xEg7yzY/w9cO1qVfEM/7Ope+eVliaL4XEllKH8aQlOnZkBg==
-X-Received: by 2002:a17:902:b203:b029:d2:1ebe:b4e4 with SMTP id t3-20020a170902b203b02900d21ebeb4e4mr671760plr.12.1601520739530;
-        Wed, 30 Sep 2020 19:52:19 -0700 (PDT)
+        bh=ba6kCSnHTvYSJ7tkav1SA5XtG8mriR1CcIvRzfUMOK8=;
+        b=O6LYCA1LHue1wCVv847AiGd3Mf+oi1zz83ke7wsiMOycKKhOi0RIxtX5OirtR350qS
+         xgp3BuQbzPgjyWwHy7mwGrHaouhos/jeWeR5pst/yNx4fMWr05t6UH4nbj1ziDdFJDWN
+         XH5m/EXAySVNCdgviOYBgs89z/xFVkzQgYrszAvDpzpzHeuykjpy+tTMDEntT4QBtRGQ
+         oGDQkk6ZXQPGztKLcJQKnpMEG0Vgh+xBhYWogXIbUINDaVVvZKg2UrusFpkw8efnliBw
+         7yNUbkm15IH7txlgfkl+CsPKUQXeFGtyVIkqSIO+gGH9LOAxBlgrDB9brS9WFL8xWJS6
+         iRtA==
+X-Gm-Message-State: AOAM532EyuAczZMpNR3XETbiiQyv9TU4ESGQ7QK1+HYq3Lsl6doGsLUM
+        x8sNdKUe5eS/2jV/4uu9o20=
+X-Google-Smtp-Source: ABdhPJw+rdRkKOy2hSmwWeA5nd6+DEHxRik9hDGMQ6rECO2DRiT+6eMeRCukfRRwz49S/lJTdQO4xw==
+X-Received: by 2002:a05:6a00:23cc:b029:142:2501:35cf with SMTP id g12-20020a056a0023ccb0290142250135cfmr5361411pfc.47.1601520892469;
+        Wed, 30 Sep 2020 19:54:52 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:74c0:38d3:8092:91f1? ([2601:647:4000:d7:74c0:38d3:8092:91f1])
-        by smtp.gmail.com with ESMTPSA id c3sm4058247pfo.120.2020.09.30.19.52.17
+        by smtp.gmail.com with ESMTPSA id y7sm3454310pgk.73.2020.09.30.19.54.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Sep 2020 19:52:18 -0700 (PDT)
-Subject: Re: [PATCH 1/2] scsi: Add limitless cmd retry support
+        Wed, 30 Sep 2020 19:54:51 -0700 (PDT)
+Subject: Re: [PATCH 2/2] scsi sd: Allow user to config cmd retries
 To:     Mike Christie <michael.christie@oracle.com>,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         james.bottomley@hansenpartnership.com
 References: <1601398908-28443-1-git-send-email-michael.christie@oracle.com>
- <1601398908-28443-2-git-send-email-michael.christie@oracle.com>
+ <1601398908-28443-3-git-send-email-michael.christie@oracle.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -72,12 +72,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <919c092a-ecf9-bf11-3422-9c4443e9918d@acm.org>
-Date:   Wed, 30 Sep 2020 19:52:17 -0700
+Message-ID: <0a68e3b4-5a1f-ff59-a6cd-4eafc593e9e6@acm.org>
+Date:   Wed, 30 Sep 2020 19:54:50 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <1601398908-28443-2-git-send-email-michael.christie@oracle.com>
+In-Reply-To: <1601398908-28443-3-git-send-email-michael.christie@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -86,16 +86,10 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-09-29 10:01, Mike Christie wrote:
-> +static bool scsi_cmd_retry_allowed(struct scsi_cmnd *cmd)
-> +{
-> +	if (cmd->allowed == SCSI_CMD_RETRIES_NO_LIMIT)
-> +		return true;
-> +
-> +	return (++cmd->retries <= cmd->allowed);
-> +}
-
-Did checkpatch complain about the parentheses in the above return statement?
-
-Anyway:
+> Some iSCSI targets went the traditional export N ports and then allowed
+> the initiator to multipath over them. Other targets went the opposite
+> direction and export 1 port, and then software on the target side
+> performs load balancing and failover to other targets via a iscsi
+> specific feature or IP takover.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
