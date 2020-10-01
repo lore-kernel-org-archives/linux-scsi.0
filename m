@@ -7,32 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A485EC4727C
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 07:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FCA3C47423
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 07:55:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B98721707
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 07:55:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A97D21707
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Oct 2020 07:55:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731738AbgJAHzS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Oct 2020 03:55:18 -0400
-Received: from mx2.suse.de ([195.135.220.15]:45236 "EHLO mx2.suse.de"
+        id S1731661AbgJAHzR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Oct 2020 03:55:17 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44966 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726540AbgJAHzN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Oct 2020 03:55:13 -0400
+        id S1730862AbgJAHzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Oct 2020 03:55:09 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 2664FAD64;
-        Thu,  1 Oct 2020 07:55:12 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id E0864AD4A;
+        Thu,  1 Oct 2020 07:55:07 +0000 (UTC)
 From:   Coly Li <colyli@suse.de>
 To:     linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
         netdev@vger.kernel.org, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Coly Li <colyli@suse.de>,
-        Jeff Layton <jlayton@kernel.org>,
-        Ilya Dryomov <idryomov@gmail.com>
-Subject: [PATCH v9 7/7] libceph: use sendpage_ok() in ceph_tcp_sendpage()
-Date:   Thu,  1 Oct 2020 15:54:08 +0800
-Message-Id: <20201001075408.25508-8-colyli@suse.de>
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Vasily Averin <vvs@virtuozzo.com>,
+        Cong Wang <amwang@redhat.com>,
+        Mike Christie <michaelc@cs.wisc.edu>,
+        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v9 6/7] scsi: libiscsi: use sendpage_ok() in iscsi_tcp_segment_map()
+Date:   Thu,  1 Oct 2020 15:54:07 +0800
+Message-Id: <20201001075408.25508-7-colyli@suse.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201001075408.25508-1-colyli@suse.de>
 References: <20201001075408.25508-1-colyli@suse.de>
@@ -42,33 +46,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In libceph, ceph_tcp_sendpage() does the following checks before handle
-the page by network layer's zero copy sendpage method,
-	if (page_count(page) >= 1 && !PageSlab(page))
+In iscsci driver, iscsi_tcp_segment_map() uses the following code to
+check whether the page should or not be handled by sendpage:
+    if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
 
-This check is exactly what sendpage_ok() does. This patch replace the
-open coded checks by sendpage_ok() as a code cleanup.
+The "page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)" part is to
+make sure the page can be sent to network layer's zero copy path. This
+part is exactly what sendpage_ok() does.
+
+This patch uses  use sendpage_ok() in iscsi_tcp_segment_map() to replace
+the original open coded checks.
 
 Signed-off-by: Coly Li <colyli@suse.de>
-Acked-by: Jeff Layton <jlayton@kernel.org>
-Cc: Ilya Dryomov <idryomov@gmail.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Vasily Averin <vvs@virtuozzo.com>
+Cc: Cong Wang <amwang@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Lee Duncan <lduncan@suse.com>
+Cc: Chris Leech <cleech@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
 ---
- net/ceph/messenger.c | 2 +-
+ drivers/scsi/libiscsi_tcp.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/ceph/messenger.c b/net/ceph/messenger.c
-index bdfd66ba3843..d4d7a0e52491 100644
---- a/net/ceph/messenger.c
-+++ b/net/ceph/messenger.c
-@@ -575,7 +575,7 @@ static int ceph_tcp_sendpage(struct socket *sock, struct page *page,
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index 37e5d4e48c2f..83f14b2c8804 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -128,7 +128,7 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
  	 * coalescing neighboring slab objects into a single frag which
  	 * triggers one of hardened usercopy checks.
  	 */
--	if (page_count(page) >= 1 && !PageSlab(page))
-+	if (sendpage_ok(page))
- 		sendpage = sock->ops->sendpage;
- 	else
- 		sendpage = sock_no_sendpage;
+-	if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
++	if (!recv && sendpage_ok(sg_page(sg)))
+ 		return;
+ 
+ 	if (recv) {
 -- 
 2.26.2
 
