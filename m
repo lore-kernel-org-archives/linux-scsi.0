@@ -2,67 +2,82 @@ Return-Path: <SRS0=W9vy=DJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E6E1C4363D
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 21:54:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E48DDC47095
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 22:28:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B113D20738
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 21:54:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601675674;
-	bh=Oae/0q5EzDwaXRlROT4j61wW2juiOq8Wo+2CtbtFKLs=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=FouYwXM1SvUOdEb58Jwb2MgOhTqlTTB20MifsKb9LU9/CKION5DdVqiX/WNps5ENf
-	 RID5XQ7c1nzk+hVuzcyvbhqBFlPlb89K5Bxiq1v2Ry+r2dsmCHJO5CjAl/YEWwN7wW
-	 O7wB1eWtYrguj/xjjEqwEQlvznMK3G9akOoO2NXo=
+	by mail.kernel.org (Postfix) with ESMTP id AF2A120719
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 22:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725791AbgJBVyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Oct 2020 17:54:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57262 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725781AbgJBVyS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Oct 2020 17:54:18 -0400
-Subject: Re: [GIT PULL] SCSI fixes for 5.9-rc7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601675657;
-        bh=Oae/0q5EzDwaXRlROT4j61wW2juiOq8Wo+2CtbtFKLs=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=YHHuTnfYxoUWmcbEhPROi0uXgswQU6dlALTaBuWLWKkt2lqQVYB5YJ1phOVU8ahWk
-         Ya6RVV1KeJwHjuH8FbbiMV9YZAEzsBE6r4nwZKIDbXfLCLH3qWiworK+Uy8R4kqEUE
-         OMfUXQwrh2rm/ddv+8/3WNvI6ahTBPAobWLr6s7o=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <32aab084a6bf83b48b7e609c35e3822ee0f778df.camel@HansenPartnership.com>
-References: <32aab084a6bf83b48b7e609c35e3822ee0f778df.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <32aab084a6bf83b48b7e609c35e3822ee0f778df.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: bcf3a2953d36bbfb9bd44ccb3db0897d935cc485
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: cb6f55af1fb28655c9f3843bc12c0a48856c1d09
-Message-Id: <160167565743.8763.5887435040064383804.pr-tracker-bot@kernel.org>
-Date:   Fri, 02 Oct 2020 21:54:17 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1725792AbgJBW2c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Oct 2020 18:28:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725283AbgJBW2c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2020 18:28:32 -0400
+Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A718C0613D0;
+        Fri,  2 Oct 2020 15:28:32 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 75BFB11E4824E;
+        Fri,  2 Oct 2020 15:11:42 -0700 (PDT)
+Date:   Fri, 02 Oct 2020 15:28:29 -0700 (PDT)
+Message-Id: <20201002.152829.1002796270145913943.davem@davemloft.net>
+To:     colyli@suse.de
+Cc:     linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        netdev@vger.kernel.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, chaitanya.kulkarni@wdc.com,
+        cleech@redhat.com, hch@lst.de, amwang@redhat.com,
+        eric.dumazet@gmail.com, hare@suse.de, idryomov@gmail.com,
+        jack@suse.com, jlayton@kernel.org, axboe@kernel.dk,
+        lduncan@suse.com, michaelc@cs.wisc.edu,
+        mskorzhinskiy@solarflare.com, philipp.reisner@linbit.com,
+        sagi@grimberg.me, vvs@virtuozzo.com, vbabka@suse.com
+Subject: Re: [PATCH v10 0/7] Introduce sendpage_ok() to detect misused
+ sendpage in network related drivers
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20201002082734.13925-1-colyli@suse.de>
+References: <20201002082734.13925-1-colyli@suse.de>
+X-Mailer: Mew version 6.8 on Emacs 27.1
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [2620:137:e000::1:9]); Fri, 02 Oct 2020 15:11:43 -0700 (PDT)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 02 Oct 2020 12:28:04 -0700:
+From: Coly Li <colyli@suse.de>
+Date: Fri,  2 Oct 2020 16:27:27 +0800
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+> As Sagi Grimberg suggested, the original fix is refind to a more common
+> inline routine:
+>     static inline bool sendpage_ok(struct page *page)
+>     {
+>         return  (!PageSlab(page) && page_count(page) >= 1);
+>     }
+> If sendpage_ok() returns true, the checking page can be handled by the
+> concrete zero-copy sendpage method in network layer.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/cb6f55af1fb28655c9f3843bc12c0a48856c1d09
+Series applied.
 
-Thank you!
+> The v10 series has 7 patches, fixes a WARN_ONCE() usage from v9 series,
+ ...
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+I still haven't heard from you how such a fundamental build failure
+was even possible.
+
+If the v9 patch series did not even compile, how in the world did you
+perform functional testing of these changes?
+
+Please explain this to me, instead of just quietly fixing it and
+posting an updated series.
+
+Thank you.
