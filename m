@@ -7,33 +7,38 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D86EDC47423
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 08:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D31D5C4363D
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 08:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 845E9206B8
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 08:28:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC61920758
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 08:28:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387712AbgJBI23 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Oct 2020 04:28:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:50082 "EHLO mx2.suse.de"
+        id S2387752AbgJBI2o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Oct 2020 04:28:44 -0400
+Received: from mx2.suse.de ([195.135.220.15]:50386 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387699AbgJBI2W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Oct 2020 04:28:22 -0400
+        id S2387739AbgJBI2g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Oct 2020 04:28:36 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B9D48AF1A;
-        Fri,  2 Oct 2020 08:28:20 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id E8BF0AF1A;
+        Fri,  2 Oct 2020 08:28:34 +0000 (UTC)
 From:   Coly Li <colyli@suse.de>
 To:     davem@davemloft.net, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, netdev@vger.kernel.org,
         open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
         ceph-devel@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Coly Li <colyli@suse.de>,
-        Eric Dumazet <eric.dumazet@gmail.com>,
-        Vasily Averin <vvs@virtuozzo.com>, stable@vger.kernel.org
-Subject: [PATCH v10 4/7] tcp: use sendpage_ok() to detect misused .sendpage
-Date:   Fri,  2 Oct 2020 16:27:31 +0800
-Message-Id: <20201002082734.13925-5-colyli@suse.de>
+        Lee Duncan <lduncan@suse.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Vasily Averin <vvs@virtuozzo.com>,
+        Cong Wang <amwang@redhat.com>,
+        Mike Christie <michaelc@cs.wisc.edu>,
+        Chris Leech <cleech@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v10 6/7] scsi: libiscsi: use sendpage_ok() in iscsi_tcp_segment_map()
+Date:   Fri,  2 Oct 2020 16:27:33 +0800
+Message-Id: <20201002082734.13925-7-colyli@suse.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201002082734.13925-1-colyli@suse.de>
 References: <20201002082734.13925-1-colyli@suse.de>
@@ -43,42 +48,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-commit a10674bf2406 ("tcp: detecting the misuse of .sendpage for Slab
-objects") adds the checks for Slab pages, but the pages don't have
-page_count are still missing from the check.
+In iscsci driver, iscsi_tcp_segment_map() uses the following code to
+check whether the page should or not be handled by sendpage:
+    if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
 
-Network layer's sendpage method is not designed to send page_count 0
-pages neither, therefore both PageSlab() and page_count() should be
-both checked for the sending page. This is exactly what sendpage_ok()
-does.
+The "page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)" part is to
+make sure the page can be sent to network layer's zero copy path. This
+part is exactly what sendpage_ok() does.
 
-This patch uses sendpage_ok() in do_tcp_sendpages() to detect misused
-.sendpage, to make the code more robust.
+This patch uses  use sendpage_ok() in iscsi_tcp_segment_map() to replace
+the original open coded checks.
 
-Fixes: a10674bf2406 ("tcp: detecting the misuse of .sendpage for Slab objects")
-Suggested-by: Eric Dumazet <eric.dumazet@gmail.com>
 Signed-off-by: Coly Li <colyli@suse.de>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Vasily Averin <vvs@virtuozzo.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: stable@vger.kernel.org
+Cc: Cong Wang <amwang@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Chris Leech <cleech@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
 ---
- net/ipv4/tcp.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/libiscsi_tcp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
-index 31f3b858db81..2135ee7c806d 100644
---- a/net/ipv4/tcp.c
-+++ b/net/ipv4/tcp.c
-@@ -970,7 +970,8 @@ ssize_t do_tcp_sendpages(struct sock *sk, struct page *page, int offset,
- 	long timeo = sock_sndtimeo(sk, flags & MSG_DONTWAIT);
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index 37e5d4e48c2f..83f14b2c8804 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -128,7 +128,7 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
+ 	 * coalescing neighboring slab objects into a single frag which
+ 	 * triggers one of hardened usercopy checks.
+ 	 */
+-	if (!recv && page_count(sg_page(sg)) >= 1 && !PageSlab(sg_page(sg)))
++	if (!recv && sendpage_ok(sg_page(sg)))
+ 		return;
  
- 	if (IS_ENABLED(CONFIG_DEBUG_VM) &&
--	    WARN_ONCE(PageSlab(page), "page must not be a Slab one"))
-+	    WARN_ONCE(!sendpage_ok(page),
-+		      "page must not be a Slab one and have page_count > 0"))
- 		return -EINVAL;
- 
- 	/* Wait for a connection to finish. One exception is TCP Fast Open
+ 	if (recv) {
 -- 
 2.26.2
 
