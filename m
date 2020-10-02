@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98AE0C47423
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 12:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FF4FC4727D
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 12:41:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C52120679
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 12:41:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5382520719
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 12:41:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387861AbgJBMlY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Oct 2020 08:41:24 -0400
+        id S2387896AbgJBMlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Oct 2020 08:41:32 -0400
 Received: from mga01.intel.com ([192.55.52.88]:36769 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725964AbgJBMlX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Oct 2020 08:41:23 -0400
-IronPort-SDR: 2ekbzXZ6l9InIQ+Kn7cR0YyZ1c3DuAf+5xkaN8pwiHvsg5waiSZ81/tLSO/l23AluvpqRJOFll
- 2W7xzj9x6Y5Q==
-X-IronPort-AV: E=McAfee;i="6000,8403,9761"; a="181105707"
+        id S1725964AbgJBMlZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Oct 2020 08:41:25 -0400
+IronPort-SDR: Ytp5BERBMJKaySN8iB1ccYpfH5AZSUYk38k+HGX4l1+hyiJrm9bLD1nclqgGWq7C2awQqb8JfJ
+ NQwsNs0XDnxg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9761"; a="181105711"
 X-IronPort-AV: E=Sophos;i="5.77,327,1596524400"; 
-   d="scan'208";a="181105707"
+   d="scan'208";a="181105711"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2020 05:41:20 -0700
-IronPort-SDR: BSqpaLl8rVR+R0J7T4+xfGBYifncVlshf5hJXCTxxiSc/Hrfgr3GQbOdtedbmNpaWjBOqjVM2Q
- MsYoTDm335EA==
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2020 05:41:22 -0700
+IronPort-SDR: 5SHLbzd24ughPzdChNcooU7gcjhhwuJWtnyZo0U/aa0fmsS3Vcvnim86XmApf07qPOA1ygr3Rc
+ EhzHKaCVJ6Xw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.77,327,1596524400"; 
-   d="scan'208";a="352362853"
+   d="scan'208";a="352362859"
 Received: from ahunter-desktop.fi.intel.com ([10.237.72.190])
-  by orsmga007.jf.intel.com with ESMTP; 02 Oct 2020 05:41:18 -0700
+  by orsmga007.jf.intel.com with ESMTP; 02 Oct 2020 05:41:20 -0700
 From:   Adrian Hunter <adrian.hunter@intel.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 1/2] scsi: ufs: Add DeepSleep feature
-Date:   Fri,  2 Oct 2020 15:40:42 +0300
-Message-Id: <20201002124043.25394-2-adrian.hunter@intel.com>
+Subject: [PATCH 2/2] scsi: ufs: Workaround UFS devices that object to DeepSleep IMMED
+Date:   Fri,  2 Oct 2020 15:40:43 +0300
+Message-Id: <20201002124043.25394-3-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201002124043.25394-1-adrian.hunter@intel.com>
 References: <20201002124043.25394-1-adrian.hunter@intel.com>
@@ -52,261 +52,134 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DeepSleep is a UFS v3.1 feature that achieves the lowest power consumption
-of the device, apart from power off.
-
-In DeepSleep mode, no commands are accepted, and the only way to exit is
-using a hardware reset or power cycle.
-
-This patch assumes that if a power cycle was an option, then power off
-would be preferable, so only exit via a hardware reset is supported.
-
-Drivers that wish to support DeepSleep need to set a new capability flag
-UFSHCD_CAP_DEEPSLEEP and provide a hardware reset via the existing
- ->device_reset() callback.
-
-It is assumed that UFS devices with wspecversion >= 0x310 support
-DeepSleep.
-
 The UFS specification says to set the IMMED (immediate) flag for the
 Start/Stop Unit command when entering DeepSleep. However some UFS
-devices object to that, which is addressed in a subsequent patch.
+devices object to that. Workaround that by retrying without IMMED.
+Whichever possibility works, the result is recorded for the next
+time.
 
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
- drivers/scsi/ufs/ufs-sysfs.c |  7 ++++++
- drivers/scsi/ufs/ufs.h       |  1 +
- drivers/scsi/ufs/ufshcd.c    | 45 ++++++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h    | 17 +++++++++++++-
- include/trace/events/ufs.h   |  3 ++-
- 5 files changed, 69 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 +++++++++++++++++++++++++++++++++------
+ drivers/scsi/ufs/ufshcd.h | 11 ++++++++
+ 2 files changed, 56 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index bdcd27faa054..08e72b7eef6a 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -28,6 +28,7 @@ static const char *ufschd_ufs_dev_pwr_mode_to_string(
- 	case UFS_ACTIVE_PWR_MODE:	return "ACTIVE";
- 	case UFS_SLEEP_PWR_MODE:	return "SLEEP";
- 	case UFS_POWERDOWN_PWR_MODE:	return "POWERDOWN";
-+	case UFS_DEEPSLEEP_PWR_MODE:	return "DEEPSLEEP";
- 	default:			return "UNKNOWN";
- 	}
- }
-@@ -38,6 +39,7 @@ static inline ssize_t ufs_sysfs_pm_lvl_store(struct device *dev,
- 					     bool rpm)
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	unsigned long flags, value;
- 
- 	if (kstrtoul(buf, 0, &value))
-@@ -46,6 +48,11 @@ static inline ssize_t ufs_sysfs_pm_lvl_store(struct device *dev,
- 	if (value >= UFS_PM_LVL_MAX)
- 		return -EINVAL;
- 
-+	if (ufs_pm_lvl_states[value].dev_state == UFS_DEEPSLEEP_PWR_MODE &&
-+	    (!(hba->caps & UFSHCD_CAP_DEEPSLEEP) ||
-+	     !(dev_info->wspecversion >= 0x310)))
-+		return -EINVAL;
-+
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (rpm)
- 		hba->rpm_lvl = value;
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index f8ab16f30fdc..d593edb48767 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -442,6 +442,7 @@ enum ufs_dev_pwr_mode {
- 	UFS_ACTIVE_PWR_MODE	= 1,
- 	UFS_SLEEP_PWR_MODE	= 2,
- 	UFS_POWERDOWN_PWR_MODE	= 3,
-+	UFS_DEEPSLEEP_PWR_MODE	= 4,
- };
- 
- #define UFS_WB_BUF_REMAIN_PERCENT(val) ((val) / 10)
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b8f573a02713..d072b0c80bd8 100644
+index d072b0c80bd8..3a67a711c0ae 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -163,6 +163,11 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
- 	{UFS_SLEEP_PWR_MODE, UIC_LINK_HIBERN8_STATE},
- 	{UFS_POWERDOWN_PWR_MODE, UIC_LINK_HIBERN8_STATE},
- 	{UFS_POWERDOWN_PWR_MODE, UIC_LINK_OFF_STATE},
-+	/*
-+	 * For DeepSleep, the link is first put in hibern8 and then off.
-+	 * Leaving the link in hibern8 is not supported.
-+	 */
-+	{UFS_DEEPSLEEP_PWR_MODE, UIC_LINK_OFF_STATE},
- };
+@@ -8202,6 +8202,44 @@ ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
+ 	return ret;
+ }
  
- static inline enum ufs_dev_pwr_mode
-@@ -8246,6 +8251,12 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 		hba->wlun_dev_clr_ua = false;
- 	}
- 
++static bool ufshcd_set_immed(struct ufs_hba *hba,
++			     enum ufs_dev_pwr_mode pwr_mode)
++{
 +	/*
 +	 * DeepSleep requires the Immediate flag. DeepSleep state is actually
 +	 * entered when the link state goes to Hibern8.
 +	 */
-+	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE)
-+		cmd[1] = 1;
++	return pwr_mode == UFS_DEEPSLEEP_PWR_MODE &&
++	       hba->deepsleep_immed != UFS_DEEPSLEEP_IMMED_BROKEN;
++}
++
++static bool ufshcd_retry_dev_pwr_mode(struct ufs_hba *hba,
++				      enum ufs_dev_pwr_mode pwr_mode,
++				      unsigned char *cmd, int ret,
++				      struct scsi_sense_hdr *sshdr)
++{
++	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE &&
++	    hba->deepsleep_immed == UFS_DEEPSLEEP_IMMED_UNKNOWN &&
++	    (cmd[1] & 1) && driver_byte(ret) == DRIVER_SENSE &&
++	    scsi_sense_valid(sshdr) && sshdr->sense_key == ILLEGAL_REQUEST) {
++		cmd[1] &= ~1;
++		return true;
++	}
++	return false;
++}
++
++static void ufshcd_set_dev_pwr_mode_success(struct ufs_hba *hba,
++					    enum ufs_dev_pwr_mode pwr_mode,
++					    unsigned char *cmd)
++{
++	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE &&
++	    hba->deepsleep_immed == UFS_DEEPSLEEP_IMMED_UNKNOWN) {
++		hba->deepsleep_immed = (cmd[1] & 1) ?
++					UFS_DEEPSLEEP_IMMED_OK :
++					UFS_DEEPSLEEP_IMMED_BROKEN;
++	}
++}
++
+ /**
+  * ufshcd_set_dev_pwr_mode - sends START STOP UNIT command to set device
+  *			     power mode
+@@ -8251,14 +8289,9 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 		hba->wlun_dev_clr_ua = false;
+ 	}
+ 
+-	/*
+-	 * DeepSleep requires the Immediate flag. DeepSleep state is actually
+-	 * entered when the link state goes to Hibern8.
+-	 */
+-	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE)
+-		cmd[1] = 1;
++	cmd[1] = ufshcd_set_immed(hba, pwr_mode) ? 1 : 0;
  	cmd[4] = pwr_mode << 4;
- 
+-
++retry:
  	/*
-@@ -8292,7 +8303,8 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 	}
- 	/*
- 	 * If autobkops is enabled, link can't be turned off because
--	 * turning off the link would also turn off the device.
-+	 * turning off the link would also turn off the device, except in the
-+	 * case of DeepSleep where the device is expected to remain powered.
- 	 */
- 	else if ((req_link_state == UIC_LINK_OFF_STATE) &&
- 		 (!check_for_bkops || !hba->auto_bkops_enabled)) {
-@@ -8302,6 +8314,9 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
- 		 * put the link in low power mode is to send the DME end point
- 		 * to device and then send the DME reset command to local
- 		 * unipro. But putting the link in hibern8 is much faster.
-+		 *
-+		 * Note also that putting the link in Hibern8 is a requirement
-+		 * for entering DeepSleep.
- 		 */
- 		ret = ufshcd_uic_hibern8_enter(hba);
- 		if (ret) {
-@@ -8434,6 +8449,7 @@ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba)
- static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	int ret = 0;
-+	int check_for_bkops;
- 	enum ufs_pm_level pm_lvl;
- 	enum ufs_dev_pwr_mode req_dev_pwr_mode;
- 	enum uic_link_state req_link_state;
-@@ -8519,7 +8535,13 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	 * Current function would be generally called from the power management
+ 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+@@ -8267,6 +8300,8 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+ 			START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
+ 	if (ret) {
++		if (ufshcd_retry_dev_pwr_mode(hba, pwr_mode, cmd, ret, &sshdr))
++			goto retry;
+ 		sdev_printk(KERN_WARNING, sdp,
+ 			    "START_STOP failed for power mode: %d, result %x\n",
+ 			    pwr_mode, ret);
+@@ -8274,8 +8309,10 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 			scsi_print_sense_hdr(sdp, NULL, &sshdr);
  	}
  
- 	flush_work(&hba->eeh_work);
--	ret = ufshcd_link_state_transition(hba, req_link_state, 1);
-+
-+	/*
-+	 * In the case of DeepSleep, the device is expected to remain powered
-+	 * with the link off, so do not check for bkops.
-+	 */
-+	check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
-+	ret = ufshcd_link_state_transition(hba, req_link_state, check_for_bkops);
- 	if (ret)
- 		goto set_dev_active;
- 
-@@ -8560,11 +8582,25 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	if (hba->clk_scaling.is_allowed)
- 		ufshcd_resume_clkscaling(hba);
- 	ufshcd_vreg_set_hpm(hba);
-+	/*
-+	 * Device hardware reset is required to exit DeepSleep. Also, for
-+	 * DeepSleep, the link is off so host reset and restore will be done
-+	 * further below.
-+	 */
-+	if (ufshcd_is_ufs_dev_deepsleep(hba)) {
-+		ufshcd_vops_device_reset(hba);
-+		WARN_ON(!ufshcd_is_link_off(hba));
+-	if (!ret)
++	if (!ret) {
+ 		hba->curr_dev_pwr_mode = pwr_mode;
++		ufshcd_set_dev_pwr_mode_success(hba, pwr_mode, cmd);
 +	}
- 	if (ufshcd_is_link_hibern8(hba) && !ufshcd_uic_hibern8_exit(hba))
- 		ufshcd_set_link_active(hba);
- 	else if (ufshcd_is_link_off(hba))
- 		ufshcd_host_reset_and_restore(hba);
- set_dev_active:
-+	/* Can also get here needing to exit DeepSleep */
-+	if (ufshcd_is_ufs_dev_deepsleep(hba)) {
-+		ufshcd_vops_device_reset(hba);
-+		ufshcd_host_reset_and_restore(hba);
-+	}
- 	if (!ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE))
- 		ufshcd_disable_auto_bkops(hba);
- enable_gating:
-@@ -8626,6 +8662,9 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	if (ret)
- 		goto disable_vreg;
- 
-+	/* For DeepSleep, the only supported option is to have the link off */
-+	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && !ufshcd_is_link_off(hba));
-+
- 	if (ufshcd_is_link_hibern8(hba)) {
- 		ret = ufshcd_uic_hibern8_exit(hba);
- 		if (!ret) {
-@@ -8639,6 +8678,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		/*
- 		 * A full initialization of the host and the device is
- 		 * required since the link was put to off during suspend.
-+		 * Note, in the case of DeepSleep, the device will exit
-+		 * DeepSleep due to device reset.
- 		 */
- 		ret = ufshcd_reset_and_restore(hba);
- 		/*
+ out:
+ 	scsi_device_put(sdp);
+ 	hba->host->eh_noresume = 0;
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 6663325ed8a0..8c6094fb35f4 100644
+index 8c6094fb35f4..b4bf00891c9f 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -114,16 +114,22 @@ enum uic_link_state {
- 	((h)->curr_dev_pwr_mode = UFS_SLEEP_PWR_MODE)
- #define ufshcd_set_ufs_dev_poweroff(h) \
- 	((h)->curr_dev_pwr_mode = UFS_POWERDOWN_PWR_MODE)
-+#define ufshcd_set_ufs_dev_deepsleep(h) \
-+	((h)->curr_dev_pwr_mode = UFS_DEEPSLEEP_PWR_MODE)
- #define ufshcd_is_ufs_dev_active(h) \
- 	((h)->curr_dev_pwr_mode == UFS_ACTIVE_PWR_MODE)
- #define ufshcd_is_ufs_dev_sleep(h) \
- 	((h)->curr_dev_pwr_mode == UFS_SLEEP_PWR_MODE)
- #define ufshcd_is_ufs_dev_poweroff(h) \
- 	((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
-+#define ufshcd_is_ufs_dev_deepsleep(h) \
-+	((h)->curr_dev_pwr_mode == UFS_DEEPSLEEP_PWR_MODE)
- 
- /*
-  * UFS Power management levels.
-- * Each level is in increasing order of power savings.
-+ * Each level is in increasing order of power savings, except DeepSleep
-+ * which is lower than PowerDown with power on but not PowerDown with
-+ * power off.
-  */
- enum ufs_pm_level {
- 	UFS_PM_LVL_0, /* UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE */
-@@ -132,6 +138,7 @@ enum ufs_pm_level {
- 	UFS_PM_LVL_3, /* UFS_SLEEP_PWR_MODE, UIC_LINK_HIBERN8_STATE */
- 	UFS_PM_LVL_4, /* UFS_POWERDOWN_PWR_MODE, UIC_LINK_HIBERN8_STATE */
- 	UFS_PM_LVL_5, /* UFS_POWERDOWN_PWR_MODE, UIC_LINK_OFF_STATE */
-+	UFS_PM_LVL_6, /* UFS_DEEPSLEEP_PWR_MODE, UIC_LINK_OFF_STATE */
- 	UFS_PM_LVL_MAX
+@@ -147,6 +147,16 @@ struct ufs_pm_lvl_states {
+ 	enum uic_link_state link_state;
  };
  
-@@ -591,6 +598,14 @@ enum ufshcd_caps {
- 	 * inline crypto engine, if it is present
- 	 */
- 	UFSHCD_CAP_CRYPTO				= 1 << 8,
++/*
++ * Whether or not to set the immediate flag for the DeepSleep START_STOP unit
++ * command.
++ */
++enum ufs_deepsleep_immed {
++	UFS_DEEPSLEEP_IMMED_UNKNOWN,	/* Set IMMED, but retry without it */
++	UFS_DEEPSLEEP_IMMED_OK,		/* Set IMMED */
++	UFS_DEEPSLEEP_IMMED_BROKEN,	/* Do not set IMMED */
++};
 +
-+	/*
-+	 * This capability allows the host controller driver to use DeepSleep,
-+	 * if it is supported by the UFS device. The host controller driver must
-+	 * support device hardware reset via the hba->device_reset() callback,
-+	 * in order to exit DeepSleep state.
-+	 */
-+	UFSHCD_CAP_DEEPSLEEP				= 1 << 9,
- };
+ /**
+  * struct ufshcd_lrb - local reference block
+  * @utr_descriptor_ptr: UTRD address of the command
+@@ -705,6 +715,7 @@ struct ufs_hba {
+ 	struct device_attribute rpm_lvl_attr;
+ 	struct device_attribute spm_lvl_attr;
+ 	int pm_op_in_progress;
++	enum ufs_deepsleep_immed deepsleep_immed;
  
- struct ufs_hba_variant_params {
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 84841b3a7ffd..2362244c2a9e 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -19,7 +19,8 @@
- #define UFS_PWR_MODES			\
- 	EM(UFS_ACTIVE_PWR_MODE)		\
- 	EM(UFS_SLEEP_PWR_MODE)		\
--	EMe(UFS_POWERDOWN_PWR_MODE)
-+	EM(UFS_POWERDOWN_PWR_MODE)	\
-+	EMe(UFS_DEEPSLEEP_PWR_MODE)
- 
- #define UFSCHD_CLK_GATING_STATES	\
- 	EM(CLKS_OFF)			\
+ 	/* Auto-Hibernate Idle Timer register value */
+ 	u32 ahit;
 -- 
 2.17.1
 
