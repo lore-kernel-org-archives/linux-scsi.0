@@ -7,179 +7,110 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FF4FC4727D
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 12:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03FAAC4363D
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 14:34:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5382520719
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 12:41:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4DBF206FA
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Oct 2020 14:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387896AbgJBMlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Oct 2020 08:41:32 -0400
-Received: from mga01.intel.com ([192.55.52.88]:36769 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725964AbgJBMlZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Oct 2020 08:41:25 -0400
-IronPort-SDR: Ytp5BERBMJKaySN8iB1ccYpfH5AZSUYk38k+HGX4l1+hyiJrm9bLD1nclqgGWq7C2awQqb8JfJ
- NQwsNs0XDnxg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9761"; a="181105711"
-X-IronPort-AV: E=Sophos;i="5.77,327,1596524400"; 
-   d="scan'208";a="181105711"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2020 05:41:22 -0700
-IronPort-SDR: 5SHLbzd24ughPzdChNcooU7gcjhhwuJWtnyZo0U/aa0fmsS3Vcvnim86XmApf07qPOA1ygr3Rc
- EhzHKaCVJ6Xw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,327,1596524400"; 
-   d="scan'208";a="352362859"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.190])
-  by orsmga007.jf.intel.com with ESMTP; 02 Oct 2020 05:41:20 -0700
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 2/2] scsi: ufs: Workaround UFS devices that object to DeepSleep IMMED
-Date:   Fri,  2 Oct 2020 15:40:43 +0300
-Message-Id: <20201002124043.25394-3-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201002124043.25394-1-adrian.hunter@intel.com>
-References: <20201002124043.25394-1-adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+        id S2388135AbgJBOei (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Oct 2020 10:34:38 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:14796 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2387807AbgJBOei (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Oct 2020 10:34:38 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id ACF00CFFD81C78F9AE78;
+        Fri,  2 Oct 2020 22:34:34 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
+ 14.3.487.0; Fri, 2 Oct 2020 22:34:26 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 2/7] scsi: hisi_sas: Switch to new framework to support suspend and resume
+Date:   Fri, 2 Oct 2020 22:30:33 +0800
+Message-ID: <1601649038-25534-3-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1601649038-25534-1-git-send-email-john.garry@huawei.com>
+References: <1601649038-25534-1-git-send-email-john.garry@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The UFS specification says to set the IMMED (immediate) flag for the
-Start/Stop Unit command when entering DeepSleep. However some UFS
-devices object to that. Workaround that by retrying without IMMED.
-Whichever possibility works, the result is recorded for the next
-time.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+For v3 hw, we will add support for runtime PM which is only supported in
+new framework. Legacy PM support and new framework are not allowed to be
+used together. So switch to new framework to support suspend and resume.
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 53 +++++++++++++++++++++++++++++++++------
- drivers/scsi/ufs/ufshcd.h | 11 ++++++++
- 2 files changed, 56 insertions(+), 8 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d072b0c80bd8..3a67a711c0ae 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8202,6 +8202,44 @@ ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
- 	return ret;
- }
- 
-+static bool ufshcd_set_immed(struct ufs_hba *hba,
-+			     enum ufs_dev_pwr_mode pwr_mode)
-+{
-+	/*
-+	 * DeepSleep requires the Immediate flag. DeepSleep state is actually
-+	 * entered when the link state goes to Hibern8.
-+	 */
-+	return pwr_mode == UFS_DEEPSLEEP_PWR_MODE &&
-+	       hba->deepsleep_immed != UFS_DEEPSLEEP_IMMED_BROKEN;
-+}
-+
-+static bool ufshcd_retry_dev_pwr_mode(struct ufs_hba *hba,
-+				      enum ufs_dev_pwr_mode pwr_mode,
-+				      unsigned char *cmd, int ret,
-+				      struct scsi_sense_hdr *sshdr)
-+{
-+	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE &&
-+	    hba->deepsleep_immed == UFS_DEEPSLEEP_IMMED_UNKNOWN &&
-+	    (cmd[1] & 1) && driver_byte(ret) == DRIVER_SENSE &&
-+	    scsi_sense_valid(sshdr) && sshdr->sense_key == ILLEGAL_REQUEST) {
-+		cmd[1] &= ~1;
-+		return true;
-+	}
-+	return false;
-+}
-+
-+static void ufshcd_set_dev_pwr_mode_success(struct ufs_hba *hba,
-+					    enum ufs_dev_pwr_mode pwr_mode,
-+					    unsigned char *cmd)
-+{
-+	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE &&
-+	    hba->deepsleep_immed == UFS_DEEPSLEEP_IMMED_UNKNOWN) {
-+		hba->deepsleep_immed = (cmd[1] & 1) ?
-+					UFS_DEEPSLEEP_IMMED_OK :
-+					UFS_DEEPSLEEP_IMMED_BROKEN;
-+	}
-+}
-+
- /**
-  * ufshcd_set_dev_pwr_mode - sends START STOP UNIT command to set device
-  *			     power mode
-@@ -8251,14 +8289,9 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 		hba->wlun_dev_clr_ua = false;
- 	}
- 
--	/*
--	 * DeepSleep requires the Immediate flag. DeepSleep state is actually
--	 * entered when the link state goes to Hibern8.
--	 */
--	if (pwr_mode == UFS_DEEPSLEEP_PWR_MODE)
--		cmd[1] = 1;
-+	cmd[1] = ufshcd_set_immed(hba, pwr_mode) ? 1 : 0;
- 	cmd[4] = pwr_mode << 4;
--
-+retry:
- 	/*
- 	 * Current function would be generally called from the power management
- 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
-@@ -8267,6 +8300,8 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 	ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
- 			START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
- 	if (ret) {
-+		if (ufshcd_retry_dev_pwr_mode(hba, pwr_mode, cmd, ret, &sshdr))
-+			goto retry;
- 		sdev_printk(KERN_WARNING, sdp,
- 			    "START_STOP failed for power mode: %d, result %x\n",
- 			    pwr_mode, ret);
-@@ -8274,8 +8309,10 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 			scsi_print_sense_hdr(sdp, NULL, &sshdr);
- 	}
- 
--	if (!ret)
-+	if (!ret) {
- 		hba->curr_dev_pwr_mode = pwr_mode;
-+		ufshcd_set_dev_pwr_mode_success(hba, pwr_mode, cmd);
-+	}
- out:
- 	scsi_device_put(sdp);
- 	hba->host->eh_noresume = 0;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 8c6094fb35f4..b4bf00891c9f 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -147,6 +147,16 @@ struct ufs_pm_lvl_states {
- 	enum uic_link_state link_state;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 0cc186fcbca8..e73c124355e5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3407,8 +3407,9 @@ enum {
+ 	hip08,
  };
  
-+/*
-+ * Whether or not to set the immediate flag for the DeepSleep START_STOP unit
-+ * command.
-+ */
-+enum ufs_deepsleep_immed {
-+	UFS_DEEPSLEEP_IMMED_UNKNOWN,	/* Set IMMED, but retry without it */
-+	UFS_DEEPSLEEP_IMMED_OK,		/* Set IMMED */
-+	UFS_DEEPSLEEP_IMMED_BROKEN,	/* Do not set IMMED */
+-static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
++static int suspend_v3_hw(struct device *device)
+ {
++	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct device *dev = hisi_hba->dev;
+@@ -3439,7 +3440,7 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
+ 
+ 	hisi_sas_init_mem(hisi_hba);
+ 
+-	device_state = pci_choose_state(pdev, state);
++	device_state = pci_choose_state(pdev, PMSG_SUSPEND);
+ 	dev_warn(dev, "entering operating state [D%d]\n",
+ 			device_state);
+ 	pci_save_state(pdev);
+@@ -3452,8 +3453,9 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	return 0;
+ }
+ 
+-static int hisi_sas_v3_resume(struct pci_dev *pdev)
++static int resume_v3_hw(struct device *device)
+ {
++	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct Scsi_Host *shost = hisi_hba->shost;
+@@ -3501,14 +3503,17 @@ static const struct pci_error_handlers hisi_sas_err_handler = {
+ 	.reset_done	= hisi_sas_reset_done_v3_hw,
+ };
+ 
++static const struct dev_pm_ops hisi_sas_v3_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(suspend_v3_hw, resume_v3_hw)
 +};
 +
- /**
-  * struct ufshcd_lrb - local reference block
-  * @utr_descriptor_ptr: UTRD address of the command
-@@ -705,6 +715,7 @@ struct ufs_hba {
- 	struct device_attribute rpm_lvl_attr;
- 	struct device_attribute spm_lvl_attr;
- 	int pm_op_in_progress;
-+	enum ufs_deepsleep_immed deepsleep_immed;
+ static struct pci_driver sas_v3_pci_driver = {
+ 	.name		= DRV_NAME,
+ 	.id_table	= sas_v3_pci_table,
+ 	.probe		= hisi_sas_v3_probe,
+ 	.remove		= hisi_sas_v3_remove,
+-	.suspend	= hisi_sas_v3_suspend,
+-	.resume		= hisi_sas_v3_resume,
+ 	.err_handler	= &hisi_sas_err_handler,
++	.driver.pm	= &hisi_sas_v3_pm_ops,
+ };
  
- 	/* Auto-Hibernate Idle Timer register value */
- 	u32 ahit;
+ module_pci_driver(sas_v3_pci_driver);
 -- 
-2.17.1
+2.26.2
 
