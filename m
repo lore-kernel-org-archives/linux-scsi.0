@@ -2,98 +2,103 @@ Return-Path: <SRS0=wS4L=DK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5EF0C4363C
-	for <linux-scsi@archiver.kernel.org>; Sat,  3 Oct 2020 00:23:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 942A9C46466
+	for <linux-scsi@archiver.kernel.org>; Sat,  3 Oct 2020 01:11:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C458206E3
-	for <linux-scsi@archiver.kernel.org>; Sat,  3 Oct 2020 00:23:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48B7321707
+	for <linux-scsi@archiver.kernel.org>; Sat,  3 Oct 2020 01:11:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dirpsFas"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725550AbgJCAXp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Oct 2020 20:23:45 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:40048 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725379AbgJCAXp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2020 20:23:45 -0400
-Received: by mail-pf1-f196.google.com with SMTP id w21so2503703pfc.7;
-        Fri, 02 Oct 2020 17:23:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=CtWlc9tOOk7EdLHe8DbuEVwI2UYtcy4XzuaSQSybDAA=;
-        b=NVlit/ppejkqJXXyEqshB6DykTMZXNu1mMx4M1/oG8WSGFnh1wmqDR5zx3BxESgxun
-         IAyxi/j1lQlRzBZdgmo6SspJVfcXSBYMETHHMmjv1pUxCaOgBFVK/66xMvSR/+kwXmAU
-         DmnI/jayfCwulCQeSXV5ZRhmQnS0qsfMJxc65TbZEJINjPUqiWuJBZGmk1Kwu6q7FVyD
-         QSh9H1ttJr6voRjeIazmPeDJtgX92GvogOo5ZDBJR61SHt/D8MCRauGf+lLn1TbJY8Eo
-         VCTPuENnhmdXX+n+diPTQIqAC1abTEZWcKRt5heqp2eA/kOzTBDXW+7E+W9WCgyRNPTG
-         2Nyw==
-X-Gm-Message-State: AOAM530UoHerbVWK/tD2NuKS4a9zpv/OdKIOwgxQPZEyecRK3678PTRF
-        zNd5FD5saacwI8PWMFB3eRd33ll67P4=
-X-Google-Smtp-Source: ABdhPJyEwxKMNfbbclA/aT2WZM/lMuKisnCfxXIDNBG/1U6ujaD4QdhZJV7RnphaN030C4YPj8WLTg==
-X-Received: by 2002:aa7:9f4e:0:b029:142:2501:39f1 with SMTP id h14-20020aa79f4e0000b0290142250139f1mr5248880pfr.64.1601684624054;
-        Fri, 02 Oct 2020 17:23:44 -0700 (PDT)
-Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id e27sm3368624pfj.62.2020.10.02.17.23.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Oct 2020 17:23:42 -0700 (PDT)
-Subject: Re: [PATCH] Revert "scsi: target/iscsi: Detect conn_cmd_list
- corruption early"
-To:     Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20201002073341.12470-1-mlombard@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ce44115e-f8ac-0307-88bd-f6a2e9d7f7f3@acm.org>
-Date:   Fri, 2 Oct 2020 17:23:40 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1725767AbgJCBLf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Oct 2020 21:11:35 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:57662 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725379AbgJCBLf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2020 21:11:35 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0931AkZD170346;
+        Sat, 3 Oct 2020 01:11:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=yoC4tlx0bgWcBOCMfOT1xNTc5SatBxasTSFvK+vjszY=;
+ b=dirpsFasiCq1ib7bii7b9ccjSZJcI9XJqrLb6OcdfXz5/dVyO7nM8HtQHrv7TMgWCLE4
+ PoHJ1rU+HColq+vYBFWNyXBEdFI7LX7q4l2UtBBdeeYQPppR+odW+9Uz6rbf9mXtr+Au
+ xuhL/mC9nKlw4GaDiIJHh5yEtPOwWv0ZdSCKeIj+NeNX0aQ4izNu4mWbC9std7/9MoCR
+ JNrpzQL3m2D+oTSMW9hwsuc7L6mgrFuq/8n6n6WjFfssLymr8wcBREFNwy9odKB685H3
+ gVlg18GRchW4Jzp8B1dAJDoYY0ctauFUx9wwMhq8J2wHPZVNAzrH8/bxVC+mWkDWTy1i Fg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 33sx9nne7s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 03 Oct 2020 01:11:19 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0931B1mO162841;
+        Sat, 3 Oct 2020 01:11:18 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 33xfb8g20p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 03 Oct 2020 01:11:18 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0931BGoA027064;
+        Sat, 3 Oct 2020 01:11:16 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 02 Oct 2020 18:11:14 -0700
+To:     "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
+Cc:     "Satish Kharat (satishkh)" <satishkh@cisco.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Govindarajulu Varadarajan (gvaradar)" <gvaradar@cisco.com>
+Subject: Re: [PATCH] fnic: to not call 'scsi_done()' for unhandled commands
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1eemgdsi2.fsf@ca-mkp.ca.oracle.com>
+References: <20200515112647.49260-1-hare@suse.de>
+        <fe3e6ab8cfeb23dc46f0413ddfd47efe5e33df7f.camel@redhat.com>
+        <5aa5ed17-e763-4b07-7526-fe1c97c04f31@suse.de>
+        <62ac9a52021d3217171a9d1a3ce5eef913780273.camel@redhat.com>
+        <9c0b41a03f636d1ef98da9f8a12422d61d71fbff.camel@suse.com>
+        <BYAPR11MB29971B225AB19F0DE072AF0BD7770@BYAPR11MB2997.namprd11.prod.outlook.com>
+        <BY5PR11MB3863DF6CE5C19EC0CFEA59F0C3380@BY5PR11MB3863.namprd11.prod.outlook.com>
+        <BY5PR11MB38636B3EF3A314D741AE0BDFC3320@BY5PR11MB3863.namprd11.prod.outlook.com>
+Date:   Fri, 02 Oct 2020 21:11:12 -0400
+In-Reply-To: <BY5PR11MB38636B3EF3A314D741AE0BDFC3320@BY5PR11MB3863.namprd11.prod.outlook.com>
+        (Karan Tilak Kumar's message of "Tue, 29 Sep 2020 22:45:06 +0000")
 MIME-Version: 1.0
-In-Reply-To: <20201002073341.12470-1-mlombard@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9762 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 bulkscore=0
+ suspectscore=1 malwarescore=0 mlxlogscore=999 phishscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010030010
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9762 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
+ phishscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 clxscore=1011
+ spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010030010
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/2/20 12:33 AM, Maurizio Lombardi wrote:
-> This reverts commit b0055acaedf56a2717a6e2a4b700f1959a1b60df.
-> 
-> This warning is duplicated because the very same condition
-> is already checked in __iscsit_free_cmd().
-> 
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> ---
->   drivers/target/iscsi/iscsi_target_util.c | 2 --
->   1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-> index 45ba07c6ec27..ff7830ddbd7b 100644
-> --- a/drivers/target/iscsi/iscsi_target_util.c
-> +++ b/drivers/target/iscsi/iscsi_target_util.c
-> @@ -764,8 +764,6 @@ void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
->   	struct se_cmd *se_cmd = cmd->se_cmd.se_tfo ? &cmd->se_cmd : NULL;
->   	int rc;
->   
-> -	WARN_ON(!list_empty(&cmd->i_conn_node));
-> -
->   	__iscsit_free_cmd(cmd, shutdown);
->   	if (se_cmd) {
->   		rc = transport_generic_free_cmd(se_cmd, shutdown);
 
-Hi Maurizio,
+Karan,
 
-I agree that the same WARN_ON() occurs inside __iscsit_free_cmd(). What is not
-clear to me is how removing the WARN_ON() statement from iscsit_free_cmd() can
-help since an identical statement occurs inside __iscsit_free_cmd()?
+> This fix was tested by Cisco QA and the fix looks good.
 
-Thanks,
+Applied to 5.10/scsi-staging with a warning fix. Thanks!
 
-Bart.
-
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
