@@ -2,175 +2,132 @@ Return-Path: <SRS0=kzw7=DL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53445C4363D
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Oct 2020 03:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F4AC47095
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Oct 2020 07:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2354A20781
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Oct 2020 03:40:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6EF6206C3
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Oct 2020 07:21:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Emxk9PEE";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="wtnElEyH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726363AbgJDDjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 3 Oct 2020 23:39:04 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35212 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726263AbgJDDjD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 3 Oct 2020 23:39:03 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 491A0AC54;
-        Sun,  4 Oct 2020 03:39:01 +0000 (UTC)
-Subject: Re: [PATCH v10 0/7] Introduce sendpage_ok() to detect misused
- sendpage in network related drivers
-To:     David Miller <davem@davemloft.net>
-Cc:     linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        netdev@vger.kernel.org, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, chaitanya.kulkarni@wdc.com,
-        cleech@redhat.com, hch@lst.de, amwang@redhat.com,
-        eric.dumazet@gmail.com, hare@suse.de, idryomov@gmail.com,
-        jack@suse.com, jlayton@kernel.org, axboe@kernel.dk,
-        lduncan@suse.com, michaelc@cs.wisc.edu,
-        mskorzhinskiy@solarflare.com, philipp.reisner@linbit.com,
-        sagi@grimberg.me, vvs@virtuozzo.com, vbabka@suse.com
-References: <20201002082734.13925-1-colyli@suse.de>
- <20201002.152829.1002796270145913943.davem@davemloft.net>
-From:   Coly Li <colyli@suse.de>
-Autocrypt: addr=colyli@suse.de; keydata=
- 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
-Message-ID: <e4482d6a-ee44-04e4-42d0-bb9ab6fc23c7@suse.de>
-Date:   Sun, 4 Oct 2020 11:38:49 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.0
-MIME-Version: 1.0
-In-Reply-To: <20201002.152829.1002796270145913943.davem@davemloft.net>
-Content-Type: text/plain; charset=utf-8
+        id S1725835AbgJDHVA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 4 Oct 2020 03:21:00 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:1248 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725825AbgJDHVA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Oct 2020 03:21:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1601796060; x=1633332060;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=cuX35NZCxmLaPAE4V+bJcgKNfQtt6XH9TL4RC1ZvbU4=;
+  b=Emxk9PEEAXQiSm0kZ39si4mj5CA9YWAMBXwfLANL3UTS6Kuln5Vbqcuf
+   VTW7kkeuBgcRhdDLNh1MARo42R9ItIXkpDigATvyUklNC3IZl4uU5jECC
+   pbQcV/3mlDE469Gwem34feIVKxIwH3CbiTEeRDhe0a+mQmgEAR+U/U+pn
+   tEj5quJ36e8iPBwsjh2bYcvO8spqEsrAFw894EcyCUPbXcPSO4vGqNzH9
+   EyjvpXk9ZKDG/QArsHKLt2yKRa9J+omcLkVfKzn6xZcCskTeHlqAVqe1d
+   MXiF8+1GXBSuH2wHlO8Idu2B+6KdO85xhEfJZ77INnauS8yJrRZRrF9DS
+   g==;
+IronPort-SDR: ROP/plRzvZbtqzD+uuSLBuU3lkpCPFEYfLm7bX/3frnCeUlwrifAvdkazSHPOmxcpulkXF+X9C
+ zJEOZ787JHvvJV0isQECsWDGe6SUPjR2/oy/pp6h40OoHEVor4uMeW/shMddxXlp7qE2z6aCJP
+ k1+BgJOHrxFSZLbb2cimNG/sPivhtt1tZaft2I/Twq9sQekQpCZoB4hVd7f3ByTAwWqLAxvYjs
+ IiY7hs+dm4S7wqOw+cx5hoc7TbzCFSTFxlIw40jbHMj4dxsYkb+1a59UukxtoqRrlroBIrJ9yo
+ VSI=
+X-IronPort-AV: E=Sophos;i="5.77,334,1596470400"; 
+   d="scan'208";a="258790465"
+Received: from mail-dm6nam12lp2168.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.168])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Oct 2020 15:20:59 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZKVJf0JHRusRROA/8YPIptxJAoQsg8KPyj4DxSzMIdttMseG6soV166S2TvXHsOM0l3tIQXVNu0cpLd3ADyOdTxSBuW7zBFkzvdi7++xctJa8B4InXQIsiMSeye3ijXZfmk3Yw+AIW3JVfFS2ifC1hwIE8pNiVV/HFYc8bBqVjClYG5BDodjkeomP+AbpkkXYtuyiXf/VIt+uZZTipicL+p0tTi5ZBklHqND1LXHzJg+c5Knyx46WxYTS5esRuxjML0W+wYcgnJILdxU+KkTIQc6TpYuivWAhN0TyspFq0m2sYloY8zcFGUBDfDRLL8TcfB75UmmVyRWX7XuP0MpQw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4JMDeCMvqmJDQcRNpMXrbpHmIohpislWjU4QvlfEf0Y=;
+ b=Svaer/Gn6NEU/dtFvxGhXvxCPt5E0dN40h1MrPSdlZcS/jHCr5ko5BpvlrWFM8vXIMzXKtcHvkWH1I+JPqBtshxo9VCngFaCBFeS8iytBIVSKrpILA8rp7lDS5idaC294wVJddeRwoNs2Umg3stoVqcoUFN4nTk0jmouomrCYDL+Es72X7t6/i1Doe599ix5simpKJiL8SURjxWJWBK5A035gs3YO+KCncPMB5fgYdcXDknl2idheN7DnkGbSDMSHxBsvdMrcGoLr9ZfWiIuRmPtsTUZXN74qg4cEDLGtIUtzPg0zlXOMJ28qrSyitRyaJgPovNvCyyVJL/FWLrYLw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4JMDeCMvqmJDQcRNpMXrbpHmIohpislWjU4QvlfEf0Y=;
+ b=wtnElEyHzp89eJRPibr0lZEeHeDGhHfMRVOTv2pQ6iuv0Mqy0m5kpDl71FSSzpKMOfXM5WVdJgPr0W/QpGSsgUAmpacXGYJlffRE7IZoBzHncdcbiXyXbcr6q7j6FwdnWPe1bbYfwUJ1QZpKKDLwZKUIIDwwTQcbe9chJOQ3IaY=
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
+ by BYAPR04MB4087.namprd04.prod.outlook.com (2603:10b6:a02:a9::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.32; Sun, 4 Oct
+ 2020 07:20:57 +0000
+Received: from BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::5567:207e:4c1b:3ce1]) by BY5PR04MB6705.namprd04.prod.outlook.com
+ ([fe80::5567:207e:4c1b:3ce1%8]) with mapi id 15.20.3433.041; Sun, 4 Oct 2020
+ 07:20:57 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: RE: [PATCH 1/2] scsi: ufs: Add DeepSleep feature
+Thread-Topic: [PATCH 1/2] scsi: ufs: Add DeepSleep feature
+Thread-Index: AQHWmLlX/36ef3l9WEy26/6zpaIUz6mHC2pQ
+Date:   Sun, 4 Oct 2020 07:20:57 +0000
+Message-ID: <BY5PR04MB67053A1985F6FD419214C6B9FC0F0@BY5PR04MB6705.namprd04.prod.outlook.com>
+References: <20201002124043.25394-1-adrian.hunter@intel.com>
+ <20201002124043.25394-2-adrian.hunter@intel.com>
+In-Reply-To: <20201002124043.25394-2-adrian.hunter@intel.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: intel.com; dkim=none (message not signed)
+ header.d=none;intel.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 2017d997-3ae8-47d9-1032-08d8683609ac
+x-ms-traffictypediagnostic: BYAPR04MB4087:
+x-microsoft-antispam-prvs: <BYAPR04MB408771588C8252D1F80F1F58FC0F0@BYAPR04MB4087.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:6108;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: s9POC3CE5oasXAM5dTZOisNyvXTCmSh7jyS7xM4aOmE4jgsWvy3vJI60GP3m6horI9vcX4TQm1+Dqr8GpFZ5JyMkkET24EDx1LoayBJcn0ZnMp2SOFJRAcS80MkKzqi7zG9HUOjxWEZI/GQnopb7azi6xKPpTpbXxZz3uoTUKFW23dZ2IozWnX3PrxyVijMS/a/6SgrhIt1IJHm3CT21ZmQzi5Lp51U5/zhLfMtwTS0tXuDpc8ShI+vLl5LrCDyiorxHzMTmywbw4HI51xFSwUJhuaJvDnw9hStgKQn9kpsR2dlDvsa0+F4kJ8xScFfJ
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(366004)(396003)(136003)(39850400004)(76116006)(52536014)(558084003)(86362001)(5660300002)(316002)(54906003)(7696005)(8936002)(110136005)(2906002)(8676002)(4326008)(6506007)(9686003)(55016002)(33656002)(26005)(478600001)(186003)(66476007)(71200400001)(66446008)(64756008)(66946007)(66556008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: wdK3gSo194UOH+55QkWYVxlLr2dHgRIxMdVSOxyRWwsLKHrc+/0gAYQgAkkPfF7wHSWzT/4d5yfCAcd7BYZJ/QB+fEe7Hr3HC/FYgOyxvPd5k1pyxNoWTevYbaWrirW843yfNtwqqW2JOLkXuwDsX5hsBVVzlDrg/Db5D0gRVKl6E1qc/f7z/3vqhgrdqoKLXrSdS7IDMiPv3eQ7+K2l4+FEGrfAIK8N0y/n7znIk+/sX2BXdlfwrULU6am5hyuLKYO6vcu51eEcbcPmHyitXhA49BWF/6FugGYQqToR2x1+sCbv47qq4vQzY6gCPevIWNSe2tXW7IPpgyT0LkgITUi5Si1s2vOT6ofrm1XsA9R8VXFsqIVkgJGRU/6P3mGiwxHfFBleci7/ZsOcoPm/ED4OnlSdRxYJ+Tk6tUaJOgmM+jZp4q918kxRhafyRovbXjkbgzLnXtGgW+vEY+aEf0QO1ERlAthBKuyl/Kmy8YS4t1ux7cArIF4ZtcJKptgIMXTXPRVJ8mrPr4HuQbkwdr4M1NKeUK/8WrH83EbBSLFfV5Jt9op/h+jJfu8kPRkgwXPpKbs8qotBwzUCAq13qDEgbodWQew+MrmQVvyRrOyK53tY4twA5gFKJFo65RYnSMrTP03Ae3DpKatddEsmoQ==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2017d997-3ae8-47d9-1032-08d8683609ac
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Oct 2020 07:20:57.1295
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: K2tlhivLrisVkTp3OrOez8o7b3UajKUQQXMowvtrnh03LVQ0ij/YtPSFFq9FF7DbjYTy4hV+mUXdxeKz5mPidA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4087
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020/10/3 06:28, David Miller wrote:
-> From: Coly Li <colyli@suse.de>
-> Date: Fri,  2 Oct 2020 16:27:27 +0800
-> 
->> As Sagi Grimberg suggested, the original fix is refind to a more common
->> inline routine:
->>     static inline bool sendpage_ok(struct page *page)
->>     {
->>         return  (!PageSlab(page) && page_count(page) >= 1);
->>     }
->> If sendpage_ok() returns true, the checking page can be handled by the
->> concrete zero-copy sendpage method in network layer.
-> 
-> Series applied.
-> 
->> The v10 series has 7 patches, fixes a WARN_ONCE() usage from v9 series,
->  ...
-> 
-> I still haven't heard from you how such a fundamental build failure
-> was even possible.
-> 
+> +       /*
+> +        * DeepSleep requires the Immediate flag. DeepSleep state is actu=
+ally
+> +        * entered when the link state goes to Hibern8.
+> +        */
+> +       if (pwr_mode =3D=3D UFS_DEEPSLEEP_PWR_MODE)
+> +               cmd[1] =3D 1;
+Shouldn't it be bit1, i.e. cmd[1] =3D 2 ?
 
-Hi David,
-
-Here is the detail steps how I leaked this uncompleted patch to you,
-1) Add WARN_ONCE() as WARN_ON() to kernel_sendpage(). Maybe I was still
-hesitating when I typed WARN_ONCE() on keyboard.
-2) Generate the patches, prepare to post
-3) Hmm, compiling failed, oh it is WARN_ONCE(). Yeah, WARN_ONCE() might
-be more informative and better.
-4) Modify to use WARN_ONCE() and compile and try, looks fine.
-5) Re-generate the patches to overwrite the previous ones.
-6) Post the patches.
-
-The missing part was, before I post the patches, I should do rebase and
-commit the change, but (interrupted by other stuffs) it skipped in my
-mind. Although I regenerated the series but the change was not included.
-The result was, uncompleted patch posted and the second-half change
-still stayed in my local file.
-
-
-> If the v9 patch series did not even compile, how in the world did you
-> perform functional testing of these changes?
-> 
-
-Only 0002-net-add-WARN_ONCE-in-kernel_sendpage-for-improper-ze.patch was
-tested in v9 series, other tests were done in previous versions.
-
-> Please explain this to me, instead of just quietly fixing it and
-> posting an updated series.
-
-
-And not all the patches in the series were tested. Here is the testing
-coverage of the series:
-
-The following ones were tested and verified to break nothing and avoid
-the mm corruption and panic,
-0001-net-introduce-helper-sendpage_ok-in-include-linux-ne.patch
-0002-net-add-WARN_ONCE-in-kernel_sendpage-for-improper-ze.patch
-0003-nvme-tcp-check-page-by-sendpage_ok-before-calling-ke.patch
-0006-scsi-libiscsi-use-sendpage_ok-in-iscsi_tcp_segment_m.patch
-
-The following ones were not tested, due to complicated environment setup,
-0005-drbd-code-cleanup-by-using-sendpage_ok-to-check-page.patch
-0007-libceph-use-sendpage_ok-in-ceph_tcp_sendpage.patch
-
-This patch I didn't explicitly test, due to lack of knowledge to modify
-network code to trigger a buggy condition. It just went with other
-tested patches,
-0004-tcp-use-sendpage_ok-to-detect-misused-.sendpage.patch
-
-
-Back to the built failure, I don't have excuse for leaking this
-uncompleted version to you. Of cause I will try to avoid to
-inefficiently occupy maintainer's time by such silly mess up.
-
-Thanks for your review and the thorough maintenance.
-
-Coly Li
+>         cmd[4] =3D pwr_mode << 4;
+>=20
