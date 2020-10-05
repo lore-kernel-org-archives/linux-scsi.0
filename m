@@ -2,91 +2,75 @@ Return-Path: <SRS0=3mnS=DM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD37AC4363A
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 08:43:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28B11C4363A
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:00:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6E1B2064C
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 08:43:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB5C72078E
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726000AbgJEIn7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Oct 2020 04:43:59 -0400
-Received: from mga17.intel.com ([192.55.52.151]:5278 "EHLO mga17.intel.com"
+        id S1725893AbgJEJA4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Oct 2020 05:00:56 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52302 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725885AbgJEIn7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Oct 2020 04:43:59 -0400
-IronPort-SDR: bQE38C7bVAUMiR2Go6ZAybrDCxmjtsYVgxqFMlFGeo4chf8sKWwB0kg4nxuIuuzQRecGo0iWti
- dVb3Ctn4q8ZQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9764"; a="143346184"
-X-IronPort-AV: E=Sophos;i="5.77,338,1596524400"; 
-   d="scan'208";a="143346184"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2020 01:43:53 -0700
-IronPort-SDR: ELbU7QIRQy4Z7gFsvS+hT+aZWXMh5TrQhcyxJo6tWcYJuAVc2aDlpp5IBBmksRNz76pUT0cERv
- VpKT+B4pLFzQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,338,1596524400"; 
-   d="scan'208";a="516649662"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.190]) ([10.237.72.190])
-  by fmsmga005.fm.intel.com with ESMTP; 05 Oct 2020 01:43:50 -0700
-Subject: Re: [PATCH 1/2] scsi: ufs: Add DeepSleep feature
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-References: <20201002124043.25394-1-adrian.hunter@intel.com>
- <20201002124043.25394-2-adrian.hunter@intel.com>
- <BY5PR04MB67054C67CCA53AB5FC5CBCFAFC0C0@BY5PR04MB6705.namprd04.prod.outlook.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <a3cd3d32-0dcf-ebaf-d6fe-e8f21539dff1@intel.com>
-Date:   Mon, 5 Oct 2020 11:43:15 +0300
+        id S1725885AbgJEJA4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Oct 2020 05:00:56 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 6781EAC97;
+        Mon,  5 Oct 2020 09:00:55 +0000 (UTC)
+Subject: Re: [PATCH 01/10] scsi: don't export scsi_device_from_queue
+To:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <20201005084130.143273-1-hch@lst.de>
+ <20201005084130.143273-2-hch@lst.de>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <a6f92b24-e3c6-aade-c47b-bc44eddb0670@suse.de>
+Date:   Mon, 5 Oct 2020 11:00:53 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <BY5PR04MB67054C67CCA53AB5FC5CBCFAFC0C0@BY5PR04MB6705.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20201005084130.143273-2-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/10/20 11:02 am, Avri Altman wrote:
-> HI,
+On 10/5/20 10:41 AM, Christoph Hellwig wrote:
+> This function is only used by code built into scsi_mod.ko.
 > 
->> Drivers that wish to support DeepSleep need to set a new capability flag
->> UFSHCD_CAP_DEEPSLEEP and provide a hardware reset via the existing
->>  ->device_reset() callback.
-> I would expect that this capability controls sending SSU 4, but it only controls the sysfs entry?
-
-The sysfs entry is the only way to request DeepSleep.
-
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   drivers/scsi/scsi_lib.c | 1 -
+>   1 file changed, 1 deletion(-)
 > 
->>
->> It is assumed that UFS devices with wspecversion >= 0x310 support
->> DeepSleep.
->>
->> The UFS specification says to set the IMMED (immediate) flag for the
->> Start/Stop Unit command when entering DeepSleep. However some UFS
->> devices object to that, which is addressed in a subsequent patch.
-> After failing to understand what the proper behavior should be with respect of the IMMED bit,
-> Although I read the applicable section few time, I gave up and consult our system guy,
-> Which is our jedec representative.  This is his answer:
-> "...
-> In order to avoid uncertainty - the host need to set IMMED bit to '0' (this is explicitly specified by the standard).
-> The device responds only after it switches to Pre-DeepSleep state. The host then switch to H8 and this would trigger the device to transition to DeepSleep state.
-> ..."
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index f0ee11dc07e4b0..b95e00ff346b09 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1959,7 +1959,6 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
+>   
+>   	return sdev;
+>   }
+> -EXPORT_SYMBOL_GPL(scsi_device_from_queue);
+>   
+>   /**
+>    * scsi_block_requests - Utility function used by low-level drivers to prevent
 > 
-> So maybe the 2nd patch isn't really needed. 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Yes I managed to get it the wrong way around!  I will drop patch 2 and send
-V2 of patch 1 in due course.
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
