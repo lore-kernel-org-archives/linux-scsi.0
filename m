@@ -2,139 +2,216 @@ Return-Path: <SRS0=3mnS=DM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C07DC4363D
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 11:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 382EFC4727D
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 11:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4136A206CB
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 11:14:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAC5B20795
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 11:17:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="CmPxaEoc";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="aEVwrFXx"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="KPTmyzCI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725983AbgJELOg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Oct 2020 07:14:36 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:8423 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725843AbgJELOg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Oct 2020 07:14:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1601896476; x=1633432476;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=ag2lpnppfLokmwt8X/zB/8djnrJd0cVu/qCcNBPp0+0=;
-  b=CmPxaEochc3gcEqXowPZZkJD22rSTPAabuitY7pIDjzQdz7W2SA3ihgt
-   iatk34FkAOE9urj6a09Rs4VcuOiqs12e6odxgXRU0lUU1cudexbjc+F6p
-   7+RSlfM03My8l2zTrCFy9EcNWAvRmaKmOnkT2+LBmrGZfk9DMdzog9ap6
-   RRlwwiSP3vvfcn5e5koUoxbft9/OdIyqamBTKEmUlb9M6fluuxRs/w4Ki
-   7YeKFjoT11Yycu57Je4gQYNyk8kRa4h3Q/lMsXy4Bqwunc90nm2Ea+FXc
-   e1SmEXjTupcZVsWqTf14XgvtNvlmHXzCrYhEPqLkqie+vRtvoMrtRfR70
-   w==;
-IronPort-SDR: oRepP9bBM7oh07jBG685BlhVlvomgXuH3z54aV/Yuk2hbqxwnURhO+sWHo0P2FbDUImgGA0P4Q
- CE2gsXFmM6sPiZDzS3N1NOlWX0np9jght3aJDIFMlxQisS61RryKS75XGOPEqEGcdBlSvdVW+N
- TQOunXPQ/73Ocdf6gRzXsW2/dyoTkvxHVV67R9vAXPJVZAqGnashQ4AHJgcU7UEkPNAfsT2dOv
- Cko1rlCiKt69PsYfXHdZLs8Tj/E8jNmhy3ptuAFB2CDdzo0tg8RvyZyPaAJo1DOUZ1kderXMc/
- mOw=
-X-IronPort-AV: E=Sophos;i="5.77,338,1596470400"; 
-   d="scan'208";a="149125915"
-Received: from mail-sn1nam02lp2057.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.36.57])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Oct 2020 19:14:35 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YnTMUhsssu808eYh+e8sWrgLfnyXMq2sNn90B7xSalgLX9gWbW8Iz5jB7vZF05nkRz3qNyENH0fvzBGBKf4CnS+9VszFR7O2ZzdHM61qhfRRuQurLVhJiCsVqTAOxp957eYWfIBet8RpNyf43HTmpqx4vCDMqqzmuw13GH6y9B33+kUYRsVyNC92DAJh6foBSVX/5/nlvThmtIwdxNAKqwZjMNNyPBCc+PI/K1doPtocmu4OCJwcHUNcRUtTJ+IP2r9eKJ9Aa1NtrR5frm7T9ojPtGpvsc7foQcBwBnC75KP3Uposws8OxAOEoIFjE15dI2+lR9hYUslXECCYL84Lw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ag2lpnppfLokmwt8X/zB/8djnrJd0cVu/qCcNBPp0+0=;
- b=Ds3q12w8f1oqeH4z5pkxi8waEJLYYaDNQO8wK5E5NxSLrGuXeJdQYtBzLUSkfQD437E81PLpzxziZ5qEmTrKcgBD09O9HonJ/IX5BHU7Y+1xo1Ehmm8fYIzsmxCHMzAxFeAObwWHXJU3yvIeK2g/AaBs0v1dnpiZnNeR7zk5a0yhqFNG9IpaUHKpw5Rgx+lPGqYktkgcaWNxc1WgN2Y2VADka6ci6gqnftI/uwLM0zNdz1ERa4O8lRT7tgX6QaYHCahRByahTSBmK+jFWPk2CPoXm7yW+NBSekBcPxfUx11WT0XckW8Xww06XDtkcWPy4NKYgeSoLYjOrdRBLMBODQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1726005AbgJELRB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Oct 2020 07:17:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37862 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725843AbgJELRB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Oct 2020 07:17:01 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F074AC0613A7
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2020 04:17:00 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id c22so9989378ejx.0
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2020 04:17:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ag2lpnppfLokmwt8X/zB/8djnrJd0cVu/qCcNBPp0+0=;
- b=aEVwrFXxvNJeK4F5zcGP66t5RXQyX/DeGDsEXr2iI11eKpEQv5XwrDCQ0ycdlzbVU35ZPLbkrMlNenURJo3zB+rEa6TKHr7fu46emCuOnykpYdg/B/GOMwb6DbcH2FQDJMr8YlEi/qI2tBxCUpVnwXsWp6xMi/pAh7i3hSIPJCM=
-Received: from BY5PR04MB6705.namprd04.prod.outlook.com (2603:10b6:a03:220::8)
- by BY5PR04MB6660.namprd04.prod.outlook.com (2603:10b6:a03:22f::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3433.38; Mon, 5 Oct
- 2020 11:14:32 +0000
-Received: from BY5PR04MB6705.namprd04.prod.outlook.com
- ([fe80::5567:207e:4c1b:3ce1]) by BY5PR04MB6705.namprd04.prod.outlook.com
- ([fe80::5567:207e:4c1b:3ce1%8]) with mapi id 15.20.3433.044; Mon, 5 Oct 2020
- 11:14:32 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: RE: [PATCH 1/2] scsi: ufs: Add DeepSleep feature
-Thread-Topic: [PATCH 1/2] scsi: ufs: Add DeepSleep feature
-Thread-Index: AQHWmLlX/36ef3l9WEy26/6zpaIUz6mIpxKwgAAOnICAABKTMIAAFYIAgAAB8ZA=
-Date:   Mon, 5 Oct 2020 11:14:31 +0000
-Message-ID: <BY5PR04MB67052E848BB5D7327454FEC2FC0C0@BY5PR04MB6705.namprd04.prod.outlook.com>
-References: <20201002124043.25394-1-adrian.hunter@intel.com>
- <20201002124043.25394-2-adrian.hunter@intel.com>
- <BY5PR04MB67054C67CCA53AB5FC5CBCFAFC0C0@BY5PR04MB6705.namprd04.prod.outlook.com>
- <a3cd3d32-0dcf-ebaf-d6fe-e8f21539dff1@intel.com>
- <BY5PR04MB6705E5FFEDED858772890DDBFC0C0@BY5PR04MB6705.namprd04.prod.outlook.com>
- <af91f0a5-1378-cbf4-b1d8-097b2d94decf@intel.com>
-In-Reply-To: <af91f0a5-1378-cbf4-b1d8-097b2d94decf@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: intel.com; dkim=none (message not signed)
- header.d=none;intel.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 597ebf4a-1c00-4112-2238-08d8691fd59e
-x-ms-traffictypediagnostic: BY5PR04MB6660:
-x-microsoft-antispam-prvs: <BY5PR04MB6660DF4A2F0018FE7C9BA76DFC0C0@BY5PR04MB6660.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 6ziYFhQYwzGLF/FmmKbckgJL6e9ERGzTe+bLaUp8NM5/9QMhtUEdspkjUjDw9GLk+aRTft60TMKMFcKSlaJHZUrMUVSWNO9Ji2DxjEV+EGqxCKlEJ76oTxDcgb1YlHrdbfUXDZBO6WxaRZvo0uSiUuGQ1+U6UGC4wwQjLbaCIaO+Gb3+AvKcHWLLfAJWHCwKBLaNMW6TMExE6VeLFcbmAFjF5RzRgUOzTve8/1412Pof4PohIORNN7WwXQrpGZoQ3RADLObqnilmoZDm2B4Jez0HWCmt+YP1Mwh/0+W0vby29Tp29eSGMxFzeJFFnDeO
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR04MB6705.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(39860400002)(366004)(136003)(376002)(346002)(86362001)(6506007)(55016002)(53546011)(83380400001)(8676002)(76116006)(4326008)(52536014)(7696005)(110136005)(316002)(66946007)(478600001)(64756008)(66556008)(66446008)(33656002)(54906003)(66476007)(5660300002)(71200400001)(186003)(26005)(2906002)(9686003)(8936002)(4744005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: f5UtecSayilnrMgDNqMU0TXN6SdM/4mobuZ0S+BaLvgwteNgp2c0Mx9/Vo214hMGXHIwieLac9z4pIpCxmcdg4lPtTVRtMMnMXXC3K9UatPMlpoKcKRzWKZE8oQZcjDP0UzlZ32Oyk/XbBi9BElotKLH6jN7LckK0tRJTIoi+K7bc0ldrlff8oAEt2iydMfPmoIicXEzZGnlh9bkG6WWeWBr9eqa02hANMN+o75AlQGpyyyTHWoZsvjcRy7EpS3xxElmGgnFPtsx6kg4gFCgJMAdNgDct2jgNX5GhD2uUwIBFSm/O0e4r2jMX+opjRw5Q0TmtDmkwypLxNd8GxgcxwZZ4draFkAp5xGtLRo6P1ZM5ZCOhmrHjlrtpnPN7M3D5eprgABc/QeaECnwGn/9pNB8sHhhgURdk8g07xl9UVLUwvxE/7drrEGJo5mTgRXFSTPO8ddykyu6R0cbAkEQbQmRrs4gubwnyVMmhp4TPkmTcEdDmHo2fLCen+9eKu0uDrg4HMhKjHsFoumxx2njRfMPqGEfnSITSNHGAc1mztkF+ZrB6X+Pl2aineR0gcFXVKzKEHDuHUuSCwdvs0MNSIj1uEf5Klk0tqupx+22aXeTMbC3ctlZ+jwV8ZqLiFeZSJFabJ2FDYhKE6pvAhSa9g==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=1BZolf6ks3SQrG5Sxkt8lBzFsVk0ZK0G00WRitlzp0w=;
+        b=KPTmyzCIWrrY47ajbMVIv6MfoHUhyqcXoeMc8UeUJa+SXQtcUtrfBbNVoU+uNJ4e6r
+         dYAKRbv3Xzkrsx0oK5cLVWpEflkJpR13KlQxLECS5Lin35ftoAmufLrZ0dmW68pCxUIQ
+         rEoWFMXF3iOPciebpSfhYK2zLw7ZTm/jRIyg2sp7ivjN9udIybcFQd8t4z0fjK5AHh5D
+         UcZHFM4agIGtR1Ei0BA5VpXXd+6oiwIdYziDR/8bgZeAOFIPKk6RgEeqSgL2Q/yvPUNv
+         wXczQ6cMlmImquRE5YO6VhdPBdfJ3c0mHmvMHnTFffSsHc+y0m2AKZ9nbRNq/5qlZzzp
+         SjDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=1BZolf6ks3SQrG5Sxkt8lBzFsVk0ZK0G00WRitlzp0w=;
+        b=tu8WNSRI16oFGkrX4qQX6I8znZFVuNM/uFiSKpCFs5aEcSlfN+DH4vrVlNCuGsDyqU
+         6SMN/e+AYeX3BZ9HsEYKYmPzjYKOWmKlYFpD5TimjsSTV9t+lH+SIAN48PYt7f04ZYGo
+         0bsuE6+vuqlvWnHe3oZecIIwMsZIMNpTFn2wsA+qUG32+pgw9A9g/v9s9OCdYwvkPI5J
+         mcNy0HzOjoVdDZyRs4hAEkRZ3lJQsErSKP8IABHXLVa0X2PRrRBRH7bW2T9HdfSDIloE
+         1v1BDmPmYSjSR4n9kpTv9Th4DCvw6ZDg7t17v2Ahp2Q69k3STAWMqZe2eDVmwBLc+nQL
+         NMTw==
+X-Gm-Message-State: AOAM530Bjdfern1uTJg+YdeRzLaH0QSzRFHFZ8098Ysuk1SQ1XvQ++np
+        bLjDfbVv9WmMR/CnWqA1ayE8GRYIXTIn8pdt+ZFNGw==
+X-Google-Smtp-Source: ABdhPJxJ5jgyIDI9FEDUkWh6b6RrnB9D8WIKG0ZGvBZcB/2+pLfaGq4eaMc5O44IvOJInCZ1NveRUCKuEjEiadCdtWY=
+X-Received: by 2002:a17:906:388:: with SMTP id b8mr14223199eja.62.1601896619590;
+ Mon, 05 Oct 2020 04:16:59 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR04MB6705.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 597ebf4a-1c00-4112-2238-08d8691fd59e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2020 11:14:32.0214
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 6UfWLEi1G4W7XzcZJCChqvE/RvYwhMiy/1z4EHm6CpSypm8YHbSotJbAZ/azwQxsB0Le3ZheHptRSNd8bjz2CA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6660
+References: <20200925061605.31628-1-Viswas.G@microchip.com.com> <20200925061605.31628-3-Viswas.G@microchip.com.com>
+In-Reply-To: <20200925061605.31628-3-Viswas.G@microchip.com.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Mon, 5 Oct 2020 13:16:48 +0200
+Message-ID: <CAMGffEkWSeEt32eDFQNZBfYdVx-2Yc0XoQp-SFR8i59OH3-M0Q@mail.gmail.com>
+Subject: Re: [PATCH 2/4] pm80xx : Remove DMA memory allocation for ccb and device
+To:     Viswas G <Viswas.G@microchip.com.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>, Ruksar.devadi@microchip.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiANCj4gT24gNS8xMC8yMCAxMjo1MSBwbSwgQXZyaSBBbHRtYW4gd3JvdGU6DQo+ID4+DQo+ID4+
-DQo+ID4+IE9uIDUvMTAvMjAgMTE6MDIgYW0sIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiA+Pj4gSEks
-DQo+ID4+Pg0KPiA+Pj4+IERyaXZlcnMgdGhhdCB3aXNoIHRvIHN1cHBvcnQgRGVlcFNsZWVwIG5l
-ZWQgdG8gc2V0IGEgbmV3IGNhcGFiaWxpdHkgZmxhZw0KPiA+Pj4+IFVGU0hDRF9DQVBfREVFUFNM
-RUVQIGFuZCBwcm92aWRlIGEgaGFyZHdhcmUgcmVzZXQgdmlhIHRoZSBleGlzdGluZw0KPiA+Pj4+
-ICAtPmRldmljZV9yZXNldCgpIGNhbGxiYWNrLg0KPiA+Pj4gSSB3b3VsZCBleHBlY3QgdGhhdCB0
-aGlzIGNhcGFiaWxpdHkgY29udHJvbHMgc2VuZGluZyBTU1UgNCwgYnV0IGl0IG9ubHkNCj4gY29u
-dHJvbHMNCj4gPj4gdGhlIHN5c2ZzIGVudHJ5Pw0KPiA+Pg0KPiA+PiBUaGUgc3lzZnMgZW50cnkg
-aXMgdGhlIG9ubHkgd2F5IHRvIHJlcXVlc3QgRGVlcFNsZWVwLg0KPiA+IFNvbWUgY2hpcHNldCB2
-ZW5kb3JzIHVzZSB0aGVpciBvd24gbW9kdWxlcywgb3IgZXZlbiB0aGUgZGV2aWNlIHRyZWUNCj4g
-PiB0byBzZXQgdGhlaXIgZGVmYXVsdCBycG1fbHZsIC8gc3BtX2x2bC4NCj4gDQo+IEkgd291bGQg
-bm90IGV4cGVjdCB0aGVtIHRvIHNldCBpdCB3cm9uZ2x5IGJ1dCB3aGF0IGFyZSB5b3Ugc3VnZ2Vz
-dGluZz8NClJpZ2h0LiBMZXQncyBsZWF2ZSBpdCBhcyBpdCBpcy4NCg0KVGhhbmtzLA0KQXZyaQ0K
-DQo=
+On Fri, Sep 25, 2020 at 8:06 AM Viswas G <Viswas.G@microchip.com.com> wrote:
+>
+> From: Viswas G <Viswas.G@microchip.com>
+>
+> Removed DMA memory allocation for Devices and CCB
+> structure, instead allocated memory outside DMA memory.
+>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
+I think it's better to mention DMA memory is limited system resource,
+better to alloc memory outside
+DMA memory when possible.
+
+With the updated commit message you can add my:
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_defs.h |  8 +++----
+>  drivers/scsi/pm8001/pm8001_init.c | 48 ++++++++++++++++++++++++---------------
+>  2 files changed, 33 insertions(+), 23 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+> index a4f52a5a449e..1bf1bcfaf010 100644
+> --- a/drivers/scsi/pm8001/pm8001_defs.h
+> +++ b/drivers/scsi/pm8001/pm8001_defs.h
+> @@ -91,17 +91,15 @@ enum port_type {
+>  #define        PM8001_MAX_DEVICES       2048   /* max supported device */
+>  #define        PM8001_MAX_MSIX_VEC      64     /* max msi-x int for spcv/ve */
+>
+> -#define USI_MAX_MEMCNT_BASE    5
+>  #define        CONFIG_SCSI_PM8001_MAX_DMA_SG   528
+>  #define PM8001_MAX_DMA_SG      CONFIG_SCSI_PM8001_MAX_DMA_SG
+>  enum memory_region_num {
+>         AAP1 = 0x0, /* application acceleration processor */
+>         IOP,        /* IO processor */
+>         NVMD,       /* NVM device */
+> -       DEV_MEM,    /* memory for devices */
+> -       CCB_MEM,    /* memory for command control block */
+>         FW_FLASH,    /* memory for fw flash update */
+> -       FORENSIC_MEM  /* memory for fw forensic data */
+> +       FORENSIC_MEM,  /* memory for fw forensic data */
+> +       USI_MAX_MEMCNT_BASE
+>  };
+>  #define        PM8001_EVENT_LOG_SIZE    (128 * 1024)
+>
+> @@ -109,7 +107,7 @@ enum memory_region_num {
+>   * maximum DMA memory regions(number of IBQ + number of IBQ CI
+>   * + number of  OBQ + number of OBQ PI)
+>   */
+> -#define USI_MAX_MEMCNT (USI_MAX_MEMCNT_BASE + 1 + ((2 * PM8001_MAX_INB_NUM) \
+> +#define USI_MAX_MEMCNT (USI_MAX_MEMCNT_BASE + ((2 * PM8001_MAX_INB_NUM) \
+>                         + (2 * PM8001_MAX_OUTB_NUM)))
+>  /*error code*/
+>  enum mpi_err {
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index c744f846e08d..d6789a261c1c 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -288,7 +288,7 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>
+>         count = pm8001_ha->max_q_num;
+>         /* Queues are chosen based on the number of cores/msix availability */
+> -       ib_offset = pm8001_ha->ib_offset  = USI_MAX_MEMCNT_BASE + 1;
+> +       ib_offset = pm8001_ha->ib_offset  = USI_MAX_MEMCNT_BASE;
+>         ci_offset = pm8001_ha->ci_offset  = ib_offset + count;
+>         ob_offset = pm8001_ha->ob_offset  = ci_offset + count;
+>         pi_offset = pm8001_ha->pi_offset  = ob_offset + count;
+> @@ -380,19 +380,6 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>         pm8001_ha->memoryMap.region[NVMD].num_elements = 1;
+>         pm8001_ha->memoryMap.region[NVMD].element_size = 4096;
+>         pm8001_ha->memoryMap.region[NVMD].total_len = 4096;
+> -       /* Memory region for devices*/
+> -       pm8001_ha->memoryMap.region[DEV_MEM].num_elements = 1;
+> -       pm8001_ha->memoryMap.region[DEV_MEM].element_size = PM8001_MAX_DEVICES *
+> -               sizeof(struct pm8001_device);
+> -       pm8001_ha->memoryMap.region[DEV_MEM].total_len = PM8001_MAX_DEVICES *
+> -               sizeof(struct pm8001_device);
+> -
+> -       /* Memory region for ccb_info*/
+> -       pm8001_ha->memoryMap.region[CCB_MEM].num_elements = 1;
+> -       pm8001_ha->memoryMap.region[CCB_MEM].element_size = PM8001_MAX_CCB *
+> -               sizeof(struct pm8001_ccb_info);
+> -       pm8001_ha->memoryMap.region[CCB_MEM].total_len = PM8001_MAX_CCB *
+> -               sizeof(struct pm8001_ccb_info);
+>
+>         /* Memory region for fw flash */
+>         pm8001_ha->memoryMap.region[FW_FLASH].total_len = 4096;
+> @@ -416,18 +403,30 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>                 }
+>         }
+>
+> -       pm8001_ha->devices = pm8001_ha->memoryMap.region[DEV_MEM].virt_ptr;
+> +       /* Memory region for devices*/
+> +       pm8001_ha->devices = kzalloc(PM8001_MAX_DEVICES
+> +                               * sizeof(struct pm8001_device), GFP_KERNEL);
+> +       if (!pm8001_ha->devices) {
+> +               rc = -ENOMEM;
+> +               goto err_out_nodev;
+> +       }
+>         for (i = 0; i < PM8001_MAX_DEVICES; i++) {
+>                 pm8001_ha->devices[i].dev_type = SAS_PHY_UNUSED;
+>                 pm8001_ha->devices[i].id = i;
+>                 pm8001_ha->devices[i].device_id = PM8001_MAX_DEVICES;
+>                 pm8001_ha->devices[i].running_req = 0;
+>         }
+> -       pm8001_ha->ccb_info = pm8001_ha->memoryMap.region[CCB_MEM].virt_ptr;
+> +       /* Memory region for ccb_info*/
+> +       pm8001_ha->ccb_info = kzalloc(PM8001_MAX_CCB
+> +                               * sizeof(struct pm8001_ccb_info), GFP_KERNEL);
+> +       if (!pm8001_ha->ccb_info) {
+> +               rc = -ENOMEM;
+> +               goto err_out_noccb;
+> +       }
+>         for (i = 0; i < PM8001_MAX_CCB; i++) {
+>                 pm8001_ha->ccb_info[i].ccb_dma_handle =
+> -                       pm8001_ha->memoryMap.region[CCB_MEM].phys_addr +
+> -                       i * sizeof(struct pm8001_ccb_info);
+> +                       virt_to_phys(pm8001_ha->ccb_info) +
+> +                       (i * sizeof(struct pm8001_ccb_info));
+>                 pm8001_ha->ccb_info[i].task = NULL;
+>                 pm8001_ha->ccb_info[i].ccb_tag = 0xffffffff;
+>                 pm8001_ha->ccb_info[i].device = NULL;
+> @@ -437,8 +436,21 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
+>         /* Initialize tags */
+>         pm8001_tag_init(pm8001_ha);
+>         return 0;
+> +
+> +err_out_noccb:
+> +       kfree(pm8001_ha->devices);
+>  err_out_shost:
+>         scsi_remove_host(pm8001_ha->shost);
+> +err_out_nodev:
+> +       for (i = 0; i < pm8001_ha->max_memcnt; i++) {
+> +               if (pm8001_ha->memoryMap.region[i].virt_ptr != NULL) {
+> +                       pci_free_consistent(pm8001_ha->pdev,
+> +                               (pm8001_ha->memoryMap.region[i].total_len +
+> +                               pm8001_ha->memoryMap.region[i].alignment),
+> +                               pm8001_ha->memoryMap.region[i].virt_ptr,
+> +                               pm8001_ha->memoryMap.region[i].phys_addr);
+> +               }
+> +       }
+>  err_out:
+>         return 1;
+>  }
+> --
+> 2.16.3
+>
