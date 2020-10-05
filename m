@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28B11C4363A
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:00:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE927C4363A
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB5C72078E
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:00:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B8F520674
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725893AbgJEJA4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Oct 2020 05:00:56 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52302 "EHLO mx2.suse.de"
+        id S1725893AbgJEJBk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Oct 2020 05:01:40 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53192 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725885AbgJEJA4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Oct 2020 05:00:56 -0400
+        id S1725885AbgJEJBk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Oct 2020 05:01:40 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 6781EAC97;
-        Mon,  5 Oct 2020 09:00:55 +0000 (UTC)
-Subject: Re: [PATCH 01/10] scsi: don't export scsi_device_from_queue
+        by mx2.suse.de (Postfix) with ESMTP id 3CAE1AD19;
+        Mon,  5 Oct 2020 09:01:38 +0000 (UTC)
+Subject: Re: [PATCH 02/10] scsi: remove scsi_init_cmd_errh
 To:     Christoph Hellwig <hch@lst.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org
 References: <20201005084130.143273-1-hch@lst.de>
- <20201005084130.143273-2-hch@lst.de>
+ <20201005084130.143273-3-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <a6f92b24-e3c6-aade-c47b-bc44eddb0670@suse.de>
-Date:   Mon, 5 Oct 2020 11:00:53 +0200
+Message-ID: <04d88915-e9c0-5603-d3cd-b4216881d988@suse.de>
+Date:   Mon, 5 Oct 2020 11:01:37 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <20201005084130.143273-2-hch@lst.de>
+In-Reply-To: <20201005084130.143273-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,25 +44,52 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/5/20 10:41 AM, Christoph Hellwig wrote:
-> This function is only used by code built into scsi_mod.ko.
+> There is no good reason to keep this functionality as a separate
+> function, just merge it into the only caller.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/scsi_lib.c | 1 -
->   1 file changed, 1 deletion(-)
+>   drivers/scsi/scsi_lib.c | 20 ++++----------------
+>   1 file changed, 4 insertions(+), 16 deletions(-)
 > 
 > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index f0ee11dc07e4b0..b95e00ff346b09 100644
+> index b95e00ff346b09..8a7ae46b5943da 100644
 > --- a/drivers/scsi/scsi_lib.c
 > +++ b/drivers/scsi/scsi_lib.c
-> @@ -1959,7 +1959,6 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
->   
->   	return sdev;
+> @@ -293,21 +293,6 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
 >   }
-> -EXPORT_SYMBOL_GPL(scsi_device_from_queue);
+>   EXPORT_SYMBOL(__scsi_execute);
 >   
->   /**
->    * scsi_block_requests - Utility function used by low-level drivers to prevent
+> -/**
+> - * scsi_init_cmd_errh - Initialize cmd fields related to error handling.
+> - * @cmd:  command that is ready to be queued.
+> - *
+> - * This function has the job of initializing a number of fields related to error
+> - * handling. Typically this will be called once for each command, as required.
+> - */
+> -static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+> -{
+> -	scsi_set_resid(cmd, 0);
+> -	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+> -	if (cmd->cmd_len == 0)
+> -		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+> -}
+> -
+>   /*
+>    * Wake up the error handler if necessary. Avoid as follows that the error
+>    * handler is not woken up if host in-flight requests number ==
+> @@ -1698,7 +1683,10 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>   	if (bd->last)
+>   		cmd->flags |= SCMD_LAST;
+>   
+> -	scsi_init_cmd_errh(cmd);
+> +	scsi_set_resid(cmd, 0);
+> +	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+> +	if (cmd->cmd_len == 0)
+> +		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+>   	cmd->scsi_done = scsi_mq_done;
+>   
+>   	reason = scsi_dispatch_cmd(cmd);
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
