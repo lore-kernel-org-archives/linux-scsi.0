@@ -4,38 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE927C4363A
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83A87C4363A
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:02:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B8F520674
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:01:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B3E42078E
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Oct 2020 09:02:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725893AbgJEJBk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Oct 2020 05:01:40 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53192 "EHLO mx2.suse.de"
+        id S1725895AbgJEJCI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Oct 2020 05:02:08 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53562 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725885AbgJEJBk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Oct 2020 05:01:40 -0400
+        id S1725885AbgJEJCI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Oct 2020 05:02:08 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 3CAE1AD19;
-        Mon,  5 Oct 2020 09:01:38 +0000 (UTC)
-Subject: Re: [PATCH 02/10] scsi: remove scsi_init_cmd_errh
+        by mx2.suse.de (Postfix) with ESMTP id B4F4FABE3;
+        Mon,  5 Oct 2020 09:02:07 +0000 (UTC)
+Subject: Re: [PATCH 03/10] scsi: move command size detection out of the fast
+ path
 To:     Christoph Hellwig <hch@lst.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org
 References: <20201005084130.143273-1-hch@lst.de>
- <20201005084130.143273-3-hch@lst.de>
+ <20201005084130.143273-4-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <04d88915-e9c0-5603-d3cd-b4216881d988@suse.de>
-Date:   Mon, 5 Oct 2020 11:01:37 +0200
+Message-ID: <b469ff7c-ac2e-c8e7-acef-fd299b5ebb11@suse.de>
+Date:   Mon, 5 Oct 2020 11:02:07 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <20201005084130.143273-3-hch@lst.de>
+In-Reply-To: <20201005084130.143273-4-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,49 +45,34 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/5/20 10:41 AM, Christoph Hellwig wrote:
-> There is no good reason to keep this functionality as a separate
-> function, just merge it into the only caller.
+> We only need to detect the command size for ioctl request from userspace,
+> which is limited to the passthrough path.  Move the check there instead
+> of doing it for all queuecommand invocations.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/scsi_lib.c | 20 ++++----------------
->   1 file changed, 4 insertions(+), 16 deletions(-)
+>   drivers/scsi/scsi_lib.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b95e00ff346b09..8a7ae46b5943da 100644
+> index 8a7ae46b5943da..3c551f06ebe9be 100644
 > --- a/drivers/scsi/scsi_lib.c
 > +++ b/drivers/scsi/scsi_lib.c
-> @@ -293,21 +293,6 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
->   }
->   EXPORT_SYMBOL(__scsi_execute);
+> @@ -1166,6 +1166,8 @@ static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
+>   	}
 >   
-> -/**
-> - * scsi_init_cmd_errh - Initialize cmd fields related to error handling.
-> - * @cmd:  command that is ready to be queued.
-> - *
-> - * This function has the job of initializing a number of fields related to error
-> - * handling. Typically this will be called once for each command, as required.
-> - */
-> -static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
-> -{
-> -	scsi_set_resid(cmd, 0);
-> -	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-> -	if (cmd->cmd_len == 0)
-> -		cmd->cmd_len = scsi_command_size(cmd->cmnd);
-> -}
-> -
->   /*
->    * Wake up the error handler if necessary. Avoid as follows that the error
->    * handler is not woken up if host in-flight requests number ==
-> @@ -1698,7 +1683,10 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->   	if (bd->last)
->   		cmd->flags |= SCMD_LAST;
->   
-> -	scsi_init_cmd_errh(cmd);
-> +	scsi_set_resid(cmd, 0);
-> +	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+>   	cmd->cmd_len = scsi_req(req)->cmd_len;
 > +	if (cmd->cmd_len == 0)
 > +		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+>   	cmd->cmnd = scsi_req(req)->cmd;
+>   	cmd->transfersize = blk_rq_bytes(req);
+>   	cmd->allowed = scsi_req(req)->retries;
+> @@ -1685,8 +1687,6 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>   
+>   	scsi_set_resid(cmd, 0);
+>   	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+> -	if (cmd->cmd_len == 0)
+> -		cmd->cmd_len = scsi_command_size(cmd->cmnd);
 >   	cmd->scsi_done = scsi_mq_done;
 >   
 >   	reason = scsi_dispatch_cmd(cmd);
