@@ -2,66 +2,62 @@ Return-Path: <SRS0=xWhZ=DN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92A14C41604
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Oct 2020 06:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 415D2C41604
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Oct 2020 06:17:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E0BA20797
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Oct 2020 06:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB65A20796
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Oct 2020 06:17:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="JNOhEn6+"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="lM2pmIBw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726769AbgJFGRd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Oct 2020 02:17:33 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6026 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726118AbgJFGRc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Oct 2020 02:17:32 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09665kkP004090
-        for <linux-scsi@vger.kernel.org>; Mon, 5 Oct 2020 23:17:30 -0700
+        id S1726789AbgJFGRy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Oct 2020 02:17:54 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33222 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726118AbgJFGRy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Oct 2020 02:17:54 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09665qXq016646
+        for <linux-scsi@vger.kernel.org>; Mon, 5 Oct 2020 23:17:53 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=rWKvSMrN3U6dswgxmbgbxm841cu+XC6j2BFsVjK27Uo=;
- b=JNOhEn6+W3aWBgTT1lDxAMp6N3/aF5+IdlbTtS4wy6CWLkqqEgeK0pEs2GXuGpQG6Nk8
- JWVxRCIHf5avTi8BXm9IYbD2V/NR9KsSpp0uVCHWJZ5Wv3oSY0ArqI6I4fG0pFavD57X
- n0dHdtZTJX7zhe1/JNmdeUjlvKGNKqEuFJ59wtlv5QJzaUL4V9t4kq1NAfJcis5Q78+k
- D2o1B7NdD43TL+QtT3K7/Qy++jJJphoyF+d4EoWV0rg3lq1Oi4NR0octGUgbf79JLCZx
- rAPFu9x6gD0sgr7bHV6icyb+Qm+K44nnKlydXY/AfmzxkLt0cOsd1yOyL0mJNKBEHJEb yw== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 33xrtnfcqh-1
+ content-type; s=pfpt0220; bh=gzimKzopIOz5Qh4rg2uYSebPPQSJPUFH1IVhZhlco3s=;
+ b=lM2pmIBwNE4UCyx7hD3d1Htr9clsKNGYPqeOwdEmFUjOwxCUI3xkL6678Pxh+Vk3cVTF
+ N7WDM38vfsSYacIoSB9mamthPsH6PYod6HoCwAUnI04G2638OLcw6J8+xoadevZM+6qo
+ rffbZgPvlPCxtYG1cCsw56Cz+xpHSwj7ViQ1MdUeFxABP4tEntuxPYJI30i/EP2Qspqu
+ iHpAmMZ2qVC9IZnLdk/WgUJcYCI8XzDoGaZDOxnCPggcAk2O0AvD+WOTqfj1NZY9ZcW7
+ 2WN1mJLA2RGfCTusgRoN3/Xb1aagXJXm6EFn/xLkEdQLJOWtiDlCy/iqJDT2hn1Y4l7i pQ== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0a-0016f401.pphosted.com with ESMTP id 33xpnpr06x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2020 23:17:30 -0700
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 5 Oct
- 2020 23:17:28 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 5 Oct
- 2020 23:17:28 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 5 Oct 2020 23:17:28 -0700
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2020 23:17:53 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 5 Oct
+ 2020 23:17:52 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 5 Oct 2020 23:17:52 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 3D5C73F703F;
-        Mon,  5 Oct 2020 23:17:28 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 6537C3F703F;
+        Mon,  5 Oct 2020 23:17:52 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0966HSuG028725;
-        Mon, 5 Oct 2020 23:17:28 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0966HqCu028737;
+        Mon, 5 Oct 2020 23:17:52 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0966HSbN028724;
-        Mon, 5 Oct 2020 23:17:28 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0966Hqxv028728;
+        Mon, 5 Oct 2020 23:17:52 -0700
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 2/5] scsi: fc: Add FPIN statistics to fc_host and fc_rport objects
-Date:   Mon, 5 Oct 2020 23:16:12 -0700
-Message-ID: <20201006061615.28674-3-njavali@marvell.com>
+Subject: [PATCH v2 3/5] scsi: fc: Parse FPIN packets and update statistics
+Date:   Mon, 5 Oct 2020 23:16:13 -0700
+Message-ID: <20201006061615.28674-4-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20201006061615.28674-1-njavali@marvell.com>
 References: <20201006061615.28674-1-njavali@marvell.com>
@@ -75,239 +71,375 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Shyam Sundar <ssundar@marvell.com>
 
-- Adds a structure for holding fpin stats for host & rport
-
-- Adds sysfs nodes to maintain FPIN stats:
-        /sys/class/fc_host/hostXX/statistics/
-        /sys/class/fc_remote_ports/rport-XX\:Y-Z/statistics/
+Parse the incoming FPIN packets and update the host and rport FPIN
+statistics based on the FPINs.
 
 Signed-off-by: Shyam Sundar <ssundar@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 117 +++++++++++++++++++++++++++++++
- include/scsi/scsi_transport_fc.h |  32 +++++++++
- 2 files changed, 149 insertions(+)
+ drivers/scsi/scsi_transport_fc.c | 322 +++++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_fc.h |   1 +
+ 2 files changed, 323 insertions(+)
 
 diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 2ff7f06203da..501e165ae6f1 100644
+index 501e165ae6f1..3db7eb674cda 100644
 --- a/drivers/scsi/scsi_transport_fc.c
 +++ b/drivers/scsi/scsi_transport_fc.c
-@@ -22,6 +22,7 @@
- #include <net/netlink.h>
- #include <scsi/scsi_netlink_fc.h>
- #include <scsi/scsi_bsg_fc.h>
-+#include <uapi/scsi/fc/fc_els.h>
- #include "scsi_priv.h"
- 
- static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
-@@ -419,6 +420,7 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
- 	fc_host->fabric_name = -1;
- 	memset(fc_host->symbolic_name, 0, sizeof(fc_host->symbolic_name));
- 	memset(fc_host->system_hostname, 0, sizeof(fc_host->system_hostname));
-+	memset(&fc_host->fpin_stats, 0, sizeof(fc_host->fpin_stats));
- 
- 	fc_host->tgtid_bind_type = FC_TGTID_BIND_BY_WWPN;
- 
-@@ -991,6 +993,67 @@ store_fc_rport_fast_io_fail_tmo(struct device *dev,
- static FC_DEVICE_ATTR(rport, fast_io_fail_tmo, S_IRUGO | S_IWUSR,
- 	show_fc_rport_fast_io_fail_tmo, store_fc_rport_fast_io_fail_tmo);
- 
-+#define fc_rport_fpin_statistic(name)					\
-+static ssize_t fc_rport_fpinstat_##name(struct device *cd,		\
-+				  struct device_attribute *attr,	\
-+				  char *buf)				\
-+{									\
-+	struct fc_rport *rport = transport_class_to_rport(cd);		\
-+									\
-+	return snprintf(buf, 20, "0x%llx\n", rport->fpin_stats.name);	\
-+}									\
-+static FC_DEVICE_ATTR(rport, fpin_##name, 0444, fc_rport_fpinstat_##name, NULL)
-+
-+fc_rport_fpin_statistic(dn);
-+fc_rport_fpin_statistic(dn_unknown);
-+fc_rport_fpin_statistic(dn_timeout);
-+fc_rport_fpin_statistic(dn_unable_to_route);
-+fc_rport_fpin_statistic(dn_device_specific);
-+fc_rport_fpin_statistic(cn);
-+fc_rport_fpin_statistic(cn_clear);
-+fc_rport_fpin_statistic(cn_lost_credit);
-+fc_rport_fpin_statistic(cn_credit_stall);
-+fc_rport_fpin_statistic(cn_oversubscription);
-+fc_rport_fpin_statistic(cn_device_specific);
-+fc_rport_fpin_statistic(li);
-+fc_rport_fpin_statistic(li_failure_unknown);
-+fc_rport_fpin_statistic(li_link_failure_count);
-+fc_rport_fpin_statistic(li_loss_of_sync_count);
-+fc_rport_fpin_statistic(li_loss_of_signals_count);
-+fc_rport_fpin_statistic(li_prim_seq_err_count);
-+fc_rport_fpin_statistic(li_invalid_tx_word_count);
-+fc_rport_fpin_statistic(li_invalid_crc_count);
-+fc_rport_fpin_statistic(li_device_specific);
-+
-+static struct attribute *fc_rport_statistics_attrs[] = {
-+	&device_attr_rport_fpin_dn.attr,
-+	&device_attr_rport_fpin_dn_unknown.attr,
-+	&device_attr_rport_fpin_dn_timeout.attr,
-+	&device_attr_rport_fpin_dn_unable_to_route.attr,
-+	&device_attr_rport_fpin_dn_device_specific.attr,
-+	&device_attr_rport_fpin_li.attr,
-+	&device_attr_rport_fpin_li_failure_unknown.attr,
-+	&device_attr_rport_fpin_li_link_failure_count.attr,
-+	&device_attr_rport_fpin_li_loss_of_sync_count.attr,
-+	&device_attr_rport_fpin_li_loss_of_signals_count.attr,
-+	&device_attr_rport_fpin_li_prim_seq_err_count.attr,
-+	&device_attr_rport_fpin_li_invalid_tx_word_count.attr,
-+	&device_attr_rport_fpin_li_invalid_crc_count.attr,
-+	&device_attr_rport_fpin_li_device_specific.attr,
-+	&device_attr_rport_fpin_cn.attr,
-+	&device_attr_rport_fpin_cn_clear.attr,
-+	&device_attr_rport_fpin_cn_lost_credit.attr,
-+	&device_attr_rport_fpin_cn_credit_stall.attr,
-+	&device_attr_rport_fpin_cn_oversubscription.attr,
-+	&device_attr_rport_fpin_cn_device_specific.attr,
-+	NULL
-+};
-+
-+static struct attribute_group fc_rport_statistics_group = {
-+	.name = "statistics",
-+	.attrs = fc_rport_statistics_attrs,
-+};
-+
+@@ -34,6 +34,11 @@ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
+ static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
+ static void fc_bsg_remove(struct request_queue *);
+ static void fc_bsg_goose_queue(struct fc_rport *);
++static void fc_li_stats_update(struct fc_fn_li_desc *li_desc,
++			       struct fc_fpin_stats *stats);
++static void fc_delivery_stats_update(u32 reason_code,
++				     struct fc_fpin_stats *stats);
++static void fc_cn_stats_update(u16 event_type, struct fc_fpin_stats *stats);
  
  /*
-  * FC SCSI Target Attribute Management
-@@ -1745,6 +1808,39 @@ fc_host_statistic(fc_xid_busy);
- fc_host_statistic(fc_seq_not_found);
- fc_host_statistic(fc_non_bls_resp);
+  * Module Parameters
+@@ -630,6 +635,291 @@ fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ }
+ EXPORT_SYMBOL(fc_host_post_vendor_event);
  
-+#define fc_host_fpin_statistic(name)					\
-+static ssize_t fc_host_fpinstat_##name(struct device *cd,		\
-+				  struct device_attribute *attr,	\
-+				  char *buf)				\
-+{									\
-+	struct Scsi_Host *shost = transport_class_to_shost(cd);		\
-+	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);	\
-+									\
-+	return snprintf(buf, 20, "0x%llx\n", fc_host->fpin_stats.name);	\
-+}									\
-+static FC_DEVICE_ATTR(host, fpin_##name, 0444, fc_host_fpinstat_##name, NULL)
++/**
++ * fc_find_rport_by_wwpn - find the fc_rport pointer for a given wwpn
++ * @shost:		host the fc_rport is associated with
++ * @wwpn:		wwpn of the fc_rport device
++ *
++ * Notes:
++ *	This routine assumes no locks are held on entry.
++ */
++struct fc_rport *
++fc_find_rport_by_wwpn(struct Scsi_Host *shost, u64 wwpn)
++{
++	struct fc_rport *rport;
++	unsigned long flags;
 +
-+fc_host_fpin_statistic(dn);
-+fc_host_fpin_statistic(dn_unknown);
-+fc_host_fpin_statistic(dn_timeout);
-+fc_host_fpin_statistic(dn_unable_to_route);
-+fc_host_fpin_statistic(dn_device_specific);
-+fc_host_fpin_statistic(cn);
-+fc_host_fpin_statistic(cn_clear);
-+fc_host_fpin_statistic(cn_lost_credit);
-+fc_host_fpin_statistic(cn_credit_stall);
-+fc_host_fpin_statistic(cn_oversubscription);
-+fc_host_fpin_statistic(cn_device_specific);
-+fc_host_fpin_statistic(li);
-+fc_host_fpin_statistic(li_failure_unknown);
-+fc_host_fpin_statistic(li_link_failure_count);
-+fc_host_fpin_statistic(li_loss_of_sync_count);
-+fc_host_fpin_statistic(li_loss_of_signals_count);
-+fc_host_fpin_statistic(li_prim_seq_err_count);
-+fc_host_fpin_statistic(li_invalid_tx_word_count);
-+fc_host_fpin_statistic(li_invalid_crc_count);
-+fc_host_fpin_statistic(li_device_specific);
++	spin_lock_irqsave(shost->host_lock, flags);
 +
- static ssize_t
- fc_reset_statistics(struct device *dev, struct device_attribute *attr,
- 		    const char *buf, size_t count)
-@@ -1794,6 +1890,26 @@ static struct attribute *fc_statistics_attrs[] = {
- 	&device_attr_host_fc_seq_not_found.attr,
- 	&device_attr_host_fc_non_bls_resp.attr,
- 	&device_attr_host_reset_statistics.attr,
-+	&device_attr_host_fpin_dn.attr,
-+	&device_attr_host_fpin_dn_unknown.attr,
-+	&device_attr_host_fpin_dn_timeout.attr,
-+	&device_attr_host_fpin_dn_unable_to_route.attr,
-+	&device_attr_host_fpin_dn_device_specific.attr,
-+	&device_attr_host_fpin_li.attr,
-+	&device_attr_host_fpin_li_failure_unknown.attr,
-+	&device_attr_host_fpin_li_link_failure_count.attr,
-+	&device_attr_host_fpin_li_loss_of_sync_count.attr,
-+	&device_attr_host_fpin_li_loss_of_signals_count.attr,
-+	&device_attr_host_fpin_li_prim_seq_err_count.attr,
-+	&device_attr_host_fpin_li_invalid_tx_word_count.attr,
-+	&device_attr_host_fpin_li_invalid_crc_count.attr,
-+	&device_attr_host_fpin_li_device_specific.attr,
-+	&device_attr_host_fpin_cn.attr,
-+	&device_attr_host_fpin_cn_clear.attr,
-+	&device_attr_host_fpin_cn_lost_credit.attr,
-+	&device_attr_host_fpin_cn_credit_stall.attr,
-+	&device_attr_host_fpin_cn_oversubscription.attr,
-+	&device_attr_host_fpin_cn_device_specific.attr,
- 	NULL
- };
- 
-@@ -2177,6 +2293,7 @@ fc_attach_transport(struct fc_function_template *ft)
- 	i->rport_attr_cont.ac.attrs = &i->rport_attrs[0];
- 	i->rport_attr_cont.ac.class = &fc_rport_class.class;
- 	i->rport_attr_cont.ac.match = fc_rport_match;
-+	i->rport_attr_cont.statistics = &fc_rport_statistics_group;
- 	transport_container_register(&i->rport_attr_cont);
- 
- 	i->vport_attr_cont.ac.attrs = &i->vport_attrs[0];
++	list_for_each_entry(rport, &fc_host_rports(shost), peers) {
++		if (rport->port_state != FC_PORTSTATE_ONLINE)
++			continue;
++
++		if (rport->port_name == wwpn) {
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			return rport;
++		}
++	}
++
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	return NULL;
++}
++EXPORT_SYMBOL(fc_find_rport_by_wwpn);
++
++static void
++fc_li_stats_update(struct fc_fn_li_desc *li_desc,
++		   struct fc_fpin_stats *stats)
++{
++	stats->li += be32_to_cpu(li_desc->event_count);
++	switch (be16_to_cpu(li_desc->event_type)) {
++	case FPIN_LI_UNKNOWN:
++		stats->li_failure_unknown +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_LINK_FAILURE:
++		stats->li_link_failure_count +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_LOSS_OF_SYNC:
++		stats->li_loss_of_sync_count +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_LOSS_OF_SIG:
++		stats->li_loss_of_signals_count +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_PRIM_SEQ_ERR:
++		stats->li_prim_seq_err_count +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_INVALID_TX_WD:
++		stats->li_invalid_tx_word_count +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_INVALID_CRC:
++		stats->li_invalid_crc_count +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	case FPIN_LI_DEVICE_SPEC:
++		stats->li_device_specific +=
++		    be32_to_cpu(li_desc->event_count);
++		break;
++	}
++}
++
++static void
++fc_delivery_stats_update(u32 reason_code, struct fc_fpin_stats *stats)
++{
++	stats->dn++;
++	switch (reason_code) {
++	case FPIN_DELI_UNKNOWN:
++		stats->dn_unknown++;
++		break;
++	case FPIN_DELI_TIMEOUT:
++		stats->dn_timeout++;
++		break;
++	case FPIN_DELI_UNABLE_TO_ROUTE:
++		stats->dn_unable_to_route++;
++		break;
++	case FPIN_DELI_DEVICE_SPEC:
++		stats->dn_device_specific++;
++		break;
++	}
++}
++
++static void
++fc_cn_stats_update(u16 event_type, struct fc_fpin_stats *stats)
++{
++	stats->cn++;
++	switch (event_type) {
++	case FPIN_CONGN_CLEAR:
++		stats->cn_clear++;
++		break;
++	case FPIN_CONGN_LOST_CREDIT:
++		stats->cn_lost_credit++;
++		break;
++	case FPIN_CONGN_CREDIT_STALL:
++		stats->cn_credit_stall++;
++		break;
++	case FPIN_CONGN_OVERSUBSCRIPTION:
++		stats->cn_oversubscription++;
++		break;
++	case FPIN_CONGN_DEVICE_SPEC:
++		stats->cn_device_specific++;
++	}
++}
++
++/*
++ * fc_fpin_li_stats_update - routine to update Link Integrity
++ * event statistics.
++ * @shost:		host the FPIN was received on
++ * @tlv:		pointer to link integrity descriptor
++ *
++ */
++static void
++fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
++{
++	u8 i;
++	struct fc_rport *rport = NULL;
++	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
++	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_fn_li_desc *li_desc = (struct fc_fn_li_desc *)tlv;
++	u64 wwpn;
++
++	rport = fc_find_rport_by_wwpn(shost,
++				      be64_to_cpu(li_desc->detecting_wwpn));
++	if (rport &&
++	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++		det_rport = rport;
++		fc_li_stats_update(li_desc, &det_rport->fpin_stats);
++	}
++
++	rport = fc_find_rport_by_wwpn(shost,
++				      be64_to_cpu(li_desc->attached_wwpn));
++	if (rport &&
++	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++		attach_rport = rport;
++		fc_li_stats_update(li_desc, &attach_rport->fpin_stats);
++	}
++
++	if (be32_to_cpu(li_desc->pname_count) > 0) {
++		for (i = 0;
++		    i < be32_to_cpu(li_desc->pname_count);
++		    i++) {
++			wwpn = be64_to_cpu(li_desc->pname_list[i]);
++			rport = fc_find_rport_by_wwpn(shost, wwpn);
++			if (rport &&
++			    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++			    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++				if (rport == det_rport ||
++				    rport == attach_rport)
++					continue;
++				fc_li_stats_update(li_desc,
++						   &rport->fpin_stats);
++			}
++		}
++	}
++
++	if (fc_host->port_name == be64_to_cpu(li_desc->attached_wwpn))
++		fc_li_stats_update(li_desc, &fc_host->fpin_stats);
++}
++
++/*
++ * fc_fpin_delivery_stats_update - routine to update Delivery Notification
++ * event statistics.
++ * @shost:		host the FPIN was received on
++ * @tlv:		pointer to delivery descriptor
++ *
++ */
++static void
++fc_fpin_delivery_stats_update(struct Scsi_Host *shost,
++			      struct fc_tlv_desc *tlv)
++{
++	struct fc_rport *rport = NULL;
++	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
++	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_fn_deli_desc *dn_desc = (struct fc_fn_deli_desc *)tlv;
++	u32 reason_code = be32_to_cpu(dn_desc->deli_reason_code);
++
++	rport = fc_find_rport_by_wwpn(shost,
++				      be64_to_cpu(dn_desc->detecting_wwpn));
++	if (rport &&
++	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++		det_rport = rport;
++		fc_delivery_stats_update(reason_code, &det_rport->fpin_stats);
++	}
++
++	rport = fc_find_rport_by_wwpn(shost,
++				      be64_to_cpu(dn_desc->attached_wwpn));
++	if (rport &&
++	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++		attach_rport = rport;
++		fc_delivery_stats_update(reason_code,
++					 &attach_rport->fpin_stats);
++	}
++
++	if (fc_host->port_name == be64_to_cpu(dn_desc->attached_wwpn))
++		fc_delivery_stats_update(reason_code, &fc_host->fpin_stats);
++}
++
++/*
++ * fc_fpin_peer_congn_stats_update - routine to update Peer Congestion
++ * event statistics.
++ * @shost:		host the FPIN was received on
++ * @tlv:		pointer to peer congestion descriptor
++ *
++ */
++static void
++fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
++				struct fc_tlv_desc *tlv)
++{
++	u8 i;
++	struct fc_rport *rport = NULL;
++	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
++	struct fc_fn_peer_congn_desc *pc_desc =
++	    (struct fc_fn_peer_congn_desc *)tlv;
++	u16 event_type = be16_to_cpu(pc_desc->event_type);
++	u64 wwpn;
++
++	rport = fc_find_rport_by_wwpn(shost,
++				      be64_to_cpu(pc_desc->detecting_wwpn));
++	if (rport &&
++	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++		det_rport = rport;
++		fc_cn_stats_update(event_type, &det_rport->fpin_stats);
++	}
++
++	rport = fc_find_rport_by_wwpn(shost,
++				      be64_to_cpu(pc_desc->attached_wwpn));
++	if (rport &&
++	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++		attach_rport = rport;
++		fc_cn_stats_update(event_type, &attach_rport->fpin_stats);
++	}
++
++	if (be32_to_cpu(pc_desc->pname_count) > 0) {
++		for (i = 0;
++		    i < be32_to_cpu(pc_desc->pname_count);
++		    i++) {
++			wwpn = be64_to_cpu(pc_desc->pname_list[i]);
++			rport = fc_find_rport_by_wwpn(shost, wwpn);
++			if (rport &&
++			    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
++			    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
++				if (rport == det_rport ||
++				    rport == attach_rport)
++					continue;
++				fc_cn_stats_update(event_type,
++						   &rport->fpin_stats);
++			}
++		}
++	}
++}
++
++/*
++ * fc_fpin_congn_stats_update - routine to update Congestion
++ * event statistics.
++ * @shost:		host the FPIN was received on
++ * @tlv:		pointer to congestion descriptor
++ *
++ */
++static void
++fc_fpin_congn_stats_update(struct Scsi_Host *shost,
++			   struct fc_tlv_desc *tlv)
++{
++	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_fn_congn_desc *congn = (struct fc_fn_congn_desc *)tlv;
++
++	fc_cn_stats_update(be16_to_cpu(congn->event_type),
++			   &fc_host->fpin_stats);
++}
++
+ /**
+  * fc_host_rcv_fpin - routine to process a received FPIN.
+  * @shost:		host the FPIN was received on
+@@ -642,6 +932,38 @@ EXPORT_SYMBOL(fc_host_post_vendor_event);
+ void
+ fc_host_fpin_rcv(struct Scsi_Host *shost, u32 fpin_len, char *fpin_buf)
+ {
++	struct fc_els_fpin *fpin = (struct fc_els_fpin *)fpin_buf;
++	struct fc_tlv_desc *tlv;
++	u32 desc_cnt = 0, bytes_remain;
++	u32 dtag;
++
++	/* Update Statistics */
++	tlv = (struct fc_tlv_desc *)&fpin->fpin_desc[0];
++	bytes_remain = fpin_len - offsetof(struct fc_els_fpin, fpin_desc);
++	bytes_remain = min_t(u32, bytes_remain, be32_to_cpu(fpin->desc_len));
++
++	while (bytes_remain >= FC_TLV_DESC_HDR_SZ &&
++	       bytes_remain >= FC_TLV_DESC_SZ_FROM_LENGTH(tlv)) {
++		dtag = be32_to_cpu(tlv->desc_tag);
++		switch (dtag) {
++		case ELS_DTAG_LNK_INTEGRITY:
++			fc_fpin_li_stats_update(shost, tlv);
++			break;
++		case ELS_DTAG_DELIVERY:
++			fc_fpin_delivery_stats_update(shost, tlv);
++			break;
++		case ELS_DTAG_PEER_CONGEST:
++			fc_fpin_peer_congn_stats_update(shost, tlv);
++			break;
++		case ELS_DTAG_CONGESTION:
++			fc_fpin_congn_stats_update(shost, tlv);
++		}
++
++		desc_cnt++;
++		bytes_remain -= FC_TLV_DESC_SZ_FROM_LENGTH(tlv);
++		tlv = fc_tlv_next_desc(tlv);
++	}
++
+ 	fc_host_post_fc_event(shost, fc_get_event_number(),
+ 				FCH_EVT_LINK_FPIN, fpin_len, fpin_buf, 0);
+ }
 diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 1c7dd35cb7a0..487a403ee51e 100644
+index 487a403ee51e..a636c1986e22 100644
 --- a/include/scsi/scsi_transport_fc.h
 +++ b/include/scsi/scsi_transport_fc.h
-@@ -285,6 +285,36 @@ struct fc_rport_identifiers {
- 	u32 roles;
- };
- 
-+/*
-+ * Fabric Performance Impact Notification Statistics
-+ */
-+struct fc_fpin_stats {
-+	/* Delivery */
-+	u64 dn;
-+	u64 dn_unknown;
-+	u64 dn_timeout;
-+	u64 dn_unable_to_route;
-+	u64 dn_device_specific;
-+
-+	/* Link Integrity */
-+	u64 li;
-+	u64 li_failure_unknown;
-+	u64 li_link_failure_count;
-+	u64 li_loss_of_sync_count;
-+	u64 li_loss_of_signals_count;
-+	u64 li_prim_seq_err_count;
-+	u64 li_invalid_tx_word_count;
-+	u64 li_invalid_crc_count;
-+	u64 li_device_specific;
-+
-+	/* Congestion/Peer Congestion */
-+	u64 cn;
-+	u64 cn_clear;
-+	u64 cn_lost_credit;
-+	u64 cn_credit_stall;
-+	u64 cn_oversubscription;
-+	u64 cn_device_specific;
-+};
- 
- /* Macro for use in defining Remote Port attributes */
- #define FC_RPORT_ATTR(_name,_mode,_show,_store)				\
-@@ -326,6 +356,7 @@ struct fc_rport {	/* aka fc_starget_attrs */
- 
- 	/* Dynamic Attributes */
- 	u32 dev_loss_tmo;	/* Remote Port loss timeout in seconds. */
-+	struct fc_fpin_stats fpin_stats;
- 
- 	/* Private (Transport-managed) Attributes */
- 	u64 node_name;
-@@ -516,6 +547,7 @@ struct fc_host_attrs {
- 	char symbolic_name[FC_SYMBOLIC_NAME_SIZE];
- 	char system_hostname[FC_SYMBOLIC_NAME_SIZE];
- 	u32 dev_loss_tmo;
-+	struct fc_fpin_stats fpin_stats;
- 
- 	/* Private (Transport-managed) Attributes */
- 	enum fc_tgtid_binding_type  tgtid_bind_type;
+@@ -819,6 +819,7 @@ void fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
+ 		enum fc_host_event_code event_code, u32 event_data);
+ void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+ 		u32 data_len, char *data_buf, u64 vendor_id);
++struct fc_rport *fc_find_rport_by_wwpn(struct Scsi_Host *shost, u64 wwpn);
+ void fc_host_post_fc_event(struct Scsi_Host *shost, u32 event_number,
+ 		enum fc_host_event_code event_code,
+ 		u32 data_len, char *data_buf, u64 vendor_id);
 -- 
 2.19.0.rc0
 
