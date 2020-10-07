@@ -8,271 +8,352 @@ X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74AF2C41604
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 20:57:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 272CEC4363C
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 20:57:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2435C20872
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 20:57:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C633F20872
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 20:57:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="W6kdl5eY"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z+6Xdf1A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728313AbgJGU5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Oct 2020 16:57:25 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:49684 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727863AbgJGU5Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 16:57:25 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097KoCTX028867;
-        Wed, 7 Oct 2020 20:57:21 GMT
+        id S1728345AbgJGU5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 16:57:30 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:44724 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726152AbgJGU5a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 16:57:30 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097KnTUl038295;
+        Wed, 7 Oct 2020 20:57:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=jl06B6+Iimn6YgraBzPh9332NSVn761yJXji70dh550=;
- b=W6kdl5eYh/hHR3In82q/7qXLqYb3mslg+XPNV9CxN7IccA3h48OS79fzLHvjUW9Qwii8
- YWnMJv4+ZcgRTZ1LQJXmKRYxboDO8hZpgPaMUV2RbF8DIBRDMfXdbgDzk+ef9SSyHzg5
- hU5kDJ+LNWGqguAeShtw6KDLxTe/RgdI3k2HfefuXdVIQC/6oYuTCroetW115N9Snnzw
- uYg2UbTG+lghNyyydfsu3XWJ71VMYhUks32ETiAdzTva0hxWqI650RlyThj10EQ+zrXL
- UOS56/Oy4DudJPxmSpdx8VUysxgjdbIGzHTV+S82SOHLRRE/FfX5zO7od7NbttI2LGY5 7A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 33xetb4eqh-1
+ bh=yhya1YvqWr786+HzbwNs8Jo4GH88EaM6i2YMxTq3ajA=;
+ b=Z+6Xdf1Asm+gK8fxV7VcaHEFz9cajjKkdLciOpmQbWUhaNvjgTZsOh4v07YIU3kEOdTT
+ e6lppLOxKwdqwX0U7fkwJIsMmEe6SxwIOYrhrD/9hyr8tEpSpsoqozEIhtToEIbg2fHj
+ sXyF+6TXjP/rLmwcnxgxY7hwKMU64JRkjw0Uq37C5bhnpWMf5jy40MqXznF6woPg2L+s
+ p1Om0HMezMNnRnkP39SdGInmWRLjdeywnWG4bCX+WlRFQDprri3+G8hcFdlD6AO0Hhui
+ RQ4KDz4FPagxqWA+PpYmZt9oUYtXJ/gEPaJ/JxpYgVDMg/h3Tgeev6vUtSAIJhcAZnqh 4g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 33xhxn47dg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 07 Oct 2020 20:57:21 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097KorIP125445;
-        Wed, 7 Oct 2020 20:55:20 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 3410k03up8-1
+        Wed, 07 Oct 2020 20:57:23 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097KpLhj166352;
+        Wed, 7 Oct 2020 20:55:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 33y2vpyv16-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 07 Oct 2020 20:55:20 +0000
+        Wed, 07 Oct 2020 20:55:23 +0000
 Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 097KtIWU021057;
-        Wed, 7 Oct 2020 20:55:19 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 097KtMuV005654;
+        Wed, 7 Oct 2020 20:55:22 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 07 Oct 2020 13:55:18 -0700
+        with ESMTP ; Wed, 07 Oct 2020 13:55:22 -0700
 From:   Mike Christie <michael.christie@oracle.com>
 To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
         pbonzini@redhat.com, stefanha@redhat.com,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 04/16] vhost: prep vhost_dev_init users to handle failures
-Date:   Wed,  7 Oct 2020 15:54:49 -0500
-Message-Id: <1602104101-5592-5-git-send-email-michael.christie@oracle.com>
+Subject: [PATCH 10/16] vhost scsi: Add support for LUN resets.
+Date:   Wed,  7 Oct 2020 15:54:55 -0500
+Message-Id: <1602104101-5592-11-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1602104101-5592-1-git-send-email-michael.christie@oracle.com>
 References: <1602104101-5592-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
- adultscore=0 bulkscore=0 malwarescore=0 suspectscore=2 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010070134
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ malwarescore=0 suspectscore=2 spamscore=0 phishscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010070134
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- clxscore=1015 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 malwarescore=0 suspectscore=2 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ impostorscore=0 lowpriorityscore=0 suspectscore=2 phishscore=0
+ mlxlogscore=999 adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2010070134
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is just a prep patch to get vhost_dev_init callers ready to handle
-the next patch where the function can fail. In this patch vhost_dev_init
-just returns 0, but I think it's easier to check for goto/error handling
-errors separated from the next patch.
+In newer versions of virtio-scsi we just reset the timer when an a
+command times out, so TMFs are never sent for the cmd time out case.
+However, in older kernels and for the TMF inject cases, we can still get
+resets and we end up just failing immediately so the guest might see the
+device get offlined and IO errors.
+
+For the older kernel cases, we want the same end result as the
+modern virtio-scsi driver where we let the lower levels fire their error
+handling and handle the problem. And at the upper levels we want to
+wait. This patch ties the LUN reset handling into the LIO TMF code which
+will just wait for outstanding commands to complete like we are doing in
+the modern virtio-scsi case.
+
+Note: I did not handle the ABORT case to keep this simple. For ABORTs
+LIO just waits on the cmd like how it does for the RESET case. If
+an ABORT fails, the guest OS ends up escalating to LUN RESET, so in
+the end we get the same behavior where we wait on the outstanding
+cmds.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/vhost/net.c   | 11 +++++++----
- drivers/vhost/scsi.c  |  7 +++++--
- drivers/vhost/test.c  |  9 +++++++--
- drivers/vhost/vdpa.c  |  6 ++++--
- drivers/vhost/vhost.c | 14 ++++++++------
- drivers/vhost/vhost.h | 10 +++++-----
- drivers/vhost/vsock.c |  9 ++++++---
- 7 files changed, 42 insertions(+), 24 deletions(-)
+ drivers/vhost/scsi.c | 147 ++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 134 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
-index 831d824..fd30b53 100644
---- a/drivers/vhost/net.c
-+++ b/drivers/vhost/net.c
-@@ -1316,10 +1316,11 @@ static int vhost_net_open(struct inode *inode, struct file *f)
- 		n->vqs[i].rx_ring = NULL;
- 		vhost_net_buf_init(&n->vqs[i].rxq);
- 	}
--	vhost_dev_init(dev, vqs, VHOST_NET_VQ_MAX,
--		       UIO_MAXIOV + VHOST_NET_BATCH,
--		       VHOST_NET_PKT_WEIGHT, VHOST_NET_WEIGHT, true,
--		       NULL);
-+	if (vhost_dev_init(dev, vqs, VHOST_NET_VQ_MAX,
-+			   UIO_MAXIOV + VHOST_NET_BATCH,
-+			   VHOST_NET_PKT_WEIGHT, VHOST_NET_WEIGHT, true,
-+			   NULL))
-+		goto err_dev_init;
- 
- 	vhost_poll_init(n->poll + VHOST_NET_VQ_TX, handle_tx_net, EPOLLOUT, dev);
- 	vhost_poll_init(n->poll + VHOST_NET_VQ_RX, handle_rx_net, EPOLLIN, dev);
-@@ -1330,6 +1331,8 @@ static int vhost_net_open(struct inode *inode, struct file *f)
- 
- 	return 0;
- 
-+err_dev_init:
-+	kfree(xdp);
- err_xdp:
- 	kfree(queue);
- err_queue:
 diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 86617bb..63ba363 100644
+index 2fa48dd..f543fa0 100644
 --- a/drivers/vhost/scsi.c
 +++ b/drivers/vhost/scsi.c
-@@ -1632,14 +1632,17 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
- 		vqs[i] = &vs->vqs[i].vq;
- 		vs->vqs[i].vq.handle_kick = vhost_scsi_handle_kick;
- 	}
--	vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ, UIO_MAXIOV,
--		       VHOST_SCSI_WEIGHT, 0, true, NULL);
-+	if (vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ, UIO_MAXIOV,
-+			   VHOST_SCSI_WEIGHT, 0, true, NULL))
-+		goto err_dev_init;
- 
- 	vhost_scsi_init_inflight(vs, NULL);
- 
- 	f->private_data = vs;
- 	return 0;
- 
-+err_dev_init:
-+	kfree(vqs);
- err_vqs:
- 	kvfree(vs);
- err_vs:
-diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
-index a09dedc..c255ae5 100644
---- a/drivers/vhost/test.c
-+++ b/drivers/vhost/test.c
-@@ -119,12 +119,17 @@ static int vhost_test_open(struct inode *inode, struct file *f)
- 	dev = &n->dev;
- 	vqs[VHOST_TEST_VQ] = &n->vqs[VHOST_TEST_VQ];
- 	n->vqs[VHOST_TEST_VQ].handle_kick = handle_vq_kick;
--	vhost_dev_init(dev, vqs, VHOST_TEST_VQ_MAX, UIO_MAXIOV,
--		       VHOST_TEST_PKT_WEIGHT, VHOST_TEST_WEIGHT, true, NULL);
-+	if (vhost_dev_init(dev, vqs, VHOST_TEST_VQ_MAX, UIO_MAXIOV,
-+			   VHOST_TEST_PKT_WEIGHT, VHOST_TEST_WEIGHT, true, NULL)
-+		goto err_dev_init;
- 
- 	f->private_data = n;
- 
- 	return 0;
-+
-+err_dev_init:
-+	kfree(vqs);
-+	return -ENOMEM;
- }
- 
- static void *vhost_test_stop_vq(struct vhost_test *n,
-diff --git a/drivers/vhost/vdpa.c b/drivers/vhost/vdpa.c
-index 62a9bb0..d413ceb 100644
---- a/drivers/vhost/vdpa.c
-+++ b/drivers/vhost/vdpa.c
-@@ -817,8 +817,9 @@ static int vhost_vdpa_open(struct inode *inode, struct file *filep)
- 		vqs[i] = &v->vqs[i];
- 		vqs[i]->handle_kick = handle_vq_kick;
- 	}
--	vhost_dev_init(dev, vqs, nvqs, 0, 0, 0, false,
--		       vhost_vdpa_process_iotlb_msg);
-+	if (vhost_dev_init(dev, vqs, nvqs, 0, 0, 0, false,
-+			   vhost_vdpa_process_iotlb_msg))
-+		goto err_dev_init;
- 
- 	dev->iotlb = vhost_iotlb_alloc(0, 0);
- 	if (!dev->iotlb) {
-@@ -836,6 +837,7 @@ static int vhost_vdpa_open(struct inode *inode, struct file *filep)
- 
- err_init_iotlb:
- 	vhost_dev_cleanup(&v->vdev);
-+err_dev_init:
- 	kfree(vqs);
- err:
- 	atomic_dec(&v->opened);
-diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
-index fbb66f6..b05e690 100644
---- a/drivers/vhost/vhost.c
-+++ b/drivers/vhost/vhost.c
-@@ -459,12 +459,12 @@ static size_t vhost_get_desc_size(struct vhost_virtqueue *vq,
- 	return sizeof(*vq->desc) * num;
- }
- 
--void vhost_dev_init(struct vhost_dev *dev,
--		    struct vhost_virtqueue **vqs, int nvqs,
--		    int iov_limit, int weight, int byte_weight,
--		    bool use_worker,
--		    int (*msg_handler)(struct vhost_dev *dev,
--				       struct vhost_iotlb_msg *msg))
-+int vhost_dev_init(struct vhost_dev *dev,
-+		   struct vhost_virtqueue **vqs, int nvqs,
-+		   int iov_limit, int weight, int byte_weight,
-+		   bool use_worker,
-+		   int (*msg_handler)(struct vhost_dev *dev,
-+				      struct vhost_iotlb_msg *msg))
- {
- 	struct vhost_virtqueue *vq;
- 	int i;
-@@ -501,6 +501,8 @@ void vhost_dev_init(struct vhost_dev *dev,
- 			vhost_poll_init(&vq->poll, vq->handle_kick,
- 					EPOLLIN, dev);
- 	}
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(vhost_dev_init);
- 
-diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-index 11db183..a053318 100644
---- a/drivers/vhost/vhost.h
-+++ b/drivers/vhost/vhost.h
-@@ -167,11 +167,11 @@ struct vhost_dev {
+@@ -139,6 +139,7 @@ struct vhost_scsi_tpg {
+ 	struct se_portal_group se_tpg;
+ 	/* Pointer back to vhost_scsi, protected by tv_tpg_mutex */
+ 	struct vhost_scsi *vhost_scsi;
++	struct list_head tmf_queue;
  };
  
- bool vhost_exceeds_weight(struct vhost_virtqueue *vq, int pkts, int total_len);
--void vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs,
--		    int nvqs, int iov_limit, int weight, int byte_weight,
--		    bool use_worker,
--		    int (*msg_handler)(struct vhost_dev *dev,
--				       struct vhost_iotlb_msg *msg));
-+int vhost_dev_init(struct vhost_dev *dev, struct vhost_virtqueue **vqs,
-+		   int nvqs, int iov_limit, int weight, int byte_weight,
-+		   bool use_worker,
-+		   int (*msg_handler)(struct vhost_dev *dev,
-+				      struct vhost_iotlb_msg *msg));
- long vhost_dev_set_owner(struct vhost_dev *dev);
- bool vhost_dev_has_owner(struct vhost_dev *dev);
- long vhost_dev_check_owner(struct vhost_dev *);
-diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c
-index f40205f..a1a35e1 100644
---- a/drivers/vhost/vsock.c
-+++ b/drivers/vhost/vsock.c
-@@ -630,9 +630,10 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
- 	vsock->vqs[VSOCK_VQ_TX].handle_kick = vhost_vsock_handle_tx_kick;
- 	vsock->vqs[VSOCK_VQ_RX].handle_kick = vhost_vsock_handle_rx_kick;
+ struct vhost_scsi_tport {
+@@ -211,6 +212,20 @@ struct vhost_scsi {
+ 	int vs_events_nr; /* num of pending events, protected by vq->mutex */
+ };
  
--	vhost_dev_init(&vsock->dev, vqs, ARRAY_SIZE(vsock->vqs),
--		       UIO_MAXIOV, VHOST_VSOCK_PKT_WEIGHT,
--		       VHOST_VSOCK_WEIGHT, true, NULL);
-+	if (vhost_dev_init(&vsock->dev, vqs, ARRAY_SIZE(vsock->vqs),
-+			   UIO_MAXIOV, VHOST_VSOCK_PKT_WEIGHT,
-+			   VHOST_VSOCK_WEIGHT, true, NULL))
-+		goto err_dev_init;
++struct vhost_scsi_tmf {
++	struct vhost_work vwork;
++	struct vhost_scsi_tpg *tpg;
++	struct vhost_scsi *vhost;
++	struct vhost_scsi_virtqueue *svq;
++	struct list_head queue_entry;
++
++	struct se_cmd se_cmd;
++	struct vhost_scsi_inflight *inflight;
++	struct iovec resp_iov;
++	int in_iovs;
++	int vq_desc;
++};
++
+ /*
+  * Context for processing request and control queue operations.
+  */
+@@ -344,14 +359,32 @@ static void vhost_scsi_release_cmd_res(struct se_cmd *se_cmd)
+ 	vhost_scsi_put_inflight(inflight);
+ }
  
- 	file->private_data = vsock;
- 	spin_lock_init(&vsock->send_pkt_list_lock);
-@@ -640,6 +641,8 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
- 	vhost_work_init(&vsock->send_pkt_work, vhost_transport_send_pkt_work);
- 	return 0;
++static void vhost_scsi_release_tmf_res(struct vhost_scsi_tmf *tmf)
++{
++	struct vhost_scsi_tpg *tpg = tmf->tpg;
++	struct vhost_scsi_inflight *inflight = tmf->inflight;
++
++	mutex_lock(&tpg->tv_tpg_mutex);
++	list_add_tail(&tpg->tmf_queue, &tmf->queue_entry);
++	mutex_unlock(&tpg->tv_tpg_mutex);
++	vhost_scsi_put_inflight(inflight);
++}
++
+ static void vhost_scsi_release_cmd(struct se_cmd *se_cmd)
+ {
+-	struct vhost_scsi_cmd *cmd = container_of(se_cmd,
++	if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) {
++		struct vhost_scsi_tmf *tmf = container_of(se_cmd,
++					struct vhost_scsi_tmf, se_cmd);
++
++		vhost_work_queue(&tmf->vhost->dev, &tmf->vwork);
++	} else {
++		struct vhost_scsi_cmd *cmd = container_of(se_cmd,
+ 					struct vhost_scsi_cmd, tvc_se_cmd);
+-	struct vhost_scsi *vs = cmd->tvc_vhost;
++		struct vhost_scsi *vs = cmd->tvc_vhost;
  
-+err_dev_init:
-+	kfree(vqs);
- out:
- 	vhost_vsock_free(vsock);
- 	return ret;
+-	llist_add(&cmd->tvc_completion_list, &vs->vs_completion_list);
+-	vhost_work_queue(&vs->dev, &vs->vs_completion_work);
++		llist_add(&cmd->tvc_completion_list, &vs->vs_completion_list);
++		vhost_work_queue(&vs->dev, &vs->vs_completion_work);
++	}
+ }
+ 
+ static u32 vhost_scsi_sess_get_index(struct se_session *se_sess)
+@@ -390,7 +423,10 @@ static int vhost_scsi_queue_status(struct se_cmd *se_cmd)
+ 
+ static void vhost_scsi_queue_tm_rsp(struct se_cmd *se_cmd)
+ {
+-	return;
++	struct vhost_scsi_tmf *tmf = container_of(se_cmd, struct vhost_scsi_tmf,
++						  se_cmd);
++
++	transport_generic_free_cmd(&tmf->se_cmd, 0);
+ }
+ 
+ static void vhost_scsi_aborted_task(struct se_cmd *se_cmd)
+@@ -1120,9 +1156,9 @@ static u16 vhost_buf_to_lun(u8 *lun_buf)
+ }
+ 
+ static void
+-vhost_scsi_send_tmf_reject(struct vhost_scsi *vs,
+-			   struct vhost_virtqueue *vq,
+-			   struct vhost_scsi_ctx *vc)
++vhost_scsi_send_tmf_resp(struct vhost_scsi *vs, struct vhost_virtqueue *vq,
++			 int in_iovs, int vq_desc, struct iovec *resp_iov,
++			 int tmf_resp_code)
+ {
+ 	struct virtio_scsi_ctrl_tmf_resp rsp;
+ 	struct iov_iter iov_iter;
+@@ -1130,17 +1166,87 @@ static u16 vhost_buf_to_lun(u8 *lun_buf)
+ 
+ 	pr_debug("%s\n", __func__);
+ 	memset(&rsp, 0, sizeof(rsp));
+-	rsp.response = VIRTIO_SCSI_S_FUNCTION_REJECTED;
++	rsp.response = tmf_resp_code;
+ 
+-	iov_iter_init(&iov_iter, READ, &vq->iov[vc->out], vc->in, sizeof(rsp));
++	iov_iter_init(&iov_iter, READ, resp_iov, in_iovs, sizeof(rsp));
+ 
+ 	ret = copy_to_iter(&rsp, sizeof(rsp), &iov_iter);
+ 	if (likely(ret == sizeof(rsp)))
+-		vhost_add_used_and_signal(&vs->dev, vq, vc->head, 0);
++		vhost_add_used_and_signal(&vs->dev, vq, vq_desc, 0);
+ 	else
+ 		pr_err("Faulted on virtio_scsi_ctrl_tmf_resp\n");
+ }
+ 
++static void vhost_scsi_tmf_resp_work(struct vhost_work *work)
++{
++	struct vhost_scsi_tmf *tmf = container_of(work, struct vhost_scsi_tmf,
++						  vwork);
++	int resp_code;
++
++	if (tmf->se_cmd.se_tmr_req->response == TMR_FUNCTION_COMPLETE)
++		resp_code = VIRTIO_SCSI_S_FUNCTION_SUCCEEDED;
++	else
++		resp_code = VIRTIO_SCSI_S_FUNCTION_REJECTED;
++
++	vhost_scsi_send_tmf_resp(tmf->vhost, &tmf->svq->vq, tmf->in_iovs,
++				 tmf->vq_desc, &tmf->resp_iov, resp_code);
++	vhost_scsi_release_tmf_res(tmf);
++}
++
++static void
++vhost_scsi_handle_tmf(struct vhost_scsi *vs, struct vhost_scsi_tpg *tpg,
++		      struct vhost_virtqueue *vq,
++		      struct virtio_scsi_ctrl_tmf_req *vtmf,
++		      struct vhost_scsi_ctx *vc)
++{
++	struct vhost_scsi_virtqueue *svq = container_of(vq,
++					struct vhost_scsi_virtqueue, vq);
++	struct vhost_scsi_tmf *tmf;
++
++	if (vhost32_to_cpu(vq, vtmf->subtype) !=
++	    VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET)
++		goto send_reject;
++
++	if (!tpg->tpg_nexus || !tpg->tpg_nexus->tvn_se_sess) {
++		pr_err("Unable to locate active struct vhost_scsi_nexus for LUN RESET.\n");
++		goto send_reject;
++	}
++
++	mutex_lock(&tpg->tv_tpg_mutex);
++	if (list_empty(&tpg->tmf_queue)) {
++		pr_err("Missing reserve TMF. Could not handle LUN RESET.\n");
++		mutex_unlock(&tpg->tv_tpg_mutex);
++		goto send_reject;
++	}
++
++	tmf = list_first_entry(&tpg->tmf_queue, struct vhost_scsi_tmf,
++			       queue_entry);
++	list_del_init(&tmf->queue_entry);
++	mutex_unlock(&tpg->tv_tpg_mutex);
++
++	tmf->tpg = tpg;
++	tmf->vhost = vs;
++	tmf->svq = svq;
++	tmf->resp_iov = vq->iov[vc->out];
++	tmf->vq_desc = vc->head;
++	tmf->in_iovs = vc->in;
++	tmf->inflight = vhost_scsi_get_inflight(vq);
++
++	if (target_submit_tmr(&tmf->se_cmd, tpg->tpg_nexus->tvn_se_sess, NULL,
++			      vhost_buf_to_lun(vtmf->lun), NULL,
++			      TMR_LUN_RESET, GFP_KERNEL, 0,
++			      TARGET_SCF_ACK_KREF) < 0) {
++		vhost_scsi_release_tmf_res(tmf);
++		goto send_reject;
++	}
++
++	return;
++
++send_reject:
++	vhost_scsi_send_tmf_resp(vs, vq, vc->in, vc->head, &vq->iov[vc->out],
++				 VIRTIO_SCSI_S_FUNCTION_REJECTED);
++}
++
+ static void
+ vhost_scsi_send_an_resp(struct vhost_scsi *vs,
+ 			struct vhost_virtqueue *vq,
+@@ -1166,6 +1272,7 @@ static u16 vhost_buf_to_lun(u8 *lun_buf)
+ static void
+ vhost_scsi_ctl_handle_vq(struct vhost_scsi *vs, struct vhost_virtqueue *vq)
+ {
++	struct vhost_scsi_tpg *tpg;
+ 	union {
+ 		__virtio32 type;
+ 		struct virtio_scsi_ctrl_an_req an;
+@@ -1247,12 +1354,12 @@ static u16 vhost_buf_to_lun(u8 *lun_buf)
+ 		vc.req += typ_size;
+ 		vc.req_size -= typ_size;
+ 
+-		ret = vhost_scsi_get_req(vq, &vc, NULL);
++		ret = vhost_scsi_get_req(vq, &vc, &tpg);
+ 		if (ret)
+ 			goto err;
+ 
+ 		if (v_req.type == VIRTIO_SCSI_T_TMF)
+-			vhost_scsi_send_tmf_reject(vs, vq, &vc);
++			vhost_scsi_handle_tmf(vs, tpg, vq, &v_req.tmf, &vc);
+ 		else
+ 			vhost_scsi_send_an_resp(vs, vq, &vc);
+ err:
+@@ -1927,11 +2034,19 @@ static int vhost_scsi_port_link(struct se_portal_group *se_tpg,
+ {
+ 	struct vhost_scsi_tpg *tpg = container_of(se_tpg,
+ 				struct vhost_scsi_tpg, se_tpg);
++	struct vhost_scsi_tmf *tmf;
++
++	tmf = kzalloc(sizeof(*tmf), GFP_KERNEL);
++	if (!tmf)
++		return -ENOMEM;
++	INIT_LIST_HEAD(&tmf->queue_entry);
++	vhost_work_init(&tmf->vwork, vhost_scsi_tmf_resp_work);
+ 
+ 	mutex_lock(&vhost_scsi_mutex);
+ 
+ 	mutex_lock(&tpg->tv_tpg_mutex);
+ 	tpg->tv_tpg_port_count++;
++	list_add_tail(&tmf->queue_entry, &tpg->tmf_queue);
+ 	mutex_unlock(&tpg->tv_tpg_mutex);
+ 
+ 	vhost_scsi_hotplug(tpg, lun);
+@@ -1946,11 +2061,16 @@ static void vhost_scsi_port_unlink(struct se_portal_group *se_tpg,
+ {
+ 	struct vhost_scsi_tpg *tpg = container_of(se_tpg,
+ 				struct vhost_scsi_tpg, se_tpg);
++	struct vhost_scsi_tmf *tmf;
+ 
+ 	mutex_lock(&vhost_scsi_mutex);
+ 
+ 	mutex_lock(&tpg->tv_tpg_mutex);
+ 	tpg->tv_tpg_port_count--;
++	tmf = list_first_entry(&tpg->tmf_queue, struct vhost_scsi_tmf,
++			       queue_entry);
++	list_del(&tmf->queue_entry);
++	kfree(tmf);
+ 	mutex_unlock(&tpg->tv_tpg_mutex);
+ 
+ 	vhost_scsi_hotunplug(tpg, lun);
+@@ -2211,6 +2331,7 @@ static ssize_t vhost_scsi_tpg_nexus_store(struct config_item *item,
+ 	}
+ 	mutex_init(&tpg->tv_tpg_mutex);
+ 	INIT_LIST_HEAD(&tpg->tv_tpg_list);
++	INIT_LIST_HEAD(&tpg->tmf_queue);
+ 	tpg->tport = tport;
+ 	tpg->tport_tpgt = tpgt;
+ 
 -- 
 1.8.3.1
 
