@@ -8,92 +8,87 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C1F6C4363C
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 03:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D3CC47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 03:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E854208C7
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 03:50:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D3CD20B1F
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 03:50:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YnWkeBDL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="p+15ztrE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727110AbgJGDuh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Oct 2020 23:50:37 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:37484 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726482AbgJGDug (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Oct 2020 23:50:36 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0973iwaH045291;
-        Wed, 7 Oct 2020 03:50:28 GMT
+        id S1727113AbgJGDui (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Oct 2020 23:50:38 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39958 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726864AbgJGDui (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Oct 2020 23:50:38 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0973mVcm169269;
+        Wed, 7 Oct 2020 03:50:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=/ts1uUAfqamVpoVl/NdC021SXpDDQ5rYyHqZB45up3M=;
- b=YnWkeBDLmkQ4wTHIRrFTx0EVRHQOIW6MEJDrPa/E29qUlgt8tg3azACwQX7KfcCjvkbV
- qAY5uGiQRQ6/9TinIbtKlI6dH4bdrO+Cf2N7ecL41BVR9xi0Ph+oWo3BeHSABAWDeWwP
- W6UYCkjoGHnqkfmnO7/JJQB7HuXu8Sp/kD4HI/PT46f8XfJXNcZC8+YuAlQbk2D9AAbH
- GE2w0sMFbsS5CTn6JT+uxC8Y8/ZeOVnz9q2AbDmpyCXO5pzbZrkS3ITJrMi2FYNBmgVl
- HA5901tX9x5oUG51xqbLO0OMxNXLz4PtI5y/3X4jebxGl6CvuI39NefaLoLlWRvJhHJ7 hg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 33ym34mk3g-1
+ bh=qJen2LN3dGmVKOMJ4XdaJGBMYeHq3nmUQkRkwTXR26k=;
+ b=p+15ztrENS+sV7xk8wr2msGICruXXwIgAH60Yxlve3x8QOw+Bnio0HzEJFr78d2TexNe
+ EFWmre7hlZDqZA0yILS7eleC9kI1Hi7POddjZAK3YFlYQuwFsmAF15nXtiIIvFa5zn00
+ iCJCMChZDQSgznu8WHBLgGvGTbwwoUkq3tPGnRTx84w89ymErms3hVePgYaVEdjGlRnR
+ 6+LuOeWSpGyXXreY3Cz/K3+oGv4qFiUi/JoJtZHX8dMeRZV3A8cWsgs8WamdoyRtDQw+
+ aoj86L/dgVcW9Fie/XxFpdlhZdVU+6Sqq3qG0wPmx8irVZ4Srn88zYYqpaoN2NvngUpn qg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 33xhxmydh7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 07 Oct 2020 03:50:27 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0973jI5Y054881;
-        Wed, 7 Oct 2020 03:48:27 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 33y2vnxxue-1
+        Wed, 07 Oct 2020 03:50:29 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0973iq00194761;
+        Wed, 7 Oct 2020 03:48:28 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 3410jy2s7y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 07 Oct 2020 03:48:27 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0973mRVT002436;
-        Wed, 7 Oct 2020 03:48:27 GMT
+        Wed, 07 Oct 2020 03:48:28 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0973mSkI002167;
+        Wed, 7 Oct 2020 03:48:28 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 06 Oct 2020 20:48:26 -0700
+        with ESMTP ; Tue, 06 Oct 2020 20:48:27 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Ye Bin <yebin10@huawei.com>, sebaddel@cisco.com,
-        satishkh@cisco.com, kartilak@cisco.com, linux-scsi@vger.kernel.org
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        linux-scsi@vger.kernel.org, Ye Bin <yebin10@huawei.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH] scsi: fnic: Fix inconsistent of format with argument type in fnic_debugfs.c
-Date:   Tue,  6 Oct 2020 23:48:04 -0400
-Message-Id: <160204240576.16940.1125240849322272155.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: lpfc: Remove Unneeded variable 'status' in lpfc_fcp_cpu_map_store
+Date:   Tue,  6 Oct 2020 23:48:05 -0400
+Message-Id: <160204240581.16940.17987560004222170971.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200930021919.2832860-2-yebin10@huawei.com>
-References: <20200930021919.2832860-1-yebin10@huawei.com> <20200930021919.2832860-2-yebin10@huawei.com>
+In-Reply-To: <20200916022859.349089-1-yebin10@huawei.com>
+References: <20200916022859.349089-1-yebin10@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9766 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- malwarescore=0 suspectscore=0 spamscore=0 phishscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2010070023
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
+ adultscore=0 bulkscore=0 malwarescore=0 suspectscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010070023
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9766 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
- mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
- malwarescore=0 phishscore=0 suspectscore=0 adultscore=0 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ impostorscore=0 lowpriorityscore=0 suspectscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2010070023
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 30 Sep 2020 10:19:19 +0800, Ye Bin wrote:
+On Wed, 16 Sep 2020 10:28:59 +0800, Ye Bin wrote:
 
-> fix follow warnings:
-> [drivers/scsi/fnic/fnic_debugfs.c:123]: (warning) %u in format string (no. 1)
-> 	requires 'unsigned int' but the argument type is 'int'.
-> [drivers/scsi/fnic/fnic_debugfs.c:125]: (warning) %u in format string (no. 1)
-> 	requires 'unsigned int' but the argument type is 'int'.
-> [drivers/scsi/fnic/fnic_debugfs.c:127]: (warning) %u in format string (no. 1)
-> 	requires 'unsigned int' but the argument type is 'int'.
+> Fixes coccicheck warning:
+> drivers/scsi/lpfc/lpfc_attr.c:5341:5-11: Unneeded variable: "status". Return "- EINVAL" on line 5342
 
 Applied to 5.10/scsi-queue, thanks!
 
-[1/1] scsi: fnic: Fix inconsistent format argument type in fnic_debugfs.c
-      https://git.kernel.org/mkp/scsi/c/1dfbed19455b
+[1/1] scsi: lpfc: Remove unneeded variable 'status' in lpfc_fcp_cpu_map_store()
+      https://git.kernel.org/mkp/scsi/c/37fa429ef7ba
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
