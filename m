@@ -2,117 +2,92 @@ Return-Path: <SRS0=2LRe=DO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD5D0C4363D
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 14:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED2E0C47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 17:05:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AF7B21531
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 14:53:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 934622087D
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 17:05:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cVZ8XSb9"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="cqdVnGSG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728701AbgJGOx5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Oct 2020 10:53:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:20379 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728677AbgJGOxy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 10:53:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602082433;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=odS/FADxguwMdYrBZ1VHdSAflMyHx/SE0+n5W31X5qs=;
-        b=cVZ8XSb9HkGfAmkoUOCWkAeeq0qUixRoS5YjK0OC8mvt06lCDE4FkUsVnuoleJdClFG7+Y
-        99C8sbGSeDKENf5IJXaO4X4n8VTq40/udNe596Tl1FUwHWwjQ87CYJGAWPLi9oUivZo12G
-        Q5Vw4Nj++tDiGwK77kb6+HMXxFSh5fI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-450-FH9_0ImGN--dthyhol7aEQ-1; Wed, 07 Oct 2020 10:53:52 -0400
-X-MC-Unique: FH9_0ImGN--dthyhol7aEQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0C76E890E7A;
-        Wed,  7 Oct 2020 14:53:32 +0000 (UTC)
-Received: from nangaparbat.redhat.com (unknown [10.35.206.121])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 173E560BEC;
-        Wed,  7 Oct 2020 14:53:29 +0000 (UTC)
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        bvanassche@acm.org, michael.christie@oracle.com
-Subject: [PATCH 1/2] target: iscsi: prevent a race condition in iscsit_unmap_cmd()
-Date:   Wed,  7 Oct 2020 16:53:25 +0200
-Message-Id: <20201007145326.56850-2-mlombard@redhat.com>
-In-Reply-To: <20201007145326.56850-1-mlombard@redhat.com>
-References: <20201007145326.56850-1-mlombard@redhat.com>
+        id S1727705AbgJGRFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 13:05:12 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55700 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726041AbgJGRFL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 13:05:11 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 097H07H6028709;
+        Wed, 7 Oct 2020 10:05:07 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=rrKteRViA4vxSNBUsWnAhe7ROJCIJod5xGAgtVlXXL0=;
+ b=cqdVnGSG46S22OXunmVF839Tq+QCBTA4dyAkQT//o++COb2Ly6Tl1bBjlmSom1hnom0x
+ OThMdm1S+jfpBnGJIHqwMMh8jxyXIE3caQ4sUpzdF8YXIn3Hz5ImX0BcJJbr3VxB/qoO
+ RDVyhMo7mLePIMErsb4jet8u+sa7R7EfPc1tne5Y6d5Ol24vTmsvdZHKA7nWzmIjyBPi
+ GZOWoPfBSJpsM4+JiJdgf+jmQCwcRsu4l3cwEYGtaVqrbJiUiHGjbwdsQzVPgQ3uNZXB
+ DyCUPRWhmX3jwgICdTGYX9JNXnsbPEGiuOFGFbJhL6HjkFLUOTtavu6RoDp6bTlIUopL 5w== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 33xrtnmy0d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 07 Oct 2020 10:05:07 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 7 Oct
+ 2020 10:05:05 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 7 Oct
+ 2020 10:05:05 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 7 Oct 2020 10:05:06 -0700
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id D7A303F703F;
+        Wed,  7 Oct 2020 10:05:05 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 097H556M023986;
+        Wed, 7 Oct 2020 10:05:05 -0700
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Wed, 7 Oct 2020 10:05:05 -0700
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     Nilesh Javali <njavali@marvell.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] qla2xxx: Do not consume srb greedily
+In-Reply-To: <20200929073802.18770-1-dwagner@suse.de>
+Message-ID: <alpine.LRH.2.21.9999.2010071001520.28578@irv1user01.caveonetworks.com>
+References: <20200929073802.18770-1-dwagner@suse.de>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-10-07_10:2020-10-07,2020-10-07 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A potential race condition may occur in iscsit_unmap_cmd() if the
-__iscsit_free_cmd() function is called by two different threads.
+On Tue, 29 Sep 2020, 12:38am, Daniel Wagner wrote:
 
-This patch adds a spinlock to serialize the calls to
-iscsit_unmap_cmd()
+> qla2xx_process_get_sp_from_handle() will clear the slot which the
+> current srb is stored. So this function has a side effect. Therefore,
+> we can't use it in qla24xx_process_mbx_iocb_response() to check
+> for consistency and later again in qla24xx_mbx_iocb_entry().
+> 
+> Let's move the consistency check directly into
+> qla24xx_mbx_iocb_entry() and avoid the double call or any open coding
+> of the qla2xx_process_get_sp_from_handle() functionality.
+> 
+> Fixes: 31a3271ff11b ("scsi: qla2xxx: Handle incorrect entry_type entries")
+> Signed-off-by: Daniel Wagner <dwagner@suse.de>
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/target/iscsi/iscsi_target_login.c | 1 +
- drivers/target/iscsi/iscsi_target_util.c  | 5 ++++-
- include/target/iscsi/iscsi_target_core.h  | 1 +
- 3 files changed, 6 insertions(+), 1 deletion(-)
+That was a nasty one, good that you caught it soon.
 
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 893d1b406c29..e16ceee87bba 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -1110,6 +1110,7 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
- 	spin_lock_init(&conn->nopin_timer_lock);
- 	spin_lock_init(&conn->response_queue_lock);
- 	spin_lock_init(&conn->state_lock);
-+	spin_lock_init(&conn->unmap_cmd_lock);
- 
- 	timer_setup(&conn->nopin_response_timer,
- 		    iscsit_handle_nopin_response_timeout, 0);
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index 45ba07c6ec27..3082f5bde9fa 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -755,8 +755,11 @@ void __iscsit_free_cmd(struct iscsi_cmd *cmd, bool check_queues)
- 		iscsit_remove_cmd_from_response_queue(cmd, conn);
- 	}
- 
--	if (conn && conn->conn_transport->iscsit_unmap_cmd)
-+	if (conn && conn->conn_transport->iscsit_unmap_cmd) {
-+		spin_lock(&conn->unmap_cmd_lock);
- 		conn->conn_transport->iscsit_unmap_cmd(conn, cmd);
-+		spin_unlock(&conn->unmap_cmd_lock);
-+	}
- }
- 
- void iscsit_free_cmd(struct iscsi_cmd *cmd, bool shutdown)
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 1eccb2ac7d02..ae7ac0134c8c 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -575,6 +575,7 @@ struct iscsi_conn {
- 	spinlock_t		nopin_timer_lock;
- 	spinlock_t		response_queue_lock;
- 	spinlock_t		state_lock;
-+	spinlock_t		unmap_cmd_lock;
- 	/* libcrypto RX and TX contexts for crc32c */
- 	struct ahash_request	*conn_rx_hash;
- 	struct ahash_request	*conn_tx_hash;
--- 
-2.26.2
+Reviewed-by: Arun Easi <aeasi@marvell.com>
 
+Regards,
+-Arun
