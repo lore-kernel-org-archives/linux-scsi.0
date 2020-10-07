@@ -2,113 +2,135 @@ Return-Path: <SRS0=2LRe=DO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D42CC41604
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 10:42:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B6BC47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 13:29:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10E0520870
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 10:42:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69E0820870
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 13:29:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gGAfa3mk"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BikErFg2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727660AbgJGKmk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Oct 2020 06:42:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53026 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726096AbgJGKmk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 06:42:40 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0666C061755;
-        Wed,  7 Oct 2020 03:42:39 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id l17so1613106edq.12;
-        Wed, 07 Oct 2020 03:42:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=6KY06uHjT4FGbr1jf7LkxmngoS8t8NSmf8ERDU+3OjU=;
-        b=gGAfa3mkIonhmBL6mXR/klqY56zNyofwXg+JPtC6R6ez3a3Nu2HSqq3FUSTMHAE+Rh
-         /TpJo4uZuk/pZo62SVAw0hs5jWL2OAV69uugtNb9w7D11hXN19zPBhuge8IgL5RJu3Kv
-         KXbnJvg9THd9CYkx074JsNmXC1chsn/4zGhZZfjHmV83E9VrDXDxrZdhx9XccEW87vZh
-         Hya2Rc3jxmkY3UMFCV+U5OdAEMdCkXbFC1zQ/2MqkRfFoF996WvujkI3+GantGXCb6F8
-         WskAE3xAtGonvtG27k25IDbzyfuq6ebeLmSWuqewjBrKedtj4GYDbq5FdVTBe/OdhVFa
-         mj9A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=6KY06uHjT4FGbr1jf7LkxmngoS8t8NSmf8ERDU+3OjU=;
-        b=Pk8lMAyuusvvPezLePLNZGsGjncCb+kogEUubcot1X/kobwYUZ61F2UF3m7NYHvhY7
-         01CZ15y+UgGveQAEglbGTa+yLFOUJ0wxTDMBCg+x1qjf2+Pu6UBEORjr2pBt/ea24OUa
-         AQZdPtFz5r9OsmRaUSyBNzi3JZinJevOZLIpv/lo6segtbZImKTTpZ9B+g3weMxnfTyl
-         oMgpRE59n+cfRL89GU4Jp6U/S52gJAhW0WrFaPPkSf2Q6A1pXg/sQyfMlkf0Law3x4Gf
-         DiqoHjrJ1YnWeAxtFjlSYVK6k53kYAG2DVUxHiOeRpUpWdomh/EqQzFcgpLqHtBy9QEv
-         hHHQ==
-X-Gm-Message-State: AOAM532W2pFsckJaW7NILQJGPbbeu6DugAzBrzaTlcEmLY8/rRcSpWCs
-        hkHuEbodNLJyLKoMbuFFJgo=
-X-Google-Smtp-Source: ABdhPJyqraldx1BIB6BRIuIJPwg9j4l6EUxFmwO3fNVtOe98PCix4WME4TrObcyaxcQQ8ZICb4EanQ==
-X-Received: by 2002:a50:cfc5:: with SMTP id i5mr2800301edk.151.1602067358476;
-        Wed, 07 Oct 2020 03:42:38 -0700 (PDT)
-Received: from localhost.localdomain ([2a01:598:b907:5772:ec4c:df78:2ef4:dfa8])
-        by smtp.gmail.com with ESMTPSA id s25sm1231482ejc.29.2020.10.07.03.42.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2020 03:42:37 -0700 (PDT)
-From:   Bean Huo <huobean@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bean Huo <beanhuo@micron.com>
-Subject: [PATCH] scsi: sd: Use UNMAP in case the device doesn't support WRITE_SAME
-Date:   Wed,  7 Oct 2020 12:42:20 +0200
-Message-Id: <20201007104220.8772-1-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        id S1728448AbgJGN3k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 09:29:40 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:47800 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728380AbgJGN3k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 09:29:40 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097DDSMw134516;
+        Wed, 7 Oct 2020 13:29:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=CwN46KYA6wJKiyru5KHjshaf/jMkwSRcmYxyCnULW74=;
+ b=BikErFg29guYiSfqReZiklztBXlXpy6G4LpI8ItXnabkz4RZM7fiLiqxiaNT2tnkPTGy
+ LPipImh+kdPkmJQnKnMk3rAmftrtdeAP4aqGnYjaC360V9Nshc+sg72FbNaYquxeXKg0
+ YrGLXmrLuE1lUcQBdvDW9fr3mJ2q0uz7r4P7odqf0kOs5iOHWgGVWxq2X3ppxd5hKQhF
+ mnfrSZYOU2MgakTdRLQjZ6M72d+t67Acf+KvQueMTHhPLGErbKUrB8hzyAub6vCV/37b
+ W53e5lTO4loZoVsNS/S0wifSH8M11lQVzj8CGgSsG3o4UiOK1hDm0Ave19/6IGHwXfmM Gg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 33xhxn1nt9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 07 Oct 2020 13:29:31 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097DFCIK141475;
+        Wed, 7 Oct 2020 13:29:31 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 33yyjh77v7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 07 Oct 2020 13:29:30 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 097DTO4v023066;
+        Wed, 7 Oct 2020 13:29:25 GMT
+Received: from [192.168.1.26] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 07 Oct 2020 06:29:24 -0700
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
+Subject: Re: [PATCH] qla2xxx: Use constant when it is known.
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+In-Reply-To: <20200921112340.GA19336@duo.ucw.cz>
+Date:   Wed, 7 Oct 2020 08:29:24 -0500
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <39CE3456-73A7-4533-BE7F-382469695E08@oracle.com>
+References: <20200921112340.GA19336@duo.ucw.cz>
+To:     Pavel Machek <pavel@denx.de>
+X-Mailer: Apple Mail (2.3608.120.23.2.4)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9766 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
+ phishscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010070088
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9766 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ impostorscore=0 lowpriorityscore=0 suspectscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 clxscore=1011 spamscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010070088
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
 
-There exists a storage device that supports READ_CAPACITY, but doesn't
-support WRITE_SAME. The problem is that WRITE SAME heuristics doesn't work
-for this kind of storage device since its block limits VPD page doesn't
-contain the LBP information. Currently we set its provisioning_mode
-"writesame_16" and didn't check "no_write_same". If we didn't manually change
-this default provisioning_mode to "unmap" through sysfs, provisioning_mode
-will be set to "disabled" after the first WRITE_SAME command with the following
-error occurs:
 
-sd 0:0:0:3: [sdd] tag#4 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08 cmd_age=0s
-sd 0:0:0:3: [sdd] tag#4 Sense Key : 0x5 [current]
-sd 0:0:0:3: [sdd] tag#4 ASC=0x20 ASCQ=0x0
-sd 0:0:0:3: [sdd] tag#4 CDB: opcode=0x93 93 08 00 00 00 00 00 00 05 4b 00 00 00 1f 00 00
-blk_update_request: critical target error, dev sdd, sector 10840 op 0x3:(DISCARD) flags 0x800 phys_seg 1 prio class 0
+> On Sep 21, 2020, at 6:23 AM, Pavel Machek <pavel@denx.de> wrote:
+>=20
+> Directly return constant when it is known, to make code easier to
+> understand.
+>=20
+> Signed-off-by: Pavel Machek (CIP) <pavel@denx.de>
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c =
+b/drivers/scsi/qla2xxx/qla_nvme.c
+> index 90bbc61f361b..248197e9e8ea 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -530,7 +530,7 @@ static int qla_nvme_post_cmd(struct =
+nvme_fc_local_port *lport,
+> 	fc_port_t *fcport;
+> 	struct srb_iocb *nvme;
+> 	struct scsi_qla_host *vha;
+> -	int rval =3D -ENODEV;
+> +	int rval;
+> 	srb_t *sp;
+> 	struct qla_qpair *qpair =3D hw_queue_handle;
+> 	struct nvme_private *priv =3D fd->private;
+> @@ -538,14 +538,14 @@ static int qla_nvme_post_cmd(struct =
+nvme_fc_local_port *lport,
+>=20
+> 	if (!priv) {
+> 		/* nvme association has been torn down */
+> -		return rval;
+> +		return -ENODEV;
+> 	}
+>=20
+> 	fcport =3D qla_rport->fcport;
+>=20
+> 	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
+> 	    (fcport && fcport->deleted))
+> -		return rval;
+> +		return -ENODEV;
+>=20
+> 	vha =3D fcport->vha;
+> 	/*
+>=20
+> --=20
+> (english) http://www.livejournal.com/~pavelmachek
+> (cesky, pictures) =
+http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
 
-Comparing to manually change provisioning_mode in sysfs, it is better to set
-provisioning_mode to "unmap" in case WRITE_SAME is not supported.
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/sd.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 95018e650f2d..93fb41741b21 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2372,7 +2372,10 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		if (buffer[14] & 0x40) /* LBPRZ */
- 			sdkp->lbprz = 1;
- 
--		sd_config_discard(sdkp, SD_LBP_WS16);
-+		if (sdp->no_write_same)
-+			sd_config_discard(sdkp, SD_LBP_UNMAP);
-+		else
-+			sd_config_discard(sdkp, SD_LBP_WS16);
- 	}
- 
- 	sdkp->capacity = lba + 1;
--- 
-2.17.1
+--
+Himanshu Madhani	 Oracle Linux Engineering
 
