@@ -2,93 +2,81 @@ Return-Path: <SRS0=2LRe=DO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D3CC47095
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 03:50:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29201C47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 04:32:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D3CD20B1F
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 03:50:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E452D208C7
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 04:32:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="p+15ztrE"
+	dkim=pass (2048-bit key) header.d=areca-com-tw.20150623.gappssmtp.com header.i=@areca-com-tw.20150623.gappssmtp.com header.b="D6l/DmN3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727113AbgJGDui (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Oct 2020 23:50:38 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:39958 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726864AbgJGDui (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Oct 2020 23:50:38 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0973mVcm169269;
-        Wed, 7 Oct 2020 03:50:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=qJen2LN3dGmVKOMJ4XdaJGBMYeHq3nmUQkRkwTXR26k=;
- b=p+15ztrENS+sV7xk8wr2msGICruXXwIgAH60Yxlve3x8QOw+Bnio0HzEJFr78d2TexNe
- EFWmre7hlZDqZA0yILS7eleC9kI1Hi7POddjZAK3YFlYQuwFsmAF15nXtiIIvFa5zn00
- iCJCMChZDQSgznu8WHBLgGvGTbwwoUkq3tPGnRTx84w89ymErms3hVePgYaVEdjGlRnR
- 6+LuOeWSpGyXXreY3Cz/K3+oGv4qFiUi/JoJtZHX8dMeRZV3A8cWsgs8WamdoyRtDQw+
- aoj86L/dgVcW9Fie/XxFpdlhZdVU+6Sqq3qG0wPmx8irVZ4Srn88zYYqpaoN2NvngUpn qg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 33xhxmydh7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 07 Oct 2020 03:50:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0973iq00194761;
-        Wed, 7 Oct 2020 03:48:28 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 3410jy2s7y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 07 Oct 2020 03:48:28 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0973mSkI002167;
-        Wed, 7 Oct 2020 03:48:28 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 06 Oct 2020 20:48:27 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        linux-scsi@vger.kernel.org, Ye Bin <yebin10@huawei.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hulk Robot <hulkci@huawei.com>
-Subject: Re: [PATCH] scsi: lpfc: Remove Unneeded variable 'status' in lpfc_fcp_cpu_map_store
-Date:   Tue,  6 Oct 2020 23:48:05 -0400
-Message-Id: <160204240581.16940.17987560004222170971.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200916022859.349089-1-yebin10@huawei.com>
-References: <20200916022859.349089-1-yebin10@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9766 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
- adultscore=0 bulkscore=0 malwarescore=0 suspectscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010070023
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9766 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- impostorscore=0 lowpriorityscore=0 suspectscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010070023
+        id S1726791AbgJGEcg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 00:32:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52484 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726755AbgJGEcf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 00:32:35 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B298C061755
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2020 21:32:34 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id x22so594392pfo.12
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2020 21:32:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=areca-com-tw.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:mime-version
+         :content-transfer-encoding;
+        bh=M52oZrMi9dCtDbxAjDKC3w2Xn750c74KunzKHY+WZkY=;
+        b=D6l/DmN3gqgifcj7qXftu2zdBTUAituYO2V5XfTpjzryg5w420y1a83h5y0uiTm91R
+         I/zZGmrEGGulyFEVEaqwz9eY13sT50T0ZKEfAp2K3Bj2PMwLtzkbbnXIaI2Bsv4fGQYK
+         3MyXZfGFnDqu2KPzxklsTZhER7enYE8ZvjMzDMXL4lUQ/YHQO/7Buc5AJ6cJ380bkTb9
+         EXW2wIV8nOdOo1/saWYiNd+1da+WnSGOO9AB819PEAAiUax6sZe36Hiojo9O6jD9qNAa
+         HpKW57GQi0pdwZRPl2ODezeeNfqXSlO4xQy4KDu+SVh7oLusj7aM8+e0qw9QDfWfpu49
+         PCiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:mime-version
+         :content-transfer-encoding;
+        bh=M52oZrMi9dCtDbxAjDKC3w2Xn750c74KunzKHY+WZkY=;
+        b=OZNfPZuiaxcOJNkO7VBbbz8tFGgmblmpDiKYUl7WILcWa670QloyEdxP0tq07vkENO
+         xmQk1nWKSZ23RVFWFMbeDCGoLdh9iFbNuTtiG//iiY4o04sirFLbug5/02QZ5p0E5YLu
+         S1KrijSlWn+/zniGBpvReSNS6pe+CBZMPVcFZFvSAbYacrgn/byFQVkLcU0SFdwil+aZ
+         6EhJ2Tn6PB9MdMAUpisOu8thX1sM/UO+IHr9rKZcqS03CRQUI94vpuvW9T+cu3meEEj3
+         9HMYowBvbzgNUCDnzidYWJNWeMd5N5vIFFam8EDpRDzSiemr7cokBk9nsRPqWY8BDKKz
+         aAPA==
+X-Gm-Message-State: AOAM533VHaNA6u8uO1kXD3Yx+vPjar8S9YorNqPmw/hYcREDw8hej+bt
+        NIfFp5XPgiUU3CYJKNt8nebd6cWyn5UcRw==
+X-Google-Smtp-Source: ABdhPJzQT89WT7rRYWfnRKbt17fvHcbha1TTHMEjfz7leHTYTUS8ugTbfIbiz86KfnNlKO4T78vYtg==
+X-Received: by 2002:a63:f342:: with SMTP id t2mr1366738pgj.313.1602045154069;
+        Tue, 06 Oct 2020 21:32:34 -0700 (PDT)
+Received: from centos78 (60-248-88-209.HINET-IP.hinet.net. [60.248.88.209])
+        by smtp.gmail.com with ESMTPSA id f18sm960710pfe.153.2020.10.06.21.32.32
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 06 Oct 2020 21:32:33 -0700 (PDT)
+Message-ID: <281cbfc346d55de4bd796916fa5779e06a833040.camel@areca.com.tw>
+Subject: [PATCH v2 0/2] scsi: arcmsr: fix warning: right shift count >=
+ width of type
+From:   ching Huang <ching2048@areca.com.tw>
+To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
+        linux-scsi@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc:     kbuild test robot <lkp@intel.com>
+Date:   Wed, 07 Oct 2020 12:32:32 +0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-8.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 16 Sep 2020 10:28:59 +0800, Ye Bin wrote:
+This patch is against to mkp's 5.10/scsi-staging.
 
-> Fixes coccicheck warning:
-> drivers/scsi/lpfc/lpfc_attr.c:5341:5-11: Unneeded variable: "status". Return "- EINVAL" on line 5342
+1. fix warning: right shift count >= width of type.
+2. use round_up() instead of logical operation.
+---
 
-Applied to 5.10/scsi-queue, thanks!
 
-[1/1] scsi: lpfc: Remove unneeded variable 'status' in lpfc_fcp_cpu_map_store()
-      https://git.kernel.org/mkp/scsi/c/37fa429ef7ba
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
