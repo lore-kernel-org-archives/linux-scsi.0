@@ -2,104 +2,210 @@ Return-Path: <SRS0=2LRe=DO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
+X-Spam-Status: No, score=-4.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F78C4363C
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 04:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92EF9C4363C
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 07:14:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85E4B208C7
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 04:42:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31155207EA
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Oct 2020 07:14:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=areca-com-tw.20150623.gappssmtp.com header.i=@areca-com-tw.20150623.gappssmtp.com header.b="r9QQJRGq"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KxqAg8do"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726385AbgJGEmH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Oct 2020 00:42:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53952 "EHLO
+        id S1727743AbgJGHOP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 03:14:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbgJGEmH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 00:42:07 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED33AC061755
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2020 21:42:06 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id u3so421039pjr.3
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2020 21:42:06 -0700 (PDT)
+        with ESMTP id S1727703AbgJGHOP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 03:14:15 -0400
+Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959BCC061755
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2020 00:14:15 -0700 (PDT)
+Received: by mail-ot1-x32f.google.com with SMTP id d28so1350447ote.1
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Oct 2020 00:14:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=areca-com-tw.20150623.gappssmtp.com; s=20150623;
-        h=message-id:subject:from:to:date:mime-version
-         :content-transfer-encoding;
-        bh=6hV7PJClGfgaN5TCcjKdtC8dZqi0TjTnFZSL7SHtRuk=;
-        b=r9QQJRGq2UX+dSVZL/fR3XmybvGJIgZzq0FLrJJ43YYy9IyqxVh7NDKehe8vsJshLL
-         bVlWcgA9MWs7Ep9oflUaDlzuzyar89lgCjHOH7gICwNEOSfwM2urzubwnhNbTeUa2FJf
-         m7h1/DkQ9rbdZ9vnaSop6DoIl/W/IyBWjsq99cyX8wTeTCioqhMERSAD6y6XLLM5GXcM
-         PvIh+KZUo2ZDb2N2gj71YiTPfWOmCLjDWwo5fBOK0kJN2N2pWoyH56WVN8uWw+7fYNBq
-         NVjz8V55KeB1D4SLLBcxmOD8loAvzHtLQbx3prf9GDJgGtPwpkGhCApoyi4nneCklcJS
-         jWkA==
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=4SDNlpdZW8aCFI80gq6xkOI0RdojF6yC6qd2/g+Q1dc=;
+        b=KxqAg8donAN0iLRzhkeqZO/vLhfzaCakUuLvDZ8N9gqR0UTGspkgyvAi8dOXYlxFXP
+         38yU1Qy287wrxFFuCbJKGlJrTiq/eCuo/VFhkdY8/NWZK0BmwejAbt40Hh1LG2c5CpGR
+         TawmlATJsmTiFgOI3ehHSziimPaEcV7UdfJhU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:date:mime-version
-         :content-transfer-encoding;
-        bh=6hV7PJClGfgaN5TCcjKdtC8dZqi0TjTnFZSL7SHtRuk=;
-        b=RRpJWzQz/CibB2r6et23khiGLebhVDLiX9WamFOeNMEUCQcUB9wrCPbam7zgu0+Go2
-         EERjVIeKgpK6L3po3oERkM7pUNpCW6NaYPrFb6krSvYA21w6fTPEUmIWaqT7PVUaQiNF
-         +kfJwo95nG68VL0esMbydwIlWO76UGDTQZcB0EqSfKbq46HNB1m6AEjhygz4I1kalyT+
-         AEjn6M2meNGKCkI+LtwlrCsr8hh4oX2sXa2m/yRSxiOLDWhc4J4g6Dzf9a61B92GoZBI
-         eW5ibl54LqWKhx/IlIubUQZsaIdi52vzcGdcb/KXyHzwv4NePqjlVR6Wp06j749R8jh+
-         LiVw==
-X-Gm-Message-State: AOAM530vuw/7YhWmZwEAySuXD8ZHUwWvheJBpccoTqMQIFI4A1pXig9a
-        1iAhBRjR1nROvJmgzp0n7t2MKw==
-X-Google-Smtp-Source: ABdhPJwaS+EmWu2efvslIkfhHgsUztVkk5DjTz6MyWALnWp0y67KQavW2S159oKbzBZHFo8LLal8QQ==
-X-Received: by 2002:a17:902:ee01:b029:d1:8c50:aa89 with SMTP id z1-20020a170902ee01b02900d18c50aa89mr1354147plb.6.1602045726343;
-        Tue, 06 Oct 2020 21:42:06 -0700 (PDT)
-Received: from centos78 (60-248-88-209.HINET-IP.hinet.net. [60.248.88.209])
-        by smtp.gmail.com with ESMTPSA id gd14sm647305pjb.31.2020.10.06.21.42.04
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 06 Oct 2020 21:42:05 -0700 (PDT)
-Message-ID: <9b02f544d1c5d4a90da268ba063f1ffe4ac098ca.camel@areca.com.tw>
-Subject: [PATCH v2 2/2] scsi: arcmsr: use round_up() instead of logical
- operation
-From:   ching Huang <ching2048@areca.com.tw>
-To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
-        linux-scsi@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Wed, 07 Oct 2020 12:42:05 +0800
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-8.el7) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=4SDNlpdZW8aCFI80gq6xkOI0RdojF6yC6qd2/g+Q1dc=;
+        b=qjVdRCFHy9kWsEuteADFJgSKQbe2YQjlLYpShz9gtFoCSrmE5l+vq0Wvr2tAorXAMr
+         0/wn6zO8afEoOHpOo0te1uevMZWWfA8leAx1zCUyvjzryrbYqI7EmR8USABRTjZexyss
+         08CiCjxFcIh+YLcaStXUOfwuaTyFkfdSUPIgw/cJzOBkC4YVtNH1INvV1IYM34dE0quk
+         GP915Uwz/8XI2Lodf39ZlxDynSfgZmVSr5zjyiGh/aYqncP1HvvdQGUz7+J/6fn3wuui
+         ya/KdcVYHkik2CXje1iA6lq1A5Ih/NimekA+PxQxylakWBWhrJgQDaiKdDcBdTB7b6AV
+         GOZg==
+X-Gm-Message-State: AOAM533DgmMqPH7/zGCTl28oN2G9wC6hBEegpoqRyhEF/AjD14EcdR1B
+        TwoknZKHkoO9mGD4lnAI2vf/0mYWuAooX6vQFx7AwA==
+X-Google-Smtp-Source: ABdhPJxGoGDmyRRPl5ZIwlXnOEu39QqmZnuE6S2jqmbHhMQ4KGqSecQmer/ATIcyFQYT2I4jYmUekvEHBUcN0PzqoKM=
+X-Received: by 2002:a9d:3426:: with SMTP id v35mr1089270otb.364.1602054854875;
+ Wed, 07 Oct 2020 00:14:14 -0700 (PDT)
+From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
+References: <1601268657-940-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1601268657-940-8-git-send-email-muneendra.kumar@broadcom.com>
+ <89648ad7-d4d2-c684-16d5-6bd39398f046@suse.de> <ff9771ee639a80275e1ef96f9da65042@mail.gmail.com>
+ <7f568b47-a14f-1ec1-222e-cf55983f2507@suse.de>
+In-Reply-To: <7f568b47-a14f-1ec1-222e-cf55983f2507@suse.de>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQHCNtb+JUCHm5+nw84r+9ykkbRKNAGO9HKFAWVODecCMRyn/wKhBGkBqXZR3mA=
+Date:   Wed, 7 Oct 2020 12:44:12 +0530
+Message-ID: <48c6c0dc57cf27c847574d1238d7d403@mail.gmail.com>
+Subject: RE: [PATCH v2 7/8] scsi_transport_fc: Added a new sysfs attribute port_state
+To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000008e452005b10f7694"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ching Huang <ching2048@areca.com.tw>
+--0000000000008e452005b10f7694
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Use round_up() instead of logical operation.
+Hi Hannes,
+Thanks for the input.
+I will incorporate all your review comments and will send the next version
+of the patch.
 
-Reported-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: ching Huang <ching2048@areca.com.tw>
----
+Regards,
+Muneendra.
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 55d85c9..1e358d9 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -644,13 +644,12 @@ static void arcmsr_hbaF_assign_regAddr(struct AdapterControlBlock *acb)
- 	struct MessageUnit_F __iomem *pmuF;
- 
- 	memset(acb->dma_coherent2, 0xff, acb->completeQ_size);
--	acb->message_wbuffer = (uint32_t *)((((unsigned long)acb->dma_coherent2 +
--		acb->completeQ_size + 3) >> 2) << 2);
-+	acb->message_wbuffer = (uint32_t *)round_up((unsigned long)acb->dma_coherent2 +
-+		acb->completeQ_size, 4);
- 	acb->message_rbuffer = ((void *)acb->message_wbuffer) + 0x100;
- 	acb->msgcode_rwbuffer = ((void *)acb->message_wbuffer) + 0x200;
- 	memset((void *)acb->message_wbuffer, 0, MESG_RW_BUFFER_SIZE);
--	host_buffer_dma = ((acb->dma_coherent_handle2 + acb->completeQ_size +
--		3) >> 2) << 2;
-+	host_buffer_dma = round_up(acb->dma_coherent_handle2 + acb->completeQ_size, 4);
- 	pmuF = acb->pmuF;
- 	/* host buffer low address, bit0:1 all buffer active */
- 	writel(lower_32_bits(host_buffer_dma | 1), &pmuF->inbound_msgaddr0);
+-----Original Message-----
+From: Hannes Reinecke [mailto:hare@suse.de]
+Sent: Monday, October 5, 2020 3:00 PM
+To: Muneendra Kumar M <muneendra.kumar@broadcom.com>;
+linux-scsi@vger.kernel.org
+Cc: jsmart2021@gmail.com; emilne@redhat.com; mkumar@redhat.com
+Subject: Re: [PATCH v2 7/8] scsi_transport_fc: Added a new sysfs attribute
+port_state
 
+On 10/5/20 11:18 AM, Muneendra Kumar M wrote:
+> Hi Hannes,
+>
+>
+>>> -
+>>> +	SETUP_PRIVATE_STARGET_ATTRIBUTE_RW(port_state);
+>>>    	BUG_ON(count > FC_STARGET_NUM_ATTRS);
+>>>
+>>>    	i->starget_attrs[count] =3D NULL;
+>
+>> Why did you move it to be a 'starget' attribute?
+>> I would have thought it should be an 'rport' attribute, seeing that
+>> it's intrinsic to the fc transport class.
+>>> [Muneendra] Correct me if my understanding is wrong.
+>>> You want this to be part of /sys/class/fc_remote_ports/
+>>> rport-X\:Y-Z/port_state instead of
+>>> /sys/class/fc_transport/targetX\:Y\:Z/port_state
+>
+> Under rport we already have an attribute of port_state which is
+> currently used to show the port_state.
+> /sys/class/fc_remote_ports/ rport-X\:Y-Z/port_state
+>
+> We can add the store functionality to the same to set the port_state.
+> Is this  approach fine ?
+>
+That was the idea, yes.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg HRB 36809 =
+(AG
+N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Felix Imend=C3=B6rffer
+
+--0000000000008e452005b10f7694
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
+Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
+KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
+aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
+b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
+AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
+MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
+Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
+A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
+DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
+hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
+LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
+9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
+/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
+EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
+b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
+SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
+BCD1+HsskvrdQozSgk3pMRAtqOvpJAEkUqDWwqHgLURABzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMDcwNzE0MTVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAK1hD3uIabcRO1m6f
+z8nFpwNxzoJXcuGRBRatnczssl/C5eGIdvcOPpYMLyfkodH4Kku/1fF3Oz/kisxe3P7DerV444Bk
+BPIjvzfu9ZN2TrpCxsI/xKIeNdzA2iZAWV7Ws+09323C9ULkQSSWQLwVGIHsLADbBxrWj5vKszUe
+H26Kfhl+YNb+boSNHGbSjeEKXQ6tckq9nfPXBO68uUSl4c7zvsKAnNxYpnNMzF+GDnggDkZyWRyj
+UQ1wVVrL/v+nMZETYQrdonccW3MxK9I26yVIrOzhq0F5+kO+OvGRKxVoyp+ILDiA7R6AD+nw2Wh4
+mgfFFEGFSpVqZvijJ7gk7w==
+--0000000000008e452005b10f7694--
