@@ -7,84 +7,84 @@ X-Spam-Status: No, score=-4.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B470FC4363D
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 02:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF97BC47095
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 02:32:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7309C207C3
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 02:26:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66079207C3
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 02:32:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LDInZQGB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N9pjtale"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728114AbgJHC0l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Oct 2020 22:26:41 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:57266 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727605AbgJHC0l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 22:26:41 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0982OC2m077039;
-        Thu, 8 Oct 2020 02:26:27 GMT
+        id S1728136AbgJHCcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 22:32:03 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:38196 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727253AbgJHCcD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 22:32:03 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0982Ufo0006183;
+        Thu, 8 Oct 2020 02:31:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=wnU28EFcIbJxso0n42g+3vGsqoAySFtYcnwF10mFpMA=;
- b=LDInZQGBzYPw0PkdFGTNkcu/fke6qda5Vs9FNy5bhXBvQyvA8b+d8gZZdz0rooWL8wi7
- Gm4EdIfaCwTPJ136W93WII+j4AysXRe0mt226/lXdzRunDQPKYYtSWHHaqDGOlA7/XE9
- 3LpSxCRai175FG8yqt0BNibihxd8RLHOA7y71xncQRrDnKpM5+M4CjRZoX2WwwFu2OG4
- mN2r8UehDE2/0Kw/3ChcgFxd7YcWt9tG6zvjsWZ/FH9enlZAXigTyLgf/6M7muPAAwLs
- SXzhEIMLc7FGST3akZ9s+A2ZEdyCnUY6F7xqd2dWlVBl+i+D22vFo4MlWQ34lnHXcBLe Hg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 33ym34t8up-1
+ bh=bJ6fW6B98Zvkr9sht1F7HPr3oF3sns7Es4BDcIoh7Tk=;
+ b=N9pjtaler6yLqJQ4Qqu/25O0c2d4v6SDbkyylMS81woWYD+T5tTGSlF2zXsAKPDNRPaw
+ ukEtCzI3lxRRmKuT4R+ratzwIlNIqSJ/nm0QPeg4fg6jfhNXe8KrdMT91ySgvyNy85zl
+ Gfa7RaVaJ3ng4PKAGXxyFn87m4k6jWJDF+i40Z6yerjk8YXmo2nItHCmbcqn9eXYd9fE
+ cC5AePpMg6jEJNJ/zXpOUjfrRoKvreKt/GlmSzT4uc2Tuz+tQosoGSZArg1OQ5MZTpVE
+ igFkWzYMduJn8YvhDBwrXPXHPFcr34s9sFRBjFrd+VRsFIai3hd9A9FExj67sopxeRM7 xA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 33xetb5avh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 08 Oct 2020 02:26:27 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0982LDtq090313;
-        Thu, 8 Oct 2020 02:24:26 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 33yyjj0k5g-1
+        Thu, 08 Oct 2020 02:31:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0982UsvK183631;
+        Thu, 8 Oct 2020 02:31:58 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 3410k0d72x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 08 Oct 2020 02:24:26 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0982ONpt025197;
-        Thu, 8 Oct 2020 02:24:23 GMT
+        Thu, 08 Oct 2020 02:31:58 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0982Vt6e012384;
+        Thu, 8 Oct 2020 02:31:56 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 07 Oct 2020 19:24:22 -0700
-To:     Qinglang Miao <miaoqinglang@huawei.com>
-Cc:     Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next v2] scsi: qla2xxx: Convert to DEFINE_SHOW_ATTRIBUTE
+        with ESMTP ; Wed, 07 Oct 2020 19:31:54 -0700
+To:     Julia Lawall <Julia.Lawall@inria.fr>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/14] target/rd: drop double zeroing
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq17ds1zc8y.fsf@ca-mkp.ca.oracle.com>
-References: <20200919025202.17531-1-miaoqinglang@huawei.com>
-        <68C6E741-9A58-4E4E-B746-4E810EA7D651@oracle.com>
-Date:   Wed, 07 Oct 2020 22:24:20 -0400
-In-Reply-To: <68C6E741-9A58-4E4E-B746-4E810EA7D651@oracle.com> (Himanshu
-        Madhani's message of "Wed, 7 Oct 2020 08:35:42 -0500")
+Message-ID: <yq11ri9zbvz.fsf@ca-mkp.ca.oracle.com>
+References: <1600601186-7420-1-git-send-email-Julia.Lawall@inria.fr>
+        <1600601186-7420-3-git-send-email-Julia.Lawall@inria.fr>
+Date:   Wed, 07 Oct 2020 22:31:52 -0400
+In-Reply-To: <1600601186-7420-3-git-send-email-Julia.Lawall@inria.fr> (Julia
+        Lawall's message of "Sun, 20 Sep 2020 13:26:14 +0200")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 bulkscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
+ adultscore=0 bulkscore=0 malwarescore=0 suspectscore=1 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010080019
+ definitions=main-2010080021
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
- mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
- malwarescore=0 phishscore=0 suspectscore=1 adultscore=0 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
+ clxscore=1011 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
+ impostorscore=0 malwarescore=0 suspectscore=1 lowpriorityscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010080020
+ definitions=main-2010080021
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
->> Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
+Julia,
+
+> sg_init_table zeroes its first argument, so the allocation of that argument
+> doesn't have to.
 
 Applied to 5.10/scsi-staging, thanks!
 
