@@ -2,124 +2,150 @@ Return-Path: <SRS0=XwCY=DP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F42C46466
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 14:24:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0CD4C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 16:39:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 548A821D43
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 14:24:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6785D221FD
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 16:39:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q/lRCt6S"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zgoai6YR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730583AbgJHOYj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Oct 2020 10:24:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55874 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730582AbgJHOYg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2020 10:24:36 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BFA0C061755;
-        Thu,  8 Oct 2020 07:24:36 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id e18so6819784wrw.9;
-        Thu, 08 Oct 2020 07:24:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=WsE6vlmD9PjpvVzoPnqJMKBuzypaiKtsmjNNqhDX95o=;
-        b=q/lRCt6Ss8/vdI0hDNrUbNoiPMjEJRCygt9VTkjMe73GWTFfGT9/VDFg8j/7d6q9vP
-         /2f7drWDk6NF6Q8bhw3blFG0QqDKQ4mWDf1jk+Q0G4X/Sc73XBpR2V5zwRyr0eNq7IZc
-         9luh3Tvi0rxUNHOACa9y0iRUi5ALtOZVZtLDQFgl6SWhWaQG4C2kHEFdY6sG9QTXTGAg
-         mc9b19i0ENGgSEm29dEMVJR/J9NakcEmZGvn32Y72CrT9JihNGLHZCkU7oDkT9r6uwBR
-         7khEbO2/XxpygmBxuWFCC6Ry/XxB0h0Z5sUq6TMjxOhnE7ihI+6Af1cnUolQ1mDPqhJg
-         UoIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=WsE6vlmD9PjpvVzoPnqJMKBuzypaiKtsmjNNqhDX95o=;
-        b=ew6d7MAC87TWlJfntkO/vg2HA4rNPem5qPqoDcqZp66rECG9W1yoLa9fLFGjFJ/sJj
-         ysR2gTlBg1p2qhtRz0LUUc2tZoXwo90sPur2njkYmPjXx4EnVHZLrmT2lDP3O3iyrZeN
-         IhxsopuzsuRpDT3+zv4dPf7ZrpOgF8TyPteWRMG5UByU3v5n+JcfFFKb8KueIBuk65Qy
-         jK4Z29oEunAjgGh7SMpM+XemIX9AKkjH4h74M4UATHpuaEXzVSI0C05I4WwXx4P6IUSU
-         8YPTYTfJdvIHTCUtDUSXJDHwBLPHJW0Ehb4gfaq4LoA5ROHbYkWtXlO5t7RewrjUdlPb
-         sIwA==
-X-Gm-Message-State: AOAM533GOlLZRpRsiJ7/TC78HNXxVJUr64PFFHrVqYXmPRtR8pgSKSSN
-        4Q/G46E3G4pDtoSQGcxGaQc=
-X-Google-Smtp-Source: ABdhPJyXOLr+W/KVhxr9IQApyCne5Ztvl/cdLftPL+q6Y73tybqT+jd+ywZrZOVJCYmHeZcsMaTX6A==
-X-Received: by 2002:adf:d849:: with SMTP id k9mr1036584wrl.332.1602167074799;
-        Thu, 08 Oct 2020 07:24:34 -0700 (PDT)
-Received: from ubuntu-laptop ([165.225.203.62])
-        by smtp.googlemail.com with ESMTPSA id t5sm7741882wrb.21.2020.10.08.07.24.33
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 08 Oct 2020 07:24:34 -0700 (PDT)
-Message-ID: <ed80ba975eda3108b1230604211062028fd91c4b.camel@gmail.com>
-Subject: Re: [PATCH] scsi: sd: Use UNMAP in case the device doesn't support
- WRITE_SAME
-From:   Bean Huo <huobean@gmail.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     jejb@linux.ibm.com, bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bean Huo <beanhuo@micron.com>
-Date:   Thu, 08 Oct 2020 16:24:31 +0200
-In-Reply-To: <yq14kn5wgqf.fsf@ca-mkp.ca.oracle.com>
-References: <20201007104220.8772-1-huobean@gmail.com>
-         <yq14kn5wgqf.fsf@ca-mkp.ca.oracle.com>
+        id S1729548AbgJHQjc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Oct 2020 12:39:32 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:28508 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725863AbgJHQjb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2020 12:39:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602175169;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=J9qYAierbVYrD4kZyI2nIgIqlbwIReYQoycMbbbHP0I=;
+        b=Zgoai6YR4q+KZhwbtvlt3pvavOCyDqjU+zGPMePGj7IDmvWBVzP5jz1AECYRJZnnMdsME3
+        p1cQAU8uSIFuzBOxA1MwL8IJxevAvAC3kInOvHqSurmOiiV24z8JfyOjLVPGhK3LmdsTWF
+        AqHXck2tKXI3T4EvmCyDX9Fo6GM6JLA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-291-sx53bJcgMRWYuQ9WHrCSQQ-1; Thu, 08 Oct 2020 12:39:25 -0400
+X-MC-Unique: sx53bJcgMRWYuQ9WHrCSQQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2A8C710BBEC3;
+        Thu,  8 Oct 2020 16:39:24 +0000 (UTC)
+Received: from ovpn-66-175.rdu2.redhat.com (unknown [10.10.67.175])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DEE7319C4F;
+        Thu,  8 Oct 2020 16:39:22 +0000 (UTC)
+Message-ID: <9dcf9f7a9005d5c5885fe8c5dcd4314d04dc9caf.camel@redhat.com>
+Subject: Re: misc I/O submission cleanups
+From:   Qian Cai <cai@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>
+Date:   Thu, 08 Oct 2020 12:39:22 -0400
+In-Reply-To: <20201005084130.143273-1-hch@lst.de>
+References: <20201005084130.143273-1-hch@lst.de>
 Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-10-07 at 23:47 -0400, Martin K. Petersen wrote:
-> > support WRITE_SAME. The problem is that WRITE SAME heuristics
-> > doesn't work
-> > for this kind of storage device since its block limits VPD page
-> > doesn't
-> > contain the LBP information. Currently we set its provisioning_mode
-> > "writesame_16" and didn't check "no_write_same".
+On Mon, 2020-10-05 at 10:41 +0200, Christoph Hellwig wrote:
+> Hi Martin,
 > 
-> There is something odd with what your device is reporting.
-> 
-> We support WRITE SAME on a bunch of devices that predate the Logical
-> Block Provisioning VPD page and the various Block Limits parameters
-> being introduced to the spec. Consequently we set the provisioning
-> mode
-> to "writesame_16" if the device reports LBPME=1 in READ CAPACITY(16)
-> and
-> nothing relevant is reported in the VPD pages. That is by design.
-> 
-> > If we didn't manually change this default provisioning_mode to
-> > "unmap"
-> > through sysfs, provisioning_mode will be set to "disabled" after
-> > the
-> > first WRITE_SAME command with the following error occurs:
-> 
-> If your device supports UNMAP it *must* report it in the Logical
-> Block
-> Provisioning VPD by setting LBPU=1 and report MAXIMUM UNMAP LBA COUNT
-> and MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT in the Block Limits VPD.
-> 
-> Also, "no_write_same" disables attempting to use WRITE SAME to zero
-> block ranges. That's orthogonal to the logic controlling which
-> command
-> to use for performing an unmap operation. An unfortunate choice of
-> naming which can be attributed to the SCSI protocol using the WRITE
-> SAME
-> command for two completely different operations.
-> 
+> this series tidies up various loose ends in the SCSI I/O submission path.
 
-Hi Martin
-thanks very much for your above comments, very detailed. The case I
-encountered is very strange to me as well. I will double check on the
-product level.
+Reverting this patchset on the top of today's linux-next fixed the boot failures
+below with libata, i.e.,
 
-thanks,
-Bean
+git revert --no-edit 653eb7c99d84..ed7fb2d018fd
+
+== Easy to reproduce using qemu-kvm "-hda" CONFIG_ATA_PIIX=y. ==
+.config: https://gitlab.com/cailca/linux-mm/-/blob/master/x86.config
+
+[   46.047499][  T757] ata2.00: WARNING: zero len r/w req
+[   46.049734][  T644] ata2.00: WARNING: zero len r/w req
+[   46.051962][  T757] ata2.00: WARNING: zero len r/w req
+[   46.054182][  T644] ata2.00: WARNING: zero len r/w req
+[   46.058018][  T757] ata2.00: WARNING: zero len r/w req
+[   46.060514][  T644] ata2.00: WARNING: zero len r/w req
+[   46.065764][  T757] ata2.00: WARNING: zero len r/w req
+[   46.068005][  T644] ata2.00: WARNING: zero len r/w req
+[   46.070192][  T644] ata2.00: WARNING: zero len r/w req
+[   46.072379][  T644] ata2.00: WARNING: zero len r/w req
+[   46.074629][  T644] ata2.00: WARNING: zero len r/w req
+[   46.077255][  T644] ata2.00: WARNING: zero len r/w req
+[   46.081553][   C36] sr 1:0:0:0: [sr0] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
+[   46.086336][   C36] sr 1:0:0:0: [sr0] tag#0 CDB: opcode=0x28 
+[   46.089171][   C36] blk_update_request: I/O error, dev sr0, sector 2097136 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
+[   46.094979][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.097526][  T757] blk_update_request: I/O error, dev sr0, sector 2097136 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.102364][  T757] Buffer I/O error on dev sr0, logical block 2097136, async page read
+[   46.106080][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.108590][  T757] blk_update_request: I/O error, dev sr0, sector 2097137 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.113234][  T757] Buffer I/O error on dev sr0, logical block 2097137, async page read
+[   46.117053][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.119581][  T757] blk_update_request: I/O error, dev sr0, sector 2097138 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.124382][  T757] Buffer I/O error on dev sr0, logical block 2097138, async page read
+[   46.128545][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.131038][  T757] blk_update_request: I/O error, dev sr0, sector 2097139 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.135905][  T757] Buffer I/O error on dev sr0, logical block 2097139, async page read
+[   46.139835][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.142422][  T757] blk_update_request: I/O error, dev sr0, sector 2097140 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.147240][  T757] Buffer I/O error on dev sr0, logical block 2097140, async page read
+[   46.150764][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.153248][  T757] blk_update_request: I/O error, dev sr0, sector 2097141 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.158439][  T757] Buffer I/O error on dev sr0, logical block 2097141, async page read
+[   46.162383][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.165062][  T757] blk_update_request: I/O error, dev sr0, sector 2097142 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.169785][  T757] Buffer I/O error on dev sr0, logical block 2097142, async page read
+[   46.173252][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.175968][  T757] blk_update_request: I/O error, dev sr0, sector 2097143 op 0x0:(READ) flags 0x0 phys_seg 1 prio class 0
+[   46.181049][  T757] Buffer I/O error on dev sr0, logical block 2097143, async page read
+[   46.184779][   C36] sr 1:0:0:0: [sr0] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
+[   46.188966][   C36] sr 1:0:0:0: [sr0] tag#0 CDB: opcode=0x28 
+[   46.191731][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.194223][  T757] Buffer I/O error on dev sr0, logical block 0, async page read
+[   46.197976][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.200781][  T757] Buffer I/O error on dev sr0, logical block 1, async page read
+[   46.204221][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.207133][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.209790][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+[   46.212464][  T757] sr 1:0:0:0: [sr0] tag#0 unaligned transfer
+
+== baremetal with ahci ==
+[   14.560235][  T515] ata1.00: WARNING: zero len r/w req
+[   14.560397][  T515] ata1.00: WARNING: zero len r/w req
+[   14.560450][  T515] ata1.00: WARNING: zero len r/w req
+[   14.560502][  T515] ata1.00: WARNING: zero len r/w req
+[   14.560594][  T515] ata1.00: WARNING: zero len r/w req
+[   14.560644][  T515] ata1.00: WARNING: zero len r/w req
+[   14.560709][  C100] sd 0:0:0:0: [sdb] tag#7 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
+[   14.560790][  C100] sd 0:0:0:0: [sdb] tag#7 CDB: opcode=0x35 35 00 00 00 00 00 00 00 00 00
+[   14.560869][  C100] blk_update_request: I/O error, dev sdb, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 0 prio class 0
+[   14.562124][ T1274] ata1.00: WARNING: zero len r/w req
+[   14.562172][ T1274] ata1.00: WARNING: zero len r/w req
+[   14.562217][ T1274] ata1.00: WARNING: zero len r/w req
+[   14.562262][ T1274] ata1.00: WARNING: zero len r/w req
+[   14.562317][ T1274] ata1.00: WARNING: zero len r/w req
+[   14.562361][ T1274] ata1.00: WARNING: zero len r/w req
+[   14.562412][  C100] sd 0:0:0:0: [sdb] tag#8 UNKNOWN(0x2003) Result: hostbyte=0x07 driverbyte=0x00 cmd_age=0s
+[   14.562465][  C100] sd 0:0:0:0: [sdb] tag#8 CDB: opcode=0x35 35 00 00 00 00 00 00 00 00 00
+[   14.562517][  C100] blk_update_request: I/O error, dev sdb, sector 1880188816 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 0
 
 
