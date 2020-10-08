@@ -7,90 +7,109 @@ X-Spam-Status: No, score=-4.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AEECC433E7
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 03:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA53C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 03:47:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B381C21527
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 03:14:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C57D2085B
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Oct 2020 03:47:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pt/zjM/V"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zheSDPZZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728044AbgJHDOu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Oct 2020 23:14:50 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58502 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbgJHDOu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 23:14:50 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0983E0NO165781;
-        Thu, 8 Oct 2020 03:14:38 GMT
+        id S1727858AbgJHDrl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Oct 2020 23:47:41 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:55518 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727437AbgJHDrl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2020 23:47:41 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0983UM7k099323;
+        Thu, 8 Oct 2020 03:47:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=iG8bFON8QypxaJ6dwgl1a7kKVGtwb2SD52jllewelG8=;
- b=pt/zjM/VbQzUE+IKz4UzyADVA+qYy1AlvLizqDfRQdXB89kHCj1xKNd4dYGYBvjaIm/b
- bszCVy4kE2yJmd1BESMgvXq7iG3iwzJxl+eGe8PVVTpplTivKwOhOqZ70pvQrllzC7gO
- wyfP5BdoQfm42Q+GN6TlajfCdNgK2IOouWyDoaEULmsIx3QbI93/aVo/YgPLUImpCgD1
- K+DVfukL0AXdZe8xnC7K2FxMYYrHciAyhzaPc1d5gcrfJQzRVqAha6nbs4Y/QD6gBOMF
- iyiafi9asKV3MfoSrsyJHf0AgPykP+2PZFMOTqjNwpIju13hE11FBw32IHzA7maL1YkC pg== 
+ bh=eP3vPWwy+ViuyUKhs7Cc5erqErxWZvAnKpG0nxxsl0k=;
+ b=zheSDPZZOSShqojlkFnxUDu9FCR3HxWUnNoW5oQTrmiMxRE5bainBJpSXc2hwy8iqd2m
+ 6crJr5Rkvg/ofn/MjIOldOLiyc5pTGb0GVN3soMxpZvfdKXm+MeTKjYFW25x2xxjiB7S
+ 2XFmUmKTT/LgVcAoeKpytgMU9JNZiUD0WQAUtvmFLjcWhE1+0ibvYLuS1qx4dBRpn0TG
+ esl9h7Uv32vfXDwg0KIhntSQ5ruplXEhjt0mUMDTtDkRRZq8wit0viJrjcw0pSKgkJG8
+ kZx7nohrH5NIQkVOnHmvG1x0rc6LTfpfbt566Gf2oaat3UxEPmxJxTtk03RsdPj2uP1i Nw== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 33ym34tbqb-1
+        by aserp2130.oracle.com with ESMTP id 33xetb5fk8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 08 Oct 2020 03:14:38 +0000
+        Thu, 08 Oct 2020 03:47:34 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09835LDt098343;
-        Thu, 8 Oct 2020 03:12:38 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 33y2vqagaw-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0983jLFX180956;
+        Thu, 8 Oct 2020 03:47:34 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 33y2vqbdyn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 08 Oct 2020 03:12:38 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0983CZVd003579;
-        Thu, 8 Oct 2020 03:12:35 GMT
+        Thu, 08 Oct 2020 03:47:34 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0983lVQ1026976;
+        Thu, 8 Oct 2020 03:47:31 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 07 Oct 2020 20:12:34 -0700
-To:     Colin King <colin.king@canonical.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: sym53c8xx_2: fix sizeof mismatch
+        with ESMTP ; Wed, 07 Oct 2020 20:47:31 -0700
+To:     Bean Huo <huobean@gmail.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bean Huo <beanhuo@micron.com>
+Subject: Re: [PATCH] scsi: sd: Use UNMAP in case the device doesn't support
+ WRITE_SAME
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1a6wxwgva.fsf@ca-mkp.ca.oracle.com>
-References: <20201006110252.536641-1-colin.king@canonical.com>
-Date:   Wed, 07 Oct 2020 23:12:32 -0400
-In-Reply-To: <20201006110252.536641-1-colin.king@canonical.com> (Colin King's
-        message of "Tue, 6 Oct 2020 12:02:52 +0100")
+Message-ID: <yq14kn5wgqf.fsf@ca-mkp.ca.oracle.com>
+References: <20201007104220.8772-1-huobean@gmail.com>
+Date:   Wed, 07 Oct 2020 23:47:28 -0400
+In-Reply-To: <20201007104220.8772-1-huobean@gmail.com> (Bean Huo's message of
+        "Wed, 7 Oct 2020 12:42:20 +0200")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
  malwarescore=0 suspectscore=1 spamscore=0 phishscore=0 bulkscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2010080027
+ engine=8.12.0-2006250000 definitions=main-2010080030
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
- mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
- malwarescore=0 phishscore=0 suspectscore=1 adultscore=0 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
+ clxscore=1015 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
+ impostorscore=0 malwarescore=0 suspectscore=1 lowpriorityscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010080028
+ definitions=main-2010080029
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Colin,
+Bean,
 
-> An incorrect sizeof is being used, struct sym_ccb ** is not correct,
-> it should be struct sym_ccb *. Note that since ** is the same size as
-> * this is not causing any issues.  Improve this fix by using the idiom
-> sizeof(*np->ccbh) as this allows one to not even reference the type of
-> the pointer.
+> There exists a storage device that supports READ_CAPACITY, but doesn't
+> support WRITE_SAME. The problem is that WRITE SAME heuristics doesn't work
+> for this kind of storage device since its block limits VPD page doesn't
+> contain the LBP information. Currently we set its provisioning_mode
+> "writesame_16" and didn't check "no_write_same".
 
-Applied to 5.10/scsi-staging, thanks!
+There is something odd with what your device is reporting.
+
+We support WRITE SAME on a bunch of devices that predate the Logical
+Block Provisioning VPD page and the various Block Limits parameters
+being introduced to the spec. Consequently we set the provisioning mode
+to "writesame_16" if the device reports LBPME=1 in READ CAPACITY(16) and
+nothing relevant is reported in the VPD pages. That is by design.
+
+> If we didn't manually change this default provisioning_mode to "unmap"
+> through sysfs, provisioning_mode will be set to "disabled" after the
+> first WRITE_SAME command with the following error occurs:
+
+If your device supports UNMAP it *must* report it in the Logical Block
+Provisioning VPD by setting LBPU=1 and report MAXIMUM UNMAP LBA COUNT
+and MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT in the Block Limits VPD.
+
+Also, "no_write_same" disables attempting to use WRITE SAME to zero
+block ranges. That's orthogonal to the logic controlling which command
+to use for performing an unmap operation. An unfortunate choice of
+naming which can be attributed to the SCSI protocol using the WRITE SAME
+command for two completely different operations.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
