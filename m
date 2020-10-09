@@ -2,233 +2,175 @@ Return-Path: <SRS0=VN9r=DQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7714C433E7
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA4AC4363D
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DFCE22267
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A32D22258
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YPC87ufe"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MfxqcBri"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390102AbgJIROV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Oct 2020 13:14:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50906 "EHLO
+        id S2390049AbgJIROZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Oct 2020 13:14:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390184AbgJIROQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:14:16 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B201C0613D5
-        for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2020 10:14:16 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id f19so7378124pfj.11
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2020 10:14:16 -0700 (PDT)
+        with ESMTP id S1731521AbgJIRON (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:14:13 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 326D6C0613D2
+        for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2020 10:14:13 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id g10so7393194pfc.8
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2020 10:14:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=mBr4VVWbIPHI9dt+SfjHl21QAMf9SN1eHinMWaY6dDg=;
-        b=YPC87ufe3YnG2s7dzqWX75+y35DXtul0HqaF5Hnuzk4h80kwcCcHBF9eeMOLUtTRaM
-         FrnZIgPyHbBUbR0jhx5s8+qEEhjmzPew5Cc/9ou3HbBuSJMUVO8QLKtRded30OvRkL0T
-         oOXH/gpATkjJLKzugvt/1SYTfEBUZdLh/JtbE=
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=p5TDwZMK3aPJQRCrERPtqdSFeH5p465wGpx/OMeD4YY=;
+        b=MfxqcBriiCxBANyq9pWTJxLY62B1YSj3YPiQOdyC1TvDEKgbXfzfD+AqZ4RDFWeWiu
+         uyYxuG0+kAM1BwcEHCPJehoRRrZ/9oaw1Xs58kJ/ocCymXVw8JE9F2uw1vo7P/teZDQq
+         z/Qxj0UfBKh6N4TwYeE3Gv18Q4CwlYjHX0Tiw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=mBr4VVWbIPHI9dt+SfjHl21QAMf9SN1eHinMWaY6dDg=;
-        b=s2JdCqbSHkdgacD/a7IF7TDUTsxVwHbCxXClMKbtTNErY9Ll4rAThzM74BmSujUeQZ
-         n3radoa6y23Tk9DFuoyGrD7L0tLy1oza2CfZioQqHzg9p/1F74GON6kFceLNkh8DFe2v
-         gcQGLqlO52Hu9SYgExqwggE32T7q1pT9WTZ0PbhBYsC2q3/tPESZ2r8lFDkVz6nN7cZw
-         DF57clY5nYo+SecBlTjtXPZXJ6elGofD5kKB+3RxYkp8MNo6uaC8/fUTwZ9uZDJDkmXX
-         k5XEbFNsQQFy/9rBDzTQ8c2cUObTnmokkUG8ZQchCg8Fwu+qChtUnA/xGCznoiVXXOzC
-         xicQ==
-X-Gm-Message-State: AOAM530SjeWJFCIFHB0opPpvfg9Phi/2F3Nb1i3eNxMIo+6LQ25j8dcH
-        gXLTb71C0kBPFTp18NkiLMWtto2Hr6Sd+M5Ljko=
-X-Google-Smtp-Source: ABdhPJxuFtxvv53nGdMRUX+IZ44SA8JxdTHYoVj2/HS6mIcfpv9TCOLIqnlrPIOoqgyagekWm0mixQ==
-X-Received: by 2002:aa7:9059:0:b029:151:d725:e230 with SMTP id n25-20020aa790590000b0290151d725e230mr13012417pfo.77.1602263655511;
-        Fri, 09 Oct 2020 10:14:15 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=p5TDwZMK3aPJQRCrERPtqdSFeH5p465wGpx/OMeD4YY=;
+        b=r7Vf5+d4SFPb9H/8AfI/SRBpXAhhOB6IOxkgDq59J262JXQlvWttGAwNhwptJ7UQg6
+         zR8L2r7cNq3lWh1w/OeB2A7s0c7bPmVd0UDDzjCYn8SNe15GiCk2u1f2hR02J+0BoiWw
+         OnQopMxU7Ts8/zDlwtREnpjshCNGUdGBNqP11KQC3td8r3I2p7L66dxPTjOyTo4A3bQj
+         mCFsrn7lS5qlgadEP22emdfj5/1/jtQXqzBtv6tISCqbqOtfYL6El/khlyEmM2/A9/Rs
+         6qi5kaKQOcZ7gfakURo7zpGE3VOmvUgl3NqnoSfCWiv4VVMzZoTXDIUM0Mv7KuH7h9wL
+         OTRg==
+X-Gm-Message-State: AOAM5339xzA4blMqtoqlxsByjB/LDtprm2UtG5BnUSOjlUrIim3LPftj
+        OWm86BBe9kL18y3Ysn8Izsb10A==
+X-Google-Smtp-Source: ABdhPJxJ79/1SgZcNIO4M/EesYZ+JlIyhKyqDHwwus6koJk5eepA50ySzDq0n97KCyQalmF6nDxMPA==
+X-Received: by 2002:a63:a55c:: with SMTP id r28mr4007526pgu.177.1602263652347;
+        Fri, 09 Oct 2020 10:14:12 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id fy24sm12299055pjb.35.2020.10.09.10.14.12
+        by smtp.gmail.com with ESMTPSA id fy24sm12299055pjb.35.2020.10.09.10.14.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2020 10:14:14 -0700 (PDT)
+        Fri, 09 Oct 2020 10:14:10 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 01/14] mpt3sas: Define hba_port structure
-Date:   Fri,  9 Oct 2020 22:44:27 +0530
-Message-Id: <20201009171440.4949-2-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 00/14] mpt3sas: Add support for multi-port path topology
+Date:   Fri,  9 Oct 2020 22:44:26 +0530
+Message-Id: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
-References: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000cffa005b1401449"
+        boundary="000000000000df8ef805b14013d2"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000cffa005b1401449
+--000000000000df8ef805b14013d2
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Defined a new hba_port structure with hold below variables,
-- port_id       : Port ID of the narrow/wide port of the HBA
-- sas_address   : SAS Address of the remote device that is
-                  attached to the current HBA port
-- phy_mask      : HBA’s phy bits to which above SAS addressed
-                  device is attached
-- flags         : this field is used to refresh this port details
-                  during HBA reset.
+Multi-port path topology example:
+    
+         Zone 1             Zone 2
+ |-----------------|   |----------------|
+ |  HD1 ..... HD25 |   | HD26 ......HD50|
+ | |==================================| |
+ | |               |   |              | |
+ | |              Expander            | |
+ | |==================================| |
+ |           |     |   |    |           |
+ |-----------|-----|   |----|-----------|
+           x8|              |x8 
+      _______|______________|_______
+      |            HBA             |
+      |____________________________|
 
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 35 ++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
+In this topology, zoning is enabled in such a way that drives from HD1
+to HD25 are accessible only through zone1 and drives from HD26 to HD50 are
+accessible only through zone2. Here the first x8 connection bw HBA to
+Expander in zone1 will have one PortID and second x8 connection bw HBA to
+Expander in Zone2 will another PortID.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index bc8beb1..2dde574 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -420,6 +420,7 @@ struct Mpi2ManufacturingPage11_t {
-  * @flags: MPT_TARGET_FLAGS_XXX flags
-  * @deleted: target flaged for deletion
-  * @tm_busy: target is busy with TM request.
-+ * @port: hba port entry containing target's port number info
-  * @sas_dev: The sas_device associated with this target
-  * @pcie_dev: The pcie device associated with this target
-  */
-@@ -432,6 +433,7 @@ struct MPT3SAS_TARGET {
- 	u32	flags;
- 	u8	deleted;
- 	u8	tm_busy;
-+	struct hba_port *port;
- 	struct _sas_device *sas_dev;
- 	struct _pcie_device *pcie_dev;
- };
-@@ -534,6 +536,7 @@ struct _internal_cmd {
-  *	addition routine.
-  * @chassis_slot: chassis slot
-  * @is_chassis_slot_valid: chassis slot valid or not
-+ * @port: hba port entry containing device's port number info
-  */
- struct _sas_device {
- 	struct list_head list;
-@@ -560,6 +563,7 @@ struct _sas_device {
- 	u8	is_chassis_slot_valid;
- 	u8	connector_name[5];
- 	struct kref refcount;
-+	struct hba_port *port;
- };
- 
- static inline void sas_device_get(struct _sas_device *s)
-@@ -730,6 +734,7 @@ struct _boot_device {
-  * @remote_identify: attached device identification
-  * @rphy: sas transport rphy object
-  * @port: sas transport wide/narrow port object
-+ * @hba_port: hba port entry containing port's port number info
-  * @phy_list: _sas_phy list objects belonging to this port
-  */
- struct _sas_port {
-@@ -738,6 +743,7 @@ struct _sas_port {
- 	struct sas_identify remote_identify;
- 	struct sas_rphy *rphy;
- 	struct sas_port *port;
-+	struct hba_port *hba_port;
- 	struct list_head phy_list;
- };
- 
-@@ -751,6 +757,7 @@ struct _sas_port {
-  * @handle: device handle for this phy
-  * @attached_handle: device handle for attached device
-  * @phy_belongs_to_port: port has been created for this phy
-+ * @port: hba port entry containing port number info
-  */
- struct _sas_phy {
- 	struct list_head port_siblings;
-@@ -761,6 +768,7 @@ struct _sas_phy {
- 	u16	handle;
- 	u16	attached_handle;
- 	u8	phy_belongs_to_port;
-+	struct hba_port *port;
- };
- 
- /**
-@@ -776,6 +784,7 @@ struct _sas_phy {
-  * @responding: used in _scsih_expander_device_mark_responding
-  * @phy: a list of phys that make up this sas_host/expander
-  * @sas_port_list: list of ports attached to this sas_host/expander
-+ * @port: hba port entry containing node's port number info
-  */
- struct _sas_node {
- 	struct list_head list;
-@@ -787,11 +796,11 @@ struct _sas_node {
- 	u16	enclosure_handle;
- 	u64	enclosure_logical_id;
- 	u8	responding;
-+	struct hba_port *port;
- 	struct	_sas_phy *phy;
- 	struct list_head sas_port_list;
- };
- 
--
- /**
-  * struct _enclosure_node - enclosure information
-  * @list: list of enclosures
-@@ -1009,6 +1018,27 @@ struct reply_post_struct {
- 	dma_addr_t			reply_post_free_dma;
- };
- 
-+/**
-+ * struct hba_port - Saves each HBA's Wide/Narrow port info
-+ * @sas_address: sas address of this wide/narrow port's attached device
-+ * @phy_mask: HBA PHY's belonging to this port
-+ * @port_id: port number
-+ * @flags: hba port flags
-+ */
-+struct hba_port {
-+	struct list_head list;
-+	u64	sas_address;
-+	u32	phy_mask;
-+	u8      port_id;
-+	u8	flags;
-+};
-+
-+/* hba port flags */
-+#define HBA_PORT_FLAG_DIRTY_PORT       0x01
-+#define HBA_PORT_FLAG_NEW_PORT         0x02
-+
-+#define MULTIPATH_DISABLED_PORT_ID     0xFF
-+
- typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
- /**
-  * struct MPT3SAS_ADAPTER - per adapter struct
-@@ -1191,6 +1221,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  *	which ensures the syncrhonization between cli/sysfs_show path.
-  * @atomic_desc_capable: Atomic Request Descriptor support.
-  * @GET_MSIX_INDEX: Get the msix index of high iops queues.
-+ * @port_table_list: list containing HBA's wide/narrow port's info
-  */
- struct MPT3SAS_ADAPTER {
- 	struct list_head list;
-@@ -1483,6 +1514,8 @@ struct MPT3SAS_ADAPTER {
- 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
- 	PUT_SMID_DEFAULT put_smid_default;
- 	GET_MSIX_INDEX get_msix_index_for_smlio;
-+
-+	struct list_head port_table_list;
- };
- 
- struct mpt3sas_debugfs_buffer {
+Problem statement:
+When zoning is enabled in expander then we will have two expander
+instances (for a single real expander), one instance is accessible through
+the first x8 connection and second instance is accessible through
+second x8 connection from HBA. But for both the instances the
+SAS Address of the expander will be the same.
+But in current mpt3sas driver, driver add's only one expander instance,
+when second expander instance's 'add' event comes then driver ignores
+this event assumues that it is duplicate instance as it already
+has a sas_expander object in it's sas_expander_list list with
+the same SAS Address. So in this topology users will see only 25 drives
+instead of 50 drives.
+
+Current mpt3sas driver use ‘SAS Address’ as a key to uniquely identify
+the End devices or Expander devices, but on the multi-port path topologies
+(such as above topology) HBA firmware will provide multiple device entries
+with different Device handles for a single device.
+So here driver can't use ‘SAS Address’ as a key instead driver can use
+‘SAS Address’ & ‘PhysicalPort (i.e. PortID)’ number as key to uniquely
+identify the device.
+
+where, PhysicalPort is a HBA port number through which the device is
+accessible.
+
+Solution:
+Now driver uses both 'SAS Address' & 'PhysicalPort' number as a key to
+uniquely identify the device object from the corresponding device
+list's. So, when 'add' event comes for second instance of expander,
+now driver can't find the sas_expander object with same 'SAS Address' &
+'PhysicalPort' number (since for this second instance PhysicalPort
+number will be different from first instance's PhysicalPort number)
+from the sas_expander_list list. So the driver processes this event and
+will create a new sas_expander object for this expander instance
+and adds it sas_expander_list.
+With this solution, the driver will have two sas_expander objects, one
+object is for the first instance of the expander, another object is for
+second instance of the driver. Now users will access all 50 drives from
+above topology.
+
+Like device SAS Address, PhysicalPort number is readily available
+from below config pages,
+* SAS IO Unit Page 0,
+* SAS Device Page 0,
+* SAS Expander Page 0,
+* SAS Phy Page 0, etc
+
+Through this patch set, the driver now manages the sas_device &
+sas_expander objects using 'SAS Address' & 'PhysicalPort'
+number as key.
+
+Sreekanth Reddy (14):
+  mpt3sas: Define hba_port structure
+  mpt3sas: Allocate memory for hba_port objects
+  mpt3sas: Rearrange _scsih_mark_responding_sas_device()
+  mpt3sas: Update hba_port's sas_address & phy_mask
+  mpt3sas: Get device objects using sas_address & portID
+  mpt3sas: Rename transport_del_phy_from_an_existing_port
+  mpt3sas: Get sas_device objects using device's rphy
+  mpt3sas: Update hba_port objects after host reset
+  mpt3sas: Set valid PhysicalPort in SMPPassThrough
+  mpt3sas: Handling HBA vSES device
+  mpt3sas: Add bypass_dirty_port_flag parameter
+  mpt3sas: Handle vSES vphy object during HBA reset
+  mpt3sas: add module parameter multipath_on_hba
+  mpt3sas: Bump driver version to 35.101.00.00
+
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  102 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |    6 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 1237 +++++++++++++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  312 +++++-
+ 4 files changed, 1455 insertions(+), 202 deletions(-)
+
 -- 
 2.18.4
 
 
---0000000000000cffa005b1401449
+--000000000000df8ef805b14013d2
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -299,13 +241,13 @@ JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
 AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
 YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
 MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-iD6e4PICEgozG4r1U/++EBVt0jpjRP4uCkeOxfXLg7kwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDA5MTcxNDE1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+dT+CJaad1OPgAGohJLysxSvAB0dwiotgUwCUCb2D2FUwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDA5MTcxNDEyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
 AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAD5+xsEhdTGGEwOVGdEF
-WtkREgJVAg6gYwjWAdIfFjEyrI7mLQ9e5OFg00BTOznR9eCjVw4DkohVZ0YyXMELHKREiQaOjV7f
-qGnOWJHEFHygtkvzoef6qr7ObDUBSsmeQTEOGndn0jH8dpqSiOOtROjM6TQBQChmQNYBLFLqeCSo
-aDPnOIKFiRPMeHL8mnkOe16klU4Xlo60xXtTWyZnseILLH6p1/EcgxHLDCsmqaOZn1cIL9v9eqkS
-w0FDuQYzyzudxy/YV2N4F4gEf6B+4PCkQ6dI9fDQffRdb8b+PVZ+13WXLkk4oPzlbUaVkICIi/J5
-QjhD9PsPvoWHxINNwTY=
---0000000000000cffa005b1401449--
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAB+PTaBQLY/TcD4I7ygE
+l6FTjUn/5r8xb3xDt0v2BaMkjNEGTR57sCLTFXAZUvW7yin2+fE05t6s5bgHJpkIFrDeTx2Zo82D
+shJyq5jePSevEGBG3kPszWtv4kzb7j6ii6SxCYFPQRQWZQM3rkpRGT2Y7mOPCTZtZA+7kCDOfLiU
+84rcrLNWZm6qZ6dWHhYyGtsy532BAnZMf7uFWc1N3qgOOenwrWm5MuF2nvWQXZSIO8eKLS0uPumd
+/Kv7aU8G6g8pDJ86fLdsuwUX7rxmbOoLaifNKuykc1fqYN1uovvw1tSbBtzdIogFn7Uw0jY4mfmy
+FBcq+hmSkvs6mhmam3Q=
+--000000000000df8ef805b14013d2--
