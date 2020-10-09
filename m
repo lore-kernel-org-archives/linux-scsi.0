@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91FEDC43457
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 20:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC449C433E7
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 20:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A967206A5
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 20:09:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67AA4206A5
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 20:09:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391823AbgJIUJI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Oct 2020 16:09:08 -0400
-Received: from mga01.intel.com ([192.55.52.88]:3555 "EHLO mga01.intel.com"
+        id S2391806AbgJIUJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Oct 2020 16:09:03 -0400
+Received: from mga12.intel.com ([192.55.52.136]:29124 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403946AbgJITvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Oct 2020 15:51:31 -0400
-IronPort-SDR: 0M+PJwZD1jFuMQocaU6wMT6hcydV5DguoJbJA0ETTZLrD7/zXfBuqvEBCFLTliVirEmY2c0PEc
- qHvKAiR1KIcg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9769"; a="182976115"
+        id S2390851AbgJITvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Oct 2020 15:51:18 -0400
+IronPort-SDR: BjVNbGWEsRp5ob82NyuDF9C0xKEegG65A+JRryG4Nh+TwGmSJ7KHpML9WJ4YeWqD9WoRDB2csA
+ ScUnXHy+dHGw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9769"; a="144850649"
 X-IronPort-AV: E=Sophos;i="5.77,355,1596524400"; 
-   d="scan'208";a="182976115"
+   d="scan'208";a="144850649"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2020 12:51:27 -0700
-IronPort-SDR: zNYl6viNpTmcuoOUFeW6ebDlF6mcWw7xHrLDRpkX9eSJEFyww70EqY5cZFdXSl9ODsqjoVqJW/
- EpbiFUFW5goQ==
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2020 12:51:16 -0700
+IronPort-SDR: JrRKqLJV6Da/4fMbj+O46I413eP5nzJr39umbL7Y1s6mKMem5hJdGDAmJBrAS4XWsKikzHiU+3
+ eSwE6XBZdj5A==
 X-IronPort-AV: E=Sophos;i="5.77,355,1596524400"; 
-   d="scan'208";a="329006240"
+   d="scan'208";a="518800998"
 Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2020 12:51:25 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2020 12:51:15 -0700
 From:   ira.weiny@intel.com
 To:     Andrew Morton <akpm@linux-foundation.org>,
         Thomas Gleixner <tglx@linutronix.de>,
@@ -41,9 +41,7 @@ To:     Andrew Morton <akpm@linux-foundation.org>,
         Andy Lutomirski <luto@kernel.org>,
         Peter Zijlstra <peterz@infradead.org>
 Cc:     Ira Weiny <ira.weiny@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>, x86@kernel.org,
+        Luis Chamberlain <mcgrof@kernel.org>, x86@kernel.org,
         Dave Hansen <dave.hansen@linux.intel.com>,
         Dan Williams <dan.j.williams@intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>, linux-doc@vger.kernel.org,
@@ -69,9 +67,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
         xen-devel@lists.xenproject.org, linux-cachefs@redhat.com,
         samba-technical@lists.samba.org, intel-wired-lan@lists.osuosl.org
-Subject: [PATCH RFC PKS/PMEM 11/58] drivers/net: Utilize new kmap_thread()
-Date:   Fri,  9 Oct 2020 12:49:46 -0700
-Message-Id: <20201009195033.3208459-12-ira.weiny@intel.com>
+Subject: [PATCH RFC PKS/PMEM 08/58] drivers/firmware_loader: Utilize new kmap_thread()
+Date:   Fri,  9 Oct 2020 12:49:43 -0700
+Message-Id: <20201009195033.3208459-9-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.28.0.rc0.12.gb6a658bd00c9
 In-Reply-To: <20201009195033.3208459-1-ira.weiny@intel.com>
 References: <20201009195033.3208459-1-ira.weiny@intel.com>
@@ -83,61 +81,56 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-The kmap() calls in these drivers are localized to a single thread.  To
+The kmap() calls in this driver are localized to a single thread.  To
 avoid the over head of global PKRS updates use the new kmap_thread()
 call.
 
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 ---
- drivers/net/ethernet/intel/igb/igb_ethtool.c     | 4 ++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c | 4 ++--
+ drivers/base/firmware_loader/fallback.c | 4 ++--
+ drivers/base/firmware_loader/main.c     | 4 ++--
  2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/igb/igb_ethtool.c b/drivers/net/ethernet/intel/igb/igb_ethtool.c
-index 6e8231c1ddf0..ac9189752012 100644
---- a/drivers/net/ethernet/intel/igb/igb_ethtool.c
-+++ b/drivers/net/ethernet/intel/igb/igb_ethtool.c
-@@ -1794,14 +1794,14 @@ static int igb_check_lbtest_frame(struct igb_rx_buffer *rx_buffer,
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 283ca2de76d4..22dea9ba7a37 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -322,14 +322,14 @@ static void firmware_rw(struct fw_priv *fw_priv, char *buffer,
+ 		int page_ofs = offset & (PAGE_SIZE-1);
+ 		int page_cnt = min_t(size_t, PAGE_SIZE - page_ofs, count);
  
- 	frame_size >>= 1;
+-		page_data = kmap(fw_priv->pages[page_nr]);
++		page_data = kmap_thread(fw_priv->pages[page_nr]);
  
--	data = kmap(rx_buffer->page);
-+	data = kmap_thread(rx_buffer->page);
+ 		if (read)
+ 			memcpy(buffer, page_data + page_ofs, page_cnt);
+ 		else
+ 			memcpy(page_data + page_ofs, buffer, page_cnt);
  
- 	if (data[3] != 0xFF ||
- 	    data[frame_size + 10] != 0xBE ||
- 	    data[frame_size + 12] != 0xAF)
- 		match = false;
+-		kunmap(fw_priv->pages[page_nr]);
++		kunmap_thread(fw_priv->pages[page_nr]);
+ 		buffer += page_cnt;
+ 		offset += page_cnt;
+ 		count -= page_cnt;
+diff --git a/drivers/base/firmware_loader/main.c b/drivers/base/firmware_loader/main.c
+index 63b9714a0154..cc884c9f8742 100644
+--- a/drivers/base/firmware_loader/main.c
++++ b/drivers/base/firmware_loader/main.c
+@@ -409,11 +409,11 @@ static int fw_decompress_xz_pages(struct device *dev, struct fw_priv *fw_priv,
  
--	kunmap(rx_buffer->page);
-+	kunmap_thread(rx_buffer->page);
- 
- 	return match;
- }
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
-index 71ec908266a6..7d469425f8b4 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_ethtool.c
-@@ -1963,14 +1963,14 @@ static bool ixgbe_check_lbtest_frame(struct ixgbe_rx_buffer *rx_buffer,
- 
- 	frame_size >>= 1;
- 
--	data = kmap(rx_buffer->page) + rx_buffer->page_offset;
-+	data = kmap_thread(rx_buffer->page) + rx_buffer->page_offset;
- 
- 	if (data[3] != 0xFF ||
- 	    data[frame_size + 10] != 0xBE ||
- 	    data[frame_size + 12] != 0xAF)
- 		match = false;
- 
--	kunmap(rx_buffer->page);
-+	kunmap_thread(rx_buffer->page);
- 
- 	return match;
- }
+ 		/* decompress onto the new allocated page */
+ 		page = fw_priv->pages[fw_priv->nr_pages - 1];
+-		xz_buf.out = kmap(page);
++		xz_buf.out = kmap_thread(page);
+ 		xz_buf.out_pos = 0;
+ 		xz_buf.out_size = PAGE_SIZE;
+ 		xz_ret = xz_dec_run(xz_dec, &xz_buf);
+-		kunmap(page);
++		kunmap_thread(page);
+ 		fw_priv->size += xz_buf.out_pos;
+ 		/* partial decompression means either end or error */
+ 		if (xz_buf.out_pos != PAGE_SIZE)
 -- 
 2.28.0.rc0.12.gb6a658bd00c9
 
