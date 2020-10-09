@@ -2,182 +2,519 @@ Return-Path: <SRS0=VN9r=DQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA140C433E7
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF563C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:58:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 775C522267
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6345C22277
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:58:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Tm8hjEGq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WVkpKe77"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389944AbgJIRO4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Oct 2020 13:14:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51036 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732603AbgJIRO4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:14:56 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E504EC0613D2
-        for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2020 10:14:55 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id o9so4753283plx.10
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2020 10:14:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=hAnJwTdXR9p2XAZ5khIba1YXn15/+IZEe8o3ZFLrdLE=;
-        b=Tm8hjEGqGzxMX1xVKFuUiGGjx+O8Emc/KZ10ExgnoHtDHeQJZBRDHd/AEm9M3ZjtWo
-         5t/To77qZ4cfpC8y006RchGq6DEBSDFDD/erEQ5kBRXyoxVXq29P98oDyftrALvmHMgh
-         AmuZZkzSv3Q/jx9RIaLctBsk2rp1m+T7/bt6E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=hAnJwTdXR9p2XAZ5khIba1YXn15/+IZEe8o3ZFLrdLE=;
-        b=AG9WpFQJEPh3nPCyIgJ8yvCvvko0YR8dg11VHMfuY9f8/PZgt/FX+RYAGp9CMsMD5V
-         kK38s6HwohP/auYk+HYe3OJoMpRKJ/b9vYhN29Goh+aqmoox6F9nu4NsyiETMiqm01SS
-         4R1Xe1xbuK2+HrxkdfYL80hDoTu2iPHlynUBF+crHRfXV3GjvOF3j4TL4xGguhZDNlEx
-         qWo5UY3RfYZ6QdLSbydz9kN6U4odPo4/n6JEXTT+8MDJJl5hvhs6P+eIv4Mc03vNpriG
-         RiOesc11S62TR/26gS9+C/8q/85QQtS1BqqkUIMKGIbtfUJYDB85XwFdRHFyUGwsiSQd
-         A8wQ==
-X-Gm-Message-State: AOAM5301MoYPVv/S9W/rp/QDZqbmSE68iOgHF3WjcD4EJQtfPrdZZuML
-        uwL70RDFYVo3xxItxpOzue714g==
-X-Google-Smtp-Source: ABdhPJz5FrR4NR+sIr3r6GLvf7YotnELapGI4Ot3HIERLXL74uvxukYd2XtWifAdLwWQB5M3OSA7eA==
-X-Received: by 2002:a17:902:bb8f:b029:d2:8ce6:f602 with SMTP id m15-20020a170902bb8fb02900d28ce6f602mr12323764pls.85.1602263695312;
-        Fri, 09 Oct 2020 10:14:55 -0700 (PDT)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id fy24sm12299055pjb.35.2020.10.09.10.14.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2020 10:14:54 -0700 (PDT)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 14/14] mpt3sas: Bump driver version to 35.101.00.00
-Date:   Fri,  9 Oct 2020 22:44:40 +0530
-Message-Id: <20201009171440.4949-15-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
-References: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000006b8dd705b1401678"
+        id S2390242AbgJIR6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Oct 2020 13:58:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43922 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731500AbgJIR6G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:58:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602266284;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=3G+H/JWLSlRdIyXhnSMRY5cZGfBOHRPwxI/3YP2dFiY=;
+        b=WVkpKe77Yzoz7Dt8gpguq2INpjbumhUq2jQMAw5nZMA0BKiJaWW1rW+5sbkt5ph+K/Pmyy
+        B2wPNYApYGrtADgMKq7IlsSDpl/n7hnSJ0U6r70ppa7nFkfh8PrZ5XEiHLnDKJYKy8m5hk
+        DkfQkaLwaL49trt7juCVbzxzpqc7724=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-270-8fT2-tb3OmGFzc2bMRmwlA-1; Fri, 09 Oct 2020 13:58:02 -0400
+X-MC-Unique: 8fT2-tb3OmGFzc2bMRmwlA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DC37F1084C88;
+        Fri,  9 Oct 2020 17:58:00 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.195.67])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6FA5219D7C;
+        Fri,  9 Oct 2020 17:57:59 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Sagar.Biradar@microchip.com, aacraid@microsemi.com,
+        Dave.Carroll@microchip.com, Balsundar.P@microchip.com
+Subject: [PATCH 1/1] aacraid: remove needless code
+Date:   Fri,  9 Oct 2020 19:57:58 +0200
+Message-Id: <20201009175758.11731-1-thenzl@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000006b8dd705b1401678
+Patch "bef18d308a22 scsi: aacraid: Disabling TM path
+and only processing IOP reset"
+has modified aac_hba_send so it returns -EINVAL for everything except
+HBA_IU_TYPE_SCSI_TM_REQ command. That makes callers using other commands
+useless - remove them together with related functions and make the test
+in aac_hba_send more visible.
+Patch also replaces a /* fall through */ comment.
 
-Bump mpt3sas driver version to 35.101.00.00
-
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/commsup.c |  12 +-
+ drivers/scsi/aacraid/linit.c   | 379 +++++----------------------------
+ 2 files changed, 64 insertions(+), 327 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index badd823..7dab579 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -76,9 +76,9 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"35.100.00.00"
-+#define MPT3SAS_DRIVER_VERSION		"35.101.00.00"
- #define MPT3SAS_MAJOR_VERSION		35
--#define MPT3SAS_MINOR_VERSION		100
-+#define MPT3SAS_MINOR_VERSION		101
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 7c0710417d37..77affdb56742 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -714,6 +714,9 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 	struct aac_hba_cmd_req *hbacmd = (struct aac_hba_cmd_req *)
+ 			fibptr->hw_fib_va;
  
++	if (command != HBA_IU_TYPE_SCSI_CMD_REQ)
++		return -EINVAL;
++
+ 	fibptr->flags = (FIB_CONTEXT_FLAG | FIB_CONTEXT_FLAG_NATIVE_HBA);
+ 	if (callback) {
+ 		wait = 0;
+@@ -725,13 +728,10 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 
+ 	hbacmd->iu_type = command;
+ 
+-	if (command == HBA_IU_TYPE_SCSI_CMD_REQ) {
+ 		/* bit1 of request_id must be 0 */
+-		hbacmd->request_id =
+-			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
+-		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
+-	} else
+-		return -EINVAL;
++	hbacmd->request_id =
++		cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
++	fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
+ 
+ 
+ 	if (wait) {
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 7d99f7155a13..534285b9856e 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -681,7 +681,7 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 	struct scsi_device * dev = cmd->device;
+ 	struct Scsi_Host * host = dev->host;
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+-	int count, found;
++	int count;
+ 	u32 bus, cid;
+ 	int ret = FAILED;
+ 
+@@ -690,334 +690,73 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 
+ 	bus = aac_logical_to_phys(scmd_channel(cmd));
+ 	cid = scmd_id(cmd);
+-	if (aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
+-		struct fib *fib;
+-		struct aac_hba_tm_req *tmf;
+-		int status;
+-		u64 address;
+-
+-		pr_err("%s: Host adapter abort request (%d,%d,%d,%d)\n",
+-		 AAC_DRIVERNAME,
+-		 host->host_no, sdev_channel(dev), sdev_id(dev), (int)dev->lun);
+-
+-		found = 0;
+-		for (count = 0; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
+-			fib = &aac->fibs[count];
+-			if (*(u8 *)fib->hw_fib_va != 0 &&
+-				(fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA) &&
+-				(fib->callback_data == cmd)) {
+-				found = 1;
+-				break;
+-			}
+-		}
+-		if (!found)
+-			return ret;
+-
+-		/* start a HBA_TMF_ABORT_TASK TMF request */
+-		fib = aac_fib_alloc(aac);
+-		if (!fib)
+-			return ret;
+-
+-		tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
+-		memset(tmf, 0, sizeof(*tmf));
+-		tmf->tmf = HBA_TMF_ABORT_TASK;
+-		tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
+-		tmf->lun[1] = cmd->device->lun;
+-
+-		address = (u64)fib->hw_error_pa;
+-		tmf->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
+-		tmf->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
+-		tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
+-
+-		fib->hbacmd_size = sizeof(*tmf);
+-		cmd->SCp.sent_command = 0;
+-
+-		status = aac_hba_send(HBA_IU_TYPE_SCSI_TM_REQ, fib,
+-				  (fib_callback) aac_hba_callback,
+-				  (void *) cmd);
+-		if (status != -EINPROGRESS) {
+-			aac_fib_complete(fib);
+-			aac_fib_free(fib);
+-			return ret;
+-		}
+-		/* Wait up to 15 secs for completion */
+-		for (count = 0; count < 15; ++count) {
+-			if (cmd->SCp.sent_command) {
++	if (aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW)
++		return ret;
++
++	pr_err(
++		"%s: Host adapter abort request.\n"
++		"%s: Outstanding commands on (%d,%d,%d,%d):\n",
++		AAC_DRIVERNAME, AAC_DRIVERNAME,
++		host->host_no, sdev_channel(dev), sdev_id(dev),
++		(int)dev->lun);
++	switch (cmd->cmnd[0]) {
++	case SERVICE_ACTION_IN_16:
++		if (!(aac->raw_io_interface) ||
++		    !(aac->raw_io_64) ||
++		    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
++			break;
++		fallthrough;
++	case INQUIRY:
++	case READ_CAPACITY:
++		/*
++		 * Mark associated FIB to not complete,
++		 * eh handler does this
++		 */
++		for (count = 0;
++			count < (host->can_queue + AAC_NUM_MGT_FIB);
++			++count) {
++			struct fib *fib = &aac->fibs[count];
++
++			if (fib->hw_fib_va->header.XferState &&
++			(fib->flags & FIB_CONTEXT_FLAG) &&
++			(fib->callback_data == cmd)) {
++				fib->flags |=
++					FIB_CONTEXT_FLAG_TIMED_OUT;
++				cmd->SCp.phase =
++					AAC_OWNER_ERROR_HANDLER;
+ 				ret = SUCCESS;
+-				break;
+ 			}
+-			msleep(1000);
+ 		}
++		break;
++	case TEST_UNIT_READY:
++		/*
++		 * Mark associated FIB to not complete,
++		 * eh handler does this
++		 */
++		for (count = 0;
++			count < (host->can_queue + AAC_NUM_MGT_FIB);
++			++count) {
++			struct scsi_cmnd *command;
++			struct fib *fib = &aac->fibs[count];
+ 
+-		if (ret != SUCCESS)
+-			pr_err("%s: Host adapter abort request timed out\n",
+-			AAC_DRIVERNAME);
+-	} else {
+-		pr_err(
+-			"%s: Host adapter abort request.\n"
+-			"%s: Outstanding commands on (%d,%d,%d,%d):\n",
+-			AAC_DRIVERNAME, AAC_DRIVERNAME,
+-			host->host_no, sdev_channel(dev), sdev_id(dev),
+-			(int)dev->lun);
+-		switch (cmd->cmnd[0]) {
+-		case SERVICE_ACTION_IN_16:
+-			if (!(aac->raw_io_interface) ||
+-			    !(aac->raw_io_64) ||
+-			    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
+-				break;
+-			/* fall through */
+-		case INQUIRY:
+-		case READ_CAPACITY:
+-			/*
+-			 * Mark associated FIB to not complete,
+-			 * eh handler does this
+-			 */
+-			for (count = 0;
+-				count < (host->can_queue + AAC_NUM_MGT_FIB);
+-				++count) {
+-				struct fib *fib = &aac->fibs[count];
+-
+-				if (fib->hw_fib_va->header.XferState &&
++			command = fib->callback_data;
++
++			if ((fib->hw_fib_va->header.XferState &
++				cpu_to_le32
++				(Async | NoResponseExpected)) &&
+ 				(fib->flags & FIB_CONTEXT_FLAG) &&
+-				(fib->callback_data == cmd)) {
+-					fib->flags |=
+-						FIB_CONTEXT_FLAG_TIMED_OUT;
+-					cmd->SCp.phase =
+-						AAC_OWNER_ERROR_HANDLER;
++				((command)) &&
++				(command->device == cmd->device)) {
++				fib->flags |=
++					FIB_CONTEXT_FLAG_TIMED_OUT;
++				command->SCp.phase =
++					AAC_OWNER_ERROR_HANDLER;
++				if (command == cmd)
+ 					ret = SUCCESS;
+-				}
+ 			}
+-			break;
+-		case TEST_UNIT_READY:
+-			/*
+-			 * Mark associated FIB to not complete,
+-			 * eh handler does this
+-			 */
+-			for (count = 0;
+-				count < (host->can_queue + AAC_NUM_MGT_FIB);
+-				++count) {
+-				struct scsi_cmnd *command;
+-				struct fib *fib = &aac->fibs[count];
+-
+-				command = fib->callback_data;
+-
+-				if ((fib->hw_fib_va->header.XferState &
+-					cpu_to_le32
+-					(Async | NoResponseExpected)) &&
+-					(fib->flags & FIB_CONTEXT_FLAG) &&
+-					((command)) &&
+-					(command->device == cmd->device)) {
+-					fib->flags |=
+-						FIB_CONTEXT_FLAG_TIMED_OUT;
+-					command->SCp.phase =
+-						AAC_OWNER_ERROR_HANDLER;
+-					if (command == cmd)
+-						ret = SUCCESS;
+-				}
+-			}
+-			break;
+ 		}
+-	}
+-	return ret;
+-}
+-
+-static u8 aac_eh_tmf_lun_reset_fib(struct aac_hba_map_info *info,
+-				   struct fib *fib, u64 tmf_lun)
+-{
+-	struct aac_hba_tm_req *tmf;
+-	u64 address;
+-
+-	/* start a HBA_TMF_LUN_RESET TMF request */
+-	tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
+-	memset(tmf, 0, sizeof(*tmf));
+-	tmf->tmf = HBA_TMF_LUN_RESET;
+-	tmf->it_nexus = info->rmw_nexus;
+-	int_to_scsilun(tmf_lun, (struct scsi_lun *)tmf->lun);
+-
+-	address = (u64)fib->hw_error_pa;
+-	tmf->error_ptr_hi = cpu_to_le32
+-		((u32)(address >> 32));
+-	tmf->error_ptr_lo = cpu_to_le32
+-		((u32)(address & 0xffffffff));
+-	tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
+-	fib->hbacmd_size = sizeof(*tmf);
+-
+-	return HBA_IU_TYPE_SCSI_TM_REQ;
+-}
+-
+-static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_info *info,
+-				    struct fib *fib)
+-{
+-	struct aac_hba_reset_req *rst;
+-	u64 address;
+-
+-	/* already tried, start a hard reset now */
+-	rst = (struct aac_hba_reset_req *)fib->hw_fib_va;
+-	memset(rst, 0, sizeof(*rst));
+-	rst->it_nexus = info->rmw_nexus;
+-
+-	address = (u64)fib->hw_error_pa;
+-	rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
+-	rst->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
+-	rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
+-	fib->hbacmd_size = sizeof(*rst);
+-
+-       return HBA_IU_TYPE_SATA_REQ;
+-}
+-
+-static void aac_tmf_callback(void *context, struct fib *fibptr)
+-{
+-	struct aac_hba_resp *err =
+-		&((struct aac_native_hba *)fibptr->hw_fib_va)->resp.err;
+-	struct aac_hba_map_info *info = context;
+-	int res;
+-
+-	switch (err->service_response) {
+-	case HBA_RESP_SVCRES_TMF_REJECTED:
+-		res = -1;
+-		break;
+-	case HBA_RESP_SVCRES_TMF_LUN_INVALID:
+-		res = 0;
+-		break;
+-	case HBA_RESP_SVCRES_TMF_COMPLETE:
+-	case HBA_RESP_SVCRES_TMF_SUCCEEDED:
+-		res = 0;
+-		break;
+-	default:
+-		res = -2;
+ 		break;
+ 	}
+-	aac_fib_complete(fibptr);
+-
+-	info->reset_state = res;
+-}
+-
+-/*
+- *	aac_eh_dev_reset	- Device reset command handling
+- *	@scsi_cmd:	SCSI command block causing the reset
+- *
+- */
+-static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_device * dev = cmd->device;
+-	struct Scsi_Host * host = dev->host;
+-	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+-	struct aac_hba_map_info *info;
+-	int count;
+-	u32 bus, cid;
+-	struct fib *fib;
+-	int ret = FAILED;
+-	int status;
+-	u8 command;
+-
+-	bus = aac_logical_to_phys(scmd_channel(cmd));
+-	cid = scmd_id(cmd);
+-
+-	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
+-		return FAILED;
+-
+-	info = &aac->hba_map[bus][cid];
+-
+-	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
+-	 !(info->reset_state > 0)))
+-		return FAILED;
+-
+-	pr_err("%s: Host device reset request. SCSI hang ?\n",
+-	       AAC_DRIVERNAME);
+-
+-	fib = aac_fib_alloc(aac);
+-	if (!fib)
+-		return ret;
+-
+-	/* start a HBA_TMF_LUN_RESET TMF request */
+-	command = aac_eh_tmf_lun_reset_fib(info, fib, dev->lun);
+-
+-	info->reset_state = 1;
+-
+-	status = aac_hba_send(command, fib,
+-			      (fib_callback) aac_tmf_callback,
+-			      (void *) info);
+-	if (status != -EINPROGRESS) {
+-		info->reset_state = 0;
+-		aac_fib_complete(fib);
+-		aac_fib_free(fib);
+-		return ret;
+-	}
+-	/* Wait up to 15 seconds for completion */
+-	for (count = 0; count < 15; ++count) {
+-		if (info->reset_state == 0) {
+-			ret = info->reset_state == 0 ? SUCCESS : FAILED;
+-			break;
+-		}
+-		msleep(1000);
+-	}
+-
+-	return ret;
+-}
+-
+-/*
+- *	aac_eh_target_reset	- Target reset command handling
+- *	@scsi_cmd:	SCSI command block causing the reset
+- *
+- */
+-static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_device * dev = cmd->device;
+-	struct Scsi_Host * host = dev->host;
+-	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+-	struct aac_hba_map_info *info;
+-	int count;
+-	u32 bus, cid;
+-	int ret = FAILED;
+-	struct fib *fib;
+-	int status;
+-	u8 command;
+-
+-	bus = aac_logical_to_phys(scmd_channel(cmd));
+-	cid = scmd_id(cmd);
+-
+-	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
+-		return FAILED;
+-
+-	info = &aac->hba_map[bus][cid];
+-
+-	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
+-	 !(info->reset_state > 0)))
+-		return FAILED;
+-
+-	pr_err("%s: Host target reset request. SCSI hang ?\n",
+-	       AAC_DRIVERNAME);
+-
+-	fib = aac_fib_alloc(aac);
+-	if (!fib)
+-		return ret;
+-
+-
+-	/* already tried, start a hard reset now */
+-	command = aac_eh_tmf_hard_reset_fib(info, fib);
+-
+-	info->reset_state = 2;
+-
+-	status = aac_hba_send(command, fib,
+-			      (fib_callback) aac_tmf_callback,
+-			      (void *) info);
+-
+-	if (status != -EINPROGRESS) {
+-		info->reset_state = 0;
+-		aac_fib_complete(fib);
+-		aac_fib_free(fib);
+-		return ret;
+-	}
+-
+-	/* Wait up to 15 seconds for completion */
+-	for (count = 0; count < 15; ++count) {
+-		if (info->reset_state <= 0) {
+-			ret = info->reset_state == 0 ? SUCCESS : FAILED;
+-			break;
+-		}
+-		msleep(1000);
+-	}
+-
+ 	return ret;
+ }
+ 
+@@ -1545,8 +1284,6 @@ static struct scsi_host_template aac_driver_template = {
+ 	.change_queue_depth		= aac_change_queue_depth,
+ 	.sdev_attrs			= aac_dev_attrs,
+ 	.eh_abort_handler		= aac_eh_abort,
+-	.eh_device_reset_handler	= aac_eh_dev_reset,
+-	.eh_target_reset_handler	= aac_eh_target_reset,
+ 	.eh_bus_reset_handler		= aac_eh_bus_reset,
+ 	.eh_host_reset_handler		= aac_eh_host_reset,
+ 	.can_queue			= AAC_NUM_IO_FIB,
 -- 
-2.18.4
+2.25.4
 
-
---0000000000006b8dd705b1401678
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-Rag/s/0IKyxAQsoBcla5ZufuDE5ir/mlnYktkPJdg+kns/OPDsINSyWqNYE9PKy9+3cp/fItNFtH
-krg1AgMBAAGjggHTMIIBzzAOBgNVHQ8BAf8EBAMCBaAwgZ4GCCsGAQUFBwEBBIGRMIGOME0GCCsG
-AQUFBzAChkFodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc3BlcnNvbmFsc2ln
-bjJzaGEyZzNvY3NwLmNydDA9BggrBgEFBQcwAYYxaHR0cDovL29jc3AyLmdsb2JhbHNpZ24uY29t
-L2dzcGVyc29uYWxzaWduMnNoYTJnMzBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEF
-BQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBE
-BgNVHR8EPTA7MDmgN6A1hjNodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzcGVyc29uYWxzaWdu
-MnNoYTJnMy5jcmwwJwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNV
-HSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4E
-FgQU1CyhXqcQo40SZ7kFS/AiOnRW6lMwDQYJKoZIhvcNAQELBQADggEBAFeMmmz112eNFAV8Ense
-5WremClV5F3Md1xS0yXKqxlgakUJaOI/Fai7OLQaQqsEoxW6/QqWEi1wbZOccbdritOkL5b7sVUp
-SU9OfuIlV8c3XMLaWSIluy+0ImtRJ49jDCI4KtQESHrqfQRZcc1C/avZvNED3U4b10U6N3SY+59b
-fm2Vlwacwp+8ESTp49DsLcJqc4U/0rUZxLWtgPokzS+ovX+JAu8zx1SmOzUC4hj4Bp6Vnfd5KWUK
-JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
-AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
-YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
-MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-VHwzmmyv0oBF73yrnuBBAIbgN5v4yP8n7QfmasRAgeQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDA5MTcxNDU1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
-AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAAf+4EoziAQgn4WyI+3T
-ddDwnVGlww8FL7mdF39hy++NQj1+DRqmoLDZLpsF7NPZAjWXwihp0gna4JwdNvatNWK+X0n2r7z1
-+En0VQ8kY46qU4mF3bGPGxnBMOzIdf17qdULcEmAmfmXMyCpbPCqjb5wj04cbX/usCLxzktKwil6
-Eb6rjsMdB1jxB90PRnx74OJRxG/Axxe6N4l7h2l1t/8+VMettjG/AkvCCH4LGomVJkjssZKvsPHB
-IrBxJvz0Z0XmVWPpiGy9+kIx8e5JF5I7jQWlflDd1Vl3f1rx0JbXjACUvJm7WXr1DplSa2Md1kNL
-OKsie//LB0sewg4/+gU=
---0000000000006b8dd705b1401678--
