@@ -8,286 +8,99 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 299A3C43457
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA140C433E7
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCD0822258
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 775C522267
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:14:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cVrmltQK"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Tm8hjEGq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389529AbgJIROx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Oct 2020 13:14:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51026 "EHLO
+        id S2389944AbgJIRO4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Oct 2020 13:14:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732603AbgJIROx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:14:53 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 139CCC0613D2
-        for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2020 10:14:53 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id o25so7710628pgm.0
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2020 10:14:53 -0700 (PDT)
+        with ESMTP id S1732603AbgJIRO4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:14:56 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E504EC0613D2
+        for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2020 10:14:55 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id o9so4753283plx.10
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2020 10:14:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Vuf+3NHZS79/sBIBBOd+HW9OiSVjp8HSfR/2oIeyNY8=;
-        b=cVrmltQKarF70z2+JrG5kxUV1wr3tgAPSgXAd+QhjIR+Xcfy1jhRYv8502WCzFMrtu
-         pFnWtwVd7Iq4vhH2Cdhdf/6RnUOgKpplTPs53Qa8Gc22l+f3a5ifPCYkGKNb5u8Cf2by
-         P5QzbtUGVjmwUwZNHKmxtWkGJqjuNA39W/RZ0=
+        bh=hAnJwTdXR9p2XAZ5khIba1YXn15/+IZEe8o3ZFLrdLE=;
+        b=Tm8hjEGqGzxMX1xVKFuUiGGjx+O8Emc/KZ10ExgnoHtDHeQJZBRDHd/AEm9M3ZjtWo
+         5t/To77qZ4cfpC8y006RchGq6DEBSDFDD/erEQ5kBRXyoxVXq29P98oDyftrALvmHMgh
+         AmuZZkzSv3Q/jx9RIaLctBsk2rp1m+T7/bt6E=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Vuf+3NHZS79/sBIBBOd+HW9OiSVjp8HSfR/2oIeyNY8=;
-        b=UAOPGHRn6driczUsKJLnK5YioSSBMhzVAOGljb3G/bTixaR2f3bcy0GSLHj+5V37sj
-         O6UnJ+mZ822U+/+fIHbjYg5sCl8BGkfClHMhew8yIP9P/eHh+flh5Nr+mSnD5yjkNQBz
-         1HVY1yT3RWzHLmjvDOLMLfHsufVDUBfgkkYu2lBdAYgwikGW8u4xy6wP1xwSIAUebd6x
-         51ZM6cMW1ZxOZxZY6/Zo1o//mB3yLCSuUf4654zBwlOpA2iflA6fnmagGen5gPQLlr7v
-         3Rik8h96VLP9t+LQnkjgyEB7v88IVdeWp4N5lJM3ue3E4DlDW5tXinOR3JQKseQMoFf9
-         iAKA==
-X-Gm-Message-State: AOAM533mP3RrD6vxAOKWTYo9yRyn5fhayTMumbZNCxIyznC7myy+aZG3
-        clJTjU5tWiOf0UHq+VJD6Nijbg==
-X-Google-Smtp-Source: ABdhPJwujk+Vi4uzWmRn3HSKuo1xNC7mM2DjYh0pyfjxQqLZ26//5/yoZXE9c/6Uj0BDXUp5EK3nqQ==
-X-Received: by 2002:a65:410c:: with SMTP id w12mr4162382pgp.411.1602263692345;
-        Fri, 09 Oct 2020 10:14:52 -0700 (PDT)
+        bh=hAnJwTdXR9p2XAZ5khIba1YXn15/+IZEe8o3ZFLrdLE=;
+        b=AG9WpFQJEPh3nPCyIgJ8yvCvvko0YR8dg11VHMfuY9f8/PZgt/FX+RYAGp9CMsMD5V
+         kK38s6HwohP/auYk+HYe3OJoMpRKJ/b9vYhN29Goh+aqmoox6F9nu4NsyiETMiqm01SS
+         4R1Xe1xbuK2+HrxkdfYL80hDoTu2iPHlynUBF+crHRfXV3GjvOF3j4TL4xGguhZDNlEx
+         qWo5UY3RfYZ6QdLSbydz9kN6U4odPo4/n6JEXTT+8MDJJl5hvhs6P+eIv4Mc03vNpriG
+         RiOesc11S62TR/26gS9+C/8q/85QQtS1BqqkUIMKGIbtfUJYDB85XwFdRHFyUGwsiSQd
+         A8wQ==
+X-Gm-Message-State: AOAM5301MoYPVv/S9W/rp/QDZqbmSE68iOgHF3WjcD4EJQtfPrdZZuML
+        uwL70RDFYVo3xxItxpOzue714g==
+X-Google-Smtp-Source: ABdhPJz5FrR4NR+sIr3r6GLvf7YotnELapGI4Ot3HIERLXL74uvxukYd2XtWifAdLwWQB5M3OSA7eA==
+X-Received: by 2002:a17:902:bb8f:b029:d2:8ce6:f602 with SMTP id m15-20020a170902bb8fb02900d28ce6f602mr12323764pls.85.1602263695312;
+        Fri, 09 Oct 2020 10:14:55 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id fy24sm12299055pjb.35.2020.10.09.10.14.49
+        by smtp.gmail.com with ESMTPSA id fy24sm12299055pjb.35.2020.10.09.10.14.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2020 10:14:51 -0700 (PDT)
+        Fri, 09 Oct 2020 10:14:54 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH 13/14] mpt3sas: add module parameter multipath_on_hba
-Date:   Fri,  9 Oct 2020 22:44:39 +0530
-Message-Id: <20201009171440.4949-14-sreekanth.reddy@broadcom.com>
+Subject: [PATCH 14/14] mpt3sas: Bump driver version to 35.101.00.00
+Date:   Fri,  9 Oct 2020 22:44:40 +0530
+Message-Id: <20201009171440.4949-15-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
 References: <20201009171440.4949-1-sreekanth.reddy@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003fe85005b140164c"
+        boundary="0000000000006b8dd705b1401678"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003fe85005b140164c
+--0000000000006b8dd705b1401678
 
-Add module parameter multipath_on_hba to enable/disable
-the support a multi-port path topology.
-By default this feature is enabled on SAS3.5 HBA device
-and disabled on SAS3 &SAS2.5 HBA devices.
-
-when this module parameter is disabled then driver uses
-a default PhysicalPort(PortID) number i.e. 255 instead of
-PhysicalPort number provided by HBA firmware.
+Bump mpt3sas driver version to 35.101.00.00
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  2 +
- drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  6 ++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 69 ++++++++++++++++++++++--
- drivers/scsi/mpt3sas/mpt3sas_transport.c |  6 ++-
- 4 files changed, 76 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index cca14ab..badd823 100644
+index badd823..7dab579 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1246,6 +1246,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  *	which ensures the syncrhonization between cli/sysfs_show path.
-  * @atomic_desc_capable: Atomic Request Descriptor support.
-  * @GET_MSIX_INDEX: Get the msix index of high iops queues.
-+ * @multipath_on_hba: flag to determine multipath on hba is enabled or not
-  * @port_table_list: list containing HBA's wide/narrow port's info
-  */
- struct MPT3SAS_ADAPTER {
-@@ -1540,6 +1541,7 @@ struct MPT3SAS_ADAPTER {
- 	PUT_SMID_DEFAULT put_smid_default;
- 	GET_MSIX_INDEX get_msix_index_for_smlio;
+@@ -76,9 +76,9 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"35.100.00.00"
++#define MPT3SAS_DRIVER_VERSION		"35.101.00.00"
+ #define MPT3SAS_MAJOR_VERSION		35
+-#define MPT3SAS_MINOR_VERSION		100
++#define MPT3SAS_MINOR_VERSION		101
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
  
-+	u8		multipath_on_hba;
- 	struct list_head port_table_list;
- };
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 5c32dbb..af2d3e3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -902,8 +902,10 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 		    (Mpi2SmpPassthroughRequest_t *)mpi_request;
- 		u8 *data;
- 
--		/* ioc determines which port to use */
--		smp_request->PhysicalPort = 0xFF;
-+		if (!ioc->multipath_on_hba) {
-+			/* ioc determines which port to use */
-+			smp_request->PhysicalPort = 0xFF;
-+		}
- 		if (smp_request->PassthroughFlags &
- 		    MPI2_SMP_PT_REQ_PT_FLAGS_IMMEDIATE)
- 			data = (u8 *)&smp_request->SGL;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index da4ffa6..699fc9a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -159,6 +159,15 @@ module_param(enable_sdev_max_qd, bool, 0444);
- MODULE_PARM_DESC(enable_sdev_max_qd,
- 	"Enable sdev max qd as can_queue, def=disabled(0)");
- 
-+static int multipath_on_hba = -1;
-+module_param(multipath_on_hba, int, 0);
-+MODULE_PARM_DESC(multipath_on_hba,
-+	"Multipath support to add same target device\n\t\t"
-+	"as many times as it is visible to HBA from various paths\n\t\t"
-+	"(by default:\n\t\t"
-+	"\t SAS 2.0 & SAS 3.0 HBA - This will be disabled,\n\t\t"
-+	"\t SAS 3.5 HBA - This will be enabled)");
-+
- /* raid transport support */
- static struct raid_template *mpt3sas_raid_template;
- static struct raid_template *mpt2sas_raid_template;
-@@ -373,6 +382,14 @@ mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc,
- {
- 	struct hba_port *port, *port_next;
- 
-+	/*
-+	 * When multipath_on_hba is disabled then
-+	 * search the hba_port entry using default
-+	 * port id i.e. 255
-+	 */
-+	if (!ioc->multipath_on_hba)
-+		port_id = MULTIPATH_DISABLED_PORT_ID;
-+
- 	list_for_each_entry_safe(port, port_next,
- 	    &ioc->port_table_list, list) {
- 		if (port->port_id != port_id)
-@@ -384,6 +401,24 @@ mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc,
- 		return port;
- 	}
- 
-+	/*
-+	 * Allocate hba_port object for default port id (i.e. 255)
-+	 * when multipath_on_hba is disabled for the HBA.
-+	 * And add this object to port_table_list.
-+	 */
-+	if (!ioc->multipath_on_hba) {
-+		port = kzalloc(sizeof(struct hba_port), GFP_KERNEL);
-+		if (!port)
-+			return NULL;
-+
-+		port->port_id = port_id;
-+		ioc_info(ioc,
-+		   "hba_port entry: %p, port: %d is added to hba_port list\n",
-+		   port, port->port_id);
-+		list_add_tail(&port->list,
-+		    &ioc->port_table_list);
-+		return port;
-+	}
- 	return NULL;
- }
- 
-@@ -10013,6 +10048,7 @@ _scsih_search_responding_expanders(struct MPT3SAS_ADAPTER *ioc)
- 	u16 ioc_status;
- 	u64 sas_address;
- 	u16 handle;
-+	u8 port;
- 
- 	ioc_info(ioc, "search for expanders: start\n");
- 
-@@ -10030,10 +10066,12 @@ _scsih_search_responding_expanders(struct MPT3SAS_ADAPTER *ioc)
- 
- 		handle = le16_to_cpu(expander_pg0.DevHandle);
- 		sas_address = le64_to_cpu(expander_pg0.SASAddress);
-+		port = expander_pg0.PhysicalPort;
- 		pr_info(
- 		    "\texpander present: handle(0x%04x), sas_addr(0x%016llx), port:%d\n",
- 		    handle, (unsigned long long)sas_address,
--		    expander_pg0.PhysicalPort);
-+		    (ioc->multipath_on_hba ?
-+		    port : MULTIPATH_DISABLED_PORT_ID));
- 		_scsih_mark_responding_expander(ioc, &expander_pg0);
- 	}
- 
-@@ -10476,8 +10514,10 @@ mpt3sas_scsih_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	dtmprintk(ioc, ioc_info(ioc, "%s: MPT3_IOC_DONE_RESET\n", __func__));
- 	if ((!ioc->is_driver_loading) && !(disable_discovery > 0 &&
- 					   !ioc->sas_hba.num_phys)) {
--		_scsih_sas_port_refresh(ioc);
--		_scsih_update_vphys_after_reset(ioc);
-+		if (ioc->multipath_on_hba) {
-+			_scsih_sas_port_refresh(ioc);
-+			_scsih_update_vphys_after_reset(ioc);
-+		}
- 		_scsih_prep_device_scan(ioc);
- 		_scsih_create_enclosure_list_after_reset(ioc);
- 		_scsih_search_responding_sas_devices(ioc);
-@@ -11765,6 +11805,12 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 			ioc->mfg_pg10_hide_flag = MFG_PAGE10_EXPOSE_ALL_DISKS;
- 			break;
- 		}
-+
-+		if (multipath_on_hba == -1 || multipath_on_hba == 0)
-+			ioc->multipath_on_hba = 0;
-+		else
-+			ioc->multipath_on_hba = 1;
-+
- 		break;
- 	case MPI25_VERSION:
- 	case MPI26_VERSION:
-@@ -11826,6 +11872,23 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 				ioc->combined_reply_index_count =
- 				 MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G3;
- 		}
-+
-+		switch (ioc->is_gen35_ioc) {
-+		case 0:
-+			if (multipath_on_hba == -1 || multipath_on_hba == 0)
-+				ioc->multipath_on_hba = 0;
-+			else
-+				ioc->multipath_on_hba = 1;
-+			break;
-+		case 1:
-+			if (multipath_on_hba == -1 || multipath_on_hba > 0)
-+				ioc->multipath_on_hba = 1;
-+			else
-+				ioc->multipath_on_hba = 0;
-+		default:
-+			break;
-+		}
-+
- 		break;
- 	default:
- 		return -ENODEV;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 0d06025..6f47082 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -912,7 +912,8 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 		return;
- 	}
- 
--	if (sas_node->handle <= ioc->sas_hba.num_phys) {
-+	if (sas_node->handle <= ioc->sas_hba.num_phys &&
-+	    (ioc->multipath_on_hba)) {
- 		if (port->vphys_mask) {
- 			list_for_each_entry_safe(vphy, vphy_next,
- 			    &port->vphys_list, list) {
-@@ -1172,7 +1173,8 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
- 	if (handle && (link_rate >= MPI2_SAS_NEG_LINK_RATE_1_5)) {
- 		_transport_set_identify(ioc, handle,
- 		    &mpt3sas_phy->remote_identify);
--		if (sas_node->handle <= ioc->sas_hba.num_phys) {
-+		if ((sas_node->handle <= ioc->sas_hba.num_phys) &&
-+		    (ioc->multipath_on_hba)) {
- 			list_for_each_entry(hba_port,
- 			    &ioc->port_table_list, list) {
- 				if (hba_port->sas_address == sas_address &&
 -- 
 2.18.4
 
 
---0000000000003fe85005b140164c
+--0000000000006b8dd705b1401678
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -358,13 +171,13 @@ JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
 AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
 YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
 MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-/28biwAa6UIrFKBCk0T1Qevmf0FZ6967YjAfoW7Rk+4wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDA5MTcxNDUyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+VHwzmmyv0oBF73yrnuBBAIbgN5v4yP8n7QfmasRAgeQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDA5MTcxNDU1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
 AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAC5u8ovLcADk4RbDFISk
-R4zSzHS/9bT+mF92chd2R3/xlLzD37WfC+MEWnXvaBgiXEFkl74KAjQol5xAP3aDCpzQczr5ec53
-54HjP5zYCQ2hQBekbXBP0nuM0I4TUeDYHz1Des85yL2dGPb3xglGhtB4vW9+1jAjSe8azibbuvAK
-lzzkPGjq5lcM/QzIhIt27RuyyusYE+M7JgRrUGXjjbugRX0HoydhjUTTCFPfocAgNnM3jkhH9dBl
-Zoj9tVwuCci+S7mUe7T3bcMgtPN4M5tl7flUinlD4b+uOeDY78Cq0vmsubhttzVGLyHfXBVTDiae
-QK7ZhQiK7ewBTw/l9Ds=
---0000000000003fe85005b140164c--
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAAf+4EoziAQgn4WyI+3T
+ddDwnVGlww8FL7mdF39hy++NQj1+DRqmoLDZLpsF7NPZAjWXwihp0gna4JwdNvatNWK+X0n2r7z1
++En0VQ8kY46qU4mF3bGPGxnBMOzIdf17qdULcEmAmfmXMyCpbPCqjb5wj04cbX/usCLxzktKwil6
+Eb6rjsMdB1jxB90PRnx74OJRxG/Axxe6N4l7h2l1t/8+VMettjG/AkvCCH4LGomVJkjssZKvsPHB
+IrBxJvz0Z0XmVWPpiGy9+kIx8e5JF5I7jQWlflDd1Vl3f1rx0JbXjACUvJm7WXr1DplSa2Md1kNL
+OKsie//LB0sewg4/+gU=
+--0000000000006b8dd705b1401678--
