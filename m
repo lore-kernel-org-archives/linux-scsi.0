@@ -2,519 +2,376 @@ Return-Path: <SRS0=VN9r=DQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF563C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C33E7C43457
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 19:50:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6345C22277
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 17:58:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WVkpKe77"
+	by mail.kernel.org (Postfix) with ESMTP id 86FBD222BA
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Oct 2020 19:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390242AbgJIR6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Oct 2020 13:58:07 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43922 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731500AbgJIR6G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 13:58:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602266284;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=3G+H/JWLSlRdIyXhnSMRY5cZGfBOHRPwxI/3YP2dFiY=;
-        b=WVkpKe77Yzoz7Dt8gpguq2INpjbumhUq2jQMAw5nZMA0BKiJaWW1rW+5sbkt5ph+K/Pmyy
-        B2wPNYApYGrtADgMKq7IlsSDpl/n7hnSJ0U6r70ppa7nFkfh8PrZ5XEiHLnDKJYKy8m5hk
-        DkfQkaLwaL49trt7juCVbzxzpqc7724=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-270-8fT2-tb3OmGFzc2bMRmwlA-1; Fri, 09 Oct 2020 13:58:02 -0400
-X-MC-Unique: 8fT2-tb3OmGFzc2bMRmwlA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DC37F1084C88;
-        Fri,  9 Oct 2020 17:58:00 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.40.195.67])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6FA5219D7C;
-        Fri,  9 Oct 2020 17:57:59 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Sagar.Biradar@microchip.com, aacraid@microsemi.com,
-        Dave.Carroll@microchip.com, Balsundar.P@microchip.com
-Subject: [PATCH 1/1] aacraid: remove needless code
-Date:   Fri,  9 Oct 2020 19:57:58 +0200
-Message-Id: <20201009175758.11731-1-thenzl@redhat.com>
+        id S2390846AbgJITus (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Oct 2020 15:50:48 -0400
+Received: from mga02.intel.com ([134.134.136.20]:57507 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726357AbgJITup (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Oct 2020 15:50:45 -0400
+IronPort-SDR: EgmAoyvHqLfUgUFSlazRhx1Cjp9MmVlenKbZYXMVRVRfgMzpJRftl57MJq2pMTa+nNfk+FbMHQ
+ 4ZNHJky2ihhA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9769"; a="152450718"
+X-IronPort-AV: E=Sophos;i="5.77,355,1596524400"; 
+   d="scan'208";a="152450718"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2020 12:50:41 -0700
+IronPort-SDR: wgvSBhlinBwJf2eRaqYm1d4mOPDeheaaBRmvXZpaWhx0BsPjq5MOqCRmfglsuVIrge+HvLIvQ5
+ IT741lyNdN2Q==
+X-IronPort-AV: E=Sophos;i="5.77,355,1596524400"; 
+   d="scan'208";a="419536654"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2020 12:50:41 -0700
+From:   ira.weiny@intel.com
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>
+Cc:     Ira Weiny <ira.weiny@intel.com>, x86@kernel.org,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kselftest@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        kvm@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
+        kexec@lists.infradead.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, devel@driverdev.osuosl.org,
+        linux-efi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-aio@kvack.org,
+        io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, cluster-devel@redhat.com,
+        ecryptfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-cachefs@redhat.com,
+        samba-technical@lists.samba.org, intel-wired-lan@lists.osuosl.org
+Subject: [PATCH RFC PKS/PMEM 00/58] PMEM: Introduce stray write protection for PMEM
+Date:   Fri,  9 Oct 2020 12:49:35 -0700
+Message-Id: <20201009195033.3208459-1-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.28.0.rc0.12.gb6a658bd00c9
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Patch "bef18d308a22 scsi: aacraid: Disabling TM path
-and only processing IOP reset"
-has modified aac_hba_send so it returns -EINVAL for everything except
-HBA_IU_TYPE_SCSI_TM_REQ command. That makes callers using other commands
-useless - remove them together with related functions and make the test
-in aac_hba_send more visible.
-Patch also replaces a /* fall through */ comment.
+From: Ira Weiny <ira.weiny@intel.com>
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/aacraid/commsup.c |  12 +-
- drivers/scsi/aacraid/linit.c   | 379 +++++----------------------------
- 2 files changed, 64 insertions(+), 327 deletions(-)
+Should a stray write in the kernel occur persistent memory is affected more
+than regular memory.  A write to the wrong area of memory could result in
+latent data corruption which will will persist after a reboot.  PKS provides a
+nice way to restrict access to persistent memory kernel mappings, while
+providing fast access when needed.
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 7c0710417d37..77affdb56742 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -714,6 +714,9 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 	struct aac_hba_cmd_req *hbacmd = (struct aac_hba_cmd_req *)
- 			fibptr->hw_fib_va;
- 
-+	if (command != HBA_IU_TYPE_SCSI_CMD_REQ)
-+		return -EINVAL;
-+
- 	fibptr->flags = (FIB_CONTEXT_FLAG | FIB_CONTEXT_FLAG_NATIVE_HBA);
- 	if (callback) {
- 		wait = 0;
-@@ -725,13 +728,10 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 
- 	hbacmd->iu_type = command;
- 
--	if (command == HBA_IU_TYPE_SCSI_CMD_REQ) {
- 		/* bit1 of request_id must be 0 */
--		hbacmd->request_id =
--			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
--		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
--	} else
--		return -EINVAL;
-+	hbacmd->request_id =
-+		cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
-+	fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
- 
- 
- 	if (wait) {
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 7d99f7155a13..534285b9856e 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -681,7 +681,7 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 	struct scsi_device * dev = cmd->device;
- 	struct Scsi_Host * host = dev->host;
- 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
--	int count, found;
-+	int count;
- 	u32 bus, cid;
- 	int ret = FAILED;
- 
-@@ -690,334 +690,73 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 
- 	bus = aac_logical_to_phys(scmd_channel(cmd));
- 	cid = scmd_id(cmd);
--	if (aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
--		struct fib *fib;
--		struct aac_hba_tm_req *tmf;
--		int status;
--		u64 address;
--
--		pr_err("%s: Host adapter abort request (%d,%d,%d,%d)\n",
--		 AAC_DRIVERNAME,
--		 host->host_no, sdev_channel(dev), sdev_id(dev), (int)dev->lun);
--
--		found = 0;
--		for (count = 0; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
--			fib = &aac->fibs[count];
--			if (*(u8 *)fib->hw_fib_va != 0 &&
--				(fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA) &&
--				(fib->callback_data == cmd)) {
--				found = 1;
--				break;
--			}
--		}
--		if (!found)
--			return ret;
--
--		/* start a HBA_TMF_ABORT_TASK TMF request */
--		fib = aac_fib_alloc(aac);
--		if (!fib)
--			return ret;
--
--		tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
--		memset(tmf, 0, sizeof(*tmf));
--		tmf->tmf = HBA_TMF_ABORT_TASK;
--		tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
--		tmf->lun[1] = cmd->device->lun;
--
--		address = (u64)fib->hw_error_pa;
--		tmf->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
--		tmf->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
--		tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
--
--		fib->hbacmd_size = sizeof(*tmf);
--		cmd->SCp.sent_command = 0;
--
--		status = aac_hba_send(HBA_IU_TYPE_SCSI_TM_REQ, fib,
--				  (fib_callback) aac_hba_callback,
--				  (void *) cmd);
--		if (status != -EINPROGRESS) {
--			aac_fib_complete(fib);
--			aac_fib_free(fib);
--			return ret;
--		}
--		/* Wait up to 15 secs for completion */
--		for (count = 0; count < 15; ++count) {
--			if (cmd->SCp.sent_command) {
-+	if (aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW)
-+		return ret;
-+
-+	pr_err(
-+		"%s: Host adapter abort request.\n"
-+		"%s: Outstanding commands on (%d,%d,%d,%d):\n",
-+		AAC_DRIVERNAME, AAC_DRIVERNAME,
-+		host->host_no, sdev_channel(dev), sdev_id(dev),
-+		(int)dev->lun);
-+	switch (cmd->cmnd[0]) {
-+	case SERVICE_ACTION_IN_16:
-+		if (!(aac->raw_io_interface) ||
-+		    !(aac->raw_io_64) ||
-+		    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
-+			break;
-+		fallthrough;
-+	case INQUIRY:
-+	case READ_CAPACITY:
-+		/*
-+		 * Mark associated FIB to not complete,
-+		 * eh handler does this
-+		 */
-+		for (count = 0;
-+			count < (host->can_queue + AAC_NUM_MGT_FIB);
-+			++count) {
-+			struct fib *fib = &aac->fibs[count];
-+
-+			if (fib->hw_fib_va->header.XferState &&
-+			(fib->flags & FIB_CONTEXT_FLAG) &&
-+			(fib->callback_data == cmd)) {
-+				fib->flags |=
-+					FIB_CONTEXT_FLAG_TIMED_OUT;
-+				cmd->SCp.phase =
-+					AAC_OWNER_ERROR_HANDLER;
- 				ret = SUCCESS;
--				break;
- 			}
--			msleep(1000);
- 		}
-+		break;
-+	case TEST_UNIT_READY:
-+		/*
-+		 * Mark associated FIB to not complete,
-+		 * eh handler does this
-+		 */
-+		for (count = 0;
-+			count < (host->can_queue + AAC_NUM_MGT_FIB);
-+			++count) {
-+			struct scsi_cmnd *command;
-+			struct fib *fib = &aac->fibs[count];
- 
--		if (ret != SUCCESS)
--			pr_err("%s: Host adapter abort request timed out\n",
--			AAC_DRIVERNAME);
--	} else {
--		pr_err(
--			"%s: Host adapter abort request.\n"
--			"%s: Outstanding commands on (%d,%d,%d,%d):\n",
--			AAC_DRIVERNAME, AAC_DRIVERNAME,
--			host->host_no, sdev_channel(dev), sdev_id(dev),
--			(int)dev->lun);
--		switch (cmd->cmnd[0]) {
--		case SERVICE_ACTION_IN_16:
--			if (!(aac->raw_io_interface) ||
--			    !(aac->raw_io_64) ||
--			    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
--				break;
--			/* fall through */
--		case INQUIRY:
--		case READ_CAPACITY:
--			/*
--			 * Mark associated FIB to not complete,
--			 * eh handler does this
--			 */
--			for (count = 0;
--				count < (host->can_queue + AAC_NUM_MGT_FIB);
--				++count) {
--				struct fib *fib = &aac->fibs[count];
--
--				if (fib->hw_fib_va->header.XferState &&
-+			command = fib->callback_data;
-+
-+			if ((fib->hw_fib_va->header.XferState &
-+				cpu_to_le32
-+				(Async | NoResponseExpected)) &&
- 				(fib->flags & FIB_CONTEXT_FLAG) &&
--				(fib->callback_data == cmd)) {
--					fib->flags |=
--						FIB_CONTEXT_FLAG_TIMED_OUT;
--					cmd->SCp.phase =
--						AAC_OWNER_ERROR_HANDLER;
-+				((command)) &&
-+				(command->device == cmd->device)) {
-+				fib->flags |=
-+					FIB_CONTEXT_FLAG_TIMED_OUT;
-+				command->SCp.phase =
-+					AAC_OWNER_ERROR_HANDLER;
-+				if (command == cmd)
- 					ret = SUCCESS;
--				}
- 			}
--			break;
--		case TEST_UNIT_READY:
--			/*
--			 * Mark associated FIB to not complete,
--			 * eh handler does this
--			 */
--			for (count = 0;
--				count < (host->can_queue + AAC_NUM_MGT_FIB);
--				++count) {
--				struct scsi_cmnd *command;
--				struct fib *fib = &aac->fibs[count];
--
--				command = fib->callback_data;
--
--				if ((fib->hw_fib_va->header.XferState &
--					cpu_to_le32
--					(Async | NoResponseExpected)) &&
--					(fib->flags & FIB_CONTEXT_FLAG) &&
--					((command)) &&
--					(command->device == cmd->device)) {
--					fib->flags |=
--						FIB_CONTEXT_FLAG_TIMED_OUT;
--					command->SCp.phase =
--						AAC_OWNER_ERROR_HANDLER;
--					if (command == cmd)
--						ret = SUCCESS;
--				}
--			}
--			break;
- 		}
--	}
--	return ret;
--}
--
--static u8 aac_eh_tmf_lun_reset_fib(struct aac_hba_map_info *info,
--				   struct fib *fib, u64 tmf_lun)
--{
--	struct aac_hba_tm_req *tmf;
--	u64 address;
--
--	/* start a HBA_TMF_LUN_RESET TMF request */
--	tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
--	memset(tmf, 0, sizeof(*tmf));
--	tmf->tmf = HBA_TMF_LUN_RESET;
--	tmf->it_nexus = info->rmw_nexus;
--	int_to_scsilun(tmf_lun, (struct scsi_lun *)tmf->lun);
--
--	address = (u64)fib->hw_error_pa;
--	tmf->error_ptr_hi = cpu_to_le32
--		((u32)(address >> 32));
--	tmf->error_ptr_lo = cpu_to_le32
--		((u32)(address & 0xffffffff));
--	tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
--	fib->hbacmd_size = sizeof(*tmf);
--
--	return HBA_IU_TYPE_SCSI_TM_REQ;
--}
--
--static u8 aac_eh_tmf_hard_reset_fib(struct aac_hba_map_info *info,
--				    struct fib *fib)
--{
--	struct aac_hba_reset_req *rst;
--	u64 address;
--
--	/* already tried, start a hard reset now */
--	rst = (struct aac_hba_reset_req *)fib->hw_fib_va;
--	memset(rst, 0, sizeof(*rst));
--	rst->it_nexus = info->rmw_nexus;
--
--	address = (u64)fib->hw_error_pa;
--	rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
--	rst->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
--	rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
--	fib->hbacmd_size = sizeof(*rst);
--
--       return HBA_IU_TYPE_SATA_REQ;
--}
--
--static void aac_tmf_callback(void *context, struct fib *fibptr)
--{
--	struct aac_hba_resp *err =
--		&((struct aac_native_hba *)fibptr->hw_fib_va)->resp.err;
--	struct aac_hba_map_info *info = context;
--	int res;
--
--	switch (err->service_response) {
--	case HBA_RESP_SVCRES_TMF_REJECTED:
--		res = -1;
--		break;
--	case HBA_RESP_SVCRES_TMF_LUN_INVALID:
--		res = 0;
--		break;
--	case HBA_RESP_SVCRES_TMF_COMPLETE:
--	case HBA_RESP_SVCRES_TMF_SUCCEEDED:
--		res = 0;
--		break;
--	default:
--		res = -2;
- 		break;
- 	}
--	aac_fib_complete(fibptr);
--
--	info->reset_state = res;
--}
--
--/*
-- *	aac_eh_dev_reset	- Device reset command handling
-- *	@scsi_cmd:	SCSI command block causing the reset
-- *
-- */
--static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
--{
--	struct scsi_device * dev = cmd->device;
--	struct Scsi_Host * host = dev->host;
--	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
--	struct aac_hba_map_info *info;
--	int count;
--	u32 bus, cid;
--	struct fib *fib;
--	int ret = FAILED;
--	int status;
--	u8 command;
--
--	bus = aac_logical_to_phys(scmd_channel(cmd));
--	cid = scmd_id(cmd);
--
--	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
--		return FAILED;
--
--	info = &aac->hba_map[bus][cid];
--
--	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
--	 !(info->reset_state > 0)))
--		return FAILED;
--
--	pr_err("%s: Host device reset request. SCSI hang ?\n",
--	       AAC_DRIVERNAME);
--
--	fib = aac_fib_alloc(aac);
--	if (!fib)
--		return ret;
--
--	/* start a HBA_TMF_LUN_RESET TMF request */
--	command = aac_eh_tmf_lun_reset_fib(info, fib, dev->lun);
--
--	info->reset_state = 1;
--
--	status = aac_hba_send(command, fib,
--			      (fib_callback) aac_tmf_callback,
--			      (void *) info);
--	if (status != -EINPROGRESS) {
--		info->reset_state = 0;
--		aac_fib_complete(fib);
--		aac_fib_free(fib);
--		return ret;
--	}
--	/* Wait up to 15 seconds for completion */
--	for (count = 0; count < 15; ++count) {
--		if (info->reset_state == 0) {
--			ret = info->reset_state == 0 ? SUCCESS : FAILED;
--			break;
--		}
--		msleep(1000);
--	}
--
--	return ret;
--}
--
--/*
-- *	aac_eh_target_reset	- Target reset command handling
-- *	@scsi_cmd:	SCSI command block causing the reset
-- *
-- */
--static int aac_eh_target_reset(struct scsi_cmnd *cmd)
--{
--	struct scsi_device * dev = cmd->device;
--	struct Scsi_Host * host = dev->host;
--	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
--	struct aac_hba_map_info *info;
--	int count;
--	u32 bus, cid;
--	int ret = FAILED;
--	struct fib *fib;
--	int status;
--	u8 command;
--
--	bus = aac_logical_to_phys(scmd_channel(cmd));
--	cid = scmd_id(cmd);
--
--	if (bus >= AAC_MAX_BUSES || cid >= AAC_MAX_TARGETS)
--		return FAILED;
--
--	info = &aac->hba_map[bus][cid];
--
--	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
--	 !(info->reset_state > 0)))
--		return FAILED;
--
--	pr_err("%s: Host target reset request. SCSI hang ?\n",
--	       AAC_DRIVERNAME);
--
--	fib = aac_fib_alloc(aac);
--	if (!fib)
--		return ret;
--
--
--	/* already tried, start a hard reset now */
--	command = aac_eh_tmf_hard_reset_fib(info, fib);
--
--	info->reset_state = 2;
--
--	status = aac_hba_send(command, fib,
--			      (fib_callback) aac_tmf_callback,
--			      (void *) info);
--
--	if (status != -EINPROGRESS) {
--		info->reset_state = 0;
--		aac_fib_complete(fib);
--		aac_fib_free(fib);
--		return ret;
--	}
--
--	/* Wait up to 15 seconds for completion */
--	for (count = 0; count < 15; ++count) {
--		if (info->reset_state <= 0) {
--			ret = info->reset_state == 0 ? SUCCESS : FAILED;
--			break;
--		}
--		msleep(1000);
--	}
--
- 	return ret;
- }
- 
-@@ -1545,8 +1284,6 @@ static struct scsi_host_template aac_driver_template = {
- 	.change_queue_depth		= aac_change_queue_depth,
- 	.sdev_attrs			= aac_dev_attrs,
- 	.eh_abort_handler		= aac_eh_abort,
--	.eh_device_reset_handler	= aac_eh_dev_reset,
--	.eh_target_reset_handler	= aac_eh_target_reset,
- 	.eh_bus_reset_handler		= aac_eh_bus_reset,
- 	.eh_host_reset_handler		= aac_eh_host_reset,
- 	.can_queue			= AAC_NUM_IO_FIB,
+Since the last RFC[1] this patch set has grown quite a bit.  It now depends on
+the core patches submitted separately.
+
+	https://lore.kernel.org/lkml/20201009194258.3207172-1-ira.weiny@intel.com/
+
+And contained in the git tree here:
+
+	https://github.com/weiny2/linux-kernel/tree/pks-rfc-v3
+
+However, functionally there is only 1 major change from the last RFC.
+Specifically, kmap() is most often used within a single thread in a 'map/do
+something/unmap' pattern.  In fact this is the pattern used in ~90% of the
+callers of kmap().  This pattern works very well for the pmem use case and the
+testing which was done.  However, there were another ~20-30 kmap users which do
+not follow this pattern.  Some of them seem to expect the mapping to be
+'global' while others require a detailed audit to be sure.[2][3]
+
+While we don't anticipate global mappings to pmem there is a danger in
+changing the semantics of kmap().  Effectively, this would cause an unresolved
+page fault with little to no information about why.
+
+There were a number of options considered.
+
+1) Attempt to change all the thread local kmap() calls to kmap_atomic()
+2) Introduce a flags parameter to kmap() to indicate if the mapping should be
+   global or not
+3) Change ~20-30 call sites to 'kmap_global()' to indicate that they require a
+   global mapping of the pages
+4) Change ~209 call sites to 'kmap_thread()' to indicate that the mapping is to
+   be used within that thread of execution only
+
+Option 1 is simply not feasible kmap_atomic() is not the same semantic as
+kmap() within a single tread.  Option 2 would require all of the call sites of
+kmap() to change.  Option 3 seems like a good minimal change but there is a
+danger that new code may miss the semantic change of kmap() and not get the
+behavior intended for future users.  Therefore, option #4 was chosen.
+
+To handle the global PKRS state in the most efficient manner possible.  We
+lazily override the thread specific PKRS key value only when needed because we
+anticipate PKS to not be needed will not be needed most of the time.  And even
+when it is used 90% of the time it is a thread local call.
+
+
+[1] https://lore.kernel.org/lkml/20200717072056.73134-1-ira.weiny@intel.com/
+
+[2] The following list of callers continue calling kmap() (utilizing the global
+PKRS).  It would be nice if more of them could be converted to kmap_thread()
+
+	drivers/firewire/net.c:         ptr = kmap(dev->broadcast_rcv_buffer.pages[u]);
+	drivers/gpu/drm/i915/gem/i915_gem_pages.c:              return kmap(sg_page(sgt->sgl));
+	drivers/gpu/drm/ttm/ttm_bo_util.c:              map->virtual = kmap(map->page);
+	drivers/infiniband/hw/qib/qib_user_sdma.c:      mpage = kmap(page);
+	drivers/misc/vmw_vmci/vmci_host.c:      context->notify = kmap(context->notify_page) + (uva & (PAGE_SIZE - 1));
+	drivers/misc/xilinx_sdfec.c:            addr = kmap(pages[i]);
+	drivers/mmc/host/usdhi6rol0.c:  host->pg.mapped         = kmap(host->pg.page);
+	drivers/mmc/host/usdhi6rol0.c:  host->pg.mapped = kmap(host->pg.page);
+	drivers/mmc/host/usdhi6rol0.c:  host->pg.mapped = kmap(host->pg.page);
+	drivers/nvme/target/tcp.c:              iov->iov_base = kmap(sg_page(sg)) + sg->offset + sg_offset;
+	drivers/scsi/libiscsi_tcp.c:            segment->sg_mapped = kmap(sg_page(sg));
+	drivers/target/iscsi/iscsi_target.c:            iov[i].iov_base = kmap(sg_page(sg)) + sg->offset + page_off;
+	drivers/target/target_core_transport.c:         return kmap(sg_page(sg)) + sg->offset;
+	fs/btrfs/check-integrity.c:             block_ctx->datav[i] = kmap(block_ctx->pagev[i]);
+	fs/ceph/dir.c:          cache_ctl->dentries = kmap(cache_ctl->page);
+	fs/ceph/inode.c:                ctl->dentries = kmap(ctl->page);
+	fs/erofs/zpvec.h:               kmap_atomic(ctor->curr) : kmap(ctor->curr);
+	lib/scatterlist.c:              miter->addr = kmap(miter->page) + miter->__offset;
+	net/ceph/pagelist.c:    pl->mapped_tail = kmap(page);
+	net/ceph/pagelist.c:            pl->mapped_tail = kmap(page);
+	virt/kvm/kvm_main.c:                    hva = kmap(page);
+
+[3] The following appear to follow the same pattern as ext2 which was converted
+after some code audit.  So I _think_ they too could be converted to
+k[un]map_thread().
+
+	fs/freevxfs/vxfs_subr.c|75| kmap(pp);
+	fs/jfs/jfs_metapage.c|102| kmap(page);
+	fs/jfs/jfs_metapage.c|156| kmap(page);
+	fs/minix/dir.c|72| kmap(page);
+	fs/nilfs2/dir.c|195| kmap(page);
+	fs/nilfs2/ifile.h|24| void *kaddr = kmap(ibh->b_page);
+	fs/ntfs/aops.h|78| kmap(page);
+	fs/ntfs/compress.c|574| kmap(page);
+	fs/qnx6/dir.c|32| kmap(page);
+	fs/qnx6/dir.c|58| kmap(*p = page);
+	fs/qnx6/inode.c|190| kmap(page);
+	fs/qnx6/inode.c|557| kmap(page);
+	fs/reiserfs/inode.c|2397| kmap(bh_result->b_page);
+	fs/reiserfs/xattr.c|444| kmap(page);
+	fs/sysv/dir.c|60| kmap(page);
+	fs/sysv/dir.c|262| kmap(page);
+	fs/ufs/dir.c|194| kmap(page);
+	fs/ufs/dir.c|562| kmap(page);
+
+
+Ira Weiny (58):
+  x86/pks: Add a global pkrs option
+  x86/pks/test: Add testing for global option
+  memremap: Add zone device access protection
+  kmap: Add stray access protection for device pages
+  kmap: Introduce k[un]map_thread
+  kmap: Introduce k[un]map_thread debugging
+  drivers/drbd: Utilize new kmap_thread()
+  drivers/firmware_loader: Utilize new kmap_thread()
+  drivers/gpu: Utilize new kmap_thread()
+  drivers/rdma: Utilize new kmap_thread()
+  drivers/net: Utilize new kmap_thread()
+  fs/afs: Utilize new kmap_thread()
+  fs/btrfs: Utilize new kmap_thread()
+  fs/cifs: Utilize new kmap_thread()
+  fs/ecryptfs: Utilize new kmap_thread()
+  fs/gfs2: Utilize new kmap_thread()
+  fs/nilfs2: Utilize new kmap_thread()
+  fs/hfs: Utilize new kmap_thread()
+  fs/hfsplus: Utilize new kmap_thread()
+  fs/jffs2: Utilize new kmap_thread()
+  fs/nfs: Utilize new kmap_thread()
+  fs/f2fs: Utilize new kmap_thread()
+  fs/fuse: Utilize new kmap_thread()
+  fs/freevxfs: Utilize new kmap_thread()
+  fs/reiserfs: Utilize new kmap_thread()
+  fs/zonefs: Utilize new kmap_thread()
+  fs/ubifs: Utilize new kmap_thread()
+  fs/cachefiles: Utilize new kmap_thread()
+  fs/ntfs: Utilize new kmap_thread()
+  fs/romfs: Utilize new kmap_thread()
+  fs/vboxsf: Utilize new kmap_thread()
+  fs/hostfs: Utilize new kmap_thread()
+  fs/cramfs: Utilize new kmap_thread()
+  fs/erofs: Utilize new kmap_thread()
+  fs: Utilize new kmap_thread()
+  fs/ext2: Use ext2_put_page
+  fs/ext2: Utilize new kmap_thread()
+  fs/isofs: Utilize new kmap_thread()
+  fs/jffs2: Utilize new kmap_thread()
+  net: Utilize new kmap_thread()
+  drivers/target: Utilize new kmap_thread()
+  drivers/scsi: Utilize new kmap_thread()
+  drivers/mmc: Utilize new kmap_thread()
+  drivers/xen: Utilize new kmap_thread()
+  drivers/firmware: Utilize new kmap_thread()
+  drives/staging: Utilize new kmap_thread()
+  drivers/mtd: Utilize new kmap_thread()
+  drivers/md: Utilize new kmap_thread()
+  drivers/misc: Utilize new kmap_thread()
+  drivers/android: Utilize new kmap_thread()
+  kernel: Utilize new kmap_thread()
+  mm: Utilize new kmap_thread()
+  lib: Utilize new kmap_thread()
+  powerpc: Utilize new kmap_thread()
+  samples: Utilize new kmap_thread()
+  dax: Stray access protection for dax_direct_access()
+  nvdimm/pmem: Stray access protection for pmem->virt_addr
+  [dax|pmem]: Enable stray access protection
+
+ Documentation/core-api/protection-keys.rst    |  11 +-
+ arch/powerpc/mm/mem.c                         |   4 +-
+ arch/x86/entry/common.c                       |  28 +++
+ arch/x86/include/asm/pkeys.h                  |   6 +-
+ arch/x86/include/asm/pkeys_common.h           |   8 +-
+ arch/x86/kernel/process.c                     |  74 ++++++-
+ arch/x86/mm/fault.c                           | 193 ++++++++++++++----
+ arch/x86/mm/pkeys.c                           |  88 ++++++--
+ drivers/android/binder_alloc.c                |   4 +-
+ drivers/base/firmware_loader/fallback.c       |   4 +-
+ drivers/base/firmware_loader/main.c           |   4 +-
+ drivers/block/drbd/drbd_main.c                |   4 +-
+ drivers/block/drbd/drbd_receiver.c            |  12 +-
+ drivers/dax/device.c                          |   2 +
+ drivers/dax/super.c                           |   2 +
+ drivers/firmware/efi/capsule-loader.c         |   6 +-
+ drivers/firmware/efi/capsule.c                |   4 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c       |  12 +-
+ drivers/gpu/drm/gma500/gma_display.c          |   4 +-
+ drivers/gpu/drm/gma500/mmu.c                  |  10 +-
+ drivers/gpu/drm/i915/gem/i915_gem_shmem.c     |   4 +-
+ .../drm/i915/gem/selftests/i915_gem_context.c |   4 +-
+ .../drm/i915/gem/selftests/i915_gem_mman.c    |   8 +-
+ drivers/gpu/drm/i915/gt/intel_ggtt_fencing.c  |   4 +-
+ drivers/gpu/drm/i915/gt/intel_gtt.c           |   4 +-
+ drivers/gpu/drm/i915/gt/shmem_utils.c         |   4 +-
+ drivers/gpu/drm/i915/i915_gem.c               |   8 +-
+ drivers/gpu/drm/i915/i915_gpu_error.c         |   4 +-
+ drivers/gpu/drm/i915/selftests/i915_perf.c    |   4 +-
+ drivers/gpu/drm/radeon/radeon_ttm.c           |   4 +-
+ drivers/infiniband/hw/hfi1/sdma.c             |   4 +-
+ drivers/infiniband/hw/i40iw/i40iw_cm.c        |  10 +-
+ drivers/infiniband/sw/siw/siw_qp_tx.c         |  14 +-
+ drivers/md/bcache/request.c                   |   4 +-
+ drivers/misc/vmw_vmci/vmci_queue_pair.c       |  12 +-
+ drivers/mmc/host/mmc_spi.c                    |   4 +-
+ drivers/mmc/host/sdricoh_cs.c                 |   4 +-
+ drivers/mtd/mtd_blkdevs.c                     |  12 +-
+ drivers/net/ethernet/intel/igb/igb_ethtool.c  |   4 +-
+ .../net/ethernet/intel/ixgbe/ixgbe_ethtool.c  |   4 +-
+ drivers/nvdimm/pmem.c                         |   6 +
+ drivers/scsi/ipr.c                            |   8 +-
+ drivers/scsi/pmcraid.c                        |   8 +-
+ drivers/staging/rts5208/rtsx_transport.c      |   4 +-
+ drivers/target/target_core_iblock.c           |   4 +-
+ drivers/target/target_core_rd.c               |   4 +-
+ drivers/target/target_core_transport.c        |   4 +-
+ drivers/xen/gntalloc.c                        |   4 +-
+ fs/afs/dir.c                                  |  16 +-
+ fs/afs/dir_edit.c                             |  16 +-
+ fs/afs/mntpt.c                                |   4 +-
+ fs/afs/write.c                                |   4 +-
+ fs/aio.c                                      |   4 +-
+ fs/binfmt_elf.c                               |   4 +-
+ fs/binfmt_elf_fdpic.c                         |   4 +-
+ fs/btrfs/check-integrity.c                    |   4 +-
+ fs/btrfs/compression.c                        |   4 +-
+ fs/btrfs/inode.c                              |  16 +-
+ fs/btrfs/lzo.c                                |  24 +--
+ fs/btrfs/raid56.c                             |  34 +--
+ fs/btrfs/reflink.c                            |   8 +-
+ fs/btrfs/send.c                               |   4 +-
+ fs/btrfs/zlib.c                               |  32 +--
+ fs/btrfs/zstd.c                               |  20 +-
+ fs/cachefiles/rdwr.c                          |   4 +-
+ fs/cifs/cifsencrypt.c                         |   6 +-
+ fs/cifs/file.c                                |  16 +-
+ fs/cifs/smb2ops.c                             |   8 +-
+ fs/cramfs/inode.c                             |  10 +-
+ fs/ecryptfs/crypto.c                          |   8 +-
+ fs/ecryptfs/read_write.c                      |   8 +-
+ fs/erofs/super.c                              |   4 +-
+ fs/erofs/xattr.c                              |   4 +-
+ fs/exec.c                                     |  10 +-
+ fs/ext2/dir.c                                 |   8 +-
+ fs/ext2/ext2.h                                |   8 +
+ fs/ext2/namei.c                               |  15 +-
+ fs/f2fs/f2fs.h                                |   8 +-
+ fs/freevxfs/vxfs_immed.c                      |   4 +-
+ fs/fuse/readdir.c                             |   4 +-
+ fs/gfs2/bmap.c                                |   4 +-
+ fs/gfs2/ops_fstype.c                          |   4 +-
+ fs/hfs/bnode.c                                |  14 +-
+ fs/hfs/btree.c                                |  20 +-
+ fs/hfsplus/bitmap.c                           |  20 +-
+ fs/hfsplus/bnode.c                            | 102 ++++-----
+ fs/hfsplus/btree.c                            |  18 +-
+ fs/hostfs/hostfs_kern.c                       |  12 +-
+ fs/io_uring.c                                 |   4 +-
+ fs/isofs/compress.c                           |   4 +-
+ fs/jffs2/file.c                               |   8 +-
+ fs/jffs2/gc.c                                 |   4 +-
+ fs/nfs/dir.c                                  |  20 +-
+ fs/nilfs2/alloc.c                             |  34 +--
+ fs/nilfs2/cpfile.c                            |   4 +-
+ fs/ntfs/aops.c                                |   4 +-
+ fs/reiserfs/journal.c                         |   4 +-
+ fs/romfs/super.c                              |   4 +-
+ fs/splice.c                                   |   4 +-
+ fs/ubifs/file.c                               |  16 +-
+ fs/vboxsf/file.c                              |  12 +-
+ fs/zonefs/super.c                             |   4 +-
+ include/linux/entry-common.h                  |   3 +
+ include/linux/highmem.h                       |  63 +++++-
+ include/linux/memremap.h                      |   1 +
+ include/linux/mm.h                            |  43 ++++
+ include/linux/pkeys.h                         |   6 +-
+ include/linux/sched.h                         |   8 +
+ include/trace/events/kmap_thread.h            |  56 +++++
+ init/init_task.c                              |   6 +
+ kernel/fork.c                                 |  18 ++
+ kernel/kexec_core.c                           |   8 +-
+ lib/Kconfig.debug                             |   8 +
+ lib/iov_iter.c                                |  12 +-
+ lib/pks/pks_test.c                            | 138 +++++++++++--
+ lib/test_bpf.c                                |   4 +-
+ lib/test_hmm.c                                |   8 +-
+ mm/Kconfig                                    |  13 ++
+ mm/debug.c                                    |  23 +++
+ mm/memory.c                                   |   8 +-
+ mm/memremap.c                                 |  90 ++++++++
+ mm/swapfile.c                                 |   4 +-
+ mm/userfaultfd.c                              |   4 +-
+ net/ceph/messenger.c                          |   4 +-
+ net/core/datagram.c                           |   4 +-
+ net/core/sock.c                               |   8 +-
+ net/ipv4/ip_output.c                          |   4 +-
+ net/sunrpc/cache.c                            |   4 +-
+ net/sunrpc/xdr.c                              |   8 +-
+ net/tls/tls_device.c                          |   4 +-
+ samples/vfio-mdev/mbochs.c                    |   4 +-
+ 131 files changed, 1284 insertions(+), 565 deletions(-)
+ create mode 100644 include/trace/events/kmap_thread.h
+
 -- 
-2.25.4
+2.28.0.rc0.12.gb6a658bd00c9
 
