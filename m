@@ -2,121 +2,139 @@ Return-Path: <SRS0=yR1C=DR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF78C433E7
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 03:42:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C28C433E7
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 04:48:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7506C21D46
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 03:42:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hdtlDfbW"
+	by mail.kernel.org (Postfix) with ESMTP id 7185C2072D
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 04:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730972AbgJJDlk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Oct 2020 23:41:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:41950 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730764AbgJJDeG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2020 23:34:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602300844;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=mquaAJYhQGvRjI4YiIIywOVHyGl4nbZ/nLSs0H46bfg=;
-        b=hdtlDfbWcGSI8pDikb41+gMZ/OrFkKwHzXAHcl7pOA7OnRDdh4a/OdwgT5IdtdzfiaBHdl
-        elp+2Wy6W6sCwsxDthdfyiscNCqeFQznVhq9btde7HsTj6ZgG7Arxq2xgfYZwyk3jCNx0W
-        m0Erdx5NZ7vogifBDNV0QgT7orDjz+M=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-250-TKRnvnTUM8OqtC_oWDY0Gw-1; Fri, 09 Oct 2020 23:25:52 -0400
-X-MC-Unique: TKRnvnTUM8OqtC_oWDY0Gw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 362A2108E1A0;
-        Sat, 10 Oct 2020 03:25:51 +0000 (UTC)
-Received: from localhost (ovpn-13-88.pek2.redhat.com [10.72.13.88])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B543760DA0;
-        Sat, 10 Oct 2020 03:25:47 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH] scsi: core: don't start concurrent async scan on same host
-Date:   Sat, 10 Oct 2020 11:25:39 +0800
-Message-Id: <20201010032539.426615-1-ming.lei@redhat.com>
+        id S1730318AbgJJErk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Oct 2020 00:47:40 -0400
+Received: from out01.mta.xmission.com ([166.70.13.231]:59176 "EHLO
+        out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726886AbgJJEn7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Oct 2020 00:43:59 -0400
+X-Greylist: delayed 3548 seconds by postgrey-1.27 at vger.kernel.org; Sat, 10 Oct 2020 00:43:28 EDT
+Received: from in02.mta.xmission.com ([166.70.13.52])
+        by out01.mta.xmission.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <ebiederm@xmission.com>)
+        id 1kR5ma-003qSe-1R; Fri, 09 Oct 2020 21:42:56 -0600
+Received: from ip68-227-160-95.om.om.cox.net ([68.227.160.95] helo=x220.xmission.com)
+        by in02.mta.xmission.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.87)
+        (envelope-from <ebiederm@xmission.com>)
+        id 1kR5mZ-0002tO-03; Fri, 09 Oct 2020 21:42:55 -0600
+From:   ebiederm@xmission.com (Eric W. Biederman)
+To:     ira.weiny@intel.com
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>, x86@kernel.org,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kselftest@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        kvm@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
+        kexec@lists.infradead.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, devel@driverdev.osuosl.org,
+        linux-efi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-aio@kvack.org,
+        io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, cluster-devel@redhat.com,
+        ecryptfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-cachefs@redhat.com,
+        samba-technical@lists.samba.org, intel-wired-lan@lists.osuosl.org
+References: <20201009195033.3208459-1-ira.weiny@intel.com>
+        <20201009195033.3208459-52-ira.weiny@intel.com>
+Date:   Fri, 09 Oct 2020 22:43:15 -0500
+In-Reply-To: <20201009195033.3208459-52-ira.weiny@intel.com> (ira weiny's
+        message of "Fri, 9 Oct 2020 12:50:26 -0700")
+Message-ID: <87k0vysq3w.fsf@x220.int.ebiederm.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain
+X-XM-SPF: eid=1kR5mZ-0002tO-03;;;mid=<87k0vysq3w.fsf@x220.int.ebiederm.org>;;;hst=in02.mta.xmission.com;;;ip=68.227.160.95;;;frm=ebiederm@xmission.com;;;spf=neutral
+X-XM-AID: U2FsdGVkX1+M6Nwc1eevosTTnX6IxBw6BnHTGm05YjI=
+X-SA-Exim-Connect-IP: 68.227.160.95
+X-SA-Exim-Mail-From: ebiederm@xmission.com
+Subject: Re: [PATCH RFC PKS/PMEM 51/58] kernel: Utilize new kmap_thread()
+X-SA-Exim-Version: 4.2.1 (built Thu, 05 May 2016 13:38:54 -0600)
+X-SA-Exim-Scanned: Yes (on in02.mta.xmission.com)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current scsi host scan mechanism supposes to fallback into sync host
-scan if async scan is in-progress. However, this rule isn't strictly
-respected, because scsi_prep_async_scan() doesn't hold scan_mutex when
-checking shost->async_scan. When scsi_scan_host() is called
-concurrently, two async scan on same host may be started, and hang in
-do_scan_async() is observed.
+ira.weiny@intel.com writes:
 
-Fixes this issue by checking & setting shost->async_scan atomically
-with shost->scan_mutex.
+> From: Ira Weiny <ira.weiny@intel.com>
+>
+> This kmap() call is localized to a single thread.  To avoid the over
+> head of global PKRS updates use the new kmap_thread() call.
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_scan.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Acked-by: "Eric W. Biederman" <ebiederm@xmission.com>
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f2437a7570ce..9af50e6f94c4 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1714,15 +1714,16 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
-  */
- static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
- {
--	struct async_scan_data *data;
-+	struct async_scan_data *data = NULL;
- 	unsigned long flags;
- 
- 	if (strncmp(scsi_scan_type, "sync", 4) == 0)
- 		return NULL;
- 
-+	mutex_lock(&shost->scan_mutex);
- 	if (shost->async_scan) {
- 		shost_printk(KERN_DEBUG, shost, "%s called twice\n", __func__);
--		return NULL;
-+		goto err;
- 	}
- 
- 	data = kmalloc(sizeof(*data), GFP_KERNEL);
-@@ -1733,7 +1734,6 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
- 		goto err;
- 	init_completion(&data->prev_finished);
- 
--	mutex_lock(&shost->scan_mutex);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	shost->async_scan = 1;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1748,6 +1748,7 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
- 	return data;
- 
-  err:
-+	mutex_unlock(&shost->scan_mutex);
- 	kfree(data);
- 	return NULL;
- }
--- 
-2.25.2
-
+>
+> Cc: Eric Biederman <ebiederm@xmission.com>
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> ---
+>  kernel/kexec_core.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/kernel/kexec_core.c b/kernel/kexec_core.c
+> index c19c0dad1ebe..272a9920c0d6 100644
+> --- a/kernel/kexec_core.c
+> +++ b/kernel/kexec_core.c
+> @@ -815,7 +815,7 @@ static int kimage_load_normal_segment(struct kimage *image,
+>  		if (result < 0)
+>  			goto out;
+>  
+> -		ptr = kmap(page);
+> +		ptr = kmap_thread(page);
+>  		/* Start with a clear page */
+>  		clear_page(ptr);
+>  		ptr += maddr & ~PAGE_MASK;
+> @@ -828,7 +828,7 @@ static int kimage_load_normal_segment(struct kimage *image,
+>  			memcpy(ptr, kbuf, uchunk);
+>  		else
+>  			result = copy_from_user(ptr, buf, uchunk);
+> -		kunmap(page);
+> +		kunmap_thread(page);
+>  		if (result) {
+>  			result = -EFAULT;
+>  			goto out;
+> @@ -879,7 +879,7 @@ static int kimage_load_crash_segment(struct kimage *image,
+>  			goto out;
+>  		}
+>  		arch_kexec_post_alloc_pages(page_address(page), 1, 0);
+> -		ptr = kmap(page);
+> +		ptr = kmap_thread(page);
+>  		ptr += maddr & ~PAGE_MASK;
+>  		mchunk = min_t(size_t, mbytes,
+>  				PAGE_SIZE - (maddr & ~PAGE_MASK));
+> @@ -895,7 +895,7 @@ static int kimage_load_crash_segment(struct kimage *image,
+>  		else
+>  			result = copy_from_user(ptr, buf, uchunk);
+>  		kexec_flush_icache_page(page);
+> -		kunmap(page);
+> +		kunmap_thread(page);
+>  		arch_kexec_pre_free_pages(page_address(page), 1);
+>  		if (result) {
+>  			result = -EFAULT;
