@@ -2,255 +2,335 @@ Return-Path: <SRS0=yR1C=DR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D01BC43467
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26EEBC35265
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14CD02080C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D38E72087D
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Oct 2020 22:52:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="NgfHLXdH"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="fFl+sWZ6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730887AbgJJWvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:51:42 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:32292 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730283AbgJJSzG (ORCPT
+        id S1730806AbgJJWvk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Oct 2020 18:51:40 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39102 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729910AbgJJSn2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 10 Oct 2020 14:55:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1602356100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=F3rqvSo2pR+XXLTboJ/bGepwCouJVTq7fsEnnAyoqbw=;
-        b=NgfHLXdHhlgt53vWEkK3VVCmrlBx7/CWmVnDbuFF4UqwcbllKlznr2jdhggtnYrmnSbIc5
-        HlXfzyzupb0wd26Ee8pTpr8tWpc91Y42kzSDjVgjYrAgpkp4ueVoL8y2vRs1FxtPAfI8bc
-        8NfjM4ZPx3g7F9SprcfoLlVxCnhMbDQ=
-Received: from EUR05-AM6-obe.outbound.protection.outlook.com
- (mail-am6eur05lp2111.outbound.protection.outlook.com [104.47.18.111])
- (Using TLS) by relay.mimecast.com with ESMTP id
- de-mta-15-EAkUOhnLPeWvWZdr3ncGMA-1; Sat, 10 Oct 2020 19:31:39 +0200
-X-MC-Unique: EAkUOhnLPeWvWZdr3ncGMA-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Qq2BISR9fikO1KRKS0I70xvwHIqa5oYDpK/HFdF5qnMbKoRJzcDotRgULoM4+o52lqfJitTujRH+fwrpTybq3Qyz/BscxtydHWu1m1B/IeDBg4fGF5dmgEf3zVfBtUxtZhMA1eGg7EBT5cfk9vZr6JTBZ/Jm/EXYY2jVSkKcdveGrxsu5pgNWO9zwZ5g0YTRrnaiQOE2DIMHUfNmQRH4YFIDD8i9UWUN3Ls1vZMRbNVET2I9TDtgHKDvfn59D9dn+ve7UTTxYDh66DLFsZZ+0hq1gVEYK0BESpnxRle58GPNn/eD4CObwkr48ByFHYaduq4J/XKap3bOl93TKDTKRQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F3rqvSo2pR+XXLTboJ/bGepwCouJVTq7fsEnnAyoqbw=;
- b=Ia3HNmH5rMEgNpNtBB7+ywixOKqVjTFzVGUf+ROezNQC9+O5yURV4j9rPfsmOKZoy1PvxcdLXzxSo7PeqhhFsf32yk9Gh3FgfelXlEHWdnu70uH9Nu2pTKdoaGIyMWPNO4f12wQ046rda+aJuQ/VPEI3LIs/yeNOMcfMYRipiu082ExajYKYHbTrBgTvzkXxC8teLwC28fCf7EvHeY3bq7jZ4Z83tY58Yx+5Fk5s1lEPNTOuZ12GqWkmP0+UuE71ORiTEga45uu+5qTd5JBJbvAL6+Kg4/ub4TnpK9q4aePme3Qke/N7ANm+OJFemkMqX1ljzHOz1jZMhxltg2x5cQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: acm.org; dkim=none (message not signed)
- header.d=none;acm.org; dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AS8PR04MB7925.eurprd04.prod.outlook.com (2603:10a6:20b:2a2::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.28; Sat, 10 Oct
- 2020 17:31:38 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::993e:654f:399e:8230]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::993e:654f:399e:8230%6]) with mapi id 15.20.3455.028; Sat, 10 Oct 2020
- 17:31:38 +0000
-Subject: Re: [PATCH] scsi: core: don't start concurrent async scan on same
- host
-To:     Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20201010032539.426615-1-ming.lei@redhat.com>
-From:   Lee Duncan <lduncan@suse.com>
-Autocrypt: addr=lduncan@suse.com; keydata=
- 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
- Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <4f3e4d42-4d53-fc00-25bc-0ead15e86900@suse.com>
-Date:   Sat, 10 Oct 2020 10:31:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
-In-Reply-To: <20201010032539.426615-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [73.25.22.216]
-X-ClientProxiedBy: AM0PR08CA0007.eurprd08.prod.outlook.com
- (2603:10a6:208:d2::20) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+        Sat, 10 Oct 2020 14:43:28 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09ABWr8E020266
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2020 07:36:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=in-reply-to : subject :
+ from : to : cc : date : mime-version : references :
+ content-transfer-encoding : content-type : message-id; s=pp1;
+ bh=NiDLo4pOxkTOHNh379y2lMt59tGJeK9BGhibE+AHe30=;
+ b=fFl+sWZ60CJNW5vj7Uw0QdIFBZaJLDIK+TmFY7+uXdPQEExbAUVKU05YhKg5dS5u6J9M
+ gRTcbWK1ehAiHgiW0QiEErv4vh+5MOV1iJMmz3AgZqVrCWi+Nh1nNGlGLl5qNxYu9TT3
+ rsErWvzJTnT/TvD/yGmIkQ5cIJnW2dxyfP5KEerqQF50430xLTdRCdzrzGOBj/IVBjpb
+ ZIGntFQpbgC01amsKXwfy1cB65UwCiqnbdgLT6Z6Qd+CSe7yV4n3BXy+qSd8xdiYdQTK
+ an7SA2yY6csjDSnstIEkYdPhg6mYvKJGwGGY1NoLkcuzdqKyvDxx/5UGYpv3tzPn6Oq9 ZA== 
+Received: from smtp.notes.na.collabserv.com (smtp.notes.na.collabserv.com [192.155.248.91])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 343b46s4xw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2020 07:36:56 -0400
+Received: from localhost
+        by smtp.notes.na.collabserv.com with smtp.notes.na.collabserv.com ESMTP
+        for <linux-scsi@vger.kernel.org> from <BMT@zurich.ibm.com>;
+        Sat, 10 Oct 2020 11:36:55 -0000
+Received: from us1a3-smtp05.a3.dal06.isc4sb.com (10.146.71.159)
+        by smtp.notes.na.collabserv.com (10.106.227.143) with smtp.notes.na.collabserv.com ESMTP;
+        Sat, 10 Oct 2020 11:36:50 -0000
+Received: from us1a3-mail162.a3.dal06.isc4sb.com ([10.146.71.4])
+          by us1a3-smtp05.a3.dal06.isc4sb.com
+          with ESMTP id 2020101011364991-175970 ;
+          Sat, 10 Oct 2020 11:36:49 +0000 
+In-Reply-To: <20201009195033.3208459-11-ira.weiny@intel.com>
+Subject: Re: [PATCH RFC PKS/PMEM 10/58] drivers/rdma: Utilize new kmap_thread()
+From:   "Bernard Metzler" <BMT@zurich.ibm.com>
+To:     ira.weiny@intel.com
+Cc:     "Andrew Morton" <akpm@linux-foundation.org>,
+        "Thomas Gleixner" <tglx@linutronix.de>,
+        "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
+        "Andy Lutomirski" <luto@kernel.org>,
+        "Peter Zijlstra" <peterz@infradead.org>,
+        "Mike Marciniszyn" <mike.marciniszyn@intel.com>,
+        "Dennis Dalessandro" <dennis.dalessandro@intel.com>,
+        "Doug Ledford" <dledford@redhat.com>,
+        "Jason Gunthorpe" <jgg@ziepe.ca>,
+        "Faisal Latif" <faisal.latif@intel.com>,
+        "Shiraz Saleem" <shiraz.saleem@intel.com>, x86@kernel.org,
+        "Dave Hansen" <dave.hansen@linux.intel.com>,
+        "Dan Williams" <dan.j.williams@intel.com>,
+        "Fenghua Yu" <fenghua.yu@intel.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kselftest@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        kvm@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
+        kexec@lists.infradead.org, linux-bcache@vger.kernel.org,
+        linux-mtd@lists.infradead.org, devel@driverdev.osuosl.org,
+        linux-efi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-aio@kvack.org,
+        io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, cluster-devel@redhat.com,
+        ecryptfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-rdma@vger.kernel.org, amd-gfx@lists.freed.esktop.org,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        drbd-dev@tron.linbit.com, linux-block@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-cachefs@redhat.com,
+        samba-technical@lists.samba.org, intel-wired-lan@lists.osuosl.org
+Date:   Sat, 10 Oct 2020 11:36:49 +0000
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by AM0PR08CA0007.eurprd08.prod.outlook.com (2603:10a6:208:d2::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.21 via Frontend Transport; Sat, 10 Oct 2020 17:31:35 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 260eb965-4628-4c33-a5fc-08d86d425796
-X-MS-TrafficTypeDiagnostic: AS8PR04MB7925:
-X-Microsoft-Antispam-PRVS: <AS8PR04MB792514634F69F3B008AB4086DA090@AS8PR04MB7925.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2887;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: pQGqRASP/1MHsZUizlhh5rba14LeiDYXGYqilXicGgjhV6ILlojm9KnpMhltPXPn4/7dRU5kDUaWXbW9mx97597cAAJ1w2Cw2gAvWZahbwVXK0fTOO4SuUg8qGqXXXi83g8zXTrhAMkQhZgY9kU/ncROz8XPa8NR/gJqppKZdoYUIo53QfGBq6RjZI8vnkiwtJCMSIC0SdR89Vrw/Jes4nLdYqnejqbIoStwo+uH4VgKFqA/WlVD9l5gUctwz0z/YezjngweGN1JVjHtp99ilSfYfRpuiwa7fs7GHWUUsGG0NjrLmsEOcpvRbHz4CLburydPO3RYRVotRA61/VprO2T316jGOjR9K39Wa33dor39lgAIOF36cWQNVlCjMpHV
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(346002)(376002)(39860400002)(366004)(2616005)(2906002)(956004)(36756003)(4326008)(6666004)(478600001)(83380400001)(31686004)(86362001)(8676002)(53546011)(16576012)(52116002)(31696002)(6486002)(110136005)(8936002)(316002)(66556008)(66476007)(66946007)(5660300002)(16526019)(186003)(54906003)(26005)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: plIVwjFdpwtzZ1Pb2YA5Mwqbvy9j6WPY+cre+ITqfVrckOVwE4s++UaTzeseyFi31en6El32JX0V3DS3fB4gfUAd/jVHRnYdwQ4JdvecdPzpQMad9+PxXTgeCHp0E7ZWB0hn6+Qw6nNKYGX9ZZeKHX0Q+jbobPzQ3IBw8G86GrdkJcrED5Ebouf8e7Y2vpKwI4dzqO2fPhyBuP3MdlRSYjbROD+hwXv12U4GiwJQnYkmuHi4jXR+UVeEi+0fYcTXygkwRfWJYlVcrcqTzRx7nUST5ArKH7jEGq+Zav68co9S1g+hb4zTAhs+mnxaMciyUbD1SUSo0HtY7Rs6rb7SrBBQ7K8XgNIngqbh4hxOyPW4M2fqbeNMvYPnrg7Y2BfeXpkXN9/W1BHr7LkIyrBGgTdjPp9FNGP2UZY8SR3oVKUJinqaW+qpPCnF9ekznbIJwI1D+cC7x0ZCdXujuIcSsB7Ac5vMR/x/+EeByrrgN+3vBzgZYzB9zhuPbu2v2TCHXNhQ3uuiHKJVKesorQBakUHD8hlY5f3jn2IrJmzhbAha3s2p/DkHEFue/aX0MmnCaB0ACjDBy59dTA7UbKAVFXBUm++xVdi0GpNIaQ38xE7zoec1r1wL49mtKOxtlQqRYzocmY6ghot8bmLBcpJtxg==
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 260eb965-4628-4c33-a5fc-08d86d425796
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Oct 2020 17:31:38.0653
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0osGL/ewX3qUGNyHnRHnfDEQlAatTOXNuAe00eQOv4zmKy7NNo3PypBAI2ZXn+gw9EtU5ez16pJxWyBiSHxKfg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7925
+Sensitivity: 
+Importance: Normal
+X-Priority: 3 (Normal)
+References: <20201009195033.3208459-11-ira.weiny@intel.com>,<20201009195033.3208459-1-ira.weiny@intel.com>
+X-Mailer: IBM iNotes ($HaikuForm 1054.1) | IBM Domino Build
+ SCN1812108_20180501T0841_FP65 April 15, 2020 at 09:48
+X-LLNOutbound: False
+X-Disclaimed: 59823
+X-TNEFEvaluated: 1
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+x-cbid: 20101011-2475-0000-0000-0000044A0339
+X-IBM-SpamModules-Scores: BY=0.233045; FL=0; FP=0; FZ=0; HX=0; KW=0; PH=0;
+ SC=0.421684; ST=0; TS=0; UL=0; ISC=; MB=0.000000
+X-IBM-SpamModules-Versions: BY=3.00013982; HX=3.00000242; KW=3.00000007;
+ PH=3.00000004; SC=3.00000295; SDB=6.01447073; UDB=6.00777937; IPR=6.01229775;
+ MB=3.00034472; MTD=3.00000008; XFM=3.00000015; UTC=2020-10-10 11:36:54
+X-IBM-AV-DETECTION: SAVI=unsuspicious REMOTE=unsuspicious XFE=unused
+X-IBM-AV-VERSION: SAVI=2020-10-10 06:57:40 - 6.00011937
+x-cbparentid: 20101011-2476-0000-0000-0000DAA5035B
+Message-Id: <OF849D92D8.F4735ECA-ON002585FD.003F5F27-002585FD.003FCBD6@notes.na.collabserv.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-10-10_07:2020-10-09,2020-10-10 signatures=0
+X-Proofpoint-Spam-Reason: orgsafe
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/9/20 8:25 PM, Ming Lei wrote:
-> Current scsi host scan mechanism supposes to fallback into sync host
-> scan if async scan is in-progress. However, this rule isn't strictly
-> respected, because scsi_prep_async_scan() doesn't hold scan_mutex when
-> checking shost->async_scan. When scsi_scan_host() is called
-> concurrently, two async scan on same host may be started, and hang in
-> do_scan_async() is observed.
-> 
-> Fixes this issue by checking & setting shost->async_scan atomically
-> with shost->scan_mutex.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ewan D. Milne <emilne@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/scsi/scsi_scan.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index f2437a7570ce..9af50e6f94c4 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1714,15 +1714,16 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
->   */
->  static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
->  {
-> -	struct async_scan_data *data;
-> +	struct async_scan_data *data = NULL;
->  	unsigned long flags;
->  
->  	if (strncmp(scsi_scan_type, "sync", 4) == 0)
->  		return NULL;
->  
-> +	mutex_lock(&shost->scan_mutex);
->  	if (shost->async_scan) {
->  		shost_printk(KERN_DEBUG, shost, "%s called twice\n", __func__);
-> -		return NULL;
-> +		goto err;
->  	}
->  
->  	data = kmalloc(sizeof(*data), GFP_KERNEL);
-> @@ -1733,7 +1734,6 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
->  		goto err;
->  	init_completion(&data->prev_finished);
->  
-> -	mutex_lock(&shost->scan_mutex);
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	shost->async_scan = 1;
->  	spin_unlock_irqrestore(shost->host_lock, flags);
-> @@ -1748,6 +1748,7 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
->  	return data;
->  
->   err:
-> +	mutex_unlock(&shost->scan_mutex);
->  	kfree(data);
->  	return NULL;
->  }
-> 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+-----ira.weiny@intel.com wrote: -----
+
+>To: "Andrew Morton" <akpm@linux-foundation.org>, "Thomas Gleixner"
+><tglx@linutronix.de>, "Ingo Molnar" <mingo@redhat.com>, "Borislav
+>Petkov" <bp@alien8.de>, "Andy Lutomirski" <luto@kernel.org>, "Peter
+>Zijlstra" <peterz@infradead.org>
+>From: ira.weiny@intel.com
+>Date: 10/09/2020 09:52PM
+>Cc: "Ira Weiny" <ira.weiny@intel.com>, "Mike Marciniszyn"
+><mike.marciniszyn@intel.com>, "Dennis Dalessandro"
+><dennis.dalessandro@intel.com>, "Doug Ledford" <dledford@redhat.com>,
+>"Jason Gunthorpe" <jgg@ziepe.ca>, "Faisal Latif"
+><faisal.latif@intel.com>, "Shiraz Saleem" <shiraz.saleem@intel.com>,
+>"Bernard Metzler" <bmt@zurich.ibm.com>, x86@kernel.org, "Dave Hansen"
+><dave.hansen@linux.intel.com>, "Dan Williams"
+><dan.j.williams@intel.com>, "Fenghua Yu" <fenghua.yu@intel.com>,
+>linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+>linux-nvdimm@lists.01.org, linux-fsdevel@vger.kernel.org,
+>linux-mm@kvack.org, linux-kselftest@vger.kernel.org,
+>linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+>netdev@vger.kernel.org, bpf@vger.kernel.org,
+>kexec@lists.infradead.org, linux-bcache@vger.kernel.org,
+>linux-mtd@lists.infradead.org, devel@driverdev.osuosl.org,
+>linux-efi@vger.kernel.org, linux-mmc@vger.kernel.org,
+>linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+>linux-nfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+>linux-ext4@vger.kernel.org, linux-aio@kvack.org,
+>io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+>linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
+>reiserfs-devel@vger.kernel.org,
+>linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org,
+>cluster-devel@redhat.com, ecryptfs@vger.kernel.org,
+>linux-cifs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+>linux-afs@lists.infradead.org, linux-rdma@vger.kernel.org,
+>amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+>intel-gfx@lists.freedesktop.org, drbd-dev@tron.linbit.com,
+>linux-block@vger.kernel.org, xen-devel@lists.xenproject.org,
+>linux-cachefs@redhat.com, samba-technical@lists.samba.org,
+>intel-wired-lan@lists.osuosl.org
+>Subject: [EXTERNAL] [PATCH RFC PKS/PMEM 10/58] drivers/rdma: Utilize
+>new kmap=5Fthread()
+>
+>From: Ira Weiny <ira.weiny@intel.com>
+>
+>The kmap() calls in these drivers are localized to a single thread.
+>To
+>avoid the over head of global PKRS updates use the new kmap=5Fthread()
+>call.
+>
+>Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>
+>Cc: Dennis Dalessandro <dennis.dalessandro@intel.com>
+>Cc: Doug Ledford <dledford@redhat.com>
+>Cc: Jason Gunthorpe <jgg@ziepe.ca>
+>Cc: Faisal Latif <faisal.latif@intel.com>
+>Cc: Shiraz Saleem <shiraz.saleem@intel.com>
+>Cc: Bernard Metzler <bmt@zurich.ibm.com>
+>Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+>---
+> drivers/infiniband/hw/hfi1/sdma.c      |  4 ++--
+> drivers/infiniband/hw/i40iw/i40iw=5Fcm.c | 10 +++++-----
+> drivers/infiniband/sw/siw/siw=5Fqp=5Ftx.c  | 14 +++++++-------
+> 3 files changed, 14 insertions(+), 14 deletions(-)
+>
+>diff --git a/drivers/infiniband/hw/hfi1/sdma.c
+>b/drivers/infiniband/hw/hfi1/sdma.c
+>index 04575c9afd61..09d206e3229a 100644
+>--- a/drivers/infiniband/hw/hfi1/sdma.c
+>+++ b/drivers/infiniband/hw/hfi1/sdma.c
+>@@ -3130,7 +3130,7 @@ int ext=5Fcoal=5Fsdma=5Ftx=5Fdescs(struct hfi1=5Fdev=
+data
+>*dd, struct sdma=5Ftxreq *tx,
+> 		}
+>=20
+> 		if (type =3D=3D SDMA=5FMAP=5FPAGE) {
+>-			kvaddr =3D kmap(page);
+>+			kvaddr =3D kmap=5Fthread(page);
+> 			kvaddr +=3D offset;
+> 		} else if (WARN=5FON(!kvaddr)) {
+> 			=5F=5Fsdma=5Ftxclean(dd, tx);
+>@@ -3140,7 +3140,7 @@ int ext=5Fcoal=5Fsdma=5Ftx=5Fdescs(struct hfi1=5Fdev=
+data
+>*dd, struct sdma=5Ftxreq *tx,
+> 		memcpy(tx->coalesce=5Fbuf + tx->coalesce=5Fidx, kvaddr, len);
+> 		tx->coalesce=5Fidx +=3D len;
+> 		if (type =3D=3D SDMA=5FMAP=5FPAGE)
+>-			kunmap(page);
+>+			kunmap=5Fthread(page);
+>=20
+> 		/* If there is more data, return */
+> 		if (tx->tlen - tx->coalesce=5Fidx)
+>diff --git a/drivers/infiniband/hw/i40iw/i40iw=5Fcm.c
+>b/drivers/infiniband/hw/i40iw/i40iw=5Fcm.c
+>index a3b95805c154..122d7a5642a1 100644
+>--- a/drivers/infiniband/hw/i40iw/i40iw=5Fcm.c
+>+++ b/drivers/infiniband/hw/i40iw/i40iw=5Fcm.c
+>@@ -3721,7 +3721,7 @@ int i40iw=5Faccept(struct iw=5Fcm=5Fid *cm=5Fid, str=
+uct
+>iw=5Fcm=5Fconn=5Fparam *conn=5Fparam)
+> 		ibmr->device =3D iwpd->ibpd.device;
+> 		iwqp->lsmm=5Fmr =3D ibmr;
+> 		if (iwqp->page)
+>-			iwqp->sc=5Fqp.qp=5Fuk.sq=5Fbase =3D kmap(iwqp->page);
+>+			iwqp->sc=5Fqp.qp=5Fuk.sq=5Fbase =3D kmap=5Fthread(iwqp->page);
+> 		dev->iw=5Fpriv=5Fqp=5Fops->qp=5Fsend=5Flsmm(&iwqp->sc=5Fqp,
+> 							iwqp->ietf=5Fmem.va,
+> 							(accept.size + conn=5Fparam->private=5Fdata=5Flen),
+>@@ -3729,12 +3729,12 @@ int i40iw=5Faccept(struct iw=5Fcm=5Fid *cm=5Fid,
+>struct iw=5Fcm=5Fconn=5Fparam *conn=5Fparam)
+>=20
+> 	} else {
+> 		if (iwqp->page)
+>-			iwqp->sc=5Fqp.qp=5Fuk.sq=5Fbase =3D kmap(iwqp->page);
+>+			iwqp->sc=5Fqp.qp=5Fuk.sq=5Fbase =3D kmap=5Fthread(iwqp->page);
+> 		dev->iw=5Fpriv=5Fqp=5Fops->qp=5Fsend=5Flsmm(&iwqp->sc=5Fqp, NULL, 0, 0);
+> 	}
+>=20
+> 	if (iwqp->page)
+>-		kunmap(iwqp->page);
+>+		kunmap=5Fthread(iwqp->page);
+>=20
+> 	iwqp->cm=5Fid =3D cm=5Fid;
+> 	cm=5Fnode->cm=5Fid =3D cm=5Fid;
+>@@ -4102,10 +4102,10 @@ static void i40iw=5Fcm=5Fevent=5Fconnected(struct
+>i40iw=5Fcm=5Fevent *event)
+> 	i40iw=5Fcm=5Finit=5Ftsa=5Fconn(iwqp, cm=5Fnode);
+> 	read0 =3D (cm=5Fnode->send=5Frdma0=5Fop =3D=3D SEND=5FRDMA=5FREAD=5FZERO=
+);
+> 	if (iwqp->page)
+>-		iwqp->sc=5Fqp.qp=5Fuk.sq=5Fbase =3D kmap(iwqp->page);
+>+		iwqp->sc=5Fqp.qp=5Fuk.sq=5Fbase =3D kmap=5Fthread(iwqp->page);
+> 	dev->iw=5Fpriv=5Fqp=5Fops->qp=5Fsend=5Frtt(&iwqp->sc=5Fqp, read0);
+> 	if (iwqp->page)
+>-		kunmap(iwqp->page);
+>+		kunmap=5Fthread(iwqp->page);
+>=20
+> 	memset(&attr, 0, sizeof(attr));
+> 	attr.qp=5Fstate =3D IB=5FQPS=5FRTS;
+>diff --git a/drivers/infiniband/sw/siw/siw=5Fqp=5Ftx.c
+>b/drivers/infiniband/sw/siw/siw=5Fqp=5Ftx.c
+>index d19d8325588b..4ed37c328d02 100644
+>--- a/drivers/infiniband/sw/siw/siw=5Fqp=5Ftx.c
+>+++ b/drivers/infiniband/sw/siw/siw=5Fqp=5Ftx.c
+>@@ -76,7 +76,7 @@ static int siw=5Ftry=5F1seg(struct siw=5Fiwarp=5Ftx *c=
+=5Ftx,
+>void *paddr)
+> 			if (unlikely(!p))
+> 				return -EFAULT;
+>=20
+>-			buffer =3D kmap(p);
+>+			buffer =3D kmap=5Fthread(p);
+>=20
+> 			if (likely(PAGE=5FSIZE - off >=3D bytes)) {
+> 				memcpy(paddr, buffer + off, bytes);
+>@@ -84,7 +84,7 @@ static int siw=5Ftry=5F1seg(struct siw=5Fiwarp=5Ftx *c=
+=5Ftx,
+>void *paddr)
+> 				unsigned long part =3D bytes - (PAGE=5FSIZE - off);
+>=20
+> 				memcpy(paddr, buffer + off, part);
+>-				kunmap(p);
+>+				kunmap=5Fthread(p);
+>=20
+> 				if (!mem->is=5Fpbl)
+> 					p =3D siw=5Fget=5Fupage(mem->umem,
+>@@ -96,10 +96,10 @@ static int siw=5Ftry=5F1seg(struct siw=5Fiwarp=5Ftx
+>*c=5Ftx, void *paddr)
+> 				if (unlikely(!p))
+> 					return -EFAULT;
+>=20
+>-				buffer =3D kmap(p);
+>+				buffer =3D kmap=5Fthread(p);
+> 				memcpy(paddr + part, buffer, bytes - part);
+> 			}
+>-			kunmap(p);
+>+			kunmap=5Fthread(p);
+> 		}
+> 	}
+> 	return (int)bytes;
+>@@ -505,7 +505,7 @@ static int siw=5Ftx=5Fhdt(struct siw=5Fiwarp=5Ftx *c=
+=5Ftx,
+>struct socket *s)
+> 				page=5Farray[seg] =3D p;
+>=20
+> 				if (!c=5Ftx->use=5Fsendpage) {
+>-					iov[seg].iov=5Fbase =3D kmap(p) + fp=5Foff;
+>+					iov[seg].iov=5Fbase =3D kmap=5Fthread(p) + fp=5Foff;
+
+This misses a corresponding kunmap=5Fthread() in siw=5Funmap=5Fpages()
+(pls change line 403 in siw=5Fqp=5Ftx.c as well)
+
+Thanks,
+Bernard.
+
+> 					iov[seg].iov=5Flen =3D plen;
+>=20
+> 					/* Remember for later kunmap() */
+>@@ -518,9 +518,9 @@ static int siw=5Ftx=5Fhdt(struct siw=5Fiwarp=5Ftx *c=
+=5Ftx,
+>struct socket *s)
+> 							plen);
+> 				} else if (do=5Fcrc) {
+> 					crypto=5Fshash=5Fupdate(c=5Ftx->mpa=5Fcrc=5Fhd,
+>-							    kmap(p) + fp=5Foff,
+>+							    kmap=5Fthread(p) + fp=5Foff,
+> 							    plen);
+>-					kunmap(p);
+>+					kunmap=5Fthread(p);
+> 				}
+> 			} else {
+> 				u64 va =3D sge->laddr + sge=5Foff;
+>--=20
+>2.28.0.rc0.12.gb6a658bd00c9
+>
+>
 
