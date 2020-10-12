@@ -2,126 +2,116 @@ Return-Path: <SRS0=8h8k=DT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 981D1C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 16:07:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72971C43467
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 16:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50B6E2078E
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 16:07:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="f3r+dEZ0"
+	by mail.kernel.org (Postfix) with ESMTP id 38A33208FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 16:19:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602519596;
+	bh=FXrMfe87r7In01hy1fZxNUDLVXbtP/5TJ3+XTzWq1o4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=NuBKV9XPikgo6wMmlgcp7vGANEBVTB9TsHCRGulLErpXptAQTdiU01LFuMxBF71I5
+	 LKJR2z/lF/qQI022NEp+/prWWvFdAhZ6qHNytNCjLl7WZkZ7oRJK+OPjQ8K88EV5CR
+	 9WhGjTuOjwPQRFx6fFSOiQhO791tAimhsg6EWKQk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390427AbgJLQHW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Oct 2020 12:07:22 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25870 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389068AbgJLQHV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Oct 2020 12:07:21 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09CG5GIR031007;
-        Mon, 12 Oct 2020 09:07:18 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=BP3BVCMCCqHQdQd5oJqR+pD+fhRIgp9mzZVOt3kVJgk=;
- b=f3r+dEZ0zfLT/4kck3qoFrCNcHgaIK4EFSZ3RIVsxkLGmnzlo892gVQstvf0W1NvmCPE
- FrvhauXfGHpmnK5BwPl3Zmm0UE3TK/Bj+P6GCRr6Hp6QXTHuB1cYpzIDuWLSNgLpp+Qz
- iC2bsB82HokWvhtfh2kCV8febs9M1akaS8ye43L/oJ6zWmTsbfjr6tkbE0UTn1+9YxVu
- +//W8TBcRiVRZ/SekmSRZO7QE04fs565EMHxb17HaknzKw6PQPBlwOc2mle3RVpUvzfv
- 91MHy/gbR/XLFsFe3vBR62Ac+1VFUqQHyUdjjwEQY9ljahnAURGrcfY0MywbGXVZlHDo wg== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 343cfj6bdp-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 12 Oct 2020 09:07:18 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Oct
- 2020 09:07:17 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Oct
- 2020 09:07:16 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 12 Oct 2020 09:07:16 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 48F643F703F;
-        Mon, 12 Oct 2020 09:07:16 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 09CG7GPx003221;
-        Mon, 12 Oct 2020 09:07:16 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Mon, 12 Oct 2020 09:07:15 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Daniel Wagner <dwagner@suse.de>
-CC:     Nilesh Javali <njavali@marvell.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] qla2xxx: Return EBUSY on fcport deletion
-In-Reply-To: <20201012091100.55305-1-dwagner@suse.de>
-Message-ID: <alpine.LRH.2.21.9999.2010120904230.28578@irv1user01.caveonetworks.com>
-References: <20201012091100.55305-1-dwagner@suse.de>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        id S2390724AbgJLQTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Oct 2020 12:19:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59212 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390043AbgJLQTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Oct 2020 12:19:50 -0400
+Received: from sol.localdomain (172-10-235-113.lightspeed.sntcca.sbcglobal.net [172.10.235.113])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 22B302080A;
+        Mon, 12 Oct 2020 16:19:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602519589;
+        bh=FXrMfe87r7In01hy1fZxNUDLVXbtP/5TJ3+XTzWq1o4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=V7DSrccLr5b4UIwMLihtwG0wHPpEpEeCdL4DEsryZDNbDbBe/031RRLLs/mkasjte
+         GkozOXCGlriE75ewyNE/y/+1/YN0mvEXF3Fx+zkSk5bqABC19TCsH57zxXZt4yoDfc
+         Gd/Q7Kn6Oc4wJMc886CZx9bFLur2svNEjPDcQyvk=
+Date:   Mon, 12 Oct 2020 09:19:46 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>, linux-aio@kvack.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        dri-devel@lists.freedesktop.org, linux-mm@kvack.org,
+        target-devel@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-kselftest@vger.kernel.org, samba-technical@lists.samba.org,
+        ceph-devel@vger.kernel.org, drbd-dev@lists.linbit.com,
+        devel@driverdev.osuosl.org, linux-cifs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+        x86@kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-afs@lists.infradead.org, cluster-devel@redhat.com,
+        linux-cachefs@redhat.com, intel-wired-lan@lists.osuosl.org,
+        xen-devel@lists.xenproject.org, linux-ext4@vger.kernel.org,
+        Fenghua Yu <fenghua.yu@intel.com>, ecryptfs@vger.kernel.org,
+        linux-um@lists.infradead.org, intel-gfx@lists.freedesktop.org,
+        linux-erofs@lists.ozlabs.org, reiserfs-devel@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        io-uring@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org,
+        kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, bpf@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH RFC PKS/PMEM 22/58] fs/f2fs: Utilize new kmap_thread()
+Message-ID: <20201012161946.GA858@sol.localdomain>
+References: <20201009195033.3208459-1-ira.weiny@intel.com>
+ <20201009195033.3208459-23-ira.weiny@intel.com>
+ <20201009213434.GA839@sol.localdomain>
+ <20201010003954.GW20115@casper.infradead.org>
+ <20201010013036.GD1122@sol.localdomain>
+ <20201012065635.GB2046448@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-10-12_12:2020-10-12,2020-10-12 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201012065635.GB2046448@iweiny-DESK2.sc.intel.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 12 Oct 2020, 2:11am, Daniel Wagner wrote:
+On Sun, Oct 11, 2020 at 11:56:35PM -0700, Ira Weiny wrote:
+> > 
+> > And I still don't really understand.  After this patchset, there is still code
+> > nearly identical to the above (doing a temporary mapping just for a memcpy) that
+> > would still be using kmap_atomic().
+> 
+> I don't understand.  You mean there would be other call sites calling:
+> 
+> kmap_atomic()
+> memcpy()
+> kunmap_atomic()
 
-> When the fcport is about to be deleted we should return EBUSY instead
-> of ENODEV. Only for EBUSY the request will be requeued in a multipath
-> setup.
-> 
-> Also in case we have a valid qpair but the firmware has not yet
-> started return EBUSY to avoid dropping the request.
-> 
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
-> ---
-> Hi,
-> 
-> During port bounce and fail tests we observed that requests get
-> dropped on a failing path because the driver returned ENODEV and thus
-> the multipath code didn't requeue the request.
-> 
-> The tests were done with only the 'fcport && fcport->deleted' condition
-> but Hannes suggested we might as well do the same for 'qpair &&
-> !qpair->fw_started'.
-> 
-> Thanks,
-> Daniel
-> 
->  drivers/scsi/qla2xxx/qla_nvme.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-> index 5cc1bbb1ed74..db8b802b147c 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -555,8 +555,11 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
->  
->  	fcport = qla_rport->fcport;
->  
-> -	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
-> +	if ((qpair && !qpair->fw_started) ||
->  	    (fcport && fcport->deleted))
-> +		return -EBUSY;
-> +
-> +	if (!qpair || !fcport)
->  		return rval;
->  
->  	vha = fcport->vha;
-> 
+Yes, there are tons of places that do this.  Try 'git grep -A6 kmap_atomic'
+and look for memcpy().
 
-This does not appear to be cut against the latest for-next/staging; "rval" 
-is not used there for the initial set of returns.
+Hence why I'm asking what will be the "recommended" way to do this...
+kunmap_thread() or kmap_atomic()?
 
-Anyway, returning EBUSY is the right way to go.
+> And since I don't know the call site details if there are kmap_thread() calls
+> which are better off as kmap_atomic() calls I think it is worth converting
+> them.  But I made the assumption that kmap users would already be calling
+> kmap_atomic() if they could (because it is more efficient).
 
-Regards,
--Arun
+Not necessarily.  In cases where either one is correct, people might not have
+put much thought into which of kmap() and kmap_atomic() they are using.
+
+- Eric
