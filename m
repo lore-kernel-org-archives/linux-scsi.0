@@ -2,115 +2,82 @@ Return-Path: <SRS0=8h8k=DT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30B64C43457
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 04:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16F33C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 05:14:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0318A20757
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 04:48:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E310020780
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 05:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726652AbgJLEsJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Oct 2020 00:48:09 -0400
-Received: from mga01.intel.com ([192.55.52.88]:22482 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725917AbgJLEsH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Oct 2020 00:48:07 -0400
-IronPort-SDR: D5zKImA/blPs9ugNxSdwTFqrAiCPQ7MfkSDjdD7L1ZPrs2PLYW8mlo8pL00EnU95KhYD7GvV7Z
- Er8+B/ppaVCA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9771"; a="183144505"
+        id S1726640AbgJLFO2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Oct 2020 01:14:28 -0400
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:37211 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725967AbgJLFO2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 01:14:28 -0400
+IronPort-SDR: SAjauPERKmjbtTrQxZaFRpQ/si0YsqT2qX6NDBj+0tjUMcSY1aq2d52fEKcOMxTMmx9fqtUbWN
+ cGNMQ3DkF7XxwsBDG//57HHFpbK6dNGvV3BWLk+mN0ebdT9HrCW/Z7eIVTHOhlFUYVtzQBAWG+
+ NSmJ1J73ZIfYzrSG/J/WUDs+MmX5kNWMZ7gM6uZYq5cwCaqRnB+XEB+xJFUEfoRNwlqGGfxqnn
+ 3ClGVhZ8xOUuA0pWB5l88kOOFwsdsDA7sp5eneXz49GFtbvP0LoOrMEZMrAT6MsT8zHBs+VACe
+ pUY=
 X-IronPort-AV: E=Sophos;i="5.77,365,1596524400"; 
-   d="scan'208";a="183144505"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2020 21:47:58 -0700
-IronPort-SDR: OeJlrvjJIthwDW5ZiLkp+F246Fw9BWID0JMdXYyjjISLX5UipnPYleFarWgQdoLnt1ZOhIB0kv
- QrFucSf/AAcw==
-X-IronPort-AV: E=Sophos;i="5.77,365,1596524400"; 
-   d="scan'208";a="529805779"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2020 21:47:57 -0700
-Date:   Sun, 11 Oct 2020 21:47:56 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Bernard Metzler <BMT@zurich.ibm.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Faisal Latif <faisal.latif@intel.com>,
-        Shiraz Saleem <shiraz.saleem@intel.com>, x86@kernel.org,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kselftest@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        kvm@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
-        kexec@lists.infradead.org, linux-bcache@vger.kernel.org,
-        linux-mtd@lists.infradead.org, devel@driverdev.osuosl.org,
-        linux-efi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-aio@kvack.org,
-        io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
-        reiserfs-devel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, cluster-devel@redhat.com,
-        ecryptfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-rdma@vger.kernel.org, amd-gfx@lists.freed.esktop.org,
-        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        drbd-dev@tron.linbit.com, linux-block@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-cachefs@redhat.com,
-        samba-technical@lists.samba.org, intel-wired-lan@lists.osuosl.org
-Subject: Re: [PATCH RFC PKS/PMEM 10/58] drivers/rdma: Utilize new
- kmap_thread()
-Message-ID: <20201012044756.GY2046448@iweiny-DESK2.sc.intel.com>
-References: <20201009195033.3208459-11-ira.weiny@intel.com>
- <20201009195033.3208459-1-ira.weiny@intel.com>
- <OF849D92D8.F4735ECA-ON002585FD.003F5F27-002585FD.003FCBD6@notes.na.collabserv.com>
+   d="scan'208";a="89863713"
+Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Oct 2020 22:14:27 -0700
+Received: from AVMBX1.microsemi.net (10.100.34.31) by AVMBX3.microsemi.net
+ (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3; Sun, 11 Oct
+ 2020 22:14:26 -0700
+Received: from bby1unixsmtp01.microsemi.net (10.180.100.99) by
+ avmbx1.microsemi.net (10.100.34.31) with Microsoft SMTP Server id 15.1.1979.3
+ via Frontend Transport; Sun, 11 Oct 2020 22:14:26 -0700
+Received: from localhost (bby1unixlb02.microsemi.net [10.180.100.121])
+        by bby1unixsmtp01.microsemi.net (Postfix) with ESMTP id 5724040047;
+        Sun, 11 Oct 2020 22:14:26 -0700 (PDT)
+From:   Viswas G <Viswas.G@microchip.com.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        <Viswas.G@microchip.com>,
+        "peter chang --cc=yuuzheng @ google . com" <dpf@google.com>,
+        <vishakhavc@google.com>, <radha@google.com>, <akshatzen@google.com>
+Subject: [PATCH 0/4] pm80xx updates 
+Date:   Mon, 12 Oct 2020 10:54:11 +0530
+Message-ID: <20201012052415.18963-1-Viswas.G@microchip.com.com>
+X-Mailer: git-send-email 2.16.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <OF849D92D8.F4735ECA-ON002585FD.003F5F27-002585FD.003FCBD6@notes.na.collabserv.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Oct 10, 2020 at 11:36:49AM +0000, Bernard Metzler wrote:
-> -----ira.weiny@intel.com wrote: -----
-> 
+From: Viswas G <Viswas.G@microchip.com>
 
-[snip]
+This patch set include some bug fixes for pm80xx driver.  
 
-> >@@ -505,7 +505,7 @@ static int siw_tx_hdt(struct siw_iwarp_tx *c_tx,
-> >struct socket *s)
-> > 				page_array[seg] = p;
-> > 
-> > 				if (!c_tx->use_sendpage) {
-> >-					iov[seg].iov_base = kmap(p) + fp_off;
-> >+					iov[seg].iov_base = kmap_thread(p) + fp_off;
-> 
-> This misses a corresponding kunmap_thread() in siw_unmap_pages()
-> (pls change line 403 in siw_qp_tx.c as well)
+Viswas G (1):
+  pm80xx: make running_req atomic.
 
-Thanks I missed that.
+akshatzen (1):
+  pm80xx: Avoid busywait in FW ready check
 
-Done.
+peter chang (1):
+  pm80xx: make mpi_build_cmd locking consistent
 
-Ira
+yuuzheng (1):
+  pm80xx: make pm8001_mpi_set_nvmd_resp free of race condition
 
-> 
-> Thanks,
-> Bernard.
-> 
+ drivers/scsi/pm8001/pm8001_hwi.c  |  86 +++++++++++++++++++------
+ drivers/scsi/pm8001/pm8001_init.c |   2 +-
+ drivers/scsi/pm8001/pm8001_sas.c  |  11 ++--
+ drivers/scsi/pm8001/pm8001_sas.h  |   2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c  | 130 ++++++++++++++++++++++++++++++--------
+ drivers/scsi/pm8001/pm80xx_hwi.h  |   6 ++
+ 6 files changed, 185 insertions(+), 52 deletions(-)
+
+-- 
+2.16.3
+
