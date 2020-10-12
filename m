@@ -7,73 +7,72 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA04C433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05852C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:37:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 638BC20797
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:29:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FBF420870
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:37:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="byvvA28f"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AAsDUSq8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388068AbgJLS3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Oct 2020 14:29:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47664 "EHLO
+        id S1729297AbgJLShI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Oct 2020 14:37:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387922AbgJLS3x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 14:29:53 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE447C0613D0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:29:53 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id l18so6069361pgg.0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:29:53 -0700 (PDT)
+        with ESMTP id S1726636AbgJLShI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 14:37:08 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17B38C0613D0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:37:08 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id x16so15194369pgj.3
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:37:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to;
-        bh=1mBpwvgaJ6FwZvThgJimDr7d/Uyi2yZvygYozWwfy6I=;
-        b=byvvA28ffy1lz+oxu/dXNlafmEDilJE1Z7SJbKH3btbKjikjsQ0gvuOK5TlviI7mXt
-         LIeLJ6IR+e06PtBX6UlTfUn214yqd2HSU03+TDzsys5bCHl2nty4d0GvWv90t/YoLUc0
-         5dVdVt88glatf41JAIOwcVVPFjrnhOASEcHt0=
+        bh=4sVdztjTght+KktgJlDpy+iXmQnGqM5rIjxx/UkIEUE=;
+        b=AAsDUSq8jFPMRhgZqzF3zuz5tIp6teTlcjRRg8gSQBe+fOuoiNFhHpH+lcLBHKp53R
+         sEHfhxSumThuoCfxPGI1x0UoHbS1EtP4A4ZStK3q3V6CB32rglyDtDEe4DrxPkIwcQ2A
+         JArApF2dBuJJ18dKIglFhjYzmGmldiw11c5lI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to;
-        bh=1mBpwvgaJ6FwZvThgJimDr7d/Uyi2yZvygYozWwfy6I=;
-        b=i0KPw43N9pxZo2XVpk2By49aQ1pVvbcXP5HFp/J20drx7W0RBre1epIPSr2ermnY3K
-         jYsHOT7klUKLm+PSYuNQ+cGFuNXC6C8C5oOSz9PkIQERujMUAqmBWvdh4rX4K1U1Dtix
-         BcNE6zYTv0hBgzevdehF/kBsUYyBVufC0yjSIW9j3Vn9PbtQHl+zfn6CtXIxAZ47q4is
-         djEK0QzhNu6H7EtObwGUiarYZCi+xIzZt2Zj0FEUfmRn5P3Ye8Z5bxvjsZVLNBaIXiBp
-         /ndLcYdnuTwniJEbxbItLXNqs+wbyhBcOk8YbUS6927rWG9naELQoLNjrKtXr/ntJVQr
-         pydQ==
-X-Gm-Message-State: AOAM533dxuy59xHGz9ahIp0VeG2hUz8cQ2KKV1biqLiKZA5Nrx93oqYL
-        qXeCNExkGGs8jlTlOe0Wr/aG7xT7CBBVrQ==
-X-Google-Smtp-Source: ABdhPJztxyapfmOQr4J6j/H1A62NIHE6/4CbYb+rJz0t3aboTw/uXLD6HmJv0fQwRJdYQFS9yeotRA==
-X-Received: by 2002:a17:90b:4389:: with SMTP id in9mr21298359pjb.177.1602527393335;
-        Mon, 12 Oct 2020 11:29:53 -0700 (PDT)
+        bh=4sVdztjTght+KktgJlDpy+iXmQnGqM5rIjxx/UkIEUE=;
+        b=iSpAh7Ya51W+gMlHdhZNsBFuJIlZqcGyj1uxr1NzqNW2sSDQREGfvVYJHrX+Mazvqm
+         k70DGefTe1nnbOskGE5xv5WWvUwBnn7MZ9AKUHhZnHM1tzsJT6oPs6Dm1f/EhQ60qkVQ
+         Ae0rLu7Jtmet0z0o9R6i/fXADYHN7VP0rULGlqM9F7M1tDb8uoKu1igmlCAKXaW/NzkA
+         jaYELFx1cgKOQQuGZOZDT5x3RidLFfdBEexNByw5thww5LxjXTwBGwPYQuCIf+eyy6ee
+         YYsxHQbyfqrT31dZfdzeBDoKfuEQwLMPA20ZesMGq+qQlYzdiR42d17A1tNmLVuz8a9o
+         0DNQ==
+X-Gm-Message-State: AOAM530vUIlz2OSjAwMizv/hvii/n//jRn6+gPNGGAxuwWpSz3Ctl/Qx
+        InAY9xx3HHCKIOOznSfIHZmKSw==
+X-Google-Smtp-Source: ABdhPJyLBgbLjoOCLPlYKZMOiRL28Af5HudNOEGY9gmmXPztuVKFt3WbI9fuHrvZ5FHymZYO2+Ox2w==
+X-Received: by 2002:a17:90a:f184:: with SMTP id bv4mr20591987pjb.1.1602527827451;
+        Mon, 12 Oct 2020 11:37:07 -0700 (PDT)
 Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id i5sm9545084pjt.54.2020.10.12.11.29.51
+        by smtp.gmail.com with ESMTPSA id y65sm8095292pfy.57.2020.10.12.11.37.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Oct 2020 11:29:52 -0700 (PDT)
-Subject: Re: [PATCH v2 2/5] scsi: fc: Add FPIN statistics to fc_host and
- fc_rport objects
+        Mon, 12 Oct 2020 11:37:06 -0700 (PDT)
+Subject: Re: [PATCH v2 3/5] scsi: fc: Parse FPIN packets and update statistics
 To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 References: <20201006061615.28674-1-njavali@marvell.com>
- <20201006061615.28674-3-njavali@marvell.com>
+ <20201006061615.28674-4-njavali@marvell.com>
 From:   James Smart <james.smart@broadcom.com>
-Message-ID: <c59aa502-241d-5fdb-e711-fd6a80163095@broadcom.com>
-Date:   Mon, 12 Oct 2020 11:29:51 -0700
+Message-ID: <d23c86d9-0440-242d-5713-918fe5917882@broadcom.com>
+Date:   Mon, 12 Oct 2020 11:37:04 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.3.2
 MIME-Version: 1.0
-In-Reply-To: <20201006061615.28674-3-njavali@marvell.com>
+In-Reply-To: <20201006061615.28674-4-njavali@marvell.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000b508a05b17d7c16"
+        boundary="000000000000ec7f4e05b17d957f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000b508a05b17d7c16
+--000000000000ec7f4e05b17d957f
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -83,22 +82,59 @@ Content-Language: en-US
 On 10/5/2020 11:16 PM, Nilesh Javali wrote:
 > From: Shyam Sundar <ssundar@marvell.com>
 >
-> - Adds a structure for holding fpin stats for host & rport
->
-> - Adds sysfs nodes to maintain FPIN stats:
->          /sys/class/fc_host/hostXX/statistics/
->          /sys/class/fc_remote_ports/rport-XX\:Y-Z/statistics/
+> Parse the incoming FPIN packets and update the host and rport FPIN
+> statistics based on the FPINs.
 >
 > Signed-off-by: Shyam Sundar <ssundar@marvell.com>
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->
+> ...
+> +/*
+> + * fc_fpin_li_stats_update - routine to update Link Integrity
+> + * event statistics.
+> + * @shost:		host the FPIN was received on
+> + * @tlv:		pointer to link integrity descriptor
+> + *
+> + */
+> +static void
+> +fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
+> +{
+> +	u8 i;
+> +	struct fc_rport *rport = NULL;
+> +	struct fc_rport *det_rport = NULL, *attach_rport = NULL;
+> +	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+> +	struct fc_fn_li_desc *li_desc = (struct fc_fn_li_desc *)tlv;
+> +	u64 wwpn;
+> +
+> +	rport = fc_find_rport_by_wwpn(shost,
+> +				      be64_to_cpu(li_desc->detecting_wwpn));
+> +	if (rport &&
+> +	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
+> +	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
+> +		det_rport = rport;
+> +		fc_li_stats_update(li_desc, &det_rport->fpin_stats);
+> +	}
 
-Reviewed-by:  James Smart <james.smart@broadcom.com>
+I thought we agreed to not include the detecting port in stat updates.
+
+> +
+> +	rport = fc_find_rport_by_wwpn(shost,
+> +				      be64_to_cpu(li_desc->attached_wwpn));
+> +	if (rport &&
+> +	    ((rport->roles & FC_PORT_ROLE_FCP_TARGET) ||
+> +	    (rport->roles & FC_PORT_ROLE_NVME_TARGET))) {
+
+nits:  indent the last line by 1 more space to align elements; 
+superfluous parens on role checks (i.e. the inner conditions don't need 
+to be parenthesized as order of precedence works fine).
+
+
+same comments apply to the other parts.
 
 -- james
 
---0000000000000b508a05b17d7c16
+
+--000000000000ec7f4e05b17d957f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -168,14 +204,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgAWLVHa7fSAu3dZji
-23kVuzZrEgvKr6i/wa4kcJEqFhYwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDEyMTgyOTUzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgOYeaOVLYOE3phY5P
+PwjzX+n46l3K3u2gizHSIEUK320wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDEyMTgzNzA3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKR96M3eh3CnIiOS0XkgQl/7SSJ1buppdudG
-OMV7u5lw6S/qbZgj/4/0j79ZAgLgX1MuBT54uT68rwPGpxL9FxC9bRisUk4z4rkOOmJQzuLw1ajN
-ctM6JdVyukvTyTST2A904z8XQebQNp4+EXaGyeWo+pJKejI6/0Z2fSzOM6B9NFbV2u3wRGx6U/Bj
-Bob0XmgdxH5OUZWn97+GuP/XFzC1+1fQ7u1WP0Ym61MN5BAzJ8wSS3iG4QE23gfXJcLbkK5fvJYg
-5kbzw5JGF0DNSzF04OfMqFSJO767/0XxbYHibetR2BcKOx5eNRu6C1lT+DEg9JM8jqdYj2TZWE5m
-wOI=
---0000000000000b508a05b17d7c16--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAHWxi7lHITD8lIuq0PLllAri9oYyxcfXJuj8
+P0PgSvbZCt4Eaa9s4ZSo88FI/mqbDagX/lCBK8TlGYze8g9NOPRhhauHGU3dp4XGDJD0pzqcnRIx
+qaBCJVWXX14SLDtZ/zzkk5pCrkcAXA3/uqOM8gBAR0T0ticD+IWQUfhBjlNwcBzz9th4FcJWwub6
+SK9Fibp1BSGT74IcDqKxu3vmOoRudYxncB9CkE0grq7RVLopDpSZ+U6QviOf2c7a8/yCJYqO6cnf
+BnPTDxaUBTD/YfUr1hCwqCOYIusZ/thJIbfn9ME4MaMOc6QVfbMGXyrlU4HoZd5xwYZeTl7Y0r9H
+ni8=
+--000000000000ec7f4e05b17d957f--
