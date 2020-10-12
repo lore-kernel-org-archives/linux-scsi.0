@@ -7,73 +7,73 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C612C433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA04C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:29:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6FF52087D
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:26:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 638BC20797
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 18:29:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HFLDA2uj"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="byvvA28f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730670AbgJLS0v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Oct 2020 14:26:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47200 "EHLO
+        id S2388068AbgJLS3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Oct 2020 14:29:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbgJLS0v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 14:26:51 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31C1DC0613D0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:26:51 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id n9so15142807pgf.9
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:26:51 -0700 (PDT)
+        with ESMTP id S2387922AbgJLS3x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 14:29:53 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE447C0613D0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:29:53 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id l18so6069361pgg.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 11:29:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to;
-        bh=W94TQnP9olo7xgBBS2sksItIW/ckZK9q4XO8drnn0j0=;
-        b=HFLDA2uj4QEn879MY6rA6eF95sA1SURGUurEOVQJFwmQwzvFJQyPY8f10z1no2N8R/
-         4mxOka8f++Damq4enFjLQCyzbiwC8/ocgwiAw9I15o0CI56ipt0n4GRQ+2c5lL4LtUo9
-         2oW/mKY+DhaBLpTxKJtux0zSiH6IYDiSHpRkU=
+        bh=1mBpwvgaJ6FwZvThgJimDr7d/Uyi2yZvygYozWwfy6I=;
+        b=byvvA28ffy1lz+oxu/dXNlafmEDilJE1Z7SJbKH3btbKjikjsQ0gvuOK5TlviI7mXt
+         LIeLJ6IR+e06PtBX6UlTfUn214yqd2HSU03+TDzsys5bCHl2nty4d0GvWv90t/YoLUc0
+         5dVdVt88glatf41JAIOwcVVPFjrnhOASEcHt0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to;
-        bh=W94TQnP9olo7xgBBS2sksItIW/ckZK9q4XO8drnn0j0=;
-        b=ocYjhbeil/XcC4jl2w1plFm6SFSWMwog3YYftnkT3wE6o2DRFVeLAvwx1atQFGR4ig
-         7jnKXMfi4S9JYKvluJDqwEe+dZr6DTwLbfd8w7ZHQsul3NsXAX19d+JfMuvKHXyXWiqZ
-         c585x6gjaCbAheV1NlAWuqD9OQXnj0Zo/BRbuIYmILDDi11Xi2YSJtiR7/LoVYpZZk3+
-         e2+zsZzbnT4Q1iR+hust5ix8kkprSMimEdLFbXW1LinpKA2jyUpiQtXKkDI8icTbnrZN
-         L9oCKXxA+ByN4AkxMyG5KZB2FA5CyvmNzt8p+OqDMot+g5wO34R4Rv6HvRNKTHep80WJ
-         4ZFg==
-X-Gm-Message-State: AOAM5314mJ1Bsz/njlE/C3PkfNdkw4ntXvL0F+jxYVaV5EVIuN4h8iyH
-        qsiyL0IMOhtzijGGDPsE2UtY2g==
-X-Google-Smtp-Source: ABdhPJybEhSN1mN5RCZvHJVGpRLo7S+9AF1765LQzQAme0YE+jglcJgSq6FYn8pNTMMMYwQvHTLkVA==
-X-Received: by 2002:aa7:9555:0:b029:152:4b0b:cca with SMTP id w21-20020aa795550000b02901524b0b0ccamr24214231pfq.16.1602527210624;
-        Mon, 12 Oct 2020 11:26:50 -0700 (PDT)
+        bh=1mBpwvgaJ6FwZvThgJimDr7d/Uyi2yZvygYozWwfy6I=;
+        b=i0KPw43N9pxZo2XVpk2By49aQ1pVvbcXP5HFp/J20drx7W0RBre1epIPSr2ermnY3K
+         jYsHOT7klUKLm+PSYuNQ+cGFuNXC6C8C5oOSz9PkIQERujMUAqmBWvdh4rX4K1U1Dtix
+         BcNE6zYTv0hBgzevdehF/kBsUYyBVufC0yjSIW9j3Vn9PbtQHl+zfn6CtXIxAZ47q4is
+         djEK0QzhNu6H7EtObwGUiarYZCi+xIzZt2Zj0FEUfmRn5P3Ye8Z5bxvjsZVLNBaIXiBp
+         /ndLcYdnuTwniJEbxbItLXNqs+wbyhBcOk8YbUS6927rWG9naELQoLNjrKtXr/ntJVQr
+         pydQ==
+X-Gm-Message-State: AOAM533dxuy59xHGz9ahIp0VeG2hUz8cQ2KKV1biqLiKZA5Nrx93oqYL
+        qXeCNExkGGs8jlTlOe0Wr/aG7xT7CBBVrQ==
+X-Google-Smtp-Source: ABdhPJztxyapfmOQr4J6j/H1A62NIHE6/4CbYb+rJz0t3aboTw/uXLD6HmJv0fQwRJdYQFS9yeotRA==
+X-Received: by 2002:a17:90b:4389:: with SMTP id in9mr21298359pjb.177.1602527393335;
+        Mon, 12 Oct 2020 11:29:53 -0700 (PDT)
 Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id a1sm24634913pjh.2.2020.10.12.11.26.49
+        by smtp.gmail.com with ESMTPSA id i5sm9545084pjt.54.2020.10.12.11.29.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Oct 2020 11:26:49 -0700 (PDT)
-Subject: Re: [PATCH v2 1/5] scsi: fc: Update formal FPIN descriptor
- definitions
+        Mon, 12 Oct 2020 11:29:52 -0700 (PDT)
+Subject: Re: [PATCH v2 2/5] scsi: fc: Add FPIN statistics to fc_host and
+ fc_rport objects
 To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 References: <20201006061615.28674-1-njavali@marvell.com>
- <20201006061615.28674-2-njavali@marvell.com>
+ <20201006061615.28674-3-njavali@marvell.com>
 From:   James Smart <james.smart@broadcom.com>
-Message-ID: <2d8af5f8-53e5-5003-f42d-40237b3914fd@broadcom.com>
-Date:   Mon, 12 Oct 2020 11:26:48 -0700
+Message-ID: <c59aa502-241d-5fdb-e711-fd6a80163095@broadcom.com>
+Date:   Mon, 12 Oct 2020 11:29:51 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.3.2
 MIME-Version: 1.0
-In-Reply-To: <20201006061615.28674-2-njavali@marvell.com>
+In-Reply-To: <20201006061615.28674-3-njavali@marvell.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000275bb005b17d719b"
+        boundary="0000000000000b508a05b17d7c16"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000275bb005b17d719b
+--0000000000000b508a05b17d7c16
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -83,26 +83,22 @@ Content-Language: en-US
 On 10/5/2020 11:16 PM, Nilesh Javali wrote:
 > From: Shyam Sundar <ssundar@marvell.com>
 >
-> Add Fabric Performance Impact Notification (FPIN) descriptor definition
-> for the following FPINs:
-> Delivery Notification Descriptor
-> Peer Congestion Notification Descriptor
-> Congestion Notification Descriptor
+> - Adds a structure for holding fpin stats for host & rport
+>
+> - Adds sysfs nodes to maintain FPIN stats:
+>          /sys/class/fc_host/hostXX/statistics/
+>          /sys/class/fc_remote_ports/rport-XX\:Y-Z/statistics/
 >
 > Signed-off-by: Shyam Sundar <ssundar@marvell.com>
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   include/uapi/scsi/fc/fc_els.h | 114 +++++++++++++++++++++++++++++++++-
->   1 file changed, 113 insertions(+), 1 deletion(-)
->
 >
 
 Reviewed-by:  James Smart <james.smart@broadcom.com>
 
 -- james
 
-
---000000000000275bb005b17d719b
+--0000000000000b508a05b17d7c16
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -172,14 +168,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgEiX1dlEmrSvic7CL
-YbFRsbOEOzjkR+nYiaADtRF1bfAwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDEyMTgyNjUwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgAWLVHa7fSAu3dZji
+23kVuzZrEgvKr6i/wa4kcJEqFhYwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDEyMTgyOTUzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAHmzcw6DQqEgUTrarm6xbBs3JaACcRaWSjS0
-2ce1+0cqwDSirzEQMqwgK6ZzOk2zAHt5BZiD3fO82x5mtzeI8VUpbm1Q7e6ZLHBxmdkrK8BaccLr
-k66SjiUlAqqfMnJDuYzSY7GTA1yOxaZMLjkFkg7iHO7BRxIdB8XQHx8z8XzlYr4qdLX1UmqcHXzN
-1FOD01X3fg15TjwsO9aLxWbenR9K4TScIrm5XFy9fsdIFybxlqSvzAtQ9QSk5+i4LqyTfciIeLzB
-ygoyFkPjfMd56qtqLIl5tYoXmSbe1YqC3dY/C1MkocyoQc0YEL3UATCxD/bPxjNhPx6vtIOQqQns
-LKA=
---000000000000275bb005b17d719b--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKR96M3eh3CnIiOS0XkgQl/7SSJ1buppdudG
+OMV7u5lw6S/qbZgj/4/0j79ZAgLgX1MuBT54uT68rwPGpxL9FxC9bRisUk4z4rkOOmJQzuLw1ajN
+ctM6JdVyukvTyTST2A904z8XQebQNp4+EXaGyeWo+pJKejI6/0Z2fSzOM6B9NFbV2u3wRGx6U/Bj
+Bob0XmgdxH5OUZWn97+GuP/XFzC1+1fQ7u1WP0Ym61MN5BAzJ8wSS3iG4QE23gfXJcLbkK5fvJYg
+5kbzw5JGF0DNSzF04OfMqFSJO767/0XxbYHibetR2BcKOx5eNRu6C1lT+DEg9JM8jqdYj2TZWE5m
+wOI=
+--0000000000000b508a05b17d7c16--
