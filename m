@@ -2,121 +2,144 @@ Return-Path: <SRS0=8h8k=DT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0F4C4363D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B81C5C43457
 	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 22:52:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC59520838
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 22:52:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82AE020878
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 22:52:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Cgsf1xfU"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="S7yGpVVm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390876AbgJLWww (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2390878AbgJLWww (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 12 Oct 2020 18:52:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60698 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390858AbgJLWwt (ORCPT
+        with ESMTP id S2390859AbgJLWwt (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 18:52:49 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DD75C0613D8
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 15:52:41 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id c20so4511640pfr.8
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 15:52:41 -0700 (PDT)
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62696C0613D7
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 15:52:39 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id q21so4673524pgi.13
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2020 15:52:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=U71v0y9A/yeUSfRSWTIePZ0qq3wUA511pDnY3SEsJw8=;
-        b=Cgsf1xfUMJ+KXjKFl0ZJa+3x6PVE5yGgA2GzWSTNeGORC01xm5tQ+yZb0QWG7g2zYk
-         52kLG5zb7/cdvnOV6rS31FfGrQmC/VA7z8Q56A1/Hzqjb5dqybE+3K/cLOpZaJtjkRER
-         QqM46pMBXJfz1RLO/YKCdpa4xTxZ5qKkkN4XI=
+        bh=N7zENmJ6vJbzEy626WuQ60pUkAvJmtJKutfrPtDnRgo=;
+        b=S7yGpVVmEaLc485+LTngvTv30QmB7P+BoaWCX8jUAn+XBJnEKXmIUmY5nWDei3dhlm
+         VfrB6ZutDMzdKzEDbmAFwtMFysrUZpzQUkMbz7HgUFS/oxkFHesFJKy+HHJ8MeDa5+Jk
+         owigpBCLmzNHa4vL6XOmgzbyDqPnOh29eYGW8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=U71v0y9A/yeUSfRSWTIePZ0qq3wUA511pDnY3SEsJw8=;
-        b=UMgXs8DPGPYka+JPLyMFx4RbAbexyRu87M4YsFScY2sjB+b0p8PrLywlG3I4/27oFE
-         VWF+MuurD01ynW2S8gy6TTEHCiXALoRAe178Jb2z/KjLZDmxwu6v+SsbKNDPgTYUsYnl
-         qcF51Ppc+SC/JGHtjEZI1X+w8zcGIwuU4bXyIYnv0aX9UuWXPvf3+dHjCG7SQO5aZHs0
-         4AigzJTS1B6puUN2ISstiqsihDxDVOCRHYSd0adnAxOxDydT1fbLiAmHEqZrQJJeLske
-         OSHD9qwQt5LwECFMZBFWZ2HdhKsfb0eXmO3Wmtbclxf4h72af3UbGNxwXIq3KzQC+X6e
-         uMJQ==
-X-Gm-Message-State: AOAM531IMbBzUbllndMS/cVNSlxbM67RW+Y9oJyVurZtYRdIn2yzOvhf
-        JWhapnCBJWLmyYMEKXEGELcDBR5Jd+yUHR/3FydygyWm6I7ElK0WmQX1LXVgREAPmW86pFDAyii
-        z/4uQvDM7hrY3jHoG7KEKJf89wiwbA2v0g3kCd2w+Vwto9/iJq5RpY07eNVu2tYK6Jb5pOD5cm0
-        jY4y4=
-X-Google-Smtp-Source: ABdhPJyjz17CgXY2xZhhJ8l6OYbTvTLX9BR3YbWB7AsL1ugvLX13mffvbNc+kI7AVDJI4mWxAPN4yg==
-X-Received: by 2002:a63:7843:: with SMTP id t64mr14907507pgc.117.1602543159906;
-        Mon, 12 Oct 2020 15:52:39 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id x5sm21222287pfr.83.2020.10.12.15.52.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=N7zENmJ6vJbzEy626WuQ60pUkAvJmtJKutfrPtDnRgo=;
+        b=ATKC6lv+u4bz3uy4aWVrInteujF84yz1tz5TQuC3RRA05PQ7Sn58YL87/wJRQ1XV2K
+         OoqZO6uBx+lBgqz8122viGSS7n6WLL6Yv2DqO+Fhw0bUngYkuBmLejZHjJTGdsAnv2Qi
+         lFYt66ufDfLPY3cw2dm+S2e0aFLZkdG5CirjdonAj0vjoerXL4pUf/AabL0kPw6wxKN8
+         N0H3MWTmSyNelo22ARKMPM6vHj/1iC37/5Oca/xMRNMyDFIkd0y9HfD76JHsqy/0qW8Y
+         sUSXD/6jeB8l51kiLMUDsPEqJuFTYisNUyMp/JOfL02pwWFrfdQ+PKMVtHI98nKa9gSI
+         IWlA==
+X-Gm-Message-State: AOAM530ncji3edbrVW8YIzRjdyVy2sWC8yqgLdcDaaskgU5lhqB3Kkj/
+        Z842WVoJ9OwME1LF19GOG/ku6Hk3FHEEfi7v0Kj4l0bK46QV9ckZxpYQGhBeL10V4f8dy6hwsjH
+        1xaxrz/BtZ3a/tAPSwyIe1fKVdAFmWKb7+vQ3JE193xWSmZQn4sQAqXro+u3lSouPLmRbXFRXlZ
+        oXC7o=
+X-Google-Smtp-Source: ABdhPJwA9fYD93B5dF9tn0zFWfDrKJYlWFXRdtda1TRAD/LBAxrqIYiado/Vvq8MR2oRKcAafyOuEg==
+X-Received: by 2002:a62:79c7:0:b029:152:197b:1b57 with SMTP id u190-20020a6279c70000b0290152197b1b57mr25432235pfc.69.1602543158249;
         Mon, 12 Oct 2020 15:52:38 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id x5sm21222287pfr.83.2020.10.12.15.52.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2020 15:52:37 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: [PATCH v4 31/31] elx: efct: Tie into kernel Kconfig and build process
-Date:   Mon, 12 Oct 2020 15:51:47 -0700
-Message-Id: <20201012225147.54404-32-james.smart@broadcom.com>
+Subject: [PATCH v4 30/31] elx: efct: Add Makefile and Kconfig for efct driver
+Date:   Mon, 12 Oct 2020 15:51:46 -0700
+Message-Id: <20201012225147.54404-31-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201012225147.54404-1-james.smart@broadcom.com>
 References: <20201012225147.54404-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d3777205b1812792"
+        boundary="000000000000b8bdca05b18127f7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000d3777205b1812792
+--000000000000b8bdca05b18127f7
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This final patch ties the efct driver into the kernel Kconfig
-and build linkages in the drivers/scsi directory.
+This patch completes the efct driver population.
+
+This patch adds driver definitions for:
+Adds the efct driver Kconfig and Makefiles
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/Kconfig  | 2 ++
- drivers/scsi/Makefile | 1 +
- 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 701b61ec76ee..f2d47bf55f97 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1170,6 +1170,8 @@ config SCSI_LPFC_DEBUG_FS
- 	  This makes debugging information from the lpfc driver
- 	  available via the debugfs filesystem.
- 
-+source "drivers/scsi/elx/Kconfig"
+---
+v4:
+  Makefile change, new files added
+---
+ drivers/scsi/elx/Kconfig  |  9 +++++++++
+ drivers/scsi/elx/Makefile | 18 ++++++++++++++++++
+ 2 files changed, 27 insertions(+)
+ create mode 100644 drivers/scsi/elx/Kconfig
+ create mode 100644 drivers/scsi/elx/Makefile
+
+diff --git a/drivers/scsi/elx/Kconfig b/drivers/scsi/elx/Kconfig
+new file mode 100644
+index 000000000000..831daea7a951
+--- /dev/null
++++ b/drivers/scsi/elx/Kconfig
+@@ -0,0 +1,9 @@
++config SCSI_EFCT
++	tristate "Emulex Fibre Channel Target"
++	depends on PCI && SCSI
++	depends on TARGET_CORE
++	depends on SCSI_FC_ATTRS
++	select CRC_T10DIF
++	help
++	  The efct driver provides enhanced SCSI Target Mode
++	  support for specific SLI-4 adapters.
+diff --git a/drivers/scsi/elx/Makefile b/drivers/scsi/elx/Makefile
+new file mode 100644
+index 000000000000..47d3b1e3c3fb
+--- /dev/null
++++ b/drivers/scsi/elx/Makefile
+@@ -0,0 +1,18 @@
++#// SPDX-License-Identifier: GPL-2.0
++#/*
++# * Copyright (C) 2020 Broadcom. All Rights Reserved. The term
++# * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++# */
 +
- config SCSI_SIM710
- 	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
- 	depends on EISA && SCSI
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index c00e3dd57990..844db573283c 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -86,6 +86,7 @@ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla1280.o
- obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
- obj-$(CONFIG_SCSI_QLA_ISCSI)	+= libiscsi.o qla4xxx/
- obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
-+obj-$(CONFIG_SCSI_EFCT)		+= elx/
- obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
- obj-$(CONFIG_SCSI_CHELSIO_FCOE)	+= csiostor/
- obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
++
++obj-$(CONFIG_SCSI_EFCT) := efct.o
++
++efct-objs := efct/efct_driver.o efct/efct_io.o efct/efct_scsi.o \
++	     efct/efct_xport.o efct/efct_hw.o efct/efct_hw_queues.o \
++	     efct/efct_lio.o efct/efct_unsol.o
++
++efct-objs += libefc/efc_cmds.o libefc/efc_domain.o libefc/efc_fabric.o \
++	     libefc/efc_node.o libefc/efc_nport.o libefc/efc_device.o \
++	     libefc/efc_lib.o libefc/efc_sm.o libefc/efc_els.o
++
++efct-objs += libefc_sli/sli4.o
 -- 
 2.26.2
 
 
---000000000000d3777205b1812792
+--000000000000b8bdca05b18127f7
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -186,14 +209,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgjzQwAqIXLa3G+mea
-q9/nmA1CgwszfjpZSmLfHYupe2cwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDEyMjI1MjQwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgPxZaPijqVte+xuUP
+Y3igy2cZmGHaH4frvCJ9t9Z9O3YwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDEyMjI1MjM4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAEvoWCL/LvQLbh6gWq7vgSY8tZ80fkSF04oG
-hRSqIRsZ3p/KmJca6JOEVDeXY2YN+r4tGDVDzRSvi8N5xEkB/fjgNxB2nBT/exN/U7ONmNXlLFL+
-glnvaFQvsTP/z9atjvq50wqDnfCjXaqHufpzOCPrWbfE97kx1X2DvbXG2QHy11KlqXn40+rVRdbi
-bXfXhwpZaaUbkWWOjkro+e6JPWhi8oAXJVWD6ZUXNbTrTbxkIr7LFI7EiSnQ+d8vFzjtcFiWmwA1
-GaWPqaO3o9IEhF246EYSZ78cGKHrryWeECceRrIzqDFGF6wCH02rl3MaQGpJVEFPqS80EqVND0Cb
-pek=
---000000000000d3777205b1812792--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAEk+Ou11dva9W0m2i/N6udClvXT5TKyruuEs
+N803P1TiC40e/pSg+W88dHuQxyYc8FCnkXgYNBfNnIHZ8IKUkmtfT907kkYDBJ/H3E+F8zgX8qmU
+fQpM82LTiWmt4LXuWT9PqO4myXJf+dm6Hk0v9/Kwj2P1dayzIJadYSahM9JFSUlbDEgBpPpu5+/W
+vbPluJwBMFnPCiJsY6Xzc7MV/sMYFeIsCmgNEoOZWppLQ3Q5lbbKre8TbBbMbtnom5Y8Va79VaaS
+WKJtfQU8HdZ+1ALOHVm1YP8ZWJwjDfAE4dw7xNveqsOguMzS5YxupNgi9NyieQih/xfPdN3yGAxQ
+kvM=
+--000000000000b8bdca05b18127f7--
