@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E94ECC43467
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 05:14:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0967C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 05:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B759C2076E
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 05:14:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D14F2078A
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Oct 2020 05:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726648AbgJLFOa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Oct 2020 01:14:30 -0400
+        id S1726661AbgJLFOd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Oct 2020 01:14:33 -0400
 Received: from esa6.microchip.iphmx.com ([216.71.154.253]:57157 "EHLO
         esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725967AbgJLFOa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 01:14:30 -0400
-IronPort-SDR: YZ0qmnvQJfqYdwlyl+LLN0cXA1hgmMGmDr1QBnQ3P1gysK0cgBZd0/EEhCMy9aMuFMQxRPkZf8
- 8Yma6bXrTh9qdGh41d8+cQsnTi2w4qWYqRK5ZHIDIKU2CEtkjPqW33EJTwQDNOiWUeJ4BYiBzR
- IeNQxyHAvi2t59sAu2nHSdyx7wAuVwu26u93PqbWlNtOYV+CoRGwNaCCgJlbhRWCrLtzwf3Pfb
- Ur5BgXm1cPCA3mu8CGAewpbOr8TAkdORpc0tkahdG2XYSjQBI6t2EOgZVfhF3lCWhGD9iOwGnC
- RSc=
+        with ESMTP id S1726651AbgJLFOd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2020 01:14:33 -0400
+IronPort-SDR: c3U/tGFRdEEWonE0t0Q7yTnOrzPOFM4uV4Jl2yeFdR3KugZX9LvHf43Jj4hZU3iLrdcTA8kri+
+ eG6Bf/x0QzgNGixmA6PxCwg6dLSler1MwJ5ixGvPyDU91A9khWOVswbKSZFFmKc9YOXCiKc1mb
+ NM4USPTbKpxu0YrYuN6MHHGjN0tQiUVVcII4dXj5aBza3XwbqvhxvR8S69AFMwGpZ/OBj78XJz
+ VERa3ggMFfTS5b2brLlaNAyr1Y3ddqWUVq4+QFQL5QtLGKW6MSY1yFB2BXV0vmW/xZYT5g7ULN
+ +74=
 X-IronPort-AV: E=Sophos;i="5.77,365,1596524400"; 
-   d="scan'208";a="29517226"
+   d="scan'208";a="29517238"
 Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Oct 2020 22:14:29 -0700
-Received: from AVMBX1.microsemi.net (10.100.34.31) by AVMBX3.microsemi.net
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Oct 2020 22:14:32 -0700
+Received: from AVMBX3.microsemi.net (10.100.34.33) by AVMBX3.microsemi.net
  (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3; Sun, 11 Oct
- 2020 22:14:28 -0700
+ 2020 22:14:31 -0700
 Received: from bby1unixsmtp01.microsemi.net (10.180.100.98) by
- avmbx1.microsemi.net (10.100.34.31) with Microsoft SMTP Server id 15.1.1979.3
- via Frontend Transport; Sun, 11 Oct 2020 22:14:28 -0700
+ avmbx3.microsemi.net (10.100.34.33) with Microsoft SMTP Server id 15.1.1979.3
+ via Frontend Transport; Sun, 11 Oct 2020 22:14:31 -0700
 Received: from localhost (bby1unixlb02.microsemi.net [10.180.100.121])
-        by bby1unixsmtp01.microsemi.net (Postfix) with ESMTP id 14363A09D5;
-        Sun, 11 Oct 2020 22:14:28 -0700 (PDT)
+        by bby1unixsmtp01.microsemi.net (Postfix) with ESMTP id 70155A09D5;
+        Sun, 11 Oct 2020 22:14:31 -0700 (PDT)
 From:   Viswas G <Viswas.G@microchip.com.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
@@ -45,9 +45,9 @@ CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <Viswas.G@microchip.com>,
         "peter chang --cc=yuuzheng @ google . com" <dpf@google.com>,
         <vishakhavc@google.com>, <radha@google.com>, <akshatzen@google.com>
-Subject: [PATCH 1/4] pm80xx: make mpi_build_cmd locking consistent
-Date:   Mon, 12 Oct 2020 10:54:12 +0530
-Message-ID: <20201012052415.18963-2-Viswas.G@microchip.com.com>
+Subject: [PATCH 3/4] pm80xx: Avoid busywait in FW ready check
+Date:   Mon, 12 Oct 2020 10:54:14 +0530
+Message-ID: <20201012052415.18963-4-Viswas.G@microchip.com.com>
 X-Mailer: git-send-email 2.16.3
 In-Reply-To: <20201012052415.18963-1-Viswas.G@microchip.com.com>
 References: <20201012052415.18963-1-Viswas.G@microchip.com.com>
@@ -57,123 +57,114 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: peter chang <dpf@google.com>
+From: akshatzen <akshatzen@google.com>
 
-the missing task completions appear to be because the driver shadow
-structures for the command issue queue can get out of sync between
-issues because the locking is inconsistent (none, host adapter lock,
-and per-cpu issue queue). the inconsistency is because sata requests
-issue per-cpu but management commands (eg, aborts etc) issue
-from queue zero. if a sata request issues from cpu zero when a
-management request issues, then there is some 'tearing' and the issue
-queue is sort of broken and we lose track of issues.
+Today in function check_fw_ready we do busy wait using udelay. Due to
+which CPU is not released and we see CPU need_resched failures.
 
-disabling interrupts may be overkill because there may not be cases
-where we're using this from interrupt context (the interrupt path
-has a different per-queue lock).
+Here busy waiting is not necessary since we are in process context and
+we should sleep instead. So to avoid busy waiting we are replacing
+udelay with msleep of 20 ms intervals to check for FW to become ready.
 
-Signed-off-by: peter chang <dpf@google.com>
+It's verified that check_fw_ready today is not being used in interrupt
+context anywhere, hence it is safe to make this change.
+
+Tested:
+Installed the kernel and looked at dmesg for failures pertaining to
+need_resched and did not find them.
+
+Signed-off-by: akshatzen <akshatzen@google.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Ruksar Devadi <Ruksar.devadi@microchip.com>
 Signed-off-by: Radha Ramachandran <radha@google.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 21 +++++++++++++++------
- drivers/scsi/pm8001/pm80xx_hwi.c |  8 --------
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 21 +++++++++++----------
+ drivers/scsi/pm8001/pm80xx_hwi.h |  6 ++++++
+ 2 files changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 2b7b2954ec31..597d7a096a97 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1356,12 +1356,19 @@ int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- {
- 	u32 Header = 0, hpriority = 0, bc = 1, category = 0x02;
- 	void *pMessage;
--
--	if (pm8001_mpi_msg_free_get(circularQ, pm8001_ha->iomb_size,
--		&pMessage) < 0) {
-+	unsigned long flags;
-+	int q_index = circularQ - pm8001_ha->inbnd_q_tbl;
-+	int rv = -1;
-+
-+	WARN_ON(q_index >= PM8001_MAX_INB_NUM);
-+	spin_lock_irqsave(&circularQ->iq_lock, flags);
-+	rv = pm8001_mpi_msg_free_get(circularQ, pm8001_ha->iomb_size,
-+			&pMessage);
-+	if (rv < 0) {
- 		PM8001_IO_DBG(pm8001_ha,
--			pm8001_printk("No free mpi buffer\n"));
--		return -ENOMEM;
-+			      pm8001_printk("No free mpi buffer\n"));
-+		rv = -ENOMEM;
-+		goto done;
- 	}
- 
- 	if (nb > (pm8001_ha->iomb_size - sizeof(struct mpi_msg_hdr)))
-@@ -1384,7 +1391,9 @@ int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- 		pm8001_printk("INB Q %x OPCODE:%x , UPDATED PI=%d CI=%d\n",
- 			responseQueue, opCode, circularQ->producer_idx,
- 			circularQ->consumer_index));
--	return 0;
-+done:
-+	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
-+	return rv;
- }
- 
- u32 pm8001_mpi_msg_free_set(struct pm8001_hba_info *pm8001_ha, void *pMsg,
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 7593f248afb2..5fe50e0effcd 100644
+index 1ba93fb76093..24a4f6b9e79d 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4281,7 +4281,6 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
- 	char *preq_dma_addr = NULL;
- 	__le64 tmp_addr;
- 	u32 i, length;
--	unsigned long flags;
+@@ -1042,6 +1042,7 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
  
- 	memset(&smp_cmd, 0, sizeof(smp_cmd));
- 	/*
-@@ -4377,10 +4376,8 @@ static int pm80xx_chip_smp_req(struct pm8001_hba_info *pm8001_ha,
+ /**
+  * check_fw_ready - The LLDD check if the FW is ready, if not, return error.
++ * This function sleeps hence it must not be used in atomic context.
+  * @pm8001_ha: our hba card information
+  */
+ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+@@ -1052,16 +1053,16 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+ 	int ret = 0;
  
- 	build_smp_cmd(pm8001_dev->device_id, smp_cmd.tag,
- 				&smp_cmd, pm8001_ha->smp_exp_mode, length);
--	spin_lock_irqsave(&circularQ->iq_lock, flags);
- 	rc = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &smp_cmd,
- 			sizeof(smp_cmd), 0);
--	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
- 	if (rc)
- 		goto err_out_2;
- 	return 0;
-@@ -4444,7 +4441,6 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 	u64 phys_addr, start_addr, end_addr;
- 	u32 end_addr_high, end_addr_low;
- 	struct inbound_queue_table *circularQ;
--	unsigned long flags;
- 	u32 q_index, cpu_id;
- 	u32 opc = OPC_INB_SSPINIIOSTART;
- 	memset(&ssp_cmd, 0, sizeof(ssp_cmd));
-@@ -4582,10 +4578,8 @@ static int pm80xx_chip_ssp_io_req(struct pm8001_hba_info *pm8001_ha,
- 			ssp_cmd.esgl = 0;
- 		}
+ 	/* reset / PCIe ready */
+-	max_wait_time = max_wait_count = 100 * 1000;	/* 100 milli sec */
++	max_wait_time = max_wait_count = 5;	/* 100 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while ((value == 0xFFFFFFFF) && (--max_wait_count));
+ 
+ 	/* check ila status */
+-	max_wait_time = max_wait_count = 1000 * 1000;	/* 1000 milli sec */
++	max_wait_time = max_wait_count = 50;	/* 1000 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while (((value & SCRATCH_PAD_ILA_READY) !=
+ 			SCRATCH_PAD_ILA_READY) && (--max_wait_count));
+@@ -1074,9 +1075,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
  	}
--	spin_lock_irqsave(&circularQ->iq_lock, flags);
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
- 			&ssp_cmd, sizeof(ssp_cmd), q_index);
--	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
- 	return ret;
- }
  
-@@ -4819,10 +4813,8 @@ static int pm80xx_chip_sata_req(struct pm8001_hba_info *pm8001_ha,
- 			}
- 		}
+ 	/* check RAAE status */
+-	max_wait_time = max_wait_count = 1800 * 1000;	/* 1800 milli sec */
++	max_wait_time = max_wait_count = 90;	/* 1800 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while (((value & SCRATCH_PAD_RAAE_READY) !=
+ 				SCRATCH_PAD_RAAE_READY) && (--max_wait_count));
+@@ -1089,9 +1090,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
  	}
--	spin_lock_irqsave(&circularQ->iq_lock, flags);
- 	ret = pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc,
- 			&sata_cmd, sizeof(sata_cmd), q_index);
--	spin_unlock_irqrestore(&circularQ->iq_lock, flags);
- 	return ret;
- }
  
+ 	/* check iop0 status */
+-	max_wait_time = max_wait_count = 600 * 1000;	/* 600 milli sec */
++	max_wait_time = max_wait_count = 30;	/* 600 milli sec */
+ 	do {
+-		udelay(1);
++		msleep(FW_READY_INTERVAL);
+ 		value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 	} while (((value & SCRATCH_PAD_IOP0_READY) != SCRATCH_PAD_IOP0_READY) &&
+ 			(--max_wait_count));
+@@ -1107,9 +1108,9 @@ static int check_fw_ready(struct pm8001_hba_info *pm8001_ha)
+ 	if ((pm8001_ha->chip_id != chip_8008) &&
+ 			(pm8001_ha->chip_id != chip_8009)) {
+ 		/* 200 milli sec */
+-		max_wait_time = max_wait_count = 200 * 1000;
++		max_wait_time = max_wait_count = 10;
+ 		do {
+-			udelay(1);
++			msleep(FW_READY_INTERVAL);
+ 			value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+ 		} while (((value & SCRATCH_PAD_IOP1_READY) !=
+ 				SCRATCH_PAD_IOP1_READY) && (--max_wait_count));
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 701951a0f715..ec48bc276de6 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -1639,3 +1639,9 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
+ 
+ #define MEMBASE_II_SHIFT_REGISTER       0x1010
+ #endif
++
++/**
++ * As we know sleep (1~20) ms may result in sleep longer than ~20 ms, hence we
++ * choose 20 ms interval.
++ */
++#define FW_READY_INTERVAL	20
 -- 
 2.16.3
 
