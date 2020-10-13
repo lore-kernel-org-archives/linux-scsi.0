@@ -2,99 +2,134 @@ Return-Path: <SRS0=AAGU=DU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8075CC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Oct 2020 19:26:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D318C43467
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Oct 2020 19:37:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 292B720BED
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Oct 2020 19:26:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B3E520E65
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Oct 2020 19:37:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="SngYSO1W"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iOPFuszm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732640AbgJMT0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Oct 2020 15:26:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53558 "EHLO
+        id S1729062AbgJMThN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Oct 2020 15:37:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732637AbgJMT0C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2020 15:26:02 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C8DCC0613D2
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2020 12:26:02 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id l18so324107pgg.0
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2020 12:26:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=af4Qc+2gHzFlWubHHxJx9BBa7rTwjknQssJBJD0vteA=;
-        b=SngYSO1WqQoNuEy3IfUOgUXEi3oLu0pp1rkBq5PYTTvQ5nlqeRR65jWwAHAb/l9TGu
-         aNri5fZdMjxBOHgTwV/H05fSeagl2qKt8dAe8Y2uHeT5fmujXFKVcTUD/eL4E64bHF5g
-         RB6E/tqEV0SXdYQ4epJDVpzEPILi/CkW3lnTSuAFEF8RjTbiMn8YiKy3gBNH3c9Edco8
-         SumaPILetIQSpl4FZoM2H4HHQcusKVMeHZU+0cOq0yzwDq7mYfTGjC4NDd+tj2e5g5wH
-         mdsBs6DxMGwrMRGWKq/AtkieSfhvuhpt8z2midqt8p2Tq7w/uyBmRM+2TBxM4IfZWwzd
-         LvFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=af4Qc+2gHzFlWubHHxJx9BBa7rTwjknQssJBJD0vteA=;
-        b=HdbedMtm1micyJkRimudW3j28JFbftQ6nTj4wlk0+KNKzfNAOfzukaxsevW+JUenWY
-         SglFThX2qT3Qqpf0E812Fz/FCyfUwJxbgFwfW4hYNXC6IVvwKMayQ8Zuz45vdlMZqD4R
-         r55XMrnXQvA5wDxldrSD3ZCJbq8Ektw1tVWU1zMCx+IiOGvJixL3U+ff21/KPAqEGCnb
-         7CL9dOXJqeGl7E2rakYznXnK4Y7p4E5IMcWSemYRiOoXxqrD4pW8VHECRcc4ITCe2xY4
-         uHrK1JdtcAzttkubpC+ESobUGVSfYjTfAiCSFU0ItMdBOQKb3qB2opa7RfVmX4UGh4hv
-         wZ2Q==
-X-Gm-Message-State: AOAM533aKc9reJM7ArqoFx0pLyKAL6y7MuurNyCXpS4I9KfXKBC8Iu9f
-        fdGIjp4wa3+xlr0RaXgEb6JZGA==
-X-Google-Smtp-Source: ABdhPJyjxaWb7RHMI6pGEY7tNUS7TTgfXPifUmnKryBF4E2RBCFrtRlq2i1ygbicehU2F6J0EqLWLw==
-X-Received: by 2002:a63:1f03:: with SMTP id f3mr817329pgf.381.1602617161620;
-        Tue, 13 Oct 2020 12:26:01 -0700 (PDT)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id z20sm451263pfn.39.2020.10.13.12.26.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Oct 2020 12:26:01 -0700 (PDT)
-Subject: Re: [PATCHv4 1/3] block: add zone specific block statuses
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, hch@lst.de, linux-api@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20200924205330.4043232-1-kbusch@kernel.org>
- <20200924205330.4043232-2-kbusch@kernel.org>
- <20201009152927.GA1023921@dhcp-10-100-145-180.wdl.wdc.com>
- <20201013171610.GB1033288@dhcp-10-100-145-180.wdl.wdc.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <52669c98-ddc3-188e-ee2b-aff1823e8e96@kernel.dk>
-Date:   Tue, 13 Oct 2020 13:25:59 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S1725919AbgJMThL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2020 15:37:11 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAF0FC0613D0;
+        Tue, 13 Oct 2020 12:37:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=julNFvrjaFWkGS8+6W5JRZKKlBpdy19jf/hCoUdzdEM=; b=iOPFuszmnN+d5S+Ahd5uX1N4pM
+        9RF6NzOI8Sd5OvAHWw4A5T4V7HBzV5SYmEitcrT6L9uijzivpv3AAlrlQ+EeeMBwBERzfaRW96tDf
+        PKzX+Sl2uCT2ULOLsIaATERkdV1cx8TAcLFUKC9PDDXh3BUb0PThsEH5DExMv1qS5B9SNDc+ifGE8
+        i5adkcq3oTTGJk72Oatktad6H8mS4gZ84Snyq0JJxGsD2588n+HRQh2ps2O3qrgewJ3m2qt+GgsvN
+        M0CVp3vtxwWhumjXm1Xcpjg1G/4g9JvOqlT5q+mB/7fQkjMGPjGhStjIFbjEA/fecM1aATnK3yCCv
+        pha3ulKA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kSQ6F-000768-Gq; Tue, 13 Oct 2020 19:36:43 +0000
+Date:   Tue, 13 Oct 2020 20:36:43 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     "Weiny, Ira" <ira.weiny@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Nicolas Pitre <nico@fluxnic.net>, X86 ML <x86@kernel.org>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>, linux-kselftest@vger.kernel.org,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        KVM list <kvm@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org,
+        Kexec Mailing List <kexec@lists.infradead.org>,
+        linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
+        devel@driverdev.osuosl.org, linux-efi <linux-efi@vger.kernel.org>,
+        linux-mmc@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>,
+        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        ceph-devel@vger.kernel.org,
+        linux-ext4 <linux-ext4@vger.kernel.org>, linux-aio@kvack.org,
+        io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, cluster-devel@redhat.com,
+        ecryptfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-afs@lists.infradead.org,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>, intel-gfx@lists.freedesktop.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        xen-devel <xen-devel@lists.xenproject.org>,
+        linux-cachefs@redhat.com, samba-technical@lists.samba.org,
+        intel-wired-lan@lists.osuosl.org
+Subject: Re: [PATCH RFC PKS/PMEM 33/58] fs/cramfs: Utilize new kmap_thread()
+Message-ID: <20201013193643.GK20115@casper.infradead.org>
+References: <20201009195033.3208459-1-ira.weiny@intel.com>
+ <20201009195033.3208459-34-ira.weiny@intel.com>
+ <CAPcyv4gL3jfw4d+SJGPqAD3Dp4F_K=X3domuN4ndAA1FQDGcPg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20201013171610.GB1033288@dhcp-10-100-145-180.wdl.wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gL3jfw4d+SJGPqAD3Dp4F_K=X3domuN4ndAA1FQDGcPg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/13/20 11:16 AM, Keith Busch wrote:
-> Hi Jens,
+On Tue, Oct 13, 2020 at 11:44:29AM -0700, Dan Williams wrote:
+> On Fri, Oct 9, 2020 at 12:52 PM <ira.weiny@intel.com> wrote:
+> >
+> > From: Ira Weiny <ira.weiny@intel.com>
+> >
+> > The kmap() calls in this FS are localized to a single thread.  To avoid
+> > the over head of global PKRS updates use the new kmap_thread() call.
+> >
+> > Cc: Nicolas Pitre <nico@fluxnic.net>
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > ---
+> >  fs/cramfs/inode.c | 10 +++++-----
+> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/fs/cramfs/inode.c b/fs/cramfs/inode.c
+> > index 912308600d39..003c014a42ed 100644
+> > --- a/fs/cramfs/inode.c
+> > +++ b/fs/cramfs/inode.c
+> > @@ -247,8 +247,8 @@ static void *cramfs_blkdev_read(struct super_block *sb, unsigned int offset,
+> >                 struct page *page = pages[i];
+> >
+> >                 if (page) {
+> > -                       memcpy(data, kmap(page), PAGE_SIZE);
+> > -                       kunmap(page);
+> > +                       memcpy(data, kmap_thread(page), PAGE_SIZE);
+> > +                       kunmap_thread(page);
 > 
-> I'm going to try one more time in the hope you've just been too busy to
-> notice these patches. The series has been unchanged for a month now, and
-> has reviews from all the right people. Can this be considered for
-> inclusion?
+> Why does this need a sleepable kmap? This looks like a textbook
+> kmap_atomic() use case.
 
-Thanks for the pings, finally got them picked up. Sorry about the
-delay!
+There's a lot of code of this form.  Could we perhaps have:
 
--- 
-Jens Axboe
+static inline void copy_to_highpage(struct page *to, void *vfrom, unsigned int size)
+{
+	char *vto = kmap_atomic(to);
 
+	memcpy(vto, vfrom, size);
+	kunmap_atomic(vto);
+}
+
+in linux/highmem.h ?
