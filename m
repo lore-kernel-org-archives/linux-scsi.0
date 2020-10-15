@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA167C433E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 02:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6412FC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 02:07:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6448622258
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 02:07:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F11022257
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 02:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389379AbgJOCH4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2389461AbgJOCH4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 14 Oct 2020 22:07:56 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:40283 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:40282 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732570AbgJOCHp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Oct 2020 22:07:45 -0400
+        id S1732569AbgJOCHq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Oct 2020 22:07:46 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 138F120414F;
-        Thu, 15 Oct 2020 04:07:40 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 9FE39204248;
+        Thu, 15 Oct 2020 04:07:41 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id IjKWiJR7BeUr; Thu, 15 Oct 2020 04:07:38 +0200 (CEST)
+        with ESMTP id IYHdj-QnS1DY; Thu, 15 Oct 2020 04:07:40 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 228C520423F;
-        Thu, 15 Oct 2020 04:07:32 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 5BA97204255;
+        Thu, 15 Oct 2020 04:07:34 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v11 42/44] sg: remove unit attention check for device changed
-Date:   Wed, 14 Oct 2020 22:06:41 -0400
-Message-Id: <20201015020643.432908-43-dgilbert@interlog.com>
+Subject: [PATCH v11 44/44] sg: bump version to 4.0.11
+Date:   Wed, 14 Oct 2020 22:06:43 -0400
+Message-Id: <20201015020643.432908-45-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201015020643.432908-1-dgilbert@interlog.com>
 References: <20201015020643.432908-1-dgilbert@interlog.com>
@@ -44,97 +44,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI mid-layer now checks for SCSI UNIT ATTENTIONs and takes
-the appropriate actions. This means that the sg driver no longer
-needs to do this check.
+Now that the sg version 4 interface is supported:
+  - with ioctl(SG_IO) for synchronous/blocking use
+  - with ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE) for
+    async/non-blocking use
+Plus new ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3)
+potentially replace write() and read() for the sg
+version 3 interface. Bump major driver version number
+from 3 to 4.
+
+The main new feature is the removal of the fixed 16 element
+array of requests per file descriptor. It is replaced by
+a xarray (eXtensible array) in their parent which is a
+sg_fd object (i.e. a file descriptor). The sg_request
+objects are not freed until the owning file descriptor is
+closed; instead these objects are re-used when multiple
+commands are sent to the same file descriptor.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 49 ++++++++++++-----------------------------------
- 1 file changed, 12 insertions(+), 37 deletions(-)
+ drivers/scsi/sg.c      | 11 ++++++-----
+ include/uapi/scsi/sg.h |  4 ++--
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d6acba00a3e4..75c29d0bceef 100644
+index 770e8c1ef53e..3a434b067b5c 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -2457,39 +2457,6 @@ sg_rq_end_io_usercontext(struct work_struct *work)
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
- }
+@@ -7,13 +7,14 @@
+  *
+  * Original driver (sg.c):
+  *        Copyright (C) 1992 Lawrence Foard
+- * Version 2 and 3 extensions to driver:
+- *        Copyright (C) 1998 - 2019 Douglas Gilbert
++ * Version 2, 3 and 4 extensions to driver:
++ *        Copyright (C) 1998 - 2020 Douglas Gilbert
++ *
+  */
  
--static void
--sg_check_sense(struct sg_device *sdp, struct sg_request *srp, int sense_len)
--{
--	int driver_stat;
--	u32 rq_res = srp->rq_result;
--	struct scsi_request *scsi_rp = scsi_req(srp->rq);
--	u8 *sbp = scsi_rp ? scsi_rp->sense : NULL;
--
--	if (!sbp)
--		return;
--	driver_stat = driver_byte(rq_res);
--	if (driver_stat & DRIVER_SENSE) {
--		struct scsi_sense_hdr ssh;
--
--		if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
--			if (!scsi_sense_is_deferred(&ssh)) {
--				if (ssh.sense_key == UNIT_ATTENTION) {
--					if (sdp->device->removable)
--						sdp->device->changed = 1;
--				}
--			}
--		}
--	}
--	if (test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm) > 0) {
--		int scsi_stat = rq_res & 0xff;
--
--		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
--		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
--			__scsi_print_sense(sdp->device, __func__, sbp,
--					   sense_len);
--	}
--}
--
- /*
-  * This "bottom half" (soft interrupt) handler is called by the mid-level
-  * when a request has completed or failed. This callback is registered in a
-@@ -2501,6 +2468,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- {
- 	enum sg_rq_state rqq_state = SG_RS_AWAIT_RCV;
- 	int a_resid, slen;
-+	u32 rq_result;
- 	struct sg_request *srp = rq->end_io_data;
- 	struct scsi_request *scsi_rp = scsi_req(rq);
- 	struct sg_device *sdp;
-@@ -2514,7 +2482,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 	sfp = srp->parentfp;
- 	sdp = sfp->parentdp;
+-static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
+-#define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
+-static char *sg_version_date = "20190606";
++static int sg_version_num = 40011;  /* [x]xyyzz where [x] empty when x=0 */
++#define SG_VERSION_STR "4.0.11"		/* [x]x.[y]y.zz */
++static char *sg_version_date = "20201014";
  
--	srp->rq_result = scsi_rp->result;
-+	rq_result = scsi_rp->result;
-+	srp->rq_result = rq_result;
- 	slen = min_t(int, scsi_rp->sense_len, SCSI_SENSE_BUFFERSIZE);
- 	a_resid = scsi_rp->resid_len;
+ #include <linux/module.h>
  
-@@ -2530,10 +2499,16 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 	}
- 
- 	SG_LOG(6, sfp, "%s: pack_id=%d, res=0x%x\n", __func__, srp->pack_id,
--	       srp->rq_result);
-+	       rq_result);
- 	srp->duration = sg_calc_rq_dur(srp);
--	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
--		sg_check_sense(sdp, srp, slen);
-+	if (unlikely((rq_result & SG_ML_RESULT_MSK) && slen > 0 &&
-+		     test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm))) {
-+		u32 scsi_stat = rq_result & 0xff;
-+
-+		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
-+		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
-+			__scsi_print_sense(sdp->device, __func__, scsi_rp->sense, slen);
-+	}
- 	if (slen > 0) {
- 		if (scsi_rp->sense && !srp->sense_bp) {
- 			srp->sense_bp = mempool_alloc(sg_sense_pool,
+diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
+index cbade2870355..72574ab0a7b3 100644
+--- a/include/uapi/scsi/sg.h
++++ b/include/uapi/scsi/sg.h
+@@ -12,9 +12,9 @@
+  *   Copyright (C) 1992 Lawrence Foard
+  *
+  * Later extensions (versions 2, 3 and 4) to driver:
+- *   Copyright (C) 1998 - 2018 Douglas Gilbert
++ *   Copyright (C) 1998 - 2020 Douglas Gilbert
+  *
+- * Version 4.0.11 (20190502)
++ * Version 4.0.09 (20200618)
+  *  This version is for Linux 4 and 5 series kernels.
+  *
+  * Documentation
 -- 
 2.25.1
 
