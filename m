@@ -9,138 +9,202 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A88AFC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80DF5C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4863C2224A
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10C9622249
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PKvq21cB"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KRJVGlNa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730629AbgJOKVQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Oct 2020 06:21:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46880 "EHLO
+        id S1731061AbgJOKVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Oct 2020 06:21:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726709AbgJOKVP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 06:21:15 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91268C061755
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:15 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id a1so1738279pjd.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:15 -0700 (PDT)
+        with ESMTP id S1726709AbgJOKVT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 06:21:19 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A322C061755
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:19 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id a1so1738371pjd.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=GU7MKdzHFZFkuzGoIm+K4K01Py2CI1GrQCHU3Ka/wCo=;
-        b=PKvq21cB5Jx8SjlkavHFPl0Y3uEOkC6vT3NQn0pMgYS4qsodtOC4h4QDPV6qLz1e3l
-         3DAIFC8nCn2Fe1gac7zHSgFNKg5LhQl+Zy4GWTihZZzzdvCBgUCiorfY3AoX8X9wajN1
-         xQYbbwCRtHCykk3XcMT8FeM1M0IQNsLY/8Wwg=
+        bh=z1FC3pUFkwS9yzzl3wibbLMwFNi6rUktgCaXt92PeRA=;
+        b=KRJVGlNaCznBBMx6cZNUCH1fui1SQhSBi+T3CPCYBfbPONRyntJc45PkAuOJbZ2Fx1
+         gBqViUKuc+jPH999YkGoQGy+BpWdPjaaVtBvmBPR/qoM1eYtDyYh4PslsTqxIXhhW+hY
+         0c4UlsHxzO7Lna3K/z59Uxf39TFUPJOfY3o3w=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=GU7MKdzHFZFkuzGoIm+K4K01Py2CI1GrQCHU3Ka/wCo=;
-        b=S8NbP/ZgLlh6KmP7LlBkx1yiP5ryzY0g1E39H5npQVSJ615Qkc1ZDaCpUUwZkvpExD
-         iZrEeM7DzmvZtJ212KH4z+0lcG3zYFZdUqfP+xggUYJcmWKwMqpfRpIm4uZU5PwedaJZ
-         npgaa6iqeChe/TPQWpDsmrlen0fKfYVBrVHpB8qXAZBAyN0qYx9gSCWtUVpJ/ju4IMca
-         Zw23rFYg6DybKNCTis3zY9g+NkgMViUc9DWV7wFZGfiVYx3v+K08RA+8DOL+Pn/i94ew
-         9oMEnFOt9wHdQkaYCflrDFWEIwxxq9HGpxXqTDNWPIJmOZ3gry9kjL1fr1zgSJPwuUaa
-         FeZg==
-X-Gm-Message-State: AOAM530CrfHiiyU+NXRELBc8tWGbJe3kPFA0CQigKUcU/bPmgJ070hwt
-        HpViQKIxrk9wJn3ohE41k+zKiasTAh4QRW9Ch4vrm/QfHa4PSjMvylRos3nrJMVo82s7LFj5xMU
-        1DLtmVoZDS3zYZsoNWhs2QpQSQEUwprCtZiJA9y7RNuq+eRGDzs/eDpIhMsEf70GDU15lrxpy9C
-        BkxyMO1CDcCho=
-X-Google-Smtp-Source: ABdhPJxnfPLoKBiLbnhNxUY6qPdzEGqa0eiZYNUvADUcEqSCkix2aC/FQxUuzHFZmLrLqNz+MPlWhQ==
-X-Received: by 2002:a17:90a:a60e:: with SMTP id c14mr3764516pjq.31.1602757274747;
-        Thu, 15 Oct 2020 03:21:14 -0700 (PDT)
+        bh=z1FC3pUFkwS9yzzl3wibbLMwFNi6rUktgCaXt92PeRA=;
+        b=eAOAJtHfLOIks7XHwckMHpxcC0XpP6QMEQMrPTQSRVKJ38QMK8uASSRM+8gYBoMSUD
+         tDRB0Y+YZnPLdqgewTUWeyWUyr7VmGSf2qqmukC5RZ/6eAMGA8rIbz4QHyOgAawNsNWq
+         KduIFH3JieuInYdBkSuDPu7vDgB9pZeEeBQXKWP4TVsgvpUj/Bgfydt8Q578ElBNDAMe
+         Qn1pL3+VAmIKo9iV5Wv2S7w2HCmxAz0PTB6nHAHd6KsTkBBcvtIBN66BPajvnNbNwQ2W
+         9ZDLjKZmNVO4qXYA+AxXG4DPKwLs3KSm+jw7nqp1/GDnml4PEIqHymd1c9q9ckyPyNXw
+         Sutw==
+X-Gm-Message-State: AOAM532zj9nKnRkkY7GHhvZSrVN0b7N5iLOm3gLR8JuAM6LWvCTAg3yZ
+        igPNfPVAcWviIiR3IsXh4wWfTP6VQu7u+4hl7eGckV0/CCcHbljqjFtid/ziz2RWEdEaSONrzcc
+        +BKtWE4ffAXzRgl6yWaaEYYKqTWH/yqdvSOC7ZQ91326isBPueeFhVxFtQZsW+SeV0PZpsAMNlz
+        fpE8NgPFtH8rQ=
+X-Google-Smtp-Source: ABdhPJwFnbUL5A8euW9x20KOuKqWZLBb4ddsRrgPFUuol7GM4wP6OJdzDbaZqJNDNlD67/zHBvFEtw==
+X-Received: by 2002:a17:902:ff14:b029:d3:f1e5:c992 with SMTP id f20-20020a170902ff14b02900d3f1e5c992mr3493743plj.72.1602757278043;
+        Thu, 15 Oct 2020 03:21:18 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 194sm2802258pfz.182.2020.10.15.03.21.12
+        by smtp.gmail.com with ESMTPSA id 194sm2802258pfz.182.2020.10.15.03.21.15
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Oct 2020 03:21:14 -0700 (PDT)
+        Thu, 15 Oct 2020 03:21:17 -0700 (PDT)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v3 03/17] scsi: No retries on abort success
-Date:   Thu, 15 Oct 2020 08:57:28 +0530
-Message-Id: <1602732462-10443-4-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v3 04/17] scsi: Added routine to set/clear SCMD_NORETRIES_ABORT bit for outstanding io on scsi_dev
+Date:   Thu, 15 Oct 2020 08:57:29 +0530
+Message-Id: <1602732462-10443-5-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000bc06d05b1b30222"
+        boundary="0000000000003f5c7305b1b30270"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000bc06d05b1b30222
+--0000000000003f5c7305b1b30270
 
-Made an additional check in scsi_noretry_cmd to verify whether user has
-decided not to do retries on abort success by setting the
-SCMD_NORETRIES_ABORT bit
+Added a new routine scsi_chg_noretries_abort_io_device().
+This functions accepts two arguments Scsi_device and a bool(set).
 
-If SCMD_NORETRIES_ABORT bit is set we are making sure there won't be any
-retries done on the same path and also setting the host byte as
-DID_TRANSPORT_MARGINAL so that the error can be propogated as recoverable
-transport error to the blk layers.
+When set is passed as 1
+this routine will set SCMD_NORETRIES_ABORT bit in
+scmd->state for all the io's on the scsi device associated
+with remote port.
 
-Added a code in scsi_result_to_blk_status to translate
-a new error DID_TRANSPORT_MARGINAL to the corresponding blk_status_t
-i.e BLK_STS_TRANSPORT
+When set is passed as 0
+This routine  will clear SCMD_NORETRIES_ABORT bit in
+scmd->state for all the io's on the scsi device associated
+with remote port.
+
+Export the symbol so the routine can be called by scsi_transport_fc.c
+
+Added new function declaration scsi_chg_noretries_abort_io_device in
+scsi_priv.h
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
 ---
 v3:
-Merged  first part of the previous patch(v2 patch3) with
-this patch.
+Used the existing scsi command iterators scsi_host_busy_iter.
+Set the SCMD_NORETRIES_ABORT to every command instead of only the inflight ios.
+Modified the scsi_chg_noretries_abort_io_device argument type from int to bool
 
 v2:
-set the hostbyte as DID_TRANSPORT_MARGINAL instead of
-DID_TRANSPORT_FAILFAST.
+Renamed the below functions as
+scsi_set_noretries_abort_io_device ->scsi_chg_noretries_abort_io_device
+__scsi_set_noretries_abort_io_device->__scsi_set_noretries_abort_io_device
+which accepts the value as an arg to set/clear the SCMD_NORETRIES_ABORT bit
 ---
- drivers/scsi/scsi_error.c | 10 ++++++++++
- drivers/scsi/scsi_lib.c   |  1 +
- 2 files changed, 11 insertions(+)
+ drivers/scsi/scsi_error.c | 65 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_priv.h  |  2 ++
+ 2 files changed, 67 insertions(+)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ae80daa5d831..aa30c1c9e9db 100644
+index aa30c1c9e9db..70e70fdfb00c 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -1763,6 +1763,16 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 		return 0;
+@@ -279,6 +279,71 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+ 	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
+ }
  
- check_type:
-+	/*
-+	 * Check whether caller has decided not to do retries on
-+	 * abort success by setting the SCMD_NORETRIES_ABORT bit
-+	 */
-+	if ((test_bit(SCMD_NORETRIES_ABORT, &scmd->state)) &&
-+		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
-+		set_host_byte(scmd, DID_TRANSPORT_MARGINAL);
-+		return 1;
-+	}
++static bool
++scsi_clear_noretries_abort_io(struct scsi_cmnd *scmd, void *priv, bool reserved)
++{
++	struct scsi_device *sdev = scmd->device;
 +
- 	/*
- 	 * assume caller has checked sense and determined
- 	 * the check condition was retryable.
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2b5dea07498e..9606bad1542f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -629,6 +629,7 @@ static blk_status_t scsi_result_to_blk_status(struct scsi_cmnd *cmd, int result)
- 			return BLK_STS_OK;
- 		return BLK_STS_IOERR;
- 	case DID_TRANSPORT_FAILFAST:
-+	case DID_TRANSPORT_MARGINAL:
- 		return BLK_STS_TRANSPORT;
- 	case DID_TARGET_FAILURE:
- 		set_host_byte(cmd, DID_OK);
++	/* only clear SCMD_NORETRIES_ABORT on ios on a specific sdev */
++	if (sdev != priv)
++		return true;
++
++	/*Clear the SCMD_NORETRIES_ABORT bit*/
++	clear_bit(SCMD_NORETRIES_ABORT, &scmd->state);
++	return true;
++}
++
++static bool
++scsi_set_noretries_abort_io(struct scsi_cmnd *scmd, void *priv, bool reserved)
++{
++	struct scsi_device *sdev = scmd->device;
++
++	/* only set SCMD_NORETRIES_ABORT on ios on a specific sdev */
++	if (sdev != priv)
++		return true;
++	/* we don't want this command reissued on abort success
++	 * so set SCMD_NORETRIES_ABORT bit to ensure it
++	 * won't get reissued
++	 */
++	set_bit(SCMD_NORETRIES_ABORT, &scmd->state);
++	return true;
++}
++
++static int
++__scsi_chg_noretries_abort_io_device(struct scsi_device *sdev, bool set)
++{
++
++	if (sdev->sdev_state != SDEV_RUNNING)
++		return -EINVAL;
++
++	blk_mq_quiesce_queue(sdev->request_queue);
++	if (set)
++		scsi_host_busy_iter(sdev->host, scsi_set_noretries_abort_io, sdev);
++	else
++		scsi_host_busy_iter(sdev->host, scsi_clear_noretries_abort_io, sdev);
++
++	blk_mq_unquiesce_queue(sdev->request_queue);
++	return 0;
++}
++
++/*
++ * scsi_chg_noretries_abort_io_device - set/clear the SCMD_NORETRIES_ABORT
++ * bit for all the pending io's on a device
++ * @sdev:	scsi_device
++ */
++int
++scsi_chg_noretries_abort_io_device(struct scsi_device *sdev, bool set)
++{
++	struct Scsi_Host *shost = sdev->host;
++	int ret  = -EINVAL;
++
++	mutex_lock(&shost->scan_mutex);
++	ret = __scsi_chg_noretries_abort_io_device(sdev, set);
++	mutex_unlock(&shost->scan_mutex);
++	return ret;
++}
++EXPORT_SYMBOL(scsi_chg_noretries_abort_io_device);
++
+ /**
+  * scsi_times_out - Timeout function for normal scsi commands.
+  * @req:	request that is timing out.
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 180636d54982..9ccd3b716cf9 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -82,6 +82,8 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+ int scsi_eh_get_sense(struct list_head *work_q,
+ 		      struct list_head *done_q);
+ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
++extern int scsi_chg_noretries_abort_io_device(struct scsi_device *sdev,
++			bool set);
+ 
+ /* scsi_lib.c */
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
 -- 
 2.26.2
 
 
---0000000000000bc06d05b1b30222
+--0000000000003f5c7305b1b30270
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -211,13 +275,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDin/ATLU/V97KbyrV8ltoR3jLwnXVYfmpMR1dWC+9njTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTUxMDIxMTVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCDWOo004+RHE0FnJxaMDhG2XghoKj8udwORmV3f1wlkvTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTUxMDIxMThaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEARMoYcT84fNmWCra/
-PQt9KQv4eTt7xFWty97KY2Jih3z49yMLW1eX7anRB7mHkhIu55xnXjysBW03GLELy08xM9e5jEFv
-FXWEvpW27pZ2H2eq5quhyzZ1MxXtHURphCyIf3npkUphrWGIc1tNXywSjh6RK5iPkEKSV5WqAkfO
-56nH/FbbpumXGcExOwBgNfluEXthaBfPSVrZ7VKvPQb5LKiPHiAKSU55G6Z0PHt28XT3xbxWxnbP
-eU5ecQB+Ipe20zoTaQaYlt4ceQxbLKCHTz8d6vvkq8uxQnyx7w//mmbIzw4kvy7HWKxwYiIBcW2a
-i/Fe27IfYvX3KXCRUGpt4g==
---0000000000000bc06d05b1b30222--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAeHQRRuUVp4UgSwxM
+bZRSapNsg0MUoz1mtQeWPCc4xXUY1oAMF1ntJ4l6mCgIeLx0XV/LitrOhsjBwynFYUoDycSrjVKn
+GVA8t7u5q/7sBuPtvJMT8Ou6vkTD1iUe6wv+d88P6FmRNf1/nsN8zrsGPwMfFYqtaryL/9I+oJOi
+lxTSaFHmUj+sfQHZZshZs+JnlB8edJoDkyEWVJTYBh5bf32UoUdpDiHiFAP3gZzGrps8+HsvDf2t
+lwaJZks4W9U7y+rrrmXC9mh5wUGB1fKHhBHqYIJBRhU1BZBHVvtdShkhzej9IRd4FeAvdCIu12Yv
+STJIURuLnbpVyUaB+MflkA==
+--0000000000003f5c7305b1b30270--
