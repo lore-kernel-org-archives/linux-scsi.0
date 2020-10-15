@@ -9,71 +9,71 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B5B4C433E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75243C433E7
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2017B2224A
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14C7522249
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HyYdyKae"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QA2NYLcj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389252AbgJOKVs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Oct 2020 06:21:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46990 "EHLO
+        id S2389257AbgJOKVv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Oct 2020 06:21:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389099AbgJOKVs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 06:21:48 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66DDDC061755
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:48 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id y14so1604797pgf.12
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:48 -0700 (PDT)
+        with ESMTP id S2389099AbgJOKVv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 06:21:51 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B9A8C061755
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:51 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id e10so1767681pfj.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=w4bhq/xMyxoG1rkdg2X4dHBzp4hLg7UaymYWxaYLxzc=;
-        b=HyYdyKaeOZrwEk4K+7lIRCQ/3Od5okohbz9E7FfbzGL1JBPaF3xo9xQUGI/YBt499u
-         5XVy8CxVV+5pWoNYQh2tO87QHbAgxO8Gafhlf8KO711pGTH7SEYdWOW3q+8a9A73pj4k
-         fW9LuRZORoi8Hx9ry5qGlcFLlSZAm6DJvvUjI=
+        bh=ZpxT8338r2d2t8w/r7yQoJ8T+dt0cI+iYrUYzx7SyQ4=;
+        b=QA2NYLcj1VXLOluGtxiUWsL7RaVSzttPFnuHiUVNf4KToog9+J8TCxjIEZAvUqShDr
+         wfjQGl1Inj5Wl9rGlA/YgeHiqJkicYsD2Qg4MVTuCR8GOdzkJvl7SVwvIo2YC9GJJkqk
+         Ls83hiHelIiJzid3TI6ZjxZs8/iSbvXFmu1Ns=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=w4bhq/xMyxoG1rkdg2X4dHBzp4hLg7UaymYWxaYLxzc=;
-        b=oZSqpyhNBE0YoXqxZXts36gCGuQliOMt4y5TjDvFbs5ZSsAiwBKcIf51HA7tV75vB+
-         frN8PmzW3bx0M/QZBLYrj4pnR9tkmJPBnnJeJt0osoiEeZrYQbv2mbaa0dxvYKA1eD6X
-         Jru+p2fz3SDQJml72MErE/Av9Fw2aRIcNjfzV9FzW/SaaNvit6f2I6o7kzmnyil9poce
-         NlHhSlmGBO/oMeX8g9MLWTBQyg3lEBoaw7ZVrvd1b98pQu9D2/P8tsBC4xt/W7e5V3IT
-         2uvHTTWdST6Ydxu3+yHSqcIbVsp9gEV0+WjFWs1iGmbpO7XYmYacbXHCtB3oP8jTXBKV
-         1pdA==
-X-Gm-Message-State: AOAM531AHrqhGwRdErn7P+k+2PNgsGeWY/LYqo/KaS7IyixtBpf4g+Pp
-        hGJ0xXHpiIUW4kXZvMh6N52LIXCYvWoTK3kDU4ms1SrsYS/7PXuea7pwjmU+1SeNY/NkvVxLPYn
-        D7FUUNaLCQZCeMs87Ld9A90yX/vYlMj3/qjUWZTVOxNxBv82lonLs509SWtSc+RCUdR6c9ZgCC/
-        Fi6ufzIAbVggQ=
-X-Google-Smtp-Source: ABdhPJxr8xYokhj9LMo+GKDAmh2M5257Azs0dNkFCPvyWQPTDi/hN9APp0M5Owy8s5Rio8Prxr7S2Q==
-X-Received: by 2002:a63:470a:: with SMTP id u10mr2878688pga.48.1602757307456;
-        Thu, 15 Oct 2020 03:21:47 -0700 (PDT)
+        bh=ZpxT8338r2d2t8w/r7yQoJ8T+dt0cI+iYrUYzx7SyQ4=;
+        b=suggv6xpIu9PCE/ecw7qAQsDqmX8apUVARiwJDQrKsY0rqh4KAKvBtcIvYsnsFzuTR
+         otgplnSfx/Hp8xhfRruuRDDK8apOlxKVDWPfXohmcizMdilfSm9CttZUNLj8wDPxfDhR
+         9jXtwb/MORdPo0vAzmUsWVMBTWE/YrYZJFTD4SQaSG4kC4kQH3gmJbhFvdSntTAX1O/l
+         RsXY19cXsT6SIfqBvFCA/1qvVlT/M8QPrQcyeKyFjeXF1/CdEZsa8pj8rEe1LGdgWL86
+         cXUivobEMT4ZUHi3Nye913A0DY7DPSTs25iaSNApbG4SUOabLD9AAKEOKiqAPu4X5b7H
+         /5aA==
+X-Gm-Message-State: AOAM5302U9nrHKYX87xwjOvNg0mvjhuPLJfeqVquVGmpO49QVQuvhj4u
+        QD70mpxyr2QCewLvHjBuWAF4TivmVlxH8x6/i5vYUwUhb17iHBtp+jvo90BWwXSLOF8G/0QEM4l
+        Uczfgv7FGnucistdtzINCMW+HF7POu0BpNavhbDk7Kd5TqWnans5j7rjUbIFyfW44V3e4pr7CDx
+        ncgAEwjYioGLI=
+X-Google-Smtp-Source: ABdhPJyKj5vooWcoc0Xi8ZfLkI+zzhVyVFBk0MZw3YMUxXn3pH43RNGfOUC1fqBYOvt2MdU2RU5MXw==
+X-Received: by 2002:a63:ba49:: with SMTP id l9mr2891509pgu.246.1602757310373;
+        Thu, 15 Oct 2020 03:21:50 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 194sm2802258pfz.182.2020.10.15.03.21.44
+        by smtp.gmail.com with ESMTPSA id 194sm2802258pfz.182.2020.10.15.03.21.47
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Oct 2020 03:21:46 -0700 (PDT)
+        Thu, 15 Oct 2020 03:21:49 -0700 (PDT)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v3 14/17] scsi:csio: Added changes to fc_remote_port_chkready
-Date:   Thu, 15 Oct 2020 08:57:39 +0530
-Message-Id: <1602732462-10443-15-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v3 15/17] scsi:bfa: Added changes to fc_remote_port_chkready
+Date:   Thu, 15 Oct 2020 08:57:40 +0530
+Message-Id: <1602732462-10443-16-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ffbecd05b1b30332"
+        boundary="0000000000002b9ef105b1b30481"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ffbecd05b1b30332
+--0000000000002b9ef105b1b30481
 
 Added changes to pass a new argument to fc_remote_port_chkready
 
@@ -83,45 +83,36 @@ Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 v3:
 New Patch
 ---
- drivers/scsi/csiostor/csio_scsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfad_im.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 55e74da2f3cb..2df093b49808 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1788,7 +1788,7 @@ csio_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmnd)
- 
- 	sqset = &hw->sqset[ln->portid][blk_mq_rq_cpu(cmnd->request)];
- 
--	nr = fc_remote_port_chkready(rport);
-+	nr = fc_remote_port_chkready(rport, cmnd);
- 	if (nr) {
- 		cmnd->result = nr;
- 		CSIO_INC_STATS(scsim, n_rn_nr_error);
-@@ -2095,7 +2095,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	 * the former case, since LUN reset is a TMF I/O on the wire, and we
- 	 * need a valid session to issue it.
- 	 */
--	if (fc_remote_port_chkready(rn->rport)) {
-+	if (fc_remote_port_chkready(rn->rport, cmnd)) {
- 		csio_err(hw,
- 			 "LUN reset cannot be issued on non-ready"
- 			 " remote node ssni:0x%x (LUN:%llu)\n",
-@@ -2223,7 +2223,7 @@ csio_slave_alloc(struct scsi_device *sdev)
- {
- 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 22f06be2606f..550ce8cdbce2 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -956,7 +956,7 @@ bfad_im_slave_alloc(struct scsi_device *sdev)
+ 	struct bfad_itnim_data_s *itnim_data;
+ 	struct bfa_s *bfa;
  
 -	if (!rport || fc_remote_port_chkready(rport))
 +	if (!rport || fc_remote_port_chkready(rport, NULL))
  		return -ENXIO;
  
- 	sdev->hostdata = *((struct csio_lnode **)(rport->dd_data));
+ 	itnim_data = (struct bfad_itnim_data_s *) rport->dd_data;
+@@ -1213,7 +1213,7 @@ bfad_im_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd
+ 	int       sg_cnt = 0;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
+ 
+-	rc = fc_remote_port_chkready(rport);
++	rc = fc_remote_port_chkready(rport, cmnd);
+ 	if (rc) {
+ 		cmnd->result = rc;
+ 		done(cmnd);
 -- 
 2.26.2
 
 
---000000000000ffbecd05b1b30332
+--0000000000002b9ef105b1b30481
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -192,13 +183,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCA2VUciiT6IoIuTl1AHkJp0X+kvITAI0GmVunUFA5qLZzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTUxMDIxNDdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCALwegSgbrnfHAb3t6XVH9Pk+fNvVlUGbRtpu3O0QGmbTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTUxMDIxNTBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEApgb8guC5skwXHUOi
-qRQv0OOLJuG7hX469Ef70DyOAVRGQn//UJYA0I2TSWBiF2I/3B4tX+bo3foLbYjpHcaqDn8f4zAq
-eAJpjFwOFA/euMQjN+mTaiUmFUrS3oa9HRjfZJRz48AkOQ1kzefIyBNi7BwYkJnEPnMh6cWulmp0
-WrTDQWP6A+yvgiIfZoVKFs4YDo/3kceNde35bDDeD3/tNOTYIln48d8D3HOYRWVQqB+mGLCMJBlu
-4Gk7OtWoURDx0Ig7H1SCNV/SY2uo7XZFVgYF+2IZskJ9Fb1B21bSC+YfOgiDY2fSnCg39JjTfPsV
-vsygQMf3VWxE4DwnjZitOw==
---000000000000ffbecd05b1b30332--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAkOKZcuNwLxLd/J71
+CP+RHgNb68wr+EBa20w7KMSXkvwQsH1c88IZOby2FHzWxsY4ZEfMYkC/CFrlTquRNm5kUH/iGcz4
+JI/NVzVZ3PKRMHIMsdHDVjfMxGrOZY4K49CGT4xgeTA+x7lge+bbO3JrJcvOyznu3giTM2EU98je
+wJ9dx+ulYYbtTQSJPo9UuoDN/pwbv2vP3dOGHv80H6ecuLzC44kmX/OLcOiYwha3t69o5lM6N8sf
+A8RCdNuqXNlso9Q2c1KAhvqiJFmgYpxdaSalX/vEuUT2NpBHjU8HSf7jhfPeisXVJwPLZEaGOoXk
+IpaRp272i9d5iJbACB1IQA==
+--0000000000002b9ef105b1b30481--
