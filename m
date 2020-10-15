@@ -9,71 +9,71 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC5BC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48603C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E4C322249
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD9C82224A
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 10:21:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WwPf0GMF"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cAEDL8nV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389227AbgJOKVd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Oct 2020 06:21:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46938 "EHLO
+        id S2389233AbgJOKVg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Oct 2020 06:21:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389099AbgJOKVd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 06:21:33 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60A79C061755
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:33 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id f5so1638712pgb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:33 -0700 (PDT)
+        with ESMTP id S2389099AbgJOKVg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 06:21:36 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371E5C061755
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:36 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id n9so1617267pgt.8
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 03:21:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=TYmvj6yiWGXfqVJr1c+9931Oj6DWNDChph4J0sZEIl4=;
-        b=WwPf0GMFpe5o5jezNZnDv8YRLykXoCxrOR+ZFY6N7uCundi+LTdjJe/x2tWOi1Ua2s
-         yvfKkzjm/7J4+D0bgWgmCFi+50nBxzJZ4ukypi0h83TFA+NlYK2QytBvoo8KScK9nr8s
-         cV0cwkUhFyLEg+S/AZPNBl3RQAEqnE1rMbIec=
+        bh=kT40iJa9Wr0fT3Ln4M6QZw3w/Zd1czMGvTOm94bl6xE=;
+        b=cAEDL8nVgKPylcZiPe+p7y0c3auMaBvuHsCFXkI7aDusceWeeVIWxOa9S7kXzsPKWz
+         46ZyLiJaz7bVkVENiITvSq6wFo1zWw6hIRT50XXsc5iHamZ9dNXymbgIFIMkBAT8tAd1
+         bAw0snq8tYU3CzE6sqrsa4Eut87FLo/ATAalY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=TYmvj6yiWGXfqVJr1c+9931Oj6DWNDChph4J0sZEIl4=;
-        b=Run1zNX3ZWG86ZVqRSDwze+nFH/3mzRSu636cXwbI7+sjYEq6xl7/Mn7Zy7cStg4ek
-         xbk48EGktnC7uCHay+QRBbKiAuvW/drS8VB6/rPdZJEjxTWkqJxZjAlsZnU+No5HfjHP
-         nF1FA5Hq6XBarUnT+VHAe2YvBuXwNrR3mtIjrjHlBWxGJ5LxCtbjpl9YSBGJu60GZsEV
-         /+mdesos3q9Ahb1ts/R+gFPcRDnsbtp6tCrma+rA+HQABnzTdAzqJ39SHFgAkv8+ala7
-         zWr9GQlBEamiTf11CbRWAbcGm0uVJS3j4AkLsU4Udh05bnHQcRS1w/J5Z3tGNhutVmSB
-         COag==
-X-Gm-Message-State: AOAM533j5tZYzN6+NP0vgAkkRjk51B+55k63xhWVj7Hs2p45IPFcN6c7
-        8KAH8iMQA8o+wnY7w1rC/OPBqxNuvIYRisCKh0BV+HeZJrVGRcXk/JR7BkpgtOFZE1HTkjMZe9i
-        OOppLs0dwQjuFO+ypQVgR1IXFvW6SYmRO4xTDiE9Cp5623k7F3szqRGECmIAlfO0sENIerumOwn
-        g+3sis0E1FPk8=
-X-Google-Smtp-Source: ABdhPJz6SvMiobtuOeP7pitZEZi/RuJ4AyG2FKYT3KzgIGAYtwcNg+hwsVcSiJbZMxqaYaebiZi0fg==
-X-Received: by 2002:a63:ef4f:: with SMTP id c15mr2813787pgk.140.1602757292508;
-        Thu, 15 Oct 2020 03:21:32 -0700 (PDT)
+        bh=kT40iJa9Wr0fT3Ln4M6QZw3w/Zd1czMGvTOm94bl6xE=;
+        b=s4m8f8M15fVEbn4cUssZJkbugFRjTwsj5LS9GysxB3g/BXvJJPiM2vBqkijvP7SSCr
+         TWsfQ+Qq9nVpF171bLxOb/T5RmdOtoFIrBCaAhThx51rVQcxjkrDAxwHxqY89xeTdeJC
+         wU+Yi2JLuO1aVR7Eribk7Em3rCLBAbwdIfRFk7z5Cb+F7Ob9bj1GJ8V3zVF8dEYdOgHF
+         c7MRx05JX9MfdRoaAFMD7+rUm4pjCNC5Dgf9NXLNACYOLDm4ACF1FqaAH5M8GZ4V4q/k
+         TSdpDHtCH6IrpE+noF6hHLfAtQvr+R2zAuIMQMqDTcFf1CWW+HVpRqbNf3jt3qoq1dw3
+         eJVQ==
+X-Gm-Message-State: AOAM532kVnsWbKpswkoRukkPEskFM/o09Dy77jdEdQsehWsakKFybVXu
+        k8g2t23zAoMj4j7/66aZQ98uIIWVd8aqVHVtoGkm8XiyXoHryjusYRLImma4ay2DEzZsaKndif3
+        ObfmEocFpzaxs14Tqu6nk1HDwLsou4yw2BZzV2SYETETguW0yl1WA0pbB2WxZjOd+5eKzEinlMU
+        7UPNV/EDPvbiM=
+X-Google-Smtp-Source: ABdhPJycAiaXz5ErVxWyR6LJJizKs0i6RvulAMdc0OZwlMctGORZpF6DKzG3HNxtlYeMuAbkOjipQQ==
+X-Received: by 2002:a63:3e06:: with SMTP id l6mr2745285pga.179.1602757295375;
+        Thu, 15 Oct 2020 03:21:35 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 194sm2802258pfz.182.2020.10.15.03.21.30
+        by smtp.gmail.com with ESMTPSA id 194sm2802258pfz.182.2020.10.15.03.21.32
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Oct 2020 03:21:31 -0700 (PDT)
+        Thu, 15 Oct 2020 03:21:34 -0700 (PDT)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v3 09/17] scsi:qedf: Added changes to fc_remote_port_chkready
-Date:   Thu, 15 Oct 2020 08:57:34 +0530
-Message-Id: <1602732462-10443-10-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v3 10/17] scsi:libfc: Added changes to fc_remote_port_chkready
+Date:   Thu, 15 Oct 2020 08:57:35 +0530
+Message-Id: <1602732462-10443-11-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001b6df305b1b3031c"
+        boundary="0000000000004678a305b1b3037d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001b6df305b1b3031c
+--0000000000004678a305b1b3037d
 
 Added changes to pass a new argument to fc_remote_port_chkready
 
@@ -83,64 +83,36 @@ Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 v3:
 New Patch
 ---
- drivers/scsi/qedf/qedf_els.c  | 2 +-
- drivers/scsi/qedf/qedf_io.c   | 4 ++--
- drivers/scsi/qedf/qedf_main.c | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
-index 625e58ccb8c8..278921555def 100644
---- a/drivers/scsi/qedf/qedf_els.c
-+++ b/drivers/scsi/qedf/qedf_els.c
-@@ -35,7 +35,7 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
- 
- 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS, "Sending ELS\n");
- 
--	rc = fc_remote_port_chkready(fcport->rport);
-+	rc = fc_remote_port_chkready(fcport->rport, NULL);
- 	if (rc) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "els 0x%x: rport not ready\n", op);
- 		rc = -EAGAIN;
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index 4869ef813dc4..0673b28ede2b 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -975,7 +975,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
- 		return 0;
- 	}
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index e11d4f002bd4..5b7a85dbc6c1 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1867,7 +1867,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 	int rc = 0;
+ 	struct fc_stats *stats;
  
 -	rval = fc_remote_port_chkready(rport);
 +	rval = fc_remote_port_chkready(rport, sc_cmd);
  	if (rval) {
- 		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_IO,
- 			  "fc_remote_port_chkready failed=0x%x for port_id=0x%06x.\n",
-@@ -2438,7 +2438,7 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 			 io_req, io_req->xid, ref_cnt);
- 	}
+ 		sc_cmd->result = rval;
+ 		sc_cmd->scsi_done(sc_cmd);
+@@ -2239,7 +2239,7 @@ int fc_slave_alloc(struct scsi_device *sdev)
+ {
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
  
--	rval = fc_remote_port_chkready(rport);
-+	rval = fc_remote_port_chkready(rport, sc_cmd);
- 	if (rval) {
- 		QEDF_ERR(NULL, "device_reset rport not ready\n");
- 		rc = FAILED;
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 46d185cb9ea8..59990400be08 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -761,7 +761,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
- 		goto drop_rdata_kref;
- 	}
+-	if (!rport || fc_remote_port_chkready(rport))
++	if (!rport || fc_remote_port_chkready(rport, NULL))
+ 		return -ENXIO;
  
--	if (fc_remote_port_chkready(rport)) {
-+	if (fc_remote_port_chkready(rport, sc_cmd)) {
- 		refcount = kref_read(&io_req->refcount);
- 		QEDF_ERR(&qedf->dbg_ctx,
- 			 "rport not ready, io_req=%p, xid=0x%x sc_cmd=%p op=0x%02x, refcount=%d, port_id=%06x\n",
+ 	scsi_change_queue_depth(sdev, FC_FCP_DFLT_QUEUE_DEPTH);
 -- 
 2.26.2
 
 
---0000000000001b6df305b1b3031c
+--0000000000004678a305b1b3037d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -211,13 +183,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDz+BZrWMxz5+MMQEd7OuJ3M382/KAXePeT3al+5XwjgjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTUxMDIxMzJaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCDfrpTnLi2WnAakNtCeQk3S+U7XMqczdMVjtRfVF8kNBTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTUxMDIxMzVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAGUrY1m0r9Y2SFDu7
-FJxXOcdNm3wBp+WaTdsAxW7NSzJ6lF40z/L6QgLpLvI0n0O9gv3CARIFkHHHqNBpCay4u1TZeKBA
-gReYQwwqtC6kfCZuo0sVCq9vPvCkqs4ZEh3RmjKuAkAkL92uj+QcONJp+A84KCXyhRzdzl3FXSDQ
-+NyVrQYlFu3tQTOJGiOMTG56/U9fINICaV0cmFDAiylPKOe80isumZ1CHC8mBJFrpWPbWylTuNmc
-R6J38zrmyIDegPeJeSvqf8dTYFBRd8nSNWd7Lg1knkOL+nKtqlx8520+lJ3yCKS/US6YTh5OH/6g
-idY2OBHhCmUuaxkLjFbzUw==
---0000000000001b6df305b1b3031c--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAJW1KQnrddf5OYPuO
+gbez5sbFhodB0CZhgnhty7iGJBJtxOKp4TwuaDR9oQymHv1uG9VLHb7ZSHCF8cIxPY3XaDlIBQxh
+S7XupzVmkx1/k/aEnQs7TcxxcGz3F4WvB3+g7Y/UprIgws57yn/y9Zeqt8kKcV8CVEDx71gMo6kv
+Pg0XpYkSLs+KO+uoGVRFur0C2Hj3mVbkBNfiEFjrqhgOTUmSXt9L47CwTG1FC1940zBr63eLnrUE
+pPDG/J8ePhkcCkUU3hc3ifAebT73KBh1+pDi9Fq7YedjqpuyS9NICJ79DgdEPatOw2nLXhYEgFDN
+cN7GOHqjFrJh9tY8uyEbSA==
+--0000000000004678a305b1b3037d--
