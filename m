@@ -2,107 +2,186 @@ Return-Path: <SRS0=rjNM=DW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
-	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,MIME_NO_TEXT,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA87C433E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 13:36:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD696C43457
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 13:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEAF82227F
-	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 13:36:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7530722256
+	for <linux-scsi@archiver.kernel.org>; Thu, 15 Oct 2020 13:36:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="W5iIPC6k"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OTRAXD7/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729830AbgJONgf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 15 Oct 2020 09:36:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48972 "EHLO
+        id S1727081AbgJONgz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 15 Oct 2020 09:36:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729599AbgJONge (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 09:36:34 -0400
+        with ESMTP id S1728216AbgJONgz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2020 09:36:55 -0400
 Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 966A9C061755
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 06:36:34 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id c20so2041066pfr.8
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 06:36:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62A0EC0613D2
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 06:36:55 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id a200so2041498pfa.10
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2020 06:36:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id;
-        bh=HMLIpCniVb2IhEt7bL0n31lXBHxEUnkus3LctrRt5YY=;
-        b=W5iIPC6kFUbiGDrYBil86C+AwZu7P1bk8x/rPM6Oyct3lGFZEgk2Z5+PzQehoxT5gZ
-         Rb/v+Kx1Oqph1G9f2ltpxwiuo1ZwVvJMPdp6OCbefmlRw9rH7jC9iC26jioVo37Ca/se
-         4tLfx9ULp0LoaohQUhctJU4eQ7HuAlGP8Lnvw=
+        bh=GlwZglio6AtuuuAtHdzzu11LsqGG/zD2LKpasK/wdOQ=;
+        b=OTRAXD7/VU2n/cM9iSc8a6lDuWUjddcvqXHcFPWVIQcadO5FI/uXNQSIVnpViPZ1mo
+         zrQNUwyOFLWh4JU11D9Mn6yN1bN0rOisQfgHGfxUVbKvk1MYZOhRYs1mxqnDH7ScLp3N
+         hPlFDhRoNz0Me7YS/RhyOB4Z3UM5hoYl2kJpE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=HMLIpCniVb2IhEt7bL0n31lXBHxEUnkus3LctrRt5YY=;
-        b=rCMYx5wJ0IcuWhSalC71qYi8Si6s1e2chvxlbjmQR7u57GqBFwlkTbgB0XYAdHBetZ
-         iV9F8kBNOo8OTL1NAyShVy4bAHsf7Wg3KMzlYRTKG3OZzTewOh6ZWOWzlAdE8ET1/fz3
-         ilaGooyjj+t4onzty6eQMx/0bY3ruAER8QVd8wkkTF7Zc6efol2SVdIAg4MH1/is5LXg
-         wa6fKYQ+VHIuSOF8CtSWlbqizKIVQIrtHJE7tlym2dJixeXegXKxgm0qnBKkGcrTsdVy
-         QTX3jV/+Jv+YayJVPSWyDQWeNxqduIBstuwnPPVaesqwnNrezE5nYnUOu/+9N+2m+Fv7
-         ZDNA==
-X-Gm-Message-State: AOAM5304PYWsifdzt+DXYocNKHB2zNzVW9mGJwuMEDpIxyauG0i9X2uW
-        jU7pI82lVkb7gPtvZWl/UK8XFBj/DJcv73CpmQHCMsZ3yP24JPu+c77fZ97dY32gpxQJZDQqk20
-        fympMSzU/S4LrJOj5c5tB98vPj4vqdS4YfNXX7A4D4jV8Zrdh198WQetBnLkO2owUt7LfVyqE0C
-        AvpsHy3Nbedrc=
-X-Google-Smtp-Source: ABdhPJyVoAsnp4/PHZwueGudw7fq9Z+NHu7qSA6RoVIdJVSXBTSc+A0p+mMtwkSTZaFgPR84oECPiQ==
-X-Received: by 2002:a63:1119:: with SMTP id g25mr3338120pgl.385.1602768992505;
-        Thu, 15 Oct 2020 06:36:32 -0700 (PDT)
+        bh=GlwZglio6AtuuuAtHdzzu11LsqGG/zD2LKpasK/wdOQ=;
+        b=t7iDsmxxO2Qq0nhqAoa5j15iYL0U+VXigZgE9XZF06msBxSNQg451J1NdJNHUF+GYv
+         A3xQVor8C5jWaPoOpHUui54cA/mS8TeZ7WI2OaIRQcQwUc65LdNZfzCiPZDNnEuzgZ5m
+         q0EM664iSa/X3QEjLBmwf8NjcFy4BVQHgx+b5lskcWY0a/rWVr7Alg4nYQOxrVpyigaB
+         EgfMR4K8b4S/XEkNywkcQm+epcMmXCBJSqOOVrXSph0EYlMhjUbZKAga/iGqkhpsFtwM
+         oX0fXWmzt0ipODHCseHDNTtcpDOjJMlXcOPpcq3Hn0yPTOOpwx6dHU8JyENMgdv2mSTQ
+         0Z4w==
+X-Gm-Message-State: AOAM530I/v9OxSConlNQH1SQWlxMSma85RASeMyTHUasUsXwGjUUAyxa
+        DrAfUVBrgfrwxFy6TUT4CtCXKuOA5LJ7GCS8WVUQ5VlKEARSN1zx7Kqe6t2j+1OUBBeX75tM8by
+        6Wip6tQJ8Y6/9IE4Qey54LpGQ1OzVTUgyQuWJxyMM03oTC77ciZUwQsEaFFSXWJv78UdEwk9uPP
+        y8ie6HobkD6zU=
+X-Google-Smtp-Source: ABdhPJxduYnU27dnro37fEx3/UohHCbuq+dTU5c8Obz5ql5sEkz0pEw9LOTZcloAOMt4IuCv48gE+w==
+X-Received: by 2002:a65:45cb:: with SMTP id m11mr3306913pgr.75.1602769014496;
+        Thu, 15 Oct 2020 06:36:54 -0700 (PDT)
 Received: from drv-bst-rhel8.static.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id e19sm3396416pff.34.2020.10.15.06.36.30
+        by smtp.gmail.com with ESMTPSA id f4sm3474280pgk.19.2020.10.15.06.36.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2020 06:36:31 -0700 (PDT)
+        Thu, 15 Oct 2020 06:36:53 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     linux-block@vger.kernel.org,
-        Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: [PATCH v1 0/3] io_uring iopoll in scsi layer
-Date:   Thu, 15 Oct 2020 19:05:41 +0530
-Message-Id: <20201015133541.60400-1-kashyap.desai@broadcom.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
+        linux-block@vger.kernel.org
+Subject: [PATCH v1 1/3] add io_uring with IOPOLL support in scsi layer
+Date:   Thu, 15 Oct 2020 19:06:33 +0530
+Message-Id: <20201015133633.61836-1-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008de8f605b1b5bc6d"
+        boundary="000000000000cb67d505b1b5bd5f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008de8f605b1b5bc6d
+--000000000000cb67d505b1b5bd5f
 
-This patch series is to support io_uring iopoll feature
-in scsi stack. This patch set requires shared hosttag support.
+io_uring with IOPOLL is not currently supported in scsi mid layer.
+Outside of that everything else should work and no extra support in the driver is needed.
+Currently io_uring with IOPOLL support is only available in block layer.
+This patch is to extend support of mq_poll in scsi layer.
 
-This patch set is created on top of for-next branch of
-https://kernel.googlesource.com/pub/scm/linux/kernel/git/axboe/linux-block
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: sumit.saxena@broadcom.com
+Cc: chandrakanth.patil@broadcom.com
+Cc: linux-block@vger.kernel.org
 
-v1 -> 
-Fixed warnings in scsi_debug driver.
-Reported-by: kernel test robot <lkp@intel.com>
+---
+ drivers/scsi/scsi_lib.c  | 16 ++++++++++++++++
+ include/scsi/scsi_cmnd.h |  1 +
+ include/scsi/scsi_host.h | 11 +++++++++++
+ 3 files changed, 28 insertions(+)
 
-Kashyap Desai (3):
-  add io_uring with IOPOLL support in scsi layer
-  megaraid_sas: iouring iopoll support
-  scsi_debug: iouring iopoll support
-
- drivers/scsi/megaraid/megaraid_sas.h        |   2 +
- drivers/scsi/megaraid/megaraid_sas_base.c   |  90 ++++++++++++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  43 ++++++-
- drivers/scsi/megaraid/megaraid_sas_fusion.h |   3 +
- drivers/scsi/scsi_debug.c                   | 123 ++++++++++++++++++++
- drivers/scsi/scsi_lib.c                     |  16 +++
- include/scsi/scsi_cmnd.h                    |   1 +
- include/scsi/scsi_host.h                    |  11 ++
- 8 files changed, 278 insertions(+), 11 deletions(-)
-
-
-base-commit: a3f4ba1ea90538464cb11a4b202036f3fa40e9f3
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 72b12102f777..5a3c383a2bb3 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1766,6 +1766,19 @@ static void scsi_mq_exit_request(struct blk_mq_tag_set *set, struct request *rq,
+ 			       cmd->sense_buffer);
+ }
+ 
++
++static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
++{
++	struct request_queue *q = hctx->queue;
++	struct scsi_device *sdev = q->queuedata;
++	struct Scsi_Host *shost = sdev->host;
++
++	if (shost->hostt->mq_poll)
++		return shost->hostt->mq_poll(shost, hctx->queue_num);
++
++	return 0;
++}
++
+ static int scsi_map_queues(struct blk_mq_tag_set *set)
+ {
+ 	struct Scsi_Host *shost = container_of(set, struct Scsi_Host, tag_set);
+@@ -1833,6 +1846,7 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
+ 	.cleanup_rq	= scsi_cleanup_rq,
+ 	.busy		= scsi_mq_lld_busy,
+ 	.map_queues	= scsi_map_queues,
++	.poll		= scsi_mq_poll,
+ };
+ 
+ 
+@@ -1861,6 +1875,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
+ 	.cleanup_rq	= scsi_cleanup_rq,
+ 	.busy		= scsi_mq_lld_busy,
+ 	.map_queues	= scsi_map_queues,
++	.poll		= scsi_mq_poll,
+ };
+ 
+ struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
+@@ -1893,6 +1908,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	else
+ 		tag_set->ops = &scsi_mq_ops_no_commit;
+ 	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
++	tag_set->nr_maps = shost->nr_maps ? : 1;
+ 	tag_set->queue_depth = shost->can_queue;
+ 	tag_set->cmd_size = cmd_size;
+ 	tag_set->numa_node = NUMA_NO_NODE;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index e76bac4d14c5..5844374a85b1 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -9,6 +9,7 @@
+ #include <linux/types.h>
+ #include <linux/timer.h>
+ #include <linux/scatterlist.h>
++#include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_request.h>
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 701f178b20ae..905ee6b00c55 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -270,6 +270,16 @@ struct scsi_host_template {
+ 	 */
+ 	int (* map_queues)(struct Scsi_Host *shost);
+ 
++	/*
++	 * SCSI interface of blk_poll - poll for IO completions.
++	 * Possible interface only if scsi LLD expose multiple h/w queues.
++	 *
++	 * Return values: Number of completed entries found.
++	 *
++	 * Status: OPTIONAL
++	 */
++	int (* mq_poll)(struct Scsi_Host *shost, unsigned int queue_num);
++
+ 	/*
+ 	 * Check if scatterlists need to be padded for DMA draining.
+ 	 *
+@@ -610,6 +620,7 @@ struct Scsi_Host {
+ 	 * the total queue depth is can_queue.
+ 	 */
+ 	unsigned nr_hw_queues;
++	unsigned nr_maps;
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+ 
 -- 
 2.18.1
 
 
---0000000000008de8f605b1b5bc6d
+--000000000000cb67d505b1b5bd5f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -172,14 +251,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg8+5Cf6NG
-VxiwUE+ZdaXJAje0JYY8ZRpD1+GIEuLxQvcwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMDE1MTMzNjM0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgxwTBbzJI
+hFrart8fExBpuwfqQJinCLJ1XC0P917JuNIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMDE1MTMzNjU0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAAXrT2NO7LuJsx19APe587CXZCqq
-XNeJ5nd/8eiQzlMU7hGQgbwANm7f1DlujQCFdoUgfRs+W01hx4Oqc+1BgJFlsc9ZqBqg36mlypDU
-yGor9KSKU4ez2gpZgdHxMHkeLGWmCukeqn5QMFnuVS8IVIUte1ztPKsJYS11I8O3uq6ghG1Z+/iK
-SaWHHcTEOzIrC7Hx0AW6TchycvwKUORbRuwQrN4HldB9Lv/ZEVzBNmoqJirEhBWlDdO+DJWI1Caq
-mLxutux1qD6cPSNon2478s44xuHJdTrZjJjwXNBFMGboQvn6BhmYafkx7bm8q0bCHMe/88m0eY1A
-PzwZtZMVU6E=
---0000000000008de8f605b1b5bc6d--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKqdAvzAvvsCIRjWkS6kv6H3YRsD
+HxePzAbSVtZSa7mZNeSnK70KI75V8GKuxp4F8C9X18i0OcL5laoLpQC40baAC7As2Tvq3JI2oNn1
+fDF0G0okgEJoOIBkLY8zWalpsKOgBmn28hX0JEU/gAtkBqwg01YPqzMFhKqppXoGO/GxvTQcGVXz
+i9upqc6l3a7rIqkfS4T/+LtWczm+bWziXiLKktUaWxHXvAOjG2OsZ22eIwKEi7yDl1iiDyBt81zR
++xo/TcUGUm8BW5fk3rjEKIA3y5io1wxn1XU4qEwo15uTGSNv67zgoRc4vq66NK/4qUpC2h3TAAXl
+KFZANzGMkLY=
+--000000000000cb67d505b1b5bd5f--
