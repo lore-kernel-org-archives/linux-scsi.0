@@ -2,129 +2,93 @@ Return-Path: <SRS0=iJzJ=DX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3088FC43467
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 04:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E8FC433E7
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 06:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3BDA20874
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 04:53:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE66D207C4
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 06:03:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602828187;
+	bh=OU66uSLTVdDEsvXAQTU5DJ60ObUUefp/DVMyIGfoE3E=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=q4u4+CbsM31yvFHbPwkyxtjs8VnKhvabDstLaSoeYNY+zKUi6vvaZfu1Ztew7L9M0
+	 2qYT3ucpBEHSoz3JOvzIG5aksd01iQp95DVJMEL0BcD0rW7bkq453pQmTDOsPnPaF7
+	 aTW8Ji7J3MZkhqekX3vfKdHGGMDAk29ASJOrqFuU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388836AbgJPExU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Oct 2020 00:53:20 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:44940 "EHLO smtp.infotech.no"
+        id S2391090AbgJPGDE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Oct 2020 02:03:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54548 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388345AbgJPExK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Oct 2020 00:53:10 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id B2F60204238;
-        Fri, 16 Oct 2020 06:53:08 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id l6GpIUqz6pps; Fri, 16 Oct 2020 06:53:07 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 9A707204259;
-        Fri, 16 Oct 2020 06:53:05 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     martin.petersen@oracle.com, axboe@kernel.dk, bvanassche@acm.org
-Subject: [PATCH 4/4] scatterlist: add sgl_memset()
-Date:   Fri, 16 Oct 2020 00:52:58 -0400
-Message-Id: <20201016045258.16246-5-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201016045258.16246-1-dgilbert@interlog.com>
-References: <20201016045258.16246-1-dgilbert@interlog.com>
+        id S1730699AbgJPGDE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Oct 2020 02:03:04 -0400
+Received: from localhost (unknown [104.132.1.66])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DF307207C4;
+        Fri, 16 Oct 2020 06:03:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602828184;
+        bh=OU66uSLTVdDEsvXAQTU5DJ60ObUUefp/DVMyIGfoE3E=;
+        h=From:To:Cc:Subject:Date:From;
+        b=SlUKJwUGhRSfwWh17+WD9YoLpK37ohRCW0JUogPSvIuI3tc545c1BQEo0Im3a+qcH
+         NHWLkYx8WXXFmXrS/0yhfD01BSGeynwtKPz/V1kX+t12LAHyGIZIb+v6c+s/xNkJUC
+         1RunAAzoAmJCFot+WW9XGKnY7MUWd83y2tRJbXCo=
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>
+Subject: [PATCH] scsi: ufs: fix no clkgating due to tag being alive
+Date:   Thu, 15 Oct 2020 23:02:59 -0700
+Message-Id: <20201016060259.390029-1-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The existing sg_zero_buffer() function is a bit restrictive.
-For example protection information (PI) blocks are usually
-initialized to 0xff bytes. As its name suggests sgl_memset()
-is modelled on memset(). One difference is the type of the
-val argument which is u8 rather than int.
+The below call stack prevents clk_gating at every IO completion.
+We can remove the condition, ufshcd_any_tag_in_use(), since clkgating_work
+will check it again.
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+ufshcd_complete_requests(struct ufs_hba *hba)
+  ufshcd_transfer_req_compl()
+    __ufshcd_transfer_req_compl()
+      __ufshcd_release(hba)
+        if (ufshcd_any_tag_in_use() == 1)
+           return;
+  ufshcd_tmc_handler(hba);
+    blk_mq_tagset_busy_iter();
+
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Can Guo <cang@codeaurora.org>
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
 ---
- include/linux/scatterlist.h |  3 +++
- lib/scatterlist.c           | 39 +++++++++++++++++++++++++++++++++++--
- 2 files changed, 40 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index ae260dc5fedb..e50dc9a6d887 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -329,6 +329,9 @@ bool sgl_compare_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_sk
- 		     struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
- 		     size_t n_bytes);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1d157ff58d81..22fecb9a4ec2 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1727,7 +1727,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
  
-+void sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
-+		u8 val, size_t n_bytes);
-+
- /*
-  * Maximum number of entries that will be allocated in one piece, if
-  * a list larger than this is required then chaining will be utilized.
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index 344725990b9d..3ca66f0c949f 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -1083,8 +1083,8 @@ EXPORT_SYMBOL(sgl_copy_sgl);
-  *
-  **/
- bool sgl_compare_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
--		     struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
--		     size_t n_bytes)
-+		    struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
-+		    size_t n_bytes)
- {
- 	bool equ = true;
- 	size_t x_off, y_off, len, x_len, y_len;
-@@ -1140,3 +1140,38 @@ bool sgl_compare_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_sk
- 	return equ;
- }
- EXPORT_SYMBOL(sgl_compare_sgl);
-+
-+/**
-+ * sgl_memset - set byte 'val' n_bytes times on SG list
-+ * @sgl:		 The SG list
-+ * @nents:		 Number of SG entries in sgl
-+ * @skip:		 Number of bytes to skip before starting
-+ * @val:		 byte value to write to sgl
-+ * @n_bytes:		 The number of bytes to modify
-+ *
-+ * Notes:
-+ *   Writes val n_bytes times or until sgl is exhausted.
-+ *
-+ **/
-+void sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
-+		u8 val, size_t n_bytes)
-+{
-+	size_t offset = 0;
-+	size_t len;
-+	struct sg_mapping_iter miter;
-+	unsigned int sg_flags = SG_MITER_ATOMIC | SG_MITER_TO_SG;
-+
-+	if (n_bytes == 0)
-+		return;
-+	sg_miter_start(&miter, sgl, nents, sg_flags);
-+	if (!sg_miter_skip(&miter, skip))
-+		goto fini;
-+
-+	while ((offset < n_bytes) && sg_miter_next(&miter)) {
-+		len = min(miter.length, n_bytes - offset);
-+		memset(miter.addr, val, len);
-+		offset += len;
-+	}
-+fini:
-+	sg_miter_stop(&miter);
-+}
+ 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
+ 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
+-		|| ufshcd_any_tag_in_use(hba) || hba->outstanding_tasks
++		|| hba->outstanding_tasks
+ 		|| hba->active_uic_cmd || hba->uic_async_done
+ 		|| ufshcd_eh_in_progress(hba))
+ 		return;
 -- 
-2.25.1
+2.29.0.rc1.297.gfa9743e501-goog
 
