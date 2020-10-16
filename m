@@ -2,289 +2,332 @@ Return-Path: <SRS0=iJzJ=DX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DBFFC433E7
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 19:52:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115A7C433E7
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 19:58:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA35420874
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 19:52:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A665A20FC3
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Oct 2020 19:58:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VNDdjFTI"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EkrnYkFt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2411162AbgJPTw6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Oct 2020 15:52:58 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:38966 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2408005AbgJPTw5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2020 15:52:57 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09GJmi9N102794;
-        Fri, 16 Oct 2020 19:52:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=effXNR4C+6b7hJsU2PAcDH8pgT9kz0fzwM7lh1OT8Lo=;
- b=VNDdjFTI6z+CGloE+kAyL3h9n+1SJ+S6pll7ZC2k98i7kZgw9vDVhjFHFjyu8nBRU3WL
- LnWdWuZOzNNnfm/qIic9/Sz1mnyUAa7ymNUhTwl4E6cHS3UvNN2mgeXwdxLYH01/s88y
- qcV+fK8r10jfETqpubOemRS+e4l+yaBR3fM6YtjnkIW+drCHhPnhvI/zwOHML/hfNHKs
- K/9+lajza4NP11kiL3IHZH+Y/P4TFYhQfB8J3jl/++mGDzr7n5gGEjTLSsKyaoU1e5/g
- b+UuP8fjTr2RrZTqQETW7K31rgD1l7L2sAYe5HSXjeAEfehDhmdO+4sP5Lijqps3DZlb HA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 346g8grpfk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 16 Oct 2020 19:52:51 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09GJnnkc090722;
-        Fri, 16 Oct 2020 19:52:50 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 343phsv4rc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Oct 2020 19:52:50 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09GJqnJ3014424;
-        Fri, 16 Oct 2020 19:52:49 GMT
-Received: from [20.15.0.8] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 16 Oct 2020 12:52:49 -0700
-Subject: Re: [PATCH v3 05/17] scsi_transport_fc: Added a new rport state
- FC_PORTSTATE_MARGINAL
-To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-scsi@vger.kernel.org, hare@suse.de
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
-References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
- <1602732462-10443-6-git-send-email-muneendra.kumar@broadcom.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <5ca752c2-94e1-444a-7755-f48b09b38577@oracle.com>
-Date:   Fri, 16 Oct 2020 14:52:48 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.1
-MIME-Version: 1.0
-In-Reply-To: <1602732462-10443-6-git-send-email-muneendra.kumar@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9776 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- bulkscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010160145
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9776 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 suspectscore=0
- priorityscore=1501 phishscore=0 clxscore=1015 spamscore=0 adultscore=0
- mlxscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010160145
+        id S2391418AbgJPT6z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Oct 2020 15:58:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48974 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390511AbgJPT6w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2020 15:58:52 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78C9EC061755;
+        Fri, 16 Oct 2020 12:58:50 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id c22so4917392ejx.0;
+        Fri, 16 Oct 2020 12:58:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=M3QxqJmo06BjbfHpNPUYBBgZTWpbg0yMALy6h8Wmrg0=;
+        b=EkrnYkFtVCUZfCvr64lRL1K9zRIcax36Gusfm4lMr4LUFRJNfvQl9S8LQ7iadcpuPP
+         NfR6cVvRlC84oCYXCt15XzRUteLDtUrqou/Zpz9S1KJyCRslBV6mXiZh0djSDXb5alRh
+         lB9416xH5g05YMmOGbVJ1Yq9H6ZAB3mcqV1HEWpVMeo6K7d4T/d8pfJN+V6WszpJfTkj
+         qYtZkcC+qZNn/mzMuTmRvGTeBp+MU7aAiooo6MOUmy3DPQVaFdfssOP7bNSVKWVOBFRV
+         kMS66k3dlQaNdk9QkYZut+rPYsCu1CPHMVzOe/xCNvCc47lF9t17bWSsDK6Ng7qX5N8u
+         BTpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=M3QxqJmo06BjbfHpNPUYBBgZTWpbg0yMALy6h8Wmrg0=;
+        b=nMBy+V+Sk5o8B109KFIaCZ33BNaVPVRPJVaYE/FUs2lb4rZhXzHD0xL/cNOCsZS02h
+         OGabaGLcz4pqMrRBT3uzdVsfPyoI5dKUbikcaPj4IMUPj/5jz0fmblPz8l8dZuYmiCcG
+         uXFI0tuLfX9umYCRbbwJZ6xnRnCzsG8i9kH/x2bdlEfq7rq8Z1n1ORz0u8l3s8vqGTWS
+         vVO9uph9kPx+wzTdqdUdJfu2epXvHM0aGhp/3rfVVf/C6Jqj+SkW+yH7wyNAABg9SQRg
+         6W4u1cMk7/LKib7FITBZCllrW/WQXfHAzQb1R6KzP6m0F7gBKmbkcTIWKJilJp8nqpiJ
+         Vhdw==
+X-Gm-Message-State: AOAM531mr/LpfW1CxSXXCq0QJS4HxNi5jE5ri9e8vcoijzO0IwtkuPVl
+        uj0ny5bHLILvBIejvph+5UM=
+X-Google-Smtp-Source: ABdhPJyzE3EUVXeU0PdBlyMpnXsCUDjZJZI2TnobiuBvMaSR+gKAnEFuGTLDmhZGkkhVszrDF7UpcA==
+X-Received: by 2002:a17:906:af71:: with SMTP id os17mr5522549ejb.200.1602878329037;
+        Fri, 16 Oct 2020 12:58:49 -0700 (PDT)
+Received: from localhost (ipbcc08ad4.dynamic.kabel-deutschland.de. [188.192.138.212])
+        by smtp.gmail.com with ESMTPSA id u29sm2623587eda.13.2020.10.16.12.58.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Oct 2020 12:58:48 -0700 (PDT)
+From:   Bodo Stroesser <bostroesser@gmail.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        Bodo Stroesser <bostroesser@gmail.com>
+Subject: [PATCH] scsi: target: tcmu: scatter_/gather_data_area rework
+Date:   Fri, 16 Oct 2020 21:58:39 +0200
+Message-Id: <20201016195839.27440-1-bostroesser@gmail.com>
+X-Mailer: git-send-email 2.12.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/14/20 10:27 PM, Muneendra wrote:
-> Added a new rport state FC_PORTSTATE_MARGINAL.
-> 
-> Added a new inline function fc_rport_chkmarginal_set_noretries
-> which will set the SCMD_NORETRIES_ABORT bit in cmd->state if rport state
-> is marginal.
-> 
-> Added a new argumet scsi_cmnd to the function fc_remote_port_chkready.
-> Made changes in fc_remote_port_chkready function to treat marginal and
-> online as same.If scsi_cmd is passed fc_rport_chkmarginal_set_noretries
-> will be called.
-> 
-> Also made changes in fc_remote_port_delete,fc_user_scan_tgt,
-> fc_timeout_deleted_rport functions  to handle the new rport state
-> FC_PORTSTATE_MARGINAL.
-> 
-> Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
-> 
-> ---
-> v3:
-> Rearranged the patch so that all the changes with respect to new
-> rport state is part of this patch.
-> Added a new argument to scsi_cmd  to fc_remote_port_chkready
-> 
-> v2:
-> New patch
-> ---
->   drivers/scsi/scsi_transport_fc.c | 40 +++++++++++++++++++-------------
->   include/scsi/scsi_transport_fc.h | 26 ++++++++++++++++++++-
->   2 files changed, 49 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 2ff7f06203da..df66a51d62e6 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -142,20 +142,23 @@ fc_enum_name_search(host_event_code, fc_host_event_code,
->   static struct {
->   	enum fc_port_state	value;
->   	char			*name;
-> +	int			matchlen;
->   } fc_port_state_names[] = {
-> -	{ FC_PORTSTATE_UNKNOWN,		"Unknown" },
-> -	{ FC_PORTSTATE_NOTPRESENT,	"Not Present" },
-> -	{ FC_PORTSTATE_ONLINE,		"Online" },
-> -	{ FC_PORTSTATE_OFFLINE,		"Offline" },
-> -	{ FC_PORTSTATE_BLOCKED,		"Blocked" },
-> -	{ FC_PORTSTATE_BYPASSED,	"Bypassed" },
-> -	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics" },
-> -	{ FC_PORTSTATE_LINKDOWN,	"Linkdown" },
-> -	{ FC_PORTSTATE_ERROR,		"Error" },
-> -	{ FC_PORTSTATE_LOOPBACK,	"Loopback" },
-> -	{ FC_PORTSTATE_DELETED,		"Deleted" },
-> +	{ FC_PORTSTATE_UNKNOWN,		"Unknown", 7},
-> +	{ FC_PORTSTATE_NOTPRESENT,	"Not Present", 11 },
-> +	{ FC_PORTSTATE_ONLINE,		"Online", 6 },
-> +	{ FC_PORTSTATE_OFFLINE,		"Offline", 7 },
-> +	{ FC_PORTSTATE_BLOCKED,		"Blocked", 7 },
-> +	{ FC_PORTSTATE_BYPASSED,	"Bypassed", 8 },
-> +	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics", 11 },
-> +	{ FC_PORTSTATE_LINKDOWN,	"Linkdown", 8 },
-> +	{ FC_PORTSTATE_ERROR,		"Error", 5 },
-> +	{ FC_PORTSTATE_LOOPBACK,	"Loopback", 8 },
-> +	{ FC_PORTSTATE_DELETED,		"Deleted", 7 },
-> +	{ FC_PORTSTATE_MARGINAL,	"Marginal", 8 },
->   };
->   fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
-> +fc_enum_name_match(port_state, fc_port_state, fc_port_state_names)
->   #define FC_PORTSTATE_MAX_NAMELEN	20
->   
->   
-> @@ -2095,7 +2098,8 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint channel, uint id, u64 lun)
->   		if (rport->scsi_target_id == -1)
->   			continue;
->   
-> -		if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +		if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +			(rport->port_state != FC_PORTSTATE_MARGINAL))
->   			continue;
->   
->   		if ((channel == rport->channel) &&
-> @@ -2958,7 +2962,8 @@ fc_remote_port_delete(struct fc_rport  *rport)
->   
->   	spin_lock_irqsave(shost->host_lock, flags);
->   
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE) {
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL)) {
->   		spin_unlock_irqrestore(shost->host_lock, flags);
->   		return;
->   	}
-> @@ -3100,7 +3105,8 @@ fc_timeout_deleted_rport(struct work_struct *work)
->   	 * target, validate it still is. If not, tear down the
->   	 * scsi_target on it.
->   	 */
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_MARGINAL)) &&
->   	    (rport->scsi_target_id != -1) &&
->   	    !(rport->roles & FC_PORT_ROLE_FCP_TARGET)) {
->   		dev_printk(KERN_ERR, &rport->dev,
-> @@ -3243,7 +3249,8 @@ fc_scsi_scan_rport(struct work_struct *work)
->   	struct fc_internal *i = to_fc_internal(shost->transportt);
->   	unsigned long flags;
->   
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_ONLINE)) &&
->   	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
->   	    !(i->f->disable_target_scan)) {
->   		scsi_scan_target(&rport->dev, rport->channel,
-> @@ -3747,7 +3754,8 @@ static blk_status_t fc_bsg_rport_prep(struct fc_rport *rport)
->   	    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
->   		return BLK_STS_RESOURCE;
->   
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL))
->   		return BLK_STS_IOERR;
->   
->   	return BLK_STS_OK;
-> diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-> index 1c7dd35cb7a0..7d010324c1e3 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -14,6 +14,7 @@
->   #include <linux/bsg-lib.h>
->   #include <asm/unaligned.h>
->   #include <scsi/scsi.h>
-> +#include <scsi/scsi_cmnd.h>
->   #include <scsi/scsi_netlink.h>
->   #include <scsi/scsi_host.h>
->   
-> @@ -67,6 +68,7 @@ enum fc_port_state {
->   	FC_PORTSTATE_ERROR,
->   	FC_PORTSTATE_LOOPBACK,
->   	FC_PORTSTATE_DELETED,
-> +	FC_PORTSTATE_MARGINAL,
->   };
->   
->   
-> @@ -707,6 +709,23 @@ struct fc_function_template {
->   	unsigned long	disable_target_scan:1;
->   };
->   
-> +/**
-> + * fc_rport_chkmarginal_set_noretries - Set the SCMD_NORETRIES_ABORT bit
-> + * in cmd->state if port state is marginal prior to initiating
-> + * io to the port.
-> + * @rport:	remote port to be checked
-> + * @scmd:	scsi_cmd to set/clear the SCMD_NORETRIES_ABORT bit on Marginal state
-> + **/
-> +static inline void
-> +fc_rport_chkmarginal_set_noretries(struct fc_rport *rport, struct scsi_cmnd *cmd)
-> +{
-> +	if ((rport->port_state == FC_PORTSTATE_MARGINAL) &&
-> +		 (cmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT))
-> +		set_bit(SCMD_NORETRIES_ABORT, &cmd->state);
-> +	else
-> +		clear_bit(SCMD_NORETRIES_ABORT, &cmd->state);
-> +
-> +}
->   
->   /**
->    * fc_remote_port_chkready - called to validate the remote port state
-> @@ -715,20 +734,25 @@ struct fc_function_template {
->    * Returns a scsi result code that can be returned by the LLDD.
->    *
->    * @rport:	remote port to be checked
-> + * @cmd:	scsi_cmd to set/clear the SCMD_NORETRIES_ABORT bit on Marginal state
->    **/
->   static inline int
-> -fc_remote_port_chkready(struct fc_rport *rport)
-> +fc_remote_port_chkready(struct fc_rport *rport, struct scsi_cmnd *cmd)
->   {
->   	int result;
->   
->   	switch (rport->port_state) {
->   	case FC_PORTSTATE_ONLINE:
-> +	case FC_PORTSTATE_MARGINAL:
->   		if (rport->roles & FC_PORT_ROLE_FCP_TARGET)
->   			result = 0;
->   		else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
->   			result = DID_IMM_RETRY << 16;
->   		else
->   			result = DID_NO_CONNECT << 16;
-> +
-> +		if (cmd)
-> +			fc_rport_chkmarginal_set_noretries(rport, cmd);
+This is made on top of the scsi-staging tree plus my previous
+patch:
+"scsi: target: tcmu: add compat mode for 32bit userspace on 64bit kernel"
 
-I was just wondering why don't you do drop all the SCMD_NORETRIES_ABORT 
-code and then in this function when you check for the marginal state do:
+---
 
-result = DID_TRANSPORT_MARGINAL;
+scatter_data_area and gather_data_area are not easy to understand,
+since data is copied in nested loops over sg_list and tcmu dbi
+list. Since sg list can contain only partly filled pages, the loop
+has to be prepared to handle sg pages not matching dbi pages
+1 by 1.
 
-?
+Existing implementation uses kmap_atomic()/kunmap_atomic() due to
+performance reasons. But instead of using these calls strictly
+nested for sg and dpi pages, the code holds the mappings in an
+overlapping way, which indeed is a bug that would trigger on archs
+using highmem.
 
-So you would do:
+The scatterlist lib contains the sg_miter_start/_next/_stop
+functions which can be used to simplify such complicated loops.
 
-1. Userspace calls in scsi_transport_fc and sets the port state to marginal.
-2. New commands would see the above check and complete the command woth 
-DID_TRANSPORT_MARGINAL.
-3. If a command is retried by the scsi layer we would end up hitting 
-this function and see the check and end up faling the IO like in #2. It 
-would be similar to what happens when the dev loss or fast io fail 
-timers fire.
+The new code now processes the dbi list in the outer loop, while
+sg list is handled by the inner one. That way the code can take
+advantage of the sg_miter_* family calls.
+
+Calling sg_miter_stop() after the end of the inner loop enforces
+strict nesting of atomic kmaps.
+
+Since the nested loops in scatter_/gather_data_area were very
+similar, I replaced them by the new helper function
+tcmu_copy_data().
+
+Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
+---
+ drivers/target/target_core_user.c | 170 ++++++++++++++++++--------------------
+ 1 file changed, 79 insertions(+), 91 deletions(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 954031c48830..9052fcdf1b46 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -642,14 +642,15 @@ static int handle_compat_iovec(struct tcmu_dev *udev, struct iovec **iov,
+ #endif
+ 
+ static int new_block_to_iov(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+-			    struct iovec **iov, int prev_dbi, int *remain)
++			    struct iovec **iov, int prev_dbi, int len)
+ {
+ 	/* Get the next dbi */
+ 	int dbi = tcmu_cmd_get_dbi(cmd);
++
+ 	/* Do not add more than DATA_BLOCK_SIZE to iov */
+-	int len = min_t(int, DATA_BLOCK_SIZE, *remain);
++	if (len > DATA_BLOCK_SIZE)
++		len = DATA_BLOCK_SIZE;
+ 
+-	*remain -= len;
+ 	/*
+ 	 * The following code will gather and map the blocks to the same iovec
+ 	 * when the blocks are all next to each other.
+@@ -678,8 +679,8 @@ static void tcmu_setup_iovs(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+ 	int dbi = -2;
+ 
+ 	/* We prepare the IOVs for DMA_FROM_DEVICE transfer direction */
+-	while (data_length > 0)
+-		dbi = new_block_to_iov(udev, cmd, iov, dbi, &data_length);
++	for (; data_length > 0; data_length -= DATA_BLOCK_SIZE)
++		dbi = new_block_to_iov(udev, cmd, iov, dbi, data_length);
+ }
+ 
+ static struct tcmu_cmd *tcmu_alloc_cmd(struct se_cmd *se_cmd)
+@@ -748,67 +749,85 @@ static inline size_t head_to_end(size_t head, size_t size)
+ 
+ #define UPDATE_HEAD(head, used, size) smp_store_release(&head, ((head % size) + used) % size)
+ 
++#define TCMU_SG_TO_DATA_AREA 1
++#define TCMU_DATA_AREA_TO_SG 2
++
++static inline void tcmu_copy_data(struct tcmu_dev *udev,
++				  struct tcmu_cmd *tcmu_cmd, uint32_t direction,
++				  struct scatterlist *sg, unsigned int sg_nents,
++				  struct iovec **iov,
++				  int data_len)
++{
++	/* start value of dbi + 1 must not be a valid dbi */
++	int dbi = -2;
++	int block_remaining;
++	struct sg_mapping_iter sg_iter;
++	unsigned int sg_flags;
++	struct page *page;
++	void *data_page_start, *data_addr;
++	size_t cp_len;
++
++	if (direction == TCMU_SG_TO_DATA_AREA)
++		sg_flags = SG_MITER_ATOMIC | SG_MITER_FROM_SG;
++	else
++		sg_flags = SG_MITER_ATOMIC | SG_MITER_TO_SG;
++	sg_miter_start(&sg_iter, sg, sg_nents, sg_flags);
++
++	while (data_len > 0) {
++		if (direction == TCMU_SG_TO_DATA_AREA)
++			dbi = new_block_to_iov(udev, tcmu_cmd, iov, dbi,
++					       data_len);
++		else
++			dbi = tcmu_cmd_get_dbi(tcmu_cmd);
++		page = tcmu_get_block_page(udev, dbi);
++		if (direction == TCMU_DATA_AREA_TO_SG)
++			flush_dcache_page(page);
++		data_page_start = kmap_atomic(page);
++		block_remaining = DATA_BLOCK_SIZE;
++
++		while (block_remaining && data_len) {
++			if (!sg_miter_next(&sg_iter)) {
++				/* set length to 0 to abort outer loop */
++				data_len = 0;
++				pr_debug("tcmu_move_data: aborting data copy due to exhausted sg_list\n");
++				break;
++			}
++			cp_len = min_t(size_t, sg_iter.length, block_remaining);
++
++			data_addr = data_page_start +
++				    DATA_BLOCK_SIZE - block_remaining;
++			if (direction == TCMU_SG_TO_DATA_AREA)
++				memcpy(data_addr, sg_iter.addr, cp_len);
++			else
++				memcpy(sg_iter.addr, data_addr, cp_len);
++
++			block_remaining -= cp_len;
++			sg_iter.consumed = cp_len;
++			data_len -= cp_len;
++		}
++		sg_miter_stop(&sg_iter);
++
++		kunmap_atomic(data_page_start);
++		if (direction == TCMU_SG_TO_DATA_AREA)
++			flush_dcache_page(page);
++	}
++}
++
+ static void scatter_data_area(struct tcmu_dev *udev, struct tcmu_cmd *tcmu_cmd,
+ 			      struct iovec **iov)
+ {
+ 	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+-	/* start value of dbi + 1 must not be a valid dbi */
+-	int i, dbi = -2;
+-	int block_remaining = 0;
+-	int data_len = se_cmd->data_length;
+-	void *from, *to = NULL;
+-	size_t copy_bytes, offset;
+-	struct scatterlist *sg;
+-	struct page *page = NULL;
+ 
+-	for_each_sg(se_cmd->t_data_sg, sg, se_cmd->t_data_nents, i) {
+-		int sg_remaining = sg->length;
+-		from = kmap_atomic(sg_page(sg)) + sg->offset;
+-		while (sg_remaining > 0) {
+-			if (block_remaining == 0) {
+-				if (to) {
+-					flush_dcache_page(page);
+-					kunmap_atomic(to);
+-				}
+-
+-				/* get next dbi and add to IOVs */
+-				dbi = new_block_to_iov(udev, tcmu_cmd, iov, dbi,
+-						       &data_len);
+-				page = tcmu_get_block_page(udev, dbi);
+-				to = kmap_atomic(page);
+-				block_remaining = DATA_BLOCK_SIZE;
+-			}
+-
+-			copy_bytes = min_t(size_t, sg_remaining,
+-					block_remaining);
+-			offset = DATA_BLOCK_SIZE - block_remaining;
+-			memcpy(to + offset, from + sg->length - sg_remaining,
+-			       copy_bytes);
+-
+-			sg_remaining -= copy_bytes;
+-			block_remaining -= copy_bytes;
+-		}
+-		kunmap_atomic(from - sg->offset);
+-	}
+-
+-	if (to) {
+-		flush_dcache_page(page);
+-		kunmap_atomic(to);
+-	}
++	tcmu_copy_data(udev, tcmu_cmd, TCMU_SG_TO_DATA_AREA, se_cmd->t_data_sg,
++		       se_cmd->t_data_nents, iov, se_cmd->data_length);
+ }
+ 
+-static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
++static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *tcmu_cmd,
+ 			     bool bidi, uint32_t read_len)
+ {
+-	struct se_cmd *se_cmd = cmd->se_cmd;
+-	int i, dbi;
+-	int block_remaining = 0;
+-	void *from = NULL, *to;
+-	size_t copy_bytes, offset;
+-	struct scatterlist *sg, *data_sg;
+-	struct page *page;
++	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
++	struct scatterlist *data_sg;
+ 	unsigned int data_nents;
+-	uint32_t count = 0;
+ 
+ 	if (!bidi) {
+ 		data_sg = se_cmd->t_data_sg;
+@@ -819,46 +838,15 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+ 		 * buffer blocks, and before gathering the Data-In buffer
+ 		 * the Data-Out buffer blocks should be skipped.
+ 		 */
+-		count = cmd->dbi_cnt - cmd->dbi_bidi_cnt;
++		tcmu_cmd_set_dbi_cur(tcmu_cmd,
++				     tcmu_cmd->dbi_cnt - tcmu_cmd->dbi_bidi_cnt);
+ 
+ 		data_sg = se_cmd->t_bidi_data_sg;
+ 		data_nents = se_cmd->t_bidi_data_nents;
+ 	}
+ 
+-	tcmu_cmd_set_dbi_cur(cmd, count);
+-
+-	for_each_sg(data_sg, sg, data_nents, i) {
+-		int sg_remaining = sg->length;
+-		to = kmap_atomic(sg_page(sg)) + sg->offset;
+-		while (sg_remaining > 0 && read_len > 0) {
+-			if (block_remaining == 0) {
+-				if (from)
+-					kunmap_atomic(from);
+-
+-				block_remaining = DATA_BLOCK_SIZE;
+-				dbi = tcmu_cmd_get_dbi(cmd);
+-				page = tcmu_get_block_page(udev, dbi);
+-				from = kmap_atomic(page);
+-				flush_dcache_page(page);
+-			}
+-			copy_bytes = min_t(size_t, sg_remaining,
+-					block_remaining);
+-			if (read_len < copy_bytes)
+-				copy_bytes = read_len;
+-			offset = DATA_BLOCK_SIZE - block_remaining;
+-			memcpy(to + sg->length - sg_remaining, from + offset,
+-					copy_bytes);
+-
+-			sg_remaining -= copy_bytes;
+-			block_remaining -= copy_bytes;
+-			read_len -= copy_bytes;
+-		}
+-		kunmap_atomic(to - sg->offset);
+-		if (read_len == 0)
+-			break;
+-	}
+-	if (from)
+-		kunmap_atomic(from);
++	tcmu_copy_data(udev, tcmu_cmd, TCMU_DATA_AREA_TO_SG, data_sg,
++		       data_nents, NULL, read_len);
+ }
+ 
+ static inline size_t spc_bitmap_free(unsigned long *bitmap, uint32_t thresh)
+-- 
+2.12.3
+
