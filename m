@@ -2,43 +2,37 @@ Return-Path: <SRS0=jquQ=DZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C42ECC43457
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 982DAC388CE
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:07:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EDEB22264
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:00:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qhWiWAYm"
+	by mail.kernel.org (Postfix) with ESMTP id 72A882226B
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:07:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727610AbgJRS7y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 14:59:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57724 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727427AbgJRS7w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Oct 2020 14:59:52 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 790A6C061755;
-        Sun, 18 Oct 2020 11:59:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=q0BhqrN3gbd6Z80uxUuHxnuOGNa3MQpvn/ujKpbjoKc=; b=qhWiWAYm9fZ2KNDR/Yk3WeXFl4
-        HF2RciAjYHBQMCf3sjKhvFkXSfibnOaNYa7rSxO4GAjMdOb5lKFie8w5W48ySlrw8CCYSSnOZO0Xg
-        5v+vzHZ7K/VxCxY2aBAso6UvZLXpaapi00aBgR18RXogoXyWfK3p9m9265NrgW55bmABmFf/ljB+D
-        9Af5uL1UZOzL5n8T3eza+cGiO5HDs2I27gnorvuwnA1XSsP05jdLks+n6C8PrE6p/2IOOkRu9s0Qf
-        2gQIITEDGF8BYWCD3hQsOGqb9beW/Q62vFU/IQef0kDvAQTCEweywjgtWsVjiKxR3wbF0iuVRtPwK
-        m1h79KbA==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kUDuB-0007Wk-NT; Sun, 18 Oct 2020 18:59:43 +0000
-Date:   Sun, 18 Oct 2020 19:59:43 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     trix@redhat.com
+        id S1726962AbgJRTGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:06:54 -0400
+Received: from smtprelay0246.hostedemail.com ([216.40.44.246]:51812 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726249AbgJRTGx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:06:53 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay01.hostedemail.com (Postfix) with ESMTP id 70CB3100E7B40;
+        Sun, 18 Oct 2020 19:06:49 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: year67_630d5f827230
+X-Filterd-Recvd-Size: 3209
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf09.hostedemail.com (Postfix) with ESMTPA;
+        Sun, 18 Oct 2020 19:06:42 +0000 (UTC)
+Message-ID: <18981cad4ac27b4a22b2e38d40bd112432d4a4e7.camel@perches.com>
+Subject: Re: [Ocfs2-devel] [RFC] treewide: cleanup unreachable breaks
+From:   Joe Perches <joe@perches.com>
+To:     Matthew Wilcox <willy@infradead.org>, trix@redhat.com
 Cc:     linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
         clang-built-linux@googlegroups.com, linux-iio@vger.kernel.org,
         nouveau@lists.freedesktop.org, storagedev@microchip.com,
@@ -69,35 +63,38 @@ Cc:     linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
         linux-crypto@vger.kernel.org, patches@opensource.cirrus.com,
         bpf@vger.kernel.org, ocfs2-devel@oss.oracle.com,
         linux-power@fi.rohmeurope.com
-Subject: Re: [Ocfs2-devel] [RFC] treewide: cleanup unreachable breaks
-Message-ID: <20201018185943.GM20115@casper.infradead.org>
+Date:   Sun, 18 Oct 2020 12:06:40 -0700
+In-Reply-To: <20201018185943.GM20115@casper.infradead.org>
 References: <20201017160928.12698-1-trix@redhat.com>
+         <20201018185943.GM20115@casper.infradead.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201017160928.12698-1-trix@redhat.com>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
-> clang has a number of useful, new warnings see
-> https://urldefense.com/v3/__https://clang.llvm.org/docs/DiagnosticsReference.html__;!!GqivPVa7Brio!Krxz78O3RKcB9JBMVo_F98FupVhj_jxX60ddN6tKGEbv_cnooXc1nnBmchm-e_O9ieGnyQ$ 
-
-Please get your IT department to remove that stupidity.  If you can't,
-please send email from a non-Red Hat email address.
-
-I don't understand why this is a useful warning to fix.  What actual
-problem is caused by the code below?
-
-> return and break
+On Sun, 2020-10-18 at 19:59 +0100, Matthew Wilcox wrote:
+> On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
+> > clang has a number of useful, new warnings see
+> > https://urldefense.com/v3/__https://clang.llvm.org/docs/DiagnosticsReference.html__;!!GqivPVa7Brio!Krxz78O3RKcB9JBMVo_F98FupVhj_jxX60ddN6tKGEbv_cnooXc1nnBmchm-e_O9ieGnyQ$ 
 > 
->  	switch (c->x86_vendor) {
->  	case X86_VENDOR_INTEL:
->  		intel_p5_mcheck_init(c);
->  		return 1;
-> -		break;
+> Please get your IT department to remove that stupidity.  If you can't,
+> please send email from a non-Red Hat email address.
 
-Sure, it's unnecessary, but it's not masking a bug.  It's not unclear.
-Why do we want to enable this warning?
+I didn't get it this way, neither did lore.
+It's on your end.
+
+https://lore.kernel.org/lkml/20201017160928.12698-1-trix@redhat.com/
+
+> I don't understand why this is a useful warning to fix.
+
+Precision in coding style intent and code minimization
+would be the biggest factors IMO.
+
+> What actual problem is caused by the code below?
+
+Obviously none.
+
 
