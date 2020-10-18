@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5721AC43457
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D01C43457
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:35:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20DDE2137B
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAB6E2137B
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:35:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049675;
-	bh=8yHdRGj2/9Sfgc6fcwYzlH5G2QZh3n45m0COG9acsDk=;
+	s=default; t=1603049708;
+	bh=l83XoGev7/j113GM7Lzz2Jh5ztG8Aodju2TukKVp2fk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ldqppe2U0sh7q1zQC+SYvJBVnqfVFmtCF3/dtSxtNwzp01xPYCRg57ZKXXaIGiFSf
-	 nmFOCWS29Z9MouoiqJJo0VC2b1ftu1DpEBLPWwCN9Qu9KyqNVndvkkID7VdgeAeANP
-	 CrsfFQ2GgtaRMh5w5ieByIbK6XqX9z0PQ+8ZQjWM=
+	b=1ZKxv2JK4a4wBIJ+rxatKuMsxv5m1Zhu84sxgAT7U8Yfy7CLbWjGtZmpRrLfLYgXK
+	 6uGhKcOZrlA/j61mIANhPfm8865ghXCjP+bjJSZCOQOeExltkkhpDptbZnPZmGfBM1
+	 6cI35eJ8/aXd7BJegD7HoQ8fdqLataOWNKochroQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732725AbgJRTea (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:34:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41498 "EHLO mail.kernel.org"
+        id S1731639AbgJRT0T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:26:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731655AbgJRT0X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:26:23 -0400
+        id S1731619AbgJRT0S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:26:18 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 76B00222E7;
-        Sun, 18 Oct 2020 19:26:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4EF66222EC;
+        Sun, 18 Oct 2020 19:26:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049182;
-        bh=8yHdRGj2/9Sfgc6fcwYzlH5G2QZh3n45m0COG9acsDk=;
+        s=default; t=1603049177;
+        bh=l83XoGev7/j113GM7Lzz2Jh5ztG8Aodju2TukKVp2fk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qwMRebvcHHzmuQz8fx64V0gumPwWoTsD4zGaZAZtuwWPzAOWsB0/8ttF6G77SWcuR
-         8j3gCxHSjCOBnpGl2PsOZxGxTf5Qs1Bw7iQydqYR+huICqYwjSNP0XuzGnUMYOW4ZI
-         gGbYmfWre19YMHFMBK8Dcz0vIMQegqrQN4/Ol4iw=
+        b=Q/ah7KCN/1foFXdVC1MgkApg4iFIa3EHBR9jR4xw8u+IFZx8lRGPFKhGQcSfchLwS
+         eLwH+Sn7Mhlsh80FONCjttjCeGIP0fN0RpdYaw1eW/JMEywBtovQQz4mDfuaPnm3aq
+         w6036LNBDWD41rcVoIlurh0i2nzcxZk/ES87N2vs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
+Cc:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 43/52] scsi: qedi: Protect active command list to avoid list corruption
-Date:   Sun, 18 Oct 2020 15:25:20 -0400
-Message-Id: <20201018192530.4055730-43-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 4.14 39/52] scsi: ibmvfc: Fix error return in ibmvfc_probe()
+Date:   Sun, 18 Oct 2020 15:25:16 -0400
+Message-Id: <20201018192530.4055730-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192530.4055730-1-sashal@kernel.org>
 References: <20201018192530.4055730-1-sashal@kernel.org>
@@ -58,106 +59,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nilesh Javali <njavali@marvell.com>
+From: Jing Xiangfeng <jingxiangfeng@huawei.com>
 
-[ Upstream commit c0650e28448d606c84f76c34333dba30f61de993 ]
+[ Upstream commit 5e48a084f4e824e1b624d3fd7ddcf53d2ba69e53 ]
 
-Protect active command list for non-I/O commands like login response,
-logout response, text response, and recovery cleanup of active list to
-avoid list corruption.
+Fix to return error code PTR_ERR() from the error handling case instead of
+0.
 
-Link: https://lore.kernel.org/r/20200908095657.26821-5-mrangankar@marvell.com
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Link: https://lore.kernel.org/r/20200907083949.154251-1-jingxiangfeng@huawei.com
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_fw.c    | 8 ++++++++
- drivers/scsi/qedi/qedi_iscsi.c | 2 ++
- 2 files changed, 10 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 2e5e04a7623fa..e688300faeefd 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -62,6 +62,7 @@ static void qedi_process_logout_resp(struct qedi_ctx *qedi,
- 		  "Freeing tid=0x%x for cid=0x%x\n",
- 		  cmd->task_id, qedi_conn->iscsi_conn_id);
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(cmd->io_cmd_in_list)) {
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
-@@ -72,6 +73,7 @@ static void qedi_process_logout_resp(struct qedi_ctx *qedi,
- 			  cmd->task_id, qedi_conn->iscsi_conn_id,
- 			  &cmd->io_cmd);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 34612add3829f..dbacd9830d3df 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -4797,6 +4797,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	if (IS_ERR(vhost->work_thread)) {
+ 		dev_err(dev, "Couldn't create kernel thread: %ld\n",
+ 			PTR_ERR(vhost->work_thread));
++		rc = PTR_ERR(vhost->work_thread);
+ 		goto free_host_mem;
  	}
-+	spin_unlock(&qedi_conn->list_lock);
  
- 	cmd->state = RESPONSE_RECEIVED;
- 	qedi_clear_task_idx(qedi, cmd->task_id);
-@@ -127,6 +129,7 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
- 		  "Freeing tid=0x%x for cid=0x%x\n",
- 		  cmd->task_id, qedi_conn->iscsi_conn_id);
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(cmd->io_cmd_in_list)) {
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
-@@ -137,6 +140,7 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
- 			  cmd->task_id, qedi_conn->iscsi_conn_id,
- 			  &cmd->io_cmd);
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- 
- 	cmd->state = RESPONSE_RECEIVED;
- 	qedi_clear_task_idx(qedi, cmd->task_id);
-@@ -231,11 +235,13 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
- 
- 	tmf_hdr = (struct iscsi_tm *)qedi_cmd->task->hdr;
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(qedi_cmd->io_cmd_in_list)) {
- 		qedi_cmd->io_cmd_in_list = false;
- 		list_del_init(&qedi_cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- 
- 	if (((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
- 	      ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) ||
-@@ -299,11 +305,13 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
- 		  ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK;
- 	qedi_conn->gen_pdu.resp_wr_ptr = qedi_conn->gen_pdu.resp_buf + pld_len;
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	if (likely(cmd->io_cmd_in_list)) {
- 		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- 
- 	memset(task_ctx, '\0', sizeof(*task_ctx));
- 
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 4d7971c3f339b..c55fb411c8a55 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -983,11 +983,13 @@ static void qedi_cleanup_active_cmd_list(struct qedi_conn *qedi_conn)
- {
- 	struct qedi_cmd *cmd, *cmd_tmp;
- 
-+	spin_lock(&qedi_conn->list_lock);
- 	list_for_each_entry_safe(cmd, cmd_tmp, &qedi_conn->active_cmd_list,
- 				 io_cmd) {
- 		list_del_init(&cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 	}
-+	spin_unlock(&qedi_conn->list_lock);
- }
- 
- static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
 -- 
 2.25.1
 
