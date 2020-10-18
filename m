@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9318C433E7
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9132C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B736C2137B
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:42:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A64A8207DE
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:43:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050175;
-	bh=dXyW51y6NN86Vgg+bi0TvnEdgx8SxD0zDjk5t52yqKI=;
+	s=default; t=1603050200;
+	bh=/98Zb1vLk8D8gEKuqdCgRdpe9G2AWlck9qCBGmPL38k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TAIUHZY8S4ICucYR4MO/oNNyFGABIfF4CLIWUJtPSMc1+HyHPoewFh9ApE3t+ZVm7
-	 ZguXdN5OGVARFQVv7gwkzdyzsq8HjZdxzPVznVYsCqCxyk+F3yLeuEgDTM9/bCQq1b
-	 TP9Nv0m2uOIVwE4l4yQmhTF12tVkfuFcPJzjIgd0=
+	b=ihbyKNgGLvwOw8QpVrwyp4gmEhaDzf41j5ncBmW1sHJYJSvppqQyfzD9Zxao5Awz6
+	 +pM3STo2lOgmohisoMLCqP6wwH3ZJOYZn+iN7UZP+TDpZLJ53PpkqzklSrwPqnGlnA
+	 7vrs14eAu7BsxkSthJdGmW2fvDHx5UXnBKQCpNe4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731549AbgJRTmq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:42:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37414 "EHLO mail.kernel.org"
+        id S1730420AbgJRTXo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:23:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37198 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730476AbgJRTXu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:23:50 -0400
+        id S1728549AbgJRTXn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:23:43 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1B86C222E9;
-        Sun, 18 Oct 2020 19:23:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AC5A2222E9;
+        Sun, 18 Oct 2020 19:23:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049029;
-        bh=dXyW51y6NN86Vgg+bi0TvnEdgx8SxD0zDjk5t52yqKI=;
+        s=default; t=1603049022;
+        bh=/98Zb1vLk8D8gEKuqdCgRdpe9G2AWlck9qCBGmPL38k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Unh75HO0qFfTLyeixYKabu+i48c/E08+gPRRdC06PK8+HHyRob4GblQq/KyIsOdEU
-         LZKqPO9zRtu8rAs9XxYv4keNEIcmuQXjy1Hbnrhy68IGdSi+VBFSftsyPxfzprdReq
-         tUalF1KFG1RsMOl9Hm3K/5jfli9TQIpHTNLKkyWk=
+        b=GQQXgVhhwUdmumG+G8Xz5j9LCDh14C/kO5oLPq+94+A7mPw7Q3Yg2RUaaKdrLEYHq
+         pkhcBpUXw1M+/WeyJ4vSdvjTEaT94e4GO2pqJn4BHILAf12IRJIU64jtg1SJh913wz
+         G78SzQJ/OCeJJgT+0RuiS0Z7/70CJ3XDMTP2/ejg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
+Cc:     Daniel Wagner <dwagner@suse.de>, Martin Wilck <mwilck@suse.com>,
+        Arun Easi <aeasi@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 62/80] scsi: qedf: Return SUCCESS if stale rport is encountered
-Date:   Sun, 18 Oct 2020 15:22:13 -0400
-Message-Id: <20201018192231.4054535-62-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 56/80] scsi: qla2xxx: Warn if done() or free() are called on an already freed srb
+Date:   Sun, 18 Oct 2020 15:22:07 -0400
+Message-Id: <20201018192231.4054535-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192231.4054535-1-sashal@kernel.org>
 References: <20201018192231.4054535-1-sashal@kernel.org>
@@ -58,35 +58,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+From: Daniel Wagner <dwagner@suse.de>
 
-[ Upstream commit 10aff62fab263ad7661780816551420cea956ebb ]
+[ Upstream commit c0014f94218ea3a312f6235febea0d626c5f2154 ]
 
-If SUCCESS is not returned, error handling will escalate. Return SUCCESS
-similar to other conditions in this function.
+Emit a warning when ->done or ->free are called on an already freed
+srb. There is a hidden use-after-free bug in the driver which corrupts
+the srb memory pool which originates from the cleanup callbacks.
 
-Link: https://lore.kernel.org/r/20200907121443.5150-6-jhasan@marvell.com
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+An extensive search didn't bring any lights on the real problem. The
+initial fix was to set both pointers to NULL and try to catch invalid
+accesses. But instead the memory corruption was gone and the driver
+didn't crash. Since not all calling places check for NULL pointer, add
+explicitly default handlers. With this we workaround the memory
+corruption and add a debug help.
+
+Link: https://lore.kernel.org/r/20200908081516.8561-2-dwagner@suse.de
+Reviewed-by: Martin Wilck <mwilck@suse.com>
+Reviewed-by: Arun Easi <aeasi@marvell.com>
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c   | 10 ++++++++++
+ drivers/scsi/qla2xxx/qla_inline.h |  5 +++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 3d0e345947c1f..9c0955c334e3e 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -668,7 +668,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
- 	rdata = fcport->rdata;
- 	if (!rdata || !kref_get_unless_zero(&rdata->kref)) {
- 		QEDF_ERR(&qedf->dbg_ctx, "stale rport, sc_cmd=%p\n", sc_cmd);
--		rc = 1;
-+		rc = SUCCESS;
- 		goto out;
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 62d2ee825c97a..b300e11095828 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -71,6 +71,16 @@ void qla2x00_sp_free(srb_t *sp)
+ 	qla2x00_rel_sp(sp);
+ }
  
++void qla2xxx_rel_done_warning(srb_t *sp, int res)
++{
++	WARN_ONCE(1, "Calling done() of an already freed srb %p object\n", sp);
++}
++
++void qla2xxx_rel_free_warning(srb_t *sp)
++{
++	WARN_ONCE(1, "Calling free() of an already freed srb %p object\n", sp);
++}
++
+ /* Asynchronous Login/Logout Routines -------------------------------------- */
+ 
+ unsigned long
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index 0c3d907af7692..6dfde42d799b5 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -183,10 +183,15 @@ qla2xxx_get_qpair_sp(scsi_qla_host_t *vha, struct qla_qpair *qpair,
+ 	return sp;
+ }
+ 
++void qla2xxx_rel_done_warning(srb_t *sp, int res);
++void qla2xxx_rel_free_warning(srb_t *sp);
++
+ static inline void
+ qla2xxx_rel_qpair_sp(struct qla_qpair *qpair, srb_t *sp)
+ {
+ 	sp->qpair = NULL;
++	sp->done = qla2xxx_rel_done_warning;
++	sp->free = qla2xxx_rel_free_warning;
+ 	mempool_free(sp, qpair->srb_mempool);
+ 	QLA_QPAIR_MARK_NOT_BUSY(qpair);
+ }
 -- 
 2.25.1
 
