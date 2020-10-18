@@ -4,50 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB864C43467
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 157FBC433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:58:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8864922263
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:56:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE6BD22272
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:58:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050995;
-	bh=ETVr0lXfJErsdZGRkJuxNwedCRH+8kc1TkFmD2CqYQQ=;
+	s=default; t=1603051124;
+	bh=rv4AEcROxj8BAs2llGk0xVhlp4UVGLDxwUVC5kEsDUw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ucmtZoDbGl1ysPHN00fwFLXPJF5O91aaSMq1MV/iyCdfqYQkr93uNew1m/wqNhlNb
-	 wPA4K3CbcwxlKkw2XbVJhkNg/nPNuXUBLINIorimhnzr2gKvreI2ZFfq9QrtBBbNn1
-	 aS/fh+VY9LgB5HgOSiNpHeQ3g7Dz+4O9dyuUK710=
+	b=LrIWJ+CdpidEf2k6qhL6TukEEucFQYTJn+Jr1wjgnyj9bu2xUAaEAnkAsnD1WvwlT
+	 yPazkp405wgbrneuq99RDkb0WvSxCXtTegTrYK1aZ6r8c7BJPRAzHgAQd49WO7cdZE
+	 5VFZYkngXQyWoUzWyDRQEAAnlfv25aSaS7l90mdU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730234AbgJRT4e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:56:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58520 "EHLO mail.kernel.org"
+        id S1727987AbgJRTTB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:19:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57356 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728352AbgJRTTj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:19:39 -0400
+        id S1727909AbgJRTTA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:19:00 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E8A7B222E7;
-        Sun, 18 Oct 2020 19:19:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D7310222E8;
+        Sun, 18 Oct 2020 19:18:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048778;
-        bh=ETVr0lXfJErsdZGRkJuxNwedCRH+8kc1TkFmD2CqYQQ=;
+        s=default; t=1603048740;
+        bh=rv4AEcROxj8BAs2llGk0xVhlp4UVGLDxwUVC5kEsDUw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=u6FPEi9b8mG8VjVyCv71MYteG8bLzppRlSA6INXSjLXZuzrqIDakwCADtTANPhyou
-         J//pvX8iSo8omhaLJCc6xxKc5DLGtfiwX9U+bMdto4reNz9XHjKvNg4/vZxkMFhjdy
-         kqXpTmhKo19ocWxu1f7zBolk9Vz0vp0xu/PHyqQg=
+        b=tV+k9wp9IUwpe5PDwe0I7irfp6uXMlIWor5KpH5ZFZRUTnZtSbQEpE4rM7hGt1v37
+         WhMp94zelCq0nvsaYWiFJvunck9gZvDQdumvKBmd0I1KceqyvWO2lH0RqoitZcxe/M
+         P3DsZFnZZ6dF6OYsmS+edtv9QeIOcga9PP+qc5oo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 5.9 076/111] scsi: ibmvfc: Fix error return in ibmvfc_probe()
-Date:   Sun, 18 Oct 2020 15:17:32 -0400
-Message-Id: <20201018191807.4052726-76-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 043/111] scsi: mvumi: Fix error return in mvumi_io_attach()
+Date:   Sun, 18 Oct 2020 15:16:59 -0400
+Message-Id: <20201018191807.4052726-43-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
 References: <20201018191807.4052726-1-sashal@kernel.org>
@@ -61,32 +59,30 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Jing Xiangfeng <jingxiangfeng@huawei.com>
 
-[ Upstream commit 5e48a084f4e824e1b624d3fd7ddcf53d2ba69e53 ]
+[ Upstream commit 055f15ab2cb4a5cbc4c0a775ef3d0066e0fa9b34 ]
 
-Fix to return error code PTR_ERR() from the error handling case instead of
-0.
+Return PTR_ERR() from the error handling case instead of 0.
 
-Link: https://lore.kernel.org/r/20200907083949.154251-1-jingxiangfeng@huawei.com
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Link: https://lore.kernel.org/r/20200910123848.93649-1-jingxiangfeng@huawei.com
 Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
+ drivers/scsi/mvumi.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index ea7c8930592dc..70daa0605082d 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -4928,6 +4928,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- 	if (IS_ERR(vhost->work_thread)) {
- 		dev_err(dev, "Couldn't create kernel thread: %ld\n",
- 			PTR_ERR(vhost->work_thread));
-+		rc = PTR_ERR(vhost->work_thread);
- 		goto free_host_mem;
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 8906aceda4c43..0354898d7cac1 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2425,6 +2425,7 @@ static int mvumi_io_attach(struct mvumi_hba *mhba)
+ 	if (IS_ERR(mhba->dm_thread)) {
+ 		dev_err(&mhba->pdev->dev,
+ 			"failed to create device scan thread\n");
++		ret = PTR_ERR(mhba->dm_thread);
+ 		mutex_unlock(&mhba->sas_discovery_mutex);
+ 		goto fail_create_thread;
  	}
- 
 -- 
 2.25.1
 
