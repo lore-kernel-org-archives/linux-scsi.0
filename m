@@ -2,107 +2,167 @@ Return-Path: <SRS0=jquQ=DZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C81C4363D
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E9E0C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6227A222B8
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:16:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iJ9Ua4Sb"
+	by mail.kernel.org (Postfix) with ESMTP id 1CC1B222EA
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603048746;
+	bh=7NorDwtBz89EfBAlrcmi2JV9J5c9nGobVF/FN+7wE6M=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=PkSM2R2UaKSScXyRLPIgX/07A2XNx2FStwEwu8GhwmrjrJPxzhvsQ6l8s7XHlw7jR
+	 FhIDNq73mMPkI4jXkjsiYtIXEAk4flrn6CUWkyh98DIb1ah6xA1oixNtUMKNKd0Dwx
+	 SaZ5OfSNhdSpcgwfCKI0ZcRm1XEoAiSxV8OlGu/o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727137AbgJRTQ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:16:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60248 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726249AbgJRTQZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Oct 2020 15:16:25 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA33C061755;
-        Sun, 18 Oct 2020 12:16:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=jSZ48E7Pk5au6oJE5B/SpoPyGzHAu2LHc5e92XLrkbA=; b=iJ9Ua4Sb+7c2gBb5X093C2g3JF
-        uPXvpy94QM9OfF4QdLHnbdoyPK+foTfLSCfptUIJX1L1QmBGwqRRLC+FO4yttdeacV1S+hl8hKo0C
-        WTqtwQkEZQTbeO+X3m7Juje7eQPdNT7ZY2bxJ15gxf5bGTukHh/PFeI2Wotfd6qSzqn3KwhwiSJ8q
-        nHMmLI1n6mOTyu1OQHnDgD5bqj+pk9E7DasCqQG55sL9hd/rW8umvQBQI/4FGFQAjFO02dSWITtwv
-        yXkpHo9Iys1nXXFCivdyuKxTY6HM4UcykOYUxv1R/rziPsZPtETfWCfkBycLom8Snu0zA9/3jwQkF
-        l4f6J+YQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kUEAE-0008Qi-Sy; Sun, 18 Oct 2020 19:16:19 +0000
-Date:   Sun, 18 Oct 2020 20:16:18 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc:     trix@redhat.com, linux-kernel@vger.kernel.org,
-        alsa-devel@alsa-project.org, clang-built-linux@googlegroups.com,
-        linux-iio@vger.kernel.org, nouveau@lists.freedesktop.org,
-        storagedev@microchip.com, dri-devel@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org,
-        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
-        ath10k@lists.infradead.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-stm32@st-md-mailman.stormreply.com,
-        usb-storage@lists.one-eyed-alien.net,
-        linux-watchdog@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvdimm@lists.01.org, amd-gfx@lists.freedesktop.org,
-        linux-acpi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        industrypack-devel@lists.sourceforge.net,
-        linux-pci@vger.kernel.org, spice-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-nfc@lists.01.org, linux-pm@vger.kernel.org,
-        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-gpio@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-amlogic@lists.infradead.org,
-        openipmi-developer@lists.sourceforge.net,
-        platform-driver-x86@vger.kernel.org,
-        linux-integrity@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-edac@vger.kernel.org,
-        netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        linux-crypto@vger.kernel.org, patches@opensource.cirrus.com,
-        bpf@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-power@fi.rohmeurope.com
-Subject: Re: [Ocfs2-devel] [RFC] treewide: cleanup unreachable breaks
-Message-ID: <20201018191618.GO20115@casper.infradead.org>
-References: <20201017160928.12698-1-trix@redhat.com>
- <20201018185943.GM20115@casper.infradead.org>
- <45efa7780c79972eae9ca9bdeb9f7edbab4f3643.camel@HansenPartnership.com>
+        id S1728024AbgJRTTF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:19:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57390 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727993AbgJRTTC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:19:02 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id EF3FA222E9;
+        Sun, 18 Oct 2020 19:19:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603048741;
+        bh=7NorDwtBz89EfBAlrcmi2JV9J5c9nGobVF/FN+7wE6M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=TVCOGeGczHLXgdGaMWdekE/HOhswRidV6Bj/Ba/8hHhToTrXlqNRCRAX8HIs/B8a4
+         I+uC8gAZ6SUYF/lOHOha0hFW2PapZiDAf7xbXIDjn0NeBjChf43JTpDDowCDFKwHG+
+         hAoYs71ejUPtYD3M+OlCy8AQfEADtdElqQMuuhYI=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 044/111] scsi: target: core: Add CONTROL field for trace events
+Date:   Sun, 18 Oct 2020 15:17:00 -0400
+Message-Id: <20201018191807.4052726-44-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
+References: <20201018191807.4052726-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45efa7780c79972eae9ca9bdeb9f7edbab4f3643.camel@HansenPartnership.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Oct 18, 2020 at 12:13:35PM -0700, James Bottomley wrote:
-> On Sun, 2020-10-18 at 19:59 +0100, Matthew Wilcox wrote:
-> > On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
-> > > clang has a number of useful, new warnings see
-> > > https://urldefense.com/v3/__https://clang.llvm.org/docs/DiagnosticsReference.html__;!!GqivPVa7Brio!Krxz78O3RKcB9JBMVo_F98FupVhj_jxX60ddN6tKGEbv_cnooXc1nnBmchm-e_O9ieGnyQ$ 
-> > 
-> > Please get your IT department to remove that stupidity.  If you
-> > can't, please send email from a non-Red Hat email address.
-> 
-> Actually, the problem is at Oracle's end somewhere in the ocfs2 list
-> ... if you could fix it, that would be great.  The usual real mailing
-> lists didn't get this transformation
-> 
-> https://lore.kernel.org/bpf/20201017160928.12698-1-trix@redhat.com/
-> 
-> but the ocfs2 list archive did:
-> 
-> https://oss.oracle.com/pipermail/ocfs2-devel/2020-October/015330.html
-> 
-> I bet Oracle IT has put some spam filter on the list that mangles URLs
-> this way.
+From: Roman Bolshakov <r.bolshakov@yadro.com>
 
-*sigh*.  I'm sure there's a way.  I've raised it with someone who should
-be able to fix it.
+[ Upstream commit 7010645ba7256992818b518163f46bd4cdf8002a ]
+
+trace-cmd report doesn't show events from target subsystem because
+scsi_command_size() leaks through event format string:
+
+  [target:target_sequencer_start] function scsi_command_size not defined
+  [target:target_cmd_complete] function scsi_command_size not defined
+
+Addition of scsi_command_size() to plugin_scsi.c in trace-cmd doesn't
+help because an expression is used inside TP_printk(). trace-cmd event
+parser doesn't understand minus sign inside [ ]:
+
+  Error: expected ']' but read '-'
+
+Rather than duplicating kernel code in plugin_scsi.c, provide a dedicated
+field for CONTROL byte.
+
+Link: https://lore.kernel.org/r/20200929125957.83069-1-r.bolshakov@yadro.com
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ include/scsi/scsi_common.h    |  7 +++++++
+ include/trace/events/target.h | 12 ++++++------
+ 2 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
+index 731ac09ed2313..5b567b43e1b16 100644
+--- a/include/scsi/scsi_common.h
++++ b/include/scsi/scsi_common.h
+@@ -25,6 +25,13 @@ scsi_command_size(const unsigned char *cmnd)
+ 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
+ }
+ 
++static inline unsigned char
++scsi_command_control(const unsigned char *cmnd)
++{
++	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
++		cmnd[1] : cmnd[COMMAND_SIZE(cmnd[0]) - 1];
++}
++
+ /* Returns a human-readable name for the device */
+ extern const char *scsi_device_type(unsigned type);
+ 
+diff --git a/include/trace/events/target.h b/include/trace/events/target.h
+index 77408edd29d2a..67fad2677ed55 100644
+--- a/include/trace/events/target.h
++++ b/include/trace/events/target.h
+@@ -141,6 +141,7 @@ TRACE_EVENT(target_sequencer_start,
+ 		__field( unsigned int,	opcode		)
+ 		__field( unsigned int,	data_length	)
+ 		__field( unsigned int,	task_attribute  )
++		__field( unsigned char,	control		)
+ 		__array( unsigned char,	cdb, TCM_MAX_COMMAND_SIZE	)
+ 		__string( initiator,	cmd->se_sess->se_node_acl->initiatorname	)
+ 	),
+@@ -151,6 +152,7 @@ TRACE_EVENT(target_sequencer_start,
+ 		__entry->opcode		= cmd->t_task_cdb[0];
+ 		__entry->data_length	= cmd->data_length;
+ 		__entry->task_attribute	= cmd->sam_task_attr;
++		__entry->control	= scsi_command_control(cmd->t_task_cdb);
+ 		memcpy(__entry->cdb, cmd->t_task_cdb, TCM_MAX_COMMAND_SIZE);
+ 		__assign_str(initiator, cmd->se_sess->se_node_acl->initiatorname);
+ 	),
+@@ -160,9 +162,7 @@ TRACE_EVENT(target_sequencer_start,
+ 		  __entry->tag, show_opcode_name(__entry->opcode),
+ 		  __entry->data_length, __print_hex(__entry->cdb, 16),
+ 		  show_task_attribute_name(__entry->task_attribute),
+-		  scsi_command_size(__entry->cdb) <= 16 ?
+-			__entry->cdb[scsi_command_size(__entry->cdb) - 1] :
+-			__entry->cdb[1]
++		  __entry->control
+ 	)
+ );
+ 
+@@ -178,6 +178,7 @@ TRACE_EVENT(target_cmd_complete,
+ 		__field( unsigned int,	opcode		)
+ 		__field( unsigned int,	data_length	)
+ 		__field( unsigned int,	task_attribute  )
++		__field( unsigned char,	control		)
+ 		__field( unsigned char,	scsi_status	)
+ 		__field( unsigned char,	sense_length	)
+ 		__array( unsigned char,	cdb, TCM_MAX_COMMAND_SIZE	)
+@@ -191,6 +192,7 @@ TRACE_EVENT(target_cmd_complete,
+ 		__entry->opcode		= cmd->t_task_cdb[0];
+ 		__entry->data_length	= cmd->data_length;
+ 		__entry->task_attribute	= cmd->sam_task_attr;
++		__entry->control	= scsi_command_control(cmd->t_task_cdb);
+ 		__entry->scsi_status	= cmd->scsi_status;
+ 		__entry->sense_length	= cmd->scsi_status == SAM_STAT_CHECK_CONDITION ?
+ 			min(18, ((u8 *) cmd->sense_buffer)[SPC_ADD_SENSE_LEN_OFFSET] + 8) : 0;
+@@ -208,9 +210,7 @@ TRACE_EVENT(target_cmd_complete,
+ 		  show_opcode_name(__entry->opcode),
+ 		  __entry->data_length, __print_hex(__entry->cdb, 16),
+ 		  show_task_attribute_name(__entry->task_attribute),
+-		  scsi_command_size(__entry->cdb) <= 16 ?
+-			__entry->cdb[scsi_command_size(__entry->cdb) - 1] :
+-			__entry->cdb[1]
++		  __entry->control
+ 	)
+ );
+ 
+-- 
+2.25.1
+
