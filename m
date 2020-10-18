@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D83DFC433E7
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A703CC433E7
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99BCF22268
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 741FA22268
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050494;
-	bh=hAfwZo3WFQcSNO/kbKcDbhhHxXXm/AOfOCg43UAlxw4=;
+	s=default; t=1603050522;
+	bh=D4zjN5/SB8CO5872b2Os3idW0tfPlzkQWmu5vObtLck=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Skf50kFtVM47e5ecf3Wl4j+gRQRW9GZF10qQ65smATt9y5E9+fudAtsCsCHpNncxk
-	 rqTN36XhvaKR6F6z6JDehghOZuBe0XqtEOWM0qKDpbdCskrpefE66M/i41Lbf4Ld+4
-	 5ycvlwuLZurDisEg9Y/4kE0xQCjHdkgt9K1suHjY=
+	b=WUpq1SO9zHtihKg0pneKaUZUukgpaMY2FciFQhz9Aph4mT1yZ/8E6PAVDMwEmB2yC
+	 yV8OQj1dSYA8OkYAjTSYTPhcKeOBuTRO5KT/Lca7MYM8jGq94PirLKkQvWudCdyfp1
+	 skPuLRCvUcE40v6pPfZwuHfmcGhJrWLme8b8zb/U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387455AbgJRTsO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:48:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34544 "EHLO mail.kernel.org"
+        id S1729627AbgJRTVz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:21:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34328 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727349AbgJRTWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:22:01 -0400
+        id S1729618AbgJRTVw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:21:52 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DCB31222E9;
-        Sun, 18 Oct 2020 19:21:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 24F20222E7;
+        Sun, 18 Oct 2020 19:21:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048920;
-        bh=hAfwZo3WFQcSNO/kbKcDbhhHxXXm/AOfOCg43UAlxw4=;
+        s=default; t=1603048912;
+        bh=D4zjN5/SB8CO5872b2Os3idW0tfPlzkQWmu5vObtLck=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fLAuLpFYIE3NxXVk/0P+aSHYu1gzRedn8Mp+LkFWYLszbCnsfwg/O3jYlyQFIKstD
-         oRcfxYyLEAg5Y9EYPo/EtErWCCqsqS0nBdoxjPpigALNKp2EOj64vTB2l2PoP9cte5
-         sslVXNo0B8lS0fbTARkc/KMBREKi+c952gCCRIUg=
+        b=qp9WjIbm76mz2J/wXBD9P+sUu3h8ul7K68eI8QZbGz4eAJQWmM9WkYqWEkCDvxObE
+         GelXnsT6SijwM5LC1X648Kb1A3nvU22QeWm8P1t1KNPVsjilLjG53SMAwwtPTHBf1b
+         Txwj4DNPezqbsZOUFjWnt/JjkAsFTeBbDLvHO/vQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
+Cc:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 078/101] scsi: qedf: Return SUCCESS if stale rport is encountered
-Date:   Sun, 18 Oct 2020 15:20:03 -0400
-Message-Id: <20201018192026.4053674-78-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 5.8 071/101] scsi: ibmvfc: Fix error return in ibmvfc_probe()
+Date:   Sun, 18 Oct 2020 15:19:56 -0400
+Message-Id: <20201018192026.4053674-71-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
 References: <20201018192026.4053674-1-sashal@kernel.org>
@@ -58,33 +59,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <skashyap@marvell.com>
+From: Jing Xiangfeng <jingxiangfeng@huawei.com>
 
-[ Upstream commit 10aff62fab263ad7661780816551420cea956ebb ]
+[ Upstream commit 5e48a084f4e824e1b624d3fd7ddcf53d2ba69e53 ]
 
-If SUCCESS is not returned, error handling will escalate. Return SUCCESS
-similar to other conditions in this function.
+Fix to return error code PTR_ERR() from the error handling case instead of
+0.
 
-Link: https://lore.kernel.org/r/20200907121443.5150-6-jhasan@marvell.com
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Link: https://lore.kernel.org/r/20200907083949.154251-1-jingxiangfeng@huawei.com
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 51cfab9d1afdc..ed3054fffa344 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -704,7 +704,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
- 	rdata = fcport->rdata;
- 	if (!rdata || !kref_get_unless_zero(&rdata->kref)) {
- 		QEDF_ERR(&qedf->dbg_ctx, "stale rport, sc_cmd=%p\n", sc_cmd);
--		rc = 1;
-+		rc = SUCCESS;
- 		goto out;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 635f6f9cffc40..ef91f3d01f989 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -4928,6 +4928,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	if (IS_ERR(vhost->work_thread)) {
+ 		dev_err(dev, "Couldn't create kernel thread: %ld\n",
+ 			PTR_ERR(vhost->work_thread));
++		rc = PTR_ERR(vhost->work_thread);
+ 		goto free_host_mem;
  	}
  
 -- 
