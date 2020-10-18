@@ -7,48 +7,46 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A6AC43457
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E605C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26D3F207DE
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:47:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D81D22267
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050440;
-	bh=Y/1hHBO6KE75jBvjkA30cN0pMayafi/gat7ttIbSo9A=;
+	s=default; t=1603050488;
+	bh=VBzvYmETKXOwfA2KkRNYm/mmCR6EPH7oXjsYbI2Q7cM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p/fGueDnmi9n9n1noPJ+fZJVr7bb5ck7S42hSB1NV/Xt0+uFPgpABTxkVETL/YP6e
-	 GmBdVs7qIF3XilL4uG8LfSSUyFzxxAQIjqwDxKn45/jja6vhI333HozXBq7fG7Qxel
-	 tRzYlgFzj5hnYcw+GkN1Dose1LeGJo8ntOaZXB4U=
+	b=MUw+/AFnkF2M4olWA6eK7CDsDEGuF+j8XDpC/DyU10E3fksnmleX/VySh2rGT2diY
+	 oIL5kxhYIJF7jn6GXZFoxKRuoKZR/pAlMXyh6DB8v3rL7jUdEOnVD2QhsXyKwYo38m
+	 hKURgHjcphwWBm7NciMUfOe3On8C+uXduWFf0RyM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729842AbgJRTW0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:22:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35180 "EHLO mail.kernel.org"
+        id S1729689AbgJRTWF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:22:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34582 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729829AbgJRTWZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:22:25 -0400
+        id S1727702AbgJRTWC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:22:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E185C2137B;
-        Sun, 18 Oct 2020 19:22:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 15A31222E7;
+        Sun, 18 Oct 2020 19:22:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048944;
-        bh=Y/1hHBO6KE75jBvjkA30cN0pMayafi/gat7ttIbSo9A=;
+        s=default; t=1603048921;
+        bh=VBzvYmETKXOwfA2KkRNYm/mmCR6EPH7oXjsYbI2Q7cM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=djI+LAz5K2PMj4fzDWYy4am5zIEMrdDS1YKY/HTRB5/sSrOP44bgnfhp22QoKroRV
-         iei4Qnpmf9Hx8VNfD01c9/Nb67+KkbBpUEtndziCLklQ9EV5qj/gbobXaEwQS76XUs
-         lkd6Wy/ITj+48pNg/7p/Xn/6YYbzKg9YE1LD5q4I=
+        b=Fen9DLf0EIxZnGsaG3max296ovDUDtl5lJerXodUyuFRtvrVUA1Soofo63sPxh1fg
+         z5h0AAhlnrpqN+kQ4SlSk+Di7635In6BAPM0A66WQXWomPgiua28VYCHQb4KiDhHaZ
+         jaagLIQmSpabTSlFP6vEc3BjyQhmLwMIKPn+UnlM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 097/101] scsi: ufs: ufs-qcom: Fix race conditions caused by ufs_qcom_testbus_config()
-Date:   Sun, 18 Oct 2020 15:20:22 -0400
-Message-Id: <20201018192026.4053674-97-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 079/101] scsi: qedi: Mark all connections for recovery on link down event
+Date:   Sun, 18 Oct 2020 15:20:04 -0400
+Message-Id: <20201018192026.4053674-79-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
 References: <20201018192026.4053674-1-sashal@kernel.org>
@@ -60,50 +58,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Can Guo <cang@codeaurora.org>
+From: Nilesh Javali <njavali@marvell.com>
 
-[ Upstream commit 89dd87acd40a44de8ff3358138aedf8f73f4efc6 ]
+[ Upstream commit 4118879be3755b38171063dfd4a57611d4b20a83 ]
 
-If ufs_qcom_dump_dbg_regs() calls ufs_qcom_testbus_config() from
-ufshcd_suspend/resume and/or clk gate/ungate context, pm_runtime_get_sync()
-and ufshcd_hold() will cause a race condition. Fix this by removing the
-unnecessary calls of pm_runtime_get_sync() and ufshcd_hold().
+For short time cable pulls, the in-flight I/O to the firmware is never
+cleaned up, resulting in the behaviour of stale I/O completion causing
+list_del corruption and soft lockup of the system.
 
-Link: https://lore.kernel.org/r/1596975355-39813-3-git-send-email-cang@codeaurora.org
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+On link down event, mark all the connections for recovery, causing cleanup
+of all the in-flight I/O immediately.
+
+Link: https://lore.kernel.org/r/20200908095657.26821-7-mrangankar@marvell.com
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/scsi/qedi/qedi_main.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2e6ddb5cdfc23..7da27eed1fe7b 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1604,9 +1604,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	 */
- 	}
- 	mask <<= offset;
--
--	pm_runtime_get_sync(host->hba->dev);
--	ufshcd_hold(host->hba, false);
- 	ufshcd_rmwl(host->hba, TEST_BUS_SEL,
- 		    (u32)host->testbus.select_major << 19,
- 		    REG_UFS_CFG1);
-@@ -1619,8 +1616,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	 * committed before returning.
- 	 */
- 	mb();
--	ufshcd_release(host->hba);
--	pm_runtime_put_sync(host->hba->dev);
- 
- 	return 0;
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 81a307695cc91..569fa4b28e4e2 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -1127,6 +1127,15 @@ static void qedi_schedule_recovery_handler(void *dev)
+ 	schedule_delayed_work(&qedi->recovery_work, 0);
  }
+ 
++static void qedi_set_conn_recovery(struct iscsi_cls_session *cls_session)
++{
++	struct iscsi_session *session = cls_session->dd_data;
++	struct iscsi_conn *conn = session->leadconn;
++	struct qedi_conn *qedi_conn = conn->dd_data;
++
++	qedi_start_conn_recovery(qedi_conn->qedi, qedi_conn);
++}
++
+ static void qedi_link_update(void *dev, struct qed_link_output *link)
+ {
+ 	struct qedi_ctx *qedi = (struct qedi_ctx *)dev;
+@@ -1138,6 +1147,7 @@ static void qedi_link_update(void *dev, struct qed_link_output *link)
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
+ 			  "Link Down event.\n");
+ 		atomic_set(&qedi->link_state, QEDI_LINK_DOWN);
++		iscsi_host_for_each_session(qedi->shost, qedi_set_conn_recovery);
+ 	}
+ }
+ 
 -- 
 2.25.1
 
