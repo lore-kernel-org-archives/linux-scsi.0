@@ -2,108 +2,160 @@ Return-Path: <SRS0=jquQ=DZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D60FAC433E7
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 17:14:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEAEC433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 17:14:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2DAA2063A
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 17:14:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD7D72063A
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 17:14:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727366AbgJRRNu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 13:13:50 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:52030 "EHLO smtp.infotech.no"
+        id S1727418AbgJRROE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 13:14:04 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:52039 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726698AbgJRRNu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726725AbgJRRNu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Sun, 18 Oct 2020 13:13:50 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id BF9D020424C;
-        Sun, 18 Oct 2020 19:13:47 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 6545520425C;
+        Sun, 18 Oct 2020 19:13:48 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id nx0fHgccNeh3; Sun, 18 Oct 2020 19:13:41 +0200 (CEST)
+        with ESMTP id jD2poka938Cf; Sun, 18 Oct 2020 19:13:46 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id 8CC6220418E;
-        Sun, 18 Oct 2020 19:13:39 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 9678D204258;
+        Sun, 18 Oct 2020 19:13:43 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     martin.petersen@oracle.com, axboe@kernel.dk, bvanassche@acm.org,
         bostroesser@gmail.com
-Subject: [PATCH v2 0/4] scatterlist: add new capabilities
-Date:   Sun, 18 Oct 2020 13:13:32 -0400
-Message-Id: <20201018171336.63839-1-dgilbert@interlog.com>
+Subject: [PATCH v2 2/4] scatterlist: add sgl_copy_sgl() function
+Date:   Sun, 18 Oct 2020 13:13:34 -0400
+Message-Id: <20201018171336.63839-3-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20201018171336.63839-1-dgilbert@interlog.com>
+References: <20201018171336.63839-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Scatter-gather lists (sgl_s) are frequently used as data carriers in
-the block layer. For example the SCSI and NVMe subsystems interchange
-data with the block layer using sgl_s. The sgl API is declared in
-<linux/scatterlist.h>
+Both the SCSI and NVMe subsystems receive user data from the block
+layer in scatterlist_s (aka scatter gather lists (sgl) which are
+often arrays). If drivers in those subsystems represent storage
+(e.g. a ramdisk) or cache "hot" user data then they may also
+choose to use scatterlist_s. Currently there are no sgl to sgl
+operations in the kernel. Start with a copy.
 
-The author has extended these transient sgl use cases to a store (i.e.
-a ramdisk) in the scsi_debug driver. Other new potential uses of sgl_s
-could be for caches. When this extra step is taken, the need to copy
-between sgl_s becomes apparent. The patchset adds sgl_copy_sgl() and
-two other sgl operations.
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ include/linux/scatterlist.h |  4 ++
+ lib/scatterlist.c           | 74 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 78 insertions(+)
 
-The existing sgl_alloc_order() function can be seen as a replacement
-for vmalloc() for large, long-term allocations.  For what seems like
-no good reason, sgl_alloc_order() currently restricts its total
-allocation to less than or equal to 4 GiB. vmalloc() has no such
-restriction.
-
-Changes since v1 [posted 20201016]:
-  - Bodo Stroesser pointed out a problem with the nesting of
-    kmap_atomic() [called via sg_miter_next()] and kunmap_atomic()
-    calls [called via sg_miter_stop()] and proposed a solution that
-    simplifies the previous code.
-
-  - the new implementation of the three functions has shorter periods
-    when pre-emption is disabled (but has more them). This should
-    make operations on large sgl_s more pre-emption "friendly" with
-    a relatively small performance hit.
-
-  - sgl_memset return type changed from void to size_t and is the
-    number of bytes actually (over)written. That number is needed
-    anyway internally so may as well return it as it may be useful to
-    the caller.
-
-This patchset is against lk 5.9.0
-
-Douglas Gilbert (4):
-  sgl_alloc_order: remove 4 GiB limit, sgl_free() warning
-  scatterlist: add sgl_copy_sgl() function
-  scatterlist: add sgl_compare_sgl() function
-  scatterlist: add sgl_memset()
-
- include/linux/scatterlist.h |  12 +++
- lib/scatterlist.c           | 204 +++++++++++++++++++++++++++++++++++-
- 2 files changed, 213 insertions(+), 3 deletions(-)
-
--- 
-2.25.1
-
-
-*** BLURB HERE ***
-
-Douglas Gilbert (4):
-  sgl_alloc_order: remove 4 GiB limit, sgl_free() warning
-  scatterlist: add sgl_copy_sgl() function
-  scatterlist: add sgl_compare_sgl() function
-  scatterlist: add sgl_memset()
-
- include/linux/scatterlist.h |  12 +++
- lib/scatterlist.c           | 185 +++++++++++++++++++++++++++++++++++-
- 2 files changed, 194 insertions(+), 3 deletions(-)
-
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index 80178afc2a4a..6649414c0749 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -321,6 +321,10 @@ size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
+ 		       size_t buflen, off_t skip);
+ 
++size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_skip,
++		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
++		    size_t n_bytes);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index d5770e7f1030..a0a86059c10e 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -974,3 +974,77 @@ size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
+ 	return offset;
+ }
+ EXPORT_SYMBOL(sg_zero_buffer);
++
++/**
++ * sgl_copy_sgl - Copy over a destination sgl from a source sgl
++ * @d_sgl:		 Destination sgl
++ * @d_nents:		 Number of SG entries in destination sgl
++ * @d_skip:		 Number of bytes to skip in destination before starting
++ * @s_sgl:		 Source sgl
++ * @s_nents:		 Number of SG entries in source sgl
++ * @s_skip:		 Number of bytes to skip in source before starting
++ * @n_bytes:		 The (maximum) number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ * Notes:
++ *   Destination arguments appear before the source arguments, as with memcpy().
++ *
++ *   Stops copying if either d_sgl, s_sgl or n_bytes is exhausted.
++ *
++ *   Since memcpy() is used, overlapping copies (where d_sgl and s_sgl belong
++ *   to the same sgl and the copy regions overlap) are not supported.
++ *
++ *   Large copies are broken into copy segments whose sizes may vary. Those
++ *   copy segment sizes are chosen by the min3() statement in the code below.
++ *   Since SG_MITER_ATOMIC is used for both sides, each copy segment is started
++ *   with kmap_atomic() [in sg_miter_next()] and completed with kunmap_atomic()
++ *   [in sg_miter_stop()]. This means pre-emption is inhibited for relatively
++ *   short periods even in very large copies.
++ *
++ *   If d_skip is large, potentially spanning multiple d_nents then some
++ *   integer arithmetic to adjust d_sgl may improve performance. For example
++ *   if d_sgl is built using sgl_alloc_order(chainable=false) then the sgl
++ *   will be an array with equally sized segments facilitating that
++ *   arithmetic. The suggestion applies to s_skip, s_sgl and s_nents as well.
++ *
++ **/
++size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_skip,
++		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
++		    size_t n_bytes)
++{
++	size_t len;
++	size_t offset = 0;
++	struct sg_mapping_iter d_iter, s_iter;
++
++	if (n_bytes == 0)
++		return 0;
++	sg_miter_start(&s_iter, s_sgl, s_nents, SG_MITER_ATOMIC | SG_MITER_FROM_SG);
++	sg_miter_start(&d_iter, d_sgl, d_nents, SG_MITER_ATOMIC | SG_MITER_TO_SG);
++	if (!sg_miter_skip(&s_iter, s_skip))
++		goto fini;
++	if (!sg_miter_skip(&d_iter, d_skip))
++		goto fini;
++
++	while (offset < n_bytes) {
++		if (!sg_miter_next(&s_iter))
++			break;
++		if (!sg_miter_next(&d_iter))
++			break;
++		len = min3(d_iter.length, s_iter.length, n_bytes - offset);
++
++		memcpy(d_iter.addr, s_iter.addr, len);
++		offset += len;
++		/* LIFO order (stop d_iter before s_iter) needed with SG_MITER_ATOMIC */
++		d_iter.consumed = len;
++		sg_miter_stop(&d_iter);
++		s_iter.consumed = len;
++		sg_miter_stop(&s_iter);
++	}
++fini:
++	sg_miter_stop(&d_iter);
++	sg_miter_stop(&s_iter);
++	return offset;
++}
++EXPORT_SYMBOL(sgl_copy_sgl);
++
 -- 
 2.25.1
 
