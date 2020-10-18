@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6786C433E7
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:24:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27624C43467
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:25:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D5EE207DE
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:24:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3A01207DE
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:25:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049094;
-	bh=1Y3Ovy7HhS/9an9kESEToXaRzV6Qxm8CLErPUU+lu/s=;
+	s=default; t=1603049110;
+	bh=8wlKawfhytZkCmkTMNOR1p8shCmwP4n+GekvhZnIxEY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=EUUyEyExVRIZ4/xzxqqEka3xD6nUM7iGv4kVZhL7Fgz81WkB1zXO4LPCdoCQTIb/o
-	 deeH1SvWPxMaUeqTqecrg1voesUZeqEmRAdLz4RD4oC/d+WuYjnzqzf7CiHb2/D04y
-	 QQTB534hkY50YPIv68P2xfRvDLmHIIXDHjUpb0/g=
+	b=M20t304nTIJaHH2JQpp+/AUjdMaU/uKe0ZDW13MSoPP/1bIv/Yoojgdj9XBDEQSlc
+	 +ND7nfiFpmsvYaLaDsrkOgl/1Lcf2rI1oBooH93XWfhWApUTH+Y87le3Uhbpafg2QF
+	 3xxonCcy1JMlBBOsjJtkyWhxMqX94hlYcvmPuXXs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731071AbgJRTYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:24:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39034 "EHLO mail.kernel.org"
+        id S1730983AbgJRTZK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:25:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39440 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731055AbgJRTYw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:24:52 -0400
+        id S1731167AbgJRTZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:25:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DF57E222EB;
-        Sun, 18 Oct 2020 19:24:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EED5C2137B;
+        Sun, 18 Oct 2020 19:25:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049091;
-        bh=1Y3Ovy7HhS/9an9kESEToXaRzV6Qxm8CLErPUU+lu/s=;
+        s=default; t=1603049108;
+        bh=8wlKawfhytZkCmkTMNOR1p8shCmwP4n+GekvhZnIxEY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eFbQouATBiPZlgGR543XA6No880ZbOFlaBVKBhYJKCkBkZJk8WCQ5MxJ/ge01cwZe
-         Z2S5yl/4VVcNy948zraOR62zLEbVcox/f9xfsysresfmGrayGWjJmZkhSRhT0bIUCO
-         3o4D8pGo7KIgdL7rZJu9BKyB50SY4OBCmp0SORIA=
+        b=gMPRtP/xW7FWdGiZDJ9Liu8VGAkRSNc491ue+J5iF/S+Ul9O4j1pW+jk0XD/dNwg+
+         wKerzlz2rqJOgesBZBnXbZzvGyFEUISOmgm8J3uGzfQeJG4ubLCIh/ZYHpoqIcUbjX
+         2WjfSn65mh5FuiXb1BNZ4+ajxftOHCn+/Xej12aE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        Mike Christie <michael.christie@oracle.com>,
+Cc:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 27/56] scsi: target: core: Add CONTROL field for trace events
-Date:   Sun, 18 Oct 2020 15:23:48 -0400
-Message-Id: <20201018192417.4055228-27-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 4.19 42/56] scsi: ibmvfc: Fix error return in ibmvfc_probe()
+Date:   Sun, 18 Oct 2020 15:24:03 -0400
+Message-Id: <20201018192417.4055228-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192417.4055228-1-sashal@kernel.org>
 References: <20201018192417.4055228-1-sashal@kernel.org>
@@ -58,110 +59,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Roman Bolshakov <r.bolshakov@yadro.com>
+From: Jing Xiangfeng <jingxiangfeng@huawei.com>
 
-[ Upstream commit 7010645ba7256992818b518163f46bd4cdf8002a ]
+[ Upstream commit 5e48a084f4e824e1b624d3fd7ddcf53d2ba69e53 ]
 
-trace-cmd report doesn't show events from target subsystem because
-scsi_command_size() leaks through event format string:
+Fix to return error code PTR_ERR() from the error handling case instead of
+0.
 
-  [target:target_sequencer_start] function scsi_command_size not defined
-  [target:target_cmd_complete] function scsi_command_size not defined
-
-Addition of scsi_command_size() to plugin_scsi.c in trace-cmd doesn't
-help because an expression is used inside TP_printk(). trace-cmd event
-parser doesn't understand minus sign inside [ ]:
-
-  Error: expected ']' but read '-'
-
-Rather than duplicating kernel code in plugin_scsi.c, provide a dedicated
-field for CONTROL byte.
-
-Link: https://lore.kernel.org/r/20200929125957.83069-1-r.bolshakov@yadro.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Link: https://lore.kernel.org/r/20200907083949.154251-1-jingxiangfeng@huawei.com
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/scsi/scsi_common.h    |  7 +++++++
- include/trace/events/target.h | 12 ++++++------
- 2 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 731ac09ed2313..5b567b43e1b16 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -25,6 +25,13 @@ scsi_command_size(const unsigned char *cmnd)
- 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
- }
- 
-+static inline unsigned char
-+scsi_command_control(const unsigned char *cmnd)
-+{
-+	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
-+		cmnd[1] : cmnd[COMMAND_SIZE(cmnd[0]) - 1];
-+}
-+
- /* Returns a human-readable name for the device */
- extern const char *scsi_device_type(unsigned type);
- 
-diff --git a/include/trace/events/target.h b/include/trace/events/target.h
-index 914a872dd3435..e87a3716b0ac9 100644
---- a/include/trace/events/target.h
-+++ b/include/trace/events/target.h
-@@ -140,6 +140,7 @@ TRACE_EVENT(target_sequencer_start,
- 		__field( unsigned int,	opcode		)
- 		__field( unsigned int,	data_length	)
- 		__field( unsigned int,	task_attribute  )
-+		__field( unsigned char,	control		)
- 		__array( unsigned char,	cdb, TCM_MAX_COMMAND_SIZE	)
- 		__string( initiator,	cmd->se_sess->se_node_acl->initiatorname	)
- 	),
-@@ -149,6 +150,7 @@ TRACE_EVENT(target_sequencer_start,
- 		__entry->opcode		= cmd->t_task_cdb[0];
- 		__entry->data_length	= cmd->data_length;
- 		__entry->task_attribute	= cmd->sam_task_attr;
-+		__entry->control	= scsi_command_control(cmd->t_task_cdb);
- 		memcpy(__entry->cdb, cmd->t_task_cdb, TCM_MAX_COMMAND_SIZE);
- 		__assign_str(initiator, cmd->se_sess->se_node_acl->initiatorname);
- 	),
-@@ -158,9 +160,7 @@ TRACE_EVENT(target_sequencer_start,
- 		  show_opcode_name(__entry->opcode),
- 		  __entry->data_length, __print_hex(__entry->cdb, 16),
- 		  show_task_attribute_name(__entry->task_attribute),
--		  scsi_command_size(__entry->cdb) <= 16 ?
--			__entry->cdb[scsi_command_size(__entry->cdb) - 1] :
--			__entry->cdb[1]
-+		  __entry->control
- 	)
- );
- 
-@@ -175,6 +175,7 @@ TRACE_EVENT(target_cmd_complete,
- 		__field( unsigned int,	opcode		)
- 		__field( unsigned int,	data_length	)
- 		__field( unsigned int,	task_attribute  )
-+		__field( unsigned char,	control		)
- 		__field( unsigned char,	scsi_status	)
- 		__field( unsigned char,	sense_length	)
- 		__array( unsigned char,	cdb, TCM_MAX_COMMAND_SIZE	)
-@@ -187,6 +188,7 @@ TRACE_EVENT(target_cmd_complete,
- 		__entry->opcode		= cmd->t_task_cdb[0];
- 		__entry->data_length	= cmd->data_length;
- 		__entry->task_attribute	= cmd->sam_task_attr;
-+		__entry->control	= scsi_command_control(cmd->t_task_cdb);
- 		__entry->scsi_status	= cmd->scsi_status;
- 		__entry->sense_length	= cmd->scsi_status == SAM_STAT_CHECK_CONDITION ?
- 			min(18, ((u8 *) cmd->sense_buffer)[SPC_ADD_SENSE_LEN_OFFSET] + 8) : 0;
-@@ -203,9 +205,7 @@ TRACE_EVENT(target_cmd_complete,
- 		  show_opcode_name(__entry->opcode),
- 		  __entry->data_length, __print_hex(__entry->cdb, 16),
- 		  show_task_attribute_name(__entry->task_attribute),
--		  scsi_command_size(__entry->cdb) <= 16 ?
--			__entry->cdb[scsi_command_size(__entry->cdb) - 1] :
--			__entry->cdb[1]
-+		  __entry->control
- 	)
- );
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 71d53bb239e25..090ab377f65e5 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -4795,6 +4795,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	if (IS_ERR(vhost->work_thread)) {
+ 		dev_err(dev, "Couldn't create kernel thread: %ld\n",
+ 			PTR_ERR(vhost->work_thread));
++		rc = PTR_ERR(vhost->work_thread);
+ 		goto free_host_mem;
+ 	}
  
 -- 
 2.25.1
