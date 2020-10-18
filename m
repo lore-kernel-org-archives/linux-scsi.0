@@ -4,51 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D1E7C43457
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA9FC433E7
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:34:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FFCC2137B
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:33:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AB44207DE
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:34:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049629;
-	bh=bgtKm3nXHAJrgo0PPg5JzJ+PX4/ItlVoSYtZa0l4BFg=;
+	s=default; t=1603049664;
+	bh=OUQmJVpfkCPr55FpPCnjaFc5PMQInHYf5iAnutgfJ1A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UJY/vShO+a1XKinfaPk7zWDk1Dta3UoDCoYDrB8deYvCBwpyT6gVfLNND9518PmhD
-	 pVl0NOCzprLwZIXJxQ3kYULLCG9vnlAyI9HFfTdeCTjxb8AUScQazjmI8SnKIJUfxK
-	 /5VNQGcWtl3Wa4xB4Udaywbu0r7+063fth4mav1s=
+	b=Uv8dHQJlHJlFLWYAEcvutG+5Yc9vhIhBTyiMeOZaxQdIV+7y/uyekDlOR1mhD2voQ
+	 H74xDiAry22SuoCJJolnvIn/xq2CuC8pkWT6VMgAk5PhVj7xD4xqpFIZOicuqZGD5b
+	 7jcn7pJ5+0b3GJa06vVS5IGTRUDbsShIj0hxCygo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732612AbgJRTds (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:33:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41778 "EHLO mail.kernel.org"
+        id S1732714AbgJRTeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:34:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41518 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731737AbgJRT0d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:26:33 -0400
+        id S1731664AbgJRT0Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:26:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AB04220791;
-        Sun, 18 Oct 2020 19:26:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A2041222EA;
+        Sun, 18 Oct 2020 19:26:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049192;
-        bh=bgtKm3nXHAJrgo0PPg5JzJ+PX4/ItlVoSYtZa0l4BFg=;
+        s=default; t=1603049183;
+        bh=OUQmJVpfkCPr55FpPCnjaFc5PMQInHYf5iAnutgfJ1A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jOi4HX7fQRwyCXb9PLzsRZbuRHhRRoU9WiXSsgcYlAHkutI7jx61FhGJBo/2dfTxT
-         UgW3SQsL8Qel7t2uUTeAvkZcdYk1ZIM11WADShi0yOM330ZvDMm/Er9aa30JEvZ2Ql
-         z1ODcFJfqexZRxVmuVsvHevB0gybETxFwDf0b+ow=
+        b=j7dX0d2+JuoU4wQNrzl66Q22T5+vTIrK7jeN/0VC1aVaHpnqzNLV1B02bqAfplkAZ
+         aTEqqY5O92oGRH/NSdP46HZycxg0ootIVHeiXpi93KL8BeOMvwtXduDWt3VZqRVLbv
+         G3avmVQlvYraoOqsaqJG06ihX0zQzkDxRIV4dP2U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 51/52] scsi: ufs: ufs-qcom: Fix race conditions caused by ufs_qcom_testbus_config()
-Date:   Sun, 18 Oct 2020 15:25:28 -0400
-Message-Id: <20201018192530.4055730-51-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 44/52] scsi: qedi: Fix list_del corruption while removing active I/O
+Date:   Sun, 18 Oct 2020 15:25:21 -0400
+Message-Id: <20201018192530.4055730-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192530.4055730-1-sashal@kernel.org>
 References: <20201018192530.4055730-1-sashal@kernel.org>
@@ -60,50 +58,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Can Guo <cang@codeaurora.org>
+From: Nilesh Javali <njavali@marvell.com>
 
-[ Upstream commit 89dd87acd40a44de8ff3358138aedf8f73f4efc6 ]
+[ Upstream commit 28b35d17f9f8573d4646dd8df08917a4076a6b63 ]
 
-If ufs_qcom_dump_dbg_regs() calls ufs_qcom_testbus_config() from
-ufshcd_suspend/resume and/or clk gate/ungate context, pm_runtime_get_sync()
-and ufshcd_hold() will cause a race condition. Fix this by removing the
-unnecessary calls of pm_runtime_get_sync() and ufshcd_hold().
+While aborting the I/O, the firmware cleanup task timed out and driver
+deleted the I/O from active command list. Some time later the firmware
+sent the cleanup task response and driver again deleted the I/O from
+active command list causing firmware to send completion for non-existent
+I/O and list_del corruption of active command list.
 
-Link: https://lore.kernel.org/r/1596975355-39813-3-git-send-email-cang@codeaurora.org
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Add fix to check if I/O is present before deleting it from the active
+command list to ensure firmware sends valid I/O completion and protect
+against list_del corruption.
+
+Link: https://lore.kernel.org/r/20200908095657.26821-4-mrangankar@marvell.com
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/scsi/qedi/qedi_fw.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index ee3589ac64abf..6b6b8bf2ec929 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1595,9 +1595,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	 */
- 	}
- 	mask <<= offset;
--
--	pm_runtime_get_sync(host->hba->dev);
--	ufshcd_hold(host->hba, false);
- 	ufshcd_rmwl(host->hba, TEST_BUS_SEL,
- 		    (u32)host->testbus.select_major << 19,
- 		    REG_UFS_CFG1);
-@@ -1610,8 +1607,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
- 	 * committed before returning.
- 	 */
- 	mb();
--	ufshcd_release(host->hba);
--	pm_runtime_put_sync(host->hba->dev);
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index e688300faeefd..e8f2c662471e0 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -844,8 +844,11 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			qedi_clear_task_idx(qedi_conn->qedi, rtid);
  
- 	return 0;
- }
+ 			spin_lock(&qedi_conn->list_lock);
+-			list_del_init(&dbg_cmd->io_cmd);
+-			qedi_conn->active_cmd_count--;
++			if (likely(dbg_cmd->io_cmd_in_list)) {
++				dbg_cmd->io_cmd_in_list = false;
++				list_del_init(&dbg_cmd->io_cmd);
++				qedi_conn->active_cmd_count--;
++			}
+ 			spin_unlock(&qedi_conn->list_lock);
+ 			qedi_cmd->state = CLEANUP_RECV;
+ 			wake_up_interruptible(&qedi_conn->wait_queue);
+@@ -1265,6 +1268,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 		qedi_conn->cmd_cleanup_req++;
+ 		qedi_iscsi_cleanup_task(ctask, true);
+ 
++		cmd->io_cmd_in_list = false;
+ 		list_del_init(&cmd->io_cmd);
+ 		qedi_conn->active_cmd_count--;
+ 		QEDI_WARN(&qedi->dbg_ctx,
+@@ -1478,8 +1482,11 @@ static void qedi_tmf_work(struct work_struct *work)
+ 	spin_unlock_bh(&qedi_conn->tmf_work_lock);
+ 
+ 	spin_lock(&qedi_conn->list_lock);
+-	list_del_init(&cmd->io_cmd);
+-	qedi_conn->active_cmd_count--;
++	if (likely(cmd->io_cmd_in_list)) {
++		cmd->io_cmd_in_list = false;
++		list_del_init(&cmd->io_cmd);
++		qedi_conn->active_cmd_count--;
++	}
+ 	spin_unlock(&qedi_conn->list_lock);
+ 
+ 	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
 -- 
 2.25.1
 
