@@ -7,51 +7,46 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80374C43457
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:41:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84B4AC433E7
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:42:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4209D207DE
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:41:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5685520708
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:42:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050115;
-	bh=xETi8a9XvVpzPzf47tAGsxCFhplCkbg4vXocLqmfXn8=;
+	s=default; t=1603050149;
+	bh=XNBNPHCWavZrEu5SlajFZldWJA/rSGH/UWI9X1BQniU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CKo9YBCbjqEy/JS/CIeW6B1/adIuR0DCgC14FPKyTPxtXpq+qg/FmCbvZ42PR5vL4
-	 reJfGyPwv/yItbq/j+x6fIUVFece9B5PyKQXsMDIA5d+OYe2nFYN/9ztG46Zi7Tln0
-	 zRFHQbq1dvnsif4v/Xnp+vgqmy7dkuIWaaVzr9sQ=
+	b=w98aatuURU0pAhvS95BJElzXcf4SuWP95XW8VZthotYl4cKLTqgR4ECdCfBMESAnZ
+	 G+iHhqe+g4SPa2eV1kxsQ2Ot1nDwdiIarXRMPVpEc4h7xGFW6Fhcin8d/tCDCAOA0D
+	 gJsp2aBqiK8piC/PZmN+z9TBgHL30hIdcR15nEqY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731189AbgJRTlv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:41:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37898 "EHLO mail.kernel.org"
+        id S1730509AbgJRTXx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:23:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37454 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730599AbgJRTYG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:24:06 -0400
+        id S1730491AbgJRTXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:23:52 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E0548207DE;
-        Sun, 18 Oct 2020 19:24:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8F515222EB;
+        Sun, 18 Oct 2020 19:23:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049045;
-        bh=xETi8a9XvVpzPzf47tAGsxCFhplCkbg4vXocLqmfXn8=;
+        s=default; t=1603049032;
+        bh=XNBNPHCWavZrEu5SlajFZldWJA/rSGH/UWI9X1BQniU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IjHogt5tyRhAVb5Xx7zDN5ZWU1R1WXsI98yFzncZCxC0LDxb5fZmc5PKXIDFRJjh5
-         t5DjVVS1JDz8evB2HCU374HSIZtC3njV8a+nTZRy9NKd68K/NOGjzDsgD/ZQZoboso
-         LoJP7Uqatk2HKbtSEjlV1PXD2/mWXUfi0Kfnjk/I=
+        b=XGO2jBEJxoBsIri+pI/P7RjgsIjy8CR6wnpxCaoqSwFn22/Kf7LywUme4Y7x87UYJ
+         3MqlemsM3e5gVkkClXh94vRrOSVeSnRUZ5IQ7MeeluO/s+0r8v4aZzSBUqh34DIdhL
+         HEc6wqcqaEyJu8PIMbDocxHPwFEa7YZxELiiVki0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kevin Barnett <kevin.barnett@microsemi.com>,
-        Scott Teel <scott.teel@microsemi.com>,
-        Scott Benesh <scott.benesh@microsemi.com>,
-        Prasad Munirathnam <Prasad.Munirathnam@microsemi.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Don Brace <don.brace@microsemi.com>,
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 74/80] scsi: smartpqi: Avoid crashing kernel for controller issues
-Date:   Sun, 18 Oct 2020 15:22:25 -0400
-Message-Id: <20201018192231.4054535-74-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 64/80] scsi: qedi: Fix list_del corruption while removing active I/O
+Date:   Sun, 18 Oct 2020 15:22:15 -0400
+Message-Id: <20201018192231.4054535-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192231.4054535-1-sashal@kernel.org>
 References: <20201018192231.4054535-1-sashal@kernel.org>
@@ -63,245 +58,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
+From: Nilesh Javali <njavali@marvell.com>
 
-[ Upstream commit 9e68cccc8ef7206f0bccd590378d0dca8f9b4f57 ]
+[ Upstream commit 28b35d17f9f8573d4646dd8df08917a4076a6b63 ]
 
-Eliminate kernel panics when getting invalid responses from controller.
-Take controller offline instead of causing kernel panics.
+While aborting the I/O, the firmware cleanup task timed out and driver
+deleted the I/O from active command list. Some time later the firmware
+sent the cleanup task response and driver again deleted the I/O from
+active command list causing firmware to send completion for non-existent
+I/O and list_del corruption of active command list.
 
-Link: https://lore.kernel.org/r/159622929306.30579.16523318707596752828.stgit@brunhilda
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Prasad Munirathnam <Prasad.Munirathnam@microsemi.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
+Add fix to check if I/O is present before deleting it from the active
+command list to ensure firmware sends valid I/O completion and protect
+against list_del corruption.
+
+Link: https://lore.kernel.org/r/20200908095657.26821-4-mrangankar@marvell.com
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   2 +-
- drivers/scsi/smartpqi/smartpqi_init.c | 101 +++++++++++++++++---------
- 2 files changed, 68 insertions(+), 35 deletions(-)
+ drivers/scsi/qedi/qedi_fw.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 7a3a942b40df0..dd2175e9bfa17 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -357,7 +357,7 @@ struct pqi_event_response {
- 	struct pqi_iu_header header;
- 	u8	event_type;
- 	u8	reserved2 : 7;
--	u8	request_acknowlege : 1;
-+	u8	request_acknowledge : 1;
- 	__le16	event_id;
- 	__le32	additional_event_id;
- 	union {
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 5ae074505386a..093ed5d1eef20 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -527,8 +527,7 @@ static int pqi_build_raid_path_request(struct pqi_ctrl_info *ctrl_info,
- 		put_unaligned_be16(cdb_length, &cdb[7]);
- 		break;
- 	default:
--		dev_err(&ctrl_info->pci_dev->dev, "unknown command 0x%c\n",
--			cmd);
-+		dev_err(&ctrl_info->pci_dev->dev, "unknown command 0x%c\n", cmd);
- 		break;
- 	}
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 32586800620bd..90aa64604ad78 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -825,8 +825,11 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			qedi_clear_task_idx(qedi_conn->qedi, rtid);
  
-@@ -2450,7 +2449,6 @@ static int pqi_raid_bypass_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
- 		offload_to_mirror =
- 			(offload_to_mirror >= layout_map_count - 1) ?
- 				0 : offload_to_mirror + 1;
--		WARN_ON(offload_to_mirror >= layout_map_count);
- 		device->offload_to_mirror = offload_to_mirror;
- 		/*
- 		 * Avoid direct use of device->offload_to_mirror within this
-@@ -2903,10 +2901,14 @@ static int pqi_interpret_task_management_response(
- 	return rc;
- }
+ 			spin_lock(&qedi_conn->list_lock);
+-			list_del_init(&dbg_cmd->io_cmd);
+-			qedi_conn->active_cmd_count--;
++			if (likely(dbg_cmd->io_cmd_in_list)) {
++				dbg_cmd->io_cmd_in_list = false;
++				list_del_init(&dbg_cmd->io_cmd);
++				qedi_conn->active_cmd_count--;
++			}
+ 			spin_unlock(&qedi_conn->list_lock);
+ 			qedi_cmd->state = CLEANUP_RECV;
+ 			wake_up_interruptible(&qedi_conn->wait_queue);
+@@ -1244,6 +1247,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
+ 		qedi_conn->cmd_cleanup_req++;
+ 		qedi_iscsi_cleanup_task(ctask, true);
  
--static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
--	struct pqi_queue_group *queue_group)
-+static inline void pqi_invalid_response(struct pqi_ctrl_info *ctrl_info)
-+{
-+	pqi_take_ctrl_offline(ctrl_info);
-+}
-+
-+static int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info, struct pqi_queue_group *queue_group)
- {
--	unsigned int num_responses;
-+	int num_responses;
- 	pqi_index_t oq_pi;
- 	pqi_index_t oq_ci;
- 	struct pqi_io_request *io_request;
-@@ -2918,6 +2920,13 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
++		cmd->io_cmd_in_list = false;
+ 		list_del_init(&cmd->io_cmd);
+ 		qedi_conn->active_cmd_count--;
+ 		QEDI_WARN(&qedi->dbg_ctx,
+@@ -1455,8 +1459,11 @@ static void qedi_tmf_work(struct work_struct *work)
+ 	spin_unlock_bh(&qedi_conn->tmf_work_lock);
  
- 	while (1) {
- 		oq_pi = readl(queue_group->oq_pi);
-+		if (oq_pi >= ctrl_info->num_elements_per_oq) {
-+			pqi_invalid_response(ctrl_info);
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"I/O interrupt: producer index (%u) out of range (0-%u): consumer index: %u\n",
-+				oq_pi, ctrl_info->num_elements_per_oq - 1, oq_ci);
-+			return -1;
-+		}
- 		if (oq_pi == oq_ci)
- 			break;
- 
-@@ -2926,10 +2935,22 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
- 			(oq_ci * PQI_OPERATIONAL_OQ_ELEMENT_LENGTH);
- 
- 		request_id = get_unaligned_le16(&response->request_id);
--		WARN_ON(request_id >= ctrl_info->max_io_slots);
-+		if (request_id >= ctrl_info->max_io_slots) {
-+			pqi_invalid_response(ctrl_info);
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"request ID in response (%u) out of range (0-%u): producer index: %u  consumer index: %u\n",
-+				request_id, ctrl_info->max_io_slots - 1, oq_pi, oq_ci);
-+			return -1;
-+		}
- 
- 		io_request = &ctrl_info->io_request_pool[request_id];
--		WARN_ON(atomic_read(&io_request->refcount) == 0);
-+		if (atomic_read(&io_request->refcount) == 0) {
-+			pqi_invalid_response(ctrl_info);
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"request ID in response (%u) does not match an outstanding I/O request: producer index: %u  consumer index: %u\n",
-+				request_id, oq_pi, oq_ci);
-+			return -1;
-+		}
- 
- 		switch (response->header.iu_type) {
- 		case PQI_RESPONSE_IU_RAID_PATH_IO_SUCCESS:
-@@ -2959,24 +2980,22 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
- 			io_request->error_info = ctrl_info->error_buffer +
- 				(get_unaligned_le16(&response->error_index) *
- 				PQI_ERROR_BUFFER_ELEMENT_LENGTH);
--			pqi_process_io_error(response->header.iu_type,
--				io_request);
-+			pqi_process_io_error(response->header.iu_type, io_request);
- 			break;
- 		default:
-+			pqi_invalid_response(ctrl_info);
- 			dev_err(&ctrl_info->pci_dev->dev,
--				"unexpected IU type: 0x%x\n",
--				response->header.iu_type);
--			break;
-+				"unexpected IU type: 0x%x: producer index: %u  consumer index: %u\n",
-+				response->header.iu_type, oq_pi, oq_ci);
-+			return -1;
- 		}
- 
--		io_request->io_complete_callback(io_request,
--			io_request->context);
-+		io_request->io_complete_callback(io_request, io_request->context);
- 
- 		/*
- 		 * Note that the I/O request structure CANNOT BE TOUCHED after
- 		 * returning from the I/O completion callback!
- 		 */
--
- 		oq_ci = (oq_ci + 1) % ctrl_info->num_elements_per_oq;
- 	}
- 
-@@ -3289,9 +3308,9 @@ static void pqi_ofa_capture_event_payload(struct pqi_event *event,
- 	}
- }
- 
--static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
-+static int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
- {
--	unsigned int num_events;
-+	int num_events;
- 	pqi_index_t oq_pi;
- 	pqi_index_t oq_ci;
- 	struct pqi_event_queue *event_queue;
-@@ -3305,26 +3324,31 @@ static unsigned int pqi_process_event_intr(struct pqi_ctrl_info *ctrl_info)
- 
- 	while (1) {
- 		oq_pi = readl(event_queue->oq_pi);
-+		if (oq_pi >= PQI_NUM_EVENT_QUEUE_ELEMENTS) {
-+			pqi_invalid_response(ctrl_info);
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"event interrupt: producer index (%u) out of range (0-%u): consumer index: %u\n",
-+				oq_pi, PQI_NUM_EVENT_QUEUE_ELEMENTS - 1, oq_ci);
-+			return -1;
-+		}
-+
- 		if (oq_pi == oq_ci)
- 			break;
- 
- 		num_events++;
--		response = event_queue->oq_element_array +
--			(oq_ci * PQI_EVENT_OQ_ELEMENT_LENGTH);
-+		response = event_queue->oq_element_array + (oq_ci * PQI_EVENT_OQ_ELEMENT_LENGTH);
- 
- 		event_index =
- 			pqi_event_type_to_event_index(response->event_type);
- 
--		if (event_index >= 0) {
--			if (response->request_acknowlege) {
--				event = &ctrl_info->events[event_index];
--				event->pending = true;
--				event->event_type = response->event_type;
--				event->event_id = response->event_id;
--				event->additional_event_id =
--					response->additional_event_id;
-+		if (event_index >= 0 && response->request_acknowledge) {
-+			event = &ctrl_info->events[event_index];
-+			event->pending = true;
-+			event->event_type = response->event_type;
-+			event->event_id = response->event_id;
-+			event->additional_event_id = response->additional_event_id;
-+			if (event->event_type == PQI_EVENT_TYPE_OFA)
- 				pqi_ofa_capture_event_payload(event, response);
--			}
- 		}
- 
- 		oq_ci = (oq_ci + 1) % PQI_NUM_EVENT_QUEUE_ELEMENTS;
-@@ -3439,7 +3463,8 @@ static irqreturn_t pqi_irq_handler(int irq, void *data)
- {
- 	struct pqi_ctrl_info *ctrl_info;
- 	struct pqi_queue_group *queue_group;
--	unsigned int num_responses_handled;
-+	int num_io_responses_handled;
-+	int num_events_handled;
- 
- 	queue_group = data;
- 	ctrl_info = queue_group->ctrl_info;
-@@ -3447,17 +3472,25 @@ static irqreturn_t pqi_irq_handler(int irq, void *data)
- 	if (!pqi_is_valid_irq(ctrl_info))
- 		return IRQ_NONE;
- 
--	num_responses_handled = pqi_process_io_intr(ctrl_info, queue_group);
-+	num_io_responses_handled = pqi_process_io_intr(ctrl_info, queue_group);
-+	if (num_io_responses_handled < 0)
-+		goto out;
- 
--	if (irq == ctrl_info->event_irq)
--		num_responses_handled += pqi_process_event_intr(ctrl_info);
-+	if (irq == ctrl_info->event_irq) {
-+		num_events_handled = pqi_process_event_intr(ctrl_info);
-+		if (num_events_handled < 0)
-+			goto out;
-+	} else {
-+		num_events_handled = 0;
+ 	spin_lock(&qedi_conn->list_lock);
+-	list_del_init(&cmd->io_cmd);
+-	qedi_conn->active_cmd_count--;
++	if (likely(cmd->io_cmd_in_list)) {
++		cmd->io_cmd_in_list = false;
++		list_del_init(&cmd->io_cmd);
++		qedi_conn->active_cmd_count--;
 +	}
+ 	spin_unlock(&qedi_conn->list_lock);
  
--	if (num_responses_handled)
-+	if (num_io_responses_handled + num_events_handled > 0)
- 		atomic_inc(&ctrl_info->num_interrupts);
- 
- 	pqi_start_io(ctrl_info, queue_group, RAID_PATH, NULL);
- 	pqi_start_io(ctrl_info, queue_group, AIO_PATH, NULL);
- 
-+out:
- 	return IRQ_HANDLED;
- }
- 
+ 	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
 -- 
 2.25.1
 
