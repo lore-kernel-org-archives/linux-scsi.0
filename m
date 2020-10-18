@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E9E0C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC5DC43457
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CC1B222EA
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:19:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA3B9222EB
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603048746;
+	s=default; t=1603048882;
 	bh=7NorDwtBz89EfBAlrcmi2JV9J5c9nGobVF/FN+7wE6M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=PkSM2R2UaKSScXyRLPIgX/07A2XNx2FStwEwu8GhwmrjrJPxzhvsQ6l8s7XHlw7jR
-	 FhIDNq73mMPkI4jXkjsiYtIXEAk4flrn6CUWkyh98DIb1ah6xA1oixNtUMKNKd0Dwx
-	 SaZ5OfSNhdSpcgwfCKI0ZcRm1XEoAiSxV8OlGu/o=
+	b=plJoc8+FBnqbmVuOhMrPEdr8waUOgIvqLqlmQAqXDQyokrw1G1u507A6IIzWnP9UX
+	 3bJU/MPoKF8mSEJTPp3aQznITNUJTRgCOgmdf0ovsX6/PpIIBD9AmzMdHH8x5T/TEf
+	 zWTXPKK9TY4oEE1Fh9UlAf6SHMJEsGkk0AZR2nBQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728024AbgJRTTF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:19:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57390 "EHLO mail.kernel.org"
+        id S1729340AbgJRTVT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:21:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33326 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727993AbgJRTTC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:19:02 -0400
+        id S1729331AbgJRTVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:21:18 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EF3FA222E9;
-        Sun, 18 Oct 2020 19:19:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BEF50222E9;
+        Sun, 18 Oct 2020 19:21:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048741;
+        s=default; t=1603048878;
         bh=7NorDwtBz89EfBAlrcmi2JV9J5c9nGobVF/FN+7wE6M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TVCOGeGczHLXgdGaMWdekE/HOhswRidV6Bj/Ba/8hHhToTrXlqNRCRAX8HIs/B8a4
-         I+uC8gAZ6SUYF/lOHOha0hFW2PapZiDAf7xbXIDjn0NeBjChf43JTpDDowCDFKwHG+
-         hAoYs71ejUPtYD3M+OlCy8AQfEADtdElqQMuuhYI=
+        b=zInMlZeopCS6u+MsfV1RtVK1MvCfUcTmaAcHTT+BbE9cJBDGYpqFKyzpeMTKSloBJ
+         hlBNH+r/JVEloxqCRPvFB4b5V3yPFM41H4026DXhXQdHHkX0rI7lljCd3afPAiZ21p
+         3guaTcY+DbFC/u90WxpMckXPetyCAMJKu9ihyERg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
         Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 044/111] scsi: target: core: Add CONTROL field for trace events
-Date:   Sun, 18 Oct 2020 15:17:00 -0400
-Message-Id: <20201018191807.4052726-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 042/101] scsi: target: core: Add CONTROL field for trace events
+Date:   Sun, 18 Oct 2020 15:19:27 -0400
+Message-Id: <20201018192026.4053674-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018191807.4052726-1-sashal@kernel.org>
-References: <20201018191807.4052726-1-sashal@kernel.org>
+In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
+References: <20201018192026.4053674-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
