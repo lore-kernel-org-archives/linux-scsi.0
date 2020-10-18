@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6500EC43467
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D83DFC433E7
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3441420735
-	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99BCF22268
+	for <linux-scsi@archiver.kernel.org>; Sun, 18 Oct 2020 19:48:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603050490;
-	bh=XNBNPHCWavZrEu5SlajFZldWJA/rSGH/UWI9X1BQniU=;
+	s=default; t=1603050494;
+	bh=hAfwZo3WFQcSNO/kbKcDbhhHxXXm/AOfOCg43UAlxw4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=01OOah/OEtmkucOyylRpuOgY+wOzFop1ZHDdDTTviJCD4xLC6K1c2FkgYnH775qvI
-	 tKThh8iFqeYPLGM3CyxsgzDICQoLObtt8MpMVog/CYkpeqKYKnRwNCk12A02vhnFxw
-	 /kxQMSk91/Shsyn3fVA7RoEQ5R53XS15sfQrQ7CA=
+	b=Skf50kFtVM47e5ecf3Wl4j+gRQRW9GZF10qQ65smATt9y5E9+fudAtsCsCHpNncxk
+	 rqTN36XhvaKR6F6z6JDehghOZuBe0XqtEOWM0qKDpbdCskrpefE66M/i41Lbf4Ld+4
+	 5ycvlwuLZurDisEg9Y/4kE0xQCjHdkgt9K1suHjY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387431AbgJRTsJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:48:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34636 "EHLO mail.kernel.org"
+        id S2387455AbgJRTsO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:48:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34544 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728196AbgJRTWE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:22:04 -0400
+        id S1727349AbgJRTWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:22:01 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7310F22314;
-        Sun, 18 Oct 2020 19:22:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DCB31222E9;
+        Sun, 18 Oct 2020 19:21:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048924;
-        bh=XNBNPHCWavZrEu5SlajFZldWJA/rSGH/UWI9X1BQniU=;
+        s=default; t=1603048920;
+        bh=hAfwZo3WFQcSNO/kbKcDbhhHxXXm/AOfOCg43UAlxw4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lN2nxicENqYsbs5ikVZSA8LUyujTHv9mLxNK4gnDRUFsjCirgNXAYuJtxWxplFeiv
-         n6J6WMu7U4JTqFF+w13jqALxYBfXOol5ngRKMxbbMwZrP3abKP3i67TTWOfLo+CyPI
-         EApVE/OMFONRGNcXMS3bRbBxdAPxDCbLET2MRTA4=
+        b=fLAuLpFYIE3NxXVk/0P+aSHYu1gzRedn8Mp+LkFWYLszbCnsfwg/O3jYlyQFIKstD
+         oRcfxYyLEAg5Y9EYPo/EtErWCCqsqS0nBdoxjPpigALNKp2EOj64vTB2l2PoP9cte5
+         sslVXNo0B8lS0fbTARkc/KMBREKi+c952gCCRIUg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
+Cc:     Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 081/101] scsi: qedi: Fix list_del corruption while removing active I/O
-Date:   Sun, 18 Oct 2020 15:20:06 -0400
-Message-Id: <20201018192026.4053674-81-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 078/101] scsi: qedf: Return SUCCESS if stale rport is encountered
+Date:   Sun, 18 Oct 2020 15:20:03 -0400
+Message-Id: <20201018192026.4053674-78-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
 References: <20201018192026.4053674-1-sashal@kernel.org>
@@ -58,69 +58,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nilesh Javali <njavali@marvell.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit 28b35d17f9f8573d4646dd8df08917a4076a6b63 ]
+[ Upstream commit 10aff62fab263ad7661780816551420cea956ebb ]
 
-While aborting the I/O, the firmware cleanup task timed out and driver
-deleted the I/O from active command list. Some time later the firmware
-sent the cleanup task response and driver again deleted the I/O from
-active command list causing firmware to send completion for non-existent
-I/O and list_del corruption of active command list.
+If SUCCESS is not returned, error handling will escalate. Return SUCCESS
+similar to other conditions in this function.
 
-Add fix to check if I/O is present before deleting it from the active
-command list to ensure firmware sends valid I/O completion and protect
-against list_del corruption.
-
-Link: https://lore.kernel.org/r/20200908095657.26821-4-mrangankar@marvell.com
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Link: https://lore.kernel.org/r/20200907121443.5150-6-jhasan@marvell.com
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Javed Hasan <jhasan@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_fw.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 32586800620bd..90aa64604ad78 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -825,8 +825,11 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
- 			qedi_clear_task_idx(qedi_conn->qedi, rtid);
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 51cfab9d1afdc..ed3054fffa344 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -704,7 +704,7 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	rdata = fcport->rdata;
+ 	if (!rdata || !kref_get_unless_zero(&rdata->kref)) {
+ 		QEDF_ERR(&qedf->dbg_ctx, "stale rport, sc_cmd=%p\n", sc_cmd);
+-		rc = 1;
++		rc = SUCCESS;
+ 		goto out;
+ 	}
  
- 			spin_lock(&qedi_conn->list_lock);
--			list_del_init(&dbg_cmd->io_cmd);
--			qedi_conn->active_cmd_count--;
-+			if (likely(dbg_cmd->io_cmd_in_list)) {
-+				dbg_cmd->io_cmd_in_list = false;
-+				list_del_init(&dbg_cmd->io_cmd);
-+				qedi_conn->active_cmd_count--;
-+			}
- 			spin_unlock(&qedi_conn->list_lock);
- 			qedi_cmd->state = CLEANUP_RECV;
- 			wake_up_interruptible(&qedi_conn->wait_queue);
-@@ -1244,6 +1247,7 @@ int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
- 		qedi_conn->cmd_cleanup_req++;
- 		qedi_iscsi_cleanup_task(ctask, true);
- 
-+		cmd->io_cmd_in_list = false;
- 		list_del_init(&cmd->io_cmd);
- 		qedi_conn->active_cmd_count--;
- 		QEDI_WARN(&qedi->dbg_ctx,
-@@ -1455,8 +1459,11 @@ static void qedi_tmf_work(struct work_struct *work)
- 	spin_unlock_bh(&qedi_conn->tmf_work_lock);
- 
- 	spin_lock(&qedi_conn->list_lock);
--	list_del_init(&cmd->io_cmd);
--	qedi_conn->active_cmd_count--;
-+	if (likely(cmd->io_cmd_in_list)) {
-+		cmd->io_cmd_in_list = false;
-+		list_del_init(&cmd->io_cmd);
-+		qedi_conn->active_cmd_count--;
-+	}
- 	spin_unlock(&qedi_conn->list_lock);
- 
- 	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
 -- 
 2.25.1
 
