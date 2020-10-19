@@ -2,396 +2,238 @@ Return-Path: <SRS0=6nW3=D2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
+	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 635B9C433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5F5C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5DF622263
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:23:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BBE4222E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:36:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FI7YRBDq"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Dm0OLPfz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729415AbgJSOXr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 10:23:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44883 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728344AbgJSOXr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Oct 2020 10:23:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603117424;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=hist2VJBj3Hg6pe/kvjFzOIwP9Y1Urk91DbUes32Z1o=;
-        b=FI7YRBDq36ECKldcig8lKOp//TdzpEbFLey4iAYZqQt8pG9823s+ljeyWkx+1FGsgUAAWJ
-        OtYsczSGhrJsdiqM2rPfOPQGm60yENfhGHaQXNQDvmT5iWUeysnV7QqlUAJIoMHtJQ+kd+
-        jQNd68jixf3utWa5sCBMtdKMlCapTC4=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-14-C8Pjd6-YNgabraQLxYbRAg-1; Mon, 19 Oct 2020 10:23:41 -0400
-X-MC-Unique: C8Pjd6-YNgabraQLxYbRAg-1
-Received: by mail-qv1-f70.google.com with SMTP id l8so71613qvz.2
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:23:41 -0700 (PDT)
+        id S1729493AbgJSOgm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 10:36:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42492 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728311AbgJSOgm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 10:36:42 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 787E2C0613CE
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:36:42 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id az3so5421479pjb.4
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:36:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=qE4HaJlrwKUppeDtJF2gBgoYziLbLcFjDPB+i0CZN+A=;
+        b=Dm0OLPfzM82XWpcwAoAQFnOBQc1TbGvdCtM+UEY+6snGADRa0z/mM/P7ryhN08zGSZ
+         9g71L8MZHG7STvYVKT6XllWe0sU/fhnL5jtgY8YrEtgNsxrKOGgmwhQFl7rLRtDVAc8T
+         3OWlDkHeHCfrYvYCisVvzvzzeI7joowBqOUkA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=hist2VJBj3Hg6pe/kvjFzOIwP9Y1Urk91DbUes32Z1o=;
-        b=SjUh6KqgqFEcFBPXJ6oxzoS1CNoLhJhHXe6cPi4rh7tYaDmEk+A/SqJxPb0Xh+2yZH
-         8CWeR4qmu7zmUW1VP8/leCSr2T0RSPgjk+PTggqjnEaD8GMi4ljCzQjlOq1mOdzLKRWZ
-         rmQrxnCLJcfkWhwIBvvb/tmLZeg9PII5F1w3k2fJUn7hkEDghW5//NeoN5Va/wFIOjVd
-         4Ix2A7lK/dFGbUC2UFCe1ys0oPwiAAX4DdgCxztGKRObOod5H1mbxwT8PD7b9BG+w93z
-         Xv1EB9oeY/+ucKpc+VL6FfsreMOReWyCV79n/Wc7Y/uJr0a1aKlxqWHE85erN9OhFswd
-         HXkA==
-X-Gm-Message-State: AOAM530TH8l56O+FwvjiMu9ljXs3XGAyNlkgqxN/xqecLXrTGh7qrJVD
-        /8O+fU2qkkGzr/iGb5/z/8xZMdjudFTG2l+yUJ1V2GY2ndI+qpxdseKY6Rv/XQkTEFxKHCu6QNm
-        XtGjUftyl8kjmESksB+e8cA==
-X-Received: by 2002:a0c:8d05:: with SMTP id r5mr2084332qvb.31.1603117420311;
-        Mon, 19 Oct 2020 07:23:40 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxSqjcv+5ZQBO/s6MPbADZWWRy0Omeq3E6TAGYS2mwIpc75suoZG1EYKN/uea08lKO8wgI3hw==
-X-Received: by 2002:a0c:8d05:: with SMTP id r5mr2084293qvb.31.1603117419983;
-        Mon, 19 Oct 2020 07:23:39 -0700 (PDT)
-Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
-        by smtp.gmail.com with ESMTPSA id 69sm79851qko.48.2020.10.19.07.23.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Oct 2020 07:23:39 -0700 (PDT)
-From:   trix@redhat.com
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com,
-        jitendra.bhivare@broadcom.com, skashyap@marvell.com,
-        jhasan@marvell.com, hare@suse.de, don.brace@microchip.com,
-        linux@highpoint-tech.com, brking@us.ibm.com,
-        intel-linux-scu@intel.com, artur.paszkiewicz@intel.com,
-        james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        yokota@netlab.is.tsukuba.ac.jp, njavali@marvell.com,
-        Kai.Makisara@kolumbus.fi, willy@infradead.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, storagedev@microchip.com,
-        Tom Rix <trix@redhat.com>
-Subject: [PATCH] scsi: remove unneeded break
-Date:   Mon, 19 Oct 2020 07:23:33 -0700
-Message-Id: <20201019142333.16584-1-trix@redhat.com>
-X-Mailer: git-send-email 2.18.1
+        bh=qE4HaJlrwKUppeDtJF2gBgoYziLbLcFjDPB+i0CZN+A=;
+        b=mYzyuU3g17D9plIRx0fzMD/+caq5EqR5Fh2AK0+n3iXt8kDZKoyLXlUXVi4lp7L/rt
+         AnXUqvj8gEbnaZ63osr1fwNQ0+DDJheihQPOVeyYxrQk4b6d/LwlX3T6KGGIeEuDtyMm
+         cfRWor/5XIm2jtwW45R42If1SKA/XKF6t0lBXcla6UPetgX69ungFo6epm/3+FwPvxjj
+         ToO5gMVggkt/JtQTN3hD4FIuA+n36qctK+zDsrEVF54O4oluth4xxnldQ51A0HpnfnOI
+         Z8pOTuDL9FC+rRdU3yOKPgmvLzOHspXrc7mTRWxP/9mJ6zudNs6d7Js19Xd5TUkPYW3C
+         VTyg==
+X-Gm-Message-State: AOAM532HJNttSKyT3I1anHX0zcpPlpfavGx/YhN+m2X9o2AF4KmlKItI
+        nIuGErc38sARuRBmYLxwCrYO7g==
+X-Google-Smtp-Source: ABdhPJw8g0ggBgWrFuIEB/3PX4xxXEVsEGAUst16VN8Lea5TIAxKFgbEqnWwNMtJeWYBzjF1Rhdepw==
+X-Received: by 2002:a17:902:7298:b029:d4:c71a:357a with SMTP id d24-20020a1709027298b02900d4c71a357amr17308244pll.38.1603118201816;
+        Mon, 19 Oct 2020 07:36:41 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id kb15sm53377pjb.17.2020.10.19.07.36.38
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 19 Oct 2020 07:36:41 -0700 (PDT)
+From:   Muneendra <muneendra.kumar@broadcom.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
+        pbonzini@redhat.com, Muneendra <muneendra.kumar@broadcom.com>
+Subject: [RFC v2 00/18] blkcg:Support to track FC storage blk io traffic
+Date:   Mon, 19 Oct 2020 13:12:55 +0530
+Message-Id: <1603093393-12875-1-git-send-email-muneendra.kumar@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000fae06a05b2070a0a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tom Rix <trix@redhat.com>
+--000000000000fae06a05b2070a0a
 
-A break is not needed if it is preceded by a return or goto
+This Patch added a unique application identifier i.e
+app_id  knob to  blkcg which allows identification of traffic
+sources at an individual cgroup based Applications
+(ex:virtual machine (VM))level in both host and
+fabric infrastructure.
 
-Signed-off-by: Tom Rix <trix@redhat.com>
----
- drivers/scsi/aic94xx/aic94xx_task.c |  1 -
- drivers/scsi/be2iscsi/be_mgmt.c     |  4 ----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c    |  1 -
- drivers/scsi/fcoe/fcoe.c            |  1 -
- drivers/scsi/hpsa.c                 |  1 -
- drivers/scsi/hptiop.c               |  1 -
- drivers/scsi/ipr.c                  |  1 -
- drivers/scsi/isci/phy.c             |  2 --
- drivers/scsi/lpfc/lpfc_debugfs.c    | 12 ++++--------
- drivers/scsi/lpfc/lpfc_init.c       |  1 -
- drivers/scsi/lpfc/lpfc_scsi.c       |  1 -
- drivers/scsi/lpfc/lpfc_sli.c        |  3 ---
- drivers/scsi/mvumi.c                |  1 -
- drivers/scsi/pcmcia/nsp_cs.c        |  2 --
- drivers/scsi/qla2xxx/qla_mbx.c      |  1 -
- drivers/scsi/st.c                   |  1 -
- drivers/scsi/sym53c8xx_2/sym_hipd.c |  1 -
- 17 files changed, 4 insertions(+), 31 deletions(-)
+Added a new sysfs attribute appid_store to set the application identfier
+in  the blkcg associted with cgroup id
+/sys/class/fc/fc_udev_device/* 
+With this new interface the user can set the application identfier
+in  the blkcg associted with cgroup id.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index f923ed019d4a..ed034192b3c3 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -269,7 +269,6 @@ static void asd_task_tasklet_complete(struct asd_ascb *ascb,
- 	case TA_I_T_NEXUS_LOSS:
- 		opcode = dl->status_block[0];
- 		goto Again;
--		break;
- 	case TF_INV_CONN_HANDLE:
- 		ts->resp = SAS_TASK_UNDELIVERED;
- 		ts->stat = SAS_DEVICE_UNKNOWN;
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 96d6e384b2b2..0d4928567265 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1244,18 +1244,14 @@ beiscsi_adap_family_disp(struct device *dev, struct device_attribute *attr,
- 	case OC_DEVICE_ID2:
- 		return snprintf(buf, PAGE_SIZE,
- 				"Obsolete/Unsupported BE2 Adapter Family\n");
--		break;
- 	case BE_DEVICE_ID2:
- 	case OC_DEVICE_ID3:
- 		return snprintf(buf, PAGE_SIZE, "BE3-R Adapter Family\n");
--		break;
- 	case OC_SKH_ID1:
- 		return snprintf(buf, PAGE_SIZE, "Skyhawk-R Adapter Family\n");
--		break;
- 	default:
- 		return snprintf(buf, PAGE_SIZE,
- 				"Unknown Adapter Family: 0x%x\n", dev_id);
--		break;
- 	}
- }
- 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 08992095ce7a..b37b0a9ec12d 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -770,7 +770,6 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 			} else
- 				printk(KERN_ERR PFX "SRR in progress\n");
- 			goto ret_err_rqe;
--			break;
- 		default:
- 			break;
- 		}
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 0f9274960dc6..a4be6f439c47 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1894,7 +1894,6 @@ static int fcoe_device_notification(struct notifier_block *notifier,
- 		mutex_unlock(&fcoe_config_mutex);
- 		fcoe_ctlr_device_delete(fcoe_ctlr_to_ctlr_dev(ctlr));
- 		goto out;
--		break;
- 	case NETDEV_FEAT_CHANGE:
- 		fcoe_netdev_features_change(lport, netdev);
- 		break;
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 83ce4f11a589..45136e3a4efc 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -7442,7 +7442,6 @@ static int find_PCI_BAR_index(struct pci_dev *pdev, unsigned long pci_bar_addr)
- 				dev_warn(&pdev->dev,
- 				       "base address is invalid\n");
- 				return -1;
--				break;
- 			}
- 		}
- 		if (offset == pci_bar_addr - PCI_BASE_ADDRESS_0)
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 6a2561f26e38..db4c7a7ff4dd 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -758,7 +758,6 @@ static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
- 		scp->result = SAM_STAT_CHECK_CONDITION;
- 		memcpy(scp->sense_buffer, &req->sg_list, SCSI_SENSE_BUFFERSIZE);
- 		goto skip_resid;
--		break;
- 
- 	default:
- 		scp->result = DRIVER_INVALID << 24 | DID_ABORT << 16;
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index b0aa58d117cc..e451102b9a29 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9487,7 +9487,6 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
- 	case pci_channel_io_perm_failure:
- 		ipr_pci_perm_failure(pdev);
- 		return PCI_ERS_RESULT_DISCONNECT;
--		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index 7041e2e3ab48..1b87d9080ebe 100644
---- a/drivers/scsi/isci/phy.c
-+++ b/drivers/scsi/isci/phy.c
-@@ -753,7 +753,6 @@ enum sci_status sci_phy_event_handler(struct isci_phy *iphy, u32 event_code)
- 		default:
- 			phy_event_warn(iphy, state, event_code);
- 			return SCI_FAILURE;
--			break;
- 		}
- 		return SCI_SUCCESS;
- 	case SCI_PHY_SUB_AWAIT_IAF_UF:
-@@ -958,7 +957,6 @@ enum sci_status sci_phy_event_handler(struct isci_phy *iphy, u32 event_code)
- 		default:
- 			phy_event_warn(iphy, state, event_code);
- 			return SCI_FAILURE_INVALID_STATE;
--			break;
- 		}
- 		return SCI_SUCCESS;
- 	default:
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index c9a327b13e5c..325081ac6553 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -3341,7 +3341,6 @@ lpfc_idiag_pcicfg_read(struct file *file, char __user *buf, size_t nbytes,
- 		break;
- 	case LPFC_PCI_CFG_BROWSE: /* browse all */
- 		goto pcicfg_browse;
--		break;
- 	default:
- 		/* illegal count */
- 		len = 0;
-@@ -4381,7 +4380,7 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
- 			}
- 		}
- 		goto error_out;
--		break;
-+
- 	case LPFC_IDIAG_CQ:
- 		/* MBX complete queue */
- 		if (phba->sli4_hba.mbx_cq &&
-@@ -4433,7 +4432,7 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
- 			}
- 		}
- 		goto error_out;
--		break;
-+
- 	case LPFC_IDIAG_MQ:
- 		/* MBX work queue */
- 		if (phba->sli4_hba.mbx_wq &&
-@@ -4447,7 +4446,7 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
- 			goto pass_check;
- 		}
- 		goto error_out;
--		break;
-+
- 	case LPFC_IDIAG_WQ:
- 		/* ELS work queue */
- 		if (phba->sli4_hba.els_wq &&
-@@ -4487,9 +4486,8 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
- 				}
- 			}
- 		}
--
- 		goto error_out;
--		break;
-+
- 	case LPFC_IDIAG_RQ:
- 		/* HDR queue */
- 		if (phba->sli4_hba.hdr_rq &&
-@@ -4514,10 +4512,8 @@ lpfc_idiag_queacc_write(struct file *file, const char __user *buf,
- 			goto pass_check;
- 		}
- 		goto error_out;
--		break;
- 	default:
- 		goto error_out;
--		break;
- 	}
- 
- pass_check:
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index ca25e54bb782..b6090357e8a5 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7196,7 +7196,6 @@ lpfc_init_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 				"1431 Invalid HBA PCI-device group: 0x%x\n",
- 				dev_grp);
- 		return -ENODEV;
--		break;
- 	}
- 	return 0;
- }
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 983eeb0e3d07..c3b02dab6e5c 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4284,7 +4284,6 @@ lpfc_scsi_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 				"1418 Invalid HBA PCI-device group: 0x%x\n",
- 				dev_grp);
- 		return -ENODEV;
--		break;
- 	}
- 	phba->lpfc_rampdown_queue_depth = lpfc_rampdown_queue_depth;
- 	phba->lpfc_scsi_cmd_iocb_cmpl = lpfc_scsi_cmd_iocb_cmpl;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index e158cd77d387..0f18f1ba8a28 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -9189,7 +9189,6 @@ lpfc_mbox_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 				"1420 Invalid HBA PCI-device group: 0x%x\n",
- 				dev_grp);
- 		return -ENODEV;
--		break;
- 	}
- 	return 0;
- }
-@@ -10072,7 +10071,6 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
- 				"2014 Invalid command 0x%x\n",
- 				iocbq->iocb.ulpCommand);
- 		return IOCB_ERROR;
--		break;
- 	}
- 
- 	if (iocbq->iocb_flag & LPFC_IO_DIF_PASS)
-@@ -10234,7 +10232,6 @@ lpfc_sli_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 				"1419 Invalid HBA PCI-device group: 0x%x\n",
- 				dev_grp);
- 		return -ENODEV;
--		break;
- 	}
- 	phba->lpfc_get_iocb_from_iocbq = lpfc_get_iocb_from_iocbq;
- 	return 0;
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 0354898d7cac..2f7a52bd653a 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -2296,7 +2296,6 @@ static int mvumi_cfg_hw_reg(struct mvumi_hba *mhba)
- 		break;
- 	default:
- 		return -1;
--		break;
- 	}
- 
- 	return 0;
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index bc5a623519e7..bb3b3884f968 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1102,8 +1102,6 @@ static irqreturn_t nspintr(int irq, void *dev_id)
- 		nsp_index_write(base, SCSIBUSCTRL, SCSI_ATN | AUTODIRECTION | ACKENB);
- 		return IRQ_HANDLED;
- 
--		break;
--
- 	case PH_RESELECT:
- 		//nsp_dbg(NSP_DEBUG_INTR, "phase reselect");
- 		// *sync_neg = SYNC_NOT_YET;
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 07afd0d8a8f3..40af7f1524ce 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4030,7 +4030,6 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 
- 			set_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags);
- 			return;
--			break;
- 		case TOPO_FL:
- 			ha->current_topology = ISP_CFG_FL;
- 			break;
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index e2e5356a997d..43f7624508a9 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -2846,7 +2846,6 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 	case MTNOP:
- 		DEBC_printk(STp, "No op on tape.\n");
- 		return 0;	/* Should do something ? */
--		break;
- 	case MTRETEN:
- 		cmd[0] = START_STOP;
- 		if (STp->immediate) {
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index a9fe092a4906..255a2d48d421 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -4596,7 +4596,6 @@ static void sym_int_sir(struct sym_hcb *np)
- 					scr_to_cpu(np->lastmsg), np->msgout[0]);
- 			}
- 			goto out_clrack;
--			break;
- 		default:
- 			goto out_reject;
- 		}
+This capability can be utilized by multiple block transport infrastructure
+like fc,iscsi,roce.
+
+Existing FC fabric will use this feature and the description of
+the use case is below.
+
+Various virtualization technologies used in Fibre Channel
+SAN deployments have created the opportunity to identify
+and associate traffic with specific virtualized applications.
+The concepts behind the T11 Application Services standard is
+to provide the general mechanisms needed to identify
+virtualized services.
+It enables the Fabric and the storage targets to
+identify, monitor, and handle FC traffic
+based on vm tags by inserting application specific identification
+into the FC frame.
+
+The patches were cut against  5.10/scsi-queue tree
+
+V2:
+renamed app_identifier to app_id.
+removed the  sysfs interface blkio.app_identifie under
+/sys/fs/cgroup/blkio
+Ported the patch on top of 5.10/scsi-queue.
+Removed redundant code due to changes since last submit.
+Added a fix for issuing QFPA command.
+
+Gaurav Srivastava (15):
+  lpfc: vmid: Add the datastructure for supporting VMID in lpfc
+  lpfc: vmid: API to check if VMID is enabled.
+  lpfc: vmid: Supplementary data structures for vmid
+  lpfc: vmid: Forward declarations for APIs
+  lpfc: vmid: Add support for vmid in mailbox command
+  lpfc: vmid: VMID params initialization
+  lpfc: vmid: vmid resource allocation
+  lpfc: vmid: cleanup vmid resources
+  lpfc: vmid: Implements ELS commands for appid patch
+  lpfc: vmid: Functions to manage vmids
+  lpfc: vmid: Implements CT commands for appid.
+  lpfc: vmid: Appends the vmid in the wqe before sending request
+  lpfc: vmid: Timeout implementation for vmid
+  lpfc: vmid: Adding qfpa and vmid timeout check in worker thread
+  lpfc: vmid: Introducing vmid in io path.
+
+Muneendra (3):
+  cgroup: Added cgroup_get_from_kernfs_id
+  blkcg: Added a app identifier support for blkcg
+  nvme: Added a newsysfs attribute appid_store
+
+ block/blk-cgroup.c               |  31 +++
+ drivers/nvme/host/fc.c           |  73 ++++++-
+ drivers/scsi/lpfc/lpfc.h         | 121 +++++++++++
+ drivers/scsi/lpfc/lpfc_attr.c    |  47 ++++
+ drivers/scsi/lpfc/lpfc_crtn.h    |  11 +
+ drivers/scsi/lpfc/lpfc_ct.c      | 249 +++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_disc.h    |   1 +
+ drivers/scsi/lpfc/lpfc_els.c     | 356 ++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 151 +++++++++++++
+ drivers/scsi/lpfc/lpfc_hw.h      | 124 ++++++++++-
+ drivers/scsi/lpfc/lpfc_hw4.h     |  12 ++
+ drivers/scsi/lpfc/lpfc_init.c    | 108 ++++++++++
+ drivers/scsi/lpfc/lpfc_mbox.c    |   6 +
+ drivers/scsi/lpfc/lpfc_scsi.c    | 325 ++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c     |  65 +++++-
+ drivers/scsi/lpfc/lpfc_sli.h     |   8 +
+ include/linux/blk-cgroup.h       |  22 ++
+ include/linux/cgroup.h           |   6 +
+ kernel/cgroup/cgroup.c           |  25 +++
+ 19 files changed, 1728 insertions(+), 13 deletions(-)
+
 -- 
-2.18.1
+2.26.2
 
+
+--000000000000fae06a05b2070a0a
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIIQTQYJKoZIhvcNAQcCoIIQPjCCEDoCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg2iMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
+CxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMT
+Ckdsb2JhbFNpZ24wHhcNMTYwNjE1MDAwMDAwWhcNMjQwNjE1MDAwMDAwWjBdMQswCQYDVQQGEwJC
+RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25h
+bFNpZ24gMiBDQSAtIFNIQTI1NiAtIEczMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+tpZok2X9LAHsYqMNVL+Ly6RDkaKar7GD8rVtb9nw6tzPFnvXGeOEA4X5xh9wjx9sScVpGR5wkTg1
+fgJIXTlrGESmaqXIdPRd9YQ+Yx9xRIIIPu3Jp/bpbiZBKYDJSbr/2Xago7sb9nnfSyjTSnucUcIP
+ZVChn6hKneVGBI2DT9yyyD3PmCEJmEzA8Y96qT83JmVH2GaPSSbCw0C+Zj1s/zqtKUbwE5zh8uuZ
+p4vC019QbaIOb8cGlzgvTqGORwK0gwDYpOO6QQdg5d03WvIHwTunnJdoLrfvqUg2vOlpqJmqR+nH
+9lHS+bEstsVJtZieU1Pa+3LzfA/4cT7XA/pnwwIDAQABo4IBtTCCAbEwDgYDVR0PAQH/BAQDAgEG
+MGoGA1UdJQRjMGEGCCsGAQUFBwMCBggrBgEFBQcDBAYIKwYBBQUHAwkGCisGAQQBgjcUAgIGCisG
+AQQBgjcKAwQGCSsGAQQBgjcVBgYKKwYBBAGCNwoDDAYIKwYBBQUHAwcGCCsGAQUFBwMRMBIGA1Ud
+EwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFGlygmIxZ5VEhXeRgMQENkmdewthMB8GA1UdIwQYMBaA
+FI/wS3+oLkUkrk1Q+mOai97i3Ru8MD4GCCsGAQUFBwEBBDIwMDAuBggrBgEFBQcwAYYiaHR0cDov
+L29jc3AyLmdsb2JhbHNpZ24uY29tL3Jvb3RyMzA2BgNVHR8ELzAtMCugKaAnhiVodHRwOi8vY3Js
+Lmdsb2JhbHNpZ24uY29tL3Jvb3QtcjMuY3JsMGcGA1UdIARgMF4wCwYJKwYBBAGgMgEoMAwGCisG
+AQQBoDIBKAowQQYJKwYBBAGgMgFfMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2JhbHNp
+Z24uY29tL3JlcG9zaXRvcnkvMA0GCSqGSIb3DQEBCwUAA4IBAQConc0yzHxn4gtQ16VccKNm4iXv
+6rS2UzBuhxI3XDPiwihW45O9RZXzWNgVcUzz5IKJFL7+pcxHvesGVII+5r++9eqI9XnEKCILjHr2
+DgvjKq5Jmg6bwifybLYbVUoBthnhaFB0WLwSRRhPrt5eGxMw51UmNICi/hSKBKsHhGFSEaJQALZy
+4HL0EWduE6ILYAjX6BSXRDtHFeUPddb46f5Hf5rzITGLsn9BIpoOVrgS878O4JnfUWQi29yBfn75
+HajifFvPC+uqn+rcVnvrpLgsLOYG/64kWX/FRH8+mhVe+mcSX3xsUpcxK9q9vLTVtroU/yJUmEC4
+OcH5dQsbHBqjMIIDXzCCAkegAwIBAgILBAAAAAABIVhTCKIwDQYJKoZIhvcNAQELBQAwTDEgMB4G
+A1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNV
+BAMTCkdsb2JhbFNpZ24wHhcNMDkwMzE4MTAwMDAwWhcNMjkwMzE4MTAwMDAwWjBMMSAwHgYDVQQL
+ExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UEAxMK
+R2xvYmFsU2lnbjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMwldpB5BngiFvXAg7aE
+yiie/QV2EcWtiHL8RgJDx7KKnQRfJMsuS+FggkbhUqsMgUdwbN1k0ev1LKMPgj0MK66X17YUhhB5
+uzsTgHeMCOFJ0mpiLx9e+pZo34knlTifBtc+ycsmWQ1z3rDI6SYOgxXG71uL0gRgykmmKPZpO/bL
+yCiR5Z2KYVc3rHQU3HTgOu5yLy6c+9C7v/U9AOEGM+iCK65TpjoWc4zdQQ4gOsC0p6Hpsk+QLjJg
+6VfLuQSSaGjlOCZgdbKfd/+RFO+uIEn8rUAVSNECMWEZXriX7613t2Saer9fwRPvm2L7DWzgVGkW
+qQPabumDk3F2xmmFghcCAwEAAaNCMEAwDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB/wQFMAMBAf8w
+HQYDVR0OBBYEFI/wS3+oLkUkrk1Q+mOai97i3Ru8MA0GCSqGSIb3DQEBCwUAA4IBAQBLQNvAUKr+
+yAzv95ZURUm7lgAJQayzE4aGKAczymvmdLm6AC2upArT9fHxD4q/c2dKg8dEe3jgr25sbwMpjjM5
+RcOO5LlXbKr8EpbsU8Yt5CRsuZRj+9xTaGdWPoO4zzUhw8lo/s7awlOqzJCK6fBdRoyV3XpYKBov
+Hd7NADdBj+1EbddTKJd+82cEHhXXipa0095MJ6RMG3NzdvQXmcIfeg7jLQitChws/zyrVQ4PkX42
+68NXSb7hLi18YIvDQVETI53O9zJrlAGomecsMx86OyXShkDOOyyGeMlhLxS67ttVb9+E7gUJTb0o
+2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFTzCCBDegAwIBAgIMX/krgFDQUQNyOf+1MA0GCSqGSIb3
+DQEBCwUAMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQD
+EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTA0MDgz
+NTI5WhcNMjIwOTA1MDgzNTI5WjCBljELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
+MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRowGAYDVQQDExFNdW5l
+ZW5kcmEgS3VtYXIgTTErMCkGCSqGSIb3DQEJARYcbXVuZWVuZHJhLmt1bWFyQGJyb2FkY29tLmNv
+bTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMoadg8/B0JvnQVWQZyfiiEMmDhh0bSq
+BIThkSCjIdy7yOV9fBOs6MdrPZgCDeX5rJvOw6PJiWjeQQ9RkTJH6WccvxwXugoyspkG/RfFdUKk
+t0/bk1Ml9aUobcee2+cC79gyzwpHUjzEpcsx49FskGIxI+n9wybrDhpurtj8mmc1C1sVzKNoIEwC
+/eHrCsDnag9JEGotxVVv0KcLXv7N0CXs03bP8uvocms3+gO1K8dasJkc7noMt/i0/xcZnaABWkgV
+J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
+Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
+KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
+aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
+b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
+AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
+MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
+Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
+A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
+DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
+hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
+LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
+9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
+/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
+EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
+b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
+SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
+BCAKyRBo8WJmEjOgUeA/5AHO3qgAYZnAQxFeTHNeoOrMDTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxNDM2NDJaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEADWx1/6Vpe3e6EFQO
+A5swbUDWn6XSA0aAXp/E5LA2VArmvwfmnrgtQh15JzgKy7MFFWHq0JoG1n67DEVnR1Kc5nYNqc17
+KRMVbRAdHFZ9Q3410VK9PZAcRxdYJMWqX7+8u1Uk4p482JqjGH+3uDdR62OPqXNdJrR550bsj0f2
+Fb8emauINS1VzQLMa93v8eAFeCKOymrE+vjDTVoH2wCvcgm+MvhKYC1wl3CBRADj/kBpBZpHl6ph
+wOcOhon8NeL4gWAi2b/vXXmciw999OldYRbc2XOXkrItwp90SEVO2D3zdmJVriYnsoXojcVamO3e
+vro3HCG2YrQCelwIa2EOFw==
+--000000000000fae06a05b2070a0a--
