@@ -2,142 +2,128 @@ Return-Path: <SRS0=6nW3=D2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46DABC43467
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 17:27:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD801C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 17:31:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0AC8222EC
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 17:27:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34487222B8
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 17:31:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="P8cUjzMd"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="didYpT73"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726894AbgJSR1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 13:27:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41694 "EHLO
+        id S1726318AbgJSRbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 13:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726768AbgJSR1g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 13:27:36 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73860C0613CE
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 10:27:36 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id a1so156433pjd.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 10:27:36 -0700 (PDT)
+        with ESMTP id S1725887AbgJSRbK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 13:31:10 -0400
+Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 934C0C0613CE
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 10:31:10 -0700 (PDT)
+Received: by mail-ot1-x331.google.com with SMTP id m11so314279otk.13
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 10:31:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to;
-        bh=+WQW9ojUQD6rvoFBZc9zaB00grVkedN0bKn9O2FEaeg=;
-        b=P8cUjzMdnCDdY/vM+bNcoGeaIbB22Dhed+vCjuLKHlVaa7o1/53l4NXZr3O0qsbRVR
-         t4wY82m4s5VSfbCS1XNyhWVcBDMqHg441vDZYS3BATm5BLrIUf7AUgthtVN2ooKkPKAO
-         IAXpV0yi9kxr0vgqgh2P3VIf1PV6RwANLfPYc=
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=pJIUJ5QNdRBGJYdcyxD1JFps945oarPiJjBSnB5aIE8=;
+        b=didYpT731gwGko5wlC/HpqBopg48gxdrBDtpxi32FsXCq4UWSikvZCiYASp9eYI4c3
+         jmeYkuXD/Zt35/yK+z33Xu/eNQF3phfXXi3li8Qzxm2rbLwqOPy8/HgyQZgTo90udC4h
+         /rTkxWJIRdTgwC0V8FEzV2AqeGMMrUyvdQ4MU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to;
-        bh=+WQW9ojUQD6rvoFBZc9zaB00grVkedN0bKn9O2FEaeg=;
-        b=dE+CAYnnMZustw9y14pURqGCHWsOkG1mHuux/nCxxNo6QE0zlZBWu4p/ay10kIXz4n
-         rrtU95WPhQfED99AA3sOq2PHUl8Thc0E4SYsUXd8KPR8kCsdIqg2/QsVYIWR2bZR93YL
-         Jypx5A+G+hXD6b2p7xmit/fACo0aaYlAj83nXRaMx3ylu0GOnHuuMydtO5lXW6Aj3cyj
-         M3w2w3kHJnxwz7cRDavKvGaVHN/AMKArkufc12WmK4+NOQ9JgmQILguzGivhgDmeL5x0
-         kMy8udsJ1Gt5OyWUC8UCvxmKHDT6vzf42/lKYhedGOmRZZMKnhCUV2ajgq3fp4z1Rt3K
-         OpCg==
-X-Gm-Message-State: AOAM533WAVIhWyAMcuu24DyIlxhRieNykAWUHsA/G+ZrWDpatgA6ZimG
-        ijnivXlbtVag8oiS9DS5+RJ1reCL3y1q1w==
-X-Google-Smtp-Source: ABdhPJy+mI780yVISvqcC0RV0OCLuAwdgUwyu+N97wE+33IeNnVtUF1tLPXGIlBfUCD+VQtin8BlPw==
-X-Received: by 2002:a17:90a:b38f:: with SMTP id e15mr452324pjr.226.1603128455776;
-        Mon, 19 Oct 2020 10:27:35 -0700 (PDT)
-Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e11sm410609pfl.58.2020.10.19.10.27.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 19 Oct 2020 10:27:34 -0700 (PDT)
-Subject: Re: [PATCH v4 02/31] elx: libefc_sli: SLI Descriptors and Queue
- entries
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     Ram Vegesna <ram.vegesna@broadcom.com>,
-        James Smart <james.smart@broadcom.com>
-References: <20201012225147.54404-1-james.smart@broadcom.com>
- <20201012225147.54404-3-james.smart@broadcom.com>
- <71db0b09-67a4-5e8b-36a7-f8d1de9c566f@suse.de>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <b287c280-d511-a712-b6b7-bde5beb933ac@broadcom.com>
-Date:   Mon, 19 Oct 2020 10:27:33 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=pJIUJ5QNdRBGJYdcyxD1JFps945oarPiJjBSnB5aIE8=;
+        b=UcAWu1M+82oay7rCGlSaPI4K/uUuBpxhm4ScN4dfHBzNlw42vjDcmQxPDo8ivpRrdB
+         Wm8xFF/4vr4v3eV44ixhi6hFB7aKTnpWdqTXTTUOo5UZvkWRwQqogkhrYnwKuvEf4iev
+         r8jsXyYSVRfrOVnvX69Hxl/UrsBqNqG/ysZL0YXwbeHOKeOHRo27lqgJTfyVLvDjuFoz
+         1pFVJ2WYh7VybRbRDSmfEWi9Yj8VIYIIckMZ4OZyJZDSQZfwvyXO+VNIPM6yxUHMxPAH
+         SRNNghtyQnUalkoUgU7YQ36W0vYlc8DdDs8U8+Mg7X9A8KcvHu72XumdawT4iDSf9eWI
+         +sXA==
+X-Gm-Message-State: AOAM531ntDJ6pWOLK3qP44ptv8Cp7HqeyQQE9aMIRj96WyEvtMBmN4DZ
+        6wnPUQtIeuyCvsQwaOuWgQM2BaD/pJtuwM3QnFi9tnE7mCk=
+X-Google-Smtp-Source: ABdhPJzIFFBiYHsZqrH0yU5QX0ZIFaG9CTnhucqWIm0giUEeSfgy0CPnb/IIpYdrTesKFLujZJD/l1uroEbIoWGyRhs=
+X-Received: by 2002:a9d:3f44:: with SMTP id m62mr788942otc.364.1603128669841;
+ Mon, 19 Oct 2020 10:31:09 -0700 (PDT)
+From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
+References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1602732462-10443-6-git-send-email-muneendra.kumar@broadcom.com>
+ <5ca752c2-94e1-444a-7755-f48b09b38577@oracle.com> <c3d65f732be0b73e4d4ebb742bc754cd@mail.gmail.com>
+ <3803E6D0-68D6-407F-80AB-A17E7E0E69E3@oracle.com> <CE70AE32-4318-4FB2-AEED-3606DEF59B79@oracle.com>
+ <a9b958fb-3c06-c385-f7ce-ce0fc863e64b@suse.de>
+In-Reply-To: <a9b958fb-3c06-c385-f7ce-ce0fc863e64b@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <71db0b09-67a4-5e8b-36a7-f8d1de9c566f@suse.de>
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQFATVqLRX+cZ5DMpa/LB2sUjSWzQAGJthEBAcREcNICYfc3iwLXtvtQAo/g/YwBakTnWapnz3KA
+Date:   Mon, 19 Oct 2020 23:01:07 +0530
+Message-ID: <bf347ae232d73c4a21af6514085a92f2@mail.gmail.com>
+Subject: RE: [PATCH v3 05/17] scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
+To:     Hannes Reinecke <hare@suse.de>,
+        Michael Christie <michael.christie@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, jsmart2021@gmail.com,
+        emilne@redhat.com, mkumar@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000002a371505b2096e81"
+        boundary="000000000000eaf39c05b2097a5e"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000002a371505b2096e81
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+--000000000000eaf39c05b2097a5e
+Content-Type: text/plain; charset="UTF-8"
 
+Hi Michael,
 
-On 10/19/2020 8:21 AM, Hannes Reinecke wrote:
-> On 10/13/20 12:51 AM, James Smart wrote:
->>
->> +
->> +#define EFC_SUCCESS    0
->> +#define EFC_FAIL    1
->> +
->
-> You said you were going to kill this ...
->
-
-No - we said we would standardize on defines and not put explicit 0's or 
-1s in the code.
-
-
-
-> [ .. ]
->> + SLI4_LNK_ATTN_TYPE_NO_HARD_ALPA        = 0x03,
->> +
->> +    SLI4_LNK_ATTN_P2P            = 0x01,
->> +    SLI4_LNK_ATTN_FC_AL            = 0x02,
->> +    SLI4_LNK_ATTN_INTERNAL_LOOPBACK        = 0x03,
->> +    SLI4_LNK_ATTN_SERDES_LOOPBACK        = 0x04,
->> +
->> +    SLI4_LNK_ATTN_1G            = 0x01,
->> +    SLI4_LNK_ATTN_2G            = 0x02,
->> +    SLI4_LNK_ATTN_4G            = 0x04,
->> +    SLI4_LNK_ATTN_8G            = 0x08,
->> +    SLI4_LNK_ATTN_10G            = 0x0a,
->> +    SLI4_LNK_ATTN_16G            = 0x10,
->> +};
->> +
->
-> Ah. 16G Only?
-
-yeah - this is a miss. We added the 32G, 64G, and 128G in the link up 
-reporting, but forgot this structure. Will fix that.
 
 >
->> +/* Prameters used to populate WQE*/
 >
-> Parameters ...
+> Oh yeah, to be clear I meant why try to send it on the marginal path
+> when you are setting up the path groups so they are not used and only the
+> optimal paths are used.
+> When the driver/scsi layer fails the IO then the multipath layer will
+> make sure it goes on a optimal path right so you do not have to worry
+> about hitting a cmd timeout and firing off the scsi eh.
+>
+> However, one other question I had though, is are you setting up
+> multipathd so the marginal paths are used if the optimal ones were to
+> fail (like the optimal paths hit a link down, dev_loss_tmo or
+> fast_io_fail fires, etc) or will they be treated like failed paths?
+>
+> So could you end up with 3 groups:
+>
+> 1. Active optimal paths
+> 2. Marginal
+> 3. failed
+>
+> If the paths in 1 move to 3, then does multipathd handle it like a all
+> paths down or does multipathd switch to #2?
+>
+>Actually, marginal path work similar to the ALUA non-optimized state.
+>Yes, the system can sent I/O to it, but it'd be preferable for the I/O to
+>be moved somewhere else.
+>If there is no other path (or no better path), yeah, tough.
 
-yep.
-
---  james
+>Hence the answer would be 2)
 
 
+[Muneendra]As Hannes mentioned if there are no active paths, the marginal
+paths will be moved to normal and the system will send the io.
 
---0000000000002a371505b2096e81
+Regards,
+Muneendra.
+
+--000000000000eaf39c05b2097a5e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Description: S/MIME Cryptographic Signature
 
-MIIQPwYJKoZIhvcNAQcCoIIQMDCCECwCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg2UMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
+MIIQTQYJKoZIhvcNAQcCoIIQPjCCEDoCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg2iMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
 CxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMT
 Ckdsb2JhbFNpZ24wHhcNMTYwNjE1MDAwMDAwWhcNMjQwNjE1MDAwMDAwWjBdMQswCQYDVQQGEwJC
 RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25h
@@ -174,40 +160,40 @@ yAzv95ZURUm7lgAJQayzE4aGKAczymvmdLm6AC2upArT9fHxD4q/c2dKg8dEe3jgr25sbwMpjjM5
 RcOO5LlXbKr8EpbsU8Yt5CRsuZRj+9xTaGdWPoO4zzUhw8lo/s7awlOqzJCK6fBdRoyV3XpYKBov
 Hd7NADdBj+1EbddTKJd+82cEHhXXipa0095MJ6RMG3NzdvQXmcIfeg7jLQitChws/zyrVQ4PkX42
 68NXSb7hLi18YIvDQVETI53O9zJrlAGomecsMx86OyXShkDOOyyGeMlhLxS67ttVb9+E7gUJTb0o
-2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFQTCCBCmgAwIBAgIMfmKtsn6cI8G7HjzCMA0GCSqGSIb3
+2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFTzCCBDegAwIBAgIMX/krgFDQUQNyOf+1MA0GCSqGSIb3
 DQEBCwUAMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQD
-EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTE3MDU0
-NjI0WhcNMjIwOTE4MDU0NjI0WjCBjDELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
-MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRQwEgYDVQQDEwtKYW1l
-cyBTbWFydDEnMCUGCSqGSIb3DQEJARYYamFtZXMuc21hcnRAYnJvYWRjb20uY29tMIIBIjANBgkq
-hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0B4Ym0dby5rc/1eyTwvNzsepN0S9eBGyF45ltfEmEmoe
-sY3NAmThxJaLBzoPYjCpfPWh65cxrVIOw9R3a9TrkDN+aISE1NPyyHOabU57I8bKvfS8WMpCQKSJ
-pDWUbzanP3MMP4C2qbJgQW+xh9UDzBi8u69f40kP+cLEPNJWbz0KxNNp7H/4zWNyTouJRtO6QKVh
-XqR+mg0QW4TJlH5sJ7NIbVGZKzs0PEbUJJJw0zJsp3m0iS6AzNFtTGHWVO1me58DIYR/VDSiY9Sh
-AanDaJF6fE9TEzbfn5AWgVgHkbqS3VY3Gq05xkLhRugDQ60IGwT29K1B+wGfcujKSaalhQIDAQAB
-o4IBzzCCAcswDgYDVR0PAQH/BAQDAgWgMIGeBggrBgEFBQcBAQSBkTCBjjBNBggrBgEFBQcwAoZB
-aHR0cDovL3NlY3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NwZXJzb25hbHNpZ24yc2hhMmcz
-b2NzcC5jcnQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwMi5nbG9iYWxzaWduLmNvbS9nc3BlcnNv
-bmFsc2lnbjJzaGEyZzMwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0
-dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwRAYDVR0fBD0w
-OzA5oDegNYYzaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc3BlcnNvbmFsc2lnbjJzaGEyZzMu
-Y3JsMCMGA1UdEQQcMBqBGGphbWVzLnNtYXJ0QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQUUXCHNA1n5KXj
-CXL1nHkJ8oKX5wYwDQYJKoZIhvcNAQELBQADggEBAGQDKmIdULu06w+bE15XZJOwlarihiP2PHos
-/4bNU3NRgy/tCQbTpJJr3L7LU9ldcPam9qQsErGZKmb5ypUjVdmS5n5M7KN42mnfLs/p7+lOOY5q
-ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
-2JU2wwirL0Sy5S1DREQmTMAuHL+M9Qwbl+uh/AprkVqaSYuvUzWFwBVgafOl2XgGdn8r6ubxSZhX
-9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
-ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgbEiU52wALGLu5XnK
-HweVTkYdAXUzss/fa/vAHwD1B94wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDE5MTcyNzM2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
-ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBALI9hm975aZVXlQJUhlJa/FMCKEZcZZYQrCO
-NGwqNPz0/Ruu3EIdtgs+ssXr3Js4Fxxop5sl3B176XjY6V429JJF/6XBs46KqXuEeZlndc7cAaIx
-9RxzVm+4yKuOYt4ZZmE/1+KYrr8wqXd4aF5uuV6YD3GSZlMclTJUe6slzGMQv1MJBvnC1ubKR8Ws
-HIQMyJeZ+UkmjJR/uud/ATq0ES8wZO0oS9RAXZFO+Hy1AJXHW4rVrzBx+27GW4p8JpDL8Ephyp1G
-3BZJJhWS8/NqlREVt7P+dLlwlvGXJubyw9RSazQCzolXGUE9oxtNLgZdbbL06kSPTcavrNXrJfJi
-nHY=
---0000000000002a371505b2096e81--
+EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTA0MDgz
+NTI5WhcNMjIwOTA1MDgzNTI5WjCBljELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
+MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRowGAYDVQQDExFNdW5l
+ZW5kcmEgS3VtYXIgTTErMCkGCSqGSIb3DQEJARYcbXVuZWVuZHJhLmt1bWFyQGJyb2FkY29tLmNv
+bTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMoadg8/B0JvnQVWQZyfiiEMmDhh0bSq
+BIThkSCjIdy7yOV9fBOs6MdrPZgCDeX5rJvOw6PJiWjeQQ9RkTJH6WccvxwXugoyspkG/RfFdUKk
+t0/bk1Ml9aUobcee2+cC79gyzwpHUjzEpcsx49FskGIxI+n9wybrDhpurtj8mmc1C1sVzKNoIEwC
+/eHrCsDnag9JEGotxVVv0KcLXv7N0CXs03bP8uvocms3+gO1K8dasJkc7noMt/i0/xcZnaABWkgV
+J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
+Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
+KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
+aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
+b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
+AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
+MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
+Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
+A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
+DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
+hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
+LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
+9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
+/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
+EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
+b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
+SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
+BCDCMGdlOYRJZSnXqQIMmPnkmP2NQ7cMdjN/iA6t0K8OEjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxNzMxMTBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAxAzEAaaEhewAs11T
+yRMFEiH442mxe00Ehc+u6VIZQDk4YhhvwHFqpEN3wD4I5QWBdEUGxw7UzyFBUb9Z4EdIsK2M2Bjv
+GsR+GgI3TgkmpiNYTG8+4bwYAyg4QWQUVbtA5rWIjKZGyfEZnVPggJyX7FuJ0V2cToSr/qCR4mNe
+XoOPyWJeplrMtCxIpirJBsYmwcIpicUgjedYioFiE9H3FsJjaRakPh3D5NsHwLDFtzFjh6xf6iOM
+ucsGdTN0sBoJkEcgXCnP61Nrnvx0dDwCzGrXFHdg/IV9ix4iL8Cq4sXZuCd1DRps62Q0Ou5oUxO0
+DfBNyZAzjhxvNvwZNJOq5Q==
+--000000000000eaf39c05b2097a5e--
