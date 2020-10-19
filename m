@@ -2,182 +2,159 @@ Return-Path: <SRS0=6nW3=D2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F02FEC433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 10:52:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BE79C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 11:18:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6238922268
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 10:52:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 247FE22263
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 11:18:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="L08DSiMT"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j2o7B/XN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727228AbgJSKwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 06:52:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35994 "EHLO
+        id S1727778AbgJSLSq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 07:18:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726606AbgJSKwR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 06:52:17 -0400
-Received: from mail-oo1-xc36.google.com (mail-oo1-xc36.google.com [IPv6:2607:f8b0:4864:20::c36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E24BC0613CE
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 03:52:17 -0700 (PDT)
-Received: by mail-oo1-xc36.google.com with SMTP id n2so1373778ooo.8
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 03:52:17 -0700 (PDT)
+        with ESMTP id S1727496AbgJSLSp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 07:18:45 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C9C9C0613CE;
+        Mon, 19 Oct 2020 04:18:44 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id t21so9810654eds.6;
+        Mon, 19 Oct 2020 04:18:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=Z81JjL/QilKhzy+ivDys4xhscncwB8XkYwjTFxPZwkU=;
-        b=L08DSiMTtS03pFIVdXsv5aZ+j8v7qcczuulhuU29yazXdPyp7slcz37CpAZSBKYcjg
-         5O6roczjp1jbbON7PqAycch48mRfglmsgEEJr6DLOoSToI8RrTGLMZdYlKm9N+CvKYSd
-         8Gk54dg7CZqGX5CWE04I6QgDPLTBUgydBo0XM=
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=45s2FCkwzyyTYjXpdLwRQnD7aZKp7qq3wruiWtEoA1o=;
+        b=j2o7B/XNkY6QxAUAH9C351tgOWQYsxOBcYAFqEPbz5qI0dLEg5vA0FTiZdfZvZyD4N
+         +Z7wS6AMAbyE+PMsMIOXAc+VCm+0HcwRZXq3GBTdMpTiCJxQhsIGb7f6M1tqs5wQPcYD
+         9mKeSEBGXwJ1y3TA11fdiQ8CICZ/LAZj/3pnThAPTMVjvkll18eU4mkdmIL5WaFaZAKg
+         5dPyAdbvco8Y67FeIK67sMD282GkbIPRS0KZAxvgxtOjn83m+l0IXH/jmr+D3dp/3wxA
+         U3kG39Cgcbq1R2+z2y8zAeXzvWFC2UvaEqcxynYUVJELMvBzbzEqPvGOAaEFw+MCsHlN
+         U/uQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=Z81JjL/QilKhzy+ivDys4xhscncwB8XkYwjTFxPZwkU=;
-        b=AvNTIAAZMBJ4JngMGbCfXmYqpfOxMZZZzUHXcs1H2BraiObE8XR8VGUDQpqq7oSnho
-         zLHWJgLQAcq+12O/fn18F4pxfWxIAZotzCoda7WUxvKULGj1g09VRuQPVhZ8wUM2weTL
-         4NnZbSjQ0lWASHPY3oqC3zIsiZodn1JSFYCCAy9cucrmDgaXM/1zNYir7yvbzxvQozCb
-         xADzR9OMW6IXM7LAdS/O4XFSuXCzJP+aP7nkaToTXNTJYr8RhtPvyGS70xPXZgVduufU
-         f/h+aba3TOdKbG6SSLctQ/qzy36f4wB3Wm6u2NtpE4iOkNxjEpiarKSHLbro9Rm0wpqW
-         Mbzw==
-X-Gm-Message-State: AOAM531TTqh06RDSjFXmHwBO+VNNqXWRl2Mcg6CUpV68zwrDjRMq893Y
-        FyhRW5DfLycKEHdZLHX6lkLBpMinG0YczAJKXYv20Q==
-X-Google-Smtp-Source: ABdhPJyGGnpg+eub5NWvOuKvIFrOGR7XvYjZRl3/et0Q2HNExlZt/JI4VOdptQrNvcQtEbHiqAsYBFqnNhnvKLZgNTo=
-X-Received: by 2002:a4a:3e8a:: with SMTP id t132mr11543889oot.20.1603104736308;
- Mon, 19 Oct 2020 03:52:16 -0700 (PDT)
-From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
-References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
- <1602732462-10443-7-git-send-email-muneendra.kumar@broadcom.com> <0f4c83ca-351b-1dc4-85d8-d595d2d33f31@oracle.com>
-In-Reply-To: <0f4c83ca-351b-1dc4-85d8-d595d2d33f31@oracle.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=45s2FCkwzyyTYjXpdLwRQnD7aZKp7qq3wruiWtEoA1o=;
+        b=lbhpALajv+gnVUxAlYpkjImX0/88AZ7PjP0QAadBdyafRZbB+HAX4viMI6xitN7bQ6
+         HX7OMmM6dkethJbqiYS0wkWP3Qgvmjc82Pci9DAix69vIz5zZr9sEE+GmCbrX0rHK93M
+         iOW4+G3Hnb/hMbACVjFuoWy99EH8wVJZazmKCd/HZjTR2iOlnEigpsDWIs6b2wIyiKUf
+         oXBi4Xih7domL0pzPDFNVjPnSG2Hu1BwAVOdWfLD+ufLD4zAhB6TJSmLwyBOrq6YDSZr
+         NVw8efu5cV1mGsQ9/pWI0PMTDEFz2HdvKpY9660NHSkCsG2dxqGNcIcxJkxH3jrZE6Xv
+         h3bQ==
+X-Gm-Message-State: AOAM533SWioSpQsOeiL5hUuXyaU/uPf4WderEAtZ05pzBiB5kwjwjfQr
+        6QObiXFci0K1PkLSnZ9a2oN7eEfOGw/r5Q==
+X-Google-Smtp-Source: ABdhPJw2B7R7ZQuAnZZQqQwRpR70rr/Vg1pWrC/W/1VOCzjuKr6oga62jViR/knTDnu+L4fnJQDPjg==
+X-Received: by 2002:aa7:c54f:: with SMTP id s15mr17950954edr.107.1603106322909;
+        Mon, 19 Oct 2020 04:18:42 -0700 (PDT)
+Received: from [192.168.178.40] ([188.192.138.212])
+        by smtp.gmail.com with ESMTPSA id d6sm10259216edr.26.2020.10.19.04.18.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Oct 2020 04:18:42 -0700 (PDT)
+Subject: Re: [PATCH v2 4/4] scatterlist: add sgl_memset()
+To:     Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, axboe@kernel.dk, bvanassche@acm.org
+References: <20201018171336.63839-1-dgilbert@interlog.com>
+ <20201018171336.63839-5-dgilbert@interlog.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <75d9b1cf-e418-cee1-89de-c59c5b2b4304@gmail.com>
+Date:   Mon, 19 Oct 2020 13:18:37 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQFATVqLRX+cZ5DMpa/LB2sUjSWzQAMuoMwXAhK+jA+qoWVbAA==
-Date:   Mon, 19 Oct 2020 16:22:14 +0530
-Message-ID: <2b444f4ac897389e945217c19841cc0e@mail.gmail.com>
-Subject: RE: [PATCH v3 06/17] scsi_transport_fc: Added store fucntionality to
- set the rport port_state using sysfs
-To:     Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, hare@suse.de
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005d28b605b203e8c2"
+In-Reply-To: <20201018171336.63839-5-dgilbert@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005d28b605b203e8c2
-Content-Type: text/plain; charset="UTF-8"
-
-HI Mike,
-Thanks for the review.
-
-> +/*
-> + * Sets port_state to Marginal/Online.
-> + * On Marginal it Sets  no retries on abort in scmd->state for all
-> + * outstanding io of all the scsi_devs
-> + * This only allows ONLINE->MARGINAL and MARGINAL->ONLINE
-
-The above comments are not needed since not counting comments the code is
-almost the same number of lines as the comments. Plus the comments below say
-the same thing. And the functions/fields/variables you are using below are
-pretty clear in what they are doing.
-[Munendra] Agreed.
-> +		if (rport->port_state == FC_PORTSTATE_ONLINE) {
-> +			rport->port_state = port_state;
-> +			scsi_target_chg_noretries_abort(&rport->dev, 1);
-> +		}
-
-Should this return a failure if port_state is not online?
-[Muneendra]Agreed. Thanks for pointing it .I will add these changes in my
-next version.
+AFAICS, there are 2 unneeded lines in the new implementation
+of sgl_memset. Please see details below.
 
 
-Regards,
-Muneendra.
+Am 18.10.20 um 19:13 schrieb Douglas Gilbert:
+> The existing sg_zero_buffer() function is a bit restrictive.
+> For example protection information (PI) blocks are usually
+> initialized to 0xff bytes. As its name suggests sgl_memset()
+> is modelled on memset(). One difference is the type of the
+> val argument which is u8 rather than int. Plus it returns
+> the number of bytes (over)written.
+> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> ---
 
---0000000000005d28b605b203e8c2
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+...
 
-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
-J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
-Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
-KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
-aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
-b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
-AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
-MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
-Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
-A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
-DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
-hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
-LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
-9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
-/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
-EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
-b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
-SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCBAMOzeKyD+kQIMmxOmbmA4x/OkiyLn2wZPkvcAiaEFUTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxMDUyMTZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
-AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAxbGg5Rj2fXLeMjxj
-tWEJQ8e6lwecw0umXPmXO20YTQxotQMvgB/1Enj6eYUCuuclZ37OYV203v0SPAQeNjr5nNWvKzII
-7kpJ9dXNAqjbmOs6lJMvMHjE84ll73Zv5b9OxpXLW7FNoGaxdt+eC2beWu3YlpI5Bt5j24XHmXQj
-bP92yEcW/Ok8UvI3OPrj5OzFjL5UucHXjjqxzD4nmbEEceyGx89Ylq3bzfSLeTV2hr3DClYibYnV
-MlLkL0CJBh0sdluJ+xC2s1t0iMdCfkch7fagKJiqIMIop5zgsyJM9pEtPsipQehGLIyQKMuinDpl
-t/nAVrk4iaRxBjrngxRLRg==
---0000000000005d28b605b203e8c2--
+> +
+> +/**
+> + * sgl_memset - set byte 'val' up to n_bytes times on SG list
+> + * @sgl:		 The SG list
+> + * @nents:		 Number of SG entries in sgl
+> + * @skip:		 Number of bytes to skip before starting
+> + * @val:		 byte value to write to sgl
+> + * @n_bytes:		 The (maximum) number of bytes to modify
+> + *
+> + * Returns:
+> + *   The number of bytes written.
+> + *
+> + * Notes:
+> + *   Stops writing if either sgl or n_bytes is exhausted. If n_bytes is
+> + *   set SIZE_MAX then val will be written to each byte until the end
+> + *   of sgl.
+> + *
+> + *   The notes in sgl_copy_sgl() about large sgl_s _applies here as well.
+> + *
+> + **/
+> +size_t sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
+> +		  u8 val, size_t n_bytes)
+> +{
+> +	size_t offset = 0;
+> +	size_t len;
+> +	struct sg_mapping_iter miter;
+> +
+> +	if (n_bytes == 0)
+> +		return 0;
+> +	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC | SG_MITER_TO_SG);
+> +	if (!sg_miter_skip(&miter, skip))
+> +		goto fini;
+> +
+> +	while ((offset < n_bytes) && sg_miter_next(&miter)) {
+> +		len = min(miter.length, n_bytes - offset);
+> +		memset(miter.addr, val, len);
+> +		offset += len;
+> +		miter.consumed = len;
+
+The above line will not change miter.consumed in all loop cycles but the
+last, since len will be miter.length for all loop cycles but the last
+and sg_miter_next initializes miter.consumed to contain miter.length.
+In the last loop cycle it does not harm if miter.consumed stays bigger
+than len. So this line is not needed and can be removed.
+
+> +		sg_miter_stop(&miter);
+
+Since the code does not use nested sg_miter, the sg_miter_stop() here is
+not needed, you can remove that line.
+
+Either the next call to sg_miter_next will call sg_miter_stop before
+preparing next chunk of mem, or sg_miter_stop is called behind the loop.
+
+> +	}
+> +fini:
+> +	sg_miter_stop(&miter);
+> +	return offset;
+> +}
+> +EXPORT_SYMBOL(sgl_memset);
+> +
+> 
