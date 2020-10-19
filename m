@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06922C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 12:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE8BC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 12:18:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB90922283
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 12:18:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E993E222B8
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 12:18:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbgJSMSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726700AbgJSMSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 19 Oct 2020 08:18:00 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49286 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49292 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726623AbgJSMR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Oct 2020 08:17:59 -0400
+        id S1726631AbgJSMSA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Oct 2020 08:18:00 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id EFB0FB020;
-        Mon, 19 Oct 2020 12:17:57 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 01A9AB1DA;
+        Mon, 19 Oct 2020 12:17:58 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/4] bfa: move bfa_sm_fault() to dev_err()
-Date:   Mon, 19 Oct 2020 14:17:56 +0200
-Message-Id: <20201019121756.74644-5-hare@suse.de>
+Subject: [PATCH 2/4] bfa: drop unused 'bfad' and 'pcidev' arguments
+Date:   Mon, 19 Oct 2020 14:17:54 +0200
+Message-Id: <20201019121756.74644-3-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201019121756.74644-1-hare@suse.de>
 References: <20201019121756.74644-1-hare@suse.de>
@@ -38,326 +38,322 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move bfa_sm_fault() to use dev_err() instead of a raw printk();
-this also allows for better type-checking and related fixes to
-the calls to bfa_sm_fault() in bfa_ioc.c
+The various bfa modules all have an 'attach' function, most of
+which have two pointless arguments 'bfad' and 'pcidev'.
+Remove them.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/bfa/bfa_cs.h  |  2 +-
- drivers/scsi/bfa/bfa_ioc.c | 50 +++++++++++++++++++++++-----------------------
- drivers/scsi/bfa/bfad.c    | 14 ++++++-------
- 3 files changed, 33 insertions(+), 33 deletions(-)
+ drivers/scsi/bfa/bfa.h         |  3 ---
+ drivers/scsi/bfa/bfa_core.c    | 30 +++++++++++++++---------------
+ drivers/scsi/bfa/bfa_fcpim.c   |  8 +++-----
+ drivers/scsi/bfa/bfa_ioc.c     |  3 +--
+ drivers/scsi/bfa/bfa_ioc.h     |  1 -
+ drivers/scsi/bfa/bfa_modules.h | 28 ++++++++++------------------
+ drivers/scsi/bfa/bfa_svc.c     | 23 ++++++++---------------
+ 7 files changed, 37 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_cs.h b/drivers/scsi/bfa/bfa_cs.h
-index 6b606bf589b4..f628ab0909c1 100644
---- a/drivers/scsi/bfa/bfa_cs.h
-+++ b/drivers/scsi/bfa/bfa_cs.h
-@@ -108,7 +108,7 @@ __bfa_trc32(struct bfa_trc_mod_s *trcm, int fileno, int line, u32 data);
+diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
+index 7bd2ba1ad4d1..901e77b9c650 100644
+--- a/drivers/scsi/bfa/bfa.h
++++ b/drivers/scsi/bfa/bfa.h
+@@ -293,9 +293,6 @@ struct bfa_iocfc_s {
+ void bfa_iocfc_meminfo(struct bfa_iocfc_cfg_s *cfg,
+ 			struct bfa_meminfo_s *meminfo,
+ 			struct bfa_s *bfa);
+-void bfa_iocfc_attach(struct bfa_s *bfa, void *bfad,
+-		      struct bfa_iocfc_cfg_s *cfg,
+-		      struct bfa_pcidev_s *pcidev);
+ void bfa_iocfc_init(struct bfa_s *bfa);
+ void bfa_iocfc_start(struct bfa_s *bfa);
+ void bfa_iocfc_stop(struct bfa_s *bfa);
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 6846ca8f7313..aa726fc7f7e1 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -1033,12 +1033,11 @@ bfa_iocfc_send_cfg(void *bfa_arg)
+ }
  
- #define bfa_sm_fault(__mod, __event)	do {				\
- 	bfa_trc(__mod, (((u32)0xDEAD << 16) | __event));		\
--	printk(KERN_ERR	"Assertion failure: %s:%d: %d",			\
-+	dev_err(&(__mod)->bfad->pcidev->dev, "Assertion failure: %s:%d: %d",	\
- 		__FILE__, __LINE__, (__event));				\
- } while (0)
+ static void
+-bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++bfa_iocfc_init_mem(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg,
+ 		   struct bfa_pcidev_s *pcidev)
+ {
+ 	struct bfa_iocfc_s	*iocfc = &bfa->iocfc;
+ 
+-	bfa->bfad = bfad;
+ 	iocfc->bfa = bfa;
+ 	iocfc->cfg = *cfg;
+ 
+@@ -1513,8 +1512,8 @@ bfa_iocfc_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+ /*
+  * Query IOC memory requirement information.
+  */
+-void
+-bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++static void
++bfa_iocfc_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg,
+ 		 struct bfa_pcidev_s *pcidev)
+ {
+ 	int		i;
+@@ -1531,7 +1530,7 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_PCIFN_CLASS_FC);
+ 	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
+ 
+-	bfa_iocfc_init_mem(bfa, bfad, cfg, pcidev);
++	bfa_iocfc_init_mem(bfa, cfg, pcidev);
+ 	bfa_iocfc_mem_claim(bfa, cfg);
+ 	INIT_LIST_HEAD(&bfa->timer_mod.timer_q);
+ 
+@@ -1833,6 +1832,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	struct list_head *dm_qe, *km_qe;
+ 
+ 	bfa->fcs = BFA_FALSE;
++	bfa->bfad = bfad;
+ 
+ 	WARN_ON((cfg == NULL) || (meminfo == NULL));
+ 
+@@ -1855,16 +1855,16 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 		kva_elem->kva_curp = kva_elem->kva;
+ 	}
+ 
+-	bfa_iocfc_attach(bfa, bfad, cfg, pcidev);
+-	bfa_fcdiag_attach(bfa, bfad, cfg, pcidev);
+-	bfa_sgpg_attach(bfa, bfad, cfg, pcidev);
+-	bfa_fcport_attach(bfa, bfad, cfg, pcidev);
+-	bfa_fcxp_attach(bfa, bfad, cfg, pcidev);
+-	bfa_lps_attach(bfa, bfad, cfg, pcidev);
+-	bfa_uf_attach(bfa, bfad, cfg, pcidev);
+-	bfa_rport_attach(bfa, bfad, cfg, pcidev);
+-	bfa_fcp_attach(bfa, bfad, cfg, pcidev);
+-	bfa_dconf_attach(bfa, bfad, cfg);
++	bfa_iocfc_attach(bfa, cfg, pcidev);
++	bfa_fcdiag_attach(bfa, cfg);
++	bfa_sgpg_attach(bfa, cfg);
++	bfa_fcport_attach(bfa, cfg);
++	bfa_fcxp_attach(bfa, cfg);
++	bfa_lps_attach(bfa, cfg);
++	bfa_uf_attach(bfa, cfg);
++	bfa_rport_attach(bfa, cfg);
++	bfa_fcp_attach(bfa, cfg);
++	bfa_dconf_attach(bfa, cfg);
+ 	bfa_com_port_attach(bfa);
+ 	bfa_com_ablk_attach(bfa);
+ 	bfa_com_cee_attach(bfa);
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 29f99561dfc3..cc3203c52c4b 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -305,8 +305,7 @@ bfa_fcpim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len)
+ 
+ 
+ static void
+-bfa_fcpim_attach(struct bfa_fcp_mod_s *fcp, void *bfad,
+-		struct bfa_iocfc_cfg_s *cfg, struct bfa_pcidev_s *pcidev)
++bfa_fcpim_attach(struct bfa_fcp_mod_s *fcp, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_fcpim_s *fcpim = &fcp->fcpim;
+ 	struct bfa_s *bfa = fcp->bfa;
+@@ -3679,8 +3678,7 @@ bfa_fcp_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *minfo,
+ }
+ 
+ void
+-bfa_fcp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_fcp_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
+ 	struct bfa_mem_dma_s *seg_ptr;
+@@ -3710,7 +3708,7 @@ bfa_fcp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	}
+ 
+ 	fcp->throttle_update_required = 1;
+-	bfa_fcpim_attach(fcp, bfad, cfg, pcidev);
++	bfa_fcpim_attach(fcp, cfg);
+ 
+ 	bfa_iotag_attach(fcp);
  
 diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index dc518a4678a9..ffcd52177f41 100644
+index dd5821dfcac2..b2ba89c81c65 100644
 --- a/drivers/scsi/bfa/bfa_ioc.c
 +++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -272,7 +272,7 @@ bfa_ioc_sm_uninit(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
+@@ -6066,11 +6066,10 @@ bfa_dconf_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
  }
- /*
-@@ -290,7 +290,7 @@ bfa_ioc_sm_reset_entry(struct bfa_ioc_s *ioc)
- static void
- bfa_ioc_sm_reset(struct bfa_ioc_s *ioc, enum ioc_event event)
+ 
+ void
+-bfa_dconf_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg)
++bfa_dconf_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
  {
--	bfa_trc(ioc, event);
-+	bfa_trc(ioc->bfa, event);
+ 	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
  
- 	switch (event) {
- 	case IOC_E_ENABLE:
-@@ -306,7 +306,7 @@ bfa_ioc_sm_reset(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
+-	dconf->bfad = bfad;
+ 	dconf->bfa = bfa;
+ 	dconf->instance = bfa->ioc.port_id;
+ 	bfa_trc(bfa, dconf->instance);
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 933a1c3890ff..402f7b6a3df4 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -782,7 +782,6 @@ struct bfa_dconf_mod_s {
+ 	bfa_boolean_t		min_cfg;
+ 	struct bfa_timer_s	timer;
+ 	struct bfa_s		*bfa;
+-	void			*bfad;
+ 	void			*trcmod;
+ 	struct bfa_dconf_s	*dconf;
+ 	struct bfa_mem_kva_s	kva_seg;
+diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
+index 578e7678b056..299b41a7b540 100644
+--- a/drivers/scsi/bfa/bfa_modules.h
++++ b/drivers/scsi/bfa/bfa_modules.h
+@@ -56,7 +56,7 @@ enum {
+ #define BFA_CACHELINE_SZ	(256)
  
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
+ struct bfa_s {
+-	void			*bfad;		/*  BFA driver instance    */
++	struct bfad_s		*bfad;		/*  BFA driver instance    */
+ 	struct bfa_plog_s	*plog;		/*  portlog buffer	    */
+ 	struct bfa_trc_mod_s	*trcmod;	/*  driver tracing	    */
+ 	struct bfa_ioc_s	ioc;		/*  IOC module		    */
+@@ -74,12 +74,11 @@ struct bfa_s {
+ 
+ extern bfa_boolean_t bfa_auto_recover;
+ 
+-void bfa_dconf_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *);
++void bfa_dconf_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_dconf_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		  struct bfa_s *);
+ void bfa_dconf_iocdisable(struct bfa_s *);
+-void bfa_fcp_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_fcp_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_fcp_iocdisable(struct bfa_s *bfa);
+ void bfa_fcp_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		struct bfa_s *);
+@@ -88,36 +87,29 @@ void bfa_fcport_start(struct bfa_s *);
+ void bfa_fcport_iocdisable(struct bfa_s *);
+ void bfa_fcport_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		   struct bfa_s *);
+-void bfa_fcport_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_fcport_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_fcxp_iocdisable(struct bfa_s *);
+ void bfa_fcxp_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		struct bfa_s *);
+-void bfa_fcxp_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_fcxp_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_fcdiag_iocdisable(struct bfa_s *);
+-void bfa_fcdiag_attach(struct bfa_s *bfa, void *, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_fcdiag_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *);
+ void bfa_ioim_lm_init(struct bfa_s *);
+ void bfa_lps_iocdisable(struct bfa_s *bfa);
+ void bfa_lps_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		struct bfa_s *);
+-void bfa_lps_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *,
+-	struct bfa_pcidev_s *);
++void bfa_lps_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_rport_iocdisable(struct bfa_s *bfa);
+ void bfa_rport_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		struct bfa_s *);
+-void bfa_rport_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_rport_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_sgpg_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		struct bfa_s *);
+-void bfa_sgpg_attach(struct bfa_s *, void *bfad, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_sgpg_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_uf_iocdisable(struct bfa_s *);
+ void bfa_uf_meminfo(struct bfa_iocfc_cfg_s *, struct bfa_meminfo_s *,
+ 		struct bfa_s *);
+-void bfa_uf_attach(struct bfa_s *, void *, struct bfa_iocfc_cfg_s *,
+-		struct bfa_pcidev_s *);
++void bfa_uf_attach(struct bfa_s *, struct bfa_iocfc_cfg_s *);
+ void bfa_uf_start(struct bfa_s *);
+ 
+ #endif /* __BFA_MODULES_H__ */
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 1e266c1ef793..c47c7e45b733 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -487,8 +487,7 @@ bfa_fcxp_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *minfo,
  }
  
-@@ -358,7 +358,7 @@ bfa_ioc_sm_enabling(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
+ void
+-bfa_fcxp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_fcxp_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_fcxp_mod_s *mod = BFA_FCXP_MOD(bfa);
  
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
+@@ -1477,8 +1476,7 @@ bfa_lps_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *minfo,
+  * bfa module attach at initialization time
+  */
+ void
+-bfa_lps_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-	struct bfa_pcidev_s *pcidev)
++bfa_lps_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_lps_mod_s	*mod = BFA_LPS_MOD(bfa);
+ 	struct bfa_lps_s	*lps;
+@@ -3021,8 +3019,7 @@ bfa_fcport_mem_claim(struct bfa_fcport_s *fcport)
+  * Memory initialization.
+  */
+ void
+-bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_fcport_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+ 	struct bfa_port_cfg_s *port_cfg = &fcport->cfg;
+@@ -4810,8 +4807,7 @@ bfa_rport_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *minfo,
  }
  
-@@ -404,7 +404,7 @@ bfa_ioc_sm_getattr(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
+ void
+-bfa_rport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_rport_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_rport_mod_s *mod = BFA_RPORT_MOD(bfa);
+ 	struct bfa_rport_s *rp;
+@@ -5176,8 +5172,7 @@ bfa_sgpg_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *minfo,
  }
  
-@@ -451,7 +451,7 @@ bfa_ioc_sm_op(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
+ void
+-bfa_sgpg_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_sgpg_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_sgpg_mod_s *mod = BFA_SGPG_MOD(bfa);
+ 	struct bfa_sgpg_s *hsgpg;
+@@ -5450,8 +5445,7 @@ bfa_uf_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *minfo,
  }
  
-@@ -493,7 +493,7 @@ bfa_ioc_sm_disabling(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
+ void
+-bfa_uf_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_uf_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_uf_mod_s *ufm = BFA_UF_MOD(bfa);
  
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
+@@ -5707,13 +5701,12 @@ bfa_fcdiag_set_busy_status(struct bfa_fcdiag_s *fcdiag)
  }
  
-@@ -526,7 +526,7 @@ bfa_ioc_sm_disabled(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
+ void
+-bfa_fcdiag_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_pcidev_s *pcidev)
++bfa_fcdiag_attach(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg)
+ {
+ 	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
+ 	struct bfa_dport_s  *dport = &fcdiag->dport;
  
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -579,7 +579,7 @@ bfa_ioc_sm_fail_retry(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -620,7 +620,7 @@ bfa_ioc_sm_fail(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		 */
- 		break;
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -653,7 +653,7 @@ bfa_ioc_sm_hwfail(struct bfa_ioc_s *ioc, enum ioc_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -690,7 +690,7 @@ bfa_iocpf_sm_reset(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -801,7 +801,7 @@ bfa_iocpf_sm_fwcheck(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -848,7 +848,7 @@ bfa_iocpf_sm_mismatch(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -893,7 +893,7 @@ bfa_iocpf_sm_semwait(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -934,7 +934,7 @@ bfa_iocpf_sm_hwinit(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -985,7 +985,7 @@ bfa_iocpf_sm_enabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1016,7 +1016,7 @@ bfa_iocpf_sm_ready(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1056,7 +1056,7 @@ bfa_iocpf_sm_disabling(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1092,7 +1092,7 @@ bfa_iocpf_sm_disabling_sync(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1124,7 +1124,7 @@ bfa_iocpf_sm_disabled(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1174,7 +1174,7 @@ bfa_iocpf_sm_initfail_sync(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1205,7 +1205,7 @@ bfa_iocpf_sm_initfail(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1265,7 +1265,7 @@ bfa_iocpf_sm_fail_sync(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-@@ -1291,7 +1291,7 @@ bfa_iocpf_sm_fail(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(ioc, event);
-+		bfa_sm_fault(ioc->bfa, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 0e2b81d74692..942f3d9a5627 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -181,7 +181,7 @@ bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 	}
- }
- 
-@@ -256,7 +256,7 @@ bfad_sm_created(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 	}
- }
- 
-@@ -295,7 +295,7 @@ bfad_sm_initializing(struct bfad_s *bfad, enum bfad_sm_event event)
- 		bfa_sm_set_state(bfad, bfad_sm_failed);
- 		break;
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 	}
- }
- 
-@@ -326,7 +326,7 @@ bfad_sm_failed(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 	}
- }
- 
-@@ -342,7 +342,7 @@ bfad_sm_operational(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 	}
- }
- 
-@@ -358,7 +358,7 @@ bfad_sm_fcs_exit(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 	}
- }
- 
-@@ -378,7 +378,7 @@ bfad_sm_stopping(struct bfad_s *bfad, enum bfad_sm_event event)
- 		break;
- 
- 	default:
--		bfa_sm_fault(bfad, event);
-+		bfa_sm_fault(&bfad->bfa, event);
- 		break;
- 	}
- }
+-	fcdiag->bfa             = bfa;
++	fcdiag->bfa = bfa;
+ 	fcdiag->trcmod  = bfa->trcmod;
+ 	/* The common DIAG attach bfa_diag_attach() will do all memory claim */
+ 	dport->bfa = bfa;
 -- 
 2.16.4
 
