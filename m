@@ -9,78 +9,76 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5760AC4363A
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:37:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C38C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:37:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB1A9222EA
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:37:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1122B222E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:37:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AtgCbqGc"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DaXZ3kNg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729552AbgJSOhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 10:37:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42570 "EHLO
+        id S1729564AbgJSOhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 10:37:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729538AbgJSOhD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 10:37:03 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B1EEC0613CE
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:37:03 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id q21so48025pgi.13
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:37:03 -0700 (PDT)
+        with ESMTP id S1729555AbgJSOhG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 10:37:06 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81FD6C0613CE
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:37:06 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id w11so5067996pll.8
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 07:37:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=8oGQihEueeYLpqbXnW03K/pdPRXhnKPRc0Ar7g6Q2B0=;
-        b=AtgCbqGc2HZTUjiGi6XvGoge/I+MfPeIibVriofhgZxO6Oq6PQo2FHO72+bVpyYvwt
-         AE3vrhSnL7D5oFG6FM2tNExGujuAUdqaGicYmP5Ue96CE5T2lEmKfuueQzo/FlUvm9f1
-         tQbMjZZpmYzMTnM0a8axj3UJKjxMiQLIjByz4=
+        bh=qIKw3xWux4grN263QBmQ5Vwaiymtx1IFb5AT244PNps=;
+        b=DaXZ3kNgnz+dEN2bFo4QRSIR5tO/AyQdNCLpt/9hyadCV+gkadn4jnGDTURqZU6oXU
+         gxbN7vW7fggNvLtOo3/pl+BK18S2cj0DXqKNXTub5+9raao7DjgXva9l2J5/ZPeUPRlp
+         E6GQtWBwSYOQA9nOgxfYYlrvIDClTlcc6Cbzs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=8oGQihEueeYLpqbXnW03K/pdPRXhnKPRc0Ar7g6Q2B0=;
-        b=pr2HPbVOE0l18uPEI0Voe8GtzGSUTzJXNO8aUP9gGRBv8tICAzaZGYfBmWlyNJKCaV
-         HgRtLXDhhPKSMIYK0WNcr15vrteCJfruXnz8WcpACNSXQ6WEB3l1fgfpj3VLce6a07SY
-         U7cpNWYvXHzZen5ir/TF6SPLMjPmfO/oIB0iuKOCVXv+VsgGcW2g/X18HJDleKCy5nvd
-         krm7u1lQD7r5blOboN4xJxMb00K5wd9RCA8BzHb4uRpzGs/vlQQJf60ZSvsvIk0ape9b
-         sq7dXYpONllCYYznNYSWEnuyMTUz6QUKSX5pQSkoVyrDKm8KgCWv8e1cZaWbWltF12/n
-         7vNg==
-X-Gm-Message-State: AOAM532k8TUNNfIWOquZTXdxIw7SM4+WP1uikv3P3lqUkshtIpVcd82U
-        RD0e4XpCFUknxpwgT8Ap3v7V3A==
-X-Google-Smtp-Source: ABdhPJyiojPgDPnCl+suNWYafBMayFW3kP1b9eRupWXx7pss5TxhGOYeCnYFF1zPGICBe4yVk1wFVA==
-X-Received: by 2002:a63:3d88:: with SMTP id k130mr6617pga.30.1603118222416;
-        Mon, 19 Oct 2020 07:37:02 -0700 (PDT)
+        bh=qIKw3xWux4grN263QBmQ5Vwaiymtx1IFb5AT244PNps=;
+        b=s/QIxeG4J0qFzGEXPgM3A4x/DB6SqQA93kr8lzbIzyKBGezRQtrvutXiwcsqerf4Gj
+         I20gxe3qFVW6ypVkQgzYalTuMuD+2l0kGIQHPTaJ2EvjRVZMAYRxsg10/K2CDERV2N5j
+         SBq8JoeYRpVD+j9P6MDEIjneEi7ORJlU0j5fU1lZuqCl31WNvJ/B0RvgnB+OePK2yUWP
+         eyIJYYcwE0/yE2KAZBxaavMRFyecSMnxOyscu0U0DPckHHCnipPkkhEUpVOZ8aVc77KW
+         BOF8BolaOjZlPLgoGAwWijsUuEEbi/mihG/GHpPLzrsUZf/otQf45ENVxQqtg8BLK08S
+         /kqA==
+X-Gm-Message-State: AOAM5314/GkZOok5c7il1dDELDa2ADPn9W1Nmr4tJkzQZPfpke9VsXJv
+        6kb9gU5KR3Ok0ivZeqAZ1aO3FR2mfdc/8jGR
+X-Google-Smtp-Source: ABdhPJxgXaDavsG/KyQxIQaqkA3E7GaYeK6TrQeSY5AjkDPthlcHOnCT3DV7qDFKkVZnGsHXPoZF0g==
+X-Received: by 2002:a17:90b:3393:: with SMTP id ke19mr86689pjb.3.1603118225892;
+        Mon, 19 Oct 2020 07:37:05 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id kb15sm53377pjb.17.2020.10.19.07.36.59
+        by smtp.gmail.com with ESMTPSA id kb15sm53377pjb.17.2020.10.19.07.37.02
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 19 Oct 2020 07:37:01 -0700 (PDT)
+        Mon, 19 Oct 2020 07:37:05 -0700 (PDT)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         pbonzini@redhat.com,
         Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: [RFC v2 06/18] lpfc: vmid: Supplementary data structures for vmid
-Date:   Mon, 19 Oct 2020 13:13:01 +0530
-Message-Id: <1603093393-12875-7-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [RFC v2 07/18] lpfc: vmid: Forward declarations for APIs
+Date:   Mon, 19 Oct 2020 13:13:02 +0530
+Message-Id: <1603093393-12875-8-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1603093393-12875-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1603093393-12875-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000034935b05b2070cec"
+        boundary="0000000000006984e305b2070c30"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000034935b05b2070cec
+--0000000000006984e305b2070c30
 
 From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
 
-This patch adds additional data structures for supporting the two
-versions of vmid implementation. First type uses app header while the
-other types uses priority tagging mechanism. These data structures
-are used mostly for ELS and CT commands for the two vmid implementation.
+This patch contains the forward declarations of commonly used APIs which
+are used outside the scope of the file.
 
 Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
@@ -89,238 +87,33 @@ Signed-off-by: James Smart <jsmart2021@gmail.com>
 v2:
 Ported the patch on top of 5.10/scsi-queue
 ---
- drivers/scsi/lpfc/lpfc_disc.h |   1 +
- drivers/scsi/lpfc/lpfc_hw.h   | 124 ++++++++++++++++++++++++++++++++--
- drivers/scsi/lpfc/lpfc_sli.h  |   8 +++
- 3 files changed, 129 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-index 482e4a888dae..c38313ee17dd 100644
---- a/drivers/scsi/lpfc/lpfc_disc.h
-+++ b/drivers/scsi/lpfc/lpfc_disc.h
-@@ -113,6 +113,7 @@ struct lpfc_nodelist {
- 	uint8_t         nlp_fcp_info;	        /* class info, bits 0-3 */
- #define NLP_FCP_2_DEVICE   0x10			/* FCP-2 device */
- 	u8		nlp_nvme_info;	        /* NVME NSLER Support */
-+	u8		vmid_support;		/* destination VMID support */
- #define NLP_NVME_NSLER     0x1			/* NVME NSLER device */
- 
- 	uint16_t        nlp_usg_map;	/* ndlp management usage bitmap */
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index c20034b3101c..c6b252fbea40 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -275,6 +275,7 @@ struct lpfc_sli_ct_request {
- #define  SLI_CT_ACCESS_DENIED             0x10
- #define  SLI_CT_INVALID_PORT_ID           0x11
- #define  SLI_CT_DATABASE_EMPTY            0x12
-+#define  SLI_CT_APP_ID_NOT_AVAILABLE      0x40
- 
- /*
-  * Name Server Command Codes
-@@ -400,16 +401,16 @@ struct csp {
- 	uint16_t altBbCredit:1;	/* FC Word 1, bit 27 */
- 	uint16_t edtovResolution:1;	/* FC Word 1, bit 26 */
- 	uint16_t multicast:1;	/* FC Word 1, bit 25 */
--	uint16_t broadcast:1;	/* FC Word 1, bit 24 */
-+	u16 app_hdr_support:1;	/* FC Word 1, bit 24 */
- 
--	uint16_t huntgroup:1;	/* FC Word 1, bit 23 */
-+	uint16_t priority_tagging:1;	/* FC Word 1, bit 23 */
- 	uint16_t simplex:1;	/* FC Word 1, bit 22 */
- 	uint16_t word1Reserved1:3;	/* FC Word 1, bit 21:19 */
- 	uint16_t dhd:1;		/* FC Word 1, bit 18 */
- 	uint16_t contIncSeqCnt:1;	/* FC Word 1, bit 17 */
- 	uint16_t payloadlength:1;	/* FC Word 1, bit 16 */
- #else	/*  __LITTLE_ENDIAN_BITFIELD */
--	uint16_t broadcast:1;	/* FC Word 1, bit 24 */
-+	u16 app_hdr_support:1;	/* FC Word 1, bit 24 */
- 	uint16_t multicast:1;	/* FC Word 1, bit 25 */
- 	uint16_t edtovResolution:1;	/* FC Word 1, bit 26 */
- 	uint16_t altBbCredit:1;	/* FC Word 1, bit 27 */
-@@ -423,7 +424,7 @@ struct csp {
- 	uint16_t dhd:1;		/* FC Word 1, bit 18 */
- 	uint16_t word1Reserved1:3;	/* FC Word 1, bit 21:19 */
- 	uint16_t simplex:1;	/* FC Word 1, bit 22 */
--	uint16_t huntgroup:1;	/* FC Word 1, bit 23 */
-+	uint16_t priority_tagging:1;	/* FC Word 1, bit 23 */
- #endif
- 
- 	uint8_t bbRcvSizeMsb;	/* Upper nibble is reserved */
-@@ -607,6 +608,8 @@ struct fc_vft_header {
- #define ELS_CMD_LIRR      0x7A000000
- #define ELS_CMD_LCB	  0x81000000
- #define ELS_CMD_FPIN	  0x16000000
-+#define ELS_CMD_QFPA      0xB0000000
-+#define ELS_CMD_UVEM      0xB1000000
- #else	/*  __LITTLE_ENDIAN_BITFIELD */
- #define ELS_CMD_MASK      0xffff
- #define ELS_RSP_MASK      0xff
-@@ -649,6 +652,8 @@ struct fc_vft_header {
- #define ELS_CMD_LIRR      0x7A
- #define ELS_CMD_LCB	  0x81
- #define ELS_CMD_FPIN	  ELS_FPIN
-+#define ELS_CMD_QFPA      0xB0
-+#define ELS_CMD_UVEM      0xB1
- #endif
- 
- /*
-@@ -1317,6 +1322,117 @@ struct fc_rdp_res_frame {
- };
- 
- 
-+/* UVEM */
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 782f6f76f18a..74ca5860ca8e 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -600,3 +600,14 @@ extern int lpfc_enable_nvmet_cnt;
+ extern unsigned long long lpfc_enable_nvmet[];
+ extern int lpfc_no_hba_reset_cnt;
+ extern unsigned long lpfc_no_hba_reset[];
 +
-+#define LPFC_UVEM_SIZE 60
-+#define LPFC_UVEM_VEM_ID_DESC_SIZE 16
-+#define LPFC_UVEM_VE_MAP_DESC_SIZE 20
-+
-+#define VEM_ID_DESC_TAG  0x0001000A
-+struct lpfc_vem_id_desc {
-+	u32 tag;
-+	u32 length;
-+	u8 vem_id[16];
-+};
-+
-+#define LPFC_QFPA_SIZE	4
-+
-+#define INSTANTIATED_VE_DESC_TAG  0x0001000B
-+struct instantiated_ve_desc {
-+	u32 tag;
-+	u32 length;
-+	u8 global_vem_id[16];
-+	u32 word6;
-+#define lpfc_instantiated_local_id_SHIFT   0
-+#define lpfc_instantiated_local_id_MASK    0x000000ff
-+#define lpfc_instantiated_local_id_WORD    word6
-+#define lpfc_instantiated_nport_id_SHIFT   8
-+#define lpfc_instantiated_nport_id_MASK    0x00ffffff
-+#define lpfc_instantiated_nport_id_WORD    word6
-+};
-+
-+#define DEINSTANTIATED_VE_DESC_TAG  0x0001000C
-+struct deinstantiated_ve_desc {
-+	u32 tag;
-+	u32 length;
-+	u8 global_vem_id[16];
-+	u32 word6;
-+#define lpfc_deinstantiated_nport_id_SHIFT   0
-+#define lpfc_deinstantiated_nport_id_MASK    0x000000ff
-+#define lpfc_deinstantiated_nport_id_WORD    word6
-+#define lpfc_deinstantiated_local_id_SHIFT   24
-+#define lpfc_deinstantiated_local_id_MASK    0x00ffffff
-+#define lpfc_deinstantiated_local_id_WORD    word6
-+};
-+
-+/* Query Fabric Priority Allocation Response */
-+#define LPFC_PRIORITY_RANGE_DESC_SIZE 12
-+
-+struct priority_range_desc {
-+	u32 tag;
-+	u32 length;
-+	u8 lo_range;
-+	u8 hi_range;
-+	u8 qos_priority;
-+	u8 local_ve_id;
-+};
-+
-+struct fc_qfpa_res {
-+	u32 reply_sequence;	/* LS_ACC or LS_RJT */
-+	u32 length;	/* FC Word 1    */
-+	struct priority_range_desc desc[1];
-+};
-+
-+/* Application Server command code */
-+/* VMID               */
-+
-+#define SLI_CT_APP_SEV_Subtypes     0x20	/* Application Server subtype */
-+
-+#define SLI_CTAS_GAPPIA_ENT    0x0100	/* Get Application Identifier */
-+#define SLI_CTAS_GALLAPPIA     0x0101	/* Get All Application Identifier */
-+#define SLI_CTAS_GALLAPPIA_ID  0x0102	/* Get All Application Identifier */
-+					/* for Nport */
-+#define SLI_CTAS_GAPPIA_IDAPP  0x0103	/* Get Application Identifier */
-+					/* for Nport */
-+#define SLI_CTAS_RAPP_IDENT    0x0200	/* Register Application Identifier */
-+#define SLI_CTAS_DAPP_IDENT    0x0300	/* Deregister Application */
-+					/* Identifier */
-+#define SLI_CTAS_DALLAPP_ID    0x0301	/* Deregister All Application */
-+					/* Identifier */
-+
-+struct entity_id_object {
-+	u8 entity_id_len;
-+	u8 entity_id[255];	/* VM UUID */
-+};
-+
-+struct app_id_object {
-+	u32 port_id;
-+	u32 app_id;
-+	struct entity_id_object obj;
-+};
-+
-+struct lpfc_vmid_rapp_ident_list {
-+	u32 no_of_objects;
-+	struct entity_id_object obj[1];
-+};
-+
-+struct lpfc_vmid_dapp_ident_list {
-+	u32 no_of_objects;
-+	struct entity_id_object obj[1];
-+};
-+
-+#define GALLAPPIA_ID_LAST  0x80
-+struct lpfc_vmid_gallapp_ident_list {
-+	u8 control;
-+	u8 reserved[3];
-+	struct app_id_object app_id;
-+};
-+
-+#define RAPP_IDENT_OFFSET  (offsetof(struct lpfc_sli_ct_request, un) + 4)
-+#define DAPP_IDENT_OFFSET  (offsetof(struct lpfc_sli_ct_request, un) + 4)
-+#define GALLAPPIA_ID_SIZE  (offsetof(struct lpfc_sli_ct_request, un) + 4)
-+#define DALLAPP_ID_SIZE    (offsetof(struct lpfc_sli_ct_request, un) + 4)
-+
- /******** FDMI ********/
- 
- /* lpfc_sli_ct_request defines the CT_IU preamble for FDMI commands */
-diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
-index 93d976ea8c5d..6dd45885df4f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.h
-+++ b/drivers/scsi/lpfc/lpfc_sli.h
-@@ -35,6 +35,12 @@ typedef enum _lpfc_ctx_cmd {
- 	LPFC_CTX_HOST
- } lpfc_ctx_cmd;
- 
-+union lpfc_vmid_iocb_tag {
-+	u32 app_id;
-+	u8 cs_ctl_vmid;
-+	struct lpfc_vmid_context *vmid_context;	/* UVEM context information */
-+};
-+
- struct lpfc_cq_event {
- 	struct list_head list;
- 	uint16_t hdwq;
-@@ -100,6 +106,7 @@ struct lpfc_iocbq {
- #define LPFC_IO_NVME	        0x200000 /* NVME FCP command */
- #define LPFC_IO_NVME_LS		0x400000 /* NVME LS command */
- #define LPFC_IO_NVMET		0x800000 /* NVMET command */
-+#define LPFC_IO_VMID            0x1000000 /* VMID tagged IO */
- 
- 	uint32_t drvrTimeout;	/* driver timeout in seconds */
- 	struct lpfc_vport *vport;/* virtual port pointer */
-@@ -114,6 +121,7 @@ struct lpfc_iocbq {
- 		struct lpfc_node_rrq *rrq;
- 	} context_un;
- 
-+	union lpfc_vmid_iocb_tag vmid_tag;
- 	void (*fabric_iocb_cmpl)(struct lpfc_hba *, struct lpfc_iocbq *,
- 			   struct lpfc_iocbq *);
- 	void (*wait_iocb_cmpl)(struct lpfc_hba *, struct lpfc_iocbq *,
++/* vmid interface */
++int lpfc_vmid_uvem(struct lpfc_vport *vport, struct lpfc_vmid *vmid, bool ins);
++u32 lpfc_vmid_get_cs_ctl(struct lpfc_vport *vport);
++int lpfc_vmid_cmd(struct lpfc_vport *vport,
++		  int cmdcode, struct lpfc_vmid *vmid);
++int lpfc_vmid_hash_fn(char *vmid, int len);
++struct lpfc_vmid *lpfc_get_vmid_from_hastable(struct lpfc_vport *vport,
++					      u32 hash, u8 *buf);
++void lpfc_vmid_vport_cleanup(struct lpfc_vport *vport);
++int lpfc_issue_els_qfpa(struct lpfc_vport *vport);
 -- 
 2.26.2
 
 
---00000000000034935b05b2070cec
+--0000000000006984e305b2070c30
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -391,13 +184,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCAfJjWoaK8umj/+h/35EIozqNtOqkPEjfGaAHp+SBjVFzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxNDM3MDJaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCDmgbH6IMBpLmFxGnOqOeP81PGtR20txGsIwixnVoKIyTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxNDM3MDZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAJgT76oSazl1mBqtD
-FIQk91WGH9Xf6ADRWvE5qVdVCxobdc2tKmrgFVlnSyy7AF2Xx+cZDxHtPjTGYUYi26Jxrbx6PwRs
-ZKkP6EETSNOZlIfqzjYvqjWhBJE5WVNWf2gs87yhuDJeXv68CHIU6PjqnnCwVEGBnlCCLZojprlU
-grpEI8Xnd+v8YmFDyRZIcddT68t6IwWpooRX84S01Y5sPLhvjbiM5wDMxK0nHHZftkB6Taq9kOWd
-ErH4v43s8J3fHUqZ2dKdKkhW2ZMxIbLRXbm4zU+2qA9BbvQL9x78g3iEedIoBb1yfJUNIcxicwVx
-f8oz8wzUbRl7bSM36jQNxA==
---00000000000034935b05b2070cec--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAaZhNLM9owMdwJxI8
+BKx6qEtF67iMU0v6BnrB2EJH+B9d15+vE223lTNcadjg0X6eCAdsCCNZzqm6i7Fw9PTP7zjHj61H
+c9hY15aVWKg1+ta1pT/r0J2saPHdKSFWLHJ5q8sEd6mwDMOrDs+2dKu/koR5XXjlaGQ+qWIB+LKa
+4WtJ7CnJbY/ZtPLNqvskiphCLxCZ0018cvoya4L9O57l9lZoEI4tQui8Qhesu0CDRT+Hh31r/RWU
+j4YmqTxnt/UKRLzouN7qW7zaLoa9RWMUWNqdJ6wW2sICkqsZEReSZmvNndkbKiBX+tooOlArn108
+WwW7OXkgce8cWcSev8cGVw==
+--0000000000006984e305b2070c30--
