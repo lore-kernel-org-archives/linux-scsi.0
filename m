@@ -2,164 +2,95 @@ Return-Path: <SRS0=6nW3=D2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 929E5C433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 19:19:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8324CC43457
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 19:20:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47E832225A
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 19:19:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C9DD22283
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 19:20:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BhZXJVn3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731256AbgJSTTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 15:19:52 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:56037 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730938AbgJSTTh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Oct 2020 15:19:37 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5A8432041BB;
-        Mon, 19 Oct 2020 21:19:35 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id lrXC0i9gKLTe; Mon, 19 Oct 2020 21:19:35 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (vpn.infotech.no [82.134.31.155])
-        by smtp.infotech.no (Postfix) with ESMTPA id 083A520414F;
-        Mon, 19 Oct 2020 21:19:33 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     martin.petersen@oracle.com, axboe@kernel.dk, bvanassche@acm.org,
-        bostroesser@gmail.com
-Subject: [PATCH v3 2/4] scatterlist: add sgl_copy_sgl() function
-Date:   Mon, 19 Oct 2020 15:19:26 -0400
-Message-Id: <20201019191928.77845-3-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201019191928.77845-1-dgilbert@interlog.com>
-References: <20201019191928.77845-1-dgilbert@interlog.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1731243AbgJSTT6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 15:19:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32989 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731123AbgJSTT6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Oct 2020 15:19:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603135197;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=/UNHIosp3cVAd663F6tCAJF4cHtF8pw7KZ/KpFqhcKs=;
+        b=BhZXJVn3z9usHymloracMKQU2GafI+gt7l0LSXGUjjZDLa9STtJ2L/QKz2FFn62a1gGnbA
+        Umx+idm+yoSCIMZEin9puyP//5q2wg9F8mevNsjT8u3WmtILNzqwU3HrvPpaRhecpsjyr5
+        tColAHV66S3hOquIEr4fkQAm+hvpC3s=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-575-_h6TCPJqP5i6XRCn2jXI3Q-1; Mon, 19 Oct 2020 15:19:55 -0400
+X-MC-Unique: _h6TCPJqP5i6XRCn2jXI3Q-1
+Received: by mail-qv1-f71.google.com with SMTP id es11so583473qvb.10
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 12:19:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=/UNHIosp3cVAd663F6tCAJF4cHtF8pw7KZ/KpFqhcKs=;
+        b=KSsbrrcBm3Ru4raVjFy+jV/mNhZeuDjO680Zi+ry1S4VUk7vQVM+9ZXl6I67dUxMgm
+         Etq6tYxqavpNjaoU82epJUUP/gRllB8mLPMIKvReZi251qO/TITLjtka+5sUp+CzYM9V
+         JdzrqzvQny3fxEB/RamyCi+JXspZMEdcODV5QUPVVsg7gYnVGwikPTx73IWwRQUGGisX
+         MCMfyQn3T1CFozycHY6hxGWWfOwOjp0UOkuLj8sjtL9DhsQT9U6C4bG6ER6au8usKvh4
+         sKcOkg3FF/SKL9IH8Gy9itg2dYWDGfueV+lvpkRTzmNjLuAwtaNtv91YPk/q3L3c/lAH
+         nu/A==
+X-Gm-Message-State: AOAM532bxoYHXwVPWevpa1C95uGpRVMEutcQYV3Cd2IDyhlse8Z6w8An
+        q1KKjwKUAbWOh4YOyBxuAxb0c9evXBNhm4R5JfV6O6Fcyr1/7GWBcG+rKUj8Vcxd3KUMmGg2nSo
+        M8kJmrZVEQ2LmJ17QfTpiyw==
+X-Received: by 2002:a37:6413:: with SMTP id y19mr1105743qkb.139.1603135195089;
+        Mon, 19 Oct 2020 12:19:55 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxD9hU21lIF+UvW612n9VgAUffmmpNI98WIqFKfQDD/JnPE1dbUHJMvrnlN3qtwZcUaGgWnbA==
+X-Received: by 2002:a37:6413:: with SMTP id y19mr1105726qkb.139.1603135194792;
+        Mon, 19 Oct 2020 12:19:54 -0700 (PDT)
+Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
+        by smtp.gmail.com with ESMTPSA id f4sm352036qtd.35.2020.10.19.12.19.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2020 12:19:54 -0700 (PDT)
+From:   trix@redhat.com
+To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Tom Rix <trix@redhat.com>
+Subject: [PATCH] message: fusion: remove unneeded break
+Date:   Mon, 19 Oct 2020 12:19:50 -0700
+Message-Id: <20201019191950.10244-1-trix@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Both the SCSI and NVMe subsystems receive user data from the block
-layer in scatterlist_s (aka scatter gather lists (sgl) which are
-often arrays). If drivers in those subsystems represent storage
-(e.g. a ramdisk) or cache "hot" user data then they may also
-choose to use scatterlist_s. Currently there are no sgl to sgl
-operations in the kernel. Start with a sgl to sgl copy. Stops
-when the first of the number of requested bytes to copy, or the
-source sgl, or the destination sgl is exhausted. So the
-destination sgl will _not_ grow.
+From: Tom Rix <trix@redhat.com>
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+A break is not needed if it is preceded by a return
+
+Signed-off-by: Tom Rix <trix@redhat.com>
 ---
- include/linux/scatterlist.h |  4 ++
- lib/scatterlist.c           | 75 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 79 insertions(+)
+ drivers/message/fusion/mptbase.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 80178afc2a4a..6649414c0749 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -321,6 +321,10 @@ size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
- 		       size_t buflen, off_t skip);
- 
-+size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_skip,
-+		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
-+		    size_t n_bytes);
-+
- /*
-  * Maximum number of entries that will be allocated in one piece, if
-  * a list larger than this is required then chaining will be utilized.
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index d5770e7f1030..1f9e093ad7da 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -974,3 +974,78 @@ size_t sg_zero_buffer(struct scatterlist *sgl, unsigned int nents,
- 	return offset;
- }
- EXPORT_SYMBOL(sg_zero_buffer);
-+
-+/**
-+ * sgl_copy_sgl - Copy over a destination sgl from a source sgl
-+ * @d_sgl:		 Destination sgl
-+ * @d_nents:		 Number of SG entries in destination sgl
-+ * @d_skip:		 Number of bytes to skip in destination before starting
-+ * @s_sgl:		 Source sgl
-+ * @s_nents:		 Number of SG entries in source sgl
-+ * @s_skip:		 Number of bytes to skip in source before starting
-+ * @n_bytes:		 The (maximum) number of bytes to copy
-+ *
-+ * Returns:
-+ *   The number of copied bytes.
-+ *
-+ * Notes:
-+ *   Destination arguments appear before the source arguments, as with memcpy().
-+ *
-+ *   Stops copying if either d_sgl, s_sgl or n_bytes is exhausted.
-+ *
-+ *   Since memcpy() is used, overlapping copies (where d_sgl and s_sgl belong
-+ *   to the same sgl and the copy regions overlap) are not supported.
-+ *
-+ *   Large copies are broken into copy segments whose sizes may vary. Those
-+ *   copy segment sizes are chosen by the min3() statement in the code below.
-+ *   Since SG_MITER_ATOMIC is used for both sides, each copy segment is started
-+ *   with kmap_atomic() [in sg_miter_next()] and completed with kunmap_atomic()
-+ *   [in sg_miter_stop()]. This means pre-emption is inhibited for relatively
-+ *   short periods even in very large copies.
-+ *
-+ *   If d_skip is large, potentially spanning multiple d_nents then some
-+ *   integer arithmetic to adjust d_sgl may improve performance. For example
-+ *   if d_sgl is built using sgl_alloc_order(chainable=false) then the sgl
-+ *   will be an array with equally sized segments facilitating that
-+ *   arithmetic. The suggestion applies to s_skip, s_sgl and s_nents as well.
-+ *
-+ **/
-+size_t sgl_copy_sgl(struct scatterlist *d_sgl, unsigned int d_nents, off_t d_skip,
-+		    struct scatterlist *s_sgl, unsigned int s_nents, off_t s_skip,
-+		    size_t n_bytes)
-+{
-+	size_t len;
-+	size_t offset = 0;
-+	struct sg_mapping_iter d_iter, s_iter;
-+
-+	if (n_bytes == 0)
-+		return 0;
-+	sg_miter_start(&s_iter, s_sgl, s_nents, SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+	sg_miter_start(&d_iter, d_sgl, d_nents, SG_MITER_ATOMIC | SG_MITER_TO_SG);
-+	if (!sg_miter_skip(&s_iter, s_skip))
-+		goto fini;
-+	if (!sg_miter_skip(&d_iter, d_skip))
-+		goto fini;
-+
-+	while (offset < n_bytes) {
-+		if (!sg_miter_next(&s_iter))
-+			break;
-+		if (!sg_miter_next(&d_iter))
-+			break;
-+		len = min3(d_iter.length, s_iter.length, n_bytes - offset);
-+
-+		memcpy(d_iter.addr, s_iter.addr, len);
-+		offset += len;
-+		/* LIFO order (stop d_iter before s_iter) needed with SG_MITER_ATOMIC */
-+		d_iter.consumed = len;
-+		sg_miter_stop(&d_iter);
-+		s_iter.consumed = len;
-+		sg_miter_stop(&s_iter);
-+	}
-+fini:
-+	sg_miter_stop(&d_iter);
-+	sg_miter_stop(&s_iter);
-+	return offset;
-+}
-+EXPORT_SYMBOL(sgl_copy_sgl);
-+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 9903e9660a38..3078fac34e51 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -473,7 +473,6 @@ mpt_turbo_reply(MPT_ADAPTER *ioc, u32 pa)
+ 			mpt_free_msg_frame(ioc, mf);
+ 			mb();
+ 			return;
+-			break;
+ 		}
+ 		mr = (MPT_FRAME_HDR *) CAST_U32_TO_PTR(pa);
+ 		break;
 -- 
-2.25.1
+2.18.1
 
