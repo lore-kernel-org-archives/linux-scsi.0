@@ -4,77 +4,100 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD801C433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 17:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D2B1C433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 18:03:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34487222B8
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 17:31:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 414D922260
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 18:03:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="didYpT73"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fNiwOLMn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726318AbgJSRbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 13:31:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42246 "EHLO
+        id S1730312AbgJSSDH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 14:03:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbgJSRbK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 13:31:10 -0400
-Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 934C0C0613CE
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 10:31:10 -0700 (PDT)
-Received: by mail-ot1-x331.google.com with SMTP id m11so314279otk.13
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 10:31:10 -0700 (PDT)
+        with ESMTP id S1729511AbgJSSDG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 14:03:06 -0400
+Received: from mail-oo1-xc30.google.com (mail-oo1-xc30.google.com [IPv6:2607:f8b0:4864:20::c30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89FE4C0613CE
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 11:03:06 -0700 (PDT)
+Received: by mail-oo1-xc30.google.com with SMTP id f1so80011oov.1
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 11:03:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=pJIUJ5QNdRBGJYdcyxD1JFps945oarPiJjBSnB5aIE8=;
-        b=didYpT731gwGko5wlC/HpqBopg48gxdrBDtpxi32FsXCq4UWSikvZCiYASp9eYI4c3
-         jmeYkuXD/Zt35/yK+z33Xu/eNQF3phfXXi3li8Qzxm2rbLwqOPy8/HgyQZgTo90udC4h
-         /rTkxWJIRdTgwC0V8FEzV2AqeGMMrUyvdQ4MU=
+        bh=smti5Kt/aEiui7MtgbnAHXT0e1DpQ/PbricSqDhhB/s=;
+        b=fNiwOLMnZGu2gVmmk0apf0Odzt+/CnWUyXFVJHnAJArPFR6ORvwp9sTPSlYGBgruOF
+         shwBAxxQfiR0RVxsZsVPpVsDEUPMlJntbqN0zY3w/i2UHTwnGDvsbxYHowoxbk9LNukP
+         PVfG6KM9i25QfZEegsNN6sOHowmm7sZku2vM8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=pJIUJ5QNdRBGJYdcyxD1JFps945oarPiJjBSnB5aIE8=;
-        b=UcAWu1M+82oay7rCGlSaPI4K/uUuBpxhm4ScN4dfHBzNlw42vjDcmQxPDo8ivpRrdB
-         Wm8xFF/4vr4v3eV44ixhi6hFB7aKTnpWdqTXTTUOo5UZvkWRwQqogkhrYnwKuvEf4iev
-         r8jsXyYSVRfrOVnvX69Hxl/UrsBqNqG/ysZL0YXwbeHOKeOHRo27lqgJTfyVLvDjuFoz
-         1pFVJ2WYh7VybRbRDSmfEWi9Yj8VIYIIckMZ4OZyJZDSQZfwvyXO+VNIPM6yxUHMxPAH
-         SRNNghtyQnUalkoUgU7YQ36W0vYlc8DdDs8U8+Mg7X9A8KcvHu72XumdawT4iDSf9eWI
-         +sXA==
-X-Gm-Message-State: AOAM531ntDJ6pWOLK3qP44ptv8Cp7HqeyQQE9aMIRj96WyEvtMBmN4DZ
-        6wnPUQtIeuyCvsQwaOuWgQM2BaD/pJtuwM3QnFi9tnE7mCk=
-X-Google-Smtp-Source: ABdhPJzIFFBiYHsZqrH0yU5QX0ZIFaG9CTnhucqWIm0giUEeSfgy0CPnb/IIpYdrTesKFLujZJD/l1uroEbIoWGyRhs=
-X-Received: by 2002:a9d:3f44:: with SMTP id m62mr788942otc.364.1603128669841;
- Mon, 19 Oct 2020 10:31:09 -0700 (PDT)
+        bh=smti5Kt/aEiui7MtgbnAHXT0e1DpQ/PbricSqDhhB/s=;
+        b=QHhTqVvbcgWBWb1BpiQMS21KwBmhrSih+cKdqMUFXZ5yfhVe1BGwNooKP+Gj9e1ttA
+         0VgQK3AvNSKhiahf8kHMWMpyugy5Fx1rDwQKSQ+/90hULxRHmrO1Eh9tPFUbuhxBZuc9
+         C0XSt5qUZQCfd+Uzzg7Nt2ObgYx/5DBiM6fIN+6Urnn9kToEQS66yDf25VBCUkawWTPq
+         s6iO3LrvAmkEdFCZiMFKT35yN+38IDMPjNVKeKCKANF7xQMo/q3r+1zrAK2AKslILwU1
+         d6LBuqogitzDStt4c4f/LYPwxRuk0qthFKMSMeu4XlqAgPq+fE5JdZelCLRZtkhLerXd
+         SYVw==
+X-Gm-Message-State: AOAM533Pfm9P31t2GmBTL8kc3+vbvW+aij5geaeRFBDnXIO1Zqk7RX1P
+        IhXFdpS7XfmhDDqfDOIMjZ3lcCZ02mhG2v+Kja0bFg==
+X-Google-Smtp-Source: ABdhPJxjEH7pbMw7sAB7MRPiw2MkQoaQA6i/ifRq86k67mrY+FaTzEMx4XUWvn3/0J3UdSxWXuC8zI1Icv8y1C9IRYw=
+X-Received: by 2002:a4a:1e43:: with SMTP id 64mr844756ooq.7.1603130585613;
+ Mon, 19 Oct 2020 11:03:05 -0700 (PDT)
 From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
 References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
  <1602732462-10443-6-git-send-email-muneendra.kumar@broadcom.com>
  <5ca752c2-94e1-444a-7755-f48b09b38577@oracle.com> <c3d65f732be0b73e4d4ebb742bc754cd@mail.gmail.com>
  <3803E6D0-68D6-407F-80AB-A17E7E0E69E3@oracle.com> <CE70AE32-4318-4FB2-AEED-3606DEF59B79@oracle.com>
- <a9b958fb-3c06-c385-f7ce-ce0fc863e64b@suse.de>
-In-Reply-To: <a9b958fb-3c06-c385-f7ce-ce0fc863e64b@suse.de>
+ <a9b958fb-3c06-c385-f7ce-ce0fc863e64b@suse.de> bf347ae232d73c4a21af6514085a92f2@mail.gmail.com
+In-Reply-To: bf347ae232d73c4a21af6514085a92f2@mail.gmail.com
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQFATVqLRX+cZ5DMpa/LB2sUjSWzQAGJthEBAcREcNICYfc3iwLXtvtQAo/g/YwBakTnWapnz3KA
-Date:   Mon, 19 Oct 2020 23:01:07 +0530
-Message-ID: <bf347ae232d73c4a21af6514085a92f2@mail.gmail.com>
+Thread-Index: AQFATVqLRX+cZ5DMpa/LB2sUjSWzQAGJthEBAcREcNICYfc3iwLXtvtQAo/g/YwBakTnWapnz3KAgAAFtNA=
+Date:   Mon, 19 Oct 2020 23:33:03 +0530
+Message-ID: <e031f239c4bc02cafde13ad573523559@mail.gmail.com>
 Subject: RE: [PATCH v3 05/17] scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
 To:     Hannes Reinecke <hare@suse.de>,
         Michael Christie <michael.christie@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, jsmart2021@gmail.com,
         emilne@redhat.com, mkumar@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000eaf39c05b2097a5e"
+        boundary="0000000000001b9e0d05b209edd2"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000eaf39c05b2097a5e
+--0000000000001b9e0d05b209edd2
 Content-Type: text/plain; charset="UTF-8"
+
+Hi Michael,
+Regarding the TUR (Test Unit Ready)command which I was mentioning .
+Multipath daemon issues TUR commands on a regular intervals to check the
+path status.
+When a port_state is set to marginal we are not suppose to end up failing
+the cmd  with DID_TRANSPORT_MARGINAL with out proceeding it.
+This may  leads to give wrong health status.
+Hannes/James Correct me if this is wrong.
+
+Regards,
+Muneendra.
+
+-----Original Message-----
+From: Muneendra Kumar M [mailto:muneendra.kumar@broadcom.com]
+Sent: Monday, October 19, 2020 11:01 PM
+To: 'Hannes Reinecke' <hare@suse.de>; 'Michael Christie'
+<michael.christie@oracle.com>
+Cc: 'linux-scsi@vger.kernel.org' <linux-scsi@vger.kernel.org>;
+'jsmart2021@gmail.com' <jsmart2021@gmail.com>; 'emilne@redhat.com'
+<emilne@redhat.com>; 'mkumar@redhat.com' <mkumar@redhat.com>
+Subject: RE: [PATCH v3 05/17] scsi_transport_fc: Added a new rport state
+FC_PORTSTATE_MARGINAL
 
 Hi Michael,
 
@@ -116,7 +139,7 @@ paths will be moved to normal and the system will send the io.
 Regards,
 Muneendra.
 
---000000000000eaf39c05b2097a5e
+--0000000000001b9e0d05b209edd2
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -187,13 +210,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDCMGdlOYRJZSnXqQIMmPnkmP2NQ7cMdjN/iA6t0K8OEjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxNzMxMTBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCAKKVF8Eq6hEOUC7YC+L6qVMwiO8x9aVYFbDwRT5FFWuTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMTkxODAzMDZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAxAzEAaaEhewAs11T
-yRMFEiH442mxe00Ehc+u6VIZQDk4YhhvwHFqpEN3wD4I5QWBdEUGxw7UzyFBUb9Z4EdIsK2M2Bjv
-GsR+GgI3TgkmpiNYTG8+4bwYAyg4QWQUVbtA5rWIjKZGyfEZnVPggJyX7FuJ0V2cToSr/qCR4mNe
-XoOPyWJeplrMtCxIpirJBsYmwcIpicUgjedYioFiE9H3FsJjaRakPh3D5NsHwLDFtzFjh6xf6iOM
-ucsGdTN0sBoJkEcgXCnP61Nrnvx0dDwCzGrXFHdg/IV9ix4iL8Cq4sXZuCd1DRps62Q0Ou5oUxO0
-DfBNyZAzjhxvNvwZNJOq5Q==
---000000000000eaf39c05b2097a5e--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAJA22sz4UD9ooYW30
+tzDIaCWTyT1RTkikNdzdYJQ3LZZpvXodF1VbDgSxVXmjSY70ztPLFd8Ynplbx0JBn0Ut5yzth/Xu
+0rRH8z/uSQEKZ4rnm0Fs37Fjfj9t5NUx/zopY3NJ4tIHMZs4SP6Vd9bYsqRp14dwhtMPxAsn4q30
+9OEXFmmdGsEpKzH73m+BKV7pnk8yDMsaMBVsrrm7XiDQfbSS9Rd3Kuy8fB/SHp3SgiwA0dz1Wdr1
+7LexazIcy92rmQhuRfyCHb+SNCszz+nJJ0s6xUDSCaW9xNTPyKHHJDYQcSy3EzOA0U6+GtA0vWT/
+XUiNppiuiGVzz51yg72BcQ==
+--0000000000001b9e0d05b209edd2--
