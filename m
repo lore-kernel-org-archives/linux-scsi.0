@@ -2,115 +2,98 @@ Return-Path: <SRS0=6nW3=D2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA2FC433E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6EAC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26BF2222E7
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:38:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DVR/bhmC"
+	by mail.kernel.org (Postfix) with ESMTP id 3DD1A22363
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 14:43:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603118601;
+	bh=b3BMq8SxIpc/13gdWrygJuyzVCVoSXos+yiY0Km84wQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Q5xMr1JN8egJGt0YLnGK0LLGQVExe1zWZVEd8qGS7Cp9ZUOrGNz2Zzvlxv/DVwuwV
+	 bNBCx6utq1BcQrWAK2kJjmp09hEe42Ux50M9te2vQDnflSs2XaFvZyfKQKCjK57yFA
+	 akFVmGxCkIc5tSO5+0HZsV0tmgVkWCF7hPSq8fiE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729433AbgJSOid (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 10:38:33 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:28098 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728877AbgJSOid (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Oct 2020 10:38:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603118312;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=pHfp/yduULZ3skm6VrdINW9K2cdPKvHgQdnlryZPxEw=;
-        b=DVR/bhmC18TOOumH/W2xX6XX27OF0apO3LS1T4TqSzsbdeyAKDtO/5Z1t+vohvLimhba3q
-        EPPcyGhrbUfddNHN2lPJubQuwrKSNFohk2s9pGRCI2FDRdHjExra5nRJVlAlgjo/HJlxOR
-        kczQgKeaCQYXARc73weMn95QfcvxEpU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-355--Ui8c2oRNz2A2i_kJsWD8Q-1; Mon, 19 Oct 2020 10:38:30 -0400
-X-MC-Unique: -Ui8c2oRNz2A2i_kJsWD8Q-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EE0851060DD6;
-        Mon, 19 Oct 2020 14:38:28 +0000 (UTC)
-Received: from T590 (ovpn-12-65.pek2.redhat.com [10.72.12.65])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D27A67A431;
-        Mon, 19 Oct 2020 14:38:22 +0000 (UTC)
-Date:   Mon, 19 Oct 2020 22:38:18 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: core: don't start concurrent async scan on same
- host
-Message-ID: <20201019143818.GA1427336@T590>
-References: <20201010032539.426615-1-ming.lei@redhat.com>
- <ff55dd89-f48c-2900-d967-8eb6b1e33289@acm.org>
+        id S1729631AbgJSOnU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 10:43:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43578 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728311AbgJSOnU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 10:43:20 -0400
+Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C2BBC0613CE;
+        Mon, 19 Oct 2020 07:43:19 -0700 (PDT)
+Received: by mail-io1-xd2f.google.com with SMTP id y20so13271985iod.5;
+        Mon, 19 Oct 2020 07:43:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=UCIZcpV4okvtyvYLzB1AmMBudnMlsV1FmyZ7pm2zTZM=;
+        b=hEOb/ar311KnaDTM2UMZcagpOXRn4M9EnHw6EnMBRarVUEBULXRiZBorpjbqcHGTn9
+         rduZHFGftKVr+E2mK9daTTm8SYZzi/6ukVR1Yla5A/UzIRPZDRmfuaohch8WTR41/hhM
+         UOl/4AXIf0VwfqoZyk/qlVCjQnHOTZAowabUKBQ5yR5d6CHb9St4aNXOfMuZN/cYuMNH
+         3bYZncmF1jzG2se0rPWF24LzaIVleRK41PuaP8elAUcvxCRLtGB/SFiVb+bw4GPZQ4BG
+         IHoWi000w7FZzHuBwRGw3tFMH7wQzGCXAbrrWSzy1RdxHCCltlG8P1gNjXnRJDI7RY2R
+         7Wgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=UCIZcpV4okvtyvYLzB1AmMBudnMlsV1FmyZ7pm2zTZM=;
+        b=WrbSlqtyN+aDJqm4sSNZ6/vNzVvP2Lq60abc72ryd2mUSVlXr8yKeItCl2jBVZoUDH
+         t1PvYRNj2C2USws8kGyOYrsMsbMLq8yVPBdufawNFrB/o3/+7ZP5W4AoVDG9ysZbZ/xM
+         dGNaMp/fE9ADzGP2ri9Osur1WgHdONed/LkOK6tG0qgB3JmOl6yAeTgaajc4uyPDzMox
+         ldzBFFEEJJc6zRM5tFpej8gDiRz4nzperf7/zQC3L505y0bMsugTqwxgOAc1iUrzStAn
+         GkLJ7LdXTLA4bQEyNiEdOd5wNNZj1qO5sRy3zR6AlFyRNkYq+HRI1bh1kG2PbmSKrPjI
+         CMnA==
+X-Gm-Message-State: AOAM530icDONLHXZM9j3ue2JmxtVKFGj4ZRljLhYkgooPz7iL6KahY2/
+        ++lCfFewMZqMFa3+bkoPw398A2oNhvK09g==
+X-Google-Smtp-Source: ABdhPJwauXxkY1ronpAbuNbxWn5kAEPQu5M79XYCEJ2roZD7e5xU0VmJkeLiK1igK8SkXTpa+ubLxQ==
+X-Received: by 2002:a02:cb0c:: with SMTP id j12mr238199jap.54.1603118598865;
+        Mon, 19 Oct 2020 07:43:18 -0700 (PDT)
+Received: from localhost ([2620:10d:c091:480::1:b34d])
+        by smtp.gmail.com with ESMTPSA id n77sm12450163ild.10.2020.10.19.07.43.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2020 07:43:18 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Mon, 19 Oct 2020 10:43:16 -0400
+From:   Tejun Heo <tj@kernel.org>
+To:     Muneendra <muneendra.kumar@broadcom.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, jsmart2021@gmail.com,
+        emilne@redhat.com, mkumar@redhat.com, pbonzini@redhat.com
+Subject: Re: [RFC v2 01/18] cgroup: Added cgroup_get_from_kernfs_id
+Message-ID: <20201019144316.GB4418@mtj.thefacebook.com>
+References: <1603093393-12875-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1603093393-12875-2-git-send-email-muneendra.kumar@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ff55dd89-f48c-2900-d967-8eb6b1e33289@acm.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <1603093393-12875-2-git-send-email-muneendra.kumar@broadcom.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 19, 2020 at 07:17:52AM -0700, Bart Van Assche wrote:
-> On 10/9/20 8:25 PM, Ming Lei wrote:
-> > Current scsi host scan mechanism supposes to fallback into sync host
-> > scan if async scan is in-progress. However, this rule isn't strictly
-> > respected, because scsi_prep_async_scan() doesn't hold scan_mutex when
-> > checking shost->async_scan. When scsi_scan_host() is called
-> > concurrently, two async scan on same host may be started, and hang in
-> > do_scan_async() is observed.
-> > 
-> > Fixes this issue by checking & setting shost->async_scan atomically
-> > with shost->scan_mutex.
+On Mon, Oct 19, 2020 at 01:12:56PM +0530, Muneendra wrote:
+> Added a new function cgroup_get_from_kernfs_id  to retrieve the cgroup
+> associated with cgroup id.
+> It takes cgroupid as an argument and returns cgrp and on failure
+> it returns NULL.
+> Exported the same as this can be used by blk-cgorup.c
 > 
-> Did you perhaps mean "by serializing shost->async_scan accesses with
-> shost->scan_mutex"?
-
-Specifically, the following checking & setting has to be done atomically,
-so shost->scan_mutex is required, just as what scsi_finish_async_scan()
-does for clearing shost->async_scan:
-
-scsi_prep_async_scan():
-
-	if (!shost->async_scan)
-		return NULL;
-	...
-	shost->async_scan = 1
-
+> Added function declaration of cgroup_get_from_kernfs_id in cgorup.h
 > 
-> It is not clear to me why the shost->async_scan assignment is protected
-> with the host lock. Can spin_lock_irqsave(shost->host_lock, flags) and
-> spin_unlock_irqrestore(shost->host_lock, flags) be left out from this
-> function?
+> Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
-I think it is doable to remove the ->host_lock from both scsi_prep_async_scan()
-and scsi_finish_async_scan(), which can be done as one follow-up cleanup.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-With this patch, all reading/writing shost->async_scan are protected by
-shost->scan_mutex.
-
-> 
-> Anyway:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-Thanks!
-
+Thanks.
 
 -- 
-Ming
-
+tejun
