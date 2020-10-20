@@ -2,230 +2,136 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 412EBC41604
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:37:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A296BC5517A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:43:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E006C2223C
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:37:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603219021;
-	bh=lOiQ/tk5QvPVG9AP0/WfjE9BL3EV6STWZmar57vdY5w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=iTTaCJC0WE/Jxahvs4lykay8Ahc2ort6olNPJBcfUfZ2PLdH9x4tKUVp9jyR8JJ+u
-	 rLTjQ5vId8DX3Q1T2oFZb2ilFgWzmj39JV7EsrBlruI2mxUa/Rp48U9esxCWQGCkNO
-	 LvJK/KjuerNYvtvOi3DGY4OpVssNmzw8QOk5mfkc=
+	by mail.kernel.org (Postfix) with ESMTP id 5E2CA2222C
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:43:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437527AbgJTSg5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 14:36:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50794 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2437524AbgJTSg5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Oct 2020 14:36:57 -0400
-Received: from localhost (unknown [104.132.1.66])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 116EA21D7B;
-        Tue, 20 Oct 2020 18:36:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603219016;
-        bh=lOiQ/tk5QvPVG9AP0/WfjE9BL3EV6STWZmar57vdY5w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0RszO0H5ka9ulVR5UPb4BKU713HT8IuVcQfjjnUi7iY8Nx+x5pSyz/W4//8H19Cvh
-         zIITV3spyqllZPK0VBnSmwQwTcf9HUB2BPjd7z2I2ZQIjOZXX8wS1TJrV9fJ5j4AmP
-         eHly5JYyTkSbg3Nvhx6cjM52psz/CoatLzFX6ssE=
-Date:   Tue, 20 Oct 2020 11:36:55 -0700
-From:   jaegeuk@kernel.org
-To:     Can Guo <cang@codeaurora.org>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: Re: [PATCH 2/4] scsi: ufs: clear UAC for FFU and RPMB LUNs
-Message-ID: <20201020183655.GB1087816@google.com>
-References: <20201005223635.2922805-1-jaegeuk@kernel.org>
- <20201005223635.2922805-2-jaegeuk@kernel.org>
- <3d9c3b844ac861c4cce7242e49e63059@codeaurora.org>
+        id S2437594AbgJTSm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 14:42:56 -0400
+Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:38858 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2437566AbgJTSmy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Oct 2020 14:42:54 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay02.hostedemail.com (Postfix) with ESMTP id 43FA51260;
+        Tue, 20 Oct 2020 18:42:51 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: humor84_3a06a8527241
+X-Filterd-Recvd-Size: 4943
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf17.hostedemail.com (Postfix) with ESMTPA;
+        Tue, 20 Oct 2020 18:42:43 +0000 (UTC)
+Message-ID: <3bc5c2e3b3edc22a4d167ec807ecdaaf8dcda76d.camel@perches.com>
+Subject: Re: [RFC] treewide: cleanup unreachable breaks
+From:   Joe Perches <joe@perches.com>
+To:     Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, linux-edac@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-power@fi.rohmeurope.com, linux-gpio@vger.kernel.org,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        nouveau@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org,
+        spice-devel@lists.freedesktop.org, linux-iio@vger.kernel.org,
+        linux-amlogic@lists.infradead.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-can@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org, ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com, linux-nfc@lists.01.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org, patches@opensource.cirrus.com,
+        storagedev@microchip.com, devel@driverdev.osuosl.org,
+        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net,
+        linux-watchdog@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        bpf <bpf@vger.kernel.org>, linux-integrity@vger.kernel.org,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+        alsa-devel@alsa-project.org,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        George Burgess <gbiv@google.com>
+Date:   Tue, 20 Oct 2020 11:42:42 -0700
+In-Reply-To: <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+References: <20201017160928.12698-1-trix@redhat.com>
+         <20201018054332.GB593954@kroah.com>
+         <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3d9c3b844ac861c4cce7242e49e63059@codeaurora.org>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/20, Can Guo wrote:
-> On 2020-10-06 06:36, Jaegeuk Kim wrote:
-> > From: Jaegeuk Kim <jaegeuk@google.com>
+On Mon, 2020-10-19 at 12:42 -0700, Nick Desaulniers wrote:
+> On Sat, Oct 17, 2020 at 10:43 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+> > On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
+> > > From: Tom Rix <trix@redhat.com>
+> > > 
+> > > This is a upcoming change to clean up a new warning treewide.
+> > > I am wondering if the change could be one mega patch (see below) or
+> > > normal patch per file about 100 patches or somewhere half way by collecting
+> > > early acks.
 > > 
-> > In order to conduct FFU or RPMB operations, UFS needs to clear UAC. This
-> > patch
-> > clears it explicitly, so that we could get no failure given early
-> > execution.
+> > Please break it up into one-patch-per-subsystem, like normal, and get it
+> > merged that way.
 > > 
+> > Sending us a patch, without even a diffstat to review, isn't going to
+> > get you very far...
 > 
-> Usually it is the user's/utility's/tool's responsiblity to clear UA by
-> sending a
-> request sense cmd and retry previous cmd, now we are doing it for the users
-> in driver?
-> As per my understanding, driver only reports UA to SCSI layer and let users
-> decide
-> what to do with it - maybe users need to do something specifically regs it,
-> but
-> the change clears it even before the users get to know it.
+> Tom,
+> If you're able to automate this cleanup, I suggest checking in a
+> script that can be run on a directory.  Then for each subsystem you
+> can say in your commit "I ran scripts/fix_whatever.py on this subdir."
+>  Then others can help you drive the tree wide cleanup.  Then we can
+> enable -Wunreachable-code-break either by default, or W=2 right now
+> might be a good idea.
+> 
+> Ah, George (gbiv@, cc'ed), did an analysis recently of
+> `-Wunreachable-code-loop-increment`, `-Wunreachable-code-break`, and
+> `-Wunreachable-code-return` for Android userspace.  From the review:
+> ```
+> Spoilers: of these, it seems useful to turn on
+> -Wunreachable-code-loop-increment and -Wunreachable-code-return by
+> default for Android
+> ...
+> While these conventions about always having break arguably became
+> obsolete when we enabled -Wfallthrough, my sample turned up zero
+> potential bugs caught by this warning, and we'd need to put a lot of
+> effort into getting a clean tree. So this warning doesn't seem to be
+> worth it.
+> ```
+> Looks like there's an order of magnitude of `-Wunreachable-code-break`
+> than the other two.
+> 
+> We probably should add all 3 to W=2 builds (wrapped in cc-option).
+> I've filed https://github.com/ClangBuiltLinux/linux/issues/1180 to
+> follow up on.
 
-Well, instead of your expectation, many users have actually complained about why
-they need to do this. Even, taking a look at some custom implementations given
-by SoC branches, they simply clears it internally.
+I suggest using W=1 as people that are doing cleanups
+generally use that and not W=123 or any other style.
 
-> 
-> Besides, this change clears UA for W-LUs, but the UFS driver still reports
-> UA to SCSI
-> layer for each SCSI device by calling scsi_report_bus_reset() in
-> ufshcd_reset_and_restore(). This will make SCSI layer treat
-> sdev->expecting_cc_ua
-> wrongly, because for W-LUs, their expecting_cc_ua should not be set as you
-> have
-> cleared their UAs.
+Every other use of W= is still quite noisy and these
+code warnings are relatively trivially to fix up.
 
-Is that fully restricted? What is the buggy scenario if sub-scsi clears it under
-its control?
 
-> 
-> Thanks,
-> 
-> Can Guo.
-> 
-> > Cc: Alim Akhtar <alim.akhtar@samsung.com>
-> > Cc: Avri Altman <avri.altman@wdc.com>
-> > Cc: Can Guo <cang@codeaurora.org>
-> > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 70 +++++++++++++++++++++++++++++++++++----
-> >  drivers/scsi/ufs/ufshcd.h |  1 +
-> >  2 files changed, 65 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index d929c3d1e58cc..0bb07b50bd23e 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -6841,7 +6841,6 @@ static inline void
-> > ufshcd_blk_pm_runtime_init(struct scsi_device *sdev)
-> >  static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
-> >  {
-> >  	int ret = 0;
-> > -	struct scsi_device *sdev_rpmb;
-> >  	struct scsi_device *sdev_boot;
-> > 
-> >  	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
-> > @@ -6854,14 +6853,14 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba
-> > *hba)
-> >  	ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device);
-> >  	scsi_device_put(hba->sdev_ufs_device);
-> > 
-> > -	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
-> > +	hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
-> >  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
-> > -	if (IS_ERR(sdev_rpmb)) {
-> > -		ret = PTR_ERR(sdev_rpmb);
-> > +	if (IS_ERR(hba->sdev_rpmb)) {
-> > +		ret = PTR_ERR(hba->sdev_rpmb);
-> >  		goto remove_sdev_ufs_device;
-> >  	}
-> > -	ufshcd_blk_pm_runtime_init(sdev_rpmb);
-> > -	scsi_device_put(sdev_rpmb);
-> > +	ufshcd_blk_pm_runtime_init(hba->sdev_rpmb);
-> > +	scsi_device_put(hba->sdev_rpmb);
-> > 
-> >  	sdev_boot = __scsi_add_device(hba->host, 0, 0,
-> >  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
-> > @@ -7385,6 +7384,63 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
-> >  	return ret;
-> >  }
-> > 
-> > +static int
-> > +ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device
-> > *sdp);
-> > +
-> > +static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
-> > +{
-> > +	struct scsi_device *sdp;
-> > +	unsigned long flags;
-> > +	int ret = 0;
-> > +
-> > +	spin_lock_irqsave(hba->host->host_lock, flags);
-> > +	if (wlun  == UFS_UPIU_UFS_DEVICE_WLUN)
-> > +		sdp = hba->sdev_ufs_device;
-> > +	else if (wlun  == UFS_UPIU_RPMB_WLUN)
-> > +		sdp = hba->sdev_rpmb;
-> > +	else
-> > +		BUG_ON(1);
-> > +	if (sdp) {
-> > +		ret = scsi_device_get(sdp);
-> > +		if (!ret && !scsi_device_online(sdp)) {
-> > +			ret = -ENODEV;
-> > +			scsi_device_put(sdp);
-> > +		}
-> > +	} else {
-> > +		ret = -ENODEV;
-> > +	}
-> > +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> > +	if (ret)
-> > +		goto out_err;
-> > +
-> > +	ret = ufshcd_send_request_sense(hba, sdp);
-> > +	scsi_device_put(sdp);
-> > +out_err:
-> > +	if (ret)
-> > +		dev_err(hba->dev, "%s: UAC clear LU=%x ret = %d\n",
-> > +				__func__, wlun, ret);
-> > +	return ret;
-> > +}
-> > +
-> > +static int ufshcd_clear_ua_wluns(struct ufs_hba *hba)
-> > +{
-> > +	int ret = 0;
-> > +
-> > +	if (!hba->wlun_dev_clr_ua)
-> > +		goto out;
-> > +
-> > +	ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_UFS_DEVICE_WLUN);
-> > +	if (!ret)
-> > +		ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_RPMB_WLUN);
-> > +	if (!ret)
-> > +		hba->wlun_dev_clr_ua = false;
-> > +out:
-> > +	if (ret)
-> > +		dev_err(hba->dev, "%s: Failed to clear UAC WLUNS ret = %d\n",
-> > +				__func__, ret);
-> > +	return ret;
-> > +}
-> > +
-> >  /**
-> >   * ufshcd_probe_hba - probe hba to detect device and initialize
-> >   * @hba: per-adapter instance
-> > @@ -7500,6 +7556,8 @@ static void ufshcd_async_scan(void *data,
-> > async_cookie_t cookie)
-> >  		pm_runtime_put_sync(hba->dev);
-> >  		ufshcd_exit_clk_scaling(hba);
-> >  		ufshcd_hba_exit(hba);
-> > +	} else {
-> > +		ufshcd_clear_ua_wluns(hba);
-> >  	}
-> >  }
-> > 
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 363589c0bd370..8344d8cb36786 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -662,6 +662,7 @@ struct ufs_hba {
-> >  	 * "UFS device" W-LU.
-> >  	 */
-> >  	struct scsi_device *sdev_ufs_device;
-> > +	struct scsi_device *sdev_rpmb;
-> > 
-> >  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
-> >  	enum uic_link_state uic_link_state;
