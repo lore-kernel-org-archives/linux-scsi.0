@@ -7,113 +7,101 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06587C41604
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 299F7C388F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A10D62076A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C26C72076A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HqIc92hE"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hU6518vl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438475AbgJTU1d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 16:27:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39252 "EHLO
+        id S2438479AbgJTU1e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 16:27:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438446AbgJTU1b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:31 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E50FC0613CE
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:31 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id 144so96576pfb.4
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:31 -0700 (PDT)
+        with ESMTP id S2438474AbgJTU1c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:32 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB200C0613CE
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:32 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id o7so42505pgv.6
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=82PzeLXxQUDTof46D44HIfVbRetn1J+UQm+WGsPZ778=;
-        b=HqIc92hENWUvOgK8nIc/ulSTjxUfazblKJ8GlvJzvo7tvUdnHnBAgqrKmZWFriWqrG
-         YBmu9qFwu0skY9yoXo1Mduv1ZLOSc8rtD62GKs7B7ePvnIDSdRLasX8jJNYedAO1JRnz
-         l8iYRPpryrIsIOBSwretrR3M3lFhz9AB72fDw=
+        bh=GRWsV8c7/ylozzxjieOFe3NBOPCGJE0vk589ySlb8m4=;
+        b=hU6518vl65TnBdIbWHUn4iMDRQ1AzZCxB6HTcv4XLCPtNB5qWUrWS771mRVRZ6GJF8
+         azThd6lOTYMaBKMKeG7k2pkwZ+5qWXru/S3j1bP/nX03S44ds7Itzlbs7FOGpac4R1zv
+         ydbCVmvKnVVhglPOdXhekyd/O0iNYhvoCakdY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=82PzeLXxQUDTof46D44HIfVbRetn1J+UQm+WGsPZ778=;
-        b=tBwradJt+lzoECOWVtRAPKSFO/Rby437k0qMjAtbFqII8o0KMGZmT2UGaY9qXtVyIF
-         JfJP493FcM1u0Ic5mOkv57HuBkxrLM/63AY5Ip/UgV+kH3ycy+mEZ1G3bGMtiq1FWHDs
-         iVdJbq1DuDYctvQPp2O1pTYo1HSdmh9kgDXfVkW5ZBrZRVdauVbNubE0yUPmMpNLLKzG
-         kOCxx+HiKDe6S3sx9/6sSmHPQM+e9tYQ+JA9qLGAxhAix31rJUJsYnLrPVPCXFapyNFp
-         TK4yysj3Zm3lU44XL40MRG+tiPq+Y5WlX5ax080jtKET8i5U+wpeus6oOO6LxzT07OI9
-         X1eQ==
-X-Gm-Message-State: AOAM533OyeWhShM1ReEdupe+ez9wcYA1Xbaq0LS0M/hvbEwjLvqEqWqZ
-        8jptO5G+tLKO5g+HF8BmgZpn2nr2GxfmO/abfBFQIJYOUzHYgJpf113s4LT+u5zwIInYXtPvfJO
-        SwYZ/RIXu/kPn8KTWFRSiUeeaM/gbAQE8dhNa/Ek7LVLP3jt/ETn/q5MQtKcXvbtFM+LZ74W7yS
-        t1EcM=
-X-Google-Smtp-Source: ABdhPJxGM8WXfA6ckUsAX0hlGG6BwT+PzWELGmRMawZPWp7Uyes84e469CIoXJ9wYunFmK7/xKPhEA==
-X-Received: by 2002:a62:cd46:0:b029:150:ddeb:646b with SMTP id o67-20020a62cd460000b0290150ddeb646bmr4254524pfg.27.1603225650225;
-        Tue, 20 Oct 2020 13:27:30 -0700 (PDT)
+        bh=GRWsV8c7/ylozzxjieOFe3NBOPCGJE0vk589ySlb8m4=;
+        b=pNX21dM1m5RhI6q/DErcm6hfk9obyRr2yjJHRQSWQFo3anKP6BhDYccrbdOh8oe2Hx
+         C2Cm5jWdYrZR7iq6K1MW5TvuwukDoU8bUz9HxAXCotQ1bkvJF6PhqmCynE9F1hsYg9Ki
+         gdvQGNuU0pqkKP6HeNXalsip3bxIPzthevptWE8Gmyy/OtIPV2ee9lOlfyantbWXa2ZR
+         jn6vT0nleYRCS/IPOljm2Ajt/rb7BTfGRSLLwAnMH3lYWjP4WGb9hOjG+4bRB3qHMkfS
+         PsRX7A/O/xT3LUsbUs8zUH//alfdPk5kkHaQkXUgE/r5HKW2nDvJSxHf4kWS3ttpq8Gp
+         BS5Q==
+X-Gm-Message-State: AOAM531Rz7X9W71oyNuOpA8Djs2T9jnfiGixl5E3+h2lyGNgPcfmZ+t3
+        6pBVeE5vgUfVF4ROVi1Yrzjv41rmC+J6bcklDk0I9pwrJrQ7bWk3m296rCxO+lMOSXNJS29fD0s
+        C5PR7ySCTcHZS2MEjVOq7xT1ztXC1CADZUH1YjGmMrW7ahqXheJK56FKIZidORdt17z/C+0gKWC
+        H/mWM=
+X-Google-Smtp-Source: ABdhPJxVucYvzZC55j3AEcUJJ+M/Gke2sdQQeG1ZQfcKX0SNvI7aTpJ/5zKC1p7YNDymlMAGO2xqzw==
+X-Received: by 2002:a62:7d15:0:b029:155:29ed:db4c with SMTP id y21-20020a627d150000b029015529eddb4cmr1595188pfc.77.1603225651463;
+        Tue, 20 Oct 2020 13:27:31 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.29
+        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2020 13:27:29 -0700 (PDT)
+        Tue, 20 Oct 2020 13:27:30 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>, stable@vger.kernel.org
-Subject: [PATCH 3/9] lpfc: Re-fix use after free in lpfc_rq_buf_free()
-Date:   Tue, 20 Oct 2020 13:27:13 -0700
-Message-Id: <20201020202719.54726-4-james.smart@broadcom.com>
+Cc:     James Smart <james.smart@broadcom.com>
+Subject: [PATCH 4/9] lpfc: Removed unused macros in lpfc_attr.c.
+Date:   Tue, 20 Oct 2020 13:27:14 -0700
+Message-Id: <20201020202719.54726-5-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201020202719.54726-1-james.smart@broadcom.com>
 References: <20201020202719.54726-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000069782205b2200fff"
+        boundary="0000000000007dc52605b2200f65"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000069782205b2200fff
+--0000000000007dc52605b2200f65
 Content-Transfer-Encoding: 8bit
 
-A commit (9816ef6ecbc1) was made to correct a use after free condition
-in lpfc_rq_buf_free(). Unfortunately, a subsequent patch cut on a tree
-without the fix inadvertantly reverted the fix.
+Removed unused MRQ-related defines that are not referenced.
 
-Put the fix back:  move the freeing of the rqb_entry to after the print
-function that references it.
-
-Fixes: 	411de511c694 ("scsi: lpfc: Fix RQ empty firmware trap")
-Cc: <stable@vger.kernel.org> # v4.17+
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_mem.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
-index 79386e294fb9..be54fbf5146f 100644
---- a/drivers/scsi/lpfc/lpfc_mem.c
-+++ b/drivers/scsi/lpfc/lpfc_mem.c
-@@ -721,7 +721,6 @@ lpfc_rq_buf_free(struct lpfc_hba *phba, struct lpfc_dmabuf *mp)
- 	drqe.address_hi = putPaddrHigh(rqb_entry->dbuf.phys);
- 	rc = lpfc_sli4_rq_put(rqb_entry->hrq, rqb_entry->drq, &hrqe, &drqe);
- 	if (rc < 0) {
--		(rqbp->rqb_free_buffer)(phba, rqb_entry);
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"6409 Cannot post to HRQ %d: %x %x %x "
- 				"DRQ %x %x\n",
-@@ -731,6 +730,7 @@ lpfc_rq_buf_free(struct lpfc_hba *phba, struct lpfc_dmabuf *mp)
- 				rqb_entry->hrq->entry_count,
- 				rqb_entry->drq->host_index,
- 				rqb_entry->drq->hba_index);
-+		(rqbp->rqb_free_buffer)(phba, rqb_entry);
- 	} else {
- 		list_add_tail(&rqb_entry->hbuf.list, &rqbp->rqb_buffer_list);
- 		rqbp->buffer_count++;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index e94eac194676..2d810474875c 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -57,10 +57,6 @@
+ #define LPFC_MIN_DEVLOSS_TMO	1
+ #define LPFC_MAX_DEVLOSS_TMO	255
+ 
+-#define LPFC_DEF_MRQ_POST	512
+-#define LPFC_MIN_MRQ_POST	512
+-#define LPFC_MAX_MRQ_POST	2048
+-
+ /*
+  * Write key size should be multiple of 4. If write key is changed
+  * make sure that library write key is also changed.
 -- 
 2.26.2
 
 
---00000000000069782205b2200fff
+--0000000000007dc52605b2200f65
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -183,14 +171,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgVRFGObuvDO0r3oxK
-0XxJcxE2H5eHcx8ZFj+CB+GxFJwwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDIwMjAyNzMwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgML5NuWJAwv//PBfZ
+6RHJREINRo3vpDYmnf0qB/HWoGQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDIwMjAyNzMyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAE+Q12qj0cZ6sXDLsBdHquXTNnxLKflMrmcS
-1EIc/lnvNvliEjtXl9GbZYV1G9BZavLyz1XEDp4I666faYQgFl0mfGJFNw1LEzCg374QZP7E1K97
-E5PSS9uxVQSwO+nAEvXA/eo+3iIgB3qV1cNH92+Ey03fytEdk2QvOdcSevcLWmN5LGIzmhIxYm99
-pNbkPU3yOoInZHQolS6GsQlI3rsBKmWaFIuBRTRPncYr/LDGUnEH0ZSROS8yTT0M6lG8khbMiRoI
-cmtZC8Wx9EsIfa6gqQokgRguk6SKsWOGUr7Crww7koX0igewZ6KalGcTRGXOnwuBQasVVq5GfT/Q
-IYA=
---00000000000069782205b2200fff--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJvMXxnH+giSDtUoWT/y2e5nUlFgM21IRLze
+dP8T6IHyoF0WZKy+13BcKd2RV96hpy/DaMu+Mrk1oX07rMxcFI0Xh+cxob1TJB6xxL707ea+grk2
+hBVfTOX45M7D3euxw1ByvMGNa/merLeXmEKtiXoE/VpLAUz01KxJ5DqKjRmdsgnuJCIF0DAy9J49
+Ea3ggxdB7KlRqp3i3PR0Ezb/6dzwU23qRG2CpjyvQED7Wb0VKh9da+yCERD3wOvXMFg5oTB+5CJN
+u6+gH11ZD3B9Dq+IuF3XXOtp7lJZ8QEB2mMQP8gnSyexKlsYnCNWnGgQUhrECwTe3XuR/Z+A+bq+
+BsY=
+--0000000000007dc52605b2200f65--
