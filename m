@@ -2,117 +2,178 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F8C0C388F7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC99C388F2
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2675222247
+	by mail.kernel.org (Postfix) with ESMTP id 912792237B
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="XHNr73kV"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Kl1R0QTf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438466AbgJTU12 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 16:27:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39234 "EHLO
+        id S2438467AbgJTU13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 16:27:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438463AbgJTU12 (ORCPT
+        with ESMTP id S2438446AbgJTU12 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:28 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51FBCC0613CE
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 863B1C0613CE
         for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:28 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id a17so1479015pju.1
+Received: by mail-pj1-x1044.google.com with SMTP id l2so765079pjt.5
         for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=AXcnUXXV4SFlm12an93WHWA+qdH1/Ih6TbXDGmXj4wY=;
-        b=XHNr73kVTTZvb60IXqFcf16jDwSTXEt88+Ay8RDFRSD5HpnSwlqk8j1tTThz8B/P/r
-         fQbIWY5NWQqPIGGRUGBitAH8njKAQUArdx7Hb+w9YPxCvB4jHimChyum7keReklJVEvL
-         kzSCO2UHJnP1ePcoJhgyjGg/5CfDZpzEy81to=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=xEVnAJY6N2AkwyWEFTE17h8buPaMKIp3bI8QLBf7jaU=;
+        b=Kl1R0QTf5c1v7Po3wwvI4M0k8R1Fh4mEaQY51qGvTz+vkXml77BQhZZEOI98Wp79cU
+         Ma2VSCwodoH5ga6NKbnkMTki+6Q0gN6zcEvu/Rm9mvI9yiXJsIqDUUxg4Umhs2GJr6dZ
+         DpFCsjEZB/+Z/VzK1NtkCx1oBt/WMORdXJZq0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=AXcnUXXV4SFlm12an93WHWA+qdH1/Ih6TbXDGmXj4wY=;
-        b=R5Lua0exMJEAm8+romABhANxyGwkBIUh2l/em4lpNqPuB5/0lkpaI4rhZRNg7GpLs8
-         3024wbjxFb9/kgiqJYGHl8cWvNFXlSJJ3gr9HgTTtJYibNLGxvV4p26ALc08/qyejHdo
-         2b8KBGFz9aEJkmwevbl1pk0APY7ENOeIwVWqEeFPA0N3R87xg63oP6kULsTItwkh0tha
-         CFwe9crFxdoHf2W0vX5DYkfPGRcfbltKy2gc2p1DS2vKvZxaFyM/m0aQoGko9B8tE0q6
-         nFk9PugZzs6DrwWVDqeJFkdJj4YNFxfQTbHD4JfUSfFEsoVGEc7NbMxf4G18AL1S+cjf
-         DHDg==
-X-Gm-Message-State: AOAM532BjX32EfYXplPFcuQDofaVFznIMMHIpoIRoJ2ZPHED+WES9guO
-        /n7FdCKQ4LYqQDDCk7RVmzirpIEsD4xvbqHHMyyxumW7ae1RTOEyz4YXOiPB1lUGmI0OA2om46s
-        zQHDutJZahXDUfGzTSWiNO7Vq52lp9dNSoHcf3i9wB3Ht2hJbXp7PnRpiFxCD5c+S/VCeEav5hs
-        4tGxY=
-X-Google-Smtp-Source: ABdhPJzbZZODLCfllTfmolfrAhZFR22QMBt/yfVkYD2XVlaCiKq5+njPrRDtFaFYyI+mv+Jq1uYOZw==
-X-Received: by 2002:a17:90a:7044:: with SMTP id f62mr208pjk.111.1603225646108;
-        Tue, 20 Oct 2020 13:27:26 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=xEVnAJY6N2AkwyWEFTE17h8buPaMKIp3bI8QLBf7jaU=;
+        b=UnTn0oMqCRojwLvGqdsJSW8a0n0586G9FQnu+QkbWzBknMXwdIEtfhzL0xFMYjQlWp
+         hBAE/R4nQvz4FoQ9fJp5ZOV3Ek2T9apJFpjgOkSmP98Uljq2ceJS6KVP4GlaAsn4cHVj
+         DZDTuTgNsWKR0VPUjLbXII+QoOTaRb8BOm9bDatJ3iSmxhErmjmP3xhLql9CXTuBkgyb
+         u7UGCzdxEfrFcdSoeKMJvFM2/HFjRD8Y5fF7i2LPCCNrd54VSR5cmjn6nhM7Jw81VE2Y
+         MS2exc8nXVhMgZHti5cgUincNRRPLGNLKEcRslwz+JJbER5+MxGoCrYgEttep4cYPB8/
+         RIMQ==
+X-Gm-Message-State: AOAM531uxeFFzFnc6Y/S2BbX95wRpSzril9b6fFmImVNXh52djLttUE5
+        Dy0f/Sglg7gDo4oOKcqeLgMl+ZTdVy5drm9kxSnJf6DCIpLHQvD0T+sNwHaFwKdM8GXSzobWpfv
+        qzhK3tjET+idx+5lydlSgdWhAkvotuFn+PSRCrLdjOGeOLZ/j23gZqZvOjumShc/HHhAIzO8Ryf
+        EBFqE=
+X-Google-Smtp-Source: ABdhPJysrBcfSRndRfCtxhGte89H6xyh1HTdvueR2tvs+lhSBplzZ5Y9VT3hv2ZZ8nU9l9KHmHWN1g==
+X-Received: by 2002:a17:90a:7d09:: with SMTP id g9mr4267pjl.63.1603225647495;
+        Tue, 20 Oct 2020 13:27:27 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.25
+        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2020 13:27:25 -0700 (PDT)
+        Tue, 20 Oct 2020 13:27:26 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>
-Subject: [PATCH 0/9] lpfc: Update lpfc to revision 12.8.0.5
-Date:   Tue, 20 Oct 2020 13:27:10 -0700
-Message-Id: <20201020202719.54726-1-james.smart@broadcom.com>
+Cc:     James Smart <james.smart@broadcom.com>, stable@vger.kernel.org,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH 1/9] lpfc: fix invalid sleeping context in lpfc_sli4_nvmet_alloc
+Date:   Tue, 20 Oct 2020 13:27:11 -0700
+Message-Id: <20201020202719.54726-2-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20201020202719.54726-1-james.smart@broadcom.com>
+References: <20201020202719.54726-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003a622f05b2200f15"
+        boundary="0000000000003e202e05b2200f84"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003a622f05b2200f15
+--0000000000003e202e05b2200f84
 Content-Transfer-Encoding: 8bit
 
-Update lpfc to revision 12.8.0.5
+The following calltrace was seen:
 
-Patches include several small fixes and the addition of a FDMI
-registration for vendor MIB data.
+BUG: sleeping function called from invalid context at mm/slab.h:494
+...
+Call Trace:
+ dump_stack+0x9a/0xf0
+ ___might_sleep.cold.63+0x13d/0x178
+ slab_pre_alloc_hook+0x6a/0x90
+ kmem_cache_alloc_trace+0x3a/0x2d0
+ lpfc_sli4_nvmet_alloc+0x4c/0x280 [lpfc]
+ lpfc_post_rq_buffer+0x2e7/0xa60 [lpfc]
+ lpfc_sli4_hba_setup+0x6b4c/0xa4b0 [lpfc]
+ lpfc_pci_probe_one_s4.isra.15+0x14f8/0x2280 [lpfc]
+ lpfc_pci_probe_one+0x260/0x2880 [lpfc]
+ local_pci_probe+0xd4/0x180
+ work_for_cpu_fn+0x51/0xa0
+ process_one_work+0x8f0/0x17b0
+ worker_thread+0x536/0xb50
+ kthread+0x30c/0x3d0
+ ret_from_fork+0x3a/0x50
 
-The patches were cut against Martin's 5.10/scsi-queue tree
+A prior patch introduced a spin_lock_irqsave(hbalock) in the
+lpfc_post_rq_buffer() routine. Call trace is seen as the hbalock
+is held with interrupts disabled during a GFP_KERNEL allocation in
+lpfc_sli4_nvmet_alloc().
 
+Fix by reordering locking so that hbalock not held when calling
+sli4_nvmet_alloc() (aka rqb_buf_list()).
 
-James Smart (9):
-  lpfc: fix invalid sleeping context in lpfc_sli4_nvmet_alloc
-  lpfc: fix scheduling call while in softirq context in lpfc_unreg_rpi
-  lpfc: Re-fix use after free in lpfc_rq_buf_free()
-  lpfc: Removed unused macros in lpfc_attr.c.
-  lpfc: Fix duplicate wq_create_version check
-  lpfc: Enlarge max_sectors in scsi templates
-  lpfc: Add FDMI Vendor MIB support
-  lpfc: Reject CT request for MIB commands
-  lpfc: Update lpfc version to 12.8.0.5
+Fixes: 	411de511c694 ("scsi: lpfc: Fix RQ empty firmware trap")
+Cc: <stable@vger.kernel.org> # v4.17+
+Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_mem.c |  4 +---
+ drivers/scsi/lpfc/lpfc_sli.c | 10 ++++++++--
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
- drivers/scsi/lpfc/lpfc.h         |   6 +-
- drivers/scsi/lpfc/lpfc_attr.c    |  14 +-
- drivers/scsi/lpfc/lpfc_bsg.c     |  21 +-
- drivers/scsi/lpfc/lpfc_ct.c      | 371 +++++++++++++++++++++++++++++--
- drivers/scsi/lpfc/lpfc_disc.h    |   2 +
- drivers/scsi/lpfc/lpfc_els.c     |   6 +
- drivers/scsi/lpfc/lpfc_hbadisc.c |  41 +++-
- drivers/scsi/lpfc/lpfc_hw.h      |   7 +-
- drivers/scsi/lpfc/lpfc_hw4.h     |  10 +-
- drivers/scsi/lpfc/lpfc_init.c    |  66 ++++--
- drivers/scsi/lpfc/lpfc_mem.c     |  11 +-
- drivers/scsi/lpfc/lpfc_nvme.c    |  18 +-
- drivers/scsi/lpfc/lpfc_scsi.c    |   4 +-
- drivers/scsi/lpfc/lpfc_sli.c     |  80 +++++--
- drivers/scsi/lpfc/lpfc_sli4.h    |  14 +-
- drivers/scsi/lpfc/lpfc_version.h |   2 +-
- 16 files changed, 563 insertions(+), 110 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 27ff67e9edae..656f35eb853e 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -588,8 +588,6 @@ lpfc_sli4_rb_free(struct lpfc_hba *phba, struct hbq_dmabuf *dmab)
+  * Description: Allocates a DMA-mapped receive buffer from the lpfc_hrb_pool PCI
+  * pool along a non-DMA-mapped container for it.
+  *
+- * Notes: Not interrupt-safe.  Must be called with no locks held.
+- *
+  * Returns:
+  *   pointer to HBQ on success
+  *   NULL on failure
+@@ -599,7 +597,7 @@ lpfc_sli4_nvmet_alloc(struct lpfc_hba *phba)
+ {
+ 	struct rqb_dmabuf *dma_buf;
+ 
+-	dma_buf = kzalloc(sizeof(struct rqb_dmabuf), GFP_KERNEL);
++	dma_buf = kzalloc(sizeof(*dma_buf), GFP_KERNEL);
+ 	if (!dma_buf)
+ 		return NULL;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 4cd7ded656b7..4958bb0f2c97 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -7248,12 +7248,16 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 	struct rqb_dmabuf *rqb_buffer;
+ 	LIST_HEAD(rqb_buf_list);
+ 
+-	spin_lock_irqsave(&phba->hbalock, flags);
+ 	rqbp = hrq->rqbp;
+ 	for (i = 0; i < count; i++) {
++		spin_lock_irqsave(&phba->hbalock, flags);
+ 		/* IF RQ is already full, don't bother */
+-		if (rqbp->buffer_count + i >= rqbp->entry_count - 1)
++		if (rqbp->buffer_count + i >= rqbp->entry_count - 1) {
++			spin_unlock_irqrestore(&phba->hbalock, flags);
+ 			break;
++		}
++		spin_unlock_irqrestore(&phba->hbalock, flags);
++
+ 		rqb_buffer = rqbp->rqb_alloc_buffer(phba);
+ 		if (!rqb_buffer)
+ 			break;
+@@ -7262,6 +7266,8 @@ lpfc_post_rq_buffer(struct lpfc_hba *phba, struct lpfc_queue *hrq,
+ 		rqb_buffer->idx = idx;
+ 		list_add_tail(&rqb_buffer->hbuf.list, &rqb_buf_list);
+ 	}
++
++	spin_lock_irqsave(&phba->hbalock, flags);
+ 	while (!list_empty(&rqb_buf_list)) {
+ 		list_remove_head(&rqb_buf_list, rqb_buffer, struct rqb_dmabuf,
+ 				 hbuf.list);
 -- 
 2.26.2
 
 
---0000000000003a622f05b2200f15
+--0000000000003e202e05b2200f84
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -182,14 +243,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgdQox0j8QuqArLZ2/
-/GStX6E1zxNHhZlZ1csEoQUBSCkwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgH2iGkR1T8qGOiPDR
+30qTwwZ0lAutDS4OvIYhVl7KB6MwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
 CQUxDxcNMjAxMDIwMjAyNzI3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAFn2MB2503ZoyLV4Acr1n5So65MZ914FyOs0
-+rKsL/MqQ/OWowx99UhT6y2OAV8OnbPIku53jDKc26HSVS63cm23LNnVirlLfLzypOHohwas2C0g
-NPb+f7NQZxS5ErNSE7C2eYyXkibNDW7rHaIqSGgXBR8oPBRvJzaoDYAKz31PGNl71A0t8lg+bZDA
-MY9FrcsNx0pyS47aHfs2jGb3ouaURnYYVRklqReOofNdAhyH+HiuVEheCyZLoyxvajITce+d2H47
-wt7cCIl3kWAyeTMZzD0Gbe+CDEy1NHB3WjpjFJ3biy7BJxSpcIhcHVvU9d4/LysY37fhUHNhxYvS
-2mk=
---0000000000003a622f05b2200f15--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAG5EGe/lrGV5jTeW5h12pD5dzy8ki3oFjDn0
+aYKudHn8Xi5/swi1VfDzBwXkuHfhLCHBbvHdexUXEpJXz5kRLh3XUcIupN9KHpVWhXN6L1K176b2
+fy65ubledjawjIySLjmZNJyKZzvqxZvvFPvlSGvPVkWiXhDnpsZ/rI48vW4Ofs1sQ5kaZmqlO3+X
+ODxExRlNuoT3EOVRpRSan5fdfoIaYZvlnV1JI9AfVQ5Dm7iGjP0MsXSJN3xTlb+sgFwDE4MUDEqr
+DNMtsBj+f2ykXRQXVrq10MsIoCeMWme3NXXo12A1iXs4MHN3JYEmm3vgyWfkcTEoxh6BgSfXFNAF
+sXA=
+--0000000000003e202e05b2200f84--
