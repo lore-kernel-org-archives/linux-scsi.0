@@ -2,108 +2,290 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 703EDC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 12:33:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E0B5C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 13:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DB8722283
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 12:33:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09A7522456
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 13:13:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="onjcZ8Ar"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FaM+xBYB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406119AbgJTMdU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 08:33:20 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:33496 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406096AbgJTMdT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Oct 2020 08:33:19 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603197199; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=BzMND/VoGzDdfPCIU+mlALzQkIfAWtsITfgqnGQwess=;
- b=onjcZ8ArNLigyfpbGoJsVwVq9XZtnhCp8mnS2aajGMMYYNk58sPkqftwPz8QbF2ebpniFM++
- N3VBrkgh9ApAC1yvG7CSEhXHoIdWQ3eMqFHoDOB6A+Z2KgpVWo5Sop0USr1OCx/rUcYwyCgk
- TFQDJE/TGwDi24a+8DpA7JZC4Cs=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 5f8ed90da03b63d673cabadd (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 20 Oct 2020 12:33:17
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D3D96C433FF; Tue, 20 Oct 2020 12:33:17 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 65FB6C433C9;
-        Tue, 20 Oct 2020 12:33:17 +0000 (UTC)
+        id S2407136AbgJTNNk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 09:13:40 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34634 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407127AbgJTNNj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 09:13:39 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09KDAATG104070;
+        Tue, 20 Oct 2020 13:13:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : references : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=cZFLts+1Ll6F7S+3y7fWYX1pRWV2Lzy8Qgo9CazSTIE=;
+ b=FaM+xBYBTR1Ti5Csyy1N4yIcQ49gCGV1oXSsmThdZpOdE8+5RMKvHkiLIa+9fd2zeCDL
+ rj/zev23DFs6WfXKU09RI7azKZ8V2p6Pc03/1Zi59erZMJR7VsJfHpt49Xy/XIKmPW8K
+ YmXWFoyDxyuJf8ksrNw7cfMLcfdH3n7HuCb/Nsm176ZNmmuSOjI7zRTPXk0EPtLlQ6AW
+ iSAhdYhPvNo9iDMHvY3XYBzIUJr1B0xTWu8Lf/NOXZaTYB2/i/D8j5rEuT9ejaPbHB0z
+ SDjbE+kje9+thYxwWzWHeexRJTtKzBpPZTcVlBRRE8ld1QHbwibnByvkHEOP5ZqPKBmr Rg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 347s8mtr0s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 20 Oct 2020 13:13:27 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09KDA1In126085;
+        Tue, 20 Oct 2020 13:13:26 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 348a6n4s9w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Oct 2020 13:13:26 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09KDDMEG009248;
+        Tue, 20 Oct 2020 13:13:24 GMT
+Received: from [10.76.62.203] (/10.76.62.203)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 20 Oct 2020 06:13:22 -0700
+Subject: Re: [PATCH] scsi: alua: fix the race between alua_bus_detach and
+ alua_rtpg
+From:   jitendra.khasdev@oracle.com
+To:     Hannes Reinecke <hare@suse.de>,
+        "Ewan D. Milne" <emilne@redhat.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, hare@suse.com, loberman@redhat.com
+Cc:     joe.jin@oracle.com, junxiao.bi@oracle.com,
+        gulam.mohamed@oracle.com, RITIKA.SRIVASTAVA@oracle.com,
+        linux-scsi@vger.kernel.org
+References: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
+ <c5e0700bb192a422541d1328db7ca0146edf7a81.camel@redhat.com>
+ <c58d1877-1d30-e81d-f10f-3571e3a248b9@oracle.com>
+ <d21e4a7c-9668-23db-c470-596a8e1e3af6@suse.de>
+ <a62fc767-6489-0093-d4ed-72e25f89782c@oracle.com>
+ <6d4115ba-bd69-75d9-e209-a4ef4aaa9a68@suse.de>
+ <f7e33ede-1436-90c4-7d8b-8c0b0da62a01@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <bcfeeb30-fd70-71e9-e81c-d389a0f5a2eb@oracle.com>
+Date:   Tue, 20 Oct 2020 18:43:16 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 20 Oct 2020 20:33:17 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Jaegeuk Kim <jaegeuk@google.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: Re: [PATCH 4/4] scsi: add more contexts in the ufs tracepoints
-In-Reply-To: <8170ddc084fc40a57c51501cbc29f5ea@codeaurora.org>
-References: <20201005223635.2922805-1-jaegeuk@kernel.org>
- <20201005223635.2922805-4-jaegeuk@kernel.org>
- <f55c7b379283bfb90e884e9b1bdf170e@codeaurora.org>
- <CH2PR04MB6710F6367C3862F3107A78F5FC1F0@CH2PR04MB6710.namprd04.prod.outlook.com>
- <14935822cbfa6d54df34946bcb2ccef8@codeaurora.org>
- <8170ddc084fc40a57c51501cbc29f5ea@codeaurora.org>
-Message-ID: <c9eeaa283f4eafdd0dece7f4f8961aa5@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+In-Reply-To: <f7e33ede-1436-90c4-7d8b-8c0b0da62a01@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9779 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ bulkscore=0 spamscore=0 adultscore=0 suspectscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010200088
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9779 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0
+ lowpriorityscore=0 mlxlogscore=999 priorityscore=1501 spamscore=0
+ phishscore=0 clxscore=1011 bulkscore=0 impostorscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010200088
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-10-20 19:57, Can Guo wrote:
-> On 2020-10-20 19:02, Can Guo wrote:
->> On 2020-10-20 18:51, Avri Altman wrote:
->>>> 
->>>> On 2020-10-06 06:36, Jaegeuk Kim wrote:
->>>> > From: Jaegeuk Kim <jaegeuk@google.com>
->>>> >
->>>> > This adds user-friendly tracepoints with group id.
->>> You have the entire cdb as part of the upiu trace,
->>> Can't you parse what you need from there?
->>> 
->>> Thanks,
->>> Avri
->> 
->> Yes, but assume we have a large trace log file, having a
->> groud id allows us to filter the data by it easily, right?
->> 
->> Thanks,
->> 
->> Can Guo.
-> 
-> I just dobule checked WRITE(10)'s CDB, byte 6 has group
-> ID ONLY. So Avri is right, we don't even need to parse it,
-> we can easily filter a ftrace log file by byte 6 to get the
-> WRITE(10) cmds with specific group ID - we don't need this
-> change.
-> 
-> Thanks,
-> 
-> Can Guo.
+Hi Hannes,
 
-Please ignore my previous mail, I misunderstood the change. :(
-You have my reivewed-by tag for this change.
+On 10/12/20 2:22 PM, jitendra.khasdev@oracle.com wrote:
+> Hi Hannes,
+> 
+> On 9/24/20 4:09 PM, Hannes Reinecke wrote:
+>> On 9/23/20 7:50 PM, jitendra.khasdev@oracle.com wrote:
+>>>
+>>>
+>>> On 9/23/20 1:47 PM, Hannes Reinecke wrote:
+>>>> On 9/18/20 5:49 AM, jitendra.khasdev@oracle.com wrote:
+>>>>>
+>>>>>
+>>>>> On 9/17/20 11:00 PM, Ewan D. Milne wrote:
+>>>>>> On Tue, 2020-09-15 at 16:28 +0530, Jitendra Khasdev wrote:
+>>>>>>> This is patch to fix the race occurs between bus detach and alua_rtpg.
+>>>>>>>
+>>>>>>> It fluses the all pending workqueue in bus detach handler, so it can avoid
+>>>>>>> race between alua_bus_detach and alua_rtpg.
+>>>>>>>
+>>>>>>> Here is call trace where race got detected.
+>>>>>>>
+>>>>>>> multipathd call stack:
+>>>>>>> [exception RIP: native_queued_spin_lock_slowpath+100]
+>>>>>>> --- <NMI exception stack> ---
+>>>>>>> native_queued_spin_lock_slowpath at ffffffff89307f54
+>>>>>>> queued_spin_lock_slowpath at ffffffff89307c18
+>>>>>>> _raw_spin_lock_irq at ffffffff89bd797b
+>>>>>>> alua_bus_detach at ffffffff8984dcc8
+>>>>>>> scsi_dh_release_device at ffffffff8984b6f2
+>>>>>>> scsi_device_dev_release_usercontext at ffffffff89846edf
+>>>>>>> execute_in_process_context at ffffffff892c3e60
+>>>>>>> scsi_device_dev_release at ffffffff8984637c
+>>>>>>> device_release at ffffffff89800fbc
+>>>>>>> kobject_cleanup at ffffffff89bb1196
+>>>>>>> kobject_put at ffffffff89bb12ea
+>>>>>>> put_device at ffffffff89801283
+>>>>>>> scsi_device_put at ffffffff89838d5b
+>>>>>>> scsi_disk_put at ffffffffc051f650 [sd_mod]
+>>>>>>> sd_release at ffffffffc051f8a2 [sd_mod]
+>>>>>>> __blkdev_put at ffffffff8952c79e
+>>>>>>> blkdev_put at ffffffff8952c80c
+>>>>>>> blkdev_close at ffffffff8952c8b5
+>>>>>>> __fput at ffffffff894e55e6
+>>>>>>> ____fput at ffffffff894e57ee
+>>>>>>> task_work_run at ffffffff892c94dc
+>>>>>>> exit_to_usermode_loop at ffffffff89204b12
+>>>>>>> do_syscall_64 at ffffffff892044da
+>>>>>>> entry_SYSCALL_64_after_hwframe at ffffffff89c001b8
+>>>>>>>
+>>>>>>> kworker:
+>>>>>>> [exception RIP: alua_rtpg+2003]
+>>>>>>> account_entity_dequeue at ffffffff892e42c1
+>>>>>>> alua_rtpg_work at ffffffff8984f097
+>>>>>>> process_one_work at ffffffff892c4c29
+>>>>>>> worker_thread at ffffffff892c5a4f
+>>>>>>> kthread at ffffffff892cb135
+>>>>>>> ret_from_fork at ffffffff89c00354
+>>>>>>>
+>>>>>>> Signed-off-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
+>>>>>>> ---
+>>>>>>>    drivers/scsi/device_handler/scsi_dh_alua.c | 3 +++
+>>>>>>>    1 file changed, 3 insertions(+)
+>>>>>>>
+>>>>>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>>>>>> index f32da0c..024a752 100644
+>>>>>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>>>>>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>>>>>> @@ -1144,6 +1144,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
+>>>>>>>        struct alua_dh_data *h = sdev->handler_data;
+>>>>>>>        struct alua_port_group *pg;
+>>>>>>>    +    sdev_printk(KERN_INFO, sdev, "%s: flushing workqueues\n", ALUA_DH_NAME);
+>>>>>>> +    flush_workqueue(kaluad_wq);
+>>>>>>> +
+>>>>>>>        spin_lock(&h->pg_lock);
+>>>>>>>        pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+>>>>>>>        rcu_assign_pointer(h->pg, NULL);
+>>>>>>
+>>>>>> I'm not sure this is the best solution.  The current code
+>>>>>> references h->sdev when the dh_list is traversed.  So it needs
+>>>>>> to remain valid.  Fixing it by flushing the workqueue to avoid
+>>>>>> the list traversal code running leaves open the possibility that
+>>>>>> future code alterations may expose this problem again.
+>>>>>>
+>>>>>> -Ewan
+>>>>>>
+>>>>>>
+>>>>>
+>>>>> I see your point, but as we are in detach handler and this code path
+>>>>> only execute when device is being detached. So, before detaching, flush
+>>>>> work-queue will take care of any current code references h->sdev where
+>>>>> dh_list is being traversed.
+>>>>>
+>>>> Flushing the workqueue is a bit of an overkill, seeing that we know exactly which workqueue element we're waiting for.
+>>>>
+>>>>> IMO, I do not think it would create any problem for future code
+>>>>> alterations. Or may be I am missing something over here, what could
+>>>>> be possible scenario for that?
+>>>>>
+>>>> Problem is more that I'd like to understand where exactly the race condition is. Can you figure out which spinlock is triggering in your stack trace?
+>>>>
+>>>> Cheers,
+>>>>
+>>>> Hannes
+>>>
+>>> Hannes,
+>>>
+>>> Race is between "alua_bus_detach" and "alua_rtpg_work".
+>>>
+>>> Whenever we perform fail-over or turn off the switch, the path goes down, which eventually triggers
+>>> blkdev_put -> .. -> scsi_device_dev_release -> .. ->  alua_bus_detach meanwhile another thread of alua_rtpg_work also running in parallel. Both threads are using sdev.
+>>>
+>>> In alua_bus_detach, we are setting null to sdev. From above call trace (multipathd) we can see alua_bus_deatch ran first and set sdev to null. It keeps its execution continue and it does not have any problem.
+>>>
+>>> 1138 /*
+>>> 1139  * alua_bus_detach - Detach device handler
+>>> 1140  * @sdev: device to be detached from
+>>> 1141  */
+>>> 1142 static void alua_bus_detach(struct scsi_device *sdev)
+>>> 1143 {
+>>> 1144         struct alua_dh_data *h = sdev->handler_data;
+>>> 1145         struct alua_port_group *pg;
+>>> 1146
+>>> 1147         spin_lock(&h->pg_lock);
+>>> 1148         pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+>>> 1149         rcu_assign_pointer(h->pg, NULL);
+>>> *1150*         h->sdev = NULL;  << Looks detach handler won the race and set sdev to null
+>>> 1151         spin_unlock(&h->pg_lock);
+>>> 1152         if (pg) {
+>>> 1153                 spin_lock_irq(&pg->lock); <<< from the call trace we can see that we just acquired the lock and got NMI
+>>> exception because we encountered a BUG_ON from different thread.
+>>> 1154                 list_del_rcu(&h->node);
+>>>
+>>>
+>>> Meanwhile alua_rtpg try to check for BUG_ON(!h->sdev);
+>>>
+>>> alua_rtpg_work -> alua_rtpg
+>>> ----
+>>>   505 static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+>>>   506 {
+>>>   .
+>>>   .
+>>>   .
+>>>   659                                         list_for_each_entry_rcu(h,
+>>>   660                                                 &tmp_pg->dh_list, node) {
+>>>   661                                                 /* h->sdev should always be valid */
+>>>   *662*                                                 BUG_ON(!h->sdev); <<<< 2nd call trace caused the panic due to this bug on.
+>>>   663                                                 h->sdev->access_state = desc[0];
+>>>   664                                         }
+>>>   665                                         rcu_read_unlock();
+>>>   666                                 }
+>>> ----
+>>>
+>> Ah, yes.
+>>
+>> We would need to take 'h->lock' here before checking 'h->sdev'.
+>> Alternatively, we should be able to fix it by not setting h->sdev to NULL, and issuing rcu_synchronize() before issuing kfree(h):
+>>
+>> @@ -1147,7 +1148,6 @@ static void alua_bus_detach(struct scsi_device *sdev)
+>>         spin_lock(&h->pg_lock);
+>>         pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+>>         rcu_assign_pointer(h->pg, NULL);
+>> -       h->sdev = NULL;
+>>         spin_unlock(&h->pg_lock);
+>>         if (pg) {
+>>                 spin_lock_irq(&pg->lock);
+>> @@ -1156,6 +1156,7 @@ static void alua_bus_detach(struct scsi_device *sdev)
+>>                 kref_put(&pg->kref, release_port_group);
+>>         }
+>>         sdev->handler_data = NULL;
+>> +       rcu_synchronize();
+>>         kfree(h);
+>>  }
+>>
+>> The 'rcu_synchronize()' will ensure that any concurrent thread has left the rcu-critical section (ie the loop mentioned above), and the issue will be avoided.
+>> Additionally, we could replace the BUG_ON() with
+>>
+>> if (!h->sdev)
+>>     continue;
+>>
+>> and the problem should be solved.
+>>
+>> Cheers,
+>>
+>> Hannes
+> 
+> 
+> This patch works and avoid crash during fail-over. It looks good to me in testing.
+> 
+> ---
+> Jitendra
+> 
 
-Regards,
 
-Can Guo.
+Gentle reminder, I am wondering if we can proceed to integrate this patch to mainline. 
+
+---
+Jitendra
