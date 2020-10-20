@@ -2,166 +2,130 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 031D0C5DF9F
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 14:09:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB92C388F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 14:19:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FCF422265
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 14:09:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C31B2224B
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 14:19:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cuyIW1vX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R99yggxx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407904AbgJTOJs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 10:09:48 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:34243 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2407825AbgJTOJd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Oct 2020 10:09:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603202971;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rOdQp2iOSkahNa0CfH1+VDlgH/zqWEjNOjN0qUXEes0=;
-        b=cuyIW1vX98ejDJgGwWUrx5HXCyaRZHAdK8jbsDHi6bt2cJE/GyXTfgYKvfyCxzlkRvK5cq
-        U/9NpE0AZnBJ12NKKZWjwB4FYjRIXi2QUCsk8EviSsGgpl7YwKTYtrluIutBzuCRV7heFV
-        J9KA6VI/uMpQZYuy/0zKz5S53TGjgz0=
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
- [209.85.219.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-389-0Ky0R51VOmKpr9RyuQtRhQ-1; Tue, 20 Oct 2020 10:09:30 -0400
-X-MC-Unique: 0Ky0R51VOmKpr9RyuQtRhQ-1
-Received: by mail-qv1-f72.google.com with SMTP id es11so1417839qvb.10
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 07:09:30 -0700 (PDT)
+        id S2407960AbgJTOTd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 10:19:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38712 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407945AbgJTOTd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 10:19:33 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1747C061755;
+        Tue, 20 Oct 2020 07:19:32 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id a3so2957993ejy.11;
+        Tue, 20 Oct 2020 07:19:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:message-id:subject:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=VkBORFPNXe+Ux1rw19W4FVF2VgTXnsWZfD7tOHA0CGc=;
+        b=R99yggxxgvtF5j4HMPiZ6N+cwMn+3K2IAh2z4OY1Zo6OQ/eh4nNMIyJ268+ABXqlPD
+         6FLfTXOSaf4hufSxUTlg3yrgS8oYriergiwf8z0XuQ50Y6GRYomYNa+Zy01quUUPFpd/
+         ClHk3LPIcopFE77ZsJB7vvR+iWjngTjgskYigrIPTE6sDUQyrDhjsO3ZkRX+z7dmyt5I
+         ZMzAR8rkoy/sTu3eRqeIIAiMOYt9Mm0Oz7BwJFl4tcnvT4KP3A9cM8TqGiuiD9YaR9gn
+         tTFgiD376hPaLoWxAKrez/M17F6f6h+qnQVSmuhOXsLImkh4xjJgQEd9DlErR967CNht
+         T8PA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=rOdQp2iOSkahNa0CfH1+VDlgH/zqWEjNOjN0qUXEes0=;
-        b=oHIO++dZpYk7F7ClRyMp3A0r4xGXo9Ky1+IfJxRPzzRo/VBZ/ftjszLUQbbIkFXH9y
-         SS+1/gb/xtBUKjHZ+UDN5E166jGuXqTTHTGQae24dFrhu151SrXPMUj03eMCxM9bS0d6
-         MHJU0w2TwryTRN403BBR5kXIPM5vJuM1fRqWSvmWk2cb2RBINLZdqE4RmyV2w8t9BmXh
-         65UJxxaHRl2zskfE5beef5EmX8Rky1vgnVM8pew24DWwq4UZ508XZSa2uFNHDlEV+8aP
-         8imEpNd6yOkKrfbPCLN1B2vpqjHm8aKDdcprZ1hz3yFcT/3HrzV/Hf+xGfLc3BBREKYO
-         zlmg==
-X-Gm-Message-State: AOAM530NMGLZogk/r4ZS2wUrro5NkTptJrOR74QdodKs3SEu1o4zGrz5
-        Kcp3Y5RvUoo+rmY0nrx/767bfTspuOWWFMcjXakLIeQqyfBIMmCtnuOEUcor7ocTarcxtlB2JeN
-        WmrBZIo61X4Xce9adBnYO5w==
-X-Received: by 2002:a05:620a:2195:: with SMTP id g21mr2990090qka.358.1603202969738;
-        Tue, 20 Oct 2020 07:09:29 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwKUy8N8weGLwzCzHDZ8oTBMtQsWbHEBLlPfZD5zpEfJ13ExA6QvxSe7FmqqHnm4D1jNxINeQ==
-X-Received: by 2002:a05:620a:2195:: with SMTP id g21mr2990039qka.358.1603202969497;
-        Tue, 20 Oct 2020 07:09:29 -0700 (PDT)
-Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
-        by smtp.gmail.com with ESMTPSA id o14sm785284qto.16.2020.10.20.07.09.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Oct 2020 07:09:28 -0700 (PDT)
-Subject: Re: [RFC] treewide: cleanup unreachable breaks
-To:     Jason Gunthorpe <jgg@ziepe.ca>,
-        Nick Desaulniers <ndesaulniers@google.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>, linux-edac@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-power@fi.rohmeurope.com, linux-gpio@vger.kernel.org,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        nouveau@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org,
-        spice-devel@lists.freedesktop.org, linux-iio@vger.kernel.org,
-        linux-amlogic@lists.infradead.org,
-        industrypack-devel@lists.sourceforge.net,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-can@vger.kernel.org,
-        Network Development <netdev@vger.kernel.org>,
-        intel-wired-lan@lists.osuosl.org, ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-stm32@st-md-mailman.stormreply.com, linux-nfc@lists.01.org,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, patches@opensource.cirrus.com,
-        storagedev@microchip.com, devel@driverdev.osuosl.org,
-        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-        usb-storage@lists.one-eyed-alien.net,
-        linux-watchdog@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        bpf <bpf@vger.kernel.org>, linux-integrity@vger.kernel.org,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-        alsa-devel@alsa-project.org,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        George Burgess <gbiv@google.com>
-References: <20201017160928.12698-1-trix@redhat.com>
- <20201018054332.GB593954@kroah.com>
- <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
- <20201019230546.GH36674@ziepe.ca>
-From:   Tom Rix <trix@redhat.com>
-Message-ID: <859ff6ff-3e10-195c-6961-7b2902b151d4@redhat.com>
-Date:   Tue, 20 Oct 2020 07:09:23 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
-MIME-Version: 1.0
-In-Reply-To: <20201019230546.GH36674@ziepe.ca>
-Content-Type: text/plain; charset=utf-8
+        h=x-gm-message-state:from:message-id:subject:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=VkBORFPNXe+Ux1rw19W4FVF2VgTXnsWZfD7tOHA0CGc=;
+        b=PMweg9PWR/odC8lsN7hfTKqmWbq/XWH+hdnuaxk476K7W2DeRWCGJxGChdyEXo9Lnc
+         +Kp6HIc5UQpk/Ak3OA3YXBlBG5e6IIa8QUb5iqL4HWS0PTvQt8kX7nMF2QjGMnkJ8IqT
+         +2dBFecOTIh1sasjIS6X8d600+/dkG5WRnlTYlNKA0ZEfxNB/vwE0h2H7xDrIh/o1ta/
+         RIiUhPu1DL5eEydQLjks0QDBX3nqhT5s/SeLo5atYt7N9La5x2zqGu6j2aMY8IdANWSg
+         M8cJrH73yETp2UFar6BvGTr2eZTA1TNSqy3CFDGc0Rggm2ClU8z0uBsEBE9ZT1UZ43Cz
+         1qpw==
+X-Gm-Message-State: AOAM533TALd/rp9w6wQGcnetvEpCkTMBbd+xJJkthWwUX2MD7s26HKng
+        +MUXrp8p8bcGaPUMDLmfktU=
+X-Google-Smtp-Source: ABdhPJyz58DFJZDWH7kXJJ8v/MmRBRCNYgKlviCUNByxhXTO8uqQgkuk3E7POiqrX6ymzjRz9wu70g==
+X-Received: by 2002:a17:906:557:: with SMTP id k23mr3276237eja.425.1603203571743;
+        Tue, 20 Oct 2020 07:19:31 -0700 (PDT)
+Received: from ubuntu-laptop ([2a01:598:b900:df40:185:7e9a:74c:2d13])
+        by smtp.googlemail.com with ESMTPSA id i5sm2772979ejs.121.2020.10.20.07.19.29
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 20 Oct 2020 07:19:30 -0700 (PDT)
+From:   Bean Huo <beanhuo.cn@gmail.com>
+X-Google-Original-From: Bean Huo <Beanhuo.cn@gmail.com>
+Message-ID: <e2976fe3f85c2625e42dbddbf61faed651caa5c0.camel@gmail.com>
+Subject: Re: [PATCH v1 1/2] scsi: ufs: Serialize eh_work with system PM
+ events and async scan
+To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Tue, 20 Oct 2020 16:19:18 +0200
+In-Reply-To: <1600752747-31881-2-git-send-email-cang@codeaurora.org>
+References: <1600752747-31881-1-git-send-email-cang@codeaurora.org>
+         <1600752747-31881-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-On 10/19/20 4:05 PM, Jason Gunthorpe wrote:
-> On Mon, Oct 19, 2020 at 12:42:15PM -0700, Nick Desaulniers wrote:
->> On Sat, Oct 17, 2020 at 10:43 PM Greg KH <gregkh@linuxfoundation.org> wrote:
->>> On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
->>>> From: Tom Rix <trix@redhat.com>
->>>>
->>>> This is a upcoming change to clean up a new warning treewide.
->>>> I am wondering if the change could be one mega patch (see below) or
->>>> normal patch per file about 100 patches or somewhere half way by collecting
->>>> early acks.
->>> Please break it up into one-patch-per-subsystem, like normal, and get it
->>> merged that way.
->>>
->>> Sending us a patch, without even a diffstat to review, isn't going to
->>> get you very far...
->> Tom,
->> If you're able to automate this cleanup, I suggest checking in a
->> script that can be run on a directory.  Then for each subsystem you
->> can say in your commit "I ran scripts/fix_whatever.py on this subdir."
->>  Then others can help you drive the tree wide cleanup.  Then we can
->> enable -Wunreachable-code-break either by default, or W=2 right now
->> might be a good idea.
-> I remember using clang-modernize in the past to fix issues very
-> similar to this, if clang machinery can generate the warning, can't
-> something like clang-tidy directly generate the patch?
+On Mon, 2020-09-21 at 22:32 -0700, Can Guo wrote:
+> Serialize eh_work with system PM events and async scan to make sure
+> eh_work
+> does not run in parallel with them.
+> 
+> Change-Id: I33012c68e2ea443950313c59a4a46ad88cf3c82d
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 64 +++++++++++++++++++++++++++++------
+> ------------
+>  drivers/scsi/ufs/ufshcd.h |  1 +
+>  2 files changed, 41 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 1d8134e..7e764e8 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5597,7 +5597,9 @@ static inline void
+> ufshcd_schedule_eh_work(struct ufs_hba *hba)
+>  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+>  {
+>  	pm_runtime_get_sync(hba->dev);
+> -	if (pm_runtime_suspended(hba->dev)) {
+> +	if (pm_runtime_status_suspended(hba->dev) || hba-
+> >is_sys_suspended) {
 
-Yes clang-tidy and similar are good tools.
+Hi Can
 
-Sometimes they change too much and your time shifts
+I curiously want to know how this can be produced in real system.
 
-from editing to analyzing and dropping changes.
+IMO, The system has been in system PM suspeded mode, how can trigger
+error handler? because the tasks have been freezed, the device
+interrupts disabled, before entering system PM suspended mode, the
+tasks in the queue should be completed, otherwises, there is bug in the
+whole flow.
 
 
-I am looking at them for auto changing api.
-
-When i have something greater than half baked i will post.
-
-Tom
-
->
-> You can send me a patch for drivers/infiniband/* as well
->
-> Thanks,
-> Jason
->
+thanks,
+Bean
 
