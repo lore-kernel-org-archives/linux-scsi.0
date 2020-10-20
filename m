@@ -2,65 +2,65 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2850C433E7
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1CBFC433E7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71535221FC
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63B24223BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:18:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oZOmX/of"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="SN/r1JhR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390477AbgJTCRe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 22:17:34 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:54646 "EHLO m42-4.mailgun.net"
+        id S2390509AbgJTCSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 22:18:43 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:53762 "EHLO z5.mailgun.us"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730143AbgJTCRb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Oct 2020 22:17:31 -0400
+        id S1730281AbgJTCSn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Oct 2020 22:18:43 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603160249; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1603160322; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=CnNWiQS2XGA1YVaIGzFp8g14cZ1x0E0s29jTfLOsuXI=;
- b=oZOmX/ofedOksjD80rg3Z9EV+bL4BL+Npw4ng8yMIsChP2KBrnBjmlrqhSess1NYF1N07rDu
- 1sHAmhJlf5A/3mdeOw1CaL9g9/G9T9q699o6MqgHRYURudKA4+bGo57jBlP2DrrI9YwsTRSf
- q3IUdCasv0PT5f7cSlQGqtqX6Jo=
-X-Mailgun-Sending-Ip: 69.72.42.4
+ MIME-Version: Sender; bh=lMfm6HKzFMEeywpRhBcHqJN+vD36Sgop5E0kgiio9W4=;
+ b=SN/r1JhRaUXxG3Ph5+a4w56Kom6RmWn2OuNBnGb8ZBGfKqOXLXiS5/hrE2nycQ+VzE3QXHsZ
+ Xeonj1LMdzioO3dVRfBjF6Og8caIW9r48gqKmLlQOZRTgVVx7Rkizbqayyxin5qxOGRsL8jJ
+ luhbU2fxSFQSeYFn1yymHW9ZGt8=
+X-Mailgun-Sending-Ip: 104.130.96.5
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5f8e48b8bfed2afaa627272c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 20 Oct 2020 02:17:28
+ smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
+ 5f8e4901ad37af35ecadf959 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 20 Oct 2020 02:18:41
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6E0C0C43391; Tue, 20 Oct 2020 02:17:27 +0000 (UTC)
+        id 3C31FC43385; Tue, 20 Oct 2020 02:18:41 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AC5BEC433FE;
-        Tue, 20 Oct 2020 02:17:25 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A25F2C433F1;
+        Tue, 20 Oct 2020 02:18:39 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 20 Oct 2020 10:17:25 +0800
+Date:   Tue, 20 Oct 2020 10:18:39 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Jaegeuk Kim <jaegeuk@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, Jaegeuk Kim <jaegeuk@google.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
-Subject: Re: [PATCH 2/4] scsi: ufs: clear UAC for FFU and RPMB LUNs
-In-Reply-To: <20201005223635.2922805-2-jaegeuk@kernel.org>
+Subject: Re: [PATCH 4/4] scsi: add more contexts in the ufs tracepoints
+In-Reply-To: <20201005223635.2922805-4-jaegeuk@kernel.org>
 References: <20201005223635.2922805-1-jaegeuk@kernel.org>
- <20201005223635.2922805-2-jaegeuk@kernel.org>
-Message-ID: <3d9c3b844ac861c4cce7242e49e63059@codeaurora.org>
+ <20201005223635.2922805-4-jaegeuk@kernel.org>
+Message-ID: <f55c7b379283bfb90e884e9b1bdf170e@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -70,162 +70,110 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 2020-10-06 06:36, Jaegeuk Kim wrote:
 > From: Jaegeuk Kim <jaegeuk@google.com>
 > 
-> In order to conduct FFU or RPMB operations, UFS needs to clear UAC. 
-> This patch
-> clears it explicitly, so that we could get no failure given early 
-> execution.
+> This adds user-friendly tracepoints with group id.
 > 
-
-Usually it is the user's/utility's/tool's responsiblity to clear UA by 
-sending a
-request sense cmd and retry previous cmd, now we are doing it for the 
-users in driver?
-As per my understanding, driver only reports UA to SCSI layer and let 
-users decide
-what to do with it - maybe users need to do something specifically regs 
-it, but
-the change clears it even before the users get to know it.
-
-Besides, this change clears UA for W-LUs, but the UFS driver still 
-reports UA to SCSI
-layer for each SCSI device by calling scsi_report_bus_reset() in
-ufshcd_reset_and_restore(). This will make SCSI layer treat 
-sdev->expecting_cc_ua
-wrongly, because for W-LUs, their expecting_cc_ua should not be set as 
-you have
-cleared their UAs.
-
-Thanks,
-
-Can Guo.
-
 > Cc: Alim Akhtar <alim.akhtar@samsung.com>
 > Cc: Avri Altman <avri.altman@wdc.com>
 > Cc: Can Guo <cang@codeaurora.org>
 > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+
+Reviewed-by: Can Guo <cang@codeaurora.org>
+
 > ---
->  drivers/scsi/ufs/ufshcd.c | 70 +++++++++++++++++++++++++++++++++++----
->  drivers/scsi/ufs/ufshcd.h |  1 +
->  2 files changed, 65 insertions(+), 6 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c  |  6 ++++--
+>  include/trace/events/ufs.h | 21 +++++++++++++++++----
+>  2 files changed, 21 insertions(+), 6 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index d929c3d1e58cc..0bb07b50bd23e 100644
+> index 76e95963887be..a2db8182663da 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6841,7 +6841,6 @@ static inline void
-> ufshcd_blk_pm_runtime_init(struct scsi_device *sdev)
->  static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
+> @@ -336,7 +336,7 @@ static void ufshcd_add_command_trace(struct ufs_hba 
+> *hba,
+>  		unsigned int tag, const char *str)
 >  {
->  	int ret = 0;
-> -	struct scsi_device *sdev_rpmb;
->  	struct scsi_device *sdev_boot;
-> 
->  	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
-> @@ -6854,14 +6853,14 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba 
-> *hba)
->  	ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device);
->  	scsi_device_put(hba->sdev_ufs_device);
-> 
-> -	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
-> +	hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
->  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
-> -	if (IS_ERR(sdev_rpmb)) {
-> -		ret = PTR_ERR(sdev_rpmb);
-> +	if (IS_ERR(hba->sdev_rpmb)) {
-> +		ret = PTR_ERR(hba->sdev_rpmb);
->  		goto remove_sdev_ufs_device;
+>  	sector_t lba = -1;
+> -	u8 opcode = 0;
+> +	u8 opcode = 0, group_id = 0;
+>  	u32 intr, doorbell;
+>  	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+>  	struct scsi_cmnd *cmd = lrbp->cmd;
+> @@ -362,13 +362,15 @@ static void ufshcd_add_command_trace(struct 
+> ufs_hba *hba,
+>  				lba = cmd->request->bio->bi_iter.bi_sector;
+>  			transfer_len = be32_to_cpu(
+>  				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
+> +			if (opcode == WRITE_10)
+> +				group_id = lrbp->cmd->cmnd[6];
+>  		}
 >  	}
-> -	ufshcd_blk_pm_runtime_init(sdev_rpmb);
-> -	scsi_device_put(sdev_rpmb);
-> +	ufshcd_blk_pm_runtime_init(hba->sdev_rpmb);
-> +	scsi_device_put(hba->sdev_rpmb);
 > 
->  	sdev_boot = __scsi_add_device(hba->host, 0, 0,
->  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
-> @@ -7385,6 +7384,63 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->  	return ret;
+>  	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+>  	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>  	trace_ufshcd_command(dev_name(hba->dev), str, tag,
+> -				doorbell, transfer_len, intr, lba, opcode);
+> +			doorbell, transfer_len, intr, lba, opcode, group_id);
 >  }
 > 
-> +static int
-> +ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device 
-> *sdp);
-> +
-> +static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
-> +{
-> +	struct scsi_device *sdp;
-> +	unsigned long flags;
-> +	int ret = 0;
-> +
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	if (wlun  == UFS_UPIU_UFS_DEVICE_WLUN)
-> +		sdp = hba->sdev_ufs_device;
-> +	else if (wlun  == UFS_UPIU_RPMB_WLUN)
-> +		sdp = hba->sdev_rpmb;
-> +	else
-> +		BUG_ON(1);
-> +	if (sdp) {
-> +		ret = scsi_device_get(sdp);
-> +		if (!ret && !scsi_device_online(sdp)) {
-> +			ret = -ENODEV;
-> +			scsi_device_put(sdp);
-> +		}
-> +	} else {
-> +		ret = -ENODEV;
-> +	}
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +	if (ret)
-> +		goto out_err;
-> +
-> +	ret = ufshcd_send_request_sense(hba, sdp);
-> +	scsi_device_put(sdp);
-> +out_err:
-> +	if (ret)
-> +		dev_err(hba->dev, "%s: UAC clear LU=%x ret = %d\n",
-> +				__func__, wlun, ret);
-> +	return ret;
-> +}
-> +
-> +static int ufshcd_clear_ua_wluns(struct ufs_hba *hba)
-> +{
-> +	int ret = 0;
-> +
-> +	if (!hba->wlun_dev_clr_ua)
-> +		goto out;
-> +
-> +	ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_UFS_DEVICE_WLUN);
-> +	if (!ret)
-> +		ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_RPMB_WLUN);
-> +	if (!ret)
-> +		hba->wlun_dev_clr_ua = false;
-> +out:
-> +	if (ret)
-> +		dev_err(hba->dev, "%s: Failed to clear UAC WLUNS ret = %d\n",
-> +				__func__, ret);
-> +	return ret;
-> +}
-> +
->  /**
->   * ufshcd_probe_hba - probe hba to detect device and initialize
->   * @hba: per-adapter instance
-> @@ -7500,6 +7556,8 @@ static void ufshcd_async_scan(void *data,
-> async_cookie_t cookie)
->  		pm_runtime_put_sync(hba->dev);
->  		ufshcd_exit_clk_scaling(hba);
->  		ufshcd_hba_exit(hba);
-> +	} else {
-> +		ufshcd_clear_ua_wluns(hba);
->  	}
->  }
+>  static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+> index 84841b3a7ffd5..50654f3526392 100644
+> --- a/include/trace/events/ufs.h
+> +++ b/include/trace/events/ufs.h
+> @@ -11,6 +11,15 @@
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 363589c0bd370..8344d8cb36786 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -662,6 +662,7 @@ struct ufs_hba {
->  	 * "UFS device" W-LU.
->  	 */
->  	struct scsi_device *sdev_ufs_device;
-> +	struct scsi_device *sdev_rpmb;
+>  #include <linux/tracepoint.h>
 > 
->  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
->  	enum uic_link_state uic_link_state;
+> +#define str_opcode(opcode)						\
+> +	__print_symbolic(opcode,					\
+> +		{ WRITE_16,		"WRITE_16" },			\
+> +		{ WRITE_10,		"WRITE_10" },			\
+> +		{ READ_16,		"READ_16" },			\
+> +		{ READ_10,		"READ_10" },			\
+> +		{ SYNCHRONIZE_CACHE,	"SYNC" },			\
+> +		{ UNMAP,		"UNMAP" })
+> +
+>  #define UFS_LINK_STATES			\
+>  	EM(UIC_LINK_OFF_STATE)		\
+>  	EM(UIC_LINK_ACTIVE_STATE)	\
+> @@ -215,9 +224,10 @@ DEFINE_EVENT(ufshcd_template, ufshcd_init,
+>  TRACE_EVENT(ufshcd_command,
+>  	TP_PROTO(const char *dev_name, const char *str, unsigned int tag,
+>  			u32 doorbell, int transfer_len, u32 intr, u64 lba,
+> -			u8 opcode),
+> +			u8 opcode, u8 group_id),
+> 
+> -	TP_ARGS(dev_name, str, tag, doorbell, transfer_len, intr, lba, 
+> opcode),
+> +	TP_ARGS(dev_name, str, tag, doorbell, transfer_len,
+> +				intr, lba, opcode, group_id),
+> 
+>  	TP_STRUCT__entry(
+>  		__string(dev_name, dev_name)
+> @@ -228,6 +238,7 @@ TRACE_EVENT(ufshcd_command,
+>  		__field(u32, intr)
+>  		__field(u64, lba)
+>  		__field(u8, opcode)
+> +		__field(u8, group_id)
+>  	),
+> 
+>  	TP_fast_assign(
+> @@ -239,13 +250,15 @@ TRACE_EVENT(ufshcd_command,
+>  		__entry->intr = intr;
+>  		__entry->lba = lba;
+>  		__entry->opcode = opcode;
+> +		__entry->group_id = group_id;
+>  	),
+> 
+>  	TP_printk(
+> -		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 
+> 0x%x",
+> +		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode:
+> 0x%x (%s), group_id: 0x%x",
+>  		__get_str(str), __get_str(dev_name), __entry->tag,
+>  		__entry->doorbell, __entry->transfer_len,
+> -		__entry->intr, __entry->lba, (u32)__entry->opcode
+> +		__entry->intr, __entry->lba, (u32)__entry->opcode,
+> +		str_opcode(__entry->opcode), (u32)__entry->group_id
+>  	)
+>  );
