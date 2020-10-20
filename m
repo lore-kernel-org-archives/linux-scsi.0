@@ -2,107 +2,101 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A082C4363A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:24:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D6D1C388F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:27:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 962FA20BED
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:24:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Gf+AVyYh"
+	by mail.kernel.org (Postfix) with ESMTP id 929592223C
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 18:27:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603218432;
+	bh=syF2yjpdpv6c6cBwA8S43bD1UXqKlZkbBSViMVykC9o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=m1cwiVYSF9z8BXZ7WOnVjyggc7K5aUDJJlMQ045TtegyOTydTR05L8gLaL65GlUeZ
+	 iIV6AjKsM1nDFKeXOGH3R0VAANfwB4SiuCz93qGU7cEKJVRurvJzD9QNx5ajnH4ltJ
+	 +2pt6x8ScHxZf8X7O6fT1jM5SmW8TtCcSbsmbLmA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389949AbgJTSYw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 14:24:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:48429 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389933AbgJTSYw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Oct 2020 14:24:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603218290;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XAyXp9HPGvvdmFxNzuHjKtmnIK4GC0/ZTZgWRZIFru8=;
-        b=Gf+AVyYhYvUh9CmIkN9jQmZMnmvWmplwTZTwbJY00yIEVP1kk+gW8M0+aamvqPEhb1QY1W
-        tfH9yTsf9ihDPjtFSK6qyMh0pv6k5zOxPe6YlIXlzk00b2NTIEmQ1D+IhZYwoTlDsMf7Yu
-        26tdW4karZ23tFB5VUl8PQnGlhj1qws=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-470-YujPkAhZNtup_7Pb2rW4Jw-1; Tue, 20 Oct 2020 14:24:46 -0400
-X-MC-Unique: YujPkAhZNtup_7Pb2rW4Jw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2390107AbgJTS1J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 14:27:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48150 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729045AbgJTS1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Oct 2020 14:27:09 -0400
+Received: from localhost (unknown [104.132.1.66])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5DBDD57052;
-        Tue, 20 Oct 2020 18:24:45 +0000 (UTC)
-Received: from octiron.msp.redhat.com (octiron.msp.redhat.com [10.15.80.209])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 40E595C1C2;
-        Tue, 20 Oct 2020 18:24:45 +0000 (UTC)
-Received: from octiron.msp.redhat.com (localhost.localdomain [127.0.0.1])
-        by octiron.msp.redhat.com (8.14.9/8.14.9) with ESMTP id 09KIOh8T020619;
-        Tue, 20 Oct 2020 13:24:43 -0500
-Received: (from bmarzins@localhost)
-        by octiron.msp.redhat.com (8.14.9/8.14.9/Submit) id 09KIOhjb020618;
-        Tue, 20 Oct 2020 13:24:43 -0500
-Date:   Tue, 20 Oct 2020 13:24:37 -0500
-From:   Benjamin Marzinski <bmarzins@redhat.com>
-To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
-Subject: Re: [PATCH v3 05/17] scsi_transport_fc: Added a new rport state
- FC_PORTSTATE_MARGINAL
-Message-ID: <20201020182437.GM3384@octiron.msp.redhat.com>
-References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
- <1602732462-10443-6-git-send-email-muneendra.kumar@broadcom.com>
- <5ca752c2-94e1-444a-7755-f48b09b38577@oracle.com>
- <c3d65f732be0b73e4d4ebb742bc754cd@mail.gmail.com>
- <3803E6D0-68D6-407F-80AB-A17E7E0E69E3@oracle.com>
- <CE70AE32-4318-4FB2-AEED-3606DEF59B79@oracle.com>
- <a9b958fb-3c06-c385-f7ce-ce0fc863e64b@suse.de>
- <bf347ae232d73c4a21af6514085a92f2@mail.gmail.com>
- <8c59834c-e46c-fde3-13d7-b60a82452148@oracle.com>
- <55e2eb834223041a7c755ac314e25f97@mail.gmail.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id D14CB20BED;
+        Tue, 20 Oct 2020 18:27:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603218429;
+        bh=syF2yjpdpv6c6cBwA8S43bD1UXqKlZkbBSViMVykC9o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=2oH7zma9kUc8nVWM9keXK5k/FJ9VCUK19MGKEFn2QD7Mh1kQ54OJByq/0UTUjxoIr
+         5zeTNGYHnqFjnTQWjGSOLyAS63Ov9cSIr3Aq6t/dtLX2AenO6dOid8w76U2gYr/UOz
+         +6kWzb9C+NaZxNBdNOYciRnoRnsQ4pvHUzEQ1QLU=
+Date:   Tue, 20 Oct 2020 11:27:07 -0700
+From:   jaegeuk@kernel.org
+To:     Can Guo <cang@codeaurora.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: Re: [PATCH 3/4] scsi: ufs: use WQ_HIGHPRI for gating work
+Message-ID: <20201020182707.GA1087816@google.com>
+References: <20201005223635.2922805-1-jaegeuk@kernel.org>
+ <20201005223635.2922805-3-jaegeuk@kernel.org>
+ <5c383fd90a0e97dbd1fffc35574133c9@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <55e2eb834223041a7c755ac314e25f97@mail.gmail.com>
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <5c383fd90a0e97dbd1fffc35574133c9@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 20, 2020 at 12:33:39AM +0530, Muneendra Kumar M wrote:
-> HI Michael,
+On 10/20, Can Guo wrote:
+> On 2020-10-06 06:36, Jaegeuk Kim wrote:
+> > From: Jaegeuk Kim <jaegeuk@google.com>
+> > 
+> > Must have WQ_MEM_RECLAIM
+> > ``WQ_MEM_RECLAIM``
+> >   All wq which might be used in the memory reclaim paths **MUST**
+> >   have this flag set.  The wq is guaranteed to have at least one
+> >   execution context regardless of memory pressure.
+> > 
 > 
-> > [Muneendra]As Hannes mentioned if there are no active paths, the
-> > marginal paths will be moved to normal and the system will send the io.
-> >What do you mean by normal?
-> 
-> >- You don't mean the the fc remote port state will change to online right?
-> Fc remote port state will not change to online.
-> 
-> - Do you just mean the the marginal path group will become the active group
-> in the dm-multipath layer?
-> 
-> Yes
-> 
+> The commit msg is not telling the same story as the change/title does.
 
-Correct. The path group is still marginal. Being marginal simply means
-that the path group has a lower priority than all the non-marginal path
-groups.  However, if there are no usable paths in any non-marginal path
-group, then a marginal path group will become the active path group (the
-path group that the kernel will send IO to).
+This message explains why we need to keep WQ_MEM_RECLAIM when adding WQ_HIGHPRI.
 
--Ben
+Thanks,
 
+> 
 > Regards,
-> Muneendra.
-
-
+> 
+> Can Guo.
+> 
+> > Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> > Cc: Avri Altman <avri.altman@wdc.com>
+> > Cc: Can Guo <cang@codeaurora.org>
+> > Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+> > ---
+> >  drivers/scsi/ufs/ufshcd.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 0bb07b50bd23e..76e95963887be 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -1849,7 +1849,7 @@ static void ufshcd_init_clk_gating(struct ufs_hba
+> > *hba)
+> >  	snprintf(wq_name, ARRAY_SIZE(wq_name), "ufs_clk_gating_%d",
+> >  		 hba->host->host_no);
+> >  	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(wq_name,
+> > -							   WQ_MEM_RECLAIM);
+> > +					WQ_MEM_RECLAIM | WQ_HIGHPRI);
+> > 
+> >  	hba->clk_gating.is_enabled = true;
