@@ -1,147 +1,231 @@
-Return-Path: <SRS0=6nW3=D2=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3978FC43457
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 23:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2850C433E7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:17:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF5EA22450
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Oct 2020 23:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71535221FC
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:17:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="R0THCPfe"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oZOmX/of"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388890AbgJSXFu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 19:05:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37902 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727721AbgJSXFt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2020 19:05:49 -0400
-Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 614B9C0613D1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 16:05:49 -0700 (PDT)
-Received: by mail-io1-xd44.google.com with SMTP id b8so24371ioh.11
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2020 16:05:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=KZcwJitFojA7RhzeD/UU8gbzehCBdvf6g5ia0ZYCrq4=;
-        b=R0THCPfeT+NjRv5n7wRuWr3+iQQVH5mYQugrcFEorv7jMlZOJpq4gWO8x2sltRZ1S3
-         8+uXkfK+0xraFRPc7RLEyC+L1Eqn+lwfgcQ60rCu3Ir6T0iqCUlHxkXPI8IxQxljNihW
-         MxA7dERE+Fo0B6yhfEPLGm6gbjuMrGvt0ee7i4ozPAa6C0OwTV1SJBaz+sj8rzyyiIix
-         DQ1LhxNguLsVQ2r9xWcmCur9QDHoeimXQtC/UVpN+4Yl8O9ZbpYKUwlrKFZtzYHwjpgZ
-         iC+kREvCZvwgmOBCIm7DmgxG6/6ncKrp6QDCnbxkp/qIzrhuMyauJsg53LWTp//HSslk
-         z+3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=KZcwJitFojA7RhzeD/UU8gbzehCBdvf6g5ia0ZYCrq4=;
-        b=nZIJyK7ztIIay9ppgpz87QZzD9vVumHmA8TYMwqD+Q5gtdfV4naADorLdiZnvcnh73
-         ee7xXX2+w+xrbJht8Z20w5ash/9X4QwT0gGqh5QdNcpG7neTsNukoy+VFCx1SfzrMgYv
-         mf74Hz2mpUoKGKYNXgyljqQXHriEzZAc1ESeszSii3UKHY3AuTMHxhglzAeGzcFbuDTm
-         CCKuAquuniUMKGH0AqhHOS6MaCEI20pGYIWQQzdjMJCSItoqMoD12mr1ngTlbomcExHl
-         5Nh31boym5I2yHinBUroKf24VyFfVCIbAZve/SO2LPgBL00D4MetUmPLwTBtngqQCSQN
-         BY/Q==
-X-Gm-Message-State: AOAM531BmoTEDlU/s9YU8tER+0cW7lEmSCfgkgCoOhMbq+hgydbIbOxA
-        sxbqU2JOzRTyEYOJSVWfx8+O9Q==
-X-Google-Smtp-Source: ABdhPJwE/qhLAedndnNRaUrUDMs331Onaq8Iz+VDEVRJN+4h4B5ckC67pNXDnvS9MRF/DxLJjNlnIQ==
-X-Received: by 2002:a6b:5019:: with SMTP id e25mr44377iob.123.1603148748578;
-        Mon, 19 Oct 2020 16:05:48 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
-        by smtp.gmail.com with ESMTPSA id u8sm7938ilm.36.2020.10.19.16.05.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Oct 2020 16:05:47 -0700 (PDT)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1kUeDq-002hRf-LL; Mon, 19 Oct 2020 20:05:46 -0300
-Date:   Mon, 19 Oct 2020 20:05:46 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Nick Desaulniers <ndesaulniers@google.com>
-Cc:     Tom Rix <trix@redhat.com>, LKML <linux-kernel@vger.kernel.org>,
-        linux-edac@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-block@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-power@fi.rohmeurope.com, linux-gpio@vger.kernel.org,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        nouveau@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org,
-        spice-devel@lists.freedesktop.org, linux-iio@vger.kernel.org,
-        linux-amlogic@lists.infradead.org,
-        industrypack-devel@lists.sourceforge.net,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-can@vger.kernel.org,
-        Network Development <netdev@vger.kernel.org>,
-        intel-wired-lan@lists.osuosl.org, ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-stm32@st-md-mailman.stormreply.com, linux-nfc@lists.01.org,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, patches@opensource.cirrus.com,
-        storagedev@microchip.com, devel@driverdev.osuosl.org,
-        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-        usb-storage@lists.one-eyed-alien.net,
-        linux-watchdog@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        bpf <bpf@vger.kernel.org>, linux-integrity@vger.kernel.org,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-        alsa-devel@alsa-project.org,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        George Burgess <gbiv@google.com>
-Subject: Re: [RFC] treewide: cleanup unreachable breaks
-Message-ID: <20201019230546.GH36674@ziepe.ca>
-References: <20201017160928.12698-1-trix@redhat.com>
- <20201018054332.GB593954@kroah.com>
- <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+        id S2390477AbgJTCRe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 22:17:34 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:54646 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730143AbgJTCRb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Oct 2020 22:17:31 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1603160249; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=CnNWiQS2XGA1YVaIGzFp8g14cZ1x0E0s29jTfLOsuXI=;
+ b=oZOmX/ofedOksjD80rg3Z9EV+bL4BL+Npw4ng8yMIsChP2KBrnBjmlrqhSess1NYF1N07rDu
+ 1sHAmhJlf5A/3mdeOw1CaL9g9/G9T9q699o6MqgHRYURudKA4+bGo57jBlP2DrrI9YwsTRSf
+ q3IUdCasv0PT5f7cSlQGqtqX6Jo=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 5f8e48b8bfed2afaa627272c (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 20 Oct 2020 02:17:28
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6E0C0C43391; Tue, 20 Oct 2020 02:17:27 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AC5BEC433FE;
+        Tue, 20 Oct 2020 02:17:25 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 20 Oct 2020 10:17:25 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, Jaegeuk Kim <jaegeuk@google.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: Re: [PATCH 2/4] scsi: ufs: clear UAC for FFU and RPMB LUNs
+In-Reply-To: <20201005223635.2922805-2-jaegeuk@kernel.org>
+References: <20201005223635.2922805-1-jaegeuk@kernel.org>
+ <20201005223635.2922805-2-jaegeuk@kernel.org>
+Message-ID: <3d9c3b844ac861c4cce7242e49e63059@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 19, 2020 at 12:42:15PM -0700, Nick Desaulniers wrote:
-> On Sat, Oct 17, 2020 at 10:43 PM Greg KH <gregkh@linuxfoundation.org> wrote:
-> >
-> > On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
-> > > From: Tom Rix <trix@redhat.com>
-> > >
-> > > This is a upcoming change to clean up a new warning treewide.
-> > > I am wondering if the change could be one mega patch (see below) or
-> > > normal patch per file about 100 patches or somewhere half way by collecting
-> > > early acks.
-> >
-> > Please break it up into one-patch-per-subsystem, like normal, and get it
-> > merged that way.
-> >
-> > Sending us a patch, without even a diffstat to review, isn't going to
-> > get you very far...
+On 2020-10-06 06:36, Jaegeuk Kim wrote:
+> From: Jaegeuk Kim <jaegeuk@google.com>
 > 
-> Tom,
-> If you're able to automate this cleanup, I suggest checking in a
-> script that can be run on a directory.  Then for each subsystem you
-> can say in your commit "I ran scripts/fix_whatever.py on this subdir."
->  Then others can help you drive the tree wide cleanup.  Then we can
-> enable -Wunreachable-code-break either by default, or W=2 right now
-> might be a good idea.
+> In order to conduct FFU or RPMB operations, UFS needs to clear UAC. 
+> This patch
+> clears it explicitly, so that we could get no failure given early 
+> execution.
+> 
 
-I remember using clang-modernize in the past to fix issues very
-similar to this, if clang machinery can generate the warning, can't
-something like clang-tidy directly generate the patch?
+Usually it is the user's/utility's/tool's responsiblity to clear UA by 
+sending a
+request sense cmd and retry previous cmd, now we are doing it for the 
+users in driver?
+As per my understanding, driver only reports UA to SCSI layer and let 
+users decide
+what to do with it - maybe users need to do something specifically regs 
+it, but
+the change clears it even before the users get to know it.
 
-You can send me a patch for drivers/infiniband/* as well
+Besides, this change clears UA for W-LUs, but the UFS driver still 
+reports UA to SCSI
+layer for each SCSI device by calling scsi_report_bus_reset() in
+ufshcd_reset_and_restore(). This will make SCSI layer treat 
+sdev->expecting_cc_ua
+wrongly, because for W-LUs, their expecting_cc_ua should not be set as 
+you have
+cleared their UAs.
 
 Thanks,
-Jason
+
+Can Guo.
+
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 70 +++++++++++++++++++++++++++++++++++----
+>  drivers/scsi/ufs/ufshcd.h |  1 +
+>  2 files changed, 65 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index d929c3d1e58cc..0bb07b50bd23e 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6841,7 +6841,6 @@ static inline void
+> ufshcd_blk_pm_runtime_init(struct scsi_device *sdev)
+>  static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
+>  {
+>  	int ret = 0;
+> -	struct scsi_device *sdev_rpmb;
+>  	struct scsi_device *sdev_boot;
+> 
+>  	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
+> @@ -6854,14 +6853,14 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba 
+> *hba)
+>  	ufshcd_blk_pm_runtime_init(hba->sdev_ufs_device);
+>  	scsi_device_put(hba->sdev_ufs_device);
+> 
+> -	sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+> +	hba->sdev_rpmb = __scsi_add_device(hba->host, 0, 0,
+>  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
+> -	if (IS_ERR(sdev_rpmb)) {
+> -		ret = PTR_ERR(sdev_rpmb);
+> +	if (IS_ERR(hba->sdev_rpmb)) {
+> +		ret = PTR_ERR(hba->sdev_rpmb);
+>  		goto remove_sdev_ufs_device;
+>  	}
+> -	ufshcd_blk_pm_runtime_init(sdev_rpmb);
+> -	scsi_device_put(sdev_rpmb);
+> +	ufshcd_blk_pm_runtime_init(hba->sdev_rpmb);
+> +	scsi_device_put(hba->sdev_rpmb);
+> 
+>  	sdev_boot = __scsi_add_device(hba->host, 0, 0,
+>  		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_BOOT_WLUN), NULL);
+> @@ -7385,6 +7384,63 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+>  	return ret;
+>  }
+> 
+> +static int
+> +ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device 
+> *sdp);
+> +
+> +static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+> +{
+> +	struct scsi_device *sdp;
+> +	unsigned long flags;
+> +	int ret = 0;
+> +
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (wlun  == UFS_UPIU_UFS_DEVICE_WLUN)
+> +		sdp = hba->sdev_ufs_device;
+> +	else if (wlun  == UFS_UPIU_RPMB_WLUN)
+> +		sdp = hba->sdev_rpmb;
+> +	else
+> +		BUG_ON(1);
+> +	if (sdp) {
+> +		ret = scsi_device_get(sdp);
+> +		if (!ret && !scsi_device_online(sdp)) {
+> +			ret = -ENODEV;
+> +			scsi_device_put(sdp);
+> +		}
+> +	} else {
+> +		ret = -ENODEV;
+> +	}
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +	if (ret)
+> +		goto out_err;
+> +
+> +	ret = ufshcd_send_request_sense(hba, sdp);
+> +	scsi_device_put(sdp);
+> +out_err:
+> +	if (ret)
+> +		dev_err(hba->dev, "%s: UAC clear LU=%x ret = %d\n",
+> +				__func__, wlun, ret);
+> +	return ret;
+> +}
+> +
+> +static int ufshcd_clear_ua_wluns(struct ufs_hba *hba)
+> +{
+> +	int ret = 0;
+> +
+> +	if (!hba->wlun_dev_clr_ua)
+> +		goto out;
+> +
+> +	ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_UFS_DEVICE_WLUN);
+> +	if (!ret)
+> +		ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_RPMB_WLUN);
+> +	if (!ret)
+> +		hba->wlun_dev_clr_ua = false;
+> +out:
+> +	if (ret)
+> +		dev_err(hba->dev, "%s: Failed to clear UAC WLUNS ret = %d\n",
+> +				__func__, ret);
+> +	return ret;
+> +}
+> +
+>  /**
+>   * ufshcd_probe_hba - probe hba to detect device and initialize
+>   * @hba: per-adapter instance
+> @@ -7500,6 +7556,8 @@ static void ufshcd_async_scan(void *data,
+> async_cookie_t cookie)
+>  		pm_runtime_put_sync(hba->dev);
+>  		ufshcd_exit_clk_scaling(hba);
+>  		ufshcd_hba_exit(hba);
+> +	} else {
+> +		ufshcd_clear_ua_wluns(hba);
+>  	}
+>  }
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 363589c0bd370..8344d8cb36786 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -662,6 +662,7 @@ struct ufs_hba {
+>  	 * "UFS device" W-LU.
+>  	 */
+>  	struct scsi_device *sdev_ufs_device;
+> +	struct scsi_device *sdev_rpmb;
+> 
+>  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+>  	enum uic_link_state uic_link_state;
