@@ -2,576 +2,181 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 895D0C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 07:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A920C433E7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 07:05:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25AE4223C6
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 07:05:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADE162240A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 07:05:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="stwK0Ovi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404784AbgJTHFJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 03:05:09 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46170 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404741AbgJTHFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Oct 2020 03:05:09 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B25BEAD52;
-        Tue, 20 Oct 2020 07:05:06 +0000 (UTC)
-Subject: Re: [PATCH v4 29/31] elx: efct: scsi_transport_fc host interface
- support
-To:     James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
-Cc:     Ram Vegesna <ram.vegesna@broadcom.com>
-References: <20201012225147.54404-1-james.smart@broadcom.com>
- <20201012225147.54404-30-james.smart@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <9fef73e6-463f-6ba8-ff1f-bc4da27668d5@suse.de>
-Date:   Tue, 20 Oct 2020 09:05:06 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S2404795AbgJTHFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 03:05:30 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:52173 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404741AbgJTHF2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 03:05:28 -0400
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20201020070525epoutp02b47d2d4979be0d5b4a313c6df6d5b99f~-oXcjpk6u2907029070epoutp02L
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 07:05:25 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20201020070525epoutp02b47d2d4979be0d5b4a313c6df6d5b99f~-oXcjpk6u2907029070epoutp02L
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1603177525;
+        bh=lz40hHps79hqNfcnD+cI3oHpIVLgeD6CDqiBeBo/A8M=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=stwK0OviaweTFSwolWPfyyffNR3bnL648FfkGNSaVmudvE6NNA+7zYQNO+Qlk6Hi0
+         0rnLAdMhoLqd0CGUClyPyAxwH2IY8zc+8dqIcIaq2ern5GKRAgwdsAZ27YITOMT6ka
+         m0WrLdgRJd8wPeU2eVbqZlmlVSG+UjnCDpYnkiWk=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20201020070525epcas2p49eb6cc2621c08aa65df0b14235df06b4~-oXcOPvH21677716777epcas2p4r;
+        Tue, 20 Oct 2020 07:05:25 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4CFl4y4DSdzMqYkr; Tue, 20 Oct
+        2020 07:05:22 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5F.9A.09588.13C8E8F5; Tue, 20 Oct 2020 16:05:22 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20201020070519epcas2p27906d7db7c74e45f2acf8243ec2eae1d~-oXXbkF4G0868808688epcas2p2C;
+        Tue, 20 Oct 2020 07:05:19 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20201020070519epsmtrp11d1d02b0f52fdcfb924fba2933fc18a2~-oXXape6_1391713917epsmtrp1g;
+        Tue, 20 Oct 2020 07:05:19 +0000 (GMT)
+X-AuditID: b6c32a45-36bff70000002574-c7-5f8e8c311e37
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        57.32.08745.F2C8E8F5; Tue, 20 Oct 2020 16:05:19 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.229.9.51]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20201020070519epsmtip161a3e009d658aad5260cf63c88ae6d7f~-oXXNZSlV2165121651epsmtip1n;
+        Tue, 20 Oct 2020 07:05:19 +0000 (GMT)
+From:   Chanho Park <chanho61.park@samsung.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chanho Park <chanho61.park@samsung.com>
+Subject: [PATCH] scsi: ufs: make sure scan sequence for multiple hosts
+Date:   Tue, 20 Oct 2020 16:05:16 +0900
+Message-Id: <20201020070516.129273-1-chanho61.park@samsung.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-In-Reply-To: <20201012225147.54404-30-james.smart@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrHKsWRmVeSWpSXmKPExsWy7bCmqa5RT1+8wbsrTBYP5m1js3j58yqb
+        xeX92haLbmxjsri8aw6bRff1HWwWy4//Y3Jg95iw6ACjx8ent1g8+rasYvT4vEnOo/1AN1MA
+        a1SOTUZqYkpqkUJqXnJ+SmZeuq2Sd3C8c7ypmYGhrqGlhbmSQl5ibqqtkotPgK5bZg7QFUoK
+        ZYk5pUChgMTiYiV9O5ui/NKSVIWM/OISW6XUgpScAkPDAr3ixNzi0rx0veT8XCtDAwMjU6DK
+        hJyMD2++sBdcFqyY+PUOYwPjXr4uRk4OCQETiaNPFrF3MXJxCAnsYJTY8vMmK4TziVHi2eqX
+        rCBVQgKfGSX2X2OG6Xjx7iFUxy5GiY2n2xghnI+MEgs+trCBVLEJ6Epsef4KKMHBISJgJHFt
+        lSdIDbPAdEaJgys/gtUIC7hJ7Nx/DmwDi4CqxNHHC8HqeQXsJV42eEEsk5d42rscbDGvgKDE
+        yZlPWEBsZqB489bZzCAzJQTOsUvce93JBtHgInH7Qj/UpcISr45vYYewpSRe9rdB2fUSKx41
+        QTX3MEq8nPYPqsFeYubTpUwgRzALaEqs36UPYkoIKEscuQW1l0+i4/Bfdogwr0RHmxBEo7rE
+        ge3TWSBsWYnuOZ9ZIWwPidX7TjJBwjBWYsWq6cwTGOVnIflmFpJvZiHsXcDIvIpRLLWgODc9
+        tdiowBA5TjcxghOilusOxslvP+gdYmTiYDzEKMHBrCTCO4G1L16INyWxsiq1KD++qDQntfgQ
+        oykweCcyS4km5wNTcl5JvKGpkZmZgaWphamZkYWSOK+KXke8kEB6YklqdmpqQWoRTB8TB6dU
+        A1OZ4Bzfd3erpl85Nflf3iPJmNCDx5/dPrhXsdDq9MSGIC5dbYlTTzoft8b5F/ouXHZ5cesH
+        8TPTuL5w+fzZsar8y/9Lb4vUH03+mVjU1sz5ttivQMdGNsfmTqNai8/3qp6z/kYpp0R+qS02
+        WRbb++TWq+OPTlVuO33LhT8sTS6p4YTsP36mJht2/4XVbYvvM1l0u3Zr3FW7KXO0RXGzZ8Sq
+        IkUJB3aezSz73cTNA2+Y/Dwr1ffQeheTraJj3WnBJLYJ3Rt5rffumejkcvYhD9ui3Rf2vvp2
+        UNdlB0fmMf5rJh2HihZUmi0ITQvceMh1Td2NUx6qk8VtGYtPT6zS6np7LvjirTkKGeqzMnzF
+        q5RYijMSDbWYi4oTAeAcpcIRBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLLMWRmVeSWpSXmKPExsWy7bCSnK5+T1+8wdPjhhYP5m1js3j58yqb
+        xeX92haLbmxjsri8aw6bRff1HWwWy4//Y3Jg95iw6ACjx8ent1g8+rasYvT4vEnOo/1AN1MA
+        axSXTUpqTmZZapG+XQJXxoc3X9gLLgtWTPx6h7GBcS9fFyMnh4SAicSLdw/Zuxi5OIQEdjBK
+        HHy8hhUiISvx7N0OdghbWOJ+yxGwuJDAe0aJd3dFQWw2AV2JLc9fMYLYIkCDZtx6xwoyiFlg
+        NqPEnuOLwRLCAm4SO/efA2tmEVCVOPp4IVCcg4NXwF7iZYMXxHx5iae9y5lBbF4BQYmTM5+w
+        gNjMQPHmrbOZJzDyzUKSmoUktYCRaRWjZGpBcW56brFhgVFearlecWJucWleul5yfu4mRnCI
+        amntYNyz6oPeIUYmDsZDjBIczEoivBNY++KFeFMSK6tSi/Lji0pzUosPMUpzsCiJ836dtTBO
+        SCA9sSQ1OzW1ILUIJsvEwSnVwNSo1MhqULM3SeishajfqX0Nr6/cq/bjDirhP9z8aOvh+QzH
+        r10sbzhaErheM+0Yv42L1S+f1z38xpujjT5MVuKXFb2SzX5D3izzSOwjpYR9tsnvKxsFrb9w
+        O08OvaZe/H9e/cfX6v8dVNlU0hkm+hwobxQW3fRTag2z/4RQvQI+nXsx3W5LphWyqDxXbzzZ
+        udl07ocN1ddZbmhKXL5elC34UPXMh/MuEVpF00q9Xoe9DTK5p9q1imcWd7+Njvr3yTN1t1zZ
+        vaDr1Jcraru7+T2T+bne8lf5HFrYuHH9wx3b5utuW1cdMInZji/CTCph5pEtW1q4Z2+ecOXu
+        rSz3p+37JORuWwWvvvqz/U3/ESWW4oxEQy3mouJEAACj59XAAgAA
+X-CMS-MailID: 20201020070519epcas2p27906d7db7c74e45f2acf8243ec2eae1d
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20201020070519epcas2p27906d7db7c74e45f2acf8243ec2eae1d
+References: <CGME20201020070519epcas2p27906d7db7c74e45f2acf8243ec2eae1d@epcas2p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/13/20 12:51 AM, James Smart wrote:
-> This patch continues the efct driver population.
-> 
-> This patch adds driver definitions for:
-> Integration with the scsi_fc_transport host interfaces
-> 
-> Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
-> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->   drivers/scsi/elx/efct/efct_xport.c | 500 +++++++++++++++++++++++++++++
->   1 file changed, 500 insertions(+)
-> 
-> diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/efct_xport.c
-> index 02d958344a8f..05be629f8985 100644
-> --- a/drivers/scsi/elx/efct/efct_xport.c
-> +++ b/drivers/scsi/elx/efct/efct_xport.c
-> @@ -778,3 +778,503 @@ int efct_scsi_del_device(struct efct *efct)
->   	}
->   	return EFC_SUCCESS;
->   }
-> +
-> +static void
-> +efct_get_host_port_id(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +	struct efc_nport *nport;
-> +
-> +	if (efc->domain && efc->domain->nport) {
-> +		nport = efc->domain->nport;
-> +		fc_host_port_id(shost) = nport->fc_id;
-> +	}
-> +}
-> +
-> +static void
-> +efct_get_host_port_type(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +	int type = FC_PORTTYPE_UNKNOWN;
-> +
-> +	if (efc->domain && efc->domain->nport) {
-> +		if (efc->domain->is_loop) {
-> +			type = FC_PORTTYPE_LPORT;
-> +		} else {
-> +			struct efc_nport *nport = efc->domain->nport;
-> +
-> +			if (nport->is_vport)
-> +				type = FC_PORTTYPE_NPIV;
-> +			else if (nport->topology == EFC_SPORT_TOPOLOGY_P2P)
-> +				type = FC_PORTTYPE_PTP;
-> +			else if (nport->topology == EFC_SPORT_TOPOLOGY_UNKNOWN)
-> +				type = FC_PORTTYPE_UNKNOWN;
-> +			else
-> +				type = FC_PORTTYPE_NPORT;
-> +		}
-> +	}
-> +	fc_host_port_type(shost) = type;
-> +}
-> +
-> +static void
-> +efct_get_host_vport_type(struct Scsi_Host *shost)
-> +{
-> +	fc_host_port_type(shost) = FC_PORTTYPE_NPIV;
-> +}
-> +
-> +static void
-> +efct_get_host_port_state(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +
-> +	if (efc->domain)
-> +		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-> +	else
-> +		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
-> +}
-> +
-> +static void
-> +efct_get_host_speed(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +	union efct_xport_stats_u speed;
-> +	u32 fc_speed = FC_PORTSPEED_UNKNOWN;
-> +	int rc;
-> +
-> +	if (!efc->domain || !efc->domain->nport) {
-> +		fc_host_speed(shost) = fc_speed;
-> +		return;
-> +	}
-> +
-> +	rc = efct_xport_status(efct->xport, EFCT_XPORT_LINK_SPEED, &speed);
-> +	if (rc == 0) {
-> +		switch (speed.value) {
-> +		case 1000:
-> +			fc_speed = FC_PORTSPEED_1GBIT;
-> +			break;
-> +		case 2000:
-> +			fc_speed = FC_PORTSPEED_2GBIT;
-> +			break;
-> +		case 4000:
-> +			fc_speed = FC_PORTSPEED_4GBIT;
-> +			break;
-> +		case 8000:
-> +			fc_speed = FC_PORTSPEED_8GBIT;
-> +			break;
-> +		case 10000:
-> +			fc_speed = FC_PORTSPEED_10GBIT;
-> +			break;
-> +		case 16000:
-> +			fc_speed = FC_PORTSPEED_16GBIT;
-> +			break;
-> +		case 32000:
-> +			fc_speed = FC_PORTSPEED_32GBIT;
-> +			break;
-> +		}
-> +	}
-> +
-> +	fc_host_speed(shost) = fc_speed;
-> +}
-> +
-> +static void
-> +efct_get_host_fabric_name(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	struct efc *efc = efct->efcport;
-> +
-> +	if (efc->domain) {
-> +		struct fc_els_flogi  *sp =
-> +			(struct fc_els_flogi  *)
-> +				efc->domain->flogi_service_params;
-> +
-> +		fc_host_fabric_name(shost) = be64_to_cpu(sp->fl_wwnn);
-> +	}
-> +}
-> +
-> +static struct fc_host_statistics *
-> +efct_get_stats(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	union efct_xport_stats_u stats;
-> +	struct efct_xport *xport = efct->xport;
-> +	u32 rc = 1;
-> +
-> +	rc = efct_xport_status(xport, EFCT_XPORT_LINK_STATISTICS, &stats);
-> +	if (rc != 0) {
-> +		pr_err("efct_xport_status returned non 0 - %d\n", rc);
-> +		return NULL;
-> +	}
-> +
-> +	vport->fc_host_stats.loss_of_sync_count =
-> +		stats.stats.link_stats.loss_of_sync_error_count;
-> +	vport->fc_host_stats.link_failure_count =
-> +		stats.stats.link_stats.link_failure_error_count;
-> +	vport->fc_host_stats.prim_seq_protocol_err_count =
-> +		stats.stats.link_stats.primitive_sequence_error_count;
-> +	vport->fc_host_stats.invalid_tx_word_count =
-> +		stats.stats.link_stats.invalid_transmission_word_error_count;
-> +	vport->fc_host_stats.invalid_crc_count =
-> +		stats.stats.link_stats.crc_error_count;
-> +	/* mbox returns kbyte count so we need to convert to words */
-> +	vport->fc_host_stats.tx_words =
-> +		stats.stats.host_stats.transmit_kbyte_count * 256;
-> +	/* mbox returns kbyte count so we need to convert to words */
-> +	vport->fc_host_stats.rx_words =
-> +		stats.stats.host_stats.receive_kbyte_count * 256;
-> +	vport->fc_host_stats.tx_frames =
-> +		stats.stats.host_stats.transmit_frame_count;
-> +	vport->fc_host_stats.rx_frames =
-> +		stats.stats.host_stats.receive_frame_count;
-> +
-> +	vport->fc_host_stats.fcp_input_requests =
-> +			xport->fcp_stats.input_requests;
-> +	vport->fc_host_stats.fcp_output_requests =
-> +			xport->fcp_stats.output_requests;
-> +	vport->fc_host_stats.fcp_output_megabytes =
-> +			xport->fcp_stats.output_bytes >> 20;
-> +	vport->fc_host_stats.fcp_input_megabytes =
-> +			xport->fcp_stats.input_bytes >> 20;
-> +	vport->fc_host_stats.fcp_control_requests =
-> +			xport->fcp_stats.control_requests;
-> +
-> +	return &vport->fc_host_stats;
-> +}
-> +
-> +static void
-> +efct_reset_stats(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport = (struct efct_vport *)shost->hostdata;
-> +	struct efct *efct = vport->efct;
-> +	/* argument has no purpose for this action */
-> +	union efct_xport_stats_u dummy;
-> +	u32 rc = 0;
-> +
-> +	rc = efct_xport_status(efct->xport, EFCT_XPORT_LINK_STAT_RESET, &dummy);
-> +	if (rc != 0)
-> +		pr_err("efct_xport_status returned non 0 - %d\n", rc);
-> +}
-> +
-> +static void
-> +efct_get_starget_port_id(struct scsi_target *starget)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static void
-> +efct_get_starget_node_name(struct scsi_target *starget)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static void
-> +efct_get_starget_port_name(struct scsi_target *starget)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static void
-> +efct_set_vport_symbolic_name(struct fc_vport *fc_vport)
-> +{
-> +	pr_err("%s\n", __func__);
-> +}
-> +
-> +static int
-> +efct_issue_lip(struct Scsi_Host *shost)
-> +{
-> +	struct efct_vport *vport =
-> +			shost ? (struct efct_vport *)shost->hostdata : NULL;
-> +	struct efct *efct = vport ? vport->efct : NULL;
-> +
-> +	if (!shost || !vport || !efct) {
-> +		pr_err("%s: shost=%p vport=%p efct=%p\n", __func__,
-> +		       shost, vport, efct);
-> +		return -EPERM;
-> +	}
-> +
-> +	/*
-> +	 * Bring the link down gracefully then re-init the link.
-> +	 * The firmware will re-initialize the Fibre Channel interface as
-> +	 * required. It does not issue a LIP.
-> +	 */
-> +
-> +	if (efct_xport_control(efct->xport, EFCT_XPORT_PORT_OFFLINE))
-> +		efc_log_test(efct, "EFCT_XPORT_PORT_OFFLINE failed\n");
-> +
-> +	if (efct_xport_control(efct->xport, EFCT_XPORT_PORT_ONLINE))
-> +		efc_log_test(efct, "EFCT_XPORT_PORT_ONLINE failed\n");
-> +
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +struct efct_vport *
-> +efct_scsi_new_vport(struct efct *efct, struct device *dev)
-> +{
-> +	struct Scsi_Host *shost = NULL;
-> +	int error = 0;
-> +	struct efct_vport *vport = NULL;
-> +	union efct_xport_stats_u speed;
-> +	u32 supported_speeds = 0;
-> +
-> +	shost = scsi_host_alloc(&efct_template, sizeof(*vport));
-> +	if (!shost) {
-> +		efc_log_err(efct, "failed to allocate Scsi_Host struct\n");
-> +		return NULL;
-> +	}
-> +
-> +	/* save efct information to shost LLD-specific space */
-> +	vport = (struct efct_vport *)shost->hostdata;
-> +	vport->efct = efct;
-> +	vport->is_vport = true;
-> +
-> +	shost->can_queue = efct->hw.config.n_io;
-> +	shost->max_cmd_len = 16; /* 16-byte CDBs */
-> +	shost->max_id = 0xffff;
-> +	shost->max_lun = 0xffffffff;
-> +
-> +	/* can only accept (from mid-layer) as many SGEs as we've pre-regited*/
-> +	shost->sg_tablesize = sli_get_max_sgl(&efct->hw.sli);
-> +
-> +	/* attach FC Transport template to shost */
-> +	shost->transportt = efct_vport_fc_tt;
-> +	efc_log_debug(efct, "vport transport template=%p\n",
-> +		       efct_vport_fc_tt);
-> +
-> +	/* get pci_dev structure and add host to SCSI ML */
-> +	error = scsi_add_host_with_dma(shost, dev, &efct->pci->dev);
-> +	if (error) {
-> +		efc_log_test(efct, "failed scsi_add_host_with_dma\n");
-> +		return NULL;
-> +	}
-> +
-> +	/* Set symbolic name for host port */
-> +	snprintf(fc_host_symbolic_name(shost),
-> +		 sizeof(fc_host_symbolic_name(shost)),
-> +		 "Emulex %s FV%s DV%s", efct->model, efct->hw.sli.fw_name[0],
-> +		 EFCT_DRIVER_VERSION);
-> +
-> +	/* Set host port supported classes */
-> +	fc_host_supported_classes(shost) = FC_COS_CLASS3;
-> +
-> +	speed.value = 1000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_1GBIT;
-> +	}
-> +	speed.value = 2000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_2GBIT;
-> +	}
-> +	speed.value = 4000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_4GBIT;
-> +	}
-> +	speed.value = 8000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_8GBIT;
-> +	}
-> +	speed.value = 10000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_10GBIT;
-> +	}
-> +	speed.value = 16000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_16GBIT;
-> +	}
-> +	speed.value = 32000;
-> +	if (efct_xport_status(efct->xport, EFCT_XPORT_IS_SUPPORTED_LINK_SPEED,
-> +			      &speed)) {
-> +		supported_speeds |= FC_PORTSPEED_32GBIT;
-> +	}
-> +
-> +	fc_host_supported_speeds(shost) = supported_speeds;
-> +	vport->shost = shost;
-> +
-> +	return vport;
-> +}
-> +
-> +int efct_scsi_del_vport(struct efct *efct, struct Scsi_Host *shost)
-> +{
-> +	if (shost) {
-> +		efc_log_debug(efct,
-> +				"Unregistering vport with Transport Layer\n");
-> +		efct_xport_remove_host(shost);
-> +		efc_log_debug(efct, "Unregistering vport with SCSI Midlayer\n");
-> +		scsi_remove_host(shost);
-> +		scsi_host_put(shost);
-> +		return EFC_SUCCESS;
-> +	}
-> +	return EFC_FAIL;
-> +}
-> +
-> +static int
-> +efct_vport_create(struct fc_vport *fc_vport, bool disable)
-> +{
-> +	struct Scsi_Host *shost = fc_vport ? fc_vport->shost : NULL;
-> +	struct efct_vport *pport = shost ?
-> +					(struct efct_vport *)shost->hostdata :
-> +					NULL;
-> +	struct efct *efct = pport ? pport->efct : NULL;
-> +	struct efct_vport *vport = NULL;
-> +
-> +	if (!fc_vport || !shost || !efct)
-> +		goto fail;
-> +
-> +	vport = efct_scsi_new_vport(efct, &fc_vport->dev);
-> +	if (!vport) {
-> +		efc_log_err(efct, "failed to create vport\n");
-> +		goto fail;
-> +	}
-> +
-> +	vport->fc_vport = fc_vport;
-> +	vport->npiv_wwpn = fc_vport->port_name;
-> +	vport->npiv_wwnn = fc_vport->node_name;
-> +	fc_host_node_name(vport->shost) = vport->npiv_wwnn;
-> +	fc_host_port_name(vport->shost) = vport->npiv_wwpn;
-> +	*(struct efct_vport **)fc_vport->dd_data = vport;
-> +
-> +	return EFC_SUCCESS;
-> +
-> +fail:
-> +	return EFC_FAIL;
-> +}
-> +
-> +static int
-> +efct_vport_delete(struct fc_vport *fc_vport)
-> +{
-> +	struct efct_vport *vport = *(struct efct_vport **)fc_vport->dd_data;
-> +	struct Scsi_Host *shost = vport ? vport->shost : NULL;
-> +	struct efct *efct = vport ? vport->efct : NULL;
-> +	int rc = -1;
-> +
-> +	rc = efct_scsi_del_vport(efct, shost);
-> +
-> +	if (rc)
-> +		pr_err("%s: vport delete failed\n", __func__);
-> +
-> +	return rc;
-> +}
-> +
-> +static int
-> +efct_vport_disable(struct fc_vport *fc_vport, bool disable)
-> +{
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +static struct fc_function_template efct_xport_functions = {
-> +	.get_starget_node_name = efct_get_starget_node_name,
-> +	.get_starget_port_name = efct_get_starget_port_name,
-> +	.get_starget_port_id  = efct_get_starget_port_id,
-> +
-> +	.get_host_port_id = efct_get_host_port_id,
-> +	.get_host_port_type = efct_get_host_port_type,
-> +	.get_host_port_state = efct_get_host_port_state,
-> +	.get_host_speed = efct_get_host_speed,
-> +	.get_host_fabric_name = efct_get_host_fabric_name,
-> +
-> +	.get_fc_host_stats = efct_get_stats,
-> +	.reset_fc_host_stats = efct_reset_stats,
-> +
-> +	.issue_fc_host_lip = efct_issue_lip,
-> +
-> +	.set_vport_symbolic_name = efct_set_vport_symbolic_name,
-> +	.vport_disable = efct_vport_disable,
-> +
-> +	/* allocation lengths for host-specific data */
-> +	.dd_fcrport_size = sizeof(struct efct_rport_data),
-> +	.dd_fcvport_size = 128, /* should be sizeof(...) */
-> +
-> +	/* remote port fixed attributes */
-> +	.show_rport_maxframe_size = 1,
-> +	.show_rport_supported_classes = 1,
-> +	.show_rport_dev_loss_tmo = 1,
-> +
-> +	/* target dynamic attributes */
-> +	.show_starget_node_name = 1,
-> +	.show_starget_port_name = 1,
-> +	.show_starget_port_id = 1,
-> +
-> +	/* host fixed attributes */
-> +	.show_host_node_name = 1,
-> +	.show_host_port_name = 1,
-> +	.show_host_supported_classes = 1,
-> +	.show_host_supported_fc4s = 1,
-> +	.show_host_supported_speeds = 1,
-> +	.show_host_maxframe_size = 1,
-> +
-> +	/* host dynamic attributes */
-> +	.show_host_port_id = 1,
-> +	.show_host_port_type = 1,
-> +	.show_host_port_state = 1,
-> +	/* active_fc4s is shown but doesn't change (thus no get function) */
-> +	.show_host_active_fc4s = 1,
-> +	.show_host_speed = 1,
-> +	.show_host_fabric_name = 1,
-> +	.show_host_symbolic_name = 1,
-> +	.vport_create = efct_vport_create,
-> +	.vport_delete = efct_vport_delete,
-> +};
-> +
-> +static struct fc_function_template efct_vport_functions = {
-> +	.get_starget_node_name = efct_get_starget_node_name,
-> +	.get_starget_port_name = efct_get_starget_port_name,
-> +	.get_starget_port_id  = efct_get_starget_port_id,
-> +
-> +	.get_host_port_id = efct_get_host_port_id,
-> +	.get_host_port_type = efct_get_host_vport_type,
-> +	.get_host_port_state = efct_get_host_port_state,
-> +	.get_host_speed = efct_get_host_speed,
-> +	.get_host_fabric_name = efct_get_host_fabric_name,
-> +
-> +	.get_fc_host_stats = efct_get_stats,
-> +	.reset_fc_host_stats = efct_reset_stats,
-> +
-> +	.issue_fc_host_lip = efct_issue_lip,
-> +	.set_vport_symbolic_name = efct_set_vport_symbolic_name,
-> +
-> +	/* allocation lengths for host-specific data */
-> +	.dd_fcrport_size = sizeof(struct efct_rport_data),
-> +	.dd_fcvport_size = 128, /* should be sizeof(...) */
-> +
-> +	/* remote port fixed attributes */
-> +	.show_rport_maxframe_size = 1,
-> +	.show_rport_supported_classes = 1,
-> +	.show_rport_dev_loss_tmo = 1,
-> +
-> +	/* target dynamic attributes */
-> +	.show_starget_node_name = 1,
-> +	.show_starget_port_name = 1,
-> +	.show_starget_port_id = 1,
-> +
-> +	/* host fixed attributes */
-> +	.show_host_node_name = 1,
-> +	.show_host_port_name = 1,
-> +	.show_host_supported_classes = 1,
-> +	.show_host_supported_fc4s = 1,
-> +	.show_host_supported_speeds = 1,
-> +	.show_host_maxframe_size = 1,
-> +
-> +	/* host dynamic attributes */
-> +	.show_host_port_id = 1,
-> +	.show_host_port_type = 1,
-> +	.show_host_port_state = 1,
-> +	/* active_fc4s is shown but doesn't change (thus no get function) */
-> +	.show_host_active_fc4s = 1,
-> +	.show_host_speed = 1,
-> +	.show_host_fabric_name = 1,
-> +	.show_host_symbolic_name = 1,
-> +};
-> 
-This is pretty much a stub ... why do you need it at all?
+By doing scan as asynchronous way, scsi device scannning can be out of
+order execution. It is no problem if there is a ufs host but the scsi
+device name of each host can be changed according to the scan sequences.
 
-Cheers,
+Ideal Case) host0 scan first
+host0 will be started from /dev/sda
+ -> /dev/sdb (BootLUN0 of host0)
+ -> /dev/sdc (BootLUN1 of host1)
+host1 will be started from /dev/sdd
 
-Hannes
+This might be an ideal case and we can easily find the host device by
+this mappinng.
+
+However, Abnormal Case) host1 scan first,
+host1 will be started from /dev/sda and host0 will be followed later.
+
+To make sure the scan sequences according to the host, we can use a
+bitmap which hosts are scanned and wait until previous hosts are
+finished to scan.
+
+Signed-off-by: Chanho Park <chanho61.park@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index b8f573a02713..1ced5996e988 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -13,6 +13,7 @@
+ #include <linux/devfreq.h>
+ #include <linux/nls.h>
+ #include <linux/of.h>
++#include <linux/bitmap.h>
+ #include <linux/bitfield.h>
+ #include <linux/blk-pm.h>
+ #include <linux/blkdev.h>
+@@ -214,6 +215,10 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 	END_FIX
+ };
+ 
++/* Ordered scan host */
++static unsigned long scanned_hosts = 0;
++static wait_queue_head_t scan_wq = __WAIT_QUEUE_HEAD_INITIALIZER(scan_wq);
++
+ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba);
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie);
+ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+@@ -7709,8 +7714,13 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	if (ret)
+ 		goto out;
+ 
+-	/* Probe and add UFS logical units  */
++	/* Probe and add UFS logical units. Sequential scan by host_no */
++	wait_event(scan_wq,
++		   find_first_zero_bit(&scanned_hosts, hba->host->max_id) ==
++		   hba->host->host_no);
+ 	ret = ufshcd_add_lus(hba);
++	set_bit(hba->host->host_no, &scanned_hosts);
++	wake_up(&scan_wq);
+ out:
+ 	/*
+ 	 * If we failed to initialize the device or the device is not
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.28.0
+
