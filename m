@@ -7,101 +7,105 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 299F7C388F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 165D6C5517A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C26C72076A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B11662076A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hU6518vl"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fDlTTC/L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438479AbgJTU1e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2438480AbgJTU1e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 20 Oct 2020 16:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39256 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438474AbgJTU1c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:32 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB200C0613CE
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:32 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id o7so42505pgv.6
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:32 -0700 (PDT)
+        with ESMTP id S2438446AbgJTU1d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:33 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1F17C0613CE
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:33 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id x13so38797pgp.7
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=GRWsV8c7/ylozzxjieOFe3NBOPCGJE0vk589ySlb8m4=;
-        b=hU6518vl65TnBdIbWHUn4iMDRQ1AzZCxB6HTcv4XLCPtNB5qWUrWS771mRVRZ6GJF8
-         azThd6lOTYMaBKMKeG7k2pkwZ+5qWXru/S3j1bP/nX03S44ds7Itzlbs7FOGpac4R1zv
-         ydbCVmvKnVVhglPOdXhekyd/O0iNYhvoCakdY=
+        bh=0j5rAldRtDcocelCkl1deW9MvQbPRMKTfZ8JyP4My7U=;
+        b=fDlTTC/LlSDNhA6uafqjZJ55VSkkZ9+aA5hYQMs+YyIbHQNeAk348T46nisK7d+Yhv
+         jL4zQHMFstqRHIvgK5Q3xsVJNXEcG5P5hlJK3VmfNPoqPL2CVouZ4ybKKC/9cHfBr42m
+         fi3Zv5wC9P7QoOh8ybyTp+PPG/DaIthUnZ3V0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=GRWsV8c7/ylozzxjieOFe3NBOPCGJE0vk589ySlb8m4=;
-        b=pNX21dM1m5RhI6q/DErcm6hfk9obyRr2yjJHRQSWQFo3anKP6BhDYccrbdOh8oe2Hx
-         C2Cm5jWdYrZR7iq6K1MW5TvuwukDoU8bUz9HxAXCotQ1bkvJF6PhqmCynE9F1hsYg9Ki
-         gdvQGNuU0pqkKP6HeNXalsip3bxIPzthevptWE8Gmyy/OtIPV2ee9lOlfyantbWXa2ZR
-         jn6vT0nleYRCS/IPOljm2Ajt/rb7BTfGRSLLwAnMH3lYWjP4WGb9hOjG+4bRB3qHMkfS
-         PsRX7A/O/xT3LUsbUs8zUH//alfdPk5kkHaQkXUgE/r5HKW2nDvJSxHf4kWS3ttpq8Gp
-         BS5Q==
-X-Gm-Message-State: AOAM531Rz7X9W71oyNuOpA8Djs2T9jnfiGixl5E3+h2lyGNgPcfmZ+t3
-        6pBVeE5vgUfVF4ROVi1Yrzjv41rmC+J6bcklDk0I9pwrJrQ7bWk3m296rCxO+lMOSXNJS29fD0s
-        C5PR7ySCTcHZS2MEjVOq7xT1ztXC1CADZUH1YjGmMrW7ahqXheJK56FKIZidORdt17z/C+0gKWC
-        H/mWM=
-X-Google-Smtp-Source: ABdhPJxVucYvzZC55j3AEcUJJ+M/Gke2sdQQeG1ZQfcKX0SNvI7aTpJ/5zKC1p7YNDymlMAGO2xqzw==
-X-Received: by 2002:a62:7d15:0:b029:155:29ed:db4c with SMTP id y21-20020a627d150000b029015529eddb4cmr1595188pfc.77.1603225651463;
-        Tue, 20 Oct 2020 13:27:31 -0700 (PDT)
+        bh=0j5rAldRtDcocelCkl1deW9MvQbPRMKTfZ8JyP4My7U=;
+        b=j1VHf6RG94N3aOXLle65VZ/5gmFisvxe6f5LqOwBNyyWGWrGr3BNGoTf2muVblVnAy
+         PEA/RGMhSfFnu3H5amgZbl4cdOG/L1iQidHg3npksBOhNq40MbytMFhBBWYPbbneSC5d
+         XLG/oAdb0F9t+L3Oq6B5pFBAw65e83VQQw4VKrREVRxehoBjqyr3bKWAAdc0XdrZTEys
+         vxXVr/jS7ZcETL7siAahJQw6AbaSK+V1nJvifdvzVEq2sPu+vKH/2hqTjLS3hefIV4Ki
+         LZyD0q5Vzx3SgU9TOvcU5xxzKG6htcm3B/xhEiSTfoi4+EG+3u6FXFmqD9udl9xz1nsV
+         Nx5g==
+X-Gm-Message-State: AOAM532eu53atMlslaSgBFotqPUGwCATVVObIFZ/Liqi/+/gkpZe4/1b
+        p0aVwv3DTyunpPwtCxkz35NWitoRtIcMNuD3vAExRrs6S6hlN1OgAqGHXNzJINi62wyPBzpSs3W
+        SAx7tPyT2fd9TUq0OYkik0/kwJjyM197pUiR+FXMIh2d10yzbXmHGB9xWpmheI50weTguuuRmi4
+        n58fc=
+X-Google-Smtp-Source: ABdhPJwGi8kZ+YSSF+Dl2I8ALTufpcwJzRYKYFbQqiT5Abr66T0WKZFXvomHMxqb9Mat2hmyDUD7yQ==
+X-Received: by 2002:a62:5542:0:b029:156:222c:a630 with SMTP id j63-20020a6255420000b0290156222ca630mr4203167pfb.50.1603225652653;
+        Tue, 20 Oct 2020 13:27:32 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.30
+        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2020 13:27:30 -0700 (PDT)
+        Tue, 20 Oct 2020 13:27:31 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>
-Subject: [PATCH 4/9] lpfc: Removed unused macros in lpfc_attr.c.
-Date:   Tue, 20 Oct 2020 13:27:14 -0700
-Message-Id: <20201020202719.54726-5-james.smart@broadcom.com>
+Subject: [PATCH 5/9] lpfc: Fix duplicate wq_create_version check
+Date:   Tue, 20 Oct 2020 13:27:15 -0700
+Message-Id: <20201020202719.54726-6-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201020202719.54726-1-james.smart@broadcom.com>
 References: <20201020202719.54726-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000007dc52605b2200f65"
+        boundary="0000000000008dadfb05b2200fa4"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000007dc52605b2200f65
+--0000000000008dadfb05b2200fa4
 Content-Transfer-Encoding: 8bit
 
-Removed unused MRQ-related defines that are not referenced.
+During code reviews duplicate code sections were found to determine the
+WQ Create version.   The duplication was potentially overriding logic
+that validated page size.
 
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index e94eac194676..2d810474875c 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -57,10 +57,6 @@
- #define LPFC_MIN_DEVLOSS_TMO	1
- #define LPFC_MAX_DEVLOSS_TMO	255
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 497b5ca34b14..d97a088fcd94 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -15896,12 +15896,6 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
+ 	else
+ 		wq_create_version = LPFC_Q_CREATE_VERSION_0;
  
--#define LPFC_DEF_MRQ_POST	512
--#define LPFC_MIN_MRQ_POST	512
--#define LPFC_MAX_MRQ_POST	2048
 -
- /*
-  * Write key size should be multiple of 4. If write key is changed
-  * make sure that library write key is also changed.
+-	if (phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT)
+-		wq_create_version = LPFC_Q_CREATE_VERSION_1;
+-	else
+-		wq_create_version = LPFC_Q_CREATE_VERSION_0;
+-
+ 	switch (wq_create_version) {
+ 	case LPFC_Q_CREATE_VERSION_1:
+ 		bf_set(lpfc_mbx_wq_create_wqe_count, &wq_create->u.request_1,
 -- 
 2.26.2
 
 
---0000000000007dc52605b2200f65
+--0000000000008dadfb05b2200fa4
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -171,14 +175,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgML5NuWJAwv//PBfZ
-6RHJREINRo3vpDYmnf0qB/HWoGQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDIwMjAyNzMyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgj1RI0KE2T/2T+bnG
+pWxoI7QHMRYJdzSi7ENZvEcD4dUwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDIwMjAyNzMzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJvMXxnH+giSDtUoWT/y2e5nUlFgM21IRLze
-dP8T6IHyoF0WZKy+13BcKd2RV96hpy/DaMu+Mrk1oX07rMxcFI0Xh+cxob1TJB6xxL707ea+grk2
-hBVfTOX45M7D3euxw1ByvMGNa/merLeXmEKtiXoE/VpLAUz01KxJ5DqKjRmdsgnuJCIF0DAy9J49
-Ea3ggxdB7KlRqp3i3PR0Ezb/6dzwU23qRG2CpjyvQED7Wb0VKh9da+yCERD3wOvXMFg5oTB+5CJN
-u6+gH11ZD3B9Dq+IuF3XXOtp7lJZ8QEB2mMQP8gnSyexKlsYnCNWnGgQUhrECwTe3XuR/Z+A+bq+
-BsY=
---0000000000007dc52605b2200f65--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAAL7djrW4TaiTqBwnNcwkx30wTT+16EXjJKk
+9mw0ej8YoLbb11NAPY6t1hzSgAR4kb7Js8FezTYTiTS+B1TaH4WtFGRxMqExtwAVez3Aybp3EwOM
+2d6tVSadEY8KkK0r6Rqazvh0M3NqG0a4EKhsweUmbX8EvitKhYB5pTUtZINSThu9ykLdh/hdu4lP
+yQgV6bi9zn+a0TOwWkEdfmERTJ33658sAlJkqxzuBIVm/VevR0kKxK+rz4tUbVFNURPAU32ylPF7
+svwae8BsQiWXG2/fFaQlJRtH7J/GO1Rrr3Y8OpmLw5USbUbNniWk7l+0ggfdi9EZy2ham63lxQ+R
+Qzs=
+--0000000000008dadfb05b2200fa4--
