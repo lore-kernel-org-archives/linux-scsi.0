@@ -2,92 +2,126 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C09C433E7
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC2EC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADBF8223BF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:33:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CE8C223BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 02:35:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="sjQWm0/H"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="eywAp/bz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390708AbgJTCdQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Oct 2020 22:33:16 -0400
-Received: from z5.mailgun.us ([104.130.96.5]:24729 "EHLO z5.mailgun.us"
+        id S1730497AbgJTCfz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Oct 2020 22:35:55 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:25190 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390706AbgJTCdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Oct 2020 22:33:16 -0400
+        id S1730404AbgJTCfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Oct 2020 22:35:55 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603161195; h=Message-ID: References: In-Reply-To: Subject:
- To: From: Date: Content-Transfer-Encoding: Content-Type: MIME-Version:
- Sender; bh=n4I5yOa4YBmI7PQMZH7cNL3gKJrkOtKtojuaGx87mVE=; b=sjQWm0/HAfGQItNxwvPVT2am1SLhrRFGLsAol97uoJuQNA2w1+pGSN9sSYVkFH2ZDmpbJPXt
- HyurTgikidlZpLFlV6cdO3fpQkQZyHfRBmlOKyepKIDM9THCDadKZxDT3NI1ljGiLVktJuql
- +oYruqfKguk83RxgeRGx4FbFD6s=
-X-Mailgun-Sending-Ip: 104.130.96.5
+ s=smtp; t=1603161354; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=7V0ug32c1j1PP+hx2W4Yh8PnNSTX3h6faSFkylQvda0=;
+ b=eywAp/bzcf6xLmnT8DVIciT6wPjO73Z780V5fzkAMxmESyxoaVyiAApDbXfPnICOZCDEjVIV
+ Z4zH7I7HFhUp1767zub88j2OF/e0/icqfpDQx+UKRaXr+Y4ic12uUFp6AKK0nxml2WkCFASR
+ OBdaFldpM4J5E9QgXgjBY4Rptyc=
+X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 5f8e4c6a57b88ccb56589c32 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 20 Oct 2020 02:33:14
+ smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
+ 5f8e4d0aaad2c3cd1c610816 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 20 Oct 2020 02:35:54
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id CBB41C433FF; Tue, 20 Oct 2020 02:33:14 +0000 (UTC)
+        id DAA79C43382; Tue, 20 Oct 2020 02:35:53 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B2AAAC43391;
-        Tue, 20 Oct 2020 02:33:13 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 31967C433FE;
+        Tue, 20 Oct 2020 02:35:53 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 20 Oct 2020 10:33:13 +0800
+Date:   Tue, 20 Oct 2020 10:35:53 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        cang@codeaurora.org
-Subject: Re: [PATCH v2 0/2] Fix some racing problems btw err_handler and paths
- like system PM ops and the task abort callback
-In-Reply-To: <1600757252-23048-1-git-send-email-cang@codeaurora.org>
-References: <1600757252-23048-1-git-send-email-cang@codeaurora.org>
-Message-ID: <e45273aa4cab164a9f8ec2c2dd1c208e@codeaurora.org>
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: Make sure clk scaling happens only when hba is
+ runtime ACTIVE
+In-Reply-To: <1600758548-28576-1-git-send-email-cang@codeaurora.org>
+References: <1600758548-28576-1-git-send-email-cang@codeaurora.org>
+Message-ID: <67c4ae5998765daa674a4df696d8d673@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bean,
+Hi Stanley,
 
-On 2020-09-22 14:47, Can Guo wrote:
-> This series mainly fixes racing problems btw err_handler and paths like
-> system PM ops, async scan and task abort callback.
+On 2020-09-22 15:09, Can Guo wrote:
+> If someone plays with the UFS clk scaling devfreq governor through 
+> sysfs,
+> ufshcd_devfreq_scale may be called even when hba is not runtime ACTIVE,
+> which can lead to unexpected error. We cannot just protect it by 
+> calling
+> pm_runtime_get_sync, because that may cause racing problem since hba
+> runtime suspend ops needs to suspend clk scaling. In order to fix it, 
+> call
+> pm_runtime_get_noresume and check hba's runtime status, then only 
+> proceed
+> if hba is runtime ACTIVE, otherwise just bail.
 > 
-> This series has been tested with error/fault injections to system PM
-> operations, async scan and task abort to the UFS device W-LU.
+> governor_store
+>  devfreq_performance_handler
+>   update_devfreq
+>    devfreq_set_target
+>     ufshcd_devfreq_target
+>      ufshcd_devfreq_scale
 > 
-> Change since v1:
-> - Removed Change-Id from commit msg
+> Signed-off-by: Can Guo <cang@codeaurora.org>
 > 
-> Can Guo (2):
->   scsi: ufs: Serialize eh_work with system PM events and async scan
->   scsi: ufs: Fix a racing problem between ufshcd_abort and eh_work
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e4cb994..847f355 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1294,8 +1294,15 @@ static int ufshcd_devfreq_target(struct device 
+> *dev,
+>  	}
+>  	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
 > 
->  drivers/scsi/ufs/ufshcd.c | 122 
-> ++++++++++++++++++++++++++++++++--------------
->  drivers/scsi/ufs/ufshcd.h |   3 ++
->  2 files changed, 89 insertions(+), 36 deletions(-)
+> +	pm_runtime_get_noresume(hba->dev);
+> +	if (!pm_runtime_active(hba->dev)) {
+> +		pm_runtime_put_noidle(hba->dev);
+> +		ret = -EAGAIN;
+> +		goto out;
+> +	}
+>  	start = ktime_get();
+>  	ret = ufshcd_devfreq_scale(hba, scale_up);
+> +	pm_runtime_put(hba->dev);
+> 
+>  	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
+>  		(scale_up ? "up" : "down"),
 
-How is your test of the 2 patches going? Could you please give your
-review since they've been here for a while.
+Could you please review this one since we may be the only two
+users of clk scaling?
 
 Thanks,
 
