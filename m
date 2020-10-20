@@ -7,105 +7,139 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 165D6C5517A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B9CC54FB2
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B11662076A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F82C2225D
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fDlTTC/L"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hhEsgYwx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438480AbgJTU1e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 16:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39260 "EHLO
+        id S2438482AbgJTU1f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 16:27:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438446AbgJTU1d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:33 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1F17C0613CE
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:33 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id x13so38797pgp.7
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:33 -0700 (PDT)
+        with ESMTP id S2438446AbgJTU1f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:35 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2279FC0613CE
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:35 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id t14so58320pgg.1
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=0j5rAldRtDcocelCkl1deW9MvQbPRMKTfZ8JyP4My7U=;
-        b=fDlTTC/LlSDNhA6uafqjZJ55VSkkZ9+aA5hYQMs+YyIbHQNeAk348T46nisK7d+Yhv
-         jL4zQHMFstqRHIvgK5Q3xsVJNXEcG5P5hlJK3VmfNPoqPL2CVouZ4ybKKC/9cHfBr42m
-         fi3Zv5wC9P7QoOh8ybyTp+PPG/DaIthUnZ3V0=
+        bh=SWAoL3y/nIYTS+7Oz19qc+RqAeJctl7s60ElHegbSEU=;
+        b=hhEsgYwxvbGJdQpVmhKSYzrtnc1D6rdneRroqSPUYCbrrIWVdTMxlbygt+PXyjLHIA
+         PXicr0wQdUHf6Vuze4wdJ+itcY7dyARNErYSIQ8HM+LVn0pbgjkJDZzEHpL4kV00VYp4
+         1phlAnw9rQDV5shejkFL3iMs7wQ0lx9hsnxQE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=0j5rAldRtDcocelCkl1deW9MvQbPRMKTfZ8JyP4My7U=;
-        b=j1VHf6RG94N3aOXLle65VZ/5gmFisvxe6f5LqOwBNyyWGWrGr3BNGoTf2muVblVnAy
-         PEA/RGMhSfFnu3H5amgZbl4cdOG/L1iQidHg3npksBOhNq40MbytMFhBBWYPbbneSC5d
-         XLG/oAdb0F9t+L3Oq6B5pFBAw65e83VQQw4VKrREVRxehoBjqyr3bKWAAdc0XdrZTEys
-         vxXVr/jS7ZcETL7siAahJQw6AbaSK+V1nJvifdvzVEq2sPu+vKH/2hqTjLS3hefIV4Ki
-         LZyD0q5Vzx3SgU9TOvcU5xxzKG6htcm3B/xhEiSTfoi4+EG+3u6FXFmqD9udl9xz1nsV
-         Nx5g==
-X-Gm-Message-State: AOAM532eu53atMlslaSgBFotqPUGwCATVVObIFZ/Liqi/+/gkpZe4/1b
-        p0aVwv3DTyunpPwtCxkz35NWitoRtIcMNuD3vAExRrs6S6hlN1OgAqGHXNzJINi62wyPBzpSs3W
-        SAx7tPyT2fd9TUq0OYkik0/kwJjyM197pUiR+FXMIh2d10yzbXmHGB9xWpmheI50weTguuuRmi4
-        n58fc=
-X-Google-Smtp-Source: ABdhPJwGi8kZ+YSSF+Dl2I8ALTufpcwJzRYKYFbQqiT5Abr66T0WKZFXvomHMxqb9Mat2hmyDUD7yQ==
-X-Received: by 2002:a62:5542:0:b029:156:222c:a630 with SMTP id j63-20020a6255420000b0290156222ca630mr4203167pfb.50.1603225652653;
-        Tue, 20 Oct 2020 13:27:32 -0700 (PDT)
+        bh=SWAoL3y/nIYTS+7Oz19qc+RqAeJctl7s60ElHegbSEU=;
+        b=cBpvJyi/t+Yyy6AupHYiEhsPJa045wuOZVYLZIxIhdk1bUvx/l1gh/fZWMFp3uYydz
+         RQFWTJtpFeIFcfKWOq9vvYmUbc2OPu6vbo6eUsvAjbS62xUfUD1vNwsefUahovvog6r5
+         WmYFhOFocTRKvfWA0j+iSVY2mX2D8lBeq6ZVbDEelw+Gs9nT1OepK2B1bLrlsIwy9zUP
+         NdHDq+YKW5HHQOVjqe9kW6A/xTT7zj7ZOb4pcQsEMJPuBYMbGMVrMIiqCJCrqVkD5j11
+         sqt82Zei/U92BVXR9rJ7dzVOdiFt4pf9PB9kCAuEIUCV0SWxsCo+lZbgbMIzC7rUnZS8
+         kM8A==
+X-Gm-Message-State: AOAM533vQ897eYJSDvxhf743I+41Ncws4y0dPg76a7ygmgi1GavPbJiK
+        3m7fl5B7tZngvJalDnREs4tWYydsl/+ikDctESGlpjELJMyC9TahHU9kylAJDQdgHrLfepRfi9O
+        IZY4qLxUO55sLbkwcvID0GNvMlT8vYrMlTTK+wQ5I/LzARdD6h1YIDC898JuN83AL2IwC35JD1b
+        yCOiQ=
+X-Google-Smtp-Source: ABdhPJx0ao9sUjnsvKgquPJBgvoSpWRveiHmk14KTffelk4WMclEtK6IOwU20wUwm5FZji5yanI7xA==
+X-Received: by 2002:a63:c55:: with SMTP id 21mr77618pgm.392.1603225654082;
+        Tue, 20 Oct 2020 13:27:34 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.31
+        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2020 13:27:31 -0700 (PDT)
+        Tue, 20 Oct 2020 13:27:33 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>
-Subject: [PATCH 5/9] lpfc: Fix duplicate wq_create_version check
-Date:   Tue, 20 Oct 2020 13:27:15 -0700
-Message-Id: <20201020202719.54726-6-james.smart@broadcom.com>
+Subject: [PATCH 6/9] lpfc: Enlarge max_sectors in scsi templates
+Date:   Tue, 20 Oct 2020 13:27:16 -0700
+Message-Id: <20201020202719.54726-7-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201020202719.54726-1-james.smart@broadcom.com>
 References: <20201020202719.54726-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008dadfb05b2200fa4"
+        boundary="000000000000a32dc205b2200f6f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008dadfb05b2200fa4
+--000000000000a32dc205b2200f6f
 Content-Transfer-Encoding: 8bit
 
-During code reviews duplicate code sections were found to determine the
-WQ Create version.   The duplication was potentially overriding logic
-that validated page size.
+The driver supports arbitrarily large sgl lists and the current value for
+max_sectors is limiting.
+
+Change the max_sectors value to the largest value.  This was actually done
+prior but it only corrected one template and that template was later
+removed.
+
+So change the remaining 2 templates. Other areas which hard-set the
+sectors value should be inheriting what is in the template.
 
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 5 +----
+ drivers/scsi/lpfc/lpfc_scsi.c | 4 ++--
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 497b5ca34b14..d97a088fcd94 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -15896,12 +15896,6 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
- 	else
- 		wq_create_version = LPFC_Q_CREATE_VERSION_0;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 40fe889033d4..d2c172348065 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4343,16 +4343,13 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 			/* Seed physical port template */
+ 			memcpy(template, &lpfc_template, sizeof(*template));
  
--
--	if (phba->sli4_hba.pc_sli4_params.wqsize & LPFC_WQ_SZ128_SUPPORT)
--		wq_create_version = LPFC_Q_CREATE_VERSION_1;
--	else
--		wq_create_version = LPFC_Q_CREATE_VERSION_0;
--
- 	switch (wq_create_version) {
- 	case LPFC_Q_CREATE_VERSION_1:
- 		bf_set(lpfc_mbx_wq_create_wqe_count, &wq_create->u.request_1,
+-			if (use_no_reset_hba) {
++			if (use_no_reset_hba)
+ 				/* template is for a no reset SCSI Host */
+-				template->max_sectors = 0xffff;
+ 				template->eh_host_reset_handler = NULL;
+-			}
+ 
+ 			/* Template for all vports this physical port creates */
+ 			memcpy(&phba->vport_template, &lpfc_template,
+ 			       sizeof(*template));
+-			phba->vport_template.max_sectors = 0xffff;
+ 			phba->vport_template.shost_attrs = lpfc_vport_attrs;
+ 			phba->vport_template.eh_bus_reset_handler = NULL;
+ 			phba->vport_template.eh_host_reset_handler = NULL;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 5e802c8b22a9..87f481b14d83 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -6029,7 +6029,7 @@ struct scsi_host_template lpfc_template_nvme = {
+ 	.sg_tablesize		= 1,
+ 	.cmd_per_lun		= 1,
+ 	.shost_attrs		= lpfc_hba_attrs,
+-	.max_sectors		= 0xFFFF,
++	.max_sectors		= 0xFFFFFFFF,
+ 	.vendor_id		= LPFC_NL_VENDOR_ID,
+ 	.track_queue_depth	= 0,
+ };
+@@ -6054,7 +6054,7 @@ struct scsi_host_template lpfc_template = {
+ 	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
+ 	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+ 	.shost_attrs		= lpfc_hba_attrs,
+-	.max_sectors		= 0xFFFF,
++	.max_sectors		= 0xFFFFFFFF,
+ 	.vendor_id		= LPFC_NL_VENDOR_ID,
+ 	.change_queue_depth	= scsi_change_queue_depth,
+ 	.track_queue_depth	= 1,
 -- 
 2.26.2
 
 
---0000000000008dadfb05b2200fa4
+--000000000000a32dc205b2200f6f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -175,14 +209,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgj1RI0KE2T/2T+bnG
-pWxoI7QHMRYJdzSi7ENZvEcD4dUwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDIwMjAyNzMzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgtat7Uk+xfWZR5ryP
+Dbbgs7CV/gdeIVskIaYbGrvLCVQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDIwMjAyNzM0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAAL7djrW4TaiTqBwnNcwkx30wTT+16EXjJKk
-9mw0ej8YoLbb11NAPY6t1hzSgAR4kb7Js8FezTYTiTS+B1TaH4WtFGRxMqExtwAVez3Aybp3EwOM
-2d6tVSadEY8KkK0r6Rqazvh0M3NqG0a4EKhsweUmbX8EvitKhYB5pTUtZINSThu9ykLdh/hdu4lP
-yQgV6bi9zn+a0TOwWkEdfmERTJ33658sAlJkqxzuBIVm/VevR0kKxK+rz4tUbVFNURPAU32ylPF7
-svwae8BsQiWXG2/fFaQlJRtH7J/GO1Rrr3Y8OpmLw5USbUbNniWk7l+0ggfdi9EZy2ham63lxQ+R
-Qzs=
---0000000000008dadfb05b2200fa4--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJMiyRBcfbOXDOLSdZQhrmBE83woGdq7FKvb
+q8BJe8p5OVbicZ5s2FBXtLFPXtfGLgIE9U1JSg2EdysJr6mnMXzo8IdotKjaqYJ4xK+iNo4jo3OF
++Xh/oIEiQbu2fMeW5j6kjvQGHf+3oGGfRD8rf7itwmyALSe8zWKO/yVg5fyEq5i9dbl/SoTWqbMV
+uzRWydLvgH4pAX/wGFSJqiujDCqbViezChht6WXWS76iCuEL0aQVKs6jn1Ii1QV6Ziy0TTtTQ9+O
+8Y9S1tKQKDX4vg9X8oVt5+7gUfG4BTOiVYeYiiD6hYXroIXZOGcsBleYFRQBrNTxX0l6pMqkPAm7
+5BI=
+--000000000000a32dc205b2200f6f--
