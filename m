@@ -7,34 +7,35 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4422DC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 06:54:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7372EC433E7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 06:56:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7D71223BF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 06:54:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B296223BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 06:56:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404632AbgJTGyb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 02:54:31 -0400
-Received: from mx2.suse.de ([195.135.220.15]:39234 "EHLO mx2.suse.de"
+        id S1730487AbgJTGz7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 02:55:59 -0400
+Received: from mx2.suse.de ([195.135.220.15]:39792 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404630AbgJTGya (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Oct 2020 02:54:30 -0400
+        id S1728843AbgJTGz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Oct 2020 02:55:59 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id BCDDEACB8;
-        Tue, 20 Oct 2020 06:54:29 +0000 (UTC)
-Subject: Re: [PATCH v4 22/31] elx: efct: Hardware queues processing
+        by mx2.suse.de (Postfix) with ESMTP id 96827ACB8;
+        Tue, 20 Oct 2020 06:55:58 +0000 (UTC)
+Subject: Re: [PATCH v4 23/31] elx: efct: Unsolicited FC frame processing
+ routines
 To:     James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 Cc:     Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20201012225147.54404-1-james.smart@broadcom.com>
- <20201012225147.54404-23-james.smart@broadcom.com>
+ <20201012225147.54404-24-james.smart@broadcom.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <72cb280f-6383-3ecf-35ec-f5834234dbfe@suse.de>
-Date:   Tue, 20 Oct 2020 08:54:29 +0200
+Message-ID: <002651b7-6297-e31e-12c9-67776ec30421@suse.de>
+Date:   Tue, 20 Oct 2020 08:55:57 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <20201012225147.54404-23-james.smart@broadcom.com>
+In-Reply-To: <20201012225147.54404-24-james.smart@broadcom.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -46,8 +47,7 @@ On 10/13/20 12:51 AM, James Smart wrote:
 > This patch continues the efct driver population.
 > 
 > This patch adds driver definitions for:
-> Routines for EQ, CQ, WQ and RQ processing.
-> Routines for IO object pool allocation and deallocation.
+> Routines to handle unsolicited FC frames.
 > 
 > Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
@@ -55,17 +55,17 @@ On 10/13/20 12:51 AM, James Smart wrote:
 > 
 > ---
 > v4:
->    Remove els entries from scsi io object, as discovery IO object handles
->       all els.
->    scsi io takes efct_node object refernce and releases when IO is done.
+>    Changed unsol frame handling.
+>    Lookup for efct target node based on d_id and s_id. Take ref count and
+>       release when cmd handling is done.
+>    Now IO path doesn't lookup for discovery objects. So no impact on IO
+>       path because of EFC lock.
 > ---
->   drivers/scsi/elx/efct/efct_hw.c | 366 ++++++++++++++++++++++++++++++++
->   drivers/scsi/elx/efct/efct_hw.h |  38 ++++
->   drivers/scsi/elx/efct/efct_io.c | 191 +++++++++++++++++
->   drivers/scsi/elx/efct/efct_io.h | 166 +++++++++++++++
->   4 files changed, 761 insertions(+)
->   create mode 100644 drivers/scsi/elx/efct/efct_io.c
->   create mode 100644 drivers/scsi/elx/efct/efct_io.h
+>   drivers/scsi/elx/efct/efct_unsol.c | 495 +++++++++++++++++++++++++++++
+>   drivers/scsi/elx/efct/efct_unsol.h |  17 +
+>   2 files changed, 512 insertions(+)
+>   create mode 100644 drivers/scsi/elx/efct/efct_unsol.c
+>   create mode 100644 drivers/scsi/elx/efct/efct_unsol.h
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
