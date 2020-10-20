@@ -2,181 +2,158 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DC2C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 08:44:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5FFFC433E7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 08:49:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20C832237B
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 08:44:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E28E22282
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 08:49:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Rx9IunAt"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q8gn83IP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389322AbgJTIoh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 04:44:37 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:45681 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389155AbgJTIog (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 04:44:36 -0400
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20201020084433epoutp04fd4262eaead847b5cfcb46548e193f3f~-puAUSMIH2227622276epoutp04N
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 08:44:33 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20201020084433epoutp04fd4262eaead847b5cfcb46548e193f3f~-puAUSMIH2227622276epoutp04N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1603183473;
-        bh=lz40hHps79hqNfcnD+cI3oHpIVLgeD6CDqiBeBo/A8M=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=Rx9IunAtzDT5HkmNrd/VFhVR2TmUebfgTkm9CWSCahfAyVwMIKK4qU7muocS/YtcL
-         TfzHkSYzFDAmMeDIarR8ia1YN7j9duMXHfWMV4pf88L7nnKccKH0vxAk2tI45iMDSZ
-         WPgYuiDYYuhD2js0nkA+x834dvRnJwUVqDzlx1XU=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20201020084433epcas2p4cbaa3d6b62ac518b6dc2907314aeeacf~-pt-8mS9-2009820098epcas2p4c;
-        Tue, 20 Oct 2020 08:44:33 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.40.191]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4CFnHM1KdnzMqYks; Tue, 20 Oct
-        2020 08:44:31 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B3.C4.09908.E63AE8F5; Tue, 20 Oct 2020 17:44:30 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20201020084429epcas2p3685bcb89c3ab1cacefb183384dcb2b6e~-pt8N9Klx1163711637epcas2p3V;
-        Tue, 20 Oct 2020 08:44:29 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20201020084429epsmtrp26e7e060944491e80b04cf5bed8c37873~-pt8NQfXL3034530345epsmtrp22;
-        Tue, 20 Oct 2020 08:44:29 +0000 (GMT)
-X-AuditID: b6c32a48-139ff700000026b4-60-5f8ea36e030a
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        A8.8B.08604.D63AE8F5; Tue, 20 Oct 2020 17:44:29 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.229.9.51]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20201020084429epsmtip163ac5d1c869d0dcc3ece584d2081c6aa~-pt8CZHLb0582605826epsmtip1V;
-        Tue, 20 Oct 2020 08:44:29 +0000 (GMT)
-From:   Chanho Park <chanho61.park@samsung.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Chanho Park <chanho61.park@samsung.com>
-Subject: [PATCH] scsi: ufs: make sure scan sequence for multiple hosts
-Date:   Tue, 20 Oct 2020 17:44:22 +0900
-Message-Id: <20201020084422.109585-1-chanho61.park@samsung.com>
-X-Mailer: git-send-email 2.28.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLKsWRmVeSWpSXmKPExsWy7bCmhW7e4r54g113NS0ezNvGZvHy51U2
-        i8v7tS0W3djGZHF51xw2i+7rO9gslh//x+TA7jFh0QFGj49Pb7F49G1ZxejxeZOcR/uBbqYA
-        1qgcm4zUxJTUIoXUvOT8lMy8dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zBygK5QU
-        yhJzSoFCAYnFxUr6djZF+aUlqQoZ+cUltkqpBSk5BYaGBXrFibnFpXnpesn5uVaGBgZGpkCV
-        CTkZH958YS+4LFgx8esdxgbGvXxdjJwcEgImEm//fGPvYuTiEBLYwSix/tIfJgjnE6PEp389
-        TCBVQgLfGCUm3NCC6Tj37gcLRNFeRomXk5ZCOR8ZJX5P2scOUsUmoCux5fkrxi5GDg4RASOJ
-        a6s8QWqYBaYzShxc+ZENpEZYwE1i5/5zrCA1LAKqEhO6lUHCvAL2EqvP72SBWCYv8bR3OTNE
-        XFDi5MwnYHFmoHjz1tnMEDWn2CV+LAqFsF0kvkyBOEFCQFji1fEtULaUxOd3e9kg7HqJFY+a
-        mEHukRDoAXpg2j+oQfYSM58uZQK5h1lAU2L9Ln0QU0JAWeLILai1fBIdh/+yQ4R5JTrahCAa
-        1SUObJ8OdbGsRPecz6wQtofE3XfHWSFBGCvx4Px81gmM8rOQPDMLyTOzEPYuYGRexSiWWlCc
-        m55abFRgghylmxjB6VDLYwfj7Lcf9A4xMnEwHmKU4GBWEuGdwNoXL8SbklhZlVqUH19UmpNa
-        fIjRFBi6E5mlRJPzgQk5ryTe0NTIzMzA0tTC1MzIQkmcV0WvI15IID2xJDU7NbUgtQimj4mD
-        U6qBKXl+Z+cn1aytrMtsXPXeKxj/+fbjXfN5qSm3popYdfNesN/3Kr5XOWaJfNo/fdckdgHP
-        g+8nynxIt1aN/fWU2e1jjMYZ8//f52abzV9/7hM/R8L16t8bur3YM2v+J/9ayfQw7sbtZBl9
-        7nsf7vbxm65dyTj9YMtrK3ethScvrTXbvFHos3zizQ9d2udEJQuDJTd8vRXtcvTbw5bD9Xo1
-        qWuefGJgeXN62lERvxP212Km3zp1vPvfvHt7PlnUFe16l6Lp0cW88FDXSrcHRYdVHgprpV1L
-        yNaeskZSyIaj6o1wyf2c/wcfLXx2d/f9FbWxQuE5WbPrBCrM1NZsUfGwZS9VXByy3vzbNZnY
-        9rbtwUosxRmJhlrMRcWJABtuQNkQBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHLMWRmVeSWpSXmKPExsWy7bCSnG7u4r54gyeNvBYP5m1js3j58yqb
-        xeX92haLbmxjsri8aw6bRff1HWwWy4//Y3Jg95iw6ACjx8ent1g8+rasYvT4vEnOo/1AN1MA
-        axSXTUpqTmZZapG+XQJXxoc3X9gLLgtWTPx6h7GBcS9fFyMnh4SAicS5dz9Yuhi5OIQEdjNK
-        HHlzmR0iISvx7N0OKFtY4n7LEVaIoveMEq/W3QRLsAnoSmx5/ooRxBYBmjTj1juwImaB2YwS
-        e44vBksIC7hJ7Nx/DijBwcEioCoxoVsZJMwrYC+x+vxOFogF8hJPe5czQ8QFJU7OfAIWZwaK
-        N2+dzTyBkW8WktQsJKkFjEyrGCVTC4pz03OLDQsM81LL9YoTc4tL89L1kvNzNzGCg1RLcwfj
-        9lUf9A4xMnEwHmKU4GBWEuGdwNoXL8SbklhZlVqUH19UmpNafIhRmoNFSZz3RuHCOCGB9MSS
-        1OzU1ILUIpgsEwenVANT0z99o2VK6rtSl+Uff66o9OvW8+Rp2c4XSpy4jZ0ZfvP6WV5Q+SMn
-        sXhbCsPMIx+fn6oyU/njLnY7r1Yras2XdN6sqzJ9+Vd7Z9R+3fgq12156RXOWE0BzxL+0N5V
-        E/XFWI+f/TkpJvnDYUWx49Fm0+YysuvaBP2sjdn7y+rni7cH+gS/8DzNYX0Ry+/xVTQx5e+U
-        mCtvWrim1F8QU0qenR1XITxfrGOxXpHj+poTfE/f8oRKztl7YV25yhIZ1g0RV7/VFUrMder3
-        y+d2uvqn6OqR+IvzGZk/Xss1n6L31+XyOh3nzekZ8VbHAp8df2vhmMIivYgtIujVJu5LjS9l
-        eBhmTNx/rE/4kt6dzBlKLMUZiYZazEXFiQDaXxrZwQIAAA==
-X-CMS-MailID: 20201020084429epcas2p3685bcb89c3ab1cacefb183384dcb2b6e
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20201020084429epcas2p3685bcb89c3ab1cacefb183384dcb2b6e
-References: <CGME20201020084429epcas2p3685bcb89c3ab1cacefb183384dcb2b6e@epcas2p3.samsung.com>
+        id S2392136AbgJTItI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 04:49:08 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41530 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389490AbgJTItF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 04:49:05 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09K8i7rI188082;
+        Tue, 20 Oct 2020 08:48:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : message-id :
+ content-type : mime-version : subject : date : in-reply-to : cc : to :
+ references; s=corp-2020-01-29;
+ bh=UBSvDuZX45rcdCwz1yIzvCzCqfd2joSCizhea4x+Xao=;
+ b=q8gn83IPPWdFm1HT3taLhd9DUF/VTUU+yXtsd8f9nD6wriupB19ul4FsqzWGdtIZMcde
+ GW+G9oeRVHaGmJfZ8muagtVwvuWLE6AywXuhak+OXkSgdFP6EIR2H2OqKDUhR7yIW2Vz
+ zpamQMFlTWRfwdWHBA7I0p8HYGgPlEg7NOi5pNpKeOCI5/Zqu82RI3DyvlSb3YeNhNvu
+ 1nAbi2LxPOnr/RtC4QoVHdNGHfdCdQB+x9xvmqx+BqjtbEr8lrxt1aMjIali/bjhTn7W
+ dzqjxrXdOv4FjsFo2kwRKNjQX5RScYby9/qqSUitUFXIKeMy4YBvXYVTZYkhax1TMfnU 0w== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 347s8msmp0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 20 Oct 2020 08:48:12 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09K8is45150623;
+        Tue, 20 Oct 2020 08:48:12 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3030.oracle.com with ESMTP id 348ahw07cp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 20 Oct 2020 08:48:12 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 09K8mAEe159753;
+        Tue, 20 Oct 2020 08:48:10 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 348ahw07bh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Oct 2020 08:48:10 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09K8lvTX021447;
+        Tue, 20 Oct 2020 08:47:58 GMT
+Received: from [10.175.164.120] (/10.175.164.120)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 20 Oct 2020 01:47:57 -0700
+From:   John Haxby <john.haxby@oracle.com>
+Message-Id: <27A23102-A7F5-48C5-8972-48CE4C283C6E@oracle.com>
+Content-Type: multipart/signed;
+        boundary="Apple-Mail=_9F9749E9-79EA-41AB-B516-003ECE07BEE3";
+        protocol="application/pgp-signature";
+        micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
+Subject: Re: [Ocfs2-devel] [RFC] treewide: cleanup unreachable breaks
+Date:   Tue, 20 Oct 2020 09:47:45 +0100
+In-Reply-To: <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+Cc:     Tom Rix <trix@redhat.com>, alsa-devel@alsa-project.org,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        linux-iio@vger.kernel.org, nouveau@lists.freedesktop.org,
+        storagedev@microchip.com,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        virtualization@lists.linux-foundation.org,
+        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
+        ath10k@lists.infradead.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-stm32@st-md-mailman.stormreply.com,
+        usb-storage@lists.one-eyed-alien.net,
+        linux-watchdog@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        linux-acpi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-pci@vger.kernel.org, spice-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-nfc@lists.01.org, linux-pm@vger.kernel.org,
+        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-gpio@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-amlogic@lists.infradead.org,
+        openipmi-developer@lists.sourceforge.net,
+        platform-driver-x86@vger.kernel.org,
+        linux-integrity@vger.kernel.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-edac@vger.kernel.org, George Burgess <gbiv@google.com>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-usb@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-security-module@vger.kernel.org,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>, patches@opensource.cirrus.com,
+        bpf <bpf@vger.kernel.org>, ocfs2-devel@oss.oracle.com,
+        linux-power@fi.rohmeurope.com
+To:     Nick Desaulniers <ndesaulniers@google.com>
+References: <20201017160928.12698-1-trix@redhat.com>
+ <20201018054332.GB593954@kroah.com>
+ <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.4)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9779 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0
+ lowpriorityscore=0 mlxlogscore=999 priorityscore=1501 spamscore=0
+ phishscore=0 clxscore=1011 bulkscore=0 impostorscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010200059
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-By doing scan as asynchronous way, scsi device scannning can be out of
-order execution. It is no problem if there is a ufs host but the scsi
-device name of each host can be changed according to the scan sequences.
 
-Ideal Case) host0 scan first
-host0 will be started from /dev/sda
- -> /dev/sdb (BootLUN0 of host0)
- -> /dev/sdc (BootLUN1 of host1)
-host1 will be started from /dev/sdd
+--Apple-Mail=_9F9749E9-79EA-41AB-B516-003ECE07BEE3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-This might be an ideal case and we can easily find the host device by
-this mappinng.
 
-However, Abnormal Case) host1 scan first,
-host1 will be started from /dev/sda and host0 will be followed later.
 
-To make sure the scan sequences according to the host, we can use a
-bitmap which hosts are scanned and wait until previous hosts are
-finished to scan.
+> On 19 Oct 2020, at 20:42, Nick Desaulniers <ndesaulniers@google.com> =
+wrote:
+>=20
+> We probably should add all 3 to W=3D2 builds (wrapped in cc-option).
+> I've filed https://github.com/ClangBuiltLinux/linux/issues/1180 to
+> follow up on.
 
-Signed-off-by: Chanho Park <chanho61.park@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+It looks as though the URL mangling has been fixed.   If anyone sees =
+that specific URL mangled, please let me know.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b8f573a02713..1ced5996e988 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -13,6 +13,7 @@
- #include <linux/devfreq.h>
- #include <linux/nls.h>
- #include <linux/of.h>
-+#include <linux/bitmap.h>
- #include <linux/bitfield.h>
- #include <linux/blk-pm.h>
- #include <linux/blkdev.h>
-@@ -214,6 +215,10 @@ static struct ufs_dev_fix ufs_fixups[] = {
- 	END_FIX
- };
- 
-+/* Ordered scan host */
-+static unsigned long scanned_hosts = 0;
-+static wait_queue_head_t scan_wq = __WAIT_QUEUE_HEAD_INITIALIZER(scan_wq);
-+
- static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
- static int ufshcd_reset_and_restore(struct ufs_hba *hba);
-@@ -7709,8 +7714,13 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 	if (ret)
- 		goto out;
- 
--	/* Probe and add UFS logical units  */
-+	/* Probe and add UFS logical units. Sequential scan by host_no */
-+	wait_event(scan_wq,
-+		   find_first_zero_bit(&scanned_hosts, hba->host->max_id) ==
-+		   hba->host->host_no);
- 	ret = ufshcd_add_lus(hba);
-+	set_bit(hba->host->host_no, &scanned_hosts);
-+	wake_up(&scan_wq);
- out:
- 	/*
- 	 * If we failed to initialize the device or the device is not
--- 
-2.28.0
+jch
 
+--Apple-Mail=_9F9749E9-79EA-41AB-B516-003ECE07BEE3
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iHUEAREIAB0WIQT+pxvb11CFWUkNSOVFC7t+lC+jyAUCX46kMQAKCRBFC7t+lC+j
+yBKiAP90JVXdPzuAwtRGkROpw1eVCo7wCaZ5nOa8Oo0sN6gC9gD/S0eGTqQhmg+n
+sXPJxPYqQsg09qmS6k/HX+AP5Oz2AMo=
+=xx66
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_9F9749E9-79EA-41AB-B516-003ECE07BEE3--
