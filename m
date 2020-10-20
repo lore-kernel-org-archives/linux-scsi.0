@@ -2,290 +2,180 @@ Return-Path: <SRS0=ehq5=D3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E0B5C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 13:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BA6C5517A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 13:56:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09A7522456
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 13:13:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DC4122250
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 13:56:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FaM+xBYB"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QUp+Tm/4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407136AbgJTNNk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Oct 2020 09:13:40 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34634 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407127AbgJTNNj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 09:13:39 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09KDAATG104070;
-        Tue, 20 Oct 2020 13:13:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : references : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=cZFLts+1Ll6F7S+3y7fWYX1pRWV2Lzy8Qgo9CazSTIE=;
- b=FaM+xBYBTR1Ti5Csyy1N4yIcQ49gCGV1oXSsmThdZpOdE8+5RMKvHkiLIa+9fd2zeCDL
- rj/zev23DFs6WfXKU09RI7azKZ8V2p6Pc03/1Zi59erZMJR7VsJfHpt49Xy/XIKmPW8K
- YmXWFoyDxyuJf8ksrNw7cfMLcfdH3n7HuCb/Nsm176ZNmmuSOjI7zRTPXk0EPtLlQ6AW
- iSAhdYhPvNo9iDMHvY3XYBzIUJr1B0xTWu8Lf/NOXZaTYB2/i/D8j5rEuT9ejaPbHB0z
- SDjbE+kje9+thYxwWzWHeexRJTtKzBpPZTcVlBRRE8ld1QHbwibnByvkHEOP5ZqPKBmr Rg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 347s8mtr0s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 20 Oct 2020 13:13:27 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09KDA1In126085;
-        Tue, 20 Oct 2020 13:13:26 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 348a6n4s9w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Oct 2020 13:13:26 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09KDDMEG009248;
-        Tue, 20 Oct 2020 13:13:24 GMT
-Received: from [10.76.62.203] (/10.76.62.203)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 20 Oct 2020 06:13:22 -0700
-Subject: Re: [PATCH] scsi: alua: fix the race between alua_bus_detach and
- alua_rtpg
-From:   jitendra.khasdev@oracle.com
-To:     Hannes Reinecke <hare@suse.de>,
-        "Ewan D. Milne" <emilne@redhat.com>, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, hare@suse.com, loberman@redhat.com
-Cc:     joe.jin@oracle.com, junxiao.bi@oracle.com,
-        gulam.mohamed@oracle.com, RITIKA.SRIVASTAVA@oracle.com,
-        linux-scsi@vger.kernel.org
-References: <1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com>
- <c5e0700bb192a422541d1328db7ca0146edf7a81.camel@redhat.com>
- <c58d1877-1d30-e81d-f10f-3571e3a248b9@oracle.com>
- <d21e4a7c-9668-23db-c470-596a8e1e3af6@suse.de>
- <a62fc767-6489-0093-d4ed-72e25f89782c@oracle.com>
- <6d4115ba-bd69-75d9-e209-a4ef4aaa9a68@suse.de>
- <f7e33ede-1436-90c4-7d8b-8c0b0da62a01@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <bcfeeb30-fd70-71e9-e81c-d389a0f5a2eb@oracle.com>
-Date:   Tue, 20 Oct 2020 18:43:16 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S2407738AbgJTN4G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Oct 2020 09:56:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35558 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2407722AbgJTN4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Oct 2020 09:56:05 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603202163;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=HyQ28xr5/lapv6azTtFCvHFT5XQ1+OzeHk+84iEm66Y=;
+        b=QUp+Tm/49C2D2ArfwdGiXcYEZLmxY3ITF9bXZyS+HEfcJJoqaGxmch+2EHiNHeADDWpHNz
+        Ouzap4oFcZixuWmorb4Ub+lRVmWRZDipZO+0tL8W1vnU06zVM/xfLz81/8VfcBPp80A1RW
+        EdBHqnK2mgm1gY9dzcmZeB2rW1Al8Fc=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-573-1_ZNXiz_NAW6GGspxz0gnQ-1; Tue, 20 Oct 2020 09:56:01 -0400
+X-MC-Unique: 1_ZNXiz_NAW6GGspxz0gnQ-1
+Received: by mail-qv1-f70.google.com with SMTP id l1so1423610qvr.5
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 06:56:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=HyQ28xr5/lapv6azTtFCvHFT5XQ1+OzeHk+84iEm66Y=;
+        b=Iklsu8jNVrLHAoSnSMVCFIB5RPlZe/ya0CSguQ7SMNUDBQkOwNi2Nc4SOd2LJ20rIP
+         YnJj3lPxyvKrU7nNy6STnFZtdFRTrRFJ8TVw5qhcgaSpRv1Vc7oshLdlz6ok+ku1283O
+         LBhYRtVm5OCgCL4ScoBImOmCj00HvfHPXTr0bVRcagfj/qcWT9FH824AZsNqHpMkytnz
+         8aoeyzhgwZqGnD3nc4y7g3zp8kQ9fCKMG1/sLymAXNiyWcnp2Qmeu0cHytpX2QJfOVzb
+         ws7H+wP1+I0tJnjJog5YaBZ3DGB9hkmPtQ4qCRyAg+Hc5/IaKb4+2NzDh+jhUBQpWCe2
+         J+YQ==
+X-Gm-Message-State: AOAM533t2u+62Lpq6EhztPv93cJ5+CxAwMESOuydIeXTxyJnMNg8xzH3
+        fag9cZmMZwaLLISjXERTdciIRcaODOqRf3Cr2GytLtG6VKi9mY/DjRhbOg6VMQI/pBhMNqnsZok
+        YCmY+NhyTDyb8gjPAKqHJRQ==
+X-Received: by 2002:a05:6214:174f:: with SMTP id dc15mr3370426qvb.25.1603202160687;
+        Tue, 20 Oct 2020 06:56:00 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyLUAfqrAOJzxwKF3+voCBF5yQYNbMOvfOkDZhumkJj3bEnT15V4x8vUJ5iQ5pWt9KusIZtsQ==
+X-Received: by 2002:a05:6214:174f:: with SMTP id dc15mr3370377qvb.25.1603202160139;
+        Tue, 20 Oct 2020 06:56:00 -0700 (PDT)
+Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
+        by smtp.gmail.com with ESMTPSA id b8sm775938qkn.133.2020.10.20.06.55.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Oct 2020 06:55:59 -0700 (PDT)
+Subject: Re: [RFC] treewide: cleanup unreachable breaks
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, linux-edac@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-power@fi.rohmeurope.com, linux-gpio@vger.kernel.org,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        nouveau@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org,
+        spice-devel@lists.freedesktop.org, linux-iio@vger.kernel.org,
+        linux-amlogic@lists.infradead.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-can@vger.kernel.org,
+        Network Development <netdev@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org, ath10k@lists.infradead.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com, linux-nfc@lists.01.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org, patches@opensource.cirrus.com,
+        storagedev@microchip.com, devel@driverdev.osuosl.org,
+        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net,
+        linux-watchdog@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        bpf <bpf@vger.kernel.org>, linux-integrity@vger.kernel.org,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+        alsa-devel@alsa-project.org,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        George Burgess <gbiv@google.com>, Joe Perches <joe@perches.com>
+References: <20201017160928.12698-1-trix@redhat.com>
+ <20201018054332.GB593954@kroah.com>
+ <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
+From:   Tom Rix <trix@redhat.com>
+Message-ID: <ca1f50d6-1005-8e3d-8d5c-98c82a704338@redhat.com>
+Date:   Tue, 20 Oct 2020 06:55:52 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <f7e33ede-1436-90c4-7d8b-8c0b0da62a01@oracle.com>
+In-Reply-To: <CAKwvOdkR_Ttfo7_JKUiZFVqr=Uh=4b05KCPCSuzwk=zaWtA2_Q@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9779 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- bulkscore=0 spamscore=0 adultscore=0 suspectscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010200088
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9779 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0
- lowpriorityscore=0 mlxlogscore=999 priorityscore=1501 spamscore=0
- phishscore=0 clxscore=1011 bulkscore=0 impostorscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010200088
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Hannes,
 
-On 10/12/20 2:22 PM, jitendra.khasdev@oracle.com wrote:
-> Hi Hannes,
-> 
-> On 9/24/20 4:09 PM, Hannes Reinecke wrote:
->> On 9/23/20 7:50 PM, jitendra.khasdev@oracle.com wrote:
+On 10/19/20 12:42 PM, Nick Desaulniers wrote:
+> On Sat, Oct 17, 2020 at 10:43 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+>> On Sat, Oct 17, 2020 at 09:09:28AM -0700, trix@redhat.com wrote:
+>>> From: Tom Rix <trix@redhat.com>
 >>>
->>>
->>> On 9/23/20 1:47 PM, Hannes Reinecke wrote:
->>>> On 9/18/20 5:49 AM, jitendra.khasdev@oracle.com wrote:
->>>>>
->>>>>
->>>>> On 9/17/20 11:00 PM, Ewan D. Milne wrote:
->>>>>> On Tue, 2020-09-15 at 16:28 +0530, Jitendra Khasdev wrote:
->>>>>>> This is patch to fix the race occurs between bus detach and alua_rtpg.
->>>>>>>
->>>>>>> It fluses the all pending workqueue in bus detach handler, so it can avoid
->>>>>>> race between alua_bus_detach and alua_rtpg.
->>>>>>>
->>>>>>> Here is call trace where race got detected.
->>>>>>>
->>>>>>> multipathd call stack:
->>>>>>> [exception RIP: native_queued_spin_lock_slowpath+100]
->>>>>>> --- <NMI exception stack> ---
->>>>>>> native_queued_spin_lock_slowpath at ffffffff89307f54
->>>>>>> queued_spin_lock_slowpath at ffffffff89307c18
->>>>>>> _raw_spin_lock_irq at ffffffff89bd797b
->>>>>>> alua_bus_detach at ffffffff8984dcc8
->>>>>>> scsi_dh_release_device at ffffffff8984b6f2
->>>>>>> scsi_device_dev_release_usercontext at ffffffff89846edf
->>>>>>> execute_in_process_context at ffffffff892c3e60
->>>>>>> scsi_device_dev_release at ffffffff8984637c
->>>>>>> device_release at ffffffff89800fbc
->>>>>>> kobject_cleanup at ffffffff89bb1196
->>>>>>> kobject_put at ffffffff89bb12ea
->>>>>>> put_device at ffffffff89801283
->>>>>>> scsi_device_put at ffffffff89838d5b
->>>>>>> scsi_disk_put at ffffffffc051f650 [sd_mod]
->>>>>>> sd_release at ffffffffc051f8a2 [sd_mod]
->>>>>>> __blkdev_put at ffffffff8952c79e
->>>>>>> blkdev_put at ffffffff8952c80c
->>>>>>> blkdev_close at ffffffff8952c8b5
->>>>>>> __fput at ffffffff894e55e6
->>>>>>> ____fput at ffffffff894e57ee
->>>>>>> task_work_run at ffffffff892c94dc
->>>>>>> exit_to_usermode_loop at ffffffff89204b12
->>>>>>> do_syscall_64 at ffffffff892044da
->>>>>>> entry_SYSCALL_64_after_hwframe at ffffffff89c001b8
->>>>>>>
->>>>>>> kworker:
->>>>>>> [exception RIP: alua_rtpg+2003]
->>>>>>> account_entity_dequeue at ffffffff892e42c1
->>>>>>> alua_rtpg_work at ffffffff8984f097
->>>>>>> process_one_work at ffffffff892c4c29
->>>>>>> worker_thread at ffffffff892c5a4f
->>>>>>> kthread at ffffffff892cb135
->>>>>>> ret_from_fork at ffffffff89c00354
->>>>>>>
->>>>>>> Signed-off-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
->>>>>>> ---
->>>>>>>    drivers/scsi/device_handler/scsi_dh_alua.c | 3 +++
->>>>>>>    1 file changed, 3 insertions(+)
->>>>>>>
->>>>>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>>> index f32da0c..024a752 100644
->>>>>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>>> @@ -1144,6 +1144,9 @@ static void alua_bus_detach(struct scsi_device *sdev)
->>>>>>>        struct alua_dh_data *h = sdev->handler_data;
->>>>>>>        struct alua_port_group *pg;
->>>>>>>    +    sdev_printk(KERN_INFO, sdev, "%s: flushing workqueues\n", ALUA_DH_NAME);
->>>>>>> +    flush_workqueue(kaluad_wq);
->>>>>>> +
->>>>>>>        spin_lock(&h->pg_lock);
->>>>>>>        pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
->>>>>>>        rcu_assign_pointer(h->pg, NULL);
->>>>>>
->>>>>> I'm not sure this is the best solution.  The current code
->>>>>> references h->sdev when the dh_list is traversed.  So it needs
->>>>>> to remain valid.  Fixing it by flushing the workqueue to avoid
->>>>>> the list traversal code running leaves open the possibility that
->>>>>> future code alterations may expose this problem again.
->>>>>>
->>>>>> -Ewan
->>>>>>
->>>>>>
->>>>>
->>>>> I see your point, but as we are in detach handler and this code path
->>>>> only execute when device is being detached. So, before detaching, flush
->>>>> work-queue will take care of any current code references h->sdev where
->>>>> dh_list is being traversed.
->>>>>
->>>> Flushing the workqueue is a bit of an overkill, seeing that we know exactly which workqueue element we're waiting for.
->>>>
->>>>> IMO, I do not think it would create any problem for future code
->>>>> alterations. Or may be I am missing something over here, what could
->>>>> be possible scenario for that?
->>>>>
->>>> Problem is more that I'd like to understand where exactly the race condition is. Can you figure out which spinlock is triggering in your stack trace?
->>>>
->>>> Cheers,
->>>>
->>>> Hannes
->>>
->>> Hannes,
->>>
->>> Race is between "alua_bus_detach" and "alua_rtpg_work".
->>>
->>> Whenever we perform fail-over or turn off the switch, the path goes down, which eventually triggers
->>> blkdev_put -> .. -> scsi_device_dev_release -> .. ->  alua_bus_detach meanwhile another thread of alua_rtpg_work also running in parallel. Both threads are using sdev.
->>>
->>> In alua_bus_detach, we are setting null to sdev. From above call trace (multipathd) we can see alua_bus_deatch ran first and set sdev to null. It keeps its execution continue and it does not have any problem.
->>>
->>> 1138 /*
->>> 1139  * alua_bus_detach - Detach device handler
->>> 1140  * @sdev: device to be detached from
->>> 1141  */
->>> 1142 static void alua_bus_detach(struct scsi_device *sdev)
->>> 1143 {
->>> 1144         struct alua_dh_data *h = sdev->handler_data;
->>> 1145         struct alua_port_group *pg;
->>> 1146
->>> 1147         spin_lock(&h->pg_lock);
->>> 1148         pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
->>> 1149         rcu_assign_pointer(h->pg, NULL);
->>> *1150*         h->sdev = NULL;  << Looks detach handler won the race and set sdev to null
->>> 1151         spin_unlock(&h->pg_lock);
->>> 1152         if (pg) {
->>> 1153                 spin_lock_irq(&pg->lock); <<< from the call trace we can see that we just acquired the lock and got NMI
->>> exception because we encountered a BUG_ON from different thread.
->>> 1154                 list_del_rcu(&h->node);
->>>
->>>
->>> Meanwhile alua_rtpg try to check for BUG_ON(!h->sdev);
->>>
->>> alua_rtpg_work -> alua_rtpg
->>> ----
->>>   505 static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
->>>   506 {
->>>   .
->>>   .
->>>   .
->>>   659                                         list_for_each_entry_rcu(h,
->>>   660                                                 &tmp_pg->dh_list, node) {
->>>   661                                                 /* h->sdev should always be valid */
->>>   *662*                                                 BUG_ON(!h->sdev); <<<< 2nd call trace caused the panic due to this bug on.
->>>   663                                                 h->sdev->access_state = desc[0];
->>>   664                                         }
->>>   665                                         rcu_read_unlock();
->>>   666                                 }
->>> ----
->>>
->> Ah, yes.
+>>> This is a upcoming change to clean up a new warning treewide.
+>>> I am wondering if the change could be one mega patch (see below) or
+>>> normal patch per file about 100 patches or somewhere half way by collecting
+>>> early acks.
+>> Please break it up into one-patch-per-subsystem, like normal, and get it
+>> merged that way.
 >>
->> We would need to take 'h->lock' here before checking 'h->sdev'.
->> Alternatively, we should be able to fix it by not setting h->sdev to NULL, and issuing rcu_synchronize() before issuing kfree(h):
->>
->> @@ -1147,7 +1148,6 @@ static void alua_bus_detach(struct scsi_device *sdev)
->>         spin_lock(&h->pg_lock);
->>         pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
->>         rcu_assign_pointer(h->pg, NULL);
->> -       h->sdev = NULL;
->>         spin_unlock(&h->pg_lock);
->>         if (pg) {
->>                 spin_lock_irq(&pg->lock);
->> @@ -1156,6 +1156,7 @@ static void alua_bus_detach(struct scsi_device *sdev)
->>                 kref_put(&pg->kref, release_port_group);
->>         }
->>         sdev->handler_data = NULL;
->> +       rcu_synchronize();
->>         kfree(h);
->>  }
->>
->> The 'rcu_synchronize()' will ensure that any concurrent thread has left the rcu-critical section (ie the loop mentioned above), and the issue will be avoided.
->> Additionally, we could replace the BUG_ON() with
->>
->> if (!h->sdev)
->>     continue;
->>
->> and the problem should be solved.
->>
->> Cheers,
->>
->> Hannes
-> 
-> 
-> This patch works and avoid crash during fail-over. It looks good to me in testing.
-> 
-> ---
-> Jitendra
-> 
+>> Sending us a patch, without even a diffstat to review, isn't going to
+>> get you very far...
+> Tom,
+> If you're able to automate this cleanup, I suggest checking in a
+> script that can be run on a directory.  Then for each subsystem you
+> can say in your commit "I ran scripts/fix_whatever.py on this subdir."
+>  Then others can help you drive the tree wide cleanup.  Then we can
+> enable -Wunreachable-code-break either by default, or W=2 right now
+> might be a good idea.
 
+I should have waited for Joe Perches's fixer addition to checkpatch :)
 
-Gentle reminder, I am wondering if we can proceed to integrate this patch to mainline. 
+The easy fixes I did only cover about 1/2 of the problems.
 
----
-Jitendra
+Remaining are mostly nested switches, which from a complexity standpoint is bad.
+
+>
+> Ah, George (gbiv@, cc'ed), did an analysis recently of
+> `-Wunreachable-code-loop-increment`, `-Wunreachable-code-break`, and
+> `-Wunreachable-code-return` for Android userspace.  From the review:
+> ```
+> Spoilers: of these, it seems useful to turn on
+> -Wunreachable-code-loop-increment and -Wunreachable-code-return by
+> default for Android
+
+In my simple add-a-cflag bot, i see there are about 250
+
+issues for -Wunreachable-code-return.
+
+I'll see about doing this one next.
+
+> ...
+> While these conventions about always having break arguably became
+> obsolete when we enabled -Wfallthrough, my sample turned up zero
+> potential bugs caught by this warning, and we'd need to put a lot of
+> effort into getting a clean tree. So this warning doesn't seem to be
+> worth it.
+> ```
+> Looks like there's an order of magnitude of `-Wunreachable-code-break`
+> than the other two.
+>
+> We probably should add all 3 to W=2 builds (wrapped in cc-option).
+> I've filed https://github.com/ClangBuiltLinux/linux/issues/1180 to
+> follow up on.
+
+Yes, i think think these should be added.
+
+Tom
+
