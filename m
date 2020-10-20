@@ -7,405 +7,510 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00E71C4363A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF01C41604
 	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6BD522247
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85A252076A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Oct 2020 20:27:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Vx6fdNiT"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UU0HIyL2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438477AbgJTU1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2438483AbgJTU1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 20 Oct 2020 16:27:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39272 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438446AbgJTU1g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:36 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D404CC0613CE
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:36 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id e7so72326pfn.12
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:36 -0700 (PDT)
+        with ESMTP id S2438481AbgJTU1i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2020 16:27:38 -0400
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27E89C0613CE
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:38 -0700 (PDT)
+Received: by mail-pg1-x533.google.com with SMTP id j7so45606pgk.5
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2020 13:27:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=etGCXL6nd2ijFKHChOpGatDc1dhTgv3Dh5tUHGxfuCI=;
-        b=Vx6fdNiT48f/Kqgnvg7Ji1SZ6YcVTuztYq8M6XRYiJpKfBtQ9iXiqp4hDWWmP7Mixy
-         ZiWfN6CJq8N1oJ4EF2LEbwsEp7WQWyUjYIJ7qptByfcUDl3i0yc+d14SVt/YaopoDgOn
-         ysXqhUlylCz1cSdC5ieJnH/Xm3hbHesluHyKQ=
+        bh=CHTW+PsRF5FB59I3e5ygYbg/8stoN+CHgQHp2Pq9gF8=;
+        b=UU0HIyL2G4Jlu162tlWwUyRXikmiaf3ptc/aUhT1Mgg3WoPBAegfGAmkwkKHSCKkRo
+         pNBs77U/UW33Nfl48M5tp7s1zgbVK+WI1EGY3tys1mEXkFFbtcHdGY5OioiaHhGQp+/y
+         imFJG+QcuYIB3hY4umG5h9PeJ0unQxGxwF9E8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=etGCXL6nd2ijFKHChOpGatDc1dhTgv3Dh5tUHGxfuCI=;
-        b=MCOvr9+kq5w8/gp6KuFJLjpYbinGYlJK1HL5TeA6HHvEgtZauYlcK+oW8qZH+EPGxV
-         qrvJeEFlneZm0YzqHhQ5kLyK8G/m5SCwHAQX/hWoSYJJJ7dX8fjoGE80XKoMRsQRGQm1
-         JQanLTH5GDqaRGfeuvJ8kyP7rTYUliyG8JGmdcwn41dwF2o3BdkyTSvjW1Sw5Bd/e1Ij
-         i6OnGDOcZ2JpZIzyY+McZlhHQ7lGpm5qMInX1f3eM148eurZpwieMPWkad8DVgPpVoB5
-         fEHHL9behsiQFmOSvZMiux5KPrJPD8ZpDWQ/qqhtzOIQDrLN/g6voOY9CkIg266U7Wsf
-         2N/Q==
-X-Gm-Message-State: AOAM531a5cKWkQElYNpSEkQPl4i2ghxvE69r6yf7qQHiq2O2HWY6nD5Q
-        ThzDz56Bz3eY1D3ZRbUEhbFryPUkpuSNy+ivCPJKyRNLUIMVUcVYiS+InCR4KyutbcjOY/RZ3Ja
-        kuYt92egTDTHVReNPsEt9FwsZqYiBDQZ39oodntoHmKZNiO3pMpeDa7dwNWsxvTe0VMSZEQGlDy
-        pqnvs=
-X-Google-Smtp-Source: ABdhPJzbMEamViqJ2lPdzCdOMLaJH0BuXe1/zcADgM+znbLtqEoR9CU00868TAS8TCRG6Cqq17ZsFw==
-X-Received: by 2002:a63:4546:: with SMTP id u6mr59085pgk.311.1603225655499;
-        Tue, 20 Oct 2020 13:27:35 -0700 (PDT)
+        bh=CHTW+PsRF5FB59I3e5ygYbg/8stoN+CHgQHp2Pq9gF8=;
+        b=gT1KRtinkc2MNpKBrBZZfpNWn91vcIYVYDTnpBsxfJIvlOUhW+gztO1eAo+fSb8Xr2
+         M2Taa45Zr8CtXB8JxlNkdkHeUI/kGV/JwMkGUwxgSDfjXwVQvqaMv4RaojBsaXgWghFx
+         L2eLPErLovIwu7jFMI+BdR+keGbtxvdA6IBSU0QwWXTiwRWgixDJZ/70EcWUpb6eI+pe
+         QxzgemBEe0buqI5whcv2y1TD3GAMa38QEEG69+nVgG0xRD6uBczwDwbWo5zMpQBXlFtI
+         7gf84x/UzOpa4CIPIZ9d9FsIz1DiLa433oKzgZymyAy/EiRT8mmTVGZo0TRjcnfZOQmu
+         Pz5g==
+X-Gm-Message-State: AOAM533Swyj1M23jMHXcszttFpV9h+O4aFOCCCPTd+YaRC1xmQyLRZqM
+        ZuMHWLGSgtifN/PB5oPe1jMMVdgBR2qp80vvUaZDbui1U/KqNYyHCZHStx6xViBKiVXektfHHqq
+        4UdmX3iEqLBNoxx3rAuNPFa28CfUv7RaK+Z6S30b71nM5ayy0Q3Fz+SArxm2LfwBqJAMMeozH+K
+        3+u2w=
+X-Google-Smtp-Source: ABdhPJwrg1RfHCoYZ4hhPtGduz91klKL9TDxlDt0cHSEdIzZ3gCzjh8yFzUXxnX2Tw2BZ8HtfqHiKw==
+X-Received: by 2002:a63:4e5e:: with SMTP id o30mr64940pgl.251.1603225656799;
+        Tue, 20 Oct 2020 13:27:36 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.34
+        by smtp.gmail.com with ESMTPSA id b16sm2871404pfp.195.2020.10.20.13.27.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2020 13:27:34 -0700 (PDT)
+        Tue, 20 Oct 2020 13:27:36 -0700 (PDT)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 7/9] lpfc: Add FDMI Vendor MIB support
-Date:   Tue, 20 Oct 2020 13:27:17 -0700
-Message-Id: <20201020202719.54726-8-james.smart@broadcom.com>
+Subject: [PATCH 8/9] lpfc: Reject CT request for MIB commands
+Date:   Tue, 20 Oct 2020 13:27:18 -0700
+Message-Id: <20201020202719.54726-9-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201020202719.54726-1-james.smart@broadcom.com>
 References: <20201020202719.54726-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000bafce405b2200f3a"
+        boundary="000000000000cee8f805b2200f4a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000bafce405b2200f3a
+--000000000000cee8f805b2200f4a
 Content-Transfer-Encoding: 8bit
 
-Add vendor-specific MIB support
+Now that MIB support was registered with FDMI, the driver may receive
+CT requests for MIB-related commands. At this time, no command is
+supported. However, the driver needs to be graceful and reject the
+CT request.
 
-Created new attribute lpfc_enable_mi, which by default is enabled.
-
-Add command definition bits for sli-4 parameters that recognize whether
-the adapter has MIB information support and what revision of MIB data.
-Using the adapter information, register vendor-specific MIB support with
-FDMI.  The registration will be done every link up.
-
-During FDMI registration, encountered a couple of errors when reverting
-to FDMI rev1. Code needed to exist once reverting. Fixed these.
+This patch adds identification of the requests as well as sending the
+reject response.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc.h         |  4 ++-
- drivers/scsi/lpfc/lpfc_attr.c    | 10 ++++++
- drivers/scsi/lpfc/lpfc_ct.c      | 60 ++++++++++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_els.c     |  6 ++++
- drivers/scsi/lpfc/lpfc_hbadisc.c |  6 ++--
- drivers/scsi/lpfc/lpfc_hw.h      |  4 ++-
- drivers/scsi/lpfc/lpfc_hw4.h     | 10 ++++--
- drivers/scsi/lpfc/lpfc_init.c    | 15 ++++++++
- drivers/scsi/lpfc/lpfc_sli4.h    |  8 +++++
- 9 files changed, 117 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_bsg.c |  21 +--
+ drivers/scsi/lpfc/lpfc_ct.c  | 311 ++++++++++++++++++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_hw.h  |   3 +
+ 3 files changed, 296 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 93e507677bdc..3c77e02d36b0 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -744,7 +744,8 @@ struct lpfc_hba {
- #define LS_NPIV_FAB_SUPPORTED 0x2	/* Fabric supports NPIV */
- #define LS_IGNORE_ERATT       0x4	/* intr handler should ignore ERATT */
- #define LS_MDS_LINK_DOWN      0x8	/* MDS Diagnostics Link Down */
--#define LS_MDS_LOOPBACK      0x10	/* MDS Diagnostics Link Up (Loopback) */
-+#define LS_MDS_LOOPBACK       0x10	/* MDS Diagnostics Link Up (Loopback) */
-+#define LS_CT_VEN_RPA         0x20	/* Vendor RPA sent to switch */
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 6f9d648a9b9c..5b66b8ea8363 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -939,28 +939,9 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	INIT_LIST_HEAD(&head);
+ 	list_add_tail(&head, &piocbq->list);
  
- 	uint32_t hba_flag;	/* hba generic flags */
- #define HBA_ERATT_HANDLED	0x1 /* This flag is set when eratt handled */
-@@ -922,6 +923,7 @@ struct lpfc_hba {
- #define LPFC_ENABLE_NVME 2
- #define LPFC_ENABLE_BOTH 3
- 	uint32_t cfg_enable_pbde;
-+	uint32_t cfg_enable_mi;
- 	struct nvmet_fc_target_port *targetport;
- 	lpfc_vpd_t vpd;		/* vital product data */
+-	if (piocbq->iocb.ulpBdeCount == 0 ||
+-	    piocbq->iocb.un.cont64[0].tus.f.bdeSize == 0)
+-		goto error_ct_unsol_exit;
+-
+-	if (phba->link_state == LPFC_HBA_ERROR ||
+-		(!(phba->sli.sli_flag & LPFC_SLI_ACTIVE)))
+-		goto error_ct_unsol_exit;
+-
+-	if (phba->sli3_options & LPFC_SLI3_HBQ_ENABLED)
+-		dmabuf = bdeBuf1;
+-	else {
+-		dma_addr = getPaddr(piocbq->iocb.un.cont64[0].addrHigh,
+-				    piocbq->iocb.un.cont64[0].addrLow);
+-		dmabuf = lpfc_sli_ringpostbuf_get(phba, pring, dma_addr);
+-	}
+-	if (dmabuf == NULL)
+-		goto error_ct_unsol_exit;
+-	ct_req = (struct lpfc_sli_ct_request *)dmabuf->virt;
++	ct_req = (struct lpfc_sli_ct_request *)bdeBuf1;
+ 	evt_req_id = ct_req->FsType;
+ 	cmd = ct_req->CommandResponse.bits.CmdRsp;
+-	if (!(phba->sli3_options & LPFC_SLI3_HBQ_ENABLED))
+-		lpfc_sli_ringpostbuf_put(phba, pring, dmabuf);
  
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 2d810474875c..0673d944c2a8 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -6134,6 +6134,14 @@ LPFC_BBCR_ATTR_RW(enable_bbcr, 1, 0, 1, "Enable BBC Recovery");
-  */
- LPFC_ATTR_RW(enable_dpp, 1, 0, 1, "Enable Direct Packet Push");
- 
-+/*
-+ * lpfc_enable_mi: Enable FDMI MIB
-+ *       0  = disabled
-+ *       1  = enabled (default)
-+ * Value range is [0,1].
-+ */
-+LPFC_ATTR_R(enable_mi, 1, 0, 1, "Enable MI");
-+
- struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_nvme_info,
- 	&dev_attr_scsi_stat,
-@@ -6251,6 +6259,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_lpfc_ras_fwlog_func,
- 	&dev_attr_lpfc_enable_bbcr,
- 	&dev_attr_lpfc_enable_dpp,
-+	&dev_attr_lpfc_enable_mi,
- 	NULL,
- };
- 
-@@ -7355,6 +7364,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_irq_chann_init(phba, lpfc_irq_chann);
- 	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
- 	lpfc_enable_dpp_init(phba, lpfc_enable_dpp);
-+	lpfc_enable_mi_init(phba, lpfc_enable_mi);
- 
- 	if (phba->sli_rev != LPFC_SLI_REV4) {
- 		/* NVME only supported on SLI4 */
+ 	spin_lock_irqsave(&phba->ct_ev_lock, flags);
+ 	list_for_each_entry(evt, &phba->ct_ev_waiters, node) {
 diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index c201686d3815..bff7d0b3ce7b 100644
+index bff7d0b3ce7b..d7811fa2407c 100644
 --- a/drivers/scsi/lpfc/lpfc_ct.c
 +++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1959,6 +1959,7 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				vport->fdmi_port_mask = LPFC_FDMI1_PORT_ATTR;
- 				/* Start over */
- 				lpfc_fdmi_cmd(vport, ndlp, cmd, 0);
-+				return;
- 			}
- 			if (vport->fdmi_port_mask == LPFC_FDMI2_SMART_ATTR) {
- 				vport->fdmi_port_mask = LPFC_FDMI2_PORT_ATTR;
-@@ -1968,12 +1969,21 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			return;
- 
- 		case SLI_MGMT_RPA:
-+			/* No retry on Vendor RPA */
-+			if (phba->link_flag & LS_CT_VEN_RPA) {
-+				lpfc_printf_vlog(vport, KERN_ERR,
-+						 LOG_DISCOVERY | LOG_ELS,
-+						 "6460 VEN FDMI RPA failure\n");
-+				phba->link_flag &= ~LS_CT_VEN_RPA;
-+				return;
-+			}
- 			if (vport->fdmi_port_mask == LPFC_FDMI2_PORT_ATTR) {
- 				/* Fallback to FDMI-1 */
- 				vport->fdmi_hba_mask = LPFC_FDMI1_HBA_ATTR;
- 				vport->fdmi_port_mask = LPFC_FDMI1_PORT_ATTR;
- 				/* Start over */
- 				lpfc_fdmi_cmd(vport, ndlp, SLI_MGMT_DHBA, 0);
-+				return;
- 			}
- 			if (vport->fdmi_port_mask == LPFC_FDMI2_SMART_ATTR) {
- 				vport->fdmi_port_mask = LPFC_FDMI2_PORT_ATTR;
-@@ -2004,6 +2014,33 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		else
- 			lpfc_fdmi_cmd(vport, ndlp, SLI_MGMT_RPRT, 0);
- 		break;
-+	case SLI_MGMT_RPA:
-+		if (vport->port_type == LPFC_PHYSICAL_PORT &&
-+		    phba->cfg_enable_mi &&
-+		    phba->sli4_hba.pc_sli4_params.mi_ver > LPFC_MIB1_SUPPORT) {
-+			/* mi is only for the phyical port, no vports */
-+			if (phba->link_flag & LS_CT_VEN_RPA) {
-+				lpfc_printf_vlog(vport, KERN_INFO,
-+						 LOG_DISCOVERY | LOG_ELS,
-+						 "6449 VEN RPA Success\n");
-+				break;
-+			}
-+
-+			if (lpfc_fdmi_cmd(vport, ndlp, cmd,
-+					  LPFC_FDMI_VENDOR_ATTR_mi) == 0)
-+				phba->link_flag |= LS_CT_VEN_RPA;
-+			lpfc_printf_vlog(vport, KERN_INFO,
-+					LOG_DISCOVERY | LOG_ELS,
-+					"6458 Send MI FDMI:%x Flag x%x\n",
-+					phba->sli4_hba.pc_sli4_params.mi_value,
-+					phba->link_flag);
-+		} else {
-+			lpfc_printf_vlog(vport, KERN_INFO,
-+					 LOG_DISCOVERY | LOG_ELS,
-+					 "6459 No FDMI VEN MI support - "
-+					 "RPA Success\n");
-+		}
-+		break;
- 	}
- 	return;
- }
-@@ -2974,6 +3011,28 @@ lpfc_fdmi_smart_attr_security(struct lpfc_vport *vport,
- 	return size;
+@@ -99,21 +99,265 @@ lpfc_ct_unsol_buffer(struct lpfc_hba *phba, struct lpfc_iocbq *piocbq,
+ 	lpfc_ct_ignore_hbq_buffer(phba, piocbq, mp, size);
  }
  
-+int
-+lpfc_fdmi_vendor_attr_mi(struct lpfc_vport *vport,
-+			  struct lpfc_fdmi_attr_def *ad)
++/**
++ * lpfc_ct_unsol_cmpl : Completion callback function for unsol ct commands
++ * @phba : pointer to lpfc hba data structure.
++ * @cmdiocb : pointer to lpfc command iocb data structure.
++ * @rspiocb : pointer to lpfc response iocb data structure.
++ *
++ * This routine is the callback function for issuing unsol ct reject command.
++ * The memory allocated in the reject command path is freed up here.
++ **/
++static void
++lpfc_ct_unsol_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
++		   struct lpfc_iocbq *rspiocb)
 +{
-+	struct lpfc_hba *phba = vport->phba;
-+	struct lpfc_fdmi_attr_entry *ae;
-+	uint32_t len, size;
-+	char mibrevision[16];
++	struct lpfc_nodelist *ndlp;
++	struct lpfc_dmabuf *mp, *bmp;
 +
-+	ae = (struct lpfc_fdmi_attr_entry *)&ad->AttrValue;
-+	memset(ae, 0, 256);
-+	sprintf(mibrevision, "ELXE2EM:%04d",
-+		phba->sli4_hba.pc_sli4_params.mi_value);
-+	strncpy(ae->un.AttrString, &mibrevision[0], sizeof(ae->un.AttrString));
-+	len = strnlen(ae->un.AttrString, sizeof(ae->un.AttrString));
-+	len += (len & 3) ? (4 - (len & 3)) : 4;
-+	size = FOURBYTES + len;
-+	ad->AttrLen = cpu_to_be16(size);
-+	ad->AttrType = cpu_to_be16(RPRT_VENDOR_MI);
-+	return size;
++	ndlp = (struct lpfc_nodelist *)cmdiocb->context1;
++	if (ndlp)
++		lpfc_nlp_put(ndlp);
++
++	mp = cmdiocb->context2;
++	bmp = cmdiocb->context3;
++	if (mp) {
++		lpfc_mbuf_free(phba, mp->virt, mp->phys);
++		kfree(mp);
++		cmdiocb->context2 = NULL;
++	}
++
++	if (bmp) {
++		lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
++		kfree(bmp);
++		cmdiocb->context3 = NULL;
++	}
++
++	lpfc_sli_release_iocbq(phba, cmdiocb);
 +}
 +
- /* RHBA attribute jump table */
- int (*lpfc_fdmi_hba_action[])
- 	(struct lpfc_vport *vport, struct lpfc_fdmi_attr_def *ad) = {
-@@ -3025,6 +3084,7 @@ int (*lpfc_fdmi_port_action[])
- 	lpfc_fdmi_smart_attr_port_info,     /* bit20  RPRT_SMART_PORT_INFO    */
- 	lpfc_fdmi_smart_attr_qos,           /* bit21  RPRT_SMART_QOS          */
- 	lpfc_fdmi_smart_attr_security,      /* bit22  RPRT_SMART_SECURITY     */
-+	lpfc_fdmi_vendor_attr_mi,           /* bit23  RPRT_VENDOR_MI          */
- };
++/**
++ * lpfc_ct_reject_event : Issue reject for unhandled CT MIB commands
++ * @ndlp : pointer to a node-list data structure.
++ * ct_req : pointer to the CT request data structure.
++ * rx_id : rx_id of the received UNSOL CT command
++ * ox_id : ox_id of the UNSOL CT command
++ *
++ * This routine is invoked by the lpfc_ct_handle_mibreq routine for sending
++ * a reject response. Reject response is sent for the unhandled commands.
++ **/
++static void
++lpfc_ct_reject_event(struct lpfc_nodelist *ndlp,
++		     struct lpfc_sli_ct_request *ct_req,
++		     u16 rx_id, u16 ox_id)
++{
++	struct lpfc_vport *vport = ndlp->vport;
++	struct lpfc_hba *phba = vport->phba;
++	struct lpfc_sli_ct_request *ct_rsp;
++	struct lpfc_iocbq *cmdiocbq = NULL;
++	struct lpfc_dmabuf *bmp = NULL;
++	struct lpfc_dmabuf *mp = NULL;
++	struct ulp_bde64 *bpl;
++	IOCB_t *icmd;
++	u8 rc = 0;
++
++	/* fill in BDEs for command */
++	mp = kmalloc(sizeof(*mp), GFP_KERNEL);
++	if (!mp) {
++		rc = 1;
++		goto ct_exit;
++	}
++
++	mp->virt = lpfc_mbuf_alloc(phba, MEM_PRI, &mp->phys);
++	if (!mp->virt) {
++		rc = 2;
++		goto ct_free_mp;
++	}
++
++	/* Allocate buffer for Buffer ptr list */
++	bmp = kmalloc(sizeof(*bmp), GFP_KERNEL);
++	if (!bmp) {
++		rc = 3;
++		goto ct_free_mpvirt;
++	}
++
++	bmp->virt = lpfc_mbuf_alloc(phba, MEM_PRI, &bmp->phys);
++	if (!bmp->virt) {
++		rc = 4;
++		goto ct_free_bmp;
++	}
++
++	INIT_LIST_HEAD(&mp->list);
++	INIT_LIST_HEAD(&bmp->list);
++
++	bpl = (struct ulp_bde64 *)bmp->virt;
++	memset(bpl, 0, sizeof(struct ulp_bde64));
++	bpl->addrHigh = le32_to_cpu(putPaddrHigh(mp->phys));
++	bpl->addrLow = le32_to_cpu(putPaddrLow(mp->phys));
++	bpl->tus.f.bdeFlags = BUFF_TYPE_BLP_64;
++	bpl->tus.f.bdeSize = (LPFC_CT_PREAMBLE - 4);
++	bpl->tus.w = le32_to_cpu(bpl->tus.w);
++
++	ct_rsp = (struct lpfc_sli_ct_request *)mp->virt;
++	memset(ct_rsp, 0, sizeof(struct lpfc_sli_ct_request));
++
++	ct_rsp->RevisionId.bits.Revision = SLI_CT_REVISION;
++	ct_rsp->RevisionId.bits.InId = 0;
++	ct_rsp->FsType = ct_req->FsType;
++	ct_rsp->FsSubType = ct_req->FsSubType;
++	ct_rsp->CommandResponse.bits.Size = 0;
++	ct_rsp->CommandResponse.bits.CmdRsp =
++		cpu_to_be16(SLI_CT_RESPONSE_FS_RJT);
++	ct_rsp->ReasonCode = SLI_CT_REQ_NOT_SUPPORTED;
++	ct_rsp->Explanation = SLI_CT_NO_ADDITIONAL_EXPL;
++
++	cmdiocbq = lpfc_sli_get_iocbq(phba);
++	if (!cmdiocbq) {
++		rc = 5;
++		goto ct_free_bmpvirt;
++	}
++
++	icmd = &cmdiocbq->iocb;
++	icmd->un.genreq64.bdl.ulpIoTag32 = 0;
++	icmd->un.genreq64.bdl.addrHigh = putPaddrHigh(bmp->phys);
++	icmd->un.genreq64.bdl.addrLow = putPaddrLow(bmp->phys);
++	icmd->un.genreq64.bdl.bdeFlags = BUFF_TYPE_BLP_64;
++	icmd->un.genreq64.bdl.bdeSize = sizeof(struct ulp_bde64);
++	icmd->un.genreq64.w5.hcsw.Fctl = (LS | LA);
++	icmd->un.genreq64.w5.hcsw.Dfctl = 0;
++	icmd->un.genreq64.w5.hcsw.Rctl = FC_RCTL_DD_SOL_CTL;
++	icmd->un.genreq64.w5.hcsw.Type = FC_TYPE_CT;
++	icmd->ulpCommand = CMD_XMIT_SEQUENCE64_CX;
++	icmd->ulpBdeCount = 1;
++	icmd->ulpLe = 1;
++	icmd->ulpClass = CLASS3;
++
++	/* Save for completion so we can release these resources */
++	cmdiocbq->context1 = lpfc_nlp_get(ndlp);
++	cmdiocbq->context2 = (uint8_t *)mp;
++	cmdiocbq->context3 = (uint8_t *)bmp;
++	cmdiocbq->iocb_cmpl = lpfc_ct_unsol_cmpl;
++	icmd->ulpContext = rx_id;  /* Xri / rx_id */
++	icmd->unsli3.rcvsli3.ox_id = ox_id;
++	icmd->un.ulpWord[3] =
++		phba->sli4_hba.rpi_ids[ndlp->nlp_rpi];
++	icmd->ulpTimeout = (3 * phba->fc_ratov);
++
++	cmdiocbq->retry = 0;
++	cmdiocbq->vport = vport;
++	cmdiocbq->context_un.ndlp = NULL;
++	cmdiocbq->drvrTimeout = icmd->ulpTimeout + LPFC_DRVR_TIMEOUT;
++
++	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, cmdiocbq, 0);
++	if (!rc)
++		return;
++
++	rc = 6;
++	lpfc_nlp_put(ndlp);
++	lpfc_sli_release_iocbq(phba, cmdiocbq);
++ct_free_bmpvirt:
++	lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
++ct_free_bmp:
++	kfree(bmp);
++ct_free_mpvirt:
++	lpfc_mbuf_free(phba, mp->virt, mp->phys);
++ct_free_mp:
++	kfree(mp);
++ct_exit:
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
++			 "6440 Unsol CT: Rsp err %d Data: x%x\n",
++			 rc, vport->fc_flag);
++}
++
++/**
++ * lpfc_ct_handle_mibreq - Process an unsolicited CT MIB request data buffer
++ * @phba: pointer to lpfc hba data structure.
++ * @ctiocb: pointer to lpfc CT command iocb data structure.
++ *
++ * This routine is used for processing the IOCB associated with a unsolicited
++ * CT MIB request. It first determines whether there is an existing ndlp that
++ * matches the DID from the unsolicited IOCB. If not, it will return.
++ **/
++static void
++lpfc_ct_handle_mibreq(struct lpfc_hba *phba, struct lpfc_iocbq *ctiocbq)
++{
++	struct lpfc_sli_ct_request *ct_req;
++	struct lpfc_nodelist *ndlp = NULL;
++	struct lpfc_vport *vport = NULL;
++	IOCB_t *icmd = &ctiocbq->iocb;
++	u32 mi_cmd, vpi;
++	u32 did = 0;
++
++	vpi = ctiocbq->iocb.unsli3.rcvsli3.vpi;
++	vport = lpfc_find_vport_by_vpid(phba, vpi);
++	if (!vport) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
++				"6437 Unsol CT: VPORT NULL vpi : x%x\n",
++				vpi);
++		return;
++	}
++
++	did = ctiocbq->iocb.un.rcvels.remoteID;
++	if (icmd->ulpStatus) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++				 "6438 Unsol CT: status:x%x/x%x did : x%x\n",
++				 icmd->ulpStatus, icmd->un.ulpWord[4], did);
++		return;
++	}
++
++	/* Ignore traffic received during vport shutdown */
++	if (vport->fc_flag & FC_UNLOADING)
++		return;
++
++	ndlp = lpfc_findnode_did(vport, did);
++	if (!ndlp) {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++				 "6439 Unsol CT: NDLP Not Found for DID : x%x",
++				 did);
++		return;
++	}
++
++	ct_req = ((struct lpfc_sli_ct_request *)
++		 (((struct lpfc_dmabuf *)ctiocbq->context2)->virt));
++
++	mi_cmd = ct_req->CommandResponse.bits.CmdRsp;
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++			 "6442 : MI Cmd : x%x Not Supported\n", mi_cmd);
++	lpfc_ct_reject_event(ndlp, ct_req,
++			     ctiocbq->iocb.ulpContext,
++			     ctiocbq->iocb.unsli3.rcvsli3.ox_id);
++}
++
++/**
++ * lpfc_ct_unsol_event - Process an unsolicited event from a ct sli ring
++ * @phba: pointer to lpfc hba data structure.
++ * @pring: pointer to a SLI ring.
++ * @ctiocbq: pointer to lpfc ct iocb data structure.
++ *
++ * This routine is used to process an unsolicited event received from a SLI
++ * (Service Level Interface) ring. The actual processing of the data buffer
++ * associated with the unsolicited event is done by invoking appropriate routine
++ * after properly set up the iocb buffer from the SLI ring on which the
++ * unsolicited event was received.
++ **/
+ void
+ lpfc_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+-		    struct lpfc_iocbq *piocbq)
++		    struct lpfc_iocbq *ctiocbq)
+ {
+ 	struct lpfc_dmabuf *mp = NULL;
+-	IOCB_t *icmd = &piocbq->iocb;
++	IOCB_t *icmd = &ctiocbq->iocb;
+ 	int i;
+ 	struct lpfc_iocbq *iocbq;
+-	dma_addr_t paddr;
++	dma_addr_t dma_addr;
+ 	uint32_t size;
+ 	struct list_head head;
+-	struct lpfc_dmabuf *bdeBuf;
++	struct lpfc_sli_ct_request *ct_req;
++	struct lpfc_dmabuf *bdeBuf1 = ctiocbq->context2;
++	struct lpfc_dmabuf *bdeBuf2 = ctiocbq->context3;
  
- /**
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index f4e274eb6c9c..e24c0b92e992 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3335,6 +3335,12 @@ lpfc_issue_els_rscn(struct lpfc_vport *vport, uint8_t retry)
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		return 1;
+-	if (lpfc_bsg_ct_unsol_event(phba, pring, piocbq) == 0)
+-		return;
++	ctiocbq->context1 = NULL;
++	ctiocbq->context2 = NULL;
++	ctiocbq->context3 = NULL;
+ 
+ 	if (unlikely(icmd->ulpStatus == IOSTAT_NEED_BUFFER)) {
+ 		lpfc_sli_hbqbuf_add_hbqs(phba, LPFC_ELS_HBQ);
+@@ -127,46 +371,75 @@ lpfc_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		return;
  	}
-+
-+	/* Only keep the ndlp if RDF is being sent */
-+	if (!phba->cfg_enable_mi ||
-+	    phba->sli4_hba.pc_sli4_params.mi_ver < LPFC_MIB3_SUPPORT)
-+		return 0;
-+
- 	/* This will cause the callback-function lpfc_cmpl_els_cmd to
- 	 * trigger the release of node.
+ 
+-	/* If there are no BDEs associated with this IOCB,
+-	 * there is nothing to do.
++	/* If there are no BDEs associated
++	 * with this IOCB, there is nothing to do.
  	 */
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 68563f717adf..e37660895fef 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -3171,7 +3171,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
- 	}
+ 	if (icmd->ulpBdeCount == 0)
+ 		return;
  
- 	phba->fc_topology = bf_get(lpfc_mbx_read_top_topology, la);
--	phba->link_flag &= ~LS_NPIV_FAB_SUPPORTED;
-+	phba->link_flag &= ~(LS_NPIV_FAB_SUPPORTED | LS_CT_VEN_RPA);
- 
- 	shost = lpfc_shost_from_vport(vport);
- 	if (phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
-@@ -4105,7 +4105,9 @@ lpfc_mbx_cmpl_ns_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 		/* Issue SCR just before NameServer GID_FT Query */
- 		lpfc_issue_els_scr(vport, 0);
- 
--		lpfc_issue_els_rdf(vport, 0);
-+		if (!phba->cfg_enable_mi ||
-+		    phba->sli4_hba.pc_sli4_params.mi_ver < LPFC_MIB3_SUPPORT)
-+			lpfc_issue_els_rdf(vport, 0);
- 	}
- 
- 	vport->fc_ns_retry = 0;
++	if (phba->sli3_options & LPFC_SLI3_HBQ_ENABLED) {
++		ctiocbq->context2 = bdeBuf1;
++		if (icmd->ulpBdeCount == 2)
++			ctiocbq->context3 = bdeBuf2;
++	} else {
++		dma_addr = getPaddr(icmd->un.cont64[0].addrHigh,
++				    icmd->un.cont64[0].addrLow);
++		ctiocbq->context2 = lpfc_sli_ringpostbuf_get(phba, pring,
++							     dma_addr);
++		if (icmd->ulpBdeCount == 2) {
++			dma_addr = getPaddr(icmd->un.cont64[1].addrHigh,
++					    icmd->un.cont64[1].addrLow);
++			ctiocbq->context3 = lpfc_sli_ringpostbuf_get(phba,
++								     pring,
++								     dma_addr);
++		}
++	}
++
++	ct_req = ((struct lpfc_sli_ct_request *)
++		 (((struct lpfc_dmabuf *)ctiocbq->context2)->virt));
++
++	if (ct_req->FsType == SLI_CT_MANAGEMENT_SERVICE &&
++	    ct_req->FsSubType == SLI_CT_MIB_Subtypes) {
++		lpfc_ct_handle_mibreq(phba, ctiocbq);
++	} else {
++		if (!lpfc_bsg_ct_unsol_event(phba, pring, ctiocbq))
++			return;
++	}
++
+ 	if (phba->sli3_options & LPFC_SLI3_HBQ_ENABLED) {
+ 		INIT_LIST_HEAD(&head);
+-		list_add_tail(&head, &piocbq->list);
++		list_add_tail(&head, &ctiocbq->list);
+ 		list_for_each_entry(iocbq, &head, list) {
+ 			icmd = &iocbq->iocb;
+ 			if (icmd->ulpBdeCount == 0)
+ 				continue;
+-			bdeBuf = iocbq->context2;
++			bdeBuf1 = iocbq->context2;
+ 			iocbq->context2 = NULL;
+ 			size  = icmd->un.cont64[0].tus.f.bdeSize;
+-			lpfc_ct_unsol_buffer(phba, piocbq, bdeBuf, size);
+-			lpfc_in_buf_free(phba, bdeBuf);
++			lpfc_ct_unsol_buffer(phba, ctiocbq, bdeBuf1, size);
++			lpfc_in_buf_free(phba, bdeBuf1);
+ 			if (icmd->ulpBdeCount == 2) {
+-				bdeBuf = iocbq->context3;
++				bdeBuf2 = iocbq->context3;
+ 				iocbq->context3 = NULL;
+ 				size  = icmd->unsli3.rcvsli3.bde2.tus.f.bdeSize;
+-				lpfc_ct_unsol_buffer(phba, piocbq, bdeBuf,
++				lpfc_ct_unsol_buffer(phba, ctiocbq, bdeBuf2,
+ 						     size);
+-				lpfc_in_buf_free(phba, bdeBuf);
++				lpfc_in_buf_free(phba, bdeBuf2);
+ 			}
+ 		}
+ 		list_del(&head);
+ 	} else {
+ 		INIT_LIST_HEAD(&head);
+-		list_add_tail(&head, &piocbq->list);
++		list_add_tail(&head, &ctiocbq->list);
+ 		list_for_each_entry(iocbq, &head, list) {
+ 			icmd = &iocbq->iocb;
+ 			if (icmd->ulpBdeCount == 0)
+ 				lpfc_ct_unsol_buffer(phba, iocbq, NULL, 0);
+ 			for (i = 0; i < icmd->ulpBdeCount; i++) {
+-				paddr = getPaddr(icmd->un.cont64[i].addrHigh,
+-						 icmd->un.cont64[i].addrLow);
++				dma_addr = getPaddr(icmd->un.cont64[i].addrHigh,
++						    icmd->un.cont64[i].addrLow);
+ 				mp = lpfc_sli_ringpostbuf_get(phba, pring,
+-							      paddr);
++							      dma_addr);
+ 				size = icmd->un.cont64[i].tus.f.bdeSize;
+ 				lpfc_ct_unsol_buffer(phba, iocbq, mp, size);
+ 				lpfc_in_buf_free(phba, mp);
 diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index c20034b3101c..28b8a394f796 100644
+index 28b8a394f796..42682d95af52 100644
 --- a/drivers/scsi/lpfc/lpfc_hw.h
 +++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -1465,7 +1465,7 @@ struct lpfc_fdmi_reg_portattr {
- #define LPFC_FDMI2_HBA_ATTR			0x0002efff
+@@ -1380,6 +1380,9 @@ struct lpfc_fdmi_reg_hba {
+ 	struct lpfc_fdmi_reg_port_list rpl;
+ };
  
++/******** MI MIB ********/
++#define SLI_CT_MIB_Subtypes	0x11
++
  /*
-- * Port Attrubute Types
-+ * Port Attribute Types
+  * Register HBA Attributes (RHAT)
   */
- #define  RPRT_SUPPORTED_FC4_TYPES     0x1 /* 32 byte binary array */
- #define  RPRT_SUPPORTED_SPEED         0x2 /* 32-bit unsigned int */
-@@ -1483,6 +1483,7 @@ struct lpfc_fdmi_reg_portattr {
- #define  RPRT_PORT_STATE              0x101 /* 32-bit unsigned int */
- #define  RPRT_DISC_PORT               0x102 /* 32-bit unsigned int */
- #define  RPRT_PORT_ID                 0x103 /* 32-bit unsigned int */
-+#define  RPRT_VENDOR_MI               0xf047 /* vendor ascii string */
- #define  RPRT_SMART_SERVICE           0xf100 /* 4 to 256 byte ASCII string */
- #define  RPRT_SMART_GUID              0xf101 /* 8 byte WWNN + 8 byte WWPN */
- #define  RPRT_SMART_VERSION           0xf102 /* 4 to 256 byte ASCII string */
-@@ -1515,6 +1516,7 @@ struct lpfc_fdmi_reg_portattr {
- #define LPFC_FDMI_SMART_ATTR_port_info		0x00100000 /* Vendor specific */
- #define LPFC_FDMI_SMART_ATTR_qos		0x00200000 /* Vendor specific */
- #define LPFC_FDMI_SMART_ATTR_security		0x00400000 /* Vendor specific */
-+#define LPFC_FDMI_VENDOR_ATTR_mi		0x00800000 /* Vendor specific */
- 
- /* Bit mask for FDMI-1 defined PORT attributes */
- #define LPFC_FDMI1_PORT_ATTR			0x0000003f
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 12e4e76233e6..49f5559f5fed 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -3506,8 +3506,14 @@ struct lpfc_sli4_parameters {
- #define cfg_max_tow_xri_MASK			0x0000ffff
- #define cfg_max_tow_xri_WORD			word20
- 
--	uint32_t word21;                        /* RESERVED */
--	uint32_t word22;                        /* RESERVED */
-+	uint32_t word21;
-+#define cfg_mib_bde_cnt_SHIFT			16
-+#define cfg_mib_bde_cnt_MASK			0x000000ff
-+#define cfg_mib_bde_cnt_WORD			word21
-+#define cfg_mi_ver_SHIFT			0
-+#define cfg_mi_ver_MASK				0x0000ffff
-+#define cfg_mi_ver_WORD				word21
-+	uint32_t mib_size;
- 	uint32_t word23;                        /* RESERVED */
- 
- 	uint32_t word24;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index d2c172348065..7dd980999e32 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12315,6 +12315,21 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	else
- 		phba->nsler = 0;
- 
-+	/* Save PB info for use during HBA setup */
-+	sli4_params->mi_ver = bf_get(cfg_mi_ver, mbx_sli4_parameters);
-+	sli4_params->mib_bde_cnt = bf_get(cfg_mib_bde_cnt, mbx_sli4_parameters);
-+	sli4_params->mib_size = mbx_sli4_parameters->mib_size;
-+	sli4_params->mi_value = LPFC_DFLT_MIB_VAL;
-+
-+	/* Next we check for Vendor MIB support */
-+	if (sli4_params->mi_ver && phba->cfg_enable_mi)
-+		phba->cfg_fdmi_on = LPFC_FDMI_SUPPORT;
-+
-+	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+			"6461 MIB attr %d  enable %d  FDMI %d buf %d:%d\n",
-+			sli4_params->mi_ver, phba->cfg_enable_mi,
-+			sli4_params->mi_value, sli4_params->mib_bde_cnt,
-+			sli4_params->mib_size);
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 100cb1a94811..26f19c95380f 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -549,6 +549,14 @@ struct lpfc_pc_sli4_params {
- 	uint32_t hdr_pp_align;
- 	uint32_t sgl_pages_max;
- 	uint32_t sgl_pp_align;
-+	uint32_t mib_size;
-+	uint16_t mi_ver;
-+#define LPFC_MIB1_SUPPORT	1
-+#define LPFC_MIB2_SUPPORT	2
-+#define LPFC_MIB3_SUPPORT	3
-+	uint16_t mi_value;
-+#define LPFC_DFLT_MIB_VAL	2
-+	uint8_t mib_bde_cnt;
- 	uint8_t cqv;
- 	uint8_t mqv;
- 	uint8_t wqv;
 -- 
 2.26.2
 
 
---000000000000bafce405b2200f3a
+--000000000000cee8f805b2200f4a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -475,14 +580,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgxvV3ByhykQyGTmIP
-9VxkRHyRSs7khzTiBKVm+P2NxKQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDIwMjAyNzM2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg/NWkmCu+crApM4VI
+bEXP1gyMrMklLm5OcWcyMvdbIl8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMDIwMjAyNzM3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAIVDhKnkSwxnLCx7s8ZieG3n82h5I/V+ymMi
-iSrRYtLS/0v/LwS3quNr1k4UWFOMAIXQMJOzh7cSA/yYTbzJg45hixsOMycjUX91tvef11+fma4v
-jmGBV8clnHJA472KlRFP+lai+9HEFlur5xXGKZIj7s7qS+vLIDLcgeYfuvB4iu6CEfTz++hfveeF
-e0WAGMrAaryzXPT1EzPqZOsXqWLjsVcP2cowFaIK8+99sx9hCe7rE4CeX72481RUY8p0cqkw9w+h
-tFvHHoaoxDPldHyJ1tt3qnZAmHkWX4ssRnqg1ZfGLO9hv2AmHAdnigp1sR3Qx72tHE9+35dUfFZQ
-nzE=
---000000000000bafce405b2200f3a--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJunA1weyfVapm744T11DczDQICXBXfHLpgo
++X4oXNIuRneORe591ylsMWIsF8Kbr71cr5p61Lhs5xvZWGwt4RYOtUAaEXKNMT3g4BxfcFwGQlxm
+coRLVpOQ9peJnlZnGjl1MrJY5HTueieG+MMIeudFQyoHCTCuJbKajH2HblpQ5764HdwnK6VTSQ6q
+aogq6aGBLceW5cyvUHvx+sTEezFo1kiBBvr8KQUCSBGiMgb2cvK6EZjN4I70CIWBFOBj/FXi3Tp+
+ftFO/wRKrHN+NAuAeorQKcrb+1HRVMAEsQRfIJ5uQnoZ2K8/m1HNb6x0gZq6Evb4OzoCZFZlcLOM
+2wI=
+--000000000000cee8f805b2200f4a--
