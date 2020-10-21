@@ -2,109 +2,101 @@ Return-Path: <SRS0=hn0g=D4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-2.4 required=3.0 tests=BAYES_05,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18F9DC56201
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 17:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E59C4363A
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 18:51:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A6BE2242F
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 17:49:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB83B22470
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 18:51:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="f3xULy97"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VYBGa4y3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503729AbgJURtY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Oct 2020 13:49:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39738 "EHLO
+        id S2440890AbgJUSv6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Oct 2020 14:51:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2503727AbgJURtX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2020 13:49:23 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6BE2C0613CE
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 10:49:23 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id t4so1567862plq.13
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 10:49:23 -0700 (PDT)
+        with ESMTP id S2437133AbgJUSv6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2020 14:51:58 -0400
+Received: from mail-oi1-x231.google.com (mail-oi1-x231.google.com [IPv6:2607:f8b0:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF07C0613CE
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 11:51:57 -0700 (PDT)
+Received: by mail-oi1-x231.google.com with SMTP id k27so518764oij.11
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 11:51:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to;
-        bh=rm+anLV1PsMMFbNGNBxXtsKZ7znbMeiTBcTx2LsX3jw=;
-        b=f3xULy97LoaFNlBx9giQXkyA1atvfQwcCkR6GidGtrCYr8QLa4N231dwaWDBSMpSLb
-         tdb7avMte1OXRxeBirV9yAAbli1XsOckHUGeiDoEk4qh5e4GgsKbmZ9r3Jy8XhFTIlil
-         kcF4mTffHeIbCa+raDRZP7PwmIpBAZpxyCJ7A=
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=nInfxyQ1dNi6hRSx/AoGhIlaLx9Jh31ajfWCEId9uFU=;
+        b=VYBGa4y3oGhNMkUZ9mTUBq4BsqA97ND9at1qkDhCLBaosAeleF6Lq7IrkT0JPHPasV
+         Z8BwyYKU8BOF4HJvhGD04Sno4hRpTkZLScXqy0cYvfXjvV3klQRNU5ZzrC3rASGw2pjO
+         RYA8D8Vk2BZfHrlRjXpGvCtucWJXP/XLCuPlY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to;
-        bh=rm+anLV1PsMMFbNGNBxXtsKZ7znbMeiTBcTx2LsX3jw=;
-        b=WwYZuAAX7065EM1SfBdW0UQpGXDl3G3tzUngcMgq49ZVK1ZOg9wsJRKA8PEC0KeeSN
-         1qxr6Q4NbUFeGayGC713bvM59ayP7YM+Ic1/AkHlkuamvpM03Fk7iBm+H7uqBoH82YdZ
-         GhSFRhtau/jgaVLILo/67KTOPoUkVlqpunmU/6tcwEDtoq0D84YvFD3srds09lYDxAD7
-         Bv8tQo9Ydg0Pboub4BaNIhaX+FKS93BIYus2AggaOn1CWXv6iLh3CRPAcVS2K2V7dSkr
-         630G5rw8zEjZcGAiaookpi79b0BqBeRRo4m0jWo1+k37XpMC6srsJi3Qm7NEwmAe+DKr
-         4vGg==
-X-Gm-Message-State: AOAM531yb1DSFNgxsm83+PPhL8U3diy8hw8UQsWa3VNTyxr2qlsUTCVC
-        YNBWpAxjoQ2MybhwP7CDUBIufw==
-X-Google-Smtp-Source: ABdhPJxrV1pLUYyqGcaxY2d01MwiqzKTJ9NMrXkQLQazdDAGZKq7a/4a8e3RWiA+5VgxOVrJW+ddIg==
-X-Received: by 2002:a17:90b:4b08:: with SMTP id lx8mr4591394pjb.211.1603302563003;
-        Wed, 21 Oct 2020 10:49:23 -0700 (PDT)
-Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id z21sm3014508pfr.43.2020.10.21.10.49.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Oct 2020 10:49:22 -0700 (PDT)
-Subject: Re: [PATCH v3 3/5] scsi: fc: Parse FPIN packets and update statistics
-To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20201021092715.22669-1-njavali@marvell.com>
- <20201021092715.22669-4-njavali@marvell.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <85b78478-7ea6-8c79-553f-16f405f3bfb3@broadcom.com>
-Date:   Wed, 21 Oct 2020 10:49:21 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.3
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=nInfxyQ1dNi6hRSx/AoGhIlaLx9Jh31ajfWCEId9uFU=;
+        b=SLe11QQTWyL5Ale67XY9YyWew4mItkjdLlqGoyef6Vqqn5azqVpUd6ZEMP4uLZsc3D
+         18HX59GUQiaOEfMoRvx6znicXDq29EoJGRgMFA244rNqkh9dD1AaE3Ib5y1PQX8anasu
+         /GCVvoo+DxdIEONubzbiaUxRe+iyo/UHiBzcda8ImlabIrIa5xaodjTl3xr0XjcxonnM
+         XwIMTc+0RyyeCNAY3uzGDDGIlqEKmBnA5g4l2DIugkxpU6ZvoC+FuwJaf1GIimtUrJA1
+         xIEgDWe5AzR4L+VSzITDogrnf9lk1e1nz0PzXUAxaf1NNNYSzMQDvOwBLg3GNaMpb9pc
+         BblQ==
+X-Gm-Message-State: AOAM53195HU5HhTEKgQJxXgv2SwdPg6SuoHSCO3Q73kaA4n8U4BLbLVQ
+        dTA+WrRKI7vfOrji3Jdq3WWYiC3yznnE6bjfzz/A3g==
+X-Google-Smtp-Source: ABdhPJzE+VWSWXq4uAu0kk3mTykyKhSws4sFu4vwJZ283tNGiGuBav5cqU5hNvxxijbFNr6q5O4SyMCD5tmr8Y/iiDw=
+X-Received: by 2002:aca:b05:: with SMTP id 5mr3330535oil.87.1603306316987;
+ Wed, 21 Oct 2020 11:51:56 -0700 (PDT)
+From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
+References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1602732462-10443-4-git-send-email-muneendra.kumar@broadcom.com>
+ <d13fc9bd-a5da-134f-df21-33f8ac14f7b8@oracle.com> <af17dfd40fc54d819b5f33259f7cd63b@mail.gmail.com>
+ <63d24f21-1f65-87d3-0a0b-d474541b32e0@oracle.com> <268e8833-d06e-666e-1813-0c74c9a0806d@oracle.com>
+In-Reply-To: <268e8833-d06e-666e-1813-0c74c9a0806d@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20201021092715.22669-4-njavali@marvell.com>
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQFATVqLRX+cZ5DMpa/LB2sUjSWzQACoPXpIAt6af5YB6WcFvAI9rshcAlweFcGqfssEUA==
+Date:   Thu, 22 Oct 2020 00:21:47 +0530
+Message-ID: <61cdb1c1ef7b39b1297a9702061863ec@mail.gmail.com>
+Subject: RE: [PATCH v3 03/17] scsi: No retries on abort success
+To:     Mike Christie <michael.christie@oracle.com>,
+        linux-scsi@vger.kernel.org, hare@suse.de
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000c364fe05b231f7ed"
+        boundary="00000000000082f48005b232d7b2"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000c364fe05b231f7ed
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+--00000000000082f48005b232d7b2
+Content-Type: text/plain; charset="UTF-8"
 
+Hi Michael,
+Thanks for the input.
 
+>Or, in the fc_eh_timed_out callout set the SCMD_NORETRIES_ABORT if port
+>state is marginal and it indicates it wants to abort the cmd. In
+>scsi_noretry_cmd above then you know we got there, because the cmd timedout
+>and we >tried/were going to abort it. We don't need the code to loop over
+>running commands, the chkready changes, etc.
 
-On 10/21/2020 2:27 AM, Nilesh Javali wrote:
-> From: Shyam Sundar <ssundar@marvell.com>
->
-> Parse the incoming FPIN packets and update the host and rport FPIN
-> statistics based on the FPINs.
->
-> Signed-off-by: Shyam Sundar <ssundar@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
->
+Agreed.
+I will incorporate all your review comments.
 
-Reviewed-by: James Smart <james.smart@broadcom.com>
+Regards,
+Muneendra.
 
-Thanks!
-
--- james
-
-
---000000000000c364fe05b231f7ed
+--00000000000082f48005b232d7b2
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Description: S/MIME Cryptographic Signature
 
-MIIQPwYJKoZIhvcNAQcCoIIQMDCCECwCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg2UMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
+MIIQTQYJKoZIhvcNAQcCoIIQPjCCEDoCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg2iMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
 CxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMT
 Ckdsb2JhbFNpZ24wHhcNMTYwNjE1MDAwMDAwWhcNMjQwNjE1MDAwMDAwWjBdMQswCQYDVQQGEwJC
 RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25h
@@ -141,40 +133,40 @@ yAzv95ZURUm7lgAJQayzE4aGKAczymvmdLm6AC2upArT9fHxD4q/c2dKg8dEe3jgr25sbwMpjjM5
 RcOO5LlXbKr8EpbsU8Yt5CRsuZRj+9xTaGdWPoO4zzUhw8lo/s7awlOqzJCK6fBdRoyV3XpYKBov
 Hd7NADdBj+1EbddTKJd+82cEHhXXipa0095MJ6RMG3NzdvQXmcIfeg7jLQitChws/zyrVQ4PkX42
 68NXSb7hLi18YIvDQVETI53O9zJrlAGomecsMx86OyXShkDOOyyGeMlhLxS67ttVb9+E7gUJTb0o
-2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFQTCCBCmgAwIBAgIMfmKtsn6cI8G7HjzCMA0GCSqGSIb3
+2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFTzCCBDegAwIBAgIMX/krgFDQUQNyOf+1MA0GCSqGSIb3
 DQEBCwUAMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQD
-EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTE3MDU0
-NjI0WhcNMjIwOTE4MDU0NjI0WjCBjDELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
-MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRQwEgYDVQQDEwtKYW1l
-cyBTbWFydDEnMCUGCSqGSIb3DQEJARYYamFtZXMuc21hcnRAYnJvYWRjb20uY29tMIIBIjANBgkq
-hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0B4Ym0dby5rc/1eyTwvNzsepN0S9eBGyF45ltfEmEmoe
-sY3NAmThxJaLBzoPYjCpfPWh65cxrVIOw9R3a9TrkDN+aISE1NPyyHOabU57I8bKvfS8WMpCQKSJ
-pDWUbzanP3MMP4C2qbJgQW+xh9UDzBi8u69f40kP+cLEPNJWbz0KxNNp7H/4zWNyTouJRtO6QKVh
-XqR+mg0QW4TJlH5sJ7NIbVGZKzs0PEbUJJJw0zJsp3m0iS6AzNFtTGHWVO1me58DIYR/VDSiY9Sh
-AanDaJF6fE9TEzbfn5AWgVgHkbqS3VY3Gq05xkLhRugDQ60IGwT29K1B+wGfcujKSaalhQIDAQAB
-o4IBzzCCAcswDgYDVR0PAQH/BAQDAgWgMIGeBggrBgEFBQcBAQSBkTCBjjBNBggrBgEFBQcwAoZB
-aHR0cDovL3NlY3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NwZXJzb25hbHNpZ24yc2hhMmcz
-b2NzcC5jcnQwPQYIKwYBBQUHMAGGMWh0dHA6Ly9vY3NwMi5nbG9iYWxzaWduLmNvbS9nc3BlcnNv
-bmFsc2lnbjJzaGEyZzMwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0
-dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwRAYDVR0fBD0w
-OzA5oDegNYYzaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc3BlcnNvbmFsc2lnbjJzaGEyZzMu
-Y3JsMCMGA1UdEQQcMBqBGGphbWVzLnNtYXJ0QGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQUUXCHNA1n5KXj
-CXL1nHkJ8oKX5wYwDQYJKoZIhvcNAQELBQADggEBAGQDKmIdULu06w+bE15XZJOwlarihiP2PHos
-/4bNU3NRgy/tCQbTpJJr3L7LU9ldcPam9qQsErGZKmb5ypUjVdmS5n5M7KN42mnfLs/p7+lOOY5q
-ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
-2JU2wwirL0Sy5S1DREQmTMAuHL+M9Qwbl+uh/AprkVqaSYuvUzWFwBVgafOl2XgGdn8r6ubxSZhX
-9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
-ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg3BjHMRdUlFFGgVAA
-bWP0ZHOVy42jpeS9Un7rK5pUG08wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMDIxMTc0OTIzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
-ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAGgVp0zgWOFJkSurkShcUFhCpPqA86seXJ9R
-i3KCiCUG688kM6xdDtPIsSTolrEFAkqjO1Eqq+IuokSl0sgEb2J2VhONJGZqc3Tm+UIhJbr5fNzH
-edbJTT0rvBKtAKsRPGStNBNeIcm///llEtxaXJU2fNJPGVUzVwzUroNkWhf4wU93CJ3VecL6EpEa
-5arANWWOJEzeos4b9Vglywtpilr8zHgQdAtoqVWPpC1ICAW8297E8yFfCv83SuXZ9hZVS/T4Do4T
-jEMzYs2++h/pxzmbx/4njwW8GbcsGfouUPX5luQiCubdD3vAuFV8jpqQEwRJFdO/6tvKmuPzgJ1a
-Xas=
---000000000000c364fe05b231f7ed--
+EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTA0MDgz
+NTI5WhcNMjIwOTA1MDgzNTI5WjCBljELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
+MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRowGAYDVQQDExFNdW5l
+ZW5kcmEgS3VtYXIgTTErMCkGCSqGSIb3DQEJARYcbXVuZWVuZHJhLmt1bWFyQGJyb2FkY29tLmNv
+bTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMoadg8/B0JvnQVWQZyfiiEMmDhh0bSq
+BIThkSCjIdy7yOV9fBOs6MdrPZgCDeX5rJvOw6PJiWjeQQ9RkTJH6WccvxwXugoyspkG/RfFdUKk
+t0/bk1Ml9aUobcee2+cC79gyzwpHUjzEpcsx49FskGIxI+n9wybrDhpurtj8mmc1C1sVzKNoIEwC
+/eHrCsDnag9JEGotxVVv0KcLXv7N0CXs03bP8uvocms3+gO1K8dasJkc7noMt/i0/xcZnaABWkgV
+J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
+Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
+KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
+aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
+b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
+AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
+MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
+Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
+A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
+DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
+hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
+LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
+9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
+/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
+EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
+b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
+SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
+BCCVf9CRX3goWTDQjf+pgE11tu0Fwua9etSbv0u2ONNNgjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMjExODUxNTdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAgdzkI+54825vrtSw
+kLqQCfc/CceCourSi8d5gCbwgHFV7xnIhSSLuOP3RbpSDO8pkZcMQf8oRdZ0W9HJVdK8ZNOTp6tL
+qVn1ICFl/eyimpaC8ZISU70rd4jBLO8WejBfh9OAAum0rf/NKi49VrCb71iKBcGiox5wbps/Cof0
+6+Ryc1QBcKEx3HjxJBQgc8tgQ+8zcvvghovWQWzxkvQghqhdg2sng1cvp110GaUh3wHYCQ7mnFmY
+y/+NCKKJ0LvtsK6CO8fR4USFTH/onH9fj1QTQ+gnmc5JUyIClbqbExw7K5WfQ14n/5o3VP7RhCh4
+JiIcLsp8LTokuBQJnSL+wA==
+--00000000000082f48005b232d7b2--
