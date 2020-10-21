@@ -2,89 +2,110 @@ Return-Path: <SRS0=hn0g=D4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFF4C4363A
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 08:31:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4045CC4363A
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 09:27:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B1AA2227F
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 08:31:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B655521D6C
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Oct 2020 09:27:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="bwb/tqF6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437101AbgJUIbL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Oct 2020 04:31:11 -0400
-Received: from smtp.h3c.com ([60.191.123.50]:13035 "EHLO h3cspam02-ex.h3c.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436952AbgJUIbL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Oct 2020 04:31:11 -0400
-X-Greylist: delayed 5742 seconds by postgrey-1.27 at vger.kernel.org; Wed, 21 Oct 2020 04:31:10 EDT
-Received: from h3cspam02-ex.h3c.com (localhost [127.0.0.2] (may be forged))
-        by h3cspam02-ex.h3c.com with ESMTP id 09L6tQ6B026815
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 14:55:26 +0800 (GMT-8)
-        (envelope-from tian.xianting@h3c.com)
-Received: from DAG2EX03-BASE.srv.huawei-3com.com ([10.8.0.66])
-        by h3cspam02-ex.h3c.com with ESMTPS id 09L6t8vc026263
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 21 Oct 2020 14:55:08 +0800 (GMT-8)
-        (envelope-from tian.xianting@h3c.com)
-Received: from localhost.localdomain (10.99.212.201) by
- DAG2EX03-BASE.srv.huawei-3com.com (10.8.0.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Wed, 21 Oct 2020 14:55:10 +0800
-From:   Xianting Tian <tian.xianting@h3c.com>
-To:     <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <shivasharan.srikanteshwara@broadcom.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <megaraidlinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Xianting Tian <tian.xianting@h3c.com>
-Subject: [PATCH] scsi: megaraid_sas: use spin_lock() in hard IRQ
-Date:   Wed, 21 Oct 2020 14:45:02 +0800
-Message-ID: <20201021064502.35469-1-tian.xianting@h3c.com>
-X-Mailer: git-send-email 2.17.1
+        id S2395558AbgJUJ1l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Oct 2020 05:27:41 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:29614 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2395379AbgJUJ1k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Oct 2020 05:27:40 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09L9Omx4006710
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 02:27:40 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=omub+oHb7p3fZngRFv+6oG24zqHuKc4n/UhuBHuAgWU=;
+ b=bwb/tqF6aZ7TbmrxfEu24IUyTNXct9ZNrVk9Elfz4SbagJNb5fXSo6cdUTTjrowPZoSV
+ r46BTLtNG22BM1O/Ik/QxdQxzhzb6bmzuvv6QvUmesgB7rMsh8IdvJpWLZQTeLJFINcD
+ hiWDNIGOziA1FKCuh9qD9NdflHRXhuwDiAxBr/B5gr5qYA/LHXVxhOZ5SBemVmdCKCCF
+ 5MCz2E4balMampXatgPQbAfvr96hDieaYq6oXlGnjp5F2U/mSN6fVZULuFoTz1X+SqL6
+ tCN2PkONrtefleYvEVsGJd7+arAn+GqEqpabNp82muLTAmmUtduSwUpg5mhX7wdZTwNJ 8g== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0a-0016f401.pphosted.com with ESMTP id 347wyqcm5t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2020 02:27:40 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 21 Oct
+ 2020 02:27:39 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 21 Oct 2020 02:27:39 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 70CE53F703F;
+        Wed, 21 Oct 2020 02:27:39 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 09L9Rdkh022704;
+        Wed, 21 Oct 2020 02:27:39 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 09L9RdLV022703;
+        Wed, 21 Oct 2020 02:27:39 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v3 0/5] SAN Congestion Management (SCM) statistics
+Date:   Wed, 21 Oct 2020 02:27:10 -0700
+Message-ID: <20201021092715.22669-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Originating-IP: [10.99.212.201]
-X-ClientProxiedBy: BJSMTP01-EX.srv.huawei-3com.com (10.63.20.132) To
- DAG2EX03-BASE.srv.huawei-3com.com (10.8.0.66)
-X-DNSRBL: 
-X-MAIL: h3cspam02-ex.h3c.com 09L6t8vc026263
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.737
+ definitions=2020-10-21_03:2020-10-20,2020-10-21 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since we already in hard IRQ context when running megasas_isr(), so use
-spin_lock() is enough, which is faster than spin_lock_irqsave().
+Martin,
 
-Signed-off-by: Xianting Tian <tian.xianting@h3c.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Please apply the attached patchset implementing the SAN Congestion
+Management (SCM) statistics to the scsi tree at your earliest
+convenience.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 2b7e7b5f3..bd186254d 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3977,15 +3977,14 @@ static irqreturn_t megasas_isr(int irq, void *devp)
- {
- 	struct megasas_irq_context *irq_context = devp;
- 	struct megasas_instance *instance = irq_context->instance;
--	unsigned long flags;
- 	irqreturn_t rc;
- 
- 	if (atomic_read(&instance->fw_reset_no_pci_access))
- 		return IRQ_HANDLED;
- 
--	spin_lock_irqsave(&instance->hba_lock, flags);
-+	spin_lock(&instance->hba_lock);
- 	rc = megasas_deplete_reply_queue(instance, DID_OK);
--	spin_unlock_irqrestore(&instance->hba_lock, flags);
-+	spin_unlock(&instance->hba_lock);
- 
- 	return rc;
- }
+v2->v3:
+Incorporate review comments for patch v2 3/5.
+Added Reviewed-by tag for other patches.
+
+v1->v2:
+Further break down patches based on functionality.
+Remove dependency on LLDs for remote port FPIN statistics.
+Optimize fc_find_rport_by_wwpn implementation.
+Name changes to multiple variables/structure elements based on review
+comments.
+
+Thanks,
+Nilesh
+
+Shyam Sundar (5):
+  scsi: fc: Update formal FPIN descriptor definitions
+  scsi: fc: Add FPIN statistics to fc_host and fc_rport objects
+  scsi: fc: Parse FPIN packets and update statistics
+  scsi: fc: Add mechanism to update FPIN signal statistics
+  scsi: fc: Update documentation of sysfs nodes for FPIN stats
+
+ Documentation/ABI/testing/sysfs-class-fc_host |  23 +
+ .../ABI/testing/sysfs-class-fc_remote_ports   |  23 +
+ drivers/scsi/scsi_transport_fc.c              | 415 ++++++++++++++++++
+ include/scsi/scsi_transport_fc.h              |  36 ++
+ include/uapi/scsi/fc/fc_els.h                 | 114 ++++-
+ 5 files changed, 610 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-fc_host
+ create mode 100644 Documentation/ABI/testing/sysfs-class-fc_remote_ports
+
+
+base-commit: 1ef16a407f544408d3559e4de2ed05591df4da75
 -- 
-2.17.1
+2.19.0.rc0
 
