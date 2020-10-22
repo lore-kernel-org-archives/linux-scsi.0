@@ -2,150 +2,87 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE87BC4363A
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 09:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 039B7C4363A
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 10:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F15B24248
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 09:36:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VMLvYiWB"
+	by mail.kernel.org (Postfix) with ESMTP id 95E9E223BF
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 10:09:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2896026AbgJVJg5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Oct 2020 05:36:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:52464 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2895247AbgJVJg4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Oct 2020 05:36:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603359415;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DC+3OwmtjhrVCpfk4sXvCEkgbYjM3Mk+x26MXzYFx48=;
-        b=VMLvYiWBWMQ8BdmpBnQeU65MkER6Womd4xJdO54glA3t/92ZkYXsTYq1nUygAYE8r7fHoJ
-        VgCH5M1VDUAcntGU/mdWH31g0jLaaceEeQfPMxf0koDQMbNQ9meQSM/seFb5+cOHaUP3NR
-        yWNVcXHNeqU07Xr7fsFTmP86uBEG6MA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-481-oXTdLQjNMMegK_tfwCZIGg-1; Thu, 22 Oct 2020 05:36:50 -0400
-X-MC-Unique: oXTdLQjNMMegK_tfwCZIGg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6A2D364152;
-        Thu, 22 Oct 2020 09:36:46 +0000 (UTC)
-Received: from [10.36.113.152] (ovpn-113-152.ams2.redhat.com [10.36.113.152])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7E9B810013D0;
-        Thu, 22 Oct 2020 09:36:41 +0000 (UTC)
-Subject: Re: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
- rw_copy_check_uvector() into lib/iov_iter.c"
-To:     David Laight <David.Laight@ACULAB.COM>,
-        Greg KH <gregkh@linuxfoundation.org>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        id S2896288AbgJVKJT convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Oct 2020 06:09:19 -0400
+Received: from smtp.h3c.com ([60.191.123.56]:60869 "EHLO h3cspam01-ex.h3c.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2896261AbgJVKJS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Oct 2020 06:09:18 -0400
+Received: from DAG2EX02-BASE.srv.huawei-3com.com ([10.8.0.65])
+        by h3cspam01-ex.h3c.com with ESMTPS id 09MA8w1e086358
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 22 Oct 2020 18:08:58 +0800 (GMT-8)
+        (envelope-from tian.xianting@h3c.com)
+Received: from DAG2EX03-BASE.srv.huawei-3com.com (10.8.0.66) by
+ DAG2EX02-BASE.srv.huawei-3com.com (10.8.0.65) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Thu, 22 Oct 2020 18:09:01 +0800
+Received: from DAG2EX03-BASE.srv.huawei-3com.com ([fe80::5d18:e01c:bbbd:c074])
+ by DAG2EX03-BASE.srv.huawei-3com.com ([fe80::5d18:e01c:bbbd:c074%7]) with
+ mapi id 15.01.2106.002; Thu, 22 Oct 2020 18:09:01 +0800
+From:   Tianxianting <tian.xianting@h3c.com>
+To:     Finn Thain <fthain@telegraphics.com.au>
+CC:     "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
+        "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>,
+        "shivasharan.srikanteshwara@broadcom.com" 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-aio@kvack.org" <linux-aio@kvack.org>,
-        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
-        "linux-security-module@vger.kernel.org" 
-        <linux-security-module@vger.kernel.org>
-References: <20200925045146.1283714-1-hch@lst.de>
- <20200925045146.1283714-3-hch@lst.de> <20201021161301.GA1196312@kroah.com>
- <20201021233914.GR3576660@ZenIV.linux.org.uk>
- <20201022082654.GA1477657@kroah.com>
- <80a2e5fa-718a-8433-1ab0-dd5b3e3b5416@redhat.com>
- <5d2ecb24db1e415b8ff88261435386ec@AcuMS.aculab.com>
- <df2e0758-b8ed-5aec-6adc-a18f499c0179@redhat.com>
- <20201022090155.GA1483166@kroah.com>
- <e04d0c5d-e834-a15b-7844-44dcc82785cc@redhat.com>
- <a1533569-948a-1d5b-e231-5531aa988047@redhat.com>
- <bc0a091865f34700b9df332c6e9dcdfd@AcuMS.aculab.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat GmbH
-Message-ID: <5fd6003b-55a6-2c3c-9a28-8fd3a575ca78@redhat.com>
-Date:   Thu, 22 Oct 2020 11:36:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] scsi: megaraid_sas: use spin_lock() in hard IRQ
+Thread-Topic: [PATCH] scsi: megaraid_sas: use spin_lock() in hard IRQ
+Thread-Index: AQHWp3ceROYVx1Vy20ukToM9T7xND6miYAoAgACPazD//4KKAIAA9PNA
+Date:   Thu, 22 Oct 2020 10:09:00 +0000
+Message-ID: <89c5cb05cb844939ae684db0077f675f@h3c.com>
+References: <20201021064502.35469-1-tian.xianting@h3c.com>
+ <alpine.LNX.2.23.453.2010221312460.6@nippy.intranet>
+ <9923f28dd2b34499a17c53e8fa33f1ca@h3c.com>
+ <alpine.LNX.2.23.453.2010221424390.6@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.23.453.2010221424390.6@nippy.intranet>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.99.141.128]
+x-sender-location: DAG2
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-In-Reply-To: <bc0a091865f34700b9df332c6e9dcdfd@AcuMS.aculab.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-DNSRBL: 
+X-MAIL: h3cspam01-ex.h3c.com 09MA8w1e086358
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22.10.20 11:32, David Laight wrote:
-> From: David Hildenbrand
->> Sent: 22 October 2020 10:25
-> ...
->> ... especially because I recall that clang and gcc behave slightly
->> differently:
->>
->> https://github.com/hjl-tools/x86-psABI/issues/2
->>
->> "Function args are different: narrow types are sign or zero extended to
->> 32 bits, depending on their type. clang depends on this for incoming
->> args, but gcc doesn't make that assumption. But both compilers do it
->> when calling, so gcc code can call clang code.
-> 
-> It really is best to use 'int' (or even 'long') for all numeric
-> arguments (and results) regardless of the domain of the value.
-> 
-> Related, I've always worried about 'bool'....
-> 
->> The upper 32 bits of registers are always undefined garbage for types
->> smaller than 64 bits."
-> 
-> On x86-64 the high bits are zeroed by all 32bit loads.
+Yes, thanks
+I see, If we add this patch, we need to get all cpu arch that support nested interrupts.
 
-Yeah, but does not help here.
+-----Original Message-----
+From: Finn Thain [mailto:fthain@telegraphics.com.au] 
+Sent: Thursday, October 22, 2020 11:29 AM
+To: tianxianting (RD) <tian.xianting@h3c.com>
+Cc: kashyap.desai@broadcom.com; sumit.saxena@broadcom.com; shivasharan.srikanteshwara@broadcom.com; jejb@linux.ibm.com; martin.petersen@oracle.com; megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: RE: [PATCH] scsi: megaraid_sas: use spin_lock() in hard IRQ
 
+On Thu, 22 Oct 2020, Tianxianting wrote:
 
-My thinking: if the compiler that calls import_iovec() has garbage in
-the upper 32 bit
+> Do you mean Megasas raid can be used in m68k arch?
 
-a) gcc will zero it out and not rely on it being zero.
-b) clang will not zero it out, assuming it is zero.
+m68k is one example of an architecture on which the unstated assumptions in your patch would be invalid. Does this help to clarify what I wrote?
 
-But
+If Megasas raid did work on m68k, I'm sure it could potentially benefit from the theoretical performance improvement from your patch.
 
-a) will zero it out when calling the !inlined variant
-b) clang will zero it out when calling the !inlined variant
-
-When inlining, b) strikes. We access garbage. That would mean that we
-have calling code that's not generated by clang/gcc IIUC.
-
-We can test easily by changing the parameters instead of adding an "inline".
-
--- 
-Thanks,
-
-David / dhildenb
-
+So perhaps you would consider adding support for slower CPUs like m68k.
