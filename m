@@ -2,157 +2,138 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC57C4363A
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 08:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E6FC388F2
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 09:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EBF622248
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 08:49:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D53AF21775
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 09:00:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ASV2uWrS"
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="dHaNfa5S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2508580AbgJVItO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Oct 2020 04:49:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60418 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2508500AbgJVItO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Oct 2020 04:49:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603356551;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Yeg0jT4D/9DqFY66G18hrg55FSffylHedhDgi/OUthM=;
-        b=ASV2uWrS0MRc7TXQZNb+nfT0NKggFgI+kIdj2OBlMKLnA+tu20SZ4aHwJRv+QJU7/Nw0PO
-        27+ffwvoKJClXC2TcH74AEGlGxUYvpRhiVacPFHujouvogP/Ek04LPlEpxNKv8ZVLs8F1A
-        hTN3QV4iZV+MRKImsZWCPPaZ+lYwIHI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-86-xBNzqHeqP4aipoD_ML6qQQ-1; Thu, 22 Oct 2020 04:49:09 -0400
-X-MC-Unique: xBNzqHeqP4aipoD_ML6qQQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E9A141018F80;
-        Thu, 22 Oct 2020 08:49:05 +0000 (UTC)
-Received: from [10.36.113.152] (ovpn-113-152.ams2.redhat.com [10.36.113.152])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8980C60C04;
-        Thu, 22 Oct 2020 08:49:00 +0000 (UTC)
-Subject: Re: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
- rw_copy_check_uvector() into lib/iov_iter.c"
-To:     David Laight <David.Laight@ACULAB.COM>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Nick Desaulniers <ndesaulniers@google.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-aio@kvack.org" <linux-aio@kvack.org>,
-        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
-        "linux-security-module@vger.kernel.org" 
-        <linux-security-module@vger.kernel.org>
-References: <20200925045146.1283714-1-hch@lst.de>
- <20200925045146.1283714-3-hch@lst.de> <20201021161301.GA1196312@kroah.com>
- <20201021233914.GR3576660@ZenIV.linux.org.uk>
- <20201022082654.GA1477657@kroah.com>
- <80a2e5fa-718a-8433-1ab0-dd5b3e3b5416@redhat.com>
- <5d2ecb24db1e415b8ff88261435386ec@AcuMS.aculab.com>
-From:   David Hildenbrand <david@redhat.com>
-Organization: Red Hat GmbH
-Message-ID: <df2e0758-b8ed-5aec-6adc-a18f499c0179@redhat.com>
-Date:   Thu, 22 Oct 2020 10:48:59 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        id S2509172AbgJVJAU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Oct 2020 05:00:20 -0400
+Received: from mout.gmx.net ([212.227.17.20]:57411 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2438092AbgJVJAU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Oct 2020 05:00:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1603357209;
+        bh=XsMIsfv73jp2VtudzQOahStXJllvYSuk50TIG/4B3hI=;
+        h=X-UI-Sender-Class:Date:From:To:Cc:Subject;
+        b=dHaNfa5Sl81aCoWioehKqUHGeOxrNNAGY2axGVSr3D5cKHRK18dVlw3ekcUny+K7A
+         LnmdSBOTenCENzfbBselLSyN7rL6QawXoYQL0SR4GS3AgE9HJFM45GnxQSFzUxFS29
+         noyIcSEiJean+UFKNDR2DY+OJi0rSjRiNu0Le6/k=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from ls3530.fritz.box ([92.116.134.214]) by mail.gmx.com (mrgmx105
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1N2mFY-1kQ7ev1c5c-0132kH; Thu, 22
+ Oct 2020 11:00:09 +0200
+Date:   Thu, 22 Oct 2020 11:00:05 +0200
+From:   Helge Deller <deller@gmx.de>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     linux-parisc@vger.kernel.org,
+        James Bottomley <James.Bottomley@hansenpartnership.com>
+Subject: [PATCH] scsi: mptfusion: Fix null pointer dereferences in
+ mptscsih_remove()
+Message-ID: <20201022090005.GA9000@ls3530.fritz.box>
 MIME-Version: 1.0
-In-Reply-To: <5d2ecb24db1e415b8ff88261435386ec@AcuMS.aculab.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Provags-ID: V03:K1:SYKXNjRyYP+ihkolsMwKc+AEwJmHzKc4SEdOSjrbKDfQkLUFS6D
+ VFfU/BCUR8AdvAbFUA4bqeflI29smpv9b9YGA3XGFr9ki2kSxGtiBHY3Z4WC0PnP0nKLGhg
+ bslhgztdi/sU2uUGoGQ8m3YmkSkWjLt4IfNx8g6UOYaS+Wc40o44JbP/CMZmIQg/2reE70r
+ iDILYlmX5QVAKE8xEYKpw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:/AbSNMgCKKw=:adbcFUZEXwobSbEB8Mya4p
+ 5XRIOheOUwKAO5XyjfJ5hlVdMpatdzaq0xKzNkfhNkOyJUOZ64Ux2uRIM5teQVXrFBHaHwiua
+ JcNbw1s5qd8VJn4iskYy8rNQ9VAbLOt3dkbpbJpnp9N98hwIVFDGK3Fw3LEMCex1q4r/J1obI
+ R0/eB3/Z1LOR6wn2cYaZPwcuxnvU3CiE0HQlOfhLL9cXu2xaS9J3bWAdkat/XRptxn8K5YqUQ
+ LgpyyNflkQ/Ao4/XV9t06zqKBsP1ywIZgujKpYXNT33JTGGynitkcBOHCQL7sXSafFMfQSh+g
+ wM/VnMKm7rswktxF3OZLQ68We8sxYh8Hf+9VKC5SdzXh68weTVoqwhA+iNv0HW8Ivk5qUlHCs
+ D65ISUbHiagqHfRvJ8xsrBOk6OxUGHFipMxoVX1iGSgpw5pVfHzEyH2T3E/e+/2azB6UBuMuO
+ PCm2jNzDrQRK23Pfg7mS8jrbOaikTEfnrVtt+jK7G+3Od3VJJBcKU2k8gNKS43Lrve35Qe2Pi
+ lRMhGcia9mli0LJ8TgtfpfqO10KZ0ubCWxVp7k2JcHVRRcAHjcZkakOa3iZhYbPeH4DE6KGgz
+ A2libZfzu9PQEjvX6yJ7/RyU4cQG+/oj5DpRwWxGNXxkMBKJ9ePYQ2NtDzb/GSHhL1AvrIU6A
+ pJfb8zjsq/OzBwaMEL5VK3CLdwVxjRBEyl66wNT3hzICYE5kbhqa+TkQ5Xmvs+q6+Lb7ifW4b
+ rZRMBgnooLuume6YlpA9QfoHD+6YJYiIADlyabduQzL1d1ml5PRImVi7tNgACBNWbEcCXzJht
+ 1S4ls6yLisWUHE/oKK1PrC3xlWKr3Uvoisttn7q1/z6gY1w1r+vjBsobw9srEwYNHlCiBNn0U
+ x0A1x7DVY+2UT5N8MIUg==
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22.10.20 10:40, David Laight wrote:
-> From: David Hildenbrand
->> Sent: 22 October 2020 09:35
->>
->> On 22.10.20 10:26, Greg KH wrote:
->>> On Thu, Oct 22, 2020 at 12:39:14AM +0100, Al Viro wrote:
->>>> On Wed, Oct 21, 2020 at 06:13:01PM +0200, Greg KH wrote:
->>>>> On Fri, Sep 25, 2020 at 06:51:39AM +0200, Christoph Hellwig wrote:
->>>>>> From: David Laight <David.Laight@ACULAB.COM>
->>>>>>
->>>>>> This lets the compiler inline it into import_iovec() generating
->>>>>> much better code.
->>>>>>
->>>>>> Signed-off-by: David Laight <david.laight@aculab.com>
->>>>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>>>>> ---
->>>>>>  fs/read_write.c | 179 ------------------------------------------------
->>>>>>  lib/iov_iter.c  | 176 +++++++++++++++++++++++++++++++++++++++++++++++
->>>>>>  2 files changed, 176 insertions(+), 179 deletions(-)
->>>>>
->>>>> Strangely, this commit causes a regression in Linus's tree right now.
->>>>>
->>>>> I can't really figure out what the regression is, only that this commit
->>>>> triggers a "large Android system binary" from working properly.  There's
->>>>> no kernel log messages anywhere, and I don't have any way to strace the
->>>>> thing in the testing framework, so any hints that people can provide
->>>>> would be most appreciated.
->>>>
->>>> It's a pure move - modulo changed line breaks in the argument lists
->>>> the functions involved are identical before and after that (just checked
->>>> that directly, by checking out the trees before and after, extracting two
->>>> functions in question from fs/read_write.c and lib/iov_iter.c (before and
->>>> after, resp.) and checking the diff between those.
->>>>
->>>> How certain is your bisection?
->>>
->>> The bisection is very reproducable.
->>>
->>> But, this looks now to be a compiler bug.  I'm using the latest version
->>> of clang and if I put "noinline" at the front of the function,
->>> everything works.
->>
->> Well, the compiler can do more invasive optimizations when inlining. If
->> you have buggy code that relies on some unspecified behavior, inlining
->> can change the behavior ... but going over that code, there isn't too
->> much action going on. At least nothing screamed at me.
-> 
-> Apart from all the optimisations that get rid off the 'pass be reference'
-> parameters and strange conditional tests.
-> Plenty of scope for the compiler getting it wrong.
-> But nothing even vaguely illegal.
+The mptscsih_remove() function triggers a kernel oops if the
+Scsi_Host pointer (ioc->sh) is NULL, as can be seen in this syslog:
 
-Not the first time that people blame the compiler to then figure out
-that something else is wrong ... but maybe this time is different :)
+ ioc0: LSI53C1030 B2: Capabilities=3D{Initiator,Target}
+ Begin: Waiting for root file system ...
+ scsi host2: error handler thread failed to spawn, error =3D -4
+ mptspi: ioc0: WARNING - Unable to register controller with SCSI subsystem
+ Backtrace:
+  [<000000001045b7cc>] mptspi_probe+0x248/0x3d0 [mptspi]
+  [<0000000040946470>] pci_device_probe+0x1ac/0x2d8
+  [<0000000040add668>] really_probe+0x1bc/0x988
+  [<0000000040ade704>] driver_probe_device+0x160/0x218
+  [<0000000040adee24>] device_driver_attach+0x160/0x188
+  [<0000000040adef90>] __driver_attach+0x144/0x320
+  [<0000000040ad7c78>] bus_for_each_dev+0xd4/0x158
+  [<0000000040adc138>] driver_attach+0x4c/0x80
+  [<0000000040adb3ec>] bus_add_driver+0x3e0/0x498
+  [<0000000040ae0130>] driver_register+0xf4/0x298
+  [<00000000409450c4>] __pci_register_driver+0x78/0xa8
+  [<000000000007d248>] mptspi_init+0x18c/0x1c4 [mptspi]
 
--- 
-Thanks,
+This patch adds the necessary NULL-pointer checks.
+Successfully tested on a HP C8000 parisc workstation with buggy SCSI drive=
+s.
 
-David / dhildenb
+Signed-off-by: Helge Deller <deller@gmx.de>
+Cc: <stable@vger.kernel.org>
 
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mp=
+tscsih.c
+index 8543f0324d5a..0d1b2b0eb843 100644
+=2D-- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1176,8 +1176,10 @@ mptscsih_remove(struct pci_dev *pdev)
+ 	MPT_SCSI_HOST		*hd;
+ 	int sz1;
+
+-	if((hd =3D shost_priv(host)) =3D=3D NULL)
+-		return;
++	if (host =3D=3D NULL)
++		hd =3D NULL;
++	else
++		hd =3D shost_priv(host);
+
+ 	mptscsih_shutdown(pdev);
+
+@@ -1193,14 +1195,15 @@ mptscsih_remove(struct pci_dev *pdev)
+ 	    "Free'd ScsiLookup (%d) memory\n",
+ 	    ioc->name, sz1));
+
+-	kfree(hd->info_kbuf);
++	if (hd)
++		kfree(hd->info_kbuf);
+
+ 	/* NULL the Scsi_Host pointer
+ 	 */
+ 	ioc->sh =3D NULL;
+
+-	scsi_host_put(host);
+-
++	if (host)
++		scsi_host_put(host);
+ 	mpt_detach(pdev);
+
+ }
