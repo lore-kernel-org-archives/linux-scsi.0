@@ -2,252 +2,80 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6E0C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 00:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66576C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 02:24:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F980223BF
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 00:52:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="acTAdtPS"
+	by mail.kernel.org (Postfix) with ESMTP id 266792245F
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 02:24:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2894467AbgJVAwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Oct 2020 20:52:17 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33278 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2442801AbgJVAwR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2020 20:52:17 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09M0pw67008105;
-        Thu, 22 Oct 2020 00:52:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- references : message-id : date : mime-version : in-reply-to : content-type
- : content-transfer-encoding; s=corp-2020-01-29;
- bh=ySwaYeUB/xfEEnLDVmYw9VoYrKUDbWZ+SilXkfBhYM4=;
- b=acTAdtPS1MXegaJEXHqj9+rQEvPY60Y86gMvzYdyd4n/6vsjKI9Go/FMOQ04UZMuO9Ga
- WoS1T9cBs3ULJtOEVI64JQlN7nRRIxBYKWQPhUIeaPQlykR2KQp8JI4JGQiMwOZgJerF
- Qrh05mCG2z7HdyqQYtAgFQgWMBVSZNQag4VLLsRruLsW3F9y0p30srVXOHD09ZWdXyxl
- JmcymIH2IG6/bmtwY5xMTnpKa8lXKRLMYmjBxTlzJEc0BUBGdSQsnma/bGuDw67+DIfA
- s/V2pUsY5nBJVM+69XBiWpnXSuKGdtp+xVxII5f7/8KmhdaWV8qp8Pvzk+MmjHk7Y8QE Ug== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 34ak16kq02-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 22 Oct 2020 00:52:13 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09M0nghx027872;
-        Thu, 22 Oct 2020 00:50:12 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 348ah0987v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Oct 2020 00:50:12 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09M0oAo2014875;
-        Thu, 22 Oct 2020 00:50:11 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 21 Oct 2020 17:50:09 -0700
-Subject: Re: [PATCH 15/17] host: support delayed vq creation
-From:   Mike Christie <michael.christie@oracle.com>
-To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
-        pbonzini@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-References: <1603326903-27052-1-git-send-email-michael.christie@oracle.com>
- <1603326903-27052-16-git-send-email-michael.christie@oracle.com>
-Message-ID: <64d6396f-8dca-b932-6fa3-6847fd3ff0f6@oracle.com>
-Date:   Wed, 21 Oct 2020 19:50:09 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S2895029AbgJVCYz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Oct 2020 22:24:55 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:46046 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2895026AbgJVCYz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2020 22:24:55 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id C397122444;
+        Wed, 21 Oct 2020 22:24:51 -0400 (EDT)
+Date:   Thu, 22 Oct 2020 13:25:00 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Xianting Tian <tian.xianting@h3c.com>
+cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_sas: use spin_lock() in hard IRQ
+In-Reply-To: <20201021064502.35469-1-tian.xianting@h3c.com>
+Message-ID: <alpine.LNX.2.23.453.2010221312460.6@nippy.intranet>
+References: <20201021064502.35469-1-tian.xianting@h3c.com>
 MIME-Version: 1.0
-In-Reply-To: <1603326903-27052-16-git-send-email-michael.christie@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
- malwarescore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010220002
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- priorityscore=1501 clxscore=1015 malwarescore=0 mlxscore=0 adultscore=0
- lowpriorityscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010220002
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The email subject and patch description got cut and paste from the wrong
-patch when I updated this patch. It should be:
+On Wed, 21 Oct 2020, Xianting Tian wrote:
 
+> Since we already in hard IRQ context when running megasas_isr(),
 
-[PATCH 15/17] vhost scsi: make completion per vq
+On m68k, hard irq context does not mean interrupts are disabled. Are there 
+no other architectures in that category?
 
-In the last patches we are going to have a worker thread per IO vq.
-This patch separates the scsi cmd completion code paths so we can
-complete cmds based on their vq instead of having all cmds complete
-on the same worker thread.
-
-
----
-
-When I handle other review comments in the set I'll fix this up too.
-
-
-On 10/21/20 7:35 PM, Mike Christie wrote:
-> This allows vq creation to be done when it's first accessed by
-> userspace. vhost-scsi doesn't know how many queues the user requested
-> until they are first setup, and we don't want to allocate resources
-> like the iovecs for 128 vqs when we are only using 1 or 2 most of the
-> time. In the next pathces, vhost-scsi will also switch to preallocating
-> cmds per vq instead of per lio session and we don't want to allocate
-> them for 127 extra vqs if they are not in use.
+> so use spin_lock() is enough, which is faster than spin_lock_irqsave().
 > 
-> With this patch when a driver calls vhost_dev_init they pass in the
-> number of vqs that they know they need and the max they can support.
-> This patch has all the drivers pass in the same value for both the
-> initial number of vqs and the max. The next patch will convert scsi.
-> The other drivers like net/vsock have their vqs hard coded in the
-> kernel or setup/discovered via other methods like with vdpa.
-> 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+
+Is that measurable?
+
+> Signed-off-by: Xianting Tian <tian.xianting@h3c.com>
 > ---
->  drivers/vhost/scsi.c | 48 +++++++++++++++++++++++++-----------------------
->  1 file changed, 25 insertions(+), 23 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index b348e9c..5d6dc15 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -178,6 +178,7 @@ enum {
->  
->  struct vhost_scsi_virtqueue {
->  	struct vhost_virtqueue vq;
-> +	struct vhost_scsi *vs;
->  	/*
->  	 * Reference counting for inflight reqs, used for flush operation. At
->  	 * each time, one reference tracks new commands submitted, while we
-> @@ -192,6 +193,9 @@ struct vhost_scsi_virtqueue {
->  	struct vhost_scsi_cmd *scsi_cmds;
->  	struct sbitmap scsi_tags;
->  	int max_cmds;
-> +
-> +	struct vhost_work completion_work;
-> +	struct llist_head completion_list;
->  };
->  
->  struct vhost_scsi {
-> @@ -202,9 +206,6 @@ struct vhost_scsi {
->  	struct vhost_dev dev;
->  	struct vhost_scsi_virtqueue vqs[VHOST_SCSI_MAX_VQ];
->  
-> -	struct vhost_work vs_completion_work; /* cmd completion work item */
-> -	struct llist_head vs_completion_list; /* cmd completion queue */
-> -
->  	struct vhost_work vs_event_work; /* evt injection work item */
->  	struct llist_head vs_event_list; /* evt injection queue */
->  
-> @@ -380,10 +381,11 @@ static void vhost_scsi_release_cmd(struct se_cmd *se_cmd)
->  	} else {
->  		struct vhost_scsi_cmd *cmd = container_of(se_cmd,
->  					struct vhost_scsi_cmd, tvc_se_cmd);
-> -		struct vhost_scsi *vs = cmd->tvc_vhost;
-> +		struct vhost_scsi_virtqueue *svq =  container_of(cmd->tvc_vq,
-> +					struct vhost_scsi_virtqueue, vq);
->  
-> -		llist_add(&cmd->tvc_completion_list, &vs->vs_completion_list);
-> -		vhost_work_queue(&vs->dev, &vs->vs_completion_work);
-> +		llist_add(&cmd->tvc_completion_list, &svq->completion_list);
-> +		vhost_vq_work_queue(&svq->vq, &svq->completion_work);
->  	}
->  }
->  
-> @@ -545,18 +547,17 @@ static void vhost_scsi_evt_work(struct vhost_work *work)
->   */
->  static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 2b7e7b5f3..bd186254d 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -3977,15 +3977,14 @@ static irqreturn_t megasas_isr(int irq, void *devp)
 >  {
-> -	struct vhost_scsi *vs = container_of(work, struct vhost_scsi,
-> -					vs_completion_work);
-> -	DECLARE_BITMAP(signal, VHOST_SCSI_MAX_VQ);
-> +	struct vhost_scsi_virtqueue *svq = container_of(work,
-> +				struct vhost_scsi_virtqueue, completion_work);
->  	struct virtio_scsi_cmd_resp v_rsp;
->  	struct vhost_scsi_cmd *cmd, *t;
->  	struct llist_node *llnode;
->  	struct se_cmd *se_cmd;
->  	struct iov_iter iov_iter;
-> -	int ret, vq;
-> +	bool signal = false;
-> +	int ret;
+>  	struct megasas_irq_context *irq_context = devp;
+>  	struct megasas_instance *instance = irq_context->instance;
+> -	unsigned long flags;
+>  	irqreturn_t rc;
 >  
-> -	bitmap_zero(signal, VHOST_SCSI_MAX_VQ);
-> -	llnode = llist_del_all(&vs->vs_completion_list);
-> +	llnode = llist_del_all(&svq->completion_list);
->  	llist_for_each_entry_safe(cmd, t, llnode, tvc_completion_list) {
->  		se_cmd = &cmd->tvc_se_cmd;
+>  	if (atomic_read(&instance->fw_reset_no_pci_access))
+>  		return IRQ_HANDLED;
 >  
-> @@ -576,21 +577,16 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
->  			      cmd->tvc_in_iovs, sizeof(v_rsp));
->  		ret = copy_to_iter(&v_rsp, sizeof(v_rsp), &iov_iter);
->  		if (likely(ret == sizeof(v_rsp))) {
-> -			struct vhost_scsi_virtqueue *q;
-> +			signal = true;
->  			vhost_add_used(cmd->tvc_vq, cmd->tvc_vq_desc, 0);
-> -			q = container_of(cmd->tvc_vq, struct vhost_scsi_virtqueue, vq);
-> -			vq = q - vs->vqs;
-> -			__set_bit(vq, signal);
->  		} else
->  			pr_err("Faulted on virtio_scsi_cmd_resp\n");
+> -	spin_lock_irqsave(&instance->hba_lock, flags);
+> +	spin_lock(&instance->hba_lock);
+>  	rc = megasas_deplete_reply_queue(instance, DID_OK);
+> -	spin_unlock_irqrestore(&instance->hba_lock, flags);
+> +	spin_unlock(&instance->hba_lock);
 >  
->  		vhost_scsi_release_cmd_res(se_cmd);
->  	}
->  
-> -	vq = -1;
-> -	while ((vq = find_next_bit(signal, VHOST_SCSI_MAX_VQ, vq + 1))
-> -		< VHOST_SCSI_MAX_VQ)
-> -		vhost_signal(&vs->dev, &vs->vqs[vq].vq);
-> +	if (signal)
-> +		vhost_signal(&svq->vs->dev, &svq->vq);
+>  	return rc;
 >  }
->  
->  static struct vhost_scsi_cmd *
-> @@ -1805,6 +1801,7 @@ static int vhost_scsi_set_features(struct vhost_scsi *vs, u64 features)
->  
->  static int vhost_scsi_open(struct inode *inode, struct file *f)
->  {
-> +	struct vhost_scsi_virtqueue *svq;
->  	struct vhost_scsi *vs;
->  	struct vhost_virtqueue **vqs;
->  	int r = -ENOMEM, i;
-> @@ -1820,7 +1817,6 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
->  	if (!vqs)
->  		goto err_vqs;
->  
-> -	vhost_work_init(&vs->vs_completion_work, vhost_scsi_complete_cmd_work);
->  	vhost_work_init(&vs->vs_event_work, vhost_scsi_evt_work);
->  
->  	vs->vs_events_nr = 0;
-> @@ -1831,8 +1827,14 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
->  	vs->vqs[VHOST_SCSI_VQ_CTL].vq.handle_kick = vhost_scsi_ctl_handle_kick;
->  	vs->vqs[VHOST_SCSI_VQ_EVT].vq.handle_kick = vhost_scsi_evt_handle_kick;
->  	for (i = VHOST_SCSI_VQ_IO; i < VHOST_SCSI_MAX_VQ; i++) {
-> -		vqs[i] = &vs->vqs[i].vq;
-> -		vs->vqs[i].vq.handle_kick = vhost_scsi_handle_kick;
-> +		svq = &vs->vqs[i];
-> +
-> +		vqs[i] = &svq->vq;
-> +		svq->vs = vs;
-> +		init_llist_head(&svq->completion_list);
-> +		vhost_work_init(&svq->completion_work,
-> +				vhost_scsi_complete_cmd_work);
-> +		svq->vq.handle_kick = vhost_scsi_handle_kick;
->  	}
->  
->  	/*
 > 
-
