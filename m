@@ -2,230 +2,76 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2167EC55179
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 13:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAEC6C388F7
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 14:21:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C85B02463F
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 13:50:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603374605;
-	bh=Sx4cMqDWql3aoHGVxi4Q1ch5vU0C+DCUz8yFXZzOK/k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=sToJtOTvL/mWlp+GvGu1rZLySCUdoLOxAjQE4ZabL04VD4afR4IVAid4tdMVWMQH0
-	 lz5q49b8JyanB9xA+Crenu/YlPXKRtX5n3dfh7nEtmSTDcimoPATLiFX2Fkl5H8RUB
-	 TLK82ZGVlSQdEBqQYGs/NUNk1w20dxjlXpT2r7ho=
+	by mail.kernel.org (Postfix) with ESMTP id 660F52463B
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 14:21:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S368013AbgJVNuF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Oct 2020 09:50:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33638 "EHLO mail.kernel.org"
+        id S2900797AbgJVOVR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Oct 2020 10:21:17 -0400
+Received: from mga02.intel.com ([134.134.136.20]:55111 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S367995AbgJVNuB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Oct 2020 09:50:01 -0400
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7E63321D43;
-        Thu, 22 Oct 2020 13:49:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603374599;
-        bh=Sx4cMqDWql3aoHGVxi4Q1ch5vU0C+DCUz8yFXZzOK/k=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TrmPUOjQ82lGAMQICF86dxOaBqGX3c7rFwPRM2IzRcz8J5REDwb4+n8X5DseEJ/Rb
-         PFHnjNKgQRc+l99wVsj2jcOBx4yrKUBmLxBNHw4NOk7uoZOsqzeoddszJ6afNS8pZk
-         GYtejC+Zt0kKJutUebxarW35YZMtd2YkdW1vlmRw=
-Date:   Thu, 22 Oct 2020 15:50:36 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     David Hildenbrand <david@redhat.com>
-Cc:     David Laight <David.Laight@aculab.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-aio@kvack.org" <linux-aio@kvack.org>,
-        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
-        "linux-security-module@vger.kernel.org" 
-        <linux-security-module@vger.kernel.org>
-Subject: Re: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
- rw_copy_check_uvector() into lib/iov_iter.c"
-Message-ID: <20201022135036.GA1787470@kroah.com>
-References: <df2e0758-b8ed-5aec-6adc-a18f499c0179@redhat.com>
- <20201022090155.GA1483166@kroah.com>
- <e04d0c5d-e834-a15b-7844-44dcc82785cc@redhat.com>
- <a1533569-948a-1d5b-e231-5531aa988047@redhat.com>
- <bc0a091865f34700b9df332c6e9dcdfd@AcuMS.aculab.com>
- <5fd6003b-55a6-2c3c-9a28-8fd3a575ca78@redhat.com>
- <20201022104805.GA1503673@kroah.com>
- <20201022121849.GA1664412@kroah.com>
- <98d9df88-b7ef-fdfb-7d90-2fa7a9d7bab5@redhat.com>
- <20201022125759.GA1685526@kroah.com>
+        id S2900764AbgJVOVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Oct 2020 10:21:17 -0400
+IronPort-SDR: /HO3qUQvHxRbTNjN0qc7oKvslPof9r0ZvIQzF6StIoL5CCPY2Gv6PiOR7R5xQEd2N4iafpnxMq
+ HxlWzEFCAgrw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9781"; a="154485999"
+X-IronPort-AV: E=Sophos;i="5.77,404,1596524400"; 
+   d="scan'208";a="154485999"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Oct 2020 07:21:15 -0700
+IronPort-SDR: /BIOu7vwq2pI3cd9ST+/ILnIqGeUW4ipyIJtNqfiM6qBFpvhmE6GTW6FRPYf7d7ui4uxBShqKl
+ 8AN5ZEE4T9JQ==
+X-IronPort-AV: E=Sophos;i="5.77,404,1596524400"; 
+   d="scan'208";a="524295100"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Oct 2020 07:21:11 -0700
+Received: from andy by smile with local (Exim 4.94)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1kVbTp-00DL3d-T9; Thu, 22 Oct 2020 17:22:13 +0300
+Date:   Thu, 22 Oct 2020 17:22:13 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Luo Jiaxing <luojiaxing@huawei.com>
+Cc:     akpm@linux-foundation.org, viro@zeniv.linux.org.uk,
+        linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
+        john.garry@huawei.com, himanshu.madhani@cavium.com,
+        felipe.balbi@linux.intel.com, gregkh@linuxfoundation.org,
+        uma.shankar@intel.com, anshuman.gupta@intel.com,
+        animesh.manna@intel.com, linux-usb@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linuxarm@huawei.com
+Subject: Re: [PATCH v1 1/5] seq_file: Introduce DEFINE_STORE_ATTRIBUTE()
+ helper macro
+Message-ID: <20201022142213.GC4077@smile.fi.intel.com>
+References: <1603355997-32350-1-git-send-email-luojiaxing@huawei.com>
+ <1603355997-32350-2-git-send-email-luojiaxing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201022125759.GA1685526@kroah.com>
+In-Reply-To: <1603355997-32350-2-git-send-email-luojiaxing@huawei.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 22, 2020 at 02:57:59PM +0200, Greg KH wrote:
-> On Thu, Oct 22, 2020 at 02:42:24PM +0200, David Hildenbrand wrote:
-> > On 22.10.20 14:18, Greg KH wrote:
-> > > On Thu, Oct 22, 2020 at 12:48:05PM +0200, Greg KH wrote:
-> > >> On Thu, Oct 22, 2020 at 11:36:40AM +0200, David Hildenbrand wrote:
-> > >>> On 22.10.20 11:32, David Laight wrote:
-> > >>>> From: David Hildenbrand
-> > >>>>> Sent: 22 October 2020 10:25
-> > >>>> ...
-> > >>>>> ... especially because I recall that clang and gcc behave slightly
-> > >>>>> differently:
-> > >>>>>
-> > >>>>> https://github.com/hjl-tools/x86-psABI/issues/2
-> > >>>>>
-> > >>>>> "Function args are different: narrow types are sign or zero extended to
-> > >>>>> 32 bits, depending on their type. clang depends on this for incoming
-> > >>>>> args, but gcc doesn't make that assumption. But both compilers do it
-> > >>>>> when calling, so gcc code can call clang code.
-> > >>>>
-> > >>>> It really is best to use 'int' (or even 'long') for all numeric
-> > >>>> arguments (and results) regardless of the domain of the value.
-> > >>>>
-> > >>>> Related, I've always worried about 'bool'....
-> > >>>>
-> > >>>>> The upper 32 bits of registers are always undefined garbage for types
-> > >>>>> smaller than 64 bits."
-> > >>>>
-> > >>>> On x86-64 the high bits are zeroed by all 32bit loads.
-> > >>>
-> > >>> Yeah, but does not help here.
-> > >>>
-> > >>>
-> > >>> My thinking: if the compiler that calls import_iovec() has garbage in
-> > >>> the upper 32 bit
-> > >>>
-> > >>> a) gcc will zero it out and not rely on it being zero.
-> > >>> b) clang will not zero it out, assuming it is zero.
-> > >>>
-> > >>> But
-> > >>>
-> > >>> a) will zero it out when calling the !inlined variant
-> > >>> b) clang will zero it out when calling the !inlined variant
-> > >>>
-> > >>> When inlining, b) strikes. We access garbage. That would mean that we
-> > >>> have calling code that's not generated by clang/gcc IIUC.
-> > >>>
-> > >>> We can test easily by changing the parameters instead of adding an "inline".
-> > >>
-> > >> Let me try that as well, as I seem to have a good reproducer, but it
-> > >> takes a while to run...
-> > > 
-> > > Ok, that didn't work.
-> > > 
-> > > And I can't seem to "fix" this by adding noinline to patches further
-> > > along in the patch series (because this commit's function is no longer
-> > > present due to later patches.)
-> > 
-> > We might have the same issues with iovec_from_user() and friends now.
-> > 
-> > > 
-> > > Will keep digging...
-> > > 
-> > > greg k-h
-> > > 
-> > 
-> > 
-> > Might be worth to give this a try, just to see if it's related to
-> > garbage in upper 32 bit and the way clang is handling it (might be a BUG
-> > in clang, though):
-> > 
-> > 
-> > diff --git a/include/linux/uio.h b/include/linux/uio.h
-> > index 72d88566694e..7527298c6b56 100644
-> > --- a/include/linux/uio.h
-> > +++ b/include/linux/uio.h
-> > @@ -267,7 +267,7 @@ size_t hash_and_copy_to_iter(const void *addr,
-> > size_t bytes, void *hashp,
-> >                 struct iov_iter *i);
-> > 
-> >  struct iovec *iovec_from_user(const struct iovec __user *uvector,
-> > -               unsigned long nr_segs, unsigned long fast_segs,
-> > +               unsigned nr_segs, unsigned fast_segs,
-> >                 struct iovec *fast_iov, bool compat);
-> >  ssize_t import_iovec(int type, const struct iovec __user *uvec,
-> >                  unsigned nr_segs, unsigned fast_segs, struct iovec **iovp,
-> > diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-> > index 1635111c5bd2..58417f1916dc 100644
-> > --- a/lib/iov_iter.c
-> > +++ b/lib/iov_iter.c
-> > @@ -1652,7 +1652,7 @@ const void *dup_iter(struct iov_iter *new, struct
-> > iov_iter *old, gfp_t flags)
-> >  EXPORT_SYMBOL(dup_iter);
-> > 
-> >  static int copy_compat_iovec_from_user(struct iovec *iov,
-> > -               const struct iovec __user *uvec, unsigned long nr_segs)
-> > +               const struct iovec __user *uvec, unsigned nr_segs)
-> >  {
-> >         const struct compat_iovec __user *uiov =
-> >                 (const struct compat_iovec __user *)uvec;
-> > @@ -1684,7 +1684,7 @@ static int copy_compat_iovec_from_user(struct
-> > iovec *iov,
-> >  }
-> > 
-> >  static int copy_iovec_from_user(struct iovec *iov,
-> > -               const struct iovec __user *uvec, unsigned long nr_segs)
-> > +               const struct iovec __user *uvec, unsigned nr_segs)
-> >  {
-> >         unsigned long seg;
-> > 
-> > @@ -1699,7 +1699,7 @@ static int copy_iovec_from_user(struct iovec *iov,
-> >  }
-> > 
-> >  struct iovec *iovec_from_user(const struct iovec __user *uvec,
-> > -               unsigned long nr_segs, unsigned long fast_segs,
-> > +               unsigned nr_segs, unsigned fast_segs,
-> >                 struct iovec *fast_iov, bool compat)
-> >  {
-> >         struct iovec *iov = fast_iov;
-> > @@ -1738,7 +1738,7 @@ ssize_t __import_iovec(int type, const struct
-> > iovec __user *uvec,
-> >                  struct iov_iter *i, bool compat)
-> >  {
-> >         ssize_t total_len = 0;
-> > -       unsigned long seg;
-> > +       unsigned seg;
-> >         struct iovec *iov;
-> > 
-> >         iov = iovec_from_user(uvec, nr_segs, fast_segs, *iovp, compat);
-> > 
-> 
-> Ah, I tested the other way around, making everything "unsigned long"
-> instead.  Will go try this too, as other tests are still running...
+On Thu, Oct 22, 2020 at 04:39:53PM +0800, Luo Jiaxing wrote:
+> We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+> for read-only file, but we found many of drivers want a helper marco for
+> read-write file too.
 
-Ok, no, this didn't work either.
+I would expect that DEFINE_STORE maps to WO attribute...
+For RW SHOW_STORE would be more appropriate.
 
-Nick, I think I need some compiler help here.  Any ideas?
+Otherwise I think it makes sense.
 
-thanks,
+-- 
+With Best Regards,
+Andy Shevchenko
 
-greg k-h
+
