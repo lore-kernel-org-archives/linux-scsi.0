@@ -2,146 +2,130 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E929DC388F7
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 16:50:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD4D6C63699
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 17:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86D9C2464E
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 16:50:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F20C24641
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 17:01:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="qX+QueXY"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FaZk1syk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2902085AbgJVQuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Oct 2020 12:50:21 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42900 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2902079AbgJVQuS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Oct 2020 12:50:18 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09MGXbET145857;
-        Thu, 22 Oct 2020 12:50:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to : sender; s=pp1;
- bh=l4guPT8owrjneCEhLz8biC2qYMo/u+zfvsp1gJ4HeR0=;
- b=qX+QueXY4TeyzkIaDDeoq6rDKg2ASypNgM8+V/vy8Wb6RUTeK5SxgXzjwiiHdUWg21eG
- 93vXX4gyXoeJ3emsaooRf1EnpiflUgNjP2DC/67e4Ml6VfTvl6DmTK4FO0CNbVfGDoqq
- uV1BSRxWdMBThnDhhux7SaX3ZYIuOpMzszT4pHzqtYNSNdle9dYiEwBwp6y058IbdfbA
- ch+VULRYLF39ne658RRQG4v9Bh1V3eV+02VdNFLREcyEUH+YsvOCTOE5JMi75o6frTWD
- RHX3T++YCWqh5pX/rPj9J0JidbqD9JPrWa97SY6ZpuYhrcqq2tXyjwPfR3fnOUt4sZyy Wg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 34b00ka5f2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Oct 2020 12:50:13 -0400
-Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 09MGfVrA170313;
-        Thu, 22 Oct 2020 12:50:13 -0400
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 34b00ka5dh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Oct 2020 12:50:12 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 09MGl6l0005894;
-        Thu, 22 Oct 2020 16:50:10 GMT
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma03ams.nl.ibm.com with ESMTP id 348d5qvv0v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Oct 2020 16:50:10 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 09MGo7n730867746
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Oct 2020 16:50:07 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 94D4B11C054;
-        Thu, 22 Oct 2020 16:50:07 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 81F1111C05B;
-        Thu, 22 Oct 2020 16:50:07 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.159.190])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Thu, 22 Oct 2020 16:50:07 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1kVdmw-000ShK-J4; Thu, 22 Oct 2020 18:50:06 +0200
-Date:   Thu, 22 Oct 2020 18:50:06 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Muneendra <muneendra.kumar@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, hare@suse.de, jsmart2021@gmail.com,
-        emilne@redhat.com, mkumar@redhat.com,
-        Steffen Maier <maier@linux.ibm.com>
-Subject: Re: [PATCH v3 16/17] scsi:zfcp: Added changes to
- fc_remote_port_chkready
-Message-ID: <20201022165006.GA15064@t480-pf1aa2c2>
-References: <1602732462-10443-1-git-send-email-muneendra.kumar@broadcom.com>
- <1602732462-10443-17-git-send-email-muneendra.kumar@broadcom.com>
+        id S2902231AbgJVRA6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Oct 2020 13:00:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56860 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2902214AbgJVRA5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Oct 2020 13:00:57 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83B1AC0613D7
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2020 10:00:56 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id y14so1490686pfp.13
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2020 10:00:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mPq1xxojTLCMg9dkpihVuEy7NB86hVAVpi/132X7kAw=;
+        b=FaZk1syk0YMG3iZb8SLWxC2V/X6x12JUTFYfL5Y4vorI7cxebKk0A4wGmpbUSoSX7r
+         Hs46zZ8QPE3GLHjpbq58EcQYAjpUsLiFd7rIWVJJucFcvXO83HQmjrAvVcsSpWuzKmDn
+         Ir7y+Hx076Ra7VE3qkMs0wIP4MuvMyPqFMZD7ErBK/erglmryprKfIJjlK9s4TEK+eV0
+         zi9+rcSPkS3oUdnHJUbiyp5gMYyTX6WkcGQdAuWCh4z6o6XxBzLh/IQ3EqBPjn/4zA8/
+         /ycOC8rWbYoFZIzXS+kSVT0mB240mCkdd7OfRPndvUPHV4Kpd/AlMGehp4EnqX4ufYBk
+         bELw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=mPq1xxojTLCMg9dkpihVuEy7NB86hVAVpi/132X7kAw=;
+        b=oxVRQepB7puiD2J3iKzervi8T7OlHOeHUR/ULJEUywTmXALQUBoL0QZsPv3QK8Kncu
+         mV33xHbExKQ2q3Sm3enV+apiSvxEt0nJFwhNYA5BLhixnVu44Em6csBW9OT8LgFlhYK1
+         j/lBEGBhR9LwE88nE50rkEJQvI5nuIrl2AASYU4HNo7MDbPaky2mZ1f/IWPDuij4HFQe
+         qnH+1WA92xq7xSBWdBrYQzYBIW9GhmfpUHkLJFm3CZxFKiI3luENlYmHx5y+lSYPiY4Q
+         JG4cXB5iw3Pepd9IYAVIZfmoHMIFdGFMW0jfdBNUcsu7xDqYaDsQA1rrbz+QmrCRbPzC
+         0Row==
+X-Gm-Message-State: AOAM533oND+4T6g9E96d/z4z4LzvxO9urP09ndNd8XxvQIAkDhB1avVm
+        LTsATGgQMf0Bqy44i+uE26xQXup53pvyYknl1tYFvw==
+X-Google-Smtp-Source: ABdhPJzMoyVci79YwTV4KRMhMNBvKksmGgmX62puAUjhkzpwpVCVuG2Q30QHXgEacyFzXNHAtggJkv+M7hW6xpUief0=
+X-Received: by 2002:a62:6408:0:b029:154:dde2:a5eb with SMTP id
+ y8-20020a6264080000b0290154dde2a5ebmr3767384pfb.30.1603386055586; Thu, 22 Oct
+ 2020 10:00:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <1602732462-10443-17-git-send-email-muneendra.kumar@broadcom.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.737
- definitions=2020-10-22_11:2020-10-20,2020-10-22 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 spamscore=0
- mlxscore=0 suspectscore=0 bulkscore=0 adultscore=0 priorityscore=1501
- lowpriorityscore=0 clxscore=1011 malwarescore=0 phishscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010220108
+References: <80a2e5fa-718a-8433-1ab0-dd5b3e3b5416@redhat.com>
+ <5d2ecb24db1e415b8ff88261435386ec@AcuMS.aculab.com> <df2e0758-b8ed-5aec-6adc-a18f499c0179@redhat.com>
+ <20201022090155.GA1483166@kroah.com> <e04d0c5d-e834-a15b-7844-44dcc82785cc@redhat.com>
+ <a1533569-948a-1d5b-e231-5531aa988047@redhat.com> <bc0a091865f34700b9df332c6e9dcdfd@AcuMS.aculab.com>
+ <5fd6003b-55a6-2c3c-9a28-8fd3a575ca78@redhat.com> <20201022132342.GB8781@lst.de>
+ <8f1fff0c358b4b669d51cc80098dbba1@AcuMS.aculab.com> <20201022164040.GV20115@casper.infradead.org>
+In-Reply-To: <20201022164040.GV20115@casper.infradead.org>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Thu, 22 Oct 2020 10:00:44 -0700
+Message-ID: <CAKwvOdnq-yYLcF_coo=jMV-RH-SkuNp_kMB+KCBF5cz3PwiB8g@mail.gmail.com>
+Subject: Re: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
+ rw_copy_check_uvector() into lib/iov_iter.c"
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     David Laight <David.Laight@aculab.com>,
+        Christoph Hellwig <hch@lst.de>,
+        David Hildenbrand <david@redhat.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
+        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-aio@kvack.org" <linux-aio@kvack.org>,
+        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
+        "linux-security-module@vger.kernel.org" 
+        <linux-security-module@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Would be good if you could address the driver mails to the driver
-maintainers :) I was out of office, but we might still miss it
-occasionally.
+On Thu, Oct 22, 2020 at 9:40 AM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Thu, Oct 22, 2020 at 04:35:17PM +0000, David Laight wrote:
+> > Wait...
+> > readv(2) defines:
+> >       ssize_t readv(int fd, const struct iovec *iov, int iovcnt);
+>
+> It doesn't really matter what the manpage says.  What does the AOSP
+> libc header say?
 
-On Thu, Oct 15, 2020 at 08:57:41AM +0530, Muneendra wrote:
-> Added changes to pass a new argument to fc_remote_port_chkready
->=20
-> Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
->=20
-> ---
-> v3:
-> New Patch
-> ---
->  drivers/s390/scsi/zfcp_scsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> index d58bf79892f2..732e15e3a839 100644
-> --- a/drivers/s390/scsi/zfcp_scsi.c
-> +++ b/drivers/s390/scsi/zfcp_scsi.c
-> @@ -74,7 +74,7 @@ int zfcp_scsi_queuecommand(struct Scsi_Host *shost, str=
-uct scsi_cmnd *scpnt)
->  	scpnt->result =3D 0;
->  	scpnt->host_scribble =3D NULL;
-> =20
-> -	scsi_result =3D fc_remote_port_chkready(rport);
-> +	scsi_result =3D fc_remote_port_chkready(rport, scpnt);
->  	if (unlikely(scsi_result)) {
->  		scpnt->result =3D scsi_result;
->  		zfcp_dbf_scsi_fail_send(scpnt);
-> --=20
-> 2.26.2
->=20
+Same: https://android.googlesource.com/platform/bionic/+/refs/heads/master/libc/include/sys/uio.h#38
 
-This change looks fine to me for zfcp.
+Theoretically someone could bypass libc to make a system call, right?
 
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+>
+> > But the syscall is defined as:
+> >
+> > SYSCALL_DEFINE3(readv, unsigned long, fd, const struct iovec __user *, vec,
+> >                 unsigned long, vlen)
+> > {
+> >         return do_readv(fd, vec, vlen, 0);
+> > }
+>
 
 
---=20
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Sys=
-tems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/pri=
-vacy
-Vorsitz. AufsR.: Gregor Pillen         /        Gesch=E4ftsf=FChrung: Dirk =
-Wittkopp
-Sitz der Gesellschaft: B=F6blingen / Registergericht: AmtsG Stuttgart, HRB =
-243294
+-- 
+Thanks,
+~Nick Desaulniers
