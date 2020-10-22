@@ -2,142 +2,252 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E06AFC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 00:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6E0C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 00:52:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B767223BF
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 00:51:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F980223BF
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 00:52:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="lgy5N1zr";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="j7Zpq4hn"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="acTAdtPS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2894403AbgJVAv3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Oct 2020 20:51:29 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:10624 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2442801AbgJVAv2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2020 20:51:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1603327889; x=1634863889;
-  h=from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=clb5MlM+CXok+/xDSyuDCfYM1wmyJCpUebxR50WUymE=;
-  b=lgy5N1zr6+FzqmNImJY0csQSHu/0As2upIyfEoww0bo/OECCBy66wPTU
-   QwZr27Gl0p5zSmH8RuX3r3KwuELK/V4cKP45mySpdXzW+su/W8e5fhgl7
-   kxmGJxVyqO0/FMSpE2Xs9GpL0rQlpBH2X3GXZAH/u/EIFk6XEjYNLNo9I
-   PpUHJ3VPwqA7L3II8Ilc7pQpPzUJVrG3GnyJUXeX8UOInL5Vlb4/51Nzl
-   5fWcAgpUck8YiIDqUBshn23UmG2QauZBd/LTtDQj8FWhN/Js06ooWZTAC
-   DDbtxOLevwB+Cssh3cpnJdj2HkXn2EfONBoW3Hr3xQLPOHiecVCx2JAqQ
-   Q==;
-IronPort-SDR: 1mzjrhzHCyMe/DvZG3c8YUWuoWgFkmJUz3/Jd5j4SdTwW8ToXYWOs/FtuQFnZGrsmajkUfIMwl
- CyDznp75cRd+2Q9bh1ccYjjRg+N66iHZl+nRvCbM0PhBRGN6+Tcd71jLIlxvU2wRJS6u29s8c/
- YUWgTp4mpAaiDeYlhu1s8wlhH9kBgrA+bCvsgzM+Z9L9XSebD96m7UiDlwuZFxYWE/ex2PvE4D
- tCvFekbH7mjOATLOIduolUfec4Gwx+RM3TPA6E1Gs4EvuMW3YuoqHGRjhwJB6ENjxutLYKX1LM
- K70=
-X-IronPort-AV: E=Sophos;i="5.77,402,1596470400"; 
-   d="scan'208";a="155005387"
-Received: from mail-dm6nam11lp2174.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.174])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2020 08:51:28 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FCegf8YWPlWQ/yaTv9BxCwSLONMjvRDI7i+77XDWN8zsQK76WpqgIqDmB7iTxjYLqhJdO0Og5Rga2UtEmTn6pAuJYu9lttEU5IHkGL7wwhBu71Yzgn99NNVRYoIKar2r6re5wuIAspFYpt/hF1azW2kwnqy5s59mNLS56eLirtGOvcxSfoORWL4Jvn6q60v1vR1S59u67ULOGj3Ddk472jHecVhV0xC8hx+K1sQ5PXvirDvMJxf8gyoaKC5xrgXA3MBu2z3taQ+UqpM9kIyzcktgcgToqLDTVjINL1Q6IjRgEPb36yWmkRYoUc/r9MNEZEEv5Qi3jPvDVdjKtKnHyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=clb5MlM+CXok+/xDSyuDCfYM1wmyJCpUebxR50WUymE=;
- b=OlMvY86+s3Y/VS35bNfS0mqI8dYSLeoaOUvcu++bB4wyCm5O5ts5NKtpPlPS8uXH+R7ZHbbqVQ5FNyQbGSOOXvl2x5SiW3cEW8GT9wtmDLKeLgyaaUA1ukdVrwb4oqJ3vxqxUxzOl4TKHX0KL0b5xlM9qfhfs3q7pNiZWKJ0S3Arie4np6oBlJ36peL2lMDhTV+3YrqFjOOZAw7BqE70FqheonTYGWNjlKSxhMCeXamdP1iUMSc6dSSkKTf0433iv7QGIJRurT99W5F+46154lhof+U3iFoH9S8N+Jilkys79jVOZMxZAX8fk0rqFINvyEIWkG45fPPJmByVjhEbnA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=clb5MlM+CXok+/xDSyuDCfYM1wmyJCpUebxR50WUymE=;
- b=j7Zpq4hn53IADN1WmSCwp/OsmjyzWo+mngMgYAJSqEznm2/hipbXAYpSsM7gnRFGYPEo3kZeleU8cXyUFZTC4S+t1GOAm7sBSoTCCQUgV1Y3KjvoGrJTmaoBHYXATPvL5Dxrc9j11DyIuQMej/pGVIKE8WbuDFj//x4HmWauOb8=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by BY5PR04MB6552.namprd04.prod.outlook.com (2603:10b6:a03:1d8::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3477.26; Thu, 22 Oct
- 2020 00:51:25 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::99ae:ab95:7c27:99e4]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::99ae:ab95:7c27:99e4%7]) with mapi id 15.20.3477.029; Thu, 22 Oct 2020
- 00:51:25 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "mst@redhat.com" <mst@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "pbonzini@redhat.com" <pbonzini@redhat.com>,
-        "stefanha@redhat.com" <stefanha@redhat.com>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>
-Subject: Re: [PATCH 02/17] vhost: remove work arg from vhost_work_flush
-Thread-Topic: [PATCH 02/17] vhost: remove work arg from vhost_work_flush
-Thread-Index: AQHWqAs6k3Dw2TcIYECQgg/ZbIRTxA==
-Date:   Thu, 22 Oct 2020 00:51:25 +0000
-Message-ID: <BYAPR04MB496583F88923E12239752032861D0@BYAPR04MB4965.namprd04.prod.outlook.com>
+        id S2894467AbgJVAwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Oct 2020 20:52:17 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:33278 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2442801AbgJVAwR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2020 20:52:17 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09M0pw67008105;
+        Thu, 22 Oct 2020 00:52:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ references : message-id : date : mime-version : in-reply-to : content-type
+ : content-transfer-encoding; s=corp-2020-01-29;
+ bh=ySwaYeUB/xfEEnLDVmYw9VoYrKUDbWZ+SilXkfBhYM4=;
+ b=acTAdtPS1MXegaJEXHqj9+rQEvPY60Y86gMvzYdyd4n/6vsjKI9Go/FMOQ04UZMuO9Ga
+ WoS1T9cBs3ULJtOEVI64JQlN7nRRIxBYKWQPhUIeaPQlykR2KQp8JI4JGQiMwOZgJerF
+ Qrh05mCG2z7HdyqQYtAgFQgWMBVSZNQag4VLLsRruLsW3F9y0p30srVXOHD09ZWdXyxl
+ JmcymIH2IG6/bmtwY5xMTnpKa8lXKRLMYmjBxTlzJEc0BUBGdSQsnma/bGuDw67+DIfA
+ s/V2pUsY5nBJVM+69XBiWpnXSuKGdtp+xVxII5f7/8KmhdaWV8qp8Pvzk+MmjHk7Y8QE Ug== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 34ak16kq02-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 22 Oct 2020 00:52:13 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09M0nghx027872;
+        Thu, 22 Oct 2020 00:50:12 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 348ah0987v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 22 Oct 2020 00:50:12 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09M0oAo2014875;
+        Thu, 22 Oct 2020 00:50:11 GMT
+Received: from [20.15.0.202] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 21 Oct 2020 17:50:09 -0700
+Subject: Re: [PATCH 15/17] host: support delayed vq creation
+From:   Mike Christie <michael.christie@oracle.com>
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
+        pbonzini@redhat.com, stefanha@redhat.com,
+        virtualization@lists.linux-foundation.org
 References: <1603326903-27052-1-git-send-email-michael.christie@oracle.com>
- <1603326903-27052-3-git-send-email-michael.christie@oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [199.255.45.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 086729bb-e4c6-46f8-14bf-08d876249a92
-x-ms-traffictypediagnostic: BY5PR04MB6552:
-x-microsoft-antispam-prvs: <BY5PR04MB655232FBBE07AEE94D7F2BD1861D0@BY5PR04MB6552.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: TQryYoTMvkJBG62tMGs+cZ0e0aQyAAEOcmO42PgRhJcPtjBwQ0+Dya9y8k93Jfgh5A27yTZAwe7y7IOWwhMkBwvRXKSrkTuqtm6kQ28VpwOZomWz/z0Vf/OaBXnVfN7sJPVFJGPnCdoIpHUzjIpJWUKcxAHS/e3p5GV8IXdY/AS7qq/muWhnDSiepl+DKEhsaa/NXVvYSldtTD08ATu5NOavKOKM234w1eHEntgflc/ac6WoiEp/w0x7ssF6kb64kWQJhjjR2OIUvbnIxv5zufFLM+AgZevj8L+gv5QxGfdv9tbqfNY83DUA1u3hrTytafnjmBfab2LzU/y8YmV5Ag==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(346002)(396003)(39860400002)(376002)(366004)(4744005)(66446008)(66476007)(64756008)(55016002)(66556008)(478600001)(5660300002)(7696005)(8676002)(33656002)(186003)(26005)(316002)(2906002)(76116006)(66946007)(110136005)(9686003)(8936002)(53546011)(71200400001)(86362001)(6506007)(52536014);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: OdOnDqj4ICC2K9rn75rUuSqciKTVCHOsNQFW3z1wwswKNbh9OYWWdbRMPj2KKcW5TIONIagv1mZORNQraHQ54MEtuE+cwWxJ8kcO+j+iMIwfIJeMJH0mvSlak2GVp0Tzs2kuv6OtD5J9WVeSbccfY+9qdv5PlIvBoj+awsaZT8e6KeNd2KXGwMbn9fUMsy/QGZu2SVfvlbfMoLNHzTZywCEqw5V7u2CfYDaG71Rb5sJPwuTsvJoosK3yKo6hJGgGAMx+eIRM8X5iFsU9JzhE8nIOFNbb/B8MzFqQeozeQQd4cdRyK4GWhZ5z5qAXEtfCq4rXF8LXbeTpfvL4hi8wto0G7ayISnKM+lSIuwTkxVFWZMdJ3rAMt3eEQX447B+Mj7KIXxyK5rUSmIl6ucjcjWEd1N1QuotWcm7BJy0DCxePHmPHCEtgRzRcMM/Uup0jjFbkYFw1fNnEVWaHvIpS2HsJvXx9QVUsxpb8bWuDLwLcYo80rWOo7m9wCLemxwQL1OaQuJZ5qwiEV4AbjoZaDbWBA3MFh7GRHcOKXK06JKFQLyQ6LluwJeJk/iHqhmNTU6beGM2TKdNWCPVAPRWjBJ4x+Nfb8Zyy4Be36vfjRlFFA0jadcwT0zPBlauYN/LPV/YM6l/cL98nkUeYNf0F2Q==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ <1603326903-27052-16-git-send-email-michael.christie@oracle.com>
+Message-ID: <64d6396f-8dca-b932-6fa3-6847fd3ff0f6@oracle.com>
+Date:   Wed, 21 Oct 2020 19:50:09 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 086729bb-e4c6-46f8-14bf-08d876249a92
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Oct 2020 00:51:25.6140
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: dQm77/0z6P/qNJFG14UtJOQOM23sNQwl5MqwdH8180tJT8rKQQ/JlpfG6PZY/9d0VLLdlAjiUIobSmE7Dze2197Rk28E5dfIn1X4kDzW6ks=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6552
+In-Reply-To: <1603326903-27052-16-git-send-email-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
+ malwarescore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010220002
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
+ priorityscore=1501 clxscore=1015 malwarescore=0 mlxscore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010220002
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/20 17:35, Mike Christie wrote:=0A=
-> vhost_work_flush doesn't do anything with the work arg. This patch drops=
-=0A=
-> it and then renames vhost_work_flush to vhost_work_dev_flush to reflect=
-=0A=
-> that the function flushes all the works in the dev and not just a=0A=
-> specific queue or work item.=0A=
->=0A=
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>=0A=
-> Acked-by: Jason Wang <jasowang@redhat.com>=0A=
-=0A=
-Apparently it used local flush.work, not sure if it supposed to=0A=
-=0A=
-use work as an argument instead of local variable, if so looks good.=0A=
-=0A=
-Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
-=0A=
+The email subject and patch description got cut and paste from the wrong
+patch when I updated this patch. It should be:
+
+
+[PATCH 15/17] vhost scsi: make completion per vq
+
+In the last patches we are going to have a worker thread per IO vq.
+This patch separates the scsi cmd completion code paths so we can
+complete cmds based on their vq instead of having all cmds complete
+on the same worker thread.
+
+
+---
+
+When I handle other review comments in the set I'll fix this up too.
+
+
+On 10/21/20 7:35 PM, Mike Christie wrote:
+> This allows vq creation to be done when it's first accessed by
+> userspace. vhost-scsi doesn't know how many queues the user requested
+> until they are first setup, and we don't want to allocate resources
+> like the iovecs for 128 vqs when we are only using 1 or 2 most of the
+> time. In the next pathces, vhost-scsi will also switch to preallocating
+> cmds per vq instead of per lio session and we don't want to allocate
+> them for 127 extra vqs if they are not in use.
+> 
+> With this patch when a driver calls vhost_dev_init they pass in the
+> number of vqs that they know they need and the max they can support.
+> This patch has all the drivers pass in the same value for both the
+> initial number of vqs and the max. The next patch will convert scsi.
+> The other drivers like net/vsock have their vqs hard coded in the
+> kernel or setup/discovered via other methods like with vdpa.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> ---
+>  drivers/vhost/scsi.c | 48 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 25 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index b348e9c..5d6dc15 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -178,6 +178,7 @@ enum {
+>  
+>  struct vhost_scsi_virtqueue {
+>  	struct vhost_virtqueue vq;
+> +	struct vhost_scsi *vs;
+>  	/*
+>  	 * Reference counting for inflight reqs, used for flush operation. At
+>  	 * each time, one reference tracks new commands submitted, while we
+> @@ -192,6 +193,9 @@ struct vhost_scsi_virtqueue {
+>  	struct vhost_scsi_cmd *scsi_cmds;
+>  	struct sbitmap scsi_tags;
+>  	int max_cmds;
+> +
+> +	struct vhost_work completion_work;
+> +	struct llist_head completion_list;
+>  };
+>  
+>  struct vhost_scsi {
+> @@ -202,9 +206,6 @@ struct vhost_scsi {
+>  	struct vhost_dev dev;
+>  	struct vhost_scsi_virtqueue vqs[VHOST_SCSI_MAX_VQ];
+>  
+> -	struct vhost_work vs_completion_work; /* cmd completion work item */
+> -	struct llist_head vs_completion_list; /* cmd completion queue */
+> -
+>  	struct vhost_work vs_event_work; /* evt injection work item */
+>  	struct llist_head vs_event_list; /* evt injection queue */
+>  
+> @@ -380,10 +381,11 @@ static void vhost_scsi_release_cmd(struct se_cmd *se_cmd)
+>  	} else {
+>  		struct vhost_scsi_cmd *cmd = container_of(se_cmd,
+>  					struct vhost_scsi_cmd, tvc_se_cmd);
+> -		struct vhost_scsi *vs = cmd->tvc_vhost;
+> +		struct vhost_scsi_virtqueue *svq =  container_of(cmd->tvc_vq,
+> +					struct vhost_scsi_virtqueue, vq);
+>  
+> -		llist_add(&cmd->tvc_completion_list, &vs->vs_completion_list);
+> -		vhost_work_queue(&vs->dev, &vs->vs_completion_work);
+> +		llist_add(&cmd->tvc_completion_list, &svq->completion_list);
+> +		vhost_vq_work_queue(&svq->vq, &svq->completion_work);
+>  	}
+>  }
+>  
+> @@ -545,18 +547,17 @@ static void vhost_scsi_evt_work(struct vhost_work *work)
+>   */
+>  static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+>  {
+> -	struct vhost_scsi *vs = container_of(work, struct vhost_scsi,
+> -					vs_completion_work);
+> -	DECLARE_BITMAP(signal, VHOST_SCSI_MAX_VQ);
+> +	struct vhost_scsi_virtqueue *svq = container_of(work,
+> +				struct vhost_scsi_virtqueue, completion_work);
+>  	struct virtio_scsi_cmd_resp v_rsp;
+>  	struct vhost_scsi_cmd *cmd, *t;
+>  	struct llist_node *llnode;
+>  	struct se_cmd *se_cmd;
+>  	struct iov_iter iov_iter;
+> -	int ret, vq;
+> +	bool signal = false;
+> +	int ret;
+>  
+> -	bitmap_zero(signal, VHOST_SCSI_MAX_VQ);
+> -	llnode = llist_del_all(&vs->vs_completion_list);
+> +	llnode = llist_del_all(&svq->completion_list);
+>  	llist_for_each_entry_safe(cmd, t, llnode, tvc_completion_list) {
+>  		se_cmd = &cmd->tvc_se_cmd;
+>  
+> @@ -576,21 +577,16 @@ static void vhost_scsi_complete_cmd_work(struct vhost_work *work)
+>  			      cmd->tvc_in_iovs, sizeof(v_rsp));
+>  		ret = copy_to_iter(&v_rsp, sizeof(v_rsp), &iov_iter);
+>  		if (likely(ret == sizeof(v_rsp))) {
+> -			struct vhost_scsi_virtqueue *q;
+> +			signal = true;
+>  			vhost_add_used(cmd->tvc_vq, cmd->tvc_vq_desc, 0);
+> -			q = container_of(cmd->tvc_vq, struct vhost_scsi_virtqueue, vq);
+> -			vq = q - vs->vqs;
+> -			__set_bit(vq, signal);
+>  		} else
+>  			pr_err("Faulted on virtio_scsi_cmd_resp\n");
+>  
+>  		vhost_scsi_release_cmd_res(se_cmd);
+>  	}
+>  
+> -	vq = -1;
+> -	while ((vq = find_next_bit(signal, VHOST_SCSI_MAX_VQ, vq + 1))
+> -		< VHOST_SCSI_MAX_VQ)
+> -		vhost_signal(&vs->dev, &vs->vqs[vq].vq);
+> +	if (signal)
+> +		vhost_signal(&svq->vs->dev, &svq->vq);
+>  }
+>  
+>  static struct vhost_scsi_cmd *
+> @@ -1805,6 +1801,7 @@ static int vhost_scsi_set_features(struct vhost_scsi *vs, u64 features)
+>  
+>  static int vhost_scsi_open(struct inode *inode, struct file *f)
+>  {
+> +	struct vhost_scsi_virtqueue *svq;
+>  	struct vhost_scsi *vs;
+>  	struct vhost_virtqueue **vqs;
+>  	int r = -ENOMEM, i;
+> @@ -1820,7 +1817,6 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
+>  	if (!vqs)
+>  		goto err_vqs;
+>  
+> -	vhost_work_init(&vs->vs_completion_work, vhost_scsi_complete_cmd_work);
+>  	vhost_work_init(&vs->vs_event_work, vhost_scsi_evt_work);
+>  
+>  	vs->vs_events_nr = 0;
+> @@ -1831,8 +1827,14 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
+>  	vs->vqs[VHOST_SCSI_VQ_CTL].vq.handle_kick = vhost_scsi_ctl_handle_kick;
+>  	vs->vqs[VHOST_SCSI_VQ_EVT].vq.handle_kick = vhost_scsi_evt_handle_kick;
+>  	for (i = VHOST_SCSI_VQ_IO; i < VHOST_SCSI_MAX_VQ; i++) {
+> -		vqs[i] = &vs->vqs[i].vq;
+> -		vs->vqs[i].vq.handle_kick = vhost_scsi_handle_kick;
+> +		svq = &vs->vqs[i];
+> +
+> +		vqs[i] = &svq->vq;
+> +		svq->vs = vs;
+> +		init_llist_head(&svq->completion_list);
+> +		vhost_work_init(&svq->completion_work,
+> +				vhost_scsi_complete_cmd_work);
+> +		svq->vq.handle_kick = vhost_scsi_handle_kick;
+>  	}
+>  
+>  	/*
+> 
+
