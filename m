@@ -2,119 +2,101 @@ Return-Path: <SRS0=4YdN=D5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AA23C388F9
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 19:46:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 805F6C388F9
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 20:06:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06B792098B
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 19:46:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="GETOLZlO"
+	by mail.kernel.org (Postfix) with ESMTP id 3FFC424182
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Oct 2020 20:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2509916AbgJVTq2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Oct 2020 15:46:28 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20832 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2508766AbgJVTq1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Oct 2020 15:46:27 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09MJiuLX027962;
-        Thu, 22 Oct 2020 12:46:24 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=syTatktNJj218s4w8i0vH5DjvlhLYwwOkkKzR/GTeIM=;
- b=GETOLZlOfC7FJYoQalB4Oc1pmpKNgMAW81Qpyl52VAj5sc4rYrmlp0CLnlWrASLv7SGv
- YX1U/95TqIwF7gnYKMoUBLtm4ex6GhwmSLZ6dDLfoRF/MNM7eXYk5knNvI8ZXzXE7cdi
- J1c9qIMs4v8nR9hgd1z6EucR/AD62UNylwTLUWqLptTygHBlzGEChPKXppY9D5r5amKW
- rYza0pRw3EWfi1BTopQqM/ArAj7g68e5+TnbTnqVotpBeyl/NGTqEWYFGPd5nE2iMMHD
- +0qzUgN9whSbSMd0j+V3OgzV3xHWLbnS5DTMwRTmmU0WnlMv5iT77o3i85fhfB8cVjEQ Tg== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 34asbe5451-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 22 Oct 2020 12:46:24 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 22 Oct
- 2020 12:46:23 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 22 Oct 2020 12:46:23 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 210803F7041;
-        Thu, 22 Oct 2020 12:46:23 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 09MJkL4L026377;
-        Thu, 22 Oct 2020 12:46:22 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Thu, 22 Oct 2020 12:46:21 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Daniel Wagner <dwagner@suse.de>
-CC:     Nilesh Javali <njavali@marvell.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [EXT] [PATCH v4] qla2xxx: Return EBUSY on fcport deletion
-In-Reply-To: <20201014073048.36219-1-dwagner@suse.de>
-Message-ID: <alpine.LRH.2.21.9999.2010221245090.28578@irv1user01.caveonetworks.com>
-References: <20201014073048.36219-1-dwagner@suse.de>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        id S370932AbgJVUGp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Oct 2020 16:06:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57484 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S370843AbgJVUGn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Oct 2020 16:06:43 -0400
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9B1C0613CE;
+        Thu, 22 Oct 2020 13:06:43 -0700 (PDT)
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kVgqz-006SmZ-1W; Thu, 22 Oct 2020 20:06:29 +0000
+Date:   Thu, 22 Oct 2020 21:06:29 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        David Laight <David.Laight@aculab.com>,
+        Christoph Hellwig <hch@lst.de>,
+        David Hildenbrand <david@redhat.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        David Howells <dhowells@redhat.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
+        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-aio@kvack.org" <linux-aio@kvack.org>,
+        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
+        "linux-security-module@vger.kernel.org" 
+        <linux-security-module@vger.kernel.org>
+Subject: Re: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
+ rw_copy_check_uvector() into lib/iov_iter.c"
+Message-ID: <20201022200629.GX3576660@ZenIV.linux.org.uk>
+References: <e04d0c5d-e834-a15b-7844-44dcc82785cc@redhat.com>
+ <a1533569-948a-1d5b-e231-5531aa988047@redhat.com>
+ <bc0a091865f34700b9df332c6e9dcdfd@AcuMS.aculab.com>
+ <5fd6003b-55a6-2c3c-9a28-8fd3a575ca78@redhat.com>
+ <20201022132342.GB8781@lst.de>
+ <8f1fff0c358b4b669d51cc80098dbba1@AcuMS.aculab.com>
+ <CAKwvOdnix6YGFhsmT_mY8ORNPTOsN3HwS33Dr0Ykn-pyJ6e-Bw@mail.gmail.com>
+ <CAK8P3a3LjG+ZvmQrkb9zpgov8xBkQQWrkHBPgjfYSqBKGrwT4w@mail.gmail.com>
+ <CAKwvOdnhONvrHLAuz_BrAuEpnF5mD9p0YPGJs=NZZ0EZNo7dFQ@mail.gmail.com>
+ <20201022192458.GV3576660@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.737
- definitions=2020-10-22_15:2020-10-20,2020-10-22 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201022192458.GV3576660@ZenIV.linux.org.uk>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 14 Oct 2020, 12:30am, Daniel Wagner wrote:
+On Thu, Oct 22, 2020 at 08:24:58PM +0100, Al Viro wrote:
 
-> External Email
-> 
-> ----------------------------------------------------------------------
-> When the fcport is about to be deleted we should return EBUSY instead
-> of ENODEV. Only for EBUSY the request will be requeued in a multipath
-> setup.
-> 
-> Also when the firmware has not yet started return EBUSY to avoid
-> dropping the request.
-> 
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
-> Reviewed-by: Arun Easi <aeasi@marvell.com>
-> ---
-> 
-> v4: updated commit message as suggested by Finn
-> v3: simplify and changed test logic as suggested by Arun
-> v2: rebased on mkp/staging
-> 
->  drivers/scsi/qla2xxx/qla_nvme.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-> index 2cd9bd288910..1fa457a5736e 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -555,10 +555,12 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
->  
->  	fcport = qla_rport->fcport;
->  
-> -	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
-> -	    (fcport && fcport->deleted))
-> +	if (!qpair || !fcport)
->  		return -ENODEV;
->  
-> +	if (!qpair->fw_started || fcport->deleted)
-> +		return -EBUSY;
-> +
->  	vha = fcport->vha;
->  
->  	if (!(fcport->nvme_flag & NVME_FLAG_REGISTERED))
-> 
+> Depending upon the calling conventions, compiler might do truncation in caller or
+> in a callee, but it must be done _somewhere_.
 
-Looks good to me.
+Unless I'm misreading AAPCS64,
+	"Unlike in the 32-bit AAPCS, named integral values must be narrowed by the callee
+	 rather than the caller"
+in 6.4.2 means that callee must not _not_ expect the upper 32 bits of %x0..%x7 to contain
+anything valid for 32bit arguments and it must zero-extend %w0..%w7 when passing that to
+something that expects a 64bit argument.  On inlining it should be the same situation as
+storing unsigned int argument into unsigned long local variable and working with that - if
 
-Regards,
--Arun
+void f(unsigned int w)
+{
+	unsigned long x = w;
+	printf("%lx\n", x);
+}
+
+ends up passing %x0 to printf, it's an obvious bug - it must do something like
+	uxtw x0, w0
+first.
+
+What am I missing here?
