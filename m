@@ -2,140 +2,148 @@ Return-Path: <SRS0=1+Eg=D6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B5EC4363A
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Oct 2020 16:24:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3DBC55179
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Oct 2020 16:33:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F4DF21D47
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Oct 2020 16:24:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08522221F9
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Oct 2020 16:33:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="k7Qn8TDe"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jCYqKvBk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1751444AbgJWQYz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Oct 2020 12:24:55 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:36062 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751438AbgJWQYy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Oct 2020 12:24:54 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09NGAR5V007277;
-        Fri, 23 Oct 2020 16:24:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=+lZ0B0U5fs6uXd4BfKe6kP2DafANBuTpVAZ62ckWqoM=;
- b=k7Qn8TDeAmT/brDz/8HcuHuORQLlSwwDme+dVHOxrUo3oUDYZGkb7KOIV0c2PJuHpkpi
- rTskW0z+RC2IwgGHHLbYpVKztWSe/hQJ22lYGP43Z59+O5NSlPklBau3EG+JoxJumslF
- FlvOH7oxPsUtxBi80ODRvowVFlilgdzhQtloU8Kf3yhaIEzb54XVwq5kT/yqtp4clcKA
- 51OXtb1jwm8UjRbQyKBFsSAYulSx93IhcX7vV/9NEgHfrOV9QO/LOxBNuyPG2y5GUgLv
- qzrJKHKNx+tuG5cUFDt9GbwH3aKjxpv9WOQ4TmSbYKey8ZISkd9qn+qTBkPHjfd9xvUq Fg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 34ak16vbs7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 23 Oct 2020 16:24:50 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09NGB7E8035757;
-        Fri, 23 Oct 2020 16:22:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 348aj1510p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 23 Oct 2020 16:22:50 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09NGMn6S005238;
-        Fri, 23 Oct 2020 16:22:49 GMT
-Received: from [20.15.0.8] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 23 Oct 2020 09:22:48 -0700
-Subject: Re: [PATCH 00/16 V2] vhost: fix scsi cmd handling and IOPs
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, jasowang@redhat.com,
-        pbonzini@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-References: <1602104101-5592-1-git-send-email-michael.christie@oracle.com>
- <20201023114539-mutt-send-email-mst@kernel.org>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <b1323161-c712-bcf4-91bb-e1c9b20dacac@oracle.com>
-Date:   Fri, 23 Oct 2020 11:22:47 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.1
+        id S1751774AbgJWQde (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Oct 2020 12:33:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:25033 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751789AbgJWQdQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Oct 2020 12:33:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603470795;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=qFpT9rw9kU+fUUj5fb7jig81eZVzobxvui7gAjawuH0=;
+        b=jCYqKvBkG2GdjY1DUZF5NWtsiGLJ9YC9z4syTQqWdOsQP24r17aal+fMLECtc6M16OeA+H
+        sJO1g/XAwINGnDOdywtyqoFs750it4J40vpWJkXU1aCWX1qtF/ZzR2f9esOsXxjH+N2ZKl
+        6mB4s7bi6imBga23sFFsjcyTuCrAh2s=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-42-mE4iRpoaPm6zGEfodl9TZg-1; Fri, 23 Oct 2020 12:33:11 -0400
+X-MC-Unique: mE4iRpoaPm6zGEfodl9TZg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 47449108E1B2;
+        Fri, 23 Oct 2020 16:33:07 +0000 (UTC)
+Received: from [10.36.114.18] (ovpn-114-18.ams2.redhat.com [10.36.114.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 139D160BFA;
+        Fri, 23 Oct 2020 16:33:00 +0000 (UTC)
+Subject: Re: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
+ rw_copy_check_uvector() into lib/iov_iter.c"
+To:     'Greg KH' <gregkh@linuxfoundation.org>,
+        David Laight <David.Laight@aculab.com>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
+        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-aio@kvack.org" <linux-aio@kvack.org>,
+        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
+        "linux-security-module@vger.kernel.org" 
+        <linux-security-module@vger.kernel.org>
+References: <5fd6003b-55a6-2c3c-9a28-8fd3a575ca78@redhat.com>
+ <20201022104805.GA1503673@kroah.com> <20201022121849.GA1664412@kroah.com>
+ <98d9df88-b7ef-fdfb-7d90-2fa7a9d7bab5@redhat.com>
+ <20201022125759.GA1685526@kroah.com> <20201022135036.GA1787470@kroah.com>
+ <134f162d711d466ebbd88906fae35b33@AcuMS.aculab.com>
+ <935f7168-c2f5-dd14-7124-412b284693a2@redhat.com>
+ <999e2926-9a75-72fd-007a-1de0af341292@redhat.com>
+ <35d0ec90ef4f4a35a75b9df7d791f719@AcuMS.aculab.com>
+ <20201023144718.GA2525489@kroah.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat GmbH
+Message-ID: <52fe0398-02be-33fb-3a64-e394cc819b60@redhat.com>
+Date:   Fri, 23 Oct 2020 18:33:00 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
 MIME-Version: 1.0
-In-Reply-To: <20201023114539-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20201023144718.GA2525489@kroah.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9782 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
- malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010230107
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9782 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- priorityscore=1501 clxscore=1015 malwarescore=0 mlxscore=0 adultscore=0
- lowpriorityscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010230107
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/23/20 10:46 AM, Michael S. Tsirkin wrote:
-> On Wed, Oct 07, 2020 at 03:54:45PM -0500, Mike Christie wrote:
->> The following patches were made over Michael's vhost branch here:
->> https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git/log/?h=vhost__;!!GqivPVa7Brio!IVNw3V-uPEJyaYcHGpZrPo_0vnAuPXchguJJZG5qCapOYzR8bOwuFyTZf49rMcokFOMG$
->>   
->> The patches also apply to Linus's or Martin's trees if you apply
->> https://urldefense.com/v3/__https://patchwork.kernel.org/patch/11790681/__;!!GqivPVa7Brio!IVNw3V-uPEJyaYcHGpZrPo_0vnAuPXchguJJZG5qCapOYzR8bOwuFyTZf49rMfl3id0D$
->> which was merged into mst's tree already.
+On 23.10.20 16:47, 'Greg KH' wrote:
+> On Fri, Oct 23, 2020 at 02:39:24PM +0000, David Laight wrote:
+>> From: David Hildenbrand
+>>> Sent: 23 October 2020 15:33
+>> ...
+>>> I just checked against upstream code generated by clang 10 and it
+>>> properly discards the upper 32bit via a mov w23 w2.
+>>>
+>>> So at least clang 10 indeed properly assumes we could have garbage and
+>>> masks it off.
+>>>
+>>> Maybe the issue is somewhere else, unrelated to nr_pages ... or clang 11
+>>> behaves differently.
 >>
->> The following patches are a follow up to this post:
->> https://urldefense.com/v3/__https://patchwork.kernel.org/cover/11790763/__;!!GqivPVa7Brio!IVNw3V-uPEJyaYcHGpZrPo_0vnAuPXchguJJZG5qCapOYzR8bOwuFyTZf49rMWyfBwDA$
->> which originally was fixing how vhost-scsi handled cmds so we would
->> not get IO errors when sending more than 256 cmds.
->>
->> In that patchset I needed to detect if a vq was in use and for this
->> patch:
->> https://urldefense.com/v3/__https://patchwork.kernel.org/patch/11790685/__;!!GqivPVa7Brio!IVNw3V-uPEJyaYcHGpZrPo_0vnAuPXchguJJZG5qCapOYzR8bOwuFyTZf49rMWWcMjJi$
->> it was suggested to add support for VHOST_RING_ENABLE. While doing
->> that though I hit a couple problems:
->>
->> 1. The patches moved how vhost-scsi allocated cmds from per lio
->> session to per vhost vq. To support both VHOST_RING_ENABLE and
->> where userspace didn't support it, I would have to keep around the
->> old per session/device cmd allocator/completion and then also maintain
->> the new code. Or, I would still have to use this patch
->> patchwork.kernel.org/cover/11790763/ for the compat case so there
->> adding the new ioctl would not help much.
->>
->> 2. For vhost-scsi I also wanted to prevent where we allocate iovecs
->> for 128 vqs even though we normally use a couple. To do this, I needed
->> something similar to #1, but the problem is that the VHOST_RING_ENABLE
->> call would come too late.
->>
->> To try and balance #1 and #2, these patches just allow vhost-scsi
->> to setup a vq when userspace starts to config it. This allows the
->> driver to only fully setup (we still waste some memory to support older
->> setups but do not have to preallocate everything like before) what
->> is used plus I do not need to maintain 2 code paths.
->>
->> Note that in this posting I am also including additional patches
->> that create multiple vhost worker threads, because I wanted to see
->> if people felt that maybe to support that and for this enablement
->> issue we want a completely a new ioctl.
->>
->>
->> V2:
->> - fix use before set cpu var errors
->> - drop vhost_vq_is_setup
->> - include patches to do a worker thread per scsi IO vq
+>> We'll need the disassembly from a failing kernel image.
+>> It isn't that big to hand annotate.
 > 
-> Stefan, Paolo, Jason any input?
-> 
+> I've worked around the merge at the moment in the android tree, but it
+> is still quite reproducable, and will try to get a .o file to
+> disassemble on Monday or so...
 
-Just a FYI there is a updated version of this patchset here:
+I just compiled pre and post fb041b598997d63c0f7d7305dfae70046bf66fe1 with
 
-https://patchwork.kernel.org/project/target-devel/list/?series=368487
+clang version 11.0.0 (Fedora 11.0.0-0.2.rc1.fc33)
+
+for aarch64 with defconfig and extracted import_iovec and
+rw_copy_check_uvector (skipping the compat things)
+
+Pre fb041b598997d63c0f7d7305dfae70046bf66fe1 import_iovec
+-> https://pastebin.com/LtnYMLJt
+Post fb041b598997d63c0f7d7305dfae70046bf66fe1 import_iovec
+-> https://pastebin.com/BWPmXrAf
+Pre fb041b598997d63c0f7d7305dfae70046bf66fe1 rw_copy_check_uvector
+-> https://pastebin.com/4nSBYRbf
+Post fb041b598997d63c0f7d7305dfae70046bf66fe1 rw_copy_check_uvector
+-> https://pastebin.com/hPtEgaEW
+
+I'm only able to spot minor differences ... less gets inlined than I
+would have expected. But there are some smaller differences.
+
+Maybe someone wants to have a look before we have object files as used
+by Greg ...
+
+-- 
+Thanks,
+
+David / dhildenb
+
