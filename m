@@ -1,68 +1,71 @@
-Return-Path: <SRS0=1+Eg=D6=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=Jnta=D7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88353C5517A
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Oct 2020 23:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6730CC2D0A3
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 03:55:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46C3221D6C
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Oct 2020 23:42:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603496535;
-	bh=nAjy8bkfhE88+gKUveTQczXrleQW2tS2ziU2FycHsXU=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=A3v5+NfZuYfLwcgA9UHBVhZdpRXsVvmpGfecW9JOYRukvVzrO1rdxy+yARH4SY82J
-	 hRoWGdfEiwcqMvLAVSWjc/DPnSK68oYmX2OGm4eGhWU67NRzGauBgNnJCidk+opNTB
-	 z6JAt5A9U/qm1fIcjQ5T1m7DXIEel6thp3Xcx3IY=
+	by mail.kernel.org (Postfix) with ESMTP id 2A4F821D43
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 03:55:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1758782AbgJWXmM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Oct 2020 19:42:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46402 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758779AbgJWXmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Oct 2020 19:42:11 -0400
-Subject: Re: [GIT PULL] final round of SCSI updates for the 5.9+ merge window
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603496531;
-        bh=nAjy8bkfhE88+gKUveTQczXrleQW2tS2ziU2FycHsXU=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=tKX9pjfycMsObhbPdsS5PoeKr6beAAi61fFgTzDD4l9zgNEngdo1Eke1Kifq9eXVM
-         B2bWFGUV0ktlAo328k/XgFW+/HhgVpB3dQJw2JEuApPXiKvYtGJMB/XkFZu8BQpneD
-         TtI4tdQSn1W5gdcXwAZPMbrsepAnXj9joK3cTWpE=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <4affd2a9c347e5f1231485483bf852737ea08151.camel@HansenPartnership.com>
-References: <4affd2a9c347e5f1231485483bf852737ea08151.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <4affd2a9c347e5f1231485483bf852737ea08151.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 1ef16a407f544408d3559e4de2ed05591df4da75
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: af995383eb653f875c4e4e2349d5b0b4ba839eaa
-Message-Id: <160349653124.22217.10098010982248353095.pr-tracker-bot@kernel.org>
-Date:   Fri, 23 Oct 2020 23:42:11 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1759439AbgJXDym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Oct 2020 23:54:42 -0400
+Received: from mail-pj1-f45.google.com ([209.85.216.45]:40814 "EHLO
+        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759434AbgJXDym (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Oct 2020 23:54:42 -0400
+Received: by mail-pj1-f45.google.com with SMTP id l2so265267pjt.5;
+        Fri, 23 Oct 2020 20:54:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Suvd71l3PIMDym64qMv85dhFTEWotVujUwdwoB2OxHs=;
+        b=S/bZ2tobvnjx3xxwUSSQhSHZFFPA3j1t7+E3R43SY7LWUnStXAcHMUbtmcDWKw7eB1
+         GbAwI9EBe0S0ODfw0KWohZIyKrBBnLx+ZPJn6WiBZkRYoRVyElZvLkMKNP3SDob/lkEA
+         pvo8SEBVFRUEM17yLYjDVMSnN/OA48ylUniYXbXogK06ZsqEb0mUdeCs9Tyl2JX+3YrG
+         JMfQQrckq1YfPw6oqY9kX5Iy+WvcFrBfk7JqjPJdtgXEFhbv2FMCDqFNkTr3BhdkwLYp
+         d77VqKXAZ/NvjRJ0X966sztlZK9stD7xn59+CWFYv7AXuLOw+2mD6R13z6Xp4og2deAl
+         Hgzw==
+X-Gm-Message-State: AOAM533u/5R++wc8Mg22/d+bHHrJXUzNv9TLWw0HlnLuVXBsJoUv5tRE
+        Xz2Ygz1aOGg2Jr3LviiDKYDRIKLMQNXlUQ==
+X-Google-Smtp-Source: ABdhPJzrSAJ3XDaWUf9/abihU8oq1RKzuUKHeCgVaV/Zfv2CinVEMZVBsN/ODtcEVRD306mwnpWwBA==
+X-Received: by 2002:a17:90a:4742:: with SMTP id y2mr6046934pjg.228.1603511681320;
+        Fri, 23 Oct 2020 20:54:41 -0700 (PDT)
+Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id y14sm3749893pfe.107.2020.10.23.20.54.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 Oct 2020 20:54:40 -0700 (PDT)
+Subject: Re: [PATCH 0/3] scsi: target: Set correct residual data
+To:     Anastasia Kovaleva <a.kovaleva@yadro.com>,
+        target-devel@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, linux@yadro.com
+References: <20201022172011.42367-1-a.kovaleva@yadro.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <d9d0046a-b4b5-0f61-5761-0cb27e968c3a@acm.org>
+Date:   Fri, 23 Oct 2020 20:54:38 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.2
+MIME-Version: 1.0
+In-Reply-To: <20201022172011.42367-1-a.kovaleva@yadro.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 23 Oct 2020 11:46:21 -0700:
+On 10/22/20 10:20 AM, Anastasia Kovaleva wrote:
+> The link to the pull request:
+> https://github.com/sahlberg/libiscsi/pull/345
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+I'm not going to merge that pull request without significant changes.
+See also the comment that I added on the pull request on github.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/af995383eb653f875c4e4e2349d5b0b4ba839eaa
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Bart.
