@@ -2,58 +2,59 @@ Return-Path: <SRS0=Jnta=D7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6730CC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 03:55:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E004C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 04:07:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A4F821D43
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 03:55:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AB1522201
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 04:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1759439AbgJXDym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Oct 2020 23:54:42 -0400
-Received: from mail-pj1-f45.google.com ([209.85.216.45]:40814 "EHLO
-        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759434AbgJXDym (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Oct 2020 23:54:42 -0400
-Received: by mail-pj1-f45.google.com with SMTP id l2so265267pjt.5;
-        Fri, 23 Oct 2020 20:54:41 -0700 (PDT)
+        id S1754979AbgJXEHm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Oct 2020 00:07:42 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:36251 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726998AbgJXEHm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Oct 2020 00:07:42 -0400
+Received: by mail-pg1-f193.google.com with SMTP id b23so2803114pgb.3;
+        Fri, 23 Oct 2020 21:07:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=Suvd71l3PIMDym64qMv85dhFTEWotVujUwdwoB2OxHs=;
-        b=S/bZ2tobvnjx3xxwUSSQhSHZFFPA3j1t7+E3R43SY7LWUnStXAcHMUbtmcDWKw7eB1
-         GbAwI9EBe0S0ODfw0KWohZIyKrBBnLx+ZPJn6WiBZkRYoRVyElZvLkMKNP3SDob/lkEA
-         pvo8SEBVFRUEM17yLYjDVMSnN/OA48ylUniYXbXogK06ZsqEb0mUdeCs9Tyl2JX+3YrG
-         JMfQQrckq1YfPw6oqY9kX5Iy+WvcFrBfk7JqjPJdtgXEFhbv2FMCDqFNkTr3BhdkwLYp
-         d77VqKXAZ/NvjRJ0X966sztlZK9stD7xn59+CWFYv7AXuLOw+2mD6R13z6Xp4og2deAl
-         Hgzw==
-X-Gm-Message-State: AOAM533u/5R++wc8Mg22/d+bHHrJXUzNv9TLWw0HlnLuVXBsJoUv5tRE
-        Xz2Ygz1aOGg2Jr3LviiDKYDRIKLMQNXlUQ==
-X-Google-Smtp-Source: ABdhPJzrSAJ3XDaWUf9/abihU8oq1RKzuUKHeCgVaV/Zfv2CinVEMZVBsN/ODtcEVRD306mwnpWwBA==
-X-Received: by 2002:a17:90a:4742:: with SMTP id y2mr6046934pjg.228.1603511681320;
-        Fri, 23 Oct 2020 20:54:41 -0700 (PDT)
+        bh=pdcicX9lxPMihXjurGsPe6g0UYtq7T7Wx9LqUueYjOU=;
+        b=CJR7Z9soDRY0FqymgZVo6L10CWrDA1HXdBr4sLiCCCbuyn2EbPXVlj6w0PC5n8AcOl
+         IJCXt03saWEDoDZMJBv7vN4Hw9Ienax7yeim6uW3X4dVdtte5eVAcD+0VP7vKJsGPyn1
+         7VUAM/G72+z5XAYFTvFhKHtP9bByb7Zmla+dnWgI1pAB6EI78g6xO0eoqjN1+aiMw9om
+         c1rPne54VMksFVwt6kJnqlVa5RMoKaYkpvJrFuKB/5Iyg117OjS//LeLUdGdBeUqx3FC
+         7fJW88+iq1U9CZ8WWNaZXNj94J0Tabzk9rf0JrlZLPDJ2OnImDxB3UnxLP0G8SOvUOCq
+         1imw==
+X-Gm-Message-State: AOAM533T3qKGJu5WnvCxtujnuXY3S255eIj0VqaRFFvKOqI0BbQX83+o
+        aL0Due6g39wRCKUVjyxZeH8AUcndSeDQFw==
+X-Google-Smtp-Source: ABdhPJx/9jKiP9y4fxQry5XNjzovkycwy6eIBjkRcDzUmdS8jyj39rrOdNtntJKKNWk46S5qiswWww==
+X-Received: by 2002:aa7:82ce:0:b029:142:2501:35cb with SMTP id f14-20020aa782ce0000b0290142250135cbmr2307492pfn.43.1603512461135;
+        Fri, 23 Oct 2020 21:07:41 -0700 (PDT)
 Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id y14sm3749893pfe.107.2020.10.23.20.54.39
+        by smtp.gmail.com with ESMTPSA id s131sm3626359pgc.18.2020.10.23.21.07.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Oct 2020 20:54:40 -0700 (PDT)
-Subject: Re: [PATCH 0/3] scsi: target: Set correct residual data
+        Fri, 23 Oct 2020 21:07:39 -0700 (PDT)
+Subject: Re: [PATCH 3/3] scsi: target: core: Change ASCQ for residual write
 To:     Anastasia Kovaleva <a.kovaleva@yadro.com>,
         target-devel@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, linux@yadro.com
+Cc:     linux-scsi@vger.kernel.org, linux@yadro.com,
+        Roman Bolshakov <r.bolshakov@yadro.com>
 References: <20201022172011.42367-1-a.kovaleva@yadro.com>
+ <20201022172011.42367-4-a.kovaleva@yadro.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <d9d0046a-b4b5-0f61-5761-0cb27e968c3a@acm.org>
-Date:   Fri, 23 Oct 2020 20:54:38 -0700
+Message-ID: <e2b215ca-0aa8-bdae-e5bd-292a09d8282e@acm.org>
+Date:   Fri, 23 Oct 2020 21:07:38 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.3.2
 MIME-Version: 1.0
-In-Reply-To: <20201022172011.42367-1-a.kovaleva@yadro.com>
+In-Reply-To: <20201022172011.42367-4-a.kovaleva@yadro.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -62,10 +63,37 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/22/20 10:20 AM, Anastasia Kovaleva wrote:
-> The link to the pull request:
-> https://github.com/sahlberg/libiscsi/pull/345
+> According to FCP-4 (9.4.2):
+> 
+>   If the command requested that data beyond the length specified by the
+>   FCP_DL field be transferred, then the device server shall set the
+>   FCP_RESID_OVER bit (see 9.5.8) to one in the FCP_RSP IU and:
+> 
+>   a) process the command normally except that data beyond the FCP_DL
+>   count shall not be requested or transferred;
+> 
+>   b) transfer no data and return CHECK CONDITION status with the sense
+>   key set to ILLEGAL REQUEST and the additional sense code set to INVALID
+>   FIELD IN COMMAND INFORMATION UNIT; or
+> 
+>   c) may transfer data and return CHECK CONDITION status with the sense
+>   key set to ABORTED COMMAND and the additional sense code set to
+>   INVALID FIELD IN COMMAND INFORMATION UNIT.
+> 
+> TCM follows b) and transfers no data for residual writes but returns
+> INVALID FIELD IN CDB instead of INVALID FIELD IN COMMAND INFORMATION
+> UNIT.
+> 
+> Change the ASCQ to INVALID FIELD IN COMMAND INFORMATION UNIT to meet the
+> standart.
 
-I'm not going to merge that pull request without significant changes.
-See also the comment that I added on the pull request on github.
+Is FCP the only standard that requires to report INVALID FIELD IN COMMAND
+INFORMATION UNIT for residual overflow? I haven't found any similar
+requirement in the iSCSI RFC nor in the SRP standard.
+
+Additionally, what benefits does it provide to report a CHECK CONDITION
+upon residual overflow? The SCST QLogic FC target driver doesn't do this
+as far as I know, is more than ten years old, is widely used and so far
+nobody complained about this.
 
 Bart.
