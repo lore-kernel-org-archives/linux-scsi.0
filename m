@@ -2,122 +2,85 @@ Return-Path: <SRS0=Jnta=D7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA06C4363A
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 12:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9426C55178
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 15:06:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7018A20BED
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 12:33:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7249B222C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Oct 2020 15:06:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603552019;
+	bh=hJq6gHeglXeioT2p+UkEfD7VO+LTb3XRjMAAYvwCArA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Yl/NAwmALkPp/5SFPRaA6hRIKo0vzGAF3JV6v+E8pm6a30DOVwc6mJ5pxh9w63iWq
+	 6G17xqIHi+iT1YM94Iwp7txDENagSlOuCbp9KkvJnMNoWSjRuii5+JTr5G5IRA6eG4
+	 lxKc/9WehXQCEpser1KUtjjrJjYW0jjaaUUlrK4I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1761386AbgJXMdi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Oct 2020 08:33:38 -0400
-Received: from avasout03.plus.net ([84.93.230.244]:38315 "EHLO
-        avasout03.plus.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761383AbgJXMdh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Oct 2020 08:33:37 -0400
-Received: from APOLLO ([212.159.61.44])
-        by smtp with ESMTPA
-        id WIjlk2EJH99nqWIjmkbs0l; Sat, 24 Oct 2020 13:33:36 +0100
-X-Clacks-Overhead: "GNU Terry Pratchett"
-X-CM-Score: 0.00
-X-CNFS-Analysis: v=2.3 cv=Uoz4y94B c=1 sm=1 tr=0
- a=AGp1duJPimIJhwGXxSk9fg==:117 a=AGp1duJPimIJhwGXxSk9fg==:17
- a=kj9zAlcOel0A:10 a=P1kZ4gAsAAAA:8 a=VwQbUJbxAAAA:8 a=RjYKm9-K-DIam8sJtF8A:9
- a=CjuIK1q_8ugA:10 a=fn9vMg-Z9CMH7MoVPInU:22 a=AjGcO6oz07-iQ99wixmX:22
-X-AUTH: perdrix52@:2500
-From:   "David C. Partridge" <david.partridge@perdrix.co.uk>
-To:     <linux-scsi@vger.kernel.org>
-References: <007e01d6a7a1$fed7d820$fc878860$@perdrix.co.uk>
-In-Reply-To: <007e01d6a7a1$fed7d820$fc878860$@perdrix.co.uk>
-Subject: RE: Adaptec ASR-51245 and aacraid driver timeouts
-Date:   Sat, 24 Oct 2020 13:33:33 +0100
-Message-ID: <009901d6aa01$e49d4690$add7d3b0$@perdrix.co.uk>
+        id S1760505AbgJXPGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Oct 2020 11:06:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60774 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760487AbgJXPGw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 24 Oct 2020 11:06:52 -0400
+Received: from localhost (unknown [104.132.1.66])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1F00A2225F;
+        Sat, 24 Oct 2020 15:06:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603552012;
+        bh=hJq6gHeglXeioT2p+UkEfD7VO+LTb3XRjMAAYvwCArA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=OB2xj8TKyNzK+H3Wy7zmQPn1SNAqPCVdf/Vt/yvvVfMd3nX79mfjTExTgXezfpatV
+         NvVs21u9lbZlDAaGVlhwcO1YSvfARNKm87ynq2hWcwkgfXMCxrJb/HBqR2oZHeA038
+         wShYwbMasNEyinsT5ALk/rwFhUwF+/RkkRtJtuu0=
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, kernel-team@android.com
+Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org, Jaegeuk Kim <jaegeuk@google.com>
+Subject: [PATCH v3 3/5] scsi: ufs: use WQ_HIGHPRI for gating work
+Date:   Sat, 24 Oct 2020 08:06:44 -0700
+Message-Id: <20201024150646.1790529-4-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
+In-Reply-To: <20201024150646.1790529-1-jaegeuk@kernel.org>
+References: <20201024150646.1790529-1-jaegeuk@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 14.0
-Content-Language: en-gb
-Thread-Index: AQHRB8w658IXIXOeAUgHC2i4dDaVL6mx8y3g
-X-CMAE-Envelope: MS4wfOh7xYieJVe4zmTZGoPlokb786YrucYDk02ukk6XllXyR349A2MsDg80L0w+f/+5+N7txUo1Woetlu6VUsIYjHTxFNLRRwc0LnHr645XYZXussmHCv//
- wizxgrSZmvn81O4yrr8nVGCjhU8D5fzHTB1fnSBp4MzghyqB+dOek148VuMUKaRsFKL/rkkZORSTbg==
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi again,
+From: Jaegeuk Kim <jaegeuk@google.com>
 
-I know there's been a lot of activity lately, so this could well have been
-missed.
+Must have WQ_MEM_RECLAIM
+``WQ_MEM_RECLAIM``
+  All wq which might be used in the memory reclaim paths **MUST**
+  have this flag set.  The wq is guaranteed to have at least one
+  execution context regardless of memory pressure.
 
-I'd dearly like to be able to power the drives down when the array is idle,
-but this problem seems to make that impossible.
+Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Are any of the folks that know the Adaptec raid cards and the aacraid driver
-here?
-
-Thanks
-David 
-
------Original Message-----
-From: David C. Partridge [mailto:david.partridge@perdrix.co.uk] 
-Sent: 21 October 2020 13:02
-To: linux-scsi@vger.kernel.org
-Subject: Adaptec ASR-51245 and aacraid driver timeouts
-
-I'm running LUbuntu x64 20.04.1 kernel 5.4.0-52-generic with an Adapted
-ASR-51245 hosting a RAID-5 array.
-
-If I configure the card to power down the drives in the raid array after a
-period of idleness, the next time my server attempts to access the logical
-device I get:
-
-Oct 19 04:03:03 charon kernel: aacraid: Host adapter abort request.
-                               aacraid: Outstanding commands on (0,0,0,0):
-Oct 19 04:03:03 charon kernel: aacraid: Host adapter reset request. SCSI
-hang ?
-Oct 19 04:03:18 charon kernel: aacraid: Host adapter reset request. SCSI
-hang ?
-Oct 19 04:03:18 charon kernel: aacraid 0000:01:00.0: outstanding cmd:
-midlevel-0
-Oct 19 04:03:18 charon kernel: aacraid 0000:01:00.0: outstanding cmd:
-lowlevel-0
-Oct 19 04:03:18 charon kernel: aacraid 0000:01:00.0: outstanding cmd: error
-handler-0
-Oct 19 04:03:18 charon kernel: aacraid 0000:01:00.0: outstanding cmd:
-firmware-1
-Oct 19 04:03:18 charon kernel: aacraid 0000:01:00.0: outstanding cmd:
-kernel-0
-Oct 19 04:03:48 charon kernel: sd 0:0:0:0: Device offlined - not ready after
-error recovery
-Oct 19 04:03:48 charon kernel: sd 0:0:0:0: [sda] tag#215 FAILED Result:
-hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
-Oct 19 04:03:48 charon kernel: sd 0:0:0:0: [sda] tag#215 CDB: Read(16) 88 00
-00 00 00 00 00 05 27 48 00 00 00 08 00 00
-Oct 19 04:03:48 charon kernel: blk_update_request: I/O error, dev sda,
-sector 337736 op 0x0:(READ) flags 0x1000 phys_seg 1 prio class 0
-Oct 19 04:03:48 charon kernel: BTRFS error (device sda1): bdev /dev/sda1
-errs: wr 1, rd 1, flush 0, corrupt 3, gen 0
-
-at which point the drive is now effectively offline :/
-
-I tried upping the timeout:
-
-root@charon:/etc/udev/rules.d# cat 99-aacraid.rules 
-SUBSYSTEM=="block", ACTION=="add", ENV{ID_VENDOR}=="Adaptec",
-ENV{ID_MODEL}=="Shared", RUN+="/bin/sh -c 'echo 135 >
-/sys/block/%k/device/timeout'"
-
-but that didn't appear to stop the problem occurring (and the kernel wasn't
-over happy about a >120s timeout).
-
-Any help much appreciated.
-David
-
-
-
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 011e80a21170..bc0d623aed66 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1867,7 +1867,7 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	snprintf(wq_name, ARRAY_SIZE(wq_name), "ufs_clk_gating_%d",
+ 		 hba->host->host_no);
+ 	hba->clk_gating.clk_gating_workq = alloc_ordered_workqueue(wq_name,
+-							   WQ_MEM_RECLAIM);
++					WQ_MEM_RECLAIM | WQ_HIGHPRI);
+ 
+ 	hba->clk_gating.is_enabled = true;
+ 
+-- 
+2.29.0.rc1.297.gfa9743e501-goog
 
