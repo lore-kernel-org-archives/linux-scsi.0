@@ -7,52 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11346C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD709C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:07:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5FB72242A
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:07:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A01A20760
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:07:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603728437;
-	bh=UuOAjqv/tTImmhISQwNWEjfqoWITfI3gf+j5nxHvAf8=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=K+ZJUVNkWUmbPg0D+1/BNt6fhli4gj56kQh5XQl8ETMMXJYRpRkBxrk5TEzlQbW+S
-	 W/IUQcUxmXDig2un96rWp9pMrRWXn/E2BQWy4hz0OTQDUECzVQQ7K+6Ah/JNEfnWFf
-	 0oLJJHswf5axtWhpUqQYnexaxPv0efa4Xl6vd0e8=
+	s=default; t=1603728450;
+	bh=vganNX6Aeeca1D9Zt1my2hxu7xQPLJXxYto20gsAqo0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=CiaA83Tgi9PVflJAYYXCJptRlFnV6qR0dZ3RP3AWI9xzu4IuEhq4JBijSEV+3VSUk
+	 kRdk36Cb6N82gdrprN9GM+BRrQNz+WQEjjTooF23GuLBQVpCSrxioP/L3JMOalmvDY
+	 2WtO8WCLRl8FWW0DdvKQHF56RBrd+V3PdVjpXZ8A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1784965AbgJZQHO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 12:07:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53324 "EHLO mail.kernel.org"
+        id S1784977AbgJZQH1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 12:07:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53602 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1775114AbgJZQHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 12:07:14 -0400
+        id S1784973AbgJZQH1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 12:07:27 -0400
 Received: from localhost.localdomain (unknown [192.30.34.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D83E222404;
-        Mon, 26 Oct 2020 16:07:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C9E6A2072C;
+        Mon, 26 Oct 2020 16:07:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603728433;
-        bh=UuOAjqv/tTImmhISQwNWEjfqoWITfI3gf+j5nxHvAf8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=AxrQslD1sIweQTaJEKAt5vEuscv8JbVCIZlj1JHhcHO9GG2H9CZgFPLIXVgqMb7ef
-         gOa3o4B/I8nEjVBnHkNVP/3+ewhvHdjucgedvqQ/wNMDOCgOq9nCyUvUU5rc8/NpPK
-         x/3taEhy5Ulj8EQtDFkzL12vPJmytaXGF/1QtYW4=
+        s=default; t=1603728446;
+        bh=vganNX6Aeeca1D9Zt1my2hxu7xQPLJXxYto20gsAqo0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=1JfCOLY9SvloVZ7+VHlhbeq3ImiDk8ALfrpC+f8AM4JD73vQlYnUc4z8iNx8R38sT
+         aLTmMkqrsTy3DAVrkVLFvw0hKt7Zm+2ejkcM4+UN2b6U1shwszLQEEFnd7SrPgqbsq
+         b07hBv3gQCHXQlJNwKhNdhlgmhBpFs1Fg5kOU+DA=
 From:   Arnd Bergmann <arnd@kernel.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Lee Jones <lee.jones@linaro.org>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH 1/2] libfc: move scsi/fc_encode.h to libfc
-Date:   Mon, 26 Oct 2020 17:06:12 +0100
-Message-Id: <20201026160705.3706396-1-arnd@kernel.org>
+To:     Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] libfc: work around Warray-bounds warning
+Date:   Mon, 26 Oct 2020 17:06:13 +0100
+Message-Id: <20201026160705.3706396-2-arnd@kernel.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201026160705.3706396-1-arnd@kernel.org>
+References: <20201026160705.3706396-1-arnd@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -61,247 +58,161 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-Most of this file is only used inside of libfc, so move
-it to where it is actually used, with only fc_fill_fc_hdr()
-left inside of the header.
+Building libfc with gcc -Warray-bounds identifies a number of
+cases in one file where a strncpy() is performed into a single-byte
+character array:
+
+In file included from include/linux/bitmap.h:9,
+                 from include/linux/cpumask.h:12,
+                 from include/linux/smp.h:13,
+                 from include/linux/lockdep.h:14,
+                 from include/linux/spinlock.h:59,
+                 from include/linux/debugobjects.h:6,
+                 from include/linux/timer.h:8,
+                 from include/scsi/libfc.h:11,
+                 from drivers/scsi/libfc/fc_elsct.c:17:
+In function 'strncpy',
+    inlined from 'fc_ct_ms_fill.constprop' at drivers/scsi/libfc/fc_encode.h:235:3:
+include/linux/string.h:290:30: warning: '__builtin_strncpy' offset [56, 135] from the object at 'pp' is out of the bounds of referenced subobject 'value' with type '__u8[1]' {aka 'unsigned char[1]'} at offset 56 [-Warray-bounds]
+  290 | #define __underlying_strncpy __builtin_strncpy
+      |                              ^
+include/linux/string.h:300:9: note: in expansion of macro '__underlying_strncpy'
+  300 |  return __underlying_strncpy(p, q, size);
+      |         ^~~~~~~~~~~~~~~~~~~~
+
+This is not a bug because the 1-byte array is used as an odd way
+to express a variable-length data field here. I tried to convert
+it to a flexible-array member, but in the end could not figure out
+why the sizeof(struct fc_fdmi_???) are used the way they are, and
+how to properly convert those.
+
+Work around this instead by abstracting the string copy
+in a slightly higher-level function fc_ct_hdr_fill() helper
+that strscpy() and memset() to achieve the same result as
+strncpy() but does not require a zero-terminated input
+and does not get checked for the array overflow because
+gcc (so far) does not understand the behavior of strscpy().
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h                  |  1 -
- drivers/scsi/libfc/fc_elsct.c                 |  2 +-
- .../scsi => drivers/scsi/libfc}/fc_encode.h   | 30 +------------------
- drivers/scsi/libfc/fc_exch.c                  |  1 -
- drivers/scsi/libfc/fc_fcp.c                   |  2 +-
- drivers/scsi/libfc/fc_libfc.c                 |  2 +-
- drivers/scsi/libfc/fc_lport.c                 |  2 +-
- drivers/scsi/libfc/fc_rport.c                 |  2 +-
- drivers/scsi/qedf/qedf.h                      |  1 -
- drivers/target/tcm_fc/tfc_cmd.c               |  1 -
- drivers/target/tcm_fc/tfc_io.c                |  1 -
- include/scsi/fc_frame.h                       | 30 +++++++++++++++++++
- 12 files changed, 36 insertions(+), 39 deletions(-)
- rename {include/scsi => drivers/scsi/libfc}/fc_encode.h (96%)
+ drivers/scsi/libfc/fc_encode.h | 30 +++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index b6e8ed757252..b4cea8b06ea1 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -51,7 +51,6 @@
- #include <scsi/scsi_tcq.h>
- #include <scsi/libfc.h>
- #include <scsi/libfcoe.h>
--#include <scsi/fc_encode.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_fc.h>
- #include <scsi/fc/fc_fip.h>
-diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
-index 13a2e7c33cb1..8d3006edbe12 100644
---- a/drivers/scsi/libfc/fc_elsct.c
-+++ b/drivers/scsi/libfc/fc_elsct.c
-@@ -15,7 +15,7 @@
- #include <scsi/fc/fc_ns.h>
- #include <scsi/fc/fc_els.h>
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
-+#include "fc_encode.h"
- #include "fc_libfc.h"
- 
- /**
-diff --git a/include/scsi/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
-similarity index 96%
-rename from include/scsi/fc_encode.h
-rename to drivers/scsi/libfc/fc_encode.h
-index c6660205d73f..18203cae04b2 100644
---- a/include/scsi/fc_encode.h
+diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
+index 18203cae04b2..602c97a651bc 100644
+--- a/drivers/scsi/libfc/fc_encode.h
 +++ b/drivers/scsi/libfc/fc_encode.h
-@@ -9,6 +9,7 @@
- #define _FC_ENCODE_H_
- #include <asm/unaligned.h>
- #include <linux/utsname.h>
-+#include <scsi/fc/fc_ms.h>
+@@ -163,6 +163,14 @@ static inline int fc_ct_ns_fill(struct fc_lport *lport,
+ 	return 0;
+ }
  
- /*
-  * F_CTL values for simple requests and responses.
-@@ -39,35 +40,6 @@ struct fc_ct_req {
- 	} payload;
- };
- 
--static inline void __fc_fill_fc_hdr(struct fc_frame_header *fh,
--				    enum fc_rctl r_ctl,
--				    u32 did, u32 sid, enum fc_fh_type type,
--				    u32 f_ctl, u32 parm_offset)
--{
--	WARN_ON(r_ctl == 0);
--	fh->fh_r_ctl = r_ctl;
--	hton24(fh->fh_d_id, did);
--	hton24(fh->fh_s_id, sid);
--	fh->fh_type = type;
--	hton24(fh->fh_f_ctl, f_ctl);
--	fh->fh_cs_ctl = 0;
--	fh->fh_df_ctl = 0;
--	fh->fh_parm_offset = htonl(parm_offset);
--}
--
--/**
-- * fill FC header fields in specified fc_frame
-- */
--static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
--				  u32 did, u32 sid, enum fc_fh_type type,
--				  u32 f_ctl, u32 parm_offset)
--{
--	struct fc_frame_header *fh;
--
--	fh = fc_frame_header_get(fp);
--	__fc_fill_fc_hdr(fh, r_ctl, did, sid, type, f_ctl, parm_offset);
--}
--
++static inline void fc_ct_ms_fill_attr(struct fc_fdmi_attr_entry *entry,
++				    const char *in, size_t len)
++{
++	int copied = strscpy(entry->value, in, len);
++	if (copied > 0)
++		memset(entry->value, copied, len - copied);
++}
++
  /**
-  * fc_adisc_fill() - Fill in adisc request frame
+  * fc_ct_ms_fill() - Fill in a mgmt service request frame
   * @lport: local port.
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 851335f09221..d71afae6191c 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -20,7 +20,6 @@
- #include <scsi/fc/fc_fc2.h>
+@@ -232,7 +240,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_MANUFACTURER,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_manufacturer(lport->host),
+ 			FC_FDMI_HBA_ATTR_MANUFACTURER_LEN);
  
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
+@@ -244,7 +252,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_SERIALNUMBER,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_serial_number(lport->host),
+ 			FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN);
  
- #include "fc_libfc.h"
+@@ -256,7 +264,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_MODEL,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_model(lport->host),
+ 			FC_FDMI_HBA_ATTR_MODEL_LEN);
  
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 7cfeb6886237..b43b5f62ee3e 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -26,8 +26,8 @@
- #include <scsi/fc/fc_fc2.h>
+@@ -268,7 +276,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_MODELDESCRIPTION,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_model_description(lport->host),
+ 			FC_FDMI_HBA_ATTR_MODELDESCR_LEN);
  
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
+@@ -280,7 +288,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_HARDWAREVERSION,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_hardware_version(lport->host),
+ 			FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN);
  
-+#include "fc_encode.h"
- #include "fc_libfc.h"
+@@ -292,7 +300,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_DRIVERVERSION,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_driver_version(lport->host),
+ 			FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN);
  
- static struct kmem_cache *scsi_pkt_cachep;
-diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-index 19c4ab4e0f4d..0e6a1355d020 100644
---- a/drivers/scsi/libfc/fc_libfc.c
-+++ b/drivers/scsi/libfc/fc_libfc.c
-@@ -12,8 +12,8 @@
- #include <linux/module.h>
+@@ -304,7 +312,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_OPTIONROMVERSION,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_optionrom_version(lport->host),
+ 			FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN);
  
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
+@@ -316,7 +324,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(FC_FDMI_HBA_ATTR_FIRMWAREVERSION,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			fc_host_firmware_version(lport->host),
+ 			FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN);
  
-+#include "fc_encode.h"
- #include "fc_libfc.h"
- 
- MODULE_AUTHOR("Open-FCoE.org");
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 6557fda85c5c..22826544da7e 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -84,9 +84,9 @@
- #include <scsi/fc/fc_gs.h>
- 
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
- #include <linux/scatterlist.h>
- 
-+#include "fc_encode.h"
- #include "fc_libfc.h"
- 
- /* Fabric IDs to use for point-to-point mode, chosen on whims. */
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index a60b228d13f1..56003208d2e7 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -58,8 +58,8 @@
- #include <asm/unaligned.h>
- 
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
- 
-+#include "fc_encode.h"
- #include "fc_libfc.h"
- 
- static struct workqueue_struct *rport_event_queue;
-diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
-index 0e2cbb164eeb..88a592d09433 100644
---- a/drivers/scsi/qedf/qedf.h
-+++ b/drivers/scsi/qedf/qedf.h
-@@ -11,7 +11,6 @@
- #include <scsi/fc/fc_fip.h>
- #include <scsi/fc/fc_fc2.h>
- #include <scsi/scsi_tcq.h>
--#include <scsi/fc_encode.h>
- #include <linux/version.h>
- 
- 
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index a7ed56602c6c..9c8c38a549c6 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -19,7 +19,6 @@
- #include <asm/unaligned.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
- 
- #include <target/target_core_base.h>
- #include <target/target_core_fabric.h>
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 6a38ff936389..bbe2e29612fa 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -28,7 +28,6 @@
- #include <linux/ratelimit.h>
- #include <asm/unaligned.h>
- #include <scsi/libfc.h>
--#include <scsi/fc_encode.h>
- 
- #include <target/target_core_base.h>
- #include <target/target_core_fabric.h>
-diff --git a/include/scsi/fc_frame.h b/include/scsi/fc_frame.h
-index 41df2ba9dbaa..d544dc5057fc 100644
---- a/include/scsi/fc_frame.h
-+++ b/include/scsi/fc_frame.h
-@@ -246,4 +246,34 @@ static inline bool fc_frame_is_cmd(const struct fc_frame *fp)
-  */
- void fc_frame_leak_check(void);
- 
-+static inline void __fc_fill_fc_hdr(struct fc_frame_header *fh,
-+				    enum fc_rctl r_ctl,
-+				    u32 did, u32 sid, enum fc_fh_type type,
-+				    u32 f_ctl, u32 parm_offset)
-+{
-+	WARN_ON(r_ctl == 0);
-+	fh->fh_r_ctl = r_ctl;
-+	hton24(fh->fh_d_id, did);
-+	hton24(fh->fh_s_id, sid);
-+	fh->fh_type = type;
-+	hton24(fh->fh_f_ctl, f_ctl);
-+	fh->fh_cs_ctl = 0;
-+	fh->fh_df_ctl = 0;
-+	fh->fh_parm_offset = htonl(parm_offset);
-+}
-+
-+/**
-+ * fill FC header fields in specified fc_frame
-+ */
-+static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
-+				  u32 did, u32 sid, enum fc_fh_type type,
-+				  u32 f_ctl, u32 parm_offset)
-+{
-+	struct fc_frame_header *fh;
-+
-+	fh = fc_frame_header_get(fp);
-+	__fc_fill_fc_hdr(fh, r_ctl, did, sid, type, f_ctl, parm_offset);
-+}
-+
-+
- #endif /* _FC_FRAME_H_ */
+@@ -411,7 +419,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+ 		/* Use the sysfs device name */
+-		strncpy((char *)&entry->value,
++		fc_ct_ms_fill_attr(entry,
+ 			dev_name(&lport->host->shost_gendev),
+ 			strnlen(dev_name(&lport->host->shost_gendev),
+ 				FC_FDMI_PORT_ATTR_HOSTNAME_LEN));
+@@ -425,12 +433,12 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+ 		if (strlen(fc_host_system_hostname(lport->host)))
+-			strncpy((char *)&entry->value,
++			fc_ct_ms_fill_attr(entry,
+ 				fc_host_system_hostname(lport->host),
+ 				strnlen(fc_host_system_hostname(lport->host),
+ 					FC_FDMI_PORT_ATTR_HOSTNAME_LEN));
+ 		else
+-			strncpy((char *)&entry->value,
++			fc_ct_ms_fill_attr(entry,
+ 				init_utsname()->nodename,
+ 				FC_FDMI_PORT_ATTR_HOSTNAME_LEN);
+ 		break;
 -- 
 2.27.0
 
