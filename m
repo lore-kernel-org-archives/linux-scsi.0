@@ -2,274 +2,151 @@ Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADEC5C4363A
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 11:48:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59487C4363A
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 13:13:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F4F522265
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 11:48:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 201C122263
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 13:13:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MQCJ3ZO/"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="opmOSRGd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1773972AbgJZLs2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 07:48:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:40052 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1772606AbgJZLs2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 07:48:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603712905;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BAg4NPiQeZ5ZueJAugDL6waABqllP1Np7akfk3Zu/Ps=;
-        b=MQCJ3ZO/1/NrmUUS49SY3lvi7JqawVewJs9rqwJBzs3hbtmNxC1HkWh0WbO+LQGA9jrJMB
-        m4d58W6s1o1O9lAfVawUqudiPlvW688+1NC0NSrsqHhH7zNfdKTdOnFKbn90iCtjtixRjh
-        o/eLfGl/m0Cmg6+AFrJ8bAt3uiXSAaE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-442-0rUlNTtAO0yWWaeqlZ7Q5A-1; Mon, 26 Oct 2020 07:48:23 -0400
-X-MC-Unique: 0rUlNTtAO0yWWaeqlZ7Q5A-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1737230AbgJZNNR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 09:13:17 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:56976 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2404269AbgJZNMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 09:12:31 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 43F004131A;
+        Mon, 26 Oct 2020 13:12:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1603717948;
+         x=1605532349; bh=/T03XNTjq07IFYLx+eb/uHDkrEwWsSaRhc+ySlfkuuU=; b=
+        opmOSRGdJYGCpke2hghvRKNOH4t6sgrsv4T0a4Z0wVeAyKBI1vx/B7q7hAQZxlPh
+        ZJqMrwJ67ikgNOhu16XIzWaPxWrYG4tazGcvIUhP5O8gpyoAMgBEuoPPS9poMY6H
+        MfF+4trBhgbIKqj7IxQoFTZ7ci8Oc7/KlFP5uzi5FCM=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id mqm3-bLaFuhx; Mon, 26 Oct 2020 16:12:28 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 85F96835B7E;
-        Mon, 26 Oct 2020 11:48:22 +0000 (UTC)
-Received: from ovpn-112-111.phx2.redhat.com (ovpn-112-111.phx2.redhat.com [10.3.112.111])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DB6955B4B3;
-        Mon, 26 Oct 2020 11:48:21 +0000 (UTC)
-Message-ID: <e067dd48cbc1b0d09032c7b449a4f5d6802bac1b.camel@redhat.com>
-Subject: Re: [patch v4 4/5] scsi_transport_fc: Added a new rport state
- FC_PORTSTATE_MARGINAL
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        hare@suse.de
-Cc:     jsmart2021@gmail.com, mkumar@redhat.com
-Date:   Mon, 26 Oct 2020 07:48:21 -0400
-In-Reply-To: <1603370091-9337-5-git-send-email-muneendra.kumar@broadcom.com>
-References: <1603370091-9337-1-git-send-email-muneendra.kumar@broadcom.com>
-         <1603370091-9337-5-git-send-email-muneendra.kumar@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+        by mta-01.yadro.com (Postfix) with ESMTPS id 1D6CE412EB;
+        Mon, 26 Oct 2020 16:12:27 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-04.corp.yadro.com
+ (172.17.100.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 26
+ Oct 2020 16:12:27 +0300
+Date:   Mon, 26 Oct 2020 16:12:26 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     Anastasia Kovaleva <a.kovaleva@yadro.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>
+Subject: Re: [PATCH 3/3] scsi: target: core: Change ASCQ for residual write
+Message-ID: <20201026131226.GA88490@SPB-NB-133.local>
+References: <20201022172011.42367-1-a.kovaleva@yadro.com>
+ <20201022172011.42367-4-a.kovaleva@yadro.com>
+ <e2b215ca-0aa8-bdae-e5bd-292a09d8282e@acm.org>
+ <20201024121315.GA35317@SPB-NB-133.local>
+ <b831a7db-1da2-c293-a8f6-d9c62f68c224@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <b831a7db-1da2-c293-a8f6-d9c62f68c224@acm.org>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-04.corp.yadro.com (172.17.100.104)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-See below.  I think you wanted to check for FC_PORTSTATE_MARGINAL
-in the code you added to fc_scsi_scan_rport().  Instead the code
-tests for FC_PORTSTATE_ONLINE twice.
+On Sat, Oct 24, 2020 at 05:25:17PM -0700, Bart Van Assche wrote:
+> On 10/24/20 5:13 AM, Roman Bolshakov wrote:
+> >> Additionally, what benefits does it provide to report a CHECK CONDITION
+> >> upon residual overflow?
+> > 
+> > Typical use case for CHECK CONDITION in case of Underflow/Overflow is
+> > extra robustness against buggy initiators [1][2]. Failing both READ and
+> > WRITE is the most solid approach in that sense [3][4][5] as it prevents
+> > data corruption at all costs.
+> > 
+> > Suppose an initiator wants to WRITE 8 LBA. For 512-byte formatted LUN,
+> > 8 LBAs need a buffer of 4K bytes. For 4096-byte formatted LUN the
+> > command would need 32K data buffer.
+> > 
+> > An Overflow happens if initiator treats 4Kn device like 512n one but
+> > provides a buffer of 4K. i.e. to complete the WRITE target needs to
+> > consume 28K more data, otherwise only 1 LBA would be written and the
+> > rest 7 LBAs would have indeterminate content.
+> > 
+> > An Underflow happens if initiator confuses 512n device with 4Kn one and
+> > provides a buffer of 32K, i.e. target doesn't utilize all buffer for the
+> > command.
+> 
+> Thanks for the additional background information, this really helps. How
+> about only rejecting SCSI commands for which the data buffer size is not
+> a multiple of the block size? I'm concerned that flagging all SCSI
+> commands that have a residue as invalid will break SCSI tape software.
+> 
 
--Ewan
+Hi Bart,
 
-On Thu, 2020-10-22 at 18:04 +0530, Muneendra wrote:
-> Added a new rport state FC_PORTSTATE_MARGINAL.
-> 
-> Added a new inline function fc_rport_chkmarginal_set_noretries
-> which will set the SCMD_NORETRIES_ABORT bit in cmd->state if rport
-> state
-> is marginal.
-> 
-> Made changes in fc_eh_timed_out to call
-> fc_rport_chkmarginal_set_noretries
-> Also made changes in fc_remote_port_delete,fc_user_scan_tgt,
-> fc_timeout_deleted_rport functions  to handle the new rport state
-> FC_PORTSTATE_MARGINAL.
-> 
-> Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
-> 
-> ---
-> v4:
-> Made changes in fc_eh_timed_out to call
-> fc_rport_chkmarginal_set_noretries
-> so that SCMD_NORETRIES_ABORT bit in cmd->state is set if rport state
-> is marginal.
-> 
-> Removed the newly added scsi_cmd argument to fc_remote_port_chkready
-> as the current patch handles only SCSI EH timeout/abort case.
-> 
-> v3:
-> Rearranged the patch so that all the changes with respect to new
-> rport state is part of this patch.
-> Added a new argument to scsi_cmd  to fc_remote_port_chkready
-> 
-> v2:
-> New patch
-> ---
->  drivers/scsi/scsi_transport_fc.c | 41 +++++++++++++++++++-----------
-> --
->  include/scsi/scsi_transport_fc.h | 19 +++++++++++++++
->  2 files changed, 44 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c
-> b/drivers/scsi/scsi_transport_fc.c
-> index 2ff7f06203da..fcb38068e2a4 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -142,20 +142,23 @@ fc_enum_name_search(host_event_code,
-> fc_host_event_code,
->  static struct {
->  	enum fc_port_state	value;
->  	char			*name;
-> +	int			matchlen;
->  } fc_port_state_names[] = {
-> -	{ FC_PORTSTATE_UNKNOWN,		"Unknown" },
-> -	{ FC_PORTSTATE_NOTPRESENT,	"Not Present" },
-> -	{ FC_PORTSTATE_ONLINE,		"Online" },
-> -	{ FC_PORTSTATE_OFFLINE,		"Offline" },
-> -	{ FC_PORTSTATE_BLOCKED,		"Blocked" },
-> -	{ FC_PORTSTATE_BYPASSED,	"Bypassed" },
-> -	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics" },
-> -	{ FC_PORTSTATE_LINKDOWN,	"Linkdown" },
-> -	{ FC_PORTSTATE_ERROR,		"Error" },
-> -	{ FC_PORTSTATE_LOOPBACK,	"Loopback" },
-> -	{ FC_PORTSTATE_DELETED,		"Deleted" },
-> +	{ FC_PORTSTATE_UNKNOWN,		"Unknown", 7},
-> +	{ FC_PORTSTATE_NOTPRESENT,	"Not Present", 11 },
-> +	{ FC_PORTSTATE_ONLINE,		"Online", 6 },
-> +	{ FC_PORTSTATE_OFFLINE,		"Offline", 7 },
-> +	{ FC_PORTSTATE_BLOCKED,		"Blocked", 7 },
-> +	{ FC_PORTSTATE_BYPASSED,	"Bypassed", 8 },
-> +	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics", 11 },
-> +	{ FC_PORTSTATE_LINKDOWN,	"Linkdown", 8 },
-> +	{ FC_PORTSTATE_ERROR,		"Error", 5 },
-> +	{ FC_PORTSTATE_LOOPBACK,	"Loopback", 8 },
-> +	{ FC_PORTSTATE_DELETED,		"Deleted", 7 },
-> +	{ FC_PORTSTATE_MARGINAL,	"Marginal", 8 },
->  };
->  fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
-> +fc_enum_name_match(port_state, fc_port_state, fc_port_state_names)
->  #define FC_PORTSTATE_MAX_NAMELEN	20
->  
->  
-> @@ -2071,6 +2074,7 @@ fc_eh_timed_out(struct scsi_cmnd *scmd)
->  {
->  	struct fc_rport *rport = starget_to_rport(scsi_target(scmd-
-> >device));
->  
-> +	fc_rport_chkmarginal_set_noretries(rport, scmd);
->  	if (rport->port_state == FC_PORTSTATE_BLOCKED)
->  		return BLK_EH_RESET_TIMER;
->  
-> @@ -2095,7 +2099,8 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint
-> channel, uint id, u64 lun)
->  		if (rport->scsi_target_id == -1)
->  			continue;
->  
-> -		if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +		if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +			(rport->port_state != FC_PORTSTATE_MARGINAL))
->  			continue;
->  
->  		if ((channel == rport->channel) &&
-> @@ -2958,7 +2963,8 @@ fc_remote_port_delete(struct fc_rport  *rport)
->  
->  	spin_lock_irqsave(shost->host_lock, flags);
->  
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE) {
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL)) {
->  		spin_unlock_irqrestore(shost->host_lock, flags);
->  		return;
->  	}
-> @@ -3100,7 +3106,8 @@ fc_timeout_deleted_rport(struct work_struct
-> *work)
->  	 * target, validate it still is. If not, tear down the
->  	 * scsi_target on it.
->  	 */
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_MARGINAL)) &&
->  	    (rport->scsi_target_id != -1) &&
->  	    !(rport->roles & FC_PORT_ROLE_FCP_TARGET)) {
->  		dev_printk(KERN_ERR, &rport->dev,
-> @@ -3243,7 +3250,8 @@ fc_scsi_scan_rport(struct work_struct *work)
->  	struct fc_internal *i = to_fc_internal(shost->transportt);
->  	unsigned long flags;
->  
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_ONLINE)) &&
+Could you please elaborate on how tape software will be broken?
+I have no experience with tapes but I've looked into SSC-5 draft.
 
-I think the second line should have been FC_PORTSTATE_MARGINAL.
+I haven't found anything concerning the writes but there are tape
+variants of overflow/underflow for reads (G.3 General read rules) called
+overlength and underlegth, respectively:
 
+  If the read command requests fewer bytes than are available for
+  transfer, then the read is an overlength read. If the read requests
+  more bytes than are available, then the read is an underlength read.
 
->  	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
->  	    !(i->f->disable_target_scan)) {
->  		scsi_scan_target(&rport->dev, rport->channel,
-> @@ -3747,7 +3755,8 @@ static blk_status_t fc_bsg_rport_prep(struct
-> fc_rport *rport)
->  	    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
->  		return BLK_STS_RESOURCE;
->  
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL))
->  		return BLK_STS_IOERR;
->  
->  	return BLK_STS_OK;
-> diff --git a/include/scsi/scsi_transport_fc.h
-> b/include/scsi/scsi_transport_fc.h
-> index 1c7dd35cb7a0..829bade13b89 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -14,6 +14,7 @@
->  #include <linux/bsg-lib.h>
->  #include <asm/unaligned.h>
->  #include <scsi/scsi.h>
-> +#include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_netlink.h>
->  #include <scsi/scsi_host.h>
->  
-> @@ -67,6 +68,7 @@ enum fc_port_state {
->  	FC_PORTSTATE_ERROR,
->  	FC_PORTSTATE_LOOPBACK,
->  	FC_PORTSTATE_DELETED,
-> +	FC_PORTSTATE_MARGINAL,
->  };
->  
->  
-> @@ -707,6 +709,22 @@ struct fc_function_template {
->  	unsigned long	disable_target_scan:1;
->  };
->  
-> +/**
-> + * fc_rport_chkmarginal_set_noretries - Set the SCMD_NORETRIES_ABORT
-> bit
-> + * in cmd->state if port state is marginal
-> + * @rport:	remote port to be checked
-> + * @scmd:	scsi_cmd to set/clear the SCMD_NORETRIES_ABORT bit on
-> Marginal state
-> + **/
-> +static inline void
-> +fc_rport_chkmarginal_set_noretries(struct fc_rport *rport, struct
-> scsi_cmnd *cmd)
-> +{
-> +	if ((rport->port_state == FC_PORTSTATE_MARGINAL) &&
-> +		 (cmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT))
-> +		set_bit(SCMD_NORETRIES_ABORT, &cmd->state);
-> +	else
-> +		clear_bit(SCMD_NORETRIES_ABORT, &cmd->state);
-> +
-> +}
->  
->  /**
->   * fc_remote_port_chkready - called to validate the remote port
-> state
-> @@ -723,6 +741,7 @@ fc_remote_port_chkready(struct fc_rport *rport)
->  
->  	switch (rport->port_state) {
->  	case FC_PORTSTATE_ONLINE:
-> +	case FC_PORTSTATE_MARGINAL:
->  		if (rport->roles & FC_PORT_ROLE_FCP_TARGET)
->  			result = 0;
->  		else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
+  The amount of data returned is the smaller of the bytes available and
+  the allocation length.
 
+And the next paragraph defines cases where CHECK CONDITION should be
+reported for such reads. However, GOOD status is also possible, the next
+chapter of the annex (G.4 Examples from figure G.1 using variable-block
+transfers and various SILI and BLOCK LENGTH settings) refines many cases
+depending on SILI bit, whether block protection is enabled, if the
+transfer is FIXED or variable-length and if BLOCK LENGTH is
+zero/non-zero.
+
+As far as I understand underlength and overlength are always suppressed
+(status is GOOD) for devices where no "default" block size is defined
+per SPC (7.5.7.1 General block descriptor format):
+
+  For sequential access devices, a block length of zero indicates that the
+  logical block size written to the medium is specified by the TRANSFER
+  LENGTH field in the CDB (see SSC-4).
+
+The cases are also summarized in annex D (D.3 Summary of length error
+conditions on read type commands).
+
+Note, that if we talk about SSC over FCP, then "9.4.2 FCP_DATA IUs for
+read and write operations" does additionally apply. Perhaps a) from
+"9.4.2 FCP_DATA IUs for read and write operations" works well for SSC:
+
+  a) process the command normally except that data beyond the FCP_DL count
+  shall not be requested or transferred;
+
+The clause allows to accomodate variable-block tranfers from SSC.
+
+So, what if we return CHECK CONDITION only for SBC WRITEs with
+residuals?  Then it has no impact on SSC and other device types. In
+future, we might also add a patch that would fail SBC READs with
+residuals for sake of consistency. That behaviour would be beneficial
+for SBC devices as no host could corrupt data or itself by forming,
+requesting invalid data buffer.
+
+Thanks,
+Roman
