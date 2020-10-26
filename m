@@ -7,28 +7,28 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCF59C388F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 522A5C5517A
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A632C2225C
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:13:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 197BB20878
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:13:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1792645AbgJZTNr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 15:13:47 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44164 "EHLO mx2.suse.de"
+        id S1792646AbgJZTNv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 15:13:51 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44178 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406080AbgJZTH1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 15:07:27 -0400
+        id S2392685AbgJZTH2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 15:07:28 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 04504AF0D;
+        by mx2.suse.de (Postfix) with ESMTP id 5BFC3AFB2;
         Mon, 26 Oct 2020 19:07:26 +0000 (UTC)
 From:   David Disseldorp <ddiss@suse.de>
 To:     target-devel@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org, David Disseldorp <ddiss@suse.de>
-Subject: [PATCH v2 2/5] scsi: target: rename struct sense_info to sense_detail
-Date:   Mon, 26 Oct 2020 20:06:43 +0100
-Message-Id: <20201026190646.8727-3-ddiss@suse.de>
+Subject: [PATCH v2 3/5] scsi: target: rename cmd.bad_sector to cmd.sense_info
+Date:   Mon, 26 Oct 2020 20:06:44 +0100
+Message-Id: <20201026190646.8727-4-ddiss@suse.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201026190646.8727-1-ddiss@suse.de>
 References: <20201026190646.8727-1-ddiss@suse.de>
@@ -38,83 +38,97 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This helps distinguish it from the SCSI sense INFORMATION field.
+cmd.bad_sector currently gets packed into the sense INFORMATION field
+for TCM_LOGICAL_BLOCK_{GUARD,APP_TAG,REF_TAG}_CHECK_FAILED errors, which
+carry an .add_sector_info flag in the sense_detail_table to ensure this.
+
+In preparation for propagating a byte offset on COMPARE AND WRITE
+TCM_MISCOMPARE_VERIFY error, rename cmd.bad_sector to cmd.sense_info
+and sense_detail.add_sector_info to sense_detail.add_sense_info so
+that it better reflects the sense INFORMATION field destination.
 
 Signed-off-by: David Disseldorp <ddiss@suse.de>
 ---
- drivers/target/target_core_transport.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/target/target_core_sbc.c       |  2 +-
+ drivers/target/target_core_transport.c | 12 ++++++------
+ include/target/target_core_base.h      |  2 +-
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 6e8b8d30938f..5f77dd95f1b9 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1439,7 +1439,7 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 			if (rc) {
+ 				kunmap_atomic(daddr - dsg->offset);
+ 				kunmap_atomic(paddr - psg->offset);
+-				cmd->bad_sector = sector;
++				cmd->sense_info = sector;
+ 				return rc;
+ 			}
+ next:
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ff26ab0a5f60..caa3a7b34826 100644
+index caa3a7b34826..c6f45c12d564 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -3094,14 +3094,14 @@ bool transport_wait_for_tasks(struct se_cmd *cmd)
- }
- EXPORT_SYMBOL(transport_wait_for_tasks);
- 
--struct sense_info {
-+struct sense_detail {
+@@ -3098,7 +3098,7 @@ struct sense_detail {
  	u8 key;
  	u8 asc;
  	u8 ascq;
- 	bool add_sector_info;
+-	bool add_sector_info;
++	bool add_sense_info;
  };
  
--static const struct sense_info sense_info_table[] = {
-+static const struct sense_detail sense_detail_table[] = {
- 	[TCM_NO_SENSE] = {
- 		.key = NOT_READY
+ static const struct sense_detail sense_detail_table[] = {
+@@ -3201,19 +3201,19 @@ static const struct sense_detail sense_detail_table[] = {
+ 		.key = ABORTED_COMMAND,
+ 		.asc = 0x10,
+ 		.ascq = 0x01, /* LOGICAL BLOCK GUARD CHECK FAILED */
+-		.add_sector_info = true,
++		.add_sense_info = true,
  	},
-@@ -3261,39 +3261,39 @@ static const struct sense_info sense_info_table[] = {
-  */
- static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
- {
--	const struct sense_info *si;
-+	const struct sense_detail *sd;
- 	u8 *buffer = cmd->sense_buffer;
- 	int r = (__force int)reason;
- 	u8 key, asc, ascq;
- 	bool desc_format = target_sense_desc_format(cmd->se_dev);
- 
--	if (r < ARRAY_SIZE(sense_info_table) && sense_info_table[r].key)
--		si = &sense_info_table[r];
-+	if (r < ARRAY_SIZE(sense_detail_table) && sense_detail_table[r].key)
-+		sd = &sense_detail_table[r];
- 	else
--		si = &sense_info_table[(__force int)
-+		sd = &sense_detail_table[(__force int)
- 				       TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE];
- 
--	key = si->key;
-+	key = sd->key;
- 	if (reason == TCM_CHECK_CONDITION_UNIT_ATTENTION) {
- 		if (!core_scsi3_ua_for_check_condition(cmd, &key, &asc,
- 						       &ascq)) {
- 			cmd->scsi_status = SAM_STAT_BUSY;
- 			return;
- 		}
--	} else if (si->asc == 0) {
-+	} else if (sd->asc == 0) {
- 		WARN_ON_ONCE(cmd->scsi_asc == 0);
- 		asc = cmd->scsi_asc;
- 		ascq = cmd->scsi_ascq;
- 	} else {
--		asc = si->asc;
--		ascq = si->ascq;
-+		asc = sd->asc;
-+		ascq = sd->ascq;
- 	}
- 
- 	cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
+ 	[TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED] = {
+ 		.key = ABORTED_COMMAND,
+ 		.asc = 0x10,
+ 		.ascq = 0x02, /* LOGICAL BLOCK APPLICATION TAG CHECK FAILED */
+-		.add_sector_info = true,
++		.add_sense_info = true,
+ 	},
+ 	[TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED] = {
+ 		.key = ABORTED_COMMAND,
+ 		.asc = 0x10,
+ 		.ascq = 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
+-		.add_sector_info = true,
++		.add_sense_info = true,
+ 	},
+ 	[TCM_COPY_TARGET_DEVICE_NOT_REACHABLE] = {
+ 		.key = COPY_ABORTED,
+@@ -3293,10 +3293,10 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
  	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
  	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
  	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
--	if (si->add_sector_info)
-+	if (sd->add_sector_info)
+-	if (sd->add_sector_info)
++	if (sd->add_sense_info)
  		WARN_ON_ONCE(scsi_set_sense_information(buffer,
  							cmd->scsi_sense_length,
- 							cmd->bad_sector) < 0);
+-							cmd->bad_sector) < 0);
++							cmd->sense_info) < 0);
+ }
+ 
+ int
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 549947d407cf..7ee2bee46b3a 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -540,7 +540,7 @@ struct se_cmd {
+ 	struct scatterlist	*t_prot_sg;
+ 	unsigned int		t_prot_nents;
+ 	sense_reason_t		pi_err;
+-	sector_t		bad_sector;
++	u64			sense_info;
+ 	int			cpuid;
+ };
+ 
 -- 
 2.26.2
 
