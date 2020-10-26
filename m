@@ -2,179 +2,131 @@ Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C044C5517A
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 01:37:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49DF7C4363A
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 02:56:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A3AD2225C
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 01:37:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 085D82224A
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 02:56:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="NDjCNYIb"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="nj4W8vyQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1421181AbgJZBhF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Oct 2020 21:37:05 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:14166 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2410972AbgJZBhE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 25 Oct 2020 21:37:04 -0400
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09Q1W1qH086265;
-        Sun, 25 Oct 2020 21:36:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding; s=pp1;
- bh=HzN4WTS1A6+3V80bxbst9bTvW0O4208Qy5TytbIiHeg=;
- b=NDjCNYIbIcjgt7DCxwjuddgEwzeSyNlaWbuVvpQ4Jj2tpgOFAYDMK1Pa4aBkXSoCwU+V
- GqThN4wUko3ufK3aCOLJcN7fkldzziKMhnkJQBzRCkhWc+OdtlkysAeXaeFwrQ78CSNw
- ybqIKWmV1fW4Oo31jTv5dzW87ciz5dpFeLBmk6rdgwvGtaMU8JUG53mJwm8Cq91Ew3g/
- bB+Sdy33rbHs6dfPqsem3RSEpDiRipFnLUvLny4JmzWcAV7qWIzaMzCSZkcNnmAJxdRZ
- k7nFNXZCR9FoTa2Omt9rNmqQ1EKNR8UMVqZll78LQ8aqx3wb6znPnPwpJsnPD/BAQqoi OQ== 
-Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 34d97f3sx8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 25 Oct 2020 21:36:53 -0400
-Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
-        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 09Q1XaTL024083;
-        Mon, 26 Oct 2020 01:36:52 GMT
-Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
-        by ppma04wdc.us.ibm.com with ESMTP id 34cbw8vcqn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 26 Oct 2020 01:36:52 +0000
-Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
-        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 09Q1aqHN54591970
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Oct 2020 01:36:52 GMT
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2BC312805A;
-        Mon, 26 Oct 2020 01:36:52 +0000 (GMT)
-Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A79C428059;
-        Mon, 26 Oct 2020 01:36:51 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.40.195.188])
-        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
-        Mon, 26 Oct 2020 01:36:51 +0000 (GMT)
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-To:     james.bottomley@hansenpartnership.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH] ibmvfc: add new fields for version 2 of several MADs
-Date:   Sun, 25 Oct 2020 20:36:49 -0500
-Message-Id: <20201026013649.10147-1-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.27.0
+        id S1421582AbgJZC4N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Oct 2020 22:56:13 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:11567 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1420359AbgJZC4N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 25 Oct 2020 22:56:13 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1603680973; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=dmmHuWWgOo1QDrCXwIDI2BrJabygSJGIfGYBwwYjSjU=;
+ b=nj4W8vyQgUKE2SEBwFJYMPtfKwHTZpaaOM3jnNx4VY7OKySlx3X/PSb0UihE+94Nn0zI2D/u
+ /Snn555KXfIz9/aujD3B6p1n9ru2ti2TTB/nnr1WW2CntBXJkljilCidMMjjRi2Y0LEuF8UD
+ Us4ddsNDm075nR6BwnfKPj6UZaY=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5f963accbb5ba27f031fc37d (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 26 Oct 2020 02:56:12
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D6A55C43387; Mon, 26 Oct 2020 02:56:11 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DF191C433C9;
+        Mon, 26 Oct 2020 02:56:10 +0000 (UTC)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.737
- definitions=2020-10-25_16:2020-10-23,2020-10-25 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxscore=0
- suspectscore=1 lowpriorityscore=0 clxscore=1015 bulkscore=0
- priorityscore=1501 malwarescore=0 phishscore=0 mlxlogscore=999
- adultscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2009150000 definitions=main-2010260004
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 26 Oct 2020 10:56:10 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>, asutoshd@codeaurora.org,
+        avri.altman@wdc.com, beanhuo@micron.com, bvanassche@acm.org,
+        hongwus@codeaurora.org, jejb@linux.ibm.com,
+        kernel-team@android.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        nguyenb@codeaurora.org, rnayak@codeaurora.org, salyzyn@google.com,
+        saravanak@google.com, stanley.chu@mediatek.com
+Subject: Re: [PATCH v2 1/1] scsi: ufs: Fix unexpected values get from
+ ufshcd_read_desc_param()
+In-Reply-To: <963815509.21603435202191.JavaMail.epsvc@epcpadp1>
+References: <CGME20201023063528epcms2p11b57d929a926d582539ce4e1a57caf80@epcms2p1>
+ <963815509.21603435202191.JavaMail.epsvc@epcpadp1>
+Message-ID: <da29783bdd6eb1326e3ff8fd50921c54@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce a targetWWPN field to several MADs. Its possible that a scsi
-ID of a target can change due to some fabric changes. The WWPN of the
-scsi target provides a better way to identify the target. Also, add
-flags for receiving MAD versioning information and advertising client
-support for targetWWPN with the VIOS. This latter capability flag will
-be required for future clients capable of requesting multiple hardware
-queues from the host adapter.
+On 2020-10-23 14:35, Daejun Park wrote:
+> Hi, Can Guo
+> 
+>> Since WB feature has been added, WB related sysfs entries can be 
+>> accessed
+>> even when an UFS device does not support WB feature. In that case, the
+>> descriptors which are not supported by the UFS device may be wrongly
+>> reported when they are accessed from their corrsponding sysfs entries.
+>> Fix it by adding a sanity check of parameter offset against the actual
+>> decriptor length.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> ---
+>> drivers/scsi/ufs/ufshcd.c | 24 +++++++++++++++---------
+>> 1 file changed, 15 insertions(+), 9 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index a2ebcc8..aeec10d 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -3184,13 +3184,19 @@ int ufshcd_read_desc_param(struct ufs_hba 
+>> *hba,
+>> 	/* Get the length of descriptor */
+>> 	ufshcd_map_desc_id_to_length(hba, desc_id, &buff_len);
+>> 	if (!buff_len) {
+>> -		dev_err(hba->dev, "%s: Failed to get desc length", __func__);
+>> +		dev_err(hba->dev, "%s: Failed to get desc length\n", __func__);
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (param_offset >= buff_len) {
+>> +		dev_err(hba->dev, "%s: Invalid offset 0x%x in descriptor IDN 0x%x, 
+>> length 0x%x\n",
+>> +			__func__, param_offset, desc_id, buff_len);
+> 
+> In my understanding, this code seems to check incorrect access to not
+> supportted features (e.g. WB) via buff_len value from
+> ufshcd_map_desc_id_to_length().
+> However, since buff_len is initialized as QUERY_DESC_MAX_SIZE and is
+> updated later by ufshcd_update_desc_length(), So it is impossible to 
+> find
+> incorrect access by checking buff_len at first time.
+> 
+> Thanks,
+> Daejun
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.h | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+Yes, I considered that during bootup time, but the current driver won't 
+even
+access WB related stuffs it is not supported (there are checks against 
+UFS version
+and feature supports in ufshcd_wb_probe()). So this change is only 
+proecting illegal
+access from sysfs entries after bootup is done. Do you see real error 
+during bootup
+time? If yes, please let me know.
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index 34debccfb142..c9c7f55baf55 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -54,6 +54,7 @@
- 
- #define IBMVFC_MAD_SUCCESS		0x00
- #define IBMVFC_MAD_NOT_SUPPORTED	0xF1
-+#define IBMVFC_MAD_VERSION_NOT_SUPP	0xF2
- #define IBMVFC_MAD_FAILED		0xF7
- #define IBMVFC_MAD_DRIVER_FAILED	0xEE
- #define IBMVFC_MAD_CRQ_ERROR		0xEF
-@@ -168,6 +169,8 @@ struct ibmvfc_npiv_login {
- #define IBMVFC_CAN_MIGRATE		0x01
- #define IBMVFC_CAN_USE_CHANNELS		0x02
- #define IBMVFC_CAN_HANDLE_FPIN		0x04
-+#define IBMVFC_CAN_USE_MAD_VERSION	0x08
-+#define IBMVFC_CAN_SEND_VF_WWPN		0x10
- 	__be64 node_name;
- 	struct srp_direct_buf async;
- 	u8 partition_name[IBMVFC_MAX_NAME];
-@@ -211,7 +214,9 @@ struct ibmvfc_npiv_login_resp {
- 	__be64 capabilities;
- #define IBMVFC_CAN_FLUSH_ON_HALT	0x08
- #define IBMVFC_CAN_SUPPRESS_ABTS	0x10
--#define IBMVFC_CAN_SUPPORT_CHANNELS	0x20
-+#define IBMVFC_MAD_VERSION_CAP		0x20
-+#define IBMVFC_HANDLE_VF_WWPN		0x40
-+#define IBMVFC_CAN_SUPPORT_CHANNELS	0x80
- 	__be32 max_cmds;
- 	__be32 scsi_id_sz;
- 	__be64 max_dma_len;
-@@ -293,7 +298,8 @@ struct ibmvfc_port_login {
- 	__be32 reserved2;
- 	struct ibmvfc_service_parms service_parms;
- 	struct ibmvfc_service_parms service_parms_change;
--	__be64 reserved3[2];
-+	__be64 targetWWPN;
-+	__be64 reserved3;
- } __packed __aligned(8);
- 
- struct ibmvfc_move_login {
-@@ -344,7 +350,8 @@ struct ibmvfc_process_login {
- 	__be16 status;
- 	__be16 error;			/* also fc_reason */
- 	__be32 reserved2;
--	__be64 reserved3[2];
-+	__be64 targetWWPN;
-+	__be64 reserved3;
- } __packed __aligned(8);
- 
- struct ibmvfc_query_tgt {
-@@ -378,7 +385,8 @@ struct ibmvfc_tmf {
- 	__be32 cancel_key;
- 	__be32 my_cancel_key;
- 	__be32 pad;
--	__be64 reserved[2];
-+	__be64 targetWWPN;
-+	__be64 taskTag;
- } __packed __aligned(8);
- 
- enum ibmvfc_fcp_rsp_info_codes {
-@@ -474,7 +482,8 @@ struct ibmvfc_cmd {
- 	__be64 correlation;
- 	__be64 tgt_scsi_id;
- 	__be64 tag;
--	__be64 reserved3[2];
-+	__be64 targetWWPN;
-+	__be64 reserved3;
- 	struct ibmvfc_fcp_cmd_iu iu;
- 	struct ibmvfc_fcp_rsp rsp;
- } __packed __aligned(8);
-@@ -503,7 +512,8 @@ struct ibmvfc_passthru_iu {
- 	__be64 correlation;
- 	__be64 scsi_id;
- 	__be64 tag;
--	__be64 reserved2[2];
-+	__be64 targetWWPN;
-+	__be64 reserved2;
- } __packed __aligned(8);
- 
- struct ibmvfc_passthru_mad {
--- 
-2.27.0
+Thanks,
 
+Can Guo.
