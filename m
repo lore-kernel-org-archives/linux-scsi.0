@@ -2,217 +2,268 @@ Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD709C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25AE5C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:46:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A01A20760
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:07:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603728450;
-	bh=vganNX6Aeeca1D9Zt1my2hxu7xQPLJXxYto20gsAqo0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CiaA83Tgi9PVflJAYYXCJptRlFnV6qR0dZ3RP3AWI9xzu4IuEhq4JBijSEV+3VSUk
-	 kRdk36Cb6N82gdrprN9GM+BRrQNz+WQEjjTooF23GuLBQVpCSrxioP/L3JMOalmvDY
-	 2WtO8WCLRl8FWW0DdvKQHF56RBrd+V3PdVjpXZ8A=
+	by mail.kernel.org (Postfix) with ESMTP id D8F9C221FC
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 16:46:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tt1jXI5A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1784977AbgJZQH1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 12:07:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53602 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1784973AbgJZQH1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 12:07:27 -0400
-Received: from localhost.localdomain (unknown [192.30.34.233])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C9E6A2072C;
-        Mon, 26 Oct 2020 16:07:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603728446;
-        bh=vganNX6Aeeca1D9Zt1my2hxu7xQPLJXxYto20gsAqo0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1JfCOLY9SvloVZ7+VHlhbeq3ImiDk8ALfrpC+f8AM4JD73vQlYnUc4z8iNx8R38sT
-         aLTmMkqrsTy3DAVrkVLFvw0hKt7Zm+2ejkcM4+UN2b6U1shwszLQEEFnd7SrPgqbsq
-         b07hBv3gQCHXQlJNwKhNdhlgmhBpFs1Fg5kOU+DA=
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] libfc: work around Warray-bounds warning
-Date:   Mon, 26 Oct 2020 17:06:13 +0100
-Message-Id: <20201026160705.3706396-2-arnd@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201026160705.3706396-1-arnd@kernel.org>
-References: <20201026160705.3706396-1-arnd@kernel.org>
+        id S1786343AbgJZQq2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 12:46:28 -0400
+Received: from mail-ej1-f68.google.com ([209.85.218.68]:39343 "EHLO
+        mail-ej1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1780583AbgJZQoy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 12:44:54 -0400
+Received: by mail-ej1-f68.google.com with SMTP id qh17so14581914ejb.6;
+        Mon, 26 Oct 2020 09:44:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=rO9DdPM05b+m1oOhpt2IrGL5DQ3+ZBkSc2O7qG1+B8E=;
+        b=tt1jXI5AVG7zNWPHvloNCf0pf1Tohi+3CVUIm3F/uVslzh0PU4MG3LwvDBhzRqEOwQ
+         l7DVdaWqqcm593JYelCxWmBXhNJIOPVt7OHgtoDFpHMwJDsh0z5QOK50I5VO9j1Dxh+p
+         NkwxP7FIbvBrFagN7uyxQKamSFK6wgq/+cgBsaFM04vQPZ9AYTEDso+56yRtF0KVI7Xc
+         CHGd6VlK1FciWHLXxchsk4fxaPnfHYpP2lqGsVQk0QxG3ZPtQTUTsU2MsK7o71XaTbGz
+         r1pPsHaNQaGApRZxn63mS26UWsTwaXWmEVRezdipQ2UkQoaymxRG8a1cxo41mVpyvGXT
+         PfiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=rO9DdPM05b+m1oOhpt2IrGL5DQ3+ZBkSc2O7qG1+B8E=;
+        b=bnCXyiewcv6VJe4N2Vt0HRt573C9soga70nEXRVQdH9Q+kMhDxn5CPN/24bbUPn+02
+         L05OXgj79Q13l6PCig1rPx1/+Jmxx3Xrdrkuloi+nGEjKC41A3LWR8aX+m2n2RJdEh+w
+         TEFh8n61Z62YmZiE7rFtGFBT0RHix0R+H+Frsra6Kp3EJHOolgrlifPmk5ev8hieb4iu
+         JPSQfsbno6VMEoihrFcNVsNQZnRjzFYCOgrKYqBA8Zvi5x+bPsVJ8HQKyLIV5lL6hUKH
+         gJYoeEWkRfx+zLVrff5UkRcABaIWPPB1JGk38rW2mc9i5yiq7cZj9MVrv1Yqkj3VTFX+
+         fy+w==
+X-Gm-Message-State: AOAM533HyAvM/1eZB8jd4Ms8qVex4rBJy7xGM/7QIQJtIvSrsZodPNtx
+        8UYsK+1uIJSUp9rMtqKElPzhQyyh/lk5+A==
+X-Google-Smtp-Source: ABdhPJwgjlmnNsKMqlRLpwMlbwsUGXDIskJoEDXSSiwFrXqaSz5wEO8n0vggIXgcq0/ilWH/4+sdpw==
+X-Received: by 2002:a17:906:539a:: with SMTP id g26mr17285079ejo.71.1603730691525;
+        Mon, 26 Oct 2020 09:44:51 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc08ad4.dynamic.kabel-deutschland.de. [188.192.138.212])
+        by smtp.gmail.com with ESMTPSA id c5sm5590027edx.58.2020.10.26.09.44.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Oct 2020 09:44:50 -0700 (PDT)
+Subject: Re: [PATCH 4/5] scsi: target: split out COMPARE AND WRITE memcmp into
+ helper
+To:     David Disseldorp <ddiss@suse.de>, target-devel@vger.kernel.org,
+        Douglas Gilbert <dgilbert@interlog.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <20201023205723.17880-1-ddiss@suse.de>
+ <20201023205723.17880-5-ddiss@suse.de>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <34b6d335-7f72-4ebc-f3b3-873d6d82e4bc@gmail.com>
+Date:   Mon, 26 Oct 2020 17:44:50 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201023205723.17880-5-ddiss@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+Am 23.10.20 um 22:57 schrieb David Disseldorp:
+> In preparation for finding and returning the miscompare offset.
+> 
+> Signed-off-by: David Disseldorp <ddiss@suse.de>
+> ---
+>   drivers/target/target_core_sbc.c | 117 ++++++++++++++++++-------------
+>   1 file changed, 67 insertions(+), 50 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+> index 5f77dd95f1b9..79216d0355e7 100644
+> --- a/drivers/target/target_core_sbc.c
+> +++ b/drivers/target/target_core_sbc.c
+> @@ -434,20 +434,77 @@ static sense_reason_t compare_and_write_post(struct se_cmd *cmd, bool success,
+>   	return ret;
+>   }
+>   
+> +/*
+> + * compare @cmp_len bytes of @read_sgl with @cmp_sgl. On miscompare return
+> + * TCM_MISCOMPARE_VERIFY.
+> + */
+> +static sense_reason_t
+> +compare_and_write_do_cmp(struct scatterlist *read_sgl, unsigned int read_nents,
+> +			 struct scatterlist *cmp_sgl, unsigned int cmp_nents,
+> +			 unsigned int cmp_len)
+> +{
+> +	unsigned char *buf = NULL;
+> +	struct scatterlist *sg;
+> +	sense_reason_t ret;
+> +	unsigned int offset;
+> +	size_t rc;
+> +	int i;
+> +
+> +	buf = kzalloc(cmp_len, GFP_KERNEL);
+> +	if (!buf) {
+> +		pr_err("Unable to allocate compare_and_write buf\n");
+> +		ret = TCM_OUT_OF_RESOURCES;
+> +		goto out;
+> +	}
+> +
+> +	rc = sg_copy_to_buffer(cmp_sgl, cmp_nents, buf, cmp_len);
+> +	if (!rc) {
+> +		pr_err("sg_copy_to_buffer() failed for compare_and_write\n");
+> +		ret = TCM_OUT_OF_RESOURCES;
+> +		goto out;
+> +	}
+> +	/*
+> +	 * Compare SCSI READ payload against verify payload
+> +	 */
+> +	offset = 0;
+> +	for_each_sg(read_sgl, sg, read_nents, i) {
+> +		unsigned int len = min(sg->length, cmp_len);
+> +		unsigned char *addr = kmap_atomic(sg_page(sg));
+> +
+> +		if (memcmp(addr, buf + offset, len)) {
+> +			pr_warn("Detected MISCOMPARE for addr: %p buf: %p\n",
+> +				addr, buf + offset);
+> +			kunmap_atomic(addr);
+> +			ret = TCM_MISCOMPARE_VERIFY;
+> +			goto out;
+> +		}
+> +		kunmap_atomic(addr);
+> +
+> +		offset += len;
+> +		cmp_len -= len;
+> +		if (!cmp_len)
+> +			break;
+> +	}
+> +	pr_debug("COMPARE AND WRITE read data matches compare data\n");
+> +	ret = TCM_NO_SENSE;
+> +out:
+> +	kfree(buf);
+> +	return ret;
+> +}
+> +
 
-Building libfc with gcc -Warray-bounds identifies a number of
-cases in one file where a strncpy() is performed into a single-byte
-character array:
+Since you are going to split out a new helper, did you consider to re-write helper's code to avoid the intermediate buffer?
 
-In file included from include/linux/bitmap.h:9,
-                 from include/linux/cpumask.h:12,
-                 from include/linux/smp.h:13,
-                 from include/linux/lockdep.h:14,
-                 from include/linux/spinlock.h:59,
-                 from include/linux/debugobjects.h:6,
-                 from include/linux/timer.h:8,
-                 from include/scsi/libfc.h:11,
-                 from drivers/scsi/libfc/fc_elsct.c:17:
-In function 'strncpy',
-    inlined from 'fc_ct_ms_fill.constprop' at drivers/scsi/libfc/fc_encode.h:235:3:
-include/linux/string.h:290:30: warning: '__builtin_strncpy' offset [56, 135] from the object at 'pp' is out of the bounds of referenced subobject 'value' with type '__u8[1]' {aka 'unsigned char[1]'} at offset 56 [-Warray-bounds]
-  290 | #define __underlying_strncpy __builtin_strncpy
-      |                              ^
-include/linux/string.h:300:9: note: in expansion of macro '__underlying_strncpy'
-  300 |  return __underlying_strncpy(p, q, size);
-      |         ^~~~~~~~~~~~~~~~~~~~
+Douglas Gilbert currently tries to add new functions to lib/scatterlist.c
+One of them is sgl_compare_sgl, which directly compares content of two sg lists:
+   https://patchwork.kernel.org/project/linux-block/patch/20201019191928.77845-4-dgilbert@interlog.com/
 
-This is not a bug because the 1-byte array is used as an odd way
-to express a variable-length data field here. I tried to convert
-it to a flexible-array member, but in the end could not figure out
-why the sizeof(struct fc_fdmi_???) are used the way they are, and
-how to properly convert those.
+This code - based on the sg_miter_* calls - works without intermediate buffer.
+Maybe your helper could use similar code or you could even call Douglas' helper, if he can enhance it to
+(optionally) return the miscompare offset.
 
-Work around this instead by abstracting the string copy
-in a slightly higher-level function fc_ct_hdr_fill() helper
-that strscpy() and memset() to achieve the same result as
-strncpy() but does not require a zero-terminated input
-and does not get checked for the array overflow because
-gcc (so far) does not understand the behavior of strscpy().
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/libfc/fc_encode.h | 30 +++++++++++++++++++-----------
- 1 file changed, 19 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
-index 18203cae04b2..602c97a651bc 100644
---- a/drivers/scsi/libfc/fc_encode.h
-+++ b/drivers/scsi/libfc/fc_encode.h
-@@ -163,6 +163,14 @@ static inline int fc_ct_ns_fill(struct fc_lport *lport,
- 	return 0;
- }
- 
-+static inline void fc_ct_ms_fill_attr(struct fc_fdmi_attr_entry *entry,
-+				    const char *in, size_t len)
-+{
-+	int copied = strscpy(entry->value, in, len);
-+	if (copied > 0)
-+		memset(entry->value, copied, len - copied);
-+}
-+
- /**
-  * fc_ct_ms_fill() - Fill in a mgmt service request frame
-  * @lport: local port.
-@@ -232,7 +240,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_MANUFACTURER,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_manufacturer(lport->host),
- 			FC_FDMI_HBA_ATTR_MANUFACTURER_LEN);
- 
-@@ -244,7 +252,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_SERIALNUMBER,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_serial_number(lport->host),
- 			FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN);
- 
-@@ -256,7 +264,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_MODEL,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_model(lport->host),
- 			FC_FDMI_HBA_ATTR_MODEL_LEN);
- 
-@@ -268,7 +276,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_MODELDESCRIPTION,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_model_description(lport->host),
- 			FC_FDMI_HBA_ATTR_MODELDESCR_LEN);
- 
-@@ -280,7 +288,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_HARDWAREVERSION,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_hardware_version(lport->host),
- 			FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN);
- 
-@@ -292,7 +300,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_DRIVERVERSION,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_driver_version(lport->host),
- 			FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN);
- 
-@@ -304,7 +312,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_OPTIONROMVERSION,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_optionrom_version(lport->host),
- 			FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN);
- 
-@@ -316,7 +324,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 		put_unaligned_be16(FC_FDMI_HBA_ATTR_FIRMWAREVERSION,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			fc_host_firmware_version(lport->host),
- 			FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN);
- 
-@@ -411,7 +419,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
- 		/* Use the sysfs device name */
--		strncpy((char *)&entry->value,
-+		fc_ct_ms_fill_attr(entry,
- 			dev_name(&lport->host->shost_gendev),
- 			strnlen(dev_name(&lport->host->shost_gendev),
- 				FC_FDMI_PORT_ATTR_HOSTNAME_LEN));
-@@ -425,12 +433,12 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
- 				   &entry->type);
- 		put_unaligned_be16(len, &entry->len);
- 		if (strlen(fc_host_system_hostname(lport->host)))
--			strncpy((char *)&entry->value,
-+			fc_ct_ms_fill_attr(entry,
- 				fc_host_system_hostname(lport->host),
- 				strnlen(fc_host_system_hostname(lport->host),
- 					FC_FDMI_PORT_ATTR_HOSTNAME_LEN));
- 		else
--			strncpy((char *)&entry->value,
-+			fc_ct_ms_fill_attr(entry,
- 				init_utsname()->nodename,
- 				FC_FDMI_PORT_ATTR_HOSTNAME_LEN);
- 		break;
--- 
-2.27.0
-
+>   static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool success,
+>   						 int *post_ret)
+>   {
+>   	struct se_device *dev = cmd->se_dev;
+>   	struct sg_table write_tbl = { };
+> -	struct scatterlist *write_sg, *sg;
+> -	unsigned char *buf = NULL, *addr;
+> +	struct scatterlist *write_sg;
+>   	struct sg_mapping_iter m;
+> -	unsigned int offset = 0, len;
+> +	unsigned int len;
+>   	unsigned int nlbas = cmd->t_task_nolb;
+>   	unsigned int block_size = dev->dev_attrib.block_size;
+>   	unsigned int compare_len = (nlbas * block_size);
+>   	sense_reason_t ret = TCM_NO_SENSE;
+> -	int rc, i;
+> +	int i;
+>   
+>   	/*
+>   	 * Handle early failure in transport_generic_request_failure(),
+> @@ -473,12 +530,13 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+>   		goto out;
+>   	}
+>   
+> -	buf = kzalloc(cmd->data_length, GFP_KERNEL);
+> -	if (!buf) {
+> -		pr_err("Unable to allocate compare_and_write buf\n");
+> -		ret = TCM_OUT_OF_RESOURCES;
+> +	ret = compare_and_write_do_cmp(cmd->t_bidi_data_sg,
+> +				       cmd->t_bidi_data_nents,
+> +				       cmd->t_data_sg,
+> +				       cmd->t_data_nents,
+> +				       compare_len);
+> +	if (ret)
+>   		goto out;
+> -	}
+>   
+>   	if (sg_alloc_table(&write_tbl, cmd->t_data_nents, GFP_KERNEL) < 0) {
+>   		pr_err("Unable to allocate compare_and_write sg\n");
+> @@ -486,41 +544,6 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+>   		goto out;
+>   	}
+>   	write_sg = write_tbl.sgl;
+> -	/*
+> -	 * Setup verify and write data payloads from total NumberLBAs.
+> -	 */
+> -	rc = sg_copy_to_buffer(cmd->t_data_sg, cmd->t_data_nents, buf,
+> -			       cmd->data_length);
+> -	if (!rc) {
+> -		pr_err("sg_copy_to_buffer() failed for compare_and_write\n");
+> -		ret = TCM_OUT_OF_RESOURCES;
+> -		goto out;
+> -	}
+> -	/*
+> -	 * Compare against SCSI READ payload against verify payload
+> -	 */
+> -	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, i) {
+> -		addr = (unsigned char *)kmap_atomic(sg_page(sg));
+> -		if (!addr) {
+> -			ret = TCM_OUT_OF_RESOURCES;
+> -			goto out;
+> -		}
+> -
+> -		len = min(sg->length, compare_len);
+> -
+> -		if (memcmp(addr, buf + offset, len)) {
+> -			pr_warn("Detected MISCOMPARE for addr: %p buf: %p\n",
+> -				addr, buf + offset);
+> -			kunmap_atomic(addr);
+> -			goto miscompare;
+> -		}
+> -		kunmap_atomic(addr);
+> -
+> -		offset += len;
+> -		compare_len -= len;
+> -		if (!compare_len)
+> -			break;
+> -	}
+>   
+>   	i = 0;
+>   	len = cmd->t_task_nolb * block_size;
+> @@ -568,13 +591,8 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+>   
+>   	__target_execute_cmd(cmd, false);
+>   
+> -	kfree(buf);
+>   	return ret;
+>   
+> -miscompare:
+> -	pr_warn("Target/%s: Send MISCOMPARE check condition and sense\n",
+> -		dev->transport->name);
+> -	ret = TCM_MISCOMPARE_VERIFY;
+>   out:
+>   	/*
+>   	 * In the MISCOMPARE or failure case, unlock ->caw_sem obtained in
+> @@ -582,7 +600,6 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+>   	 */
+>   	up(&dev->caw_sem);
+>   	sg_free_table(&write_tbl);
+> -	kfree(buf);
+>   	return ret;
+>   }
+>   
+> 
