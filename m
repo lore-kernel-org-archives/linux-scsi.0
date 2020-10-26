@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC5CC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 23:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2A3C6369E
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 23:55:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A07721D7B
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 23:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A75192417A
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 23:55:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603756297;
-	bh=ZTESLHi7py5jh9TVyU/eqxa5tjJK114yudUAiHzxLQk=;
+	s=default; t=1603756536;
+	bh=AoVGMYSYNNDsixj9REKeSZPdJlCOTT/kbriVNvv8dB8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=tj9hOSr5AwDj7ELSqlcaJziZp+8oXk5FE7M7dgFeSfQkcUBg4aQVz02oS0YBREOA+
-	 qoGO9sdYguK+9PI7MgB00ECDGUH0bV8mXMNHkNl9zw+0D2+1kl2wrxvu5qEw9WX6T4
-	 GphqRIl5hfD6AlfGdxY71U1YKo8lg6TEcRcFyUmI=
+	b=iSnQWYGu1PO2MlZmcHOqG76tIt8bezm1NM8iYTKEmgqqsg5xFe4OE+xk7kz9NjVp1
+	 XfGUxWRkwc3JctMdH3RNLZwjHcRHSWticNePxvEDTTm4ij7imBoXQkHhcRckXqooWu
+	 PnQqcnsFd4xsaZRvY+a+nYvN7m9DNXyZH9Zoc34s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2409474AbgJZXvh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 19:51:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52632 "EHLO mail.kernel.org"
+        id S2410450AbgJZXy2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 19:54:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60314 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2409463AbgJZXvg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 19:51:36 -0400
+        id S2410436AbgJZXy0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 19:54:26 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 80925217A0;
-        Mon, 26 Oct 2020 23:51:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F185921D7B;
+        Mon, 26 Oct 2020 23:54:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603756295;
-        bh=ZTESLHi7py5jh9TVyU/eqxa5tjJK114yudUAiHzxLQk=;
+        s=default; t=1603756465;
+        bh=AoVGMYSYNNDsixj9REKeSZPdJlCOTT/kbriVNvv8dB8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=POdTmT3znhg0MaYCia9XbDGxoOgyQNHAMoUVahQhaOU2FDoUkdnz5PmeyT92okc02
-         iewKZzuwy12cLobFu6Ev1/S0505woTNS9EnkjbR2Fz+Ro0v103ha8RDBKA+H+Il5pm
-         e31FSEfZcm7siXSCV7Jp20nLJHU8Az6n+n/FuJFo=
+        b=U4eiX0qaLwmN+vgk76L+9js6xEEKWKkh/ypNudZHbbmHrPKeL4CBC+w/ohcGiQ+jf
+         Y6LNafR19/zRMILnJuMkdW5WFxg+51DYux0FydPDVRD5/BI1Zw/80D4yjqbf4bNT0b
+         2CaIiTiKUpZE/pc9sAXgeVvl6Hg8qGyTlDwBNtZA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 122/147] scsi: core: Clean up allocation and freeing of sgtables
-Date:   Mon, 26 Oct 2020 19:48:40 -0400
-Message-Id: <20201026234905.1022767-122-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 113/132] scsi: core: Clean up allocation and freeing of sgtables
+Date:   Mon, 26 Oct 2020 19:51:45 -0400
+Message-Id: <20201026235205.1023962-113-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201026234905.1022767-1-sashal@kernel.org>
-References: <20201026234905.1022767-1-sashal@kernel.org>
+In-Reply-To: <20201026235205.1023962-1-sashal@kernel.org>
+References: <20201026235205.1023962-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -78,10 +78,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  4 files changed, 31 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 7affaaf8b98e0..198130b6a9963 100644
+index ae620dada8ce5..ba8fafd24f4bd 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -530,7 +530,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
+@@ -531,7 +531,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
  	}
  }
  
@@ -90,7 +90,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  {
  	if (cmd->sdb.table.nents)
  		sg_free_table_chained(&cmd->sdb.table,
-@@ -539,6 +539,7 @@ static void scsi_free_sgtables(struct scsi_cmnd *cmd)
+@@ -540,6 +540,7 @@ static void scsi_free_sgtables(struct scsi_cmnd *cmd)
  		sg_free_table_chained(&cmd->prot_sdb->table,
  				SCSI_INLINE_PROT_SG_CNT);
  }
@@ -98,7 +98,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  
  static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
  {
-@@ -966,7 +967,7 @@ static inline bool scsi_cmd_needs_dma_drain(struct scsi_device *sdev,
+@@ -967,7 +968,7 @@ static inline bool scsi_cmd_needs_dma_drain(struct scsi_device *sdev,
  }
  
  /**
@@ -107,7 +107,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
   * @cmd:  command descriptor we wish to initialize
   *
   * Returns:
-@@ -974,7 +975,7 @@ static inline bool scsi_cmd_needs_dma_drain(struct scsi_device *sdev,
+@@ -975,7 +976,7 @@ static inline bool scsi_cmd_needs_dma_drain(struct scsi_device *sdev,
   * * BLK_STS_RESOURCE - if the failure is retryable
   * * BLK_STS_IOERR    - if the failure is fatal
   */
@@ -116,7 +116,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  {
  	struct scsi_device *sdev = cmd->device;
  	struct request *rq = cmd->request;
-@@ -1066,7 +1067,7 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
+@@ -1067,7 +1068,7 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
  	scsi_free_sgtables(cmd);
  	return ret;
  }
@@ -125,7 +125,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  
  /**
   * scsi_initialize_rq - initialize struct scsi_cmnd partially
-@@ -1154,7 +1155,7 @@ static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
+@@ -1155,7 +1156,7 @@ static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
  	 * submit a request without an attached bio.
  	 */
  	if (req->bio) {
@@ -134,7 +134,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  		if (unlikely(ret != BLK_STS_OK))
  			return ret;
  	} else {
-@@ -1194,7 +1195,6 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
+@@ -1195,7 +1196,6 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
  		struct request *req)
  {
  	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
@@ -142,7 +142,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  
  	if (!blk_rq_bytes(req))
  		cmd->sc_data_direction = DMA_NONE;
-@@ -1204,14 +1204,8 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
+@@ -1205,14 +1205,8 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
  		cmd->sc_data_direction = DMA_FROM_DEVICE;
  
  	if (blk_rq_is_scsi(req))
@@ -160,7 +160,7 @@ index 7affaaf8b98e0..198130b6a9963 100644
  
  static blk_status_t
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 16503e22691ed..e93a9a874004f 100644
+index 4b2117cb84837..c0c422ad305bc 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
 @@ -866,7 +866,7 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
@@ -262,7 +262,7 @@ index 16503e22691ed..e93a9a874004f 100644
  
  static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3b3a53c6a0de5..7e8fe55f3b339 100644
+index 0c4aa4665a2f9..b74dfd8dc1165 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
 @@ -392,15 +392,11 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
