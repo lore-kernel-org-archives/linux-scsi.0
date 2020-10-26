@@ -2,110 +2,81 @@ Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B8ABC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 07:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44546C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 09:01:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6D5220747
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 07:02:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="v/QiIfKq"
+	by mail.kernel.org (Postfix) with ESMTP id E8955223FD
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 09:01:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1736788AbgJZHCk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 03:02:40 -0400
-Received: from m42-4.mailgun.net ([69.72.42.4]:47924 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1736776AbgJZHCk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 03:02:40 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1603695759; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=4W30NrG0crD/eXRgkUetS2eftLP50C0CS9VL2EWCFO0=;
- b=v/QiIfKq0HBGwKPOaehyLVfS1qAEo7/LssOUxg2WtuARGXY3xN6HemluDBB7HzHqTUPxjPd7
- eQ9vo+mjZnREKERf29TPXqq808DyyFSRlNzXhX2ydHpU+kcdKfnBpNXU69aYHoMHVRi+TCD2
- xWsrAR1wPbNmmlFdx4lu8CfonnE=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 5f96745babdbaddfebb337fe (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 26 Oct 2020 07:01:47
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B14C2C433FF; Mon, 26 Oct 2020 07:01:46 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E6EDCC433F0;
-        Mon, 26 Oct 2020 07:01:45 +0000 (UTC)
+        id S1772479AbgJZJB5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 05:01:57 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:3475 "EHLO
+        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1772468AbgJZJB5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 05:01:57 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4CKTNn36kQzhbqr;
+        Mon, 26 Oct 2020 17:02:01 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Mon, 26 Oct 2020
+ 17:01:52 +0800
+From:   Zhang Qilong <zhangqilong3@huawei.com>
+To:     <hare@suse.com>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>
+Subject: [PATCH -next] [SCSI] aic7xxx: change the error value of ahx_pci_test_register_access from postive to negative
+Date:   Mon, 26 Oct 2020 17:12:36 +0800
+Message-ID: <20201026091236.68561-1-zhangqilong3@huawei.com>
+X-Mailer: git-send-email 2.26.0.106.g9fadedd
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 26 Oct 2020 15:01:45 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/1] scsi: ufs: Fix unexpected values get from
- ufshcd_read_desc_param()
-In-Reply-To: <BY5PR04MB67056EDDDA22DEDAFD1972C1FC190@BY5PR04MB6705.namprd04.prod.outlook.com>
-References: <1603346348-14149-1-git-send-email-cang@codeaurora.org>
- <BY5PR04MB6705D719530D5E188ECB724EFC1D0@BY5PR04MB6705.namprd04.prod.outlook.com>
- <5271e570f2e38770da3b23f13e739e41@codeaurora.org>
- <BY5PR04MB67056EDDDA22DEDAFD1972C1FC190@BY5PR04MB6705.namprd04.prod.outlook.com>
-Message-ID: <28555cab045fb631c91262c77b71d9fc@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-10-26 13:22, Avri Altman wrote:
->> On 2020-10-22 14:37, Avri Altman wrote:
->> >> Since WB feature has been added, WB related sysfs entries can be
->> >> accessed
->> >> even when an UFS device does not support WB feature. In that case, the
->> >> descriptors which are not supported by the UFS device may be wrongly
->> >> reported when they are accessed from their corrsponding sysfs entries.
->> >> Fix it by adding a sanity check of parameter offset against the actual
->> >> decriptor length.s
->> > This should be a bug fix IMO, and be dealt with similarly like
->> > ufshcd_is_wb_attrs or ufshcd_is_wb_flag.
->> > Thanks,
->> > Avri
->> 
->> Could you please elaborate on ufshcd_is_wb_attrs or ufshcd_is_wb_flag?
->> Sorry that I don't quite get it.
-> Since this change is only protecting illegal access from sysfs entries,
-> I am suggesting to handle it there, just like ufshcd_is_wb_attrs or
-> ufshcd_is_wb_flag
-> Are doing it for flags and attributes.
-> 
-> Thanks,
-> Avri
+A negative error code should be returned
+instead of a positive one when going to
+error path.
 
-This is a general problem - if later we have HPB entries added into 
-sysfs,
-we will hit it again. We cannot keep adding checks like 
-ufshcd_is_xxx_attrs
-or ufshcd_is_xxx_flag to block them, right?
+Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
+---
+ drivers/scsi/aic7xxx/aic79xx_pci.c | 2 +-
+ drivers/scsi/aic7xxx/aic7xxx_pci.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+index 8397ae93f7dd..0edce0ebd944 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -419,7 +419,7 @@ ahd_pci_test_register_access(struct ahd_softc *ahd)
+ 	int	 error;
+ 	uint8_t	 hcntrl;
+ 
+-	error = EIO;
++	error = -EIO;
+ 
+ 	/*
+ 	 * Enable PCI error interrupt status, but suppress NMIs
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_pci.c b/drivers/scsi/aic7xxx/aic7xxx_pci.c
+index 656f680c7802..cbeca694e883 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_pci.c
+@@ -1168,7 +1168,7 @@ ahc_pci_test_register_access(struct ahc_softc *ahc)
+ 	uint32_t cmd;
+ 	uint8_t	 hcntrl;
+ 
+-	error = EIO;
++	error = -EIO;
+ 
+ 	/*
+ 	 * Enable PCI error interrupt status, but suppress NMIs
+-- 
+2.17.1
 
-Can Guo.
