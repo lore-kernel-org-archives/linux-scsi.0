@@ -1,73 +1,65 @@
-Return-Path: <SRS0=0UYT=EI=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2583BC00A89
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 20:35:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E16C388F9
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:51:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B954622245
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 20:35:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="e3fsqo3g";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Wq3FCG3i"
+	by mail.kernel.org (Postfix) with ESMTP id 71D3420773
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:51:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1603741912;
+	bh=AOMeeq2SMI01qVL8HXqf3EnvAIJJQDYsbPf6cOCaBb0=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=dRn5C6q4mfy+T3fh8+n8pSadY8G25qFRRtOknSUHLsNyTm6HAK3KcQgnan8PDq9iC
+	 mHiK/e2KqPlQluGCF+J3WH52UhfuczCf3zrKUOmlPons1UtPm5yVTqCu4YZmIap/Mi
+	 ltJ67NwSAV4xvRuMUNtS3jYh/41uuP0Y3tO8/slg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbgKBUfZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 15:35:25 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:32910 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726563AbgKBUfZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 15:35:25 -0500
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1604349323;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zR+88Sdp7BuaikCJ0w896+tv8a4qTUALQu7lJ2As4us=;
-        b=e3fsqo3g+7Oe2+twrXYwyyLDc3b+43hSXvxIHLgMY5KLv9hFlXPtsIHijKdPcyIzK6v/5+
-        YR2Da4OUK++66AgoVwAsQshMk/k7USPrH5gKZ29Jft4zTtTsZIMbQPSBc7W+i2OorNVA22
-        H5zhWww6NvMwRYHO5WOGuJGy89mYLQEQ3n/1Ji91k35dqJOVJcCf6ywzc0uQzqDKhGyr0b
-        i1gZ/AmMHjiFDdN8nR6vkfp92/LEvsUpb13MKGchc0ehbqCJnMB1FsIlSvNg8gg/bCgm7A
-        wgdYRS+wgpwXm8n8xupWhKOP0sU5f1rUgkMEj0ZfRfmX4qGz0w0I30ujtZm2jA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1604349323;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zR+88Sdp7BuaikCJ0w896+tv8a4qTUALQu7lJ2As4us=;
-        b=Wq3FCG3ipI+69Li4OYL4pTjWSRiTSQd7WfysGJrZgYfP5Ug/2tkD9gmnaCYN7QMHIw7Cv9
-        Eo9QH8MHTDxlgYBQ==
-To:     John Garry <john.garry@huawei.com>, gregkh@linuxfoundation.org,
-        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com
-Cc:     linuxarm@huawei.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, maz@kernel.org
-Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
-In-Reply-To: <ce13a36e-967c-c7ec-fd34-d53262313a5d@huawei.com>
-References: <1603888387-52499-1-git-send-email-john.garry@huawei.com> <1603888387-52499-2-git-send-email-john.garry@huawei.com> <87eelifbx6.fsf@nanos.tec.linutronix.de> <ce13a36e-967c-c7ec-fd34-d53262313a5d@huawei.com>
-Date:   Mon, 02 Nov 2020 21:35:23 +0100
-Message-ID: <87blgf8pkk.fsf@nanos.tec.linutronix.de>
+        id S1728841AbgJZTvb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 15:51:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47454 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728825AbgJZTvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 15:51:31 -0400
+Received: from localhost (unknown [104.132.1.66])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 775392076D;
+        Mon, 26 Oct 2020 19:51:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1603741890;
+        bh=AOMeeq2SMI01qVL8HXqf3EnvAIJJQDYsbPf6cOCaBb0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=S1W6IvBZNYtXWiofei3HFIp7TQmIgczNWXIRiQ9RvyHep3IlQYJMbaQ53ZVCA/zRd
+         E+yM+e8kgErvhtZPXEIn5dJ08zgkXHtmazDWgOw0CQ/SlkQgIfbJ9S/03pu58X6KyZ
+         vlR4iHcdOh+pLmbCkqU1nTEyVyYBWCOX5qmHzqQw=
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        bvanassche@acm.org
+Subject: 
+Date:   Mon, 26 Oct 2020 12:51:19 -0700
+Message-Id: <20201026195124.363096-1-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 02 2020 at 17:32, John Garry wrote:
-> On 28/10/2020 18:22, Thomas Gleixner wrote:
->> But all of this can't work on x86 due to the way how vector allocation
->> works. Let me think about that.
->
-> Is the problem that we reserve per-cpu managed interrupt space when 
-> allocated irq vectors on x86, and so later changing managed vs 
-> non-managed setting for irqs messes up this accounting somehow?
+Change log from v3:
+ - use __ufshcd_release with a fix in __ufshcd_release
 
-Correct. I have a halfways working solution for that, but I need to fix
-some other thing first.
+Change log from v2:
+ - use active_req-- instead of __ufshcd_release to avoid UFS timeout
 
-Thanks,
+Change log from v1:
+ - remove clkgating_enable check in __ufshcd_release
+ - use __uhfshcd_release instead of active_req.
 
-        tglx
+
