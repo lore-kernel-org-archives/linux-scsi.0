@@ -2,296 +2,147 @@ Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC2DCC4363A
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 20:24:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8246DC4363A
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 20:24:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6714321D41
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 20:24:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F91821D41
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 20:24:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Vy3CM2ST"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="G2caJV6o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731377AbgJZUYR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 16:24:17 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:37310 "EHLO
+        id S1731445AbgJZUYu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 16:24:50 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:44280 "EHLO
         mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731368AbgJZUYQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 16:24:16 -0400
-Received: by mail-ot1-f67.google.com with SMTP id m22so9203514ots.4
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2020 13:24:15 -0700 (PDT)
+        with ESMTP id S1731433AbgJZUYu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 16:24:50 -0400
+Received: by mail-ot1-f67.google.com with SMTP id e20so9169802otj.11
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2020 13:24:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=c9+EsDPLBsDb8A/eh3gwy4mcNCh6pKrfuBauzOBGGjA=;
-        b=Vy3CM2STMTeI4uhPZfTX2o/qGxlXdLWNF2GSvv7CI1zFwyuI/rQ6grf8PFsnN3EGRj
-         fBkbo5cGN45doHmJCt3D0d9FocRzsnxOqZpqg2Nym6UiqREcMhkA/VQZ0t5rBUe50GUv
-         q87Eif6z2QUCXZhmwh16034zN6RhtxwZt4H3g=
+        bh=ZCh9ynE/VSZ8UJo2nNgpZO5eNtoHAObNXX2OSd1v0TQ=;
+        b=G2caJV6oDQ7Mm1UWJPivMij7d1nENfJEwv4Gka4xRLFWWqUZqeSvCZx/eTQWYfHilE
+         wPtFN3vA9mjmXpxW1rE/pqjnT+7sNt5VCytaE69rxRzHxh69JgSzY0gapJVGVcPFv4aD
+         i7s+RFNLozVacJPk7aw0AEfcpIbdGyto72a1k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=c9+EsDPLBsDb8A/eh3gwy4mcNCh6pKrfuBauzOBGGjA=;
-        b=OMnKfpIr3V5ZY5WWvcsJeogzNXEYLEG7p8B6ELT7ta9cETE/xXOUWmXZGvauuZRpQ4
-         0+U60kVOVFd0azFl2jQrcyj6xFkgXv3Mx6Xjkb3X+OX8iV7pGDf/mn2MCNUrW+NSpeW9
-         iD5kdAYrz3Pb7BoFFsaiaE3YWBdm1mCyBDDSK7AhuRBejO+8Cftu60TINQFcy31F+o8L
-         a5zo9zRpeT2+8k/uIM8tUtAk76oUAt02PqcWx76paMLY5eGQTQ0ZxMXYNlgRcKb775Mw
-         KR9nSymZeDW7uG4LrV/09+D5nf3LNR9Pniz/rPiHJvJKAgQ/ssx6Pg2D7jsUJslNgH6/
-         FarQ==
-X-Gm-Message-State: AOAM532PFRL/Vt6iYe27KidzBDlhcokEFwLnZ2fB6mn/5wZzjEnyxc75
-        5rcNQSxl+lrLOsepQwOEKuD7cmJzsYvm4dgnWLbLIA==
-X-Google-Smtp-Source: ABdhPJyouRRZcaWx0IB7qiNsKqSPme0PzDJpus01R+Yzdsb6Bx5akaM5/ows6BUKxkyRtJMV1Nb0wTKeTUUEfPTA6co=
-X-Received: by 2002:a9d:3f44:: with SMTP id m62mr16695659otc.364.1603743854896;
- Mon, 26 Oct 2020 13:24:14 -0700 (PDT)
+        bh=ZCh9ynE/VSZ8UJo2nNgpZO5eNtoHAObNXX2OSd1v0TQ=;
+        b=pZiTd9lwRwAdmtPq0sVACD4JHLJC/MIfIQ7YzDa4lrhAk9d/BS3XkDVyQkiOFJkKVV
+         6X+98b9JYjlMM+lh4UsHbBI12VXVjM+zTZo8RsFJwcRfxJ11w9/y07XPHsbDv+qg9RHJ
+         lSp2AUlNDoT32O/B2xhyP2ewgE63jmyw/H8QaH46MmYMZKiCLVVJEWdQQ/12vrwudPKw
+         pEKByrRBoItq2fmjak4DGYA/s5YvFnf3GicQKlIzy6xiyWHxtcsz0XL0cGrIEhInvsC6
+         n1ioUC5svHxXEwP0U7FsO/v3HHnA/Cb1D0EKlafoxf2k+VfCrgIxcy99aggLbm/K13xv
+         6QqA==
+X-Gm-Message-State: AOAM531Ma1S/Xc6wjMOUQ9k+ctb6WOEa+ksZpTWz6fd5Nh2GA8YQT1tQ
+        /itNlom2Hj5ACmQ9hOLnQ1YJYuUh1q+nAA4Lyz45Jw==
+X-Google-Smtp-Source: ABdhPJwNpd7+meIfemJtf/8BnBFikaK2pKcz/Vwo2F5T0OEBchlXHpJJLzLjh1cqZHuR1qwPXP3OM5qCzQpCQVRI9G0=
+X-Received: by 2002:a05:6830:1c3c:: with SMTP id f28mr17036494ote.188.1603743889005;
+ Mon, 26 Oct 2020 13:24:49 -0700 (PDT)
 From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
 References: <1603370091-9337-1-git-send-email-muneendra.kumar@broadcom.com>
-         <1603370091-9337-5-git-send-email-muneendra.kumar@broadcom.com> <e067dd48cbc1b0d09032c7b449a4f5d6802bac1b.camel@redhat.com>
-In-Reply-To: <e067dd48cbc1b0d09032c7b449a4f5d6802bac1b.camel@redhat.com>
+         <1603370091-9337-3-git-send-email-muneendra.kumar@broadcom.com> <8d29df3e8fc04a781191092f65a4e7ca45ce3d63.camel@redhat.com>
+In-Reply-To: <8d29df3e8fc04a781191092f65a4e7ca45ce3d63.camel@redhat.com>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQLv5vf0y45oXVLFrswKM5p1yAny/wICmmMsA1RCFDynTSbT8A==
-Date:   Tue, 27 Oct 2020 01:54:12 +0530
-Message-ID: <336c3bb85208d79e64439b08606a507b@mail.gmail.com>
-Subject: RE: [patch v4 4/5] scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
+Thread-Index: AQLv5vf0y45oXVLFrswKM5p1yAny/wKZQkLVAvL4yu2nS3wwgA==
+Date:   Tue, 27 Oct 2020 01:54:46 +0530
+Message-ID: <4d3f1e94f7e283a1d8f9f289b3e09a6c@mail.gmail.com>
+Subject: RE: [patch v4 2/5] scsi: Added a new error code in scsi.h
 To:     "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org,
         michael.christie@oracle.com, hare@suse.de
 Cc:     jsmart2021@gmail.com, mkumar@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ce163f05b298b670"
+        boundary="000000000000d516af05b298b87c"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ce163f05b298b670
+--000000000000d516af05b298b87c
 Content-Type: text/plain; charset="UTF-8"
 
-Hi ewan,
-Thanks for the input.
-I will change this.
+Hi Ewan,
+Thanks for the input .
+I will add this change.
 
 Regards,
 Muneendra.
 
 -----Original Message-----
 From: Ewan D. Milne [mailto:emilne@redhat.com]
-Sent: Monday, October 26, 2020 5:18 PM
+Sent: Monday, October 26, 2020 5:16 PM
 To: Muneendra <muneendra.kumar@broadcom.com>; linux-scsi@vger.kernel.org;
 michael.christie@oracle.com; hare@suse.de
 Cc: jsmart2021@gmail.com; mkumar@redhat.com
-Subject: Re: [patch v4 4/5] scsi_transport_fc: Added a new rport state
-FC_PORTSTATE_MARGINAL
+Subject: Re: [patch v4 2/5] scsi: Added a new error code in scsi.h
 
-See below.  I think you wanted to check for FC_PORTSTATE_MARGINAL in the
-code you added to fc_scsi_scan_rport().  Instead the code tests for
-FC_PORTSTATE_ONLINE twice.
+Don't you need to add the DID_TRANSPORT_MARGINAL case to
+scsi_decide_disposition() ?   DID_TRANSPORT_FAILFAST returns
+SUCCESS but the default case returns ERROR.
 
 -Ewan
 
+
 On Thu, 2020-10-22 at 18:04 +0530, Muneendra wrote:
-> Added a new rport state FC_PORTSTATE_MARGINAL.
+> Added a new error code DID_TRANSPORT_MARGINAL to handle marginal
+> errors in scsi.h
 >
-> Added a new inline function fc_rport_chkmarginal_set_noretries
-> which will set the SCMD_NORETRIES_ABORT bit in cmd->state if rport
-> state is marginal.
->
-> Made changes in fc_eh_timed_out to call
-> fc_rport_chkmarginal_set_noretries
-> Also made changes in fc_remote_port_delete,fc_user_scan_tgt,
-> fc_timeout_deleted_rport functions  to handle the new rport state
-> FC_PORTSTATE_MARGINAL.
+> Clearing the SCMD_NORETRIES_ABORT bit in state flag before
+> blk_mq_start_request
 >
 > Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 >
 > ---
 > v4:
-> Made changes in fc_eh_timed_out to call
-> fc_rport_chkmarginal_set_noretries
-> so that SCMD_NORETRIES_ABORT bit in cmd->state is set if rport state
-> is marginal.
->
-> Removed the newly added scsi_cmd argument to fc_remote_port_chkready
-> as the current patch handles only SCSI EH timeout/abort case.
+> No change
 >
 > v3:
-> Rearranged the patch so that all the changes with respect to new rport
-> state is part of this patch.
-> Added a new argument to scsi_cmd  to fc_remote_port_chkready
+> Rearranged the patch by merging second hunk of the previous(v2)
+> patch3 to this patch
 >
 > v2:
-> New patch
+> Newpatch
 > ---
->  drivers/scsi/scsi_transport_fc.c | 41 +++++++++++++++++++-----------
-> --
->  include/scsi/scsi_transport_fc.h | 19 +++++++++++++++
->  2 files changed, 44 insertions(+), 16 deletions(-)
+>  drivers/scsi/scsi_lib.c | 1 +
+>  include/scsi/scsi.h     | 1 +
+>  2 files changed, 2 insertions(+)
 >
-> diff --git a/drivers/scsi/scsi_transport_fc.c
-> b/drivers/scsi/scsi_transport_fc.c
-> index 2ff7f06203da..fcb38068e2a4 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -142,20 +142,23 @@ fc_enum_name_search(host_event_code,
-> fc_host_event_code,
->  static struct {
->  	enum fc_port_state	value;
->  	char			*name;
-> +	int			matchlen;
->  } fc_port_state_names[] = {
-> -	{ FC_PORTSTATE_UNKNOWN,		"Unknown" },
-> -	{ FC_PORTSTATE_NOTPRESENT,	"Not Present" },
-> -	{ FC_PORTSTATE_ONLINE,		"Online" },
-> -	{ FC_PORTSTATE_OFFLINE,		"Offline" },
-> -	{ FC_PORTSTATE_BLOCKED,		"Blocked" },
-> -	{ FC_PORTSTATE_BYPASSED,	"Bypassed" },
-> -	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics" },
-> -	{ FC_PORTSTATE_LINKDOWN,	"Linkdown" },
-> -	{ FC_PORTSTATE_ERROR,		"Error" },
-> -	{ FC_PORTSTATE_LOOPBACK,	"Loopback" },
-> -	{ FC_PORTSTATE_DELETED,		"Deleted" },
-> +	{ FC_PORTSTATE_UNKNOWN,		"Unknown", 7},
-> +	{ FC_PORTSTATE_NOTPRESENT,	"Not Present", 11 },
-> +	{ FC_PORTSTATE_ONLINE,		"Online", 6 },
-> +	{ FC_PORTSTATE_OFFLINE,		"Offline", 7 },
-> +	{ FC_PORTSTATE_BLOCKED,		"Blocked", 7 },
-> +	{ FC_PORTSTATE_BYPASSED,	"Bypassed", 8 },
-> +	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics", 11 },
-> +	{ FC_PORTSTATE_LINKDOWN,	"Linkdown", 8 },
-> +	{ FC_PORTSTATE_ERROR,		"Error", 5 },
-> +	{ FC_PORTSTATE_LOOPBACK,	"Loopback", 8 },
-> +	{ FC_PORTSTATE_DELETED,		"Deleted", 7 },
-> +	{ FC_PORTSTATE_MARGINAL,	"Marginal", 8 },
->  };
->  fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
-> +fc_enum_name_match(port_state, fc_port_state, fc_port_state_names)
->  #define FC_PORTSTATE_MAX_NAMELEN	20
->
->
-> @@ -2071,6 +2074,7 @@ fc_eh_timed_out(struct scsi_cmnd *scmd)  {
->  	struct fc_rport *rport = starget_to_rport(scsi_target(scmd-
-> >device));
->
-> +	fc_rport_chkmarginal_set_noretries(rport, scmd);
->  	if (rport->port_state == FC_PORTSTATE_BLOCKED)
->  		return BLK_EH_RESET_TIMER;
->
-> @@ -2095,7 +2099,8 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint
-> channel, uint id, u64 lun)
->  		if (rport->scsi_target_id == -1)
->  			continue;
->
-> -		if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +		if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +			(rport->port_state != FC_PORTSTATE_MARGINAL))
->  			continue;
->
->  		if ((channel == rport->channel) &&
-> @@ -2958,7 +2963,8 @@ fc_remote_port_delete(struct fc_rport  *rport)
->
->  	spin_lock_irqsave(shost->host_lock, flags);
->
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE) {
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL)) {
->  		spin_unlock_irqrestore(shost->host_lock, flags);
->  		return;
->  	}
-> @@ -3100,7 +3106,8 @@ fc_timeout_deleted_rport(struct work_struct
-> *work)
->  	 * target, validate it still is. If not, tear down the
->  	 * scsi_target on it.
->  	 */
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_MARGINAL)) &&
->  	    (rport->scsi_target_id != -1) &&
->  	    !(rport->roles & FC_PORT_ROLE_FCP_TARGET)) {
->  		dev_printk(KERN_ERR, &rport->dev,
-> @@ -3243,7 +3250,8 @@ fc_scsi_scan_rport(struct work_struct *work)
->  	struct fc_internal *i = to_fc_internal(shost->transportt);
->  	unsigned long flags;
->
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_ONLINE)) &&
-
-I think the second line should have been FC_PORTSTATE_MARGINAL.
-
-
->  	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
->  	    !(i->f->disable_target_scan)) {
->  		scsi_scan_target(&rport->dev, rport->channel, @@ -3747,7 +3755,8 @@
-> static blk_status_t fc_bsg_rport_prep(struct fc_rport *rport)
->  	    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
->  		return BLK_STS_RESOURCE;
->
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL))
->  		return BLK_STS_IOERR;
->
->  	return BLK_STS_OK;
-> diff --git a/include/scsi/scsi_transport_fc.h
-> b/include/scsi/scsi_transport_fc.h
-> index 1c7dd35cb7a0..829bade13b89 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -14,6 +14,7 @@
->  #include <linux/bsg-lib.h>
->  #include <asm/unaligned.h>
->  #include <scsi/scsi.h>
-> +#include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_netlink.h>
->  #include <scsi/scsi_host.h>
->
-> @@ -67,6 +68,7 @@ enum fc_port_state {
->  	FC_PORTSTATE_ERROR,
->  	FC_PORTSTATE_LOOPBACK,
->  	FC_PORTSTATE_DELETED,
-> +	FC_PORTSTATE_MARGINAL,
->  };
->
->
-> @@ -707,6 +709,22 @@ struct fc_function_template {
->  	unsigned long	disable_target_scan:1;
->  };
->
-> +/**
-> + * fc_rport_chkmarginal_set_noretries - Set the SCMD_NORETRIES_ABORT
-> bit
-> + * in cmd->state if port state is marginal
-> + * @rport:	remote port to be checked
-> + * @scmd:	scsi_cmd to set/clear the SCMD_NORETRIES_ABORT bit on
-> Marginal state
-> + **/
-> +static inline void
-> +fc_rport_chkmarginal_set_noretries(struct fc_rport *rport, struct
-> scsi_cmnd *cmd)
-> +{
-> +	if ((rport->port_state == FC_PORTSTATE_MARGINAL) &&
-> +		 (cmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT))
-> +		set_bit(SCMD_NORETRIES_ABORT, &cmd->state);
-> +	else
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c index
+> 1a2e9bab42ef..2b5dea07498e 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1660,6 +1660,7 @@ static blk_status_t scsi_queue_rq(struct
+> blk_mq_hw_ctx *hctx,
+>  		req->rq_flags |= RQF_DONTPREP;
+>  	} else {
+>  		clear_bit(SCMD_STATE_COMPLETE, &cmd->state);
 > +		clear_bit(SCMD_NORETRIES_ABORT, &cmd->state);
-> +
-> +}
+>  	}
 >
->  /**
->   * fc_remote_port_chkready - called to validate the remote port state
-> @@ -723,6 +741,7 @@ fc_remote_port_chkready(struct fc_rport *rport)
+>  	cmd->flags &= SCMD_PRESERVED_FLAGS;
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h index
+> 5339baadc082..5b287ad8b727 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -159,6 +159,7 @@ static inline int scsi_is_wlun(u64 lun)
+>  				 * paths might yield different results */  #define
+> DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
+> #define DID_MEDIUM_ERROR  0x13  /* Medium error */
+> +#define DID_TRANSPORT_MARGINAL 0x14 /* Transport marginal errors */
+>  #define DRIVER_OK       0x00	/* Driver
+> status                           */
 >
->  	switch (rport->port_state) {
->  	case FC_PORTSTATE_ONLINE:
-> +	case FC_PORTSTATE_MARGINAL:
->  		if (rport->roles & FC_PORT_ROLE_FCP_TARGET)
->  			result = 0;
->  		else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
+>  /*
 
---000000000000ce163f05b298b670
+--000000000000d516af05b298b87c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -362,13 +213,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCD2jRWJquL1CjMRdqnxOiO+UZtDKMsDA8qSX3z6gpb8qjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMjYyMDI0MTVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCCEmxpSWW61QOgbIQyNGEhayFsnU6YEwpE/HNhZ6T4dETAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDEwMjYyMDI0NDlaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAr2RW5MYvVHOru5bP
-2BsLr4OUVBWPX8XOtYo19+1hjZOEKgWzE7tMSppePjfyyBEmsMzifdtLAvueOJmHEOxDY7Gsyod6
-LCVFznmQucf4On05JLCNhU3M58mkSDBBnz3FbxLs5j8OfWK7uMBwD24Sga6/j1pkkYet0a8iTg3I
-iS3u6r/acGI4J5e5cJ/JKhM4vDf268THQoQ1OPrfuU/sosajjlTNktog5B5qi2UnPCSDCyOrB+bT
-t7qgPeEJAlkgW5ntcfDTPKRSI347J0Bm85Vj6ANmMk/4Ii5FgJ10oJ0qF9tncg90lR8XyNUtdIYp
-IVwshoOCqq9Za1cyC/u3EA==
---000000000000ce163f05b298b670--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAtBBc8t94xNpU+4qt
+fs2GmCNOkGnBPwzRT7EsOI15htu/9yJOi9m8SOSA5KrS+Tu1cYuUCt13VOFIYH11pHHSGetNxicO
+Koa6YI+lGxi0yaQ+jckI+4dp5jIYNLmIEwTuz6m4SQH/MmgvyhBfnrjCkGaLtwKD4AoEqKYxajOr
+lBR6UCxmtVs7Q4mqb1r54M+Q2SnuspqCEMbYy8by+sTtKSqxyQmXR5weKxwo7EOQUGPDX/wZFK0w
+oehnV5XM+sAT9wzguwaeXeqAe81JIrOCLgKYqSXZub0r9xUAOBujx5GbJPvvSFPULojl4IgQPLlh
+eYCvkt/Phx6p3s0a33qU/Q==
+--000000000000d516af05b298b87c--
