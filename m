@@ -2,92 +2,132 @@ Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA5FDC56201
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 22:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CB6AC2D0A3
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 23:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7261D20709
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 22:55:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kylehuey.com header.i=@kylehuey.com header.b="JQw5fA5c"
+	by mail.kernel.org (Postfix) with ESMTP id 6A28020809
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 23:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394902AbgJZWz1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 18:55:27 -0400
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:45373 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394904AbgJZWz0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 18:55:26 -0400
-Received: by mail-ed1-f65.google.com with SMTP id dg9so11423947edb.12
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2020 15:55:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kylehuey.com; s=google;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=J/+n1x0TPOHJCTfSVoXlG/q+OLrGnnNxrysZ0ZyIy+Y=;
-        b=JQw5fA5cqXZCTLCd2xkURV07bnYrA8gTT/8l9H7r6P+PgM37GQ7tblZcETghImepsU
-         AcI0oUILLNpw7+Lob5wOxm8oxXKZgdxlvk1iOdkoLk31eLVc1crb3sEhxCSb6bD2V31l
-         b7OGa6zHv0zDl28Z8OMcIxY0WvmVK7pWJSrW3Zs4sWifuxNiQ2iEW7pkdOAgHIEek3Fp
-         L3yESbOX+0gb8ueK46K6rtDj34b55Vtmz8U4fPoQ/Dv2vqBsFOJNMTpbG7mznOfR5TaL
-         kpOlREDICaBo0Xi3+x/a4pHYfGgO73EI5dQFmBZNKgKh2ry9/Y+FL54IAgbsbpnA0Xzm
-         BeOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=J/+n1x0TPOHJCTfSVoXlG/q+OLrGnnNxrysZ0ZyIy+Y=;
-        b=RKb50V4mBGMe692a5PwOeIt5AZbDNWgMU9fFcxJVV5fZrkdwYZtDJ/wsq54Of2dzCA
-         XTsdqPM9YBpu05rKhYa8xN7ZgYLTL3T/s89s9BtV2JxJUM1WNFmLhdp5B2axJ3RNlU/R
-         u1VBI4JnvCeMrZBjF6oaBuJfZoyqUbVH5XQ8dLDbnp8dthOyNmkGzZGcU6QR+6MO6+LF
-         ZogS0IGQHpsbBdUB4KzJOgW3e9CVNah7zNSjf3GlKulcvkPN24z86sjZGIfnIOO8KFxC
-         nTjporaSvI7XHKk4VP+/FMWcaHMQ76M1cEqNbnQ1WPTW+NX++hrvulwZ33DgGSBlUJjj
-         CySQ==
-X-Gm-Message-State: AOAM530vkDEq9ASlWkIGjJDHH38TYQ0BS1oNe78vGsGEVNSRqWUCAZdZ
-        unTixN7EVobLFVcudly+J9CRoSk/5kUuPgQpS15Sug==
-X-Google-Smtp-Source: ABdhPJyAci+5cM2zXs7C2dh5O8VDIKXSp+LVa6rVM/MPlgy6tZLvyXi43c6iWM9w5BW9l3CIsdr5O5Od75OK4rN9ByQ=
-X-Received: by 2002:aa7:d9ce:: with SMTP id v14mr12828586eds.203.1603752924617;
- Mon, 26 Oct 2020 15:55:24 -0700 (PDT)
-MIME-Version: 1.0
-From:   Kyle Huey <me@kylehuey.com>
-Date:   Mon, 26 Oct 2020 15:55:13 -0700
-Message-ID: <CAP045Aqrsb=CXHDHx4nS-pgg+MUDj14r-kN8_Jcbn-NAUziVag@mail.gmail.com>
-Subject: [REGRESSION] mm: process_vm_readv testcase no longer works after
- compat_prcoess_vm_readv removed
-To:     open list <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     "Robert O'Callahan" <robert@ocallahan.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        "open list:FILESYSTEMS (VFS and infrastructure)" 
-        <linux-fsdevel@vger.kernel.org>, linux-aio@kvack.org,
-        io-uring@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-mm@kvack.org, netdev@vger.kernel.org,
-        keyrings@vger.kernel.org, linux-security-module@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S2406297AbgJZXao (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 19:30:44 -0400
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:25462 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2406250AbgJZXan (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 19:30:43 -0400
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 26 Oct 2020 16:30:42 -0700
+X-QCInternal: smtphost
+Received: from asutoshd-linux1.qualcomm.com ([10.46.160.39])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 26 Oct 2020 16:30:42 -0700
+Received: by asutoshd-linux1.qualcomm.com (Postfix, from userid 92687)
+        id 1364A20DDC; Mon, 26 Oct 2020 16:30:42 -0700 (PDT)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     cang@codeaurora.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Cc:     linux-arm-msm@vger.kernel.org,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v1 1/2] scsi: ufs: Put hba into LPM during clk gating
+Date:   Mon, 26 Oct 2020 16:30:08 -0700
+Message-Id: <ce0a3be9c685506803597fb770e37c099ae27232.1603754932.git.asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A test program from the rr[0] test suite, vm_readv_writev[1], no
-longer works on 5.10-rc1 when compiled as a 32 bit binary and executed
-on a 64 bit kernel. The first process_vm_readv call (on line 35) now
-fails with EFAULT. I have bisected this to
-c3973b401ef2b0b8005f8074a10e96e3ea093823.
+From: Can Guo <cang@codeaurora.org>
 
-It should be fairly straightforward to extract the test case from our
-repository into a standalone program.
+During clock gating, after clocks are disabled,
+put hba into LPM to save more power.
 
-- Kyle
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c |  7 +++++--
+ drivers/scsi/ufs/ufshcd.h | 13 +++++++++++++
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-[0] https://rr-project.org/
-[1] https://github.com/mozilla/rr/blob/master/src/test/vm_readv_writev.c
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 47c544d..55ca8c6 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1548,6 +1548,7 @@ static void ufshcd_ungate_work(struct work_struct *work)
+ 	}
+ 
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	ufshcd_hba_vreg_set_hpm(hba);
+ 	ufshcd_setup_clocks(hba, true);
+ 
+ 	ufshcd_enable_irq(hba);
+@@ -1713,6 +1714,8 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 		/* If link is active, device ref_clk can't be switched off */
+ 		__ufshcd_setup_clocks(hba, false, true);
+ 
++	/* Put the host controller in low power mode if possible */
++	ufshcd_hba_vreg_set_lpm(hba);
+ 	/*
+ 	 * In case you are here to cancel this work the gating state
+ 	 * would be marked as REQ_CLKS_ON. In this case keep the state
+@@ -8405,13 +8408,13 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ 
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba)
+ {
+-	if (ufshcd_is_link_off(hba))
++	if (ufshcd_is_link_off(hba) || ufshcd_can_aggressive_pc(hba))
+ 		ufshcd_setup_hba_vreg(hba, false);
+ }
+ 
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba)
+ {
+-	if (ufshcd_is_link_off(hba))
++	if (ufshcd_is_link_off(hba) || ufshcd_can_aggressive_pc(hba))
+ 		ufshcd_setup_hba_vreg(hba, true);
+ }
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 47eb143..0fbb735 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -592,6 +592,13 @@ enum ufshcd_caps {
+ 	 * inline crypto engine, if it is present
+ 	 */
+ 	UFSHCD_CAP_CRYPTO				= 1 << 8,
++
++	/*
++	 * This capability allows the controller regulators to be put into
++	 * lpm mode aggressively during clock gating.
++	 * This would increase power savings.
++	 */
++	UFSHCD_CAP_AGGR_POWER_COLLAPSE			= 1 << 9,
+ };
+ 
+ struct ufs_hba_variant_params {
+@@ -829,6 +836,12 @@ return true;
+ #endif
+ }
+ 
++static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
++{
++	return !!(ufshcd_is_link_hibern8(hba) &&
++		  (hba->caps & UFSHCD_CAP_AGGR_POWER_COLLAPSE));
++}
++
+ static inline bool ufshcd_is_auto_hibern8_supported(struct ufs_hba *hba)
+ {
+ 	return (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT) &&
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
