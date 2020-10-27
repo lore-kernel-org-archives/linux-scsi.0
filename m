@@ -2,571 +2,282 @@ Return-Path: <SRS0=LZqT=EC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D087C388F9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B48C388F9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BC03221F8
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29D5E221F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Cd6gKEMW"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JAdWOxCi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1751870AbgJ0NIo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Oct 2020 09:08:44 -0400
-Received: from mail-pj1-f53.google.com ([209.85.216.53]:40566 "EHLO
-        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751867AbgJ0NIo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:44 -0400
-Received: by mail-pj1-f53.google.com with SMTP id l2so719477pjt.5
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:43 -0700 (PDT)
+        id S1751873AbgJ0NIr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Oct 2020 09:08:47 -0400
+Received: from mail-pf1-f179.google.com ([209.85.210.179]:35308 "EHLO
+        mail-pf1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751867AbgJ0NIr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:47 -0400
+Received: by mail-pf1-f179.google.com with SMTP id b3so893949pfo.2
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=iCjNlkAC1hiqYl20R4fS0nBpC9MmmscC3JayasWz/pg=;
-        b=Cd6gKEMW335MwUKGAtPU0Y3984+LurxobwvO+EFmUirn3ME9cwXWEU3ZItnlhOXU79
-         nfhbQUKp/8xLyH8CBOnLwGxPuoPqfgPiJeycXQoam6d7F3PjBZNK3aZgKEOKvT+yucOM
-         HLI/tkVFFzdJ6X05Nr0LrZdHQJ9843QuvA/EY=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=eE+dKrSpU2VCs/pXGBIUWiRGunzz83I8pBk2lofcmQQ=;
+        b=JAdWOxCiPFfzdOo+DUdoCd9fawG7cmPVp0X6pFI9dgVHO7QGhZw8qycrviSJftaUE7
+         aF1ZV45bbVTDNv+d6jtRP75QPWI1e1sRQnRSEjdvUKK4wV9kgrgzllvzdQ52HcX4PBjc
+         qdwAqUkgIbP1o5OMgc/f6tL2o+G61uiQxEGRc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=iCjNlkAC1hiqYl20R4fS0nBpC9MmmscC3JayasWz/pg=;
-        b=d13Fy/+OdX0yVxYVYpaLvy7cQ7YYcg7PWAb/NEc2JWbkqkNNVjXLhgYueylLt/tQbm
-         Wx2puIIBHQVYfZhYmuO4Fwv71nK0AhxnX8R0L9KVoRG6xiLjaxZgs5bpJw12rgSDTEYQ
-         z1yOGnT6MbVmj8qfxbymKN6VXhXRJqwRZ0WrZ6ZIpgAU4on0Mw+dsdVwPkGN1d0MsB1P
-         C5/RIDoTxzAuFgYkm8uZ/mK8IUtqpbkA2fIpVGBeF2lLSP31XmfK1Ghk3B55EKCO7DdC
-         oB413FyKXP1X7l3aBOdAfnftpU40QtUZuuU0QcOEnOJNTFdCN3jiU/6BmerKRn1ME4r3
-         iEUg==
-X-Gm-Message-State: AOAM5332OZkIit/0oytbYmhVMqdtr6sybAyu/q1GCW3rVtyo1+oTl5y4
-        lLpigWJucO63OPWNitR+MGFbDQ==
-X-Google-Smtp-Source: ABdhPJz+LPTGlTTsoogpGDgcbLvzWMIPFZ0FdOE2zwkMz6bFuA8SJQedIrz4KRETHuit9SxRSn8FCA==
-X-Received: by 2002:a17:90a:9504:: with SMTP id t4mr2073176pjo.82.1603804122770;
-        Tue, 27 Oct 2020 06:08:42 -0700 (PDT)
+         :references;
+        bh=eE+dKrSpU2VCs/pXGBIUWiRGunzz83I8pBk2lofcmQQ=;
+        b=ZNy72lHEqD0ONRzyQFnkLd714C9cQRzOQibOKqupUMQD55D9qtpYKkQcvllNBcSSJB
+         GBA+aAGavbbldMA9ZX3luIJE/aQ1dlpGBV7V1dVwilgrxlZIc7UhdJo+rtjrkgPiFfJW
+         3mzJDO2heGzJ3pnoiUbdLuYoiDWXl8q/ju6+VW/OKNUZtAhkGvneh5AFVggdIOSNqXOr
+         wOQbVHohsZaW/gDLCO6la5GE2CmJm7bhfajWVv/7MSWeJ3jmwJ/yW+b67JZ8BKFQa0pB
+         ++WrSux8HXGy1Ng3yUVroC79mdJe8GXndbi9MasxyzGUkEBhnkOFSLMfW641DHIjFkbV
+         EeMQ==
+X-Gm-Message-State: AOAM5335x1PlwXUBwG/XqEG/P9EKKnfyzGw5pqieX8lnkaz+Twj+UGKm
+        e6I9DoyHEniPYupDBsDphwOHtw==
+X-Google-Smtp-Source: ABdhPJxrovjcMLJURgIWJhjL+DeJGH/pj8eHVrZ8lH6bKOML84/YrpPuc4CgGAEuHZ2x6+8Re1x1Zw==
+X-Received: by 2002:aa7:8f10:0:b029:161:79ae:eace with SMTP id x16-20020aa78f100000b029016179aeeacemr2113971pfr.45.1603804125609;
+        Tue, 27 Oct 2020 06:08:45 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.40
+        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2020 06:08:42 -0700 (PDT)
+        Tue, 27 Oct 2020 06:08:44 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v1 08/14] mpt3sas: Update hba_port objects after host reset
-Date:   Tue, 27 Oct 2020 18:38:41 +0530
-Message-Id: <20201027130847.9962-9-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v1 09/14] mpt3sas: Set valid PhysicalPort in SMPPassThrough
+Date:   Tue, 27 Oct 2020 18:38:42 +0530
+Message-Id: <20201027130847.9962-10-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 References: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
-MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000000e37b505b2a6bf73"
+        boundary="000000000000391d2d05b2a6bf80"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000000e37b505b2a6bf73
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+--000000000000391d2d05b2a6bf80
 
-During host reset there are chances that the Port number
-allocated by the firmware for the attached devices may change.
-Also it may be possible that some HBA phy’s may go down/come up
-after reset. So the driver can’t just trust the HBA Port table
-that it has populated before host reset as valid. So it has to
-update the HBA Port table in such a way that it shouldn’t
-disturb the drives which are still accessible even after
-host reset.
+Current driver is always setting PhysicalPort field as 0xFF for
+SMPPassthrough Request message. So in zoning topologies this
+SMPPassthrough command always operates on devices in one zone
+(default zone) even when user issues SMP command for other zone
+drives.
 
-Driver follows below algorithm to update the ‘HBA Port table’
-during host reset,
-  I. After host reset operation and before marking the
-     devices as responding/non-responding, create a temporary
-     Port table called “New Port table” by parsing each of the
-     HBA PHY’s Phy data info read from SAS IOUnit Page0,
-        a. Check whether Phy’s negotiated link rate is greater
-           than 1.5Gbps, if not go to next Phy,
-        b. Get the SAS Address of the attached device,
-        c. Create a new entry in the ‘New Port table’ with
-           SAS Address field filled with attached device’s
-           SAS Address, port number with Phy’s Port number
-           (read from SAS IOUnit Page0) and enable bit in the
-           ‘Phy mask’ field corresponding to current Phy number.
-           New entry is created only if the driver won’t find
-           any entry in the ‘New Port table’ which matches with
-           attached device ‘SAS Address’ & ‘Port Number’. If it
-           finds an entry with matches with attached device
-           ‘SAS Address’ & ‘Port Number’ then the driver takes
-           that matched entry and will enable current Phy number
-           bit in the ‘Phy mask’ field.
-        d. After parsing all the HBA phy’s info, the driver will
-           have complete Port table info in “New Port table”.
-  II. Mark all the existing sas_device & sas_expander device
-      structures as ‘dirty’.
-  III. Mark each entry of the HBA Port list’s as ‘dirty’.
-  IV. Take each entry from ‘New Port table’ one by one and check
-      whether the taken entry has any corresponding matched entry
-      (which is marked as ‘dirty’) in the HBA Port table or not.
-      While looking for a corresponding matched entry, look for
-      matched entry in the sequence from top row to bottom row
-      listed in below table. If you find any matched entry
-      (according to any of the rules tabulated below) then perform
-      the action mentioned in the ‘Action’ column in that matched rule.
-===========================================================================
-|Search  |SAS     | Phy Mask | Port    | Possibilities| Action            |
-|every   |Address |    or    | Number  |              | required          |
-|entry   |matched?| subset of| matched?|              |                   |
-|in below|        | phy mask |         |              |                   |
-|sequence|        | matched? |         |              |                   |
-===========================================================================
-|  1     |matched | matched  | matched | nothing      |* unmark HBA port  |
-|        |        |          |         | changed      |table entry as     |
-|        |        |          |         |              |dirty              |
----------------------------------------------------------------------------
-|  2     |matched | matched  | not     | port number  |* Update port      |
-|        |        |          | matched | is changed   |number in the      |
-|        |        |          |         |              |matched port table |
-|        |        |          |         |              |entry              |
-|        |        |          |         |              |* unmask HBA port  |
-|        |        |          |         |              |table entry as     |
-|        |        |          |         |              | dirty             |
----------------------------------------------------------------------------
-|  3.a   |matched | subset of| matched |some phys     |*Add these new phys|
-|        |        | phy mask | (or)    |might have    |to current port in |
-|        |        | matched  | not     |enabled which |STL                |
-|        |        |          | matched |are previously|* Update phy mask  |
-|        |        |          | (but    |disabled      |field in HBA's port|
-|        |        |          | first   |              |tables's matched   |
-|        |        |          | look for|              |entry,             |
-|        |        |          | matched |              |*Update port number|
-|        |        |          | one)    |              |in the matched port|
-|        |        |          |         |              |table entry (if    |
-|        |        |          |         |              |port number is     |
-|        |        |          |         |              |changed),          |
-|        |        |          |         |              |* Unmask HBA port  |
-|        |        |          |         |              |table entry as     |
-|        |        |          |         |              |dirty              |
----------------------------------------------------------------------------
-|  3.b   |matched | subset of| matched |some phys     |*Remove these phys |
-|        |        | phy mask | (or)    |might have    |from current port  |
-|        |        | matched  | not     |disabled which|in STL             |
-|        |        |          | matched |are previously|* Update phy mask  |
-|        |        |          | (but    |enabled       |field in HBA's port|
-|        |        |          | first   |              |tables's matched   |
-|        |        |          | look for|              |entry,             |
-|        |        |          | matched |              |*Update port number|
-|        |        |          | one)    |              |in the matched port|
-|        |        |          |         |              |table entry (if    |
-|        |        |          |         |              |port number is     |
-|        |        |          |         |              |changed),          |
-|        |        |          |         |              |* Unmask HBA port  |
-|        |        |          |         |              |table entry as     |
-|        |        |          |         |              |dirty              |
----------------------------------------------------------------------------
-|  4     |matched | not      | matched |A cable       |*Remove old phys & |
-|        |        | matched  | (or)    |attached to an|new phys to current|
-|        |        |          | not     |expander is   |port in STL        |
-|        |        |          | matched |changed to    |* Update phy mask  |
-|        |        |          |         |another HBA   |field in HBA's port|
-|        |        |          |         |port during   |tables's matched   |
-|        |        |          |         |reset         |entry,             |
-|        |        |          |         |              |*Update port number|
-|        |        |          |         |              |in the matched port|
-|        |        |          |         |              |table entry (if    |
-|        |        |          |         |              |port number is     |
-|        |        |          |         |              |changed),          |
-|        |        |          |         |              |* Unmask HBA port  |
-|        |        |          |         |              |table entry as     |
-|        |        |          |         |              |dirty              |
----------------------------------------------------------------------------
-
-V. Delete the hba_port objects which are still marked as dirty.
+Now helper functions _transport_get_port_id_by_rphy() &
+_transport_get_port_id_by_sas_phy() are defined to get Physical
+Port number from sas_rphy & sas_phy respectively for
+SMPPassthrough request message so that SMP Passthrough request
+message is send to intended zone device.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
 v1:
-Fix below compilation warning reported by kernel test robot,
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:5940
- _scsih_look_and_get_matched_port_entry() error:
- uninitialized symbol 'matched_code'.
+No change.
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 338 +++++++++++++++++++++++++++
- 1 file changed, 338 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  2 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     |  1 +
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 75 ++++++++++++++++++++++--
+ 3 files changed, 72 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 047d234..a8e42d1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -788,6 +788,7 @@ struct _sas_phy {
+  * @phy: a list of phys that make up this sas_host/expander
+  * @sas_port_list: list of ports attached to this sas_host/expander
+  * @port: hba port entry containing node's port number info
++ * @rphy: sas_rphy object of this expander
+  */
+ struct _sas_node {
+ 	struct list_head list;
+@@ -802,6 +803,7 @@ struct _sas_node {
+ 	struct hba_port *port;
+ 	struct	_sas_phy *phy;
+ 	struct list_head sas_port_list;
++	struct sas_rphy *rphy;
+ };
+ 
+ /**
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index afb381d..3752314 100644
+index 3752314..2b87003 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5816,6 +5816,342 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	return 0;
- }
+@@ -6510,6 +6510,7 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 		goto out_fail;
+ 	}
+ 	sas_expander->parent_dev = &mpt3sas_port->rphy->dev;
++	sas_expander->rphy = mpt3sas_port->rphy;
+ 
+ 	for (i = 0 ; i < sas_expander->num_phys ; i++) {
+ 		if ((mpt3sas_config_get_expander_pg1(ioc, &mpi_reply,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index 3cc78c2..d52d8b3 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -60,6 +60,24 @@
+ 
+ #include "mpt3sas_base.h"
  
 +/**
-+ * _scsih_get_port_table_after_reset - Construct temporary port table
-+ * @ioc: per adapter object
-+ * @port_table: address where port table needs to be constructed
++ * _transport_get_port_id_by_sas_phy - get zone's port id that Phy belong to
++ * @phy - sas_phy object
 + *
-+ * return number of HBA port entries available after reset.
++ * Return Port number
 + */
-+static int
-+_scsih_get_port_table_after_reset(struct MPT3SAS_ADAPTER *ioc,
-+	struct hba_port *port_table)
++static inline u8
++_transport_get_port_id_by_sas_phy(struct sas_phy *phy)
 +{
-+	u16 sz, ioc_status;
-+	int i, j;
-+	Mpi2ConfigReply_t mpi_reply;
-+	Mpi2SasIOUnitPage0_t *sas_iounit_pg0 = NULL;
-+	u16 attached_handle;
-+	u64 attached_sas_addr;
-+	u8 found = 0, port_count = 0, port_id;
++	u8 port_id = 0xFF;
++	struct hba_port *port = phy->hostdata;
 +
-+	sz = offsetof(Mpi2SasIOUnitPage0_t, PhyData) + (ioc->sas_hba.num_phys
-+	    * sizeof(Mpi2SasIOUnit0PhyData_t));
-+	sas_iounit_pg0 = kzalloc(sz, GFP_KERNEL);
-+	if (!sas_iounit_pg0) {
-+		ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+		    __FILE__, __LINE__, __func__);
-+		return port_count;
-+	}
++	if (port)
++		port_id = port->port_id;
 +
-+	if ((mpt3sas_config_get_sas_iounit_pg0(ioc, &mpi_reply,
-+	    sas_iounit_pg0, sz)) != 0)
-+		goto out;
-+	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
-+	if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
-+		goto out;
-+	for (i = 0; i < ioc->sas_hba.num_phys; i++) {
-+		found = 0;
-+		if ((sas_iounit_pg0->PhyData[i].NegotiatedLinkRate >> 4) <
-+		    MPI2_SAS_NEG_LINK_RATE_1_5)
-+			continue;
-+		attached_handle =
-+		    le16_to_cpu(sas_iounit_pg0->PhyData[i].AttachedDevHandle);
-+		if (_scsih_get_sas_address(
-+		    ioc, attached_handle, &attached_sas_addr) != 0) {
-+			ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+			    __FILE__, __LINE__, __func__);
-+			continue;
-+		}
-+
-+		for (j = 0; j < port_count; j++) {
-+			port_id = sas_iounit_pg0->PhyData[i].Port;
-+			if (port_table[j].port_id == port_id &&
-+			    port_table[j].sas_address == attached_sas_addr) {
-+				port_table[j].phy_mask |= (1 << i);
-+				found = 1;
-+				break;
-+			}
-+		}
-+
-+		if (found)
-+			continue;
-+
-+		port_id = sas_iounit_pg0->PhyData[i].Port;
-+		port_table[port_count].port_id = port_id;
-+		port_table[port_count].phy_mask = (1 << i);
-+		port_table[port_count].sas_address = attached_sas_addr;
-+		port_count++;
-+	}
-+out:
-+	kfree(sas_iounit_pg0);
-+	return port_count;
-+}
-+
-+enum hba_port_matched_codes {
-+	NOT_MATCHED = 0,
-+	MATCHED_WITH_ADDR_AND_PHYMASK,
-+	MATCHED_WITH_ADDR_SUBPHYMASK_AND_PORT,
-+	MATCHED_WITH_ADDR_AND_SUBPHYMASK,
-+	MATCHED_WITH_ADDR,
-+};
-+
-+/**
-+ * _scsih_look_and_get_matched_port_entry - Get matched hba port entry
-+ *					from HBA port table
-+ * @ioc: per adapter object
-+ * @port_entry - hba port entry from temporary port table which needs to be
-+ *		searched for matched entry in the HBA port table
-+ * @matched_port_entry - save matched hba port entry here
-+ * @count - count of matched entries
-+ *
-+ * return type of matched entry found.
-+ */
-+static enum hba_port_matched_codes
-+_scsih_look_and_get_matched_port_entry(struct MPT3SAS_ADAPTER *ioc,
-+	struct hba_port *port_entry,
-+	struct hba_port **matched_port_entry, int *count)
-+{
-+	struct hba_port *port_table_entry, *matched_port = NULL;
-+	enum hba_port_matched_codes matched_code = NOT_MATCHED;
-+	int lcount = 0;
-+	*matched_port_entry = NULL;
-+
-+	list_for_each_entry(port_table_entry, &ioc->port_table_list, list) {
-+		if (!(port_table_entry->flags & HBA_PORT_FLAG_DIRTY_PORT))
-+			continue;
-+
-+		if ((port_table_entry->sas_address == port_entry->sas_address)
-+		    && (port_table_entry->phy_mask == port_entry->phy_mask)) {
-+			matched_code = MATCHED_WITH_ADDR_AND_PHYMASK;
-+			matched_port = port_table_entry;
-+			break;
-+		}
-+
-+		if ((port_table_entry->sas_address == port_entry->sas_address)
-+		    && (port_table_entry->phy_mask & port_entry->phy_mask)
-+		    && (port_table_entry->port_id == port_entry->port_id)) {
-+			matched_code = MATCHED_WITH_ADDR_SUBPHYMASK_AND_PORT;
-+			matched_port = port_table_entry;
-+			continue;
-+		}
-+
-+		if ((port_table_entry->sas_address == port_entry->sas_address)
-+		    && (port_table_entry->phy_mask & port_entry->phy_mask)) {
-+			if (matched_code ==
-+			    MATCHED_WITH_ADDR_SUBPHYMASK_AND_PORT)
-+				continue;
-+			matched_code = MATCHED_WITH_ADDR_AND_SUBPHYMASK;
-+			matched_port = port_table_entry;
-+			continue;
-+		}
-+
-+		if (port_table_entry->sas_address == port_entry->sas_address) {
-+			if (matched_code ==
-+			    MATCHED_WITH_ADDR_SUBPHYMASK_AND_PORT)
-+				continue;
-+			if (matched_code == MATCHED_WITH_ADDR_AND_SUBPHYMASK)
-+				continue;
-+			matched_code = MATCHED_WITH_ADDR;
-+			matched_port = port_table_entry;
-+			lcount++;
-+		}
-+	}
-+
-+	*matched_port_entry = matched_port;
-+	if (matched_code ==  MATCHED_WITH_ADDR)
-+		*count = lcount;
-+	return matched_code;
-+}
-+
-+/**
-+ * _scsih_del_phy_part_of_anther_port - remove phy if it
-+ *				is a part of anther port
-+ *@ioc: per adapter object
-+ *@port_table: port table after reset
-+ *@index: hba port entry index
-+ *@port_count: number of ports available after host reset
-+ *@offset: HBA phy bit offset
-+ *
-+ */
-+static void
-+_scsih_del_phy_part_of_anther_port(struct MPT3SAS_ADAPTER *ioc,
-+	struct hba_port *port_table,
-+	int index, u8 port_count, int offset)
-+{
-+	struct _sas_node *sas_node = &ioc->sas_hba;
-+	u32 i, found = 0;
-+
-+	for (i = 0; i < port_count; i++) {
-+		if (i == index)
-+			continue;
-+
-+		if (port_table[i].phy_mask & (1 << offset)) {
-+			mpt3sas_transport_del_phy_from_an_existing_port(
-+			    ioc, sas_node, &sas_node->phy[offset]);
-+			found = 1;
-+			break;
-+		}
-+	}
-+	if (!found)
-+		port_table[index].phy_mask |= (1 << offset);
-+}
-+
-+/**
-+ * _scsih_add_or_del_phys_from_existing_port - add/remove phy to/from
-+ *						right port
-+ *@ioc: per adapter object
-+ *@hba_port_entry: hba port table entry
-+ *@port_table: temporary port table
-+ *@index: hba port entry index
-+ *@port_count: number of ports available after host reset
-+ *
-+ */
-+static void
-+_scsih_add_or_del_phys_from_existing_port(struct MPT3SAS_ADAPTER *ioc,
-+	struct hba_port *hba_port_entry, struct hba_port *port_table,
-+	int index, int port_count)
-+{
-+	u32 phy_mask, offset = 0;
-+	struct _sas_node *sas_node = &ioc->sas_hba;
-+
-+	phy_mask = hba_port_entry->phy_mask ^ port_table[index].phy_mask;
-+
-+	for (offset = 0; offset < ioc->sas_hba.num_phys; offset++) {
-+		if (phy_mask & (1 << offset)) {
-+			if (!(port_table[index].phy_mask & (1 << offset))) {
-+				_scsih_del_phy_part_of_anther_port(
-+				    ioc, port_table, index, port_count,
-+				    offset);
-+				continue;
-+			}
-+			if (sas_node->phy[offset].phy_belongs_to_port)
-+				mpt3sas_transport_del_phy_from_an_existing_port(
-+				    ioc, sas_node, &sas_node->phy[offset]);
-+			mpt3sas_transport_add_phy_to_an_existing_port(
-+			    ioc, sas_node, &sas_node->phy[offset],
-+			    hba_port_entry->sas_address,
-+			    hba_port_entry);
-+		}
-+	}
-+}
-+
-+/**
-+ * _scsih_del_dirty_port_entries - delete dirty port entries from port list
-+ *					after host reset
-+ *@ioc: per adapter object
-+ *
-+ */
-+static void
-+_scsih_del_dirty_port_entries(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct hba_port *port, *port_next;
-+
-+	list_for_each_entry_safe(port, port_next,
-+	    &ioc->port_table_list, list) {
-+		if (!(port->flags & HBA_PORT_FLAG_DIRTY_PORT) ||
-+		    port->flags & HBA_PORT_FLAG_NEW_PORT)
-+			continue;
-+
-+		drsprintk(ioc, ioc_info(ioc,
-+		    "Deleting port table entry %p having Port: %d\t Phy_mask 0x%08x\n",
-+		    port, port->port_id, port->phy_mask));
-+		list_del(&port->list);
-+		kfree(port);
-+	}
-+}
-+
-+/**
-+ * _scsih_sas_port_refresh - Update HBA port table after host reset
-+ * @ioc: per adapter object
-+ */
-+static void
-+_scsih_sas_port_refresh(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	u32 port_count = 0;
-+	struct hba_port *port_table;
-+	struct hba_port *port_table_entry;
-+	struct hba_port *port_entry = NULL;
-+	int i, j, count = 0, lcount = 0;
-+	int ret;
-+	u64 sas_addr;
-+
-+	drsprintk(ioc, ioc_info(ioc,
-+	    "updating ports for sas_host(0x%016llx)\n",
-+	    (unsigned long long)ioc->sas_hba.sas_address));
-+
-+	port_table = kcalloc(ioc->sas_hba.num_phys,
-+	    sizeof(struct hba_port), GFP_KERNEL);
-+	if (!port_table)
-+		return;
-+
-+	port_count = _scsih_get_port_table_after_reset(ioc, port_table);
-+	if (!port_count)
-+		return;
-+
-+	drsprintk(ioc, ioc_info(ioc, "New Port table\n"));
-+	for (j = 0; j < port_count; j++)
-+		drsprintk(ioc, ioc_info(ioc,
-+		    "Port: %d\t Phy_mask 0x%08x\t sas_addr(0x%016llx)\n",
-+		    port_table[j].port_id,
-+		    port_table[j].phy_mask, port_table[j].sas_address));
-+
-+	list_for_each_entry(port_table_entry, &ioc->port_table_list, list)
-+		port_table_entry->flags |= HBA_PORT_FLAG_DIRTY_PORT;
-+
-+	drsprintk(ioc, ioc_info(ioc, "Old Port table\n"));
-+	port_table_entry = NULL;
-+	list_for_each_entry(port_table_entry, &ioc->port_table_list, list) {
-+		drsprintk(ioc, ioc_info(ioc,
-+		    "Port: %d\t Phy_mask 0x%08x\t sas_addr(0x%016llx)\n",
-+		    port_table_entry->port_id,
-+		    port_table_entry->phy_mask,
-+		    port_table_entry->sas_address));
-+	}
-+
-+	for (j = 0; j < port_count; j++) {
-+		ret = _scsih_look_and_get_matched_port_entry(ioc,
-+		    &port_table[j], &port_entry, &count);
-+		if (!port_entry) {
-+			drsprintk(ioc, ioc_info(ioc,
-+			    "No Matched entry for sas_addr(0x%16llx), Port:%d\n",
-+			    port_table[j].sas_address,
-+			    port_table[j].port_id));
-+			continue;
-+		}
-+
-+		switch (ret) {
-+		case MATCHED_WITH_ADDR_SUBPHYMASK_AND_PORT:
-+		case MATCHED_WITH_ADDR_AND_SUBPHYMASK:
-+			_scsih_add_or_del_phys_from_existing_port(ioc,
-+			    port_entry, port_table, j, port_count);
-+			break;
-+		case MATCHED_WITH_ADDR:
-+			sas_addr = port_table[j].sas_address;
-+			for (i = 0; i < port_count; i++) {
-+				if (port_table[i].sas_address == sas_addr)
-+					lcount++;
-+			}
-+
-+			if (count > 1 || lcount > 1)
-+				port_entry = NULL;
-+			else
-+				_scsih_add_or_del_phys_from_existing_port(ioc,
-+				    port_entry, port_table, j, port_count);
-+		}
-+
-+		if (!port_entry)
-+			continue;
-+
-+		if (port_entry->port_id != port_table[j].port_id)
-+			port_entry->port_id = port_table[j].port_id;
-+		port_entry->flags &= ~HBA_PORT_FLAG_DIRTY_PORT;
-+		port_entry->phy_mask = port_table[j].phy_mask;
-+	}
-+
-+	port_table_entry = NULL;
++	return port_id;
 +}
 +
  /**
-  * _scsih_sas_host_refresh - refreshing sas host object contents
+  * _transport_sas_node_find_by_sas_address - sas node search
   * @ioc: per adapter object
-@@ -9790,6 +10126,7 @@ mpt3sas_scsih_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
- 	dtmprintk(ioc, ioc_info(ioc, "%s: MPT3_IOC_DONE_RESET\n", __func__));
- 	if ((!ioc->is_driver_loading) && !(disable_discovery > 0 &&
- 					   !ioc->sas_hba.num_phys)) {
-+		_scsih_sas_port_refresh(ioc);
- 		_scsih_prep_device_scan(ioc);
- 		_scsih_create_enclosure_list_after_reset(ioc);
- 		_scsih_search_responding_sas_devices(ioc);
-@@ -9837,6 +10174,7 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
- 			ssleep(1);
- 		}
- 		_scsih_remove_unresponding_devices(ioc);
-+		_scsih_del_dirty_port_entries(ioc);
- 		_scsih_scan_for_devices_after_reset(ioc);
- 		_scsih_set_nvme_max_shutdown_latency(ioc);
- 		break;
+@@ -81,6 +99,49 @@ _transport_sas_node_find_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
+ 		    sas_address, port);
+ }
+ 
++/**
++ * _transport_get_port_id_by_rphy - Get Port number from rphy object
++ * @ioc: per adapter object
++ * @rphy: sas_rphy object
++ *
++ * Returns Port number.
++ */
++static u8
++_transport_get_port_id_by_rphy(struct MPT3SAS_ADAPTER *ioc,
++	struct sas_rphy *rphy)
++{
++	struct _sas_node *sas_expander;
++	struct _sas_device *sas_device;
++	unsigned long flags;
++	u8 port_id = 0xFF;
++
++	if (!rphy)
++		return port_id;
++
++	if (rphy->identify.device_type == SAS_EDGE_EXPANDER_DEVICE ||
++	    rphy->identify.device_type == SAS_FANOUT_EXPANDER_DEVICE) {
++		spin_lock_irqsave(&ioc->sas_node_lock, flags);
++		list_for_each_entry(sas_expander,
++		    &ioc->sas_expander_list, list) {
++			if (sas_expander->rphy == rphy) {
++				port_id = sas_expander->port->port_id;
++				break;
++			}
++		}
++		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
++	} else if (rphy->identify.device_type == SAS_END_DEVICE) {
++		spin_lock_irqsave(&ioc->sas_device_lock, flags);
++		sas_device = __mpt3sas_get_sdev_by_rphy(ioc, rphy);
++		if (sas_device) {
++			port_id = sas_device->port->port_id;
++			sas_device_put(sas_device);
++		}
++		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
++	}
++
++	return port_id;
++}
++
+ /**
+  * _transport_convert_phy_link_rate -
+  * @link_rate: link rate returned from mpt firmware
+@@ -289,7 +350,7 @@ struct rep_manu_reply {
+  */
+ static int
+ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
+-	u64 sas_address, struct sas_expander_device *edev)
++	u64 sas_address, struct sas_expander_device *edev, u8 port_id)
+ {
+ 	Mpi2SmpPassthroughRequest_t *mpi_request;
+ 	Mpi2SmpPassthroughReply_t *mpi_reply;
+@@ -356,7 +417,7 @@ _transport_expander_report_manufacture(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	memset(mpi_request, 0, sizeof(Mpi2SmpPassthroughRequest_t));
+ 	mpi_request->Function = MPI2_FUNCTION_SMP_PASSTHROUGH;
+-	mpi_request->PhysicalPort = 0xFF;
++	mpi_request->PhysicalPort = port_id;
+ 	mpi_request->SASAddress = cpu_to_le64(sas_address);
+ 	mpi_request->RequestDataLength = cpu_to_le16(data_out_sz);
+ 	psge = &mpi_request->SGL;
+@@ -772,7 +833,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	    MPI2_SAS_DEVICE_INFO_FANOUT_EXPANDER)
+ 		_transport_expander_report_manufacture(ioc,
+ 		    mpt3sas_port->remote_identify.sas_address,
+-		    rphy_to_expander_device(rphy));
++		    rphy_to_expander_device(rphy), hba_port->port_id);
+ 	return mpt3sas_port;
+ 
+  out_fail:
+@@ -923,6 +984,7 @@ mpt3sas_transport_add_host_phy(struct MPT3SAS_ADAPTER *ioc, struct _sas_phy
+ 	    phy_pg0.ProgrammedLinkRate & MPI2_SAS_PRATE_MIN_RATE_MASK);
+ 	phy->maximum_linkrate = _transport_convert_phy_link_rate(
+ 	    phy_pg0.ProgrammedLinkRate >> 4);
++	phy->hostdata = mpt3sas_phy->port;
+ 
+ 	if ((sas_phy_add(phy))) {
+ 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
+@@ -993,6 +1055,7 @@ mpt3sas_transport_add_expander_phy(struct MPT3SAS_ADAPTER *ioc, struct _sas_phy
+ 	    expander_pg1.ProgrammedLinkRate & MPI2_SAS_PRATE_MIN_RATE_MASK);
+ 	phy->maximum_linkrate = _transport_convert_phy_link_rate(
+ 	    expander_pg1.ProgrammedLinkRate >> 4);
++	phy->hostdata = mpt3sas_phy->port;
+ 
+ 	if ((sas_phy_add(phy))) {
+ 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
+@@ -1197,7 +1260,7 @@ _transport_get_expander_phy_error_log(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	memset(mpi_request, 0, sizeof(Mpi2SmpPassthroughRequest_t));
+ 	mpi_request->Function = MPI2_FUNCTION_SMP_PASSTHROUGH;
+-	mpi_request->PhysicalPort = 0xFF;
++	mpi_request->PhysicalPort = _transport_get_port_id_by_sas_phy(phy);
+ 	mpi_request->VF_ID = 0; /* TODO */
+ 	mpi_request->VP_ID = 0;
+ 	mpi_request->SASAddress = cpu_to_le64(phy->identify.sas_address);
+@@ -1493,7 +1556,7 @@ _transport_expander_phy_control(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	memset(mpi_request, 0, sizeof(Mpi2SmpPassthroughRequest_t));
+ 	mpi_request->Function = MPI2_FUNCTION_SMP_PASSTHROUGH;
+-	mpi_request->PhysicalPort = 0xFF;
++	mpi_request->PhysicalPort = _transport_get_port_id_by_sas_phy(phy);
+ 	mpi_request->VF_ID = 0; /* TODO */
+ 	mpi_request->VP_ID = 0;
+ 	mpi_request->SASAddress = cpu_to_le64(phy->identify.sas_address);
+@@ -1983,7 +2046,7 @@ _transport_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 
+ 	memset(mpi_request, 0, sizeof(Mpi2SmpPassthroughRequest_t));
+ 	mpi_request->Function = MPI2_FUNCTION_SMP_PASSTHROUGH;
+-	mpi_request->PhysicalPort = 0xFF;
++	mpi_request->PhysicalPort = _transport_get_port_id_by_rphy(ioc, rphy);
+ 	mpi_request->SASAddress = (rphy) ?
+ 	    cpu_to_le64(rphy->identify.sas_address) :
+ 	    cpu_to_le64(ioc->sas_hba.sas_address);
 -- 
 2.18.4
 
 
---0000000000000e37b505b2a6bf73
+--000000000000391d2d05b2a6bf80
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -637,13 +348,13 @@ JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
 AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
 YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
 MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-NQBIWibQVsUIzuc6tSaJmQFTahbi8vqFX8otmnMf9UQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODQzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+NXnfcUforGVkMnISm8biQGgXqOjwjyjYRLSNfkH2ifcwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODQ2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
 AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBACM9teJQRNfLL1OJQbhh
-CrqKkrbgT7MHINZPb7eYDkC8KzRo/mCLs+NcvkgcBI0+1a0VwW1ttTMF+vbGj/uggPEMnYaGeV2K
-fxMNswhGWmwx+FkKTnlORtx2FNx5neggWTDXAGdQ1YbCQ00Q56fQ5WCwuRPCsuZ14Q43k8nCsHuT
-GRVjRxUusrlVItGeC/Kwx3JHyfTDxUx7f8t/0ATFlbnjrmmmHbzQvMPmkZ1lHptRadBg4lSlh7ZS
-nIS1f6Gb+p1L+jlpjq2Gf4M1zi7+c0T2WJI8/TKDYRL9iSelhWglFhjyMxvgRNtDc7ZJhTxM+hWJ
-NdyLQBQHIOTUA/RVvz0=
---0000000000000e37b505b2a6bf73--
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBACr1nlnH6BPLaMKQdkhR
+nY7X/XW4ywbq6ts/TLalTLZAg/UFTffCj9ICerUbiBI04H2NN6ewUZt5NmqJ4b9Jfke7HUUbWXJI
+pL1rGq27y54CJSPGhXYXatNp3vezjJSdPRwuLBvO92FR+UvbbKW5ABvklKVY0cegPlmUvvhnkbUO
+uIOeLDrRhoesLk3/i29rfeCnkxMsNh7OkclSohwO/OuRZctTBCHSWvwzM2G7YneYXyNxhQoWkMIO
+Qkwd752If5ARaomHCz84X44lR0J5zKUOR54f1LZCyQ7RCAoygxngN0kLrF0sCNpHZVlAridDgySD
+LErZy2RpbNUqB7C/fqY=
+--000000000000391d2d05b2a6bf80--
