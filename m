@@ -8,226 +8,216 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE46C55178
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B1AC388F9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BEDF20878
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21C47221F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GV3qcI5b"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EZR8t4Pe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1751854AbgJ0NI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1751855AbgJ0NI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 27 Oct 2020 09:08:29 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:35616 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751850AbgJ0NI1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:27 -0400
-Received: by mail-pg1-f195.google.com with SMTP id f38so771460pgm.2
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:26 -0700 (PDT)
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:36120 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751852AbgJ0NI3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:29 -0400
+Received: by mail-pf1-f196.google.com with SMTP id w65so892058pfd.3
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=tvUmMYlnP+gYRbgT5nceIyw0tTb29ZfCxVnLpiGPYXg=;
-        b=GV3qcI5bSVHuMjsYlXWHbnj/HHkiSGbH7B5QtuI9xBSTWBVsZA1vl4PnnEftqThzOt
-         MpjBLFGEr18P+Bh7ulNWhpU/Z5UWyFOamXC35Vw5YakvUI/nAtYKlFvELj5E2yWSJpaY
-         ZAfhzC8JG9ccv5qsqSjHZjnCdRTq19GCqulT4=
+        bh=EB6w1aPi1yQgyJ+y4xL8vc2ZpvtpweX43ktsioWOK5E=;
+        b=EZR8t4Pe+h4jC6mWX2shIbi7WnYQUhTXKWM05TRwk2d5GHV1o4B5fzbSeSrzwSG8MP
+         felmdYnuqXzViUaq2YC0mHDiawrEkzMUJxk8wUpZG2Ds9WoPmRF3yNJCVTkGv4Ytm3WG
+         bZRhVOGwlVC/AywkH5HpQvlU/RNNnozdvnsNA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=tvUmMYlnP+gYRbgT5nceIyw0tTb29ZfCxVnLpiGPYXg=;
-        b=OUogIPF7utRwJ629DhLHbJS4qB8LTdUEK/KQUNMBr/5TrE50jBU2BCY8MPvOr1Hwe6
-         HBd+//PDNEpiC2KGjHc9x5GX/tDuAqypjO4u0Gd3xBRcYhm+yOhxsSzNs28khnHbajD0
-         DMvwTPSMKXiNfrIxi0aCOYm9JjvCKf8BZN3ITeHfhEGz8vTbgGRQNKawwxmiNDl6GVEo
-         c8rMQbb0Muo10Gj+A9cssmypKt1PdBMoVGxOLfW4+8mT3EKtDv0GwKTjUhC5dmciXWUG
-         fj3+nnE/n9phH036py4WOs6bRZshB+DA0OkngO0SaD4D/Zee6BvcGgLUY8zWkFSTGrUV
-         GXFA==
-X-Gm-Message-State: AOAM531kH9GqD5HNdD1G5qxHDmcpluHGd5VjgH1MaHu12vrKxJYoFme9
-        v/S42J96PNPbzdjUUH/6Be1y6mkiw86OSA==
-X-Google-Smtp-Source: ABdhPJzPEOexgr8VpPYqoCRtbehOc5KaB6kE1ujyiouQnJd/g14NupiN23EQPvjxEBXKOvNo0QhowQ==
-X-Received: by 2002:a62:8847:0:b029:15b:51c6:6a10 with SMTP id l68-20020a6288470000b029015b51c66a10mr2304552pfd.69.1603804105436;
-        Tue, 27 Oct 2020 06:08:25 -0700 (PDT)
+        bh=EB6w1aPi1yQgyJ+y4xL8vc2ZpvtpweX43ktsioWOK5E=;
+        b=mYUU9RNonKVdgUhJNZmD0tRjF66cGtrhusWmg5JXC4fqcxqUDaN+FJX9mdkmLR6++j
+         +RE0ZXxISBpvGb+3VhxkgvBjqSY8rqJhyckI676jA4fdeql+46WkqCNSJePQ0vTQR7VE
+         qzQLhRpHlTKjrdAUHCGcIz+XuDQyLSvaEF914B+tM/JFqMF4tZOu61ZqKyfgFhnntHoq
+         wzOtyEUfKOS6PYOzyZjjvKtPawIDeJxas+uChp6nyd7yZ6W0cOy6wEaNCeC8Q8erNUgx
+         PxLpeyaFjLz5U+r8VQ/f8FN+0etX3NjwYssg0HZ7i9bOhitWsxkKvQhs7Mg/mgspNofE
+         OE/Q==
+X-Gm-Message-State: AOAM533mz/Dw+mpoF59R3ksIkwfyXzktA0aYIx6ALSKIyoco1bO0N5r+
+        eYo7RLVWtpZlHhOSHGQBSBw1sA==
+X-Google-Smtp-Source: ABdhPJzwryTPTW99+C63aAG5Wgb8gOhYopGV/XXqYPX/WrC7HxPs9bVKuibFUbBa+TFuW3B6SCF3Xg==
+X-Received: by 2002:a63:ff5d:: with SMTP id s29mr1946179pgk.442.1603804108180;
+        Tue, 27 Oct 2020 06:08:28 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.22
+        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2020 06:08:24 -0700 (PDT)
+        Tue, 27 Oct 2020 06:08:27 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v1 02/14] mpt3sas: Allocate memory for hba_port objects
-Date:   Tue, 27 Oct 2020 18:38:35 +0530
-Message-Id: <20201027130847.9962-3-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v1 03/14] mpt3sas: Rearrange _scsih_mark_responding_sas_device()
+Date:   Tue, 27 Oct 2020 18:38:36 +0530
+Message-Id: <20201027130847.9962-4-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 References: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000006380a05b2a6be7a"
+        boundary="0000000000002fa17505b2a6be8a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000006380a05b2a6be7a
+--0000000000002fa17505b2a6be8a
 
-Allocate hba_port object whenever a new HBA's wide/narrow
-port is identified while processing the SASIOUnitPage0's
-phy data and add this object to port_table_list.
-And deallocate these objects during driver unload.
+Rearrange _scsih_mark_responding_sas_device function for better
+code management. No functional change.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
 v1:
 No change.
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 73 ++++++++++++++++++++++++++--
- 1 file changed, 69 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 116 +++++++++++++--------------
+ 1 file changed, 58 insertions(+), 58 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index db9c816..a40fa7e 100644
+index a40fa7e..e8ffe1e 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -356,6 +356,30 @@ _scsih_srch_boot_encl_slot(u64 enclosure_logical_id, u16 slot_number,
- 	    SlotNumber)) ? 1 : 0;
- }
+@@ -8742,69 +8742,69 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 	}
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
+-		if ((sas_device->sas_address == le64_to_cpu(
+-		    sas_device_pg0->SASAddress)) && (sas_device->slot ==
+-		    le16_to_cpu(sas_device_pg0->Slot))) {
+-			sas_device->responding = 1;
+-			starget = sas_device->starget;
+-			if (starget && starget->hostdata) {
+-				sas_target_priv_data = starget->hostdata;
+-				sas_target_priv_data->tm_busy = 0;
+-				sas_target_priv_data->deleted = 0;
+-			} else
+-				sas_target_priv_data = NULL;
+-			if (starget) {
+-				starget_printk(KERN_INFO, starget,
+-				    "handle(0x%04x), sas_addr(0x%016llx)\n",
+-				    le16_to_cpu(sas_device_pg0->DevHandle),
+-				    (unsigned long long)
+-				    sas_device->sas_address);
++		if (sas_device->sas_address != le64_to_cpu(
++		    sas_device_pg0->SASAddress))
++			continue;
++		if (sas_device->slot != le16_to_cpu(sas_device_pg0->Slot))
++			continue;
++		sas_device->responding = 1;
++		starget = sas_device->starget;
++		if (starget && starget->hostdata) {
++			sas_target_priv_data = starget->hostdata;
++			sas_target_priv_data->tm_busy = 0;
++			sas_target_priv_data->deleted = 0;
++		} else
++			sas_target_priv_data = NULL;
++		if (starget) {
++			starget_printk(KERN_INFO, starget,
++			    "handle(0x%04x), sas_addr(0x%016llx)\n",
++			    le16_to_cpu(sas_device_pg0->DevHandle),
++			    (unsigned long long)
++			    sas_device->sas_address);
  
-+/**
-+ * mpt3sas_get_port_by_id - get hba port entry corresponding to provided
-+ *			  port number from port list
-+ * @ioc: per adapter object
-+ * @port_id: port number
-+ *
-+ * Search for hba port entry corresponding to provided port number,
-+ * if available return port object otherwise return NULL.
-+ */
-+struct hba_port *
-+mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc, u8 port_id)
-+{
-+	struct hba_port *port, *port_next;
-+
-+	list_for_each_entry_safe(port, port_next,
-+	    &ioc->port_table_list, list) {
-+		if (port->port_id == port_id &&
-+		    !(port->flags & HBA_PORT_FLAG_DIRTY_PORT))
-+			return port;
-+	}
-+
-+	return NULL;
-+}
-+
- /**
-  * _scsih_is_boot_device - search for matching boot device.
-  * @sas_address: sas address
-@@ -5732,7 +5756,8 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
- 	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2SasIOUnitPage0_t *sas_iounit_pg0 = NULL;
- 	u16 attached_handle;
--	u8 link_rate;
-+	u8 link_rate, port_id;
-+	struct hba_port *port;
- 
- 	dtmprintk(ioc,
- 		  ioc_info(ioc, "updating handles for sas_host(0x%016llx)\n",
-@@ -5756,13 +5781,28 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
- 	for (i = 0; i < ioc->sas_hba.num_phys ; i++) {
- 		link_rate = sas_iounit_pg0->PhyData[i].NegotiatedLinkRate >> 4;
- 		if (i == 0)
--			ioc->sas_hba.handle = le16_to_cpu(sas_iounit_pg0->
--			    PhyData[0].ControllerDevHandle);
-+			ioc->sas_hba.handle = le16_to_cpu(
-+			    sas_iounit_pg0->PhyData[0].ControllerDevHandle);
-+		port_id = sas_iounit_pg0->PhyData[i].Port;
-+		if (!(mpt3sas_get_port_by_id(ioc, port_id))) {
-+			port = kzalloc(sizeof(struct hba_port), GFP_KERNEL);
-+			if (!port)
-+				goto out;
-+
-+			port->port_id = port_id;
-+			ioc_info(ioc,
-+			    "hba_port entry: %p, port: %d is added to hba_port list\n",
-+			    port, port->port_id);
-+			if (ioc->shost_recovery)
-+				port->flags = HBA_PORT_FLAG_NEW_PORT;
-+			list_add_tail(&port->list, &ioc->port_table_list);
+-				if (sas_device->enclosure_handle != 0)
+-					starget_printk(KERN_INFO, starget,
+-					 "enclosure logical id(0x%016llx),"
+-					 " slot(%d)\n",
+-					 (unsigned long long)
+-					 sas_device->enclosure_logical_id,
+-					 sas_device->slot);
+-			}
+-			if (le16_to_cpu(sas_device_pg0->Flags) &
+-			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+-				sas_device->enclosure_level =
+-				   sas_device_pg0->EnclosureLevel;
+-				memcpy(&sas_device->connector_name[0],
+-					&sas_device_pg0->ConnectorName[0], 4);
+-			} else {
+-				sas_device->enclosure_level = 0;
+-				sas_device->connector_name[0] = '\0';
+-			}
++			if (sas_device->enclosure_handle != 0)
++				starget_printk(KERN_INFO, starget,
++				 "enclosure logical id(0x%016llx), slot(%d)\n",
++				 (unsigned long long)
++				 sas_device->enclosure_logical_id,
++				 sas_device->slot);
 +		}
- 		ioc->sas_hba.phy[i].handle = ioc->sas_hba.handle;
- 		attached_handle = le16_to_cpu(sas_iounit_pg0->PhyData[i].
- 		    AttachedDevHandle);
- 		if (attached_handle && link_rate < MPI2_SAS_NEG_LINK_RATE_1_5)
- 			link_rate = MPI2_SAS_NEG_LINK_RATE_1_5;
-+		ioc->sas_hba.phy[i].port = mpt3sas_get_port_by_id(ioc, port_id);
- 		mpt3sas_transport_update_links(ioc, ioc->sas_hba.sas_address,
- 		    attached_handle, i, link_rate);
- 	}
-@@ -5789,7 +5829,8 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
- 	u16 ioc_status;
- 	u16 sz;
- 	u8 device_missing_delay;
--	u8 num_phys;
-+	u8 num_phys, port_id;
-+	struct hba_port *port;
- 
- 	mpt3sas_config_get_number_hba_phys(ioc, &num_phys);
- 	if (!num_phys) {
-@@ -5882,8 +5923,24 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
- 		if (i == 0)
- 			ioc->sas_hba.handle = le16_to_cpu(sas_iounit_pg0->
- 			    PhyData[0].ControllerDevHandle);
-+
-+		port_id = sas_iounit_pg0->PhyData[i].Port;
-+		if (!(mpt3sas_get_port_by_id(ioc, port_id))) {
-+			port = kzalloc(sizeof(struct hba_port), GFP_KERNEL);
-+			if (!port)
-+				goto out;
-+
-+			port->port_id = port_id;
-+			ioc_info(ioc,
-+			   "hba_port entry: %p, port: %d is added to hba_port list\n",
-+			   port, port->port_id);
-+			list_add_tail(&port->list,
-+			    &ioc->port_table_list);
++		if (le16_to_cpu(sas_device_pg0->Flags) &
++		      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
++			sas_device->enclosure_level =
++			   sas_device_pg0->EnclosureLevel;
++			memcpy(&sas_device->connector_name[0],
++				&sas_device_pg0->ConnectorName[0], 4);
++		} else {
++			sas_device->enclosure_level = 0;
++			sas_device->connector_name[0] = '\0';
 +		}
-+
- 		ioc->sas_hba.phy[i].handle = ioc->sas_hba.handle;
- 		ioc->sas_hba.phy[i].phy_id = i;
-+		ioc->sas_hba.phy[i].port = mpt3sas_get_port_by_id(ioc, port_id);
- 		mpt3sas_transport_add_host_phy(ioc, &ioc->sas_hba.phy[i],
- 		    phy_pg0, ioc->sas_hba.parent_dev);
+ 
+-			sas_device->enclosure_handle =
+-				le16_to_cpu(sas_device_pg0->EnclosureHandle);
+-			sas_device->is_chassis_slot_valid = 0;
+-			if (enclosure_dev) {
+-				sas_device->enclosure_logical_id = le64_to_cpu(
+-					enclosure_dev->pg0.EnclosureLogicalID);
+-				if (le16_to_cpu(enclosure_dev->pg0.Flags) &
+-				    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
+-					sas_device->is_chassis_slot_valid = 1;
+-					sas_device->chassis_slot =
+-						enclosure_dev->pg0.ChassisSlot;
+-				}
++		sas_device->enclosure_handle =
++			le16_to_cpu(sas_device_pg0->EnclosureHandle);
++		sas_device->is_chassis_slot_valid = 0;
++		if (enclosure_dev) {
++			sas_device->enclosure_logical_id = le64_to_cpu(
++				enclosure_dev->pg0.EnclosureLogicalID);
++			if (le16_to_cpu(enclosure_dev->pg0.Flags) &
++			    MPI2_SAS_ENCLS0_FLAGS_CHASSIS_SLOT_VALID) {
++				sas_device->is_chassis_slot_valid = 1;
++				sas_device->chassis_slot =
++					enclosure_dev->pg0.ChassisSlot;
+ 			}
++		}
+ 
+-			if (sas_device->handle == le16_to_cpu(
+-			    sas_device_pg0->DevHandle))
+-				goto out;
+-			pr_info("\thandle changed from(0x%04x)!!!\n",
+-			    sas_device->handle);
+-			sas_device->handle = le16_to_cpu(
+-			    sas_device_pg0->DevHandle);
+-			if (sas_target_priv_data)
+-				sas_target_priv_data->handle =
+-				    le16_to_cpu(sas_device_pg0->DevHandle);
++		if (sas_device->handle == le16_to_cpu(
++		    sas_device_pg0->DevHandle))
+ 			goto out;
+-		}
++		pr_info("\thandle changed from(0x%04x)!!!\n",
++		    sas_device->handle);
++		sas_device->handle = le16_to_cpu(
++		    sas_device_pg0->DevHandle);
++		if (sas_target_priv_data)
++			sas_target_priv_data->handle =
++			    le16_to_cpu(sas_device_pg0->DevHandle);
++		goto out;
  	}
-@@ -10136,6 +10193,7 @@ static void scsih_remove(struct pci_dev *pdev)
- 	struct workqueue_struct	*wq;
- 	unsigned long flags;
- 	Mpi2ConfigReply_t mpi_reply;
-+	struct hba_port *port, *port_next;
- 
- 	if (_scsih_get_shost_and_ioc(pdev, &shost, &ioc))
- 		return;
-@@ -10198,6 +10256,12 @@ static void scsih_remove(struct pci_dev *pdev)
- 			    mpt3sas_port->remote_identify.sas_address);
- 	}
- 
-+	list_for_each_entry_safe(port, port_next,
-+	    &ioc->port_table_list, list) {
-+		list_del(&port->list);
-+		kfree(port);
-+	}
-+
- 	/* free phys attached to the sas_host */
- 	if (ioc->sas_hba.num_phys) {
- 		kfree(ioc->sas_hba.phy);
-@@ -10987,6 +11051,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&ioc->delayed_event_ack_list);
- 	INIT_LIST_HEAD(&ioc->delayed_tr_volume_list);
- 	INIT_LIST_HEAD(&ioc->reply_queue_list);
-+	INIT_LIST_HEAD(&ioc->port_table_list);
- 
- 	sprintf(ioc->name, "%s_cm%d", ioc->driver_name, ioc->id);
- 
+  out:
+ 	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
 -- 
 2.18.4
 
 
---00000000000006380a05b2a6be7a
+--0000000000002fa17505b2a6be8a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -298,13 +288,13 @@ JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
 AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
 YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
 MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-Tamuql3TGzCMFPKOXrf+WvMZrzRO7XXCsSAv/vrprTEwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODI1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+vVNk0ff/vw0N5lWjzxwAkgrVvgoCZ3burlF8orYkoLYwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODI4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
 AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAFOsx8f2MOu5d0YWWGqz
-AMbJYlzcsK+515Bkght28zyEZaIv7FiPvocsFkMB9gYqLseyLt9ArbBIj92kbLGHj7Tt+tiTuCmu
-BrjhxF6tC4tjG2K7sY4YNtQhbmo0SbvlQd7/pnEDsjjXFGTHMUlwkTFiZ0LzI+f+ZqqU5pV9/PvT
-M8F1Y8RpjIlrxwWJHbHjLRKdNi4GgU8AjjPr93nRLen+JKwuYa5BHAijcnkUOkpneDBx1jcl8/ID
-3G+VZT9Rtijwlx0gHCDCSe0rwssrlMRsSarO+HrshGs3MaH72t8AbwAH6Ip23lCv/RgFYMXJrb//
-/OPIm9yj6NyjvfjcZPw=
---00000000000006380a05b2a6be7a--
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBALmZbGdGI2M5fCiODGgi
+j9ptl8dO7haCuNDf2TqvYc8HT+uROgnwkWZpMoJ/ELhIYYWVef/GiTXwSpDEGZzuNUxzslQwUPKU
+qvEDLUfRejZm+dYOq0zxeWOuhCdWl29r6Mmzj95Wqw0EEyiewhjWjXsID2CdvVoHz6VBOilEPSvg
+iA7hdPyqskjZ+b7v1X4pkUpY4iefO7as9fib3ZVHiw+3TKTm3HkbZyd3k7RsETbkh66mwx2v8QSs
+NvdFUALQJ9gcQvt6BQkziXLEm9InuxIYokom8XzLkCAVU7hMRhCGdJXqoTTUQRALToy/KjVverPo
+rD/aj2hpjTzySiHzeCU=
+--0000000000002fa17505b2a6be8a--
