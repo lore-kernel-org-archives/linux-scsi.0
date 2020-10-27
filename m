@@ -2,92 +2,124 @@ Return-Path: <SRS0=LZqT=EC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA121C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E32BBC4363A
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:17:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 589132151B
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:14:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A11EC2072E
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:17:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Qr12oq5H"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mtGpzp6H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504416AbgJ0COW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 22:14:22 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:58578 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2504402AbgJ0COV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 22:14:21 -0400
-X-UUID: 9029e7a3ed9345c881696fca767fdc6d-20201027
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=yn+aDxe0MyCOkeF7ZShIwLI84elbg5Pk2VP2K10B4IA=;
-        b=Qr12oq5HaffqklVXt0NKNJm/Ifuup7tF+1kT5ToEuQhXFOJFXsBvV/LyUbrjPK2pb52F9frhYlPD+I/gZyq26V0gaB+WrBfbLrBQAa/cGWcayuSr82g0aYHHAVg4FPz02FALD38lUK8pCLh+rX/yAmr1gRIgthQjEJpXFj/HV+I=;
-X-UUID: 9029e7a3ed9345c881696fca767fdc6d-20201027
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 422591151; Tue, 27 Oct 2020 10:14:18 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 27 Oct 2020 10:14:16 +0800
-Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 27 Oct 2020 10:14:16 +0800
-Message-ID: <1603764857.2104.6.camel@mtkswgap22>
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Keep UFS regulators on when autobkops
- enabled
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Asutosh Das <asutoshd@codeaurora.org>
-CC:     <cang@codeaurora.org>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Bao D. Nguyen" <nguyenb@codeaurora.org>,
-        <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "open list" <linux-kernel@vger.kernel.org>
-Date:   Tue, 27 Oct 2020 10:14:17 +0800
-In-Reply-To: <6fd8e4d88eb331c9f04c74a3581593961f2caf73.1603747748.git.asutoshd@codeaurora.org>
-References: <6fd8e4d88eb331c9f04c74a3581593961f2caf73.1603747748.git.asutoshd@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S2504446AbgJ0CRh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 22:17:37 -0400
+Received: from m42-4.mailgun.net ([69.72.42.4]:47928 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2504442AbgJ0CRg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 22:17:36 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1603765055; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=ZzFhkO2QNn27KCRuwRwy9HGYUS6mSmOvRLivBwN26xE=;
+ b=mtGpzp6HrhPwwIzQLWoGALvpTIBKS9B1eWt++zhSuTlnKy4UTSRoOUI0nkQdmjnQ5JRLq17d
+ tSJJQyqxsVEu8sH3ePLJnty8PacfgrSJYJ29Qvj1XK4XdVXXAd8CLgBUAUa53CYrbfBsyUoB
+ AGgmPoBXGKnFxuvS2tIO0EYQtbs=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 5f97833f7955e2c7cd1033fc (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 27 Oct 2020 02:17:35
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4E101C43382; Tue, 27 Oct 2020 02:17:35 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BDFC6C433C9;
+        Tue, 27 Oct 2020 02:17:34 +0000 (UTC)
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 27 Oct 2020 10:17:34 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org,
+        Jaegeuk Kim <jaegeuk@google.com>
+Subject: Re: [PATCH v4 1/5] scsi: ufs: atomic update for clkgating_enable
+In-Reply-To: <20201026195124.363096-2-jaegeuk@kernel.org>
+References: <20201026195124.363096-1-jaegeuk@kernel.org>
+ <20201026195124.363096-2-jaegeuk@kernel.org>
+Message-ID: <20d1c2ca06e95beb207fd4ba1b61dc80@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGksDQoNCk9uIE1vbiwgMjAyMC0xMC0yNiBhdCAxNDozMSAtMDcwMCwgQXN1dG9zaCBEYXMgd3Jv
-dGU6DQo+IEZyb206ICJCYW8gRC4gTmd1eWVuIiA8bmd1eWVuYkBjb2RlYXVyb3JhLm9yZz4NCj4g
-DQo+IFdoZW4gYmtvcHMgaXMgZW5hYmxlZCwgdGhlIFVGUyBkZXZpY2UgbWF5IGRvIGJrb3BzIGR1
-cmluZyBzdXNwZW5kLg0KPiBXaXRoIGJrb3BzIGVuYWJsZWQgZHVyaW5nIHN1c3BlbmQsIGtlZXAg
-dGhlIHJlZ3VsYXRvcnMNCj4gaW4gYWN0aXZlIG9wZXJhdGlvbiBjb25maWd1cmF0aW9uLCBhbGxv
-d2luZyB0aGUgZGV2aWNlIHRvIGRyYXcNCj4gaGlnaCBwb3dlciB0byBzdXBwb3J0IGJrb3BzIGFu
-ZCBhdm9pZCBvdmVyIGN1cnJlbnQgZXZlbnQuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBCYW8gRC4g
-Tmd1eWVuIDxuZ3V5ZW5iQGNvZGVhdXJvcmEub3JnPg0KPiBTaWduZWQtb2ZmLWJ5OiBBc3V0b3No
-IERhcyA8YXN1dG9zaGRAY29kZWF1cm9yYS5vcmc+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3Vm
-cy91ZnNoY2QuYyB8IDQgKysrLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwg
-MSBkZWxldGlvbigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNk
-LmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+IGluZGV4IDQ3YzU0NGQuLmE5NDU0M2Mg
-MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gKysrIGIvZHJpdmVy
-cy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiBAQCAtODUyMyw3ICs4NTIzLDkgQEAgc3RhdGljIGludCB1
-ZnNoY2Rfc3VzcGVuZChzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBlbnVtIHVmc19wbV9vcCBwbV9vcCkN
-Cj4gIAlpZiAocmV0KQ0KPiAgCQlnb3RvIHNldF9kZXZfYWN0aXZlOw0KPiAgDQo+IC0JdWZzaGNk
-X3ZyZWdfc2V0X2xwbShoYmEpOw0KPiArCS8qIERldmljZSBtYXkgcGVyZm9ybSBia29wcyBpZiBh
-dXRvYmtvcHMgaXMgZW5hYmxlZCAqLw0KPiArCWlmICghaGJhLT5hdXRvX2Jrb3BzX2VuYWJsZWQp
-DQo+ICsJCXVmc2hjZF92cmVnX3NldF9scG0oaGJhKTsNCg0KSWYgYXV0byBia29wcyBpcyBhbGxv
-d2VkIGFuZCBlbmFibGVkIGR1cmluZyBydW50aW1lIHN1c3BlbmQgKGN1cnJlbnRseQ0KYXV0byBi
-a29wcyBpcyBhbGxvdyBpbiBydW50aW1lIHN1c3BlbmQgb25seSwgYW5kIG5vdCBhbGxvd2VkIGlu
-IHN5c3RlbQ0Kc3VzcGVuZCksIGhiYS0+ZGV2X2luZm8uYl9ycG1fZGV2X2ZsdXNoX2NhcGFibGUg
-d291bGQgYmUgdHJ1ZSBhbmQga2VlcA0KdGhlIGN1cnJlbnQgZGV2aWNlIHBvd2VyIG1vZGUsIHNh
-eSBBY3RpdmUgUG93ZXIgTW9kZS4gSW4gdGhpcyBjYXNlLA0KcmVndWxhdG9yIHdvdWxkIG5vdCBi
-ZSBzZXQgYXMgbHBtIG1vZGUgYnkgdWZzaGNkX3ZyZWdfc2V0X2xwbSgpLg0KDQpQbGVhc2UgY29y
-cmVjdCBtZSBpZiBJIHdhcyB3cm9uZy4NCg0KVGhhbmtzLA0KU3RhbmxleSBDaHUNCg0KDQo=
+On 2020-10-27 03:51, Jaegeuk Kim wrote:
+> From: Jaegeuk Kim <jaegeuk@google.com>
+> 
+> When giving a stress test which enables/disables clkgating, we hit 
+> device
+> timeout sometimes. This patch avoids subtle racy condition to address 
+> it.
+> 
+> Note that, this requires a patch to address the device stuck by 
+> REQ_CLKS_OFF in
+> __ufshcd_release().
+> 
+> The fix is "scsi: ufs: avoid to call REQ_CLKS_OFF to CLKS_OFF".
 
+Why don't you just squash the fix into this one?
+
+Thanks,
+
+Can Guo.
+
+> 
+> Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index cc8d5f0c3fdc..6c9269bffcbd 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1808,19 +1808,19 @@ static ssize_t
+> ufshcd_clkgate_enable_store(struct device *dev,
+>  		return -EINVAL;
+> 
+>  	value = !!value;
+> +
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	if (value == hba->clk_gating.is_enabled)
+>  		goto out;
+> 
+> -	if (value) {
+> -		ufshcd_release(hba);
+> -	} else {
+> -		spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (value)
+> +		__ufshcd_release(hba);
+> +	else
+>  		hba->clk_gating.active_reqs++;
+> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	}
+> 
+>  	hba->clk_gating.is_enabled = value;
+>  out:
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  	return count;
+>  }
