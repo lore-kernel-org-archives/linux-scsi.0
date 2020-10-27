@@ -8,219 +8,221 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E57CFC55178
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 293C5C55178
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B63A20878
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAD7320878
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VatoX5sB"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fZsA3uBB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1751863AbgJ0NIi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Oct 2020 09:08:38 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:35050 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751852AbgJ0NIh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:37 -0400
-Received: by mail-pj1-f67.google.com with SMTP id h4so727342pjk.0
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:37 -0700 (PDT)
+        id S1751865AbgJ0NIl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Oct 2020 09:08:41 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:45345 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751852AbgJ0NIl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:41 -0400
+Received: by mail-pg1-f196.google.com with SMTP id 15so745118pgd.12
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UFKbK3fmePLQwdezNuusczqmTgVUm950gOjWkZChlKE=;
-        b=VatoX5sBDgJVG0mvkwBEpcrPTSIje08fPJf61JhHdZL9ta5443N1w6aNYWWwNY0Jcq
-         M1sEvs1zXeqI4REQVXA9lGGtN23HwJUcUZcBMFpdOf9LHF2JWjbLBK2Aq+/go4Oakcr+
-         RKjiPRyT4t4aA9lDJpRkGaOPxJ7P3Vvej+f0M=
+        bh=hfqCKRckxrrzOwggH/TOoty5GuNnaDCeUHf8tUcMNjQ=;
+        b=fZsA3uBBte8o59It44IPXQ88CgRSqlgE784gkz94HxGMau4atho2iokkxCW7lY2l7R
+         GCf1sNydZT7T3B7GmmRp/DiSttSEz74jvRlVVokYCDWWVhHsEtBRc1znkXdkNLegseZ1
+         oa9YCT4PMcHtADE2N0RDBeFHmPcqr2UTGsPSM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=UFKbK3fmePLQwdezNuusczqmTgVUm950gOjWkZChlKE=;
-        b=iFwIIdJ/HmG8zHDyLze66Jcoym7jF8JqxxVgW3scZYNF5frXsIqSewYPgKhG/e0wEF
-         /J5UJXaeJs0toYTbHYp9U5JklHp/Zy88uGzLil3c6wPrVYWaHfJJK240GS/aEqUqbRW1
-         j/edirWSFjn0ARCtab9ccsC/x0Mv6uZGcO/QLkK1qpPDG2EJONKEVXCVneutI7H2j0g9
-         F7Dd/Wed+RMtwyVFQ9w77PzEx3iX37NTwi9RUftiCRYqF/Aw0rr1VvW21kRpsLL6zgAf
-         CPrSZLd3Vs7nM0snpo/BRgG3tjFOpKU/b5a/AomobesYUgEn3Wr1MNVwhcIAMTQ6D0IP
-         upSw==
-X-Gm-Message-State: AOAM531tslLtOOig02y6at+yNeOALSyA9aAFXoVODUpRateA/TGGQVX/
-        bgIodt+vNPcRlSne5e89Dw5Rpw==
-X-Google-Smtp-Source: ABdhPJwOwpem6YhbXuezbQ4a7jyo+3NnefUrb3idWMAaj0t54VCndkLkEhQAFIqfRcqXelZaWeMGWw==
-X-Received: by 2002:a17:902:c697:b029:d3:df24:163e with SMTP id r23-20020a170902c697b02900d3df24163emr2252471plx.18.1603804116997;
-        Tue, 27 Oct 2020 06:08:36 -0700 (PDT)
+        bh=hfqCKRckxrrzOwggH/TOoty5GuNnaDCeUHf8tUcMNjQ=;
+        b=TNk5PIe6uQLk61HnpZAajpEpGVEFKQkzmV5FTV6YfniXIIGpeMRE2/33usrCezeGBT
+         /UX/4DSI2uQrpeJlq4vyoq9QvnRBR8PU69gnnFP/h2kzvCL11WABJRxY+Vwr/dAhxS3V
+         I5Rwlkr4xOVSx3WqxD4Xd7Ls1afOYbHz7z5F60d6pzPPrYCmlh1NHthDJ9Ow7W+Cuaju
+         uIdofQI0jvoZftnNrUXUZzIz72p3U7yVf4DDoF6g2a9+xwmHz+Sw5ztxvE1wrLNBVQCy
+         zd5jNPi67wSa9Be6AU5YvYXv7Gj0za2Mc3AeRP04LnBgHjT84Orqbbzq5IFeRV0eHGfy
+         h0cg==
+X-Gm-Message-State: AOAM532xGwufJT9w6tI9TtD799kH4jxe3Xwio27fGZw94/+U7enTLsKw
+        qxyUVbPHjtVeVqIrGZJj1XI6OQ==
+X-Google-Smtp-Source: ABdhPJy+e5igyUqq7cNuQBUdgYGfOnVYozCJrRP0i1zHQJ0egQO8MzfEWNpfecipjpe4w4CFsHm4pg==
+X-Received: by 2002:a63:1d53:: with SMTP id d19mr1883905pgm.289.1603804119810;
+        Tue, 27 Oct 2020 06:08:39 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.34
+        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2020 06:08:36 -0700 (PDT)
+        Tue, 27 Oct 2020 06:08:39 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v1 06/14] mpt3sas: Rename transport_del_phy_from_an_existing_port
-Date:   Tue, 27 Oct 2020 18:38:39 +0530
-Message-Id: <20201027130847.9962-7-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v1 07/14] mpt3sas: Get sas_device objects using device's rphy
+Date:   Tue, 27 Oct 2020 18:38:40 +0530
+Message-Id: <20201027130847.9962-8-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 References: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000b4e11b05b2a6be7e"
+        boundary="000000000000e0cfb905b2a6be12"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000b4e11b05b2a6be7e
+--000000000000e0cfb905b2a6be12
 
-* Renamed _transport_add_phy_to_an_existing_port to
-  mpt3sas_transport_add_phy_to_an_existing_port &
-  _transport_del_phy_from_an_existing_port to
-  mpt3sas_transport_del_phy_from_an_existing_port,
-  as driver has to call these functions from outside
-  mpt3sas_transport.c file now.
+In below scsi_host_template & sas_function_template callback
+functions, the driver won't have PhysicalPort number information
+to retrieve the sas_device object using SAS Address & PhysicalPort
+number. So, in these callback functions the device's rphy
+object is used to retrieve sas_device object for the device.
 
-* Added extra function argument 'port' of type
-  struct hba_port in above renamed functions.
+.target_alloc,
+.get_enclosure_identifier
+.get_bay_identifier
 
-* Also in above functions, check for portID before
-  adding/removing the phy from the _sas_port object.
-  i.e. add/remove the phy from _sas_port object only
-  if _sas_port's port object and phy's port object
-  are the same.
+When a rphy (of type sas_rphy) object is allocated then it's
+address is saved in corresponding sas_device object's rphy
+field. so in __mpt3sas_get_sdev_by_rphy(), driver loops over
+all the sas_device objects from sas_device_list list to
+retrieve the sas_device objects who's rphy matches with
+provided rphy.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
 v1:
 No change.
 
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  7 +++++
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 35 ++++++++++++++++--------
- 2 files changed, 30 insertions(+), 12 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  5 +++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 41 ++++++++++++++++++++++--
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  7 ++--
+ 3 files changed, 47 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index b5d1fc5..24db627 100644
+index 24db627..047d234 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1811,6 +1811,13 @@ void mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
- 	struct hba_port *port);
- extern struct sas_function_template mpt3sas_transport_functions;
- extern struct scsi_transport_template *mpt3sas_transport_template;
-+void
-+mpt3sas_transport_del_phy_from_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
-+	struct _sas_node *sas_node, struct _sas_phy *mpt3sas_phy);
-+void
-+mpt3sas_transport_add_phy_to_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
-+	struct _sas_node *sas_node, struct _sas_phy *mpt3sas_phy,
-+	u64 sas_address, struct hba_port *port);
- /* trigger data externs */
- void mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
- 	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data);
+@@ -537,6 +537,8 @@ struct _internal_cmd {
+  * @chassis_slot: chassis slot
+  * @is_chassis_slot_valid: chassis slot valid or not
+  * @port: hba port entry containing device's port number info
++ * @rphy: device's sas_rphy address used to identify this device structure in
++ *	target_alloc callback function
+  */
+ struct _sas_device {
+ 	struct list_head list;
+@@ -564,6 +566,7 @@ struct _sas_device {
+ 	u8	connector_name[5];
+ 	struct kref refcount;
+ 	struct hba_port *port;
++	struct sas_rphy *rphy;
+ };
+ 
+ static inline void sas_device_get(struct _sas_device *s)
+@@ -1681,6 +1684,8 @@ void mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc);
+ struct _raid_device *
+ mpt3sas_raid_device_find_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle);
+ void mpt3sas_scsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
++struct _sas_device *
++__mpt3sas_get_sdev_by_rphy(struct MPT3SAS_ADAPTER *ioc, struct sas_rphy *rphy);
+ 
+ /* config shared API */
+ u8 mpt3sas_config_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 4542d66..afb381d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -638,6 +638,44 @@ mpt3sas_get_pdev_from_target(struct MPT3SAS_ADAPTER *ioc,
+ 	return ret;
+ }
+ 
++
++/**
++ * __mpt3sas_get_sdev_by_rphy - sas device search
++ * @ioc: per adapter object
++ * @rphy: sas_rphy pointer
++ *
++ * Context: This function will acquire ioc->sas_device_lock and will release
++ * before returning the sas_device object.
++ *
++ * This searches for sas_device from rphy object
++ * then return sas_device object.
++ */
++struct _sas_device *
++__mpt3sas_get_sdev_by_rphy(struct MPT3SAS_ADAPTER *ioc,
++	struct sas_rphy *rphy)
++{
++	struct _sas_device *sas_device;
++
++	assert_spin_locked(&ioc->sas_device_lock);
++
++	list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
++		if (sas_device->rphy != rphy)
++			continue;
++		sas_device_get(sas_device);
++		return sas_device;
++	}
++
++	sas_device = NULL;
++	list_for_each_entry(sas_device, &ioc->sas_device_init_list, list) {
++		if (sas_device->rphy != rphy)
++			continue;
++		sas_device_get(sas_device);
++		return sas_device;
++	}
++
++	return NULL;
++}
++
+ /**
+  * mpt3sas_get_sdev_by_addr - get _sas_device object corresponding to provided
+  *				sas address from sas_device_list list
+@@ -1815,8 +1853,7 @@ scsih_target_alloc(struct scsi_target *starget)
+ 	/* sas/sata devices */
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	rphy = dev_to_rphy(starget->dev.parent);
+-	sas_device = __mpt3sas_get_sdev_by_addr(ioc,
+-	   rphy->identify.sas_address, NULL);
++	sas_device = __mpt3sas_get_sdev_by_rphy(ioc, rphy);
+ 
+ 	if (sas_device) {
+ 		sas_target_priv_data->handle = sas_device->handle;
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index 54c004e..560ce32 100644
+index 560ce32..3cc78c2 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -503,16 +503,17 @@ _transport_add_phy(struct MPT3SAS_ADAPTER *ioc, struct _sas_port *mpt3sas_port,
- }
+@@ -733,6 +733,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	mpt3sas_port->port = port;
+ 	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
+ 		rphy = sas_end_device_alloc(port);
++		sas_device->rphy = rphy;
+ 		if (sas_node->handle <= ioc->sas_hba.num_phys)
+ 			hba_port->sas_address = sas_device->sas_address;
+ 	} else {
+@@ -1342,8 +1343,7 @@ _transport_get_enclosure_identifier(struct sas_rphy *rphy, u64 *identifier)
+ 	int rc;
  
- /**
-- * _transport_add_phy_to_an_existing_port - adding new phy to existing port
-+ * mpt3sas_transport_add_phy_to_an_existing_port - adding new phy to existing port
-  * @ioc: per adapter object
-  * @sas_node: sas node object (either expander or sas host)
-  * @mpt3sas_phy: mpt3sas per phy object
-  * @sas_address: sas address of device/expander were phy needs to be added to
-+ * @port: hba port entry
-  */
--static void
--_transport_add_phy_to_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
-+void
-+mpt3sas_transport_add_phy_to_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
- 	struct _sas_node *sas_node, struct _sas_phy *mpt3sas_phy,
--	u64 sas_address)
-+	u64 sas_address, struct hba_port *port)
- {
- 	struct _sas_port *mpt3sas_port;
- 	struct _sas_phy *phy_srch;
-@@ -520,11 +521,16 @@ _transport_add_phy_to_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
- 	if (mpt3sas_phy->phy_belongs_to_port == 1)
- 		return;
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+-	sas_device = __mpt3sas_get_sdev_by_addr(ioc,
+-	    rphy->identify.sas_address, 0);
++	sas_device = __mpt3sas_get_sdev_by_rphy(ioc, rphy);
+ 	if (sas_device) {
+ 		*identifier = sas_device->enclosure_logical_id;
+ 		rc = 0;
+@@ -1372,8 +1372,7 @@ _transport_get_bay_identifier(struct sas_rphy *rphy)
+ 	int rc;
  
-+	if (!port)
-+		return;
-+
- 	list_for_each_entry(mpt3sas_port, &sas_node->sas_port_list,
- 	    port_list) {
- 		if (mpt3sas_port->remote_identify.sas_address !=
- 		    sas_address)
- 			continue;
-+		if (mpt3sas_port->hba_port != port)
-+			continue;
- 		list_for_each_entry(phy_srch, &mpt3sas_port->phy_list,
- 		    port_siblings) {
- 			if (phy_srch == mpt3sas_phy)
-@@ -537,13 +543,13 @@ _transport_add_phy_to_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-- * _transport_del_phy_from_an_existing_port - delete phy from existing port
-+ * mpt3sas_transport_del_phy_from_an_existing_port - delete phy from existing port
-  * @ioc: per adapter object
-  * @sas_node: sas node object (either expander or sas host)
-  * @mpt3sas_phy: mpt3sas per phy object
-  */
--static void
--_transport_del_phy_from_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
-+void
-+mpt3sas_transport_del_phy_from_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
- 	struct _sas_node *sas_node, struct _sas_phy *mpt3sas_phy)
- {
- 	struct _sas_port *mpt3sas_port, *next;
-@@ -559,7 +565,11 @@ _transport_del_phy_from_an_existing_port(struct MPT3SAS_ADAPTER *ioc,
- 			if (phy_srch != mpt3sas_phy)
- 				continue;
- 
--			if (mpt3sas_port->num_phys == 1)
-+			/*
-+			 * Don't delete port during host reset,
-+			 * just delete phy.
-+			 */
-+			if (mpt3sas_port->num_phys == 1 && !ioc->shost_recovery)
- 				_transport_delete_port(ioc, mpt3sas_port);
- 			else
- 				_transport_delete_phy(ioc, mpt3sas_port,
-@@ -590,8 +600,8 @@ _transport_sanity_check(struct MPT3SAS_ADAPTER *ioc, struct _sas_node *sas_node,
- 		if (sas_node->phy[i].port != port)
- 			continue;
- 		if (sas_node->phy[i].phy_belongs_to_port == 1)
--			_transport_del_phy_from_an_existing_port(ioc, sas_node,
--			    &sas_node->phy[i]);
-+			mpt3sas_transport_del_phy_from_an_existing_port(ioc,
-+			    sas_node, &sas_node->phy[i]);
- 	}
- }
- 
-@@ -1040,8 +1050,6 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
- 	if (handle && (link_rate >= MPI2_SAS_NEG_LINK_RATE_1_5)) {
- 		_transport_set_identify(ioc, handle,
- 		    &mpt3sas_phy->remote_identify);
--		_transport_add_phy_to_an_existing_port(ioc, sas_node,
--		    mpt3sas_phy, mpt3sas_phy->remote_identify.sas_address);
- 		if (sas_node->handle <= ioc->sas_hba.num_phys) {
- 			list_for_each_entry(hba_port,
- 			    &ioc->port_table_list, list) {
-@@ -1051,6 +1059,9 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
- 					    (1 << mpt3sas_phy->phy_id);
- 			}
- 		}
-+		mpt3sas_transport_add_phy_to_an_existing_port(ioc, sas_node,
-+		    mpt3sas_phy, mpt3sas_phy->remote_identify.sas_address,
-+		    port);
- 	} else
- 		memset(&mpt3sas_phy->remote_identify, 0 , sizeof(struct
- 		    sas_identify));
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+-	sas_device = __mpt3sas_get_sdev_by_addr(ioc,
+-	    rphy->identify.sas_address, 0);
++	sas_device = __mpt3sas_get_sdev_by_rphy(ioc, rphy);
+ 	if (sas_device) {
+ 		rc = sas_device->slot;
+ 		sas_device_put(sas_device);
 -- 
 2.18.4
 
 
---000000000000b4e11b05b2a6be7e
+--000000000000e0cfb905b2a6be12
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -291,13 +293,13 @@ JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
 AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
 YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
 MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-28Cakx/2H4HdVco+NNPeOMzqmavZqVa8+j3GxB+1BrkwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODM3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+REjfKITQ1lMFLuSrkFudrVVNbuHNrpZFRTaGmTYdOskwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODQwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
 AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAFDX/IoBhel/Wma5RJVD
-zO/Unq+7DZ6Be0cxdX716p26fPMiv9WCOZMdVobgYhRghrOMz9FqB1tvU3E6Qr1+23nbpdSnIV6f
-nntadLZxs8N4GTOvK0KbLNo+G8PaV13Jq1BEbtbjrxTk7Rhv/eE1RAkf6VQ+DqsOZ9GXtaut2XSp
-omIGTDvQbtMhqeXthToAb/gEfotsLZoJYImP53AAqoiZQl6KUUHiM8/RO7eaIqGxd9LNrXS7UE5o
-OwHESSrSi7tgCqsueZMpjaVwRDhhVHLFHKjRmOwGx+ska5IVhdruuClkJviMQ/losoTYnK6++HO4
-MJNGQ4duOEOw4Gk1joQ=
---000000000000b4e11b05b2a6be7e--
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAGNcTSY0HE04Kd/JkF7U
+wBknXjZYpHtbGbYNn7/RxlHVa95tiFE2BxCk5Iq/9V3WYUp5KaO6O+uao8ZtJeMaZbOdyouNJOdd
+vGYgcEjf8dci+o3f7/2vIU7AWppHsr38L29Gx+xfgYJOfsVXAE5m4iMJIMwBx/c7R4Ia+JseiKrG
+/070F+05evIp4SWxCB51W9M9dihRMHwbk8MmTCtbwOoqiMavjjVvZxejKNLwtQSgIeneHMwOaYbL
+rFZm8iau3aC44BZWn8c0yBQGFG+G6n9c2hhxA24Ls63eha7MuJenZQbq9ISRVb7njDhdZdyGzqA2
+6UZlN7pEKf5JY/FmsvA=
+--000000000000e0cfb905b2a6be12--
