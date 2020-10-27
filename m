@@ -8,449 +8,381 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BF8C388F9
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF81C388F9
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCDD320878
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6799020829
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 13:08:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TvS0pDRH"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Pn+BROSp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1751874AbgJ0NIv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Oct 2020 09:08:51 -0400
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:53553 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2441500AbgJ0NIv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:51 -0400
-Received: by mail-pj1-f68.google.com with SMTP id g16so755983pjv.3
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:50 -0700 (PDT)
+        id S1751838AbgJ0NIy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Oct 2020 09:08:54 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:38144 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751875AbgJ0NIx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 09:08:53 -0400
+Received: by mail-pl1-f195.google.com with SMTP id f21so730497plr.5
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2020 06:08:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=78EwkV+RjrwpZqsl91CDk3iP3kdMU2M+QW6TzKkQmvI=;
-        b=TvS0pDRH/FYJ00Rn0HjYpOyFW4AMK7HHXeV9gBxotMxW9NzxXnHgG0tKpTq4fElhpU
-         aasWMMeg/v6IjAgCZ6YWofCy0e1C1HJSsrKh5ysSvqYURQgzi6RcA4TW2qRj9ft3TWaE
-         cGFR81tmP2OngFyYdjLKw8ulFUIrpr2CXHdTo=
+        bh=kLljICZPGJZD1YlrdX7cEhGJSSk7EH3X/eT1E5k7iqo=;
+        b=Pn+BROSpcaKBWMA+ic/ryA2+2xpe7b2NYNpNl0jxie/xgB2vWGrvU6vR71P76SpSxW
+         ytGR1meSA5LxWH5bNaIQ3FQn1q6Z2t0VFBgbrz9k+L9glRZY5opOMshRyBlTHEYERIBC
+         EahSEz7BCg3D7UDo4hg1oOi3ctt3jVV8rmeJs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=78EwkV+RjrwpZqsl91CDk3iP3kdMU2M+QW6TzKkQmvI=;
-        b=ti/6qeoFeZomoxwn1YKKF76s7HS6wAHTOePm3pC9k7a++31VBIv9cUEwS2l98nU10Y
-         ilClR9YO6AnNUiYpNzDrgdshHn2kjjp6G4BnSE2mm/qRqgkAfD87neDdyfk1/alRE3HQ
-         qyPlb+jHcmiW5zMZXezJ86/lK59/ncf2BP99MPqBEYz4kifxU57YltPPL4avEfi1zP0b
-         Rh4BGg1TU8PL7kLGt2NBxQNFHYT3W4+a/KRmI22Lho4D2cWC5sjZRfs2KhNCqrhpOaaW
-         qE/S9SVjdH7c2crqOzxIpv2Qw6JGzZhRsZagARJZ+X2y2fk1SCZCAyH2fdNxB+ASNLvF
-         6KJg==
-X-Gm-Message-State: AOAM5310LmJ9fTW71adWoAAliF7L96uIvQrB2sc6GqF0afQd/fJpL6kz
-        y6Vts14XI9FK+E0Ht4wxwEHnsg==
-X-Google-Smtp-Source: ABdhPJxQRTz8qqLPe4ZlAEUQ0dBEz5SI9nzF/LL8urw/JA5Eu3swHEtcbmyFgFnZmWcbfy2box1eaw==
-X-Received: by 2002:a17:902:8c88:b029:d5:ffe1:6653 with SMTP id t8-20020a1709028c88b02900d5ffe16653mr2363687plo.22.1603804129027;
-        Tue, 27 Oct 2020 06:08:49 -0700 (PDT)
+        bh=kLljICZPGJZD1YlrdX7cEhGJSSk7EH3X/eT1E5k7iqo=;
+        b=KIVwb6nTWU1z1dmEcA8hFb3P4aCW26zisTonUI9vGLLBzKlfksALbNOb09Z9RcEtjL
+         ZH3202nbOSDk9I+Yt55HkVHm/aXidz8hMuaq7TR5vTEUZ2Sp7Cp4yqL0tEYls8BW6szk
+         CEgpw6SJgcazrDH2mb9FhZwfkHE3KNviqidwqPlRKvyjLcKns0c3XwbKXGUx+gsQnX5u
+         YJsNRTZBCFSu1RrK0OtFx5TnQPot+NgscdIbSu+ffQupU69i7Rq50gTUoqB31RTi8XS7
+         zLZvfC02b7E6a6sNNabR/j0O3vA9iWjk2+AZ8ES60U48gWfbihywnjSrkQ4Ng3ac9FKq
+         9SLQ==
+X-Gm-Message-State: AOAM531FkfbU5EKlprwtdOD+VHVaq4Q1nWOFtxofCMmfFHppWDzJokn8
+        SOR0bS33gVgSzOnn9tCcLACCz6t+FNUzCg==
+X-Google-Smtp-Source: ABdhPJz/FWudMpMP3vRWAH5cvBHi9C8W82hnPkO4c9NnSp+PGT5mj7eT4KTg6ACWGjnT6dt8EJSdlQ==
+X-Received: by 2002:a17:90b:92:: with SMTP id bb18mr2006087pjb.108.1603804131880;
+        Tue, 27 Oct 2020 06:08:51 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.45
+        by smtp.gmail.com with ESMTPSA id b24sm2009319pge.59.2020.10.27.06.08.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2020 06:08:47 -0700 (PDT)
+        Tue, 27 Oct 2020 06:08:51 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
         suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v1 10/14] mpt3sas: Handling HBA vSES device
-Date:   Tue, 27 Oct 2020 18:38:43 +0530
-Message-Id: <20201027130847.9962-11-sreekanth.reddy@broadcom.com>
+Subject: [PATCH v1 11/14] mpt3sas: Add bypass_dirty_port_flag parameter
+Date:   Tue, 27 Oct 2020 18:38:44 +0530
+Message-Id: <20201027130847.9962-12-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 References: <20201027130847.9962-1-sreekanth.reddy@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000077177005b2a6bf30"
+        boundary="000000000000995d9805b2a6bfab"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000077177005b2a6bf30
+--000000000000995d9805b2a6bfab
 
-Each direct attached device will have a unique Port ID,
-but with an exception. i.e. HBA vSES may use the same
-Port ID of another direct attached device Port's ID.
-So special handling is needed for vSES.
-
-Create a virtual_phy object when a new HBA vSES device
-is detected and add this virtual_phy object to
-vphys_list of port ID's hba_port object.
-When the HBA vSES device is removed then remove the
-corresponding virtual_phy object from it's parent's
-hba_port's vphy_list and free this virtual_vphy object.
-
-Below are variables of virtual_phy objects,
-sas_address:    SAS address of vSES device,
-phy_mask:       HBA phy bit which is assigned to vSES device
-flag:           used during host reset to refresh this virtual_phy object
-
-In hba_port object added vphy_mask field to hold the list
-of HBA phy bits which are assigned to vSES devices, Also added
-vphy_list list to hold list of virtual_phy objects which holds
-the same portID of current hba_port's portID.
-
-Also, added a hba_vphy field in _sas_phy object to determine
-whether this _sas_phy object belongs to vSES device or not.
-
-- Allocate a virtual_phy object whenever a virtual phy is detected
-  while processing the SASIOUnitPage0's phy data. And this allocated
-  virtual_phy object to corresponding PortID''s hba_port's vphy_list.
-
-- When a vSES device is added to the SML then initialize the corresponding
-  virtual_phy objects's sas_address field with vSES device's SAS
-  Address.
-
-- Free this virtual_phy object during driver unload time and when
-  this vSES device is removed.
+Added a new parameter bypass_dirty_port_flag in function
+mpt3sas_get_port_by_id(). When this parameter is set to one
+then search for matching hba port entry from port_table_list
+even when this hba_port entry is marked as dirty.
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
 v1:
 No change.
 
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  23 +++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 106 +++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_transport.c |  80 ++++++++++++++---
- 3 files changed, 198 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  3 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 63 ++++++++++++++----------
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  8 +--
+ 3 files changed, 44 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index a8e42d1..e7d047a 100644
+index e7d047a..cca14ab 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -771,6 +771,7 @@ struct _sas_phy {
- 	u16	handle;
- 	u16	attached_handle;
- 	u8	phy_belongs_to_port;
-+	u8	hba_vphy;
- 	struct hba_port *port;
- };
+@@ -1684,7 +1684,8 @@ void mpt3sas_device_remove_by_sas_address(struct MPT3SAS_ADAPTER *ioc,
+ u8 mpt3sas_check_for_pending_internal_cmds(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 smid);
+ struct hba_port *
+-mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc, u8 port);
++mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc, u8 port,
++	u8 bypass_dirty_port_flag);
  
-@@ -1023,12 +1024,29 @@ struct reply_post_struct {
- 	dma_addr_t			reply_post_free_dma;
- };
- 
-+/**
-+ * struct virtual_phy - vSES phy structure
-+ * sas_address: SAS Address of vSES device
-+ * phy_mask: vSES device's phy number
-+ * flags: flags used to manage this structure
-+ */
-+struct virtual_phy {
-+	struct	list_head list;
-+	u64	sas_address;
-+	u32	phy_mask;
-+	u8	flags;
-+};
-+
-+#define MPT_VPHY_FLAG_DIRTY_PHY	0x01
-+
- /**
-  * struct hba_port - Saves each HBA's Wide/Narrow port info
-  * @sas_address: sas address of this wide/narrow port's attached device
-  * @phy_mask: HBA PHY's belonging to this port
-  * @port_id: port number
-  * @flags: hba port flags
-+ * @vphys_mask : mask of vSES devices Phy number
-+ * @vphys_list : list containing vSES device structures
-  */
- struct hba_port {
- 	struct list_head list;
-@@ -1036,6 +1054,8 @@ struct hba_port {
- 	u32	phy_mask;
- 	u8      port_id;
- 	u8	flags;
-+	u32	vphys_mask;
-+	struct list_head vphys_list;
- };
- 
- /* hba port flags */
-@@ -1688,6 +1708,9 @@ mpt3sas_raid_device_find_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle);
- void mpt3sas_scsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
- struct _sas_device *
- __mpt3sas_get_sdev_by_rphy(struct MPT3SAS_ADAPTER *ioc, struct sas_rphy *rphy);
-+struct virtual_phy *
-+mpt3sas_get_vphy_by_phy(struct MPT3SAS_ADAPTER *ioc,
-+	struct hba_port *port, u32 phy);
- 
- /* config shared API */
- u8 mpt3sas_config_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ struct _sas_node *mpt3sas_scsih_expander_find_by_handle(
+ 	struct MPT3SAS_ADAPTER *ioc, u16 handle);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 2b87003..6463876 100644
+index 6463876..b033f19 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -380,6 +380,30 @@ mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc, u8 port_id)
- 	return NULL;
- }
- 
-+/**
-+ * mpt3sas_get_vphy_by_phy - get virtual_phy object corresponding to phy number
-+ * @ioc: per adapter object
-+ * @port: hba_port object
-+ * @phy: phy number
-+ *
-+ * Return virtual_phy object corresponding to phy number.
-+ */
-+struct virtual_phy *
-+mpt3sas_get_vphy_by_phy(struct MPT3SAS_ADAPTER *ioc,
-+	struct hba_port *port, u32 phy)
-+{
-+	struct virtual_phy *vphy, *vphy_next;
-+
-+	if (!port->vphys_mask)
-+		return NULL;
-+
-+	list_for_each_entry_safe(vphy, vphy_next, &port->vphys_list, list) {
-+		if (vphy->phy_mask & (1 << phy))
-+			return vphy;
-+	}
-+	return NULL;
-+}
-+
- /**
-  * _scsih_is_boot_device - search for matching boot device.
-  * @sas_address: sas address
-@@ -6152,6 +6176,47 @@ _scsih_sas_port_refresh(struct MPT3SAS_ADAPTER *ioc)
- 	port_table_entry = NULL;
- }
- 
-+/**
-+ * _scsih_alloc_vphy - allocate virtual_phy object
-+ * @ioc: per adapter object
-+ * @port_id: Port ID number
-+ * @phy_num: HBA Phy number
-+ *
-+ * Returns allocated virtual_phy object.
-+ */
-+static struct virtual_phy *
-+_scsih_alloc_vphy(struct MPT3SAS_ADAPTER *ioc, u8 port_id, u8 phy_num)
-+{
-+	struct virtual_phy *vphy;
-+	struct hba_port *port;
-+
-+	port = mpt3sas_get_port_by_id(ioc, port_id);
-+	if (!port)
-+		return NULL;
-+
-+	vphy = mpt3sas_get_vphy_by_phy(ioc, port, phy_num);
-+	if (!vphy) {
-+		vphy = kzalloc(sizeof(struct virtual_phy), GFP_KERNEL);
-+		if (!vphy)
-+			return NULL;
-+
-+		/*
-+		 * Enable bit corresponding to HBA phy number on it's
-+		 * parent hba_port object's vphys_mask field.
-+		 */
-+		port->vphys_mask |= (1 << phy_num);
-+		vphy->phy_mask |= (1 << phy_num);
-+
-+		INIT_LIST_HEAD(&port->vphys_list);
-+		list_add_tail(&vphy->list, &port->vphys_list);
-+
-+		ioc_info(ioc,
-+		    "vphy entry: %p, port id: %d, phy:%d is added to port's vphys_list\n",
-+		    vphy, port->port_id, phy_num);
-+	}
-+	return vphy;
-+}
-+
- /**
-  * _scsih_sas_host_refresh - refreshing sas host object contents
+@@ -361,20 +361,27 @@ _scsih_srch_boot_encl_slot(u64 enclosure_logical_id, u16 slot_number,
+  *			  port number from port list
   * @ioc: per adapter object
-@@ -6172,6 +6237,7 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
- 	u16 attached_handle;
- 	u8 link_rate, port_id;
+  * @port_id: port number
++ * @bypass_dirty_port_flag: when set look the matching hba port entry even
++ *			if hba port entry is marked as dirty.
+  *
+  * Search for hba port entry corresponding to provided port number,
+  * if available return port object otherwise return NULL.
+  */
+ struct hba_port *
+-mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc, u8 port_id)
++mpt3sas_get_port_by_id(struct MPT3SAS_ADAPTER *ioc,
++	u8 port_id, u8 bypass_dirty_port_flag)
+ {
+ 	struct hba_port *port, *port_next;
+ 
+ 	list_for_each_entry_safe(port, port_next,
+ 	    &ioc->port_table_list, list) {
+-		if (port->port_id == port_id &&
+-		    !(port->flags & HBA_PORT_FLAG_DIRTY_PORT))
++		if (port->port_id != port_id)
++			continue;
++		if (bypass_dirty_port_flag)
+ 			return port;
++		if (port->flags & HBA_PORT_FLAG_DIRTY_PORT)
++			continue;
++		return port;
+ 	}
+ 
+ 	return NULL;
+@@ -6190,7 +6197,7 @@ _scsih_alloc_vphy(struct MPT3SAS_ADAPTER *ioc, u8 port_id, u8 phy_num)
+ 	struct virtual_phy *vphy;
  	struct hba_port *port;
-+	Mpi2SasPhyPage0_t phy_pg0;
  
- 	dtmprintk(ioc,
- 		  ioc_info(ioc, "updating handles for sas_host(0x%016llx)\n",
-@@ -6211,6 +6277,31 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
- 				port->flags = HBA_PORT_FLAG_NEW_PORT;
- 			list_add_tail(&port->list, &ioc->port_table_list);
- 		}
-+		/*
-+		 * Check whether current Phy belongs to HBA vSES device or not.
-+		 */
-+		if (le32_to_cpu(sas_iounit_pg0->PhyData[i].ControllerPhyDeviceInfo) &
-+		    MPI2_SAS_DEVICE_INFO_SEP &&
-+		    (link_rate >=  MPI2_SAS_NEG_LINK_RATE_1_5)) {
-+			if ((mpt3sas_config_get_phy_pg0(ioc, &mpi_reply,
-+			    &phy_pg0, i))) {
-+				ioc_err(ioc,
-+				    "failure at %s:%d/%s()!\n",
-+				     __FILE__, __LINE__, __func__);
-+				goto out;
-+			}
-+			if (!(le32_to_cpu(phy_pg0.PhyInfo) &
-+			    MPI2_SAS_PHYINFO_VIRTUAL_PHY))
-+				continue;
-+			/*
-+			 * Allocate a virtual_phy object for vSES device, if
-+			 * this vSES device is hot added.
-+			 */
-+			if (!_scsih_alloc_vphy(ioc, port_id, i))
-+				goto out;
-+			ioc->sas_hba.phy[i].hba_vphy = 1;
-+		}
-+
- 		ioc->sas_hba.phy[i].handle = ioc->sas_hba.handle;
- 		attached_handle = le16_to_cpu(sas_iounit_pg0->PhyData[i].
+-	port = mpt3sas_get_port_by_id(ioc, port_id);
++	port = mpt3sas_get_port_by_id(ioc, port_id, 0);
+ 	if (!port)
+ 		return NULL;
+ 
+@@ -6264,7 +6271,7 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
+ 			ioc->sas_hba.handle = le16_to_cpu(
+ 			    sas_iounit_pg0->PhyData[0].ControllerDevHandle);
+ 		port_id = sas_iounit_pg0->PhyData[i].Port;
+-		if (!(mpt3sas_get_port_by_id(ioc, port_id))) {
++		if (!(mpt3sas_get_port_by_id(ioc, port_id, 0))) {
+ 			port = kzalloc(sizeof(struct hba_port), GFP_KERNEL);
+ 			if (!port)
+ 				goto out;
+@@ -6307,7 +6314,8 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
  		    AttachedDevHandle);
-@@ -6353,6 +6444,21 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
- 			    &ioc->port_table_list);
- 		}
+ 		if (attached_handle && link_rate < MPI2_SAS_NEG_LINK_RATE_1_5)
+ 			link_rate = MPI2_SAS_NEG_LINK_RATE_1_5;
+-		ioc->sas_hba.phy[i].port = mpt3sas_get_port_by_id(ioc, port_id);
++		ioc->sas_hba.phy[i].port =
++		    mpt3sas_get_port_by_id(ioc, port_id, 0);
+ 		mpt3sas_transport_update_links(ioc, ioc->sas_hba.sas_address,
+ 		    attached_handle, i, link_rate,
+ 		    ioc->sas_hba.phy[i].port);
+@@ -6431,7 +6439,7 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
+ 			    PhyData[0].ControllerDevHandle);
  
-+		/*
-+		 * Check whether current Phy belongs to HBA vSES device or not.
-+		 */
-+		if ((le32_to_cpu(phy_pg0.PhyInfo) &
-+		    MPI2_SAS_PHYINFO_VIRTUAL_PHY) &&
-+		    (phy_pg0.NegotiatedLinkRate >> 4) >=
-+		    MPI2_SAS_NEG_LINK_RATE_1_5) {
-+			/*
-+			 * Allocate a virtual_phy object for vSES device.
-+			 */
-+			if (!_scsih_alloc_vphy(ioc, port_id, i))
-+				goto out;
-+			ioc->sas_hba.phy[i].hba_vphy = 1;
-+		}
-+
+ 		port_id = sas_iounit_pg0->PhyData[i].Port;
+-		if (!(mpt3sas_get_port_by_id(ioc, port_id))) {
++		if (!(mpt3sas_get_port_by_id(ioc, port_id, 0))) {
+ 			port = kzalloc(sizeof(struct hba_port), GFP_KERNEL);
+ 			if (!port)
+ 				goto out;
+@@ -6461,7 +6469,8 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
+ 
  		ioc->sas_hba.phy[i].handle = ioc->sas_hba.handle;
  		ioc->sas_hba.phy[i].phy_id = i;
- 		ioc->sas_hba.phy[i].port = mpt3sas_get_port_by_id(ioc, port_id);
+-		ioc->sas_hba.phy[i].port = mpt3sas_get_port_by_id(ioc, port_id);
++		ioc->sas_hba.phy[i].port =
++		    mpt3sas_get_port_by_id(ioc, port_id, 0);
+ 		mpt3sas_transport_add_host_phy(ioc, &ioc->sas_hba.phy[i],
+ 		    phy_pg0, ioc->sas_hba.parent_dev);
+ 	}
+@@ -6553,7 +6562,8 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	if (sas_address_parent != ioc->sas_hba.sas_address) {
+ 		spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 		sas_expander = mpt3sas_scsih_expander_find_by_sas_address(ioc,
+-		    sas_address_parent, mpt3sas_get_port_by_id(ioc, port_id));
++		    sas_address_parent,
++		    mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		if (!sas_expander) {
+ 			rc = _scsih_expander_add(ioc, parent_handle);
+@@ -6565,7 +6575,7 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	sas_address = le64_to_cpu(expander_pg0.SASAddress);
+ 	sas_expander = mpt3sas_scsih_expander_find_by_sas_address(ioc,
+-	    sas_address, mpt3sas_get_port_by_id(ioc, port_id));
++	    sas_address, mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 
+ 	if (sas_expander)
+@@ -6583,7 +6593,7 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	sas_expander->num_phys = expander_pg0.NumPhys;
+ 	sas_expander->sas_address_parent = sas_address_parent;
+ 	sas_expander->sas_address = sas_address;
+-	sas_expander->port = mpt3sas_get_port_by_id(ioc, port_id);
++	sas_expander->port = mpt3sas_get_port_by_id(ioc, port_id, 0);
+ 	if (!sas_expander->port) {
+ 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
+ 		    __FILE__, __LINE__, __func__);
+@@ -6628,7 +6638,8 @@ _scsih_expander_add(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 		}
+ 		sas_expander->phy[i].handle = handle;
+ 		sas_expander->phy[i].phy_id = i;
+-		sas_expander->phy[i].port = mpt3sas_get_port_by_id(ioc, port_id);
++		sas_expander->phy[i].port =
++		    mpt3sas_get_port_by_id(ioc, port_id, 0);
+ 
+ 		if ((mpt3sas_transport_add_expander_phy(ioc,
+ 		    &sas_expander->phy[i], expander_pg1,
+@@ -6835,7 +6846,7 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	sas_address = le64_to_cpu(sas_device_pg0.SASAddress);
+-	port = mpt3sas_get_port_by_id(ioc, sas_device_pg0.PhysicalPort);
++	port = mpt3sas_get_port_by_id(ioc, sas_device_pg0.PhysicalPort, 0);
+ 	if (!port)
+ 		goto out_unlock;
+ 	sas_device = __mpt3sas_get_sdev_by_addr(ioc,
+@@ -6968,7 +6979,7 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
+ 
+ 	port_id = sas_device_pg0.PhysicalPort;
+ 	sas_device = mpt3sas_get_sdev_by_addr(ioc,
+-	    sas_address, mpt3sas_get_port_by_id(ioc, port_id));
++	    sas_address, mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 	if (sas_device) {
+ 		clear_bit(handle, ioc->pend_os_device_add);
+ 		sas_device_put(sas_device);
+@@ -7009,7 +7020,7 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
+ 	sas_device->phy = sas_device_pg0.PhyNum;
+ 	sas_device->fast_path = (le16_to_cpu(sas_device_pg0.Flags) &
+ 	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
+-	sas_device->port = mpt3sas_get_port_by_id(ioc, port_id);
++	sas_device->port = mpt3sas_get_port_by_id(ioc, port_id, 0);
+ 	if (!sas_device->port) {
+ 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
+ 		    __FILE__, __LINE__, __func__);
+@@ -7224,7 +7235,7 @@ _scsih_sas_topology_change_event(struct MPT3SAS_ADAPTER *ioc,
+ 	}
+ 
+ 	parent_handle = le16_to_cpu(event_data->ExpanderDevHandle);
+-	port = mpt3sas_get_port_by_id(ioc, event_data->PhysicalPort);
++	port = mpt3sas_get_port_by_id(ioc, event_data->PhysicalPort, 0);
+ 
+ 	/* handle expander add */
+ 	if (event_data->ExpStatus == MPI2_EVENT_SAS_TOPO_ES_ADDED)
+@@ -7415,7 +7426,8 @@ _scsih_sas_device_status_change_event(struct MPT3SAS_ADAPTER *ioc,
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+ 	sas_address = le64_to_cpu(event_data->SASAddress);
+ 	sas_device = __mpt3sas_get_sdev_by_addr(ioc,
+-	    sas_address, mpt3sas_get_port_by_id(ioc, event_data->PhysicalPort));
++	    sas_address,
++	    mpt3sas_get_port_by_id(ioc, event_data->PhysicalPort, 0));
+ 
+ 	if (!sas_device || !sas_device->starget)
+ 		goto out;
+@@ -8856,7 +8868,8 @@ _scsih_sas_pd_add(struct MPT3SAS_ADAPTER *ioc,
+ 	if (!_scsih_get_sas_address(ioc, parent_handle, &sas_address))
+ 		mpt3sas_transport_update_links(ioc, sas_address, handle,
+ 		    sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5,
+-		    mpt3sas_get_port_by_id(ioc, sas_device_pg0.PhysicalPort));
++		    mpt3sas_get_port_by_id(ioc,
++		    sas_device_pg0.PhysicalPort, 0));
+ 
+ 	_scsih_ir_fastpath(ioc, handle, element->PhysDiskNum);
+ 	_scsih_add_device(ioc, handle, 0, 1);
+@@ -9164,7 +9177,7 @@ _scsih_sas_ir_physical_disk_event(struct MPT3SAS_ADAPTER *ioc,
+ 			mpt3sas_transport_update_links(ioc, sas_address, handle,
+ 			    sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5,
+ 			    mpt3sas_get_port_by_id(ioc,
+-			    sas_device_pg0.PhysicalPort));
++			    sas_device_pg0.PhysicalPort, 0));
+ 
+ 		_scsih_add_device(ioc, handle, 0, 1);
+ 
+@@ -9290,7 +9303,7 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 	struct _enclosure_node *enclosure_dev = NULL;
+ 	unsigned long flags;
+ 	struct hba_port *port = mpt3sas_get_port_by_id(
+-	    ioc, sas_device_pg0->PhysicalPort);
++	    ioc, sas_device_pg0->PhysicalPort, 0);
+ 
+ 	if (sas_device_pg0->EnclosureHandle) {
+ 		enclosure_dev =
+@@ -9718,7 +9731,7 @@ _scsih_mark_responding_expander(struct MPT3SAS_ADAPTER *ioc,
+ 	u16 enclosure_handle = le16_to_cpu(expander_pg0->EnclosureHandle);
+ 	u64 sas_address = le64_to_cpu(expander_pg0->SASAddress);
+ 	struct hba_port *port = mpt3sas_get_port_by_id(
+-	    ioc, expander_pg0->PhysicalPort);
++	    ioc, expander_pg0->PhysicalPort, 0);
+ 
+ 	if (enclosure_handle)
+ 		enclosure_dev =
+@@ -9965,7 +9978,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 		port_id = expander_pg0.PhysicalPort;
+ 		expander_device = mpt3sas_scsih_expander_find_by_sas_address(
+ 		    ioc, le64_to_cpu(expander_pg0.SASAddress),
+-		    mpt3sas_get_port_by_id(ioc, port_id));
++		    mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		if (expander_device)
+ 			_scsih_refresh_expander_links(ioc, expander_device,
+@@ -10028,7 +10041,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 			mpt3sas_transport_update_links(ioc, sas_address,
+ 			    handle, sas_device_pg0.PhyNum,
+ 			    MPI2_SAS_NEG_LINK_RATE_1_5,
+-			    mpt3sas_get_port_by_id(ioc, port_id));
++			    mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 			set_bit(handle, ioc->pd_handles);
+ 			retry_count = 0;
+ 			/* This will retry adding the end device.
+@@ -10117,7 +10130,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 		port_id = sas_device_pg0.PhysicalPort;
+ 		sas_device = mpt3sas_get_sdev_by_addr(ioc,
+ 		    le64_to_cpu(sas_device_pg0.SASAddress),
+-		    mpt3sas_get_port_by_id(ioc, port_id));
++		    mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 		if (sas_device) {
+ 			sas_device_put(sas_device);
+ 			continue;
+@@ -10129,7 +10142,7 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
+ 				 (u64)le64_to_cpu(sas_device_pg0.SASAddress));
+ 			mpt3sas_transport_update_links(ioc, sas_address, handle,
+ 			    sas_device_pg0.PhyNum, MPI2_SAS_NEG_LINK_RATE_1_5,
+-			    mpt3sas_get_port_by_id(ioc, port_id));
++			    mpt3sas_get_port_by_id(ioc, port_id, 0));
+ 			retry_count = 0;
+ 			/* This will retry adding the end device.
+ 			 * _scsih_add_device() will decide on retries and
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index d52d8b3..256dae1 100644
+index 256dae1..0d06025 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -690,6 +690,7 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 	struct _sas_device *sas_device = NULL;
- 	int i;
- 	struct sas_port *port;
-+	struct virtual_phy *vphy = NULL;
- 
- 	if (!hba_port) {
- 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
-@@ -743,9 +744,20 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 			continue;
- 		list_add_tail(&sas_node->phy[i].port_siblings,
- 		    &mpt3sas_port->phy_list);
--		if (sas_node->handle <= ioc->sas_hba.num_phys)
--			hba_port->phy_mask |= (1 << i);
- 		mpt3sas_port->num_phys++;
-+		if (sas_node->handle <= ioc->sas_hba.num_phys) {
-+			if (!sas_node->phy[i].hba_vphy) {
-+				hba_port->phy_mask |= (1 << i);
-+				continue;
-+			}
-+
-+			vphy = mpt3sas_get_vphy_by_phy(ioc, hba_port, i);
-+			if (!vphy) {
-+				ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+				    __FILE__, __LINE__, __func__);
-+				goto out_fail;
-+			}
-+		}
+@@ -1414,7 +1414,7 @@ _transport_get_linkerrors(struct sas_phy *phy)
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	if (_transport_sas_node_find_by_sas_address(ioc,
+ 	    phy->identify.sas_address,
+-	    mpt3sas_get_port_by_id(ioc, port_id)) == NULL) {
++	    mpt3sas_get_port_by_id(ioc, port_id, 0)) == NULL) {
+ 		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		return -EINVAL;
  	}
- 
- 	if (!mpt3sas_port->num_phys) {
-@@ -795,8 +807,14 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 	if (mpt3sas_port->remote_identify.device_type == SAS_END_DEVICE) {
- 		rphy = sas_end_device_alloc(port);
- 		sas_device->rphy = rphy;
--		if (sas_node->handle <= ioc->sas_hba.num_phys)
--			hba_port->sas_address = sas_device->sas_address;
-+		if (sas_node->handle <= ioc->sas_hba.num_phys) {
-+			if (!vphy)
-+				hba_port->sas_address =
-+				    sas_device->sas_address;
-+			else
-+				vphy->sas_address =
-+				    sas_device->sas_address;
-+		}
- 	} else {
- 		rphy = sas_expander_alloc(port,
- 		    mpt3sas_port->remote_identify.device_type);
-@@ -866,6 +884,7 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 	u8 found = 0;
- 	struct _sas_phy *mpt3sas_phy, *next_phy;
- 	struct hba_port *hba_port_next, *hba_port = NULL;
-+	struct virtual_phy *vphy, *vphy_next = NULL;
- 
- 	if (!port)
- 		return;
-@@ -894,17 +913,56 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
+@@ -1703,7 +1703,7 @@ _transport_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	if (_transport_sas_node_find_by_sas_address(ioc,
+ 	    phy->identify.sas_address,
+-	    mpt3sas_get_port_by_id(ioc, port_id)) == NULL) {
++	    mpt3sas_get_port_by_id(ioc, port_id, 0)) == NULL) {
+ 		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		return -EINVAL;
  	}
- 
- 	if (sas_node->handle <= ioc->sas_hba.num_phys) {
-+		if (port->vphys_mask) {
-+			list_for_each_entry_safe(vphy, vphy_next,
-+			    &port->vphys_list, list) {
-+				if (vphy->sas_address != sas_address)
-+					continue;
-+				ioc_info(ioc,
-+				    "remove vphy entry: %p of port:%p,from %d port's vphys list\n",
-+				    vphy, port, port->port_id);
-+				port->vphys_mask &= ~vphy->phy_mask;
-+				list_del(&vphy->list);
-+				kfree(vphy);
-+			}
-+		}
-+
- 		list_for_each_entry_safe(hba_port, hba_port_next,
- 		    &ioc->port_table_list, list) {
- 			if (hba_port != port)
- 				continue;
--			if (hba_port->sas_address != sas_address)
--				continue;
--			ioc_info(ioc,
--			    "remove hba_port entry: %p port: %d from hba_port list\n",
--			    hba_port, hba_port->port_id);
--			list_del(&hba_port->list);
--			kfree(hba_port);
-+			/*
-+			 * Delete hba_port object if
-+			 *  - hba_port object's sas address matches with current
-+			 *    removed device's sas address and no vphy's
-+			 *    associated with it.
-+			 *  - Current removed device is a vSES device and
-+			 *    none of the other direct attached device have
-+			 *    this vSES device's port number (hence hba_port
-+			 *    object sas_address field will be zero).
-+			 */
-+			if ((hba_port->sas_address == sas_address ||
-+			    !hba_port->sas_address) && !hba_port->vphys_mask) {
-+				ioc_info(ioc,
-+				    "remove hba_port entry: %p port: %d from hba_port list\n",
-+				    hba_port, hba_port->port_id);
-+				list_del(&hba_port->list);
-+				kfree(hba_port);
-+			} else if (hba_port->sas_address == sas_address &&
-+			    hba_port->vphys_mask) {
-+				/*
-+				 * Current removed device is a non vSES device
-+				 * and a vSES device has the same port number
-+				 * as of current device's port number. Hence
-+				 * only clear the sas_address filed, don't
-+				 * delete the hba_port object.
-+				 */
-+				ioc_info(ioc,
-+				    "clearing sas_address from hba_port entry: %p port: %d from hba_port list\n",
-+				    hba_port, hba_port->port_id);
-+				port->sas_address = 0;
-+			}
-+			break;
- 		}
+@@ -1762,7 +1762,7 @@ _transport_phy_enable(struct sas_phy *phy, int enable)
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	if (_transport_sas_node_find_by_sas_address(ioc,
+ 	    phy->identify.sas_address,
+-	    mpt3sas_get_port_by_id(ioc, port_id)) == NULL) {
++	    mpt3sas_get_port_by_id(ioc, port_id, 0)) == NULL) {
+ 		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		return -EINVAL;
  	}
- 
+@@ -1902,7 +1902,7 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ 	spin_lock_irqsave(&ioc->sas_node_lock, flags);
+ 	if (_transport_sas_node_find_by_sas_address(ioc,
+ 	    phy->identify.sas_address,
+-	    mpt3sas_get_port_by_id(ioc, port_id)) == NULL) {
++	    mpt3sas_get_port_by_id(ioc, port_id, 0)) == NULL) {
+ 		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		return -EINVAL;
+ 	}
 -- 
 2.18.4
 
 
---00000000000077177005b2a6bf30
+--000000000000995d9805b2a6bfab
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -521,13 +453,13 @@ JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
 AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
 YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
 MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
-HED9577K2oaRhJxoyMweK2huzewqLBimVD/gkND7uMIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
-ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODUwWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+uctR4RxOpBS+SFVPTF17F27JQP9PuD0oFvVfD1eS1VQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMDI3MTMwODUyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
 AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
-BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAH6NU/q58IDd+mB4WlZe
-PfooDpeMgRjgE8RKH6E62dQ9Alsf7mBifNwrzolQdFz2nSQyYPRmkBa+50LceNzSVgpNuxTjHCEU
-FspySR/cmXuvOfmXXEHAs6kLB5TJ9wjZdzKTrQpHYBkAoHS5I3jlYKWf7LPdjTrxUhjZ2/lIwJ61
-tjYilm+2mgsTMJEDDmHnXkKpdL7Qp8+7n9v/zUxLDy8wEc/WS5MN1CDHVCXV90TrYlV0hUxXC1zp
-L/HF2fXCw00uDE7MVEwUH7ibwArRmmpuqVuk8AkFH5eEsES8r5wA9SQpgbwWFHtgtGXV2foAUzqE
-ZPz0wtT+Ov0b5J8M8dI=
---00000000000077177005b2a6bf30--
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBABG4YxW1TK2LWd3oFMoh
+B7OLQ+ebg0W33I91ZdIx1wk0BV9z+rKnWyUPeQk6QmOl7YqAqSdnWZwJkU8l+WlWFKzzZ5C1+jwa
+bMenIf6yfyHB5LabtIka+bNbt++2s/eAjU8Y0OX2YmIe6cpNVCeSdw4JyoyYmjtVRMU2M2v5kKs/
+Bscs2AdimVw785SLraOEl9S/W7EjqkGTnjJTbHfqxphzF9SZWP4KLBx15azkNm+USL5d17ZG+bmF
+6S5a80p38zyyKYHkJU6SYxn+LwJ88mqnskhJ3f93S2bdn+SW713aWcfOonrj0QRTFeD8YfQZZWcC
+hFQp7o2PPKF5/OlhQIo=
+--000000000000995d9805b2a6bfab--
