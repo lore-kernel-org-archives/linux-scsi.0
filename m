@@ -2,89 +2,104 @@ Return-Path: <SRS0=LZqT=EC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D19C55178
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 15:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C278C838CA
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 15:47:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0293621D41
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 15:22:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hU3438/G";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="edxYOTDd"
+	by mail.kernel.org (Postfix) with ESMTP id 310C322283
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 15:47:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1797192AbgJ0PWI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Oct 2020 11:22:08 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:47546 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1797180AbgJ0PWG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2020 11:22:06 -0400
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1603812124;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZpUA5T6GnqkL1oqvAwNtwEv/lxjhPPmZ7O6sI+tfvDs=;
-        b=hU3438/GeulhC9U+rgBa3ne3IR8cwYgHVtt2xgj/3xw2gcU7K4hAW9oSqCCYHRzD2MxkAS
-        uimd452kFnZN1CUwPDy4lCcm8ifmX5RLu9kU/dRMAzGZp2a7kTIEs4KWTEAvEKjVX8V7kE
-        OtUilBoYiURaWY68Oxf4CqALxC1Dvg03zb5U6W8qWYAHn4cFUML1nn9gJOd+Zxd2Vr82KE
-        0Jc2107h2FUzhxVnY7vC9yUh5CjhJhWXtA+EQHu6KZkfwOnHs5rRBBbJA7eAl3IdDvdsKw
-        vceNhfjfoS0QJrPSDhFO3fw0GnMuEtxFdX8p2MRASdaoGdsCp36Eoo0e44Si4A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1603812124;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZpUA5T6GnqkL1oqvAwNtwEv/lxjhPPmZ7O6sI+tfvDs=;
-        b=edxYOTDdAdOBYBCllantSJcHX9nVuXGxgiGlV1ORSUid3sz6uG5u5fR6RfdvSFbxpbSjZz
-        idH1FJgq7zjdXfBA==
-To:     John Garry <john.garry@huawei.com>, gregkh@linuxfoundation.org,
-        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com
-Cc:     linuxarm@huawei.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, maz@kernel.org,
-        John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 1/3] genirq/affinity: Add irq_update_affinity_desc()
-In-Reply-To: <1603800624-180488-2-git-send-email-john.garry@huawei.com>
-References: <1603800624-180488-1-git-send-email-john.garry@huawei.com> <1603800624-180488-2-git-send-email-john.garry@huawei.com>
-Date:   Tue, 27 Oct 2020 16:22:03 +0100
-Message-ID: <87h7qf1yp0.fsf@nanos.tec.linutronix.de>
+        id S1764484AbgJ0PrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Oct 2020 11:47:22 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:3000 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1799227AbgJ0Pa0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Oct 2020 11:30:26 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 9B788CFFF0BBBC69937E;
+        Tue, 27 Oct 2020 15:30:24 +0000 (GMT)
+Received: from [10.47.8.138] (10.47.8.138) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 27 Oct
+ 2020 15:30:23 +0000
+Subject: Re: [PATCHv6 00/21] scsi: enable reserved commands for LLDDs
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        Don Brace <don.brace@microchip.com>,
+        <linux-scsi@vger.kernel.org>,
+        chenxiang <chenxiang66@hisilicon.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20200703130122.111448-1-hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <ac78e944-25e1-15d7-7c9e-b7f439079222@huawei.com>
+Date:   Tue, 27 Oct 2020 15:27:03 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20200703130122.111448-1-hare@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.8.138]
+X-ClientProxiedBy: lhreml715-chm.china.huawei.com (10.201.108.66) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-John,
+On 03/07/2020 14:01, Hannes Reinecke wrote:
+> Hi all,
+> 
+> quite some drivers use internal commands for various purposes, most
+> commonly sending TMFs or querying the HBA status.
+> While these commands use the same submission mechanism than normal
+> I/O commands, they will not be counted as outstanding commands,
+> requiring those drivers to implement their own mechanism to figure
+> out outstanding commands.
+> The block layer already has the concept of 'reserved' tags for
+> precisely this purpose, namely non-I/O tags which live off a separate
+> tag pool. That guarantees that these commands can always be sent,
+> and won't be influenced by tag starvation from the I/O tag pool.
+> This patchset enables the use of reserved tags for the SCSI midlayer
+> by allocating a virtual LUN for the HBA itself which just serves
+> as a resource to allocate valid tags from.
+> This removes quite some hacks which were required for some
+> drivers (eg. fnic or snic), and allows the use of tagset
+> iterators within the drivers.
+> 
+> The entire patchset can be found at
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git reserved-tags.v6
+> 
 
-On Tue, Oct 27 2020 at 20:10, John Garry wrote:
+Hi Hannes,
 
-> From: Thomas Gleixner <tglx@linutronix.de>
->
-> Add a function to allow the affinity of an interrupt be switched to
-> managed, such that interrupts allocated for platform devices may be
-> managed.
->
-> <Insert author sob>
->
-> [jpg: Add commit message and add prototypes]
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
-> Thomas, I just made you author since you provided the original code, hope
-> it's ok.
+Any chance you can repost this series? I'm being a bit of a nag :)
 
-I already forgot about this. And in fact I only gave you a broken
-example. So just make yourself the author and add Suggested-by: tglx.
+It now looks like some drivers may also need this for supporting 
+io_uring in SCSI mid-layer:
+https://lore.kernel.org/linux-scsi/20201015133541.60400-1-kashyap.desai@broadcom.com/
 
-Vs. merging. I'd like to pick that up myself as I might have other
-changes in that area coming up.
+And it's also useful for the runtime PM which we were supporting for 
+hisi_sas, to track IOs.
 
-I'll do it as a single commit on top of rc1 and tag it so the scsi
-people can just pull it in.
+I know that you were hoping for a few more reviews, but I don't think 
+that they are coming for v6 now. And at least I gave a few comments 
+here, like:
 
-Thanks,
+https://lore.kernel.org/linux-scsi/b03c1256-8255-5e7f-dda3-df036aaef812@huawei.com/
 
-        tglx
+And there were other comments.
+
+Please let me know.
+
+Cheers,
+John
