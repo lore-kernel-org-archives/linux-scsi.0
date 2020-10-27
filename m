@@ -2,90 +2,96 @@ Return-Path: <SRS0=LZqT=EC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55BE6C4363A
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:03:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53494C4363A
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:06:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E36A820872
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:03:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 072B020882
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 02:06:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i7HePejj"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Yzg1qVe8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504327AbgJ0CDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 22:03:49 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47528 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728076AbgJ0CDt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 22:03:49 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09R1xKSv028785;
-        Tue, 27 Oct 2020 02:03:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=35Sxldvow+z8Xed162Rpv8J/WbDCcWLZgAUe3vtL2MU=;
- b=i7HePejjdPc3R6whgHxgyMStk73U10WGGHk6V8ujh239SHbET+Za826Tj/aa4cwo0EgV
- 9LH7PgwgxVtg1IrhbW1iFTKi8eKPyVaEI2OHvWV687ICYvNA+b0sACx5I3cqZ5RTj2QO
- 1r+ndYZJ6l58ZU0v5Mtq0d4xa64zPtBVhezYmdo5i0+FL7eOPYvWPdNGA0BWsW+rN/xm
- hwv4B7e43rTHhwLsI4J6XNslSvnZTMCbWHz6A4iuGDee/KXDhry4pFeqn55YLKhk3+cP
- ePqlQF07z47r8IYvhvKNEVwWd6FKpSrpv5ReEcZpH/BFoaWvzTavfRAWaGhnWECbC1ON Ng== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 34cc7kqgcy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 27 Oct 2020 02:03:38 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09R1uOYn018813;
-        Tue, 27 Oct 2020 02:03:38 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 34cwuku4cb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Oct 2020 02:03:38 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09R23b56026695;
-        Tue, 27 Oct 2020 02:03:37 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Oct 2020 19:03:36 -0700
-To:     Zhang Qilong <zhangqilong3@huawei.com>
-Cc:     <hare@suse.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH -next] [SCSI] aic7xxx: change the error value of
- ahx_pci_test_register_access from postive to negative
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1pn544e8g.fsf@ca-mkp.ca.oracle.com>
-References: <20201026091236.68561-1-zhangqilong3@huawei.com>
-Date:   Mon, 26 Oct 2020 22:03:34 -0400
-In-Reply-To: <20201026091236.68561-1-zhangqilong3@huawei.com> (Zhang Qilong's
-        message of "Mon, 26 Oct 2020 17:12:36 +0800")
+        id S2504347AbgJ0CGH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 22:06:07 -0400
+Received: from z5.mailgun.us ([104.130.96.5]:64951 "EHLO z5.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2504344AbgJ0CGH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Oct 2020 22:06:07 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1603764366; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=GxlUBsgWpRmzq1zbsPQ+RSymFtnjB5bpOntoDLsD6lY=;
+ b=Yzg1qVe8lJL2ClFbKTmvrgBUsdTNKj5KshUIG+qeGUjuo8WWe3rdyExVt5xYU5qa2JZneO2f
+ 91tZqRXTWjA1KheKv04sQ5MTGc7FozrFI1qod/RCD45nENhR9QgE91nDw2V9+3TEWcWGO9Eb
+ xyC6oblK+wL1g7jdnEDMnI0FJc8=
+X-Mailgun-Sending-Ip: 104.130.96.5
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5f97808e1e4642bf75eebb51 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 27 Oct 2020 02:06:06
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id AF996C433FE; Tue, 27 Oct 2020 02:06:05 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0400DC433C9;
+        Tue, 27 Oct 2020 02:06:04 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010270013
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- malwarescore=0 spamscore=0 clxscore=1011 mlxscore=0 suspectscore=1
- priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010270013
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 27 Oct 2020 10:06:04 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Asutosh Das <asutoshd@codeaurora.org>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 2/2] ufs: qcom: Enable aggressive power collapse for
+ ufs hba
+In-Reply-To: <0716681006075e9eebbf0decd28505824e22d637.1603754932.git.asutoshd@codeaurora.org>
+References: <ce0a3be9c685506803597fb770e37c099ae27232.1603754932.git.asutoshd@codeaurora.org>
+ <0716681006075e9eebbf0decd28505824e22d637.1603754932.git.asutoshd@codeaurora.org>
+Message-ID: <8f03a3a7a4209d2e1dfb07c6981a6ec6@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-10-27 07:30, Asutosh Das wrote:
+> Enabling this capability to let hba power-collapse
+> more often to save power.
+> 
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 
-Zhang,
+Reviewed-by: Can Guo <cang@codeaurora.org>
 
-> A negative error code should be returned instead of a positive one
-> when going to error path.
-
-Applied to 5.11/scsi-staging, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index f9d6ef3..9a19c6d 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -863,6 +863,7 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+>  	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+>  	hba->caps |= UFSHCD_CAP_WB_EN;
+>  	hba->caps |= UFSHCD_CAP_CRYPTO;
+> +	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
+> 
+>  	if (host->hw_ver.major >= 0x2) {
+>  		host->caps = UFS_QCOM_CAP_QUNIPRO |
