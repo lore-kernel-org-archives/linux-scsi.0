@@ -2,106 +2,90 @@ Return-Path: <SRS0=LZqT=EC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B7A7C55178
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 00:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8566BC55178
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 00:41:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBA8620723
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 00:21:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Nkt9v38U"
+	by mail.kernel.org (Postfix) with ESMTP id 494B62223C
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Oct 2020 00:41:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441229AbgJ0AVr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 20:21:47 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55040 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2441222AbgJ0AVq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 20:21:46 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09R0F2MN058979;
-        Tue, 27 Oct 2020 00:21:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=yKf+TLM8FaUS8yvyOhERA6d6h1+T384M5rD4+vg1YPw=;
- b=Nkt9v38UOEu/EiDVq2/8jnrElgCtFvj1WP0KvNg1iUfqQ7QdnsDqrM0Ddb3jdGrNsAaH
- tEWAMYLOwP1EW5+VruIq1X8IyYQfoJf/xb2jEDZz5Ok3VCHj7oUxaQnjgSMIW0mEgy54
- vXxfBuI0A347gQiogac3L3Dd91l17L/wPWfkF8gkphpHmY6xneqPHtiLhptq16hoUIoy
- vlWRZ4QFpJPdC+WHbDR1GG7KhKJbdidTP1JknXPdjVMqQqsc12oTZWUEUUH05bdBOagF
- UVZ4RrDrz+hNvT7uuHgSgIwKzSPnhd+hRV/Tx10frwk5cjY4RLdlGsiHoxrdJyJrk0Vy Vg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 34dgm3vx7u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 27 Oct 2020 00:21:39 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09R0Fxeb025400;
-        Tue, 27 Oct 2020 00:21:39 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 34cx5wgnee-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Oct 2020 00:21:39 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09R0Lb01015918;
-        Tue, 27 Oct 2020 00:21:37 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Oct 2020 17:21:37 -0700
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        id S2410410AbgJ0AiX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Oct 2020 20:38:23 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:44164 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2436545AbgJ0Acv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2020 20:32:51 -0400
+X-Greylist: delayed 1637 seconds by postgrey-1.27 at vger.kernel.org; Mon, 26 Oct 2020 20:32:46 EDT
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kXCUL-009VwG-7r; Tue, 27 Oct 2020 00:05:21 +0000
+Date:   Tue, 27 Oct 2020 00:05:21 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Kyle Huey <me@kylehuey.com>,
+        open list <linux-kernel@vger.kernel.org>,
         Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/4] scsi: remove devices in ALUA transitioning status
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq136207c42.fsf@ca-mkp.ca.oracle.com>
-References: <20200930080256.90964-1-hare@suse.de>
-Date:   Mon, 26 Oct 2020 20:21:35 -0400
-In-Reply-To: <20200930080256.90964-1-hare@suse.de> (Hannes Reinecke's message
-        of "Wed, 30 Sep 2020 10:02:52 +0200")
+        Robert O'Callahan <robert@ocallahan.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        David Howells <dhowells@redhat.com>,
+        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "open list:FILESYSTEMS (VFS and infrastructure)" 
+        <linux-fsdevel@vger.kernel.org>, linux-aio@kvack.org,
+        io-uring@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-mm@kvack.org, netdev@vger.kernel.org,
+        keyrings@vger.kernel.org, linux-security-module@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [REGRESSION] mm: process_vm_readv testcase no longer works after
+ compat_prcoess_vm_readv removed
+Message-ID: <20201027000521.GD3576660@ZenIV.linux.org.uk>
+References: <CAP045Aqrsb=CXHDHx4nS-pgg+MUDj14r-kN8_Jcbn-NAUziVag@mail.gmail.com>
+ <70d5569e-4ad6-988a-e047-5d12d298684c@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
- suspectscore=1 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010270000
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- suspectscore=1 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010270000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <70d5569e-4ad6-988a-e047-5d12d298684c@kernel.dk>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Mon, Oct 26, 2020 at 05:56:11PM -0600, Jens Axboe wrote:
+> On 10/26/20 4:55 PM, Kyle Huey wrote:
+> > A test program from the rr[0] test suite, vm_readv_writev[1], no
+> > longer works on 5.10-rc1 when compiled as a 32 bit binary and executed
+> > on a 64 bit kernel. The first process_vm_readv call (on line 35) now
+> > fails with EFAULT. I have bisected this to
+> > c3973b401ef2b0b8005f8074a10e96e3ea093823.
+> > 
+> > It should be fairly straightforward to extract the test case from our
+> > repository into a standalone program.
+> 
+> Can you check with this applied?
+> 
+> diff --git a/mm/process_vm_access.c b/mm/process_vm_access.c
+> index fd12da80b6f2..05676722d9cd 100644
+> --- a/mm/process_vm_access.c
+> +++ b/mm/process_vm_access.c
+> @@ -273,7 +273,8 @@ static ssize_t process_vm_rw(pid_t pid,
+>  		return rc;
+>  	if (!iov_iter_count(&iter))
+>  		goto free_iov_l;
+> -	iov_r = iovec_from_user(rvec, riovcnt, UIO_FASTIOV, iovstack_r, false);
+> +	iov_r = iovec_from_user(rvec, riovcnt, UIO_FASTIOV, iovstack_r,
+> +				in_compat_syscall());
 
-Hannes,
+_ouch_
 
-> during testing we found that there is an issue with dev_loss_tmo and
-> devices in ALUA transitioning state.  What happens is that I/O gets
-> requeued via BLK_STS_RESOURCE for these devices, so when dev_loss_tmo
-> triggers the SCSI core cannot flush the request list as I/O is simply
-> requeued.
->
-> So when the driver is trying to re-establish the device it'll wait for
-> that last reference to drop in order to re-attach the device, but as
-> I/O is still outstanding on the (old) device it'll wait for ever.
->
-> Fix this by returning 'BLK_STS_AGAIN' from scsi_dh_alua when the
-> device is in ALUA transitioning, and also set the 'transitioning'
-> state when scsi_dh_alua is receiving a sense code, and not only after
-> scsi_dh_alua successfully received the response to a REPORT TARGET
-> PORT GROUPS command.
-
-It would be good to get this revived/reviewed.
-
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+There's a bug, all right, but I'm not sure that this is all there is to it.
+For now it's probably the right fix, but...  Consider the fun trying to
+use that from 32bit process to access the memory of 64bit one.  IOW, we
+might want to add an explicit flag for "force 64bit addresses/sizes
+in rvec".
