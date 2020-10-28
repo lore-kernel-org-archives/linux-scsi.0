@@ -2,188 +2,87 @@ Return-Path: <SRS0=SSlb=ED=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-2.3 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0619C55179
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 21:59:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18E0AC388F7
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 22:00:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5617124754
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 21:59:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B21632473C
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 22:00:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z21ZFxGa"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="G2SRgpwN";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="JEwHkmPJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729313AbgJ1V7r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:59:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35169 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728525AbgJ1V7a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Oct 2020 17:59:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603922368;
+        id S1729302AbgJ1V71 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:59:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50316 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729296AbgJ1V70 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2020 17:59:26 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6BBEC0613D1;
+        Wed, 28 Oct 2020 14:59:26 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1603909350;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=Fsp+qw7VQilYqGlRCGG49/rRdIH2EMX83NOPrIacuxk=;
-        b=Z21ZFxGaHChx8I+W7ER25mjfddy8X1El+FFO0lWi7XMo133RyClZtBLr4pvYRYSr9oDOsC
-        yZpHAn/j/cjjQtNPlCgc4K83gTntQkn0pR9q858m8HRm3yVyq+oGrb0oDQNSgoRKhOJ512
-        vXDMWmdIEddWVDfaKN/VpfgpiARq6H0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-401-UfFOzHHINp27BE-bRy8Obw-1; Tue, 27 Oct 2020 21:55:27 -0400
-X-MC-Unique: UfFOzHHINp27BE-bRy8Obw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D994F1868401;
-        Wed, 28 Oct 2020 01:55:25 +0000 (UTC)
-Received: from [10.72.13.38] (ovpn-13-38.pek2.redhat.com [10.72.13.38])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 759D35D9E8;
-        Wed, 28 Oct 2020 01:55:17 +0000 (UTC)
-Subject: Re: [PATCH 07/17] vhost scsi: support delayed IO vq creation
-To:     Mike Christie <michael.christie@oracle.com>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, pbonzini@redhat.com,
-        stefanha@redhat.com, virtualization@lists.linux-foundation.org
-References: <1603326903-27052-1-git-send-email-michael.christie@oracle.com>
- <1603326903-27052-8-git-send-email-michael.christie@oracle.com>
- <9e97ea2a-bc57-d4aa-4711-35dba20b3b9e@redhat.com>
- <49c2fc29-348c-06db-4823-392f7476d318@oracle.com>
-From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <adcaeb64-b1da-2195-6656-ecc19f12e5ed@redhat.com>
-Date:   Wed, 28 Oct 2020 09:55:15 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        bh=hHSo5mLm2YdFaQeHlvR8xcV3UAJmfAc+vvkhBluX8qo=;
+        b=G2SRgpwNjPS2PH7DHQA38BGfmVOfajAY2isL1Sq1OCS+XXjtEyTCt+SlM57rdjf3f+6n+g
+        m99IZb/Jfe3WefkKHGyD4pVPkCTs+byjYWrm9re7Bmnqmg1w+gWb64Zhy4SFCzqnBY2TWM
+        4xO6vBXlYhhZhkX9m8t4GC3RpkdUEiTfTcI+qHAowj7S3BdlVvr6Shded/G4HztZ3nHU1C
+        Dq+fde2zgojwG0K+oabyxY3WkE3FutsDA3o/+Lm4fuTFNwFBpXmcjtVsOMUKnXYL5j/zWQ
+        XS4+Feii3CoyBWBe/cm0H0JJGGDwMfs0zUcvpHmDB5N+jftG6g5PbFoSEKpJ/g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1603909350;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hHSo5mLm2YdFaQeHlvR8xcV3UAJmfAc+vvkhBluX8qo=;
+        b=JEwHkmPJCpzQmpW+KFKsSIdIi/I+53aSg4+W8esXHBbp57OL4ZDRhuIQIt3/H/G0qisUa9
+        urgekIPvbeQQIXDw==
+To:     John Garry <john.garry@huawei.com>, gregkh@linuxfoundation.org,
+        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com
+Cc:     linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, maz@kernel.org,
+        John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+In-Reply-To: <1603888387-52499-2-git-send-email-john.garry@huawei.com>
+References: <1603888387-52499-1-git-send-email-john.garry@huawei.com> <1603888387-52499-2-git-send-email-john.garry@huawei.com>
+Date:   Wed, 28 Oct 2020 19:22:29 +0100
+Message-ID: <87eelifbx6.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <49c2fc29-348c-06db-4823-392f7476d318@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Oct 28 2020 at 20:33, John Garry wrote:
+>  
+> +int irq_update_affinity_desc(unsigned int irq,
+> +			     struct irq_affinity_desc *affinity)
+> +{
+> +	unsigned long flags;
+> +	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+> +
+> +	if (!desc)
+> +		return -EINVAL;
 
-On 2020/10/27 下午1:47, Mike Christie wrote:
-> On 10/25/20 10:51 PM, Jason Wang wrote:
->>
->> On 2020/10/22 上午8:34, Mike Christie wrote:
->>> Each vhost-scsi device will need a evt and ctl queue, but the number
->>> of IO queues depends on whatever the user has configured in userspace.
->>> This patch has vhost-scsi create the evt, ctl and one IO vq at device
->>> open time. We then create the other IO vqs when userspace starts to
->>> set them up. We still waste some mem on the vq and scsi vq structs,
->>> but we don't waste mem on iovec related arrays and for later patches
->>> we know which queues are used by the dev->nvqs value.
->>>
->>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->>> ---
->>>   drivers/vhost/scsi.c | 19 +++++++++++++++----
->>>   1 file changed, 15 insertions(+), 4 deletions(-)
->>
->>
->> Not familiar with SCSI. But I wonder if it could behave like vhost-net.
->>
->> E.g userspace should known the number of virtqueues so it can just 
->> open and close multiple vhost-scsi file descriptors.
->>
->
-> One hiccup I'm hitting is that we might end up creating about 3x more 
-> vqs than we need. The problem is that for scsi each vhost device has:
->
-> vq=0: special control vq
-> vq=1: event vq
-> vq=2 and above: SCSI CMD/IO vqs. We want to create N of these.
->
-> Today we do:
->
-> Uerspace does open(/dev/vhost-scsi)
->         vhost_dev_init(create 128 vqs and then later we setup and use 
-> N of them);
->
-> Qemu does ioctl(VHOST_SET_OWNER)
->         vhost_dev_set_owner()
->
-> For N vqs userspace does:
->         // virtqueue setup related ioctls
->
-> Qemu does ioctl(VHOST_SCSI_SET_ENDPOINT)
->         - match LIO/target port to vhost_dev
->
->
-> So we could change that to:
->
-> For N IO vqs userspace does
->         open(/dev/vhost-scsi)
->                 vhost_dev_init(create IO, evt, and ctl);
->
-> for N IO vqs Qemu does:
->         ioctl(VHOST_SET_OWNER)
->                 vhost_dev_set_owner()
->
-> for N IO vqs Qemu does:
->         // virtqueue setup related ioctls
->
-> for N IO vqs Qemu does:
->         ioctl(VHOST_SCSI_SET_ENDPOINT)
->                 - match LIO/target port to vhost_dev and assemble the 
-> multiple vhost_dev device.
->
-> The problem is that we have to setup some of the evt/ctl specific 
-> parts at open() time when vhost_dev_init does vhost_poll_init for 
-> example.
->
-> - At open time, we don't know if this vhost_dev is going to be part of 
-> a multiple vhost_device device or a single one so we need to create at 
-> least 3 of them
-> - If it is a multiple device we don't know if its the first device 
-> being created for the device or the N'th, so we don't know if the 
-> dev's vqs will be used for IO or ctls/evts, so we have to create all 3.
->
-> When we get the first VHOST_SCSI_SET_ENDPOINT call for a new style 
-> multiple vhost_dev device, we can use that dev's evt/ctl vqs for 
-> events/controls requests. When we get the other 
-> VHOST_SCSI_SET_ENDPOINT calls for the multiple vhost_dev device then 
-> those dev's evt/ctl vqs will be ignored and we will only use their IO 
-> vqs. So we end up with a lot of extra vqs.
+Just looking at it some more. This needs a check whether the interrupt
+is actually shut down. Otherwise the update will corrupt
+state. Something like this:
 
+        if (irqd_is_started(&desc->irq_data))
+        	return -EBUSY;
 
-Right, so in this case we can use this patch to address this issue 
-probably. If evt/ctl vq is not used, we won't even create them.
+But all of this can't work on x86 due to the way how vector allocation
+works. Let me think about that.
 
+Thanks,
 
->
->
-> One other question/issue I have is that qemu can open the 
-> /dev/vhost-scsi device or it allows tools like libvirtd to open the 
-> device and pass in the fd to use.
-
-
-It allows libvirt to open and pass fds to qemu. This is how multie-queue 
-virtio-net is done, libvirt is in charge of opening multiple file 
-descriptors and pass them to qemu.
-
-
-> For the latter case, would we continue to have those tools pass in the 
-> leading fd, then have qemu do the other num_queues - 1 
-> open(/dev/vhost-scsi) calls? Or do these apps that pass in the fd need 
-> to know about all of the fds for some management reason?
-
-
-Usually qemu is running without privilege. So it depends on the 
-management to open the device.
-
-Note that I'm not object your proposal, just want to see if it could be 
-done via a more easy way. During the development if multiqueue 
-virito-net, something similar as you've done was proposed but we end up 
-with the multiple vhost-net fd model which keeps kernel code unchanged.
-
-Thanks
-
-
+        tglx
 
