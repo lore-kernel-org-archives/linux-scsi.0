@@ -2,24 +2,25 @@ Return-Path: <SRS0=Vgdy=EE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 771E0C55179
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:22:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A965C56201
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:22:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32A9C20791
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:22:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B93D20757
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:22:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729474AbgJ1WEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:04:54 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:7078 "EHLO
+        id S1729602AbgJ1WEx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:04:53 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7075 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729497AbgJ1WCN (ORCPT
+        with ESMTP id S1728221AbgJ1WCN (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2020 18:02:13 -0400
 Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CLp3v4wslzLqT4;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CLp3v5KtTzLqWJ;
         Wed, 28 Oct 2020 20:36:59 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
@@ -31,10 +32,12 @@ To:     <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
 CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <maz@kernel.org>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 0/3] Support managed interrupts for platform devices
-Date:   Wed, 28 Oct 2020 20:33:04 +0800
-Message-ID: <1603888387-52499-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 2/3] Driver core: platform: Add platform_get_irqs_affinity()
+Date:   Wed, 28 Oct 2020 20:33:06 +0800
+Message-ID: <1603888387-52499-3-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1603888387-52499-1-git-send-email-john.garry@huawei.com>
+References: <1603888387-52499-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -43,42 +46,113 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-So far, managed interrupts are only used for PCI MSIs. This series add
-platform device support for managed interrupts. Initially this topic was
-discussed at [0].
+Drivers for multi-queue platform devices may also want managed interrupts
+for handling HW queue completion interrupts, so add support.
 
-The method to enable managed interrupts is to allocate all the IRQs for
-the device, and then switch the interrupts to managed - this is done
-through new function irq_update_affinity_desc().
+The function accepts an affinity descriptor pointer, which covers all IRQs
+expected for the device.
 
-API platform_get_irqs_affinity() is added as a helper to manage this work,
-such that we don't need to export irq_update_affinity_desc() or
-irq_create_affinity_masks().
+The platform device driver is expected to hold all the IRQ numbers, as
+there is no point in holding these in the common platform_device structure.
 
-For now, the HiSilicon SAS v2 hw driver is switched over. This is used
-in the D05 dev board.
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/base/platform.c         | 58 +++++++++++++++++++++++++++++++++
+ include/linux/platform_device.h |  5 +++
+ 2 files changed, 63 insertions(+)
 
-Performance gain observed for 6x SAS SSDs is ~357K -> 420K IOPs for fio read.
-
-[0] https://lore.kernel.org/lkml/84a9411b-4ae3-1928-3d35-1666f2687ec8@huawei.com/
-
-Changes since v1:
-- Update authorship on genirq change
-
-John Garry (3):
-  genirq/affinity: Add irq_update_affinity_desc()
-  Driver core: platform: Add platform_get_irqs_affinity()
-  scsi: hisi_sas: Expose HW queues for v2 hw
-
- drivers/base/platform.c                | 58 +++++++++++++++++++++
- drivers/scsi/hisi_sas/hisi_sas.h       |  4 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 11 ++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 71 ++++++++++++++++++++++----
- include/linux/interrupt.h              |  8 +++
- include/linux/platform_device.h        |  5 ++
- kernel/irq/manage.c                    | 19 +++++++
- 7 files changed, 165 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index 88aef93eb4dd..c110b35469d6 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -269,6 +269,64 @@ int platform_get_irq(struct platform_device *dev, unsigned int num)
+ }
+ EXPORT_SYMBOL_GPL(platform_get_irq);
+ 
++/**
++ * platform_get_irqs_affinity - get all IRQs for a device using an affinity
++ *				descriptor
++ * @dev: platform device pointer
++ * @affd: affinity descriptor, must be set
++ * @count: pointer to count of IRQS
++ * @irqs: pointer holder for IRQ numbers
++ *
++ * Gets a full set of IRQs for a platform device, and updates IRQ afffinty
++ * according to the passed affinity descriptor
++ *
++ * Return: 0 on success, negative error number on failure.
++ */
++int platform_get_irqs_affinity(struct platform_device *dev,
++			       struct irq_affinity *affd,
++			       unsigned int *count,
++			       int **irqs)
++{
++	struct irq_affinity_desc *desc;
++	int i, *pirqs;
++
++	if (!affd)
++		return -EPERM;
++
++	*count = platform_irq_count(dev);
++
++	if (*count <= affd->pre_vectors + affd->post_vectors)
++		return -EIO;
++
++	pirqs = kcalloc(*count, sizeof(int), GFP_KERNEL);
++	if (!pirqs)
++		return -ENOMEM;
++
++	for (i = 0; i < *count; i++) {
++		int irq = platform_get_irq(dev, i);
++		if (irq < 0) {
++			kfree(pirqs);
++			return irq;
++		}
++		pirqs[i] = irq;
++	}
++
++	desc = irq_create_affinity_masks(*count, affd);
++	if (!desc) {
++		kfree(pirqs);
++		return -ENOMEM;
++	}
++
++	for (i = 0; i < *count; i++)
++		irq_update_affinity_desc(pirqs[i], &desc[i]);
++
++	kfree(desc);
++	*irqs = pirqs;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(platform_get_irqs_affinity);
++
+ /**
+  * platform_irq_count - Count the number of IRQs a platform device uses
+  * @dev: platform device
+diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
+index 77a2aada106d..c3f4fc5a76b9 100644
+--- a/include/linux/platform_device.h
++++ b/include/linux/platform_device.h
+@@ -11,6 +11,7 @@
+ #define _PLATFORM_DEVICE_H_
+ 
+ #include <linux/device.h>
++#include <linux/interrupt.h>
+ 
+ #define PLATFORM_DEVID_NONE	(-1)
+ #define PLATFORM_DEVID_AUTO	(-2)
+@@ -70,6 +71,10 @@ devm_platform_ioremap_resource_byname(struct platform_device *pdev,
+ extern int platform_get_irq(struct platform_device *, unsigned int);
+ extern int platform_get_irq_optional(struct platform_device *, unsigned int);
+ extern int platform_irq_count(struct platform_device *);
++extern int platform_get_irqs_affinity(struct platform_device *dev,
++				      struct irq_affinity *affd,
++				      unsigned int *count,
++				      int **irqs);
+ extern struct resource *platform_get_resource_byname(struct platform_device *,
+ 						     unsigned int,
+ 						     const char *);
 -- 
 2.26.2
 
