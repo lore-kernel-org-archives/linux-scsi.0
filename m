@@ -2,26 +2,25 @@ Return-Path: <SRS0=Vgdy=EE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7105C388F7
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 771E0C55179
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:22:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9816C20791
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:05:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32A9C20791
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 01:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730865AbgJ2BFM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:05:12 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:6982 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730036AbgJ1WFo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2020 18:05:44 -0400
+        id S1729474AbgJ1WEy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:04:54 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7078 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729497AbgJ1WCN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2020 18:02:13 -0400
 Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4CLp3x39q2zhbW6;
-        Wed, 28 Oct 2020 20:37:01 +0800 (CST)
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CLp3v4wslzLqT4;
+        Wed, 28 Oct 2020 20:36:59 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
  14.3.487.0; Wed, 28 Oct 2020 20:36:47 +0800
@@ -32,12 +31,10 @@ To:     <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
 CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <maz@kernel.org>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
-Date:   Wed, 28 Oct 2020 20:33:05 +0800
-Message-ID: <1603888387-52499-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 0/3] Support managed interrupts for platform devices
+Date:   Wed, 28 Oct 2020 20:33:04 +0800
+Message-ID: <1603888387-52499-1-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1603888387-52499-1-git-send-email-john.garry@huawei.com>
-References: <1603888387-52499-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -46,73 +43,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a function to allow the affinity of an interrupt be switched to
-managed, such that interrupts allocated for platform devices may be
-managed.
+So far, managed interrupts are only used for PCI MSIs. This series add
+platform device support for managed interrupts. Initially this topic was
+discussed at [0].
 
-Suggested-by: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- include/linux/interrupt.h |  8 ++++++++
- kernel/irq/manage.c       | 19 +++++++++++++++++++
- 2 files changed, 27 insertions(+)
+The method to enable managed interrupts is to allocate all the IRQs for
+the device, and then switch the interrupts to managed - this is done
+through new function irq_update_affinity_desc().
 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index ee8299eb1f52..870b3251e174 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -352,6 +352,8 @@ extern int irq_can_set_affinity(unsigned int irq);
- extern int irq_select_affinity(unsigned int irq);
- 
- extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
-+extern int irq_update_affinity_desc(unsigned int irq,
-+				    struct irq_affinity_desc *affinity);
- 
- extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
-@@ -387,6 +389,12 @@ static inline int irq_set_affinity_hint(unsigned int irq,
- 	return -EINVAL;
- }
- 
-+static inline int irq_update_affinity_desc(unsigned int irq,
-+					   struct irq_affinity_desc *affinity)
-+{
-+	return -EINVAL;
-+}
-+
- static inline int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
- {
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index c460e0496006..b96af4cde4bc 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -371,6 +371,25 @@ int irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask,
- 	return ret;
- }
- 
-+int irq_update_affinity_desc(unsigned int irq,
-+			     struct irq_affinity_desc *affinity)
-+{
-+	unsigned long flags;
-+	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
-+
-+	if (!desc)
-+		return -EINVAL;
-+
-+	if (affinity->is_managed) {
-+		irqd_set(&desc->irq_data, IRQD_AFFINITY_MANAGED);
-+		irqd_set(&desc->irq_data, IRQD_MANAGED_SHUTDOWN);
-+	}
-+
-+	cpumask_copy(desc->irq_common_data.affinity, &affinity->mask);
-+	irq_put_desc_unlock(desc, flags);
-+	return 0;
-+}
-+
- int __irq_set_affinity(unsigned int irq, const struct cpumask *mask, bool force)
- {
- 	struct irq_desc *desc = irq_to_desc(irq);
+API platform_get_irqs_affinity() is added as a helper to manage this work,
+such that we don't need to export irq_update_affinity_desc() or
+irq_create_affinity_masks().
+
+For now, the HiSilicon SAS v2 hw driver is switched over. This is used
+in the D05 dev board.
+
+Performance gain observed for 6x SAS SSDs is ~357K -> 420K IOPs for fio read.
+
+[0] https://lore.kernel.org/lkml/84a9411b-4ae3-1928-3d35-1666f2687ec8@huawei.com/
+
+Changes since v1:
+- Update authorship on genirq change
+
+John Garry (3):
+  genirq/affinity: Add irq_update_affinity_desc()
+  Driver core: platform: Add platform_get_irqs_affinity()
+  scsi: hisi_sas: Expose HW queues for v2 hw
+
+ drivers/base/platform.c                | 58 +++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas.h       |  4 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 11 ++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 71 ++++++++++++++++++++++----
+ include/linux/interrupt.h              |  8 +++
+ include/linux/platform_device.h        |  5 ++
+ kernel/irq/manage.c                    | 19 +++++++
+ 7 files changed, 165 insertions(+), 11 deletions(-)
+
 -- 
 2.26.2
 
