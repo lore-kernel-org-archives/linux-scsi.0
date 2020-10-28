@@ -2,131 +2,193 @@ Return-Path: <SRS0=SSlb=ED=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB28C388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 01:47:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E4EAC56201
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 21:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AB2322281
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 01:47:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A51EE24859
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 21:33:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="M+1C+LC5"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="sVzeVD51"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726204AbgJ1Bin (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Oct 2020 21:38:43 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:46032 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1833054AbgJ0Xqp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Oct 2020 19:46:45 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 1A39C412F3;
-        Tue, 27 Oct 2020 23:46:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1603842400;
-         x=1605656801; bh=z1lAivyAWMVrhdFLfzNfi3hY5tnKbWtUjtmUI3M2EjE=; b=
-        M+1C+LC5dSvta1Qn1oUT0HmPktvDQ8OSsYzA1UBUZfQZW2huYII2kN8EcK+Eqrmn
-        Oaa6d9vxUO8STh2NQzF8CP0wrkb/D1kFfVzvGrjb9YAi9+tHOoJ+oFDz5V3OSw9T
-        dFSyre3QPSeW1iqYnsqgnVBchqPzzA73VtDM7KkvZ04=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id wbYx8PcnIBIm; Wed, 28 Oct 2020 02:46:40 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id B1E6841279;
-        Wed, 28 Oct 2020 02:46:40 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-04.corp.yadro.com
- (172.17.100.104) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 28
- Oct 2020 02:46:39 +0300
-Date:   Wed, 28 Oct 2020 02:46:39 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     Anastasia Kovaleva <a.kovaleva@yadro.com>,
-        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>
-Subject: Re: [PATCH 3/3] scsi: target: core: Change ASCQ for residual write
-Message-ID: <20201027234639.GB88490@SPB-NB-133.local>
-References: <20201022172011.42367-1-a.kovaleva@yadro.com>
- <20201022172011.42367-4-a.kovaleva@yadro.com>
- <e2b215ca-0aa8-bdae-e5bd-292a09d8282e@acm.org>
- <20201024121315.GA35317@SPB-NB-133.local>
- <b831a7db-1da2-c293-a8f6-d9c62f68c224@acm.org>
- <20201026131226.GA88490@SPB-NB-133.local>
- <270e2edf-49c9-942f-ac3d-b6dfa0aca8f7@acm.org>
+        id S1725856AbgJ1VdB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:33:01 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:2902 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725828AbgJ1Vc4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Oct 2020 17:32:56 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09SI25qA123705;
+        Wed, 28 Oct 2020 14:31:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : sender; s=pp1;
+ bh=TQtuFv4i4lEPirDbebLwB2JvxgOWERtBtKQF8MOx+2M=;
+ b=sVzeVD510ul6oUUaSTdXXy1l1KKC0D8Wb8P7Wpx09ALIHHbLzxR2CEpRGl76wxUnQkKQ
+ ttXkVM9SHb8RiYEi3h26pO+fz4R+JsC64HkYK7yBXCD5Cah4Nve53aU9Zpu4KzkGWbXf
+ jfTlqhihG90eIQhrDyDo3oUV5ro8MXJZ8oUC8rLeGzpoiNoSlEJD9BDWFNaBgcGXFaMo
+ +K9pMsnJsZpim1YZ9wHsaAYG05Kg4JPBGdnSy3CZ6o28Se4sk4ZGksbL9Q+0389nC26E
+ SSDM9qHHHXqScHynf/TtukVuUCYNk5I5c3wMzlJ46L9La7e4dm11prLqy7pkgDwtlgKu 9Q== 
+Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 34esjm5x41-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 28 Oct 2020 14:30:59 -0400
+Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
+        by ppma06fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 09SITIYG020422;
+        Wed, 28 Oct 2020 18:30:57 GMT
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+        by ppma06fra.de.ibm.com with ESMTP id 34ejqe8rw8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 28 Oct 2020 18:30:57 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 09SIUsm931981874
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 28 Oct 2020 18:30:54 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BB4CC4C05C;
+        Wed, 28 Oct 2020 18:30:54 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id AD9C74C05E;
+        Wed, 28 Oct 2020 18:30:54 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.145.72.181])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Wed, 28 Oct 2020 18:30:54 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1kXqDl-002ps6-Mk; Wed, 28 Oct 2020 19:30:53 +0100
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Julian Wiedmann <jwi@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Fedor Loshakov <loshakov@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+Subject: [PATCH 5/5] zfcp: handle event-lost notification for Version Change events
+Date:   Wed, 28 Oct 2020 19:30:52 +0100
+Message-Id: <297c7be2944c3714863fcd22d531d910312d29f0.1603908167.git.bblock@linux.ibm.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <cover.1603908167.git.bblock@linux.ibm.com>
+References: <cover.1603908167.git.bblock@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <270e2edf-49c9-942f-ac3d-b6dfa0aca8f7@acm.org>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-04.corp.yadro.com (172.17.100.104)
+Organization: IBM Deutschland Research & Development GmbH, Vorsitz. AufsR. Gregor Pillen, Geschaeftsfuehrung Dirk Wittkopp, Sitz der Gesellschaft Boeblingen, Registergericht AmtsG Stuttgart, HRB 243294
+Content-Transfer-Encoding: 8bit
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-10-28_08:2020-10-28,2020-10-28 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 spamscore=0
+ adultscore=0 mlxscore=0 phishscore=0 bulkscore=0 lowpriorityscore=0
+ malwarescore=0 clxscore=1015 priorityscore=1501 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010280116
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 07:42:55PM -0700, Bart Van Assche wrote:
-> On 10/26/20 6:12 AM, Roman Bolshakov wrote:
-> > Note, that if we talk about SSC over FCP, then "9.4.2 FCP_DATA IUs for
-> > read and write operations" does additionally apply. Perhaps a) from
-> > "9.4.2 FCP_DATA IUs for read and write operations" works well for SSC:
-> > 
-> >   a) process the command normally except that data beyond the FCP_DL count
-> >   shall not be requested or transferred;
-> > 
-> > The clause allows to accomodate variable-block tranfers from SSC.
-> > 
-> > So, what if we return CHECK CONDITION only for SBC WRITEs with
-> > residuals?  Then it has no impact on SSC and other device types. In
-> > future, we might also add a patch that would fail SBC READs with
-> > residuals for sake of consistency. That behaviour would be beneficial
-> > for SBC devices as no host could corrupt data or itself by forming,
-> > requesting invalid data buffer.
-> 
-> Maybe I'm overly concerned. I do not know for sure which applications
-> rely on the current behavior of residual handling. All I know about
-> these applications is based on what others wrote about these
-> applications. An example from
-> https://www.t10.org/pipermail/t10/2003-November/009317.html: "We have
-> customers who also use overlength and underlength transfers as a normal
-> mode of operation."
-> 
+From: Julian Wiedmann <jwi@linux.ibm.com>
 
-Hi Bart,
+As recovery for a lost Version Change event, trigger an
+Exchange Config Data cmd to retrieve the current FW version.
 
-Thanks for raising the point about overlength/underlength. If you wish
-we can add an extra check that fails DMA_TO_DEVICE && DATA with
-residuals only for SBC devices but note that before the series,
-underflow/overflow for WRITE didn't return GOOD status. The particular
-patch only changes sense code to more meaningful from the former INVALID
-FIELD IN CDB.
+Doing so requires process context (as eg. zfcp_qdio_sbal_get()
+might need to sleep), so defer from tasklet context into a work
+item.
 
-Theoretically, it could be good to have a configurable switch how LIO
-handles overflows/underflows for a LUN. Then it'd be possible to
-configure desired behaviour on a per-LUN basis. But there should be a
-clear need & demand for the feature to avoid maintenance of dead code.
+Suggested-by: Steffen Maier <maier@linux.ibm.com>
+Signed-off-by: Julian Wiedmann <jwi@linux.ibm.com>
+Reviewed-by: Steffen Maier <maier@linux.ibm.com>
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
+---
+ drivers/s390/scsi/zfcp_aux.c | 11 +++++++++++
+ drivers/s390/scsi/zfcp_def.h |  1 +
+ drivers/s390/scsi/zfcp_fsf.c |  3 +++
+ drivers/s390/scsi/zfcp_fsf.h |  1 +
+ 4 files changed, 16 insertions(+)
 
-> An additional question is what behavior other operating systems than
-> Linux expect? There are probably setups in which another operating
-> system than Linux communicates with a LIO SCSI target?
-> 
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+index 18b713a616de..768873dd55b8 100644
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -292,6 +292,14 @@ static void _zfcp_status_read_scheduler(struct work_struct *work)
+ 					     stat_work));
+ }
+ 
++static void zfcp_version_change_lost_work(struct work_struct *work)
++{
++	struct zfcp_adapter *adapter = container_of(work, struct zfcp_adapter,
++						    version_change_lost_work);
++
++	zfcp_fsf_exchange_config_data_sync(adapter->qdio, NULL);
++}
++
+ static void zfcp_print_sl(struct seq_file *m, struct service_level *sl)
+ {
+ 	struct zfcp_adapter *adapter =
+@@ -353,6 +361,8 @@ struct zfcp_adapter *zfcp_adapter_enqueue(struct ccw_device *ccw_device)
+ 	INIT_WORK(&adapter->stat_work, _zfcp_status_read_scheduler);
+ 	INIT_DELAYED_WORK(&adapter->scan_work, zfcp_fc_scan_ports);
+ 	INIT_WORK(&adapter->ns_up_work, zfcp_fc_sym_name_update);
++	INIT_WORK(&adapter->version_change_lost_work,
++		  zfcp_version_change_lost_work);
+ 
+ 	adapter->next_port_scan = jiffies;
+ 
+@@ -429,6 +439,7 @@ void zfcp_adapter_unregister(struct zfcp_adapter *adapter)
+ 	cancel_delayed_work_sync(&adapter->scan_work);
+ 	cancel_work_sync(&adapter->stat_work);
+ 	cancel_work_sync(&adapter->ns_up_work);
++	cancel_work_sync(&adapter->version_change_lost_work);
+ 	zfcp_destroy_adapter_work_queue(adapter);
+ 
+ 	zfcp_fc_wka_ports_force_offline(adapter->gs);
+diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
+index da8a5ceb615c..f656d74a5f94 100644
+--- a/drivers/s390/scsi/zfcp_def.h
++++ b/drivers/s390/scsi/zfcp_def.h
+@@ -201,6 +201,7 @@ struct zfcp_adapter {
+ 	struct zfcp_fc_events events;
+ 	unsigned long		next_port_scan;
+ 	struct zfcp_diag_adapter	*diagnostics;
++	struct work_struct	version_change_lost_work;
+ };
+ 
+ struct zfcp_port {
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index afa95e04eceb..7593a9667b3e 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -309,6 +309,9 @@ static void zfcp_fsf_status_read_handler(struct zfcp_fsf_req *req)
+ 	case FSF_STATUS_READ_NOTIFICATION_LOST:
+ 		if (sr_buf->status_subtype & FSF_STATUS_READ_SUB_INCOMING_ELS)
+ 			zfcp_fc_conditional_port_scan(adapter);
++		if (sr_buf->status_subtype & FSF_STATUS_READ_SUB_VERSION_CHANGE)
++			queue_work(adapter->work_queue,
++				   &adapter->version_change_lost_work);
+ 		break;
+ 	case FSF_STATUS_READ_FEATURE_UPDATE_ALERT:
+ 		adapter->adapter_features = sr_buf->payload.word[0];
+diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
+index 26ad7a0c5ce3..5e6b601af980 100644
+--- a/drivers/s390/scsi/zfcp_fsf.h
++++ b/drivers/s390/scsi/zfcp_fsf.h
+@@ -143,6 +143,7 @@
+ 
+ /* status subtypes for unsolicited status notification lost */
+ #define FSF_STATUS_READ_SUB_INCOMING_ELS	0x00000001
++#define FSF_STATUS_READ_SUB_VERSION_CHANGE	0x00000100
+ 
+ /* status subtypes for version change */
+ #define FSF_STATUS_READ_SUB_LIC_CHANGE		0x00000001
+-- 
+2.26.2
 
-TBH I don't know any hosts that do SBC WRITE with residuals as normal
-course of operation. They wouldn't be able to work with LIO because it
-never returns GOOD status on WRITE with residuals. I can send an update
-later if the series works fine with modern hosts (~1 month, after a few
-cycles of system testing).
-
-Fun fact, ~60 years ago WRITE overflows were used to achieve behaviour
-similar to disk zeroing/WRITE SAME [1].
-
-1. https://mailarchive.ietf.org/arch/msg/ips/135ycRlgwUg1sb3gRrUQ3-lSXg0/
-
-Thanks,
-Roman
