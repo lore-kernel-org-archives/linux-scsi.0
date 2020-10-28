@@ -2,244 +2,191 @@ Return-Path: <SRS0=SSlb=ED=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0B0BC388F7
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 22:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BE4C55179
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 22:10:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F6A62470E
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 22:04:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4174D246C5
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Oct 2020 22:10:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="pKUy4HZN"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SdUu6nlN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729583AbgJ1WEx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:04:53 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:5888 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728327AbgJ1WBK (ORCPT
+        id S1730563AbgJ1WKh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:10:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:33200 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730532AbgJ1WKg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Oct 2020 18:01:10 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09SI2P6q034700;
-        Wed, 28 Oct 2020 14:30:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : sender; s=pp1;
- bh=JNiX6m+j8hfc5BWwDrbqyi4olR4cLc/NmQ+QKVJWL4k=;
- b=pKUy4HZNa9rkihoWzpfppzfnsoZidLWiuyWdEYs63VYz54SsCSRndnr+Dah5N+8twZ3S
- gSEz5E7bvsC15NySVUeYDvI2dECbVHDv++3E1y7872U+jXHLBrdDZU62RUss578C3kJS
- 3D/Rh31srW1kVIqihXoNmJFkEY6a8cuY9IHEck79EtzTbmB6WQI7BQkeHs8ZY99ZLLJr
- tzOkm1/pB9lums3GiwNCmwcvrqdSl9faWeRUGD13FhOSzhFb4Ou9Xqwrn0120vECY0lD
- 22v5ZQGgAW0g+WJ0IQRUcxLcXd9pISY/OcZ/nZxHOvFldAptFotJFEzt1X+HDw63c3on uQ== 
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 34f97ubkt6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 28 Oct 2020 14:30:58 -0400
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 09SIUCba004495;
-        Wed, 28 Oct 2020 18:30:56 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma01fra.de.ibm.com with ESMTP id 34dwh0hcgx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 28 Oct 2020 18:30:56 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 09SIUroZ30736662
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 28 Oct 2020 18:30:53 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9A7FB4C05C;
-        Wed, 28 Oct 2020 18:30:53 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8F9364C044;
-        Wed, 28 Oct 2020 18:30:53 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.72.181])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Wed, 28 Oct 2020 18:30:53 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1kXqDk-002prv-Ir; Wed, 28 Oct 2020 19:30:52 +0100
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Wed, 28 Oct 2020 18:10:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603923034;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DeXZH2CM/0JL0dV2e8UQ5dRCc4s7qSC0e1ICk1+6Htw=;
+        b=SdUu6nlNKXHLM6639ZdXo64xKhqxa+dYKy9d3pF7SUn5jP/0BxMif9wmm4lo6qWK2OAKgZ
+        uCxFMZTE64NhBIRMxMRFZLXisG7Xbofjsyg0aPQygl2RKT7oWMudRAFnL1ZrwpCB0szsgB
+        qOf7JSQhJFMrXw809k4DfWDpnDZekdY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-203-Pl_IbCEiNHyU9M9lSXt-Ug-1; Wed, 28 Oct 2020 13:09:53 -0400
+X-MC-Unique: Pl_IbCEiNHyU9M9lSXt-Ug-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4F94F1016CE8;
+        Wed, 28 Oct 2020 17:09:52 +0000 (UTC)
+Received: from [10.35.206.112] (unknown [10.35.206.112])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 42C812C31E;
+        Wed, 28 Oct 2020 17:09:49 +0000 (UTC)
+Subject: Re: [PATCH 2/2] target: iscsi: fix a race condition when aborting a
+ task
+To:     Michael Christie <michael.christie@oracle.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Julian Wiedmann <jwi@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Fedor Loshakov <loshakov@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
-Subject: [PATCH 1/5] zfcp: lift Input Queue tasklet from qdio
-Date:   Wed, 28 Oct 2020 19:30:48 +0100
-Message-Id: <94a765211c48b74a7b91c5e60b158de01db98d43.1603908167.git.bblock@linux.ibm.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <cover.1603908167.git.bblock@linux.ibm.com>
-References: <cover.1603908167.git.bblock@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        bvanassche@acm.org
+References: <20201007145326.56850-1-mlombard@redhat.com>
+ <20201007145326.56850-3-mlombard@redhat.com>
+ <20daa17d-08e7-a412-4d33-bcf75587eca6@oracle.com>
+ <1852a8bd-3edc-5c49-fa51-9afe52f125a8@redhat.com>
+ <184667b1-032b-c36f-d1e7-5cfef961c763@oracle.com>
+ <71691FED-C164-482C-B629-A8B89B81E566@oracle.com>
+From:   Maurizio Lombardi <mlombard@redhat.com>
+Message-ID: <a936cc4e-1610-5201-5960-107689b81820@redhat.com>
+Date:   Wed, 28 Oct 2020 18:09:48 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
 MIME-Version: 1.0
-Organization: IBM Deutschland Research & Development GmbH, Vorsitz. AufsR. Gregor Pillen, Geschaeftsfuehrung Dirk Wittkopp, Sitz der Gesellschaft Boeblingen, Registergericht AmtsG Stuttgart, HRB 243294
-Content-Transfer-Encoding: 8bit
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-10-28_08:2020-10-28,2020-10-28 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 spamscore=0 phishscore=0 bulkscore=0 priorityscore=1501
- clxscore=1015 suspectscore=2 impostorscore=0 mlxscore=0 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010280116
+In-Reply-To: <71691FED-C164-482C-B629-A8B89B81E566@oracle.com>
+Content-Type: text/plain; charset=iso-8859-2
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Julian Wiedmann <jwi@linux.ibm.com>
 
-Shift the IRQ tasklet processing from the qdio layer into zfcp.
-This will allow for a good amount of cleanups in qdio, and provides
-future opportunity to improve the IRQ processing inside zfcp.
 
-We continue to use the qdio layer's internal tasklet/timer mechanism
-(ie. scan_threshold etc) to check for Request Queue completions.
-Initially we planned to check for such completions after inspecting
-the Response Queue - this should typically work, but there's a
-theoretical race where the device only presents the Request Queue
-completions _after_ all Response Queue processing has finished.
-If the Request Queue is then also _completely_ full, we could send no
-further IOs and thus get no interrupt that would trigger an inspection
-of the Request Queue.
-So for now stick to the old model, where we can trust that such a race
-would be recovered by qdio's internal timer.
+Dne 27. 10. 20 v 21:03 Michael Christie napsal(a):
+> 
+> 
+>> On Oct 27, 2020, at 12:54 PM, Mike Christie <michael.christie@oracle.com> wrote:
+>>
+>> On 10/27/20 8:49 AM, Maurizio Lombardi wrote:
+>>> Hello Mike,
+>>>
+>>> Dne 22. 10. 20 v 4:42 Mike Christie napsal(a):
+>>>> If we free the cmd from the abort path, then for your conn stop plus abort race case, could we do:
+>>>>
+>>>> 1. thread1 runs iscsit_release_commands_from_conn and sets CMD_T_FABRIC_STOP.
+>>>> 2. thread2 runs iscsit_aborted_task and then does __iscsit_free_cmd. It then returns from the aborted_task callout and we finish target_handle_abort and do:
+>>>>
+>>>> target_handle_abort -> transport_cmd_check_stop_to_fabric -> lio_check_stop_free -> target_put_sess_cmd
+>>>>
+>>>> The cmd is now freed.
+>>>> 3. thread1 now finishes iscsit_release_commands_from_conn and runs iscsit_free_cmd while accessing a command we just released.
+>>>>
+>>>>
+>>>
+>>> Thanks for the review!
+>>>
+>>> There are definitely some problems with task aborts and commands' refcounting *
+>>> but this is a different bug than the one this patch is trying to solve (a race to list_del_init());
+>>> unless you are saying that abort tasks should never be executed when the connection 
+>>> is going down and we have to prevent such cases from happening at all.
+>>
+>> Yeah, I think if we prevent the race then we fix the refcount issue and your issue.
+>> Here is a patch that is only compile tested:
+>>
+>> From 209709bcedd9a6ce6003e6bb86f3ebf547dca6af Mon Sep 17 00:00:00 2001
+>> From: Mike Christie <michael.christie@oracle.com>
+>> Date: Tue, 27 Oct 2020 12:30:53 -0500
+>> Subject: [PATCH] iscsi target: fix cmd abort vs fabric stop race
+>>
+>> The abort and cmd stop paths can race where:
+>>
+>> 1. thread1 runs iscsit_release_commands_from_conn and sets
+>> CMD_T_FABRIC_STOP.
+>> 2. thread2 runs iscsit_aborted_task and then does __iscsit_free_cmd. It
+>> then returns from the aborted_task callout and we finish
+>> target_handle_abort and do:
+>>
+>> target_handle_abort -> transport_cmd_check_stop_to_fabric ->
+>> lio_check_stop_free -> target_put_sess_cmd
+>>
+>> The cmd is now freed.
+>> 3. thread1 now finishes iscsit_release_commands_from_conn and runs
+>> iscsit_free_cmd while accessing a command we just released.
+>>
+>> In __target_check_io_state we check for CMD_T_FABRIC_STOP and set the
+>> CMD_T_ABORTED if the driver is not cleaning up the cmd because of
+>> a session shutdown. However, iscsit_release_commands_from_conn only
+>> sets the CMD_T_FABRIC_STOP and does not check to see if the abort path
+>> has claimed completion ownership of the command.
+>>
+>> This adds a check in iscsit_release_commands_from_conn so only the
+>> abort or fabric stop path cleanup the command.
+>> ---
+>> drivers/target/iscsi/iscsi_target.c | 13 +++++++++++--
+>> 1 file changed, 11 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+>> index f77e5ee..85027d3 100644
+>> --- a/drivers/target/iscsi/iscsi_target.c
+>> +++ b/drivers/target/iscsi/iscsi_target.c
+>> @@ -483,8 +483,7 @@ int iscsit_queue_rsp(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
+>> void iscsit_aborted_task(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
+>> {
+>> 	spin_lock_bh(&conn->cmd_lock);
+>> -	if (!list_empty(&cmd->i_conn_node) &&
+>> -	    !(cmd->se_cmd.transport_state & CMD_T_FABRIC_STOP))
+>> +	if (!list_empty(&cmd->i_conn_node))
+>> 		list_del_init(&cmd->i_conn_node);
+>> 	spin_unlock_bh(&conn->cmd_lock);
+>>
+>> @@ -4088,6 +4087,16 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+>>
+>> 		if (se_cmd->se_tfo != NULL) {
+>> 			spin_lock_irq(&se_cmd->t_state_lock);
+>> +			if (se_cmd->transport_state & CMD_T_ABORTED) {
+>> +				/*
+>> +				 * LIO's abort path owns the cleanup for this,
+>> +				 * so put it back on the list and let
+>> +				 * aborted_task handle it.
+>> +				 */
+>> +				list_add_tail(&cmd->i_conn_node,
+>> +					      &conn->conn_cmd_list);
+> 
+> 
+> That should have been a move from the tmp list back to the conn_cmd_list.
 
-Code-flow wise, this establishes two levels of control:
-1. the qdio layer will only deliver IRQs to the device driver if the
-   QDIO_IRQ_DISABLED flag is cleared. zfcp manages this through
-   qdio_start_irq() / qdio_stop_irq(). The initial state is DISABLED,
-   and zfcp_qdio_open() schedules zfcp's IRQ tasklet once during startup
-   to explicitly enable IRQ delivery.
-2. the zfcp tasklet is initialized with tasklet_disable(), and only gets
-   enabled once we open the qdio device.
-   When closing the qdio device, we must disable the tasklet _before_
-   disabling IRQ delivery (otherwise a concurrently running tasklet
-   could re-enable IRQ delivery after we disabled it).
+Nice, it looks simple and I will test it.
+I am a bit worried there could be other possible race conditions.
 
-   A final tasklet_kill() during teardown ensures that no lingering
-   tasklet_schedule() is still accessing the tasklet structure.
+Example: 
 
-Signed-off-by: Julian Wiedmann <jwi@linux.ibm.com>
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
----
- drivers/s390/scsi/zfcp_qdio.c | 39 +++++++++++++++++++++++++++++++++++
- drivers/s390/scsi/zfcp_qdio.h |  2 ++
- 2 files changed, 41 insertions(+)
+thread1: connection is going to be closed,
+iscsit_release_commands_from_conn() finds a command that is about
+to be aborted, re-adds it to conn_cmd_list and proceeds.
+iscsit_close_connection() decreases the conn usage count and finally calls iscsit_free_conn(conn)
+that destroys the conn structure.
 
-diff --git a/drivers/s390/scsi/zfcp_qdio.c b/drivers/s390/scsi/zfcp_qdio.c
-index a8a514074084..9fc045ddf66d 100644
---- a/drivers/s390/scsi/zfcp_qdio.c
-+++ b/drivers/s390/scsi/zfcp_qdio.c
-@@ -131,6 +131,33 @@ static void zfcp_qdio_int_resp(struct ccw_device *cdev, unsigned int qdio_err,
- 		zfcp_erp_adapter_reopen(qdio->adapter, 0, "qdires2");
- }
- 
-+static void zfcp_qdio_irq_tasklet(struct tasklet_struct *tasklet)
-+{
-+	struct zfcp_qdio *qdio = from_tasklet(qdio, tasklet, irq_tasklet);
-+	struct ccw_device *cdev = qdio->adapter->ccw_device;
-+	unsigned int start, error;
-+	int completed;
-+
-+	/* Check the Response Queue, and kick off the Request Queue tasklet: */
-+	completed = qdio_get_next_buffers(cdev, 0, &start, &error);
-+	if (completed < 0)
-+		return;
-+	if (completed > 0)
-+		zfcp_qdio_int_resp(cdev, error, 0, start, completed,
-+				   (unsigned long) qdio);
-+
-+	if (qdio_start_irq(cdev))
-+		/* More work pending: */
-+		tasklet_schedule(&qdio->irq_tasklet);
-+}
-+
-+static void zfcp_qdio_poll(struct ccw_device *cdev, unsigned long data)
-+{
-+	struct zfcp_qdio *qdio = (struct zfcp_qdio *) data;
-+
-+	tasklet_schedule(&qdio->irq_tasklet);
-+}
-+
- static struct qdio_buffer_element *
- zfcp_qdio_sbal_chain(struct zfcp_qdio *qdio, struct zfcp_qdio_req *q_req)
- {
-@@ -332,6 +359,8 @@ void zfcp_qdio_close(struct zfcp_qdio *qdio)
- 
- 	wake_up(&qdio->req_q_wq);
- 
-+	tasklet_disable(&qdio->irq_tasklet);
-+	qdio_stop_irq(adapter->ccw_device);
- 	qdio_shutdown(adapter->ccw_device, QDIO_FLAG_CLEANUP_USING_CLEAR);
- 
- 	/* cleanup used outbound sbals */
-@@ -387,6 +416,7 @@ int zfcp_qdio_open(struct zfcp_qdio *qdio)
- 	init_data.no_output_qs = 1;
- 	init_data.input_handler = zfcp_qdio_int_resp;
- 	init_data.output_handler = zfcp_qdio_int_req;
-+	init_data.irq_poll = zfcp_qdio_poll;
- 	init_data.int_parm = (unsigned long) qdio;
- 	init_data.input_sbal_addr_array = input_sbals;
- 	init_data.output_sbal_addr_array = output_sbals;
-@@ -433,6 +463,11 @@ int zfcp_qdio_open(struct zfcp_qdio *qdio)
- 	atomic_set(&qdio->req_q_free, QDIO_MAX_BUFFERS_PER_Q);
- 	atomic_or(ZFCP_STATUS_ADAPTER_QDIOUP, &qdio->adapter->status);
- 
-+	/* Enable processing for QDIO interrupts: */
-+	tasklet_enable(&qdio->irq_tasklet);
-+	/* This results in a qdio_start_irq(): */
-+	tasklet_schedule(&qdio->irq_tasklet);
-+
- 	zfcp_qdio_shost_update(adapter, qdio);
- 
- 	return 0;
-@@ -450,6 +485,8 @@ void zfcp_qdio_destroy(struct zfcp_qdio *qdio)
- 	if (!qdio)
- 		return;
- 
-+	tasklet_kill(&qdio->irq_tasklet);
-+
- 	if (qdio->adapter->ccw_device)
- 		qdio_free(qdio->adapter->ccw_device);
- 
-@@ -475,6 +512,8 @@ int zfcp_qdio_setup(struct zfcp_adapter *adapter)
- 
- 	spin_lock_init(&qdio->req_q_lock);
- 	spin_lock_init(&qdio->stat_lock);
-+	tasklet_setup(&qdio->irq_tasklet, zfcp_qdio_irq_tasklet);
-+	tasklet_disable(&qdio->irq_tasklet);
- 
- 	adapter->qdio = qdio;
- 	return 0;
-diff --git a/drivers/s390/scsi/zfcp_qdio.h b/drivers/s390/scsi/zfcp_qdio.h
-index 6b43d6b254be..9c1f310db155 100644
---- a/drivers/s390/scsi/zfcp_qdio.h
-+++ b/drivers/s390/scsi/zfcp_qdio.h
-@@ -10,6 +10,7 @@
- #ifndef ZFCP_QDIO_H
- #define ZFCP_QDIO_H
- 
-+#include <linux/interrupt.h>
- #include <asm/qdio.h>
- 
- #define ZFCP_QDIO_SBALE_LEN	PAGE_SIZE
-@@ -44,6 +45,7 @@ struct zfcp_qdio {
- 	u64			req_q_util;
- 	atomic_t		req_q_full;
- 	wait_queue_head_t	req_q_wq;
-+	struct tasklet_struct	irq_tasklet;
- 	struct zfcp_adapter	*adapter;
- 	u16			max_sbale_per_sbal;
- 	u16			max_sbale_per_req;
--- 
-2.26.2
+thread2: iscsit_aborted_task() gets called and tries to lock the conn->cmd_lock spinlock, dereferencing
+an invalid pointer.
+
+Possible solutions that I can think of:
+
+- Make iscsit_release_commands_from_conn() wait for the abort task to finish
+or
+- abort handler could hold a reference to the conn structure so that iscsit_close_connection()
+will sleep when calling iscsit_check_conn_usage_count(conn) until abort finishes.
+
+
+Maurizio
 
