@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E34C4363A
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 15:31:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD71C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 15:31:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B09A420724
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 15:30:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B960206F4
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Oct 2020 15:31:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="v9sUALIz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HrC9j+ri"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728163AbgJ2Pax (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Oct 2020 11:30:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46454 "EHLO
+        id S1728360AbgJ2PbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Oct 2020 11:31:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728150AbgJ2Pa0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2020 11:30:26 -0400
+        with ESMTP id S1728249AbgJ2Pa7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2020 11:30:59 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7584AC0613D5;
-        Thu, 29 Oct 2020 08:30:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 687AFC0613D3;
+        Thu, 29 Oct 2020 08:21:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Yo3ZB9M+nmgNalslzrZu+fIoZz4HDZTJc+r4wSqNG4o=; b=v9sUALIzWxZQwIHOdb4X1J2Nin
-        jM9luF5ZIGUZGnlOd0UHFwStZUcS+R7bEnOEI6cJxkV0GrDD1/TQEZPv5Cagq/87oxvjbAxXB9MoB
-        Ple4pt39L3tInusvum4wqiSqRdULkkcBMg0S6eaSsr+NKabzeHWiXDzDl+atbVUHvU5FPuu7+6ho1
-        zl95NWxLFXDyc581fye5mhazenix6X07mFMtNOXs1n2mRiu7yarB/bhzQuqzSMcTqZrH0mEcRzLO6
-        u9BGmf2OJ5mqcJQ0tAYZehPiJ2mu+53JvD889oRj4KVr0+NOxZqRpWgtd+8zdhtU/tDHsutng+SBx
-        q1bLsrtw==;
+        bh=gVY2C3Yr3hbZHWXTJ3PuAFR8cZ/e33HSpQGIidM7NRQ=; b=HrC9j+riyfO1S9gr/g++5iI0N3
+        74NLSLyzTtNUKZ9XF3rwp2K1v/s+fjg2qcSYjf8QOmUICfgBrPeOSA1jbxUxF7r9HJB4hbyRx7eHk
+        FojcS1VgBVwdrVokJXM0BtgkFwqQskJ3K8Dx40UqDdugqgQFIJHy1X4dw53zzQAjv29HotPTRtdHB
+        3MOvjgI/R4rDuc4u757UYn1+KcRPt8DRgowi8eh9QpLFKw9ZJA3a4+GIU3UDH6ViAVvzgnqkn6GmD
+        fohXz6rwzElTUCRi/NGIC3TGBpsu/Az9PdclZijenq0WSNuZgbFUF38rLy8pFKTK4Ov2TQ1iwWu7X
+        6bFOAwYg==;
 Received: from 089144193201.atnat0002.highway.a1.net ([89.144.193.201] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kY9sP-0007Sd-Gg; Thu, 29 Oct 2020 15:30:18 +0000
+        id 1kY9jQ-0006nN-Gz; Thu, 29 Oct 2020 15:20:55 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -48,10 +48,11 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Michael Schmitz <schmitzmic@gmail.com>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [PATCH 13/18] floppy: use a separate gendisk for each media format
-Date:   Thu, 29 Oct 2020 15:58:36 +0100
-Message-Id: <20201029145841.144173-14-hch@lst.de>
+        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 09/18] brd: use __register_blkdev to allocate devices on demand
+Date:   Thu, 29 Oct 2020 15:58:32 +0100
+Message-Id: <20201029145841.144173-10-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201029145841.144173-1-hch@lst.de>
 References: <20201029145841.144173-1-hch@lst.de>
@@ -62,298 +63,116 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The floppy driver usually autodetects the media when used with the
-normal /dev/fd? devices, which also are the only nodes created by udev.
-But it also supports various aliases that force a given media format.
-That is currently supported using the blk_register_region framework
-which finds the floppy gendisk even for a 'mismatched' dev_t.  The
-problem with this (besides the code complexity) is that it creates
-multiple struct block_device instances for the whole device of a
-single gendisk, which can lead to interesting issues in code not
-aware of that fact.
-
-To fix this just create a separate gendisk for each of the aliases
-if they are accessed.
+Use the simpler mechanism attached to major_name to allocate a brd device
+when a currently unregistered minor is accessed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/block/floppy.c | 154 ++++++++++++++++++++++++++---------------
- 1 file changed, 97 insertions(+), 57 deletions(-)
+ drivers/block/brd.c | 39 +++++++++++----------------------------
+ 1 file changed, 11 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
-index 7df79ae6b0a1e1..dfe1dfc901ccc2 100644
---- a/drivers/block/floppy.c
-+++ b/drivers/block/floppy.c
-@@ -402,7 +402,6 @@ static struct floppy_drive_params drive_params[N_DRIVE];
- static struct floppy_drive_struct drive_state[N_DRIVE];
- static struct floppy_write_errors write_errors[N_DRIVE];
- static struct timer_list motor_off_timer[N_DRIVE];
--static struct gendisk *disks[N_DRIVE];
- static struct blk_mq_tag_set tag_sets[N_DRIVE];
- static struct block_device *opened_bdev[N_DRIVE];
- static DEFINE_MUTEX(open_lock);
-@@ -477,6 +476,8 @@ static struct floppy_struct floppy_type[32] = {
- 	{ 3200,20,2,80,0,0x1C,0x00,0xCF,0x2C,"H1600" }, /* 31 1.6MB 3.5"    */
- };
- 
-+static struct gendisk *disks[N_DRIVE][ARRAY_SIZE(floppy_type)];
-+
- #define SECTSIZE (_FD_SECTSIZE(*floppy))
- 
- /* Auto-detection: Disk type used until the next media change occurs. */
-@@ -4111,7 +4112,7 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
- 
- 	new_dev = MINOR(bdev->bd_dev);
- 	drive_state[drive].fd_device = new_dev;
--	set_capacity(disks[drive], floppy_sizes[new_dev]);
-+	set_capacity(disks[drive][ITYPE(new_dev)], floppy_sizes[new_dev]);
- 	if (old_dev != -1 && old_dev != new_dev) {
- 		if (buffer_drive == drive)
- 			buffer_track = -1;
-@@ -4579,15 +4580,58 @@ static bool floppy_available(int drive)
- 	return true;
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index cc49a921339f77..c43a6ab4b1f39f 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -426,14 +426,15 @@ static void brd_free(struct brd_device *brd)
+ 	kfree(brd);
  }
  
--static struct kobject *floppy_find(dev_t dev, int *part, void *data)
-+static int floppy_alloc_disk(unsigned int drive, unsigned int type)
+-static struct brd_device *brd_init_one(int i, bool *new)
++static void brd_probe(dev_t dev)
  {
--	int drive = (*part & 3) | ((*part & 0x80) >> 5);
--	if (drive >= N_DRIVE || !floppy_available(drive))
--		return NULL;
--	if (((*part >> 2) & 0x1f) >= ARRAY_SIZE(floppy_type))
--		return NULL;
--	*part = 0;
--	return get_disk_and_module(disks[drive]);
-+	struct gendisk *disk;
-+	int err;
+ 	struct brd_device *brd;
++	int i = MINOR(dev) / max_part;
+ 
+-	*new = false;
++	mutex_lock(&brd_devices_mutex);
+ 	list_for_each_entry(brd, &brd_devices, brd_list) {
+ 		if (brd->brd_number == i)
+-			goto out;
++			goto out_unlock;
+ 	}
+ 
+ 	brd = brd_alloc(i);
+@@ -442,9 +443,9 @@ static struct brd_device *brd_init_one(int i, bool *new)
+ 		add_disk(brd->brd_disk);
+ 		list_add_tail(&brd->brd_list, &brd_devices);
+ 	}
+-	*new = true;
+-out:
+-	return brd;
 +
-+	disk = alloc_disk(1);
-+	if (!disk)
-+		return -ENOMEM;
-+
-+	disk->queue = blk_mq_init_queue(&tag_sets[drive]);
-+	if (IS_ERR(disk->queue)) {
-+		err = PTR_ERR(disk->queue);
-+		disk->queue = NULL;
-+		put_disk(disk);
-+		return err;
-+	}
-+
-+	blk_queue_bounce_limit(disk->queue, BLK_BOUNCE_HIGH);
-+	blk_queue_max_hw_sectors(disk->queue, 64);
-+	disk->major = FLOPPY_MAJOR;
-+	disk->first_minor = TOMINOR(drive) | (type << 2);
-+	disk->fops = &floppy_fops;
-+	disk->events = DISK_EVENT_MEDIA_CHANGE;
-+	if (type)
-+		sprintf(disk->disk_name, "fd%d_type%d", drive, type);
-+	else
-+		sprintf(disk->disk_name, "fd%d", drive);
-+	/* to be cleaned up... */
-+	disk->private_data = (void *)(long)drive;
-+	disk->flags |= GENHD_FL_REMOVABLE;
-+
-+	disks[drive][type] = disk;
-+	return 0;
-+}
-+
-+static DEFINE_MUTEX(floppy_probe_lock);
-+
-+static void floppy_probe(dev_t dev)
-+{
-+	unsigned int drive = (MINOR(dev) & 3) | ((MINOR(dev) & 0x80) >> 5);
-+	unsigned int type = (MINOR(dev) >> 2) & 0x1f;
-+
-+	if (drive >= N_DRIVE || !floppy_available(drive) ||
-+	    type >= ARRAY_SIZE(floppy_type))
-+		return;
-+
-+	mutex_lock(&floppy_probe_lock);
-+	if (!disks[drive][type]) {
-+		if (floppy_alloc_disk(drive, type) == 0)
-+			add_disk(disks[drive][type]);
-+	}
-+	mutex_unlock(&floppy_probe_lock);
++out_unlock:
++	mutex_unlock(&brd_devices_mutex);
  }
  
- static int __init do_floppy_init(void)
-@@ -4609,33 +4653,25 @@ static int __init do_floppy_init(void)
- 		return -ENOMEM;
+ static void brd_del_one(struct brd_device *brd)
+@@ -454,23 +455,6 @@ static void brd_del_one(struct brd_device *brd)
+ 	brd_free(brd);
+ }
  
- 	for (drive = 0; drive < N_DRIVE; drive++) {
--		disks[drive] = alloc_disk(1);
--		if (!disks[drive]) {
--			err = -ENOMEM;
-+		memset(&tag_sets[drive], 0, sizeof(tag_sets[drive]));
-+		tag_sets[drive].ops = &floppy_mq_ops;
-+		tag_sets[drive].nr_hw_queues = 1;
-+		tag_sets[drive].nr_maps = 1;
-+		tag_sets[drive].queue_depth = 2;
-+		tag_sets[drive].numa_node = NUMA_NO_NODE;
-+		tag_sets[drive].flags = BLK_MQ_F_SHOULD_MERGE;
-+		err = blk_mq_alloc_tag_set(&tag_sets[drive]);
-+		if (err)
- 			goto out_put_disk;
--		}
- 
--		disks[drive]->queue = blk_mq_init_sq_queue(&tag_sets[drive],
--							   &floppy_mq_ops, 2,
--							   BLK_MQ_F_SHOULD_MERGE);
--		if (IS_ERR(disks[drive]->queue)) {
--			err = PTR_ERR(disks[drive]->queue);
--			disks[drive]->queue = NULL;
-+		err = floppy_alloc_disk(drive, 0);
-+		if (err)
- 			goto out_put_disk;
--		}
+-static struct kobject *brd_probe(dev_t dev, int *part, void *data)
+-{
+-	struct brd_device *brd;
+-	struct kobject *kobj;
+-	bool new;
 -
--		blk_queue_bounce_limit(disks[drive]->queue, BLK_BOUNCE_HIGH);
--		blk_queue_max_hw_sectors(disks[drive]->queue, 64);
--		disks[drive]->major = FLOPPY_MAJOR;
--		disks[drive]->first_minor = TOMINOR(drive);
--		disks[drive]->fops = &floppy_fops;
--		disks[drive]->events = DISK_EVENT_MEDIA_CHANGE;
--		sprintf(disks[drive]->disk_name, "fd%d", drive);
- 
- 		timer_setup(&motor_off_timer[drive], motor_off_callback, 0);
- 	}
- 
--	err = register_blkdev(FLOPPY_MAJOR, "fd");
-+	err = __register_blkdev(FLOPPY_MAJOR, "fd", floppy_probe);
- 	if (err)
- 		goto out_put_disk;
- 
-@@ -4643,9 +4679,6 @@ static int __init do_floppy_init(void)
- 	if (err)
- 		goto out_unreg_blkdev;
- 
--	blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
--			    floppy_find, NULL, NULL);
+-	mutex_lock(&brd_devices_mutex);
+-	brd = brd_init_one(MINOR(dev) / max_part, &new);
+-	kobj = brd ? get_disk_and_module(brd->brd_disk) : NULL;
+-	mutex_unlock(&brd_devices_mutex);
 -
- 	for (i = 0; i < 256; i++)
- 		if (ITYPE(i))
- 			floppy_sizes[i] = floppy_type[ITYPE(i)].size;
-@@ -4673,7 +4706,7 @@ static int __init do_floppy_init(void)
- 	if (fdc_state[0].address == -1) {
- 		cancel_delayed_work(&fd_timeout);
- 		err = -ENODEV;
--		goto out_unreg_region;
-+		goto out_unreg_driver;
- 	}
- #if N_FDC > 1
- 	fdc_state[1].address = FDC2;
-@@ -4684,7 +4717,7 @@ static int __init do_floppy_init(void)
- 	if (err) {
- 		cancel_delayed_work(&fd_timeout);
- 		err = -EBUSY;
--		goto out_unreg_region;
-+		goto out_unreg_driver;
- 	}
+-	if (new)
+-		*part = 0;
+-
+-	return kobj;
+-}
+-
+ static inline void brd_check_and_reset_par(void)
+ {
+ 	if (unlikely(!max_part))
+@@ -510,11 +494,12 @@ static int __init brd_init(void)
+ 	 *	dynamically.
+ 	 */
  
- 	/* initialise drive state */
-@@ -4761,10 +4794,8 @@ static int __init do_floppy_init(void)
- 		if (err)
- 			goto out_remove_drives;
+-	if (register_blkdev(RAMDISK_MAJOR, "ramdisk"))
++	if (__register_blkdev(RAMDISK_MAJOR, "ramdisk", brd_probe))
+ 		return -EIO;
  
--		/* to be cleaned up... */
--		disks[drive]->private_data = (void *)(long)drive;
--		disks[drive]->flags |= GENHD_FL_REMOVABLE;
--		device_add_disk(&floppy_device[drive].dev, disks[drive], NULL);
-+		device_add_disk(&floppy_device[drive].dev, disks[drive][0],
-+				NULL);
+ 	brd_check_and_reset_par();
+ 
++	mutex_lock(&brd_devices_mutex);
+ 	for (i = 0; i < rd_nr; i++) {
+ 		brd = brd_alloc(i);
+ 		if (!brd)
+@@ -532,9 +517,7 @@ static int __init brd_init(void)
+ 		brd->brd_disk->queue = brd->brd_queue;
+ 		add_disk(brd->brd_disk);
  	}
+-
+-	blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS,
+-				  THIS_MODULE, brd_probe, NULL, NULL);
++	mutex_unlock(&brd_devices_mutex);
  
+ 	pr_info("brd: module loaded\n");
  	return 0;
-@@ -4772,30 +4803,27 @@ static int __init do_floppy_init(void)
- out_remove_drives:
- 	while (drive--) {
- 		if (floppy_available(drive)) {
--			del_gendisk(disks[drive]);
-+			del_gendisk(disks[drive][0]);
- 			platform_device_unregister(&floppy_device[drive]);
- 		}
+@@ -544,6 +527,7 @@ static int __init brd_init(void)
+ 		list_del(&brd->brd_list);
+ 		brd_free(brd);
  	}
- out_release_dma:
- 	if (atomic_read(&usage_count))
- 		floppy_release_irq_and_dma();
--out_unreg_region:
--	blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
-+out_unreg_driver:
- 	platform_driver_unregister(&floppy_driver);
- out_unreg_blkdev:
- 	unregister_blkdev(FLOPPY_MAJOR, "fd");
- out_put_disk:
- 	destroy_workqueue(floppy_wq);
- 	for (drive = 0; drive < N_DRIVE; drive++) {
--		if (!disks[drive])
-+		if (!disks[drive][0])
- 			break;
--		if (disks[drive]->queue) {
--			del_timer_sync(&motor_off_timer[drive]);
--			blk_cleanup_queue(disks[drive]->queue);
--			disks[drive]->queue = NULL;
--			blk_mq_free_tag_set(&tag_sets[drive]);
--		}
--		put_disk(disks[drive]);
-+		del_timer_sync(&motor_off_timer[drive]);
-+		blk_cleanup_queue(disks[drive][0]->queue);
-+		disks[drive][0]->queue = NULL;
-+		blk_mq_free_tag_set(&tag_sets[drive]);
-+		put_disk(disks[drive][0]);
- 	}
- 	return err;
- }
-@@ -5006,9 +5034,8 @@ module_init(floppy_module_init);
++	mutex_unlock(&brd_devices_mutex);
+ 	unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
  
- static void __exit floppy_module_exit(void)
- {
--	int drive;
-+	int drive, i;
+ 	pr_info("brd: module NOT loaded !!!\n");
+@@ -557,7 +541,6 @@ static void __exit brd_exit(void)
+ 	list_for_each_entry_safe(brd, next, &brd_devices, brd_list)
+ 		brd_del_one(brd);
  
--	blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
- 	unregister_blkdev(FLOPPY_MAJOR, "fd");
- 	platform_driver_unregister(&floppy_driver);
+-	blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
+ 	unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
  
-@@ -5018,10 +5045,16 @@ static void __exit floppy_module_exit(void)
- 		del_timer_sync(&motor_off_timer[drive]);
- 
- 		if (floppy_available(drive)) {
--			del_gendisk(disks[drive]);
-+			for (i = 0; i < ARRAY_SIZE(floppy_type); i++) {
-+				if (disks[drive][i])
-+					del_gendisk(disks[drive][i]);
-+			}
- 			platform_device_unregister(&floppy_device[drive]);
- 		}
--		blk_cleanup_queue(disks[drive]->queue);
-+		for (i = 0; i < ARRAY_SIZE(floppy_type); i++) {
-+			if (disks[drive][i])
-+				blk_cleanup_queue(disks[drive][i]->queue);
-+		}
- 		blk_mq_free_tag_set(&tag_sets[drive]);
- 
- 		/*
-@@ -5029,10 +5062,17 @@ static void __exit floppy_module_exit(void)
- 		 * queue reference in put_disk().
- 		 */
- 		if (!(allowed_drive_mask & (1 << drive)) ||
--		    fdc_state[FDC(drive)].version == FDC_NONE)
--			disks[drive]->queue = NULL;
-+		    fdc_state[FDC(drive)].version == FDC_NONE) {
-+			for (i = 0; i < ARRAY_SIZE(floppy_type); i++) {
-+				if (disks[drive][i])
-+					disks[drive][i]->queue = NULL;
-+			}
-+		}
- 
--		put_disk(disks[drive]);
-+		for (i = 0; i < ARRAY_SIZE(floppy_type); i++) {
-+			if (disks[drive][i])
-+				put_disk(disks[drive][i]);
-+		}
- 	}
- 
- 	cancel_delayed_work_sync(&fd_timeout);
+ 	pr_info("brd: module unloaded\n");
 -- 
 2.28.0
 
