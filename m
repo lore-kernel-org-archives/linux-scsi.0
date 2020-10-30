@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5E6C4742C
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 21:39:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B13EAC55178
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 21:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A81722228
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 21:39:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C1FB22245
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 21:39:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727217AbgJ3Vjx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Oct 2020 17:39:53 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56814 "EHLO mx2.suse.de"
+        id S1726413AbgJ3Vjy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Oct 2020 17:39:54 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56838 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726163AbgJ3Vjx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727092AbgJ3Vjx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 30 Oct 2020 17:39:53 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 21F7DAE0F;
+        by mx2.suse.de (Postfix) with ESMTP id 9BACCAE30;
         Fri, 30 Oct 2020 21:39:51 +0000 (UTC)
 From:   David Disseldorp <ddiss@suse.de>
 To:     target-devel@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org, David Disseldorp <ddiss@suse.de>,
         Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v3 1/4] scsi: target: rename struct sense_info to sense_detail
-Date:   Fri, 30 Oct 2020 22:39:28 +0100
-Message-Id: <20201030213931.10720-2-ddiss@suse.de>
+Subject: [PATCH v3 3/4] scsi: target: split out COMPARE AND WRITE memcmp into helper
+Date:   Fri, 30 Oct 2020 22:39:30 +0100
+Message-Id: <20201030213931.10720-4-ddiss@suse.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201030213931.10720-1-ddiss@suse.de>
 References: <20201030213931.10720-1-ddiss@suse.de>
@@ -39,84 +39,187 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This helps distinguish it from the SCSI sense INFORMATION field.
+In preparation for finding and returning the miscompare offset.
 
 Signed-off-by: David Disseldorp <ddiss@suse.de>
 Reviewed-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/target/target_core_transport.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/target/target_core_sbc.c | 121 +++++++++++++++++--------------
+ 1 file changed, 68 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ff26ab0a5f60..caa3a7b34826 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3094,14 +3094,14 @@ bool transport_wait_for_tasks(struct se_cmd *cmd)
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 5f77dd95f1b9..22d0cbba6ff3 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -434,20 +434,75 @@ static sense_reason_t compare_and_write_post(struct se_cmd *cmd, bool success,
+ 	return ret;
  }
- EXPORT_SYMBOL(transport_wait_for_tasks);
  
--struct sense_info {
-+struct sense_detail {
- 	u8 key;
- 	u8 asc;
- 	u8 ascq;
- 	bool add_sector_info;
- };
- 
--static const struct sense_info sense_info_table[] = {
-+static const struct sense_detail sense_detail_table[] = {
- 	[TCM_NO_SENSE] = {
- 		.key = NOT_READY
- 	},
-@@ -3261,39 +3261,39 @@ static const struct sense_info sense_info_table[] = {
-  */
- static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
++/*
++ * compare @cmp_len bytes of @read_sgl with @cmp_sgl. On miscompare return
++ * TCM_MISCOMPARE_VERIFY.
++ */
++static sense_reason_t
++compare_and_write_do_cmp(struct scatterlist *read_sgl, unsigned int read_nents,
++			 struct scatterlist *cmp_sgl, unsigned int cmp_nents,
++			 unsigned int cmp_len)
++{
++	unsigned char *buf = NULL;
++	struct scatterlist *sg;
++	sense_reason_t ret;
++	unsigned int offset;
++	size_t rc;
++	int i;
++
++	buf = kzalloc(cmp_len, GFP_KERNEL);
++	if (!buf) {
++		ret = TCM_OUT_OF_RESOURCES;
++		goto out;
++	}
++
++	rc = sg_copy_to_buffer(cmp_sgl, cmp_nents, buf, cmp_len);
++	if (!rc) {
++		pr_err("sg_copy_to_buffer() failed for compare_and_write\n");
++		ret = TCM_OUT_OF_RESOURCES;
++		goto out;
++	}
++	/*
++	 * Compare SCSI READ payload against verify payload
++	 */
++	offset = 0;
++	for_each_sg(read_sgl, sg, read_nents, i) {
++		unsigned int len = min(sg->length, cmp_len);
++		unsigned char *addr = kmap_atomic(sg_page(sg));
++
++		if (memcmp(addr, buf + offset, len)) {
++			pr_warn("Detected MISCOMPARE for addr: %p buf: %p\n",
++				addr, buf + offset);
++			kunmap_atomic(addr);
++			ret = TCM_MISCOMPARE_VERIFY;
++			goto out;
++		}
++		kunmap_atomic(addr);
++
++		offset += len;
++		cmp_len -= len;
++		if (!cmp_len)
++			break;
++	}
++	pr_debug("COMPARE AND WRITE read data matches compare data\n");
++	ret = TCM_NO_SENSE;
++out:
++	kfree(buf);
++	return ret;
++}
++
+ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool success,
+ 						 int *post_ret)
  {
--	const struct sense_info *si;
-+	const struct sense_detail *sd;
- 	u8 *buffer = cmd->sense_buffer;
- 	int r = (__force int)reason;
- 	u8 key, asc, ascq;
- 	bool desc_format = target_sense_desc_format(cmd->se_dev);
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct sg_table write_tbl = { };
+-	struct scatterlist *write_sg, *sg;
+-	unsigned char *buf = NULL, *addr;
++	struct scatterlist *write_sg;
+ 	struct sg_mapping_iter m;
+-	unsigned int offset = 0, len;
+-	unsigned int nlbas = cmd->t_task_nolb;
++	unsigned int len;
+ 	unsigned int block_size = dev->dev_attrib.block_size;
+-	unsigned int compare_len = (nlbas * block_size);
++	unsigned int compare_len = (cmd->t_task_nolb * block_size);
+ 	sense_reason_t ret = TCM_NO_SENSE;
+-	int rc, i;
++	int i;
  
--	if (r < ARRAY_SIZE(sense_info_table) && sense_info_table[r].key)
--		si = &sense_info_table[r];
-+	if (r < ARRAY_SIZE(sense_detail_table) && sense_detail_table[r].key)
-+		sd = &sense_detail_table[r];
- 	else
--		si = &sense_info_table[(__force int)
-+		sd = &sense_detail_table[(__force int)
- 				       TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE];
- 
--	key = si->key;
-+	key = sd->key;
- 	if (reason == TCM_CHECK_CONDITION_UNIT_ATTENTION) {
- 		if (!core_scsi3_ua_for_check_condition(cmd, &key, &asc,
- 						       &ascq)) {
- 			cmd->scsi_status = SAM_STAT_BUSY;
- 			return;
- 		}
--	} else if (si->asc == 0) {
-+	} else if (sd->asc == 0) {
- 		WARN_ON_ONCE(cmd->scsi_asc == 0);
- 		asc = cmd->scsi_asc;
- 		ascq = cmd->scsi_ascq;
- 	} else {
--		asc = si->asc;
--		ascq = si->ascq;
-+		asc = sd->asc;
-+		ascq = sd->ascq;
+ 	/*
+ 	 * Handle early failure in transport_generic_request_failure(),
+@@ -473,12 +528,13 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 		goto out;
  	}
  
- 	cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
- 	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
- 	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
- 	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
--	if (si->add_sector_info)
-+	if (sd->add_sector_info)
- 		WARN_ON_ONCE(scsi_set_sense_information(buffer,
- 							cmd->scsi_sense_length,
- 							cmd->bad_sector) < 0);
+-	buf = kzalloc(cmd->data_length, GFP_KERNEL);
+-	if (!buf) {
+-		pr_err("Unable to allocate compare_and_write buf\n");
+-		ret = TCM_OUT_OF_RESOURCES;
++	ret = compare_and_write_do_cmp(cmd->t_bidi_data_sg,
++				       cmd->t_bidi_data_nents,
++				       cmd->t_data_sg,
++				       cmd->t_data_nents,
++				       compare_len);
++	if (ret)
+ 		goto out;
+-	}
+ 
+ 	if (sg_alloc_table(&write_tbl, cmd->t_data_nents, GFP_KERNEL) < 0) {
+ 		pr_err("Unable to allocate compare_and_write sg\n");
+@@ -486,44 +542,9 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 		goto out;
+ 	}
+ 	write_sg = write_tbl.sgl;
+-	/*
+-	 * Setup verify and write data payloads from total NumberLBAs.
+-	 */
+-	rc = sg_copy_to_buffer(cmd->t_data_sg, cmd->t_data_nents, buf,
+-			       cmd->data_length);
+-	if (!rc) {
+-		pr_err("sg_copy_to_buffer() failed for compare_and_write\n");
+-		ret = TCM_OUT_OF_RESOURCES;
+-		goto out;
+-	}
+-	/*
+-	 * Compare against SCSI READ payload against verify payload
+-	 */
+-	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, i) {
+-		addr = (unsigned char *)kmap_atomic(sg_page(sg));
+-		if (!addr) {
+-			ret = TCM_OUT_OF_RESOURCES;
+-			goto out;
+-		}
+-
+-		len = min(sg->length, compare_len);
+-
+-		if (memcmp(addr, buf + offset, len)) {
+-			pr_warn("Detected MISCOMPARE for addr: %p buf: %p\n",
+-				addr, buf + offset);
+-			kunmap_atomic(addr);
+-			goto miscompare;
+-		}
+-		kunmap_atomic(addr);
+-
+-		offset += len;
+-		compare_len -= len;
+-		if (!compare_len)
+-			break;
+-	}
+ 
+ 	i = 0;
+-	len = cmd->t_task_nolb * block_size;
++	len = compare_len;
+ 	sg_miter_start(&m, cmd->t_data_sg, cmd->t_data_nents, SG_MITER_TO_SG);
+ 	/*
+ 	 * Currently assumes NoLB=1 and SGLs are PAGE_SIZE..
+@@ -568,13 +589,8 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 
+ 	__target_execute_cmd(cmd, false);
+ 
+-	kfree(buf);
+ 	return ret;
+ 
+-miscompare:
+-	pr_warn("Target/%s: Send MISCOMPARE check condition and sense\n",
+-		dev->transport->name);
+-	ret = TCM_MISCOMPARE_VERIFY;
+ out:
+ 	/*
+ 	 * In the MISCOMPARE or failure case, unlock ->caw_sem obtained in
+@@ -582,7 +598,6 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 	 */
+ 	up(&dev->caw_sem);
+ 	sg_free_table(&write_tbl);
+-	kfree(buf);
+ 	return ret;
+ }
+ 
 -- 
 2.26.2
 
