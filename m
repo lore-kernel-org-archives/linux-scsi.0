@@ -2,188 +2,290 @@ Return-Path: <SRS0=glVe=EF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4B98C55179
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:47:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 079EDC55179
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3616020704
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:47:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iCGOZDpt"
+	by mail.kernel.org (Postfix) with ESMTP id AFC1B22210
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725875AbgJ3Irf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Oct 2020 04:47:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28224 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725355AbgJ3Irf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Oct 2020 04:47:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604047653;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OowK7sEL9WYawE8HtiZ4y/bzMNMCZEory9yOR9ZIFgY=;
-        b=iCGOZDptev63WZfKzyQV0yBX9gYS0GVjVQEVrw2MM1BOw1eWDTQMe/AhJ0y1ntUMwRUsLv
-        P2LWYrJDUG1CpV9Yhq0hdzWyQFhbmmJ9o2NUX5VIPmFlrwDYVNS1zDyplpZiH6Ki1iBHEk
-        HkLCvvVjo8sG+YbeQ2sq3jC5h+vDv8E=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-320-SnK6bQsbNda0jL-EwizChg-1; Fri, 30 Oct 2020 04:47:31 -0400
-X-MC-Unique: SnK6bQsbNda0jL-EwizChg-1
-Received: by mail-wr1-f71.google.com with SMTP id u1so117376wri.6
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2020 01:47:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=OowK7sEL9WYawE8HtiZ4y/bzMNMCZEory9yOR9ZIFgY=;
-        b=cuqUlhHHjKPixoWB6gtqmC+w3DonX/VY6dkZXhSfFyaq3nYtTdEwanpyzmupMyRUrn
-         qv4lMPrTJE6mo9hhVX6qk1Y00X7eglnDj9iJL4it9Q2MO4I1NK8lPctNFfU/kEC6BE5V
-         270DtNZZjrd8lN3IkeMFgN/CQ8QUi2kTeqD2z/5YuQFpVov5kKfDbxdAXAH9lPaREVKV
-         Dxl6wAwRhuJXWmDHjDDYU1GXt8+RPjcQ5Mnr0zR30DohHsfQfKkrOCc9tXCwuub9oDt/
-         cEcky16TTzRSSfj50Y0Na2W7sjwkHM6oWs9D00/M5HJmKPZo9V8CEzDms+FGiTfPqQFj
-         UzEw==
-X-Gm-Message-State: AOAM530Q8PVq3hicHJGjlptBTnQPuX+BBCbGIEdvGB2dVVniRQdAiHmc
-        pF1zhGhPlCQIh9jWamkGByGZ1UnXJa86nj/9l3WzCDlnD2Mymod0RfFUkeuBVEDXNzCMtphOGPI
-        1g4AamYhK/VTOYr9SpFcIaA==
-X-Received: by 2002:adf:e40e:: with SMTP id g14mr1514368wrm.285.1604047650234;
-        Fri, 30 Oct 2020 01:47:30 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwX0VUnp1F7pR6WRrcOB29Hkdk2r6gE37I/8kD5eGOV2J1UWZXMq2SjTH7D/hE2cwGkfYz5iQ==
-X-Received: by 2002:adf:e40e:: with SMTP id g14mr1514342wrm.285.1604047649952;
-        Fri, 30 Oct 2020 01:47:29 -0700 (PDT)
-Received: from redhat.com (bzq-79-176-118-93.red.bezeqint.net. [79.176.118.93])
-        by smtp.gmail.com with ESMTPSA id t7sm9232775wrx.42.2020.10.30.01.47.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Oct 2020 01:47:29 -0700 (PDT)
-Date:   Fri, 30 Oct 2020 04:47:26 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Jason Wang <jasowang@redhat.com>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        pbonzini@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 07/17] vhost scsi: support delayed IO vq creation
-Message-ID: <20201030044402-mutt-send-email-mst@kernel.org>
-References: <1603326903-27052-1-git-send-email-michael.christie@oracle.com>
- <1603326903-27052-8-git-send-email-michael.christie@oracle.com>
- <9e97ea2a-bc57-d4aa-4711-35dba20b3b9e@redhat.com>
- <49c2fc29-348c-06db-4823-392f7476d318@oracle.com>
+        id S1726148AbgJ3Iu0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Oct 2020 04:50:26 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:6942 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725784AbgJ3IuZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2020 04:50:25 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4CMwWp0cLFz70Rp;
+        Fri, 30 Oct 2020 16:31:34 +0800 (CST)
+Received: from huawei.com (10.69.192.56) by DGGEMS411-HUB.china.huawei.com
+ (10.3.19.211) with Microsoft SMTP Server id 14.3.487.0; Fri, 30 Oct 2020
+ 16:31:24 +0800
+From:   Luo Jiaxing <luojiaxing@huawei.com>
+To:     <akpm@linux-foundation.org>, <viro@zeniv.linux.org.uk>,
+        <andriy.shevchenko@linux.intel.com>
+CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <john.garry@huawei.com>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
+Subject: [PATCH v2 2/5] scsi: hisi_sas: Introduce DEFINE_SHOW_STORE_ATTRIBUTE for debugfs
+Date:   Fri, 30 Oct 2020 16:31:59 +0800
+Message-ID: <1604046722-15531-3-git-send-email-luojiaxing@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1604046722-15531-1-git-send-email-luojiaxing@huawei.com>
+References: <1604046722-15531-1-git-send-email-luojiaxing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <49c2fc29-348c-06db-4823-392f7476d318@oracle.com>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 12:47:34AM -0500, Mike Christie wrote:
-> On 10/25/20 10:51 PM, Jason Wang wrote:
-> > 
-> > On 2020/10/22 上午8:34, Mike Christie wrote:
-> > > Each vhost-scsi device will need a evt and ctl queue, but the number
-> > > of IO queues depends on whatever the user has configured in userspace.
-> > > This patch has vhost-scsi create the evt, ctl and one IO vq at device
-> > > open time. We then create the other IO vqs when userspace starts to
-> > > set them up. We still waste some mem on the vq and scsi vq structs,
-> > > but we don't waste mem on iovec related arrays and for later patches
-> > > we know which queues are used by the dev->nvqs value.
-> > > 
-> > > Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> > > ---
-> > >   drivers/vhost/scsi.c | 19 +++++++++++++++----
-> > >   1 file changed, 15 insertions(+), 4 deletions(-)
-> > 
-> > 
-> > Not familiar with SCSI. But I wonder if it could behave like vhost-net.
-> > 
-> > E.g userspace should known the number of virtqueues so it can just open
-> > and close multiple vhost-scsi file descriptors.
-> > 
-> 
-> One hiccup I'm hitting is that we might end up creating about 3x more vqs
-> than we need. The problem is that for scsi each vhost device has:
-> 
-> vq=0: special control vq
-> vq=1: event vq
-> vq=2 and above: SCSI CMD/IO vqs. We want to create N of these.
-> 
-> Today we do:
-> 
-> Uerspace does open(/dev/vhost-scsi)
->         vhost_dev_init(create 128 vqs and then later we setup and use N of
-> them);
-> 
-> Qemu does ioctl(VHOST_SET_OWNER)
->         vhost_dev_set_owner()
-> 
-> For N vqs userspace does:
->         // virtqueue setup related ioctls
-> 
-> Qemu does ioctl(VHOST_SCSI_SET_ENDPOINT)
->         - match LIO/target port to vhost_dev
-> 
-> 
-> So we could change that to:
-> 
-> For N IO vqs userspace does
->         open(/dev/vhost-scsi)
->                 vhost_dev_init(create IO, evt, and ctl);
-> 
-> for N IO vqs Qemu does:
->         ioctl(VHOST_SET_OWNER)
->                 vhost_dev_set_owner()
-> 
-> for N IO vqs Qemu does:
->         // virtqueue setup related ioctls
-> 
-> for N IO vqs Qemu does:
->         ioctl(VHOST_SCSI_SET_ENDPOINT)
->                 - match LIO/target port to vhost_dev and assemble the
-> multiple vhost_dev device.
-> 
-> The problem is that we have to setup some of the evt/ctl specific parts at
-> open() time when vhost_dev_init does vhost_poll_init for example.
-> 
-> - At open time, we don't know if this vhost_dev is going to be part of a
-> multiple vhost_device device or a single one so we need to create at least 3
-> of them
-> - If it is a multiple device we don't know if its the first device being
-> created for the device or the N'th, so we don't know if the dev's vqs will
-> be used for IO or ctls/evts, so we have to create all 3.
-> 
-> When we get the first VHOST_SCSI_SET_ENDPOINT call for a new style multiple
-> vhost_dev device, we can use that dev's evt/ctl vqs for events/controls
-> requests. When we get the other VHOST_SCSI_SET_ENDPOINT calls for the
-> multiple vhost_dev device then those dev's evt/ctl vqs will be ignored and
-> we will only use their IO vqs. So we end up with a lot of extra vqs.
+Seq instroduce a new helper marco DEFINE_SHOW_STORE_ATTRIBUTE for
+Read-Write file, So we use it at our code to reduce some duplicate code.
 
-The issue Jason's hinting at is how can admins control the amount
-of resources a given qemu instance can consume?
-After all vhost vqs all live in host kernel memory ...
-Limiting # of open fds would be one way to do that ...
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 135 ++++------------------------------
+ 1 file changed, 16 insertions(+), 119 deletions(-)
 
-The need to share event/control vqs between devices is a problem though,
-and sending lots of ioctls on things like reset is also not that elegant.
-Jason, did you have a good solution in mind?
-
-> One other question/issue I have is that qemu can open the /dev/vhost-scsi
-> device or it allows tools like libvirtd to open the device and pass in the
-> fd to use. For the latter case, would we continue to have those tools pass
-> in the leading fd, then have qemu do the other num_queues - 1
-> open(/dev/vhost-scsi) calls? Or do these apps that pass in the fd need to
-> know about all of the fds for some management reason?
-
-They know about all the fds, for resource control and priveledge
-separation reasons.
-
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 128583d..b8a6fc9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -3403,22 +3403,7 @@ static ssize_t hisi_sas_debugfs_bist_linkrate_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int hisi_sas_debugfs_bist_linkrate_open(struct inode *inode,
+-					       struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_bist_linkrate_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_bist_linkrate_ops = {
+-	.open = hisi_sas_debugfs_bist_linkrate_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_bist_linkrate_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs_bist_linkrate);
+ 
+ static const struct {
+ 	int		value;
+@@ -3493,22 +3478,7 @@ static ssize_t hisi_sas_debugfs_bist_code_mode_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int hisi_sas_debugfs_bist_code_mode_open(struct inode *inode,
+-						struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_bist_code_mode_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_bist_code_mode_ops = {
+-	.open = hisi_sas_debugfs_bist_code_mode_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_bist_code_mode_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs_bist_code_mode);
+ 
+ static ssize_t hisi_sas_debugfs_bist_phy_write(struct file *filp,
+ 					       const char __user *buf,
+@@ -3542,22 +3512,7 @@ static int hisi_sas_debugfs_bist_phy_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int hisi_sas_debugfs_bist_phy_open(struct inode *inode,
+-					  struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_bist_phy_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_bist_phy_ops = {
+-	.open = hisi_sas_debugfs_bist_phy_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_bist_phy_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs_bist_phy);
+ 
+ static const struct {
+ 	int		value;
+@@ -3621,22 +3576,7 @@ static ssize_t hisi_sas_debugfs_bist_mode_write(struct file *filp,
+ 
+ 	return count;
+ }
+-
+-static int hisi_sas_debugfs_bist_mode_open(struct inode *inode,
+-					   struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_bist_mode_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_bist_mode_ops = {
+-	.open = hisi_sas_debugfs_bist_mode_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_bist_mode_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs_bist_mode);
+ 
+ static ssize_t hisi_sas_debugfs_bist_enable_write(struct file *filp,
+ 						  const char __user *buf,
+@@ -3677,22 +3617,7 @@ static int hisi_sas_debugfs_bist_enable_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int hisi_sas_debugfs_bist_enable_open(struct inode *inode,
+-					     struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_bist_enable_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_bist_enable_ops = {
+-	.open = hisi_sas_debugfs_bist_enable_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_bist_enable_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs_bist_enable);
+ 
+ static const struct {
+ 	char *name;
+@@ -3730,21 +3655,7 @@ static int hisi_sas_debugfs_show(struct seq_file *s, void *p)
+ 
+ 	return 0;
+ }
+-
+-static int hisi_sas_debugfs_open(struct inode *inode, struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_ops = {
+-	.open = hisi_sas_debugfs_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs);
+ 
+ static ssize_t hisi_sas_debugfs_phy_down_cnt_write(struct file *filp,
+ 						   const char __user *buf,
+@@ -3776,21 +3687,7 @@ static int hisi_sas_debugfs_phy_down_cnt_show(struct seq_file *s, void *p)
+ 	return 0;
+ }
+ 
+-static int hisi_sas_debugfs_phy_down_cnt_open(struct inode *inode,
+-					      struct file *filp)
+-{
+-	return single_open(filp, hisi_sas_debugfs_phy_down_cnt_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations hisi_sas_debugfs_phy_down_cnt_ops = {
+-	.open = hisi_sas_debugfs_phy_down_cnt_open,
+-	.read = seq_read,
+-	.write = hisi_sas_debugfs_phy_down_cnt_write,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.owner = THIS_MODULE,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(hisi_sas_debugfs_phy_down_cnt);
+ 
+ void hisi_sas_debugfs_work_handler(struct work_struct *work)
+ {
+@@ -3937,7 +3834,7 @@ static void hisi_sas_debugfs_phy_down_cnt_init(struct hisi_hba *hisi_hba)
+ 		snprintf(name, 16, "%d", phy_no);
+ 		debugfs_create_file(name, 0600, dir,
+ 				    &hisi_hba->phy[phy_no],
+-				    &hisi_sas_debugfs_phy_down_cnt_ops);
++				    &hisi_sas_debugfs_phy_down_cnt_fops);
+ 	}
+ }
+ 
+@@ -3950,34 +3847,34 @@ static void hisi_sas_debugfs_bist_init(struct hisi_hba *hisi_hba)
+ 			debugfs_create_dir("bist", hisi_hba->debugfs_dir);
+ 	debugfs_create_file("link_rate", 0600,
+ 			    hisi_hba->debugfs_bist_dentry, hisi_hba,
+-			    &hisi_sas_debugfs_bist_linkrate_ops);
++			    &hisi_sas_debugfs_bist_linkrate_fops);
+ 
+ 	debugfs_create_file("code_mode", 0600,
+ 			    hisi_hba->debugfs_bist_dentry, hisi_hba,
+-			    &hisi_sas_debugfs_bist_code_mode_ops);
++			    &hisi_sas_debugfs_bist_code_mode_fops);
+ 
+ 	debugfs_create_file("fixed_code", 0600,
+ 			    hisi_hba->debugfs_bist_dentry,
+ 			    &hisi_hba->debugfs_bist_fixed_code[0],
+-			    &hisi_sas_debugfs_ops);
++			    &hisi_sas_debugfs_fops);
+ 
+ 	debugfs_create_file("fixed_code_1", 0600,
+ 			    hisi_hba->debugfs_bist_dentry,
+ 			    &hisi_hba->debugfs_bist_fixed_code[1],
+-			    &hisi_sas_debugfs_ops);
++			    &hisi_sas_debugfs_fops);
+ 
+ 	debugfs_create_file("phy_id", 0600, hisi_hba->debugfs_bist_dentry,
+-			    hisi_hba, &hisi_sas_debugfs_bist_phy_ops);
++			    hisi_hba, &hisi_sas_debugfs_bist_phy_fops);
+ 
+ 	debugfs_create_u32("cnt", 0600, hisi_hba->debugfs_bist_dentry,
+ 			   &hisi_hba->debugfs_bist_cnt);
+ 
+ 	debugfs_create_file("loopback_mode", 0600,
+ 			    hisi_hba->debugfs_bist_dentry,
+-			    hisi_hba, &hisi_sas_debugfs_bist_mode_ops);
++			    hisi_hba, &hisi_sas_debugfs_bist_mode_fops);
+ 
+ 	debugfs_create_file("enable", 0600, hisi_hba->debugfs_bist_dentry,
+-			    hisi_hba, &hisi_sas_debugfs_bist_enable_ops);
++			    hisi_hba, &hisi_sas_debugfs_bist_enable_fops);
+ 
+ 	ports_dentry = debugfs_create_dir("port", hisi_hba->debugfs_bist_dentry);
+ 
+@@ -3996,7 +3893,7 @@ static void hisi_sas_debugfs_bist_init(struct hisi_hba *hisi_hba)
+ 			debugfs_create_file(hisi_sas_debugfs_ffe_name[i].name,
+ 					    0600, ffe_dentry,
+ 					    &hisi_hba->debugfs_bist_ffe[phy_no][i],
+-					    &hisi_sas_debugfs_ops);
++					    &hisi_sas_debugfs_fops);
+ 		}
+ 	}
+ 
 -- 
-MST
+2.7.4
 
