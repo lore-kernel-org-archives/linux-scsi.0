@@ -2,95 +2,97 @@ Return-Path: <SRS0=glVe=EF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C5B2C4363A
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B21C4363A
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:20:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C77D920756
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:19:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57E2720756
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:20:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PNK305Ln"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HX2yPDki"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725873AbgJ3CT0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Oct 2020 22:19:26 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:51742 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725781AbgJ3CT0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2020 22:19:26 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2H4rv058204;
-        Fri, 30 Oct 2020 02:19:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=9blWy4O3mGRd1/hZavbwGDpqENic/StV9aj52Uy3YIY=;
- b=PNK305LnSo8xoTg2MIAGC+9EXsCF5+sioG0h0A0dfbPn7r3+7vjd1aBQ2l4UJPBjx1H7
- aQUP7DNZXwn0qoVg+DgEKI7MWXBq0NJe/iRqz9cv+tv2VfWQ+kNk1MmGMjG5mqCavQh1
- qStRB697kSDkrC6WKzfSQdKIDobedKzfb3g4xizNpZ4QeNvaPIm1s3JezgvasfjNTOGi
- 3WZWB75Wh2GnrB9YPd0Nd3gYKVKZFZqlz5WHyI6oORMcISjrEvyzCaW8j+WUvdDYzQIt
- oFfg6T+4gY7QRaZ1goALsWGMXHcCbEZbYZInsFBENp/CgGAX7A2E3jJbHt1/9a7yrgi0 Eg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 34cc7m7qvn-1
+        id S1725909AbgJ3CU1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Oct 2020 22:20:27 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:56370 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725790AbgJ3CU1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2020 22:20:27 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2FXQK143934;
+        Fri, 30 Oct 2020 02:20:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=8RV3DVUM4dxiFGT4hEb0ar6t+vieEVsI4rpYwnOrKds=;
+ b=HX2yPDkitG1NjY2snzcZpTyrfMLqisYtaeUR2HnPxhwbXU6LVjkzPBbfgC80TvOyes2l
+ rsjVB9+Xt0pfU9GgbQi0fOEa2nkmX/wdUY2ZLkst+ghVtQY1+8vhTQmHYAZgYT0+eURM
+ ImNNiyaCUjKIyyKYHaRd5flzKfiN/kwkJoJInguyJe9AIx75ynNZ4qoj1pWuYKn5/kQs
+ Z16ONbDLlypiVUfMMn8lDuWXRKGjPG7KGYLpmgPNHck46ENUm7smVvncFdVoza47NcJG
+ 7HVlTX70Ak6zNVjzoQf08Pc1WkF+nsEZCUmncDVpw49F//8KI4cFYICInd2RUMfsouod Hg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 34c9sb7w6q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 30 Oct 2020 02:19:24 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2GXns068366;
-        Fri, 30 Oct 2020 02:17:23 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 34cwuqfmqk-1
+        Fri, 30 Oct 2020 02:20:22 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2KDDm171495;
+        Fri, 30 Oct 2020 02:20:22 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 34cx617265-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Oct 2020 02:17:23 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09U2HJAD016404;
-        Fri, 30 Oct 2020 02:17:20 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        Fri, 30 Oct 2020 02:20:22 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09U2KIUR003180;
+        Fri, 30 Oct 2020 02:20:18 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 19:17:19 -0700
-To:     Benjamin Block <bblock@linux.ibm.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Fedor Loshakov <loshakov@linux.ibm.com>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
-Subject: Re: [PATCH 0/5] zfcp: cleanups, refactorings and features for 5.11
+        with ESMTP ; Thu, 29 Oct 2020 19:20:18 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1o8kkzcd7.fsf@ca-mkp.ca.oracle.com>
-References: <cover.1603908167.git.bblock@linux.ibm.com>
-Date:   Thu, 29 Oct 2020 22:17:16 -0400
-In-Reply-To: <cover.1603908167.git.bblock@linux.ibm.com> (Benjamin Block's
-        message of "Wed, 28 Oct 2020 19:30:47 +0100")
+To:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, Don Brace <don.brace@microsemi.com>,
+        esc.storagedev@microsemi.com, linux-kernel@vger.kernel.org,
+        takafumi@sslab.ics.keio.ac.jp
+Subject: Re: [PATCH v3] scsi: hpsa: fix memory leak in hpsa_init_one
+Date:   Thu, 29 Oct 2020 22:20:17 -0400
+Message-Id: <160402432641.14215.8278310688594247277.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201027073125.14229-1-keitasuzuki.park@sslab.ics.keio.ac.jp>
+References: <CAEYrHjmJRmcKX+F8R_wjd146FXnSHekodauG_eNQBXArE4OBeA@mail.gmail.com> <20201027073125.14229-1-keitasuzuki.park@sslab.ics.keio.ac.jp>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=901 suspectscore=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=739
+ suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010300015
+ definitions=main-2010300016
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- malwarescore=0 spamscore=0 clxscore=1011 mlxscore=0 suspectscore=1
- priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
- mlxlogscore=931 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
+ mlxlogscore=756 malwarescore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2010300015
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, 27 Oct 2020 07:31:24 +0000, Keita Suzuki wrote:
 
-Benjamin,
+> When hpsa_scsi_add_host fails, h->lastlogicals is leaked since it lacks
+> free in the error handler.
+> 
+> Fix this by adding free when hpsa_scsi_add_host fails.
 
-> here is a series of changes for our zfcp driver for 5.11.
+Applied to 5.10/scsi-fixes, thanks!
 
-Applied to 5.11/scsi-staging, thanks!
+[1/1] scsi: hpsa: Fix memory leak in hpsa_init_one()
+      https://git.kernel.org/mkp/scsi/c/af61bc1e33d2
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
