@@ -2,93 +2,105 @@ Return-Path: <SRS0=glVe=EF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E72C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:11:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BDB4C4741F
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:15:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE0C820738
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:11:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA06B2075E
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 02:15:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="R6eZ6m6D"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LtfLt7Yl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725819AbgJ3CLA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Oct 2020 22:11:00 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:45870 "EHLO
+        id S1726192AbgJ3CPv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Oct 2020 22:15:51 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:49386 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725797AbgJ3CLA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2020 22:11:00 -0400
+        with ESMTP id S1725790AbgJ3CPu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2020 22:15:50 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U29nql032280;
-        Fri, 30 Oct 2020 02:10:56 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2FXt0057285;
+        Fri, 30 Oct 2020 02:15:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=r1Z2be8KC2in28npgG/4iHWPhv+sMMrT7mFRw6ixn9M=;
- b=R6eZ6m6DGHzeLuz3n7OK5CdMCPOFTP0FHjup7sLY8/pyMKrJGXzbapWpXsz2yb88THn0
- 1fz6VtO1mA/8vu2rRD5xVwCdlWAdpFfX3g06FX/4PoymQTfQa9jeOT6D0wS8cxuswdak
- jg063hhwupC8VSRONimhGMJl6wO1pDMFtxYaZZom2rolc/7frEnFdxEsMJPRAKmxMhz2
- hXKOz8x8XJUiMXKBXOx20FvWivIOXH6M2QrrI9e5tLj/mhkY6CmtBK38V7jPmsKcVySI
- u2OaDLvCeckiJvLcR2jU0cE3b3kP6iHH/NXV4N/ADCpI0WngqstV+splk4Ew1hMKhXQx Aw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34cc7m7q9s-1
+ bh=Cm/6VbzyJH4sOrtddGQ54uD1O5Uz5x5zqNdZFEq/iWk=;
+ b=LtfLt7YldThlxCxbhkPHLsw4m63RD1s4XMFzSMnu1P6DeyAPuMMiUUee6j+FZC3kgf8o
+ PMpIPBTMW6lzrlgMM1P9u8+Fb9lE1w551e00LpwA2yN0vdq0oEjh4VUVfFVdbvA6iKMg
+ F7c4vtPq56gu9gOXN/xq2wV7lBPd3Q4/iMOZJtZwpb6G4juOTaOcLCBQGVRt04zTsYie
+ unVDn+BKsR0P9r0stRIbArMf89Ssg3ZLnRa5ndWnpTFfmlHwHZasUBuc5EP1QCaiwbhs
+ t2y1Nv5Z3BFAS1eaHbVMDp+cNMTly+s/fQU0pECytoS7LLr5cqtn6MxCuUrqFPtPzqxw Gg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 34cc7m7qq0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 30 Oct 2020 02:10:56 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U29SiA047787;
-        Fri, 30 Oct 2020 02:10:55 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 34cx70696x-1
+        Fri, 30 Oct 2020 02:15:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09U2APRv115382;
+        Fri, 30 Oct 2020 02:13:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 34cx1txdjm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Oct 2020 02:10:55 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09U2AsjN030437;
-        Fri, 30 Oct 2020 02:10:54 GMT
+        Fri, 30 Oct 2020 02:13:31 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09U2DOSB002716;
+        Fri, 30 Oct 2020 02:13:24 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 19:10:53 -0700
-To:     ching Huang <ching2048@areca.com.tw>
-Cc:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
-        linux-scsi@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] scsi: arcmsr: configure the default SCSI device
- command timeout value
+        with ESMTP ; Thu, 29 Oct 2020 19:13:24 -0700
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Denis Efremov <efremov@linux.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 08/18] sd: use __register_blkdev to avoid a modprobe for
+ an unregistered dev_t
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1zh44zcnw.fsf@ca-mkp.ca.oracle.com>
-References: <53bbf27e75420ae1de09899c40b42e4c2d5edda6.camel@areca.com.tw>
-Date:   Thu, 29 Oct 2020 22:10:51 -0400
-In-Reply-To: <53bbf27e75420ae1de09899c40b42e4c2d5edda6.camel@areca.com.tw>
-        (ching Huang's message of "Tue, 27 Oct 2020 11:27:59 +0800")
+Message-ID: <yq1tuuczcjx.fsf@ca-mkp.ca.oracle.com>
+References: <20201029145841.144173-1-hch@lst.de>
+        <20201029145841.144173-9-hch@lst.de>
+Date:   Thu, 29 Oct 2020 22:13:21 -0400
+In-Reply-To: <20201029145841.144173-9-hch@lst.de> (Christoph Hellwig's message
+        of "Thu, 29 Oct 2020 15:58:31 +0100")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
- bulkscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ suspectscore=1 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010300014
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
+ malwarescore=0 spamscore=0 clxscore=1011 mlxscore=0 suspectscore=1
  priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
  mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010300014
+ engine=8.12.0-2009150000 definitions=main-2010300015
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-ching,
+Christoph,
 
-> This patch is against to mkp's 5.10/scsi-fixes.
+> Switch from using blk_register_region to the probe callback passed to
+> __register_blkdev to disable the request_module call for an unclaimed
+> dev_t in the SD majors.
 >
-> 1. Configure the default SCSI device command timeout value.
-> 2. Confirm get free ccb in spin_lock circle.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Applied to 5.11/scsi-staging, thanks!
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
