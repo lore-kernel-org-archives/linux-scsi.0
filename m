@@ -2,29 +2,29 @@ Return-Path: <SRS0=glVe=EF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B09C4741F
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:50:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5060CC4741F
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:50:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A81B22243
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:50:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1BFD22210
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 08:50:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726209AbgJ3Iuo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Oct 2020 04:50:44 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:6943 "EHLO
+        id S1726095AbgJ3IuY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Oct 2020 04:50:24 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:6944 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725801AbgJ3IuY (ORCPT
+        with ESMTP id S1726027AbgJ3IuY (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2020 04:50:24 -0400
 Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4CMwWp0wLDz70S0;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4CMwWp1C68z70SB;
         Fri, 30 Oct 2020 16:31:34 +0800 (CST)
 Received: from huawei.com (10.69.192.56) by DGGEMS411-HUB.china.huawei.com
  (10.3.19.211) with Microsoft SMTP Server id 14.3.487.0; Fri, 30 Oct 2020
- 16:31:24 +0800
+ 16:31:25 +0800
 From:   Luo Jiaxing <luojiaxing@huawei.com>
 To:     <akpm@linux-foundation.org>, <viro@zeniv.linux.org.uk>,
         <andriy.shevchenko@linux.intel.com>
@@ -34,9 +34,9 @@ CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
         <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
         <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-Subject: [PATCH v2 1/5] seq_file: Introduce DEFINE_SHOW_STORE_ATTRIBUTE() helper macro
-Date:   Fri, 30 Oct 2020 16:31:58 +0800
-Message-ID: <1604046722-15531-2-git-send-email-luojiaxing@huawei.com>
+Subject: [PATCH v2 4/5] usb: dwc3: debugfs: Introduce DEFINE_SHOW_STORE_ATTRIBUTE
+Date:   Fri, 30 Oct 2020 16:32:01 +0800
+Message-ID: <1604046722-15531-5-git-send-email-luojiaxing@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1604046722-15531-1-git-send-email-luojiaxing@huawei.com>
 References: <1604046722-15531-1-git-send-email-luojiaxing@huawei.com>
@@ -48,43 +48,127 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
-for read-only file, but we found many of drivers want a helper marco for
-read-write file too.
-
-So we try to make one to decrease code duplication.
+Seq instroduce a new helper marco DEFINE_SHOW_STORE_ATTRIBUTE for
+Read-Write file, So we apply it at dwc3 debugfs to reduce some duplicate
+code.
 
 Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 ---
- include/linux/seq_file.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/usb/dwc3/debugfs.c | 52 ++++------------------------------------------
+ 1 file changed, 4 insertions(+), 48 deletions(-)
 
-diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
-index 813614d..8a474c8 100644
---- a/include/linux/seq_file.h
-+++ b/include/linux/seq_file.h
-@@ -191,6 +191,21 @@ static const struct proc_ops __name ## _proc_ops = {			\
- 	.proc_release	= single_release,				\
+diff --git a/drivers/usb/dwc3/debugfs.c b/drivers/usb/dwc3/debugfs.c
+index 5da4f60..2b5de8d 100644
+--- a/drivers/usb/dwc3/debugfs.c
++++ b/drivers/usb/dwc3/debugfs.c
+@@ -348,11 +348,6 @@ static int dwc3_lsp_show(struct seq_file *s, void *unused)
+ 	return 0;
  }
  
-+#define DEFINE_SHOW_STORE_ATTRIBUTE(__name)					\
-+static int __name ## _open(struct inode *inode, struct file *file)	\
-+{									\
-+	return single_open(file, __name ## _show, inode->i_private);	\
-+}									\
-+									\
-+static const struct file_operations __name ## _fops = {			\
-+	.owner		= THIS_MODULE,					\
-+	.open		= __name ## _open,				\
-+	.read		= seq_read,					\
-+	.write		= __name ## _write,				\
-+	.llseek		= seq_lseek,					\
-+	.release	= single_release,				\
-+}
-+
- static inline struct user_namespace *seq_user_ns(struct seq_file *seq)
+-static int dwc3_lsp_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_lsp_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_lsp_write(struct file *file, const char __user *ubuf,
+ 			      size_t count, loff_t *ppos)
  {
- #ifdef CONFIG_USER_NS
+@@ -377,13 +372,7 @@ static ssize_t dwc3_lsp_write(struct file *file, const char __user *ubuf,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_lsp_fops = {
+-	.open			= dwc3_lsp_open,
+-	.write			= dwc3_lsp_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_lsp);
+ 
+ static int dwc3_mode_show(struct seq_file *s, void *unused)
+ {
+@@ -412,11 +401,6 @@ static int dwc3_mode_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_mode_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_mode_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_mode_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -445,13 +429,7 @@ static ssize_t dwc3_mode_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_mode_fops = {
+-	.open			= dwc3_mode_open,
+-	.write			= dwc3_mode_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_mode);
+ 
+ static int dwc3_testmode_show(struct seq_file *s, void *unused)
+ {
+@@ -491,11 +469,6 @@ static int dwc3_testmode_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_testmode_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_testmode_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_testmode_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -528,13 +501,7 @@ static ssize_t dwc3_testmode_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_testmode_fops = {
+-	.open			= dwc3_testmode_open,
+-	.write			= dwc3_testmode_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_testmode);
+ 
+ static int dwc3_link_state_show(struct seq_file *s, void *unused)
+ {
+@@ -564,11 +531,6 @@ static int dwc3_link_state_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_link_state_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_link_state_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_link_state_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -620,13 +582,7 @@ static ssize_t dwc3_link_state_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_link_state_fops = {
+-	.open			= dwc3_link_state_open,
+-	.write			= dwc3_link_state_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_link_state);
+ 
+ struct dwc3_ep_file_map {
+ 	const char name[25];
 -- 
 2.7.4
 
