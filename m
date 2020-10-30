@@ -2,206 +2,323 @@ Return-Path: <SRS0=glVe=EF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2922CC00A89
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 17:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D734C55178
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 17:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADC74208B6
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 17:27:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D207D20936
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Oct 2020 17:28:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EJXWHzoB"
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Ak0Ng3HY";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="ZIx9TQgU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726992AbgJ3R1I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Oct 2020 13:27:08 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:49450 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726885AbgJ3R1H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2020 13:27:07 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09UHOeXL051761;
-        Fri, 30 Oct 2020 17:26:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : references : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=CThKkD8fKLFdJpCtyjsx01DzFICwSg3N9chL45J5io4=;
- b=EJXWHzoBSJ+AfBlD/50K/Th8uri51kFLNNUMkJGIJdB/HZK+psTD7LlD80PUCE/gjdF0
- kuVbQZ7BR0AmyhCCUP/wS2Ard1IPI2vGAphecKytDbGGPyW8gsTlcHsYZKaRnNxNAAvf
- 6jdMIri2A95WQyJrJm5HeErHYn3maN9CdZT4B8r0vwHa9V0JLpsL4uMTXy4mUfr8hTxt
- WBKVrcQboCMy+fO1TRj5wcRXyHWyApz8PjRyd3YXT6SEGtayVFJxMA+5wyuJ8Bbnzp+q
- eMLwPErKWzI0uhr3VFo5QkUTs1T/B5lTvubivHomefEIdynkcLbbiNNk2ErXENQLfYo2 0A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 34dgm4gfbr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 30 Oct 2020 17:26:57 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09UHQS55191797;
-        Fri, 30 Oct 2020 17:26:57 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 34cx1uqf7k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Oct 2020 17:26:56 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09UHQtNP025388;
-        Fri, 30 Oct 2020 17:26:55 GMT
-Received: from [20.15.0.8] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 30 Oct 2020 10:26:55 -0700
-Subject: Re: [PATCH 07/17] vhost scsi: support delayed IO vq creation
-From:   Mike Christie <michael.christie@oracle.com>
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     Jason Wang <jasowang@redhat.com>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        pbonzini@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-References: <1603326903-27052-1-git-send-email-michael.christie@oracle.com>
- <1603326903-27052-8-git-send-email-michael.christie@oracle.com>
- <9e97ea2a-bc57-d4aa-4711-35dba20b3b9e@redhat.com>
- <49c2fc29-348c-06db-4823-392f7476d318@oracle.com>
- <20201030044402-mutt-send-email-mst@kernel.org>
- <d53ae860-5b7e-7fd6-d34b-122c03162be1@oracle.com>
-Message-ID: <e78d5787-45f5-4b94-9d3b-116639af3c1c@oracle.com>
-Date:   Fri, 30 Oct 2020 12:26:54 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.12.1
+        id S1727096AbgJ3R2l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Oct 2020 13:28:41 -0400
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:44638 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726491AbgJ3R2k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Oct 2020 13:28:40 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 18EFF1280E76;
+        Fri, 30 Oct 2020 10:28:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1604078920;
+        bh=lj+KONZ4I+w3XheO3CXxtBVadfPLMATA9vF6xJgMjfM=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=Ak0Ng3HYGt5I0Sd67ks+ZvjR2V7hASUoByMK7qi12U39PM0tFYHRaq762OrtkjLZ+
+         8MYazovDVOvrqLLqMA1UyLAw0C/QYEgr6KJB6j9fh5SUf3KPx9ZUd5y1DUFO8CCAPY
+         jj3n8qvi7cJ7t6VuJzy3phUOswtzOfp2RkrWJaqE=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id B6A-uv44Vqdr; Fri, 30 Oct 2020 10:28:40 -0700 (PDT)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::c447])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id A8A661280E51;
+        Fri, 30 Oct 2020 10:28:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1604078919;
+        bh=lj+KONZ4I+w3XheO3CXxtBVadfPLMATA9vF6xJgMjfM=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=ZIx9TQgUIh87iYb0ATBMo4WrbY4+oBNhz1izuRSEKz1cnuV8kZKXiEe+99t2dvoSy
+         iFJvSYA8bpAqfqa6GFsQPZKe9EAaK5PPkHTqgWW/ewDtZEUquCBLZgeo7NgTWJ5ac8
+         MgfOEeLy4NkU3yQBV8gVpQ2fk7xZABKpQwCtqHcs=
+Message-ID: <86563422e11735ab7ec6cf0edbd8a7863e46a96a.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.10-rc1
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 30 Oct 2020 10:28:38 -0700
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-In-Reply-To: <d53ae860-5b7e-7fd6-d34b-122c03162be1@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9790 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010300130
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9790 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- suspectscore=0 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010300130
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/30/20 11:30 AM, Mike Christie wrote:
-> On 10/30/20 3:47 AM, Michael S. Tsirkin wrote:
->> On Tue, Oct 27, 2020 at 12:47:34AM -0500, Mike Christie wrote:
->>> On 10/25/20 10:51 PM, Jason Wang wrote:
->>>>
->>>> On 2020/10/22 上午8:34, Mike Christie wrote:
->>>>> Each vhost-scsi device will need a evt and ctl queue, but the number
->>>>> of IO queues depends on whatever the user has configured in userspace.
->>>>> This patch has vhost-scsi create the evt, ctl and one IO vq at device
->>>>> open time. We then create the other IO vqs when userspace starts to
->>>>> set them up. We still waste some mem on the vq and scsi vq structs,
->>>>> but we don't waste mem on iovec related arrays and for later patches
->>>>> we know which queues are used by the dev->nvqs value.
->>>>>
->>>>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->>>>> ---
->>>>>    drivers/vhost/scsi.c | 19 +++++++++++++++----
->>>>>    1 file changed, 15 insertions(+), 4 deletions(-)
->>>>
->>>>
->>>> Not familiar with SCSI. But I wonder if it could behave like vhost-net.
->>>>
->>>> E.g userspace should known the number of virtqueues so it can just open
->>>> and close multiple vhost-scsi file descriptors.
->>>>
->>>
->>> One hiccup I'm hitting is that we might end up creating about 3x more 
->>> vqs
->>> than we need. The problem is that for scsi each vhost device has:
->>>
->>> vq=0: special control vq
->>> vq=1: event vq
->>> vq=2 and above: SCSI CMD/IO vqs. We want to create N of these.
->>>
->>> Today we do:
->>>
->>> Uerspace does open(/dev/vhost-scsi)
->>>          vhost_dev_init(create 128 vqs and then later we setup and 
->>> use N of
->>> them);
->>>
->>> Qemu does ioctl(VHOST_SET_OWNER)
->>>          vhost_dev_set_owner()
->>>
->>> For N vqs userspace does:
->>>          // virtqueue setup related ioctls
->>>
->>> Qemu does ioctl(VHOST_SCSI_SET_ENDPOINT)
->>>          - match LIO/target port to vhost_dev
->>>
->>>
->>> So we could change that to:
->>>
->>> For N IO vqs userspace does
->>>          open(/dev/vhost-scsi)
->>>                  vhost_dev_init(create IO, evt, and ctl);
->>>
->>> for N IO vqs Qemu does:
->>>          ioctl(VHOST_SET_OWNER)
->>>                  vhost_dev_set_owner()
->>>
->>> for N IO vqs Qemu does:
->>>          // virtqueue setup related ioctls
->>>
->>> for N IO vqs Qemu does:
->>>          ioctl(VHOST_SCSI_SET_ENDPOINT)
->>>                  - match LIO/target port to vhost_dev and assemble the
->>> multiple vhost_dev device.
->>>
->>> The problem is that we have to setup some of the evt/ctl specific 
->>> parts at
->>> open() time when vhost_dev_init does vhost_poll_init for example.
->>>
->>> - At open time, we don't know if this vhost_dev is going to be part of a
->>> multiple vhost_device device or a single one so we need to create at 
->>> least 3
->>> of them
->>> - If it is a multiple device we don't know if its the first device being
->>> created for the device or the N'th, so we don't know if the dev's vqs 
->>> will
->>> be used for IO or ctls/evts, so we have to create all 3.
->>>
->>> When we get the first VHOST_SCSI_SET_ENDPOINT call for a new style 
->>> multiple
->>> vhost_dev device, we can use that dev's evt/ctl vqs for events/controls
->>> requests. When we get the other VHOST_SCSI_SET_ENDPOINT calls for the
->>> multiple vhost_dev device then those dev's evt/ctl vqs will be 
->>> ignored and
->>> we will only use their IO vqs. So we end up with a lot of extra vqs.
->>
->> The issue Jason's hinting at is how can admins control the amount
->> of resources a given qemu instance can consume?
->> After all vhost vqs all live in host kernel memory ...
->> Limiting # of open fds would be one way to do that ...
-> 
-> If I understand you, then the answer is vhost scsi has a setting 
-> num_queues already that controls the number of vqs. The upstream 
-> kernel's vhost scsi driver and qemu's vhost scsi code support multiqueue 
-> today. To enable it, the admin is setting the qemu property num_queues 
-> (qemu/hw/scsi/host-scsi.c). In the current code, we are already doing 
-> what I described in "Today we do:".
-> 
-> In the second chunk of patches (patches 13 - 16) I'm just trying to make 
-> it so vhost-scsi gets a thread per IO vq.
-> 
-> Patch 17 then fixes up the cgroup support so the user can control the IO 
-> vqs with cgroups. Today for vhost scsi the vhost work thread takes the 
-> request from the vq, then passes it to a workqueue_struct workqueue to 
-> submit it to the block layer. So today we are putting the vhost work 
-> thread in the cgroup, but it's a different thread interacting with the 
-> block layer, and the cgroup settings/limits are not applying.
-> 
+Four driver fixes and one core fix.  The core fix closes a race window
+where we could kick off a second asynchronous scan because the test and
+set of the variable preventing it isn't atomic.
 
-Ah, I think I did misundestand you. Today, you can set the fd limit to N 
-and that would limit the total number of devices. But right now the user 
-can set each of those N device's to have anywhere from num_queues=1 - 
-128 which could be a wide range of resource use. You want something 
-finer grained right?
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Daniel Wagner (1):
+      scsi: qla2xxx: Return EBUSY on fcport deletion
+
+Helge Deller (1):
+      scsi: mptfusion: Fix null pointer dereferences in mptscsih_remove()
+
+John Garry (1):
+      scsi: hisi_sas: Stop using queue #0 always for v2 hw
+
+Ming Lei (1):
+      scsi: core: Don't start concurrent async scan on same host
+
+Tyrel Datwyler (1):
+      scsi: ibmvscsi: Fix potential race after loss of transport
+
+And the diffstat:
+
+ drivers/message/fusion/mptscsih.c     | 13 ++++++++-----
+ drivers/scsi/hisi_sas/hisi_sas_main.c |  2 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c      | 36 +++++++++++++++++++++++++----------
+ drivers/scsi/qla2xxx/qla_nvme.c       |  6 ++++--
+ drivers/scsi/scsi_scan.c              |  7 ++++---
+ 5 files changed, 43 insertions(+), 21 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index a5ef9faf71c7..e7f0d4ae0f96 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1176,8 +1176,10 @@ mptscsih_remove(struct pci_dev *pdev)
+ 	MPT_SCSI_HOST		*hd;
+ 	int sz1;
+ 
+-	if((hd = shost_priv(host)) == NULL)
+-		return;
++	if (host == NULL)
++		hd = NULL;
++	else
++		hd = shost_priv(host);
+ 
+ 	mptscsih_shutdown(pdev);
+ 
+@@ -1193,14 +1195,15 @@ mptscsih_remove(struct pci_dev *pdev)
+ 	    "Free'd ScsiLookup (%d) memory\n",
+ 	    ioc->name, sz1));
+ 
+-	kfree(hd->info_kbuf);
++	if (hd)
++		kfree(hd->info_kbuf);
+ 
+ 	/* NULL the Scsi_Host pointer
+ 	 */
+ 	ioc->sh = NULL;
+ 
+-	scsi_host_put(host);
+-
++	if (host)
++		scsi_host_put(host);
+ 	mpt_detach(pdev);
+ 
+ }
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 128583dfccf2..c8dd8588f800 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -445,7 +445,7 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 		}
+ 	}
+ 
+-	if (scmd) {
++	if (scmd && hisi_hba->shost->nr_hw_queues) {
+ 		unsigned int dq_index;
+ 		u32 blk_tag;
+ 
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index b1f3017b6547..29fcc44be2d5 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -806,6 +806,22 @@ static void purge_requests(struct ibmvscsi_host_data *hostdata, int error_code)
+ 	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ }
+ 
++/**
++ * ibmvscsi_set_request_limit - Set the adapter request_limit in response to
++ * an adapter failure, reset, or SRP Login. Done under host lock to prevent
++ * race with SCSI command submission.
++ * @hostdata:	adapter to adjust
++ * @limit:	new request limit
++ */
++static void ibmvscsi_set_request_limit(struct ibmvscsi_host_data *hostdata, int limit)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
++	atomic_set(&hostdata->request_limit, limit);
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
++}
++
+ /**
+  * ibmvscsi_reset_host - Reset the connection to the server
+  * @hostdata:	struct ibmvscsi_host_data to reset
+@@ -813,7 +829,7 @@ static void purge_requests(struct ibmvscsi_host_data *hostdata, int error_code)
+ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
+ {
+ 	scsi_block_requests(hostdata->host);
+-	atomic_set(&hostdata->request_limit, 0);
++	ibmvscsi_set_request_limit(hostdata, 0);
+ 
+ 	purge_requests(hostdata, DID_ERROR);
+ 	hostdata->action = IBMVSCSI_HOST_ACTION_RESET;
+@@ -1146,13 +1162,13 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 		dev_info(hostdata->dev, "SRP_LOGIN_REJ reason %u\n",
+ 			 evt_struct->xfer_iu->srp.login_rej.reason);
+ 		/* Login failed.  */
+-		atomic_set(&hostdata->request_limit, -1);
++		ibmvscsi_set_request_limit(hostdata, -1);
+ 		return;
+ 	default:
+ 		dev_err(hostdata->dev, "Invalid login response typecode 0x%02x!\n",
+ 			evt_struct->xfer_iu->srp.login_rsp.opcode);
+ 		/* Login failed.  */
+-		atomic_set(&hostdata->request_limit, -1);
++		ibmvscsi_set_request_limit(hostdata, -1);
+ 		return;
+ 	}
+ 
+@@ -1163,7 +1179,7 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 	 * This value is set rather than added to request_limit because
+ 	 * request_limit could have been set to -1 by this client.
+ 	 */
+-	atomic_set(&hostdata->request_limit,
++	ibmvscsi_set_request_limit(hostdata,
+ 		   be32_to_cpu(evt_struct->xfer_iu->srp.login_rsp.req_lim_delta));
+ 
+ 	/* If we had any pending I/Os, kick them */
+@@ -1195,13 +1211,13 @@ static int send_srp_login(struct ibmvscsi_host_data *hostdata)
+ 	login->req_buf_fmt = cpu_to_be16(SRP_BUF_FORMAT_DIRECT |
+ 					 SRP_BUF_FORMAT_INDIRECT);
+ 
+-	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	/* Start out with a request limit of 0, since this is negotiated in
+ 	 * the login request we are just sending and login requests always
+ 	 * get sent by the driver regardless of request_limit.
+ 	 */
+-	atomic_set(&hostdata->request_limit, 0);
++	ibmvscsi_set_request_limit(hostdata, 0);
+ 
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	rc = ibmvscsi_send_srp_event(evt_struct, hostdata, login_timeout * 2);
+ 	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 	dev_info(hostdata->dev, "sent SRP login\n");
+@@ -1781,7 +1797,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
+ 		return;
+ 	case VIOSRP_CRQ_XPORT_EVENT:	/* Hypervisor telling us the connection is closed */
+ 		scsi_block_requests(hostdata->host);
+-		atomic_set(&hostdata->request_limit, 0);
++		ibmvscsi_set_request_limit(hostdata, 0);
+ 		if (crq->format == 0x06) {
+ 			/* We need to re-setup the interpartition connection */
+ 			dev_info(hostdata->dev, "Re-enabling adapter!\n");
+@@ -2137,12 +2153,12 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 	}
+ 
+ 	hostdata->action = IBMVSCSI_HOST_ACTION_NONE;
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 
+ 	if (rc) {
+-		atomic_set(&hostdata->request_limit, -1);
++		ibmvscsi_set_request_limit(hostdata, -1);
+ 		dev_err(hostdata->dev, "error after %s\n", action);
+ 	}
+-	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 
+ 	scsi_unblock_requests(hostdata->host);
+ }
+@@ -2226,7 +2242,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	init_waitqueue_head(&hostdata->work_wait_q);
+ 	hostdata->host = host;
+ 	hostdata->dev = dev;
+-	atomic_set(&hostdata->request_limit, -1);
++	ibmvscsi_set_request_limit(hostdata, -1);
+ 	hostdata->host->max_sectors = IBMVSCSI_MAX_SECTORS_DEFAULT;
+ 
+ 	if (map_persist_bufs(hostdata)) {
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 1f9005125313..b7a1dc24db38 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -554,10 +554,12 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+ 
+ 	fcport = qla_rport->fcport;
+ 
+-	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
+-	    (fcport && fcport->deleted))
++	if (!qpair || !fcport)
+ 		return -ENODEV;
+ 
++	if (!qpair->fw_started || fcport->deleted)
++		return -EBUSY;
++
+ 	vha = fcport->vha;
+ 
+ 	if (!(fcport->nvme_flag & NVME_FLAG_REGISTERED))
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f2437a7570ce..9af50e6f94c4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1714,15 +1714,16 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+  */
+ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
+ {
+-	struct async_scan_data *data;
++	struct async_scan_data *data = NULL;
+ 	unsigned long flags;
+ 
+ 	if (strncmp(scsi_scan_type, "sync", 4) == 0)
+ 		return NULL;
+ 
++	mutex_lock(&shost->scan_mutex);
+ 	if (shost->async_scan) {
+ 		shost_printk(KERN_DEBUG, shost, "%s called twice\n", __func__);
+-		return NULL;
++		goto err;
+ 	}
+ 
+ 	data = kmalloc(sizeof(*data), GFP_KERNEL);
+@@ -1733,7 +1734,6 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
+ 		goto err;
+ 	init_completion(&data->prev_finished);
+ 
+-	mutex_lock(&shost->scan_mutex);
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->async_scan = 1;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+@@ -1748,6 +1748,7 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
+ 	return data;
+ 
+  err:
++	mutex_unlock(&shost->scan_mutex);
+ 	kfree(data);
+ 	return NULL;
+ }
+
