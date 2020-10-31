@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2FBEC4741F
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Oct 2020 23:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CB3C56201
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Oct 2020 23:32:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8B2F221FF
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Oct 2020 23:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19532221FF
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Oct 2020 23:32:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726114AbgJaXc1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726117AbgJaXc1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 31 Oct 2020 19:32:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:57532 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:57520 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726064AbgJaXc0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726063AbgJaXc0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Sat, 31 Oct 2020 19:32:26 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 1FA1DB1B1;
-        Sat, 31 Oct 2020 23:32:24 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id D94A0B1AC;
+        Sat, 31 Oct 2020 23:32:23 +0000 (UTC)
 From:   David Disseldorp <ddiss@suse.de>
 To:     target-devel@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org, David Disseldorp <ddiss@suse.de>,
         Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v4 3/4] scsi: target: split out COMPARE AND WRITE memcmp into helper
-Date:   Sun,  1 Nov 2020 00:32:10 +0100
-Message-Id: <20201031233211.5207-4-ddiss@suse.de>
+Subject: [PATCH v4 2/4] scsi: target: rename cmd.bad_sector to cmd.sense_info
+Date:   Sun,  1 Nov 2020 00:32:09 +0100
+Message-Id: <20201031233211.5207-3-ddiss@suse.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201031233211.5207-1-ddiss@suse.de>
 References: <20201031233211.5207-1-ddiss@suse.de>
@@ -39,186 +39,118 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for finding and returning the miscompare offset.
+cmd.bad_sector currently gets packed into the sense INFORMATION field
+for TCM_LOGICAL_BLOCK_{GUARD,APP_TAG,REF_TAG}_CHECK_FAILED errors, which
+carry an .add_sector_info flag in the sense_detail_table to ensure this.
+
+In preparation for propagating a byte offset on COMPARE AND WRITE
+TCM_MISCOMPARE_VERIFY error, rename cmd.bad_sector to cmd.sense_info
+and sense_detail.add_sector_info to sense_detail.add_sense_info so
+that it better reflects the sense INFORMATION field destination.
 
 Signed-off-by: David Disseldorp <ddiss@suse.de>
 Reviewed-by: Mike Christie <michael.christie@oracle.com>
+[ddiss: update previously overlooked ib_isert]
 ---
- drivers/target/target_core_sbc.c | 121 +++++++++++++++++--------------
- 1 file changed, 68 insertions(+), 53 deletions(-)
+ drivers/infiniband/ulp/isert/ib_isert.c |  4 ++--
+ drivers/target/target_core_sbc.c        |  2 +-
+ drivers/target/target_core_transport.c  | 12 ++++++------
+ include/target/target_core_base.h       |  2 +-
+ 4 files changed, 10 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index 436e17f1d0e5..a3ba0c4d0d39 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -1528,12 +1528,12 @@ isert_check_pi_status(struct se_cmd *se_cmd, struct ib_mr *sig_mr)
+ 		}
+ 		sec_offset_err = mr_status.sig_err.sig_err_offset;
+ 		do_div(sec_offset_err, block_size);
+-		se_cmd->bad_sector = sec_offset_err + se_cmd->t_task_lba;
++		se_cmd->sense_info = sec_offset_err + se_cmd->t_task_lba;
+ 
+ 		isert_err("PI error found type %d at sector 0x%llx "
+ 			  "expected 0x%x vs actual 0x%x\n",
+ 			  mr_status.sig_err.err_type,
+-			  (unsigned long long)se_cmd->bad_sector,
++			  (unsigned long long)se_cmd->sense_info,
+ 			  mr_status.sig_err.expected,
+ 			  mr_status.sig_err.actual);
+ 		ret = 1;
 diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 5f77dd95f1b9..22d0cbba6ff3 100644
+index 6e8b8d30938f..5f77dd95f1b9 100644
 --- a/drivers/target/target_core_sbc.c
 +++ b/drivers/target/target_core_sbc.c
-@@ -434,20 +434,75 @@ static sense_reason_t compare_and_write_post(struct se_cmd *cmd, bool success,
- 	return ret;
+@@ -1439,7 +1439,7 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 			if (rc) {
+ 				kunmap_atomic(daddr - dsg->offset);
+ 				kunmap_atomic(paddr - psg->offset);
+-				cmd->bad_sector = sector;
++				cmd->sense_info = sector;
+ 				return rc;
+ 			}
+ next:
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index caa3a7b34826..c6f45c12d564 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3098,7 +3098,7 @@ struct sense_detail {
+ 	u8 key;
+ 	u8 asc;
+ 	u8 ascq;
+-	bool add_sector_info;
++	bool add_sense_info;
+ };
+ 
+ static const struct sense_detail sense_detail_table[] = {
+@@ -3201,19 +3201,19 @@ static const struct sense_detail sense_detail_table[] = {
+ 		.key = ABORTED_COMMAND,
+ 		.asc = 0x10,
+ 		.ascq = 0x01, /* LOGICAL BLOCK GUARD CHECK FAILED */
+-		.add_sector_info = true,
++		.add_sense_info = true,
+ 	},
+ 	[TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED] = {
+ 		.key = ABORTED_COMMAND,
+ 		.asc = 0x10,
+ 		.ascq = 0x02, /* LOGICAL BLOCK APPLICATION TAG CHECK FAILED */
+-		.add_sector_info = true,
++		.add_sense_info = true,
+ 	},
+ 	[TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED] = {
+ 		.key = ABORTED_COMMAND,
+ 		.asc = 0x10,
+ 		.ascq = 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
+-		.add_sector_info = true,
++		.add_sense_info = true,
+ 	},
+ 	[TCM_COPY_TARGET_DEVICE_NOT_REACHABLE] = {
+ 		.key = COPY_ABORTED,
+@@ -3293,10 +3293,10 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
+ 	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
+ 	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
+-	if (sd->add_sector_info)
++	if (sd->add_sense_info)
+ 		WARN_ON_ONCE(scsi_set_sense_information(buffer,
+ 							cmd->scsi_sense_length,
+-							cmd->bad_sector) < 0);
++							cmd->sense_info) < 0);
  }
  
-+/*
-+ * compare @cmp_len bytes of @read_sgl with @cmp_sgl. On miscompare return
-+ * TCM_MISCOMPARE_VERIFY.
-+ */
-+static sense_reason_t
-+compare_and_write_do_cmp(struct scatterlist *read_sgl, unsigned int read_nents,
-+			 struct scatterlist *cmp_sgl, unsigned int cmp_nents,
-+			 unsigned int cmp_len)
-+{
-+	unsigned char *buf = NULL;
-+	struct scatterlist *sg;
-+	sense_reason_t ret;
-+	unsigned int offset;
-+	size_t rc;
-+	int i;
-+
-+	buf = kzalloc(cmp_len, GFP_KERNEL);
-+	if (!buf) {
-+		ret = TCM_OUT_OF_RESOURCES;
-+		goto out;
-+	}
-+
-+	rc = sg_copy_to_buffer(cmp_sgl, cmp_nents, buf, cmp_len);
-+	if (!rc) {
-+		pr_err("sg_copy_to_buffer() failed for compare_and_write\n");
-+		ret = TCM_OUT_OF_RESOURCES;
-+		goto out;
-+	}
-+	/*
-+	 * Compare SCSI READ payload against verify payload
-+	 */
-+	offset = 0;
-+	for_each_sg(read_sgl, sg, read_nents, i) {
-+		unsigned int len = min(sg->length, cmp_len);
-+		unsigned char *addr = kmap_atomic(sg_page(sg));
-+
-+		if (memcmp(addr, buf + offset, len)) {
-+			pr_warn("Detected MISCOMPARE for addr: %p buf: %p\n",
-+				addr, buf + offset);
-+			kunmap_atomic(addr);
-+			ret = TCM_MISCOMPARE_VERIFY;
-+			goto out;
-+		}
-+		kunmap_atomic(addr);
-+
-+		offset += len;
-+		cmp_len -= len;
-+		if (!cmp_len)
-+			break;
-+	}
-+	pr_debug("COMPARE AND WRITE read data matches compare data\n");
-+	ret = TCM_NO_SENSE;
-+out:
-+	kfree(buf);
-+	return ret;
-+}
-+
- static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool success,
- 						 int *post_ret)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct sg_table write_tbl = { };
--	struct scatterlist *write_sg, *sg;
--	unsigned char *buf = NULL, *addr;
-+	struct scatterlist *write_sg;
- 	struct sg_mapping_iter m;
--	unsigned int offset = 0, len;
--	unsigned int nlbas = cmd->t_task_nolb;
-+	unsigned int len;
- 	unsigned int block_size = dev->dev_attrib.block_size;
--	unsigned int compare_len = (nlbas * block_size);
-+	unsigned int compare_len = (cmd->t_task_nolb * block_size);
- 	sense_reason_t ret = TCM_NO_SENSE;
--	int rc, i;
-+	int i;
- 
- 	/*
- 	 * Handle early failure in transport_generic_request_failure(),
-@@ -473,12 +528,13 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 		goto out;
- 	}
- 
--	buf = kzalloc(cmd->data_length, GFP_KERNEL);
--	if (!buf) {
--		pr_err("Unable to allocate compare_and_write buf\n");
--		ret = TCM_OUT_OF_RESOURCES;
-+	ret = compare_and_write_do_cmp(cmd->t_bidi_data_sg,
-+				       cmd->t_bidi_data_nents,
-+				       cmd->t_data_sg,
-+				       cmd->t_data_nents,
-+				       compare_len);
-+	if (ret)
- 		goto out;
--	}
- 
- 	if (sg_alloc_table(&write_tbl, cmd->t_data_nents, GFP_KERNEL) < 0) {
- 		pr_err("Unable to allocate compare_and_write sg\n");
-@@ -486,44 +542,9 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 		goto out;
- 	}
- 	write_sg = write_tbl.sgl;
--	/*
--	 * Setup verify and write data payloads from total NumberLBAs.
--	 */
--	rc = sg_copy_to_buffer(cmd->t_data_sg, cmd->t_data_nents, buf,
--			       cmd->data_length);
--	if (!rc) {
--		pr_err("sg_copy_to_buffer() failed for compare_and_write\n");
--		ret = TCM_OUT_OF_RESOURCES;
--		goto out;
--	}
--	/*
--	 * Compare against SCSI READ payload against verify payload
--	 */
--	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, i) {
--		addr = (unsigned char *)kmap_atomic(sg_page(sg));
--		if (!addr) {
--			ret = TCM_OUT_OF_RESOURCES;
--			goto out;
--		}
--
--		len = min(sg->length, compare_len);
--
--		if (memcmp(addr, buf + offset, len)) {
--			pr_warn("Detected MISCOMPARE for addr: %p buf: %p\n",
--				addr, buf + offset);
--			kunmap_atomic(addr);
--			goto miscompare;
--		}
--		kunmap_atomic(addr);
--
--		offset += len;
--		compare_len -= len;
--		if (!compare_len)
--			break;
--	}
- 
- 	i = 0;
--	len = cmd->t_task_nolb * block_size;
-+	len = compare_len;
- 	sg_miter_start(&m, cmd->t_data_sg, cmd->t_data_nents, SG_MITER_TO_SG);
- 	/*
- 	 * Currently assumes NoLB=1 and SGLs are PAGE_SIZE..
-@@ -568,13 +589,8 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 
- 	__target_execute_cmd(cmd, false);
- 
--	kfree(buf);
- 	return ret;
- 
--miscompare:
--	pr_warn("Target/%s: Send MISCOMPARE check condition and sense\n",
--		dev->transport->name);
--	ret = TCM_MISCOMPARE_VERIFY;
- out:
- 	/*
- 	 * In the MISCOMPARE or failure case, unlock ->caw_sem obtained in
-@@ -582,7 +598,6 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 	 */
- 	up(&dev->caw_sem);
- 	sg_free_table(&write_tbl);
--	kfree(buf);
- 	return ret;
- }
+ int
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 549947d407cf..7ee2bee46b3a 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -540,7 +540,7 @@ struct se_cmd {
+ 	struct scatterlist	*t_prot_sg;
+ 	unsigned int		t_prot_nents;
+ 	sense_reason_t		pi_err;
+-	sector_t		bad_sector;
++	u64			sense_info;
+ 	int			cpuid;
+ };
  
 -- 
 2.26.2
