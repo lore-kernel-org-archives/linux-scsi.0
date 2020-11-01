@@ -2,68 +2,65 @@ Return-Path: <SRS0=rQSi=EH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38526C4741F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0ECC4742C
 	for <linux-scsi@archiver.kernel.org>; Sun,  1 Nov 2020 18:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E12A422254
-	for <linux-scsi@archiver.kernel.org>; Sun,  1 Nov 2020 18:59:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E65C22274
+	for <linux-scsi@archiver.kernel.org>; Sun,  1 Nov 2020 18:59:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hlkPYgMI"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zNjIo9p6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727289AbgKAS7w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727298AbgKAS7w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 1 Nov 2020 13:59:52 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:46384 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:46386 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727254AbgKAS7v (ORCPT
+        with ESMTP id S1727264AbgKAS7v (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Nov 2020 13:59:51 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A1Iukvs153273;
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A1ItOs8152790;
         Sun, 1 Nov 2020 18:59:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=3KFFaojRxbva9FVrBREDvHn2V4tGAy/+wiJTiiU+t38=;
- b=hlkPYgMIUbQk3yORW8FPSXjv/TgV0JQECEGp6H9R5ADYbY+T5Cyvmu4ZK7oLRAiJA97N
- tJndQtWKvSIoUKNLde5ft4FjjFvllV+357E7bAEO4yu0tuLxHOz8FOTGJEIydoQYl8lC
- LxXZLuqRFQK64BlV+O/iIk47lmGrz9T4PRhwf2EExVz9VGgE4AAP5RcygD2zKxWPLFRi
- 0KT6Ur5FxlNazk3F5HmAbcu/sKatNtbsjFIGVSG/4EKbzZfIqibDfJEu59OMH4S5gjnC
- /fcpc+tX3wXBJI0ryjH6+5/qsG3FMfx/jfsPddz+MqTz9OoIXe/CDHgQVWVK53P1df70 fQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 34hhvc1arh-1
+ date : message-id; s=corp-2020-01-29;
+ bh=fzt5NevbQReMFhXiJ/Enlt2ogqCHwfGDL8t4GWsr4pc=;
+ b=zNjIo9p6UPxzc/kg0PobCZsa37kzqEPkFOQuqrm8//hcMNPIZ+nCEm6LAW8coQa31trK
+ kca9Gi9+xBo/4U50uTiqf4n8GhjwHPZ5eB74miWtpEKVC3Q05xTR1rDr/VL5LgVVaMkQ
+ eR8txznyob+niydSKJnCVhb8kF3659rQGQbXwQK+rI/x6he5NepE9NClTEJ6IoZR89Nm
+ z6OJFpHgHLebixsOlQ9eExTjzEsp5ExVgUmSDJ3MboY7RKOhK34GJT3aasS+XnirPBfs
+ M08BeQ9blMRn7C6eFQsR9FoENnFdWK+Bs61qrFVaE+99RPDtk+xp9Hhf+UTe9Y8lvUfU Og== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 34hhvc1arg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
         Sun, 01 Nov 2020 18:59:46 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A1IsiYk125932;
-        Sun, 1 Nov 2020 18:59:46 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 34hvrmef5e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 01 Nov 2020 18:59:46 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A1Ixjaf009061;
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A1Isgux091271;
         Sun, 1 Nov 2020 18:59:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 34hw0aprdg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 01 Nov 2020 18:59:45 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A1Ixghe013094;
+        Sun, 1 Nov 2020 18:59:44 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 01 Nov 2020 10:59:44 -0800
+        with ESMTP ; Sun, 01 Nov 2020 10:59:41 -0800
 From:   Mike Christie <michael.christie@oracle.com>
 To:     himanshu.madhani@oracle.com, njavali@marvell.com,
         james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH 4/8] target: remove TARGET_SCF_LOOKUP_LUN_FROM_TAG
-Date:   Sun,  1 Nov 2020 12:59:30 -0600
-Message-Id: <1604257174-4524-5-git-send-email-michael.christie@oracle.com>
+Subject: [PATCH 0/8 v3] target: fix up locking/refcounting in IO paths
+Date:   Sun,  1 Nov 2020 12:59:26 -0600
+Message-Id: <1604257174-4524-1-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1604257174-4524-1-git-send-email-michael.christie@oracle.com>
-References: <1604257174-4524-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9792 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- malwarescore=0 mlxscore=0 suspectscore=0 spamscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2011010154
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9792 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
@@ -75,78 +72,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-TARGET_SCF_LOOKUP_LUN_FROM_TAG is no longer used so remove it.
+The following patches made over Martin's staging branch fix some
+ref counting issues I hit while testing and improves the locking
+in the IO paths. To do the latter, the patches:
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- drivers/target/target_core_transport.c | 33 ---------------------------------
- include/target/target_core_base.h      |  1 -
- 2 files changed, 34 deletions(-)
+1. move the sess_cmd_lock to tcm_qla2xxx since it was the only
+driver using the sess_cmd_list.
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index d47619a..465b6583 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1772,29 +1772,6 @@ static void target_complete_tmr_failure(struct work_struct *work)
- 	transport_cmd_check_stop_to_fabric(se_cmd);
- }
- 
--static bool target_lookup_lun_from_tag(struct se_session *se_sess, u64 tag,
--				       u64 *unpacked_lun)
--{
--	struct se_cmd *se_cmd;
--	unsigned long flags;
--	bool ret = false;
--
--	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
--	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
--		if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
--			continue;
--
--		if (se_cmd->tag == tag) {
--			*unpacked_lun = se_cmd->orig_fe_lun;
--			ret = true;
--			break;
--		}
--	}
--	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
--
--	return ret;
--}
--
- /**
-  * target_submit_tmr - lookup unpacked lun and submit uninitialized se_cmd
-  *                     for TMR CDBs
-@@ -1842,16 +1819,6 @@ int target_submit_tmr(struct se_cmd *se_cmd, struct se_session *se_sess,
- 		core_tmr_release_req(se_cmd->se_tmr_req);
- 		return ret;
- 	}
--	/*
--	 * If this is ABORT_TASK with no explicit fabric provided LUN,
--	 * go ahead and search active session tags for a match to figure
--	 * out unpacked_lun for the original se_cmd.
--	 */
--	if (tm_type == TMR_ABORT_TASK && (flags & TARGET_SCF_LOOKUP_LUN_FROM_TAG)) {
--		if (!target_lookup_lun_from_tag(se_sess, tag,
--						&se_cmd->orig_fe_lun))
--			goto failure;
--	}
- 
- 	ret = transport_lookup_tmr_lun(se_cmd);
- 	if (ret)
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 549947d..b3c9946 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -195,7 +195,6 @@ enum target_sc_flags_table {
- 	TARGET_SCF_ACK_KREF		= 0x02,
- 	TARGET_SCF_UNKNOWN_SIZE		= 0x04,
- 	TARGET_SCF_USE_CPUID		= 0x08,
--	TARGET_SCF_LOOKUP_LUN_FROM_TAG	= 0x10,
- };
- 
- /* fabric independent task management function values */
--- 
-1.8.3.1
+2. makes the execution lock/list per cpu'ish. I just allocate
+nr_cpu_ids's worth of lock/lists then make sure we complete
+the cmd on the cpu it was started on.
+
+With the patches I'm seeing a 25% improvement in IOPs for small
+IO tests like:
+
+fio  --filename=/dev/sdXYZ  --direct=1 --rw=randrw --bs=4k \
+--iodepth=128  --numjobs=16
+
+with drivers like vhost (with those other patches on the list to
+fix up multiple virtqueue support) and with the included loop
+patch when nr hw queues is increased.
+
+v3:
+- Fixed issue where qla2xxx's cpuid was overwritten.
+- Fixed up email submit prefix to have "qla2xxx".
+v2:
+- Got access to qla2xxx setup and tested patch. Fixed various issues.
+- Added fixes for issues found in the same code paths I was testing:
+        - target: fix lun ref count handling
+        - target: fix cmd_count ref leak
+v1/RFC
+- Initial posting.
+
 
