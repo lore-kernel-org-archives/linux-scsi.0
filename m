@@ -5,59 +5,59 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2861C00A89
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 789F5C388F2
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77A2122268
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37150223FD
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EInGRm6c"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BFOSE7/j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727392AbgKBQw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 11:52:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43052 "EHLO
+        id S1727486AbgKBQwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 11:52:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726920AbgKBQw0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:52:26 -0500
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54572C0617A6;
-        Mon,  2 Nov 2020 08:52:26 -0800 (PST)
-Received: by mail-pl1-x643.google.com with SMTP id j5so7098449plk.7;
-        Mon, 02 Nov 2020 08:52:26 -0800 (PST)
+        with ESMTP id S1727484AbgKBQwq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:52:46 -0500
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79E1BC0617A6;
+        Mon,  2 Nov 2020 08:52:46 -0800 (PST)
+Received: by mail-pg1-x543.google.com with SMTP id k9so9590462pgt.9;
+        Mon, 02 Nov 2020 08:52:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=80Yi1XLQzKPeoqRYuchuEzVl/P6+59b0kyvSplkNuqw=;
-        b=EInGRm6cBk43ZkBUefE+Lxc1nMZ8wuWhwjNtsLaYAjJkkpXaroUIq/Ir/9rRIReZTa
-         TX9Syn6BVfq83IPRQ7ykGpcDSU2omjDUI3aFWdcpcTOE4zk4dSfSsjJxRXA/HxRfwRnq
-         ItPVjw8aiAUDrYudk7Kq3o9fsSpGJ085X8SNop1TA56COWuz2G5PaKpEdELT/3brT2Re
-         Z3KSEtx+XzcTXvGNXhcZFGfzpg1EJVAyhG85b4saGFxQuf05Tf97gMtSJAW5Cf0q6pit
-         ImNpcFHlfvOWYNqWyTpk9PqZ2elCuC7uo5nkhF6uYvOiCQO/H1luHZ5Su0VVC1HGsZPR
-         VbTQ==
+        bh=XPMjeP+Aj8Y7qYlQVBIVXdIdvsMXyUBB2qOriiIG5lA=;
+        b=BFOSE7/jZj6D/hNGPW6Z+IYEY9S+IxabURlympaa+oRyRRbAXjsP9s3RqWZx4J9hsI
+         BGEE9Eq70JfosYWPtLomF9SBSuA2HBDZ02GUj+CVWcFUEBT+XVI7n7zaCr7wbCwgw6ka
+         3+H7Z9qVtNwMndJMN2vWnlSyc5hAqGyIR5QQN8X+2yhvSRPnaI69RmUxBdbubFTuCUIX
+         piy3chi0KamIbGXKBG2UJ2Es5dnVCmLTvftYmI0OmGoR0vMZdTO+zQFhPSeSyRYxhBDJ
+         KlfHKfLgq+0S1P+m6dMT7tAXfXoDIUsQHSzhmIinIKqJS2Ln4WWV+wyx2ui1xnLN3d52
+         V74g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=80Yi1XLQzKPeoqRYuchuEzVl/P6+59b0kyvSplkNuqw=;
-        b=KFjTtzvKL3ixdicJKOip7CvYadhzT7PDfJ/f1hEkc6Eqxjk4/U7ka66QJvF1hsrJOS
-         bPFyy2+0nAONKUAmAOrgGNzhCZXPEbtXTuiQcI6q7Kdc0wU1bTrUXL43yZo94pBJIfQ2
-         arcO1Y7/eN0TyAmL3DKbU7Twlvf8STLmTz3+zSjFEF04uV8qQLH/76yPOQPtWhFIgGXm
-         8enbjNvLfXwUBMYV9+0a/27G5xs6MSiIRx1OQOOpEIL/ViAd5lQ2vNDHhYLcgMrbYrA/
-         698UbugsxuMWh3L+cmDZlfj0GtDQXyPnjCCmbrJzkyFiN8ARafoVBvE5F0qNaLHs0PSo
-         koMg==
-X-Gm-Message-State: AOAM533UrePATMO4paMLeFP4dj1vrlrFCbP3Q3dm1Wq6bn6onF9hytjg
-        T2mNkv19ZJ5Mk/PD93la8ow=
-X-Google-Smtp-Source: ABdhPJwWscqt8CM6V8MAKcDq8ZXDB9lxb+Wc/XDRC0YTbVpR2R6o45JcQIqTodOCmknuT+Pb9bX4UA==
-X-Received: by 2002:a17:902:bb81:b029:d5:b437:edb4 with SMTP id m1-20020a170902bb81b02900d5b437edb4mr21171215pls.6.1604335945887;
-        Mon, 02 Nov 2020 08:52:25 -0800 (PST)
+        bh=XPMjeP+Aj8Y7qYlQVBIVXdIdvsMXyUBB2qOriiIG5lA=;
+        b=aSrurqFQWiQ+kB2Dx66kipoTUG+G3EXQyW4/wxKVi9utlut22q/gg54gI9mKR1eN7J
+         Y8J57qqNmrX8iU79FYrUJIKHE3Sk/X1X7mqcR37rt1ry+AgmKFym2fS2BF8sFbSex84o
+         MzZ22R/HykFQgo7FQ1WY9NzpoL3eat1rW6Y0GJDKCfJj1mES/jeH0ufO8Zw85760SjBf
+         dT5mGMfZ+KR08qWJWNP41fxHkdkwQZDhpcnknnzGg0YcgWTJX7Hip49jv2zq0nJ7XGtF
+         iD+L86Acvn8KCv+VKSGxbAIIAP3oj5W0QSy+WUFN1Ld61mIHeEbbDX9Dza3NgpApcHUW
+         8yWA==
+X-Gm-Message-State: AOAM532FctXEUjsNslvOvuiSZlY/+v/mVxMYras0OXfEbY9r3WnUuDYP
+        wDVCocXf+86wCMAlKIlPG5E=
+X-Google-Smtp-Source: ABdhPJyCrllqbyiFve3kKXuwDFU8Zp7rtUgBCNHNxZtJ2bhsDm1uCIq1J9Y4X4Ue1/8Cl51gz1/Uiw==
+X-Received: by 2002:a17:90a:468f:: with SMTP id z15mr17777167pjf.200.1604335966065;
+        Mon, 02 Nov 2020 08:52:46 -0800 (PST)
 Received: from varodek.localdomain ([223.179.149.110])
-        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.52.17
+        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.52.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 08:52:25 -0800 (PST)
+        Mon, 02 Nov 2020 08:52:45 -0800 (PST)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -89,9 +89,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v4 10/29] scsi: esas2r: Drop PCI Wakeup calls from .resume
-Date:   Mon,  2 Nov 2020 22:17:11 +0530
-Message-Id: <20201102164730.324035-11-vaibhavgupta40@gmail.com>
+Subject: [PATCH v4 12/29] scsi: hisi_sas_v3_hw: Drop PCI Wakeup calls from .resume
+Date:   Mon,  2 Nov 2020 22:17:13 +0530
+Message-Id: <20201102164730.324035-13-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
 References: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
@@ -101,35 +101,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver calls pci_enable_wake(...., false) in esas2r_resume(), and
-there is no corresponding pci_enable_wake(...., true) in esas2r_suspend().
-Either it should do enable-wake the device in .suspend() or should not
-invoke pci_enable_wake() at all.
+The driver calls pci_enable_wake(...., false) in hisi_sas_v3_resume(), and
+there is no corresponding pci_enable_wake(...., true) in
+hisi_sas_v3_suspend(). Either it should do enable-wake the device in
+.suspend() or should not invoke pci_enable_wake() at all.
 
 Concluding that this driver doesn't support enable-wake and PCI core calls
 pci_enable_wake(pci_dev, PCI_D0, false) during resume, drop it from
-esas2r_resume().
+hisi_sas_v3_resume().
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/esas2r/esas2r_init.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 09c5c24bf391..905a6c874789 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -676,10 +676,6 @@ int esas2r_resume(struct pci_dev *pdev)
- 		       "pci_set_power_state(PCI_D0) "
- 		       "called");
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7133ca859b5e..f19f3db1ac6d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3492,7 +3492,6 @@ static int _resume_v3_hw(struct device *device)
+ 	dev_warn(dev, "resuming from operating state [D%d]\n",
+ 		 device_state);
  	pci_set_power_state(pdev, PCI_D0);
--	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
--		       "pci_enable_wake(PCI_D0, 0) "
--		       "called");
 -	pci_enable_wake(pdev, PCI_D0, 0);
- 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
- 		       "pci_restore_state() called");
  	pci_restore_state(pdev);
+ 	rc = pci_enable_device(pdev);
+ 	if (rc) {
 -- 
 2.28.0
 
