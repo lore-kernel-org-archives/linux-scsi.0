@@ -2,124 +2,138 @@ Return-Path: <SRS0=0UYT=EI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B665C00A89
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 09:08:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 860D5C388F9
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 10:25:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA4F9223BD
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 09:08:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DAA02231B
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 10:25:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HoSR/w39"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728306AbgKBJIG convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 04:08:06 -0500
-Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:43925 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728297AbgKBJID (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 04:08:03 -0500
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id uk-mta-2-3gt7SuvxPWOqa-ZpIA1B2g-1;
- Mon, 02 Nov 2020 09:06:39 +0000
-X-MC-Unique: 3gt7SuvxPWOqa-ZpIA1B2g-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Mon, 2 Nov 2020 09:06:38 +0000
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Mon, 2 Nov 2020 09:06:38 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Greg KH' <gregkh@linuxfoundation.org>
-CC:     'David Hildenbrand' <david@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>,
-        David Howells <dhowells@redhat.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-aio@kvack.org" <linux-aio@kvack.org>,
-        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
-        "linux-security-module@vger.kernel.org" 
-        <linux-security-module@vger.kernel.org>
-Subject: RE: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
- rw_copy_check_uvector() into lib/iov_iter.c"
-Thread-Topic: Buggy commit tracked to: "Re: [PATCH 2/9] iov_iter: move
- rw_copy_check_uvector() into lib/iov_iter.c"
-Thread-Index: AQHWqE5GNDfnH4y9nkGWtfqJueR1KKmjTCJQgAAN4UiAAAD2IIAASOeCgAF+12CAAB+UKYAAAQNg///yIQCAD2i/YA==
-Date:   Mon, 2 Nov 2020 09:06:38 +0000
-Message-ID: <0ab5ac71f28d459db2f350c2e07b88ca@AcuMS.aculab.com>
-References: <5fd6003b-55a6-2c3c-9a28-8fd3a575ca78@redhat.com>
- <20201022104805.GA1503673@kroah.com> <20201022121849.GA1664412@kroah.com>
- <98d9df88-b7ef-fdfb-7d90-2fa7a9d7bab5@redhat.com>
- <20201022125759.GA1685526@kroah.com> <20201022135036.GA1787470@kroah.com>
- <134f162d711d466ebbd88906fae35b33@AcuMS.aculab.com>
- <935f7168-c2f5-dd14-7124-412b284693a2@redhat.com>
- <999e2926-9a75-72fd-007a-1de0af341292@redhat.com>
- <35d0ec90ef4f4a35a75b9df7d791f719@AcuMS.aculab.com>
- <20201023144718.GA2525489@kroah.com>
-In-Reply-To: <20201023144718.GA2525489@kroah.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        id S1728339AbgKBKZ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 05:25:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38852 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728005AbgKBKZ6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 05:25:58 -0500
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C7FBC0617A6
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2020 02:25:58 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id 205so1197379wma.4
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2020 02:25:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3H4ECss9j64M9/DgBBB+UTVHgBY3NUG4+bvVfh0cN/I=;
+        b=HoSR/w39rJuiecht1ygijSGfa4XlnF9cC/ivdmb3z2ZeTQXJLEcTWfGC51PSRt9Xe1
+         dHNqYxrx/izLdx0fqrocT7tVsOgQPde6tZDAawtHde515wDMgwBgYLZ7zEIHkev7YR/7
+         6ld8RCHsqws5z/i4GXDRRtAl75RNu+Ro83U2Z9XccSZs8lVNj1khP+Qv+mxmPfGJlJ7d
+         waTi4k8APAMKyJ3LSMJeuMM1G/nRHxKw884PmImuVXfML/1ylfBPcVr3iLhD6IyX2tJ0
+         rhs3/6kXiMZ8h2H7AUgu6+8KzLIJ4xsi4ONYRRhHXKpsEmshz/APuVViXFgqOlVXGu0d
+         O46g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3H4ECss9j64M9/DgBBB+UTVHgBY3NUG4+bvVfh0cN/I=;
+        b=nn7o5E3WPWx3vpoUcU4Iv1p6ZbHDnotNFRtleGulRdEnVet8g7gUpn8Gx0MM2k0Hp4
+         Ge8IwwBUK6SQJeK4rmfaVRrEeylhzNgVxnTU/2fieunfLjm8XAOxmclvI+4OZOc8sy72
+         VQl4MYCOo7mg8farbp7cW/XLmPslUMr/4asJlZ1r66Ig7FA5CBSC99vJ3z6MexwClANI
+         cw6WQkhKSayRhm+ZCza8qzKuVQr4uF5ir82YHDy1bZ1J/RwA2caYaXd0AVXyyGsU6Npq
+         CPn/RZUVcqBfQbePjv3hrlQL9hcCFxrdLaHIyttdDvcOiytvQb/KgBM1cWYuJz0CvylW
+         k0ag==
+X-Gm-Message-State: AOAM532yZgL59r9O89k8y8171hzxDohLtTu6QIN99DeSaWQwdOYNnFMq
+        6UA1dDT5rKOim/HZcy8DP/HDeg==
+X-Google-Smtp-Source: ABdhPJydm3PV+VbDKFvxHMR122TwsTt83llpIYfSiY7TCAzdcBmix5sc5NMqlV0v6/5dzWHbUSKiMA==
+X-Received: by 2002:a1c:b70b:: with SMTP id h11mr13256458wmf.185.1604312756936;
+        Mon, 02 Nov 2020 02:25:56 -0800 (PST)
+Received: from dell.default ([91.110.221.242])
+        by smtp.gmail.com with ESMTPSA id o7sm21766730wrp.23.2020.11.02.02.25.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Nov 2020 02:25:56 -0800 (PST)
+From:   Lee Jones <lee.jones@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        support@areca.com.tw
+Subject: [PATCH 1/3] scsi: arcmsr: arcmsr_hba: Stop __builtin_strncpy complaining about a lack of space for NUL
+Date:   Mon,  2 Nov 2020 10:25:42 +0000
+Message-Id: <20201102102544.1018706-1-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: 'Greg KH'
-> Sent: 23 October 2020 15:47
-> 
-> On Fri, Oct 23, 2020 at 02:39:24PM +0000, David Laight wrote:
-> > From: David Hildenbrand
-> > > Sent: 23 October 2020 15:33
-> > ...
-> > > I just checked against upstream code generated by clang 10 and it
-> > > properly discards the upper 32bit via a mov w23 w2.
-> > >
-> > > So at least clang 10 indeed properly assumes we could have garbage and
-> > > masks it off.
-> > >
-> > > Maybe the issue is somewhere else, unrelated to nr_pages ... or clang 11
-> > > behaves differently.
-> >
-> > We'll need the disassembly from a failing kernel image.
-> > It isn't that big to hand annotate.
-> 
-> I've worked around the merge at the moment in the android tree, but it
-> is still quite reproducable, and will try to get a .o file to
-> disassemble on Monday or so...
+inqdata is not NUL terminated.
 
-Did this get properly resolved?
+Fixes the following W=1 kernel build warning(s):
 
-	David
+ In file included from include/linux/bitmap.h:9,
+ from include/linux/nodemask.h:95,
+ from include/linux/mmzone.h:17,
+ from include/linux/gfp.h:6,
+ from include/linux/umh.h:4,
+ from include/linux/kmod.h:9,
+ from include/linux/module.h:16,
+ from drivers/scsi/arcmsr/arcmsr_hba.c:47:
+ In function ‘strncpy’,
+ inlined from ‘arcmsr_handle_virtual_command’ at drivers/scsi/arcmsr/arcmsr_hba.c:3055:3:
+ include/linux/string.h:297:30: warning: ‘__builtin_strncpy’ output truncated before terminating nul copying 4 bytes from a string of the same length [-Wstringop-truncation]
+ 297 | #define __underlying_strncpy __builtin_strncpy
+ | ^
+ include/linux/string.h:307:9: note: in expansion of macro ‘__underlying_strncpy’
+ 307 | return __underlying_strncpy(p, q, size);
+ | ^~~~~~~~~~~~~~~~~~~~
+ In function ‘strncpy’,
+ inlined from ‘arcmsr_handle_virtual_command’ at drivers/scsi/arcmsr/arcmsr_hba.c:3053:3:
+ include/linux/string.h:297:30: warning: ‘__builtin_strncpy’ output truncated before terminating nul copying 16 bytes from a string of the same length [-Wstringop-truncation]
+ 297 | #define __underlying_strncpy __builtin_strncpy
+ | ^
+ include/linux/string.h:307:9: note: in expansion of macro ‘__underlying_strncpy’
+ 307 | return __underlying_strncpy(p, q, size);
+ | ^~~~~~~~~~~~~~~~~~~~
+ In function ‘strncpy’,
+ inlined from ‘arcmsr_handle_virtual_command’ at drivers/scsi/arcmsr/arcmsr_hba.c:3051:3:
+ include/linux/string.h:297:30: warning: ‘__builtin_strncpy’ output truncated before terminating nul copying 8 bytes from a string of the same length [-Wstringop-truncation]
+ 297 | #define __underlying_strncpy __builtin_strncpy
+ | ^
+ include/linux/string.h:307:9: note: in expansion of macro ‘__underlying_strncpy’
+ 307 | return __underlying_strncpy(p, q, size);
+ | ^~~~~~~~~~~~~~~~~~~~
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+Cc: support@areca.com.tw
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 127fe50e6b120..f241ae15496a2 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -3201,11 +3201,11 @@ static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
+ 		/* ISO, ECMA, & ANSI versions */
+ 		inqdata[4] = 31;
+ 		/* length of additional data */
+-		strncpy(&inqdata[8], "Areca   ", 8);
++		memcpy(&inqdata[8], "Areca   ", 8);
+ 		/* Vendor Identification */
+-		strncpy(&inqdata[16], "RAID controller ", 16);
++		memcpy(&inqdata[16], "RAID controller ", 16);
+ 		/* Product Identification */
+-		strncpy(&inqdata[32], "R001", 4); /* Product Revision */
++		memcpy(&inqdata[32], "R001", 4); /* Product Revision */
+ 
+ 		sg = scsi_sglist(cmd);
+ 		buffer = kmap_atomic(sg_page(sg)) + sg->offset;
+-- 
+2.25.1
 
