@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27053C00A89
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 461F2C388F2
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD694206F9
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBC77222BA
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X+zOGPT/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="byawQ/SZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727692AbgKBQzX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 11:55:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43550 "EHLO
+        id S1727474AbgKBQzd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 11:55:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727688AbgKBQzX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:55:23 -0500
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AEDDC0617A6;
-        Mon,  2 Nov 2020 08:55:23 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id 72so4913122pfv.7;
-        Mon, 02 Nov 2020 08:55:23 -0800 (PST)
+        with ESMTP id S1727324AbgKBQzd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:55:33 -0500
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9B0C0617A6;
+        Mon,  2 Nov 2020 08:55:33 -0800 (PST)
+Received: by mail-pf1-x441.google.com with SMTP id 10so11618333pfp.5;
+        Mon, 02 Nov 2020 08:55:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=EXCGiZLEfZtvWjQ4e/G4dbiDVH55KoRFUUF32V42VvE=;
-        b=X+zOGPT/TSOjE20bmMX712PNBloY0JW3OvLlxo329Ib1Nf2+FbziCV/QGDeTkMtx3D
-         Ab6QfTFENhrYD1E/hwYQlE6GPQRAaqwsm3H1gCYd65BpugqByfoG3PnQ4AG4MMPNdBhm
-         1FtG6g90mxk2rKio+tEnH6/jKTlWAcNL5g+wjjNzYlzM8idwGsSZ+iCykVZSPWTTqivi
-         WZ352otPwDz30BsdcSrChlsHrFNfm1b/w3AHyNdbVSDJoXEa6FU9mnfJNrr295p8orMa
-         yKxsCSYOkyY4oE/6MbL82LydkpnzJTbqmN8AwhAm1RYe8+lwWUhiSIV4r4rQUh7gT3TO
-         pCVA==
+        bh=fW/BfkSigqeA/7sHlInXZcmolxISxSAGZHTmLq9vq7w=;
+        b=byawQ/SZbG7wwZwJ/BWULutg85ygIZfRKdeXa6SDhyrH+Rigyw6EMt2sR1MiBbdTHo
+         M1mHBCdM3y2DRE3nwIa0HJ5k9WC0RrQrjWynbAxYIaDORDdrqukMS2WUewpCne1LJXYW
+         BP9li66eIdwTbKooMZc37vvk78qDwS6ARQJQ40bwL8JbiOZpr3L3H9JFwnhEbKs8bYYr
+         e1Jkp1hoefRoRYxYTlxlvW5g3nfMnlKn0RQzuPdS5E04KMkj2nsjb7E6s3+hmDMw/rBF
+         ale7UeErtqRDabJT2q8yjGBLjBtYgxYA1bRnU+8UJus5+SNjPOrGz8Yh9NnvSOXLkPm8
+         vhDQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=EXCGiZLEfZtvWjQ4e/G4dbiDVH55KoRFUUF32V42VvE=;
-        b=fpaKd6KpQTVQwPhyV/g68Zvfvb9M7k39T1G6xhknP3by+qdijbmPWUBm5GW3z3tdtj
-         VIAh27MMTha3d4/VLRQ0Vw0KQDVLRe3OaA8phltfyGp1e95LqfnCOUlyGj6poPee6m/e
-         3nre9h6NJ8ZWBFcdzG80KZebNLrERkZC683gb4+P3mjKbOkDy/So1CnegvZGpfJnq3n6
-         yQdWeYNoqRUj/l7zyF2OiPngyu0CIJtAqsFo+E+z1cPr2P6wjaG/9K5cHs0RXsDcB4jb
-         rdQJIV5Lnh7YuhKGolCS55gcLA5ysXVLNTzPOIFCm/F4VAB+ML3bdoYls/kKhqBMSQS0
-         y0ZA==
-X-Gm-Message-State: AOAM530acSaAF2TNXLQlsZ9UWFXc1QVSlwn3zCCwFm+F8bqIwa5PQSW9
-        0AOwcF9XscrAHl4OVSziCJ0=
-X-Google-Smtp-Source: ABdhPJwzfPgvdSwIBa5QtR9xO4o0HjNoNHKyv4uGH33LCWmGslB9FXZpefstEtLmcHt2vG3qPnXRHw==
-X-Received: by 2002:a17:90a:fb8d:: with SMTP id cp13mr7412843pjb.168.1604336122852;
-        Mon, 02 Nov 2020 08:55:22 -0800 (PST)
+        bh=fW/BfkSigqeA/7sHlInXZcmolxISxSAGZHTmLq9vq7w=;
+        b=MzkzJ2/gIxgofl9dMAo0go0xUkHT4i5hS/xf7LdHsY5kB1dUlkc+M0QwbCE0bqj95m
+         UTWdDAiZxlgqFGKyArvZeVFAKzsiaA4h1vrl1t150z4vlOBcTX6EsK5E6wR4qGI+tdn+
+         zDaDQEvUv/3gxVbJHfBgwB6T/USe3hIi3FOdTq5pQEX6ZQFYFiwh3mcEwXlBbet/PnaV
+         fGqo7QMolnwylwKRAAwWDyYOHzPSnAdvjEBH1q2r5FWa12H2XK1rmJqhjYDHT8b8XspG
+         OnztcWQ3Cmi0bMZ0uJD+1ELB2Xxe/wud3W2cTMDiBK2aiEwU2Kv5eiA8BHf/jXUfTjbe
+         GBQw==
+X-Gm-Message-State: AOAM531Q7aQaKH8/ZpLUxNWjO9O9HADp4alq461FnzGVeV0p56W/GMJO
+        5u/79dUw6kT5cVh06S2zLwY=
+X-Google-Smtp-Source: ABdhPJyhJXUnKsKoEx0UezB9HVKpp590ogdrqyESHRkls/XQE7Dx1XdbSnVjSMeH5dlNWJM1qUpfVw==
+X-Received: by 2002:a63:221d:: with SMTP id i29mr5230679pgi.69.1604336132873;
+        Mon, 02 Nov 2020 08:55:32 -0800 (PST)
 Received: from varodek.localdomain ([223.179.149.110])
-        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.55.14
+        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.55.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 08:55:22 -0800 (PST)
+        Mon, 02 Nov 2020 08:55:32 -0800 (PST)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -89,9 +89,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v4 27/29] scsi: mvumi: update function description
-Date:   Mon,  2 Nov 2020 22:17:28 +0530
-Message-Id: <20201102164730.324035-28-vaibhavgupta40@gmail.com>
+Subject: [PATCH v4 28/29] scsi: pmcraid: Drop PCI Wakeup calls from .resume
+Date:   Mon,  2 Nov 2020 22:17:29 +0530
+Message-Id: <20201102164730.324035-29-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
 References: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
@@ -101,27 +101,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no "device" parameter in mvumi_shutdown(). Instead there is
-"pdev" which is not described.
+The driver calls pci_enable_wake(...., false) in pmcraid_resume(), and
+there is no corresponding pci_enable_wake(...., true) in pmcraid_suspend().
+Either it should do enable-wake the device in .suspend() or should not
+invoke pci_enable_wake() at all.
+
+Concluding that this driver doesn't support enable-wake and PCI core calls
+pci_enable_wake(pci_dev, PCI_D0, false) during resume, drop it from
+pmcraid_resume().
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/mvumi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pmcraid.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index bbf0faac1f05..6c82b0bc391a 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -2559,7 +2559,7 @@ static void mvumi_detach_one(struct pci_dev *pdev)
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index cbe5fab793eb..5c767cd8ffc3 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -5271,7 +5271,6 @@ static int pmcraid_resume(struct pci_dev *pdev)
+ 	int rc;
  
- /**
-  * mvumi_shutdown -	Shutdown entry point
-- * @device:		Generic device structure
-+ * @pdev:		PCI device structure
-  */
- static void mvumi_shutdown(struct pci_dev *pdev)
- {
+ 	pci_set_power_state(pdev, PCI_D0);
+-	pci_enable_wake(pdev, PCI_D0, 0);
+ 	pci_restore_state(pdev);
+ 
+ 	rc = pci_enable_device(pdev);
 -- 
 2.28.0
 
