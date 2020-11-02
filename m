@@ -5,59 +5,59 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEBFBC4742C
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5AEC4742C
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:53:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B093C22258
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:53:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A135206F9
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:53:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i4lK7B2j"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="To8S2jHL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727384AbgKBQxA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 11:53:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43138 "EHLO
+        id S1727218AbgKBQxJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 11:53:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727196AbgKBQw7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:52:59 -0500
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A0F0C0617A6;
-        Mon,  2 Nov 2020 08:52:58 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id y14so11587475pfp.13;
-        Mon, 02 Nov 2020 08:52:58 -0800 (PST)
+        with ESMTP id S1727201AbgKBQxI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:53:08 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61531C0617A6;
+        Mon,  2 Nov 2020 08:53:08 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id c20so11601537pfr.8;
+        Mon, 02 Nov 2020 08:53:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=MBzsuEUa6bYvsV+CNnIl+xHeK3YoENUVJTW96RlBScM=;
-        b=i4lK7B2jCeWUWs/7k7aRJe2mVzCOREf/YaZphfdcnGM0u+NoaCHXT1UMtxiid1cPRk
-         z+BPB3zIpcTUGy7gNJ+vQ+mf6T/j71u4xbBtkOpJFr0pkC7C9qKw3p0Q/5/01HSApBta
-         Ou3O6JCnnfnkLTA7bAPGiA4KrhBxm/8fKADenbdF1J4iCL0+VyOS918WGeSy6jnLmizw
-         gqP9jIo7nYYWjov+spMoRffy2As9Y9GUzTL5aQWpXYLgfZia0BjMUJBE8J1Or8gBFVVo
-         F016wRV7uUCivQ4adKG5hAUXH+lhQwfZSg1Wfk102HFPrtIRVcxXRArRP+VFGN2ZB9nO
-         alSg==
+        bh=6EF8lQwOXO2Z8DiQbYXGCQ2159bXf7Ji78BoyHo/jeA=;
+        b=To8S2jHLUsT+F/DtIpwDe+1nsQoZHhatxgqGT8Sxc9KuSJcRM3S8ryS3lDtBN5YMeC
+         eShZMSTpM3aCVSG4nLzekO+XOUtDj7y1FgYmyOoflsoop1hjOytHUrxV2RaxdVt1uR2K
+         MsYuRH9Cm4h6i8pQu10lgzPWUt+Es7x0imUyp5peUkZWoz88nNq3tKjWLVQXyeoy5Ul/
+         z5pEcBNh47ZPnd7Kj8KAiwpTLOhaDKBFsZhXe+elVgnjgD1CuacyLxDuhKvU82nUQZGn
+         tVYMZUv2X+pju79d8atKoU76RgvzTZQ64FLTcnhEqHIhg+OcbKdWCbaUTKMj13OhJ0Ia
+         oasA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=MBzsuEUa6bYvsV+CNnIl+xHeK3YoENUVJTW96RlBScM=;
-        b=bipUM18rmPTrQX97TuRcxqTJVVlM3ldiB9OtaHS2o66vKrGS9Gm0qNr7LH0etVY5K5
-         SPjAhwU8y4YAEKTrGIc96hhlD4hA/+/zzhnJYQimMAJZc3vl8cY0+nnzgp2f1rAV8Amn
-         QqfXMscTePQB0l7f23qk7HcFiwaj9sxiOwpXKnO0LAQEu1mLQcHLKrUq25kaXFGsh6R/
-         DnZU3z4GJz+9TxmUPmb7r4v2n31q411FWXaFzXTWCQevktnf9uetU1nKAzY6hs++aiIX
-         y786XCihAkW7t97meEikuYhSoGoP2sFVJO7z2VTToyLphNzEUMXV3cmRgNR3uLgLUAyk
-         bzHQ==
-X-Gm-Message-State: AOAM532uqq4HWH+zqVXLAPOQvw1n6kCiZDVgeUsiIjyLvSG3hJeo0AMj
-        quQgZnHzDdUocDL4wgVexnk=
-X-Google-Smtp-Source: ABdhPJxiIXDXayIA4x2vypTJ5B2naXIVlq1IYCXlgXG2jWp3RJ2Zwiiq5D86qMZ/Pko1ZcPv4K6N1w==
-X-Received: by 2002:a17:90a:3e4a:: with SMTP id t10mr18207881pjm.151.1604335977846;
-        Mon, 02 Nov 2020 08:52:57 -0800 (PST)
+        bh=6EF8lQwOXO2Z8DiQbYXGCQ2159bXf7Ji78BoyHo/jeA=;
+        b=d37kHKDzFpSjOQ915Qhlftyi96Q79AhiEdFGO0Pdss1OH3yeAJUjhwfnHrfQsOz7Qt
+         vPWxNKQOt7fPi6a28yvMonDG51O9eIdVKmXq/lwmTHhdQdwb7+zJa3opTo0Jp9IxyfWj
+         ysPrKMmDY47xt2Cjwbt7Spus3aQEXRBwNEl86BKLm0tgaZOZJ273oiatbXPuc4v7ooUH
+         wfNOJxgq89YUdZxstLvGvIV7xamZnf7OhvcXe23KI8C7TyZiV5XZB03CZU4akR9t6hDn
+         d09jfsDEU3PWmJRCW/EGzeJAYVeRpVnw7JxJ473YyNIfzSUxU4d85XTjaIbBwdvxGyzo
+         3u6g==
+X-Gm-Message-State: AOAM5301Ed8Xr0TZHYFimmSHh/2KmMqrWIMjfUUid6oKqV8+0fKA4c5l
+        PrNCnhq9/jx4ni4nbUT+sck=
+X-Google-Smtp-Source: ABdhPJw+WZ503yKFquawRt0K3fv1VZ0392lfMRA03Pm+y/b3nAXy5mhWcTDXFlgVjXkApI1klFFsZw==
+X-Received: by 2002:a65:6819:: with SMTP id l25mr14077553pgt.111.1604335987979;
+        Mon, 02 Nov 2020 08:53:07 -0800 (PST)
 Received: from varodek.localdomain ([223.179.149.110])
-        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.52.49
+        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.52.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 08:52:57 -0800 (PST)
+        Mon, 02 Nov 2020 08:53:07 -0800 (PST)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -89,9 +89,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v4 13/29] scsi: hisi_sas_v3_hw: Don't use PCI helper functions
-Date:   Mon,  2 Nov 2020 22:17:14 +0530
-Message-Id: <20201102164730.324035-14-vaibhavgupta40@gmail.com>
+Subject: [PATCH v4 14/29] scsi: hisi_sas_v3_hw: Remove extra function calls for runtime pm
+Date:   Mon,  2 Nov 2020 22:17:15 +0530
+Message-Id: <20201102164730.324035-15-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
 References: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
@@ -101,68 +101,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drivers using new-framework/generic-framework should not handle standard
-power management operations. These operations were performed by legacy
-framework through PCI helper functions like pci_save/restore_state(),
-pci_set_power_state(), etc.
+Both runtime_suspend_v3_hw() and runtime_resume_v3_hw() do nothing else but
+invoke suspend_v3_hw() and resume_v3_hw() respectively. This is the case of
+unnecessary function calls. To use those functions for runtime pm as well,
+simply use UNIVERSAL_DEV_PM_OPS.
 
-Drivers should not use them now.
+make -j$(nproc) W=1, with CONFIG_PM disabled, throws '-Wunused-function'
+warning for runtime_suspend_v3_hw() and runtime_resume_v3_hw(). After
+dropping those function definitions, the warning was thrown for
+suspend_v3_hw() and resume_v3_hw(). Hence, mark them as '__maybe_unused'.
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 17 +----------------
- 1 file changed, 1 insertion(+), 16 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 23 ++++++-----------------
+ 1 file changed, 6 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index f19f3db1ac6d..dfeb86c865d3 100644
+index dfeb86c865d3..9f0b4fe564cc 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3440,7 +3440,6 @@ static int _suspend_v3_hw(struct device *device)
- 	struct hisi_hba *hisi_hba = sha->lldd_ha;
- 	struct device *dev = hisi_hba->dev;
- 	struct Scsi_Host *shost = hisi_hba->shost;
--	pci_power_t device_state;
- 	int rc;
+@@ -3502,7 +3502,7 @@ static int _resume_v3_hw(struct device *device)
+ 	return 0;
+ }
  
- 	if (!pdev->pm_cap) {
-@@ -3466,12 +3465,7 @@ static int _suspend_v3_hw(struct device *device)
+-static int suspend_v3_hw(struct device *device)
++static int __maybe_unused suspend_v3_hw(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+@@ -3518,7 +3518,7 @@ static int suspend_v3_hw(struct device *device)
+ 	return rc;
+ }
  
- 	hisi_sas_init_mem(hisi_hba);
+-static int resume_v3_hw(struct device *device)
++static int __maybe_unused resume_v3_hw(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+@@ -3541,21 +3541,10 @@ static const struct pci_error_handlers hisi_sas_err_handler = {
+ 	.reset_done	= hisi_sas_reset_done_v3_hw,
+ };
  
--	device_state = pci_choose_state(pdev, PMSG_SUSPEND);
--	dev_warn(dev, "entering operating state [D%d]\n",
--			device_state);
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, device_state);
-+	dev_warn(dev, "entering suspend state\n");
+-static int runtime_suspend_v3_hw(struct device *dev)
+-{
+-	return suspend_v3_hw(dev);
+-}
+-
+-static int runtime_resume_v3_hw(struct device *dev)
+-{
+-	return resume_v3_hw(dev);
+-}
+-
+-static const struct dev_pm_ops hisi_sas_v3_pm_ops = {
+-	SET_SYSTEM_SLEEP_PM_OPS(suspend_v3_hw, resume_v3_hw)
+-	SET_RUNTIME_PM_OPS(runtime_suspend_v3_hw,
+-			   runtime_resume_v3_hw, NULL)
+-};
++static UNIVERSAL_DEV_PM_OPS(hisi_sas_v3_pm_ops,
++			    suspend_v3_hw,
++			    resume_v3_hw,
++			    NULL);
  
- 	hisi_sas_release_tasks(hisi_hba);
- 
-@@ -3491,15 +3485,7 @@ static int _resume_v3_hw(struct device *device)
- 
- 	dev_warn(dev, "resuming from operating state [D%d]\n",
- 		 device_state);
--	pci_set_power_state(pdev, PCI_D0);
--	pci_restore_state(pdev);
--	rc = pci_enable_device(pdev);
--	if (rc) {
--		dev_err(dev, "enable device failed during resume (%d)\n", rc);
--		return rc;
--	}
- 
--	pci_set_master(pdev);
- 	scsi_unblock_requests(shost);
- 	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 
-@@ -3507,7 +3493,6 @@ static int _resume_v3_hw(struct device *device)
- 	rc = hw_init_v3_hw(hisi_hba);
- 	if (rc) {
- 		scsi_remove_host(shost);
--		pci_disable_device(pdev);
- 		return rc;
- 	}
- 	hisi_hba->hw->phys_init(hisi_hba);
+ static struct pci_driver sas_v3_pci_driver = {
+ 	.name		= DRV_NAME,
 -- 
 2.28.0
 
