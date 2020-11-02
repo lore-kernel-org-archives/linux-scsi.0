@@ -5,59 +5,59 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91927C55178
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87AF9C00A89
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:54:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4AD5922258
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:54:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48D0822268
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:54:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FNiyl1hX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CGndiWGb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727305AbgKBQyD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 11:54:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43330 "EHLO
+        id S1727324AbgKBQyO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 11:54:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726619AbgKBQyD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:54:03 -0500
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73560C0617A6;
-        Mon,  2 Nov 2020 08:54:03 -0800 (PST)
-Received: by mail-pg1-x544.google.com with SMTP id w4so1059280pgg.13;
-        Mon, 02 Nov 2020 08:54:03 -0800 (PST)
+        with ESMTP id S1727157AbgKBQyN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:54:13 -0500
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CB36C0617A6;
+        Mon,  2 Nov 2020 08:54:13 -0800 (PST)
+Received: by mail-pg1-x543.google.com with SMTP id x13so11275252pgp.7;
+        Mon, 02 Nov 2020 08:54:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=VhabbmrVlKfIcloXKiUycGjVLZHaLqGck6HUDFpjzd4=;
-        b=FNiyl1hXUBQIr2AqRDMiQQrHQtakYZefo7BHUUaFEaNe3AON3Ra5wz0jv1lYLopD/J
-         9q8+190FFV4gQaefv/2wGEECM1DanKSBBp6LpCc5bFyiS/gJ+vAWZ2XhBgvBprgyn077
-         FtvPNPx+RM9xASBAwpDud3V4EfOVN+Dh/9fc+LvsrT2IGgKnHDRKA1uwwlTf8TFb4Mo7
-         Xe3hTU/lEOs5umAd2rcm6QQ20EQOL36vlpNKBpAt/kwzfLP8K3TFO6RzPr+MypS1qIDV
-         vuob7yY27jvqqNGxWe15ZTzBVzQdcCPRfXzff+iC9VGLk3vk1aq6qMg6V2WoZ2bF7s5E
-         YD/A==
+        bh=y9mWg+/4v2UCFJAlCKvgYuV+7m/IMMSCBwMkcMZiS84=;
+        b=CGndiWGbeSa0mZUzNP66q0m9jiwhXlWICOiDvD/aXAaAJaV11Abd15VLtUvUSiB8Oj
+         7HbbO6v9eHhFuHCvGlbf7bKUBw8vMz1pct/80te2IDeQGdEEsZQKEdjRiCPqGa3A/jhb
+         kxZStACpdV/f42s2hwn5yaSZ+B5YqtZQvCHktHJOzl5DI/8opJgVkeGZWlpXVBQmjuCj
+         HwP1zLtTDbxrTyxo40PGgdgjtU0mylXAqS9dDbhPmynAscuBSdw4yZynqaoLNJEVH72m
+         I6zx+2RpSG9MuYE1HAWlMp6lGsKIzWx4MkEriuyMomTbCi61P6XXeZdoyUZjoZ8KpxOr
+         sWgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=VhabbmrVlKfIcloXKiUycGjVLZHaLqGck6HUDFpjzd4=;
-        b=etcvYIQRsfAcgWccS/1ttbZOzfAQKrx0/PFAhM+H1BBhHlIND6ShCVwAHZcAOrR/kX
-         P/6Ewa8JGI3B0iCf4HttrHI8CmixXcXtv9MpoSRkY/jsRYqt1JkAvKagIvciXKIzVnmq
-         DpbrykCdNbJhOVStoB9CGB6AAzbq8LEpfIqS6DslCgzVyOdvpisT7nmQuoVlPGTTnWJ3
-         UA7fyM5il8BjLYmB+Gtk3ywobeKo18FkTA/kM6l3NxXVn/xeJFDtI7/rV6DWYzySpNcN
-         3ZkaNaC8dnzbeeUrYdT2zu6jGzObTIyqOXyRMMCDJJFH3GFauiVuTdjcDNyKBzCT69FZ
-         FkKg==
-X-Gm-Message-State: AOAM5309TZOT0f/P8k13KvBt4kSmN9Juci8JmxT0uysqYy2FwmgOsrAg
-        cGAYL4dhn0roGfDuG1L3cOU=
-X-Google-Smtp-Source: ABdhPJxw8lCwnUiNaQAX76vwhA4YIcPI6dIqpyLBz643suOBf7Pk6OZM1tXuc9wBPSC5zsTj+b76jA==
-X-Received: by 2002:a17:90a:4a15:: with SMTP id e21mr4038914pjh.130.1604336042989;
-        Mon, 02 Nov 2020 08:54:02 -0800 (PST)
+        bh=y9mWg+/4v2UCFJAlCKvgYuV+7m/IMMSCBwMkcMZiS84=;
+        b=LM/9AY5CWfS5iCxVRFc2rK65O/xtU+BDyTsJK8Kg8NtwIy2ZF6zcFNOw/kYQA+HrbS
+         vGbpYQlMxu1QXIh0NZeAIo+yGu/2+IUAHsyslA90RgC5P72J4qK4HD7G7450Yn4HCnLd
+         nsUcKSz/yRIcgZGq6XqTnT+m0zJhfHg1hYOAJj6yavQ3chrleXpUfClhmAGZBYg5M/vP
+         co7qLfelNaEFlWY9GlWSJ9qdi0naXh2/2/ZMb3QeaCtPIh6njpxg1VLRT02KXWky6Ala
+         wtOfh/+pPt8gH6d6sywI+BaDqFIPmPsS/jJ0tIVQSfHTRyH+7TO9Op4Sjo4O2Lfz6h8R
+         gDKA==
+X-Gm-Message-State: AOAM531royx4XnsWRY51q9Mdu9s6vlBoYkbDj/xV1fqOnork4vbovvDP
+        RuqgNXWjJ/aioVFqWumXhv8=
+X-Google-Smtp-Source: ABdhPJzpwB1ncwX9rI1DG4O7sobiR6+6b36+pLha0Afpn+jdJ0C7J2kMqfr4zgoRAaArG6s8YBucwQ==
+X-Received: by 2002:a17:90b:994:: with SMTP id bl20mr18624263pjb.34.1604336053051;
+        Mon, 02 Nov 2020 08:54:13 -0800 (PST)
 Received: from varodek.localdomain ([223.179.149.110])
-        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.53.54
+        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.54.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 08:54:02 -0800 (PST)
+        Mon, 02 Nov 2020 08:54:12 -0800 (PST)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -89,9 +89,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v4 19/29] scsi: pm_8001: use generic power management
-Date:   Mon,  2 Nov 2020 22:17:20 +0530
-Message-Id: <20201102164730.324035-20-vaibhavgupta40@gmail.com>
+Subject: [PATCH v4 20/29] scsi: hpsa: use generic power management
+Date:   Mon,  2 Nov 2020 22:17:21 +0530
+Message-Id: <20201102164730.324035-21-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
 References: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
@@ -114,118 +114,46 @@ unnecessary calls to the PCI Helper functions along with the legacy
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 45 +++++++++++--------------------
- 1 file changed, 16 insertions(+), 29 deletions(-)
+ drivers/scsi/hpsa.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index d47ed9a33173..7a732fd09b38 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1257,23 +1257,21 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
- 
- /**
-  * pm8001_pci_suspend - power management suspend main entry point
-- * @pdev: PCI device struct
-- * @state: PM state change to (usually PCI_D3)
-+ * @dev: Device struct
-  *
-  * Returns 0 success, anything else error.
-  */
--static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int __maybe_unused pm8001_pci_suspend(struct device *dev)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
--	struct pm8001_hba_info *pm8001_ha;
-+	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
- 	int  i, j;
--	u32 device_state;
--	pm8001_ha = sha->lldd_ha;
- 	sas_suspend_ha(sha);
- 	flush_workqueue(pm8001_wq);
- 	scsi_block_requests(pm8001_ha->shost);
- 	if (!pdev->pm_cap) {
--		dev_err(&pdev->dev, " PCI PM not supported\n");
-+		dev_err(dev, " PCI PM not supported\n");
- 		return -ENODEV;
- 	}
- 	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
-@@ -1296,24 +1294,21 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 		for (j = 0; j < PM8001_MAX_MSIX_VEC; j++)
- 			tasklet_kill(&pm8001_ha->tasklet[j]);
- #endif
--	device_state = pci_choose_state(pdev, state);
- 	pm8001_printk("pdev=0x%p, slot=%s, entering "
--		      "operating state [D%d]\n", pdev,
--		      pm8001_ha->name, device_state);
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, device_state);
-+		"suspended state\n", pdev,
-+		pm8001_ha->name);
- 	return 0;
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 83ce4f11a589..e53364141fa3 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -9090,25 +9090,27 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	hpda_free_ctlr_info(h);				/* init_one 1 */
  }
  
- /**
-  * pm8001_pci_resume - power management resume main entry point
-- * @pdev: PCI device struct
-+ * @dev: Device struct
-  *
-  * Returns 0 success, anything else error.
-  */
--static int pm8001_pci_resume(struct pci_dev *pdev)
-+static int __maybe_unused pm8001_pci_resume(struct device *dev)
+-static int hpsa_suspend(__attribute__((unused)) struct pci_dev *pdev,
+-	__attribute__((unused)) pm_message_t state)
++static int __maybe_unused hpsa_suspend(
++	__attribute__((unused)) struct device *dev)
  {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
- 	struct pm8001_hba_info *pm8001_ha;
- 	int rc;
-@@ -1326,16 +1321,6 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 	pm8001_printk("pdev=0x%p, slot=%s, resuming from previous "
- 		"operating state [D%d]\n", pdev, pm8001_ha->name, device_state);
- 
--	pci_set_power_state(pdev, PCI_D0);
--	pci_restore_state(pdev);
--	rc = pci_enable_device(pdev);
--	if (rc) {
--		pm8001_printk("slot=%s Enable device failed during resume\n",
--			      pm8001_ha->name);
--		goto err_out_enable;
--	}
--
--	pci_set_master(pdev);
- 	rc = pci_go_44(pdev);
- 	if (rc)
- 		goto err_out_disable;
-@@ -1396,8 +1381,7 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
- 
- err_out_disable:
- 	scsi_remove_host(pm8001_ha->shost);
--	pci_disable_device(pdev);
--err_out_enable:
-+
- 	return rc;
+ 	return -ENOSYS;
  }
  
-@@ -1480,13 +1464,16 @@ static struct pci_device_id pm8001_pci_table[] = {
- 	{} /* terminate list */
- };
+-static int hpsa_resume(__attribute__((unused)) struct pci_dev *pdev)
++static int __maybe_unused hpsa_resume
++	(__attribute__((unused)) struct device *dev)
+ {
+ 	return -ENOSYS;
+ }
  
-+static SIMPLE_DEV_PM_OPS(pm8001_pci_pm_ops,
-+			 pm8001_pci_suspend,
-+			 pm8001_pci_resume);
++static SIMPLE_DEV_PM_OPS(hpsa_pm_ops, hpsa_suspend, hpsa_resume);
 +
- static struct pci_driver pm8001_pci_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= pm8001_pci_table,
- 	.probe		= pm8001_pci_probe,
- 	.remove		= pm8001_pci_remove,
--	.suspend	= pm8001_pci_suspend,
--	.resume		= pm8001_pci_resume,
-+	.driver.pm	= &pm8001_pci_pm_ops,
+ static struct pci_driver hpsa_pci_driver = {
+ 	.name = HPSA,
+ 	.probe = hpsa_init_one,
+ 	.remove = hpsa_remove_one,
+ 	.id_table = hpsa_pci_device_id,	/* id_table */
+ 	.shutdown = hpsa_shutdown,
+-	.suspend = hpsa_suspend,
+-	.resume = hpsa_resume,
++	.driver.pm = &hpsa_pm_ops,
  };
  
- /**
+ /* Fill in bucket_map[], given nsgs (the max number of
 -- 
 2.28.0
 
