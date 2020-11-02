@@ -5,72 +5,71 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2835AC00A89
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 14:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 100DDC4742C
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 14:25:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B42872072C
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 14:25:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7F82206F8
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 14:25:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SpxkEqP9"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DmDYPWXt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726452AbgKBOZ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726445AbgKBOZ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 2 Nov 2020 09:25:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47866 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726203AbgKBOYN (ORCPT
+        with ESMTP id S1726216AbgKBOYN (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 09:24:13 -0500
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1FEFC0617A6
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2020 06:24:11 -0800 (PST)
-Received: by mail-wm1-x330.google.com with SMTP id v5so9568671wmh.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2020 06:24:11 -0800 (PST)
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6A27C061A04
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2020 06:24:12 -0800 (PST)
+Received: by mail-wm1-x343.google.com with SMTP id h22so9699102wmb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2020 06:24:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=y4OaFqQapHo8kjxQ8b1JCEqEmva3JkMUSlJKMXA1e00=;
-        b=SpxkEqP9NED+hfM65OniUCNh8f+9VyW4OZ/CfAcoVrEEhh6sjr/rCFI41ejtoTHxg5
-         Hbhii2xCnNTQe4IuFgfSiSpU+EOxDvKlkphC+GdoOJuV3W7+kj0twpY6ClbG2lsWBUDh
-         46KHnmR9wIbIoQe+Mh6EPpm2bgmyk9/setXoFizKFIfoKGHOrTIwfutTvY9Fi0bowKU2
-         YCksBOYxLdYbJzHtgQnwp0Y95X3TSaVrEVf3ils+ln2ob738h1DF8osFF9Kphb5Oh/gw
-         6Som8EhKiPW0r7ToLe/Y4hC8FIGFHuQbLbTwHd0bTCeYyX5bg4jN8dUcoPIKGmy2SZcZ
-         tdDA==
+        bh=mzeTsnVBQeYqxq9T62Y4dbDZSOnvVH0q+uB/IaQ0f7A=;
+        b=DmDYPWXtnNuGHa6+tatUFk5QuHY4P4xSS6RYT8Gi1DqL5YQAxlVL6dREZDhAANp77/
+         Sm5qufyo+ehieT15KjiZ7iqVwv0J6Qyf17VXXGYXDHX9jh3Kx6QqNU/9ZeJbWFbJSApC
+         phoXu4Rja9nt7CMqDsO7n2jJhL/cjpXI0m2sPX35uE/TEVufO7DA1dxRjWjMwSFlyWkY
+         Yy0x7/2YHj4IVGPYmSc/jY6lUh/rmRc06x0hJmB8MKjqHjder1Ym829TJjzvEADuVSKX
+         f+SncEEEEndwGzXPYtPvk8yArX1v/OE1/MhWarv5FmdExUK7EjHy3TNciwei95VccO5m
+         uRiw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=y4OaFqQapHo8kjxQ8b1JCEqEmva3JkMUSlJKMXA1e00=;
-        b=LowknZmyw9uQIsyGKOEFXmHHlZfHYLi2GgWWhlOmYG/btojUAUDDteQoIQM3LynRfP
-         vA/upl6JLBqSweU1STA0IbofgOi7wcGK2UAsmfWv7cd7huN0iwzsxxQ4lfuyAQDHoXjm
-         Igvit2mNOMKKxeP9vug+qvKgoJ2TpV9lu2ubA26GkEP9QyE24A2MPNtCC/Mer5/1VNmb
-         r9kBDmGETZLUiF748cDMybEVcaci6VLopoYY5cFHTb7kbbT5NSbzy9dHIS7GZuuA+pe+
-         GX7eDYNqq3kIiwFuPbkNOtmLomovomUiZCN4Li5kadE6B0HiarFe7BhxqSny3V+Xlsbd
-         A58Q==
-X-Gm-Message-State: AOAM530NFlVTNC1TfU011b6l2L6LWINhxb9B/DkXf2OiP6en0BeGKAkf
-        MayW2wDW4cXy39675xkCd+8upg==
-X-Google-Smtp-Source: ABdhPJyBELH1VV4HOEvafGyzG22irRdFSeoSQNGXNWjziYvqc4gX3Z2jeQkSAZ4OjO4ncLfkJx0OGw==
-X-Received: by 2002:a1c:6355:: with SMTP id x82mr18997299wmb.177.1604327050431;
-        Mon, 02 Nov 2020 06:24:10 -0800 (PST)
+        bh=mzeTsnVBQeYqxq9T62Y4dbDZSOnvVH0q+uB/IaQ0f7A=;
+        b=YeFmLW3Iw2fqicvTrO9+y7wSqRsvL6gEwJD9KRnMtU3wD+8rCiLawlN3UhW+XayqLF
+         O6QocOOWxEkPlsVLP63b70RuDnmEeB0mqme7InSnvjK0lhCZb3V+bsBPl1wTYT9KKZQH
+         SyqWLToBnby7ZDcVIqAsIR9jvzWOR8MYh9WNC0vNIroPjX84p8CDX5XMqRriJlgoXHbb
+         /q3PGzkbZSTRCIk/xUEn4Sfm2SD0yIdmymD2nexXfqJGJ4sHe9gvYGxHg4YCVVu0ZQ6w
+         0s9asSNF41gUaj5uZQezSQtNO4mxmvTYJvpfRqlbWeMVnw1EiI1qL/VhUybBrgqd/yfW
+         40YA==
+X-Gm-Message-State: AOAM530YjfJRmhvkFVqilztNbug0JUHr2PzAxktZt1tgTUnFHygzfzMD
+        jOS0oy/6MtXFOawPiK4HIw7Rng==
+X-Google-Smtp-Source: ABdhPJzGG8Kirb9ed21xWpDkJf4IlXV5eshgVVQ2V2F96eVC5pVPn5sCprzulPBLnTyJ9tet1oQuXA==
+X-Received: by 2002:a1c:2901:: with SMTP id p1mr18492705wmp.170.1604327051506;
+        Mon, 02 Nov 2020 06:24:11 -0800 (PST)
 Received: from dell.default ([91.110.221.242])
-        by smtp.gmail.com with ESMTPSA id f7sm23542501wrx.64.2020.11.02.06.24.09
+        by smtp.gmail.com with ESMTPSA id f7sm23542501wrx.64.2020.11.02.06.24.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 06:24:09 -0800 (PST)
+        Mon, 02 Nov 2020 06:24:10 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     martin.petersen@oracle.com, jejb@linux.ibm.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
         James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [RESEND 05/19] scsi: lpfc: lpfc_attr: Fix-up a bunch of kernel-doc misdemeanours
-Date:   Mon,  2 Nov 2020 14:23:45 +0000
-Message-Id: <20201102142359.561122-6-lee.jones@linaro.org>
+Subject: [RESEND 06/19] scsi: lpfc: lpfc_debugfs: Fix a couple of function documentation issues
+Date:   Mon,  2 Nov 2020 14:23:46 +0000
+Message-Id: <20201102142359.561122-7-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201102142359.561122-1-lee.jones@linaro.org>
 References: <20201102142359.561122-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -78,182 +77,38 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- from drivers/scsi/lpfc/lpfc_attr.c:26:
- inlined from ‘lpfc_stat_data_ctrl_store’ at drivers/scsi/lpfc/lpfc_attr.c:4165:3:
- drivers/scsi/lpfc/lpfc_attr.c:2537: warning: Function parameter or member 'attr' not described in 'lpfc_vport_param_init'
- drivers/scsi/lpfc/lpfc_attr.c:2537: warning: Function parameter or member 'default' not described in 'lpfc_vport_param_init'
- drivers/scsi/lpfc/lpfc_attr.c:2537: warning: Function parameter or member 'minval' not described in 'lpfc_vport_param_init'
- drivers/scsi/lpfc/lpfc_attr.c:2537: warning: Function parameter or member 'maxval' not described in 'lpfc_vport_param_init'
- drivers/scsi/lpfc/lpfc_attr.c:2537: warning: Excess function parameter 'phba' description in 'lpfc_vport_param_init'
- drivers/scsi/lpfc/lpfc_attr.c:2537: warning: Excess function parameter 'val' description in 'lpfc_vport_param_init'
- drivers/scsi/lpfc/lpfc_attr.c:2792: warning: Function parameter or member 'dev' not described in 'lpfc_soft_wwpn_store'
- drivers/scsi/lpfc/lpfc_attr.c:2886: warning: Function parameter or member 'dev' not described in 'lpfc_soft_wwnn_store'
- drivers/scsi/lpfc/lpfc_attr.c:2886: warning: Function parameter or member 'attr' not described in 'lpfc_soft_wwnn_store'
- drivers/scsi/lpfc/lpfc_attr.c:2886: warning: Excess function parameter 'cdev' description in 'lpfc_soft_wwnn_store'
- drivers/scsi/lpfc/lpfc_attr.c:3224: warning: Function parameter or member 'vpt_wwpn' not described in 'lpfc_oas_lun_state_set'
- drivers/scsi/lpfc/lpfc_attr.c:3224: warning: Function parameter or member 'tgt_wwpn' not described in 'lpfc_oas_lun_state_set'
- drivers/scsi/lpfc/lpfc_attr.c:3224: warning: Function parameter or member 'pri' not described in 'lpfc_oas_lun_state_set'
- drivers/scsi/lpfc/lpfc_attr.c:3224: warning: Excess function parameter 'ndlp' description in 'lpfc_oas_lun_state_set'
- drivers/scsi/lpfc/lpfc_attr.c:3264: warning: Function parameter or member 'lun_pri' not described in 'lpfc_oas_lun_get_next'
- drivers/scsi/lpfc/lpfc_attr.c:3302: warning: Function parameter or member 'pri' not described in 'lpfc_oas_lun_state_change'
- drivers/scsi/lpfc/lpfc_attr.c:3376: warning: Function parameter or member 'count' not described in 'lpfc_oas_lun_store'
- drivers/scsi/lpfc/lpfc_attr.c:3835: warning: Function parameter or member 'vport' not described in 'lpfc_tgt_queue_depth_set'
- drivers/scsi/lpfc/lpfc_attr.c:3835: warning: Excess function parameter 'phba' description in 'lpfc_tgt_queue_depth_set'
- drivers/scsi/lpfc/lpfc_attr.c:4026: warning: Function parameter or member 'dev' not described in 'lpfc_topology_store'
- drivers/scsi/lpfc/lpfc_attr.c:4026: warning: Function parameter or member 'attr' not described in 'lpfc_topology_store'
- drivers/scsi/lpfc/lpfc_attr.c:4026: warning: Function parameter or member 'buf' not described in 'lpfc_topology_store'
- drivers/scsi/lpfc/lpfc_attr.c:4026: warning: Function parameter or member 'count' not described in 'lpfc_topology_store'
- drivers/scsi/lpfc/lpfc_attr.c:4026: warning: Excess function parameter 'phba' description in 'lpfc_topology_store'
- drivers/scsi/lpfc/lpfc_attr.c:4026: warning: Excess function parameter 'val' description in 'lpfc_topology_store'
- drivers/scsi/lpfc/lpfc_attr.c:4148: warning: Function parameter or member 'attr' not described in 'lpfc_stat_data_ctrl_store'
- drivers/scsi/lpfc/lpfc_attr.c:4302: warning: Function parameter or member 'attr' not described in 'lpfc_stat_data_ctrl_show'
- drivers/scsi/lpfc/lpfc_attr.c:4383: warning: Function parameter or member 'buf' not described in 'sysfs_drvr_stat_data_read'
- drivers/scsi/lpfc/lpfc_attr.c:4383: warning: Excess function parameter 'buff' description in 'sysfs_drvr_stat_data_read'
- drivers/scsi/lpfc/lpfc_attr.c:4476: warning: Function parameter or member 'dev' not described in 'lpfc_link_speed_store'
- drivers/scsi/lpfc/lpfc_attr.c:4476: warning: Function parameter or member 'attr' not described in 'lpfc_link_speed_store'
- drivers/scsi/lpfc/lpfc_attr.c:4476: warning: Function parameter or member 'buf' not described in 'lpfc_link_speed_store'
- drivers/scsi/lpfc/lpfc_attr.c:4476: warning: Function parameter or member 'count' not described in 'lpfc_link_speed_store'
- drivers/scsi/lpfc/lpfc_attr.c:4476: warning: Excess function parameter 'phba' description in 'lpfc_link_speed_store'
- drivers/scsi/lpfc/lpfc_attr.c:4476: warning: Excess function parameter 'val' description in 'lpfc_link_speed_store'
- drivers/scsi/lpfc/lpfc_attr.c:7117: warning: Function parameter or member 'verbose' not described in 'lpfc_hba_log_verbose_init'
+ drivers/scsi/lpfc/lpfc_debugfs.c:4204: warning: Function parameter or member 'len' not described in 'lpfc_idiag_queacc_read_qe'
+ drivers/scsi/lpfc/lpfc_debugfs.c:4781: warning: Function parameter or member 'ctlregid' not described in 'lpfc_idiag_ctlacc_read_reg'
+ drivers/scsi/lpfc/lpfc_debugfs.c:4781: warning: Excess function parameter 'drbregid' description in 'lpfc_idiag_ctlacc_read_reg'
 
 Cc: James Smart <james.smart@broadcom.com>
 Cc: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 33 +++++++++++++++++++++++----------
- 1 file changed, 23 insertions(+), 10 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 6a33f0607cc8b..ada231d4f0c6a 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2771,7 +2771,7 @@ lpfc_soft_wwpn_show(struct device *dev, struct device_attribute *attr,
- 
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 325081ac65539..5a354abcbafc4 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -4186,6 +4186,7 @@ lpfc_idiag_que_param_check(struct lpfc_queue *q, int index, int count)
  /**
-  * lpfc_soft_wwpn_store - Set the ww port name of the adapter
-- * @dev class device that is converted into a Scsi_host.
-+ * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: contains the wwpn in hexadecimal.
-  * @count: number of wwpn bytes in buf
-@@ -2868,7 +2868,8 @@ lpfc_soft_wwnn_show(struct device *dev, struct device_attribute *attr,
- 
- /**
-  * lpfc_soft_wwnn_store - sets the ww node name of the adapter
-- * @cdev: class device that is converted into a Scsi_host.
-+ * @dev: class device that is converted into a Scsi_host.
-+ * @attr: device attribute, not used.
-  * @buf: contains the ww node name in hexadecimal.
-  * @count: number of wwnn bytes in buf.
+  * lpfc_idiag_queacc_read_qe - read a single entry from the given queue index
+  * @pbuffer: The pointer to buffer to copy the read data into.
++ * @len: Length of the buffer.
+  * @pque: The pointer to the queue to be read.
+  * @index: The index into the queue entry.
   *
-@@ -3204,9 +3205,11 @@ static DEVICE_ATTR(lpfc_xlane_lun_status, S_IRUGO,
-  * lpfc_oas_lun_state_set - enable or disable a lun for Optimized Access Storage
-  *			   (OAS) operations.
-  * @phba: lpfc_hba pointer.
-- * @ndlp: pointer to fcp target node.
-+ * @vpt_wwpn: wwpn of the vport associated with the returned lun
-+ * @tgt_wwpn: wwpn of the target associated with the returned lun
-  * @lun: the fc lun for setting oas state.
-  * @oas_state: the oas state to be set to the lun.
-+ * @pri: priority
-  *
-  * Returns:
-  * SUCCESS : 0
-@@ -3244,6 +3247,7 @@ lpfc_oas_lun_state_set(struct lpfc_hba *phba, uint8_t vpt_wwpn[],
-  * @vpt_wwpn: wwpn of the vport associated with the returned lun
-  * @tgt_wwpn: wwpn of the target associated with the returned lun
-  * @lun_status: status of the lun returned lun
-+ * @lun_pri: priority of the lun returned lun
-  *
-  * Returns the first or next lun enabled for OAS operations for the vport/target
-  * specified.  If a lun is found, its vport wwpn, target wwpn and status is
-@@ -3282,6 +3286,7 @@ lpfc_oas_lun_get_next(struct lpfc_hba *phba, uint8_t vpt_wwpn[],
-  * @tgt_wwpn: target wwpn by reference.
-  * @lun: the fc lun for setting oas state.
-  * @oas_state: the oas state to be set to the oas_lun.
-+ * @pri: priority
-  *
-  * This routine enables (OAS_LUN_ENABLE) or disables (OAS_LUN_DISABLE)
-  * a lun for OAS operations.
-@@ -3356,6 +3361,7 @@ lpfc_oas_lun_show(struct device *dev, struct device_attribute *attr,
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-  * @buf: buffer for passing information.
-+ * @count: size of the formatting string
-  *
-  * This function sets the OAS state for lun.  Before this function is called,
-  * the vport wwpn, target wwpn, and oas state need to be set.
-@@ -3817,7 +3823,7 @@ lpfc_vport_param_init(tgt_queue_depth, LPFC_MAX_TGT_QDEPTH,
- 
- /**
-  * lpfc_tgt_queue_depth_store: Sets an attribute value.
-- * @phba: pointer the the adapter structure.
-+ * @vport: lpfc vport structure pointer.
-  * @val: integer attribute value.
-  *
-  * Description: Sets the parameter to the new value.
-@@ -4002,8 +4008,10 @@ LPFC_ATTR(topology, 0, 0, 6,
- 
- /**
-  * lpfc_topology_set - Set the adapters topology field
-- * @phba: lpfc_hba pointer.
-- * @val: topology value.
-+ * @dev: class device that is converted into a scsi_host.
-+ * @attr:device attribute, not used.
-+ * @buf: buffer for passing information.
-+ * @count: size of the data buffer.
+@@ -4762,7 +4763,7 @@ lpfc_idiag_drbacc_write(struct file *file, const char __user *buf,
+  * @phba: The pointer to hba structure.
+  * @pbuffer: The pointer to the buffer to copy the data to.
+  * @len: The length of bytes to copied.
+- * @drbregid: The id to doorbell registers.
++ * @ctlregid: The id to doorbell registers.
   *
   * Description:
-  * If val is in a valid range then set the adapter's topology field and
-@@ -4122,6 +4130,7 @@ static DEVICE_ATTR_RO(lpfc_static_vport);
- /**
-  * lpfc_stat_data_ctrl_store - write call back for lpfc_stat_data_ctrl sysfs file
-  * @dev: Pointer to class device.
-+ * @attr: Unused.
-  * @buf: Data buffer.
-  * @count: Size of the data buffer.
-  *
-@@ -4285,7 +4294,8 @@ lpfc_stat_data_ctrl_store(struct device *dev, struct device_attribute *attr,
- 
- /**
-  * lpfc_stat_data_ctrl_show - Read function for lpfc_stat_data_ctrl sysfs file
-- * @dev: Pointer to class device object.
-+ * @dev: Pointer to class device.
-+ * @attr: Unused.
-  * @buf: Data buffer.
-  *
-  * This function is the read call back function for
-@@ -4364,7 +4374,7 @@ static DEVICE_ATTR_RW(lpfc_stat_data_ctrl);
-  * @filp: sysfs file
-  * @kobj: Pointer to the kernel object
-  * @bin_attr: Attribute object
-- * @buff: Buffer pointer
-+ * @buf: Buffer pointer
-  * @off: File offset
-  * @count: Buffer size
-  *
-@@ -4451,8 +4461,10 @@ static struct bin_attribute sysfs_drvr_stat_data_attr = {
- */
- /**
-  * lpfc_link_speed_set - Set the adapters link speed
-- * @phba: lpfc_hba pointer.
-- * @val: link speed value.
-+ * @dev: Pointer to class device.
-+ * @attr: Unused.
-+ * @buf: Data buffer.
-+ * @count: Size of the data buffer.
-  *
-  * Description:
-  * If val is in a valid range then set the adapter's link speed field and
-@@ -7111,6 +7123,7 @@ lpfc_set_vport_symbolic_name(struct fc_vport *fc_vport)
- /**
-  * lpfc_hba_log_verbose_init - Set hba's log verbose level
-  * @phba: Pointer to lpfc_hba struct.
-+ * @verbose: Verbose level to set.
-  *
-  * This function is called by the lpfc_get_cfgparam() routine to set the
-  * module lpfc_log_verbose into the @phba cfg_log_verbose for use with
+  * This routine reads a control register and copies its content to the
 -- 
 2.25.1
 
