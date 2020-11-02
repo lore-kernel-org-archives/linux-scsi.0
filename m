@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E7AC00A89
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2861C00A89
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3263D22268
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77A2122268
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Nov 2020 16:52:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IdnDTo/Z"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EInGRm6c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727384AbgKBQwQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Nov 2020 11:52:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43024 "EHLO
+        id S1727392AbgKBQw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 11:52:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727209AbgKBQwQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:52:16 -0500
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47265C0617A6;
-        Mon,  2 Nov 2020 08:52:16 -0800 (PST)
-Received: by mail-pf1-x442.google.com with SMTP id 13so11607330pfy.4;
-        Mon, 02 Nov 2020 08:52:16 -0800 (PST)
+        with ESMTP id S1726920AbgKBQw0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2020 11:52:26 -0500
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54572C0617A6;
+        Mon,  2 Nov 2020 08:52:26 -0800 (PST)
+Received: by mail-pl1-x643.google.com with SMTP id j5so7098449plk.7;
+        Mon, 02 Nov 2020 08:52:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ZfFrvqo7DqkFljFYrfz490r27HiLjLHSzp/wVexiQxI=;
-        b=IdnDTo/Z15gQQJenXHbz48rYyZ/viY+gIX4WeuWdw9YrvB5qHMPlW9Isvh8v/xjYQI
-         0kWZQNPsIkfFdOAjHYKP+c03Rh33P4ZJMStTRU1josXmDvOOc1vNyzmuUFxBPB3Qdrc5
-         ljpB3kLsnIHr0K044vjKgn0TpYJNwEvJt1tPcQgSCiUkMgdXAfiOH5cF9qXnOEKUWD0P
-         hGkzzS9vDdqsfIS15adkZY7sb3CkU/GjCpwUppvlmyAxLmQk0jhk08kZzv2Qr9evE1jI
-         TysSsLBvylG7r7fpMdwCYyLH6l4ofk8UcOAi2WaYRI4+4shSaRYRXhoZ0ONrcbsaK5OE
-         I9sQ==
+        bh=80Yi1XLQzKPeoqRYuchuEzVl/P6+59b0kyvSplkNuqw=;
+        b=EInGRm6cBk43ZkBUefE+Lxc1nMZ8wuWhwjNtsLaYAjJkkpXaroUIq/Ir/9rRIReZTa
+         TX9Syn6BVfq83IPRQ7ykGpcDSU2omjDUI3aFWdcpcTOE4zk4dSfSsjJxRXA/HxRfwRnq
+         ItPVjw8aiAUDrYudk7Kq3o9fsSpGJ085X8SNop1TA56COWuz2G5PaKpEdELT/3brT2Re
+         Z3KSEtx+XzcTXvGNXhcZFGfzpg1EJVAyhG85b4saGFxQuf05Tf97gMtSJAW5Cf0q6pit
+         ImNpcFHlfvOWYNqWyTpk9PqZ2elCuC7uo5nkhF6uYvOiCQO/H1luHZ5Su0VVC1HGsZPR
+         VbTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ZfFrvqo7DqkFljFYrfz490r27HiLjLHSzp/wVexiQxI=;
-        b=EnpL0T4Wuv54VK67AsdQdr/VWyY/hdBvaLOgovv2hAr9TgAXJsQY5Z1hiMFmzOyCs0
-         5LsKd2qsqKtTKQf0UFgKwdI8bde8v4exAHaJ+Y3dVLBg/YJmCmM13omguTDeJJkRyxxe
-         Ep3EJnDJxGuav5hWFQ3Esd4YxwSGOoaW5B3LmCFHTy1w/MX/Q2aMHDqoS51vJGc/+ycP
-         oBU75ZqBxQfrb9VCmc0MUJK/kI8cACK3CI6A8O8C14cDvjLvVr3Gj85GDkBvAbTkc2dY
-         P5zCsWpND9zqI4rP4wRoSXrzBWSsqfEgrD1xLOpn12gViA5OO/FtkCgJJ4t9wwLD8yxb
-         fB5w==
-X-Gm-Message-State: AOAM530o4Rs5WE/8Tdfi97P2kDZXz3GDm2uDcz/bpufOoeUhXr7NjnCX
-        rP7rGNPuxZ83tAZ892+NkzE=
-X-Google-Smtp-Source: ABdhPJzoB/aS3l59wiqAH8Fub2lfPofKLh5dv3O7rn/FPpOZWCaLVIp6hFC00Sx3oLNCUw1fY3Zkqw==
-X-Received: by 2002:a17:90a:8b93:: with SMTP id z19mr11878765pjn.123.1604335935795;
-        Mon, 02 Nov 2020 08:52:15 -0800 (PST)
+        bh=80Yi1XLQzKPeoqRYuchuEzVl/P6+59b0kyvSplkNuqw=;
+        b=KFjTtzvKL3ixdicJKOip7CvYadhzT7PDfJ/f1hEkc6Eqxjk4/U7ka66QJvF1hsrJOS
+         bPFyy2+0nAONKUAmAOrgGNzhCZXPEbtXTuiQcI6q7Kdc0wU1bTrUXL43yZo94pBJIfQ2
+         arcO1Y7/eN0TyAmL3DKbU7Twlvf8STLmTz3+zSjFEF04uV8qQLH/76yPOQPtWhFIgGXm
+         8enbjNvLfXwUBMYV9+0a/27G5xs6MSiIRx1OQOOpEIL/ViAd5lQ2vNDHhYLcgMrbYrA/
+         698UbugsxuMWh3L+cmDZlfj0GtDQXyPnjCCmbrJzkyFiN8ARafoVBvE5F0qNaLHs0PSo
+         koMg==
+X-Gm-Message-State: AOAM533UrePATMO4paMLeFP4dj1vrlrFCbP3Q3dm1Wq6bn6onF9hytjg
+        T2mNkv19ZJ5Mk/PD93la8ow=
+X-Google-Smtp-Source: ABdhPJwWscqt8CM6V8MAKcDq8ZXDB9lxb+Wc/XDRC0YTbVpR2R6o45JcQIqTodOCmknuT+Pb9bX4UA==
+X-Received: by 2002:a17:902:bb81:b029:d5:b437:edb4 with SMTP id m1-20020a170902bb81b02900d5b437edb4mr21171215pls.6.1604335945887;
+        Mon, 02 Nov 2020 08:52:25 -0800 (PST)
 Received: from varodek.localdomain ([223.179.149.110])
-        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.52.07
+        by smtp.gmail.com with ESMTPSA id t74sm4953233pfc.47.2020.11.02.08.52.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 08:52:15 -0800 (PST)
+        Mon, 02 Nov 2020 08:52:25 -0800 (PST)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -89,9 +89,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v4 09/29] scsi: arcmsr: use generic power management
-Date:   Mon,  2 Nov 2020 22:17:10 +0530
-Message-Id: <20201102164730.324035-10-vaibhavgupta40@gmail.com>
+Subject: [PATCH v4 10/29] scsi: esas2r: Drop PCI Wakeup calls from .resume
+Date:   Mon,  2 Nov 2020 22:17:11 +0530
+Message-Id: <20201102164730.324035-11-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
 References: <20201102164730.324035-1-vaibhavgupta40@gmail.com>
@@ -101,106 +101,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drivers should do only device-specific jobs. But in general, drivers using
-legacy PCI PM framework for .suspend()/.resume() have to manage many PCI
-PM-related tasks themselves which can be done by PCI Core itself. This
-brings extra load on the driver and it directly calls PCI helper functions
-to handle them.
+The driver calls pci_enable_wake(...., false) in esas2r_resume(), and
+there is no corresponding pci_enable_wake(...., true) in esas2r_suspend().
+Either it should do enable-wake the device in .suspend() or should not
+invoke pci_enable_wake() at all.
 
-Switch to the new generic framework by updating function signatures and
-define a "struct dev_pm_ops" variable to bind PM callbacks. Also, remove
-unnecessary calls to the PCI Helper functions along with the legacy
-.suspend & .resume bindings.
+Concluding that this driver doesn't support enable-wake and PCI core calls
+pci_enable_wake(pci_dev, PCI_D0, false) during resume, drop it from
+esas2r_resume().
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 28 +++++++++-------------------
- 1 file changed, 9 insertions(+), 19 deletions(-)
+ drivers/scsi/esas2r/esas2r_init.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index c7ba4cbd197b..907f5af3bbd4 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -113,8 +113,8 @@ static int arcmsr_bios_param(struct scsi_device *sdev,
- static int arcmsr_queue_command(struct Scsi_Host *h, struct scsi_cmnd *cmd);
- static int arcmsr_probe(struct pci_dev *pdev,
- 				const struct pci_device_id *id);
--static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state);
--static int arcmsr_resume(struct pci_dev *pdev);
-+static int __maybe_unused arcmsr_suspend(struct device *dev);
-+static int __maybe_unused arcmsr_resume(struct device *dev);
- static void arcmsr_remove(struct pci_dev *pdev);
- static void arcmsr_shutdown(struct pci_dev *pdev);
- static void arcmsr_iop_init(struct AdapterControlBlock *acb);
-@@ -216,13 +216,14 @@ static struct pci_device_id arcmsr_device_id_table[] = {
- };
- MODULE_DEVICE_TABLE(pci, arcmsr_device_id_table);
- 
-+static SIMPLE_DEV_PM_OPS(arcmsr_pm_ops, arcmsr_suspend, arcmsr_resume);
-+
- static struct pci_driver arcmsr_pci_driver = {
- 	.name			= "arcmsr",
- 	.id_table		= arcmsr_device_id_table,
- 	.probe			= arcmsr_probe,
- 	.remove			= arcmsr_remove,
--	.suspend		= arcmsr_suspend,
--	.resume			= arcmsr_resume,
-+	.driver.pm		= &arcmsr_pm_ops,
- 	.shutdown		= arcmsr_shutdown,
- };
- /*
-@@ -1126,8 +1127,9 @@ static void arcmsr_free_irq(struct pci_dev *pdev,
- 	pci_free_irq_vectors(pdev);
- }
- 
--static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int __maybe_unused arcmsr_suspend(struct device *dev)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *)host->hostdata;
-@@ -1140,28 +1142,18 @@ static int arcmsr_suspend(struct pci_dev *pdev, pm_message_t state)
- 	flush_work(&acb->arcmsr_do_message_isr_bh);
- 	arcmsr_stop_adapter_bgrb(acb);
- 	arcmsr_flush_adapter_cache(acb);
--	pci_set_drvdata(pdev, host);
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, pci_choose_state(pdev, state));
- 	return 0;
- }
- 
--static int arcmsr_resume(struct pci_dev *pdev)
-+static int __maybe_unused arcmsr_resume(struct device *dev)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *)host->hostdata;
- 
--	pci_set_power_state(pdev, PCI_D0);
--	pci_restore_state(pdev);
--	if (pci_enable_device(pdev)) {
--		pr_warn("%s: pci_enable_device error\n", __func__);
--		return -ENODEV;
--	}
- 	if (arcmsr_set_dma_mask(acb))
- 		goto controller_unregister;
--	pci_set_master(pdev);
- 	if (arcmsr_request_irq(pdev, acb) == FAILED)
- 		goto controller_stop;
- 	switch (acb->adapter_type) {
-@@ -1206,9 +1198,7 @@ static int arcmsr_resume(struct pci_dev *pdev)
- 	if (acb->adapter_type == ACB_ADAPTER_TYPE_F)
- 		arcmsr_free_io_queue(acb);
- 	arcmsr_unmap_pciregion(acb);
--	pci_release_regions(pdev);
- 	scsi_host_put(host);
--	pci_disable_device(pdev);
- 	return -ENODEV;
- }
- 
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+index 09c5c24bf391..905a6c874789 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -676,10 +676,6 @@ int esas2r_resume(struct pci_dev *pdev)
+ 		       "pci_set_power_state(PCI_D0) "
+ 		       "called");
+ 	pci_set_power_state(pdev, PCI_D0);
+-	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
+-		       "pci_enable_wake(PCI_D0, 0) "
+-		       "called");
+-	pci_enable_wake(pdev, PCI_D0, 0);
+ 	esas2r_log_dev(ESAS2R_LOG_INFO, &(pdev->dev),
+ 		       "pci_restore_state() called");
+ 	pci_restore_state(pdev);
 -- 
 2.28.0
 
