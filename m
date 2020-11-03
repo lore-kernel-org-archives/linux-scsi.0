@@ -4,79 +4,174 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B7D5C388F2
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 11:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 493E3C388F7
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 12:29:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 352D3206F1
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 11:56:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C2F2223BD
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 12:29:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728396AbgKCL4f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Nov 2020 06:56:35 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6696 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727109AbgKCL4f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 06:56:35 -0500
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4CQStR0xXvz15QX0;
-        Tue,  3 Nov 2020 19:56:31 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
- 14.3.487.0; Tue, 3 Nov 2020 19:56:26 +0800
-From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jingxiangfeng@huawei.com>
-Subject: [PATCH] scsi: qla4xxx: Remove redundant assignment to variable rval
-Date:   Tue, 3 Nov 2020 20:01:37 +0800
-Message-ID: <20201103120137.109717-1-jingxiangfeng@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S1729067AbgKCM32 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Nov 2020 07:29:28 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7588 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729042AbgKCM30 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 07:29:26 -0500
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CQTcB1YvVzLt6L;
+        Tue,  3 Nov 2020 20:29:14 +0800 (CST)
+Received: from huawei.com (10.69.192.56) by DGGEMS410-HUB.china.huawei.com
+ (10.3.19.210) with Microsoft SMTP Server id 14.3.487.0; Tue, 3 Nov 2020
+ 20:29:10 +0800
+From:   Luo Jiaxing <luojiaxing@huawei.com>
+To:     <akpm@linux-foundation.org>, <viro@zeniv.linux.org.uk>,
+        <andriy.shevchenko@linux.intel.com>
+CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <john.garry@huawei.com>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
+Subject: [PATCH v3 4/5] usb: dwc3: debugfs: Introduce DEFINE_SHOW_STORE_ATTRIBUTE
+Date:   Tue, 3 Nov 2020 20:29:43 +0800
+Message-ID: <1604406584-53926-5-git-send-email-luojiaxing@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1604406584-53926-1-git-send-email-luojiaxing@huawei.com>
+References: <1604406584-53926-1-git-send-email-luojiaxing@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The variable rval has been initialized with 'QLA_ERROR'. The assignment
-is redundant in an error path. So remove it.
+Seq introduce a new helper macro DEFINE_SHOW_STORE_ATTRIBUTE for
+Read-Write file, so we apply it at dwc3 debugfs to reduce some duplicated
+code.
 
-Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+While at that, also use DEFINE_SHOW_ATTRIBUTE() where possible.
+
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Acked-by: Felipe Balbi <balbi@kernel.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/usb/dwc3/debugfs.c | 52 ++++------------------------------------------
+ 1 file changed, 4 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 676778cbc550..aaccbf71dff5 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -686,7 +686,6 @@ static int qla4xxx_get_chap_by_index(struct scsi_qla_host *ha,
+diff --git a/drivers/usb/dwc3/debugfs.c b/drivers/usb/dwc3/debugfs.c
+index 5da4f60..2b5de8d 100644
+--- a/drivers/usb/dwc3/debugfs.c
++++ b/drivers/usb/dwc3/debugfs.c
+@@ -348,11 +348,6 @@ static int dwc3_lsp_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
  
- 	if (!ha->chap_list) {
- 		ql4_printk(KERN_ERR, ha, "CHAP table cache is empty!\n");
--		rval = QLA_ERROR;
- 		goto exit_get_chap;
- 	}
+-static int dwc3_lsp_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_lsp_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_lsp_write(struct file *file, const char __user *ubuf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -377,13 +372,7 @@ static ssize_t dwc3_lsp_write(struct file *file, const char __user *ubuf,
+ 	return count;
+ }
  
-@@ -698,14 +697,12 @@ static int qla4xxx_get_chap_by_index(struct scsi_qla_host *ha,
+-static const struct file_operations dwc3_lsp_fops = {
+-	.open			= dwc3_lsp_open,
+-	.write			= dwc3_lsp_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_lsp);
  
- 	if (chap_index > max_chap_entries) {
- 		ql4_printk(KERN_ERR, ha, "Invalid Chap index\n");
--		rval = QLA_ERROR;
- 		goto exit_get_chap;
- 	}
+ static int dwc3_mode_show(struct seq_file *s, void *unused)
+ {
+@@ -412,11 +401,6 @@ static int dwc3_mode_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
  
- 	*chap_entry = (struct ql4_chap_table *)ha->chap_list + chap_index;
- 	if ((*chap_entry)->cookie !=
- 	     __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
--		rval = QLA_ERROR;
- 		*chap_entry = NULL;
- 	} else {
- 		rval = QLA_SUCCESS;
+-static int dwc3_mode_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_mode_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_mode_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -445,13 +429,7 @@ static ssize_t dwc3_mode_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_mode_fops = {
+-	.open			= dwc3_mode_open,
+-	.write			= dwc3_mode_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_mode);
+ 
+ static int dwc3_testmode_show(struct seq_file *s, void *unused)
+ {
+@@ -491,11 +469,6 @@ static int dwc3_testmode_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_testmode_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_testmode_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_testmode_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -528,13 +501,7 @@ static ssize_t dwc3_testmode_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_testmode_fops = {
+-	.open			= dwc3_testmode_open,
+-	.write			= dwc3_testmode_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_testmode);
+ 
+ static int dwc3_link_state_show(struct seq_file *s, void *unused)
+ {
+@@ -564,11 +531,6 @@ static int dwc3_link_state_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_link_state_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_link_state_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_link_state_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -620,13 +582,7 @@ static ssize_t dwc3_link_state_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_link_state_fops = {
+-	.open			= dwc3_link_state_open,
+-	.write			= dwc3_link_state_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_link_state);
+ 
+ struct dwc3_ep_file_map {
+ 	const char name[25];
 -- 
-2.17.1
+2.7.4
 
