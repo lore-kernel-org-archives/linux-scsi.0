@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C83CFC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 12:29:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F1A4C388F7
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 12:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D5CD22384
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 12:29:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EF76223BD
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 12:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729031AbgKCM3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728995AbgKCM3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 3 Nov 2020 07:29:23 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:7584 "EHLO
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7585 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727923AbgKCM3W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 07:29:22 -0500
+        with ESMTP id S1728168AbgKCM3V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 07:29:21 -0500
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CQTcB1qB7zLt6X;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CQTcB23vzzLt6w;
         Tue,  3 Nov 2020 20:29:14 +0800 (CST)
 Received: from huawei.com (10.69.192.56) by DGGEMS410-HUB.china.huawei.com
  (10.3.19.210) with Microsoft SMTP Server id 14.3.487.0; Tue, 3 Nov 2020
@@ -34,9 +34,9 @@ CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
         <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
         <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-Subject: [PATCH v3 3/5] scsi: qla2xxx: Introduce DEFINE_SHOW_STORE_ATTRIBUTE for debugfs
-Date:   Tue, 3 Nov 2020 20:29:42 +0800
-Message-ID: <1604406584-53926-4-git-send-email-luojiaxing@huawei.com>
+Subject: [PATCH v3 5/5] drm/i915/display: Introduce DEFINE_SHOW_STORE_ATTRIBUTE for debugfs
+Date:   Tue, 3 Nov 2020 20:29:44 +0800
+Message-ID: <1604406584-53926-6-git-send-email-luojiaxing@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1604406584-53926-1-git-send-email-luojiaxing@huawei.com>
 References: <1604406584-53926-1-git-send-email-luojiaxing@huawei.com>
@@ -49,57 +49,101 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Seq introduce a new helper macro DEFINE_SHOW_STORE_ATTRIBUTE for
-Read-Write file, so we apply it at qla2xxx to reduce some duplicated code.
+Read-Write file, so we apply it at drm/i915/display to reduce some
+duplicated code.
 
 Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
+ .../gpu/drm/i915/display/intel_display_debugfs.c   | 55 ++--------------------
+ 1 file changed, 4 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index f89ad32..a5de808 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -513,14 +513,6 @@ qla_dfs_naqp_show(struct seq_file *s, void *unused)
+diff --git a/drivers/gpu/drm/i915/display/intel_display_debugfs.c b/drivers/gpu/drm/i915/display/intel_display_debugfs.c
+index 0bf31f9..8bf839f 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_debugfs.c
++++ b/drivers/gpu/drm/i915/display/intel_display_debugfs.c
+@@ -1329,21 +1329,7 @@ static int i915_displayport_test_active_show(struct seq_file *m, void *data)
  	return 0;
  }
  
--static int
--qla_dfs_naqp_open(struct inode *inode, struct file *file)
+-static int i915_displayport_test_active_open(struct inode *inode,
+-					     struct file *file)
 -{
--	struct scsi_qla_host *vha = inode->i_private;
--
--	return single_open(file, qla_dfs_naqp_show, vha);
+-	return single_open(file, i915_displayport_test_active_show,
+-			   inode->i_private);
 -}
 -
- static ssize_t
- qla_dfs_naqp_write(struct file *file, const char __user *buffer,
-     size_t count, loff_t *pos)
-@@ -569,14 +561,7 @@ qla_dfs_naqp_write(struct file *file, const char __user *buffer,
- 	return rc;
+-static const struct file_operations i915_displayport_test_active_fops = {
+-	.owner = THIS_MODULE,
+-	.open = i915_displayport_test_active_open,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.write = i915_displayport_test_active_write
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(i915_displayport_test_active);
+ 
+ static int i915_displayport_test_data_show(struct seq_file *m, void *data)
+ {
+@@ -1733,19 +1719,7 @@ static ssize_t i915_hpd_storm_ctl_write(struct file *file,
+ 	return len;
  }
  
--static const struct file_operations dfs_naqp_ops = {
--	.open		= qla_dfs_naqp_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--	.write		= qla_dfs_naqp_write,
--};
+-static int i915_hpd_storm_ctl_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, i915_hpd_storm_ctl_show, inode->i_private);
+-}
 -
-+DEFINE_SHOW_STORE_ATTRIBUTE(qla_dfs_naqp);
+-static const struct file_operations i915_hpd_storm_ctl_fops = {
+-	.owner = THIS_MODULE,
+-	.open = i915_hpd_storm_ctl_open,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.write = i915_hpd_storm_ctl_write
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(i915_hpd_storm_ctl);
  
- int
- qla2x00_dfs_setup(scsi_qla_host_t *vha)
-@@ -622,7 +607,7 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+ static int i915_hpd_short_storm_ctl_show(struct seq_file *m, void *data)
+ {
+@@ -1811,14 +1785,7 @@ static ssize_t i915_hpd_short_storm_ctl_write(struct file *file,
+ 	return len;
+ }
  
- 	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha)) {
- 		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
--		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
-+		    0400, ha->dfs_dir, vha, &qla_dfs_naqp_ops);
- 		if (!ha->tgt.dfs_naqp) {
- 			ql_log(ql_log_warn, vha, 0xd011,
- 			       "Unable to create debugFS naqp node.\n");
+-static const struct file_operations i915_hpd_short_storm_ctl_fops = {
+-	.owner = THIS_MODULE,
+-	.open = i915_hpd_short_storm_ctl_open,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.write = i915_hpd_short_storm_ctl_write,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(i915_hpd_short_storm_ctl);
+ 
+ static int i915_drrs_ctl_set(void *data, u64 val)
+ {
+@@ -2181,21 +2148,7 @@ static ssize_t i915_dsc_fec_support_write(struct file *file,
+ 	return len;
+ }
+ 
+-static int i915_dsc_fec_support_open(struct inode *inode,
+-				     struct file *file)
+-{
+-	return single_open(file, i915_dsc_fec_support_show,
+-			   inode->i_private);
+-}
+-
+-static const struct file_operations i915_dsc_fec_support_fops = {
+-	.owner = THIS_MODULE,
+-	.open = i915_dsc_fec_support_open,
+-	.read = seq_read,
+-	.llseek = seq_lseek,
+-	.release = single_release,
+-	.write = i915_dsc_fec_support_write
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(i915_dsc_fec_support);
+ 
+ /**
+  * intel_connector_debugfs_add - add i915 specific connector debugfs files
 -- 
 2.7.4
 
