@@ -9,288 +9,199 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F805C388F9
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBAA2C55179
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E52522243
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 851C622264
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="P06whvqY"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DYG3980Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729579AbgKCOMy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Nov 2020 09:12:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44672 "EHLO
+        id S1729631AbgKCOM4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Nov 2020 09:12:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729617AbgKCOMw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:12:52 -0500
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F60C0613D1
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:12:51 -0800 (PST)
-Received: by mail-pl1-x644.google.com with SMTP id b19so8624022pld.0
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:12:51 -0800 (PST)
+        with ESMTP id S1729574AbgKCOL4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:11:56 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2DAC0613D1
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:11:56 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id e7so14262809pfn.12
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:11:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5jBlQXK03AwSY84lgaLDHagZNbD6Df3aXwMsqocPBgM=;
-        b=P06whvqYUb77vVzYi8REC4UITJkM3lsKQtmD+WoaolVhAZ8PQlCg0zEaAvRHcPxX/U
-         XI2R8vSuG+zAFLLDORY23BjzqGWQ4fG/dexrO5KDyCKFNXdGHhrSpn/S1B9zmuZ/FUEE
-         KsyRlsMR2mOZqm5cpmC+2UWtzay5gg0OJQSXA=
+        bh=w7CE0cxjC01o2eVLK4UsKW4yh3w6IbG1Xvq7VjIHFfE=;
+        b=DYG3980ZxCyYVXcMUa5yyXHJ2GqREvjUePSbgBGN4Lx5tJqH/7D2D7FWVUuvTbUyEj
+         KdwfNGKPCuOUX1VthNRIf6YQz15+aOakgrpo/b5yIK4i4ggwPUBa9nEH2JUnvHZoC0UA
+         LNqQIAylhugIZCSmnLoljdjjRnJ+MW9JKT/4Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=5jBlQXK03AwSY84lgaLDHagZNbD6Df3aXwMsqocPBgM=;
-        b=EtDuuG+Ig7UdcW5iVPJdA9yUoPyjDJztqESj9jtsl/9dPPSV9InLxzSaTNLje92LN3
-         ZeMimZ72mMwwMGDr/4BUUrrE+a7POC1Bd9SaRXlXUbeXi0HJ7y5Bgu6jmT7uM6fUYEkD
-         519G5Tico8agJJxKCpYThBpzsBgSWWuaVWij8anK5cVtDuII4QLrFFNIH5uZIkaCbL7V
-         VZZOkYLdAMhR+E8UgbSoI6rg6Xqh2ZEw8GOakAeX5LxrZn/tJo1tnwk/73kU9a6gHr70
-         afdFyTXHfhsNEai0VVj34USlTbUiaIEbBQmpulLCkbEWEoWfMtf3FRLrK7uXBIwZMUJO
-         NUHg==
-X-Gm-Message-State: AOAM533Zo6CcTCOEcSczvLgTn6MadT7wkMqvRbZYvw2kEmi3KM+3pzev
-        ChYv4ovX31IpmA2LnrRBobgabGHn1yFUaheC
-X-Google-Smtp-Source: ABdhPJxQt/VzmeWAWzBbH29qw+UVF0Ygeqg6QNfPbDxrz5wu21XaxKL4qGUE4hkK3PtV1Oyw5yGRGA==
-X-Received: by 2002:a17:902:bcc6:b029:d4:db82:4439 with SMTP id o6-20020a170902bcc6b02900d4db824439mr25318268pls.63.1604412770731;
-        Tue, 03 Nov 2020 06:12:50 -0800 (PST)
+        bh=w7CE0cxjC01o2eVLK4UsKW4yh3w6IbG1Xvq7VjIHFfE=;
+        b=IvcZ+zetBQDocOcu0l6kF0xFrsXPScvDuQPhql91cD/k2nTADMvZfZbeWNAOa3DVzE
+         Ua8WpPixqix3Sr57R4KpJimddjlnmzDt8nlExK2CqBsNaMCf1d52ERs8UqAFn7a6ZrLT
+         QJZUQHjwc0iT5gB8ok9kV1eav0Tx07bEHZnR3sNVdL1jchhN2KnvJ5xzksaikz0vXCaO
+         NkUu6B4E6/dAIH3anMoekJHPcFe3huG36LYxw0qQAAcYE8BuotWy9swH51iP4ZqFxBU0
+         6/F4qw4GSYETb8/JbdhNOqxrPRPRQPKFtb28bpkbci1nqRCTxUOheWpLnuIJvONwqS+C
+         5raA==
+X-Gm-Message-State: AOAM53140FA9z4YE7vimfp91VCdG1e3WOY3VEM5OjQMv5knjrTXjOvmz
+        ybgh6MJ+bL7yWHEwh0Cj++G23A==
+X-Google-Smtp-Source: ABdhPJypbfxV4UjJ5AVrnbIV69EoLJwvAfmkbg/us8J/wtAd8akA7c98//sN9xy+1W7oXsGP5LgLkQ==
+X-Received: by 2002:a17:90b:3505:: with SMTP id ls5mr3892847pjb.134.1604412716072;
+        Tue, 03 Nov 2020 06:11:56 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.12.47
+        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.11.52
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Nov 2020 06:12:50 -0800 (PST)
+        Tue, 03 Nov 2020 06:11:55 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        pbonzini@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: [PATCH v3 18/19] lpfc: vmid: Introducing vmid in io path.
-Date:   Tue,  3 Nov 2020 12:48:22 +0530
-Message-Id: <1604387903-20006-19-git-send-email-muneendra.kumar@broadcom.com>
+        pbonzini@redhat.com, Muneendra <muneendra.kumar@broadcom.com>
+Subject: [PATCH v3 03/19] nvme: Added a newsysfs attribute appid_store
+Date:   Tue,  3 Nov 2020 12:48:07 +0530
+Message-Id: <1604387903-20006-4-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000004c4fd805b3347550"
+        boundary="0000000000000865d305b33472bb"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000004c4fd805b3347550
+--0000000000000865d305b33472bb
 
-From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+Added a new sysfs attribute appid_store under
+/sys/class/fc/fc_udev_device/*
 
-The patch introduces the vmid in the io path. It checks if the vmid is
-enabled and if io belongs to a vm or not and acts accordingly. Other
-supporing APIs are also included in the patch.
+With this new interface the user can set the application identfier
+in  the blkcg associted with cgroup id.
 
-Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Once the application identifer has set with this interface it allows
+identification of traffic sources at an individual cgroup based
+Applications (ex:virtual machine (VM))level in both host and
+fabric infrastructure(FC).
+
+Below is the interface provided to set the app_id
+
+echo "<cgroupid>:<appid>" >> /sys/class/fc/fc_udev_device/appid_store
+echo "457E:100000109b521d27" >> /sys/class/fc/fc_udev_device/appid_store
+
+Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
 ---
 v3:
-Replaced blkcg_get_app_identifier with blkcg_get_fc_appid
+Replaced blkcg_set_app_identifier function with blkcg_set_fc_appid
 
 v2:
-Ported the patch on top of 5.10/scsi-queue
-Added a fix for issuing QFPA command which was not included in the
-last submit
+New Patch
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 165 ++++++++++++++++++++++++++++++++++
- 1 file changed, 165 insertions(+)
+ drivers/nvme/host/fc.c | 73 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 72 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index e5a1056cc575..7533438fef07 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4624,6 +4624,151 @@ void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport, struct lpfc_vmid *vmid)
- 	}
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index eae43bb444e0..6d6cc06fd54a 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -9,7 +9,7 @@
+ #include <uapi/scsi/fc/fc_els.h>
+ #include <linux/delay.h>
+ #include <linux/overflow.h>
+-
++#include <linux/blk-cgroup.h>
+ #include "nvme.h"
+ #include "fabrics.h"
+ #include <linux/nvme-fc-driver.h>
+@@ -3768,10 +3768,81 @@ static ssize_t nvme_fc_nvme_discovery_store(struct device *dev,
+ 
+ 	return count;
  }
- 
-+/*
-+ * lpfc_vmid_get_appid- get the vmid associated with the uuid
-+ * @vport: The virtual port for which this call is being executed.
-+ * @uuid: uuid associated with the VE
-+ * @cmd: address of scsi cmmd descriptor
-+ * @tag: VMID tag
-+ * Returns status of the function
-+ */
-+static int lpfc_vmid_get_appid(struct lpfc_vport *vport, char *uuid, struct
-+			       scsi_cmnd * cmd, union lpfc_vmid_io_tag *tag)
++
++/*parse the Cgroup id from a buf and returns the length of cgrpid*/
++static int fc_parse_cgrpid(const char *buf, u64 *id)
 +{
-+	struct lpfc_vmid *vmp = NULL;
-+	int hash, len, rc = 1, i;
-+	u8 pending = 0;
++	char cgrp_id[16+1];
++	int cgrpid_len, j;
 +
-+	/* check if QFPA is complete */
-+	if (lpfc_vmid_is_type_priority_tag(vport) && !(vport->vmid_flag &
-+	      LPFC_VMID_QFPA_CMPL)) {
-+		vport->work_port_events |= WORKER_CHECK_VMID_ISSUE_QFPA;
-+		return 1;
-+	}
-+
-+	/* search if the uuid has already been mapped to the vmid */
-+	len = strlen(uuid);
-+	hash = lpfc_vmid_hash_fn(uuid, len);
-+
-+	/* search for the VMID in the table */
-+	read_lock(&vport->vmid_lock);
-+	vmp = lpfc_get_vmid_from_hastable(vport, hash, uuid);
-+	read_unlock(&vport->vmid_lock);
-+
-+	/* if found, check if its already registered  */
-+	if (vmp  && vmp->flag & LPFC_VMID_REGISTERED) {
-+		lpfc_vmid_update_entry(vport, cmd, vmp, tag);
-+		rc = 0;
-+	} else if (vmp && (vmp->flag & LPFC_VMID_REQ_REGISTER ||
-+			   vmp->flag & LPFC_VMID_DE_REGISTER)) {
-+		/* else if register or dereg request has already been sent */
-+		/* Hence vmid tag will not be added for this IO */
-+		rc = 1;
-+	} else {
-+		/* else, start the process to obtain one as per the */
-+		/* switch connected */
-+		write_lock(&vport->vmid_lock);
-+		vmp = lpfc_get_vmid_from_hastable(vport, hash, uuid);
-+
-+		/* while the read lock was released, in case the entry was */
-+		/* added by other context or is in process of being added */
-+		if (vmp && vmp->flag & LPFC_VMID_REGISTERED) {
-+			lpfc_vmid_update_entry(vport, cmd, vmp, tag);
-+			write_unlock(&vport->vmid_lock);
-+			return 0;
-+		} else if (vmp && vmp->flag & LPFC_VMID_REQ_REGISTER) {
-+			write_unlock(&vport->vmid_lock);
-+			return 1;
-+		}
-+
-+		/* else search and allocate a free slot in the hash table */
-+		if (vport->cur_vmid_cnt < vport->max_vmid) {
-+			for (i = 0; i < vport->max_vmid; ++i) {
-+				vmp = vport->vmid + i;
-+				if (vmp->flag == LPFC_VMID_SLOT_FREE) {
-+					vmp = vport->vmid + i;
-+					break;
-+				}
-+			}
-+		} else {
-+			write_unlock(&vport->vmid_lock);
-+			return 1;
-+		}
-+
-+		if (vmp && (vmp->flag == LPFC_VMID_SLOT_FREE)) {
-+			vmp->vmid_len = len;
-+
-+			/* Add the vmid and register  */
-+			memcpy(vmp->host_vmid, uuid, vmp->vmid_len);
-+			vmp->io_rd_cnt = 0;
-+			vmp->io_wr_cnt = 0;
-+			vmp->flag = LPFC_VMID_SLOT_USED;
-+			lpfc_put_vmid_in_hashtable(vport, hash, vmp);
-+
-+			vmp->delete_inactive =
-+			    vport->vmid_inactivity_timeout ? 1 : 0;
-+
-+			/* if type priority tag, get next available vmid */
-+			if (lpfc_vmid_is_type_priority_tag(vport))
-+				lpfc_vmid_assign_cs_ctl(vport, vmp);
-+
-+			/* allocate the per cpu variable for holding */
-+			/* the last access time stamp only if vmid is enabled */
-+			if (!vmp->last_io_time)
-+				vmp->last_io_time =
-+				    __alloc_percpu(sizeof(u64),
-+						   __alignof__(struct
-+							       lpfc_vmid));
-+
-+			/* registration pending */
-+			pending = 1;
-+			rc = 1;
-+		}
-+		write_unlock(&vport->vmid_lock);
-+
-+		/* complete transaction with switch */
-+		if (pending) {
-+			if (lpfc_vmid_is_type_priority_tag(vport))
-+				rc = lpfc_vmid_uvem(vport, vmp, true);
-+			else
-+				rc = lpfc_vmid_cmd(vport,
-+						   SLI_CTAS_RAPP_IDENT,
-+						   vmp);
-+			if (!rc) {
-+				write_lock(&vport->vmid_lock);
-+				vport->cur_vmid_cnt++;
-+				vmp->flag |= LPFC_VMID_REQ_REGISTER;
-+				write_unlock(&vport->vmid_lock);
-+			}
-+		}
-+
-+		/* finally, enable the idle timer once */
-+		if (!(vport->phba->pport->vmid_flag & LPFC_VMID_TIMER_ENBLD)) {
-+			mod_timer(&vport->phba->inactive_vmid_poll,
-+				  jiffies +
-+				  msecs_to_jiffies(1000 * LPFC_VMID_TIMER));
-+			vport->phba->pport->vmid_flag |= LPFC_VMID_TIMER_ENBLD;
++	memset(cgrp_id, 0x0, sizeof(cgrp_id));
++	for (cgrpid_len = 0, j = 0; cgrpid_len < 17; cgrpid_len++) {
++		if (buf[cgrpid_len] != ':')
++			cgrp_id[cgrpid_len] = buf[cgrpid_len];
++		else {
++			j = 1;
++			break;
 +		}
 +	}
-+	return rc;
++	if (!j)
++		return -EINVAL;
++	if (kstrtou64(cgrp_id, 16, id) < 0)
++		return -EINVAL;
++	return cgrpid_len;
 +}
 +
 +/*
-+ * lpfc_is_command_vm_io - get the uuid from blk cgroup
-+ * @cmd:Pointer to scsi_cmnd data structure
-+ * Returns uuid if present if not null
++ * fc_update_appid :parses and updates the appid in the blkcg associated with
++ * cgroupid.
++ * @buf: buf contains both cgrpid and appid info
++ * @count: size of the buffer
 + */
-+static char *lpfc_is_command_vm_io(struct scsi_cmnd *cmd)
++static int fc_update_appid(const char *buf, size_t count)
 +{
-+	char *uuid = NULL;
++	u64 cgrp_id;
++	int appid_len = 0;
++	int cgrpid_len = 0;
++	char app_id[APPID_LEN];
++	int ret = 0;
 +
-+	if (cmd->request) {
-+		if (cmd->request->bio)
-+			uuid = blkcg_get_fc_appid(cmd->request->bio);
-+	}
-+	return uuid;
++	if (buf[count-1] == '\n')
++		count--;
++
++	if ((count > (16+1+APPID_LEN)) || (!strchr(buf, ':')))
++		return -EINVAL;
++
++	cgrpid_len = fc_parse_cgrpid(buf, &cgrp_id);
++	if (cgrpid_len < 0)
++		return -EINVAL;
++	/*appid len is count - cgrpid_len -1 (: + \n) */
++	appid_len = count - cgrpid_len - 1;
++	if (appid_len > APPID_LEN)
++		return -EINVAL;
++
++	memset(app_id, 0x0, sizeof(app_id));
++	memcpy(app_id, &buf[cgrpid_len+1], appid_len);
++	ret = blkcg_set_app_identifier(app_id, cgrp_id, sizeof(app_id));
++	if (ret < 0)
++		return ret;
++	return count;
 +}
 +
- /**
-  * lpfc_queuecommand - scsi_host_template queuecommand entry point
-  * @cmnd: Pointer to scsi_cmnd data structure.
-@@ -4649,6 +4794,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 	int err, idx;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	uint64_t start = 0L;
-+	u8 *uuid = NULL;
- 
- 	if (phba->ktime_on)
- 		start = ktime_get_ns();
-@@ -4772,6 +4918,25 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 
- 	lpfc_scsi_prep_cmnd(vport, lpfc_cmd, ndlp);
- 
-+	/* check the necessary and sufficient condition to support VMID */
-+	if (lpfc_is_vmid_enabled(phba) &&
-+	    (ndlp->vmid_support ||
-+	     phba->pport->vmid_priority_tagging ==
-+	     LPFC_VMID_PRIO_TAG_ALL_TARGETS)) {
-+		/* is the IO generated by a VM, get the associated virtual */
-+		/* entity id */
-+		uuid = lpfc_is_command_vm_io(cmnd);
++static ssize_t fc_appid_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	int ret  = 0;
 +
-+		if (uuid) {
-+			err = lpfc_vmid_get_appid(vport, uuid, cmnd,
-+				(union lpfc_vmid_io_tag *)
-+					&lpfc_cmd->cur_iocbq.vmid_tag);
-+			if (!err)
-+				lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_IO_VMID;
-+		}
-+	}
-+
-+	atomic_inc(&ndlp->cmd_pending);
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	if (unlikely(phba->hdwqstat_on & LPFC_CHECK_SCSI_IO))
- 		this_cpu_inc(phba->sli4_hba.c_stat->xmt_io);
++	ret = fc_update_appid(buf, count);
++	if (ret < 0)
++		return -EINVAL;
++	return count;
++}
+ static DEVICE_ATTR(nvme_discovery, 0200, NULL, nvme_fc_nvme_discovery_store);
++static DEVICE_ATTR(appid_store, 0200, NULL, fc_appid_store);
+ 
+ static struct attribute *nvme_fc_attrs[] = {
+ 	&dev_attr_nvme_discovery.attr,
++	&dev_attr_appid_store.attr,
+ 	NULL
+ };
+ 
 -- 
 2.26.2
 
 
---0000000000004c4fd805b3347550
+--0000000000000865d305b33472bb
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -361,13 +272,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDhGcIKkmhJUtTezT61Lr7fkgpBQCog/aXmkEBmYpPF8DAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDEyNTFaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCB0rSt5tvgVhVx+aFG/ONkEYNdHL6wLEBvQRT7CbuCHdjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDExNTZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAm5g8shTZD/GDjVkK
-ufCbFTy71Ra5C6Nf1x974gP+r4z7vEN78LtjX1K5jQOe9ylJK8uzbivUkaerq/R2uvhya0OTLQPp
-XZ275fVVyp7AQBDaf/Rm8SBkC5GRmpo7w7ME1l477ZtBpsHyFunybNHJRB7a0WUw4xMcNV0aVR3n
-aCwxiBT5DFIqhnfktAYmgGjbXUjjX+Y74YmytmoxRnCgKglDZq93XuCD+FwpKImfY7JLuWmHBuOL
-O5d/PHKPmjoQIfyZUP4Ikh54GBdDx8M9A4GNDsHHEw+pEQ8+1C8xL/5vgR8aZBASmux2Kem6NFwX
-Whb7Fcl+Siez4/zD6SxvLg==
---0000000000004c4fd805b3347550--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAWbJDVboE7ke3rkp0
+g+ayIsIpckBR6b3PcyxnEuSpaq8N1pHC1DW4H54h6XNPEzcjMvKxof8PNk6tPYdImDx3Rf0mOz1W
+VXnUkOqlYvtDdR65xvZrn7w04j1n5dGmaWKskiY+lCtJp7mnLQq/7jt4aAaDjsCT7jMOzT3+f3Pw
+350bsjJzidUivcoe1a56jDT5tYyAsVu7ROnh4rMfDuuh1HbsKFmDuh7HMrzWZ42LHNdAqUW690vl
+79sTguE81Wo76+WQ47Yf5WhTavnAMOjXgySMy2uXUji7tF4qucpgdWZ5lDCs531FkeqMGat2dzfK
+eMpkJRxe1j6JTqYDQs9UGw==
+--0000000000000865d305b33472bb--
