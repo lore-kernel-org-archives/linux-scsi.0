@@ -9,166 +9,243 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93581C388F9
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC7A3C5517A
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:13:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E9BC22243
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 578E922264
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:13:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ONFaDRvi"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Bd/43fXd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729634AbgKCOM5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Nov 2020 09:12:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44450 "EHLO
+        id S1729630AbgKCOM4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Nov 2020 09:12:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729248AbgKCOLt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:11:49 -0500
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E2CEC0613D1
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:11:49 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id y14so14271253pfp.13
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:11:49 -0800 (PST)
+        with ESMTP id S1729577AbgKCOMA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:12:00 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31230C0613D1
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:12:00 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id 133so14285672pfx.11
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:12:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=EUMy7Zq/F/BENdHKHHaH6mRJFyN2oA04ziP7UtBR00k=;
-        b=ONFaDRviNEWYSgCY4HnBIyGtLVZQQdfI+TaXP4O3j+snSYKij4RX3+eD2qhMXWAcFg
-         E9tc1h5zBvupQ9forIImlWCuwXi8om4V9O2vqLmSexZ6eRmNEBx77bNd2pw9q5nVFW+2
-         iGXy0FJacZyBTeIyOPMKk0EPDLA78JuttTCtc=
+        bh=C53eTRc1SfzFQIFGnH+ZlCo3z0qScyqMQXJ7BQ4AqVs=;
+        b=Bd/43fXdfvWIi/mGeT58gYM6yuKUZM+q7eYI2BD0/oNmNwMuxzs5+s3fNHCdigLyn8
+         8QCftu9pMcYpzPvRDhr4DQsPLJKl640LrtmdDc6/l4hi2uiCavkrF8XBzAtQWT9Oed0q
+         Q4i5C1kvllY9M1060N4VdY7LOY/y4Q5pnshnw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=EUMy7Zq/F/BENdHKHHaH6mRJFyN2oA04ziP7UtBR00k=;
-        b=AhVlhVjOKeYREsfmcIrR8c6mwtbDCU2dMGYIj0OtJDwAxGXu7kmzeciYTn7xd/JeBU
-         DHxQI9qJjRNdGScahRC5ujvOdMlg0baDC5NamlfXoazLK396JL96Odj4XrQKVpXTtbgq
-         1CxbMX0WdqRdshXcj1ZwEt/POhQmOKQKlwPSBLi14YuQ3M9PunAEyIq4n9xk5Vo5tRqN
-         ZoS3ESY2LW8CCkgewoK7/TKGhnV8f8o4XBYRJDhsFefOmllhjZfIFRGIO1ksLUJCl25/
-         qFHN2Q0jxI62Q5phiKiFDwVKA7agj+P+QgtUWImjO7cdhQo0PCO8m+9/k26pP6Itge/G
-         LjbA==
-X-Gm-Message-State: AOAM533KfTvh1ody/cIBGfEzruNh/lKwPcOb4VhyV7lIGbFj9tBmVTBE
-        io9DDrWDG+L3zYoUhVOYh+6R/A==
-X-Google-Smtp-Source: ABdhPJyNsgeo5p08Ruv90PKkCbLlOxm3tADTSwlYgWNXT5vkuvTn15rdwfPhu0UM2M870V2pz0/F6g==
-X-Received: by 2002:a17:90a:6c61:: with SMTP id x88mr4197999pjj.13.1604412708631;
-        Tue, 03 Nov 2020 06:11:48 -0800 (PST)
+        bh=C53eTRc1SfzFQIFGnH+ZlCo3z0qScyqMQXJ7BQ4AqVs=;
+        b=eG83KZcXSXBREIGNaOJvsha081MB2xaGkn4CZzgQeLrGdbjQoeSPSi8b9+BiyyRfwD
+         ZtCniU2O060nAos/iGqRUFCZXc9UYlyHbSvT3HOkhTQql3jo1jV5wjexkPXXqbNLvBk2
+         M9ZZT1uDkdwyoOWaiT++/UFPwoLdrVEIk4gIhJnJoLUD5OVaUQSq3sStreszcx4VPp1X
+         Xp8bFrymrspin6ZyjlHzqZJdOdAWSMGiH59a/Y9d//ohL6T2zH0AUckk747ypfpM0oFi
+         YqlaWevUoGXgk6QhDYXCwgaCAS7wOFVb+RGgmfO9geO4f+KXhg6WQ6J+JEca8VLBg3sI
+         VVhg==
+X-Gm-Message-State: AOAM532kdyZq2Jctz1V00FlOfS+9DpdguB5RDgRml+TYXrxJHUSf55yM
+        NNgIeJIkqHKxGWDRovLdUWvFwA==
+X-Google-Smtp-Source: ABdhPJzDmUcU9UAUVWXHSdbq1u4+wmVsq3VQrzCTfqHl9cmRG63MPZcXwjom94EtttN3IsSV3uog3g==
+X-Received: by 2002:a17:90b:80e:: with SMTP id bk14mr219644pjb.109.1604412719636;
+        Tue, 03 Nov 2020 06:11:59 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.11.45
+        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.11.56
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Nov 2020 06:11:47 -0800 (PST)
+        Tue, 03 Nov 2020 06:11:58 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        pbonzini@redhat.com, Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v3 01/19] cgroup: Added cgroup_get_from_kernfs_id
-Date:   Tue,  3 Nov 2020 12:48:05 +0530
-Message-Id: <1604387903-20006-2-git-send-email-muneendra.kumar@broadcom.com>
+        pbonzini@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+Subject: [PATCH v3 04/19] lpfc: vmid: Add the datastructure for supporting VMID in lpfc
+Date:   Tue,  3 Nov 2020 12:48:08 +0530
+Message-Id: <1604387903-20006-5-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000009757e005b334713f"
+        boundary="0000000000003f94cd05b334728f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000009757e005b334713f
+--0000000000003f94cd05b334728f
 
-Added a new function cgroup_get_from_kernfs_id  to retrieve the cgroup
-associated with cgroup id.
-It takes cgroupid as an argument and returns cgrp and on failure
-it returns NULL.
-Exported the same as this can be used by blk-cgorup.c
+From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
 
-Added function declaration of cgroup_get_from_kernfs_id in cgorup.h
-Exported the cgroup_get_e_css
+This patch adds the primary datastructures needed to implement VMID in lpfc
+driver. It maintains the capability, current state, hash table for the
+vmid/appid along with other information.
 
-Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
+Signed-off-by: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
 ---
 v3:
-Exported the cgroup_get_e_css
+No change
 
 v2:
-New patch
+Ported the patch on top of 5.10/scsi-queue
+Removed unused variable.
 ---
- include/linux/cgroup.h |  6 ++++++
- kernel/cgroup/cgroup.c | 26 ++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ drivers/scsi/lpfc/lpfc.h | 97 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 97 insertions(+)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 618838c48313..1741f02a41d6 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -696,6 +696,7 @@ static inline void cgroup_kthread_ready(void)
- }
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 549adfaa97ce..8f0062d2b891 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -303,6 +303,63 @@ struct lpfc_stats {
+ struct lpfc_hba;
  
- void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen);
-+struct cgroup *cgroup_get_from_kernfs_id(u64 id);
- #else /* !CONFIG_CGROUPS */
  
- struct cgroup_subsys_state;
-@@ -743,6 +744,11 @@ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 
- static inline void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- {}
++#define LPFC_VMID_TIMER   300	/* timer interval in seconds. */
 +
-+static struct cgroup *cgroup_get_from_kernfs_id(u64 id)
-+{
-+	return NULL;
-+}
- #endif /* !CONFIG_CGROUPS */
- 
- #ifdef CONFIG_CGROUPS
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index dd247747ec14..53046deeb9ca 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -580,6 +580,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
- 	rcu_read_unlock();
- 	return css;
- }
-+EXPORT_SYMBOL_GPL(cgroup_get_e_css);
- 
- static void cgroup_get_live(struct cgroup *cgrp)
- {
-@@ -5803,6 +5804,31 @@ void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- 	kernfs_put(kn);
- }
- 
-+/*
-+ * cgroup_get_from_kernfs_id : get the cgroup associated with cgroup id
-+ * @id: cgroup id
-+ * On success it returns the cgrp on failure it returns NULL
-+ */
-+struct cgroup *cgroup_get_from_kernfs_id(u64 id)
-+{
-+	struct kernfs_node *kn;
-+	struct cgroup *cgrp = NULL;
++#define LPFC_MAX_VMID_SIZE      256
++#define LPFC_COMPRESS_VMID_SIZE 16
 +
-+	mutex_lock(&cgroup_mutex);
-+	kn = kernfs_find_and_get_node_by_id(cgrp_dfl_root.kf_root, id);
-+	if (!kn)
-+		goto out_unlock;
++union lpfc_vmid_io_tag {
++	u32 app_id;	/* App Id vmid */
++	u8 cs_ctl_vmid;	/* Priority tag vmid */
++};
 +
-+	cgrp = kn->priv;
-+	if (cgroup_is_dead(cgrp) || !cgroup_tryget(cgrp))
-+		cgrp = NULL;
-+	kernfs_put(kn);
-+out_unlock:
-+	mutex_unlock(&cgroup_mutex);
-+	return cgrp;
-+}
-+EXPORT_SYMBOL_GPL(cgroup_get_from_kernfs_id);
++#define JIFFIES_PER_HR	(HZ * 60 * 60)
 +
- /*
-  * proc_cgroup_show()
-  *  - Print task's cgroup paths into seq_file, one line for each hierarchy
++struct lpfc_vmid {
++	u8 flag;
++#define LPFC_VMID_SLOT_FREE     0x0
++#define LPFC_VMID_SLOT_USED     0x1
++#define LPFC_VMID_REQ_REGISTER  0x2
++#define LPFC_VMID_REGISTERED    0x4
++#define LPFC_VMID_DE_REGISTER   0x8
++	u8 host_vmid[LPFC_MAX_VMID_SIZE];
++	union lpfc_vmid_io_tag un;
++	u64 io_rd_cnt;
++	u64 io_wr_cnt;
++	u8 vmid_len;
++	u8 delete_inactive; /* Delete if inactive flag 0 = no, 1 = yes */
++	u32 hash_index;
++	u64 __percpu *last_io_time;
++};
++
++#define lpfc_vmid_is_type_priority_tag(vport)\
++	(vport->vmid_priority_tagging ? 1 : 0)
++
++#define LPFC_VMID_HASH_SIZE     256
++#define LPFC_VMID_HASH_MASK     255
++#define LPFC_VMID_HASH_SHIFT    6
++
++struct lpfc_vmid_context {
++	struct lpfc_vmid *vmp;
++	struct lpfc_nodelist *nlp;
++	u8 instantiated;
++};
++
++struct lpfc_vmid_priority_range {
++	u8 low;
++	u8 high;
++	u8 qos;
++};
++
++struct lpfc_vmid_priority_info {
++	u32 num_descriptors;
++	struct lpfc_vmid_priority_range *vmid_range;
++};
++
++#define QFPA_EVEN_ONLY 0x01
++#define QFPA_ODD_ONLY  0x02
++#define QFPA_EVEN_ODD  0x03
++
+ enum discovery_state {
+ 	LPFC_VPORT_UNKNOWN     =  0,    /* vport state is unknown */
+ 	LPFC_VPORT_FAILED      =  1,    /* vport has failed */
+@@ -442,6 +499,9 @@ struct lpfc_vport {
+ #define WORKER_RAMP_DOWN_QUEUE         0x800	/* hba: Decrease Q depth */
+ #define WORKER_RAMP_UP_QUEUE           0x1000	/* hba: Increase Q depth */
+ #define WORKER_SERVICE_TXQ             0x2000	/* hba: IOCBs on the txq */
++#define WORKER_CHECK_INACTIVE_VMID     0x4000	/* hba: check inactive vmids */
++#define WORKER_CHECK_VMID_ISSUE_QFPA   0x8000	/* vport: Check if qfpa need */
++						/* to issue */
+ 
+ 	struct timer_list els_tmofunc;
+ 	struct timer_list delayed_disc_tmo;
+@@ -452,6 +512,8 @@ struct lpfc_vport {
+ #define FC_LOADING		0x1	/* HBA in process of loading drvr */
+ #define FC_UNLOADING		0x2	/* HBA in process of unloading drvr */
+ #define FC_ALLOW_FDMI		0x4	/* port is ready for FDMI requests */
++#define FC_ALLOW_VMID		0x8	/* Allow VMID IO's */
++#define FC_DEREGISTER_ALL_APP_ID	0x10	/* Deregister all vmid's */
+ 	/* Vport Config Parameters */
+ 	uint32_t cfg_scan_down;
+ 	uint32_t cfg_lun_queue_depth;
+@@ -470,9 +532,36 @@ struct lpfc_vport {
+ 	uint32_t cfg_tgt_queue_depth;
+ 	uint32_t cfg_first_burst_size;
+ 	uint32_t dev_loss_tmo_changed;
++	/* VMID parameters */
++	u8 lpfc_vmid_host_uuid[LPFC_COMPRESS_VMID_SIZE];
++	u32 max_vmid;	/* maximum VMIDs allowed per port */
++	u32 cur_vmid_cnt;	/* Current VMID count */
++#define LPFC_MIN_VMID	4
++#define LPFC_MAX_VMID	255
++	u32 vmid_inactivity_timeout;	/* Time after which the VMID */
++						/* deregisters from switch */
++	u32 vmid_priority_tagging;
++#define LPFC_VMID_PRIO_TAG_DISABLE	0 /* Disable */
++#define LPFC_VMID_PRIO_TAG_SUP_TARGETS	1 /* Allow supported targets only */
++#define LPFC_VMID_PRIO_TAG_ALL_TARGETS	2 /* Allow all targets */
++	unsigned long *vmid_priority_range;
++#define LPFC_VMID_MAX_PRIORITY_RANGE    256
++#define LPFC_VMID_PRIORITY_BITMAP_SIZE  32
++	u8 vmid_flag;
++#define LPFC_VMID_IN_USE		0x1
++#define LPFC_VMID_ISSUE_QFPA		0x2
++#define LPFC_VMID_QFPA_CMPL		0x4
++#define LPFC_VMID_QOS_ENABLED		0x8
++#define LPFC_VMID_TIMER_ENBLD		0x10
++	struct fc_qfpa_res *qfpa_res;
+ 
+ 	struct fc_vport *fc_vport;
+ 
++	struct lpfc_vmid *vmid;
++	struct lpfc_vmid *hash_table[LPFC_VMID_HASH_SIZE];
++	rwlock_t vmid_lock;
++	struct lpfc_vmid_priority_info vmid_priority;
++
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	struct dentry *debug_disc_trc;
+ 	struct dentry *debug_nodelist;
+@@ -925,6 +1014,13 @@ struct lpfc_hba {
+ 	struct nvmet_fc_target_port *targetport;
+ 	lpfc_vpd_t vpd;		/* vital product data */
+ 
++	u32 cfg_max_vmid;	/* maximum VMIDs allowed per port */
++	u32 cfg_vmid_app_header;
++#define LPFC_VMID_APP_HEADER_DISABLE	0
++#define LPFC_VMID_APP_HEADER_ENABLE	1
++	u32 cfg_vmid_priority_tagging;
++	u32 cfg_vmid_inactivity_timeout;	/* Time after which the VMID */
++						/*  deregisters from switch */
+ 	struct pci_dev *pcidev;
+ 	struct list_head      work_list;
+ 	uint32_t              work_ha;      /* Host Attention Bits for WT */
+@@ -1168,6 +1264,7 @@ struct lpfc_hba {
+ 	struct list_head ct_ev_waiters;
+ 	struct unsol_rcv_ct_ctx ct_ctx[LPFC_CT_CTX_MAX];
+ 	uint32_t ctx_idx;
++	struct timer_list inactive_vmid_poll;
+ 
+ 	/* RAS Support */
+ 	struct lpfc_ras_fwlog ras_fwlog;
 -- 
 2.26.2
 
 
---0000000000009757e005b334713f
+--0000000000003f94cd05b334728f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -239,13 +316,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDVUo9pX43ScTRImfGgnEoDcfPfr5x8BJKimCZ4RXf0+DAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDExNDhaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCDU7ritHOBEjSncmcm4FEyk3NtU73KTimfwggiYcTy5DDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDExNTlaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAk0wKcCxRYOzaG9q0
-gcbICpt6PPTN3mCeWFYrhM2fod5TWFQryQ6f7KX+RkliSozbRQMgtflUPYZpgExuBrSYAQbwTkq/
-4To2BGFRzFpb1Uz4AL4thV2zfLPnPyCD+TBAzp0m6iLVlGDkfNat2oHJxk448j15ic5YKNFWcOqa
-rFjBMGhBeimMVrrz3hlJ81al4BDu9g0A9Yj61LYqL23G+gZz3uYeZbjN24bVqhYcXDc2vjjWGn6Y
-Y40ADj1Xs26/Yvf6V0HnljaFaSRbqXaFmgdKLHw9q072kyOPgpp719981kQDDw+rQ/bjC10/rjNX
-PtvVDJc/M17apPrToA5C2w==
---0000000000009757e005b334713f--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAqUjnJ4qDVwR5ObPq
+HEEFnNdEtirRO7cEihe4e8A1u52+aYYgUUg0w7CEKDP44HApDlZ3uOOlsA0P58Ir+8HURYjXZ5hf
+M4NYX2r70qby3gU0wVoRRtLiKthJxVZHFTHKTNjbUd4W/yJyJ9qkbEpQtLheCuYpNH16uzVUrv6g
+TNMnJbBR8PXmlPCzNl34ZsA39i+Lgfce4mJQmTjwMR9pJninnrLAfvfQo53KpY51OrE4ELbxrXGb
+AhqEvhD5/N8NLCJp1YbECrKcCEULfRcHTMVbZMHVZ7tZcGGc0Y1M2lijUftM7Ob8aMHQg8CvHjO3
+RssiikFVUqpoAZCUlTuTsA==
+--0000000000003f94cd05b334728f--
