@@ -1,65 +1,204 @@
-Return-Path: <SRS0=a792=EB=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=0yur=EJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E16C388F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED6F8C56201
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 01:19:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71D3420773
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Oct 2020 19:51:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA1C2222EC
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 01:19:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603741912;
-	bh=AOMeeq2SMI01qVL8HXqf3EnvAIJJQDYsbPf6cOCaBb0=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=dRn5C6q4mfy+T3fh8+n8pSadY8G25qFRRtOknSUHLsNyTm6HAK3KcQgnan8PDq9iC
-	 mHiK/e2KqPlQluGCF+J3WH52UhfuczCf3zrKUOmlPons1UtPm5yVTqCu4YZmIap/Mi
-	 ltJ67NwSAV4xvRuMUNtS3jYh/41uuP0Y3tO8/slg=
+	s=default; t=1604366355;
+	bh=c6strdFNX862Wnk98EAR6chwxrm6G0VD8w8sw8l1sco=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=OcMQF3Mw8e0dJY05GfnaGGtUGNc0WRxQyBcOnbxP43S1SH3bJUeVjeSJbK/oI/p4a
+	 9ob3Jk71RRKoHXLxDmQjTlXY5fszF6pdkHg3kyVVeylJI7p9IrV7GXnifcqzRlSfN6
+	 Gyc+Q+DB73G5wtFOYpy+k6YLPQw4/LEEuWYcmRGc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728841AbgJZTvb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Oct 2020 15:51:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47454 "EHLO mail.kernel.org"
+        id S1727618AbgKCBTO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Nov 2020 20:19:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:32826 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728825AbgJZTvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Oct 2020 15:51:31 -0400
-Received: from localhost (unknown [104.132.1.66])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727559AbgKCBTO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Nov 2020 20:19:14 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 775392076D;
-        Mon, 26 Oct 2020 19:51:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 42641222B9;
+        Tue,  3 Nov 2020 01:19:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603741890;
-        bh=AOMeeq2SMI01qVL8HXqf3EnvAIJJQDYsbPf6cOCaBb0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=S1W6IvBZNYtXWiofei3HFIp7TQmIgczNWXIRiQ9RvyHep3IlQYJMbaQ53ZVCA/zRd
-         E+yM+e8kgErvhtZPXEIn5dJ08zgkXHtmazDWgOw0CQ/SlkQgIfbJ9S/03pu58X6KyZ
-         vlR4iHcdOh+pLmbCkqU1nTEyVyYBWCOX5qmHzqQw=
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org
-Subject: 
-Date:   Mon, 26 Oct 2020 12:51:19 -0700
-Message-Id: <20201026195124.363096-1-jaegeuk@kernel.org>
-X-Mailer: git-send-email 2.29.0.rc1.297.gfa9743e501-goog
+        s=default; t=1604366353;
+        bh=c6strdFNX862Wnk98EAR6chwxrm6G0VD8w8sw8l1sco=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=b0Gs89KRtAc3dUGYjgXOtZMs5MY5p/ATkWoQVWZWFY8VsHtnk9ZdqoaAk6Ww7Q5D+
+         jJbiMkDZP8gs+QWXvWECHF1Px3+B3vPQyh6Ahgx3bkunRyXg7rZAd+F5w6ESAzuGVX
+         GPblKuRoWGrM1Sp31O9W69EjGux1XNhR+ytsT4lU=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 5.9 24/35] scsi: ibmvscsi: Fix potential race after loss of transport
+Date:   Mon,  2 Nov 2020 20:18:29 -0500
+Message-Id: <20201103011840.182814-24-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201103011840.182814-1-sashal@kernel.org>
+References: <20201103011840.182814-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Change log from v3:
- - use __ufshcd_release with a fix in __ufshcd_release
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-Change log from v2:
- - use active_req-- instead of __ufshcd_release to avoid UFS timeout
+[ Upstream commit 665e0224a3d76f36da40bd9012270fa629aa42ed ]
 
-Change log from v1:
- - remove clkgating_enable check in __ufshcd_release
- - use __uhfshcd_release instead of active_req.
+After a loss of transport due to an adapter migration or crash/disconnect
+from the host partner there is a tiny window where we can race adjusting
+the request_limit of the adapter. The request limit is atomically
+increased/decreased to track the number of inflight requests against the
+allowed limit of our VIOS partner.
 
+After a transport loss we set the request_limit to zero to reflect this
+state.  However, there is a window where the adapter may attempt to queue a
+command because the transport loss event hasn't been fully processed yet
+and request_limit is still greater than zero.  The hypercall to send the
+event will fail and the error path will increment the request_limit as a
+result.  If the adapter processes the transport event prior to this
+increment the request_limit becomes out of sync with the adapter state and
+can result in SCSI commands being submitted on the now reset connection
+prior to an SRP Login resulting in a protocol violation.
+
+Fix this race by protecting request_limit with the host lock when changing
+the value via atomic_set() to indicate no transport.
+
+Link: https://lore.kernel.org/r/20201025001355.4527-1-tyreld@linux.ibm.com
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 36 +++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index b1f3017b6547a..29fcc44be2d57 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -806,6 +806,22 @@ static void purge_requests(struct ibmvscsi_host_data *hostdata, int error_code)
+ 	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ }
+ 
++/**
++ * ibmvscsi_set_request_limit - Set the adapter request_limit in response to
++ * an adapter failure, reset, or SRP Login. Done under host lock to prevent
++ * race with SCSI command submission.
++ * @hostdata:	adapter to adjust
++ * @limit:	new request limit
++ */
++static void ibmvscsi_set_request_limit(struct ibmvscsi_host_data *hostdata, int limit)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
++	atomic_set(&hostdata->request_limit, limit);
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
++}
++
+ /**
+  * ibmvscsi_reset_host - Reset the connection to the server
+  * @hostdata:	struct ibmvscsi_host_data to reset
+@@ -813,7 +829,7 @@ static void purge_requests(struct ibmvscsi_host_data *hostdata, int error_code)
+ static void ibmvscsi_reset_host(struct ibmvscsi_host_data *hostdata)
+ {
+ 	scsi_block_requests(hostdata->host);
+-	atomic_set(&hostdata->request_limit, 0);
++	ibmvscsi_set_request_limit(hostdata, 0);
+ 
+ 	purge_requests(hostdata, DID_ERROR);
+ 	hostdata->action = IBMVSCSI_HOST_ACTION_RESET;
+@@ -1146,13 +1162,13 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 		dev_info(hostdata->dev, "SRP_LOGIN_REJ reason %u\n",
+ 			 evt_struct->xfer_iu->srp.login_rej.reason);
+ 		/* Login failed.  */
+-		atomic_set(&hostdata->request_limit, -1);
++		ibmvscsi_set_request_limit(hostdata, -1);
+ 		return;
+ 	default:
+ 		dev_err(hostdata->dev, "Invalid login response typecode 0x%02x!\n",
+ 			evt_struct->xfer_iu->srp.login_rsp.opcode);
+ 		/* Login failed.  */
+-		atomic_set(&hostdata->request_limit, -1);
++		ibmvscsi_set_request_limit(hostdata, -1);
+ 		return;
+ 	}
+ 
+@@ -1163,7 +1179,7 @@ static void login_rsp(struct srp_event_struct *evt_struct)
+ 	 * This value is set rather than added to request_limit because
+ 	 * request_limit could have been set to -1 by this client.
+ 	 */
+-	atomic_set(&hostdata->request_limit,
++	ibmvscsi_set_request_limit(hostdata,
+ 		   be32_to_cpu(evt_struct->xfer_iu->srp.login_rsp.req_lim_delta));
+ 
+ 	/* If we had any pending I/Os, kick them */
+@@ -1195,13 +1211,13 @@ static int send_srp_login(struct ibmvscsi_host_data *hostdata)
+ 	login->req_buf_fmt = cpu_to_be16(SRP_BUF_FORMAT_DIRECT |
+ 					 SRP_BUF_FORMAT_INDIRECT);
+ 
+-	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	/* Start out with a request limit of 0, since this is negotiated in
+ 	 * the login request we are just sending and login requests always
+ 	 * get sent by the driver regardless of request_limit.
+ 	 */
+-	atomic_set(&hostdata->request_limit, 0);
++	ibmvscsi_set_request_limit(hostdata, 0);
+ 
++	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	rc = ibmvscsi_send_srp_event(evt_struct, hostdata, login_timeout * 2);
+ 	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 	dev_info(hostdata->dev, "sent SRP login\n");
+@@ -1781,7 +1797,7 @@ static void ibmvscsi_handle_crq(struct viosrp_crq *crq,
+ 		return;
+ 	case VIOSRP_CRQ_XPORT_EVENT:	/* Hypervisor telling us the connection is closed */
+ 		scsi_block_requests(hostdata->host);
+-		atomic_set(&hostdata->request_limit, 0);
++		ibmvscsi_set_request_limit(hostdata, 0);
+ 		if (crq->format == 0x06) {
+ 			/* We need to re-setup the interpartition connection */
+ 			dev_info(hostdata->dev, "Re-enabling adapter!\n");
+@@ -2137,12 +2153,12 @@ static void ibmvscsi_do_work(struct ibmvscsi_host_data *hostdata)
+ 	}
+ 
+ 	hostdata->action = IBMVSCSI_HOST_ACTION_NONE;
++	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 
+ 	if (rc) {
+-		atomic_set(&hostdata->request_limit, -1);
++		ibmvscsi_set_request_limit(hostdata, -1);
+ 		dev_err(hostdata->dev, "error after %s\n", action);
+ 	}
+-	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 
+ 	scsi_unblock_requests(hostdata->host);
+ }
+@@ -2226,7 +2242,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	init_waitqueue_head(&hostdata->work_wait_q);
+ 	hostdata->host = host;
+ 	hostdata->dev = dev;
+-	atomic_set(&hostdata->request_limit, -1);
++	ibmvscsi_set_request_limit(hostdata, -1);
+ 	hostdata->host->max_sectors = IBMVSCSI_MAX_SECTORS_DEFAULT;
+ 
+ 	if (map_persist_bufs(hostdata)) {
+-- 
+2.27.0
 
