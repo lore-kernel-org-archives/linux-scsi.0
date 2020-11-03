@@ -9,161 +9,142 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AA9BC388F7
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:10:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B4E7C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABA7322264
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:10:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19E3822243
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Hbp9Cc+M"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ayYzWUJi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729470AbgKCOKk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Nov 2020 09:10:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43936 "EHLO
+        id S1729594AbgKCOM0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Nov 2020 09:12:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729432AbgKCOIt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:08:49 -0500
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01262C0613D1
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:08:49 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id z3so7905994pfz.6
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:08:48 -0800 (PST)
+        with ESMTP id S1729590AbgKCOM0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:12:26 -0500
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C227C0613D1
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:12:26 -0800 (PST)
+Received: by mail-pf1-x441.google.com with SMTP id 13so14293588pfy.4
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:12:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=RfPSHK1wZvE1A1p0066UPbvm6lotTHtFGIhc8t381Zg=;
-        b=Hbp9Cc+MO+Q5fgJdu2aBEZQr7x2GGxlJfUDNIAEttxxVSDX6k5GmDnKxlMN2s6DkvT
-         ebUUSGD0EQW8HBaYQgAXRFEFLmPd4kdwOd211XlmMURmtwK9VM/OnntKuohCQ/nMIsk5
-         QO9M1hw4/emyFRBVS+0T72OWGt9iDgpalwEo0=
+        bh=xUVhHko56DiKH7nnv+nrZi563MaWvoG/GXDOrL8t/cY=;
+        b=ayYzWUJipBIBtDhx86BKthEr4UmFWbjOB9H3aN+0gihXNb/3SwbCgTAlUU+XzlDKhU
+         mffABPQgmSpVRgF324elyEfObXNVwJKV0KbYODiLTYmuT0Wxpw/fr6gvkUxYw2oqy1WK
+         hvrfBw6tVV1Cu2ooLNyNBxwzGsHNf1Hx9df+Y=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=RfPSHK1wZvE1A1p0066UPbvm6lotTHtFGIhc8t381Zg=;
-        b=qCR/gcgkD16i12Sk8txeXPyXGePj7v5Nd2QkDjJvKjVy/voGNtw2olkMyK5v+U8hTl
-         ON5z0MFcsJYUo2TTYdYsh4pa9zrJh2lVKVOzX4vdFYcFHlE1lEN0N1cv73ZJgwKCBAJL
-         peermbV8nSB95hUFUokHY3ITYYh/innvxqHsQ9dKISCvJBKnhlEz04PhVouRu8ZDrdgE
-         agaNiSlOlcZ/0HYOzBs91yh2Hh5uZYZt6CRv6XqLETCnnkd7qDFt48lVCrw/uEiG19NQ
-         Kzbk4cZBzGu137IbYPfSh0/aCF1AcQlHxetxu7XsvFi3INmPQCSWnHM4amFtcjMaptp0
-         iX4A==
-X-Gm-Message-State: AOAM533vwKje+34Ci0LaXFDKXxQCoAFBPOpHid6mVu440BgVGkhxxVe6
-        bjz5d/q/qbrLFjbXb/8R66GLEvvaAZX1R4vxNkBmKy/EVT9CsPYbljN8O7AkM1QCwB9w31TwZsm
-        aHaxdadfzlcVg9z/T5xUv6HUYYvC6b4PSbHCudOlOyBJyEK3KRYIQXJMQNZu/bPEmnKIv84PABm
-        3rfWrOjA9YoBc=
-X-Google-Smtp-Source: ABdhPJzGD6T+X3tBDQBI7s83ARfhAHQ1ChdKfl1rfoR7iJOJ0onioXHLa1xrxse7pAqznaKV6l+HUw==
-X-Received: by 2002:a17:90a:cb93:: with SMTP id a19mr3842431pju.99.1604412527683;
-        Tue, 03 Nov 2020 06:08:47 -0800 (PST)
+        bh=xUVhHko56DiKH7nnv+nrZi563MaWvoG/GXDOrL8t/cY=;
+        b=gJLo3C3dE/nURTtPiOClA8yV86/Ha5gHTMaObd/MXgeyRSYLxIUhyl8IKh2o3SSphW
+         I9UCegglGv2aOQyIjbGQAgknvEW6aauf0B3OZ4ieYKBARBZ+tE+1QLcbjLSDyvPhGDHP
+         0L+//JObi5BtJxiWpQ8rrR4U8v0X6is88gsxnMFP01F64OkwIT6cEDAU2T29WxCvzxI2
+         1hzrrZeXIU0mRx8nzUBE5OuhdANFVcmC0NBQmx4vtRN3z41C+nTdPFOHiXDFqIFSJqbK
+         wOo9T0sS2j4d1ryJraX2sr3sX3ZUOVJHZ01i2GlSR61olx+sUQlgdJ+AKUIBhnhv1kur
+         Zw8w==
+X-Gm-Message-State: AOAM530toTaNZDCF53TVRfh8Av70rAq0uUPLO2sGS+1lGIzdoiaBJjqT
+        y1v/mIedmDlX5N8pFHfILOV8+Q==
+X-Google-Smtp-Source: ABdhPJxBcRy1IzeQYF7vAdLqwng0L4j6+eT2ctGGtkf3R1v+POJ5yTh/zVMARIdFjodWccmN8ylDfw==
+X-Received: by 2002:a17:90a:62c1:: with SMTP id k1mr4154706pjs.135.1604412745513;
+        Tue, 03 Nov 2020 06:12:25 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id r19sm3525959pjo.23.2020.11.03.06.08.43
+        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.12.22
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Nov 2020 06:08:46 -0800 (PST)
+        Tue, 03 Nov 2020 06:12:24 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
-To:     linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        hare@suse.de
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        Muneendra <muneendra.kumar@broadcom.com>
-Subject: [patch v5 3/5] scsi: No retries on abort success
-Date:   Tue,  3 Nov 2020 12:45:10 +0530
-Message-Id: <1604387712-19801-4-git-send-email-muneendra.kumar@broadcom.com>
+        pbonzini@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+Subject: [PATCH v3 11/19] lpfc: vmid: cleanup vmid resources
+Date:   Tue,  3 Nov 2020 12:48:15 +0530
+Message-Id: <1604387903-20006-12-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1604387712-19801-1-git-send-email-muneendra.kumar@broadcom.com>
-References: <1604387712-19801-1-git-send-email-muneendra.kumar@broadcom.com>
+In-Reply-To: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
+References: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000cfa3f705b33466f0"
+        boundary="000000000000c9d87205b33473e0"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000cfa3f705b33466f0
+--000000000000c9d87205b33473e0
 
-Made an additional check in scsi_noretry_cmd to verify whether user has
-decided not to do retries on abort success by setting the
-SCMD_NORETRIES_ABORT bit
+From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
 
-If SCMD_NORETRIES_ABORT bit is set we are making sure there won't be any
-retries done on the same path and also setting the host byte as
-DID_TRANSPORT_MARGINAL so that the error can be propogated as recoverable
-transport error to the blk layers.
+The patch cleans up the vmid resources and stops the timer.
 
-Added a code in scsi_result_to_blk_status to translate
-a new error DID_TRANSPORT_MARGINAL to the corresponding blk_status_t
-i.e BLK_STS_TRANSPORT
-
-Added DID_TRANSPORT_MARGINAL case to scsi_decide_disposition
-
-Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
+Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
 ---
-v5:
-added the DID_TRANSPORT_MARGINAL case to
-scsi_decide_disposition
-v4:
-Modified the comments in the code appropriately
-
 v3:
-Merged  first part of the previous patch(v2 patch3) with
-this patch.
+No change
 
 v2:
-set the hostbyte as DID_TRANSPORT_MARGINAL instead of
-DID_TRANSPORT_FAILFAST.
+Ported the patch on top of 5.10/scsi-queue
 ---
- drivers/scsi/scsi_error.c | 17 +++++++++++++++++
- drivers/scsi/scsi_lib.c   |  1 +
- 2 files changed, 18 insertions(+)
+ drivers/scsi/lpfc/lpfc_init.c |  4 ++++
+ drivers/scsi/lpfc/lpfc_scsi.c | 21 +++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ae80daa5d831..02dfd70219b2 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1763,6 +1763,16 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 		return 0;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index e32d69515586..88777875f4b8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -2843,6 +2843,10 @@ lpfc_cleanup(struct lpfc_vport *vport)
+ 	if (phba->link_state > LPFC_LINK_DOWN)
+ 		lpfc_port_link_failure(vport);
  
- check_type:
-+	/*
-+	 * Check whether caller has decided not to do retries on
-+	 * abort success by checking the SCMD_NORETRIES_ABORT bit
-+	 */
-+	if ((test_bit(SCMD_NORETRIES_ABORT, &scmd->state)) &&
-+		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
-+		set_host_byte(scmd, DID_TRANSPORT_MARGINAL);
-+		return 1;
-+	}
++	/* cleanup vmid resources */
++	if (lpfc_is_vmid_enabled(phba))
++		lpfc_vmid_vport_cleanup(vport);
 +
- 	/*
- 	 * assume caller has checked sense and determined
- 	 * the check condition was retryable.
-@@ -1861,6 +1871,13 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * the fast io fail tmo fired), so send IO directly upwards.
- 		 */
- 		return SUCCESS;
+ 	list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes, nlp_listp) {
+ 		if (!NLP_CHK_NODE_ACT(ndlp)) {
+ 			ndlp = lpfc_enable_node(vport, ndlp,
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 5e802c8b22a9..7bc1fd69b715 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4711,6 +4711,27 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 	return 0;
+ }
+ 
++/*
++ * lpfc_vmid_vport_cleanup - cleans up the resources associated with a vports
++ * @vport: The virtual port for which this call is being executed.
++ */
++void lpfc_vmid_vport_cleanup(struct lpfc_vport *vport)
++{
++	/* delete the timer */
++	if (vport->port_type == LPFC_PHYSICAL_PORT)
++		del_timer_sync(&vport->phba->inactive_vmid_poll);
 +
-+	case DID_TRANSPORT_MARGINAL:
-+		/*
-+		 * caller has decided not to do retries on
-+		 * abort success, so send IO directly upwards.
-+		 */
-+		return SUCCESS;
- 	case DID_ERROR:
- 		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
- 		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2b5dea07498e..9606bad1542f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -629,6 +629,7 @@ static blk_status_t scsi_result_to_blk_status(struct scsi_cmnd *cmd, int result)
- 			return BLK_STS_OK;
- 		return BLK_STS_IOERR;
- 	case DID_TRANSPORT_FAILFAST:
-+	case DID_TRANSPORT_MARGINAL:
- 		return BLK_STS_TRANSPORT;
- 	case DID_TARGET_FAILURE:
- 		set_host_byte(cmd, DID_OK);
++	/* free the resources */
++	kfree(vport->qfpa_res);
++	kfree(vport->vmid_priority.vmid_range);
++	kfree(vport->vmid);
++
++	/* reset variables */
++	vport->qfpa_res = NULL;
++	vport->vmid_priority.vmid_range = NULL;
++	vport->vmid = NULL;
++	vport->cur_vmid_cnt = 0;
++}
+ 
+ /**
+  * lpfc_abort_handler - scsi_host_template eh_abort_handler entry point
 -- 
 2.26.2
 
 
---000000000000cfa3f705b33466f0
+--000000000000c9d87205b33473e0
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -234,13 +215,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCBgIGVJlZIrCaNqcFevYWUea6miEJl/y2O+80lwLkB2CDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDA4NDhaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCC4DcAptaF909KxgauQplJDreTSIHWv8ZdS/M+uZ5jGwTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDEyMjVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAYT6CJuyF7e580YJH
-Bn5yOlCjbGIFsBQLPRKXSdRNokFyj1Rmue8jfymK1kmDBhDUNi2hiYL3l0P3Ue45xFNdqxTmUnwB
-6XR5k4gqXol18R6O2S0LKCyhqDxKZFBC6dU/9q1tSiPfCALG+6pvdceODwkFvbZjCcb+xk8lZOLa
-8yIFr6UqHhjuSayH/W06lUyY8BaMDXZSx2wFgI45JC3gEJl6x8wHKrd0D8xvFLBbVM0z1W2AE3TM
-nI8WV+aeT9CA1SHmnZnB33EVww6jeIKjIMooh9C+0kFIIjVEWnCm28om/MQUNffBdYcvEBK0uof/
-m1iWZv3tH2QUKe2tFwZ3pA==
---000000000000cfa3f705b33466f0--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAV1VHDvGG2/wztNO3
+azF2dxuYWOcrPjc+C1nWhlvqSnx2YUJFnZU1BQbv5TvGPx6LyF5//5dSkKF65aym6HGLfqEaTzhS
+6hibVQP05eIaZNGzDQYegff7gym6XFSujzWNrAoQkqV7XbmvqRkABQFdDvDzMK+NzshJHTglfhIa
+ZcjigZoSdAmUnqpNzUQugA6/027zncUdomXEBUo3iaF/OGndHDuxuCcafsOlE/6UL0StuWTGx3d0
+jtQd5OOEf3pvzALPu0FTUnHdIbW2Esec9BaBWwX8FiqZTKg3Q8hynoCiVCuMaosIDIY3ijYZUKwx
+VWV4oh3dqOkSFvl6Co0YJg==
+--000000000000c9d87205b33473e0--
