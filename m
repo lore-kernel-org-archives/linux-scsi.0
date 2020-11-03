@@ -9,77 +9,76 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87884C388F7
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49478C55179
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24BDB22243
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4D6122243
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:12:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CFFWmVWr"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SQ8vUoLJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729606AbgKCOMo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Nov 2020 09:12:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44622 "EHLO
+        id S1729623AbgKCOMt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Nov 2020 09:12:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729582AbgKCOMh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:12:37 -0500
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BF19C0613D1
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:12:37 -0800 (PST)
-Received: by mail-pf1-x441.google.com with SMTP id 133so14287336pfx.11
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:12:37 -0800 (PST)
+        with ESMTP id S1729613AbgKCOMo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:12:44 -0500
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61949C0613D1
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:12:44 -0800 (PST)
+Received: by mail-pf1-x431.google.com with SMTP id 133so14287638pfx.11
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:12:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=DMpnbUYM0Vuchuz5E7cz7tYIeEQgQDhm5GLQSw1OIuU=;
-        b=CFFWmVWr/gYzDFqIXudcwVrzWnDqmL8YZilOvz//CiRPupWq5Gtsn/GhRCnYExvAL1
-         9zVxfABCfhIGwrFbf/LvLJHC6GJcDsw+rHKYeVw9cN5JeTFJRXhY0E3hbdbpUv+56q9J
-         hWRobUtA4/bAsShqpWwDGOvO6y3J7vqArzQw8=
+        bh=6AvKXyoKTUNec8TvllCUGoK9INwpjYCVoktaScqkOYE=;
+        b=SQ8vUoLJqrTEXMv6XkpPChujVHO833dQ83pw5qS5dkaRJjZUUpZaKzy3CYsDHHHml+
+         IVfWhxMSHW4GOFJ5AwXYirR4qiZMmXhsvsVNCp7vpZ8TF+mEonTP84bC12GHewo/zqgu
+         kVHqgM3c4zLcb9XFxQQNbdrkwhdC4C1mXDePc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=DMpnbUYM0Vuchuz5E7cz7tYIeEQgQDhm5GLQSw1OIuU=;
-        b=oDqbbtodbk6FYmW0qMjiKF5DyNCdPAHdKOGWkC1yf1H6x3xcKtw/y01dpM6BHoooIN
-         EU0Y76JLHq6vWY9XK3nyDjDdHIrtLZLDy8XvUlsGUhcsMaF//dBXmDlP3Kd/3YWCfuJL
-         7KxDKU0d57Mm/brqB4/XvAL5/gH78PVil1LqEUJ7YhhzXTSdM+c1n5ZBJc2nFh9B4Dh6
-         9C02OTHDKOsbbjrDwYOqi+kavHN6NPt12LR4dxWaueib2ESdFwNgQcHfAe/g9PNYwRPd
-         DC5F64cInDndiSVy019VDihabRoG/D25RMjLDbvZD0F3ABcDBtC7H+UhY/lGh7qpTtbs
-         ehfg==
-X-Gm-Message-State: AOAM5327rSkyPewyZtJ5DlsWQgOaxifLCr4ttRUhiyxI6r0tYghiaVfh
-        8Iaz/QAQT99SW9CEFxf90SngT88cQ18Gvevb
-X-Google-Smtp-Source: ABdhPJw6UqtYlHkprgjk7/L1utXOnXZ1sktb2rSjVXX2xJqOfph6F4be7UyUelLhQIBEA9OVBPraBg==
-X-Received: by 2002:a17:90b:602:: with SMTP id gb2mr3952715pjb.12.1604412756865;
-        Tue, 03 Nov 2020 06:12:36 -0800 (PST)
+        bh=6AvKXyoKTUNec8TvllCUGoK9INwpjYCVoktaScqkOYE=;
+        b=uQtlNLVLr+g7gBwZ9/FTYR9ZcgsaaSkmF4JnZk/EZ3QO5YBfvZhRTUo0MfJpGpDq0L
+         R84jgzEDNQFoVRwOTrfR9xf5gtY2NcwhwWFQtKYHU5dQrN68Ed/meyCk/RjqXX0C6Suc
+         NvmoEN3HT8Yc89Tib1g2zQcc0diKrha6ZXHnaZjGqeBSdFTdcEoV9U8RGeNtCUOwMAji
+         XrCH/l00fA+rEq8iqnzd29nrxO6+ZVh8FEzaaDvLWYIOiwT9HXsxxT052RsfpLNAYUww
+         6Ioz5PxPUbgkhoIVeZyIBl4EQIfsqSV3UWDXQZpeAIg1HAvavB0kNNkO4YZezB5UxuSm
+         8mHQ==
+X-Gm-Message-State: AOAM533Zex0gZa1MoMpTTtjHY1Qr8QBByzt6eAVU7fc1Uq5Q3M7eaLZw
+        GeaIq7Xfivey/JqvXou6ohPhonr8gRlTgd6r
+X-Google-Smtp-Source: ABdhPJyZHlBpz4CBZHF8l8E5YLjo2dh50SAF3LTQF2iFDpt8EdscHQxe72/F/801wT5u5SX7hdWo9w==
+X-Received: by 2002:a17:90b:3505:: with SMTP id ls5mr3896677pjb.134.1604412763814;
+        Tue, 03 Nov 2020 06:12:43 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.12.33
+        by smtp.gmail.com with ESMTPSA id t19sm3596691pgv.37.2020.11.03.06.12.40
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Nov 2020 06:12:36 -0800 (PST)
+        Tue, 03 Nov 2020 06:12:43 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         pbonzini@redhat.com,
         Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: [PATCH v3 14/19] lpfc: vmid: Implements CT commands for appid.
-Date:   Tue,  3 Nov 2020 12:48:18 +0530
-Message-Id: <1604387903-20006-15-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v3 16/19] lpfc: vmid: Timeout implementation for vmid
+Date:   Tue,  3 Nov 2020 12:48:20 +0530
+Message-Id: <1604387903-20006-17-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1604387903-20006-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000078aedd05b334742f"
+        boundary="000000000000e1708a05b33474e8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000078aedd05b334742f
+--000000000000e1708a05b33474e8
 
 From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
 
-The patch implements CT commands for registering and deregistering the
-appid for the application. Also, a small change in decrementing the ndlp
-ref counter has been added.
+This patch implements the timeout functionality for the vmid. After the
+set time period of inactivity, the vmid is deregistered from the switch.
 
 Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
@@ -90,273 +89,194 @@ No change
 
 v2:
 Ported the patch on top of 5.10/scsi-queue
-Removed redundant code due to changes since last submit
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 249 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 249 insertions(+)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 109 +++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c    |  40 ++++++++++++
+ 2 files changed, 149 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index c201686d3815..691f78340f26 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3406,3 +3406,252 @@ lpfc_decode_firmware_rev(struct lpfc_hba *phba, char *fwrevision, int flag)
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 142a02114479..b20013866942 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -190,6 +190,115 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
  	return;
  }
-+
-+void
-+lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-+		      struct lpfc_iocbq *rspiocb)
+ 
++/**
++ * lpfc_check_inactive_vmid_one - VMID inactivity checker for a vport
++ * @vport: Pointer to vport context object.
++ *
++ * This function checks for idle vmid entries related to a particular vport. If
++ * found unused/idle, it frees them accordingly.
++ **/
++static void lpfc_check_inactive_vmid_one(struct lpfc_vport *vport)
 +{
-+	struct lpfc_vport *vport = cmdiocb->vport;
-+	struct lpfc_dmabuf *inp = cmdiocb->context1;
-+	struct lpfc_dmabuf *outp = cmdiocb->context2;
-+	struct lpfc_sli_ct_request *ctcmd = inp->virt;
-+	struct lpfc_sli_ct_request *ctrsp = outp->virt;
-+	u16 rsp = ctrsp->CommandResponse.bits.CmdRsp;
-+	struct app_id_object *app;
-+	u32 cmd, hash;
-+	struct lpfc_vmid *vmp;
-+	u8 *data = outp->virt;
-+	int i;
++	u16 i, keep;
++	u32 difftime = 0, r;
++	u64 *lta;
++	int cpu;
 +
-+	cmd = be16_to_cpu(ctcmd->CommandResponse.bits.CmdRsp);
-+	if (cmd == SLI_CTAS_DALLAPP_ID)
-+		lpfc_ct_free_iocb(phba, cmdiocb);
++	write_lock(&vport->vmid_lock);
 +
-+	if (lpfc_els_chk_latt(vport) || rspiocb->iocb.ulpStatus) {
-+		if (cmd != SLI_CTAS_DALLAPP_ID)
-+			return;
-+	}
-+	/* Check for a CT LS_RJT response */
-+	if (rsp == be16_to_cpu(SLI_CT_RESPONSE_FS_RJT)) {
-+		if (cmd != SLI_CTAS_DALLAPP_ID)
-+			lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+					 "3306 VMID FS_RJT Data: x%x  %x %x\n",
-+				 cmd, ctrsp->ReasonCode, ctrsp->Explanation);
-+		if ((cmd != SLI_CTAS_DALLAPP_ID) ||
-+		    (ctrsp->ReasonCode != SLI_CT_UNABLE_TO_PERFORM_REQ) ||
-+		    (ctrsp->Explanation != SLI_CT_APP_ID_NOT_AVAILABLE)) {
-+			/* If DALLAPP_ID failed retry later */
-+			if (cmd == SLI_CTAS_DALLAPP_ID)
-+				vport->load_flag |= FC_DEREGISTER_ALL_APP_ID;
-+			return;
++	if (!vport->cur_vmid_cnt)
++		goto out;
++
++	/* iterate through the table */
++	for (i = 0; i < LPFC_VMID_HASH_SIZE; ++i) {
++		if (vport->hash_table[i] && (vport->hash_table[i]->flag &
++					     LPFC_VMID_REGISTERED)) {
++			/* check if the particular vmid is in use */
++			/* for all available per cpu variable */
++			for_each_possible_cpu(cpu) {
++				/* if last access time is less than timeout */
++				lta = per_cpu_ptr(
++					vport->hash_table[i]->last_io_time,
++					cpu);
++				if (!lta)
++					continue;
++				difftime = (jiffies) - (*lta);
++				if ((vport->vmid_inactivity_timeout *
++				     JIFFIES_PER_HR) > difftime) {
++					keep = 1;
++					break;
++				}
++			}
++
++			/* if none of the cpus have been used by the vm, */
++			/*  remove the entry if already registered */
++			if (!keep) {
++				/* mark the entry for deregistration */
++				vport->hash_table[i]->flag =
++					LPFC_VMID_DE_REGISTER;
++				write_unlock(&vport->vmid_lock);
++				if (vport->vmid_priority_tagging)
++					r = lpfc_vmid_uvem(vport,
++							   vport->hash_table[i],
++							   false);
++				else
++					r = lpfc_vmid_cmd(vport,
++							  SLI_CTAS_DAPP_IDENT,
++							  vport->hash_table[i]);
++
++				/* decrement number of active vms and mark */
++				/* entry in slot as free */
++				write_lock(&vport->vmid_lock);
++				if (!r) {
++					struct lpfc_vmid *ht =
++							vport->hash_table[i];
++					vport->cur_vmid_cnt--;
++					ht->flag = LPFC_VMID_SLOT_FREE;
++					free_percpu(ht->last_io_time);
++					ht->last_io_time = NULL;
++					vport->hash_table[i] = NULL;
++				}
++			}
 +		}
++		keep = 0;
 +	}
-+
-+	switch (cmd) {
-+	case SLI_CTAS_RAPP_IDENT:
-+		app = (struct app_id_object *)(RAPP_IDENT_OFFSET + data);
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "6712 RAPP_IDENT app id %d  port id %x id\n"
-+				 "len %d\n", be32_to_cpu(app->app_id),
-+				 be32_to_cpu(app->port_id),
-+				 app->obj.entity_id_len);
-+
-+		if (app->obj.entity_id_len == 0 || app->port_id == 0)
-+			return;
-+
-+		hash = lpfc_vmid_hash_fn(app->obj.entity_id,
-+					 app->obj.entity_id_len);
-+		vmp = lpfc_get_vmid_from_hastable(vport, hash,
-+						  app->obj.entity_id);
-+		if (vmp) {
-+			vmp->un.app_id = be32_to_cpu(app->app_id);
-+			vmp->flag |= LPFC_VMID_REGISTERED;
-+			vmp->flag &= ~LPFC_VMID_REQ_REGISTER;
-+			/* Set IN USE flag */
-+			vport->vmid_flag |= LPFC_VMID_IN_USE;
-+		} else {
-+			lpfc_printf_vlog(vport, KERN_DEBUG,
-+					 LOG_DISCOVERY, "6901 No entry found\n"
-+					 "%s hash %d\n", app->obj.entity_id,
-+					 hash);
-+		}
-+		break;
-+	case SLI_CTAS_DAPP_IDENT:
-+		app = (struct app_id_object *)(DAPP_IDENT_OFFSET + data);
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "6713 DAPP_IDENT app id %d  port id %x",
-+				 cpu_to_be32(app->app_id),
-+				 cpu_to_be32(app->port_id));
-+		break;
-+	case SLI_CTAS_DALLAPP_ID:
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "8856 Deregistered all app ids");
-+		for (i = 0; i < phba->cfg_max_vmid; i++) {
-+			vmp = &vport->vmid[i];
-+			if (vmp->flag != LPFC_VMID_SLOT_FREE)
-+				memset(vmp, 0, sizeof(struct lpfc_vmid));
-+		}
-+		for (i = 0; i < LPFC_VMID_HASH_SIZE; i++)
-+			vport->hash_table[i] = NULL;
-+		vport->load_flag |= FC_ALLOW_VMID;
-+		break;
-+	default:
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "8857 Invalid command code");
-+	}
++ out:
++	write_unlock(&vport->vmid_lock);
 +}
 +
 +/**
-+ * lpfc_vmid_cmd - Build and send a FDMI cmd to the specified NPort
-+ * @vport: pointer to a host virtual N_Port data structure.
-+ * @ndlp: ndlp to send FDMI cmd to (if NULL use FDMI_DID)
-+ * cmdcode: FDMI command to send
-+ * mask: Mask of HBA or PORT Attributes to send
++ * lpfc_check_inactive_vmid - VMID inactivity checker
++ * @phba: Pointer to hba context object.
 + *
-+ * Builds and sends a FDMI command using the CT subsystem.
-+ */
-+int
-+lpfc_vmid_cmd(struct lpfc_vport *vport,
-+	      int cmdcode, struct lpfc_vmid *vmid)
++ * This function is called from the worker thread to determine if an entry in
++ * the vmid table can be released since there was no IO activity seen from that
++ * particular VM for the specified time. When this happens, the entry in the
++ * table is released and also the resources on the switch cleared.
++ **/
++
++void lpfc_check_inactive_vmid(struct lpfc_hba *phba)
 +{
-+	struct lpfc_hba *phba = vport->phba;
-+	struct lpfc_dmabuf *mp, *bmp;
-+	struct lpfc_sli_ct_request *ctreq;
-+	struct ulp_bde64 *bpl;
-+	u32 size;
-+	u32 rsp_size;
-+	u8 *data;
-+	struct lpfc_vmid_rapp_ident_list *rap;
-+	struct lpfc_vmid_dapp_ident_list *dap;
-+	u8 retry = 0;
-+	struct lpfc_nodelist *ndlp;
++	struct lpfc_vport *vport;
++	struct lpfc_vport **vports;
++	int i;
 +
-+	void (*cmpl)(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-+		     struct lpfc_iocbq *rspiocb);
++	vports = lpfc_create_vport_work_array(phba);
++	if (!vports)
++		return;
 +
-+	ndlp = lpfc_findnode_did(vport, FDMI_DID);
-+	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp))
-+		return 0;
++	for (i = 0; i <= phba->max_vports; i++) {
++		if ((!vports[i]) && (i == 0))
++			vport = phba->pport;
++		else
++			vport = vports[i];
++		if (!vport)
++			break;
 +
-+	cmpl = lpfc_cmpl_ct_cmd_vmid;
++		lpfc_check_inactive_vmid_one(vport);
++	}
++	lpfc_destroy_vport_work_array(phba, vports);
++}
 +
-+	/* fill in BDEs for command */
-+	/* Allocate buffer for command payload */
-+	mp = kmalloc(sizeof(*mp), GFP_KERNEL);
-+	if (!mp)
-+		goto vmid_free_mp_exit;
+ /**
+  * lpfc_dev_loss_tmo_handler - Remote node devloss timeout handler
+  * @ndlp: Pointer to remote node object.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 88777875f4b8..7e93049fba21 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4829,6 +4829,42 @@ lpfc_sli4_fcf_redisc_wait_tmo(struct timer_list *t)
+ 	lpfc_worker_wake_up(phba);
+ }
+ 
++/**
++ * lpfc_vmid_poll - VMID timeout detection
++ * @ptr: Map to lpfc_hba data structure pointer.
++ *
++ * This routine is invoked when there is no IO on by a VM for the specified
++ * amount of time. When this situation is detected, the VMID has to be
++ * deregistered from the switch and all the local resources freed. The VMID
++ * will be reassigned to the VM once the IO begins.
++ **/
++static void
++lpfc_vmid_poll(struct timer_list *t)
++{
++	struct lpfc_hba *phba = from_timer(phba, t, inactive_vmid_poll);
++	u32 wake_up = 0;
 +
-+	mp->virt = lpfc_mbuf_alloc(phba, 0, &mp->phys);
-+	if (!mp->virt)
-+		goto vmid_free_mp_virt_exit;
-+
-+	/* Allocate buffer for Buffer ptr list */
-+	bmp = kmalloc(sizeof(*bmp), GFP_KERNEL);
-+	if (!bmp)
-+		goto vmid_free_bmp_exit;
-+
-+	bmp->virt = lpfc_mbuf_alloc(phba, 0, &bmp->phys);
-+	if (!bmp->virt)
-+		goto vmid_free_bmp_virt_exit;
-+
-+	INIT_LIST_HEAD(&mp->list);
-+	INIT_LIST_HEAD(&bmp->list);
-+
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
-+			 "0218 VMID Request Data: x%x x%x x%x",
-+			 vport->fc_flag, vport->port_state, cmdcode);
-+	ctreq = (struct lpfc_sli_ct_request *)mp->virt;
-+	data = mp->virt;
-+	/* First populate the CT_IU preamble */
-+	memset(data, 0, LPFC_BPL_SIZE);
-+	ctreq->RevisionId.bits.Revision = SLI_CT_REVISION;
-+	ctreq->RevisionId.bits.InId = 0;
-+
-+	ctreq->FsType = SLI_CT_MANAGEMENT_SERVICE;
-+	ctreq->FsSubType = SLI_CT_APP_SEV_Subtypes;
-+
-+	ctreq->CommandResponse.bits.CmdRsp = cpu_to_be16(cmdcode);
-+	rsp_size = LPFC_BPL_SIZE;
-+	size = 0;
-+
-+	switch (cmdcode) {
-+	case SLI_CTAS_RAPP_IDENT:
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "1329 RAPP_IDENT for %s", vmid->host_vmid);
-+		ctreq->un.PortID = cpu_to_be32(vport->fc_myDID);
-+		rap = (struct lpfc_vmid_rapp_ident_list *)
-+			(DAPP_IDENT_OFFSET + data);
-+		rap->no_of_objects = cpu_to_be32(1);
-+		rap->obj[0].entity_id_len = vmid->vmid_len;
-+		memcpy(rap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
-+		size = RAPP_IDENT_OFFSET +
-+			sizeof(struct lpfc_vmid_rapp_ident_list);
-+		retry = 1;
-+		break;
-+
-+	case SLI_CTAS_GALLAPPIA_ID:
-+		ctreq->un.PortID = cpu_to_be32(vport->fc_myDID);
-+		size = GALLAPPIA_ID_SIZE;
-+		break;
-+
-+	case SLI_CTAS_DAPP_IDENT:
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "1469 DAPP_IDENT for %s", vmid->host_vmid);
-+		ctreq->un.PortID = cpu_to_be32(vport->fc_myDID);
-+		dap = (struct lpfc_vmid_dapp_ident_list *)
-+			(DAPP_IDENT_OFFSET + data);
-+		dap->no_of_objects = cpu_to_be32(1);
-+		dap->obj[0].entity_id_len = vmid->vmid_len;
-+		memcpy(dap->obj[0].entity_id, vmid->host_vmid, vmid->vmid_len);
-+		size = DAPP_IDENT_OFFSET +
-+			sizeof(struct lpfc_vmid_dapp_ident_list);
-+		vmid->flag &= ~LPFC_VMID_REGISTERED;
-+		retry = 1;
-+		break;
-+
-+	case SLI_CTAS_DALLAPP_ID:
-+		ctreq->un.PortID = cpu_to_be32(vport->fc_myDID);
-+		size = DALLAPP_ID_SIZE;
-+		break;
-+
-+	default:
-+		lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+				 "7062 VMID cmdcode x%x not supported",
-+				 cmdcode);
-+		goto vmid_free_all_mem;
++	/* check if there is a need to issue QFPA */
++	if (phba->pport->vmid_priority_tagging) {
++		wake_up = 1;
++		phba->pport->work_port_events |= WORKER_CHECK_VMID_ISSUE_QFPA;
 +	}
 +
-+	ctreq->CommandResponse.bits.Size = cpu_to_be16(rsp_size);
++	/* Is the vmid inactivity timer enabled */
++	if (phba->pport->vmid_inactivity_timeout ||
++	    phba->pport->load_flag & FC_DEREGISTER_ALL_APP_ID) {
++		wake_up = 1;
++		phba->pport->work_port_events |= WORKER_CHECK_INACTIVE_VMID;
++	}
 +
-+	bpl = (struct ulp_bde64 *)bmp->virt;
-+	bpl->addrHigh = putPaddrHigh(mp->phys);
-+	bpl->addrLow = putPaddrLow(mp->phys);
-+	bpl->tus.f.bdeFlags = 0;
-+	bpl->tus.f.bdeSize = size;
++	if (wake_up)
++		lpfc_worker_wake_up(phba);
 +
-+	/* The lpfc_ct_cmd/lpfc_get_req shall increment ndlp reference count
-+	 * to hold ndlp reference for the corresponding callback function.
-+	 */
-+	if (!lpfc_ct_cmd(vport, mp, bmp, ndlp, cmpl, rsp_size, retry))
-+		return 0;
-+
-+	/* Decrement ndlp reference count to release ndlp reference held
-+	 * for the failed command's callback function.
-+	 */
-+	lpfc_nlp_put(ndlp);
-+
-+ vmid_free_all_mem:
-+	lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
-+ vmid_free_bmp_virt_exit:
-+	kfree(bmp);
-+ vmid_free_bmp_exit:
-+	lpfc_mbuf_free(phba, mp->virt, mp->phys);
-+ vmid_free_mp_virt_exit:
-+	kfree(mp);
-+ vmid_free_mp_exit:
-+
-+	/* Issue FDMI request failed */
-+	lpfc_printf_vlog(vport, KERN_DEBUG, LOG_DISCOVERY,
-+			 "0244 Issue FDMI request failed Data: x%x", cmdcode);
-+	return 1;
++	/* restart the timer for the next iteration */
++	mod_timer(&phba->inactive_vmid_poll, jiffies + msecs_to_jiffies(1000 *
++							LPFC_VMID_TIMER));
 +}
++
+ /**
+  * lpfc_sli4_parse_latt_fault - Parse sli4 link-attention link fault code
+  * @phba: pointer to lpfc hba data structure.
+@@ -6679,6 +6715,10 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	phba->hbqs[LPFC_ELS_HBQ].hbq_alloc_buffer = lpfc_sli4_rb_alloc;
+ 	phba->hbqs[LPFC_ELS_HBQ].hbq_free_buffer = lpfc_sli4_rb_free;
+ 
++	/* for VMID idle timeout if VMID is enabled */
++	if (lpfc_is_vmid_enabled(phba))
++		timer_setup(&phba->inactive_vmid_poll, lpfc_vmid_poll, 0);
++
+ 	/*
+ 	 * Initialize the SLI Layer to run with lpfc SLI4 HBAs.
+ 	 */
 -- 
 2.26.2
 
 
---00000000000078aedd05b334742f
+--000000000000e1708a05b33474e8
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -427,13 +347,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCCy5LZaHF3ySZFk7qSLCtAi25Gcd4ptFxS9PjssdtWDijAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDEyMzdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCBByeCiaqbRgL4ZLg/HhvpmpjSFQzXbq7zP/uEnd6Fb/zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDEyNDRaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAJkhTzcqUDOApLzC0
-TRnpBNLX80Hv99+JQwy+klvQeqSRtyBbjo5Btt3wV4m1VdaUlw7oF0VDyrrHac+/4h7pc2OpGe/R
-WglGNTQe5EGmNipOYrq/01iix6c3xkjAbLZGWPGOqCWoUsRhNaj4th2cLs2zbnWsJ8UjYvPsoaZm
-tQZPqVdJTtBrURBCHO4UiTyPZBW4fsP+aFLg5LBap/uEj1W/Sx/5mnOY0EG7/rbuIK4Ukrpi+z+U
-EhNTDc2xiNt1VeRgE6yoI4Wtl5XMszZlWVRvnqV0ZGT5oDjdlySogUU5IOefhBhiygjEDhFpvUQa
-aE85Ei50EsQvZucccUqchA==
---00000000000078aedd05b334742f--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAPEkaVpdSksQH/DGp
+dqFcSver8R4n3bveG7cr7NyBViRGXvCoIbfWG+EuRLEQ3T/OoI64C2+bjJtyGALejdCeSxeSzXUg
+2+trwwg3LyOzkpO0E7bfxCeJ4G/H0HrrgPqIhE/GYysd0l9laODytdyoXyK7wn8m5vfLAqT7u3Y8
+0UIBv2xjikBqf0yZ1DX/HPZ0Ljpd6NMMqrRS1W8pbMeqtZSv4Ixrw/kdQ7dm4ACsaK1bJ5hgtnw0
+sOUS+lN0/Rn3dPHxigpyxLPBc9JnXIxISIGy1+nUEHCaZIFYzH5rDzhjVro9Dk5L36/n+/9R8MDy
+cNogh1d4/dPLpG78rTi9vQ==
+--000000000000e1708a05b33474e8--
