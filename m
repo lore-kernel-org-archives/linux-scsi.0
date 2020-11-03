@@ -2,122 +2,169 @@ Return-Path: <SRS0=0yur=EJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_HEADER_CTYPE_ONLY,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
+	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68405C388F9
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:08:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DC9C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDBD722264
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:08:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A301F22243
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Nov 2020 14:08:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="K2+iM6Tl"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MVGg8mLg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729528AbgKCOIl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Nov 2020 09:08:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43908 "EHLO
+        id S1729391AbgKCOIj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Nov 2020 09:08:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729361AbgKCOIk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:08:40 -0500
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E417C0613D1
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:08:40 -0800 (PST)
-Received: by mail-pl1-x643.google.com with SMTP id x23so8620931plr.6
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:08:40 -0800 (PST)
+        with ESMTP id S1729380AbgKCOIh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2020 09:08:37 -0500
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A0F6C0613D1
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2020 06:08:37 -0800 (PST)
+Received: by mail-pf1-x432.google.com with SMTP id x13so14274717pfa.9
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2020 06:08:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=tGPF1tZzbjg9RDUrVBN5ZLmFYpdjHRMWH4T2ul90m0c=;
-        b=K2+iM6Tl55o1HcoKQEBSmoT3t7GxzV/wDQgS88qTXlW3BFGrWXaga+DkSQtQVqIRrX
-         5aKfa6G+6cWEDra7rVD/lhrSsbtSPhDgq2VAi/bYj74KXvc0kJISlnpqqVc0P/jufNxZ
-         ZGaTy3LmSzzoUIb5pXmHksv7IyNR4jOa4BBVU=
+        h=from:to:cc:subject:date:message-id;
+        bh=Ste+jlP0OvPL9pJvRXNNX/8x5v4VHYSjiyUMMCUb4dY=;
+        b=MVGg8mLgLWESaW1ui9GzC6YNU4LduVJwQWj/f3T1z0qRUfTVCw7i5jti9qsl8mjpH8
+         KyoHzalAC2L6q1E6Tc0E4gDLyJ3NhjlVy+vkNnwP69pItLnhCI+1bjCetRyyzTXL9XUz
+         dyL/qELL4vK5RqLbu7j0MMUahjZvK36bI0pTg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=tGPF1tZzbjg9RDUrVBN5ZLmFYpdjHRMWH4T2ul90m0c=;
-        b=OTPQBaP1HhTkLzszPPPt1jtWfdQCu67/MLBAXt3+XcHHJZQXgbJw8+IDuDQFGXYoCU
-         VeaK2VqIznYouB6djWmYVMUhTXPDRgCojvjIXk+ziO1drkS/8M1ESqZqq8gUUbQBdIEe
-         TY6JyJhy4osQHmdmPVpIqR+LGkeYPyV/vbsoW4iJiJl76hU7P0ZEX9IdYs0eylZWqH7J
-         AsOzecyVHp9iNiP/qSkyZT0LBV1x/29Oz8EYdhqbsnJZ0IMyzx9KLcOBWhQYK2QKGXe2
-         FfClQ5lZg0dH0Wxs65TEA9gF6CQrir3n+H9ZqBUJlf2nVnUfC2QW7XTddEY3fTM3x+ga
-         FP+g==
-X-Gm-Message-State: AOAM531dTeFmH5/uxIG2YWaNrgexQoEnaX0fb+i4BjrXK37IoyZTyAZa
-        XXzwKyExHpdo4YPnXI57URvABopGXG6dUwGiouwmnBVpNuOUVwk8tOYbPpMxhAD5oqUaxYRnlp6
-        beBm8tMnN8q93o1KIMVwGTu0+AbaAUNLsGE6a8/TpwUm61K/K0rwZeyoFBvno3Vn1wQ8EIVvq8I
-        3JnN9C0ee5biw=
-X-Google-Smtp-Source: ABdhPJyf7BIEUIRwRqDLlrGE3Zla/rRkBItcySnBqzdS9tbPCAF2Ff9yjLc6uZvmPQQGZMt4QMDYFg==
-X-Received: by 2002:a17:902:b196:b029:d5:a8fd:9a1c with SMTP id s22-20020a170902b196b02900d5a8fd9a1cmr26011382plr.44.1604412519300;
-        Tue, 03 Nov 2020 06:08:39 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Ste+jlP0OvPL9pJvRXNNX/8x5v4VHYSjiyUMMCUb4dY=;
+        b=pAyi7bxVyrXp8QRJZAnBWv3iKdopfkRXAffe5RDrjQBF2A95OBWjRbrn3MxxZAdwAB
+         iwCRiT/BplCSEnyBTB/wsFY2HNabpe0SNSNDnp3ln2YW+vp2Kjbuk2nqC8th+02WELcG
+         owWZ+8aDqLyZzzkph/hAW/UVufLOxwJghoNB81apAByVMa7zV38xJg9kU10ldEBMGupg
+         VPvD6C2zLWx8BDV27jDspnIqQ6VgIQHlDlrhUfB+EsNOXFKr6efht76o6tQi4wujdaAn
+         2l7OSyRSY3Nv2dv+ruD7yqqqmCOHMmek0HHxnEAFHNi/2qOD8yCfiTrj+lqBL/j4ZOYt
+         kIHg==
+X-Gm-Message-State: AOAM533bQjQybLPNtOAG5sCBE9lvkgmm8Npow+z3gSYOqXLtA3qH2p2Q
+        bldio4q/hP0m/3lAPgJsKg7kUX5LLCdoxsEVHgQS9160lx/O8zEQMtXA6ogtuqPgX3heK+9oQa6
+        f8INIiF5N34EXIjIIklsEufxLdLQQ6i+DTThm++hGJBq2yjJ1QKBFk5+DxY2Q59xyfMx18ITMTz
+        8ktq2iSIeqyOg=
+X-Google-Smtp-Source: ABdhPJxiwTuz4ulLVrzEK860NQhIYkua+i2jBhZPPkMyboNL3rDS6TMiw8+eF6/MfXOgYBq238rqhQ==
+X-Received: by 2002:aa7:95bb:0:b029:152:b32d:6935 with SMTP id a27-20020aa795bb0000b0290152b32d6935mr26049523pfk.54.1604412515397;
+        Tue, 03 Nov 2020 06:08:35 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id r19sm3525959pjo.23.2020.11.03.06.08.35
+        by smtp.gmail.com with ESMTPSA id r19sm3525959pjo.23.2020.11.03.06.08.31
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Nov 2020 06:08:38 -0800 (PST)
+        Tue, 03 Nov 2020 06:08:33 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, michael.christie@oracle.com,
         hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [patch v5 1/5] scsi: Added a new definition in scsi_cmnd.h
-Date:   Tue,  3 Nov 2020 12:45:08 +0530
-Message-Id: <1604387712-19801-2-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [patch v5 0/5] scsi: Support to handle Intermittent errors
+Date:   Tue,  3 Nov 2020 12:45:07 +0530
+Message-Id: <1604387712-19801-1-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1604387712-19801-1-git-send-email-muneendra.kumar@broadcom.com>
-References: <1604387712-19801-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000050164b05b33466f9"
+        boundary="0000000000001689f005b33466a5"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000050164b05b33466f9
+--0000000000001689f005b33466a5
 
-Added a new definition SCMD_NORETRIES_ABORT in scsi_cmnd.h
+This patch adds a support to prevent retries of all the
+io's after an abort succeeds on a particular device when transport
+connectivity to the device is encountering intermittent errors.
 
-The SCMD_NORETRIES_ABORT defines the third bit postion
-in scmd->state
+Intermittent connectivity is a condition that can be detected by transport
+fabric notifications. A service can monitor the ELS notifications and
+take action on all the outstanding io's of a scsi device at that instant.
 
-Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
+This feature is intended to be used when the device is part of a multipath
+environment. When the service detects the poor connectivity, the multipath
+path can be placed in a marginal path group and ignored further io
+operations.
+
+After placing a path in the marginal path group,the daemon sets the
+port_state to Marginal which sets bit in scmd->state for all the
+io's on that particular device with the new sysfs interface
+provided in this patch.This prevent retries of all the
+io's if an io hits a scsi timeout which inturn issues an abort.
+On Abort succeeds on a marginal path the io will be immediately retried on
+another active path.On abort fails then the things escalates to existing
+target reset sg interface recovery process.
+
+Below is the interface provided to set the port state to Marginal
+and Online.
+echo "Marginal" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
+echo "Online" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
+
+
+The patches were cut against  5.10/scsi-queue tree
 
 ---
 v5:
-No Change
+Added the DID_TRANSPORT_MARGINAL case to scsi_decide_disposition
+
+Made changes to clear the SCMD_NORETRIES_ABORT bit if the port_state
+has changed from marginal to online due to port_delete and port_add
+as we need the normal cmd retry behaviour while we are calling the
+eh handlers.
+
+Made changes in fc_scsi_scan_rport as we are checking FC_PORTSTATE_ONLINE
+instead of FC_PORTSTATE_ONLINE and FC_PORTSTATE_MARGINAL
+
 
 v4:
-No Change
+Made changes in fc_eh_timed_out callout to set the SCMD_NORETRIES_ABORT if port
+state is marginal 
+
+With this change, we  removed the code  to loop over running commands
+and fc_remote_port_chkready changes to set the SCMD_NORETRIES_ABORT 
+
+Removed the scsi_cmd argument for fc_remote_port_chkready
+and reverted back the patches that addressed this change(argument)
+
+Removed unnecessary comments
+Handle the return of errors on failure.
 
 v3:
-No change
+Removed the port_state from starget attributes.
+Enabled the store functionality for port_state under remote port
+Added a new argument to scsi_cmd  to fc_remote_port_chkready
+Used the existing scsi command iterators scsi_host_busy_iter.
+Rearranged the patches
+Added new patches to add new argument for fc_remote_port_chkready
 
 v2:
-Modified the commit log
----
- include/scsi/scsi_cmnd.h | 3 +++
- 1 file changed, 3 insertions(+)
+Added new error code DID_TRANSPORT_MARGINAL to handle marginal errors.
+Added a new rport_state FC_PORTSTATE_MARGINAL and also added a new
+sysfs interface port_state to set the port_state to marginal.
+Added the support in lpfc to handle the marginal state.
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 69ade4fb71aa..8dec4ec6bd5f 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -64,6 +64,9 @@ struct scsi_pointer {
- /* for scmd->state */
- #define SCMD_STATE_COMPLETE	0
- #define SCMD_STATE_INFLIGHT	1
-+#define SCMD_NORETRIES_ABORT	2 /* If this bit is set then there won't be any
-+				   * retries of scmd on abort success
-+				   */
- 
- struct scsi_cmnd {
- 	struct scsi_request req;
+
+
+Muneendra (5):
+  scsi: Added a new definition in scsi_cmnd.h
+  scsi: Added a new error code in scsi.h
+  scsi: No retries on abort success
+  scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
+  scsi_transport_fc: Added store fucntionality to set the rport
+    port_state using sysfs
+
+ drivers/scsi/scsi_error.c        |  17 +++++
+ drivers/scsi/scsi_lib.c          |   2 +
+ drivers/scsi/scsi_transport_fc.c | 103 +++++++++++++++++++++++++------
+ include/scsi/scsi.h              |   1 +
+ include/scsi/scsi_cmnd.h         |   3 +
+ include/scsi/scsi_transport_fc.h |  19 ++++++
+ 6 files changed, 126 insertions(+), 19 deletions(-)
+
 -- 
 2.26.2
 
 
---00000000000050164b05b33466f9
+--0000000000001689f005b33466a5
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -188,13 +235,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDvuhJQ57eH2lGKUIDURKQ2I+SiE1g1PMlO8Eil06VWiTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDA4MzlaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCA8AwzEa3GCCypHnpacYsXaDHlBARGFw3Bmx4uN/JW+AjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDMxNDA4MzVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAdqvZW+g09PPXcE24
-7XU4z7BPzPWXvipNxkTnpV0h3+jIeOkqifpNdkwTVBnmsqBpoVbL0l99dIl6cgipuCJLyJZXoJvT
-9437W4vVsc+RoctEc6G1neDHV923UCmnFBVWvnC557VIwBoMLa2ZInTeCRGbNqHcfZSdFv8wj7b1
-HzU4/KByQ4ZmYL2ES+WZk/reZxA5NiYjnxT3LS/1tTEUsES28QBQKvpbSz5D1iCdmh4gjQ3EgfN6
-WiRgUxUStFQQcICTww54AWfwGdM5sagtl3Tm9tZ3Z3zQ+NG12XSk9+E9ysr9vWynMjtxcn+HPt43
-eXrW9cHJlY3HMlaRc7swbw==
---00000000000050164b05b33466f9--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEANRjnuPZpu2YeUp2g
+yTd9su3iZVdaBrfFNzMzJaq4tCnTMuEOjFJvkvnY8gWWpGbSS9BGYgNX27rtNHVht/KRQI/wQSyD
+GU8+TiW4vqNjvTiIn0M+/PTCLw4SjriQfElEhKbA9M4Y55ev1tec9OXD2JfGY/LBjGuyWMRN3hYN
+oOrTKIaSJXoZ1VW+zo+o/3TFPIQayadylIIcbsg6GIUS3An4w1oWMhE0ux8kAhoFAPKhAwHl6e6+
+z8XNF35qv0Kg9moBp15H2mGu6XztRdtpa/vwHrzUUiluUGUiiTMik0JchxikwXuLQO6zHLe6fN3S
+D/1gUGh3409g+/dPDZrtvQ==
+--0000000000001689f005b33466a5--
