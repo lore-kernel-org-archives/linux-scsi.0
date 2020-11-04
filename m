@@ -2,451 +2,117 @@ Return-Path: <SRS0=199q=EK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75BDEC55179
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Nov 2020 09:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3524FC2D0A3
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Nov 2020 09:44:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 006122222C
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Nov 2020 09:04:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB4862068E
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Nov 2020 09:44:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="iBrtK3Cz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GBu1uRaD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728029AbgKDJE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Nov 2020 04:04:26 -0500
-Received: from m42-4.mailgun.net ([69.72.42.4]:26347 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728340AbgKDJES (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Nov 2020 04:04:18 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1604480656; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=EBtaqffI/pnaYsjRqVzpNnIG3+uEbzwVcZ8DOB10imI=;
- b=iBrtK3Cz3NDaY+Wa+CnuTmYg7Kyd7JMEcGHT/0dfPayfd6J7kgX7TyxlDGluAPjyQPvrUA8T
- hETFDbgoOl1/FbMgYmY7/dIwIKSF1u1zKfE1zy3adylbmvH8SBsmnnkpG8pstDJ3BmF624BI
- YcT7AGw7QA9JCaMO4f3yqJ0pzeI=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5fa26e72ca0638c0dcd046cd (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 04 Nov 2020 09:03:46
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 085D1C433F0; Wed,  4 Nov 2020 09:03:46 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D5615C433C6;
-        Wed,  4 Nov 2020 09:03:43 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Wed, 04 Nov 2020 17:03:43 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: Re: [PATCH V4 1/2] scsi: ufs: Add DeepSleep feature
-In-Reply-To: <f3195f76-e81f-393e-a32e-3d06eaa10aeb@intel.com>
-References: <20201103141403.2142-1-adrian.hunter@intel.com>
- <20201103141403.2142-2-adrian.hunter@intel.com>
- <5331559186b4ecf5e5ffc1bf1d28c6b3@codeaurora.org>
- <f3195f76-e81f-393e-a32e-3d06eaa10aeb@intel.com>
-Message-ID: <a3b909186ff96ec29e98999590822cd1@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        id S1728387AbgKDJoE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Nov 2020 04:44:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56954 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726029AbgKDJoD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2020 04:44:03 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3F36C0613D3;
+        Wed,  4 Nov 2020 01:44:03 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id z3so10463258pfz.6;
+        Wed, 04 Nov 2020 01:44:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=kWJsCx4EQF8uXSgei7plJ9RR+HrNgfh8GxBgpJCy8ss=;
+        b=GBu1uRaDmb8QPh6FX7PmLpFaX3oh0yFIKEjPPKUwIHP4XzF0RtlsmAnn5eNilm+l/o
+         GK4NjFn+DB+fhz+4WYGywEuvsyFpjtc2HTJmmkxschYhP2X3mt99J9KKLN6GkMWloI4s
+         /MCdXA8LNSch/zTgvb2Qe4jafdHMeA5lYfXxUcz7GtKLjPn2b+RcybjXMX4t9kaRYL/J
+         pQrJiFUJlauAhN14G/sdnOwHDAMoMf8qJBkSK0fmJ+67n8RxjXR7xDdiU0lf4uQMM0AU
+         Zx8TGmNt7/Hx0KLCL0+P6a/z710rJcKot/ufluBoRzWoPCBNeesOtNtjsMdZSTBa81Rh
+         shzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=kWJsCx4EQF8uXSgei7plJ9RR+HrNgfh8GxBgpJCy8ss=;
+        b=TmI190ch9zxtxoDPsJDl+thf8ARmS7vPqMCfi58WlbzJ8a3sw/lIBFpqueXVDvXOWa
+         LBRXGTQhCeclQotzFGrsvNgC8dW0CUo/KpLqA7Ggd+Ep3IGbip1IicA/+fwbUJCWDwli
+         eAjSLHblg5v9mwIBvk5U4QRIW3epnaZjntyAj/Ga1f9SGk4J9aH88kBYLZFaeg5lDfuD
+         vRr/GXyO1lnnP9yZ1VBLN2IdANIvZFCqarIIbyCcFUvcBUWS95M/i5bK1FD/48zgoBc0
+         R5KJtMf+K/ZJtqIobuP636bwz5RgwERgcWMQE130gjzhgN+GdyHtVwhDYZepExMoSAFk
+         YUzg==
+X-Gm-Message-State: AOAM531nRSkL0YjPzImydVnvBUA8N8oPDLR7Wam0ThW9Bm8ZkRubGqtq
+        H9NlJS4dBss/9WBNsd71DA==
+X-Google-Smtp-Source: ABdhPJzyxRUbu8mhR63eWnntpxXM+mZwoE3c+3Hu3tPLIkdXYhsDnOUL9pb+5cs+Zssm+8d9lLlIkA==
+X-Received: by 2002:a17:90a:5d82:: with SMTP id t2mr3634750pji.42.1604483043378;
+        Wed, 04 Nov 2020 01:44:03 -0800 (PST)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id e5sm2003487pjd.0.2020.11.04.01.44.02
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 04 Nov 2020 01:44:02 -0800 (PST)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        martin.petersen@oracle.com, jsmart2021@gmail.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH] scsi: lpfc: use the normal helper to get the device
+Date:   Wed,  4 Nov 2020 17:43:57 +0800
+Message-Id: <1604483037-24060-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-11-04 16:37, Adrian Hunter wrote:
-> On 4/11/20 10:29 am, Can Guo wrote:
->> Hi Adrian,
->> 
->> On 2020-11-03 22:14, Adrian Hunter wrote:
->>> DeepSleep is a UFS v3.1 feature that achieves the lowest power 
->>> consumption
->>> of the device, apart from power off.
->>> 
->>> In DeepSleep mode, no commands are accepted, and the only way to exit 
->>> is
->>> using a hardware reset or power cycle.
->>> 
->>> This patch assumes that if a power cycle was an option, then power 
->>> off
->>> would be preferable, so only exit via a hardware reset is supported.
->>> 
->>> Drivers that wish to support DeepSleep need to set a new capability 
->>> flag
->>> UFSHCD_CAP_DEEPSLEEP and provide a hardware reset via the existing
->>>  ->device_reset() callback.
->>> 
->>> It is assumed that UFS devices with wspecversion >= 0x310 support
->>> DeepSleep.
->>> 
->>> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
->>> ---
->>>  Documentation/ABI/testing/sysfs-driver-ufs | 34 +++++++++++--------
->>>  drivers/scsi/ufs/ufs-sysfs.c               |  7 ++++
->>>  drivers/scsi/ufs/ufs.h                     |  1 +
->>>  drivers/scsi/ufs/ufshcd.c                  | 39 
->>> ++++++++++++++++++++--
->>>  drivers/scsi/ufs/ufshcd.h                  | 17 +++++++++-
->>>  include/trace/events/ufs.h                 |  3 +-
->>>  6 files changed, 83 insertions(+), 18 deletions(-)
->>> 
->>> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs
->>> b/Documentation/ABI/testing/sysfs-driver-ufs
->>> index adc0d0e91607..e77fa784d6d8 100644
->>> --- a/Documentation/ABI/testing/sysfs-driver-ufs
->>> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
->>> @@ -916,21 +916,24 @@ Date:        September 2014
->>>  Contact:    Subhash Jadavani <subhashj@codeaurora.org>
->>>  Description:    This entry could be used to set or show the UFS 
->>> device
->>>          runtime power management level. The current driver
->>> -        implementation supports 6 levels with next target states:
->>> +        implementation supports 7 levels with next target states:
->>> 
->>>          ==  ====================================================
->>> -        0   an UFS device will stay active, an UIC link will
->>> +        0   UFS device will stay active, UIC link will
->>>              stay active
->>> -        1   an UFS device will stay active, an UIC link will
->>> +        1   UFS device will stay active, UIC link will
->>>              hibernate
->>> -        2   an UFS device will moved to sleep, an UIC link will
->>> +        2   UFS device will be moved to sleep, UIC link will
->>>              stay active
->>> -        3   an UFS device will moved to sleep, an UIC link will
->>> +        3   UFS device will be moved to sleep, UIC link will
->>>              hibernate
->>> -        4   an UFS device will be powered off, an UIC link will
->>> +        4   UFS device will be powered off, UIC link will
->>>              hibernate
->>> -        5   an UFS device will be powered off, an UIC link will
->>> +        5   UFS device will be powered off, UIC link will
->>>              be powered off
->>> +        6   UFS device will be moved to deep sleep, UIC link
->>> +        will be powered off. Note, deep sleep might not be
->>> +        supported in which case this value will not be accepted
->> 
->> Nitpicking, usually higher spm/rpm_lvl means better power saving.
->> Since POWERDOWN+LINKOFF achieves the lowest power consumption, can
->> we put DEEPSLEEP_LINKOFF to 5, and POWERDOWN_LINKOFF to 6?
-> 
-> That would break the API i.e. we shouldn't change the meaning of '5'
-> 
-> Also, pedantically it depends on whether regulators are provided as to
-> whether Deep Sleep is higher/lower than PowerDown i.e. without 
-> regulators to
-> switch off the device, it will remain in PowerDown mode which does not 
-> save
-> as much power as Deep Sleep.
-> 
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-OK, that makes sense. The change LGTM, I gave my reivewed-by tag.
+Here we could use the normal helper kobj_to_dev() to get the device
+to simplify code.
 
-Regards,
+Reported-by: Tosk Robot <tencent_os_robot@tencent.com>
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Can Guo.
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index e94eac194676..779c7880481d 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -4380,8 +4380,7 @@ sysfs_drvr_stat_data_read(struct file *filp, struct kobject *kobj,
+ 		struct bin_attribute *bin_attr,
+ 		char *buf, loff_t off, size_t count)
+ {
+-	struct device *dev = container_of(kobj, struct device,
+-		kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host  *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+@@ -6309,7 +6308,7 @@ sysfs_ctlreg_write(struct file *filp, struct kobject *kobj,
+ 		   char *buf, loff_t off, size_t count)
+ {
+ 	size_t buf_off;
+-	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host  *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+@@ -6369,7 +6368,7 @@ sysfs_ctlreg_read(struct file *filp, struct kobject *kobj,
+ {
+ 	size_t buf_off;
+ 	uint32_t * tmp_ptr;
+-	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = kobj_to_dev(kobj);
+ 	struct Scsi_Host  *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+-- 
+2.20.0
 
->> 
->> Thanks,
->> 
->> Can Guo.
->> 
->>>          ==  ====================================================
->>> 
->>>  What:        /sys/bus/platform/drivers/ufshcd/*/rpm_target_dev_state
->>> @@ -954,21 +957,24 @@ Date:        September 2014
->>>  Contact:    Subhash Jadavani <subhashj@codeaurora.org>
->>>  Description:    This entry could be used to set or show the UFS 
->>> device
->>>          system power management level. The current driver
->>> -        implementation supports 6 levels with next target states:
->>> +        implementation supports 7 levels with next target states:
->>> 
->>>          ==  ====================================================
->>> -        0   an UFS device will stay active, an UIC link will
->>> +        0   UFS device will stay active, UIC link will
->>>              stay active
->>> -        1   an UFS device will stay active, an UIC link will
->>> +        1   UFS device will stay active, UIC link will
->>>              hibernate
->>> -        2   an UFS device will moved to sleep, an UIC link will
->>> +        2   UFS device will be moved to sleep, UIC link will
->>>              stay active
->>> -        3   an UFS device will moved to sleep, an UIC link will
->>> +        3   UFS device will be moved to sleep, UIC link will
->>>              hibernate
->>> -        4   an UFS device will be powered off, an UIC link will
->>> +        4   UFS device will be powered off, UIC link will
->>>              hibernate
->>> -        5   an UFS device will be powered off, an UIC link will
->>> +        5   UFS device will be powered off, UIC link will
->>>              be powered off
->>> +        6   UFS device will be moved to deep sleep, UIC link
->>> +        will be powered off. Note, deep sleep might not be
->>> +        supported in which case this value will not be accepted
->>>          ==  ====================================================
->>> 
->>>  What:        /sys/bus/platform/drivers/ufshcd/*/spm_target_dev_state
->>> diff --git a/drivers/scsi/ufs/ufs-sysfs.c 
->>> b/drivers/scsi/ufs/ufs-sysfs.c
->>> index bdcd27faa054..08e72b7eef6a 100644
->>> --- a/drivers/scsi/ufs/ufs-sysfs.c
->>> +++ b/drivers/scsi/ufs/ufs-sysfs.c
->>> @@ -28,6 +28,7 @@ static const char 
->>> *ufschd_ufs_dev_pwr_mode_to_string(
->>>      case UFS_ACTIVE_PWR_MODE:    return "ACTIVE";
->>>      case UFS_SLEEP_PWR_MODE:    return "SLEEP";
->>>      case UFS_POWERDOWN_PWR_MODE:    return "POWERDOWN";
->>> +    case UFS_DEEPSLEEP_PWR_MODE:    return "DEEPSLEEP";
->>>      default:            return "UNKNOWN";
->>>      }
->>>  }
->>> @@ -38,6 +39,7 @@ static inline ssize_t ufs_sysfs_pm_lvl_store(struct
->>> device *dev,
->>>                           bool rpm)
->>>  {
->>>      struct ufs_hba *hba = dev_get_drvdata(dev);
->>> +    struct ufs_dev_info *dev_info = &hba->dev_info;
->>>      unsigned long flags, value;
->>> 
->>>      if (kstrtoul(buf, 0, &value))
->>> @@ -46,6 +48,11 @@ static inline ssize_t 
->>> ufs_sysfs_pm_lvl_store(struct
->>> device *dev,
->>>      if (value >= UFS_PM_LVL_MAX)
->>>          return -EINVAL;
->>> 
->>> +    if (ufs_pm_lvl_states[value].dev_state == UFS_DEEPSLEEP_PWR_MODE 
->>> &&
->>> +        (!(hba->caps & UFSHCD_CAP_DEEPSLEEP) ||
->>> +         !(dev_info->wspecversion >= 0x310)))
->>> +        return -EINVAL;
->>> +
->>>      spin_lock_irqsave(hba->host->host_lock, flags);
->>>      if (rpm)
->>>          hba->rpm_lvl = value;
->>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
->>> index f8ab16f30fdc..d593edb48767 100644
->>> --- a/drivers/scsi/ufs/ufs.h
->>> +++ b/drivers/scsi/ufs/ufs.h
->>> @@ -442,6 +442,7 @@ enum ufs_dev_pwr_mode {
->>>      UFS_ACTIVE_PWR_MODE    = 1,
->>>      UFS_SLEEP_PWR_MODE    = 2,
->>>      UFS_POWERDOWN_PWR_MODE    = 3,
->>> +    UFS_DEEPSLEEP_PWR_MODE    = 4,
->>>  };
->>> 
->>>  #define UFS_WB_BUF_REMAIN_PERCENT(val) ((val) / 10)
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 2309253d3101..ee083b96e405 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -163,6 +163,11 @@ struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
->>>      {UFS_SLEEP_PWR_MODE, UIC_LINK_HIBERN8_STATE},
->>>      {UFS_POWERDOWN_PWR_MODE, UIC_LINK_HIBERN8_STATE},
->>>      {UFS_POWERDOWN_PWR_MODE, UIC_LINK_OFF_STATE},
->>> +    /*
->>> +     * For DeepSleep, the link is first put in hibern8 and then off.
->>> +     * Leaving the link in hibern8 is not supported.
->>> +     */
->>> +    {UFS_DEEPSLEEP_PWR_MODE, UIC_LINK_OFF_STATE},
->>>  };
->>> 
->>>  static inline enum ufs_dev_pwr_mode
->>> @@ -8297,7 +8302,8 @@ static int ufshcd_link_state_transition(struct
->>> ufs_hba *hba,
->>>      }
->>>      /*
->>>       * If autobkops is enabled, link can't be turned off because
->>> -     * turning off the link would also turn off the device.
->>> +     * turning off the link would also turn off the device, except 
->>> in the
->>> +     * case of DeepSleep where the device is expected to remain 
->>> powered.
->>>       */
->>>      else if ((req_link_state == UIC_LINK_OFF_STATE) &&
->>>           (!check_for_bkops || !hba->auto_bkops_enabled)) {
->>> @@ -8307,6 +8313,9 @@ static int ufshcd_link_state_transition(struct
->>> ufs_hba *hba,
->>>           * put the link in low power mode is to send the DME end 
->>> point
->>>           * to device and then send the DME reset command to local
->>>           * unipro. But putting the link in hibern8 is much faster.
->>> +         *
->>> +         * Note also that putting the link in Hibern8 is a 
->>> requirement
->>> +         * for entering DeepSleep.
->>>           */
->>>          ret = ufshcd_uic_hibern8_enter(hba);
->>>          if (ret) {
->>> @@ -8439,6 +8448,7 @@ static void ufshcd_hba_vreg_set_hpm(struct 
->>> ufs_hba
->>> *hba)
->>>  static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->>>  {
->>>      int ret = 0;
->>> +    int check_for_bkops;
->>>      enum ufs_pm_level pm_lvl;
->>>      enum ufs_dev_pwr_mode req_dev_pwr_mode;
->>>      enum uic_link_state req_link_state;
->>> @@ -8524,7 +8534,13 @@ static int ufshcd_suspend(struct ufs_hba *hba,
->>> enum ufs_pm_op pm_op)
->>>      }
->>> 
->>>      flush_work(&hba->eeh_work);
->>> -    ret = ufshcd_link_state_transition(hba, req_link_state, 1);
->>> +
->>> +    /*
->>> +     * In the case of DeepSleep, the device is expected to remain 
->>> powered
->>> +     * with the link off, so do not check for bkops.
->>> +     */
->>> +    check_for_bkops = !ufshcd_is_ufs_dev_deepsleep(hba);
->>> +    ret = ufshcd_link_state_transition(hba, req_link_state,
->>> check_for_bkops);
->>>      if (ret)
->>>          goto set_dev_active;
->>> 
->>> @@ -8565,11 +8581,25 @@ static int ufshcd_suspend(struct ufs_hba 
->>> *hba,
->>> enum ufs_pm_op pm_op)
->>>      if (hba->clk_scaling.is_allowed)
->>>          ufshcd_resume_clkscaling(hba);
->>>      ufshcd_vreg_set_hpm(hba);
->>> +    /*
->>> +     * Device hardware reset is required to exit DeepSleep. Also, 
->>> for
->>> +     * DeepSleep, the link is off so host reset and restore will be 
->>> done
->>> +     * further below.
->>> +     */
->>> +    if (ufshcd_is_ufs_dev_deepsleep(hba)) {
->>> +        ufshcd_vops_device_reset(hba);
->>> +        WARN_ON(!ufshcd_is_link_off(hba));
->>> +    }
->>>      if (ufshcd_is_link_hibern8(hba) && 
->>> !ufshcd_uic_hibern8_exit(hba))
->>>          ufshcd_set_link_active(hba);
->>>      else if (ufshcd_is_link_off(hba))
->>>          ufshcd_host_reset_and_restore(hba);
->>>  set_dev_active:
->>> +    /* Can also get here needing to exit DeepSleep */
->>> +    if (ufshcd_is_ufs_dev_deepsleep(hba)) {
->>> +        ufshcd_vops_device_reset(hba);
->>> +        ufshcd_host_reset_and_restore(hba);
->>> +    }
->>>      if (!ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE))
->>>          ufshcd_disable_auto_bkops(hba);
->>>  enable_gating:
->>> @@ -8631,6 +8661,9 @@ static int ufshcd_resume(struct ufs_hba *hba,
->>> enum ufs_pm_op pm_op)
->>>      if (ret)
->>>          goto disable_vreg;
->>> 
->>> +    /* For DeepSleep, the only supported option is to have the link 
->>> off */
->>> +    WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
->>> !ufshcd_is_link_off(hba));
->>> +
->>>      if (ufshcd_is_link_hibern8(hba)) {
->>>          ret = ufshcd_uic_hibern8_exit(hba);
->>>          if (!ret) {
->>> @@ -8644,6 +8677,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
->>> enum ufs_pm_op pm_op)
->>>          /*
->>>           * A full initialization of the host and the device is
->>>           * required since the link was put to off during suspend.
->>> +         * Note, in the case of DeepSleep, the device will exit
->>> +         * DeepSleep due to device reset.
->>>           */
->>>          ret = ufshcd_reset_and_restore(hba);
->>>          /*
->>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->>> index 0fbb735bb70c..213be0667b59 100644
->>> --- a/drivers/scsi/ufs/ufshcd.h
->>> +++ b/drivers/scsi/ufs/ufshcd.h
->>> @@ -114,16 +114,22 @@ enum uic_link_state {
->>>      ((h)->curr_dev_pwr_mode = UFS_SLEEP_PWR_MODE)
->>>  #define ufshcd_set_ufs_dev_poweroff(h) \
->>>      ((h)->curr_dev_pwr_mode = UFS_POWERDOWN_PWR_MODE)
->>> +#define ufshcd_set_ufs_dev_deepsleep(h) \
->>> +    ((h)->curr_dev_pwr_mode = UFS_DEEPSLEEP_PWR_MODE)
->>>  #define ufshcd_is_ufs_dev_active(h) \
->>>      ((h)->curr_dev_pwr_mode == UFS_ACTIVE_PWR_MODE)
->>>  #define ufshcd_is_ufs_dev_sleep(h) \
->>>      ((h)->curr_dev_pwr_mode == UFS_SLEEP_PWR_MODE)
->>>  #define ufshcd_is_ufs_dev_poweroff(h) \
->>>      ((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
->>> +#define ufshcd_is_ufs_dev_deepsleep(h) \
->>> +    ((h)->curr_dev_pwr_mode == UFS_DEEPSLEEP_PWR_MODE)
->>> 
->>>  /*
->>>   * UFS Power management levels.
->>> - * Each level is in increasing order of power savings.
->>> + * Each level is in increasing order of power savings, except 
->>> DeepSleep
->>> + * which is lower than PowerDown with power on but not PowerDown 
->>> with
->>> + * power off.
->>>   */
->>>  enum ufs_pm_level {
->>>      UFS_PM_LVL_0, /* UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE */
->>> @@ -132,6 +138,7 @@ enum ufs_pm_level {
->>>      UFS_PM_LVL_3, /* UFS_SLEEP_PWR_MODE, UIC_LINK_HIBERN8_STATE */
->>>      UFS_PM_LVL_4, /* UFS_POWERDOWN_PWR_MODE, UIC_LINK_HIBERN8_STATE 
->>> */
->>>      UFS_PM_LVL_5, /* UFS_POWERDOWN_PWR_MODE, UIC_LINK_OFF_STATE */
->>> +    UFS_PM_LVL_6, /* UFS_DEEPSLEEP_PWR_MODE, UIC_LINK_OFF_STATE */
->>>      UFS_PM_LVL_MAX
->>>  };
->>> 
->>> @@ -599,6 +606,14 @@ enum ufshcd_caps {
->>>       * This would increase power savings.
->>>       */
->>>      UFSHCD_CAP_AGGR_POWER_COLLAPSE            = 1 << 9,
->>> +
->>> +    /*
->>> +     * This capability allows the host controller driver to use 
->>> DeepSleep,
->>> +     * if it is supported by the UFS device. The host controller 
->>> driver must
->>> +     * support device hardware reset via the hba->device_reset() 
->>> callback,
->>> +     * in order to exit DeepSleep state.
->>> +     */
->>> +    UFSHCD_CAP_DEEPSLEEP                = 1 << 10,
->>>  };
->>> 
->>>  struct ufs_hba_variant_params {
->>> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
->>> index 84841b3a7ffd..2362244c2a9e 100644
->>> --- a/include/trace/events/ufs.h
->>> +++ b/include/trace/events/ufs.h
->>> @@ -19,7 +19,8 @@
->>>  #define UFS_PWR_MODES            \
->>>      EM(UFS_ACTIVE_PWR_MODE)        \
->>>      EM(UFS_SLEEP_PWR_MODE)        \
->>> -    EMe(UFS_POWERDOWN_PWR_MODE)
->>> +    EM(UFS_POWERDOWN_PWR_MODE)    \
->>> +    EMe(UFS_DEEPSLEEP_PWR_MODE)
->>> 
->>>  #define UFSCHD_CLK_GATING_STATES    \
->>>      EM(CLKS_OFF)            \
