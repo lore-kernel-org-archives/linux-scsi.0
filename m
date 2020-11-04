@@ -2,100 +2,129 @@ Return-Path: <SRS0=199q=EK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C880C2D0A3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F9EDC4741F
 	for <linux-scsi@archiver.kernel.org>; Wed,  4 Nov 2020 18:26:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDCDD20759
+	by mail.kernel.org (Postfix) with ESMTP id E7B052076D
 	for <linux-scsi@archiver.kernel.org>; Wed,  4 Nov 2020 18:26:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732350AbgKDS0s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1730516AbgKDS0s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 4 Nov 2020 13:26:48 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2051 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729488AbgKDS0s (ORCPT
+Received: from mail-1.ca.inter.net ([208.85.220.69]:38606 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726801AbgKDS0s (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2020 13:26:48 -0500
-X-Greylist: delayed 1093 seconds by postgrey-1.27 at vger.kernel.org; Wed, 04 Nov 2020 13:26:48 EST
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CRF3T1YLBz67HGN;
-        Thu,  5 Nov 2020 02:07:01 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1913.5; Wed, 4 Nov 2020 19:08:32 +0100
-Received: from [10.47.0.132] (10.47.0.132) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Wed, 4 Nov 2020
- 18:08:31 +0000
-Subject: Re: [PATCH v8 17/18] scsi: megaraid_sas: Added support for shared
- host tagset for cpuhotplug
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Qian Cai <cai@redhat.com>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <don.brace@microsemi.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <dgilbert@interlog.com>,
-        <paolo.valente@linaro.org>, <hare@suse.de>, <hch@lst.de>
-CC:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <esc.storagedev@microsemi.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
-        <chenxiang66@hisilicon.com>, <luojiaxing@huawei.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <1597850436-116171-1-git-send-email-john.garry@huawei.com>
- <1597850436-116171-18-git-send-email-john.garry@huawei.com>
- <fe3dff7dae4494e5a88caffbb4d877bbf472dceb.camel@redhat.com>
- <385d5408-6ba2-6bb6-52d3-b59c9aa9c5e5@huawei.com>
- <193a0440eed447209c48bda042f0e4db102355e7.camel@redhat.com>
- <519e0d58-e73e-22ce-0ddb-1be71487ba6d@huawei.com>
- <d8fd51b11d5d54e6ec7e4e9a4f7dcc83f1215cd3.camel@redhat.com>
- <d4f86cccccc3bffccc4eda39500ce1e1fee2109a.camel@redhat.com>
- <7624d3fe1613f19af5c3a77f4ae8fe55@mail.gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <d1040c06-74ea-7016-d259-195fa52196a9@huawei.com>
-Date:   Wed, 4 Nov 2020 18:08:28 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 4C6572EA024;
+        Wed,  4 Nov 2020 13:26:46 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id SS5bke63PJDu; Wed,  4 Nov 2020 13:18:12 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 88B352EA043;
+        Wed,  4 Nov 2020 13:26:45 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v3 1/4] sgl_alloc_order: remove 4 GiB limit, sgl_free()
+ warning
+To:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     martin.petersen@oracle.com, axboe@kernel.dk, bvanassche@acm.org
+References: <20201019191928.77845-1-dgilbert@interlog.com>
+ <20201019191928.77845-2-dgilbert@interlog.com>
+ <2e94f118-1216-b926-a275-2fb325874b04@gmail.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <b64de9eb-408f-f618-0db9-731f8823525a@interlog.com>
+Date:   Wed, 4 Nov 2020 13:26:45 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <7624d3fe1613f19af5c3a77f4ae8fe55@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
+In-Reply-To: <2e94f118-1216-b926-a275-2fb325874b04@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.0.132]
-X-ClientProxiedBy: lhreml724-chm.china.huawei.com (10.201.108.75) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/11/2020 16:07, Kashyap Desai wrote:
->>>
->>> v5.10-rc2 is also broken here.
->>
->> John, Kashyap, any update on this? If this is going to take a while to fix
->> it
->> proper, should I send a patch to revert this or at least disable the
->> feature by
->> default for megaraid_sas in the meantime, so it no longer breaks the
->> existing
->> systems out there?
+On 2020-11-03 7:54 a.m., Bodo Stroesser wrote:
+> Am 19.10.20 um 21:19 schrieb Douglas Gilbert:
+>> This patch removes a check done by sgl_alloc_order() before it starts
+>> any allocations. The comment before the removed code says: "Check for
+>> integer overflow" arguably gives a false sense of security. The right
+>> hand side of the expression in the condition is resolved as u32 so
+>> cannot exceed UINT32_MAX (4 GiB) which means 'length' cannot exceed
+>> that amount. If that was the intention then the comment above it
+>> could be dropped and the condition rewritten more clearly as:
+>>        if (length > UINT32_MAX) <<failure path >>;
 > 
-> I am trying to get similar h/w to try out. All my current h/w works fine.
-> Give me couple of days' time.
-> If this is not obviously common issue and need time, we will go with module
-> parameter disable method.
-> I will let you know.
+> I think the intention of the check is to reject calls, where length is so high, that calculation of nent overflows unsigned int nent/nalloc.
+> Consistently a similar check is done few lines later before incrementing nalloc due to chainable = true.
+> So I think the code tries to allow length values up to 4G << (PAGE_SHIFT + order).
+> 
+> That said I think instead of removing the check it better should be fixed, e.g. by adding an unsigned long long cast before nent
+> 
+> BTW: I don't know why there are two checks. I think one check after conditionally incrementing nalloc would be enough.
 
-Hi Kashyap,
+Okay, I'm working on a "v4" patchset. Apart from the above, my plan is
+to extend sgl_compare_sgl() with a helper that additionally yields
+the byte index of the first miscompare.
 
-Please also consider just disabling for this card, so any other possible 
-issues are unearthed on other cards. I don't have this card or any x86 
-machine to test it unfortunately to assist.
+Doug Gilbert
 
-BTW, just to be clear, did you try the same .config as Qian Cai?
+>> The author's intention is to use sgl_alloc_order() to replace
+>> vmalloc(unsigned long) for a large allocation (debug ramdisk).
+>> vmalloc has no limit at 4 GiB so its seems unreasonable that:
+>>       sgl_alloc_order(unsigned long long length, ....)
+>> does. sgl_s made with sgl_alloc_order(chainable=false) have equally
+>> sized segments placed in a scatter gather array. That allows O(1)
+>> navigation around a big sgl using some simple integer maths.
+>>
+>> Having previously sent a patch to fix a memory leak in
+>> sg_alloc_order() take the opportunity to put a one line comment above
+>> sgl_free()'s declaration that it is not suitable when order > 0 . The
+>> mis-use of sgl_free() when order > 0 was the reason for the memory
+>> leak. The other users of sgl_alloc_order() in the kernel where
+>> checked and found to handle free-ing properly.
+>>
+>> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+>> ---
+>>    include/linux/scatterlist.h | 1 +
+>>    lib/scatterlist.c           | 3 ---
+>>    2 files changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+>> index 45cf7b69d852..80178afc2a4a 100644
+>> --- a/include/linux/scatterlist.h
+>> +++ b/include/linux/scatterlist.h
+>> @@ -302,6 +302,7 @@ struct scatterlist *sgl_alloc(unsigned long long length, gfp_t gfp,
+>>    			      unsigned int *nent_p);
+>>    void sgl_free_n_order(struct scatterlist *sgl, int nents, int order);
+>>    void sgl_free_order(struct scatterlist *sgl, int order);
+>> +/* Only use sgl_free() when order is 0 */
+>>    void sgl_free(struct scatterlist *sgl);
+>>    #endif /* CONFIG_SGL_ALLOC */
+>>    
+>> diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+>> index c448642e0f78..d5770e7f1030 100644
+>> --- a/lib/scatterlist.c
+>> +++ b/lib/scatterlist.c
+>> @@ -493,9 +493,6 @@ struct scatterlist *sgl_alloc_order(unsigned long long length,
+>>    	u32 elem_len;
+>>    
+>>    	nent = round_up(length, PAGE_SIZE << order) >> (PAGE_SHIFT + order);
+>> -	/* Check for integer overflow */
+>> -	if (length > (nent << (PAGE_SHIFT + order)))
+>> -		return NULL;
+>>    	nalloc = nent;
+>>    	if (chainable) {
+>>    		/* Check for integer overflow */
+>>
 
-Thanks,
-John
