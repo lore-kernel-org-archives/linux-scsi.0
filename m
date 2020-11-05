@@ -9,135 +9,182 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7416C388F9
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 13:03:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 120B9C388F9
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 13:03:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 600E82087D
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 13:03:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EDFF20936
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 13:03:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="O79wmu6w"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LXzH5mEV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729992AbgKENDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Nov 2020 08:03:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59196 "EHLO
+        id S1730594AbgKENDY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Nov 2020 08:03:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbgKENDU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2020 08:03:20 -0500
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB57FC0613CF
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2020 05:03:20 -0800 (PST)
-Received: by mail-pl1-x643.google.com with SMTP id p4so762584plr.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2020 05:03:20 -0800 (PST)
+        with ESMTP id S1725468AbgKENDX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2020 08:03:23 -0500
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C9CC0613CF
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2020 05:03:23 -0800 (PST)
+Received: by mail-pf1-x42c.google.com with SMTP id y7so390912pfq.11
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2020 05:03:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=uDkQNsc6DsPsPKv2o21H94U+AHRU9KrNcFgTG8KcNPM=;
-        b=O79wmu6wDX5n/8BwuAL9k2UOxXukdbjdxFvx/IolVP6mH16wn8eyN0UGjOGezS94om
-         DaI8ibrqg/VmVIlbgfEThTAcTgK7wiR+Myi42carKNHdge8YGdLBQDmDBPzHgpQEDZ9+
-         6kH9Q4/+ph97MwcEBzNs/rPK3koRYZDD/FyFc=
+        bh=Cu07e8/kT3mYvc0P5Yz/ZPTYuhP+CdMddVbnC1aSZ9Q=;
+        b=LXzH5mEVcjRUu+AkGSW65W01UqMjRWdDmFyewIy1vISVq2djvMF7XEbE+Foc7dwRl6
+         1Q/AgZTnkTRCFzXJXKmV7Mj9JO5VDPDKFXNPBYnK64Vv+AYHOGir1t9RGDRIkP7/0fIB
+         0oNlBHMgm7sWmuulgoCWdsRduJiLslM+QYhk4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=uDkQNsc6DsPsPKv2o21H94U+AHRU9KrNcFgTG8KcNPM=;
-        b=TcX5COi9ndOhJM0PZ75yyS9t1oVeQVX7YrtFoo+pWucR89z4kIt63CXxrh3rNbHjcQ
-         AntaTKxzfsBWCJJsT3w1ozlai1mQx/R+zBV+Mz8XzMePVDrw9YY8IZl7npnAjbNU0V/w
-         uHQ/xsjEDoIf9hWD10XIiw+IqnzZ5rLii8pen/KmSpdVdjiNFub606crLtK1lQ8oMbHi
-         81PEH0XcKK6zBaHA2pk+utL60esqW6ADtgZMjM8+znV7AhXN1EwvRqmVPy+jsT2XDQhX
-         pffLVQunTnaqebHuOzhjzr2SYpWTvEWUMoXAjKA+X54Kkjomk51wp2bZRGq+XiVy/ThH
-         Pjrg==
-X-Gm-Message-State: AOAM532uozJiTiysKhfRH4TeAN28/BQBnPWQD0v0KVCflRYcbH4lbWz+
-        WfZ5O96UeNO/AORselGiY7NL0bLA2IwVxLPhP0bXsAgsoWiTUWW7Ardnscg/QQGttJUpv5Wl6TP
-        Opsrf4EkqvBBE8Jeqy0JYAkraofEPPX6sHPnEPMhMt+udX4CUH79qO+kqhriSS8xl+ED5eNk/OP
-        NyXYRUmmZ7qQ8=
-X-Google-Smtp-Source: ABdhPJwrnbDoIVOB1K0jspRhDaxYrDci6BJKYH3Lf0Exgh8pHACmV0gkjwpDsIH94l+ODUlzDz9cSg==
-X-Received: by 2002:a17:90b:3798:: with SMTP id mz24mr2302296pjb.46.1604581399763;
-        Thu, 05 Nov 2020 05:03:19 -0800 (PST)
+        bh=Cu07e8/kT3mYvc0P5Yz/ZPTYuhP+CdMddVbnC1aSZ9Q=;
+        b=Ayp3JLQSJDO4eNM2SFQNbjYJI14G7FwpW6NUey9ILA1bpFE231tvsXPif9CNHHiY2i
+         C7RCUjPeTwTo6p4URrBDLDcDlcW1uAUpwB6H0ir6+/CEmBJuC4BZrSBC3TfRBLMRRHyj
+         BNyhLwfwlPYRT3R8u5wmNXW1IHciuTDcgJyUnpvnyG4x2eWsG5jwd+czhscpow0z0B+F
+         g3LIdRnZ6E99jViF5r/6lIwlIu0XxWBLH4+bROJKZazhhMFoqg/7zNz2wbya4kqEjBX5
+         ae27I6tLoFuv8urcA5OvW8hPoHFTpUlN63Kl+3UaMPNIddwpSoTCKYYitrISW6BoxvMy
+         P8QA==
+X-Gm-Message-State: AOAM532Uf+Sw1ZTpSSE7s5TgiaZimgBhXX+Ydt5heTyvxXRvhUnVsdoV
+        TLm7LuVm3K6fKZCUWr2VgWIFpJP99A/8C1AYHJxVWjv7/m0vVoaUUSXQRd/QTTU5WUyHs/E8pIc
+        7tsA3MbmngqAst5AEd95DGgqvThtrA7nmHvr8LVpfJWYufgIjOxquLe2vnrHdjwAJ7Lq3uLZFdC
+        Kx6d/Z+28/X/U=
+X-Google-Smtp-Source: ABdhPJyQD4EIINIAM0eipa9q1q/nfMyxw9Mj2hPo/PPKwzkzIFLkAb0UTHbMyUUVpNaETMiFd+XgAQ==
+X-Received: by 2002:a62:f846:0:b029:15f:f897:7647 with SMTP id c6-20020a62f8460000b029015ff8977647mr2496415pfm.75.1604581402662;
+        Thu, 05 Nov 2020 05:03:22 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id y141sm2491319pfb.17.2020.11.05.05.03.17
+        by smtp.gmail.com with ESMTPSA id y141sm2491319pfb.17.2020.11.05.05.03.20
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2020 05:03:19 -0800 (PST)
+        Thu, 05 Nov 2020 05:03:22 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, michael.christie@oracle.com,
         hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v6 1/4] scsi: Added a new definition in scsi_cmnd.h
-Date:   Thu,  5 Nov 2020 11:39:53 +0530
-Message-Id: <1604556596-27228-2-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v6 2/4] scsi: No retries on abort success
+Date:   Thu,  5 Nov 2020 11:39:54 +0530
+Message-Id: <1604556596-27228-3-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1604556596-27228-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1604556596-27228-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005f099705b35bb8fa"
+        boundary="0000000000008b948805b35bb88d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005f099705b35bb8fa
+--0000000000008b948805b35bb88d
 
-Added a new definition SCMD_NORETRIES_ABORT in scsi_cmnd.h
+Made an additional check in scsi_noretry_cmd to verify whether user has
+decided not to do retries on abort success by checking the
+SCMD_NORETRIES_ABORT bit
 
-The SCMD_NORETRIES_ABORT defines the third bit postion
-in scmd->state
+If SCMD_NORETRIES_ABORT bit is set we are making sure there won't be any
+retries done on the same path and also setting the host byte as
+DID_TRANSPORT_MARGINAL so that the error can be propogated as recoverable
+transport error to the blk layers.
 
-Clearing the SCMD_NORETRIES_ABORT bit in state flag before
-blk_mq_start_request
+Added a new error code DID_TRANSPORT_MARGINAL to handle marginal
+errors in scsi.h
+
+Added a code in scsi_result_to_blk_status to translate
+a new error DID_TRANSPORT_MARGINAL to the corresponding blk_status_t
+i.e BLK_STS_TRANSPORT
+
+Added DID_TRANSPORT_MARGINAL case to scsi_decide_disposition
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
 ---
 v6:
-Rearranged the patch by merging first hunk of the patch2 in v5
+Rearranged the patch by merging second hunk of the patch2 in v5
 to this patch
 
 v5:
-No Change
+added the DID_TRANSPORT_MARGINAL case to
+scsi_decide_disposition
 
 v4:
-No Change
+Modified the comments in the code appropriately
 
 v3:
-No change
+Merged  first part of the previous patch(v2 patch3) with
+this patch.
 
 v2:
-Modified the commit log
+set the hostbyte as DID_TRANSPORT_MARGINAL instead of
+DID_TRANSPORT_FAILFAST.
 ---
- drivers/scsi/scsi_lib.c  | 1 +
- include/scsi/scsi_cmnd.h | 3 +++
- 2 files changed, 4 insertions(+)
+ drivers/scsi/scsi_error.c | 17 +++++++++++++++++
+ drivers/scsi/scsi_lib.c   |  1 +
+ include/scsi/scsi.h       |  1 +
+ 3 files changed, 19 insertions(+)
 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index ae80daa5d831..02dfd70219b2 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1763,6 +1763,16 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+ 		return 0;
+ 
+ check_type:
++	/*
++	 * Check whether caller has decided not to do retries on
++	 * abort success by checking the SCMD_NORETRIES_ABORT bit
++	 */
++	if ((test_bit(SCMD_NORETRIES_ABORT, &scmd->state)) &&
++		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
++		set_host_byte(scmd, DID_TRANSPORT_MARGINAL);
++		return 1;
++	}
++
+ 	/*
+ 	 * assume caller has checked sense and determined
+ 	 * the check condition was retryable.
+@@ -1861,6 +1871,13 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		 * the fast io fail tmo fired), so send IO directly upwards.
+ 		 */
+ 		return SUCCESS;
++
++	case DID_TRANSPORT_MARGINAL:
++		/*
++		 * caller has decided not to do retries on
++		 * abort success, so send IO directly upwards.
++		 */
++		return SUCCESS;
+ 	case DID_ERROR:
+ 		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
+ 		    status_byte(scmd->result) == RESERVATION_CONFLICT)
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1a2e9bab42ef..2b5dea07498e 100644
+index 2b5dea07498e..9606bad1542f 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1660,6 +1660,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		req->rq_flags |= RQF_DONTPREP;
- 	} else {
- 		clear_bit(SCMD_STATE_COMPLETE, &cmd->state);
-+		clear_bit(SCMD_NORETRIES_ABORT, &cmd->state);
- 	}
+@@ -629,6 +629,7 @@ static blk_status_t scsi_result_to_blk_status(struct scsi_cmnd *cmd, int result)
+ 			return BLK_STS_OK;
+ 		return BLK_STS_IOERR;
+ 	case DID_TRANSPORT_FAILFAST:
++	case DID_TRANSPORT_MARGINAL:
+ 		return BLK_STS_TRANSPORT;
+ 	case DID_TARGET_FAILURE:
+ 		set_host_byte(cmd, DID_OK);
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 5339baadc082..5b287ad8b727 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -159,6 +159,7 @@ static inline int scsi_is_wlun(u64 lun)
+ 				 * paths might yield different results */
+ #define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
+ #define DID_MEDIUM_ERROR  0x13  /* Medium error */
++#define DID_TRANSPORT_MARGINAL 0x14 /* Transport marginal errors */
+ #define DRIVER_OK       0x00	/* Driver status                           */
  
- 	cmd->flags &= SCMD_PRESERVED_FLAGS;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 69ade4fb71aa..8dec4ec6bd5f 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -64,6 +64,9 @@ struct scsi_pointer {
- /* for scmd->state */
- #define SCMD_STATE_COMPLETE	0
- #define SCMD_STATE_INFLIGHT	1
-+#define SCMD_NORETRIES_ABORT	2 /* If this bit is set then there won't be any
-+				   * retries of scmd on abort success
-+				   */
- 
- struct scsi_cmnd {
- 	struct scsi_request req;
+ /*
 -- 
 2.26.2
 
 
---0000000000005f099705b35bb8fa
+--0000000000008b948805b35bb88d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -208,13 +255,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCBpXijyf3S96YUM3aBtduzTthZOJ89Lh4FmYdRAcYHm6DAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDUxMzAzMjBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCDAIk7hThN4CFilHhYq7K6/xAxqie2zrr6nBbQHVDZ5ujAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDUxMzAzMjNaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEANDZblhUIhvB3HuXT
-UAWunQp2Kp3DSyqXCbl9hb+OFuUVI9XgiK3bGgqTADK6+ju6GYEFYSmUSgo4v5xAQHy1Qj9TJX6F
-ioOKBOu93Mj7OzK+i2D2I29HYDa18dvwCHLZqe6sz7vKRNi+sVBuYOqG5RHfBJu2PEoTGLPI0jz2
-zS2OcIcomFhx8vTEeQwlUwDVaEG8LYbtbueXIRar/L4IoyWwJqAPwJvu5yKch/7rwnZ/UdunUdJd
-d55ewS9xzaA4ksu2MvwJHNBxYQgsRrq4JcOzQG1NtZmi14Za+8R0RTXJ9enuJlam1xuxJQ98ty5Y
-6Ein1lj/xKSMvRrUpEfmxg==
---0000000000005f099705b35bb8fa--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAwDoVYHFzNXOvD3md
+pw/QiKh+I3gBeFwGzv4fq9pzSQJC+L1r8HIkuUDxGE2S4mhAQSD+Evg1a4zPRd5Xy4zu9Dvx/qC5
+jMMeTMjIr2tY8DH7hJfnP6Td6r057Q+7SG3g97Idbbr9WHF4oY1pomdFk3bEUVyPXJvoKlxKWU8d
+4SNcPa3/NSS/CgI8EqLjPD/Ks4KPp6gqoJ/T8ruPLpE/Qy7mZDzcM9Zql70cWIuf1Uj5T4ws/H3/
+dnqlMxkWNxQvKKg6G/QkJSih+BYrHVyldG38OQmvNTNo/XWApE2QDV6xCHVnYjHuz0KNZYGwbG9K
++vZn7QElG/ys9JqcOrxedg==
+--0000000000008b948805b35bb88d--
