@@ -2,294 +2,238 @@ Return-Path: <SRS0=zqxZ=EL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A59E4C55178
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 18:30:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8811C388F7
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 19:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29F5A2087D
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 18:30:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F7C62087D
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 19:16:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="WFLu0cyH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U9eR4nIW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731808AbgKESah (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Nov 2020 13:30:37 -0500
-Received: from de-smtp-delivery-102.mimecast.com ([62.140.7.102]:56473 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731799AbgKESah (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2020 13:30:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1604601033;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=IYA+7XZd0FTvbt7376a9ukPP8jrFGDO7o2C4vH/z6kg=;
-        b=WFLu0cyH45cfpeykMJ04BvSsW8ywn+8qHHHuldeycfSbFe45krIL+Z3RkJZtFVHLsEaQLk
-        /JX3GXTwbXk5+c9CdrdelyxLq1chW25HUzZaIXKkAMVg8I9ADguD2kqk20UXvB+8Rksk1s
-        y8iTs6KpOnzLWKzfXGzt5aJrG58ax3A=
-Received: from EUR02-HE1-obe.outbound.protection.outlook.com
- (mail-he1eur02lp2052.outbound.protection.outlook.com [104.47.5.52]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- de-mta-32-9POQdmosMrGOZTzWwzwC9A-1; Thu, 05 Nov 2020 19:30:32 +0100
-X-MC-Unique: 9POQdmosMrGOZTzWwzwC9A-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CukxWFFT1WXP7LCpbnD38A8C0sOk1zTM3pdDlYa6ufbqP1zNeQ7GEyf1ns2DZU7d6iWnaYgU52YmeOCkil3AqL+a2bQZI5o2XoEgWus5PxM0/dh+5yyH+/pNL7Px2iyt//cENpnlt87Pet/uDRXn5hvmNCLFMjmI3bm6WpRqOHLvLm/6c0G2qa6gwY+xcmFMj2k59uNsSjjFoB/24VYE3OoFihuFNUKqlPne/ixK4bza2hsf5h1VqIrFhZqND/baWstQ5g/0zt01NX+HrboR0ydrm8rqzW26RzkP1b2WK3OddfIDb8SBQUHVLFpCtXfhZemG7/BuL5CZAvBJ7YbkBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xzXuwhvkskKwfMc+ZCQpnKWxEmR/lViTgzkJFbRCV6Y=;
- b=ChveBf3YpO8UAHWzYzryJSLfw45wpMb5NlfhksGpDZHSHqQJhdCdKZzBGlGmf7M0dVaCWxF8a3rDUlwsXczQygPsAFUtXSRkDPe6RCqjZ16iyMMrD3sYQDxyqYG7yaJ9PGs7vbXiG54hHAQ5LTPW6Lcnz6jypqET9iYtLWWCREMVOkcqkXujPEKkhZOuVM1PxmnhyQcVYLUhx33uFHAWVBs7pKBlPm2TsPPj/1fcNz/a0v/UG2cT5gr2vDPSdqTsy7oBOjE3N5LXMCuhgFHoArevV8Xz7APyWgBRdYhRDxc27CY/7xtZPCMPnMFYbICK1SpWxciyEjIyoCqX9HACzw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: googlegroups.com; dkim=none (message not signed)
- header.d=none;googlegroups.com; dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM6PR04MB4518.eurprd04.prod.outlook.com (2603:10a6:20b:1f::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.18; Thu, 5 Nov
- 2020 18:30:31 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::d0f5:2f85:a7f2:2952]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::d0f5:2f85:a7f2:2952%7]) with mapi id 15.20.3499.032; Thu, 5 Nov 2020
- 18:30:30 +0000
-Subject: Re: [PATCH] scsi: libiscsi: fix NOP race condition
-To:     Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org
-CC:     open-iscsi@googlegroups.com
-References: <20200918210947.23800-1-leeman.duncan@gmail.com>
- <f0c9b3ff-7d93-9c2b-d405-e52fb4aa8c37@oracle.com>
-From:   Lee Duncan <lduncan@suse.com>
-Autocrypt: addr=lduncan@suse.com; keydata=
- xsFNBE6ockoBEADMQ+ZJI8khyuc2jMfgf4RmARpBkZrcHSs1xTKVVBUbpFooDEVi49D/bz0G
- XngCDUzLt1g7QwHkMl5hDe6h6zPcACkUf0vy3AkpbidveIbIUKhb29tnsuiAcvzmrE4Q5CcQ
- JCSFAUnBPliKauX+r0oHjJE02ifuims1nBQ9CK8sWGHqkkwH2vUW2GSX2Q8zGMemwEJdhclS
- 3VOYZa+Cdm+hRxUxcEo4QigWM1IlgUqjhQp6ZXTYuNECHZTrL9NUbslW5Rbmc3m0ABrJcaAo
- LgG13TnT6HCreN/PO8VbSFdFU+3MX1GqZUHfPBA4UvGvcI8QgdYyCtyYF9PQ02Lr0kK0FwBD
- cm416qSMCsk0kaFPeL99Afg8ElXsA9bGW6ImJQap/L1uoWZTNL5q9KKO5As9rq6RHGlb2FFz
- 9IPggMhBYsSVZNmLsvgGXvZToUCW58IMELG/X5ssI8Kr65KxKVNOT5gXGmTyV3sqomsRVVHm
- wA3RBwjnx7tM7QsV+7UboF3MOcMjBOCIDiw95dBVSM6+leThXC5dc4/17Idw912mnlo1CsxO
- uQSJddzWeD0A2hbL8EcRQN/z9YD0IwEgeNa2t1nQ6nGjbDZ5TiG6Mqxk+rdYJ5StA+b/TExl
- nZ29y2s6etx9wbTUBSA1aFiEPDN5U77CrjiM0H4y7eKldLezPwARAQABzSRMZWUgRHVuY2Fu
- IDxsZWVtYW4uZHVuY2FuQGdtYWlsLmNvbT7CwYEEEwECACsCGy8FCRLP94AGCwkIBwMCBhUI
- AgkKCwQWAgMBAh4BAheABQJOqHy+AhkBAAoJEMU8XTeNhnafp4YQAMgE1owepFfSgebbT3fj
- 0/S83KvYloj2Fv/OiQKgjnEamy7k2n3XBl0+XYHe/0ZlKAYN8oCnlpr+PTh5iT79rq99CkZa
- 1OENVypbnVGjeZQpNivmXtkKYATwVhqyWsWItJyQ7fqciDkPlCekjURhEMRliE8OcrpvXOxq
- w1apxuL6phkQxY0fQGSQzz9sXZcMIx4ZhotQRwGLr5FIpqIhToIlVhvkooL7NsDG0FlagV5f
- +Jr412zvk7f3rPKrLR8Bp1qTe/HLeEyhT38CWECiTM8+VAGFQ4+5HRg6F4322T8VynMX/zyp
- LUVHIymbmzyXXMj6xJsbrcN8UJsPglQ+fHmb5ojKsy+S92KgAgpnq4mmz63eCzZrKZ7B5AqB
- qMhZ0V8wjv0LzHdQbHH72ikM/IWkAvPfVYsvm08mxUdFMmwFXpjIZJeJJyxS6Glxcxt98usO
- cdrBBJE57Q77GQC69gbPJu2vmH7quAKp59PxMxqZPDMfn2nt/Qnxem3SYL3377rl3UAlZmbK
- 2kKAOY3gngHfptoYtlJJ69bnoTIOXPNfE5jPkLrt3LbOQyfvrSKSTUOet26fWD9cME/tXtvC
- 48hsyheShX3obqBVZO6UnW5J+f6DVLuHv1huDUEwQMvHyejpomfnOFpGX8LkaS26Btvm94h2
- szYB8xYSw5VfH3DKzsFNBE6ockoBEADAo38n1dd3etQL/i07qPVoqGSWmaMZqS6DSFAPfqLe
- RVRTQZRBltdHNlV4BcDhRHDQJCuhuKqhTe8TkM2wpFFOVyNYkXm4V5mEmUtQ8PDa76FfY2nn
- 6cV4DIN/oCqt0SnWbi18LLd9x7knApsD+y1MnVYmQxw1x91GvHFJD4L4NwHNZJUO4YkIwhl/
- AMcDP0WYJRwR8vt657gEtfkZnD9N3Vb+gLk820VGMPpbDNqedqPxNEjMyNSn2AwBTJ5bxvCM
- +6eJA/F6/hIyvoAmb8oAXBpW6+GZQEi3D2xOmzQmgoMstLuxIzeK0gBg4lFg0dMsX6fq+CxW
- QtKR46HFs3R6xtLZkYOg0ZNlnSlJUOE0BiRgEOP0hJhSYFqnHuXvIxnTAr8gh0883KMI64nA
- sCOcUaO/SeRkGRvzg+Oh0Nnr2DG/U3TMygDlkr/MXZQDGi3H3760/HD3ipQjs28nLHtiqJNr
- 5wwJwMv1iWcw9tuzNLt/5mmI5+veDJRObGCqQM43A2FMUx+zVZfVLVyVihnQ08eGdVTAsuSl
- FzyPaaIQUaPn224wRtnbDTTWg9HTR3R6Qxi0ayWeTVZV3va2lCXWrUecJpzvUFLyH3ViM2Iw
- LboM03qutGcjINkb4KuqqW6EHm3MkOC69TWgIFa4W2rpy1FPkDvXNf9nlqcgoNo0fQARAQAB
- wsOEBBgBAgAPBQJOqHJKAhsuBQkSz/eAAikJEMU8XTeNhnafwV0gBBkBAgAGBQJOqHJKAAoJ
- EF8LJ744L6KVhr4QAKGjq1s8WBup2uWOevIcncyAaKYaGX3gQj4Qf+lfklvPpnwUfPMbcYMU
- DhTo4H1lw1dDSBic65OsqMjz2pxJ+AYtLxrONKKCUQRyfO1mwB4etIv7ZF+E5HsclwqM/GWt
- Y9QijHgRbDiUK1h3Y2sQGc/MKg8m7EImZOGEEMQQj1tJ5r3ksH2e6KwO+K9y/uf+qLHd6lSb
- G2+niSSUhcA46PdW2tzx40dZp6d2aEl53f2jwsQbrog1BsGuxOA9+26xhF4p0Ag/hfOX9/n/
- mMzw+bXSFB/gJE0zQ83jksuHFCSJDHEsPzmKi4hVRKuEcEAryjGXH4bqoDkz/p3DRdIfnuKi
- Li/iwSsK76UgGekw6tjjP8ggz6UC8UVhdMv9q4hcewv5/omdnuHj/G6uSGlVcAi+5VJ88yEH
- 5Am1IYbjSbqzSDQazEK3oAE6qXwzQXjq1iuqR9Xa6eXtcog+CHFSKU3aEuL+f8oUUzpEU+Xq
- ZSPuHpFgYHsNTkxUA8fuP6Tr53kqHD9PEqLb8+M1MlJBjiD+JSHIN5+C6LpZIZ0Zbp7qInu8
- Pu1eALxri4VgevZKQOQXTJUsNFWh4EYdsfNgcCbQoP8gFFns9YmQ0vXHnJG/dPjzBPAUfKZg
- PtVofEMK1B4J9gAm1fO3hqRxrtSkUZgopZpjHtC7ZuYSkwmEUoMjxpwP/j2ql5J6t06uIhUz
- OgHAEJ9+4ppeAPNQAUsRVrPk3m1PaV1xs7nx/D4yXbq+S0/iMA+g1k0Ovh3TSvdQfK/74Rp0
- 48Tr+0Tm2uAESaN4+7WK0v8rONVPuqpSKf92o5KmFtlT+Yyz9ZRu52GE7BzkktMEnGp1sLBM
- zbwflhj/ZtMPOdQxmpBZS5h34alcBiYK3wVVZpzRNLhke3z8ZAn0e2xG8fOX56LiL7o1w8wF
- SA7PMuuhklq3NY/xTwBOpT8YiQU6VlELQQTR06unnHa6we3JcsNlTH2//7mZ0QVp9nPW6MEw
- FUvbjJliGQbs4e8z6vL8M7bgl1kgcTViSW4jL41CXnGlLSUm8pqvbQ95/gJhgs6PVBwH5FF8
- JGCvUKOeAFsICUPEFizy4BgQpPPYE++I07VqZ87/gaeN9EeFgZASolQwcZNRAWplDD4jIpj8
- u7wo+4j22HyVXuoQTg8+p5TVMV1Y0b2X4tJm98ways9e5LTQLXM6dcoGKeVF3Pt53RVBiv2n
- 7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh9eFp
- v8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPaXd8p
- +B+giaT8a1b5hWuz85V0zsFNBE6ockoBEADAo38n1dd3etQL/i07qPVoqGSWmaMZqS6DSFAP
- fqLeRVRTQZRBltdHNlV4BcDhRHDQJCuhuKqhTe8TkM2wpFFOVyNYkXm4V5mEmUtQ8PDa76Ff
- Y2nn6cV4DIN/oCqt0SnWbi18LLd9x7knApsD+y1MnVYmQxw1x91GvHFJD4L4NwHNZJUO4YkI
- whl/AMcDP0WYJRwR8vt657gEtfkZnD9N3Vb+gLk820VGMPpbDNqedqPxNEjMyNSn2AwBTJ5b
- xvCM+6eJA/F6/hIyvoAmb8oAXBpW6+GZQEi3D2xOmzQmgoMstLuxIzeK0gBg4lFg0dMsX6fq
- +CxWQtKR46HFs3R6xtLZkYOg0ZNlnSlJUOE0BiRgEOP0hJhSYFqnHuXvIxnTAr8gh0883KMI
- 64nAsCOcUaO/SeRkGRvzg+Oh0Nnr2DG/U3TMygDlkr/MXZQDGi3H3760/HD3ipQjs28nLHti
- qJNr5wwJwMv1iWcw9tuzNLt/5mmI5+veDJRObGCqQM43A2FMUx+zVZfVLVyVihnQ08eGdVTA
- suSlFzyPaaIQUaPn224wRtnbDTTWg9HTR3R6Qxi0ayWeTVZV3va2lCXWrUecJpzvUFLyH3Vi
- M2IwLboM03qutGcjINkb4KuqqW6EHm3MkOC69TWgIFa4W2rpy1FPkDvXNf9nlqcgoNo0fQAR
- AQABwsOEBBgBAgAPBQJOqHJKAhsuBQkSz/eAAikJEMU8XTeNhnafwV0gBBkBAgAGBQJOqHJK
- AAoJEF8LJ744L6KVhr4QAKGjq1s8WBup2uWOevIcncyAaKYaGX3gQj4Qf+lfklvPpnwUfPMb
- cYMUDhTo4H1lw1dDSBic65OsqMjz2pxJ+AYtLxrONKKCUQRyfO1mwB4etIv7ZF+E5HsclwqM
- /GWtY9QijHgRbDiUK1h3Y2sQGc/MKg8m7EImZOGEEMQQj1tJ5r3ksH2e6KwO+K9y/uf+qLHd
- 6lSbG2+niSSUhcA46PdW2tzx40dZp6d2aEl53f2jwsQbrog1BsGuxOA9+26xhF4p0Ag/hfOX
- 9/n/mMzw+bXSFB/gJE0zQ83jksuHFCSJDHEsPzmKi4hVRKuEcEAryjGXH4bqoDkz/p3DRdIf
- nuKiLi/iwSsK76UgGekw6tjjP8ggz6UC8UVhdMv9q4hcewv5/omdnuHj/G6uSGlVcAi+5VJ8
- 8yEH5Am1IYbjSbqzSDQazEK3oAE6qXwzQXjq1iuqR9Xa6eXtcog+CHFSKU3aEuL+f8oUUzpE
- U+XqZSPuHpFgYHsNTkxUA8fuP6Tr53kqHD9PEqLb8+M1MlJBjiD+JSHIN5+C6LpZIZ0Zbp7q
- Inu8Pu1eALxri4VgevZKQOQXTJUsNFWh4EYdsfNgcCbQoP8gFFns9YmQ0vXHnJG/dPjzBPAU
- fKZgPtVofEMK1B4J9gAm1fO3hqRxrtSkUZgopZpjHtC7ZuYSkwmEUoMjxpwP/j2ql5J6t06u
- IhUzOgHAEJ9+4ppeAPNQAUsRVrPk3m1PaV1xs7nx/D4yXbq+S0/iMA+g1k0Ovh3TSvdQfK/7
- 4Rp048Tr+0Tm2uAESaN4+7WK0v8rONVPuqpSKf92o5KmFtlT+Yyz9ZRu52GE7BzkktMEnGp1
- sLBMzbwflhj/ZtMPOdQxmpBZS5h34alcBiYK3wVVZpzRNLhke3z8ZAn0e2xG8fOX56LiL7o1
- w8wFSA7PMuuhklq3NY/xTwBOpT8YiQU6VlELQQTR06unnHa6we3JcsNlTH2//7mZ0QVp9nPW
- 6MEwFUvbjJliGQbs4e8z6vL8M7bgl1kgcTViSW4jL41CXnGlLSUm8pqvbQ95/gJhgs6PVBwH
- 5FF8JGCvUKOeAFsICUPEFizy4BgQpPPYE++I07VqZ87/gaeN9EeFgZASolQwcZNRAWplDD4j
- Ipj8u7wo+4j22HyVXuoQTg8+p5TVMV1Y0b2X4tJm98ways9e5LTQLXM6dcoGKeVF3Pt53RVB
- iv2n7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh
- 9eFpv8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPa
- Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <c43612c1-14d7-4ccb-007f-23b9df1474cc@suse.com>
-Date:   Thu, 5 Nov 2020 10:30:25 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
-In-Reply-To: <f0c9b3ff-7d93-9c2b-d405-e52fb4aa8c37@oracle.com>
+        id S1729783AbgKETQH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Nov 2020 14:16:07 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:49984 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727017AbgKETQG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2020 14:16:06 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A5J9EHW013558;
+        Thu, 5 Nov 2020 19:15:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=KvvG5TT9NZ9sxhdA8+ScR/AAkvRO1N29HYALFB/X8qw=;
+ b=U9eR4nIWyWmRxJ631VV1Yc3HwMEkuqiGA7c1yxtOe7tF0tyh7WznO0LuUARNyuSrw0f3
+ sgWnBlxZDQMLGsb8+Hga3UL3vrAp4M9MvHZigx9XZm6Abou69JWDRTcfcVjeQzmDBTAI
+ RWBqKFGr+xjaVdegWmAGR3EYx5LaXCiWqxTk9Q/i2unSY4yST30rsda+287ljX6fWH8c
+ KB7g/byi/hDdPgqWVdGkfO/hQ0pRtbnY802/t3kLjwA9vMEQ5oefx8zOX1N0uY4DtA7p
+ 4KVAcBFGVo6l6ed/pQkotBe91yRVNuDZm217asc7JvM0Eg62533U5ur0pP/EwcwP9N6z Rg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 34hhw2wnre-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 05 Nov 2020 19:15:56 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A5JB62J087973;
+        Thu, 5 Nov 2020 19:15:55 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 34hw0hvke0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 05 Nov 2020 19:15:55 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A5JFqgq012884;
+        Thu, 5 Nov 2020 19:15:52 GMT
+Received: from [20.15.0.202] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 05 Nov 2020 11:15:52 -0800
+Subject: Re: [PATCH v6 3/4] scsi_transport_fc: Added a new rport state
+ FC_PORTSTATE_MARGINAL
+To:     Muneendra Kumar M <muneendra.kumar@broadcom.com>,
+        linux-scsi@vger.kernel.org, hare@suse.de
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
+References: <1604556596-27228-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1604556596-27228-4-git-send-email-muneendra.kumar@broadcom.com>
+ <e575da88-8b40-3062-9835-419456b46989@oracle.com>
+ <08d150e63f2b79cd0199fb49355ce601@mail.gmail.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <eed1c6b0-1b9c-572c-a9f6-8468a6996491@oracle.com>
+Date:   Thu, 5 Nov 2020 13:15:51 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
+MIME-Version: 1.0
+In-Reply-To: <08d150e63f2b79cd0199fb49355ce601@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Originating-IP: [73.25.22.216]
-X-ClientProxiedBy: FR2P281CA0004.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:a::14) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by FR2P281CA0004.DEUP281.PROD.OUTLOOK.COM (2603:10a6:d10:a::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3541.10 via Frontend Transport; Thu, 5 Nov 2020 18:30:29 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4c22e11d-b189-473b-a393-08d881b8e008
-X-MS-TrafficTypeDiagnostic: AM6PR04MB4518:
-X-Microsoft-Antispam-PRVS: <AM6PR04MB4518D12EBC8D09D601165A33DAEE0@AM6PR04MB4518.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: q+y9/OCVQ1HHA6nj57nBaiamYGKQNNsmKtjH9uFZk3wuvvu1zWBMDhCW/6IwYRSicujALPTDlmMk1qm3Pd7Rh569jb+Dw316PWoTx+BLmAjcXtE9llGBsKDFXvilzAV8PyswoJGbgJ1HMONPPvPwUX5Kql7uupZb7k3pcR4AOQNXCHTsVYIshECCcQUde7MpC5KvMYrLaghKpLbQRyqv2HCjFwb0eQScWxNmUPqGrrBXmkBftGig43mTRvhfuEqYYiYiEn6StCiy+Yl3LzPuTap0xLfqGE2zA6hyBEwjsz6klQ4+A/v46AK+PyEdAn+qaybTFTLfBcrrrAfS/itorL5uLDKdOJWkRap5+RVibYd+zXWRSkKYOULC88lqKu0m
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(39850400004)(396003)(346002)(376002)(136003)(53546011)(478600001)(5660300002)(52116002)(4326008)(6666004)(66476007)(8936002)(86362001)(2906002)(66946007)(66556008)(83380400001)(8676002)(16576012)(26005)(316002)(36756003)(31696002)(956004)(6486002)(186003)(2616005)(16526019)(31686004)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: ysF4AEbEEvbaosC3lzTrkTfDr0DBFIuu7C3bz4lyEtkYgHfGtJ3nK9vyTVnvIN8gK5mBfCULjP9ZKYsu4BaRwob5VaoL3BprskgCSIYiqwr1GZhfUZS8YYCRZj5JqzS9Tp87tKqNG0qjarSUv9aGig48GVfYgRpO3DfT2dZ1rIG7uDS7ZwInxF7/ZLhI26/VJPD7vnsepoyzqJqm9COB/WxnLMAKeZ/YyaBx6T45f0psbZyKIRjBc0avos//0J51iILwOVDtnWWUob2V6zNDVegBXIic4oUhotHvg43spU5j5qcefVlYpdhjCTOiamZJ4iy6L+zCV8VixhLxKR5tYtCNoE4h5Mn7secanB2hBeWy3uCusPg6NAmk1kOpcmzLss18aiNQz6pQn8Xsz13L7mCEyrqkxZA1SvRdUN5WLLDmgpFJX5X80/d5WfH+r9RQ2Zb9vtpG9h2KQ4YCOu3MyrFAoJRfE8qjEEU+GaPiYy1zsbZwZ0JaduSwzpk/7y7E/3yDtON9tCt8s/2ETHUnp48Dp4SEuDRcqClYXgHxJxAq/rT900hv9vi0hbuwb2E37IgeM7gnEvbjig4QzXLEWPuWYA4NbDgkvncYRNAsVQfLNXH/9t6dkMoQVl0+dfrvEeS5FlZdWe0DFZi9Y2GTLA==
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c22e11d-b189-473b-a393-08d881b8e008
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2020 18:30:30.7941
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: z6nZvlMzZb0iT4SeNBMI0pDfBBU0xSo+LNp3bKEBP+aCwsA9NaVC956L7aoqLtmqBqjTOAOavDTNfBDH66tS1g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB4518
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011050124
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=0 clxscore=1015 priorityscore=1501 impostorscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011050124
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/4/20 1:33 PM, Mike Christie wrote:
-> On 9/18/20 4:09 PM, Lee Duncan wrote:
->> From: Lee Duncan <lduncan@suse.com>
->>
->> iSCSI NOPs are sometimes "lost", mistakenly sent to the
->> user-land iscsid daemon instead of handled in the kernel,
->> as they should be, resulting in a message from the daemon like:
->>
->>> iscsid: Got nop in, but kernel supports nop handling.
->>
->> This can occur because of the new forward- and back-locks,
->> and the fact that an iSCSI NOP response can occur before
->> processing of the NOP send is complete. This can result
->> in "conn->ping_task" being NULL in iscsi_nop_out_rsp(),
->> when the pointer is actually in the process of being set.
->>
->> To work around this, we add a new state to the "ping_task"
->> pointer. In addition to NULL (not assigned) and a pointer
->> (assigned), we add the state "being set", which is signaled
->> with an INVALID pointer (using "-1").
->>
->> Signed-off-by: Lee Duncan <lduncan@suse.com>
->> ---
->> =C2=A0 drivers/scsi/libiscsi.c | 11 ++++++++++-
->> =C2=A0 include/scsi/libiscsi.h |=C2=A0 3 +++
->> =C2=A0 2 files changed, 13 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->> index 1e9c3171fa9f..5eb064787ee2 100644
->> --- a/drivers/scsi/libiscsi.c
->> +++ b/drivers/scsi/libiscsi.c
->> @@ -738,6 +738,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn,
->> struct iscsi_hdr *hdr,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 task->conn->session->age);
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
->> =C2=A0 +=C2=A0=C2=A0=C2=A0 if (unlikely(READ_ONCE(conn->ping_task) =3D=
-=3D INVALID_SCSI_TASK))
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 WRITE_ONCE(conn->ping_task, =
-task);
->> +
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!ihost->workq) {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (iscsi_prep_mg=
-mt_task(conn, task))
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 goto free_task;
->> @@ -941,6 +944,11 @@ static int iscsi_send_nopout(struct iscsi_conn
->> *conn, struct iscsi_nopin *rhdr)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct iscsi_nopo=
-ut hdr;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct iscsi_task *task;
->> =C2=A0 +=C2=A0=C2=A0=C2=A0 if (!rhdr) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (READ_ONCE(conn->ping_tas=
-k))
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 retu=
-rn -EINVAL;
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 WRITE_ONCE(conn->ping_task, =
-INVALID_SCSI_TASK);
->> +=C2=A0=C2=A0=C2=A0 }
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!rhdr && conn->ping_task)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
->> =C2=A0 @@ -957,11 +965,12 @@ static int iscsi_send_nopout(struct iscsi_c=
-onn
->> *conn, struct iscsi_nopin *rhdr)
->> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 task =3D __iscsi_conn_send_pdu(con=
-n, (struct iscsi_hdr *)&hdr,
->> NULL, 0);
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!task) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!rhdr)
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 WRIT=
-E_ONCE(conn->ping_task, NULL);
->=20
-> I don't think you need this. If __iscsi_conn_send_pdu returns NULL, it
-> will have done __iscsi_put_task and done this already.
+On 11/5/20 11:27 AM, Muneendra Kumar M wrote:
+> Hi Mike,
+> Thanks for the input.
+> Below are my replies.
+> 
+> 
+>> Hey sorry for the late reply. I was trying to test some things out but am
+>> not sure if all drivers work the same.
+> 
+>> For the code above, what will happen if we have passed that check in the
+>> driver, then the driver does the report del and add sequence? Let's say
+>> it's initially calling the abort callout, and we passed that check, we then
+>> do the >del/add seqeuence, what will happen next? Do the fc drivers return
+>> success or failure for the abort call. What happens for the other callouts
+>> too?
+> 
+>> If failure, then the eh escalates and when we call the next callout, and we
+>> hit the check above and will clear it, so we are ok.
+> 
+> If success then we would not get a chance to clear it right?
+> [Muneendra]Agreed. So what about clearing the flags in fc_remote_port_del. I
+> think this should address all the concerns?
+> 
+>> If this is the case, then I think you need to instead go the route where
+>> you add the eh cmd completion/decide_disposition callout. You would call
+>> it in scmd_eh_abort_handler, scsi_eh_bus_device_reset, etc when we are
+>> deciding if we want to retry/fail the command.
+> [Muneendra]Sorry I didn't get what you are saying could you please elaborate
+> on the same.
+> 
+> In this approach you do not need the eh_timed_out changes, since we only
+> seem to care about the port state after the eh callout has completed.
+> [Muneendra]what about setting the SCMD_NORETRIES_ABORT bit?
+> 
 
-Not an issue, as you already replied.
+I don't think you need it. It sounds like we only care about the port state
+when the cmd is completing. For example we have:
 
->=20
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 iscsi_conn_printk=
-(KERN_ERR, conn, "Could not send nopout\n");
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EIO;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else if (!rhdr) {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* only track our=
- nops */
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 conn->ping_task =3D task;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 conn->last_ping =
-=3D jiffies;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
->=20
-> Why in the send path do we always use the READ_ONCE/WRITE_ONCE, but in
-> the completion path like in iscsi_complete_task we don't.
->=20
+1. the case where the cmd times out, we do aborts/resets, then the
+port state goes into marginal, then the aborts/resets complete. We want to
+fail the cmds without retries.
 
-The answer is that I was only modifying the code that needed changing
-for this bug. My first pass did not use READ_ONCE() or WRITE_ONCE(), but
-Hannes suggested the change.
+2. If the port state is in marginal, the cmd times out, we do the aborts/resets
+and when we are done if the port state is still marginal we want to fail the
+cmd without retries.
 
-Now that I think about it more, the memory barrier stuff would make
-sense only if all the access to that field are protected.
+3. If the port state is marginal (or any value), before or after the cmd
+initially times out, but the port state goes back to online, then when the
+aborts/resets complete we want to retry the cmd.
 
-I will resubmit V2 of the patch.
---=20
-Lee Duncan
+So can we just add a callout to check the port state when the eh has completed
+like the untested unfinished patch below:
+
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 983eeb0..8ad3a9a 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -6041,6 +6041,7 @@ struct scsi_host_template lpfc_template = {
+ 	.info			= lpfc_info,
+ 	.queuecommand		= lpfc_queuecommand,
+ 	.eh_timed_out		= fc_eh_timed_out,
++	.eh_timed_out		= fc_eh_should_retry_cmd,
+ 	.eh_abort_handler	= lpfc_abort_handler,
+ 	.eh_device_reset_handler = lpfc_device_reset_handler,
+ 	.eh_target_reset_handler = lpfc_target_reset_handler,
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index f11f51e..7c66d17 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -140,6 +140,7 @@ static bool scsi_cmd_retry_allowed(struct scsi_cmnd *cmd)
+ 	struct scsi_cmnd *scmd =
+ 		container_of(work, struct scsi_cmnd, abort_work.work);
+ 	struct scsi_device *sdev = scmd->device;
++	struct Scsi_Host *host = sdev->host;
+ 	int rtn;
+ 
+ 	if (scsi_host_eh_past_deadline(sdev->host)) {
+@@ -159,7 +160,8 @@ static bool scsi_cmd_retry_allowed(struct scsi_cmnd *cmd)
+ 						    "eh timeout, not retrying "
+ 						    "aborted command\n"));
+ 			} else if (!scsi_noretry_cmd(scmd) &&
+-				   scsi_cmd_retry_allowed(scmd)) {
++				   scsi_cmd_retry_allowed(scmd) &&
++				   host->hostt->eh_should_retry_cmd(scmd)) {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "retry aborted command\n"));
+@@ -2105,7 +2107,8 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+ 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+ 		list_del_init(&scmd->eh_entry);
+ 		if (scsi_device_online(scmd->device) &&
+-		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd)) {
++		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
++		    host->hostt->eh_should_retry_cmd(scmd)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+ 					     "%s: flush retry cmd\n",
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 2ff7f06..7011963 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2043,6 +2043,18 @@ static int fc_vport_match(struct attribute_container *cont,
+ 	return &i->vport_attr_cont.ac == cont;
+ }
+ 
++bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd)
++{
++	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
++
++	if (rport->port_state == FC_PORTSTATE_MARGINAL)
++		return false;
++
++	/* Other port states will set the sdev state */
++	/* TODO check comment above */ 
++	return true;
++}
++EXPORT_SYMBOL_GPL(fc_eh_should_retry_cmd);
+ 
+ /**
+  * fc_eh_timed_out - FC Transport I/O timeout intercept handler
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 701f178..51d5af0 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -315,6 +315,13 @@ struct scsi_host_template {
+ 	 */
+ 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
+ 
++	/*
++	 * Optional routine that allows the transport to decide if a cmd is
++	 * retryable. Return true if the transport is in a state the cmd
++	 * should be retried on.
++	 */
++	bool (*eh_should_retry_cmd)(struct scsi_cmnd *);
++
+ 	/* This is an optional routine that allows transport to initiate
+ 	 * LLD adapter or firmware reset using sysfs attribute.
+ 	 *
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 1c7dd35..f21b583 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -803,6 +803,7 @@ struct fc_vport *fc_vport_create(struct Scsi_Host *shost, int channel,
+ int fc_block_rport(struct fc_rport *rport);
+ int fc_block_scsi_eh(struct scsi_cmnd *cmnd);
+ enum blk_eh_timer_return fc_eh_timed_out(struct scsi_cmnd *scmd);
++bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd);
+ 
+ static inline struct Scsi_Host *fc_bsg_to_shost(struct bsg_job *job)
+ {
+
 
