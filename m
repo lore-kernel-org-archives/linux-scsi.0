@@ -2,91 +2,75 @@ Return-Path: <SRS0=zqxZ=EL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 735C3C00A89
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 03:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E0E8C00A89
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 03:45:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 107B22072E
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 03:41:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LE3k4flX"
+	by mail.kernel.org (Postfix) with ESMTP id 44652205F4
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 03:45:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388621AbgKEDlk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Nov 2020 22:41:40 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:47314 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733135AbgKEDlk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2020 22:41:40 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A53P7ja028859;
-        Thu, 5 Nov 2020 03:41:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=ziJqP69rbY2z7tN+5/qbBLCt0pQOEeJ3Phbzv7Dsw8Y=;
- b=LE3k4flXyhFKdSd3qUR3tlHEPJldHRw121eJ2KWvb1TD7AHtqSKF2J3qlpj/OZneruxs
- XiBuH3iKwdm3V6j9QB28aRyqpjzGv/kNR1LaaPlh9/8EBvh3MMagev9rPWXCv/GELbpU
- i2xBEbo53A6TsyEHCy461riKjSLo57GhWz2fub3LqIKVF74Ya8yZcpp+WpwmUBHDJLBo
- zxaBWQa8HxrD5F5DNAIMFFuKDgFmcdQuP9eCkWsgoGvocnpxLAPLPXdjID3pmRVrfw1x
- zv5iXCUcRltlnTN/ikdz9WZ1Ir/2BcZQH7wzyYf4m/t9MwY6Y/QGd+Soe7haM26dPy1g jA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 34hhb29vqa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 05 Nov 2020 03:41:36 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A53Otni010640;
-        Thu, 5 Nov 2020 03:41:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 34jf4bdgh8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Nov 2020 03:41:36 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A53fZrt000495;
-        Thu, 5 Nov 2020 03:41:35 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 04 Nov 2020 19:41:34 -0800
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     himanshu.madhani@oracle.com, njavali@marvell.com,
-        james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: Re: [PATCH 0/8 v3] target: fix up locking/refcounting in IO paths
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1tuu4scev.fsf@ca-mkp.ca.oracle.com>
-References: <1604257174-4524-1-git-send-email-michael.christie@oracle.com>
-Date:   Wed, 04 Nov 2020 22:41:32 -0500
-In-Reply-To: <1604257174-4524-1-git-send-email-michael.christie@oracle.com>
-        (Mike Christie's message of "Sun, 1 Nov 2020 12:59:26 -0600")
+        id S2388623AbgKEDpB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Nov 2020 22:45:01 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:44592 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733135AbgKEDpB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2020 22:45:01 -0500
+Received: by mail-pf1-f194.google.com with SMTP id 133so275237pfx.11;
+        Wed, 04 Nov 2020 19:45:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=biDC4E7QW4kY+RCuS593Sf8Q4Qz6TZ6iV3bgi7DMj78=;
+        b=hulAdtUT/j3s/XoDcSKBRFVXUMkDWwlSLSNPwf5S6N7Kffx4TIhNGCXKJJag6PACna
+         b2s3LUyNqmosY1ppoTlaxWmrhjP39bv4PDAXILdiJO4mfjwDNYSsRsi3FWe7yzaHizht
+         zWzd6j1uSL7R48KJfvgRnduYvjFIEwdMhB3yHn+V16mGJQzixj6jxuZhZ+B909sdmcML
+         AJ/3kvS8HpGouqGKHIge1TCw+qUYkSP9Vzq4z+6X2PHdruVWKz8MDb/5Kc6MOgKCXBh3
+         k45K8uVrXA3hCzstBuME46JkBt1HIHQRgpEgW4bcDkekI/OdksSaH1VxZi+tXkvqpIbN
+         1u+w==
+X-Gm-Message-State: AOAM532RGR5CncoVolv8heXAEPrXLh2J53DqQjvisWNt4Sn6kMvYOxrx
+        vRUsOEB6WGDku5H5jNwWzYY=
+X-Google-Smtp-Source: ABdhPJx5BORiKOuVbqxOfWSJu/byHdevMCTXImzbHScfwXHueRyNl+rohYwVY2sGsAXJEUdxUeTmxg==
+X-Received: by 2002:a62:1b96:0:b029:164:5161:e393 with SMTP id b144-20020a621b960000b02901645161e393mr462163pfb.7.1604547900680;
+        Wed, 04 Nov 2020 19:45:00 -0800 (PST)
+Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id nv7sm173305pjb.27.2020.11.04.19.44.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Nov 2020 19:44:59 -0800 (PST)
+Subject: Re: [PATCH 1/1] target_core_user: make Bodo maintainer
+To:     Mike Christie <michael.christie@oracle.com>,
+        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     Bodo Stroesser <bostroesser@gmail.com>
+References: <1604521666-16573-1-git-send-email-michael.christie@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <8b44ced8-b9ae-8e28-ef36-42ab4fea0d41@acm.org>
+Date:   Wed, 4 Nov 2020 19:44:58 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9795 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1 mlxscore=0
- bulkscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011050025
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9795 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=1
- clxscore=1015 mlxlogscore=999 impostorscore=0 malwarescore=0
- lowpriorityscore=0 adultscore=0 spamscore=0 priorityscore=1501 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011050025
+In-Reply-To: <1604521666-16573-1-git-send-email-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 11/4/20 12:27 PM, Mike Christie wrote:
+> +SCSI TARGET CORE USER DRIVER
+> +M:	Bodo Stroesser <bostroesser@gmail.com>
+> +L:	linux-scsi@vger.kernel.org
+> +L:	target-devel@vger.kernel.org
+> +S:	Supported
+> +F:	Documentation/target/tcmu-design.rst
+> +F:	drivers/target/target_core_user.c
+> +F:	include/uapi/linux/target_core_user.h
 
-Mike,
+Assuming this patch will be accepted: congratulated Bodo!
 
-> The following patches made over Martin's staging branch fix some
-> ref counting issues I hit while testing and improves the locking
-> in the IO paths. To do the latter, the patches:
-
-Applied to 5.11/scsi-staging, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
