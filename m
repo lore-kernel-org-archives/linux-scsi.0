@@ -2,74 +2,76 @@ Return-Path: <SRS0=zqxZ=EL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 795E7C4741F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 20:01:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76517C4741F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 20:02:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9B6320729
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 20:01:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 038682074B
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Nov 2020 20:02:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bTrZTsCO"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OtO15o6w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727836AbgKEUBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Nov 2020 15:01:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40336 "EHLO
+        id S1727836AbgKEUCp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Nov 2020 15:02:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726801AbgKEUBq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2020 15:01:46 -0500
-Received: from mail-oi1-x244.google.com (mail-oi1-x244.google.com [IPv6:2607:f8b0:4864:20::244])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E1D2C0613CF
-        for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2020 12:01:46 -0800 (PST)
-Received: by mail-oi1-x244.google.com with SMTP id t16so2939691oie.11
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2020 12:01:46 -0800 (PST)
+        with ESMTP id S1726729AbgKEUCp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2020 15:02:45 -0500
+Received: from mail-oi1-x242.google.com (mail-oi1-x242.google.com [IPv6:2607:f8b0:4864:20::242])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C8CFC0613CF
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2020 12:02:45 -0800 (PST)
+Received: by mail-oi1-x242.google.com with SMTP id t16so2943158oie.11
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2020 12:02:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=Kz8lGYJ4y8rFfEAocYvvZzOWXiX1rcCIT/xhvanGEFs=;
-        b=bTrZTsCO7fWff4L37mIBJJ+pjyhYeWR0v3a6LEfAQcS5KxqFpnSNFxGpU2rcwRSLNc
-         0Ixnabhs6TKEJU2TRXJkEcdvSZZUw1Zn3zg7r0H1EhL7X28QoOffKVrUj7gpASefsS4d
-         Mz+QqZQTvQ+YVYPH2EhqIYSPm+6x3eAwimow0=
+        bh=xub4fded6oUceeS63EbKrGcwb5WjUa/pvuGO51MUvNg=;
+        b=OtO15o6wYitmms2Ci4kw/4fkAGFIvLoLPJtzt6rRf7wvWeDB6zcZHamVzkdZBczftV
+         zoSdoisKannYv0JI4zYXeFa88AL4Ws6EdQ0RiD7RFUC2KCGCVQEjGCzqgUw7t/IeaUnw
+         788JWxwMLZHgv+uxdx2x9BLmlH5y3MeHSXuWA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=Kz8lGYJ4y8rFfEAocYvvZzOWXiX1rcCIT/xhvanGEFs=;
-        b=cBY4pUxnNFw2RCxWAhLwHKQTyiEZQlcf2+Rh++mWATxOZR+UbPzFYyr/5rl6gTZR9M
-         Q2pipAFQSrOzxn8ntipPPuarQRcwrY++G17F4mnqpa80aWlkJEUofWas9C7/TdhsdD3T
-         3sXkjrNYQ0+b4oNDvI+dZPABoE5MXjk9nd6P3T2wrh0cVxN7XGXAtgw8tacQa6BapxIH
-         tRZ7snvhIE60n2t8vivluYmoZAuA84YRW1za0tp5R9QduU/DV7JbtYZmxS1iClRYeIxl
-         JV72E0eANKZETiWRqRaZsqSwMVDP+e0Uw9oCRYfNzsJNI5X0h/iUA6VVG66XAfnKWXLf
-         WJrA==
-X-Gm-Message-State: AOAM532Rm+WUZ9e0+X1y6F2Fyo+Nn4LoL9NhOORRsWuv7CzJQedCwHvO
-        +OIXEX6cOYUckey588vBb1Sqn9c/gpwH2621xGWSTw==
-X-Google-Smtp-Source: ABdhPJwfD1IGKYgOd6B2m4BYsQLYtN7KEXJl0LDlysgsv8cB3yWNFfVVWz/id9i7DMKg6AT2Zc8y2E4MyNp1lQaD4Xo=
-X-Received: by 2002:aca:6748:: with SMTP id b8mr692039oiy.77.1604606505548;
- Thu, 05 Nov 2020 12:01:45 -0800 (PST)
+        bh=xub4fded6oUceeS63EbKrGcwb5WjUa/pvuGO51MUvNg=;
+        b=MNuA9US8SWgGN4dCqfmTLSXW0qTmx1ltK69B89tJqvHzdv54nhunvkPOu4WdiTszeR
+         PLIDl8pdnQNHCn0zgHq6LwtNiRBEQYCTd7P47mWD+VNlx7xx9GMeddgZWp+sYaBeNtoW
+         Fuhx3yt5bvU9HtSF75tgHQS39nZjmDoY0dZif4cAqw3H7q2+tkI6PF+AnCkwbMeyGyHg
+         qTv4DIYmlDRMleme2lLkG22Eq5Eif3YPkQODS/uieoAGYQTH1T9HX9rCsfn5GIKiwG2z
+         SJzLORWFhnPBF3g/Zy7yQuyJnLwuSvlB+udv7amIE0LZdI62ff8IW1V6w4J7/Jt60D4s
+         9TcA==
+X-Gm-Message-State: AOAM533Hp6yugVoJWCFWb/Z8T6kLCvZ5rVdes0uqa5NGx9xBwNocRGFG
+        3IpxAAuOwZj+F+WyVfoJs7/KNfqtsL2X/wDhdvCYGQ==
+X-Google-Smtp-Source: ABdhPJwdQXNEWGvJhRtqR/NGKHnWKCdTZGWhQifDFv8xpBVucx0HXAXajg7Ds7MaoGtvbT9rwupol9cH7IqzkzJ00Ro=
+X-Received: by 2002:aca:c70b:: with SMTP id x11mr713098oif.104.1604606564550;
+ Thu, 05 Nov 2020 12:02:44 -0800 (PST)
 From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
 References: <1604556596-27228-1-git-send-email-muneendra.kumar@broadcom.com>
- <1604556596-27228-4-git-send-email-muneendra.kumar@broadcom.com> <e575da88-8b40-3062-9835-419456b46989@oracle.com>
-In-Reply-To: <e575da88-8b40-3062-9835-419456b46989@oracle.com>
+ <1604556596-27228-4-git-send-email-muneendra.kumar@broadcom.com>
+ <e575da88-8b40-3062-9835-419456b46989@oracle.com> <08d150e63f2b79cd0199fb49355ce601@mail.gmail.com>
+ <eed1c6b0-1b9c-572c-a9f6-8468a6996491@oracle.com>
+In-Reply-To: <eed1c6b0-1b9c-572c-a9f6-8468a6996491@oracle.com>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQJbIqKuxKDp76OdHE9svWN8tlfO/QIOdQWIAbeXNKSokubKsA==
-Date:   Fri, 6 Nov 2020 01:31:43 +0530
-Message-ID: <a341633007a57145aa38855ba1bdb2e6@mail.gmail.com>
+Thread-Index: AQJbIqKuxKDp76OdHE9svWN8tlfO/QIOdQWIAbeXNKQCjjFYMwNRi63YqGPpqQA=
+Date:   Fri, 6 Nov 2020 01:32:42 +0530
+Message-ID: <580c59bb83eaff8dd60705ede02ae133@mail.gmail.com>
 Subject: RE: [PATCH v6 3/4] scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
 To:     Mike Christie <michael.christie@oracle.com>,
         linux-scsi@vger.kernel.org, hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ca3d5405b3619010"
+        boundary="0000000000004e845d05b3619476"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ca3d5405b3619010
+--0000000000004e845d05b3619476
 Content-Type: text/plain; charset="UTF-8"
 
 Hi Mike,
@@ -81,58 +83,167 @@ Muneendra.
 
 -----Original Message-----
 From: Mike Christie [mailto:michael.christie@oracle.com]
-Sent: Thursday, November 5, 2020 9:29 PM
-To: Muneendra <muneendra.kumar@broadcom.com>; linux-scsi@vger.kernel.org;
-hare@suse.de
+Sent: Friday, November 6, 2020 12:46 AM
+To: Muneendra Kumar M <muneendra.kumar@broadcom.com>;
+linux-scsi@vger.kernel.org; hare@suse.de
 Cc: jsmart2021@gmail.com; emilne@redhat.com; mkumar@redhat.com
 Subject: Re: [PATCH v6 3/4] scsi_transport_fc: Added a new rport state
 FC_PORTSTATE_MARGINAL
 
-On 11/5/20 12:09 AM, Muneendra wrote:
->   int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
->   {
->   	struct fc_rport *rport =
-> starget_to_rport(scsi_target(cmnd->device));
-> +	int ret = 0;
+On 11/5/20 11:27 AM, Muneendra Kumar M wrote:
+> Hi Mike,
+> Thanks for the input.
+> Below are my replies.
 >
->   	if (WARN_ON_ONCE(!rport))
->   		return FAST_IO_FAIL;
 >
-> -	return fc_block_rport(rport);
-> +	ret = fc_block_rport(rport);
-> +	/*
-> +	 * Clear the SCMD_NORETRIES_ABORT bit if the Port state has
-> +	 * changed from marginal to online due to
-> +	 * fc_remote_port_delete and fc_remote_port_add
-> +	 */
-> +	if (rport->port_state != FC_PORTSTATE_MARGINAL)
-> +		clear_bit(SCMD_NORETRIES_ABORT, &cmnd->state);
-> +	return ret;
->   }
+>> Hey sorry for the late reply. I was trying to test some things out
+>> but am not sure if all drivers work the same.
+>
+>> For the code above, what will happen if we have passed that check in
+>> the driver, then the driver does the report del and add sequence?
+>> Let's say it's initially calling the abort callout, and we passed
+>> that check, we then do the >del/add seqeuence, what will happen next?
+>> Do the fc drivers return success or failure for the abort call. What
+>> happens for the other callouts too?
+>
+>> If failure, then the eh escalates and when we call the next callout,
+>> and we hit the check above and will clear it, so we are ok.
+>
+> If success then we would not get a chance to clear it right?
+> [Muneendra]Agreed. So what about clearing the flags in
+> fc_remote_port_del. I think this should address all the concerns?
+>
+>> If this is the case, then I think you need to instead go the route
+>> where you add the eh cmd completion/decide_disposition callout. You
+>> would call it in scmd_eh_abort_handler, scsi_eh_bus_device_reset, etc
+>> when we are deciding if we want to retry/fail the command.
+> [Muneendra]Sorry I didn't get what you are saying could you please
+> elaborate on the same.
+>
+> In this approach you do not need the eh_timed_out changes, since we
+> only seem to care about the port state after the eh callout has completed.
+> [Muneendra]what about setting the SCMD_NORETRIES_ABORT bit?
+>
+
+I don't think you need it. It sounds like we only care about the port state
+when the cmd is completing. For example we have:
+
+1. the case where the cmd times out, we do aborts/resets, then the port
+state goes into marginal, then the aborts/resets complete. We want to fail
+the cmds without retries.
+
+2. If the port state is in marginal, the cmd times out, we do the
+aborts/resets and when we are done if the port state is still marginal we
+want to fail the cmd without retries.
+
+3. If the port state is marginal (or any value), before or after the cmd
+initially times out, but the port state goes back to online, then when the
+aborts/resets complete we want to retry the cmd.
+
+So can we just add a callout to check the port state when the eh has
+completed like the untested unfinished patch below:
 
 
-Hey sorry for the late reply. I was trying to test some things out but am
-not sure if all drivers work the same.
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 983eeb0..8ad3a9a 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -6041,6 +6041,7 @@ struct scsi_host_template lpfc_template = {
+ 	.info			= lpfc_info,
+ 	.queuecommand		= lpfc_queuecommand,
+ 	.eh_timed_out		= fc_eh_timed_out,
++	.eh_timed_out		= fc_eh_should_retry_cmd,
+ 	.eh_abort_handler	= lpfc_abort_handler,
+ 	.eh_device_reset_handler = lpfc_device_reset_handler,
+ 	.eh_target_reset_handler = lpfc_target_reset_handler, diff --git
+a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c index
+f11f51e..7c66d17 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -140,6 +140,7 @@ static bool scsi_cmd_retry_allowed(struct scsi_cmnd
+*cmd)
+ 	struct scsi_cmnd *scmd =
+ 		container_of(work, struct scsi_cmnd, abort_work.work);
+ 	struct scsi_device *sdev = scmd->device;
++	struct Scsi_Host *host = sdev->host;
+ 	int rtn;
 
-For the code above, what will happen if we have passed that check in the
-driver, then the driver does the report del and add sequence? Let's say it's
-initially calling the abort callout, and we passed that check, we then do
-the del/add seqeuence, what will happen next? Do the fc drivers return
-success or failure for the abort call. What happens for the other callouts
-too?
+ 	if (scsi_host_eh_past_deadline(sdev->host)) { @@ -159,7 +160,8 @@ static
+bool scsi_cmd_retry_allowed(struct scsi_cmnd *cmd)
+ 						    "eh timeout, not retrying "
+ 						    "aborted command\n"));
+ 			} else if (!scsi_noretry_cmd(scmd) &&
+-				   scsi_cmd_retry_allowed(scmd)) {
++				   scsi_cmd_retry_allowed(scmd) &&
++				   host->hostt->eh_should_retry_cmd(scmd)) {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "retry aborted command\n"));
+@@ -2105,7 +2107,8 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+ 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+ 		list_del_init(&scmd->eh_entry);
+ 		if (scsi_device_online(scmd->device) &&
+-		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd)) {
++		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
++		    host->hostt->eh_should_retry_cmd(scmd)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+ 					     "%s: flush retry cmd\n",
+diff --git a/drivers/scsi/scsi_transport_fc.c
+b/drivers/scsi/scsi_transport_fc.c
+index 2ff7f06..7011963 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2043,6 +2043,18 @@ static int fc_vport_match(struct attribute_container
+*cont,
+ 	return &i->vport_attr_cont.ac == cont;  }
 
-If failure, then the eh escalates and when we call the next callout, and we
-hit the check above and will clear it, so we are ok.
++bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd) {
++	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
++
++	if (rport->port_state == FC_PORTSTATE_MARGINAL)
++		return false;
++
++	/* Other port states will set the sdev state */
++	/* TODO check comment above */
++	return true;
++}
++EXPORT_SYMBOL_GPL(fc_eh_should_retry_cmd);
 
-If success then we would not get a chance to clear it right? If this is the
-case, then I think you need to instead go the route where you add the eh cmd
-completion/decide_disposition callout. You would call it in
-scmd_eh_abort_handler, scsi_eh_bus_device_reset, etc when we are deciding if
-we want to retry/fail the command. In this approach you do not need the
-eh_timed_out changes, since we only seem to care about the port state after
-the eh callout has completed.
+ /**
+  * fc_eh_timed_out - FC Transport I/O timeout intercept handler diff --git
+a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h index 701f178..51d5af0
+100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -315,6 +315,13 @@ struct scsi_host_template {
+ 	 */
+ 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
 
---000000000000ca3d5405b3619010
++	/*
++	 * Optional routine that allows the transport to decide if a cmd is
++	 * retryable. Return true if the transport is in a state the cmd
++	 * should be retried on.
++	 */
++	bool (*eh_should_retry_cmd)(struct scsi_cmnd *);
++
+ 	/* This is an optional routine that allows transport to initiate
+ 	 * LLD adapter or firmware reset using sysfs attribute.
+ 	 *
+diff --git a/include/scsi/scsi_transport_fc.h
+b/include/scsi/scsi_transport_fc.h
+index 1c7dd35..f21b583 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -803,6 +803,7 @@ struct fc_vport *fc_vport_create(struct Scsi_Host
+*shost, int channel,  int fc_block_rport(struct fc_rport *rport);  int
+fc_block_scsi_eh(struct scsi_cmnd *cmnd);  enum blk_eh_timer_return
+fc_eh_timed_out(struct scsi_cmnd *scmd);
++bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd);
+
+ static inline struct Scsi_Host *fc_bsg_to_shost(struct bsg_job *job)  {
+
+--0000000000004e845d05b3619476
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -203,13 +314,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCDKIALi5Np/St/S1On6jFeqjjhGLo0MxXDF37JGyf4RCjAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDUyMDAxNDVaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCA8r6IpsOiYzdd82rosHnhDuCaXWHHQaxiBcVzetisucDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDUyMDAyNDRaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAeGZSqawVaAiOLawr
-/1AeMrn00vk2w3wOZfsWMFHESNZkV/jdJm9aRGvYgREgwqsNVyFKmpapaGioCrnzXNl1OjvW+H95
-JC0ubjrcFhO3gPIYLWhlsF35dn6sqjSGqtYFk4GyYgg8e88NmR/osBThnYDEqY2korkNY7SrsoVU
-zAgiZBV5iHBvzzRwgjD+QNSTlAWTp2i26yqtlf0D7VbHQD2ZkpZRlM/I5VdNp4S6KOiCRYMl/8Ts
-I2qmgt2Lf8ZHn9DbS++LM1YPKULWPmMVMXld1VKuxQRgq2SWRoY/xV8LGPBWKOc+peJ4IT5DKSnb
-8tXavunC6dvICbpyASSBGg==
---000000000000ca3d5405b3619010--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAkfvZgx2DargUcZzi
+JebtA7z/MKILo932FookD4+9fW2t66qjb+NNE068nYbM9IWH1FK8D6u0wHsZHi0l/ydSG97yCP8N
+mMEYjquYnjvT6p3QFzFv2rV1V53u+4t/cwgBqQCMK/jPCgO8NRG3CbGt34e4fSn/NjsLYi0/7/64
+VVmyQkg3OoqkWiKCjtco8gBGBSKPgIwgTnqVMIPgd8f5sKT03BzuSlkZktjuXNqH+SMfMcZKGUJQ
++rxXbwTPE0iSrws5Gto2FIf5FHyepkVUvFEVkpZAkq5r7hwxHI2you5+ES3Gq8MK5yjbrkUrteiu
+SbpVU65En1W2l9hWg4T3bA==
+--0000000000004e845d05b3619476--
