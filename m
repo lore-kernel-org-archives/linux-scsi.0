@@ -2,134 +2,103 @@ Return-Path: <SRS0=4aQo=EM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C841C55178
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 15:36:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8391CC56202
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 19:04:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 331BA22203
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 15:36:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43068221FA
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 19:04:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tB2Wdu/P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727499AbgKFPgc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Nov 2020 10:36:32 -0500
-Received: from mga03.intel.com ([134.134.136.65]:57396 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726880AbgKFPgc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Nov 2020 10:36:32 -0500
-IronPort-SDR: koEp/a+Km8W80Z3Sb8XSf3dTUkVj/iMu5+A/aduW+1B0N0JIn+7MG+TNBDa/jdD/bFXKZSxdoK
- f8c/ggSdDkeA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9796"; a="169668852"
-X-IronPort-AV: E=Sophos;i="5.77,456,1596524400"; 
-   d="scan'208";a="169668852"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2020 07:36:31 -0800
-IronPort-SDR: +r0cLRJLKwxqP2I0IhVXTW/KGYHtXRBj79d1s0Vhl/PMKu5eoj3FxPc5xGd0b19fGbFIKzzFoi
- W44NJbqTEMtg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,456,1596524400"; 
-   d="scan'208";a="364207970"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.94])
-  by FMSMGA003.fm.intel.com with ESMTP; 06 Nov 2020 07:36:29 -0800
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     linux-doc@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH] docs: ABI: sysfs-driver-ufs: Add DeepSleep power mode
-Date:   Fri,  6 Nov 2020 17:36:15 +0200
-Message-Id: <20201106153615.13033-1-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.17.1
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+        id S1727997AbgKFTEK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Nov 2020 14:04:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59242 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726447AbgKFTEJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Nov 2020 14:04:09 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C449AC0613CF;
+        Fri,  6 Nov 2020 11:04:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=stmwFAlkeYayJwqxLAzxAb5snaHT5ewOrHfW4MD4mwk=; b=tB2Wdu/PMT4HaSqbNXLjbJSinK
+        5hsrT8s37btBvfcSB9O4uU93SD5PFBnxHXny99OrIualpr25xUxUD6huKCkWn/+mqbBjsPu8GBT2K
+        BThvX+OWl/FleZFRHiOhjc346V7c34ia1qBhD1BbATvc5xUrGPzH/rmzYuoB0ZX7+lPL+RKQlCljc
+        jG3EgsYXLaMRAjav+9rOo/D7/8GwP4iHme6XgziXy4nXb8g0UObGiuuRw0pjd58Xmnsj883VpUPPn
+        /WqbOngIbQjdRi22wAva6IBkP7TmfNzppcbD1VYiYpN4uQufsS9sHdI0GfKYll6bY7LU3TdfwkqXU
+        DJQocnLQ==;
+Received: from [2001:4bb8:184:9a8d:9e34:f7f4:e59e:ad6f] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kb71X-0000tW-UC; Fri, 06 Nov 2020 19:03:50 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH 01/24] block: remove the call to __invalidate_device in check_disk_size_change
+Date:   Fri,  6 Nov 2020 20:03:13 +0100
+Message-Id: <20201106190337.1973127-2-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201106190337.1973127-1-hch@lst.de>
+References: <20201106190337.1973127-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A patch for DeepSleep is in the scsi queue, but as per mkp:
+__invalidate_device without the kill_dirty parameter just invalidates
+various clean entries in caches, which doesn't really help us with
+anything, but can cause all kinds of horrible lock orders due to how
+it calls into the file system.  The only reason this hasn't been a
+major issue is because so many people use partitions, for which no
+invalidation was performed anyway.
 
-	I left out the sysfs ABI piece due to the conflicts.
-	I suggest you send that piece through the doc tree.
-
-Ergo this patch.
-
-Link: https://lore.kernel.org/r/yq1imaksb3g.fsf@ca-mkp.ca.oracle.com/
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 34 +++++++++++++---------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+ fs/block_dev.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index adc0d0e91607..e77fa784d6d8 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -916,21 +916,24 @@ Date:		September 2014
- Contact:	Subhash Jadavani <subhashj@codeaurora.org>
- Description:	This entry could be used to set or show the UFS device
- 		runtime power management level. The current driver
--		implementation supports 6 levels with next target states:
-+		implementation supports 7 levels with next target states:
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 9e84b1928b9401..66ebf594c97f47 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1334,12 +1334,6 @@ static void check_disk_size_change(struct gendisk *disk,
+ 		i_size_write(bdev->bd_inode, disk_size);
+ 	}
+ 	spin_unlock(&bdev->bd_size_lock);
+-
+-	if (bdev_size > disk_size) {
+-		if (__invalidate_device(bdev, false))
+-			pr_warn("VFS: busy inodes on resized disk %s\n",
+-				disk->disk_name);
+-	}
+ }
  
- 		==  ====================================================
--		0   an UFS device will stay active, an UIC link will
-+		0   UFS device will stay active, UIC link will
- 		    stay active
--		1   an UFS device will stay active, an UIC link will
-+		1   UFS device will stay active, UIC link will
- 		    hibernate
--		2   an UFS device will moved to sleep, an UIC link will
-+		2   UFS device will be moved to sleep, UIC link will
- 		    stay active
--		3   an UFS device will moved to sleep, an UIC link will
-+		3   UFS device will be moved to sleep, UIC link will
- 		    hibernate
--		4   an UFS device will be powered off, an UIC link will
-+		4   UFS device will be powered off, UIC link will
- 		    hibernate
--		5   an UFS device will be powered off, an UIC link will
-+		5   UFS device will be powered off, UIC link will
- 		    be powered off
-+		6   UFS device will be moved to deep sleep, UIC link
-+		will be powered off. Note, deep sleep might not be
-+		supported in which case this value will not be accepted
- 		==  ====================================================
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_dev_state
-@@ -954,21 +957,24 @@ Date:		September 2014
- Contact:	Subhash Jadavani <subhashj@codeaurora.org>
- Description:	This entry could be used to set or show the UFS device
- 		system power management level. The current driver
--		implementation supports 6 levels with next target states:
-+		implementation supports 7 levels with next target states:
- 
- 		==  ====================================================
--		0   an UFS device will stay active, an UIC link will
-+		0   UFS device will stay active, UIC link will
- 		    stay active
--		1   an UFS device will stay active, an UIC link will
-+		1   UFS device will stay active, UIC link will
- 		    hibernate
--		2   an UFS device will moved to sleep, an UIC link will
-+		2   UFS device will be moved to sleep, UIC link will
- 		    stay active
--		3   an UFS device will moved to sleep, an UIC link will
-+		3   UFS device will be moved to sleep, UIC link will
- 		    hibernate
--		4   an UFS device will be powered off, an UIC link will
-+		4   UFS device will be powered off, UIC link will
- 		    hibernate
--		5   an UFS device will be powered off, an UIC link will
-+		5   UFS device will be powered off, UIC link will
- 		    be powered off
-+		6   UFS device will be moved to deep sleep, UIC link
-+		will be powered off. Note, deep sleep might not be
-+		supported in which case this value will not be accepted
- 		==  ====================================================
- 
- What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_dev_state
+ /**
 -- 
-2.17.1
+2.28.0
 
