@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFF8AC55178
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 19:05:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25AF1C61DD8
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 19:05:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D40D21D46
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 19:05:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C44E9208C7
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Nov 2020 19:05:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iiGVfdCI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="d0t0faqK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728256AbgKFTFE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Nov 2020 14:05:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59398 "EHLO
+        id S1728203AbgKFTEt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Nov 2020 14:04:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728191AbgKFTEt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Nov 2020 14:04:49 -0500
+        with ESMTP id S1727287AbgKFTEm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Nov 2020 14:04:42 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 091BEC0613D2;
-        Fri,  6 Nov 2020 11:04:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7C6AC0613D3;
+        Fri,  6 Nov 2020 11:04:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=MupYDI4l/YovZ7RWUiZbIkKTEoIVA+KjloyNnUiTimo=; b=iiGVfdCIPPX+IkfTbBzmxkNClz
-        t982+XiX0rLzTMHY8HFo1Fp5Mtn7rK+diWNO+RHxxMdKcJUTti2/wcEDk1JuKfU/o4+K8dKleodTE
-        HTiaGtNCpYoo9vb3GGX4aLbLQQjLGGtNWkpDZpYqEwfuTn9hbBczupYDxFhREBpBASbSx6M7Lze9e
-        iKaTzCv7Ayt/qABbDvowSzznAcYB/VzFYgYnipTJO4suLkefkpjbVL2Cs7whyJwZIOchXyT0sQa+l
-        gQuWBa19/ZwoPZGFHeWQytUlRCgvx6EJq35hta2jU2txOK4i/ZI7bcgxRU7PROSuEa2OkMTwR08Xi
-        9io2po4w==;
+        bh=WS/5HaJpXF8+Aj3VZ2GQ3e6HnWhXjc79y2mDNxe6L1Y=; b=d0t0faqKeh0diZy5D+3oFd7PUF
+        TCyCK8sa/DuNKYU0jeT8wTyRvaiEBKDnaS6SEkdUTuybDBsIgoIeRPsAlzl5bKXOe6SmughSQbIEP
+        KkykvrhSx4ccDUXIrBKyrD0p4JiXqCPHgPeWfj3mWbknoX/XAnoyioec4TemaKCqv4ah93+QLH5cg
+        9/RsZdWQzxsF1SLgUEW0HOn02HqxzKnJlnn0keo28vvDdvLYdDXii4E52+MkqA7lju2awVWXrKJL6
+        ATVrFBAnHLMBbHBOSnGGHyMGWAswR83/TC1I7JT5bKbjrfZ4wEjHnEBd8a7RQ1Qnb4mvA0vQ78WTS
+        P88M1meg==;
 Received: from [2001:4bb8:184:9a8d:9e34:f7f4:e59e:ad6f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kb72H-00017b-Qy; Fri, 06 Nov 2020 19:04:34 +0000
+        id 1kb72A-00013z-Vd; Fri, 06 Nov 2020 19:04:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 23/24] virtio-blk: remove a spurious call to revalidate_disk_size
-Date:   Fri,  6 Nov 2020 20:03:35 +0100
-Message-Id: <20201106190337.1973127-24-hch@lst.de>
+Subject: [PATCH 20/24] dm-raid: use set_capacity_and_notify
+Date:   Fri,  6 Nov 2020 20:03:32 +0100
+Message-Id: <20201106190337.1973127-21-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201106190337.1973127-1-hch@lst.de>
 References: <20201106190337.1973127-1-hch@lst.de>
@@ -70,27 +70,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-revalidate_disk_size just updates the block device size from the disk
-size.  Thus calling it from revalidate_disk_size doesn't actually do
-anything.
+Use set_capacity_and_notify to set the size of both the disk and block
+device.  This also gets the uevent notifications for the resize for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/virtio_blk.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/md/dm-raid.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 3e812b4c32e669..145606dc52db1e 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -598,7 +598,6 @@ static void virtblk_update_cache_mode(struct virtio_device *vdev)
- 	struct virtio_blk *vblk = vdev->priv;
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 9c1f7c4de65b35..294f34d2d61bae 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -700,8 +700,7 @@ static void rs_set_capacity(struct raid_set *rs)
+ {
+ 	struct gendisk *gendisk = dm_disk(dm_table_get_md(rs->ti->table));
  
- 	blk_queue_write_cache(vblk->disk->queue, writeback, false);
--	revalidate_disk_size(vblk->disk, true);
+-	set_capacity(gendisk, rs->md.array_sectors);
+-	revalidate_disk_size(gendisk, true);
++	set_capacity_and_notify(gendisk, rs->md.array_sectors);
  }
  
- static const char *const virtblk_cache_types[] = {
+ /*
 -- 
 2.28.0
 
