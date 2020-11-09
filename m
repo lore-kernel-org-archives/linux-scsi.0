@@ -2,110 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C11C0C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 22:32:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27374C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 23:28:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63FD2206CB
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 22:32:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hBSkS5ZZ"
+	by mail.kernel.org (Postfix) with ESMTP id D5F6B206ED
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 23:28:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730121AbgKIWc2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 17:32:28 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36547 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729706AbgKIWc1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 17:32:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604961146;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ilWn6M2YeSNAy1OjrKgETUEYS6rW9P62pTXErbsPxXU=;
-        b=hBSkS5ZZM/2yMLx0Q7UeHV1O1D/PDxh+CRQ8tsUnGZGu0IRACOYqUN3dWNPIkl03OYBwBc
-        8gLsm/qx5Ihg57FemU3L6wl4rycR7C/6Vaf/hogm7mbx89Mhb/CX68IAdr1iWznvbjJrLW
-        sMm7Fc/lbFGcDR6pYyR/rAtO+pAPblo=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-477-xWfjFHSCM-OH6wr39Rnmtg-1; Mon, 09 Nov 2020 17:32:24 -0500
-X-MC-Unique: xWfjFHSCM-OH6wr39Rnmtg-1
-Received: by mail-wr1-f71.google.com with SMTP id f4so1821629wru.21
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2020 14:32:24 -0800 (PST)
+        id S1729585AbgKIX2z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 18:28:55 -0500
+Received: from mail-wm1-f53.google.com ([209.85.128.53]:39700 "EHLO
+        mail-wm1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727070AbgKIX2z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 18:28:55 -0500
+Received: by mail-wm1-f53.google.com with SMTP id s13so1198991wmh.4;
+        Mon, 09 Nov 2020 15:28:53 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ilWn6M2YeSNAy1OjrKgETUEYS6rW9P62pTXErbsPxXU=;
-        b=tgIeAxyFJ5fl83AGxiNK7cy7mgXKc9x9PKStIiKkshmHNBIqD5a1DobNJ2g9TEORKs
-         Gj87+lwrsGMbrqF67+mkZAx9UektGVNUYn3yKIRAYLI8qdRRpV5kd+b5MDq26F2ik78i
-         RCUU9aNkD8VYR5A6wdC355ceooTP8d+7RFuIUBl7JdBQBHFO85O9VrI9XK4TMcL16N8O
-         UN/DMBKdn116R3tWSc93yYwbANQnzQASlBcs5+CxZbrzrNbrnBVGPK3NVPm7WwxVmVZn
-         l8QgKBKtywERBd5tO2U3N7V2qPDyVwnxXzuq5hMjulauMxFD5dIH+jdW0oMbhl7Gu7Nb
-         bauQ==
-X-Gm-Message-State: AOAM532u7Dfor327ilqdHjXEPuXQ0iLfgu0EbOnEAw8YzHai9avm1EOY
-        6TieVPic7XaV6If14TamvDVhVuVmHbkKH6FD00rX5ZCYFRizm7NrRp2OF9S8tTkUXMfKq1hHBMn
-        saWAm1GJ2tcaCaHUsnSCD3Q==
-X-Received: by 2002:adf:9544:: with SMTP id 62mr20108968wrs.223.1604961143332;
-        Mon, 09 Nov 2020 14:32:23 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyh47AqupUQogPqD176lZqagmPngj1Pmkx6eJjzzl/nhQE8xwUWQt+djiOvPwM7ngtjJEbr0g==
-X-Received: by 2002:adf:9544:: with SMTP id 62mr20108951wrs.223.1604961143173;
-        Mon, 09 Nov 2020 14:32:23 -0800 (PST)
-Received: from redhat.com (bzq-79-176-118-93.red.bezeqint.net. [79.176.118.93])
-        by smtp.gmail.com with ESMTPSA id y185sm841543wmb.29.2020.11.09.14.32.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2020 14:32:21 -0800 (PST)
-Date:   Mon, 9 Nov 2020 17:32:18 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     Jason Wang <jasowang@redhat.com>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        pbonzini@redhat.com, stefanha@redhat.com,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 06/11] vhost: support delayed vq creation
-Message-ID: <20201109173058-mutt-send-email-mst@kernel.org>
-References: <1604528804-2878-1-git-send-email-michael.christie@oracle.com>
- <1604528804-2878-7-git-send-email-michael.christie@oracle.com>
- <56056e8d-d6ff-9a6e-2a7e-1ea1737b1d27@redhat.com>
- <54285b79-637e-3dcd-382f-ddeff44f6019@oracle.com>
- <fc22b679-08c1-85bb-515a-8f63de7148a2@oracle.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uVd85Bl4q22td+3jSMit0FtxZJ1sJtChRiPRn7GLPMw=;
+        b=HmwiSpFl37ey7W+KPYX0yuTvszCkzbZPqiU2uXb6qT02LkHBR46YeEhm9srTHyhJF2
+         FRS9/deJcROvz4rWp1AWoJmDeFSQbccznPh0nKBwG/zkGqXCW3fOeKxDRzDhpycI6QOo
+         Xkp7YymryHYQdqkrPPqha15m0Td85ytosagMBI/DbYq0KErPYPeNriK0QKEK722VPLbZ
+         0pBJObub8M+MSF+2NQuhzdhpuvBZTgdW9H22O9sbjmuPDAPRyAy5BgNFOHGYmz2bDT6Z
+         2VOv+XV2Yi2cWR3JWgUzwccsUSeHdMpJthdjmXkX0NeItxwAZOEUtxCm/0Yk/mlAHsO0
+         4HPA==
+X-Gm-Message-State: AOAM531WI4EAudH0HhWYHlwY+eeDGMxcDgTkQF1n8zxx3HEmdg0fiyuE
+        LZ/VB59ZM7ilfY22SNRc62uTFY8US70=
+X-Google-Smtp-Source: ABdhPJyLfZWJAVtXVvWavay6Dkz/YKClz0bIC5QMERvUePaULd58OWlCLidmjNr2cN/ZVx4HfgINbw==
+X-Received: by 2002:a7b:c2f7:: with SMTP id e23mr1575766wmk.100.1604964532362;
+        Mon, 09 Nov 2020 15:28:52 -0800 (PST)
+Received: from ?IPv6:2601:647:4802:9070:f26a:270b:f54c:37eb? ([2601:647:4802:9070:f26a:270b:f54c:37eb])
+        by smtp.gmail.com with ESMTPSA id c17sm6900728wro.19.2020.11.09.15.28.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Nov 2020 15:28:51 -0800 (PST)
+Subject: Re: [PATCH 03/24] nvme: let set_capacity_revalidate_and_notify update
+ the bdev size
+To:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20201106190337.1973127-1-hch@lst.de>
+ <20201106190337.1973127-4-hch@lst.de>
+ <1d06cdfa-a904-30be-f3ec-08ae2fa85cbd@suse.de>
+ <20201109085340.GB27483@lst.de>
+ <e79f9a96-ef53-d6ea-f6e7-e141bdd2e2d2@suse.de>
+From:   Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <d28042e3-3123-5dfc-d0a2-aab0012150c8@grimberg.me>
+Date:   Mon, 9 Nov 2020 15:28:44 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fc22b679-08c1-85bb-515a-8f63de7148a2@oracle.com>
+In-Reply-To: <e79f9a96-ef53-d6ea-f6e7-e141bdd2e2d2@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 09, 2020 at 02:30:36PM -0600, Mike Christie wrote:
-> On 11/9/20 12:41 PM, Mike Christie wrote:
-> > 
-> > If you want to pair this patchset down to it's bare bug fixes that
-> > prevent users from getting IO errors, I would do ring.addr check only
-> > approach for this bug fix patchset.
-> 
-> Oh yeah, just so we don't have to burn an extra day, above I'm proposing I
-> repost the original patchset:
-> 
-> https://lore.kernel.org/linux-scsi/1600712588-9514-1-git-send-email-michael.christie@oracle.com/t/
-> 
-> for the bug fix only patches. It will have the compile error fixed and
-> Bart's comment handled.
-> 
-> To even trim it down more I can also drop the last 2 patches:
-> 
-> 0007-vhost-remove-work-arg-from-vhost_work_flush.patch
-> 0008-vhost-scsi-remove-extra-flushes.patch
-> 
-> and send separately in a cleanups patchset since the extra flushes it kills
-> don't really hurt.
 
-Makes sense to me.
+> [ .. ]
+>>> Originally nvme multipath would update/change the size of the multipath
+>>> device according to the underlying path devices.
+>>> With this patch the size of the multipath device will _not_ change if 
+>>> there
+>>> is a change on the underlying devices.
+>>
+>> Yes, it will.  Take a close look at nvme_update_disk_info and how it is
+>> called.
+>>
+> Okay, then: What would be the correct way of handling a size update for 
+> NVMe multipath?
+> Assuming we're getting an AEN for each path signalling the size change
+> (or a controller reset leading to a size change).
+> So if we're updating the size of the multipath device together with the 
+> path device at the first AEN/reset we'll end up with the other paths 
+> having a different size than the multipath device (and the path we've 
+> just been updating).
+> - Do we care, or cross fingers and hope for the best?
+> - Shouldn't we detect the case where we won't get a size update for the 
+> other paths, or, indeed, we have a genuine device size mismatch due to a 
+> misconfiguration on the target?
+> 
+> IE shouldn't we have a flag 'size update pending' for the other paths,, 
+> to take them out ouf use temporarily until the other AENs/resets have 
+> been processed?
 
--- 
-MST
+the mpath device will take the minimum size from all the paths, that is
+what blk_stack_limits does. When the AEN for all the paths will arrive
+the mpath size will update.
 
+Not sure how this is different than what we have today...
