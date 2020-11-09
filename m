@@ -2,454 +2,184 @@ Return-Path: <SRS0=ULGd=EP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F780C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 04:02:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C837C2D0A3
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 04:57:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 254EF221FC
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 04:02:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B28F02084C
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 04:57:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FJldVZjh"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ew2VBRlp";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="Wd+N6tVY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729244AbgKIECO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Nov 2020 23:02:14 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60499 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728038AbgKIECO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2020 23:02:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604894531;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NTEavUB7e9p3f2tJL/wIzGTjl9u7Dmr+MnnZamc8KXc=;
-        b=FJldVZjhF320emPKxTl6VuVQE0SZ1ymoiBRYV7y6um4kcNHU5AlwsJafEUp2+UoX9/udhh
-        YqSc4eMqaM8ygiT8cTialp5lADe0Y2B0mKowK/OxaTQA7Mj7xhMDnydDlK9E0T6+xcz8lT
-        SQpvzBzWaa3Yht29Nhau/Di8uppr4t8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-503-fLyUp8nNPzyHc8sBEC8eYw-1; Sun, 08 Nov 2020 23:02:09 -0500
-X-MC-Unique: fLyUp8nNPzyHc8sBEC8eYw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 89B41809DCF;
-        Mon,  9 Nov 2020 04:02:08 +0000 (UTC)
-Received: from [10.72.12.244] (ovpn-12-244.pek2.redhat.com [10.72.12.244])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9A89C277B6;
-        Mon,  9 Nov 2020 04:01:59 +0000 (UTC)
-Subject: Re: [PATCH 06/11] vhost: support delayed vq creation
-To:     Mike Christie <michael.christie@oracle.com>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, pbonzini@redhat.com,
-        stefanha@redhat.com, virtualization@lists.linux-foundation.org
-References: <1604528804-2878-1-git-send-email-michael.christie@oracle.com>
- <1604528804-2878-7-git-send-email-michael.christie@oracle.com>
-From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <56056e8d-d6ff-9a6e-2a7e-1ea1737b1d27@redhat.com>
-Date:   Mon, 9 Nov 2020 12:01:58 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <1604528804-2878-7-git-send-email-michael.christie@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        id S1728814AbgKIE5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Nov 2020 23:57:34 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64670 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728038AbgKIE5d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2020 23:57:33 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0A94rCLw015108;
+        Sun, 8 Nov 2020 20:56:45 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0220;
+ bh=13DjEgYtNijdBjDuD8MAiJ8OyiqtMH3YWuHp6Ah0g14=;
+ b=ew2VBRlpJsuGIKjB+8hr9yzfUHEvIVmAlS3JDPBnJUKOMaJSJIjS8k8U1IwUPA9aWvsM
+ /pA6dEi3K78b/GewNhRFE9NalEIdQLFpCeSI0wyG9vT96ncvXb4yrp9s4k88DqAMPzLb
+ 36H/CdweCChQyBdDC9FCvThbkigAXABV3cd6rntWcPxPC8koDILp59Sz/EgCe0D4mfdW
+ YTlLfUJm5pCJ0IbRMUAHk3NP1u8r5XlqmavcnPo0fv5x9RcmC6bQBDOnS9+xczakBKLr
+ lbZxeYBpcwds6n0vAo/3q2Hui0x+8S7J9Wp+L8tLKKl2HEWSSF9FI1Xojz+fiJNNYbvu EQ== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 34nuys8gg4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Sun, 08 Nov 2020 20:56:45 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 8 Nov
+ 2020 20:56:43 -0800
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 8 Nov
+ 2020 20:56:43 -0800
+Received: from NAM04-SN1-obe.outbound.protection.outlook.com (104.47.44.58) by
+ SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Sun, 8 Nov 2020 20:56:42 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Eilm3HFVfgAXoEj8S0kiCHZLK9Kbo7mkbQX4o4n7lWKL8rMqTPeqcarilwfixqxmZjgRr/kDUS/+NOclIqZ2xdEs5Q2xw1Emq7xcBTEBJh0Wfdo+kvV76bJYsxFbdXLnlZpiEetU527mcIM6zDX936U+TX2UN45qDepgEHPN+ObKe31R0oravZjNZddgxco4Vbj0jKu5YYin+j2YfpghQw8qFReGHWyRkGGhu0djhPjH5Jd7cdbXedFKSYdiEFFU+cwY4w7X8IKRg5DoS7/dARnHPlJiOugjbb5/HJSNncbpQQkkAv+MB9g44X3phKzxGkvAdDdKAaKpzXi3oohBnw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=13DjEgYtNijdBjDuD8MAiJ8OyiqtMH3YWuHp6Ah0g14=;
+ b=Zal4WkaNxEimAiJ64t0wmIji66+dAVey4rk9QXqJsO3qXfqmazlGctBM79YktyGSGqknwwGJWpVUYbnYV5LzZyUDKV9Z9LFemKIgtaJqgz2jQjsosa7eA4eAoBkL+y8b7G3RkML9EEX2f4A1Mv4YS7ebvSRhqZ/QtwFbSh0Uj8dENg2IDOL1XaAFueoCxj43Dyup5+M4M5hTCXEONUhnKAE1TI2E86Yr9V5/uoqgxoKWFF4lKUmUHpWTWbWdKv6AQ9aPLnbTM6asnzszRoMSMn2xQTl28abVIl+FyGw/ENNaUvVuW8TU1zEqQ7JvMI3FgkQ2NMbjKPees73XQ2x8JQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=13DjEgYtNijdBjDuD8MAiJ8OyiqtMH3YWuHp6Ah0g14=;
+ b=Wd+N6tVY5xoDrnLR24ZNsnbBPbgta7ksUb2cL6W15PR8LPV5bpcKxL1i8yXc8dYWDUSs5ntX6qE32rdi9mr7L6IrzWLxoLoxpG4/sFMCGOFG0cbQ0Dwjd+M9U+j02Bff4zi3cwN7pj+kDPSGyxGHKemTyTEvNx+JOsDZZdNJdmk=
+Received: from DM6PR18MB3034.namprd18.prod.outlook.com (2603:10b6:5:18c::32)
+ by DM6PR18MB2602.namprd18.prod.outlook.com (2603:10b6:5:15d::25) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3541.25; Mon, 9 Nov
+ 2020 04:56:40 +0000
+Received: from DM6PR18MB3034.namprd18.prod.outlook.com
+ ([fe80::a087:2131:1284:66e7]) by DM6PR18MB3034.namprd18.prod.outlook.com
+ ([fe80::a087:2131:1284:66e7%7]) with mapi id 15.20.3541.025; Mon, 9 Nov 2020
+ 04:56:40 +0000
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     "xiakaixu1987@gmail.com" <xiakaixu1987@gmail.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: RE: [PATCH] scsi: bnx2fc: fix comparison to bool warning
+Thread-Topic: [PATCH] scsi: bnx2fc: fix comparison to bool warning
+Thread-Index: AQHWtSZXw7LwU+PJ/EKQqIb/yr/v3am/PtBw
+Date:   Mon, 9 Nov 2020 04:56:40 +0000
+Message-ID: <DM6PR18MB3034D9FD587A112D92062257D2EA0@DM6PR18MB3034.namprd18.prod.outlook.com>
+References: <1604767920-8361-1-git-send-email-kaixuxia@tencent.com>
+In-Reply-To: <1604767920-8361-1-git-send-email-kaixuxia@tencent.com>
+Accept-Language: en-GB, en-US
 Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=marvell.com;
+x-originating-ip: [117.211.149.245]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 6f4b65ea-04e4-45b5-a27d-08d8846bd880
+x-ms-traffictypediagnostic: DM6PR18MB2602:
+x-microsoft-antispam-prvs: <DM6PR18MB2602E5DA2F70930EE8F94D10D2EA0@DM6PR18MB2602.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:6108;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: DtUL7nckaPcHksa4wkZYTeZjMbl2lRnjcZwg+z2xBPFltCbhOkX9/Hr3V6lU7VY/2q62/023IopVtmgwVEw/uE9WbcNxZgHgke1MewhuhN3LCRLeMgEDOI3Jt9rrz6sQ2GhoVmrAeA+EG0Rh+38gXwM3mLAzAnC1RsaS6IEqDMCvwnpthIWAzxt0u2J1r7fCW3nc7g1NamrygbuylSJN3gx9T201gd2TpRKPiAP+hpLyQ1p/i8+Zxw8GFng+YUZT566gcgArjcj/yeduoUzx+PH4SCMh4Sd6TUofX8ytgMZhheMPIE6rUMVeNLIGuHdWt9QKbUGsDJD4tDsUxxO3xg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR18MB3034.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(346002)(396003)(39850400004)(366004)(376002)(83380400001)(9686003)(8936002)(4326008)(8676002)(2906002)(55016002)(478600001)(316002)(110136005)(54906003)(86362001)(6506007)(26005)(186003)(52536014)(7696005)(53546011)(33656002)(66946007)(66446008)(66556008)(76116006)(64756008)(66476007)(5660300002)(71200400001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: mz1DgVr9Jx9kNCD2KCalt9Tt1C6r91wdu41l6XeEEyr5hJOypbFL76AV00vuHM0BJBxRukg3PRUJHTph3fCaIOPRenJfv7W1OZRnqXOq6u6oZDCr+qeNyG+sjc/8qLrKdX2vAzJaVwBtBRdMuwtmURJW7fgPEW7YBpo/bd8HbXC9T4FHsUOFBWcmO2XyoNFRXr9M2hJipkTaodtRyxBcFKN2hGIGP2ItFElEmrwEnN7psyq+VVk0vKpgbs+pcc97nyeNQ7kU8+vqWrYgorwHF3yrnx43vS575eMxv2xXHcWl4Yz/T8I6a1aiLobBsvVT8rmLyos73a80wXTI7bLraey0gkygLQYLSRzu6UFyJ9HzsUlvwSvon8wxVPCa+CzzPWoe1IAg0q442W7Gf6Es1O9WwQYGLu3qo5W/zYFEPXXtZpYl9XVV+siutySw7vih3Vw1XDCl51y7hXXOdL6Z22v7pgHkMYvG9CQSGcuvZn5kFSIdJIPi/dx6s74yQsjV/OS8mQWTO+4y6xp9LoAlvQP0lMKiaJdS3DLIggZPMuDVcpmmblFZQGWldIc6490ZC3f8NWbsS5FlIDEvtoQwsuK0i3/G/44393+wtXjfzuSbPXYM7ocKqxbjGJ1c7y1gXobyqMUdyGl9Rr+9Y9S0HQ==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR18MB3034.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6f4b65ea-04e4-45b5-a27d-08d8846bd880
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2020 04:56:40.0621
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: NbkymrKcudEENrSKJFcdKi0ISBhqZ4FgvF15UkDTJQ/8L48dq5wV4XYOTV7AnC15IAOjCAq83k/UBgHY8s2Gjw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR18MB2602
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-09_01:2020-11-05,2020-11-09 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 2020/11/5 上午6:26, Mike Christie wrote:
-> This allows vq creation to be done when it's first accessed by
-> userspace. vhost-scsi doesn't know how many queues the user requested
-> until they are first setup, and we don't want to allocate resources
-> like the iovecs for 128 vqs when we are only using 1 or 2 most of the
-> time. In the next pathces, vhost-scsi will also switch to preallocating
-> cmds per vq instead of per lio session and we don't want to allocate
-> them for 127 extra vqs if they are not in use.
->
-> With this patch when a driver calls vhost_dev_init they pass in the
-> number of vqs that they know they need and the max they can support.
-> This patch has all the drivers pass in the same value for both the
-> initial number of vqs and the max. The next patch will convert scsi.
-> The other drivers like net/vsock have their vqs hard coded in the
-> kernel or setup/discovered via other methods like with vdpa.
->
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Hi,
 
 
-This looks like a delayed vq metadata creation instead of vq itself.
-
-Several questions:
-
-- can we simply introduce new ioctls to set the #max_vqs for SCSI? Or 
-simply introduce VRING_ENABLE ioctl for SCSI and let qemu to call that 
-ioctl for 1.0 device, qemu can simply forward the ENABLE command to 
-vhost-scsi, for 0.9x device qemu can simply check whether ring.addr is 
-zero or not?
-- if not, it's better to convert all the devices/queues to behave as if 
-SCSI to have a consistent way allocate metadata
-- do we need to care about vq free, e.g free vqs during reset?
-
-Thanks
-
-
+> -----Original Message-----
+> From: xiakaixu1987@gmail.com <xiakaixu1987@gmail.com>
+> Sent: Saturday, November 7, 2020 10:22 PM
+> To: jejb@linux.ibm.com; martin.petersen@oracle.com
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Kaixu Xia
+> <kaixuxia@tencent.com>
+> Subject: [PATCH] scsi: bnx2fc: fix comparison to bool warning
+>=20
+> From: Kaixu Xia <kaixuxia@tencent.com>
+>=20
+> Fix the following coccicheck warning:
+>=20
+> ./drivers/scsi/bnx2fc/bnx2fc_fcoe.c:2089:5-23: WARNING: Comparison to boo=
+l
+> ./drivers/scsi/bnx2fc/bnx2fc_fcoe.c:2187:5-23: WARNING: Comparison to boo=
+l
+>=20
+> Reported-by: Tosk Robot <tencent_os_robot@tencent.com>
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 > ---
->   drivers/vhost/net.c   |  2 +-
->   drivers/vhost/scsi.c  |  4 +--
->   drivers/vhost/test.c  |  5 ++--
->   drivers/vhost/vdpa.c  |  2 +-
->   drivers/vhost/vhost.c | 71 ++++++++++++++++++++++++++++++++++-----------------
->   drivers/vhost/vhost.h |  7 +++--
->   drivers/vhost/vsock.c | 11 ++++----
->   7 files changed, 66 insertions(+), 36 deletions(-)
+>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 6890bbe04a8c..b612f5ea647e 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -2086,7 +2086,7 @@ static int __bnx2fc_disable(struct fcoe_ctlr *ctlr)
+>  {
+>  	struct bnx2fc_interface *interface =3D fcoe_ctlr_priv(ctlr);
+>=20
+> -	if (interface->enabled =3D=3D true) {
+> +	if (interface->enabled) {
+>  		if (!ctlr->lp) {
+>  			pr_err(PFX "__bnx2fc_disable: lport not found\n");
+>  			return -ENODEV;
+> @@ -2184,7 +2184,7 @@ static int __bnx2fc_enable(struct fcoe_ctlr *ctlr)
+>  	struct cnic_fc_npiv_tbl *npiv_tbl;
+>  	struct fc_lport *lport;
+>=20
+> -	if (interface->enabled =3D=3D false) {
+> +	if (!interface->enabled) {
+>  		if (!ctlr->lp) {
+>  			pr_err(PFX "__bnx2fc_enable: lport not found\n");
+>  			return -ENODEV;
 >
-> diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
-> index fd30b53..fce46f0 100644
-> --- a/drivers/vhost/net.c
-> +++ b/drivers/vhost/net.c
-> @@ -1316,7 +1316,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
->   		n->vqs[i].rx_ring = NULL;
->   		vhost_net_buf_init(&n->vqs[i].rxq);
->   	}
-> -	if (vhost_dev_init(dev, vqs, VHOST_NET_VQ_MAX,
-> +	if (vhost_dev_init(dev, vqs, VHOST_NET_VQ_MAX, VHOST_NET_VQ_MAX,
->   			   UIO_MAXIOV + VHOST_NET_BATCH,
->   			   VHOST_NET_PKT_WEIGHT, VHOST_NET_WEIGHT, true,
->   			   NULL))
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index ed8baf9..5b3720e 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -1632,8 +1632,8 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
->   		vqs[i] = &vs->vqs[i].vq;
->   		vs->vqs[i].vq.handle_kick = vhost_scsi_handle_kick;
->   	}
-> -	r = vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ, UIO_MAXIOV,
-> -			   VHOST_SCSI_WEIGHT, 0, true, NULL);
-> +	r = vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ, VHOST_SCSI_MAX_VQ,
-> +			   UIO_MAXIOV, VHOST_SCSI_WEIGHT, 0, true, NULL);
->   	if (r)
->   		goto err_dev_init;
->   
-> diff --git a/drivers/vhost/test.c b/drivers/vhost/test.c
-> index c255ae5..9d2bfa3 100644
-> --- a/drivers/vhost/test.c
-> +++ b/drivers/vhost/test.c
-> @@ -119,8 +119,9 @@ static int vhost_test_open(struct inode *inode, struct file *f)
->   	dev = &n->dev;
->   	vqs[VHOST_TEST_VQ] = &n->vqs[VHOST_TEST_VQ];
->   	n->vqs[VHOST_TEST_VQ].handle_kick = handle_vq_kick;
-> -	if (vhost_dev_init(dev, vqs, VHOST_TEST_VQ_MAX, UIO_MAXIOV,
-> -			   VHOST_TEST_PKT_WEIGHT, VHOST_TEST_WEIGHT, true, NULL)
-> +	if (vhost_dev_init(dev, vqs, VHOST_TEST_VQ_MAX, VHOST_TEST_VQ_MAX,
-> +			   UIO_MAXIOV, VHOST_TEST_PKT_WEIGHT, VHOST_TEST_WEIGHT,
-> +			   true, NULL)
->   		goto err_dev_init;
->   
->   	f->private_data = n;
-> diff --git a/drivers/vhost/vdpa.c b/drivers/vhost/vdpa.c
-> index c1615a7..6abd9d8 100644
-> --- a/drivers/vhost/vdpa.c
-> +++ b/drivers/vhost/vdpa.c
-> @@ -829,7 +829,7 @@ static int vhost_vdpa_open(struct inode *inode, struct file *filep)
->   		vqs[i] = &v->vqs[i];
->   		vqs[i]->handle_kick = handle_vq_kick;
->   	}
-> -	r = vhost_dev_init(dev, vqs, nvqs, 0, 0, 0, false,
-> +	r = vhost_dev_init(dev, vqs, nvqs, nvqs, 0, 0, 0, false,
->   			   vhost_vdpa_process_iotlb_msg);
->   	if (r)
->   		goto err_dev_init;
-> diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
-> index a4a4450..2ca2e71 100644
-> --- a/drivers/vhost/vhost.c
-> +++ b/drivers/vhost/vhost.c
-> @@ -294,7 +294,7 @@ static void vhost_vq_meta_reset(struct vhost_dev *d)
->   {
->   	int i;
->   
-> -	for (i = 0; i < d->nvqs; ++i)
-> +	for (i = 0; i < d->max_nvqs; ++i)
->   		__vhost_vq_meta_reset(d->vqs[i]);
->   }
->   
-> @@ -331,6 +331,7 @@ static void vhost_vq_reset(struct vhost_dev *dev,
->   	vq->busyloop_timeout = 0;
->   	vq->umem = NULL;
->   	vq->iotlb = NULL;
-> +	vq->initialized = false;
->   	vhost_vring_call_reset(&vq->call_ctx);
->   	__vhost_vq_meta_reset(vq);
->   }
-> @@ -411,7 +412,7 @@ static void vhost_dev_free_iovecs(struct vhost_dev *dev)
->   {
->   	int i;
->   
-> -	for (i = 0; i < dev->nvqs; ++i)
-> +	for (i = 0; i < dev->max_nvqs; ++i)
->   		vhost_vq_free_iovecs(dev->vqs[i]);
->   }
->   
-> @@ -456,7 +457,7 @@ static size_t vhost_get_desc_size(struct vhost_virtqueue *vq,
->   	return sizeof(*vq->desc) * num;
->   }
->   
-> -static int vhost_vq_init(struct vhost_dev *dev, struct vhost_virtqueue *vq)
-> +static void __vhost_vq_init(struct vhost_dev *dev, struct vhost_virtqueue *vq)
->   {
->   	vq->log = NULL;
->   	vq->indirect = NULL;
-> @@ -467,12 +468,29 @@ static int vhost_vq_init(struct vhost_dev *dev, struct vhost_virtqueue *vq)
->   
->   	if (vq->handle_kick)
->   		vhost_poll_init(&vq->poll, vq->handle_kick, EPOLLIN, dev);
-> +}
-> +
-> +static int vhost_vq_init(struct vhost_dev *dev, int vq_idx)
-> +{
-> +	struct vhost_virtqueue *vq;
-> +	int ret;
-> +
-> +	if (vq_idx >= dev->max_nvqs)
-> +		return -ENOBUFS;
-> +
-> +	vq = dev->vqs[vq_idx];
-> +	__vhost_vq_init(dev, vq);
-> +	ret = vhost_vq_alloc_iovecs(dev, vq);
-> +	if (ret)
-> +		return ret;
->   
-> -	return vhost_vq_alloc_iovecs(dev, vq);
-> +	vq->initialized = true;
-> +	dev->nvqs++;
-> +	return 0;
->   }
->   
->   int vhost_dev_init(struct vhost_dev *dev,
-> -		   struct vhost_virtqueue **vqs, int nvqs,
-> +		   struct vhost_virtqueue **vqs, int nvqs, int max_nvqs,
->   		   int iov_limit, int weight, int byte_weight,
->   		   bool use_worker,
->   		   int (*msg_handler)(struct vhost_dev *dev,
-> @@ -481,7 +499,8 @@ int vhost_dev_init(struct vhost_dev *dev,
->   	int i;
->   
->   	dev->vqs = vqs;
-> -	dev->nvqs = nvqs;
-> +	dev->nvqs = 0;
-> +	dev->max_nvqs = max_nvqs;
->   	mutex_init(&dev->mutex);
->   	dev->log_ctx = NULL;
->   	dev->umem = NULL;
-> @@ -499,12 +518,15 @@ int vhost_dev_init(struct vhost_dev *dev,
->   	INIT_LIST_HEAD(&dev->pending_list);
->   	spin_lock_init(&dev->iotlb_lock);
->   
-> -
-> -	for (i = 0; i < dev->nvqs; ++i) {
-> -		if (vhost_vq_init(dev, dev->vqs[i]))
-> +	for (i = 0; i < nvqs; ++i) {
-> +		if (vhost_vq_init(dev, i))
->   			goto err_vq_init;
->   	}
->   
-> +	for (; i < dev->max_nvqs; ++i)
-> +		/* Just prep/clear the fields and set initialized=false */
-> +		__vhost_vq_init(dev, dev->vqs[i]);
-> +
->   	return 0;
->   
->   err_vq_init:
-> @@ -652,7 +674,7 @@ void vhost_dev_reset_owner(struct vhost_dev *dev, struct vhost_iotlb *umem)
->   	/* We don't need VQ locks below since vhost_dev_cleanup makes sure
->   	 * VQs aren't running.
->   	 */
-> -	for (i = 0; i < dev->nvqs; ++i)
-> +	for (i = 0; i < dev->max_nvqs; ++i)
->   		dev->vqs[i]->umem = umem;
->   }
->   EXPORT_SYMBOL_GPL(vhost_dev_reset_owner);
-> @@ -661,7 +683,7 @@ void vhost_dev_stop(struct vhost_dev *dev)
->   {
->   	int i;
->   
-> -	for (i = 0; i < dev->nvqs; ++i) {
-> +	for (i = 0; i < dev->max_nvqs; ++i) {
->   		if (dev->vqs[i]->kick && dev->vqs[i]->handle_kick) {
->   			vhost_poll_stop(&dev->vqs[i]->poll);
->   			vhost_poll_flush(&dev->vqs[i]->poll);
-> @@ -693,7 +715,7 @@ void vhost_dev_cleanup(struct vhost_dev *dev)
->   {
->   	int i;
->   
-> -	for (i = 0; i < dev->nvqs; ++i) {
-> +	for (i = 0; i < dev->max_nvqs; ++i) {
->   		if (dev->vqs[i]->error_ctx)
->   			eventfd_ctx_put(dev->vqs[i]->error_ctx);
->   		if (dev->vqs[i]->kick)
-> @@ -787,7 +809,7 @@ static bool memory_access_ok(struct vhost_dev *d, struct vhost_iotlb *umem,
->   {
->   	int i;
->   
-> -	for (i = 0; i < d->nvqs; ++i) {
-> +	for (i = 0; i < d->max_nvqs; ++i) {
->   		bool ok;
->   		bool log;
->   
-> @@ -999,14 +1021,14 @@ static inline int vhost_put_used_idx(struct vhost_virtqueue *vq)
->   static void vhost_dev_lock_vqs(struct vhost_dev *d)
->   {
->   	int i = 0;
-> -	for (i = 0; i < d->nvqs; ++i)
-> +	for (i = 0; i < d->max_nvqs; ++i)
->   		mutex_lock_nested(&d->vqs[i]->mutex, i);
->   }
->   
->   static void vhost_dev_unlock_vqs(struct vhost_dev *d)
->   {
->   	int i = 0;
-> -	for (i = 0; i < d->nvqs; ++i)
-> +	for (i = 0; i < d->max_nvqs; ++i)
->   		mutex_unlock(&d->vqs[i]->mutex);
->   }
->   
-> @@ -1462,7 +1484,7 @@ static long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)
->   	d->umem = newumem;
->   
->   	/* All memory accesses are done under some VQ mutex. */
-> -	for (i = 0; i < d->nvqs; ++i) {
-> +	for (i = 0; i < d->max_nvqs; ++i) {
->   		mutex_lock(&d->vqs[i]->mutex);
->   		d->vqs[i]->umem = newumem;
->   		mutex_unlock(&d->vqs[i]->mutex);
-> @@ -1590,11 +1612,14 @@ long vhost_vring_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *arg
->   	r = get_user(idx, idxp);
->   	if (r < 0)
->   		return r;
-> -	if (idx >= d->nvqs)
-> -		return -ENOBUFS;
->   
-> -	idx = array_index_nospec(idx, d->nvqs);
-> +	idx = array_index_nospec(idx, d->max_nvqs);
->   	vq = d->vqs[idx];
-> +	if (!vq->initialized) {
-> +		r = vhost_vq_init(d, idx);
-> +		if (r)
-> +			return r;
-> +	}
->   
->   	if (ioctl == VHOST_SET_VRING_NUM ||
->   	    ioctl == VHOST_SET_VRING_ADDR) {
-> @@ -1724,7 +1749,7 @@ int vhost_init_device_iotlb(struct vhost_dev *d, bool enabled)
->   	oiotlb = d->iotlb;
->   	d->iotlb = niotlb;
->   
-> -	for (i = 0; i < d->nvqs; ++i) {
-> +	for (i = 0; i < d->max_nvqs; ++i) {
->   		struct vhost_virtqueue *vq = d->vqs[i];
->   
->   		mutex_lock(&vq->mutex);
-> @@ -1771,7 +1796,7 @@ long vhost_dev_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *argp)
->   			r = -EFAULT;
->   			break;
->   		}
-> -		for (i = 0; i < d->nvqs; ++i) {
-> +		for (i = 0; i < d->max_nvqs; ++i) {
->   			struct vhost_virtqueue *vq;
->   			void __user *base = (void __user *)(unsigned long)p;
->   			vq = d->vqs[i];
-> @@ -1794,7 +1819,7 @@ long vhost_dev_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *argp)
->   			break;
->   		}
->   		swap(ctx, d->log_ctx);
-> -		for (i = 0; i < d->nvqs; ++i) {
-> +		for (i = 0; i < d->max_nvqs; ++i) {
->   			mutex_lock(&d->vqs[i]->mutex);
->   			d->vqs[i]->log_ctx = d->log_ctx;
->   			mutex_unlock(&d->vqs[i]->mutex);
-> @@ -2609,7 +2634,7 @@ void vhost_set_backend_features(struct vhost_dev *dev, u64 features)
->   	int i;
->   
->   	mutex_lock(&dev->mutex);
-> -	for (i = 0; i < dev->nvqs; ++i) {
-> +	for (i = 0; i < dev->max_nvqs; ++i) {
->   		vq = dev->vqs[i];
->   		mutex_lock(&vq->mutex);
->   		vq->acked_backend_features = features;
-> diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-> index 9ad34b1..9677870 100644
-> --- a/drivers/vhost/vhost.h
-> +++ b/drivers/vhost/vhost.h
-> @@ -132,6 +132,8 @@ struct vhost_virtqueue {
->   	bool user_be;
->   #endif
->   	u32 busyloop_timeout;
-> +
-> +	bool initialized;
->   };
->   
->   struct vhost_msg_node {
-> @@ -148,6 +150,7 @@ struct vhost_dev {
->   	struct mutex mutex;
->   	struct vhost_virtqueue **vqs;
->   	int nvqs;
-> +	int max_nvqs;
->   	struct eventfd_ctx *log_ctx;
->   	struct llist_head work_list;
->   	struct task_struct *worker;
-> @@ -168,8 +171,8 @@ struct vhost_dev {
->   
->   bool vhost_exceeds_weight(struct vhost_virtqueue *vq, int pkts, int total_len);
->   int vhost_dev_init(struct vhost_dev *dev, struct vhost_virtqueue **vqs,
-> -		   int nvqs, int iov_limit, int weight, int byte_weight,
-> -		   bool use_worker,
-> +		   int nvqs, int max_nvqs, int iov_limit, int weight,
-> +		   int byte_weight, bool use_worker,
->   		   int (*msg_handler)(struct vhost_dev *dev,
->   				      struct vhost_iotlb_msg *msg));
->   long vhost_dev_set_owner(struct vhost_dev *dev);
-> diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c
-> index cae0083..bcdfd58 100644
-> --- a/drivers/vhost/vsock.c
-> +++ b/drivers/vhost/vsock.c
-> @@ -606,7 +606,7 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
->   {
->   	struct vhost_virtqueue **vqs;
->   	struct vhost_vsock *vsock;
-> -	int ret;
-> +	int ret, nvqs;
->   
->   	/* This struct is large and allocation could fail, fall back to vmalloc
->   	 * if there is no other way.
-> @@ -615,7 +615,8 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
->   	if (!vsock)
->   		return -ENOMEM;
->   
-> -	vqs = kmalloc_array(ARRAY_SIZE(vsock->vqs), sizeof(*vqs), GFP_KERNEL);
-> +	nvqs = ARRAY_SIZE(vsock->vqs);
-> +	vqs = kmalloc_array(nvqs, sizeof(*vqs), GFP_KERNEL);
->   	if (!vqs) {
->   		ret = -ENOMEM;
->   		goto out;
-> @@ -630,9 +631,9 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
->   	vsock->vqs[VSOCK_VQ_TX].handle_kick = vhost_vsock_handle_tx_kick;
->   	vsock->vqs[VSOCK_VQ_RX].handle_kick = vhost_vsock_handle_rx_kick;
->   
-> -	ret = vhost_dev_init(&vsock->dev, vqs, ARRAY_SIZE(vsock->vqs),
-> -			     UIO_MAXIOV, VHOST_VSOCK_PKT_WEIGHT,
-> -			     VHOST_VSOCK_WEIGHT, true, NULL);
-> +	ret = vhost_dev_init(&vsock->dev, vqs, nvqs, nvqs, UIO_MAXIOV,
-> +			     VHOST_VSOCK_PKT_WEIGHT, VHOST_VSOCK_WEIGHT, true,
-> +			     NULL);
->   	if (ret)
->   		goto err_dev_init;
->   
+Thanks for a patch.
+
+Acked-by: Saurav Kashyap <skashyap@marvell.com>
+
+Thanks,
+~Saurav
+ --
+> 2.20.0
+
 
