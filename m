@@ -2,87 +2,71 @@ Return-Path: <SRS0=ULGd=EP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF27CC55ABD
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 08:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AE7C4741F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 09:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E0D820702
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 08:53:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9362A20731
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 09:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729757AbgKIIxp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 03:53:45 -0500
-Received: from verein.lst.de ([213.95.11.211]:57570 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727791AbgKIIxp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Nov 2020 03:53:45 -0500
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id AB71E6736F; Mon,  9 Nov 2020 09:53:40 +0100 (CET)
-Date:   Mon, 9 Nov 2020 09:53:40 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 03/24] nvme: let set_capacity_revalidate_and_notify
- update the bdev size
-Message-ID: <20201109085340.GB27483@lst.de>
-References: <20201106190337.1973127-1-hch@lst.de> <20201106190337.1973127-4-hch@lst.de> <1d06cdfa-a904-30be-f3ec-08ae2fa85cbd@suse.de>
+        id S1729859AbgKIJKP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 04:10:15 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:7158 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727791AbgKIJKP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 04:10:15 -0500
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4CV4vd5l9vz15RwB;
+        Mon,  9 Nov 2020 17:10:05 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
+ 14.3.487.0; Mon, 9 Nov 2020 17:10:05 +0800
+From:   Qinglang Miao <miaoqinglang@huawei.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Qinglang Miao" <miaoqinglang@huawei.com>
+Subject: [PATCH] scsi: ufshcd: fix missing destroy_workqueue() on error in ufshcd_init
+Date:   Mon, 9 Nov 2020 17:15:22 +0800
+Message-ID: <20201109091522.55989-1-miaoqinglang@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1d06cdfa-a904-30be-f3ec-08ae2fa85cbd@suse.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 09, 2020 at 08:53:58AM +0100, Hannes Reinecke wrote:
->> index 376096bfc54a83..4e86c9aafd88a7 100644
->> --- a/drivers/nvme/host/core.c
->> +++ b/drivers/nvme/host/core.c
->> @@ -2053,7 +2053,7 @@ static void nvme_update_disk_info(struct gendisk *disk,
->>   			capacity = 0;
->>   	}
->>   -	set_capacity_revalidate_and_notify(disk, capacity, false);
->> +	set_capacity_revalidate_and_notify(disk, capacity, true);
->>     	nvme_config_discard(disk, ns);
->>   	nvme_config_write_zeroes(disk, ns);
->> @@ -2136,7 +2136,6 @@ static int nvme_update_ns_info(struct nvme_ns *ns, struct nvme_id_ns *id)
->>   		blk_stack_limits(&ns->head->disk->queue->limits,
->>   				 &ns->queue->limits, 0);
->>   		blk_queue_update_readahead(ns->head->disk->queue);
->> -		nvme_update_bdev_size(ns->head->disk);
->>   		blk_mq_unfreeze_queue(ns->head->disk->queue);
->>   	}
->>   #endif
->
-> Hold on.
-> This, at the very least, should be a separate patch.
-> With this you are changing the behaviour of nvme multipath.
->
-> Originally nvme multipath would update/change the size of the multipath 
-> device according to the underlying path devices.
-> With this patch the size of the multipath device will _not_ change if there 
-> is a change on the underlying devices.
+Add the missing destroy_workqueue() before return from
+ufshcd_init in the error handling case. It seems that
+exit_gating is an appropriate place.
 
-Yes, it will.  Take a close look at nvme_update_disk_info and how it is
-called.
+Fixes: 4db7a2360597 ("scsi: ufs: Fix concurrency of error handler and other error recovery paths")
+Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index b8f573a02713..9eaa0eaca374 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9206,6 +9206,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ exit_gating:
+ 	ufshcd_exit_clk_scaling(hba);
+ 	ufshcd_exit_clk_gating(hba);
++	destroy_workqueue(hba->eh_wq);
+ out_disable:
+ 	hba->is_irq_enabled = false;
+ 	ufshcd_hba_exit(hba);
+-- 
+2.23.0
+
