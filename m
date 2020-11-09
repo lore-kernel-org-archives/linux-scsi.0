@@ -2,70 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C9CC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 15:59:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BB3C388F7
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 16:59:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 631B52074F
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 15:59:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0B8D21D46
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 16:59:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="NOlERqMf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729894AbgKIP7l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 10:59:41 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:7198 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726410AbgKIP7l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 10:59:41 -0500
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4CVFzw2NvlzkhV0;
-        Mon,  9 Nov 2020 23:59:24 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.487.0; Mon, 9 Nov 2020
- 23:59:32 +0800
-From:   Zhang Qilong <zhangqilong3@huawei.com>
-To:     <jinpu.wang@cloud.ionos.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: [PATCH] scsi: pm80xx: Fix error return in pm8001_pci_probe
-Date:   Tue, 10 Nov 2020 00:03:22 +0800
-Message-ID: <20201109160322.1938811-1-zhangqilong3@huawei.com>
-X-Mailer: git-send-email 2.25.4
+        id S1730704AbgKIQ67 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 11:58:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57894 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729776AbgKIQ67 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Nov 2020 11:58:59 -0500
+Received: from localhost (unknown [104.132.1.66])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0E18720789;
+        Mon,  9 Nov 2020 16:58:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604941139;
+        bh=WGEcmPXvVRi61x7imWKMEdS2fqmM9HkxAxRybtdcPMQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=NOlERqMfSxbiWBVfsUqkHzGXJN7umYN+eZXwHi0RAx2g40ylf9gwggxhjCN2BJJ8R
+         dYm2OYWPq82xFgNSTabN+Ldbj0mduIMM/kAcEBYWkhNBqPIUm1uP/nNtrSz7i9MYmt
+         NO4x8wKOc65ZWBvIQYNNyi+xL1nwvrvpOpbM4dA4=
+From:   Jaegeuk Kim <jaegeuk@kernel.org>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     Chao Yu <yuchao0@huawei.com>, Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: [PATCH] f2fs: avoid unneeded data copy in f2fs_ioc_move_range()
+Date:   Mon,  9 Nov 2020 08:58:57 -0800
+Message-Id: <20201109165857.2115554-1-jaegeuk@kernel.org>
+X-Mailer: git-send-email 2.29.2.222.g5d2a92d10f8-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Forget to set error code when pm8001_configure_phy_settings failed.
-We fixed it by using rc to store return value of
-pm8001_configure_phy_settings.
+From: Chao Yu <yuchao0@huawei.com>
 
-Fixes: 279094079a442 ("[SCSI] pm80xx: Phy settings support for motherboard controller.")
-Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
+Fields in struct f2fs_move_range won't change in f2fs_ioc_move_range(),
+let's avoid copying this structure's data to userspace.
+
+Signed-off-by: Chao Yu <yuchao0@huawei.com>
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/f2fs/file.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index fb471ad3720a..89397e5351ff 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1131,7 +1131,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 52417a2e3f4f..22ae8ae0072f 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -2898,12 +2898,6 @@ static int f2fs_ioc_move_range(struct file *filp, unsigned long arg)
+ 					range.pos_out, range.len);
  
- 	pm8001_init_sas_add(pm8001_ha);
- 	/* phy setting support for motherboard controller */
--	if (pm8001_configure_phy_settings(pm8001_ha))
-+	rc = pm8001_configure_phy_settings(pm8001_ha);
-+	if (rc)
- 		goto err_out_shost;
- 
- 	pm8001_post_sas_ha_init(shost, chip);
+ 	mnt_drop_write_file(filp);
+-	if (err)
+-		goto err_out;
+-
+-	if (copy_to_user((struct f2fs_move_range __user *)arg,
+-						&range, sizeof(range)))
+-		err = -EFAULT;
+ err_out:
+ 	fdput(dst);
+ 	return err;
 -- 
-2.25.4
+2.29.2.222.g5d2a92d10f8-goog
 
