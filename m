@@ -2,116 +2,181 @@ Return-Path: <SRS0=ULGd=EP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC15C4741F
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 09:57:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68383C4741F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 10:04:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE2BD2083B
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 09:57:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BF0520789
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 10:04:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Pjy86Bce"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uCNZMTv+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729206AbgKIJ5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 04:57:18 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:36942 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727183AbgKIJ5R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 04:57:17 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A99rm3a168608;
-        Mon, 9 Nov 2020 09:57:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=EgR8M57jdF5W6v/LtWZUIPEB0wXu/qEKkaNkJ31iix0=;
- b=Pjy86BceYnOzvN/Zk9owat4C9QapONtcjMroOzrHN5U+wIuBvqcwJYuhGCHLYbjnejJJ
- zoxi++c7n2LdciTYbLKUAVTZPPZTtN7xyX3ingy6EcU5mcOCC6rP4zfRyywVOkbmexsL
- 5UNrC65yvZiDwBhMpEoEojCKAHY7spCI1uE4T4ZeiiftDhDD9iPvlsgHlYmaYGeUX00K
- fDIzV6sS48DgNRSn6EqIAMRtn9sKB60dGoprreRwde5iQ7lXXIkI++E7znmypKuffs6M
- rPUoByP7P9is6pEvcbSaIJ1iUguBIx9OSkX7iPlYydXLOkrerWOGKCZy7sQPt13MuJIR 2Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 34nh3ana3r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 09 Nov 2020 09:57:14 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A99u3Wl077835;
-        Mon, 9 Nov 2020 09:57:13 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 34p5gv29qc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 09 Nov 2020 09:57:13 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A99vDNV013495;
-        Mon, 9 Nov 2020 09:57:13 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 09 Nov 2020 01:57:12 -0800
-Date:   Mon, 9 Nov 2020 12:57:07 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: ufs: Try to save power mode change and UIC cmd
- completion timeout
-Message-ID: <20201109095707.GA2453397@mwanda>
+        id S1729328AbgKIKE3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 05:04:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49656 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729045AbgKIKE1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 05:04:27 -0500
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87E2FC0613CF;
+        Mon,  9 Nov 2020 02:04:27 -0800 (PST)
+Received: by mail-wr1-x444.google.com with SMTP id j7so754681wrp.3;
+        Mon, 09 Nov 2020 02:04:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7HmXGBYoS09GoozyfmH+xb/d9FOWeeDG+N6hfNplN0c=;
+        b=uCNZMTv+kYnhlowwmB38hvaYw+++JWYD3Wl5sHYoRlTCCw48COYjxtRUbvRBlFIrIQ
+         VWn+J3Ee9qJkfOG7FylVqY+JaKSuotIKTfQombXmAy1lUbAVd2l2XUzDOOkpQ2+vY7qT
+         tZ7oPqBzPBPMlewKAahlvnYm0qncsAdqfPvL0/fJ+cbyIXpgolEChSAqFyKdCFNpPFUX
+         p6ISnvhiILrRAB2IjPE/EAZ4kOzD7KFpVpRkPV2zxrQW/cqvvU8RgLnEIUpSEUqgjkFg
+         nNfxTFwX5YN3SoT/nFsan+y6b+ekHkhqgbgjw62ZS7AzvtRAJtukgTH9AuBWKms+eAgG
+         FHpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7HmXGBYoS09GoozyfmH+xb/d9FOWeeDG+N6hfNplN0c=;
+        b=nj78+k70V36YSsNHJT6rGnPJUMkHtktsnJvRCzzHYKqmmwXMW67A2VUSQqM2+y5coo
+         +3o+I/FCVNLhtnFdS8XbvDl8zpSZzwD1JlogRSE+MDgIoNzqko9N1sA274uloVkLYWGP
+         BuiCDobmdfob05gQA+TT9fErnEaGlaz8txfLAlQHxUTlZN9a09czHexCM8kV9ZTCkLIq
+         0dUUA6G5ADoyAESI+XA+c/LlwwHgUAI7Af2f661dd4kU0stL3T1SUQU2kJ1/yef6THUk
+         JtYLc2wNHoZrhzlwendNnGaWrsf1Aww/wa2gVT7Z77qylquyX1TogfskQvyml8yMmDWE
+         LPXg==
+X-Gm-Message-State: AOAM531iFrh3XNjfY3CwS7EZy5qCtlip+H9RFBn++ZBjipcfZYVpbxRW
+        /mRDpL9ZxiGps7LfZyhRGsQEwhVfox4ttLVW
+X-Google-Smtp-Source: ABdhPJyb5RfUCkNp1oky4ayBu0lCc1PefAHEBMJsc6O+4atNfQ2U4EcNnO+QtTWJn5jPNGLRLTLGfw==
+X-Received: by 2002:a5d:4448:: with SMTP id x8mr16759960wrr.364.1604916265931;
+        Mon, 09 Nov 2020 02:04:25 -0800 (PST)
+Received: from localhost.localdomain (host-95-245-157-54.retail.telecomitalia.it. [95.245.157.54])
+        by smtp.gmail.com with ESMTPSA id 71sm13117885wrm.20.2020.11.09.02.04.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Nov 2020 02:04:25 -0800 (PST)
+From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
+        Andres Beltran <lkmlabelt@gmail.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Saruhan Karademir <skarade@microsoft.com>,
+        Juan Vazquez <juvazq@microsoft.com>,
+        Andrea Parri <parri.andrea@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v9 2/3] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
+Date:   Mon,  9 Nov 2020 11:04:01 +0100
+Message-Id: <20201109100402.8946-3-parri.andrea@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20201109100402.8946-1-parri.andrea@gmail.com>
+References: <20201109100402.8946-1-parri.andrea@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9799 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 phishscore=0 adultscore=0 malwarescore=0 suspectscore=3
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011090063
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9799 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1011 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=3
- mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011090063
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Can Guo,
+From: Andres Beltran <lkmlabelt@gmail.com>
 
-This is a semi-automatic email about new static checker warnings.
+Currently, pointers to guest memory are passed to Hyper-V as
+transaction IDs in storvsc. In the face of errors or malicious
+behavior in Hyper-V, storvsc should not expose or trust the transaction
+IDs returned by Hyper-V to be valid guest memory addresses. Instead,
+use small integers generated by vmbus_requestor as requests
+(transaction) IDs.
 
-The patch 0f52fcb99ea2: "scsi: ufs: Try to save power mode change and
-UIC cmd completion timeout" from Nov 2, 2020, leads to the following
-Smatch complaint:
+Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
+Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+Changes in v7:
+        - Move the allocation of the request ID after the data has been
+          copied into the ring buffer (cf. 1/3)
 
-    drivers/scsi/ufs/ufshcd.c:4941 ufshcd_uic_cmd_compl()
-    error: we previously assumed 'hba->active_uic_cmd' could be null (see line 4929)
+Changes in v2:
+        - Add casts to unsigned long to fix warnings on 32bit
 
-drivers/scsi/ufs/ufshcd.c
-  4928	
-  4929		if ((intr_status & UIC_COMMAND_COMPL) && hba->active_uic_cmd) {
-                                                         ^^^^^^^^^^^^^^^^^^^
-Here is the NULL check
+ drivers/scsi/storvsc_drv.c | 26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
-  4930			hba->active_uic_cmd->argument2 |=
-  4931				ufshcd_get_uic_cmd_result(hba);
-  4932			hba->active_uic_cmd->argument3 =
-  4933				ufshcd_get_dme_attr_val(hba);
-  4934			if (!hba->uic_async_done)
-  4935				hba->active_uic_cmd->cmd_active = 0;
-  4936			complete(&hba->active_uic_cmd->done);
-  4937			retval = IRQ_HANDLED;
-  4938		}
-  4939	
-  4940		if ((intr_status & UFSHCD_UIC_PWR_MASK) && hba->uic_async_done) {
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Smatch isn't clever enough to tie this to "hba->active_uic_cmd" and I
-looked at it briefly and wasn't able to right away either.
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 0c65fbd41035e..369a6c6266729 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -399,6 +399,7 @@ static int storvsc_timeout = 180;
+ static struct scsi_transport_template *fc_transport_template;
+ #endif
+ 
++static struct scsi_host_template scsi_driver;
+ static void storvsc_on_channel_callback(void *context);
+ 
+ #define STORVSC_MAX_LUNS_PER_TARGET			255
+@@ -698,6 +699,12 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
+ 
++	/*
++	 * The size of vmbus_requestor is an upper bound on the number of requests
++	 * that can be in-progress at any one time across all channels.
++	 */
++	new_sc->rqstor_size = scsi_driver.can_queue;
++
+ 	ret = vmbus_open(new_sc,
+ 			 storvsc_ringbuffer_size,
+ 			 storvsc_ringbuffer_size,
+@@ -1242,9 +1249,17 @@ static void storvsc_on_channel_callback(void *context)
+ 	foreach_vmbus_pkt(desc, channel) {
+ 		void *packet = hv_pkt_data(desc);
+ 		struct storvsc_cmd_request *request;
++		u64 cmd_rqst;
++
++		cmd_rqst = vmbus_request_addr(&channel->requestor,
++					      desc->trans_id);
++		if (cmd_rqst == VMBUS_RQST_ERROR) {
++			dev_err(&device->device,
++				"Incorrect transaction id\n");
++			continue;
++		}
+ 
+-		request = (struct storvsc_cmd_request *)
+-			((unsigned long)desc->trans_id);
++		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
+ 
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+@@ -1265,6 +1280,12 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
+ 
++	/*
++	 * The size of vmbus_requestor is an upper bound on the number of requests
++	 * that can be in-progress at any one time across all channels.
++	 */
++	device->channel->rqstor_size = scsi_driver.can_queue;
++
+ 	ret = vmbus_open(device->channel,
+ 			 ring_size,
+ 			 ring_size,
+@@ -1572,7 +1593,6 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
+ 
+-
+ 	stor_device = get_out_stor_device(device);
+ 	if (!stor_device)
+ 		return FAILED;
+-- 
+2.25.1
 
-  4941			hba->active_uic_cmd->cmd_active = 0;
-                        ^^^^^^^^^^^^^^^^^^^^^
-Unchecked NULL dereference.
-
-  4942			complete(hba->uic_async_done);
-  4943			retval = IRQ_HANDLED;
-
-regards,
-dan carpenter
