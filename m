@@ -9,79 +9,86 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E5CBC2D0A3
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 11:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F72C4741F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 11:17:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE79120897
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 11:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 571C72068D
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Nov 2020 11:17:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bys6JMDg"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="brttUaa3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729399AbgKILRc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 06:17:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33070 "EHLO
+        id S1729427AbgKILRi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 06:17:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727774AbgKILRa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 06:17:30 -0500
+        with ESMTP id S1729426AbgKILRh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2020 06:17:37 -0500
 Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84B96C0613CF
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2020 03:17:30 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id c66so2136340pfa.4
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2020 03:17:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D6E3C0613D4
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2020 03:17:37 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id x13so7834182pfa.9
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2020 03:17:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=bYaqDyHlUOGibR7tX3hHCoOSVm1gaUK15169GGLsr6o=;
-        b=bys6JMDgvlSlg6km/faITtL0+PGteN2C0zS3eg4Y24KOB4gIiYEQG5/yUnx4J0bVJ1
-         2f/e87dbVTux92JiJ9Nbl5Qso7CEh0q9NcbnZchV/xFauNIHXoBZVjordIazGO8bj2sG
-         t3JxfL2Ga+iSmfhDokgLoB9UrqLbZmGfxxLoo=
+        bh=QcgO9p3xVVTPqQtPrFLuYnP4yx1zAae9IsbbcCwBM2k=;
+        b=brttUaa3Jy6z/conjRrJnpPggaokq8g4hb4XTimL0NdFWvFobdICpqp3WtfeVgjT17
+         IVXDSo3LZbQzO0jxAv7MsH+27/6kwHYcFzrvVTVQGK3Uzfhuvie1e6IBfaJme7Vlla2/
+         O9P1x4D0TPW6HjwtL7k0fozM2jbBGuhCzwbjE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=bYaqDyHlUOGibR7tX3hHCoOSVm1gaUK15169GGLsr6o=;
-        b=I0RAgf0fjgANdPqZGC9ELzQZPJVuloQdlC/k0upJv6Vc8tZqvmyrbJbOluWY7afbD0
-         rWbnrDbQLJ5LVPxsWhDupa+zVsuhPayJGqHAFUYNAnVAB19bUKGfQkcOt0+D9W3CCVa6
-         lkKi9TakMV4vzVCZxDCve1x49qEGSv8Rh2vxDDuYJxGspH+98IsNCQsqrUvrns0HA8Kn
-         QMOBhb5hxFYuE4XCQopDI+BXrebKasAKF7IMy/qG4hoJSq+tqSkfp5NVfImAmnVz/QRR
-         3GZVr+7G/vWw2se9CiNFPBtFqFZotwhh+C+W2raIF5onrVnPIqJXyocoCPj9F5NJtBpv
-         nUXw==
-X-Gm-Message-State: AOAM533msd1YYzyWDJGRLpZydwc7olM93bI+wgwiFmSqeAQT3PX2ZIfn
-        C/mSCpiOEgKVYZlJ4Vt+p9jA5g==
-X-Google-Smtp-Source: ABdhPJwWUEgPyCdgMOJLastt8Q8dPEQ5cCal+j3gGAoHpcak4z3S4xrigxKUtcyNFoqXHfdMNCPlzw==
-X-Received: by 2002:a05:6a00:88d:b029:164:5a00:29b8 with SMTP id q13-20020a056a00088db02901645a0029b8mr13935521pfj.10.1604920649995;
-        Mon, 09 Nov 2020 03:17:29 -0800 (PST)
+        bh=QcgO9p3xVVTPqQtPrFLuYnP4yx1zAae9IsbbcCwBM2k=;
+        b=glmyvUezZxBRfYEmoOf68nYxbqRoqi9fuxZ2wyI/SqSUo0H7E+VLebENjzWkIfubK/
+         gU9ZSzS7zi3BC5imAzhHXJ8j/q8uY9CIjZB6z4eH2rlKrG45CsZ8Wi4/weFFravFicOt
+         0lYtqHlEqmuOevMYHH1KiirTexwWnW7VYB0xKf3h6OGhjhJAM2/zfHDU/r3g/LBTTRiC
+         l6TRyuBmmpbWkd1VAjMtLEc8XxHKBU6dD8g4vucbhbvC1pDzBbjWsHgrLBNh/4HYAj3U
+         F+YXml1ePm+wGSETA1kkA8p2xOq3aT/N8jgauNwgFPC6VhreNw1S6VQRtwSLBtTckZed
+         KAtw==
+X-Gm-Message-State: AOAM532xRDH9FF1br8WhAHeV9jij7pn30JuBLuCD93oXZJpKwf8yhD1/
+        av49nAxc/LKNkONoc+nU1WdNYg==
+X-Google-Smtp-Source: ABdhPJyh8DAg928IME1ogv9LTLGXxn4yHsy7/H6DeZqyEP9xtrtkiFNcJ1eANkB6APS0p2tc2IinHA==
+X-Received: by 2002:a17:90b:1881:: with SMTP id mn1mr12942490pjb.225.1604920656785;
+        Mon, 09 Nov 2020 03:17:36 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id k9sm10889364pfp.68.2020.11.09.03.17.26
+        by smtp.gmail.com with ESMTPSA id k9sm10889364pfp.68.2020.11.09.03.17.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 09 Nov 2020 03:17:29 -0800 (PST)
+        Mon, 09 Nov 2020 03:17:36 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         tj@kernel.org, linux-nvme@lists.infradead.org
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         pbonzini@redhat.com, Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v4 01/19] cgroup: Added cgroup_get_from_kernfs_id
-Date:   Mon,  9 Nov 2020 09:53:47 +0530
-Message-Id: <1604895845-2587-2-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v4 03/19] nvme: Added a newsysfs attribute appid_store
+Date:   Mon,  9 Nov 2020 09:53:49 +0530
+Message-Id: <1604895845-2587-4-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1604895845-2587-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1604895845-2587-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000041a05105b3aab5ad"
+        boundary="000000000000a7e70f05b3aab56a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000041a05105b3aab5ad
+--000000000000a7e70f05b3aab56a
 
-Added a new function cgroup_get_from_kernfs_id  to retrieve the cgroup
-associated with cgroup id.
-It takes cgroupid as an argument and returns cgrp and on failure
-it returns NULL.
-Exported the same as this can be used by blk-cgorup.c
+Added a new sysfs attribute appid_store under
+/sys/class/fc/fc_udev_device/*
 
-Added function declaration of cgroup_get_from_kernfs_id in cgorup.h
-Exported the cgroup_get_e_css
+With this new interface the user can set the application identfier
+in  the blkcg associted with cgroup id.
+
+Once the application identifer has set with this interface it allows
+identification of traffic sources at an individual cgroup based
+Applications (ex:virtual machine (VM))level in both host and
+fabric infrastructure(FC).
+
+Below is the interface provided to set the app_id
+
+echo "<cgroupid>:<appid>" >> /sys/class/fc/fc_udev_device/appid_store
+echo "457E:100000109b521d27" >> /sys/class/fc/fc_udev_device/appid_store
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
@@ -90,88 +97,114 @@ v4:
 No change
 
 v3:
-Exported the cgroup_get_e_css
+Replaced blkcg_set_app_identifier function with blkcg_set_fc_appid
 
 v2:
-New patch
+New Patch
 ---
- include/linux/cgroup.h |  6 ++++++
- kernel/cgroup/cgroup.c | 26 ++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ drivers/nvme/host/fc.c | 73 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 72 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 618838c48313..1741f02a41d6 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -696,6 +696,7 @@ static inline void cgroup_kthread_ready(void)
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index eae43bb444e0..6d6cc06fd54a 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -9,7 +9,7 @@
+ #include <uapi/scsi/fc/fc_els.h>
+ #include <linux/delay.h>
+ #include <linux/overflow.h>
+-
++#include <linux/blk-cgroup.h>
+ #include "nvme.h"
+ #include "fabrics.h"
+ #include <linux/nvme-fc-driver.h>
+@@ -3768,10 +3768,81 @@ static ssize_t nvme_fc_nvme_discovery_store(struct device *dev,
+ 
+ 	return count;
  }
- 
- void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen);
-+struct cgroup *cgroup_get_from_kernfs_id(u64 id);
- #else /* !CONFIG_CGROUPS */
- 
- struct cgroup_subsys_state;
-@@ -743,6 +744,11 @@ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 
- static inline void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- {}
 +
-+static struct cgroup *cgroup_get_from_kernfs_id(u64 id)
++/*parse the Cgroup id from a buf and returns the length of cgrpid*/
++static int fc_parse_cgrpid(const char *buf, u64 *id)
 +{
-+	return NULL;
++	char cgrp_id[16+1];
++	int cgrpid_len, j;
++
++	memset(cgrp_id, 0x0, sizeof(cgrp_id));
++	for (cgrpid_len = 0, j = 0; cgrpid_len < 17; cgrpid_len++) {
++		if (buf[cgrpid_len] != ':')
++			cgrp_id[cgrpid_len] = buf[cgrpid_len];
++		else {
++			j = 1;
++			break;
++		}
++	}
++	if (!j)
++		return -EINVAL;
++	if (kstrtou64(cgrp_id, 16, id) < 0)
++		return -EINVAL;
++	return cgrpid_len;
 +}
- #endif /* !CONFIG_CGROUPS */
- 
- #ifdef CONFIG_CGROUPS
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index dd247747ec14..53046deeb9ca 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -580,6 +580,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
- 	rcu_read_unlock();
- 	return css;
- }
-+EXPORT_SYMBOL_GPL(cgroup_get_e_css);
- 
- static void cgroup_get_live(struct cgroup *cgrp)
- {
-@@ -5803,6 +5804,31 @@ void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- 	kernfs_put(kn);
- }
- 
++
 +/*
-+ * cgroup_get_from_kernfs_id : get the cgroup associated with cgroup id
-+ * @id: cgroup id
-+ * On success it returns the cgrp on failure it returns NULL
++ * fc_update_appid :parses and updates the appid in the blkcg associated with
++ * cgroupid.
++ * @buf: buf contains both cgrpid and appid info
++ * @count: size of the buffer
 + */
-+struct cgroup *cgroup_get_from_kernfs_id(u64 id)
++static int fc_update_appid(const char *buf, size_t count)
 +{
-+	struct kernfs_node *kn;
-+	struct cgroup *cgrp = NULL;
++	u64 cgrp_id;
++	int appid_len = 0;
++	int cgrpid_len = 0;
++	char app_id[APPID_LEN];
++	int ret = 0;
 +
-+	mutex_lock(&cgroup_mutex);
-+	kn = kernfs_find_and_get_node_by_id(cgrp_dfl_root.kf_root, id);
-+	if (!kn)
-+		goto out_unlock;
++	if (buf[count-1] == '\n')
++		count--;
 +
-+	cgrp = kn->priv;
-+	if (cgroup_is_dead(cgrp) || !cgroup_tryget(cgrp))
-+		cgrp = NULL;
-+	kernfs_put(kn);
-+out_unlock:
-+	mutex_unlock(&cgroup_mutex);
-+	return cgrp;
++	if ((count > (16+1+APPID_LEN)) || (!strchr(buf, ':')))
++		return -EINVAL;
++
++	cgrpid_len = fc_parse_cgrpid(buf, &cgrp_id);
++	if (cgrpid_len < 0)
++		return -EINVAL;
++	/*appid len is count - cgrpid_len -1 (: + \n) */
++	appid_len = count - cgrpid_len - 1;
++	if (appid_len > APPID_LEN)
++		return -EINVAL;
++
++	memset(app_id, 0x0, sizeof(app_id));
++	memcpy(app_id, &buf[cgrpid_len+1], appid_len);
++	ret = blkcg_set_app_identifier(app_id, cgrp_id, sizeof(app_id));
++	if (ret < 0)
++		return ret;
++	return count;
 +}
-+EXPORT_SYMBOL_GPL(cgroup_get_from_kernfs_id);
 +
- /*
-  * proc_cgroup_show()
-  *  - Print task's cgroup paths into seq_file, one line for each hierarchy
++static ssize_t fc_appid_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	int ret  = 0;
++
++	ret = fc_update_appid(buf, count);
++	if (ret < 0)
++		return -EINVAL;
++	return count;
++}
+ static DEVICE_ATTR(nvme_discovery, 0200, NULL, nvme_fc_nvme_discovery_store);
++static DEVICE_ATTR(appid_store, 0200, NULL, fc_appid_store);
+ 
+ static struct attribute *nvme_fc_attrs[] = {
+ 	&dev_attr_nvme_discovery.attr,
++	&dev_attr_appid_store.attr,
+ 	NULL
+ };
+ 
 -- 
 2.26.2
 
 
---00000000000041a05105b3aab5ad
+--000000000000a7e70f05b3aab56a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -242,13 +275,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCBxSe2h9OvDO31uqn2H/fumo3G+stGTSR0kGKakhMupSTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDkxMTE3MzBaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCDYlnSuxagtAmbij3+PI2GGFaPs2ASvkPewiIbbdUXPUTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMDkxMTE3MzdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAxTkoGGslokf1vAjF
-gAf/1sF9U4x7ygN8zUtBRkmq96OQYjOLa/AXbLQKhXhfdosGtGEnQOwoVLVviqRfV7sYgeI5rQtC
-ipK3M1+CKCY5pNaEQjo/VUIpiJ8FKPmk5DAY33RqFpACC1LlRQpgm9lSUYOFVa+ydXJsqYJzFywt
-DwxG0iRpGIq8wqHZckASwCwQV7kBGZ+B2gYwU+xl7+VOc43MdKKlOba1E/8CjLVGMZo3gdOzb5pX
-Man9HfFKZWHMI32gyQ+J0j5GaqbqbGBEFkh2kaSqcMHpm8Kus20CTVu1lIEIoa8tE6NfiVoZHQNQ
-tB8fOtulBJkjcKPW4kGiGA==
---00000000000041a05105b3aab5ad--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAHXhxukQr0+LwtlHt
+ym+EW6qrn9u6yrPOMR6mzus1rxFopmTxQacBb+KKXjSIuwWFGbd47TMFn4OIsXAb+8iXXMtFQcrM
+dldQPCkRD26f+TdXJhw3ZQMV53+l86MqJMqoEiu9H2EuMB/+EJzshM01UO4HyV1uaoHYpAIZ7ndz
+868ULmHT+tZaelcKB8NSJLmMvrRwVDJ6R9O0bGnElvEGjuYq5T5NGiJ2LuOapLh14UlqfN7qKxtv
+g0zHLNn1TbEMiCqZZAtVnpn0sl/cOpw7ErgYa5SKQwGlLidSRfv2Vg6hFLOKmnWpKqkVI0Lgj0cg
+dxyOuKt6YjPcrneDNADPgA==
+--000000000000a7e70f05b3aab56a--
