@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5ADC4742C
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:00:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1A8C5517A
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:02:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B30D20663
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:00:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5561820663
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:02:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="hjicVVvd"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="C9bFcOcA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733300AbgKJDzw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 22:55:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57454 "EHLO mail.kernel.org"
+        id S1733100AbgKJDzU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 22:55:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56464 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733289AbgKJDzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Nov 2020 22:55:49 -0500
+        id S1730684AbgKJDzO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Nov 2020 22:55:14 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 864A220731;
-        Tue, 10 Nov 2020 03:55:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B8BB6221FF;
+        Tue, 10 Nov 2020 03:55:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604980549;
-        bh=VEcLB/MVR0LEUpWTTrWj43XSJz54k8rCbHBNh949iz8=;
+        s=default; t=1604980513;
+        bh=s630rPJpfJFLHqRNgQjNroUDIE3HyVQs2IOZYkqHzvg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hjicVVvdTBUtKGrBjc1B+ENLkowj5rBPo1KrPavg6MSkFNceJyJU3fQ6UQVdvEFbg
-         SluNonEgScebX/TQd0P1yGhY4KQUinGtvfW/tsVyvStOCaGargTxhZvxcDoaZ+1ef9
-         vjPNFpwY+D4K/uPYY5572jvSFippZ0ehpLLW+Bao=
+        b=C9bFcOcAGx8p9n0W9IkHe3KN3cWU8UQwFQr78WfnOlHZn467+phmZLUo29WYm1hBG
+         lpd47m5EqDAMawpyChh3V+McoQNcDAqKiDsB+IOhlwhzI0eJMx4NjOmmyx4CvcvkBa
+         m9tosrbdIXoj9oYcc+P1bgqua+6YB1aKmlMHPApM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
-        Don Brace <don.brace@microchip.com>,
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Tomas Henzl <thenzl@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/21] scsi: hpsa: Fix memory leak in hpsa_init_one()
-Date:   Mon,  9 Nov 2020 22:55:26 -0500
-Message-Id: <20201110035541.424648-6-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 23/42] scsi: mpt3sas: Fix timeouts observed while reenabling IRQ
+Date:   Mon,  9 Nov 2020 22:54:21 -0500
+Message-Id: <20201110035440.424258-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201110035541.424648-1-sashal@kernel.org>
-References: <20201110035541.424648-1-sashal@kernel.org>
+In-Reply-To: <20201110035440.424258-1-sashal@kernel.org>
+References: <20201110035440.424258-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,47 +54,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit af61bc1e33d2c0ec22612b46050f5b58ac56a962 ]
+[ Upstream commit 5feed64f9199ff90c4239971733f23f30aeb2484 ]
 
-When hpsa_scsi_add_host() fails, h->lastlogicals is leaked since it is
-missing a free() in the error handler.
+While reenabling the IRQ after irq poll there may be small time window
+where HBA firmware has posted some replies and raise the interrupts but
+driver has not received the interrupts. So we may observe I/O timeouts as
+the driver has not processed the replies as interrupts got missed while
+reenabling the IRQ.
 
-Fix this by adding free() when hpsa_scsi_add_host() fails.
+To fix this issue the driver has to go for one more round of processing the
+reply descriptors from reply descriptor post queue after enabling the IRQ.
 
-Link: https://lore.kernel.org/r/20201027073125.14229-1-keitasuzuki.park@sslab.ics.keio.ac.jp
-Tested-by: Don Brace <don.brace@microchip.com>
-Acked-by: Don Brace <don.brace@microchip.com>
-Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
+Link: https://lore.kernel.org/r/20201102072746.27410-1-sreekanth.reddy@broadcom.com
+Reported-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hpsa.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 11de2198bb87d..0fe21cbdf0ca7 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -8781,7 +8781,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	/* hook into SCSI subsystem */
- 	rc = hpsa_scsi_add_host(h);
- 	if (rc)
--		goto clean7; /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
-+		goto clean8; /* lastlogicals, perf, sg, cmd, irq, shost, pci, lu, aer/h */
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 3d58d24de6b61..8be8c510fdf79 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1641,6 +1641,13 @@ _base_irqpoll(struct irq_poll *irqpoll, int budget)
+ 		reply_q->irq_poll_scheduled = false;
+ 		reply_q->irq_line_enable = true;
+ 		enable_irq(reply_q->os_irq);
++		/*
++		 * Go for one more round of processing the
++		 * reply descriptor post queue incase if HBA
++		 * Firmware has posted some reply descriptors
++		 * while reenabling the IRQ.
++		 */
++		_base_process_reply_queue(reply_q);
+ 	}
  
- 	/* Monitor the controller for firmware lockups */
- 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
-@@ -8796,6 +8796,8 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 				HPSA_EVENT_MONITOR_INTERVAL);
- 	return 0;
- 
-+clean8: /* lastlogicals, perf, sg, cmd, irq, shost, pci, lu, aer/h */
-+	kfree(h->lastlogicals);
- clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
- 	hpsa_free_performant_mode(h);
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+ 	return num_entries;
 -- 
 2.27.0
 
