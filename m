@@ -2,115 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.6 required=3.0 tests=BAYES_50,DKIM_ADSP_CUSTOM_MED,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FREEMAIL_REPLYTO_END_DIGIT,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9761C64E8A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:37:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87E3CC83021
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:37:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B1FD20853
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:37:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4717820853
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729632AbgKPLD7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 06:03:59 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:36012 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727240AbgKPLD6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 06:03:58 -0500
-Received: by mail-wm1-f66.google.com with SMTP id a65so23241607wme.1;
-        Mon, 16 Nov 2020 03:03:55 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=vzbLBZlhKCzw8aWCXrtL3fgPKqSslz5XBfEd+0EuZTU=;
-        b=Nl6Y7U6D6g412Y5EyvaYTCNVZaNhDCfo/6IeUY5L73MmH1ugGTNqWUfZwNVqFPpUuE
-         3ca7JXnsSlFG6DkBD0M/W5rYqtXRofEDXF+TGC1G2q5MgiMPqNn4ZVMHnNsGF3eDMVol
-         2YT3k8VnzGI5DI2Q1i1i/Mmb2t19k1IWvBsMtovrFtcU4HYVg+MBAEnAJcFEMqVjVUYb
-         X/4KrWXSIpLt2kiVIep71sLFfz5F68xjog0jEjALedKlZ7hozjzagEFcRJGnVV616aiD
-         fuEToB58/IdcS+czQed2OlljxjugwaGWAx5JGCTtg6lroVat1YImZhURRNYl3eeN7fug
-         Saog==
-X-Gm-Message-State: AOAM530JXqUYKao7xX+4mrxemauNSkwj5o4i9fRmWF6wK9JkfgLYKfPl
-        Xppq3jVCrTEH7pK94zayoQ2w/VrrEJE=
-X-Google-Smtp-Source: ABdhPJxkE593KIIPiNQrAJmMLS9OVFuJKEQLkWmp7EhuYf4WWbZMwfZBIS8Lzv90wIsg3PY9Pwg09A==
-X-Received: by 2002:a1c:a185:: with SMTP id k127mr14596707wme.23.1605524634488;
-        Mon, 16 Nov 2020 03:03:54 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id w11sm20204620wmg.36.2020.11.16.03.03.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2020 03:03:53 -0800 (PST)
-Date:   Mon, 16 Nov 2020 11:03:52 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Andrea Parri <parri.andrea@gmail.com>
-Cc:     Wei Liu <wei.liu@kernel.org>, linux-kernel@vger.kernel.org,
-        "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        linux-hyperv@vger.kernel.org, Andres Beltran <lkmlabelt@gmail.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v9 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20201116110352.obbqxzxw6etdq4cl@liuwe-devbox-debian-v2>
-References: <20201109100402.8946-1-parri.andrea@gmail.com>
- <20201109100402.8946-3-parri.andrea@gmail.com>
- <20201113113327.dmium67e32iadqbz@liuwe-devbox-debian-v2>
- <20201113185424.ujdfx6ot7siqr5qh@liuwe-devbox-debian-v2>
- <20201113213933.GA4937@andrea>
+        id S1728533AbgKPLJI convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 06:09:08 -0500
+Received: from tigeramira.ro ([88.158.78.30]:49352 "EHLO mail.tigeramira.ro"
+        rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+        id S1727593AbgKPLJH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Nov 2020 06:09:07 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by mail.tigeramira.ro (Postfix) with ESMTP id 5CC0FA76FBC
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2020 10:45:39 +0200 (EET)
+Received: from mail.tigeramira.ro ([127.0.0.1])
+        by localhost (mail.tigeramira.ro [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id fAUDZ1PxpKwe for <linux-scsi@vger.kernel.org>;
+        Sat, 14 Nov 2020 10:45:36 +0200 (EET)
+Received: from mail.tigeramira.ro (localhost [127.0.0.1])
+        by mail.tigeramira.ro (Postfix) with ESMTP id A2DFA74CB2D
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2020 09:40:12 +0200 (EET)
+Received: from [156.96.44.214] (unknown [192.168.12.254])
+        by mail.tigeramira.ro (Postfix) with ESMTP id 307A7D3F9F6
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2020 17:09:06 +0200 (EET)
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201113213933.GA4937@andrea>
-User-Agent: NeoMutt/20180716
+Content-Transfer-Encoding: 8BIT
+Content-Description: Mail message body
+Subject: Corporate and Personal Loan/
+To:     linux-scsi@vger.kernel.org
+From:   "Investment  Corporate" <financialcapability6@gmail.com>
+Date:   Tue, 10 Nov 2020 06:09:34 -0800
+Reply-To: hmurrah39@gmail.com
+Message-Id: <20201110150906.307A7D3F9F6@mail.tigeramira.ro>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 13, 2020 at 10:39:33PM +0100, Andrea Parri wrote:
-> On Fri, Nov 13, 2020 at 06:54:24PM +0000, Wei Liu wrote:
-> > On Fri, Nov 13, 2020 at 11:33:27AM +0000, Wei Liu wrote:
-> > > On Mon, Nov 09, 2020 at 11:04:01AM +0100, Andrea Parri (Microsoft) wrote:
-> > > > From: Andres Beltran <lkmlabelt@gmail.com>
-> > > > 
-> > > > Currently, pointers to guest memory are passed to Hyper-V as
-> > > > transaction IDs in storvsc. In the face of errors or malicious
-> > > > behavior in Hyper-V, storvsc should not expose or trust the transaction
-> > > > IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> > > > use small integers generated by vmbus_requestor as requests
-> > > > (transaction) IDs.
-> > > > 
-> > > > Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> > > > Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> > > > Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> > > > Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-> > > > Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> > > > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> > > > Cc: linux-scsi@vger.kernel.org
-> > > 
-> > > Reviewed-by: Wei Liu <wl@xen.org>
-> > 
-> > Martin already gave his ack back in July. I guess nothing substantial
-> > changed so it should have been carried over?
-> 
-> The only change here happened in v7 and consisted in moving the
-> allocation of the request IDs from the VSC code down into the core
-> vmbus_sendpacket()&co functions.  As mentioned in v7 cover letter,
-> this change was applied to ensure that the allocation in question
-> is performed after the packet is copied into the ring buffer.  On
-> a positive note, this change greatly reduced the diff of this and
-> the following (NetVSC) patches.
+Hello linux-scsi@vger.kernel.org
 
-Martin and James, are you happy with this change? I would assume you are
-because that means this patch to storvsc is leaner.
 
-Please give an explicit ack if you can. Thanks.
+We are Base Investment Company offering Corporate and Personal Loan at 3% Interest Rate for a duration of 10Years.
 
-Wei.
 
-> 
->   Andrea
+We also pay 1% commission to brokers, who introduce project owners for finance or other opportunities.
+
+
+Please get back to me if you are interested for more
+
+details.
+
+
+Yours faithfully,
+
+Hashim Murrah
