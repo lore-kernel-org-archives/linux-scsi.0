@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38258C388F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 03:55:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B9DC388F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 03:58:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7D31221F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 03:55:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AC2220E65
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 03:58:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="crctbawA"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="dPsfTGmS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733066AbgKJDzO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 22:55:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56400 "EHLO mail.kernel.org"
+        id S1732849AbgKJD6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 22:58:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58920 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733044AbgKJDzN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Nov 2020 22:55:13 -0500
+        id S2387728AbgKJD4r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Nov 2020 22:56:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 58691207BC;
-        Tue, 10 Nov 2020 03:55:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9663420663;
+        Tue, 10 Nov 2020 03:56:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604980512;
-        bh=7lcMbKOxhN/Le0MESmUbQj5z7nRfEq6LZOAd40/ORv0=;
+        s=default; t=1604980606;
+        bh=fOenn9yeBaHCunCysCslJG4dwffDPlwPlsVozQjgGfA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=crctbawAQy4Y5qs2hCPdtuAWg9BmLiI0f3ReViLIw1+MojlpgRvvhISvXZl7sccxF
-         08+jpWiYN5fH7MQw4IL+jRHCjSaRRORPUQME3rzXOxDz2dvu/THT16zMPp8TL0osc9
-         67gIGRsub2QRJAkIcovNf9Bm2KT+4TU0BNG8Uftg=
+        b=dPsfTGmSMym5vNaURgAB59Tv795mGS1DhnEVAZZwz494yw8OhVLdLEFn3zw5ceXB6
+         sHP7XnHEenrv2sq+4X0gFUp6ROZ7oeRAkuKALchV5LijCmJdUgohHj6aNI/8xJ8kUj
+         YoJCz15/s6gE74IHuigg+kKwJbJYS/Q5ky78FxaQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>,
@@ -40,12 +40,12 @@ Cc:     Hannes Reinecke <hare@suse.de>,
         Jitendra Khasdev <jitendra.khasdev@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 22/42] scsi: scsi_dh_alua: Avoid crash during alua_bus_detach()
-Date:   Mon,  9 Nov 2020 22:54:20 -0500
-Message-Id: <20201110035440.424258-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 09/12] scsi: scsi_dh_alua: Avoid crash during alua_bus_detach()
+Date:   Mon,  9 Nov 2020 22:56:30 -0500
+Message-Id: <20201110035633.425030-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201110035440.424258-1-sashal@kernel.org>
-References: <20201110035440.424258-1-sashal@kernel.org>
+In-Reply-To: <20201110035633.425030-1-sashal@kernel.org>
+References: <20201110035633.425030-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index f32da0ca529e0..308bda2e9c000 100644
+index 60c288526355a..2bc3dc6244a5e 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -658,8 +658,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+@@ -657,8 +657,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  					rcu_read_lock();
  					list_for_each_entry_rcu(h,
  						&tmp_pg->dh_list, node) {
@@ -93,7 +93,7 @@ index f32da0ca529e0..308bda2e9c000 100644
  						h->sdev->access_state = desc[0];
  					}
  					rcu_read_unlock();
-@@ -705,7 +705,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+@@ -704,7 +704,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
  			pg->expiry = 0;
  			rcu_read_lock();
  			list_for_each_entry_rcu(h, &pg->dh_list, node) {
@@ -103,15 +103,15 @@ index f32da0ca529e0..308bda2e9c000 100644
  				h->sdev->access_state =
  					(pg->state & SCSI_ACCESS_STATE_MASK);
  				if (pg->pref)
-@@ -1147,7 +1148,6 @@ static void alua_bus_detach(struct scsi_device *sdev)
+@@ -1149,7 +1150,6 @@ static void alua_bus_detach(struct scsi_device *sdev)
  	spin_lock(&h->pg_lock);
- 	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+ 	pg = h->pg;
  	rcu_assign_pointer(h->pg, NULL);
 -	h->sdev = NULL;
  	spin_unlock(&h->pg_lock);
  	if (pg) {
  		spin_lock_irq(&pg->lock);
-@@ -1156,6 +1156,7 @@ static void alua_bus_detach(struct scsi_device *sdev)
+@@ -1158,6 +1158,7 @@ static void alua_bus_detach(struct scsi_device *sdev)
  		kref_put(&pg->kref, release_port_group);
  	}
  	sdev->handler_data = NULL;
