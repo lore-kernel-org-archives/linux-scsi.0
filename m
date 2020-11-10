@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B43C5517A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:00:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5ADC4742C
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D37D32054F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B30D20663
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 04:00:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="BbAuN7jq"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="hjicVVvd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732358AbgKJEAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Nov 2020 23:00:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57696 "EHLO mail.kernel.org"
+        id S1733300AbgKJDzw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Nov 2020 22:55:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57454 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387432AbgKJDz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Nov 2020 22:55:59 -0500
+        id S1733289AbgKJDzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Nov 2020 22:55:49 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F0C42221E9;
-        Tue, 10 Nov 2020 03:55:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 864A220731;
+        Tue, 10 Nov 2020 03:55:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604980558;
-        bh=RBJ9y4/oa7/bY94unf5ZZ/waRSM/GIKyKc+JiZfknWc=;
+        s=default; t=1604980549;
+        bh=VEcLB/MVR0LEUpWTTrWj43XSJz54k8rCbHBNh949iz8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BbAuN7jqe4Sle0ZjZ4bpObSEI3ztBvSLcICeU9kchuV1CReyoTS+/kydL0m8p3nVQ
-         XQijRIBNb9mOOPk6SaZX6Ls0Fooyu+EwMatLHiA9doJ4o+sax6LKk9yaPAUB8gEVU0
-         VMUEwXbiYkr8tOyWk70ZM/dEVeidcUjedkcUnGT0=
+        b=hjicVVvdTBUtKGrBjc1B+ENLkowj5rBPo1KrPavg6MSkFNceJyJU3fQ6UQVdvEFbg
+         SluNonEgScebX/TQd0P1yGhY4KQUinGtvfW/tsVyvStOCaGargTxhZvxcDoaZ+1ef9
+         vjPNFpwY+D4K/uPYY5572jvSFippZ0ehpLLW+Bao=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>,
-        Brian Bunker <brian@purestorage.com>,
-        Jitendra Khasdev <jitendra.khasdev@oracle.com>,
+Cc:     Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 13/21] scsi: scsi_dh_alua: Avoid crash during alua_bus_detach()
-Date:   Mon,  9 Nov 2020 22:55:33 -0500
-Message-Id: <20201110035541.424648-13-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 06/21] scsi: hpsa: Fix memory leak in hpsa_init_one()
+Date:   Mon,  9 Nov 2020 22:55:26 -0500
+Message-Id: <20201110035541.424648-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201110035541.424648-1-sashal@kernel.org>
 References: <20201110035541.424648-1-sashal@kernel.org>
@@ -54,71 +54,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+From: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 
-[ Upstream commit 5faf50e9e9fdc2117c61ff7e20da49cd6a29e0ca ]
+[ Upstream commit af61bc1e33d2c0ec22612b46050f5b58ac56a962 ]
 
-alua_bus_detach() might be running concurrently with alua_rtpg_work(), so
-we might trip over h->sdev == NULL and call BUG_ON().  The correct way of
-handling it is to not set h->sdev to NULL in alua_bus_detach(), and call
-rcu_synchronize() before the final delete to ensure that all concurrent
-threads have left the critical section.  Then we can get rid of the
-BUG_ON() and replace it with a simple if condition.
+When hpsa_scsi_add_host() fails, h->lastlogicals is leaked since it is
+missing a free() in the error handler.
 
-Link: https://lore.kernel.org/r/1600167537-12509-1-git-send-email-jitendra.khasdev@oracle.com
-Link: https://lore.kernel.org/r/20200924104559.26753-1-hare@suse.de
-Cc: Brian Bunker <brian@purestorage.com>
-Acked-by: Brian Bunker <brian@purestorage.com>
-Tested-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
-Reviewed-by: Jitendra Khasdev <jitendra.khasdev@oracle.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Fix this by adding free() when hpsa_scsi_add_host() fails.
+
+Link: https://lore.kernel.org/r/20201027073125.14229-1-keitasuzuki.park@sslab.ics.keio.ac.jp
+Tested-by: Don Brace <don.brace@microchip.com>
+Acked-by: Don Brace <don.brace@microchip.com>
+Signed-off-by: Keita Suzuki <keitasuzuki.park@sslab.ics.keio.ac.jp>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index c95c782b93a53..60c48dc5d9453 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -672,8 +672,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 					rcu_read_lock();
- 					list_for_each_entry_rcu(h,
- 						&tmp_pg->dh_list, node) {
--						/* h->sdev should always be valid */
--						BUG_ON(!h->sdev);
-+						if (!h->sdev)
-+							continue;
- 						h->sdev->access_state = desc[0];
- 					}
- 					rcu_read_unlock();
-@@ -719,7 +719,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 			pg->expiry = 0;
- 			rcu_read_lock();
- 			list_for_each_entry_rcu(h, &pg->dh_list, node) {
--				BUG_ON(!h->sdev);
-+				if (!h->sdev)
-+					continue;
- 				h->sdev->access_state =
- 					(pg->state & SCSI_ACCESS_STATE_MASK);
- 				if (pg->pref)
-@@ -1160,7 +1161,6 @@ static void alua_bus_detach(struct scsi_device *sdev)
- 	spin_lock(&h->pg_lock);
- 	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
- 	rcu_assign_pointer(h->pg, NULL);
--	h->sdev = NULL;
- 	spin_unlock(&h->pg_lock);
- 	if (pg) {
- 		spin_lock_irq(&pg->lock);
-@@ -1169,6 +1169,7 @@ static void alua_bus_detach(struct scsi_device *sdev)
- 		kref_put(&pg->kref, release_port_group);
- 	}
- 	sdev->handler_data = NULL;
-+	synchronize_rcu();
- 	kfree(h);
- }
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 11de2198bb87d..0fe21cbdf0ca7 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8781,7 +8781,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* hook into SCSI subsystem */
+ 	rc = hpsa_scsi_add_host(h);
+ 	if (rc)
+-		goto clean7; /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
++		goto clean8; /* lastlogicals, perf, sg, cmd, irq, shost, pci, lu, aer/h */
  
+ 	/* Monitor the controller for firmware lockups */
+ 	h->heartbeat_sample_interval = HEARTBEAT_SAMPLE_INTERVAL;
+@@ -8796,6 +8796,8 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 				HPSA_EVENT_MONITOR_INTERVAL);
+ 	return 0;
+ 
++clean8: /* lastlogicals, perf, sg, cmd, irq, shost, pci, lu, aer/h */
++	kfree(h->lastlogicals);
+ clean7: /* perf, sg, cmd, irq, shost, pci, lu, aer/h */
+ 	hpsa_free_performant_mode(h);
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
 -- 
 2.27.0
 
