@@ -2,170 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3AADC388F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 21:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6128FC388F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 22:24:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85A1C206F1
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 21:29:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F1E7206B2
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 22:24:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="A7Wu/aCL"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="kOK8vqIm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731654AbgKJV3n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Nov 2020 16:29:43 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:31316 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726462AbgKJV3m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Nov 2020 16:29:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605043781;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1kc+ZhU9ws//7PzGXJeqUYAOEvQWX0tFw9KDWrcTSRo=;
-        b=A7Wu/aCLzFDq4RyEQCanCHiL0q3006ewkb5VsGATuUub6B683BAQV5YkGsepvM+P10QZcU
-        DVcyaz6lCTlJaf6hs4UEQFrTKG8B3bzFQ+O8CI3Yc/F7LmEac3aEUyMB8GnYBHZBg8KhpV
-        2g2KEBL+Ef+dm2i/NCqGZkyf+kNaqrY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-132-UXVzcuCMMjG4dwGD7vqdmg-1; Tue, 10 Nov 2020 16:29:39 -0500
-X-MC-Unique: UXVzcuCMMjG4dwGD7vqdmg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1732194AbgKJWYK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Nov 2020 17:24:10 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:16549 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727275AbgKJWYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Nov 2020 17:24:07 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1605047046; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=R1H4tV57NpCwsIrFGSsbbq3Bv8mEyWC5e4FAWHjBcBI=; b=kOK8vqImTCUhpvZfJBy4O8SEd4j0DxGeiNgHjfMJK9GPEWSuv3ZPui5O16r6/RSBFSQfZXL5
+ 2eeWilH2wQ6qRQTSwMOYOGRlk9njPMMk/DA7L35fGHR3owVEPo643Ar7PTbas3Do6zAzA105
+ 8jAmfdA7oVkUaL5DIOI2ETeGRfw=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5fab1301b8c6a84a5cf2a34a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 10 Nov 2020 22:24:01
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D0D3DC433FF; Tue, 10 Nov 2020 22:24:00 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C2D3359;
-        Tue, 10 Nov 2020 21:29:37 +0000 (UTC)
-Received: from [10.35.206.163] (unknown [10.35.206.163])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 736285B4A0;
-        Tue, 10 Nov 2020 21:29:35 +0000 (UTC)
-Subject: Re: [PATCH 2/2] target: iscsi: fix a race condition when aborting a
- task
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        bvanassche@acm.org, m.lombardi85@gmail.com
-References: <20201007145326.56850-1-mlombard@redhat.com>
- <20201007145326.56850-3-mlombard@redhat.com>
- <20daa17d-08e7-a412-4d33-bcf75587eca6@oracle.com>
- <1852a8bd-3edc-5c49-fa51-9afe52f125a8@redhat.com>
- <184667b1-032b-c36f-d1e7-5cfef961c763@oracle.com>
- <71691FED-C164-482C-B629-A8B89B81E566@oracle.com>
- <a936cc4e-1610-5201-5960-107689b81820@redhat.com>
- <d7107857-ef7a-3c88-8146-a5e7abce5ce6@oracle.com>
-From:   Maurizio Lombardi <mlombard@redhat.com>
-Message-ID: <840cb2fe-5642-78d0-e700-d3652021cb5d@redhat.com>
-Date:   Tue, 10 Nov 2020 22:29:33 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id BBB74C433C9;
+        Tue, 10 Nov 2020 22:23:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BBB74C433C9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v2 1/1] scsi: ufs: Fix unexpected values get from
+ ufshcd_read_desc_param()
+To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1603346348-14149-1-git-send-email-cang@codeaurora.org>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <d6ef63bb-12e5-b530-d8cb-8f05a47a9e19@codeaurora.org>
+Date:   Tue, 10 Nov 2020 14:23:57 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-In-Reply-To: <d7107857-ef7a-3c88-8146-a5e7abce5ce6@oracle.com>
-Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <1603346348-14149-1-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-Dne 28. 10. 20 v 21:37 Mike Christie napsal(a):
->>
->> Possible solutions that I can think of:
->>
->> - Make iscsit_release_commands_from_conn() wait for the abort task to finish
+On 10/21/2020 10:59 PM, Can Guo wrote:
+> Since WB feature has been added, WB related sysfs entries can be accessed
+> even when an UFS device does not support WB feature. In that case, the
+> descriptors which are not supported by the UFS device may be wrongly
+> reported when they are accessed from their corrsponding sysfs entries.
+> Fix it by adding a sanity check of parameter offset against the actual
+> decriptor length.
 > 
-> Yeah you could set a completion in there then have aborted_task do the complete() call maybe?
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+
+>   drivers/scsi/ufs/ufshcd.c | 24 +++++++++++++++---------
+>   1 file changed, 15 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index a2ebcc8..aeec10d 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -3184,13 +3184,19 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+>   	/* Get the length of descriptor */
+>   	ufshcd_map_desc_id_to_length(hba, desc_id, &buff_len);
+>   	if (!buff_len) {
+> -		dev_err(hba->dev, "%s: Failed to get desc length", __func__);
+> +		dev_err(hba->dev, "%s: Failed to get desc length\n", __func__);
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (param_offset >= buff_len) {
+> +		dev_err(hba->dev, "%s: Invalid offset 0x%x in descriptor IDN 0x%x, length 0x%x\n",
+> +			__func__, param_offset, desc_id, buff_len);
+>   		return -EINVAL;
+>   	}
+>   
+>   	/* Check whether we need temp memory */
+>   	if (param_offset != 0 || param_size < buff_len) {
+> -		desc_buf = kmalloc(buff_len, GFP_KERNEL);
+> +		desc_buf = kzalloc(buff_len, GFP_KERNEL);
+>   		if (!desc_buf)
+>   			return -ENOMEM;
+>   	} else {
+> @@ -3204,14 +3210,14 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+>   					desc_buf, &buff_len);
+>   
+>   	if (ret) {
+> -		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
+> +		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d\n",
+>   			__func__, desc_id, desc_index, param_offset, ret);
+>   		goto out;
+>   	}
+>   
+>   	/* Sanity check */
+>   	if (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id) {
+> -		dev_err(hba->dev, "%s: invalid desc_id %d in descriptor header",
+> +		dev_err(hba->dev, "%s: invalid desc_id %d in descriptor header\n",
+>   			__func__, desc_buf[QUERY_DESC_DESC_TYPE_OFFSET]);
+>   		ret = -EINVAL;
+>   		goto out;
+> @@ -3221,12 +3227,12 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+>   	buff_len = desc_buf[QUERY_DESC_LENGTH_OFFSET];
+>   	ufshcd_update_desc_length(hba, desc_id, desc_index, buff_len);
+>   
+> -	/* Check wherher we will not copy more data, than available */
+> -	if (is_kmalloc && (param_offset + param_size) > buff_len)
+> -		param_size = buff_len - param_offset;
+> -
+> -	if (is_kmalloc)
+> +	if (is_kmalloc) {
+> +		/* Make sure we don't copy more data than available */
+> +		if (param_offset + param_size > buff_len)
+> +			param_size = buff_len - param_offset;
+>   		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
+> +	}
+>   out:
+>   	if (is_kmalloc)
+>   		kfree(desc_buf);
 > 
 
-We could do something like this, what do you think?
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 067074ef50818..ffd3dbc53a42f 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -490,13 +490,16 @@ EXPORT_SYMBOL(iscsit_queue_rsp);
- 
- void iscsit_aborted_task(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
- {
-+	struct se_cmd *se_cmd = cmd->se_cmd.se_tfo ? &cmd->se_cmd : NULL;
-+
- 	spin_lock_bh(&conn->cmd_lock);
--	if (!list_empty(&cmd->i_conn_node) &&
--	    !(cmd->se_cmd.transport_state & CMD_T_FABRIC_STOP))
-+	if (!list_empty(&cmd->i_conn_node))
- 		list_del_init(&cmd->i_conn_node);
- 	spin_unlock_bh(&conn->cmd_lock);
- 
- 	__iscsit_free_cmd(cmd, true);
-+	if (se_cmd && se_cmd->abrt_task_compl)
-+		complete(se_cmd->abrt_task_compl);
- }
- EXPORT_SYMBOL(iscsit_aborted_task);
- 
-@@ -4080,6 +4083,7 @@ int iscsi_target_rx_thread(void *arg)
- 
- static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
- {
-+	DECLARE_COMPLETION_ONSTACK(compl);
- 	LIST_HEAD(tmp_list);
- 	struct iscsi_cmd *cmd = NULL, *cmd_tmp = NULL;
- 	struct iscsi_session *sess = conn->sess;
-@@ -4096,8 +4100,24 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
- 
- 		if (se_cmd->se_tfo != NULL) {
- 			spin_lock_irq(&se_cmd->t_state_lock);
-+			if (se_cmd->transport_state & CMD_T_ABORTED) {
-+				/*
-+				 * LIO's abort path owns the cleanup for this,
-+				 * so put it back on the list and let
-+				 * aborted_task handle it.
-+				 */
-+				list_move_tail(&cmd->i_conn_node, &conn->conn_cmd_list);
-+				WARN_ON_ONCE(se_cmd->abrt_task_compl);
-+				se_cmd->abrt_task_compl = &compl;
-+			}
- 			se_cmd->transport_state |= CMD_T_FABRIC_STOP;
- 			spin_unlock_irq(&se_cmd->t_state_lock);
-+
-+			if (se_cmd->abrt_task_compl) {
-+				spin_unlock_bh(&conn->cmd_lock);
-+				wait_for_completion(&compl);
-+				spin_lock_bh(&conn->cmd_lock);
-+			}
- 		}
- 	}
- 	spin_unlock_bh(&conn->cmd_lock);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index db53a0d649da7..5611e6c00f18c 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1391,6 +1391,7 @@ void transport_init_se_cmd(
- 	init_completion(&cmd->t_transport_stop_comp);
- 	cmd->free_compl = NULL;
- 	cmd->abrt_compl = NULL;
-+	cmd->abrt_task_compl = NULL;
- 	spin_lock_init(&cmd->t_state_lock);
- 	INIT_WORK(&cmd->work, NULL);
- 	kref_init(&cmd->cmd_kref);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 549947d407cfd..25cc451930281 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -491,6 +491,7 @@ struct se_cmd {
- 	struct list_head	se_cmd_list;
- 	struct completion	*free_compl;
- 	struct completion	*abrt_compl;
-+	struct completion	*abrt_task_compl;
- 	const struct target_core_fabric_ops *se_tfo;
- 	sense_reason_t		(*execute_cmd)(struct se_cmd *);
- 	sense_reason_t (*transport_complete_callback)(struct se_cmd *, bool, int *);
 -- 
-2.26.2
-
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
