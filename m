@@ -2,104 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8887C388F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 08:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 725EFC388F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 09:05:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DA2A2080A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 08:48:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="iuo8f+7v";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="y7osrUd/"
+	by mail.kernel.org (Postfix) with ESMTP id 304D320780
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Nov 2020 09:05:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728986AbgKJIse (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Nov 2020 03:48:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35680 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727001AbgKJIsd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2020 03:48:33 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71028C0613CF;
-        Tue, 10 Nov 2020 00:48:33 -0800 (PST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1604998111;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+lFM+Dy1hrzRRrrrA3qnbGkxEtyVqIh0g4peYrriLeU=;
-        b=iuo8f+7vFglLggVRQElkiZ2WEkqCMbTG8xoMGtVyBk3DBfZOlzK9bn4iYE9n5TJlXEeyiw
-        mK2AsUoeE727uJ+eyVgbEeyt2qz1CsngbkfMTC30zg6BSGbxrFxVJV/nTlcmtj9NHSMsJn
-        sU38ljGJ30NJ8ooIZ53QTax6dO6NfnLLpRxklxBphTMVejdacYZZqkmCK8e4gkxhfN2Hq9
-        zuGNw+h8VUH3NFZO14JlYgbkNPH833xVYFQ2lmqEAC35a4/baTqfi6uG7ey36+HQyygrEi
-        Jy4I41umlX4stejJrRBLu7awPrfWhbLcelHNMzqQQSqRZrKTpO34TDntXU+02A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1604998111;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+lFM+Dy1hrzRRrrrA3qnbGkxEtyVqIh0g4peYrriLeU=;
-        b=y7osrUd/437dzM5/Hc5G9cQ/HuZ2jh7vgX8EDHSswmJuPLkHyLG6iEX8rrCl2sg3XohELe
-        1aQhUu8PTNjq+DAw==
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Randy Dunlap <rdunlap@infradead.org>, x86@kernel.org,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kselftest@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        kvm@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org,
-        kexec@lists.infradead.org, linux-bcache@vger.kernel.org,
-        linux-mtd@lists.infradead.org, devel@driverdev.osuosl.org,
-        linux-efi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-aio@kvack.org,
-        io-uring@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-um@lists.infradead.org, linux-ntfs-dev@lists.sourceforge.net,
-        reiserfs-devel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, cluster-devel@redhat.com,
-        ecryptfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-rdma@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-cachefs@redhat.com,
-        samba-technical@lists.samba.org, intel-wired-lan@lists.osuosl.org
-Subject: Re: [PATCH RFC PKS/PMEM 05/58] kmap: Introduce k[un]map_thread
-In-Reply-To: <20201110045954.GL3976735@iweiny-DESK2.sc.intel.com>
-References: <20201009195033.3208459-1-ira.weiny@intel.com> <20201009195033.3208459-6-ira.weiny@intel.com> <87h7pyhv3f.fsf@nanos.tec.linutronix.de> <20201110045954.GL3976735@iweiny-DESK2.sc.intel.com>
-Date:   Tue, 10 Nov 2020 09:48:31 +0100
-Message-ID: <87eel1iom8.fsf@nanos.tec.linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1730094AbgKJJFg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Nov 2020 04:05:36 -0500
+Received: from mail-m1272.qiye.163.com ([115.236.127.2]:3195 "EHLO
+        mail-m1272.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729809AbgKJJEG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2020 04:04:06 -0500
+X-Greylist: delayed 490 seconds by postgrey-1.27 at vger.kernel.org; Tue, 10 Nov 2020 04:04:04 EST
+Received: from ubuntu.localdomain (unknown [157.0.31.124])
+        by mail-m1272.qiye.163.com (Hmail) with ESMTPA id 0ECA1B02488;
+        Tue, 10 Nov 2020 16:55:52 +0800 (CST)
+From:   Yang Yang <yang.yang@vivo.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Sujit Reddy Thumma <sthumma@codeaurora.org>,
+        Dolev Raviv <draviv@codeaurora.org>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     onlyfever@icloud.com, yang.yang@vivo.com
+Subject: [PATCH] scsi: ufs: Fix a bug in ufshcd_system_resume()
+Date:   Tue, 10 Nov 2020 00:55:35 -0800
+Message-Id: <20201110085537.2889-1-yang.yang@vivo.com>
+X-Mailer: git-send-email 2.17.1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
+        oVCBIfWUFZHUpISRoYSklIT09MVkpNS09CQkNOTklPT0JVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
+        FZT0tIVUpKS0hKQ1VLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6ODI6OBw6Hz8fERBDHDkKQxch
+        EBJPCUtVSlVKTUtPQkJDTk5JQ0lOVTMWGhIXVQIaFRxVAhoVHDsNEg0UVRgUFkVZV1kSC1lBWUpO
+        TFVLVUhKVUpJT1lXWQgBWUFITk9MNwY+
+X-HM-Tid: 0a75b15e5b0398b7kuuu0eca1b02488
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 09 2020 at 20:59, Ira Weiny wrote:
-> On Tue, Nov 10, 2020 at 02:13:56AM +0100, Thomas Gleixner wrote:
-> Also, we can convert the new memcpy_*_page() calls to kmap_local() as well.
-> [For now my patch just uses kmap_atomic().]
->
-> I've not looked at all of the patches in your latest version.  Have you
-> included converting any of the kmap() call sites?  I thought you were more
-> focused on converting the kmap_atomic() to kmap_local()?
+During system resume, ufshcd_system_resume() won't resume UFS host if
+runtime suspended. After that, scsi_bus_resume() try to set SCSI host's
+RPM status to RPM_ACTIVE, this will fail because UFS host's RPM status
+is still RPM_SUSPENDED. So fix it.
 
-I did not touch any of those yet, but it's a logical consequence to
-convert all kmap() instances which are _not_ creating a global mapping
-over to it.
+    scsi host0: scsi_runtime_suspend()
+		ufshcd_runtime_suspend()
+    scsi host0: scsi_bus_suspend()
+		ufshcd_system_suspend()
+    ----------------------------------
+		ufshcd_pltfrm_resume()
+    scsi host0: scsi_bus_resume()
+    scsi host0: scsi_bus_resume_common()
+    scsi host0: pm_runtime_set_active(dev)
 
-Thanks,
+    scsi host0: runtime PM trying to activate child device host0 but parent
+    (8800000.ufshc) is not active
 
-        tglx
+Fixes: 57d104c153d3 ("ufs: add UFS power management support")
+Signed-off-by: Yang Yang <yang.yang@vivo.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index b8f573a02713..9e666e1ad58c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8767,11 +8767,7 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 	if (!hba)
+ 		return -EINVAL;
+ 
+-	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
+-		/*
+-		 * Let the runtime resume take care of resuming
+-		 * if runtime suspended.
+-		 */
++	if (!hba->is_powered)
+ 		goto out;
+ 	else
+ 		ret = ufshcd_resume(hba, UFS_SYSTEM_PM);
+@@ -8779,8 +8775,15 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+-	if (!ret)
++	if (!ret) {
+ 		hba->is_sys_suspended = false;
++
++		if (pm_runtime_suspended(hba->dev)) {
++			pm_runtime_disable(hba->dev);
++			pm_runtime_set_active(hba->dev);
++			pm_runtime_enable(hba->dev);
++		}
++	}
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_resume);
+-- 
+2.17.1
 
