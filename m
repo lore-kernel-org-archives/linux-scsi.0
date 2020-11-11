@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F061C388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:28:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69EB5C61DD8
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:28:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCDD2206F1
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B9E22074B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:28:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m5MWiiWz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tinmFTQP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726846AbgKKI1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:27:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33576 "EHLO
+        id S1726654AbgKKI2S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:28:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbgKKI1k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:40 -0500
+        with ESMTP id S1726634AbgKKI1l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:41 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2892BC0617A6;
-        Wed, 11 Nov 2020 00:27:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F999C0613D4;
+        Wed, 11 Nov 2020 00:27:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=PHuhBTY1ouZHYZght48HNcRnOQ9ETUZCJ1FQTXf/EwQ=; b=m5MWiiWzcpaSYXwS8kDVrHOGAw
-        92iCzGTWlSpt7Br9adIXKJfa7+N+xudiux0bUtzBV0XOA8sCFw4A+F+21N6k6DSKovVJVpX0hyRne
-        XeIBsiJ1g7Ruf7j/9oBvg5u8uE72Evjw5CNmDZkyoFT44EDwPVXjfy+qvbBMZwYJ4ZM30mXDzKACM
-        sbMnAv+VpKqU/y2BICE63kA6Ex/Ct7GtegULS3KTE0zTRAvu/6wpo59jG/nz2JK3HbrnIKVuEf9X9
-        L91CAfTn1sj5/yjS/WJVSnqinqVMqn7XYadu2gBkPI9KyrNPK+vEVaQZyACPmx4+EtdIlPpHqXZDG
-        leis3YSg==;
+        bh=nVz8RkNtpZwARdADh/JLCUJA7/hL1Ru40zDyIK26ET0=; b=tinmFTQPUUV98QgHlYKWX8YU4L
+        4qD5VD7H0dD3uFNSDokl4KoFGi+j9gbRq7IRLld2eCm6EcqPRS6TWJuVKJhRvlBT4k8G49ePxnn5y
+        IJdwH0Tkv70a7xu934IYCUXQlwrqMdxTy/SOG5XZrYyyc8yRDIsMxf9cnhcVLrtzz5C+wb1IO24Zf
+        AqNi1dVWI5Z0ckM3+Q2ktx3U+FU4QA8GqzJow7/V+uWu26C7iqg4HEhWS44W5/9cZSIyjuIofOa4K
+        kaEY3fE06TS463cWbBOQ4b28ewRycc05JB8+7U97q79iJYL/Y9Nk16FoT28Ku03ykhf7QO82EmBlE
+        Y3KW2tZQ==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclTP-0007dc-EI; Wed, 11 Nov 2020 08:27:23 +0000
+        id 1kclTM-0007cn-Hp; Wed, 11 Nov 2020 08:27:20 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 18/24] rnbd: use set_capacity_and_notify
-Date:   Wed, 11 Nov 2020 09:26:52 +0100
-Message-Id: <20201111082658.3401686-19-hch@lst.de>
+Subject: [PATCH 16/24] drbd: use set_capacity_and_notify
+Date:   Wed, 11 Nov 2020 09:26:50 +0100
+Message-Id: <20201111082658.3401686-17-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
 References: <20201111082658.3401686-1-hch@lst.de>
@@ -74,24 +74,35 @@ Use set_capacity_and_notify to set the size of both the disk and block
 device.  This also gets the uevent notifications for the resize for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Ilya Dryomov <idryomov@gmail.com>
 ---
- drivers/block/rnbd/rnbd-clt.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/block/drbd/drbd_main.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/block/rnbd/rnbd-clt.c b/drivers/block/rnbd/rnbd-clt.c
-index 8b2411ccbda97c..bb13d7dd195a08 100644
---- a/drivers/block/rnbd/rnbd-clt.c
-+++ b/drivers/block/rnbd/rnbd-clt.c
-@@ -100,8 +100,7 @@ static int rnbd_clt_change_capacity(struct rnbd_clt_dev *dev,
- 	rnbd_clt_info(dev, "Device size changed from %zu to %zu sectors\n",
- 		       dev->nsectors, new_nsectors);
- 	dev->nsectors = new_nsectors;
--	set_capacity(dev->gd, dev->nsectors);
--	revalidate_disk_size(dev->gd, true);
-+	set_capacity_and_notify(dev->gd, dev->nsectors);
- 	return 0;
- }
+diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
+index 65b95aef8dbc95..1c8c18b2a25f33 100644
+--- a/drivers/block/drbd/drbd_main.c
++++ b/drivers/block/drbd/drbd_main.c
+@@ -2036,8 +2036,7 @@ void drbd_set_my_capacity(struct drbd_device *device, sector_t size)
+ {
+ 	char ppb[10];
  
+-	set_capacity(device->vdisk, size);
+-	revalidate_disk_size(device->vdisk, false);
++	set_capacity_and_notify(device->vdisk, size);
+ 
+ 	drbd_info(device, "size = %s (%llu KB)\n",
+ 		ppsize(ppb, size>>1), (unsigned long long)size>>1);
+@@ -2068,8 +2067,7 @@ void drbd_device_cleanup(struct drbd_device *device)
+ 	}
+ 	D_ASSERT(device, first_peer_device(device)->connection->net_conf == NULL);
+ 
+-	set_capacity(device->vdisk, 0);
+-	revalidate_disk_size(device->vdisk, false);
++	set_capacity_and_notify(device->vdisk, 0);
+ 	if (device->bitmap) {
+ 		/* maybe never allocated. */
+ 		drbd_bm_resize(device, 0, 1);
 -- 
 2.28.0
 
