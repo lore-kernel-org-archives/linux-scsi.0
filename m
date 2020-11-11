@@ -4,27 +4,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 101FAC55ABD
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB31C56201
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9A1920756
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:08:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE52420809
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:57:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbgKKNIV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 08:08:21 -0500
-Received: from mx2.suse.de ([195.135.220.15]:45112 "EHLO mx2.suse.de"
+        id S1727273AbgKKN5u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 08:57:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:35712 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726104AbgKKNIV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Nov 2020 08:08:21 -0500
+        id S1726923AbgKKN5r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Nov 2020 08:57:47 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id ABAFFAD45;
-        Wed, 11 Nov 2020 13:08:19 +0000 (UTC)
-Subject: Re: [PATCH 06/24] block: add a return value to
- set_capacity_and_notify
+        by mx2.suse.de (Postfix) with ESMTP id E144AABD1;
+        Wed, 11 Nov 2020 13:57:45 +0000 (UTC)
+Subject: Re: [PATCH 13/24] dm: use set_capacity_and_notify
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -45,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201111082658.3401686-1-hch@lst.de>
- <20201111082658.3401686-7-hch@lst.de>
+ <20201111082658.3401686-14-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <7d892cf3-70bc-7d5d-81f0-07b87e49f6ae@suse.de>
-Date:   Wed, 11 Nov 2020 14:08:17 +0100
+Message-ID: <1327a2b4-d912-799d-ac94-4f11bf071e15@suse.de>
+Date:   Wed, 11 Nov 2020 14:57:44 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201111082658.3401686-7-hch@lst.de>
+In-Reply-To: <20201111082658.3401686-14-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -61,13 +60,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/11/20 9:26 AM, Christoph Hellwig wrote:
-> Return if the function ended up sending an uevent or not.
+> Use set_capacity_and_notify to set the size of both the disk and block
+> device.  This also gets the uevent notifications for the resize for free.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   block/genhd.c         | 7 +++++--
->   include/linux/genhd.h | 2 +-
->   2 files changed, 6 insertions(+), 3 deletions(-)
+>   drivers/md/dm.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
