@@ -2,105 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 283D4C56201
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28178C56201
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 983C1206E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:17:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96A9B2074B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Td+lnN/p"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rB3xS2xK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725973AbgKKIRU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:17:20 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54922 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725903AbgKKIRU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Nov 2020 03:17:20 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1605082639;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SGNMWGSyzrXXNn9z3ZeuYny0fmKgFw9UJyQopJXlgo0=;
-        b=Td+lnN/pCrfQbvCfI7s+ExElgGtCmKQ0UxtUnEE9ueLMexgWX6sIQ4pOvJEfKgkxarFTfk
-        vIdDO/3yFlVJ43Nai3HdoDsXh1gKMU2HVaJ0GxEL39shK2VIHSkOYbax51/b69jTrdd1CF
-        b1teE36d2aGEdvwCFo3lgs3SMI0QjRI=
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9037DB013;
-        Wed, 11 Nov 2020 08:17:18 +0000 (UTC)
-Message-ID: <f28d600615f05050ecf52a0ec338127a09a2f821.camel@suse.com>
-Subject: Re: [PATCH 1/2] scsi: scsi_vpd_lun_id(): fix designator priorities
-From:   Martin Wilck <mwilck@suse.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org,
-        James Bottomley <jejb@linux.vnet.ibm.com>
-Date:   Wed, 11 Nov 2020 09:17:14 +0100
-In-Reply-To: <64c0efe0-e6dd-d706-4e50-f21bcbc58e23@suse.de>
-References: <20201029170846.14786-1-mwilck@suse.com>
-         <yq1eel0ha2c.fsf@ca-mkp.ca.oracle.com>
-         <64c0efe0-e6dd-d706-4e50-f21bcbc58e23@suse.de>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.36.5 
+        id S1726303AbgKKI1V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:27:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33494 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725468AbgKKI1V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:21 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CEC8C0613D1;
+        Wed, 11 Nov 2020 00:27:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=39LqvDrxdGPNtriZMOTjrvhaX6hK5pd+kVbHzj2b5RQ=; b=rB3xS2xKLy3oYNqoQbHUPfTNTa
+        r+rNmbYaYrD2dlKjzOxYT9xmEBJsRgUQJcGy66NpIJpzIjMxQizb3i/YvjT4iTdbGigdHKJcenQpb
+        F71+M1qmF3OUb37QXvlyPi35EALUT1xpODwUhpDlDborQS+zX63b6P4Ls+4IgD3/rbnslNs6ulVdG
+        uiLutWtBfp3TghBBkbaPN3ds7YR09C0o6XQkZdD+ueG3VvtoxpF1pGzKs+I2bINVH1LBvE8L9wwjT
+        jQwz44tV+riOP8/WouLdnWaQco2wRAS6pwBfPpT4gA6tmr4NW5hEh60r9spxv7eHvAXz6SCt21dPc
+        YXmRlIKg==;
+Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kclT5-0007Zq-BZ; Wed, 11 Nov 2020 08:27:03 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH 03/24] nvme: let set_capacity_revalidate_and_notify update the bdev size
+Date:   Wed, 11 Nov 2020 09:26:37 +0100
+Message-Id: <20201111082658.3401686-4-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
+References: <20201111082658.3401686-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-11-11 at 07:54 +0100, Hannes Reinecke wrote:
-> On 11/11/20 4:05 AM, Martin K. Petersen wrote:
-> > Martin,
-> > 
-> > > The current code would use the first descriptor, because it's
-> > > longer
-> > > than the NAA descriptor. But this is wrong, the kernel is
-> > > supposed to
-> > > prefer NAA descriptors over T10 vendor ID. Designator length
-> > > should
-> > > only be used to compare designators of the same type.
-> > > 
-> > > This patch addresses the issue by separating designator priority
-> > > and
-> > > length.
-> > 
-> > I am concerned that we're going to break existing systems since
-> > their
-> > /dev/disk/by-* names might change as a result of this. Thoughts?
-> > 
-> No, this shouldn't happen. With the standard udev rules we're
-> creating 
-> symlinks for all possible VPD designators, so they don't change.
+There is no good reason to call revalidate_disk_size separately.
 
-Right. On distributions using either udev's scsi_id or the standard
-rules shipped with sg3_utils for determining WWIDs, nothing should
-change.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/nvme/host/core.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-With this patch, the kernel's logic would eventually match the logic of
-the udev rules, which is a good thing. In the long run, we could
-finally ditch the complexity of the udev rules and rely on the kernel
-to get the wwid right. That would be a big step forward for device
-identification, wrt both reliablity and speed.
-
-Only distributions using non-standard udev rules (generating
-/dev/disk/by-wwid from the "wwid" attribute) would be affected. I don't
-know if any such distribution currently exist, I haven't seen one. Even
-those would only be affected in certain cases like the one I showed in
-the commit message.
-
-If this truly worries you, we could introduce a new sysfs attribute
-besides "wwid". But I suppose that would rather confuse people. I
-strongly believe we should have a sysfs attribute that reliably
-provides the "right" WWID to user space.
-
-Regards,
-Martin
-
-
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 40ca71b29bb91a..66129b86e97bed 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2053,7 +2053,7 @@ static void nvme_update_disk_info(struct gendisk *disk,
+ 			capacity = 0;
+ 	}
+ 
+-	set_capacity_revalidate_and_notify(disk, capacity, false);
++	set_capacity_revalidate_and_notify(disk, capacity, true);
+ 
+ 	nvme_config_discard(disk, ns);
+ 	nvme_config_write_zeroes(disk, ns);
+@@ -2136,7 +2136,6 @@ static int nvme_update_ns_info(struct nvme_ns *ns, struct nvme_id_ns *id)
+ 		blk_stack_limits(&ns->head->disk->queue->limits,
+ 				 &ns->queue->limits, 0);
+ 		blk_queue_update_readahead(ns->head->disk->queue);
+-		nvme_update_bdev_size(ns->head->disk);
+ 		blk_mq_unfreeze_queue(ns->head->disk->queue);
+ 	}
+ #endif
+@@ -3965,8 +3964,6 @@ static void nvme_validate_ns(struct nvme_ns *ns, struct nvme_ns_ids *ids)
+ 	 */
+ 	if (ret && ret != -ENOMEM && !(ret > 0 && !(ret & NVME_SC_DNR)))
+ 		nvme_ns_remove(ns);
+-	else
+-		revalidate_disk_size(ns->disk, true);
+ }
+ 
+ static void nvme_validate_or_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+-- 
+2.28.0
 
