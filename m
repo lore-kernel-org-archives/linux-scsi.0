@@ -2,40 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DD1DC388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95349C388F9
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBE1F2074B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39CD82074B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b1ddQnGW"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="J7buGI+/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726595AbgKKI3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:29:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33502 "EHLO
+        id S1726977AbgKKI3f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:29:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726321AbgKKI1W (ORCPT
+        with ESMTP id S1726325AbgKKI1W (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:22 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AD76C0613D6;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C01BC0617A7;
         Wed, 11 Nov 2020 00:27:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=JAKJjNQpsrrbjmsxnYVVJRTgGHrM34ycZR/npT/boCU=; b=b1ddQnGWc2jtHoKywAuScN8Zdh
-        JpUZaUqXCtKuY0r1wvcQJho9I5LlxQ+Jf1PeuV9MT8HozEqz08MjPlQ2bflOzs5jN6AtnzX9UZLvR
-        TP+ksdGoX+zMrKqAYf6UV/230oaeX+lnludtn/sFHHGEZUrrgeMSlNkGj8LNwkKSIL8M1BtpRD8QW
-        JHnmwoGSdoYRlX13Qq80Wbx/PB+8AMxck1eRfIb4ZyOL7mf/BnfhPUzDrVsEYY2/hN12f5r+V4/aB
-        CJTa0r5tvV0A5l4JwwqEcBTVEhomL9IDTnuaOQ3CyD1joSKU5ImqC0esiM6bTSJ+Tq3LxQEN03v+h
-        /wjoDc/w==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=GTpuLBfYyo8TaeZo/z07ad7aIfYXt5VjexG6J+Un22Y=; b=J7buGI+/FIE7Z9SkwKpEv6Dzao
+        H6Jb7XY7aLyNJQXzdjS8KYFAIVquuUqCDHM7hyICJO7/G/MCyKCn0iuzxejTcLdTDO2OcEOx0dcDS
+        xhDrtjFYbZTHZdcrjKzLNs7zeWZH6NtDmauWmpSq/4neZW0FKJUBESEe2290E+/sWMUiz2KhrZVe1
+        zSq1a/6hxWMD2sjWBneREarqtdUM/v40hRmP7cNWbUvCbhYM5UtDwGuEnfrwRt02CysygTP9nvqBk
+        hiXdS7b3AluL/i5ahJdcWqTTM/kEXp3nGDMSv/NxeIEiOg6Xnf7cpb5dGWOuvMZ+I/jr2gTe4ccJr
+        Dzzb4ntg==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclT1-0007Z4-Lb; Wed, 11 Nov 2020 08:27:00 +0000
+        id 1kclT4-0007Zh-93; Wed, 11 Nov 2020 08:27:02 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -56,10 +57,12 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: cleanup updating the size of block devices v2
-Date:   Wed, 11 Nov 2020 09:26:34 +0100
-Message-Id: <20201111082658.3401686-1-hch@lst.de>
+Subject: [PATCH 02/24] loop: remove loop_set_size
+Date:   Wed, 11 Nov 2020 09:26:36 +0100
+Message-Id: <20201111082658.3401686-3-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
+References: <20201111082658.3401686-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -67,34 +70,93 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Jens,
+Just use set_capacity_revalidate_and_notify directly, as this function
+can update the block device size as well when the last parameter is set
+to true.
 
-this series builds on top of the work that went into the last merge window,
-and make sure we have a single coherent interfac for updating the size of a
-block device.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/block/loop.c | 37 +++++++------------------------------
+ 1 file changed, 7 insertions(+), 30 deletions(-)
 
-Changes since v1:
- - minor spelling fixes
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index cb1191d6e945f2..86eb7e0691eef5 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -241,23 +241,6 @@ loop_validate_block_size(unsigned short bsize)
+ 	return 0;
+ }
+ 
+-/**
+- * loop_set_size() - sets device size and notifies userspace
+- * @lo: struct loop_device to set the size for
+- * @size: new size of the loop device
+- *
+- * Callers must validate that the size passed into this function fits into
+- * a sector_t, eg using loop_validate_size()
+- */
+-static void loop_set_size(struct loop_device *lo, loff_t size)
+-{
+-	struct block_device *bdev = lo->lo_device;
+-
+-	bd_set_nr_sectors(bdev, size);
+-
+-	set_capacity_revalidate_and_notify(lo->lo_disk, size, false);
+-}
+-
+ static inline int
+ lo_do_transfer(struct loop_device *lo, int cmd,
+ 	       struct page *rpage, unsigned roffs,
+@@ -1076,7 +1059,6 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,
+ 	struct address_space *mapping;
+ 	struct block_device *claimed_bdev = NULL;
+ 	int		error;
+-	loff_t		size;
+ 	bool		partscan;
+ 	unsigned short  bsize;
+ 
+@@ -1164,9 +1146,8 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,
+ 	loop_update_dio(lo);
+ 	loop_sysfs_init(lo);
+ 
+-	size = get_loop_size(lo, file);
+-	loop_set_size(lo, size);
+-
++	set_capacity_revalidate_and_notify(lo->lo_disk, get_loop_size(lo, file),
++			true);
+ 	set_blocksize(bdev, S_ISBLK(inode->i_mode) ?
+ 		      block_size(inode->i_bdev) : PAGE_SIZE);
+ 
+@@ -1402,9 +1383,9 @@ loop_set_status(struct loop_device *lo, const struct loop_info64 *info)
+ 	lo->lo_flags |= prev_lo_flags & ~LOOP_SET_STATUS_CLEARABLE_FLAGS;
+ 
+ 	if (size_changed) {
+-		loff_t new_size = get_size(lo->lo_offset, lo->lo_sizelimit,
+-					   lo->lo_backing_file);
+-		loop_set_size(lo, new_size);
++		set_capacity_revalidate_and_notify(lo->lo_disk,
++				get_size(lo->lo_offset, lo->lo_sizelimit,
++					 lo->lo_backing_file), true);
+ 	}
+ 
+ 	loop_config_discard(lo);
+@@ -1580,14 +1561,10 @@ loop_get_status64(struct loop_device *lo, struct loop_info64 __user *arg) {
+ 
+ static int loop_set_capacity(struct loop_device *lo)
+ {
+-	loff_t size;
+-
+ 	if (unlikely(lo->lo_state != Lo_bound))
+ 		return -ENXIO;
+-
+-	size = get_loop_size(lo, lo->lo_backing_file);
+-	loop_set_size(lo, size);
+-
++	set_capacity_revalidate_and_notify(lo->lo_disk,
++			get_loop_size(lo, lo->lo_backing_file), true);
+ 	return 0;
+ }
+ 
+-- 
+2.28.0
 
-Diffstat:
- block/genhd.c                  |   16 +++----
- drivers/block/aoe/aoecmd.c     |   15 +-----
- drivers/block/drbd/drbd_main.c |    6 --
- drivers/block/loop.c           |   36 ++--------------
- drivers/block/nbd.c            |   88 +++++++++++++----------------------------
- drivers/block/pktcdvd.c        |    3 -
- drivers/block/rbd.c            |    3 -
- drivers/block/rnbd/rnbd-clt.c  |    3 -
- drivers/block/virtio_blk.c     |    3 -
- drivers/block/xen-blkfront.c   |    2 
- drivers/block/zram/zram_drv.c  |    7 ---
- drivers/md/dm-raid.c           |    3 -
- drivers/md/dm.c                |    3 -
- drivers/md/md-cluster.c        |    8 ---
- drivers/md/md-linear.c         |    3 -
- drivers/md/md.c                |   24 ++++-------
- drivers/nvme/host/core.c       |   18 --------
- drivers/scsi/sd.c              |    9 +---
- fs/block_dev.c                 |    7 ---
- include/linux/genhd.h          |    3 -
- 20 files changed, 76 insertions(+), 184 deletions(-)
