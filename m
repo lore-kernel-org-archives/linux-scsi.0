@@ -9,92 +9,97 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
 	T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F47BC388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 11:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DBD8C5517A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 11:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1AF820709
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 11:51:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE5D120709
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 11:51:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="I/7PB1ye"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HrcJWx9J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726310AbgKKLv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 06:51:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38056 "EHLO
+        id S1726499AbgKKLvb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 06:51:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726203AbgKKLv0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 06:51:26 -0500
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEEE1C0613D1
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2020 03:51:26 -0800 (PST)
-Received: by mail-pj1-x1041.google.com with SMTP id s35so518021pjd.1
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2020 03:51:26 -0800 (PST)
+        with ESMTP id S1726203AbgKKLva (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 06:51:30 -0500
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9D74C0613D1
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2020 03:51:29 -0800 (PST)
+Received: by mail-pg1-x543.google.com with SMTP id 62so1274889pgg.12
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2020 03:51:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=yZ2ccBN80a0/UGa8jmtjIXTj7oBQNkpBUjok8qYOctE=;
-        b=I/7PB1yeQLFX2MOIkvDDPFr+Hnq46AaxwxAI1QPfFz+E850XDM7q7ZU92F2MGZPNfB
-         ii5woRaAMYi9Aa5fBiJIWTWkFH93FaJkJ4JKZYFJoKVXuCm1zCD/fiROX/fCj+Lw2lyu
-         ad6ipt09TBLmJHVHDPeag6pobUs58X2v6LF04=
+        bh=8XKbWlR0P9nEOHQKylW8DIvraE/TYQZotEMJiMFSX04=;
+        b=HrcJWx9JLc/qE3zIX2cwDH7+F+lHi+qCY7rtStE7JvKpPKT4mncQQIOiUTiBe+a4qD
+         j8ho7O4r0FzZvrKzhdpX0Z63QnskatqJ8YEs1Suewm7+eOFEvgMmTiH0VWt9atvbZhEB
+         Rqee5nDktdjdaZysi7aTxItqqyt7yck7wN5f8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=yZ2ccBN80a0/UGa8jmtjIXTj7oBQNkpBUjok8qYOctE=;
-        b=lH0mgAo5YK4XGbMNHblDCQqs6L5kXPzY6EqJ859+eFTE+hqg7KGM1p5iTKtSV7qOY0
-         So+bY9GPrSpRRzJ+m+nOtQw9arVUXkm91g+PASZeJ5sV3Wffbb/qLPdG96zLURFVzi56
-         SbHhPLSj8/0VwVMRX60cV4oSmS3ORUT+1vS4QrGYxNFqaOwPX4dV/5TCC1BOgqcc26h1
-         ZKotTADFCNHgtmIs0WWRNGGD1N9vdH2yxBcw5EOu9YEzAq8+Mum3ggAjJXpMKe0G6ASO
-         HUs9dXAnHtqPorlAuEkaeaBwYR6m/m3lgRmh8sys6q+X1xMYPG2TwQFqGuKF1G7QEYTa
-         Nttw==
-X-Gm-Message-State: AOAM533zOCtvQqhfJ09rX+zg9mYxvyuinL8MK0EFQoRx3rSYqx21Awpv
-        e1YZvpYf0/2QP0xG0oYQ+QHOmHMLoGD6eMoTfPPjt43B7pU6FMJxW00HGpvT9WM/fG+T/Yu7JVe
-        VQekaU56Tfzd53lnJy/SBS0jb5yvauQmMHESZP5VI6ZnvE1EpDRaMS+ieOpnNnfrrP/n3rOdIm5
-        RQ73hSpnnerUI=
-X-Google-Smtp-Source: ABdhPJy+NxiCy8g6gHhhkxCemokDqlT0yO/as9EGpAB2c9AndlM1QsQuVdQOXAd6GwoZjdXQQFfH8w==
-X-Received: by 2002:a17:90b:4743:: with SMTP id ka3mr3551650pjb.148.1605095485956;
-        Wed, 11 Nov 2020 03:51:25 -0800 (PST)
+        bh=8XKbWlR0P9nEOHQKylW8DIvraE/TYQZotEMJiMFSX04=;
+        b=n5udSIO4xwVUfPtllxA/Ic6ZJKxThRTgNTwyi7SWcQqf3VO9v1uwx0gUWX1SkCjqK8
+         +frJAMz9TDXr5lbGJJ3mZ5f7VpUgztbLA9UQ1QUn01zlAgngdk3ZuaWD/pgfW8Afs9Gj
+         tu8bjl9ASUyWAZ4Hx/WnX7aBmpdCK88XNSE2O/9bXNN5FM8cFNuh7Ng3gG9I5dnGIzGP
+         Rvgb5Fz1DJt7CWlIwjzC1pHhV5IqmUyOXtcLrfqVlriNceEWz2pbXAwHFhQuUMqaCJcG
+         DsWp1UB269p4xW9xrQXaCCg7O9jBM37+5LZ4b08LDlZpaBC6kpES0DRhJdnaLklFdnWB
+         hhbw==
+X-Gm-Message-State: AOAM533wRY5PCXRX6z14SaS4mWgRV6vCYkeSBI9vGuRZyWp8Z+S0/tOC
+        G3BsRHlw90Bz31VJv7FobBRWLtwIAzqQxIm+Tf7EwPVvxJxS5b6IjNivAsKtsadNqxz0VVhANaT
+        mbOIZe7s8lhMWEgbycRhCTtBWroLmeh53fjmg+0Kd7CyyHDeSholU3r4W16kWMd6xAVFePiAsr9
+        zLYqn60NHEPzw=
+X-Google-Smtp-Source: ABdhPJxHR4P51kPNXNFKFgiLjPjtDUI+E9o8d0a8eoFjbFO4TqTgrKCm87QqwgDdMBMduhF60ql7eQ==
+X-Received: by 2002:a62:1455:0:b029:18b:83a2:768b with SMTP id 82-20020a6214550000b029018b83a2768bmr22812725pfu.3.1605095488765;
+        Wed, 11 Nov 2020 03:51:28 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id o1sm1160221pfk.67.2020.11.11.03.51.23
+        by smtp.gmail.com with ESMTPSA id o1sm1160221pfk.67.2020.11.11.03.51.26
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 11 Nov 2020 03:51:25 -0800 (PST)
+        Wed, 11 Nov 2020 03:51:28 -0800 (PST)
 From:   Muneendra <muneendra.kumar@broadcom.com>
 To:     linux-scsi@vger.kernel.org, michael.christie@oracle.com,
         hare@suse.de
 Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH v7 1/5] scsi: Added a new error code DID_TRANSPORT_MARGINAL in scsi.h
-Date:   Wed, 11 Nov 2020 10:28:01 +0530
-Message-Id: <1605070685-20945-2-git-send-email-muneendra.kumar@broadcom.com>
+Subject: [PATCH v7 2/5] scsi: No retries on abort success
+Date:   Wed, 11 Nov 2020 10:28:02 +0530
+Message-Id: <1605070685-20945-3-git-send-email-muneendra.kumar@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1605070685-20945-1-git-send-email-muneendra.kumar@broadcom.com>
 References: <1605070685-20945-1-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000004c754f05b3d36a3d"
+        boundary="000000000000789c2905b3d36a15"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000004c754f05b3d36a3d
+--000000000000789c2905b3d36a15
 
-Added a new error code DID_TRANSPORT_MARGINAL to handle marginal
-errors in scsi.h
+Added a new optional routine eh_should_retry_cmd
+in scsi_host_template that allows the transport to decide if a
+cmd is retryable.Return true if the transport is in a state the
+cmd should be retried on.
 
-Added a code in scsi_result_to_blk_status to translate
-a new error DID_TRANSPORT_MARGINAL to the corresponding blk_status_t
-i.e BLK_STS_TRANSPORT
+Added a new interface scsi_eh_should_retry_cmd which checks and
+calls the new routine eh_should_retry_cmd.
 
-Added DID_TRANSPORT_MARGINAL case to scsi_decide_disposition
+Made changes in scmd_eh_abort_handler and scsi_eh_flush_done_q which
+calls the scsi_eh_should_retry_cmd to check whether the
+command needs to be retried.
+
+The above changes were done based on a patch by Mike Christie.
 
 Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 
 ---
 v7:
-Rearranged the patch by moving the DID_TRANSPORT_MARGINAL
-and the changes with respect to the same to this patch
-from the previous patch2 in v6
+Added New routine in scsi_host_template to decide if a cmd is
+retryable instead of checking the same using  SCMD_NORETRIES_ABORT
+bit as the cmd retry part can be checked by validating the port state.
 
-Removed the previuos patch patch1 in v6 as in the
-current approach there is no need of this bit SCMD_NORETRIES_ABORT
+Moved the DID_TRANSPORT_MARGINAL changes to previous patch
+for reordering
 
 v6:
 Rearranged the patch by merging second hunk of the patch2 in v5
@@ -114,57 +119,74 @@ v2:
 set the hostbyte as DID_TRANSPORT_MARGINAL instead of
 DID_TRANSPORT_FAILFAST.
 ---
- drivers/scsi/scsi_error.c | 6 ++++++
- drivers/scsi/scsi_lib.c   | 1 +
- include/scsi/scsi.h       | 1 +
- 3 files changed, 8 insertions(+)
+ drivers/scsi/scsi_error.c | 17 +++++++++++++++--
+ include/scsi/scsi_host.h  |  6 ++++++
+ 2 files changed, 21 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index f11f51e2465f..28056ee498b3 100644
+index 28056ee498b3..1cdfa5a8ca09 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -1861,6 +1861,12 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * the fast io fail tmo fired), so send IO directly upwards.
- 		 */
- 		return SUCCESS;
-+	case DID_TRANSPORT_MARGINAL:
-+		/*
-+		 * caller has decided not to do retries on
-+		 * abort success, so send IO directly upwards
-+		 */
-+		return SUCCESS;
- 	case DID_ERROR:
- 		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
- 		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 20a357563d3d..ce1e2adaca36 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -629,6 +629,7 @@ static blk_status_t scsi_result_to_blk_status(struct scsi_cmnd *cmd, int result)
- 			return BLK_STS_OK;
- 		return BLK_STS_IOERR;
- 	case DID_TRANSPORT_FAILFAST:
-+	case DID_TRANSPORT_MARGINAL:
- 		return BLK_STS_TRANSPORT;
- 	case DID_TARGET_FAILURE:
- 		set_host_byte(cmd, DID_OK);
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 5339baadc082..5b287ad8b727 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -159,6 +159,7 @@ static inline int scsi_is_wlun(u64 lun)
- 				 * paths might yield different results */
- #define DID_ALLOC_FAILURE 0x12  /* Space allocation on the device failed */
- #define DID_MEDIUM_ERROR  0x13  /* Medium error */
-+#define DID_TRANSPORT_MARGINAL 0x14 /* Transport marginal errors */
- #define DRIVER_OK       0x00	/* Driver status                           */
+@@ -124,6 +124,17 @@ static bool scsi_cmd_retry_allowed(struct scsi_cmnd *cmd)
+ 	return ++cmd->retries <= cmd->allowed;
+ }
  
- /*
++static bool scsi_eh_should_retry_cmd(struct scsi_cmnd *cmd)
++{
++	struct scsi_device *sdev = cmd->device;
++	struct Scsi_Host *host = sdev->host;
++
++	if (host->hostt->eh_should_retry_cmd)
++		return  host->hostt->eh_should_retry_cmd(cmd);
++
++	return true;
++}
++
+ /**
+  * scmd_eh_abort_handler - Handle command aborts
+  * @work:	command to be aborted.
+@@ -159,7 +170,8 @@ scmd_eh_abort_handler(struct work_struct *work)
+ 						    "eh timeout, not retrying "
+ 						    "aborted command\n"));
+ 			} else if (!scsi_noretry_cmd(scmd) &&
+-				   scsi_cmd_retry_allowed(scmd)) {
++				   scsi_cmd_retry_allowed(scmd) &&
++				scsi_eh_should_retry_cmd(scmd)) {
+ 				SCSI_LOG_ERROR_RECOVERY(3,
+ 					scmd_printk(KERN_WARNING, scmd,
+ 						    "retry aborted command\n"));
+@@ -2111,7 +2123,8 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+ 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+ 		list_del_init(&scmd->eh_entry);
+ 		if (scsi_device_online(scmd->device) &&
+-		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd)) {
++		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
++			scsi_eh_should_retry_cmd(scmd)) {
+ 			SCSI_LOG_ERROR_RECOVERY(3,
+ 				scmd_printk(KERN_INFO, scmd,
+ 					     "%s: flush retry cmd\n",
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 701f178b20ae..e30fd963b97d 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -314,6 +314,12 @@ struct scsi_host_template {
+ 	 * Status: OPTIONAL
+ 	 */
+ 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
++	/*
++	 * Optional routine that allows the transport to decide if a cmd
++	 * is retryable. Return true if the transport is in a state the
++	 * cmd should be retried on.
++	 */
++	bool (*eh_should_retry_cmd)(struct scsi_cmnd *scmd);
+ 
+ 	/* This is an optional routine that allows transport to initiate
+ 	 * LLD adapter or firmware reset using sysfs attribute.
 -- 
 2.26.2
 
 
---0000000000004c754f05b3d36a3d
+--000000000000789c2905b3d36a15
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -235,13 +257,13 @@ LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
 EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
 b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
 SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCAz4Md7gMSOgdE4iqMa1TiwUwLpJupeHdPVprmyCx1k2TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMTExMTUxMjZaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
+BCBqCZ3vQOkYfYJoadijbIGoc+vW92JvVT+eZQsZ0/JSdzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
+AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMTExMTUxMjlaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
 AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAach92T1lK5dasyAP
-jFyoM4j0U1JJsf/T/ldCOQjahy8sXwBvzqgetOSpPM123STM7PNV/klV+HFSJbpxjGyisflVmcsg
-eb+GxWx3zUBA2DOF88c7FBkhPVKwFhpRJ0qTrqLHZJez3UNUjb2DxUw1GvRYtxJKeA9hzeor45Ai
-WYBdQjnnWplX+G5hvvEMDxhNjQ5kKKwSkN0uTDV2Fxb7z2DvGfmnuqroHA10HRdTpXK/L4a/zx4v
-B1q7j9x2HEVxeFUUsNi4becIe74RxULzwVz9idldujcGLf9MpKTH+m5Gyw5S/6RTagZOxB+m+mHf
-1hL+CBIZ22WA2JnnKyrRdQ==
---0000000000004c754f05b3d36a3d--
+MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAK+Caeh36hu5bK1RS
+qgCmc5/HkQJtHvPkbAVdb/DWJq5emRnMgnm3ONJ3Ktc7isu8Uz3EWSdEVbWSJTcbe2dB92ysGFHN
+h57eYURE1zrhJtmolYLvmgZnrBzIiQIGAP07Fr3xdD5l2zH08nTchZNLREdPPizQDxCy6BHrVukp
+OfBZ8vduYuVzmbt3G6cBV5f0pMLyQDQXnxbYMmv8vKlSqVgluqvOZqhKx/+D6MuIHzGZoITSLlN3
+nLa/wfQjYo896WG+7MaEcP2P93RzEC5ZFOS2tQrj3zLNFT+xfGL9ecs3SSjStl6h4dPMCbGNU06W
+JsQ3VKvgw4qyP+D8QJA2og==
+--000000000000789c2905b3d36a15--
