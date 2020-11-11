@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D6AC61DD8
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F061C388F9
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:28:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2837206F1
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCDD2206F1
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:28:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fh6dXrMt"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m5MWiiWz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726736AbgKKI16 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:27:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33600 "EHLO
+        id S1726846AbgKKI1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:27:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726849AbgKKI1p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:45 -0500
+        with ESMTP id S1726416AbgKKI1k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:40 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D48C0613D1;
-        Wed, 11 Nov 2020 00:27:45 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2892BC0617A6;
+        Wed, 11 Nov 2020 00:27:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=VpoGqglFmdO7rnCbfTvzOvXddLcpMeI5Oi6kPi7JzMI=; b=fh6dXrMtrp6rcPPLQiDw9sObnB
-        efyUG413uhXCb/QlAb9v8YRflPAq5yVp8u+GdJ3bhDBmbClXQ1kCpqH+iSdq//kveTtc0aIkz9/t1
-        NlOAJ4US+n4Craqy3YLcf0d/UIIueyp+te++vbLGVABk4rzZkClrL41F56aqypppQdeDo+E3XqxqJ
-        i+R8ENt7qFBaf1eEpWEC2Ev9uhlpwv3fW3tkYO79IfCJ8e8m8V20ceNDASmk3zIUqgUWaiXo3hZ8t
-        x6L5b2uRc0iF0V0qiQuq2BgZgpQ3K0E2zlRsdDc30ePD0TrZzD8SAnDEx2V9S0Ja3dbtv/5M2xPH2
-        2ywmdMQw==;
+        bh=PHuhBTY1ouZHYZght48HNcRnOQ9ETUZCJ1FQTXf/EwQ=; b=m5MWiiWzcpaSYXwS8kDVrHOGAw
+        92iCzGTWlSpt7Br9adIXKJfa7+N+xudiux0bUtzBV0XOA8sCFw4A+F+21N6k6DSKovVJVpX0hyRne
+        XeIBsiJ1g7Ruf7j/9oBvg5u8uE72Evjw5CNmDZkyoFT44EDwPVXjfy+qvbBMZwYJ4ZM30mXDzKACM
+        sbMnAv+VpKqU/y2BICE63kA6Ex/Ct7GtegULS3KTE0zTRAvu/6wpo59jG/nz2JK3HbrnIKVuEf9X9
+        L91CAfTn1sj5/yjS/WJVSnqinqVMqn7XYadu2gBkPI9KyrNPK+vEVaQZyACPmx4+EtdIlPpHqXZDG
+        leis3YSg==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclTV-0007f7-7D; Wed, 11 Nov 2020 08:27:29 +0000
+        id 1kclTP-0007dc-EI; Wed, 11 Nov 2020 08:27:23 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 22/24] md: remove a spurious call to revalidate_disk_size in update_size
-Date:   Wed, 11 Nov 2020 09:26:56 +0100
-Message-Id: <20201111082658.3401686-23-hch@lst.de>
+Subject: [PATCH 18/24] rnbd: use set_capacity_and_notify
+Date:   Wed, 11 Nov 2020 09:26:52 +0100
+Message-Id: <20201111082658.3401686-19-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
 References: <20201111082658.3401686-1-hch@lst.de>
@@ -70,28 +70,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-None of the ->resize methods updates the disk size, so calling
-revalidate_disk_size here won't do anything.
+Use set_capacity_and_notify to set the size of both the disk and block
+device.  This also gets the uevent notifications for the resize for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Song Liu <song@kernel.org>
 ---
- drivers/md/md-cluster.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/block/rnbd/rnbd-clt.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 87442dc59f6ca3..35e2690c1803dd 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1299,8 +1299,6 @@ static void update_size(struct mddev *mddev, sector_t old_dev_sectors)
- 	} else {
- 		/* revert to previous sectors */
- 		ret = mddev->pers->resize(mddev, old_dev_sectors);
--		if (!ret)
--			revalidate_disk_size(mddev->gendisk, true);
- 		ret = __sendmsg(cinfo, &cmsg);
- 		if (ret)
- 			pr_err("%s:%d: failed to send METADATA_UPDATED msg\n",
+diff --git a/drivers/block/rnbd/rnbd-clt.c b/drivers/block/rnbd/rnbd-clt.c
+index 8b2411ccbda97c..bb13d7dd195a08 100644
+--- a/drivers/block/rnbd/rnbd-clt.c
++++ b/drivers/block/rnbd/rnbd-clt.c
+@@ -100,8 +100,7 @@ static int rnbd_clt_change_capacity(struct rnbd_clt_dev *dev,
+ 	rnbd_clt_info(dev, "Device size changed from %zu to %zu sectors\n",
+ 		       dev->nsectors, new_nsectors);
+ 	dev->nsectors = new_nsectors;
+-	set_capacity(dev->gd, dev->nsectors);
+-	revalidate_disk_size(dev->gd, true);
++	set_capacity_and_notify(dev->gd, dev->nsectors);
+ 	return 0;
+ }
+ 
 -- 
 2.28.0
 
