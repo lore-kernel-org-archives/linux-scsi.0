@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B81C56201
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7167FC61DD8
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03A5720797
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 115AA20795
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WGdyaw45"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vJB9c0uf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726982AbgKKI3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726988AbgKKI3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 11 Nov 2020 03:29:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33504 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726324AbgKKI1W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:22 -0500
+        with ESMTP id S1725922AbgKKI1Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:24 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48ED3C0617A6;
-        Wed, 11 Nov 2020 00:27:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51F3EC061A04;
+        Wed, 11 Nov 2020 00:27:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=stmwFAlkeYayJwqxLAzxAb5snaHT5ewOrHfW4MD4mwk=; b=WGdyaw45qmIaK2SmatQbzEUT8g
-        sEQj1d8rAjkxLN2VkCVTmqZPll/LHGpxSV/Ir/IILaWgwYuFt2ICDMLJQCEBXEhKh5VnaPge+eYYF
-        IOkQ1MFG821grDHDC93JDllTw4BY36AXV/yFqmryZ3vHvbukA3hGqUm74A8voHvu45uxjEGSyanL7
-        IphCk+rTO/osj709X1NFm11SrN6uOCMdFEiCn4af1goiKlpL+OEwTfsYuGysBGdA57IRinYRl+Iz0
-        iyGlhXels8NLzlL13cFL+YI5aSIARz+l1EkZoUoEk2NSPyid+0DXdQDDf19mhfxK6pCa6I7Rf7UkB
-        L8AvM4RA==;
+        bh=DxpFRHQFxTQEJeN4GgGJQ0kD3jbey5oDwaxlpVZafNQ=; b=vJB9c0ufLsJ+1Xo5f8NEg4RHaC
+        98XDL7CsYrrMKs9Q11bCNE34XEPD2IqwS7KKo5742pBrutf+nBOji8TuquAbexo/jmfAH5rN6yLvg
+        vynvG1kS12vAEnRM0qCOkqzj4K6wx65p08QSCU6KweYUO41Ky9CBvAueWqKzfwAL2Izvf1mxdkMSH
+        CF7dcunxgYm95R69mW8FLbnawc67+JRWKMKFSvpCi7sea2728l+t/4wD3D6d8xlKV/lA1rlhsloEC
+        MoxWwOngvmgMlyXhXRA8eKa8tBI6ITu5Prbwd5gH9fsErYkZCfFYsvFdRkWPc5VOc0QL8QZblikj5
+        EJ2PRWpw==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclT3-0007Ze-1h; Wed, 11 Nov 2020 08:27:01 +0000
+        id 1kclT9-0007aX-Sw; Wed, 11 Nov 2020 08:27:08 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 01/24] block: remove the call to __invalidate_device in check_disk_size_change
-Date:   Wed, 11 Nov 2020 09:26:35 +0100
-Message-Id: <20201111082658.3401686-2-hch@lst.de>
+Subject: [PATCH 07/24] nbd: remove the call to set_blocksize
+Date:   Wed, 11 Nov 2020 09:26:41 +0100
+Message-Id: <20201111082658.3401686-8-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
 References: <20201111082658.3401686-1-hch@lst.de>
@@ -70,35 +70,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-__invalidate_device without the kill_dirty parameter just invalidates
-various clean entries in caches, which doesn't really help us with
-anything, but can cause all kinds of horrible lock orders due to how
-it calls into the file system.  The only reason this hasn't been a
-major issue is because so many people use partitions, for which no
-invalidation was performed anyway.
+Block driver have no business setting the file system concept of a
+block size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 ---
- fs/block_dev.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/block/nbd.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 9e84b1928b9401..66ebf594c97f47 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1334,12 +1334,6 @@ static void check_disk_size_change(struct gendisk *disk,
- 		i_size_write(bdev->bd_inode, disk_size);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index c4f9ccf5cc2ac5..f618688a196654 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -296,7 +296,7 @@ static void nbd_size_clear(struct nbd_device *nbd)
  	}
- 	spin_unlock(&bdev->bd_size_lock);
--
--	if (bdev_size > disk_size) {
--		if (__invalidate_device(bdev, false))
--			pr_warn("VFS: busy inodes on resized disk %s\n",
--				disk->disk_name);
--	}
  }
  
- /**
+-static void nbd_size_update(struct nbd_device *nbd, bool start)
++static void nbd_size_update(struct nbd_device *nbd)
+ {
+ 	struct nbd_config *config = nbd->config;
+ 	struct block_device *bdev = bdget_disk(nbd->disk, 0);
+@@ -311,11 +311,9 @@ static void nbd_size_update(struct nbd_device *nbd, bool start)
+ 	blk_queue_physical_block_size(nbd->disk->queue, config->blksize);
+ 	set_capacity(nbd->disk, nr_sectors);
+ 	if (bdev) {
+-		if (bdev->bd_disk) {
++		if (bdev->bd_disk)
+ 			bd_set_nr_sectors(bdev, nr_sectors);
+-			if (start)
+-				set_blocksize(bdev, config->blksize);
+-		} else
++		else
+ 			set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
+ 		bdput(bdev);
+ 	}
+@@ -329,7 +327,7 @@ static void nbd_size_set(struct nbd_device *nbd, loff_t blocksize,
+ 	config->blksize = blocksize;
+ 	config->bytesize = blocksize * nr_blocks;
+ 	if (nbd->task_recv != NULL)
+-		nbd_size_update(nbd, false);
++		nbd_size_update(nbd);
+ }
+ 
+ static void nbd_complete_rq(struct request *req)
+@@ -1309,7 +1307,7 @@ static int nbd_start_device(struct nbd_device *nbd)
+ 		args->index = i;
+ 		queue_work(nbd->recv_workq, &args->work);
+ 	}
+-	nbd_size_update(nbd, true);
++	nbd_size_update(nbd);
+ 	return error;
+ }
+ 
 -- 
 2.28.0
 
