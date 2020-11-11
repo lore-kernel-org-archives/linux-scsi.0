@@ -7,71 +7,87 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B27C388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:13:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E4CC5517A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:19:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 125A221741
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:13:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC66E221FB
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:19:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MKV6PNYt"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rdxx8bfC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725903AbgKKENV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Nov 2020 23:13:21 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:52816 "EHLO
+        id S1725908AbgKKETn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Nov 2020 23:19:43 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:56610 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725870AbgKKENU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2020 23:13:20 -0500
+        with ESMTP id S1725468AbgKKETm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2020 23:19:42 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB49Qgb187059;
-        Wed, 11 Nov 2020 04:12:22 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB49Tbn187079;
+        Wed, 11 Nov 2020 04:18:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=GXywq9HLAQiBosLvOQf2KY95yYBv7vb8SnQzxwOZPww=;
- b=MKV6PNYtI1LkB9cs15AkR4FXKxMo7gDRqf926JJ4LSHXTr5XRTM4HtXpt1pdKLTXI9lL
- JKzEvnHtiM+gGuXDZ+Pft/27vIA+n4j+sBhuLLFEmAIfM7/VPhDKMlNe/fshrMi5HQbo
- ixugH2OMIuly5nxTN5YoFaYB4OEN3nqeh/F/wIbg1PAbEmXZ2nu9hxmLgPNLgj952pc1
- sAUD98Hh6IHUnK95ITzEGtuTp/CE0nb3/bn02EVLfou50NkZj8EAGJvRHhGsCZBg+m10
- nljOy6EkXyFl1WQZAyeZDTBzTFPkFxO+CTGfB+GRQw4wveFabocDAfR/sQP+gDaI9zt1 8Q== 
+ bh=EwuOibuX72u5GW/vr3IZET1mbk4Qqp2f1lpQhsZMo3U=;
+ b=rdxx8bfCoz66U7/JxdRXyqosHLyk6104gocou3/pxKr+MBaHN9z+JG22xyBjdFrs/toj
+ u8kyE9Mnx40f+onFhQWnASdg9eewdpqao7JjD8N8PDe0bDGwb4iBUgCzzxwXH2tPfd4b
+ ZewD9ZDiq4ttMBKnV5hFCYBDOG9JBlIzwIQL8q1J/Y6q7a+0GcQKjASc2OGvEo13qqVS
+ YW2PdJ4GC1fZvqx8aM04P1FnQraTmrtlR84Q48lCpCKfWOIJkugsvGV1CkUq/whUbI2D
+ eu9b4yGyWVKNklkWbsL8Eg4w7p+siPP69BiWWD0dUAtW6doZkGUQe3KqPOb7wn/WWPSd sQ== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 34p72en8rx-1
+        by userp2120.oracle.com with ESMTP id 34p72en941-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 04:12:22 +0000
+        Wed, 11 Nov 2020 04:18:21 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB40tJ6113461;
-        Wed, 11 Nov 2020 04:10:21 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 34p5g173ja-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB4Arf2138947;
+        Wed, 11 Nov 2020 04:18:20 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 34p5g179j7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 04:10:21 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AB4AI24022627;
-        Wed, 11 Nov 2020 04:10:18 GMT
+        Wed, 11 Nov 2020 04:18:20 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB4IBdx000879;
+        Wed, 11 Nov 2020 04:18:11 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 20:10:18 -0800
-To:     xiakaixu1987@gmail.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kaixu Xia <kaixuxia@tencent.com>
-Subject: Re: [PATCH] scsi: bnx2fc: fix comparison to bool warning
+        with ESMTP ; Tue, 10 Nov 2020 20:18:09 -0800
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Roger Pau =?utf-8?Q?Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@tron.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 04/24] sd: update the bdev size in sd_revalidate_disk
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq15z6cfs9w.fsf@ca-mkp.ca.oracle.com>
-References: <1604767920-8361-1-git-send-email-kaixuxia@tencent.com>
-Date:   Tue, 10 Nov 2020 23:10:16 -0500
-In-Reply-To: <1604767920-8361-1-git-send-email-kaixuxia@tencent.com>
-        (xiakaixu's message of "Sun, 8 Nov 2020 00:52:00 +0800")
+Organization: Oracle
+Message-ID: <yq1tutwedcb.fsf@ca-mkp.ca.oracle.com>
+References: <20201106190337.1973127-1-hch@lst.de>
+        <20201106190337.1973127-5-hch@lst.de>
+Date:   Tue, 10 Nov 2020 23:18:05 -0500
+In-Reply-To: <20201106190337.1973127-5-hch@lst.de> (Christoph Hellwig's
+        message of "Fri, 6 Nov 2020 20:03:16 +0100")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
- adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=882 suspectscore=3
+ adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=887 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110018
+ definitions=main-2011110019
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=913 mlxscore=0
- malwarescore=0 suspectscore=3 lowpriorityscore=0 adultscore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=877 mlxscore=0
+ malwarescore=0 suspectscore=1 lowpriorityscore=0 adultscore=0 phishscore=0
  priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1011
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110019
@@ -80,12 +96,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-xiakaixu1987@gmail.com,
+Christoph,
 
-> ./drivers/scsi/bnx2fc/bnx2fc_fcoe.c:2089:5-23: WARNING: Comparison to bool
-> ./drivers/scsi/bnx2fc/bnx2fc_fcoe.c:2187:5-23: WARNING: Comparison to bool
+> This avoids the extra call to revalidate_disk_size in sd_rescan and
+> is otherwise a no-op because the size did not change, or we are in
+> the probe path.
 
-Applied to 5.11/scsi-staging, thanks!
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
