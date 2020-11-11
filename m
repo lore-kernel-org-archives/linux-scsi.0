@@ -2,244 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEACCC56202
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 09:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 908B9C56201
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 09:55:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74D5D20756
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 09:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B97E20729
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 09:55:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fdSJ/Hte"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Flu0kG/G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726575AbgKKJ2O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 04:28:14 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:39930 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726176AbgKKJ2N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Nov 2020 04:28:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605086891;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eNo6Md/9dfVzilzM+6Lo5mUatEHgedivNh/U2R1OIMU=;
-        b=fdSJ/Hteg252ORhambN/1QarURJ9x+yHrOY9KmTqnLAUF7uGfykM9GYvJR1XXL986iMbzF
-        ZwLrHs89fldQ93gjXVUSpjt0T7ZT+W69gEygY68k1fEKTke6hUN+8dNbeyH3I/pR6msD4o
-        Wn0Ah+ONDl+U/kkef38OWeNrnMiDTkY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-276-dZ-DS3yLOmKB2wip47gmdg-1; Wed, 11 Nov 2020 04:28:06 -0500
-X-MC-Unique: dZ-DS3yLOmKB2wip47gmdg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A7A1B188C129;
-        Wed, 11 Nov 2020 09:28:02 +0000 (UTC)
-Received: from T590 (ovpn-12-145.pek2.redhat.com [10.72.12.145])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 677EB5C1C4;
-        Wed, 11 Nov 2020 09:27:47 +0000 (UTC)
-Date:   Wed, 11 Nov 2020 17:27:43 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Sumit Saxena <sumit.saxena@broadcom.com>
-Cc:     John Garry <john.garry@huawei.com>, Qian Cai <cai@redhat.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        don.brace@microsemi.com, Bart Van Assche <bvanassche@acm.org>,
-        dgilbert@interlog.com, paolo.valente@linaro.org,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        esc.storagedev@microsemi.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
-        chenxiang66@hisilicon.com, luojiaxing@huawei.com,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH v8 17/18] scsi: megaraid_sas: Added support for shared
- host tagset for cpuhotplug
-Message-ID: <20201111092743.GC545929@T590>
-References: <d4f86cccccc3bffccc4eda39500ce1e1fee2109a.camel@redhat.com>
- <7624d3fe1613f19af5c3a77f4ae8fe55@mail.gmail.com>
- <d1040c06-74ea-7016-d259-195fa52196a9@huawei.com>
- <CAL2rwxoAAGQDud1djb3_LNvBw95YoYUGhe22FwE=hYhy7XOLSw@mail.gmail.com>
- <aaf849d38ca3cdd45151ffae9b6a99fe6f6ea280.camel@redhat.com>
- <0c75b881-3096-12cf-07cc-1119ca6a453e@huawei.com>
- <06a1a6bde51a66461d7b3135349641856315401d.camel@redhat.com>
- <db92d37c-28fd-4f81-7b59-8f19e9178543@huawei.com>
- <8043d516-c041-c94b-a7d9-61bdbfef0d7e@huawei.com>
- <CAL2rwxpQt-w2Re8ttu0=6Yzb7ibX3_FB6j-kd_cbtrWxzc7chw@mail.gmail.com>
+        id S1727307AbgKKJzr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 04:55:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47182 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725870AbgKKJzq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 04:55:46 -0500
+Received: from mail-il1-x141.google.com (mail-il1-x141.google.com [IPv6:2607:f8b0:4864:20::141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D378BC0613D1;
+        Wed, 11 Nov 2020 01:55:45 -0800 (PST)
+Received: by mail-il1-x141.google.com with SMTP id e17so1439067ili.5;
+        Wed, 11 Nov 2020 01:55:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qfEf7xRtwJh6vel7ndE10SMbjF6zTEFOWV8RA9xu3eI=;
+        b=Flu0kG/G8H5tmdzF22ns+x1T3WixC4FBs0RbA9YeGx20Pw3IL573gomPOrRSgLhidi
+         jxm4xXdraWCqe23Uz/lTRF5Gzul+neu0ZW5SRlL8rLtuRaQOMWWnKLr+e1J5E2f/IB4R
+         iaO9iEipyz2F49FzVbspMmUTamyYBNigOi7Hq45S5vTkNhsbMM69J9bWbbawzfmKvyaE
+         prBgh+sprAAWuhDKQzcpJRm9c4LoRmjW0z3OGufy4OEk4vgw7impUerADJ8+P1l4Evs/
+         gUeZGg6Qzu0m4oCwYhIr6na+Ay9Hq4ATHKFwzo1XQC1pmqP6NOhCJ7ijtefRPRR/Tb4r
+         FFHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qfEf7xRtwJh6vel7ndE10SMbjF6zTEFOWV8RA9xu3eI=;
+        b=KvtS3IeStM5spfDS6t6NO2+Z1VVJWwY9Dkb++mMQr4Cbe0WS12JoCGvRiKDFTDqW23
+         Fcl0HjtUQWBREdxrjcfttIJ1Dl3UDFkmWILgzi2EV40lzqdbH6U3RU2Sxd3ZtHbAxq5M
+         e7uKNRkXS77qam+khns2CflLQkAbtEdbDN5EDc6Qtv0/JI6ZZyj58jtePF9bAzs1B8qu
+         2UEBX/rhc9OohOWQBumtJHm192PB+q6NVqH/1Nu599qdHrSlSgAhl05U9Y1c3J2ChkXg
+         eZZHtlCXQifk2Ur/USrSzX8jorUsiOURvtiLIHqxAFdoQYGWu5edS8Gd2Z9dlu+Blm+G
+         c0Xw==
+X-Gm-Message-State: AOAM530rzE2Uf1a3DNfiF3E8gear4jJ9Te9pOjiINn0CCaTDD+fG/Jf+
+        I3OImvDk2aXapBxLGV/SDmHx5+N36GBSYNMgtEOmEDHQZ3pvnb2q
+X-Google-Smtp-Source: ABdhPJy9ZPoku1YjH4P5V9sTrbXGNc0TDLR8E4ST1Mn4KA5kvu+HvwpbOUC5MO/5tCHlTeWvzQ658Y1GM8zrKYsupSY=
+X-Received: by 2002:a92:1f43:: with SMTP id i64mr17516886ile.281.1605088545285;
+ Wed, 11 Nov 2020 01:55:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAL2rwxpQt-w2Re8ttu0=6Yzb7ibX3_FB6j-kd_cbtrWxzc7chw@mail.gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+References: <20201111082658.3401686-1-hch@lst.de> <20201111082658.3401686-18-hch@lst.de>
+In-Reply-To: <20201111082658.3401686-18-hch@lst.de>
+From:   Ilya Dryomov <idryomov@gmail.com>
+Date:   Wed, 11 Nov 2020 10:55:45 +0100
+Message-ID: <CAOi1vP-JjnNdAUqd9Gy6YdFgi8Ev4_Jt3zcB9DhAmdAvQhG7Eg@mail.gmail.com>
+Subject: Re: [PATCH 17/24] rbd: use set_capacity_and_notify
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block <linux-block@vger.kernel.org>,
+        Lars Ellenberg <drbd-dev@lists.linbit.com>,
+        nbd@other.debian.org,
+        Ceph Development <ceph-devel@vger.kernel.org>,
+        xen-devel@lists.xenproject.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 11, 2020 at 12:57:59PM +0530, Sumit Saxena wrote:
-> On Tue, Nov 10, 2020 at 11:12 PM John Garry <john.garry@huawei.com> wrote:
-> >
-> > On 09/11/2020 14:05, John Garry wrote:
-> > > On 09/11/2020 13:39, Qian Cai wrote:
-> > >>> I suppose I could try do this myself also, but an authentic version
-> > >>> would be nicer.
-> > >> The closest one I have here is:
-> > >> https://cailca.coding.net/public/linux/mm/git/files/master/arm64.config
-> > >>
-> > >> but it only selects the Thunder X2 platform and needs to manually select
-> > >> CONFIG_MEGARAID_SAS=m to start with, but none of arm64 systems here have
-> > >> megaraid_sas.
-> > >
-> > > Thanks, I'm confident I can fix it up to get it going on my Huawei arm64
-> > > D06CS.
-> > >
-> > > So that board has a megaraid sas card. In addition, it also has hisi_sas
-> > > HW, which is another storage controller which we enabled this same
-> > > feature which is causing the problem.
-> > >
-> > > I'll report back when I can.
-> >
-> > So I had to hack that arm64 config a bit to get it booting:
-> > https://github.com/hisilicon/kernel-dev/commits/private-topic-sas-5.10-megaraid-hang
-> >
-> > Boot is ok on my board without the megaraid sas card, but includes
-> > hisi_sas HW (which enables the equivalent option which is exposing the
-> > problem).
-> >
-> > But the board with the megaraid sas boots very slowly, specifically
-> > around the megaraid sas probe:
-> >
-> > : ttyS0 at MMIO 0x3f00002f8 (irq = 17, base_baud = 115200) is a 16550A
-> > [   50.023726][    T1] printk: console [ttyS0] enabled
-> > [   50.412597][    T1] megasas: 07.714.04.00-rc1
-> > [   50.436614][    T5] megaraid_sas 0000:08:00.0: FW now in Ready state
-> > [   50.450079][    T5] megaraid_sas 0000:08:00.0: 63 bit DMA mask and 63
-> > bit consistent mask
-> > [   50.467811][    T5] megaraid_sas 0000:08:00.0: firmware supports msix
-> >         : (128)
-> > [   50.845995][    T5] megaraid_sas 0000:08:00.0: requested/available
-> > msix 128/128
-> > [   50.861476][    T5] megaraid_sas 0000:08:00.0: current msix/online
-> > cpus      : (128/128)
-> > [   50.877616][    T5] megaraid_sas 0000:08:00.0: RDPQ mode     : (enabled)
-> > [   50.891018][    T5] megaraid_sas 0000:08:00.0: Current firmware
-> > supports maximum commands: 4077       LDIO threshold: 0
-> > [   51.262942][    T5] megaraid_sas 0000:08:00.0: Performance mode
-> > :Latency (latency index = 1)
-> > [   51.280749][    T5] megaraid_sas 0000:08:00.0: FW supports sync cache
-> >         : Yes
-> > [   51.295451][    T5] megaraid_sas 0000:08:00.0:
-> > megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-> > [   51.387474][    T5] megaraid_sas 0000:08:00.0: FW provided
-> > supportMaxExtLDs: 1       max_lds: 64
-> > [   51.404931][    T5] megaraid_sas 0000:08:00.0: controller type
-> > : MR(2048MB)
-> > [   51.419616][    T5] megaraid_sas 0000:08:00.0: Online Controller
-> > Reset(OCR)  : Enabled
-> > [   51.436132][    T5] megaraid_sas 0000:08:00.0: Secure JBOD support
-> > : Yes
-> > [   51.450265][    T5] megaraid_sas 0000:08:00.0: NVMe passthru support
-> > : Yes
-> > [   51.464757][    T5] megaraid_sas 0000:08:00.0: FW provided TM
-> > TaskAbort/Reset timeout        : 6 secs/60 secs
-> > [   51.484379][    T5] megaraid_sas 0000:08:00.0: JBOD sequence map
-> > support     : Yes
-> > [   51.499607][    T5] megaraid_sas 0000:08:00.0: PCI Lane Margining
-> > support    : No
-> > [   51.547610][    T5] megaraid_sas 0000:08:00.0: NVME page size
-> > : (4096)
-> > [   51.608635][    T5] megaraid_sas 0000:08:00.0:
-> > megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
-> > [   51.630285][    T5] megaraid_sas 0000:08:00.0: INIT adapter done
-> > [   51.649854][    T5] megaraid_sas 0000:08:00.0: pci id
-> > : (0x1000)/(0x0016)/(0x19e5)/(0xd215)
-> > [   51.667873][    T5] megaraid_sas 0000:08:00.0: unevenspan support    : no
-> > [   51.681646][    T5] megaraid_sas 0000:08:00.0: firmware crash dump   : no
-> > [   51.695596][    T5] megaraid_sas 0000:08:00.0: JBOD sequence map
-> > : enabled
-> > [   51.711521][    T5] megaraid_sas 0000:08:00.0: Max firmware commands:
-> > 4076 shared with nr_hw_queues = 127
-> > [   51.733056][    T5] scsi host0: Avago SAS based MegaRAID driver
-> > [   65.304363][    T5] scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG
-> > MZ7KH1T9 404Q PQ: 0 ANSI: 6
-> > [   65.392401][    T5] scsi 0:0:1:0: Direct-Access     ATA      SAMSUNG
-> > MZ7KH1T9 404Q PQ: 0 ANSI: 6
-> > [   79.508307][    T5] scsi 0:0:65:0: Enclosure         HUAWEI
-> > Expander 12Gx16  131  PQ: 0 ANSI: 6
-> > [  183.965109][   C14] random: fast init done
-> >
-> > Notice the 14 and 104 second delays.
-> >
-> > But does boot fully to get to the console. I'll wait for further issues,
-> > which you guys seem to experience after a while.
-> >
-> > Thanks,
-> > John
-> "megaraid_sas" driver calls “scsi_scan_host()” to discover SCSI
-> devices. In this failure case, scsi_scan_host() is taking a long time
-> to complete, hence causing delay in system boot.
-> With "host_tagset" enabled, scsi_scan_host() takes around 20 mins.
-> With "host_tagset" disabled, scsi_scan_host() takes upto 5-8 mins.
-> 
-> The scan time depends upon the number of scsi channels and devices per
-> scsi channel is exposed by LLD.
-> megaraid_sas driver exposes 4 channels and 128 drives per channel.
-> 
-> Each target scan takes 2 seconds (in case of failure with host_tagset
-> enabled).  That's why driver load completes after ~20 minutes. See
-> below:
-> 
-> [  299.725271] kobject: 'target18:0:96': free name
-> [  301.681267] kobject: 'target18:0:97' (00000000987c7f11):
-> kobject_cleanup, parent 0000000000000000
-> [  301.681269] kobject: 'target18:0:97' (00000000987c7f11): calling
-> ktype release
-> [  301.681273] kobject: 'target18:0:97': free name
-> [  303.575268] kobject: 'target18:0:98' (00000000a8c34149):
-> kobject_cleanup, parent 0000000000000000
-> 
-> In Qian's kernel .config, async scsi scan is disabled so in failure
-> case SCSI scan type is synchronous.
-> Below is the stack trace when scsi_scan_host() hangs:
-> 
-> [<0>] __wait_rcu_gp+0x134/0x170
-> [<0>] synchronize_rcu.part.80+0x53/0x60
-> [<0>] blk_free_flush_queue+0x12/0x30
+On Wed, Nov 11, 2020 at 9:27 AM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Use set_capacity_and_notify to set the size of both the disk and block
+> device.  This also gets the uevent notifications for the resize for free.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+> ---
+>  drivers/block/rbd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+> index f84128abade319..b7a194ffda55b4 100644
+> --- a/drivers/block/rbd.c
+> +++ b/drivers/block/rbd.c
+> @@ -4920,8 +4920,7 @@ static void rbd_dev_update_size(struct rbd_device *rbd_dev)
+>             !test_bit(RBD_DEV_FLAG_REMOVING, &rbd_dev->flags)) {
+>                 size = (sector_t)rbd_dev->mapping.size / SECTOR_SIZE;
+>                 dout("setting size to %llu sectors", (unsigned long long)size);
+> -               set_capacity(rbd_dev->disk, size);
+> -               revalidate_disk_size(rbd_dev->disk, true);
+> +               set_capacity_and_notify(rbd_dev->disk, size);
+>         }
+>  }
+>
+> --
+> 2.28.0
+>
 
-Can this issue disappear by applying the following change?
+Hi Christoph,
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index e32958f0b687..b1fe6176d77f 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -469,9 +469,6 @@ struct blk_flush_queue *blk_alloc_flush_queue(int node, int cmd_size,
- 	INIT_LIST_HEAD(&fq->flush_queue[1]);
- 	INIT_LIST_HEAD(&fq->flush_data_in_flight);
- 
--	lockdep_register_key(&fq->key);
--	lockdep_set_class(&fq->mq_flush_lock, &fq->key);
--
- 	return fq;
- 
-  fail_rq:
-@@ -486,7 +483,6 @@ void blk_free_flush_queue(struct blk_flush_queue *fq)
- 	if (!fq)
- 		return;
- 
--	lockdep_unregister_key(&fq->key);
- 	kfree(fq->flush_rq);
- 	kfree(fq);
- }
+The Acked-by is wrong here.  I acked this patch (17/24, rbd), and Jack
+acked the next one (18/24, rnbd).
 
+Thanks,
 
-Thanks, 
-Ming
-
+                Ilya
