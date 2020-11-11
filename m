@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7495C388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19F66C4742C
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AB732074B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAF772075A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:27:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HtE3Jf5V"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u/ozI6WB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726532AbgKKI12 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:27:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33522 "EHLO
+        id S1726784AbgKKI1g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:27:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbgKKI10 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:26 -0500
+        with ESMTP id S1726416AbgKKI13 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:29 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24450C0613D4;
-        Wed, 11 Nov 2020 00:27:26 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90DF4C0617A7;
+        Wed, 11 Nov 2020 00:27:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=msAxRVgou3+s48HjnTxbv/pHmvKh+OTllxGOwTa9PDs=; b=HtE3Jf5Vbg9BUyHuOP4LioCkGM
-        D5RSbkrHUpDFKIQjTw/EK4TzE+8HC7HKkeSRDQ5TzvYLeD176nt7vURqsS/VEBAOA0ZGVp2Hfk4BA
-        FS2uNGpdT5zytQL6JfJub2kZpw2LjaJ9Qgw8NxRTfmPK2IU9L78Jw1VK21pEcdjuzr8xdUwVC1AG8
-        FZzij4ATCs/rSb1EzfUVneXPwEq9nYX5eNo+i9hTfvU1x/iEwjUiJQP7bXoR4lZCu9eKsU3Nd9Bq0
-        Kq770Jj2OBzqFQPHPMIVFh4h4EqCewYZ87onZqxTquG/UH1fcZ9aZrou8dZ3Mf5neqm7MQBxdmEx8
-        6E4xnYtg==;
+        bh=aTYccYixW8gbHYOBakp7ukQbj8m53SZz7oZSluFWVGc=; b=u/ozI6WBA8REfAwdRvhywExuNr
+        JLlsRRFbzxUvhpbOhxUj8/yRTolc2kh0ts2NzCUCtvtIGjt7R+mL86s4iNKKy19DxPdRahEdhs7pR
+        VWtl3HgZF75ovljLu1zA3T/5X+fFn3rmuS8w2OpsYFgzn7J0YuXm5T5t2THdt8scAYc5+kG47mtie
+        yNOj6g1hD19a3zBv5h1AdD75GWTJEyW2t6w6Ar1OufkGiHlajaAgfjYMc64Hrs99tQQwSRtuKeGPk
+        C900mkX+WRHnV1MWMEPhCqV0DdkzBlCFAXPcCILEVO5ocQBjNPNvC67NrkhDk+Rw1ZN2Zzateo5JG
+        8ZYIrJAA==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclT8-0007aM-Pa; Wed, 11 Nov 2020 08:27:06 +0000
+        id 1kclTI-0007c0-C4; Wed, 11 Nov 2020 08:27:16 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 06/24] block: add a return value to set_capacity_and_notify
-Date:   Wed, 11 Nov 2020 09:26:40 +0100
-Message-Id: <20201111082658.3401686-7-hch@lst.de>
+Subject: [PATCH 13/24] dm: use set_capacity_and_notify
+Date:   Wed, 11 Nov 2020 09:26:47 +0100
+Message-Id: <20201111082658.3401686-14-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
 References: <20201111082658.3401686-1-hch@lst.de>
@@ -70,54 +70,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Return if the function ended up sending an uevent or not.
+Use set_capacity_and_notify to set the size of both the disk and block
+device.  This also gets the uevent notifications for the resize for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c         | 7 +++++--
- include/linux/genhd.h | 2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/md/dm.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index d8d9d6c1c916e1..8c350fecfe8bfe 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -47,9 +47,9 @@ static void disk_release_events(struct gendisk *disk);
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index c18fc25485186d..62ad44925e73ec 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1971,8 +1971,7 @@ static struct dm_table *__bind(struct mapped_device *md, struct dm_table *t,
+ 	if (size != dm_get_size(md))
+ 		memset(&md->geometry, 0, sizeof(md->geometry));
  
- /*
-  * Set disk capacity and notify if the size is not currently zero and will not
-- * be set to zero.
-+ * be set to zero.  Returns true if a uevent was sent, otherwise false.
-  */
--void set_capacity_and_notify(struct gendisk *disk, sector_t size)
-+bool set_capacity_and_notify(struct gendisk *disk, sector_t size)
- {
- 	sector_t capacity = get_capacity(disk);
+-	set_capacity(md->disk, size);
+-	bd_set_nr_sectors(md->bdev, size);
++	set_capacity_and_notify(md->disk, size);
  
-@@ -60,7 +60,10 @@ void set_capacity_and_notify(struct gendisk *disk, sector_t size)
- 		char *envp[] = { "RESIZE=1", NULL };
+ 	dm_table_event_callback(t, event_callback, md);
  
- 		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
-+		return true;
- 	}
-+
-+	return false;
- }
- EXPORT_SYMBOL_GPL(set_capacity_and_notify);
- 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 596f31b5a3e133..4b22bfd9336e1a 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -315,7 +315,7 @@ static inline int get_disk_ro(struct gendisk *disk)
- extern void disk_block_events(struct gendisk *disk);
- extern void disk_unblock_events(struct gendisk *disk);
- extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
--void set_capacity_and_notify(struct gendisk *disk, sector_t size);
-+bool set_capacity_and_notify(struct gendisk *disk, sector_t size);
- 
- /* drivers/char/random.c */
- extern void add_disk_randomness(struct gendisk *disk) __latent_entropy;
 -- 
 2.28.0
 
