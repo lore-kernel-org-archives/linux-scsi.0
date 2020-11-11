@@ -7,79 +7,73 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D1ADC388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2EB1C5517A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:09:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD71F20797
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:04:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8512620825
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 04:09:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="svDd6dU7"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tnSA1P6J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725870AbgKKEEa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Nov 2020 23:04:30 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:35376 "EHLO
+        id S1725885AbgKKEI5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Nov 2020 23:08:57 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:38294 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725849AbgKKEEa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2020 23:04:30 -0500
+        with ESMTP id S1725852AbgKKEI5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2020 23:08:57 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB442P8090288;
-        Wed, 11 Nov 2020 04:04:17 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB449we090305;
+        Wed, 11 Nov 2020 04:08:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=V5ePjViCRr23kx/T8WxrIkVMuE+GuaYuOU6AhJaCWqs=;
- b=svDd6dU7ZqMaPCMepfgK33jmAw1aA9xrxb7YtwFlABkXncMvms3qoTrbazZesOm0N0eM
- GnyQZ0N+kjlN8wIagNwXrl0yVOxXgXNC0SVzpha5XvzJzoDAqmjBBINfOTYPbHrfxDrP
- hmiCcKD5ivJfs3dB5mYctYmwNTAo6kN9cODsEfmPYpz/so+3j1finA33iAdph+fcyc+0
- 159knvpM3/uOzeAtCPqKReIm62xJHKQLKL5Lzs8I+CMWFX4hXJcLheACAN9/Zda5hHUt
- xKE6lcWyvAGzKBuz/hNQ2yDgHRh+QuBV+nR9sievwOdSBHMVXwb/dfwCB8jL60MBjScb Gw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 34nkhky1qw-1
+ bh=IVxKlKj2u2ChwvH87FLPmfUzdGcvNuupnV6Etx+4L2c=;
+ b=tnSA1P6JZG5aky81G1J+ykQ/N9u1yIt0sseg6hbum5KJoSShuhxBKCj5FM/Ajc4RS6ib
+ Ofein/eRh6lrZNrqkN3yYBzb4YJP6cfuZr1RCZ58D0D954T2UEWQ8RLCcoWurLxnHOmj
+ NES+zTOj2yeJ5aE1o49bl90ugfevbGehtrZ8No+BF3iwgWVtLg7IK7fxSH9+IFRtSeWW
+ SEoMHXf0yzxv+uQvfSs00T+gGl5nLIECPD/LhilYFNrR1PtU9Ozg1j3E4Uu7hGlJPnKV
+ sAkIK/xVXjlHU7LSUZ93wzkunooOrFaP0gLES417CVX+By/miqaxAGuEufxRHI3qEqRG vw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 34nkhky21w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 04:04:17 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB40tHL113439;
-        Wed, 11 Nov 2020 04:04:17 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 34p5g16ym2-1
+        Wed, 11 Nov 2020 04:08:50 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB41DAx018273;
+        Wed, 11 Nov 2020 04:08:50 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 34p55pf53g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 04:04:16 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB44F45025455;
-        Wed, 11 Nov 2020 04:04:16 GMT
+        Wed, 11 Nov 2020 04:08:50 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AB48nZk004797;
+        Wed, 11 Nov 2020 04:08:49 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 20:04:15 -0800
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <matthias.bgg@gmail.com>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <alice.chao@mediatek.com>
-Subject: Re: [PATCH v1 0/6] scsi: ufs: Add some proprietary features in
- MediaTek UFS platforms
+        with ESMTP ; Tue, 10 Nov 2020 20:08:49 -0800
+To:     Vaibhav Gupta <vaibhavgupta40@gmail.com>
+Cc:     Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Intel SCU Linux support <intel-linux-scu@intel.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] scsi: isci: Don't use PCI helper functions
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1h7pwfsju.fsf@ca-mkp.ca.oracle.com>
-References: <20201029115750.24391-1-stanley.chu@mediatek.com>
-Date:   Tue, 10 Nov 2020 23:04:12 -0500
-In-Reply-To: <20201029115750.24391-1-stanley.chu@mediatek.com> (Stanley Chu's
-        message of "Thu, 29 Oct 2020 19:57:44 +0800")
+Message-ID: <yq1blg4fsc6.fsf@ca-mkp.ca.oracle.com>
+References: <20201107100420.149521-1-vaibhavgupta40@gmail.com>
+Date:   Tue, 10 Nov 2020 23:08:47 -0500
+In-Reply-To: <20201107100420.149521-1-vaibhavgupta40@gmail.com> (Vaibhav
+        Gupta's message of "Sat, 7 Nov 2020 15:34:19 +0530")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
- adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=968 suspectscore=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ mlxlogscore=828 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110018
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
- mlxscore=0 suspectscore=1 mlxlogscore=982 lowpriorityscore=0 spamscore=0
+ mlxscore=0 suspectscore=1 mlxlogscore=842 lowpriorityscore=0 spamscore=0
  malwarescore=0 adultscore=0 clxscore=1011 bulkscore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110018
@@ -88,10 +82,15 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Vaibhav,
 
-> This patch series provides some features and fixes in MediaTek UFS
-> platforms,
+> PCI helper functions such as pci_enable/disable_device(),
+> pci_save/restore_state(), pci_set_power_state(), etc. were used by the
+> legacy framework to perform standard operations related to PCI PM.
+>
+> This driver is using the generic framework and thus calls for those
+> functions should be dropped as those tasks are now performed by the PCI
+> core.
 
 Applied to 5.11/scsi-staging, thanks!
 
