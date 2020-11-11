@@ -7,24 +7,23 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5B1C5517A
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 12:46:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E89CC5517A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 12:47:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84E3420809
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 12:46:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FA70206F1
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 12:47:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726441AbgKKMqa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 07:46:30 -0500
-Received: from mx2.suse.de ([195.135.220.15]:42166 "EHLO mx2.suse.de"
+        id S1726557AbgKKMrY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 07:47:24 -0500
+Received: from mx2.suse.de ([195.135.220.15]:42932 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725908AbgKKMqa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Nov 2020 07:46:30 -0500
+        id S1726316AbgKKMrY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Nov 2020 07:47:24 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 45EACABD6;
-        Wed, 11 Nov 2020 12:46:28 +0000 (UTC)
-Subject: Re: [PATCH 01/24] block: remove the call to __invalidate_device in
- check_disk_size_change
+        by mx2.suse.de (Postfix) with ESMTP id A9D22ABD6;
+        Wed, 11 Nov 2020 12:47:22 +0000 (UTC)
+Subject: Re: [PATCH 02/24] loop: remove loop_set_size
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -45,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201111082658.3401686-1-hch@lst.de>
- <20201111082658.3401686-2-hch@lst.de>
+ <20201111082658.3401686-3-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <1e4539ab-199f-1d15-863d-052b0b2d3946@suse.de>
-Date:   Wed, 11 Nov 2020 13:46:24 +0100
+Message-ID: <e98e9de2-826a-6a1e-cbf4-605557e846fa@suse.de>
+Date:   Wed, 11 Nov 2020 13:47:19 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201111082658.3401686-2-hch@lst.de>
+In-Reply-To: <20201111082658.3401686-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -61,17 +60,14 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/11/20 9:26 AM, Christoph Hellwig wrote:
-> __invalidate_device without the kill_dirty parameter just invalidates
-> various clean entries in caches, which doesn't really help us with
-> anything, but can cause all kinds of horrible lock orders due to how
-> it calls into the file system.  The only reason this hasn't been a
-> major issue is because so many people use partitions, for which no
-> invalidation was performed anyway.
+> Just use set_capacity_revalidate_and_notify directly, as this function
+> can update the block device size as well when the last parameter is set
+> to true.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   fs/block_dev.c | 6 ------
->   1 file changed, 6 deletions(-)
+>   drivers/block/loop.c | 37 +++++++------------------------------
+>   1 file changed, 7 insertions(+), 30 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
