@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184CDC388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C816EC4742C
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB3B220756
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84EF92074B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 08:29:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ls58rLr6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SnGVq269"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726394AbgKKI10 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 03:27:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33496 "EHLO
+        id S1726432AbgKKI3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 03:29:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbgKKI1W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:22 -0500
+        with ESMTP id S1726334AbgKKI1Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 03:27:25 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB3FC0613D1;
-        Wed, 11 Nov 2020 00:27:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B82DC061A47;
+        Wed, 11 Nov 2020 00:27:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=5qPdl0lgCEFGJP5lmM9cIt5xVilmdrR4jnFYjPe6Rv8=; b=Ls58rLr6Jmuq6v/NWUCE8TiQve
-        QBjPwhQnxk5CSZDABDmV5Iyu5nLZjZdDmarW2RJ3+wQ5CV5i02GTCtgGza5/Yikfz5DAuG4zguCCG
-        EgI2R68wska0Fvawliu6ZPQh4vTvOEmDa4t/Qtue0sps/HKOLz+4l8CHVpEuyJgxKspc63ZIHdpKU
-        Uq3vr9AJQ5geGGAUVhvBJa5nv2zB+UeNiCzfSwqeiFVJbNutC+jduzyz0hsShH64P+ui1tcelTUh9
-        yk7kRWHvmVGXLbg/oeCZFpx13CQpxXc9aqGPjNAocrsQQUXFrFu2FbaPQL06RNU64LcD6XqJk4iCo
-        SOHcJEpw==;
+        bh=sleWhQz8pOnJuBnS8tyNBOSxS3LFjGP3TCWYI+Y9Xwo=; b=SnGVq269/UTvePhazhsGEqe1g4
+        +Sdxfj0JE1XKc8hE5k0k3fff848q4NtXnaEE9VLg/C2I0lFuBfyREt4J81h7TQHcYmvdbPYYZExEc
+        rvsv8rKBFRclcRvxaov26S6VkAKG56QaJUn2wD/mTm4/DYl8qdkAvKZ4bO76kHjl21mZEwgM+L3W8
+        B0dk20R4wCMbx4pzaYw5R6GsJ3eFFwEWgkikMnu+2X9+jrMgSEIR2I0zoFfL2v0SAjEba5l3GfvGJ
+        VVKXne4B7f2m79dzqfoTvI53FLRJZJnCKRBE5HBGzRzPBkuT4Wg+DmexI9Xj8bzcPW8BIeky07GCR
+        w5/puTXA==;
 Received: from [2001:4bb8:180:6600:bcde:334f:863c:27b8] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kclT6-0007Zx-Ef; Wed, 11 Nov 2020 08:27:04 +0000
+        id 1kclTB-0007aj-13; Wed, 11 Nov 2020 08:27:09 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 04/24] sd: update the bdev size in sd_revalidate_disk
-Date:   Wed, 11 Nov 2020 09:26:38 +0100
-Message-Id: <20201111082658.3401686-5-hch@lst.de>
+Subject: [PATCH 08/24] nbd: move the task_recv check into nbd_size_update
+Date:   Wed, 11 Nov 2020 09:26:42 +0100
+Message-Id: <20201111082658.3401686-9-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201111082658.3401686-1-hch@lst.de>
 References: <20201111082658.3401686-1-hch@lst.de>
@@ -70,50 +70,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This avoids the extra call to revalidate_disk_size in sd_rescan and
-is otherwise a no-op because the size did not change, or we are in
-the probe path.
+nbd_size_update is about to acquire a few more callers, so lift the check
+into the function.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Josef Bacik <josef@toxicpanda.com>
 ---
- drivers/scsi/sd.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/block/nbd.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 656bcf4940d6d1..4a34dd5b153196 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1750,10 +1750,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- static void sd_rescan(struct device *dev)
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index f618688a196654..58b7090dcbd832 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -299,8 +299,11 @@ static void nbd_size_clear(struct nbd_device *nbd)
+ static void nbd_size_update(struct nbd_device *nbd)
  {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	int ret;
+ 	struct nbd_config *config = nbd->config;
+-	struct block_device *bdev = bdget_disk(nbd->disk, 0);
+ 	sector_t nr_sectors = config->bytesize >> 9;
++	struct block_device *bdev;
++
++	if (!nbd->task_recv)
++		return;
  
--	ret = sd_revalidate_disk(sdkp->disk);
--	revalidate_disk_size(sdkp->disk, ret == 0);
-+	sd_revalidate_disk(sdkp->disk);
+ 	if (config->flags & NBD_FLAG_SEND_TRIM) {
+ 		nbd->disk->queue->limits.discard_granularity = config->blksize;
+@@ -309,7 +312,9 @@ static void nbd_size_update(struct nbd_device *nbd)
+ 	}
+ 	blk_queue_logical_block_size(nbd->disk->queue, config->blksize);
+ 	blk_queue_physical_block_size(nbd->disk->queue, config->blksize);
++
+ 	set_capacity(nbd->disk, nr_sectors);
++	bdev = bdget_disk(nbd->disk, 0);
+ 	if (bdev) {
+ 		if (bdev->bd_disk)
+ 			bd_set_nr_sectors(bdev, nr_sectors);
+@@ -326,8 +331,7 @@ static void nbd_size_set(struct nbd_device *nbd, loff_t blocksize,
+ 	struct nbd_config *config = nbd->config;
+ 	config->blksize = blocksize;
+ 	config->bytesize = blocksize * nr_blocks;
+-	if (nbd->task_recv != NULL)
+-		nbd_size_update(nbd);
++	nbd_size_update(nbd);
  }
  
- static int sd_ioctl(struct block_device *bdev, fmode_t mode,
-@@ -3266,7 +3264,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	sdkp->first_scan = 0;
- 
- 	set_capacity_revalidate_and_notify(disk,
--		logical_to_sectors(sdp, sdkp->capacity), false);
-+		logical_to_sectors(sdp, sdkp->capacity), true);
- 	sd_config_write_same(sdkp);
- 	kfree(buffer);
- 
-@@ -3276,7 +3274,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 * capacity to 0.
- 	 */
- 	if (sd_zbc_revalidate_zones(sdkp))
--		set_capacity_revalidate_and_notify(disk, 0, false);
-+		set_capacity_revalidate_and_notify(disk, 0, true);
- 
-  out:
- 	return 0;
+ static void nbd_complete_rq(struct request *req)
 -- 
 2.28.0
 
