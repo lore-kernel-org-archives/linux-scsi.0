@@ -7,24 +7,23 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4311C5517A
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:06:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DF3C56201
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64BD320809
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:06:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35CB4206CA
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 13:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgKKNGQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 08:06:16 -0500
-Received: from mx2.suse.de ([195.135.220.15]:43152 "EHLO mx2.suse.de"
+        id S1726849AbgKKNHQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 08:07:16 -0500
+Received: from mx2.suse.de ([195.135.220.15]:44064 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725912AbgKKNGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Nov 2020 08:06:15 -0500
+        id S1726012AbgKKNHQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Nov 2020 08:07:16 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 2B341AFC6;
-        Wed, 11 Nov 2020 13:06:14 +0000 (UTC)
-Subject: Re: [PATCH 03/24] nvme: let set_capacity_revalidate_and_notify update
- the bdev size
+        by mx2.suse.de (Postfix) with ESMTP id 68451AD77;
+        Wed, 11 Nov 2020 13:07:14 +0000 (UTC)
+Subject: Re: [PATCH 04/24] sd: update the bdev size in sd_revalidate_disk
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -45,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201111082658.3401686-1-hch@lst.de>
- <20201111082658.3401686-4-hch@lst.de>
+ <20201111082658.3401686-5-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <92fdb64d-b6b1-a934-b32b-b3ce565fadea@suse.de>
-Date:   Wed, 11 Nov 2020 14:06:11 +0100
+Message-ID: <59f175cf-4a67-7ebc-6f72-cfd28fafa2a9@suse.de>
+Date:   Wed, 11 Nov 2020 14:07:11 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201111082658.3401686-4-hch@lst.de>
+In-Reply-To: <20201111082658.3401686-5-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -61,16 +60,19 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/11/20 9:26 AM, Christoph Hellwig wrote:
-> There is no good reason to call revalidate_disk_size separately.
+> This avoids the extra call to revalidate_disk_size in sd_rescan and
+> is otherwise a no-op because the size did not change, or we are in
+> the probe path.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 > ---
->   drivers/nvme/host/core.c | 5 +----
->   1 file changed, 1 insertion(+), 4 deletions(-)
+>   drivers/scsi/sd.c | 8 +++-----
+>   1 file changed, 3 insertions(+), 5 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+Cheers.
 
 Hannes
 -- 
