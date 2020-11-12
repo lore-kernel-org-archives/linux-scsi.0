@@ -8,147 +8,152 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1FF9C388F7
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 23:19:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B62CC56202
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 23:19:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8201822201
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 23:19:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F07E122227
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 23:19:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LMQVjcvm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CAGe0CZk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726172AbgKLXTp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Nov 2020 18:19:45 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:33640 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726063AbgKLXTm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2020 18:19:42 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACN9s53118597;
-        Thu, 12 Nov 2020 23:19:33 GMT
+        id S1726063AbgKLXTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Nov 2020 18:19:47 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:57208 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726149AbgKLXTn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2020 18:19:43 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACNAUNv087344;
+        Thu, 12 Nov 2020 23:19:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=R2JseW7jyZDCbc3BuxyomgGcBpBu+lEPPC0jla1UTkI=;
- b=LMQVjcvmPD5iB/XUVhjt9pzrbt39iPdgDbrxzzzIVYbm3rbNUqc9hjjzN67+SEUNOOaV
- xyJKJ8mtJUt2m+rAvgLS2zymTINJY4d7GS4vifA+TWsuGea4oFZLItVUPFK5NTNNpZDy
- VvWa2ZdnN1M2H+rCtZgIEuUzhRWqCyvJ6qjXf9yvUe2XG5AzRB6wz5WtNKhhqzrz0hcp
- HjRdcmWPirXJWLP1AyZvSTuGEOUp33mfuxdUO+wHyeRIE4U0sJT3Rlmy0Z9Mm0aR+IiN
- 5ANar4YMAdnx5pB5evHvOnwFdEfTEvmR8ByibuVDrvZMRXSCx9SVoDNcBtw4yTlTpZpd Gw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34nkhm83vk-1
+ bh=inE/sT98h+DxX+TMTZz44K2yKdu909cu59+L/DBU4f4=;
+ b=CAGe0CZkbvzldQmV2dPMlPBVG+mkEbn7zICigJEPkRLannPnWRSwYpx5aoJfSnYhpMn/
+ DOlSjrO9ArwFFXFQUT4zAthdcEpm0vmraXvcFaZGkwOpZU9J1d2Vi9UwrXGL9mMzgk2Z
+ g48WZ/BAeTyYc8mPcplm1VC5++YQzoWxJ9kbg43cfwrjtDmmMrAi6sxu9cgO7v+M4y7b
+ nlh5rbws2RyWxtKWxiu2iExtylXkSnYFx4qvh4ge7C8b/LHsO+Sk1JyX6B9D3jvtdjTb
+ fKqr44eAcKXFCAKgJjI1TPvpkYbDdX+GkUU5ERrmYT3seXPnPKjGGcHnFCT8qZtJctO8 1A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 34nh3b8btu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 12 Nov 2020 23:19:33 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACNAH5Y076027;
-        Thu, 12 Nov 2020 23:19:32 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 34rtksk53b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Nov 2020 23:19:32 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0ACNJVHF011617;
+        Thu, 12 Nov 2020 23:19:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACNB0Rb027426;
         Thu, 12 Nov 2020 23:19:31 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 34p5g3tsfe-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Nov 2020 23:19:31 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0ACNJU2Y020415;
+        Thu, 12 Nov 2020 23:19:30 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 12 Nov 2020 15:19:31 -0800
+        with ESMTP ; Thu, 12 Nov 2020 15:19:30 -0800
 From:   Mike Christie <michael.christie@oracle.com>
 To:     stefanha@redhat.com, qemu-devel@nongnu.org, fam@euphon.net,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 10/10] vhost-scsi: create a woker per IO vq
-Date:   Thu, 12 Nov 2020 17:19:10 -0600
-Message-Id: <1605223150-10888-12-git-send-email-michael.christie@oracle.com>
+Subject: [PATCH 09/10] vhost: add VHOST_SET_VRING_ENABLE support
+Date:   Thu, 12 Nov 2020 17:19:09 -0600
+Message-Id: <1605223150-10888-11-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
 References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9803 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
- suspectscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
+ adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011120130
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9803 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
- mlxscore=0 suspectscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0
- malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
+ clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0
+ mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011120130
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch has vhost-scsi create a worker thread per IO vq.
-It also adds a modparam to enable the feature, because I was thinking
-existing setups might not be expecting the extra threading use, so the
-default is to use the old single thread multiple vq behavior.
+This adds a new ioctl VHOST_SET_VRING_ENABLE that the vhost drivers can
+implement a callout for and execute an operation when the vq is
+enabled/disabled.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/vhost/scsi.c | 38 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+ drivers/vhost/vhost.c      | 25 +++++++++++++++++++++++++
+ drivers/vhost/vhost.h      |  1 +
+ include/uapi/linux/vhost.h |  1 +
+ 3 files changed, 27 insertions(+)
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 612359d..3fb147f 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -62,6 +62,12 @@
-  */
- #define VHOST_SCSI_WEIGHT 256
+diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+index 2f98b81..e953031 100644
+--- a/drivers/vhost/vhost.c
++++ b/drivers/vhost/vhost.c
+@@ -1736,6 +1736,28 @@ static long vhost_vring_set_num_addr(struct vhost_dev *d,
  
-+static bool vhost_scsi_worker_per_io_vq;
-+module_param_named(thread_per_io_virtqueue, vhost_scsi_worker_per_io_vq, bool,
-+		   0644);
-+MODULE_PARM_DESC(thread_per_io_virtqueue,
-+		 "Create a worker thread per IO virtqueue. Set to true to turn on. Default is false where all virtqueues share a thread.");
-+
- struct vhost_scsi_inflight {
- 	/* Wait for the flush operation to finish */
- 	struct completion comp;
-@@ -1805,6 +1811,36 @@ static int vhost_scsi_set_features(struct vhost_scsi *vs, u64 features)
- 	return 0;
+ 	return r;
  }
- 
-+static int vhost_scsi_enable_vring(struct vhost_virtqueue *vq, bool enable)
-+{
-+	struct vhost_scsi *vs = container_of(vq->dev, struct vhost_scsi, dev);
-+	/*
-+	 * For compat, we have the evt, ctl and first IO vq share worker0 like
-+	 * is setup by default. Additional vqs get their own worker.
-+	 */
-+	if (vq == &vs->vqs[VHOST_SCSI_VQ_CTL].vq ||
-+	    vq == &vs->vqs[VHOST_SCSI_VQ_EVT].vq ||
-+	    vq == &vs->vqs[VHOST_SCSI_VQ_IO].vq)
-+		return 0;
 +
-+	if (enable) {
-+		if (!vhost_scsi_worker_per_io_vq)
-+			return 0;
-+		if (vq->worker_id != 0)
-+			return 0;
-+		return vhost_vq_worker_add(vq->dev, vq);
-+	} else {
-+		if (vq->worker_id == 0)
-+			return 0;
-+		vhost_vq_worker_remove(vq->dev, vq);
-+		return 0;
-+	}
++static long vhost_vring_set_enable(struct vhost_dev *d,
++				   struct vhost_virtqueue *vq,
++				   void __user *argp)
++{
++	struct vhost_vring_state s;
++	int ret = 0;
++
++	if (vq->private_data)
++		return -EBUSY;
++
++	if (copy_from_user(&s, argp, sizeof s))
++		return -EFAULT;
++
++	if (s.num != 1 && s.num != 0)
++		return -EINVAL;
++
++	if (d->ops && d->ops->enable_vring)
++		ret = d->ops->enable_vring(vq, s.num);
++	return ret;
 +}
 +
-+static struct vhost_dev_ops vhost_scsi_dev_ops = {
-+	.enable_vring = vhost_scsi_enable_vring,
-+};
-+
- static int vhost_scsi_open(struct inode *inode, struct file *f)
+ long vhost_vring_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *argp)
  {
- 	struct vhost_scsi_virtqueue *svq;
-@@ -1843,7 +1879,7 @@ static int vhost_scsi_open(struct inode *inode, struct file *f)
- 		svq->vq.handle_kick = vhost_scsi_handle_kick;
- 	}
- 	vhost_dev_init(&vs->dev, vqs, VHOST_SCSI_MAX_VQ, UIO_MAXIOV,
--		       VHOST_SCSI_WEIGHT, 0, true, NULL);
-+		       VHOST_SCSI_WEIGHT, 0, true, &vhost_scsi_dev_ops);
+ 	struct file *eventfp, *filep = NULL;
+@@ -1765,6 +1787,9 @@ long vhost_vring_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *arg
+ 	mutex_lock(&vq->mutex);
  
- 	vhost_scsi_init_inflight(vs, NULL);
+ 	switch (ioctl) {
++	case VHOST_SET_VRING_ENABLE:
++		r = vhost_vring_set_enable(d, vq, argp);
++		break;
+ 	case VHOST_SET_VRING_BASE:
+ 		/* Moving base with an active backend?
+ 		 * You don't want to do that. */
+diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
+index a293f48..1279c09 100644
+--- a/drivers/vhost/vhost.h
++++ b/drivers/vhost/vhost.h
+@@ -158,6 +158,7 @@ struct vhost_msg_node {
  
+ struct vhost_dev_ops {
+ 	int (*msg_handler)(struct vhost_dev *dev, struct vhost_iotlb_msg *msg);
++	int (*enable_vring)(struct vhost_virtqueue *vq, bool enable);
+ };
+ 
+ struct vhost_dev {
+diff --git a/include/uapi/linux/vhost.h b/include/uapi/linux/vhost.h
+index c998860..3ffd133 100644
+--- a/include/uapi/linux/vhost.h
++++ b/include/uapi/linux/vhost.h
+@@ -70,6 +70,7 @@
+ #define VHOST_VRING_BIG_ENDIAN 1
+ #define VHOST_SET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x13, struct vhost_vring_state)
+ #define VHOST_GET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x14, struct vhost_vring_state)
++#define VHOST_SET_VRING_ENABLE _IOW(VHOST_VIRTIO, 0x15, struct vhost_vring_state)
+ 
+ /* The following ioctls use eventfd file descriptors to signal and poll
+  * for events. */
 -- 
 1.8.3.1
 
