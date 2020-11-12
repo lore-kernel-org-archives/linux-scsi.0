@@ -2,72 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ABDDC55ABD
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 19:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C4D8C388F7
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 23:19:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE7BF20B80
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 19:22:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45A0C216FD
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 23:19:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NFV3M+9X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726629AbgKLTW2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Nov 2020 14:22:28 -0500
-Received: from mx2.suse.de ([195.135.220.15]:35714 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726255AbgKLTW1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Nov 2020 14:22:27 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9C79EAFF8;
-        Thu, 12 Nov 2020 19:22:25 +0000 (UTC)
-Date:   Thu, 12 Nov 2020 20:22:23 +0100
-From:   Petr Vorel <pvorel@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Roger Pau =?iso-8859-2?Q?Monn=E9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 05/24] block: remove the update_bdev parameter from
- set_capacity_revalidate_and_notify
-Message-ID: <20201112192223.GA17194@pevik>
-Reply-To: Petr Vorel <pvorel@suse.cz>
-References: <20201111082658.3401686-1-hch@lst.de>
- <20201111082658.3401686-6-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201111082658.3401686-6-hch@lst.de>
+        id S1726054AbgKLXTk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Nov 2020 18:19:40 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:33614 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725929AbgKLXTk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2020 18:19:40 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACN9sRO118600;
+        Thu, 12 Nov 2020 23:19:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id; s=corp-2020-01-29;
+ bh=zkd61/tba/h2odvP0fuyY9lA39g2B4FPo68/2n7cZQ0=;
+ b=NFV3M+9XhIfMAGZwDUA+eZc3za2cVBT9z/U9iR+cXh3S++ZKGSTGipMrKeK3ACyL4k2H
+ vukmoxPsuIpor1bVPxigI7Ga4xesUwnOcvOjfGsvVm9ZtOk1zxS5WDnabmQweX1L27r0
+ CH/koP60dwqgV9U1pwBAnQkiZbJQA2zybkzX9SOAm/TmgdUhbWOdGkiKocVxVMJlhXOq
+ /TFmaHT8+FE8yrWVmMeuyTjS7nZyUVRXMyPM1um4SzNFHhu7FRGNiWvG/h1GgS0SZ0AA
+ fkDqYJZhzS/5DdmM+CZeEmEweh3oFoShItgh2xNvjxbXI3QU67RhXLaFojriaSlO9SKS NQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 34nkhm83v4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 12 Nov 2020 23:19:22 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACNAH2k075845;
+        Thu, 12 Nov 2020 23:19:21 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 34rtksk4xm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Nov 2020 23:19:21 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0ACNJJwk011448;
+        Thu, 12 Nov 2020 23:19:20 GMT
+Received: from ol2.localdomain (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 12 Nov 2020 15:19:19 -0800
+From:   Mike Christie <michael.christie@oracle.com>
+To:     stefanha@redhat.com, qemu-devel@nongnu.org, fam@euphon.net,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
+        virtualization@lists.linux-foundation.org
+Subject: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq 
+Date:   Thu, 12 Nov 2020 17:18:59 -0600
+Message-Id: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
+X-Mailer: git-send-email 1.8.3.1
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9803 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
+ suspectscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011120130
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9803 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ mlxscore=0 suspectscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ malwarescore=0 adultscore=0 clxscore=1011 bulkscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011120130
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph,
+The following kernel patches were made over Michael's vhost branch:
 
-> The update_bdev argument is always set to true, so remove it.  Also
-> rename the function to the slighly less verbose set_capacity_and_notify,
-> as propagating the disk size to the block device isn't really
-> revalidation.
+https://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git/log/?h=vhost
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Petr Vorel <pvorel@suse.cz>
+and the vhost-scsi bug fix patchset:
 
-Nice cleanup.
+https://lore.kernel.org/linux-scsi/20201112170008.GB1555653@stefanha-x1.localdomain/T/#t
 
-Kind regards,
-Petr
+And the qemu patch was made over the qemu master branch.
+
+vhost-scsi currently supports multiple queues with the num_queues
+setting, but we end up with a setup where the guest's scsi/block
+layer can do a queue per vCPU and the layers below vhost can do
+a queue per CPU. vhost-scsi will then do a num_queue virtqueues,
+but all IO gets set on and completed on a single vhost-scsi thread.
+After 2 - 4 vqs this becomes a bottleneck.
+
+This patchset allows us to create a worker thread per IO vq, so we
+can better utilize multiple CPUs with the multiple queues. It
+implments Jason's suggestion to create the initial worker like
+normal, then create the extra workers for IO vqs with the
+VHOST_SET_VRING_ENABLE ioctl command added in this patchset.
+
+
