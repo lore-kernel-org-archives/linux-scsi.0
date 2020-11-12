@@ -2,207 +2,206 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5761AC388F9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 20:29:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB4CDC4742C
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 01:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF07D208B8
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Nov 2020 20:29:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BCBE208B3
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 01:34:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jeAWaqsm"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Ah1AfsvZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726196AbgKKU3E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Nov 2020 15:29:04 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:42828 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725959AbgKKU3E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2020 15:29:04 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ABKOIDw136527;
-        Wed, 11 Nov 2020 20:28:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=z0m64spdF50MULsGSMo+f8qtAM2sugLVg+9TtDk1V7c=;
- b=jeAWaqsmtRqxQJ396r6e98bW6Cm9sq6ZleUovwpCLjfT5Rh7USqNUI+FbKYzDsTdXJ9K
- Ui50okW0jv/5VHjV7stK0uPSTlVg49Qak5aPbaawFKs7bWV+k+PHxQEzWYqfPmvT83d/
- xARWskO9p/uAaGXadKtwu94jiRdMAlb3KBJmFuI4BFn827bwICwFnn2Q5kc7wMcexXPN
- IAAGFj+p+suUQvxZswLMrJEX1IbVOhGM2I6G+lIGLq0Bql1tBlnYlaqOMT/yiAH2ZUxY
- RN+uEMWFjaNgKhBaqZajzWYR8ZWBXdgNgKNHCdpbW2QtDqfZy8g5XsHu5PyoB+nDJS3h 3A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 34nh3b2pcb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 20:28:57 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ABKPGgK070617;
-        Wed, 11 Nov 2020 20:28:57 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 34p55qccm5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 20:28:57 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0ABKStTD015897;
-        Wed, 11 Nov 2020 20:28:55 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 11 Nov 2020 12:28:55 -0800
-Subject: Re: [PATCH v2] SCSI: libiscsi: fix NOP race condition
-To:     Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     open-iscsi@googlegroups.com, Lee Duncan <lduncan@suse.com>
-References: <20201106193317.16993-1-leeman.duncan@gmail.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <e82c27ad-35f0-a9c8-f857-513e0b4aa0ca@oracle.com>
-Date:   Wed, 11 Nov 2020 14:28:53 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        id S1728722AbgKLBeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Nov 2020 20:34:23 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42620 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728184AbgKLBEy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Nov 2020 20:04:54 -0500
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AC0XSFh066925;
+        Wed, 11 Nov 2020 20:04:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=EyVYVNtmcmDmwdOaopHTFUmt28HbKBD4z3fz8IlkTJg=;
+ b=Ah1AfsvZXh+1ttlsHTNtB374cm5IrJJDrqRNFcBOjrXd53MzMtldZCr6PrUcWtTaC+d1
+ /+Ky0v+aITeYNx8iHYNwiJQDjv52pyCQlLUoiF5Pk64nDyFZYScpmFmDPsUwZp08q3Pu
+ WaqkkIHMTYSpDfUCMbKnka5oV1IF+btG1+LGzxhINhpPdOksUttwM/KhsdFFkKCqdla+
+ Jn9QMOpsSr0d1i0URijOIGLeWAxIKiEQ/L5vBuKU9AstpdY+QWcibkoubYd+MyY2eh/o
+ TiUuPcR40tgHg3p+JNQe1MvgafmkYdBYZrBHMfTI7t6hsAxHjIlZeg3NW3bRNBuALO+A Ng== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 34rt69s84m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 11 Nov 2020 20:04:49 -0500
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AC0wCWt031160;
+        Thu, 12 Nov 2020 01:04:47 GMT
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+        by ppma04wdc.us.ibm.com with ESMTP id 34q5nexpec-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 12 Nov 2020 01:04:47 +0000
+Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
+        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AC14luX9110052
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Nov 2020 01:04:47 GMT
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 13B3D2805A;
+        Thu, 12 Nov 2020 01:04:47 +0000 (GMT)
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9B6C428059;
+        Thu, 12 Nov 2020 01:04:46 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.40.195.188])
+        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
+        Thu, 12 Nov 2020 01:04:46 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH 5/6] ibmvfc: add support for targetWWPN field in v2 MADs and vfcFrame
+Date:   Wed, 11 Nov 2020 19:04:41 -0600
+Message-Id: <20201112010442.102589-5-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201112010442.102589-1-tyreld@linux.ibm.com>
+References: <20201112010442.102589-1-tyreld@linux.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20201106193317.16993-1-leeman.duncan@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9802 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=2
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110118
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9802 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=2
- mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110118
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-11_12:2020-11-10,2020-11-11 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
+ clxscore=1015 priorityscore=1501 spamscore=0 impostorscore=0 bulkscore=0
+ lowpriorityscore=0 adultscore=0 malwarescore=0 mlxlogscore=999
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011120001
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/6/20 1:33 PM, Lee Duncan wrote:
-> From: Lee Duncan <lduncan@suse.com>
-> 
-> iSCSI NOPs are sometimes "lost", mistakenly sent to the
-> user-land iscsid daemon instead of handled in the kernel,
-> as they should be, resulting in a message from the daemon like:
-> 
->> iscsid: Got nop in, but kernel supports nop handling.
-> 
-> This can occur because of the new forward- and back-locks,
-> and the fact that an iSCSI NOP response can occur before
-> processing of the NOP send is complete. This can result
-> in "conn->ping_task" being NULL in iscsi_nop_out_rsp(),
-> when the pointer is actually in the process of being set.
-> 
-> To work around this, we add a new state to the "ping_task"
-> pointer. In addition to NULL (not assigned) and a pointer
-> (assigned), we add the state "being set", which is signaled
-> with an INVALID pointer (using "-1").
-> 
-> Changes since V1:
->   - expanded using READ_ONCE()/WRITE_ONCE() to the whole path
-> 
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->   drivers/scsi/libiscsi.c | 23 +++++++++++++++--------
->   include/scsi/libiscsi.h |  3 +++
->   2 files changed, 18 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 1e9c3171fa9f..f9314f1393fb 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -533,8 +533,8 @@ static void iscsi_complete_task(struct iscsi_task *task, int state)
->   	if (conn->task == task)
->   		conn->task = NULL;
->   
-> -	if (conn->ping_task == task)
-> -		conn->ping_task = NULL;
-> +	if (READ_ONCE(conn->ping_task) == task)
-> +		WRITE_ONCE(conn->ping_task, NULL);
->   
->   	/* release get from queueing */
->   	__iscsi_put_task(task);
-> @@ -738,6 +738,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
->   						   task->conn->session->age);
->   	}
->   
-> +	if (unlikely(READ_ONCE(conn->ping_task) == INVALID_SCSI_TASK))
-> +		WRITE_ONCE(conn->ping_task, task);
-> +
->   	if (!ihost->workq) {
->   		if (iscsi_prep_mgmt_task(conn, task))
->   			goto free_task;
-> @@ -941,8 +944,11 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
->           struct iscsi_nopout hdr;
->   	struct iscsi_task *task;
->   
-> -	if (!rhdr && conn->ping_task)
-> -		return -EINVAL;
-> +	if (!rhdr) {
-> +		if (READ_ONCE(conn->ping_task))
-> +			return -EINVAL;
-> +		WRITE_ONCE(conn->ping_task, INVALID_SCSI_TASK);
-> +	}
->   
->   	memset(&hdr, 0, sizeof(struct iscsi_nopout));
->   	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
-> @@ -957,11 +963,12 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
->   
->   	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
->   	if (!task) {
-> +		if (!rhdr)
-> +			WRITE_ONCE(conn->ping_task, NULL);
->   		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
->   		return -EIO;
->   	} else if (!rhdr) {
->   		/* only track our nops */
-> -		conn->ping_task = task;
->   		conn->last_ping = jiffies;
->   	}
->   
-> @@ -984,7 +991,7 @@ static int iscsi_nop_out_rsp(struct iscsi_task *task,
->   	struct iscsi_conn *conn = task->conn;
->   	int rc = 0;
->   
-> -	if (conn->ping_task != task) {
-> +	if (READ_ONCE(conn->ping_task) != task) {
->   		/*
->   		 * If this is not in response to one of our
->   		 * nops then it must be from userspace.
-> @@ -1923,7 +1930,7 @@ static void iscsi_start_tx(struct iscsi_conn *conn)
->    */
->   static int iscsi_has_ping_timed_out(struct iscsi_conn *conn)
->   {
-> -	if (conn->ping_task &&
-> +	if (READ_ONCE(conn->ping_task) &&
->   	    time_before_eq(conn->last_recv + (conn->recv_timeout * HZ) +
->   			   (conn->ping_timeout * HZ), jiffies))
->   		return 1;
-> @@ -2058,7 +2065,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
->   	 * Checking the transport already or nop from a cmd timeout still
->   	 * running
->   	 */
-> -	if (conn->ping_task) {
-> +	if (READ_ONCE(conn->ping_task)) {
->   		task->have_checked_conn = true;
->   		rc = BLK_EH_RESET_TIMER;
->   		goto done;
-> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-> index c25fb86ffae9..b3bbd10eb3f0 100644
-> --- a/include/scsi/libiscsi.h
-> +++ b/include/scsi/libiscsi.h
-> @@ -132,6 +132,9 @@ struct iscsi_task {
->   	void			*dd_data;	/* driver/transport data */
->   };
->   
-> +/* invalid scsi_task pointer */
-> +#define	INVALID_SCSI_TASK	(struct iscsi_task *)-1l
-> +
->   static inline int iscsi_task_has_unsol_data(struct iscsi_task *task)
->   {
->   	return task->unsol_r2t.data_length > task->unsol_r2t.sent;
-> 
+Several version 2 MADs and the version 2 vfcFrame structures introduced
+a new targetWWPN field for better identification of the target then
+simply the scsi_id.
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Set this field and MAD versioning fields when the VIOS advertises the
+IBMVFC_HANDLE_VF_WWPN capability.
+
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 39 ++++++++++++++++++++++++++++------
+ 1 file changed, 33 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 5e666f7c9266..604bccebf7d2 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1676,9 +1676,10 @@ static struct ibmvfc_cmd *ibmvfc_init_vfc_cmd(struct ibmvfc_event *evt, struct s
+ 	size_t offset;
+ 
+ 	memset(vfc_cmd, 0, sizeof(*vfc_cmd));
+-	if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN)
++	if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN) {
+ 		offset = offsetof(struct ibmvfc_cmd, v2.rsp);
+-	else
++		vfc_cmd->targetWWPN = cpu_to_be64(rport->port_name);
++	} else
+ 		offset = offsetof(struct ibmvfc_cmd, v1.rsp);
+ 	vfc_cmd->resp.va = cpu_to_be64(be64_to_cpu(evt->crq.ioba) + offset);
+ 	vfc_cmd->resp.len = cpu_to_be32(sizeof(*rsp));
+@@ -2053,6 +2054,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
+ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
+ {
+ 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
++	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+ 	struct ibmvfc_cmd *tmf;
+ 	struct ibmvfc_event *evt = NULL;
+ 	union ibmvfc_iu rsp_iu;
+@@ -2070,6 +2072,8 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
+ 		iu = ibmvfc_get_fcp_iu(vhost, tmf);
+ 
+ 		tmf->flags = cpu_to_be16((IBMVFC_NO_MEM_DESC | IBMVFC_TMF));
++		if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN)
++			tmf->targetWWPN = cpu_to_be64(rport->port_name);
+ 		iu->tmf_flags = type;
+ 		evt->sync_iu = &rsp_iu;
+ 
+@@ -2260,7 +2264,12 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+ 
+ 		tmf = &evt->iu.tmf;
+ 		memset(tmf, 0, sizeof(*tmf));
+-		tmf->common.version = cpu_to_be32(1);
++		if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN) {
++			tmf->common.version = cpu_to_be32(2);
++			tmf->targetWWPN = cpu_to_be64(found_evt->tgt->wwpn);
++		} else {
++			tmf->common.version = cpu_to_be32(1);
++		}
+ 		tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
+ 		tmf->common.length = cpu_to_be16(sizeof(*tmf));
+ 		tmf->scsi_id = cpu_to_be64(rport->port_id);
+@@ -2360,6 +2369,7 @@ static int ibmvfc_match_evt(struct ibmvfc_event *evt, void *match)
+ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
+ {
+ 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
++	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+ 	struct ibmvfc_cmd *tmf;
+ 	struct ibmvfc_event *evt, *found_evt;
+ 	union ibmvfc_iu rsp_iu;
+@@ -2391,6 +2401,8 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
+ 		tmf = ibmvfc_init_vfc_cmd(evt, sdev);
+ 		iu = ibmvfc_get_fcp_iu(vhost, tmf);
+ 
++		if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN)
++			tmf->targetWWPN = cpu_to_be64(rport->port_name);
+ 		iu->tmf_flags = IBMVFC_ABORT_TASK_SET;
+ 		tmf->flags = cpu_to_be16((IBMVFC_NO_MEM_DESC | IBMVFC_TMF));
+ 		evt->sync_iu = &rsp_iu;
+@@ -3470,7 +3482,12 @@ static void ibmvfc_tgt_send_prli(struct ibmvfc_target *tgt)
+ 	evt->tgt = tgt;
+ 	prli = &evt->iu.prli;
+ 	memset(prli, 0, sizeof(*prli));
+-	prli->common.version = cpu_to_be32(1);
++	if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN) {
++		prli->common.version = cpu_to_be32(2);
++		prli->targetWWPN = cpu_to_be64(tgt->wwpn);
++	} else {
++		prli->common.version = cpu_to_be32(1);
++	}
+ 	prli->common.opcode = cpu_to_be32(IBMVFC_PROCESS_LOGIN);
+ 	prli->common.length = cpu_to_be16(sizeof(*prli));
+ 	prli->scsi_id = cpu_to_be64(tgt->scsi_id);
+@@ -3573,7 +3590,12 @@ static void ibmvfc_tgt_send_plogi(struct ibmvfc_target *tgt)
+ 	evt->tgt = tgt;
+ 	plogi = &evt->iu.plogi;
+ 	memset(plogi, 0, sizeof(*plogi));
+-	plogi->common.version = cpu_to_be32(1);
++	if(be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN) {
++		plogi->common.version = cpu_to_be32(2);
++		plogi->targetWWPN = cpu_to_be64(tgt->wwpn);
++	} else {
++		plogi->common.version = cpu_to_be32(1);
++	}
+ 	plogi->common.opcode = cpu_to_be32(IBMVFC_PORT_LOGIN);
+ 	plogi->common.length = cpu_to_be16(sizeof(*plogi));
+ 	plogi->scsi_id = cpu_to_be64(tgt->scsi_id);
+@@ -3973,7 +3995,12 @@ static void ibmvfc_adisc_timeout(struct timer_list *t)
+ 	evt->tgt = tgt;
+ 	tmf = &evt->iu.tmf;
+ 	memset(tmf, 0, sizeof(*tmf));
+-	tmf->common.version = cpu_to_be32(1);
++	if (be64_to_cpu(vhost->login_buf->resp.capabilities) & IBMVFC_HANDLE_VF_WWPN) {
++		tmf->common.version = cpu_to_be32(2);
++		tmf->targetWWPN = cpu_to_be64(tgt->wwpn);
++	} else {
++		tmf->common.version = cpu_to_be32(1);
++	}
+ 	tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
+ 	tmf->common.length = cpu_to_be16(sizeof(*tmf));
+ 	tmf->scsi_id = cpu_to_be64(tgt->scsi_id);
+-- 
+2.27.0
+
