@@ -4,23 +4,23 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB91C2D0A3
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 07:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE49C5517A
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 07:07:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F5222085B
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 07:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7543420791
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 07:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727130AbgKLHHa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Nov 2020 02:07:30 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:7519 "EHLO
+        id S1727202AbgKLHHh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Nov 2020 02:07:37 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7520 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725933AbgKLHH3 (ORCPT
+        with ESMTP id S1726039AbgKLHH3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2020 02:07:29 -0500
 Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CWt2V0hCyzhkl1;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CWt2V1FC9zhkl5;
         Thu, 12 Nov 2020 15:07:14 +0800 (CST)
 Received: from huawei.com (10.69.192.56) by DGGEMS405-HUB.china.huawei.com
  (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Thu, 12 Nov 2020
@@ -34,9 +34,9 @@ CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
         <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
         <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
-Subject: [PATCH v4 3/5] scsi: qla2xxx: Introduce DEFINE_SHOW_STORE_ATTRIBUTE for debugfs
-Date:   Thu, 12 Nov 2020 15:07:41 +0800
-Message-ID: <1605164864-58944-4-git-send-email-luojiaxing@huawei.com>
+Subject: [PATCH v4 4/5] usb: dwc3: debugfs: Introduce DEFINE_SHOW_STORE_ATTRIBUTE
+Date:   Thu, 12 Nov 2020 15:07:42 +0800
+Message-ID: <1605164864-58944-5-git-send-email-luojiaxing@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
 References: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
@@ -49,57 +49,129 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Seq introduce a new helper macro DEFINE_SHOW_STORE_ATTRIBUTE for
-Read-Write file, so we apply it at qla2xxx to reduce some duplicated code.
+Read-Write file, so we apply it at dwc3 debugfs to reduce some duplicated
+code.
+
+While at that, also use DEFINE_SHOW_ATTRIBUTE() where possible.
 
 Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Acked-by: Felipe Balbi <balbi@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
+ drivers/usb/dwc3/debugfs.c | 52 ++++------------------------------------------
+ 1 file changed, 4 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index f89ad32..a5de808 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -513,14 +513,6 @@ qla_dfs_naqp_show(struct seq_file *s, void *unused)
+diff --git a/drivers/usb/dwc3/debugfs.c b/drivers/usb/dwc3/debugfs.c
+index 5da4f60..2b5de8d 100644
+--- a/drivers/usb/dwc3/debugfs.c
++++ b/drivers/usb/dwc3/debugfs.c
+@@ -348,11 +348,6 @@ static int dwc3_lsp_show(struct seq_file *s, void *unused)
  	return 0;
  }
  
--static int
--qla_dfs_naqp_open(struct inode *inode, struct file *file)
+-static int dwc3_lsp_open(struct inode *inode, struct file *file)
 -{
--	struct scsi_qla_host *vha = inode->i_private;
--
--	return single_open(file, qla_dfs_naqp_show, vha);
+-	return single_open(file, dwc3_lsp_show, inode->i_private);
 -}
 -
- static ssize_t
- qla_dfs_naqp_write(struct file *file, const char __user *buffer,
-     size_t count, loff_t *pos)
-@@ -569,14 +561,7 @@ qla_dfs_naqp_write(struct file *file, const char __user *buffer,
- 	return rc;
+ static ssize_t dwc3_lsp_write(struct file *file, const char __user *ubuf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -377,13 +372,7 @@ static ssize_t dwc3_lsp_write(struct file *file, const char __user *ubuf,
+ 	return count;
  }
  
--static const struct file_operations dfs_naqp_ops = {
--	.open		= qla_dfs_naqp_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--	.write		= qla_dfs_naqp_write,
+-static const struct file_operations dwc3_lsp_fops = {
+-	.open			= dwc3_lsp_open,
+-	.write			= dwc3_lsp_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
 -};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_lsp);
+ 
+ static int dwc3_mode_show(struct seq_file *s, void *unused)
+ {
+@@ -412,11 +401,6 @@ static int dwc3_mode_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_mode_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_mode_show, inode->i_private);
+-}
 -
-+DEFINE_SHOW_STORE_ATTRIBUTE(qla_dfs_naqp);
+ static ssize_t dwc3_mode_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -445,13 +429,7 @@ static ssize_t dwc3_mode_write(struct file *file,
+ 	return count;
+ }
  
- int
- qla2x00_dfs_setup(scsi_qla_host_t *vha)
-@@ -622,7 +607,7 @@ qla2x00_dfs_setup(scsi_qla_host_t *vha)
+-static const struct file_operations dwc3_mode_fops = {
+-	.open			= dwc3_mode_open,
+-	.write			= dwc3_mode_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_mode);
  
- 	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha)) {
- 		ha->tgt.dfs_naqp = debugfs_create_file("naqp",
--		    0400, ha->dfs_dir, vha, &dfs_naqp_ops);
-+		    0400, ha->dfs_dir, vha, &qla_dfs_naqp_ops);
- 		if (!ha->tgt.dfs_naqp) {
- 			ql_log(ql_log_warn, vha, 0xd011,
- 			       "Unable to create debugFS naqp node.\n");
+ static int dwc3_testmode_show(struct seq_file *s, void *unused)
+ {
+@@ -491,11 +469,6 @@ static int dwc3_testmode_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_testmode_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_testmode_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_testmode_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -528,13 +501,7 @@ static ssize_t dwc3_testmode_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_testmode_fops = {
+-	.open			= dwc3_testmode_open,
+-	.write			= dwc3_testmode_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_testmode);
+ 
+ static int dwc3_link_state_show(struct seq_file *s, void *unused)
+ {
+@@ -564,11 +531,6 @@ static int dwc3_link_state_show(struct seq_file *s, void *unused)
+ 	return 0;
+ }
+ 
+-static int dwc3_link_state_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, dwc3_link_state_show, inode->i_private);
+-}
+-
+ static ssize_t dwc3_link_state_write(struct file *file,
+ 		const char __user *ubuf, size_t count, loff_t *ppos)
+ {
+@@ -620,13 +582,7 @@ static ssize_t dwc3_link_state_write(struct file *file,
+ 	return count;
+ }
+ 
+-static const struct file_operations dwc3_link_state_fops = {
+-	.open			= dwc3_link_state_open,
+-	.write			= dwc3_link_state_write,
+-	.read			= seq_read,
+-	.llseek			= seq_lseek,
+-	.release		= single_release,
+-};
++DEFINE_SHOW_STORE_ATTRIBUTE(dwc3_link_state);
+ 
+ struct dwc3_ep_file_map {
+ 	const char name[25];
 -- 
 2.7.4
 
