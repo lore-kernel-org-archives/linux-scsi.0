@@ -2,107 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A1C9C56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 05:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98222C5517A
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 07:07:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFB70208FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 05:45:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51DEB20791
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Nov 2020 07:07:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726096AbgKLFpz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:45:55 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:52217 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725920AbgKLFpu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2020 00:45:50 -0500
-X-UUID: 3619e16383324db68f09494592aaac68-20201112
-X-UUID: 3619e16383324db68f09494592aaac68-20201112
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1261890501; Thu, 12 Nov 2020 13:45:41 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 12 Nov 2020 13:45:38 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 12 Nov 2020 13:45:38 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <alice.chao@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH] scsi: ufs: Add retry flow for failed hba enabling
-Date:   Thu, 12 Nov 2020 13:45:37 +0800
-Message-ID: <20201112054537.22494-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1727038AbgKLHH1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Nov 2020 02:07:27 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8068 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726083AbgKLHH1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2020 02:07:27 -0500
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CWt2Q3Sk5zLrGV;
+        Thu, 12 Nov 2020 15:07:10 +0800 (CST)
+Received: from huawei.com (10.69.192.56) by DGGEMS405-HUB.china.huawei.com
+ (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Thu, 12 Nov 2020
+ 15:07:14 +0800
+From:   Luo Jiaxing <luojiaxing@huawei.com>
+To:     <akpm@linux-foundation.org>, <viro@zeniv.linux.org.uk>,
+        <andriy.shevchenko@linux.intel.com>
+CC:     <linux-kernel@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <john.garry@huawei.com>, <himanshu.madhani@cavium.com>,
+        <felipe.balbi@linux.intel.com>, <gregkh@linuxfoundation.org>,
+        <uma.shankar@intel.com>, <anshuman.gupta@intel.com>,
+        <animesh.manna@intel.com>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>
+Subject: [PATCH v4 1/5] seq_file: Introduce DEFINE_SHOW_STORE_ATTRIBUTE() helper macro
+Date:   Thu, 12 Nov 2020 15:07:39 +0800
+Message-ID: <1605164864-58944-2-git-send-email-luojiaxing@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
+References: <1605164864-58944-1-git-send-email-luojiaxing@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-SNTS-SMTP: 71C1B6B624CEB4EED4AABDF7C779B0B4F80EF6905439682D9094502A978056822000:8
-X-MTK:  N
+X-Originating-IP: [10.69.192.56]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Once hba enabling is failed, add retry mechanism and in the
-meanwhile allow vendors to apply specific handlings before
-the next retry. For example, vendors can do vendor-specific
-host reset flow in variant function "ufshcd_vops_hce_enable_notify()".
+We already own DEFINE_SHOW_ATTRIBUTE() helper macro for defining attribute
+for read-only file, but many of drivers want a helper macro for read-write
+file too.
 
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+So we make one to decrease code duplication.
+
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ include/linux/seq_file.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8001bbfec5c0..9186ee01379a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4328,8 +4328,10 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba)
-  */
- static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
+diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
+index 813614d..8a474c8 100644
+--- a/include/linux/seq_file.h
++++ b/include/linux/seq_file.h
+@@ -191,6 +191,21 @@ static const struct proc_ops __name ## _proc_ops = {			\
+ 	.proc_release	= single_release,				\
+ }
+ 
++#define DEFINE_SHOW_STORE_ATTRIBUTE(__name)					\
++static int __name ## _open(struct inode *inode, struct file *file)	\
++{									\
++	return single_open(file, __name ## _show, inode->i_private);	\
++}									\
++									\
++static const struct file_operations __name ## _fops = {			\
++	.owner		= THIS_MODULE,					\
++	.open		= __name ## _open,				\
++	.read		= seq_read,					\
++	.write		= __name ## _write,				\
++	.llseek		= seq_lseek,					\
++	.release	= single_release,				\
++}
++
+ static inline struct user_namespace *seq_user_ns(struct seq_file *seq)
  {
--	int retry;
-+	int retry_outer = 3;
-+	int retry_inner;
- 
-+start:
- 	if (!ufshcd_is_hba_active(hba))
- 		/* change controller state to "reset state" */
- 		ufshcd_hba_stop(hba);
-@@ -4355,13 +4357,17 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
- 	ufshcd_delay_us(hba->vps->hba_enable_delay_us, 100);
- 
- 	/* wait for the host controller to complete initialization */
--	retry = 50;
-+	retry_inner = 50;
- 	while (ufshcd_is_hba_active(hba)) {
--		if (retry) {
--			retry--;
-+		if (retry_inner) {
-+			retry_inner--;
- 		} else {
- 			dev_err(hba->dev,
- 				"Controller enable failed\n");
-+			if (retry_outer) {
-+				retry_outer--;
-+				goto start;
-+			}
- 			return -EIO;
- 		}
- 		usleep_range(1000, 1100);
+ #ifdef CONFIG_USER_NS
 -- 
-2.18.0
+2.7.4
 
