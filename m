@@ -2,96 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 433A4C61DD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 18:54:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B45B4C55ABD
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 19:39:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8F8C21D7F
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 18:54:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BB0D22248
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 19:39:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="iCQz/8Sk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726204AbgKMSy3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Nov 2020 13:54:29 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:54081 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726090AbgKMSy2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2020 13:54:28 -0500
-Received: by mail-wm1-f66.google.com with SMTP id p22so9594820wmg.3;
-        Fri, 13 Nov 2020 10:54:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=tzL14T6rCTSN4RsuVPtTnWJiOyUZXc1z2gXeQlm5kq8=;
-        b=gCvOupb3ISWmYY9xXbqcFv5BfoEfp9v+Q5AKWACfOj7Dx+ta7muduPNtC0Zn0KQeBy
-         cYefoRUp3xnm1ou7naolKgLP0MjOcIhJ2JzQXDtVRlwn3GYi7JfPr7+sCitTaTKC4RVd
-         2dSknXtk1ac4FpPdRal04vGFR4BuXKYlg1B51qREVqTwqoSgNOgLUnTSp5FrK68xbcCZ
-         PPeb2DXt8muR+LrCiKEYaOsxwQRggxFDDApb8nmbBtEzOwYYu2mG9hCS1wP8zS25HRVb
-         VZTO59F/Y4yJlqQ7+fM6Ye5wIb0tBySvhDd+Bvd4jqyDTNEjVywZPei/xiE8+zSMaDuS
-         Gv/A==
-X-Gm-Message-State: AOAM532LqRgi4YI7Im4QJBqxxH5Z/RViIG5kcU9je5nabhM/jLWUNSBJ
-        T/8MH1Pq0LUmAJHoMZ9qO7s=
-X-Google-Smtp-Source: ABdhPJwZPyvPPpg2JGbFWoSxXPFRAFGFLuAl484xnZIUH09JJJ8ZkGkOxsNN8/LkABhANC6ma/BPcA==
-X-Received: by 2002:a7b:c8c5:: with SMTP id f5mr889104wml.174.1605293666845;
-        Fri, 13 Nov 2020 10:54:26 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id u5sm7158222wro.56.2020.11.13.10.54.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2020 10:54:26 -0800 (PST)
-Date:   Fri, 13 Nov 2020 18:54:24 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v9 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20201113185424.ujdfx6ot7siqr5qh@liuwe-devbox-debian-v2>
-References: <20201109100402.8946-1-parri.andrea@gmail.com>
- <20201109100402.8946-3-parri.andrea@gmail.com>
- <20201113113327.dmium67e32iadqbz@liuwe-devbox-debian-v2>
+        id S1726094AbgKMTj4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Nov 2020 14:39:56 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47674 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726162AbgKMTjz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Nov 2020 14:39:55 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0ADJVUKv069329;
+        Fri, 13 Nov 2020 14:39:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=nPwIVS1T6ImUpr2jIqRuuKKMr+2ETbA+Gq0kZ/tqCVg=;
+ b=iCQz/8SkXOg3XXaQfJVahDrDIbsIRLkFMBws6norJAThObkrjTT1s6b/78/nG0xDnq5I
+ bPi21MUX+5A+1OTYTW5PeYLH7VGKmy39Y5kkNEyYx+TdCNhsr2E9mVQPLg0+3qpp3HwA
+ dnbDtRMUpPDvQXNA0FHqxUIm6nbVd22LyDZ5Rzy3BPitmgx+DhnUOjL/IzGPGt4VfNNC
+ 5rCGNaO1t8jRy7RFc39ISjDoqwa+tDTtbdPTl+6B7Fi6jVbgpTVsuGjjZVEnfcCkAWim
+ M5EyqJZzWG1U0+Ar5vLSn6aO8Uv8fODwUDnyS9ga7x3PHQFH750bCOo9ySfdimaJQ7wA yQ== 
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 34sxs2bj10-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 13 Nov 2020 14:39:40 -0500
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0ADJbWWE012766;
+        Fri, 13 Nov 2020 19:39:39 GMT
+Received: from b01cxnp22036.gho.pok.ibm.com (b01cxnp22036.gho.pok.ibm.com [9.57.198.26])
+        by ppma03dal.us.ibm.com with ESMTP id 34nk7ajmw6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 13 Nov 2020 19:39:39 +0000
+Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
+        by b01cxnp22036.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0ADJdcRg20513420
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 13 Nov 2020 19:39:38 GMT
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 86D9F28058;
+        Fri, 13 Nov 2020 19:39:38 +0000 (GMT)
+Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C573A28059;
+        Fri, 13 Nov 2020 19:39:36 +0000 (GMT)
+Received: from oc6857751186.ibm.com (unknown [9.65.230.183])
+        by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
+        Fri, 13 Nov 2020 19:39:36 +0000 (GMT)
+Subject: Re: [PATCH 1/6] ibmvfc: byte swap login_buf.resp values in attribute
+ show functions
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, linuxppc-dev@lists.ozlabs.org
+References: <20201112010442.102589-1-tyreld@linux.ibm.com>
+ <20201112093752.GA24235@infradead.org>
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+Message-ID: <7df9d768-e008-a849-5fbd-78d6bd0536fa@linux.ibm.com>
+Date:   Fri, 13 Nov 2020 11:39:35 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201113113327.dmium67e32iadqbz@liuwe-devbox-debian-v2>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20201112093752.GA24235@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-13_17:2020-11-13,2020-11-13 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ spamscore=0 impostorscore=0 clxscore=1011 suspectscore=0 mlxlogscore=999
+ adultscore=0 priorityscore=1501 malwarescore=0 mlxscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011130123
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 13, 2020 at 11:33:27AM +0000, Wei Liu wrote:
-> On Mon, Nov 09, 2020 at 11:04:01AM +0100, Andrea Parri (Microsoft) wrote:
-> > From: Andres Beltran <lkmlabelt@gmail.com>
-> > 
-> > Currently, pointers to guest memory are passed to Hyper-V as
-> > transaction IDs in storvsc. In the face of errors or malicious
-> > behavior in Hyper-V, storvsc should not expose or trust the transaction
-> > IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> > use small integers generated by vmbus_requestor as requests
-> > (transaction) IDs.
-> > 
-> > Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> > Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> > Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> > Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-> > Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> > Cc: linux-scsi@vger.kernel.org
+On 11/12/20 1:37 AM, Christoph Hellwig wrote:
+> On Wed, Nov 11, 2020 at 07:04:37PM -0600, Tyrel Datwyler wrote:
+>> Both ibmvfc_show_host_(capabilities|npiv_version) functions retrieve
+>> values from vhost->login_buf.resp buffer. This is the MAD response
+>> buffer from the VIOS and as such any multi-byte non-string values are in
+>> big endian format.
+>>
+>> Byte swap these values to host cpu endian format for better human
+>> readability.
 > 
-> Reviewed-by: Wei Liu <wl@xen.org>
+> The whole series creates tons of pointlessly over 80 char lines.
+> Please do a quick fixup.
+> 
 
-Martin already gave his ack back in July. I guess nothing substantial
-changed so it should have been carried over?
+The checkpatch script only warns at 100 char lines these days. To be fair though
+I did have two lines go over that limit by a couple characters, there are a
+couple commit log typos, and I had an if keyword with no space after before the
+opening parenthesis. So, I'll happily re-spin.
 
-Wei.
+However, for my info going forward is the SCSI subsystem sticking to 80 char
+lines as a hard limit?
+
+-Tyrel
