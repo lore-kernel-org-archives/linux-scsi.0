@@ -2,89 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B421DC4742C
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 12:04:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02127C56202
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 12:12:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 873E82224C
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 12:04:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B107C2224C
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 12:12:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726707AbgKMLia (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Nov 2020 06:38:30 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:36808 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726749AbgKMLf5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2020 06:35:57 -0500
-Received: by mail-wm1-f65.google.com with SMTP id a65so8094413wme.1;
-        Fri, 13 Nov 2020 03:33:32 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=0SpwRyb0TuJ7zwVMJU26I/lRO0ner+Y643hGtbb0oXo=;
-        b=FzigzCEUTzSsFr7taMH3OPzHU0fKl5kzHm6lRZdKLj+EB8GrMxohoGDzb6OGVAr4UV
-         0JFwDk6TkDrWZU/nlXBMWOM1jRbtcTufAmqVDtLyxVKjWAq6QlVcESG59Ii07hbMNvD1
-         ctmDWcouocNY0+sFA3tK0Ey8pj8/g5nLIFfcfFcbyKBeXDizQeVa6JJTMG7uJ5y+WS9N
-         +b1V9y28ZYZFatgouR01WNkh8RWYghJklhiOWyKtfyPa2NVo/t6AGFlrj6HwV9+nKtiA
-         QogzHgJQX5W3npDrAjXkZnXL0JxOhIebwnHxpFlDT3DFPyQ66E+6mxbHnh0GfmN3dKR7
-         2KXA==
-X-Gm-Message-State: AOAM5334i1EgMPm4SoiBtdY7oeNqZRsGi6F6ut9H4IOsTgL54qXi7NCO
-        GAJu1AqWdc5mwICL/k9J1fo=
-X-Google-Smtp-Source: ABdhPJzto1ayTPSbWp7palp8RQsEdeA17/YLhio9PbL50h4Y4EuZ2MMQ01ikoHQxdq1b6CBwNb2qQA==
-X-Received: by 2002:a1c:2bc3:: with SMTP id r186mr1951868wmr.163.1605267209574;
-        Fri, 13 Nov 2020 03:33:29 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id d2sm5489806wra.73.2020.11.13.03.33.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2020 03:33:29 -0800 (PST)
-Date:   Fri, 13 Nov 2020 11:33:27 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v9 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20201113113327.dmium67e32iadqbz@liuwe-devbox-debian-v2>
-References: <20201109100402.8946-1-parri.andrea@gmail.com>
- <20201109100402.8946-3-parri.andrea@gmail.com>
+        id S1726698AbgKMMMO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Nov 2020 07:12:14 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2102 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726359AbgKMMMN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2020 07:12:13 -0500
+Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CXcFT3rnKz67Grs;
+        Fri, 13 Nov 2020 19:49:17 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Fri, 13 Nov 2020 12:51:16 +0100
+Received: from [10.47.88.104] (10.47.88.104) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Fri, 13 Nov
+ 2020 11:51:15 +0000
+Subject: Re: [PATCH v1 1/3] add io_uring with IOPOLL support in scsi layer
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <sumit.saxena@broadcom.com>, <chandrakanth.patil@broadcom.com>,
+        <linux-block@vger.kernel.org>
+References: <20201015133633.61836-1-kashyap.desai@broadcom.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <0531d781-38ed-0098-d5b8-727a3e143dde@huawei.com>
+Date:   Fri, 13 Nov 2020 11:51:05 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201109100402.8946-3-parri.andrea@gmail.com>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20201015133633.61836-1-kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.88.104]
+X-ClientProxiedBy: lhreml752-chm.china.huawei.com (10.201.108.202) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 09, 2020 at 11:04:01AM +0100, Andrea Parri (Microsoft) wrote:
-> From: Andres Beltran <lkmlabelt@gmail.com>
+On 15/10/2020 14:36, Kashyap Desai wrote:
+> io_uring with IOPOLL is not currently supported in scsi mid layer.
+> Outside of that everything else should work and no extra support in the driver is needed.
+> Currently io_uring with IOPOLL support is only available in block layer.
+> This patch is to extend support of mq_poll in scsi layer. >
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: sumit.saxena@broadcom.com
+> Cc: chandrakanth.patil@broadcom.com
+> Cc: linux-block@vger.kernel.org
 > 
-> Currently, pointers to guest memory are passed to Hyper-V as
-> transaction IDs in storvsc. In the face of errors or malicious
-> behavior in Hyper-V, storvsc should not expose or trust the transaction
-> IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> use small integers generated by vmbus_requestor as requests
-> (transaction) IDs.
+> ---
+>   drivers/scsi/scsi_lib.c  | 16 ++++++++++++++++
+>   include/scsi/scsi_cmnd.h |  1 +
+>   include/scsi/scsi_host.h | 11 +++++++++++
+>   3 files changed, 28 insertions(+)
 > 
-> Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 72b12102f777..5a3c383a2bb3 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1766,6 +1766,19 @@ static void scsi_mq_exit_request(struct blk_mq_tag_set *set, struct request *rq,
+>   			       cmd->sense_buffer);
+>   }
+>   
+> +
+> +static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
+> +{
+> +	struct request_queue *q = hctx->queue;
+> +	struct scsi_device *sdev = q->queuedata;
+> +	struct Scsi_Host *shost = sdev->host;
 
-Reviewed-by: Wei Liu <wl@xen.org>
+could we separately set hctx->driver_data = shost or similar for a 
+quicker lookup? I don't see hctx->driver_data set for SCSI currently. 
+Going through the scsi_device looks strange - I know that it is done in 
+scsi_commit_rqs.
+
+> +
+> +	if (shost->hostt->mq_poll)
+
+to avoid this check, could we reject if .mq_poll is not set and 
+HCTX_TYPE_POLL is?
+
+> +		return shost->hostt->mq_poll(shost, hctx->queue_num);
+> +
+> +	return 0;
+> +}
+> +
+>   static int scsi_map_queues(struct blk_mq_tag_set *set)
+>   {
+>   	struct Scsi_Host *shost = container_of(set, struct Scsi_Host, tag_set);
+> @@ -1833,6 +1846,7 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit = {
+>   	.cleanup_rq	= scsi_cleanup_rq,
+>   	.busy		= scsi_mq_lld_busy,
+>   	.map_queues	= scsi_map_queues,
+> +	.poll		= scsi_mq_poll,
+>   };
+>   
+>   
+> @@ -1861,6 +1875,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
+>   	.cleanup_rq	= scsi_cleanup_rq,
+>   	.busy		= scsi_mq_lld_busy,
+>   	.map_queues	= scsi_map_queues,
+> +	.poll		= scsi_mq_poll,
+>   };
+>   
+>   struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
+> @@ -1893,6 +1908,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>   	else
+>   		tag_set->ops = &scsi_mq_ops_no_commit;
+>   	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
+> +	tag_set->nr_maps = shost->nr_maps ? : 1;
+>   	tag_set->queue_depth = shost->can_queue;
+>   	tag_set->cmd_size = cmd_size;
+>   	tag_set->numa_node = NUMA_NO_NODE;
+> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+> index e76bac4d14c5..5844374a85b1 100644
+> --- a/include/scsi/scsi_cmnd.h
+> +++ b/include/scsi/scsi_cmnd.h
+> @@ -9,6 +9,7 @@
+>   #include <linux/types.h>
+>   #include <linux/timer.h>
+>   #include <linux/scatterlist.h>
+> +#include <scsi/scsi_host.h>
+
+can we maintain alphabetic ordering?
+
+>   #include <scsi/scsi_device.h>
+>   #include <scsi/scsi_request.h>
+>   
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 701f178b20ae..905ee6b00c55 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -270,6 +270,16 @@ struct scsi_host_template {
+>   	 */
+>   	int (* map_queues)(struct Scsi_Host *shost);
+>   
+> +	/*
+> +	 * SCSI interface of blk_poll - poll for IO completions.
+> +	 * Possible interface only if scsi LLD expose multiple h/w queues.
+> +	 *
+> +	 * Return values: Number of completed entries found.
+
+/s/values/value/
+
+> +	 *
+> +	 * Status: OPTIONAL
+> +	 */
+> +	int (* mq_poll)(struct Scsi_Host *shost, unsigned int queue_num);
+> +
+>   	/*
+>   	 * Check if scatterlists need to be padded for DMA draining.
+>   	 *
+> @@ -610,6 +620,7 @@ struct Scsi_Host {
+>   	 * the total queue depth is can_queue.
+>   	 */
+>   	unsigned nr_hw_queues;
+> +	unsigned nr_maps; >   	unsigned active_mode:2;
+>   	unsigned unchecked_isa_dma:1;
+>   
+> 
+
