@@ -7,108 +7,93 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7742BC56202
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 10:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA743C388F7
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 10:50:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D7F02224D
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 10:48:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B9ED2224F
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Nov 2020 10:50:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="E4ZbcHeg"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aJetgqmR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726355AbgKMKsi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Nov 2020 05:48:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51902 "EHLO
+        id S1726309AbgKMKud (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Nov 2020 05:50:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726184AbgKMKsh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2020 05:48:37 -0500
-Received: from mail-qk1-x732.google.com (mail-qk1-x732.google.com [IPv6:2607:f8b0:4864:20::732])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14266C0613D1
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2020 02:48:37 -0800 (PST)
-Received: by mail-qk1-x732.google.com with SMTP id 11so8367232qkd.5
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2020 02:48:37 -0800 (PST)
+        with ESMTP id S1726290AbgKMKud (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Nov 2020 05:50:33 -0500
+Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3110C0617A6
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2020 02:50:32 -0800 (PST)
+Received: by mail-qk1-x741.google.com with SMTP id 199so8348659qkg.9
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2020 02:50:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:references:in-reply-to:mime-version:thread-index:date
          :message-id:subject:to:cc;
-        bh=3JeADPUve3Ms5nMr7C9u3QebmABLkJXNnLQB6QE4DBA=;
-        b=E4ZbcHeg3SvhU5EmGABco1x45EGkEfiHGHPL9NF3iXFO/YWPourBnBnGqGa1O09sRG
-         c2/GbdRzM56rQU8X/JZTFWxv3f5amvoRRUg2kZ/lX3AAtrX8+lclTJCx1lcbbnKJyOn7
-         mseXEhvkaUOzpuPqE9/E4Zy4LwEK8/WBEaBG8=
+        bh=Kp8VsMGr3lyiEl5/MFJTT3z15WO5lPPgBKinfdTuxkQ=;
+        b=aJetgqmRXWBGsoYirAqRWbNmVUKvDuf2Pfc8ZKoLa8Gg7r81tGKZPtjWuJ9WJmBi2P
+         6mcpJRFIG8jZcMKu2GZiUxzuFiWBjHzJXOZQULBsAenEzJiVr61dh37oYrTDber3EpQy
+         MwEijb4fElOIt9MbtTfKsGVsEXcGlEUmcFMIA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:references:in-reply-to:mime-version
          :thread-index:date:message-id:subject:to:cc;
-        bh=3JeADPUve3Ms5nMr7C9u3QebmABLkJXNnLQB6QE4DBA=;
-        b=BicZDLnyCvQwEvY2SR1ntOfdkfBm+eLl+c03ysXfQd72YlnxZwkqXo9DdH9o+rL7wS
-         fSUWC0Xi/nxtNro5SprCy9bX6N9Teoql9XfxcivQGhYF0r0YeXA9WLOmyVlqz+DYo9Pe
-         WdHyy5qtJbrr0qIxESvSphfeZvqENPzQBBJpey+eytL3IJAH370SQqZeW4nPQmn6CEf7
-         D7CWwrYZmpBX/u/25bmqipjJqkIGivuFNZOFjxX9Y7ex/TsUVbhB495N/5NoiNefgY8W
-         F0WO2APG5NCd3Ntd+iCZgT17Mo+9FMB+dNgT1Ru7TdM7Btb/hTdCfyuHchz/FPpMjGEf
-         gcYA==
-X-Gm-Message-State: AOAM531h2/m9glQYqHTeWtINcLo373HduhDx52GmAom54imWpqwMbf/d
-        X7Bls2Gu+otcJE+XKNR/r6OrQAK4ZyUn/veDz7Qq81g6ETNDNA==
-X-Google-Smtp-Source: ABdhPJx82GhKLl+7LO+aFCHWszPFU865zY9Y5KsT9beDtPDJHYWbkqYMNyp8dK3t/myvLlZv/96uAlDGxl+QWhhZbB8=
-X-Received: by 2002:a05:620a:1265:: with SMTP id b5mr1312605qkl.27.1605264515352;
- Fri, 13 Nov 2020 02:48:35 -0800 (PST)
+        bh=Kp8VsMGr3lyiEl5/MFJTT3z15WO5lPPgBKinfdTuxkQ=;
+        b=al1ZUvslW6B8Dd2tOmsIFzMLewlQBWqx4tNaTlttKCeU4FFe47830i7KHt4icMlxpI
+         erftEgULNEKJJdkoi3uNuPEfDWO46pF/Jhnb4AHIPhyQV7KtvYtGx7bPh5wJhgWyx/eF
+         8evO5QZkS8ns3KoeCan0av0Uz9n4JW2KdgVhkusG8DpU/yoZud75VSmibIDz3I0F+QxO
+         P7hIqBc7PG5KQJGxNkZeAu8B4jsXIvULvbqIAIg9FgpnOjvVB8Anwg5MK/t76l4nTOIE
+         dznoh5h4jqK5GZqyxVYqQNm6GXNSnd0jmH06gracNuqEjSzaPXuJ4aDrPzifZwIPDzUP
+         00aA==
+X-Gm-Message-State: AOAM533MBogC3I+5WkGaSEvbpQYiQIV63iNmccQs+RlhFpvuTo3SBC40
+        n/YGoOOTqN5YKzAN/rdZnmUz1+/np1i3p/SCs3kCIC9X3Jh/Xw==
+X-Google-Smtp-Source: ABdhPJzdh+0N+ACKwjFOIxPZug+1ZEtQ05/p3BZR3AGkCkKL4PqklPN9ZqBJ2ca3pI7sXZD5L86xt/5g/qrYC5n/UzA=
+X-Received: by 2002:a37:2f43:: with SMTP id v64mr1283507qkh.127.1605264631453;
+ Fri, 13 Nov 2020 02:50:31 -0800 (PST)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20201015133702.62879-1-kashyap.desai@broadcom.com>
-In-Reply-To: <20201015133702.62879-1-kashyap.desai@broadcom.com>
+References: <20201015133721.63476-1-kashyap.desai@broadcom.com>
+In-Reply-To: <20201015133721.63476-1-kashyap.desai@broadcom.com>
 MIME-Version: 1.0
 X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQGJzrs5sdJlHzBIQISuMRxkJPRbM6pftz1w
-Date:   Fri, 13 Nov 2020 16:18:33 +0530
-Message-ID: <52b4b839da97f5fef007b451c98680c4@mail.gmail.com>
-Subject: RE: [PATCH v1 2/3] megaraid_sas: iouring iopoll support
-To:     linux-scsi@vger.kernel.org
-Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        linux-block@vger.kernel.org
+Thread-Index: AQKUm/+n80BG5XDZqj6B7AOaaFsZXahKHVuw
+Date:   Fri, 13 Nov 2020 16:20:29 +0530
+Message-ID: <10349873a8c9adfc95fec50e0152f807@mail.gmail.com>
+Subject: RE: [PATCH v1 3/3] scsi_debug: iouring iopoll support
+To:     linux-scsi@vger.kernel.org, dgilbert@interlog.com
+Cc:     linux-block@vger.kernel.org
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000003bfe9605b3fac560"
+        boundary="00000000000025aa5f05b3facce6"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000003bfe9605b3fac560
+--00000000000025aa5f05b3facce6
 Content-Type: text/plain; charset="UTF-8"
 
-> Add support of iouring iopoll interface. This feature requires shared
-hosttag
-> support in kernel and driver.
+> -----Original Message-----
+> From: Kashyap Desai [mailto:kashyap.desai@broadcom.com]
+> Sent: Thursday, October 15, 2020 7:07 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>; dgilbert@interlog.com;
+> linux-block@vger.kernel.org
+> Subject: [PATCH v1 3/3] scsi_debug: iouring iopoll support
 >
-> Driver will work in non-IRQ mode = There will not be any msix vector
-> associated for poll_queues and h/w can still work in this mode.
-> MegaRaid h/w is single submission queue and multiple reply queue, but
-using
-> shared host tagset support it will enable simulated multiple hw queue.
->
-> Driver allocates some extra reply queues and it will be marked as
-poll_queue.
-> These poll_queues will not have associated msix vectors. All the IO
-> completion on this queue will be done from IOPOLL interface.
->
-> megaraid_sas driver having 8 poll_queues and using io_uring hiprio=1
-> settings, It can reach 3.2M IOPs and there is zero interrupt generated
-by h/w.
->
-> This feature can be enabled using module parameter poll_queues.
+> Add support of iouring iopoll interface in scsi_debug.
+> This feature requires shared hosttag support in kernel and driver.
 >
 > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: sumit.saxena@broadcom.com
-> Cc: chandrakanth.patil@broadcom.com
+> Cc: dgilbert@interlog.com
 > Cc: linux-block@vger.kernel.org
->
 > ---
->  drivers/scsi/megaraid/megaraid_sas.h        |  2 +
->  drivers/scsi/megaraid/megaraid_sas_base.c   | 90 ++++++++++++++++++---
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 43 +++++++++-
-> drivers/scsi/megaraid/megaraid_sas_fusion.h |  3 +
->  4 files changed, 127 insertions(+), 11 deletions(-)
->
+>  drivers/scsi/scsi_debug.c | 123 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 123 insertions(+)
 
-Is there  any feedback/comment on this patch series ?
 
---0000000000003bfe9605b3fac560
+Hi Doug - Any comment/feedback ?
+
+Kashyap
+
+--00000000000025aa5f05b3facce6
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -178,14 +163,14 @@ pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
 M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
 1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
 IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgf+F9M0EI
-YyL6f8C5/2fPMIqjHEJ+6hC4KdzF1Pe8DYUwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMTEzMTA0ODM1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgRmVZDOBb
+DxtAN47Sr5skPKoVa+eDmqiXBy99WarJX/0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMTEzMTA1MDMxWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
 BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAEeyZo4+vKjP/B8rzGwcXNDADOQy
-0c5a562kl+VbQ9ahhgHBJf0NlWqmDTr3GagaAevlhf9fiNSa6doiysEtaQ6eFrpZEXUnb2MtjLzA
-PkbGnqelm8DXon8DlzSKgn2Hef3Vn1aJKMl/6Z/cgkzbU8RQL+GBfzyI5EVOqTX39uVo2NtHQ7OV
-0DAoIYNCQ+t9gdpyGHOZK3OJUo9c9CLboZkrbQh05wiFm50Ht3lSzLhONitcNyz6r4ZtoQibK1td
-bEbA+khv7thz58goRWv5M6wSeW+JPHZiK4yw8t8tMfb2XBxA6mzEKLiM4N6AJ9AozQ4+zVlabG0G
-19/8IzbHwik=
---0000000000003bfe9605b3fac560--
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAEMHkEdnGDpr7QJ4/mqcYrPgBrCL
+q4He7z2rDI4zLamSxA50GrtZJhheidoGCk76zi/D5vD7r5evJ/Mu1caL/CgiosL5xRGyLlLtHULi
+bO0GRJF+NTUCtmiJZhOPhqg9lRTvptG1RLcGTv2NHssfR21dDxLvWkRAJbUH0l874XkGkWv9Fu1d
+hH4ADNkmMqiIZ4bvmgoWgLiDH4O5cCyQdN2RQVw32qVmk5vX1EW/kJafTFkDnpFrKsPgbCvdsgVD
+q/lUy0BUIQiiPvvYS0dOrHLnQgqC7pfsKt3K+/Vuo0ZEyYn+9Suych1UtjaqRJ14vXDvGK0or469
+yQYL5Zr6/ts=
+--00000000000025aa5f05b3facce6--
