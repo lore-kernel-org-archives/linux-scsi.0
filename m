@@ -2,69 +2,62 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE489C61DD8
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Nov 2020 07:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F930C63697
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Nov 2020 20:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84D972224B
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Nov 2020 07:26:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5CF42137B
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Nov 2020 20:51:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ishXo/DX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726499AbgKNH0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 14 Nov 2020 02:26:17 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:7897 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726430AbgKNH0R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Nov 2020 02:26:17 -0500
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4CY6MF3c42z75b3;
-        Sat, 14 Nov 2020 15:26:01 +0800 (CST)
-Received: from linux-lmwb.huawei.com (10.175.103.112) by
- DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.487.0; Sat, 14 Nov 2020 15:26:05 +0800
-From:   Zou Wei <zou_wei@huawei.com>
-To:     <subbu.seetharaman@broadcom.com>, <ketan.mukadam@broadcom.com>,
-        <jitendra.bhivare@broadcom.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Zou Wei <zou_wei@huawei.com>
-Subject: [PATCH -next] scsi: be2iscsi: Mark beiscsi_attrs with static keyword
-Date:   Sat, 14 Nov 2020 15:37:54 +0800
-Message-ID: <1605339474-22329-1-git-send-email-zou_wei@huawei.com>
-X-Mailer: git-send-email 2.6.2
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.103.112]
-X-CFilter-Loop: Reflected
+        id S1726316AbgKNUvL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 14 Nov 2020 15:51:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35078 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726291AbgKNUvL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 14 Nov 2020 15:51:11 -0500
+Subject: Re: [GIT PULL] SCSI fixes for 5.10-rc3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605387070;
+        bh=7m8xNhtGjkjWPUEfXbeoGZcvGAuC+jPU2z7/UOdN3B8=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=ishXo/DXUS59s1Y2lBIhxYerieYDZneQMXJOKo9sCSNitDSNWrTcNeMp/EcMCVFQE
+         avx6n9kTvy7EwxeWLebKCa+rYTExp2yRgKz3EvtDrb4kghhSrkagfaxGn7GZp07l9S
+         bihmx0F2O7eRMOFRaPT15zA4+F6Q9gJyLgjvUw8M=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <595dbda885e4d8f0666fe49aaf52a54f2b0c8c73.camel@HansenPartnership.com>
+References: <595dbda885e4d8f0666fe49aaf52a54f2b0c8c73.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <595dbda885e4d8f0666fe49aaf52a54f2b0c8c73.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 2e6f11a797a24d1e2141a214a6dd6dfbe709f55d
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 0c0451112b629946c93ed2102b7ae47d4d1dc0bc
+Message-Id: <160538707067.24878.9576594385078780770.pr-tracker-bot@kernel.org>
+Date:   Sat, 14 Nov 2020 20:51:10 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following sparse warning:
+The pull request you sent on Fri, 13 Nov 2020 16:20:13 -0800:
 
-./be_main.c:167:25: warning: symbol 'beiscsi_attrs' was not declared. Should it be static?
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Signed-off-by: Zou Wei <zou_wei@huawei.com>
----
- drivers/scsi/be2iscsi/be_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/0c0451112b629946c93ed2102b7ae47d4d1dc0bc
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 202ba92..50e4642 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -164,7 +164,7 @@ DEVICE_ATTR(beiscsi_active_session_count, S_IRUGO,
- 	     beiscsi_active_session_disp, NULL);
- DEVICE_ATTR(beiscsi_free_session_count, S_IRUGO,
- 	     beiscsi_free_session_disp, NULL);
--struct device_attribute *beiscsi_attrs[] = {
-+static struct device_attribute *beiscsi_attrs[] = {
- 	&dev_attr_beiscsi_log_enable,
- 	&dev_attr_beiscsi_drvr_ver,
- 	&dev_attr_beiscsi_adapter_family,
+Thank you!
+
 -- 
-2.6.2
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
