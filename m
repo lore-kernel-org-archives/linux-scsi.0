@@ -7,1003 +7,677 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66E01C64E8A
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71CF8C2D0E4
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 288D622314
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E9DF22314
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="M7i82xSV"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="N1AYitqL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727706AbgKOT1S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Nov 2020 14:27:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38760 "EHLO
+        id S1727891AbgKOT1R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Nov 2020 14:27:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727879AbgKOT1Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:27:16 -0500
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DB3AC0613D1
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:16 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id b63so7731702pfg.12
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:16 -0800 (PST)
+        with ESMTP id S1727610AbgKOT1P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:27:15 -0500
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 002D4C0613CF
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:14 -0800 (PST)
+Received: by mail-pl1-x643.google.com with SMTP id y22so7034210plr.6
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=GvBXAQnElsvErMu/rai11Ebn8wbvn3a9fjf0GfDzg0k=;
-        b=M7i82xSVdQT2cvciMfabJj2x42L3KAOoNynSf2hECMT9royG/TbsjPU2dQUh7XO8bb
-         9kS5B7032rpL9UftnE+lykP3e73Q9hPGYCM7vFP5Hb6EYIJ92ezVW2CVGP2R9QH4c40K
-         i/Nf1Jh9xRiFd3Eez4G/K4bLzTMA/3nr6u+L4=
+        bh=Z50AzeFMCmfRVlCkemFQMME2ua/iVb4p74m5lWoh2OY=;
+        b=N1AYitqLsuFD2753d0neOhiXUJ81pXEHtjWcwZP+zhTuNvlC8ctqZxSJHxgoQMbEhb
+         AOjSvA5HIq8IMKbAE5TwoeZLPAIBSspIFPmDL3FL2jznB/5tK74IkSB8k3EnAv9SUpCY
+         hfT35PdARSfBbLC0onKeH1GClbJJQIl+dpDzw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=GvBXAQnElsvErMu/rai11Ebn8wbvn3a9fjf0GfDzg0k=;
-        b=fFXGygIy7Oo9GPnzdguhsExyMIY7WGMnASzgdZFRtYlys1vbheFNCk3R8GhT807zlS
-         gEoH2Eztz+X54M+5ZK2a7nB0U4fepKLg7zt/4mLbHRgr9vFr11GG2goEI+CbUks+p4B3
-         gcMm90TWFDuJkDdetnJ/zCZbD50J1QyOe3lEWchm+7pDHQZmuHdwiJRar4o2oP/yMuL9
-         tIf68KzPfdRcp+cIGZLZdwf9xbYjnj+cfaF0cK1TYbSpxDxzRKqdy7JFvIq5Wg83dcZx
-         mic31EP/teBb92JwofVUnNVNNG291vyP4sOYi7P0JsTPFOVMrhs6yLmYFMn9YjwxdwjI
-         q65w==
-X-Gm-Message-State: AOAM533eO24kwG/4diBdbsB6msujxbFRa5IaOq8SZck8+yHP9cBAcg15
-        QlcnS9J1kUMrO+eIPJ9jZH9RbQeWf5+/OrqvDkOjBlD9a+LCljieVuTtGLOlhH3VcvAVjiEwSi1
-        N1q4OJUgm5U/YDPsN1lYUO9Jci+ujpQzEGQzvCO0wABs+NdsspG2DcZqjyPKNDwqgaH0cXmAf3V
-        xJzjg=
-X-Google-Smtp-Source: ABdhPJwQbaKcYLB3GV1PNzCp1o/TDsBsN2B6e6gipu8RCrqzl5o3yBbkS8IZvUSG6pPbZN6intTugQ==
-X-Received: by 2002:a65:52cc:: with SMTP id z12mr10164580pgp.24.1605468434931;
-        Sun, 15 Nov 2020 11:27:14 -0800 (PST)
+        bh=Z50AzeFMCmfRVlCkemFQMME2ua/iVb4p74m5lWoh2OY=;
+        b=LL5TX/NjovQUjk6hSLUf1dw7HC1jc8Wt6CUD5swDuMRm5JUj+e/halFoRUCuNCW7kR
+         6/P/OclqiIttg8HXH+brOwiUNov5fiaJjQOP5Y9RTC6tXaEid2DhkmkWyjOS31f5/3WU
+         +a6ptku3qeDZXklnOp0zVPqsQ41Zk0RNw1Suw03YuxjqpiptWpXtA02/f5TKcGJeI8uV
+         whkcbNoIuFQNSw0kXTH+ox19//Bbckm7xMfcGiRDegZz2KzX+E5H/QXRSK1mB1chI3HG
+         EmyYutc+rnJAjrYiycr2NLaBDUIm2i38O2J7iWoMFSkCA0D8hpj6+hcjcN5YFiZZ93kg
+         aqdg==
+X-Gm-Message-State: AOAM530Vno5Y8EUS59lP/fhzUicsHUrmbVgg1ukYmR5jj5KzWMzP5Odj
+        OyCLqhJiq0cr8hanQzo9SUjgtUbbcoATE6/A2iH6TiZV1XpNdpMKkA1dML/3IKu6RCbEkDbLHQ8
+        WrUH7r6+pbGd6cKnAq4S1GEcF3FZnTLyHluVdmj9MskwOaMxkkZ0nnVtLUqUIhMU6umnfNPiYRn
+        n+nSc=
+X-Google-Smtp-Source: ABdhPJxSUcuO9rbBckZtseE57r6K2CXp2uLVyScoV3kl4bmp6usQD7i6r4zy8Oy9yR4ksIKNbiXn7Q==
+X-Received: by 2002:a17:902:c1cc:b029:d8:d2de:e523 with SMTP id c12-20020a170902c1ccb02900d8d2dee523mr9918485plc.67.1605468433544;
+        Sun, 15 Nov 2020 11:27:13 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.27.13
+        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.27.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2020 11:27:14 -0800 (PST)
+        Sun, 15 Nov 2020 11:27:12 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 15/17] lpfc: Convert abort handling to sli-3 and sli-4 handlers
-Date:   Sun, 15 Nov 2020 11:26:44 -0800
-Message-Id: <20201115192646.12977-16-james.smart@broadcom.com>
+Subject: [PATCH 14/17] lpfc: convert scsi io completions to sli-3 and sli-4 handlers
+Date:   Sun, 15 Nov 2020 11:26:43 -0800
+Message-Id: <20201115192646.12977-15-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201115192646.12977-1-james.smart@broadcom.com>
 References: <20201115192646.12977-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000d1c4a605b42a3f0a"
+        boundary="000000000000b8ee3d05b42a3f53"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000d1c4a605b42a3f0a
+--000000000000b8ee3d05b42a3f53
 Content-Transfer-Encoding: 8bit
 
-This patch reworks the abort interfaces such that SLI-3 retains the
-iocb-based formatting and completions and SLI-4 now uses native WQEs
-and completion routines.
+The current driver implementation uses sli-4 wqe to iocb conversion
+before calling the cmpl callback function.
 
-The following changes are made:
-- The code is refactored from a confusing 2 routine sequence of
-  xx_abort_iotag_issue(), which creates/formats and abort cmd, and
-  xx_issue_abort_tag(), which then issues and handles the completion
-  of the abort cmd - into a single interface of xx_issue_abort_iotag().
-  The new interface will determine whether sli-3 or sli-4 and then call
-  the appropriate handler. A completion handler can now be specified to
-  address the differences in completion handling.
-  note: original code is all iocb based, with sli-4 converting to sli-3
-  for the scsi/els path, and nvme natively using wqes.
-- The sli-3 side is refactored:
-   The older iocb-base lpfc_sli_issue_abort_iotag() routine is combined
-   with the logic of lpfc_sli_abort_iotag_issue() as well as the
-   iocb-specific code in lpfc_abort_handler() and lpfc_sli_abort_iocb()
-   to create the new single sli-3 abort routine that formats and issues
-   the iocb.
-- The sli-4 side is refactored and added to:
-   The native WQE abort code in nvme is moved to the new sli-4
-   issue_abort_iotag() routine. Items in scsi that set fields not
-   set by nvme is migrated into the new routine. Thus the routine supports
-   nvme and scsi initiators. The nvmet block (target) formats the abort
-   slightly different (like the old nvme initiator) thus it has its own
-   prep routine stolen from nvme initiator and it retains the current
-   code it has for issuing the wqe (does not use the commonized routine
-   the initiators do). sli-4 completion handlers were also added.
-- lpfc_abort_handler now becomes a wrapper that determines whether
-  SLI-3 or SLI-4 and calls the proper abort handler.
+Rework the fcp io completion path to utilize the sli-4 wqe.
+
+This patch converts the scsi io completion paths from the iocb-centric
+interfaces to the routines are native for whether ios are iocb-based
+(sli-3) or wqe-based (sli-4).
+
+Most existing routines were iocb-based, so this creates a lot of SLI-4
+specific routines to provide the functionality.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c       |   4 +-
- drivers/scsi/lpfc/lpfc_crtn.h      |   7 +-
- drivers/scsi/lpfc/lpfc_els.c       |   7 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c   |   2 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c |   2 +-
- drivers/scsi/lpfc/lpfc_nvme.c      |  72 +------
- drivers/scsi/lpfc/lpfc_nvmet.c     |  42 +++-
- drivers/scsi/lpfc/lpfc_scsi.c      |  62 +-----
- drivers/scsi/lpfc/lpfc_sli.c       | 329 ++++++++++++++++-------------
- drivers/scsi/lpfc/lpfc_sli.h       |   5 +
- 10 files changed, 253 insertions(+), 279 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 490 +++++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.c  |   5 +-
+ 2 files changed, 481 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index e2f87a0d5c4f..8fb84415893d 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -5927,7 +5927,7 @@ lpfc_bsg_timeout(struct bsg_job *job)
- 			}
- 		}
- 		if (list_empty(&completions))
--			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb);
-+			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb, NULL);
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		if (!list_empty(&completions)) {
- 			lpfc_sli_cancel_iocbs(phba, &completions,
-@@ -5964,7 +5964,7 @@ lpfc_bsg_timeout(struct bsg_job *job)
- 			}
- 		}
- 		if (list_empty(&completions))
--			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb);
-+			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb, NULL);
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
- 		if (!list_empty(&completions)) {
- 			lpfc_sli_cancel_iocbs(phba, &completions,
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 2b1540c0c82e..69b1a357007b 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -324,6 +324,8 @@ int lpfc_sli_issue_fcp_io(struct lpfc_hba *phba, uint32_t ring_number,
- 			  struct lpfc_iocbq *piocb, uint32_t flag);
- int lpfc_sli4_issue_wqe(struct lpfc_hba *phba, struct lpfc_sli4_hdw_queue *qp,
- 			struct lpfc_iocbq *pwqe);
-+int lpfc_sli4_issue_abort_iotag(struct lpfc_hba *phba,
-+			struct lpfc_iocbq *cmdiocb, void *cmpl);
- struct lpfc_sglq *__lpfc_clear_active_sglq(struct lpfc_hba *phba, uint16_t xri);
- struct lpfc_sglq *__lpfc_sli_get_nvmet_sglq(struct lpfc_hba *phba,
- 					    struct lpfc_iocbq *piocbq);
-@@ -348,7 +350,7 @@ int lpfc_sli_hbqbuf_add_hbqs(struct lpfc_hba *, uint32_t);
- void lpfc_sli_hbqbuf_free_all(struct lpfc_hba *);
- int lpfc_sli_hbq_size(void);
- int lpfc_sli_issue_abort_iotag(struct lpfc_hba *, struct lpfc_sli_ring *,
--			       struct lpfc_iocbq *);
-+			       struct lpfc_iocbq *, void *);
- int lpfc_sli_sum_iocb(struct lpfc_vport *, uint16_t, uint64_t, lpfc_ctx_cmd);
- int lpfc_sli_abort_iocb(struct lpfc_vport *, struct lpfc_sli_ring *, uint16_t,
- 			uint64_t, lpfc_ctx_cmd);
-@@ -371,6 +373,8 @@ int lpfc_sli_issue_iocb_wait(struct lpfc_hba *, uint32_t,
- 			     uint32_t);
- void lpfc_sli_abort_fcp_cmpl(struct lpfc_hba *, struct lpfc_iocbq *,
- 			     struct lpfc_iocbq *);
-+void lpfc_sli4_abort_fcp_cmpl(struct lpfc_hba *h, struct lpfc_iocbq *i,
-+			      struct lpfc_wcqe_complete *w);
- 
- void lpfc_sli_free_hbq(struct lpfc_hba *, struct hbq_dmabuf *);
- 
-@@ -595,7 +599,6 @@ void lpfc_io_ktime(struct lpfc_hba *phba, struct lpfc_io_buf *ncmd);
- void lpfc_wqe_cmd_template(void);
- void lpfc_nvmet_cmd_template(void);
- void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn);
--void lpfc_nvme_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt);
- extern int lpfc_enable_nvmet_cnt;
- extern unsigned long long lpfc_enable_nvmet[];
- extern int lpfc_no_hba_reset_cnt;
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 48095bebd47b..35cac231f871 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1424,7 +1424,8 @@ lpfc_els_abort_flogi(struct lpfc_hba *phba)
- 		if (icmd->ulpCommand == CMD_ELS_REQUEST64_CR) {
- 			ndlp = (struct lpfc_nodelist *)(iocb->context1);
- 			if (ndlp && (ndlp->nlp_DID == Fabric_DID))
--				lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
-+							   NULL);
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 4d6492faab81..0cd8f0b72605 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2882,6 +2882,150 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
  	}
- 	spin_unlock_irq(&phba->hbalock);
-@@ -8135,7 +8136,7 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
- 			 remote_ID, cmd->ulpCommand, cmd->ulpIoTag);
- 		spin_lock_irq(&phba->hbalock);
- 		list_del_init(&piocb->dlist);
--		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
-+		lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
- 		spin_unlock_irq(&phba->hbalock);
- 	}
+ }
  
-@@ -8235,7 +8236,7 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
- 		spin_lock_irqsave(&phba->hbalock, iflags);
- 		list_del_init(&piocb->dlist);
--		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
-+		lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
- 		spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	}
- 	if (!list_empty(&abort_list))
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 4c5a0ffec86f..6e6d9a57b9be 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -5610,7 +5610,7 @@ lpfc_free_tx(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- 		icmd = &iocb->iocb;
- 		if (icmd->ulpCommand == CMD_ELS_REQUEST64_CR ||
- 		    icmd->ulpCommand == CMD_XMIT_ELS_RSP64_CX) {
--			lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
- 		}
- 	}
- 	spin_unlock_irq(&phba->hbalock);
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 1eddb40f009c..297fc92d01ce 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -247,7 +247,7 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
- 	list_for_each_entry_safe(iocb, next_iocb, &abort_list, dlist) {
- 			spin_lock_irq(&phba->hbalock);
- 			list_del_init(&iocb->dlist);
--			lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
- 			spin_unlock_irq(&phba->hbalock);
- 	}
++/*
++ * This function checks for BlockGuard errors detected by
++ * the HBA.  In case of errors, the ASC/ASCQ fields in the
++ * sense buffer will be set accordingly, paired with
++ * ILLEGAL_REQUEST to signal to the kernel that the HBA
++ * detected corruption.
++ *
++ * Returns:
++ *  0 - No error found
++ *  1 - BlockGuard error found
++ * -1 - Internal error (bad profile, ...etc)
++ */
++static int
++lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
++		       struct lpfc_wcqe_complete *wcqe)
++{
++	struct scsi_cmnd *cmd = lpfc_cmd->pCmd;
++	int ret = 0;
++	u32 status = bf_get(lpfc_wcqe_c_status, wcqe);
++	u32 bghm = 0;
++	u32 bgstat = 0;
++	u64 failing_sector = 0;
++
++	if (status == CQE_STATUS_DI_ERROR) {
++		if (bf_get(lpfc_wcqe_c_bg_ge, wcqe)) /* Guard Check failed */
++			bgstat |= BGS_GUARD_ERR_MASK;
++		if (bf_get(lpfc_wcqe_c_bg_ae, wcqe)) /* AppTag Check failed */
++			bgstat |= BGS_APPTAG_ERR_MASK;
++		if (bf_get(lpfc_wcqe_c_bg_re, wcqe)) /* RefTag Check failed */
++			bgstat |= BGS_REFTAG_ERR_MASK;
++
++		/* Check to see if there was any good data before the error */
++		if (bf_get(lpfc_wcqe_c_bg_tdpv, wcqe)) {
++			bgstat |= BGS_HI_WATER_MARK_PRESENT_MASK;
++			bghm = wcqe->total_data_placed;
++		}
++
++		/*
++		 * Set ALL the error bits to indicate we don't know what
++		 * type of error it is.
++		 */
++		if (!bgstat)
++			bgstat |= (BGS_REFTAG_ERR_MASK | BGS_APPTAG_ERR_MASK |
++				BGS_GUARD_ERR_MASK);
++	}
++
++	if (lpfc_bgs_get_guard_err(bgstat)) {
++		ret = 1;
++
++		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
++					0x10, 0x1);
++		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
++			      SAM_STAT_CHECK_CONDITION;
++		phba->bg_guard_err_cnt++;
++		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
++				"9059 BLKGRD: Guard Tag error in cmd"
++				" 0x%x lba 0x%llx blk cnt 0x%x "
++				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
++				(unsigned long long)scsi_get_lba(cmd),
++				blk_rq_sectors(cmd->request), bgstat, bghm);
++	}
++
++	if (lpfc_bgs_get_reftag_err(bgstat)) {
++		ret = 1;
++
++		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
++					0x10, 0x3);
++		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
++			      SAM_STAT_CHECK_CONDITION;
++
++		phba->bg_reftag_err_cnt++;
++		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
++				"9060 BLKGRD: Ref Tag error in cmd"
++				" 0x%x lba 0x%llx blk cnt 0x%x "
++				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
++				(unsigned long long)scsi_get_lba(cmd),
++				blk_rq_sectors(cmd->request), bgstat, bghm);
++	}
++
++	if (lpfc_bgs_get_apptag_err(bgstat)) {
++		ret = 1;
++
++		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
++					0x10, 0x2);
++		cmd->result = DRIVER_SENSE << 24 | DID_ABORT << 16 |
++			      SAM_STAT_CHECK_CONDITION;
++
++		phba->bg_apptag_err_cnt++;
++		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
++				"9062 BLKGRD: App Tag error in cmd"
++				" 0x%x lba 0x%llx blk cnt 0x%x "
++				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
++				(unsigned long long)scsi_get_lba(cmd),
++				blk_rq_sectors(cmd->request), bgstat, bghm);
++	}
++
++	if (lpfc_bgs_get_hi_water_mark_present(bgstat)) {
++		/*
++		 * setup sense data descriptor 0 per SPC-4 as an information
++		 * field, and put the failing LBA in it.
++		 * This code assumes there was also a guard/app/ref tag error
++		 * indication.
++		 */
++		cmd->sense_buffer[7] = 0xc;   /* Additional sense length */
++		cmd->sense_buffer[8] = 0;     /* Information descriptor type */
++		cmd->sense_buffer[9] = 0xa;   /* Additional descriptor length */
++		cmd->sense_buffer[10] = 0x80; /* Validity bit */
++
++		/* bghm is a "on the wire" FC frame based count */
++		switch (scsi_get_prot_op(cmd)) {
++		case SCSI_PROT_READ_INSERT:
++		case SCSI_PROT_WRITE_STRIP:
++			bghm /= cmd->device->sector_size;
++			break;
++		case SCSI_PROT_READ_STRIP:
++		case SCSI_PROT_WRITE_INSERT:
++		case SCSI_PROT_READ_PASS:
++		case SCSI_PROT_WRITE_PASS:
++			bghm /= (cmd->device->sector_size +
++				sizeof(struct scsi_dif_tuple));
++			break;
++		}
++
++		failing_sector = scsi_get_lba(cmd);
++		failing_sector += bghm;
++
++		/* Descriptor Information */
++		put_unaligned_be64(failing_sector, &cmd->sense_buffer[12]);
++	}
++
++	if (!ret) {
++		/* No error was reported - problem in FW? */
++		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
++				"9068 BLKGRD: Unknown error in cmd"
++				" 0x%x lba 0x%llx blk cnt 0x%x "
++				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
++				(unsigned long long)scsi_get_lba(cmd),
++				blk_rq_sectors(cmd->request), bgstat, bghm);
++
++		/* Calcuate what type of error it was */
++		lpfc_calc_bg_err(phba, lpfc_cmd);
++	}
++	return ret;
++}
  
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 5458b8ef949f..a821f36f66e6 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -62,46 +62,6 @@ lpfc_release_nvme_buf(struct lpfc_hba *, struct lpfc_io_buf *);
- 
- static struct nvme_fc_port_template lpfc_nvme_template;
- 
--/**
-- * lpfc_nvme_prep_abort_wqe - set up 'abort' work queue entry.
-- * @pwqeq: Pointer to command iocb.
-- * @xritag: Tag that  uniqely identifies the local exchange resource.
-- * @opt: Option bits -
-- *		bit 0 = inhibit sending abts on the link
-- *
-- * This function is called with hbalock held.
-- **/
--void
--lpfc_nvme_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt)
--{
--	union lpfc_wqe128 *wqe = &pwqeq->wqe;
--
--	/* WQEs are reused.  Clear stale data and set key fields to
--	 * zero like ia, iaab, iaar, xri_tag, and ctxt_tag.
--	 */
--	memset(wqe, 0, sizeof(*wqe));
--
--	if (opt & INHIBIT_ABORT)
--		bf_set(abort_cmd_ia, &wqe->abort_cmd, 1);
--	/* Abort specified xri tag, with the mask deliberately zeroed */
--	bf_set(abort_cmd_criteria, &wqe->abort_cmd, T_XRI_TAG);
--
--	bf_set(wqe_cmnd, &wqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
--
--	/* Abort the IO associated with this outstanding exchange ID. */
--	wqe->abort_cmd.wqe_com.abort_tag = xritag;
--
--	/* iotag for the wqe completion. */
--	bf_set(wqe_reqtag, &wqe->abort_cmd.wqe_com, pwqeq->iotag);
--
--	bf_set(wqe_qosd, &wqe->abort_cmd.wqe_com, 1);
--	bf_set(wqe_lenloc, &wqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
--
--	bf_set(wqe_cmd_type, &wqe->abort_cmd.wqe_com, OTHER_COMMAND);
--	bf_set(wqe_wqec, &wqe->abort_cmd.wqe_com, 1);
--	bf_set(wqe_cqid, &wqe->abort_cmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
--}
--
- /**
-  * lpfc_nvme_create_queue -
-  * @pnvme_lport: Transport localport that LS is to be issued from
-@@ -767,7 +727,7 @@ __lpfc_nvme_ls_abort(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	spin_unlock(&pring->ring_lock);
- 
- 	if (foundit)
--		lpfc_sli_issue_abort_iotag(phba, pring, wqe);
-+		lpfc_sli_issue_abort_iotag(phba, pring, wqe, NULL);
- 	spin_unlock_irq(&phba->hbalock);
- 
- 	if (foundit)
-@@ -1778,7 +1738,6 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_vport *vport;
- 	struct lpfc_hba *phba;
- 	struct lpfc_io_buf *lpfc_nbuf;
--	struct lpfc_iocbq *abts_buf;
- 	struct lpfc_iocbq *nvmereq_wqe;
- 	struct lpfc_nvme_fcpreq_priv *freqpriv;
+ /*
+  * This function checks for BlockGuard errors detected by
+@@ -3561,12 +3705,11 @@ lpfc_scsi_prep_cmnd_buf(struct lpfc_vport *vport, struct lpfc_io_buf *lpfc_cmd,
+  **/
+ static void
+ lpfc_send_scsi_error_event(struct lpfc_hba *phba, struct lpfc_vport *vport,
+-		struct lpfc_io_buf *lpfc_cmd, struct lpfc_iocbq *rsp_iocb) {
++		struct lpfc_io_buf *lpfc_cmd, uint32_t fcpi_parm) {
+ 	struct scsi_cmnd *cmnd = lpfc_cmd->pCmd;
+ 	struct fcp_rsp *fcprsp = lpfc_cmd->fcp_rsp;
+ 	uint32_t resp_info = fcprsp->rspStatus2;
+ 	uint32_t scsi_status = fcprsp->rspStatus3;
+-	uint32_t fcpi_parm = rsp_iocb->iocb.un.fcpi.fcpi_parm;
+ 	struct lpfc_fast_path_event *fast_path_evt = NULL;
+ 	struct lpfc_nodelist *pnode = lpfc_cmd->rdata->pnode;
  	unsigned long flags;
-@@ -1889,42 +1848,23 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 		goto out_unlock;
- 	}
+@@ -3681,13 +3824,11 @@ lpfc_scsi_unprep_dma_buf(struct lpfc_hba *phba, struct lpfc_io_buf *psb)
+  **/
+ static void
+ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_io_buf *lpfc_cmd,
+-		    struct lpfc_iocbq *rsp_iocb)
++		    uint32_t fcpi_parm)
+ {
+-	struct lpfc_hba *phba = vport->phba;
+ 	struct scsi_cmnd *cmnd = lpfc_cmd->pCmd;
+ 	struct fcp_cmnd *fcpcmd = lpfc_cmd->fcp_cmnd;
+ 	struct fcp_rsp *fcprsp = lpfc_cmd->fcp_rsp;
+-	uint32_t fcpi_parm = rsp_iocb->iocb.un.fcpi.fcpi_parm;
+ 	uint32_t resp_info = fcprsp->rspStatus2;
+ 	uint32_t scsi_status = fcprsp->rspStatus3;
+ 	uint32_t *lp;
+@@ -3822,13 +3963,10 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_io_buf *lpfc_cmd,
+ 	 */
+ 	} else if (fcpi_parm) {
+ 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP | LOG_FCP_ERROR,
+-				 "9029 FCP %s Check Error xri x%x  Data: "
++				 "9029 FCP %s Check Error Data: "
+ 				 "x%x x%x x%x x%x x%x\n",
+ 				 ((cmnd->sc_data_direction == DMA_FROM_DEVICE) ?
+ 				 "Read" : "Write"),
+-				 ((phba->sli_rev == LPFC_SLI_REV4) ?
+-				 lpfc_cmd->cur_iocbq.sli4_xritag :
+-				 rsp_iocb->iocb.ulpContext),
+ 				 fcpDl, be32_to_cpu(fcprsp->rspResId),
+ 				 fcpi_parm, cmnd->cmnd[0], scsi_status);
  
--	abts_buf = __lpfc_sli_get_iocbq(phba);
--	if (!abts_buf) {
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				 "6136 No available abort wqes. Skipping "
--				 "Abts req for nvme_fcreq x%px xri x%x\n",
--				 pnvme_fcreq, nvmereq_wqe->sli4_xritag);
--		goto out_unlock;
--	}
--
--	/* Ready - mark outstanding as aborted by driver. */
--	nvmereq_wqe->iocb_flag |= LPFC_DRIVER_ABORTED;
-+	ret_val = lpfc_sli4_issue_abort_iotag(phba, nvmereq_wqe,
-+					      lpfc_nvme_abort_fcreq_cmpl);
+@@ -3855,7 +3993,333 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_io_buf *lpfc_cmd,
  
--	lpfc_nvme_prep_abort_wqe(abts_buf, nvmereq_wqe->sli4_xritag, 0);
--
--	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
--	abts_buf->iocb_flag |= LPFC_IO_NVME;
--	abts_buf->hba_wqidx = nvmereq_wqe->hba_wqidx;
--	abts_buf->vport = vport;
--	abts_buf->wqe_cmpl = lpfc_nvme_abort_fcreq_cmpl;
--	ret_val = lpfc_sli4_issue_wqe(phba, lpfc_nbuf->hdwq, abts_buf);
- 	spin_unlock(&lpfc_nbuf->buf_lock);
- 	spin_unlock_irqrestore(&phba->hbalock, flags);
--	if (ret_val) {
-+	if (ret_val != WQE_SUCCESS) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
- 				 "6137 Failed abts issue_wqe with status x%x "
- 				 "for nvme_fcreq x%px.\n",
- 				 ret_val, pnvme_fcreq);
--		lpfc_sli_release_iocbq(phba, abts_buf);
+  out:
+ 	cmnd->result = host_status << 16 | scsi_status;
+-	lpfc_send_scsi_error_event(vport->phba, vport, lpfc_cmd, rsp_iocb);
++	lpfc_send_scsi_error_event(vport->phba, vport, lpfc_cmd, fcpi_parm);
++}
++
++/**
++ * lpfc_fcp_io_cmd_wqe_cmpl - Complete a FCP IO
++ * @phba: The hba for which this call is being executed.
++ * @pwqeIn: The command WQE for the scsi cmnd.
++ * @pwqeOut: The response WQE for the scsi cmnd.
++ *
++ * This routine assigns scsi command result by looking into response WQE
++ * status field appropriately. This routine handles QUEUE FULL condition as
++ * well by ramping down device queue depth.
++ **/
++static void
++lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
++			 struct lpfc_wcqe_complete *wcqe)
++{
++	struct lpfc_io_buf *lpfc_cmd =
++		(struct lpfc_io_buf *)pwqeIn->context1;
++	struct lpfc_vport *vport = pwqeIn->vport;
++	struct lpfc_rport_data *rdata = lpfc_cmd->rdata;
++	struct lpfc_nodelist *ndlp = rdata->pnode;
++	struct scsi_cmnd *cmd;
++	unsigned long flags;
++	struct lpfc_fast_path_event *fast_path_evt;
++	struct Scsi_Host *shost;
++	u32 logit = LOG_FCP;
++	u32 status, idx;
++	unsigned long iflags = 0;
++
++	/* Sanity check on return of outstanding command */
++	if (!lpfc_cmd) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++				 "9032 Null lpfc_cmd pointer. No "
++				 "release, skip completion\n");
++		return;
++	}
++
++	if (bf_get(lpfc_wcqe_c_xb, wcqe)) {
++		/* TOREMOVE - currently this flag is checked during
++		 * the release of lpfc_iocbq. Remove once we move
++		 * to lpfc_wqe_job construct.
++		 *
++		 * This needs to be done outside buf_lock
++		 */
++		spin_lock_irqsave(&phba->hbalock, iflags);
++		lpfc_cmd->cur_iocbq.iocb_flag |= LPFC_EXCHANGE_BUSY;
++		spin_unlock_irqrestore(&phba->hbalock, iflags);
++	}
++
++	/* Guard against abort handler being called at same time */
++	spin_lock(&lpfc_cmd->buf_lock);
++
++	/* Sanity check on return of outstanding command */
++	cmd = lpfc_cmd->pCmd;
++	if (!cmd || !phba) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
++				 "9042 IO completion: Not an active IO\n");
++		spin_unlock(&lpfc_cmd->buf_lock);
++		lpfc_release_scsi_buf(phba, lpfc_cmd);
++		return;
++	}
++	idx = lpfc_cmd->cur_iocbq.hba_wqidx;
++	if (phba->sli4_hba.hdwq)
++		phba->sli4_hba.hdwq[idx].scsi_cstat.io_cmpls++;
++
++#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++	if (unlikely(phba->hdwqstat_on & LPFC_CHECK_SCSI_IO))
++		this_cpu_inc(phba->sli4_hba.c_stat->cmpl_io);
++#endif
++	shost = cmd->device->host;
++
++	status = bf_get(lpfc_wcqe_c_status, wcqe);
++	lpfc_cmd->status = (status & LPFC_IOCB_STATUS_MASK);
++	lpfc_cmd->result = (wcqe->parameter & IOERR_PARAM_MASK);
++
++	lpfc_cmd->flags &= ~LPFC_SBUF_XBUSY;
++	if (bf_get(lpfc_wcqe_c_xb, wcqe))
++		lpfc_cmd->flags |= LPFC_SBUF_XBUSY;
++
++#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++	if (lpfc_cmd->prot_data_type) {
++		struct scsi_dif_tuple *src = NULL;
++
++		src =  (struct scsi_dif_tuple *)lpfc_cmd->prot_data_segment;
++		/*
++		 * Used to restore any changes to protection
++		 * data for error injection.
++		 */
++		switch (lpfc_cmd->prot_data_type) {
++		case LPFC_INJERR_REFTAG:
++			src->ref_tag =
++				lpfc_cmd->prot_data;
++			break;
++		case LPFC_INJERR_APPTAG:
++			src->app_tag =
++				(uint16_t)lpfc_cmd->prot_data;
++			break;
++		case LPFC_INJERR_GUARD:
++			src->guard_tag =
++				(uint16_t)lpfc_cmd->prot_data;
++			break;
++		default:
++			break;
++		}
++
++		lpfc_cmd->prot_data = 0;
++		lpfc_cmd->prot_data_type = 0;
++		lpfc_cmd->prot_data_segment = NULL;
++	}
++#endif
++	if (unlikely(lpfc_cmd->status)) {
++		if (lpfc_cmd->status == IOSTAT_LOCAL_REJECT &&
++		    (lpfc_cmd->result & IOERR_DRVR_MASK))
++			lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
++		else if (lpfc_cmd->status >= IOSTAT_CNT)
++			lpfc_cmd->status = IOSTAT_DEFAULT;
++		if (lpfc_cmd->status == IOSTAT_FCP_RSP_ERROR &&
++		    !lpfc_cmd->fcp_rsp->rspStatus3 &&
++		    (lpfc_cmd->fcp_rsp->rspStatus2 & RESID_UNDER) &&
++		    !(vport->cfg_log_verbose & LOG_FCP_UNDER))
++			logit = 0;
++		else
++			logit = LOG_FCP | LOG_FCP_UNDER;
++		lpfc_printf_vlog(vport, KERN_WARNING, logit,
++				 "9034 FCP cmd x%x failed <%d/%lld> "
++				 "status: x%x result: x%x "
++				 "sid: x%x did: x%x oxid: x%x "
++				 "Data: x%x x%x x%x\n",
++				 cmd->cmnd[0],
++				 cmd->device ? cmd->device->id : 0xffff,
++				 cmd->device ? cmd->device->lun : 0xffff,
++				 lpfc_cmd->status, lpfc_cmd->result,
++				 vport->fc_myDID,
++				 (ndlp) ? ndlp->nlp_DID : 0,
++				 lpfc_cmd->cur_iocbq.sli4_xritag,
++				 wcqe->parameter, wcqe->total_data_placed,
++				 lpfc_cmd->cur_iocbq.iotag);
++	}
++
++	switch (lpfc_cmd->status) {
++	case IOSTAT_SUCCESS:
++		cmd->result = DID_OK << 16;
++		break;
++	case IOSTAT_FCP_RSP_ERROR:
++		lpfc_handle_fcp_err(vport, lpfc_cmd,
++				    pwqeIn->wqe.fcp_iread.total_xfer_len -
++				    wcqe->total_data_placed);
++		break;
++	case IOSTAT_NPORT_BSY:
++	case IOSTAT_FABRIC_BSY:
++		cmd->result = DID_TRANSPORT_DISRUPTED << 16;
++		fast_path_evt = lpfc_alloc_fast_evt(phba);
++		if (!fast_path_evt)
++			break;
++		fast_path_evt->un.fabric_evt.event_type =
++			FC_REG_FABRIC_EVENT;
++		fast_path_evt->un.fabric_evt.subcategory =
++			(lpfc_cmd->status == IOSTAT_NPORT_BSY) ?
++			LPFC_EVENT_PORT_BUSY : LPFC_EVENT_FABRIC_BUSY;
++		if (ndlp) {
++			memcpy(&fast_path_evt->un.fabric_evt.wwpn,
++			       &ndlp->nlp_portname,
++				sizeof(struct lpfc_name));
++			memcpy(&fast_path_evt->un.fabric_evt.wwnn,
++			       &ndlp->nlp_nodename,
++				sizeof(struct lpfc_name));
++		}
++		fast_path_evt->vport = vport;
++		fast_path_evt->work_evt.evt =
++			LPFC_EVT_FASTPATH_MGMT_EVT;
++		spin_lock_irqsave(&phba->hbalock, flags);
++		list_add_tail(&fast_path_evt->work_evt.evt_listp,
++			      &phba->work_list);
++		spin_unlock_irqrestore(&phba->hbalock, flags);
++		lpfc_worker_wake_up(phba);
++		lpfc_printf_vlog(vport, KERN_WARNING, logit,
++				 "9035 Fabric/Node busy FCP cmd x%x failed"
++				 " <%d/%lld> "
++				 "status: x%x result: x%x "
++				 "sid: x%x did: x%x oxid: x%x "
++				 "Data: x%x x%x x%x\n",
++				 cmd->cmnd[0],
++				 cmd->device ? cmd->device->id : 0xffff,
++				 cmd->device ? cmd->device->lun : 0xffff,
++				 lpfc_cmd->status, lpfc_cmd->result,
++				 vport->fc_myDID,
++				 (ndlp) ? ndlp->nlp_DID : 0,
++				 lpfc_cmd->cur_iocbq.sli4_xritag,
++				 wcqe->parameter,
++				 wcqe->total_data_placed,
++				 lpfc_cmd->cur_iocbq.iocb.ulpIoTag);
++		break;
++	case IOSTAT_REMOTE_STOP:
++		if (ndlp) {
++			/* This IO was aborted by the target, we don't
++			 * know the rxid and because we did not send the
++			 * ABTS we cannot generate and RRQ.
++			 */
++			lpfc_set_rrq_active(phba, ndlp,
++					    lpfc_cmd->cur_iocbq.sli4_lxritag,
++					    0, 0);
++		}
++		fallthrough;
++	case IOSTAT_LOCAL_REJECT:
++		if (lpfc_cmd->result & IOERR_DRVR_MASK)
++			lpfc_cmd->status = IOSTAT_DRIVER_REJECT;
++		if (lpfc_cmd->result == IOERR_ELXSEC_KEY_UNWRAP_ERROR ||
++		    lpfc_cmd->result ==
++		    IOERR_ELXSEC_KEY_UNWRAP_COMPARE_ERROR ||
++		    lpfc_cmd->result == IOERR_ELXSEC_CRYPTO_ERROR ||
++		    lpfc_cmd->result ==
++		    IOERR_ELXSEC_CRYPTO_COMPARE_ERROR) {
++			cmd->result = DID_NO_CONNECT << 16;
++			break;
++		}
++		if (lpfc_cmd->result == IOERR_INVALID_RPI ||
++		    lpfc_cmd->result == IOERR_NO_RESOURCES ||
++		    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
++		    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
++			cmd->result = DID_REQUEUE << 16;
++			break;
++		}
++		if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
++		     lpfc_cmd->result == IOERR_TX_DMA_FAILED) &&
++		     status == CQE_STATUS_DI_ERROR) {
++			if (scsi_get_prot_op(cmd) !=
++			    SCSI_PROT_NORMAL) {
++				/*
++				 * This is a response for a BG enabled
++				 * cmd. Parse BG error
++				 */
++				lpfc_sli4_parse_bg_err(phba, lpfc_cmd,
++						       wcqe);
++				break;
++			}
++			lpfc_printf_vlog(vport, KERN_WARNING, LOG_BG,
++				 "9040 non-zero BGSTAT on unprotected cmd\n");
++		}
++		lpfc_printf_vlog(vport, KERN_WARNING, logit,
++				 "9036 Local Reject FCP cmd x%x failed"
++				 " <%d/%lld> "
++				 "status: x%x result: x%x "
++				 "sid: x%x did: x%x oxid: x%x "
++				 "Data: x%x x%x x%x\n",
++				 cmd->cmnd[0],
++				 cmd->device ? cmd->device->id : 0xffff,
++				 cmd->device ? cmd->device->lun : 0xffff,
++				 lpfc_cmd->status, lpfc_cmd->result,
++				 vport->fc_myDID,
++				 (ndlp) ? ndlp->nlp_DID : 0,
++				 lpfc_cmd->cur_iocbq.sli4_xritag,
++				 wcqe->parameter,
++				 wcqe->total_data_placed,
++				 lpfc_cmd->cur_iocbq.iocb.ulpIoTag);
++		fallthrough;
++	default:
++		if (lpfc_cmd->status >= IOSTAT_CNT)
++			lpfc_cmd->status = IOSTAT_DEFAULT;
++		cmd->result = DID_ERROR << 16;
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
++				 "9037 FCP Completion Error: xri %x "
++				 "status x%x result x%x [x%x] "
++				 "placed x%x\n",
++				 lpfc_cmd->cur_iocbq.sli4_xritag,
++				 lpfc_cmd->status, lpfc_cmd->result,
++				 wcqe->parameter,
++				 wcqe->total_data_placed);
++	}
++	if (cmd->result || lpfc_cmd->fcp_rsp->rspSnsLen) {
++		u32 *lp = (u32 *)cmd->sense_buffer;
++
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
++				 "9039 Iodone <%d/%llu> cmd x%p, error "
++				 "x%x SNS x%x x%x Data: x%x x%x\n",
++				 cmd->device->id, cmd->device->lun, cmd,
++				 cmd->result, *lp, *(lp + 3), cmd->retries,
++				 scsi_get_resid(cmd));
++	}
++
++	lpfc_update_stats(vport, lpfc_cmd);
++
++	if (vport->cfg_max_scsicmpl_time &&
++	    time_after(jiffies, lpfc_cmd->start_time +
++	    msecs_to_jiffies(vport->cfg_max_scsicmpl_time))) {
++		spin_lock_irqsave(shost->host_lock, flags);
++		if (ndlp) {
++			if (ndlp->cmd_qdepth >
++				atomic_read(&ndlp->cmd_pending) &&
++				(atomic_read(&ndlp->cmd_pending) >
++				LPFC_MIN_TGT_QDEPTH) &&
++				(cmd->cmnd[0] == READ_10 ||
++				cmd->cmnd[0] == WRITE_10))
++				ndlp->cmd_qdepth =
++					atomic_read(&ndlp->cmd_pending);
++
++			ndlp->last_change_time = jiffies;
++		}
++		spin_unlock_irqrestore(shost->host_lock, flags);
++	}
++	lpfc_scsi_unprep_dma_buf(phba, lpfc_cmd);
++
++#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
++	if (lpfc_cmd->ts_cmd_start) {
++		lpfc_cmd->ts_isr_cmpl = lpfc_cmd->cur_iocbq.isr_timestamp;
++		lpfc_cmd->ts_data_io = ktime_get_ns();
++		phba->ktime_last_cmd = lpfc_cmd->ts_data_io;
++		lpfc_io_ktime(phba, lpfc_cmd);
++	}
++#endif
++	lpfc_cmd->pCmd = NULL;
++	spin_unlock(&lpfc_cmd->buf_lock);
++
++	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
++	cmd->scsi_done(cmd);
++
++	/*
++	 * If there is an abort thread waiting for command completion
++	 * wake up the thread.
++	 */
++	spin_lock(&lpfc_cmd->buf_lock);
++	lpfc_cmd->cur_iocbq.iocb_flag &= ~LPFC_DRIVER_ABORTED;
++	if (lpfc_cmd->waitq)
++		wake_up(lpfc_cmd->waitq);
++	spin_unlock(&lpfc_cmd->buf_lock);
++
++	lpfc_release_scsi_buf(phba, lpfc_cmd);
+ }
+ 
+ /**
+@@ -3978,7 +4442,8 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 		switch (lpfc_cmd->status) {
+ 		case IOSTAT_FCP_RSP_ERROR:
+ 			/* Call FCP RSP handler to determine result */
+-			lpfc_handle_fcp_err(vport, lpfc_cmd, pIocbOut);
++			lpfc_handle_fcp_err(vport, lpfc_cmd,
++					    pIocbOut->iocb.un.fcpi.fcpi_parm);
+ 			break;
+ 		case IOSTAT_NPORT_BSY:
+ 		case IOSTAT_FABRIC_BSY:
+@@ -4305,8 +4770,7 @@ static int lpfc_scsi_prep_cmnd_buf_s4(struct lpfc_vport *vport,
+ 	pwqeq->vport = vport;
+ 	pwqeq->context1 = lpfc_cmd;
+ 	pwqeq->hba_wqidx = lpfc_cmd->hdwq_no;
+-	if (!pwqeq->iocb_cmpl)
+-		pwqeq->iocb_cmpl = lpfc_scsi_cmd_iocb_cmpl;
++	pwqeq->wqe_cmpl = lpfc_fcp_io_cmd_wqe_cmpl;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 2007835b6a5a..e58ad2ea11be 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -14339,7 +14339,9 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ #endif
+ 	if (cmdiocbq->iocb_cmpl == NULL) {
+ 		if (cmdiocbq->wqe_cmpl) {
+-			if (cmdiocbq->iocb_flag & LPFC_DRIVER_ABORTED) {
++			/* For FCP the flag is cleared in wqe_cmpl */
++			if (!(cmdiocbq->iocb_flag & LPFC_IO_FCP) &&
++			    cmdiocbq->iocb_flag & LPFC_DRIVER_ABORTED) {
+ 				spin_lock_irqsave(&phba->hbalock, iflags);
+ 				cmdiocbq->iocb_flag &= ~LPFC_DRIVER_ABORTED;
+ 				spin_unlock_irqrestore(&phba->hbalock, iflags);
+@@ -14356,6 +14358,7 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
  		return;
  	}
  
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_ABTS,
- 			 "6138 Transport Abort NVME Request Issued for "
--			 "ox_id x%x on reqtag x%x\n",
--			 nvmereq_wqe->sli4_xritag,
--			 abts_buf->iotag);
-+			 "ox_id x%x\n",
-+			 nvmereq_wqe->sli4_xritag);
- 	return;
++	/* Only SLI4 non-IO commands stil use IOCB */
+ 	/* Fake the irspiocb and copy necessary response information */
+ 	lpfc_sli4_iocb_param_transfer(phba, &irspiocbq, cmdiocbq, wcqe);
  
- out_unlock:
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index fe8b3a80e3c8..dfd8e61b9daa 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -3328,6 +3328,46 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
- 	return 1;
- }
- 
-+/**
-+ * lpfc_nvmet_prep_abort_wqe - set up 'abort' work queue entry.
-+ * @pwqeq: Pointer to command iocb.
-+ * @xritag: Tag that  uniqely identifies the local exchange resource.
-+ * @opt: Option bits -
-+ *		bit 0 = inhibit sending abts on the link
-+ *
-+ * This function is called with hbalock held.
-+ **/
-+void
-+lpfc_nvmet_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt)
-+{
-+	union lpfc_wqe128 *wqe = &pwqeq->wqe;
-+
-+	/* WQEs are reused.  Clear stale data and set key fields to
-+	 * zero like ia, iaab, iaar, xri_tag, and ctxt_tag.
-+	 */
-+	memset(wqe, 0, sizeof(*wqe));
-+
-+	if (opt & INHIBIT_ABORT)
-+		bf_set(abort_cmd_ia, &wqe->abort_cmd, 1);
-+	/* Abort specified xri tag, with the mask deliberately zeroed */
-+	bf_set(abort_cmd_criteria, &wqe->abort_cmd, T_XRI_TAG);
-+
-+	bf_set(wqe_cmnd, &wqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
-+
-+	/* Abort the IO associated with this outstanding exchange ID. */
-+	wqe->abort_cmd.wqe_com.abort_tag = xritag;
-+
-+	/* iotag for the wqe completion. */
-+	bf_set(wqe_reqtag, &wqe->abort_cmd.wqe_com, pwqeq->iotag);
-+
-+	bf_set(wqe_qosd, &wqe->abort_cmd.wqe_com, 1);
-+	bf_set(wqe_lenloc, &wqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
-+
-+	bf_set(wqe_cmd_type, &wqe->abort_cmd.wqe_com, OTHER_COMMAND);
-+	bf_set(wqe_wqec, &wqe->abort_cmd.wqe_com, 1);
-+	bf_set(wqe_cqid, &wqe->abort_cmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
-+}
-+
- static int
- lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
- 			       struct lpfc_async_xchg_ctx *ctxp,
-@@ -3423,7 +3463,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
- 	/* Ready - mark outstanding as aborted by driver. */
- 	abts_wqeq->iocb_flag |= LPFC_DRIVER_ABORTED;
- 
--	lpfc_nvme_prep_abort_wqe(abts_wqeq, ctxp->wqeq->sli4_xritag, opt);
-+	lpfc_nvmet_prep_abort_wqe(abts_wqeq, ctxp->wqeq->sli4_xritag, opt);
- 
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abts_wqeq->hba_wqidx = ctxp->wqeq->hba_wqidx;
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 0cd8f0b72605..cd502ed489d0 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5377,11 +5377,10 @@ lpfc_abort_handler(struct scsi_cmnd *cmnd)
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_iocbq *iocb;
--	struct lpfc_iocbq *abtsiocb;
- 	struct lpfc_io_buf *lpfc_cmd;
--	IOCB_t *cmd, *icmd;
- 	int ret = SUCCESS, status = 0;
- 	struct lpfc_sli_ring *pring_s4 = NULL;
-+	struct lpfc_sli_ring *pring = NULL;
- 	int ret_val;
- 	unsigned long flags;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
-@@ -5458,64 +5457,22 @@ lpfc_abort_handler(struct scsi_cmnd *cmnd)
- 		goto wait_for_cmpl;
- 	}
- 
--	abtsiocb = __lpfc_sli_get_iocbq(phba);
--	if (abtsiocb == NULL) {
--		ret = FAILED;
--		goto out_unlock_ring;
--	}
--
--	/* Indicate the IO is being aborted by the driver. */
--	iocb->iocb_flag |= LPFC_DRIVER_ABORTED;
--
--	/*
--	 * The scsi command can not be in txq and it is in flight because the
--	 * pCmd is still pointig at the SCSI command we have to abort. There
--	 * is no need to search the txcmplq. Just send an abort to the FW.
--	 */
--
--	cmd = &iocb->iocb;
--	icmd = &abtsiocb->iocb;
--	icmd->un.acxri.abortType = ABORT_TYPE_ABTS;
--	icmd->un.acxri.abortContextTag = cmd->ulpContext;
--	if (phba->sli_rev == LPFC_SLI_REV4)
--		icmd->un.acxri.abortIoTag = iocb->sli4_xritag;
--	else
--		icmd->un.acxri.abortIoTag = cmd->ulpIoTag;
--
--	icmd->ulpLe = 1;
--	icmd->ulpClass = cmd->ulpClass;
--
--	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
--	abtsiocb->hba_wqidx = iocb->hba_wqidx;
--	abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
--	if (iocb->iocb_flag & LPFC_IO_FOF)
--		abtsiocb->iocb_flag |= LPFC_IO_FOF;
--
--	if (lpfc_is_link_up(phba))
--		icmd->ulpCommand = CMD_ABORT_XRI_CN;
--	else
--		icmd->ulpCommand = CMD_CLOSE_XRI_CN;
--
--	abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
--	abtsiocb->vport = vport;
- 	lpfc_cmd->waitq = &waitq;
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
--		/* Note: both hbalock and ring_lock must be set here */
--		ret_val = __lpfc_sli_issue_iocb(phba, pring_s4->ringno,
--						abtsiocb, 0);
- 		spin_unlock(&pring_s4->ring_lock);
-+		ret_val = lpfc_sli4_issue_abort_iotag(phba, iocb,
-+						      lpfc_sli4_abort_fcp_cmpl);
- 	} else {
--		ret_val = __lpfc_sli_issue_iocb(phba, LPFC_FCP_RING,
--						abtsiocb, 0);
-+		pring = &phba->sli.sli3_ring[LPFC_FCP_RING];
-+		ret_val = lpfc_sli_issue_abort_iotag(phba, pring, iocb,
-+						     lpfc_sli_abort_fcp_cmpl);
- 	}
- 
--	if (ret_val == IOCB_ERROR) {
-+	if (ret_val != IOCB_SUCCESS) {
- 		/* Indicate the IO is not being aborted by the driver. */
--		iocb->iocb_flag &= ~LPFC_DRIVER_ABORTED;
- 		lpfc_cmd->waitq = NULL;
- 		spin_unlock(&lpfc_cmd->buf_lock);
- 		spin_unlock_irqrestore(&phba->hbalock, flags);
--		lpfc_sli_release_iocbq(phba, abtsiocb);
- 		ret = FAILED;
- 		goto out;
- 	}
-@@ -5529,7 +5486,10 @@ lpfc_abort_handler(struct scsi_cmnd *cmnd)
- 			&phba->sli.sli3_ring[LPFC_FCP_RING], HA_R0RE_REQ);
- 
- wait_for_cmpl:
--	/* Wait for abort to complete */
-+	/*
-+	 * iocb_flag is set to LPFC_DRIVER_ABORTED before we wait
-+	 * for abort to complete.
-+	 */
- 	wait_event_timeout(waitq,
- 			  (lpfc_cmd->pCmd != cmnd),
- 			   msecs_to_jiffies(2*vport->cfg_devloss_tmo*1000));
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index e58ad2ea11be..62218e41933e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -4209,7 +4209,7 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- 		spin_lock_irq(&phba->hbalock);
- 		/* Next issue ABTS for everything on the txcmplq */
- 		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
--			lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
- 		spin_unlock_irq(&phba->hbalock);
- 	} else {
- 		spin_lock_irq(&phba->hbalock);
-@@ -4218,7 +4218,7 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- 
- 		/* Next issue ABTS for everything on the txcmplq */
- 		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
--			lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
- 		spin_unlock_irq(&phba->hbalock);
- 	}
- 
-@@ -11181,7 +11181,8 @@ lpfc_sli_host_down(struct lpfc_vport *vport)
- 						 &pring->txcmplq, list) {
- 				if (iocb->vport != vport)
- 					continue;
--				lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
-+							   NULL);
- 			}
- 			pring->flag = prev_pring_flag;
- 		}
-@@ -11208,7 +11209,8 @@ lpfc_sli_host_down(struct lpfc_vport *vport)
- 						 &pring->txcmplq, list) {
- 				if (iocb->vport != vport)
- 					continue;
--				lpfc_sli_issue_abort_iotag(phba, pring, iocb);
-+				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
-+							   NULL);
- 			}
- 			pring->flag = prev_pring_flag;
- 		}
-@@ -11605,27 +11607,29 @@ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- }
- 
- /**
-- * lpfc_sli_abort_iotag_issue - Issue abort for a command iocb
-+ * lpfc_sli_issue_abort_iotag - Abort function for a command iocb
-  * @phba: Pointer to HBA context object.
-  * @pring: Pointer to driver SLI ring object.
-  * @cmdiocb: Pointer to driver command iocb object.
-+ * @cmpl: completion function.
-+ *
-+ * This function issues an abort iocb for the provided command iocb. In case
-+ * of unloading, the abort iocb will not be issued to commands on the ELS
-+ * ring. Instead, the callback function shall be changed to those commands
-+ * so that nothing happens when them finishes. This function is called with
-+ * hbalock held andno ring_lock held (SLI4). The function returns IOCB_SUCCESS
-+ * when the command iocb is an abort request.
-  *
-- * This function issues an abort iocb for the provided command iocb down to
-- * the port. Other than the case the outstanding command iocb is an abort
-- * request, this function issues abort out unconditionally. This function is
-- * called with hbalock held. The function returns 0 when it fails due to
-- * memory allocation failure or when the command iocb is an abort request.
-- * The hbalock is asserted held in the code path calling this routine.
-  **/
--static int
--lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
--			   struct lpfc_iocbq *cmdiocb)
-+int
-+lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
-+			   struct lpfc_iocbq *cmdiocb, void *cmpl)
- {
- 	struct lpfc_vport *vport = cmdiocb->vport;
- 	struct lpfc_iocbq *abtsiocbp;
- 	IOCB_t *icmd = NULL;
- 	IOCB_t *iabt = NULL;
--	int retval;
-+	int retval = IOCB_ERROR;
- 	unsigned long iflags;
- 	struct lpfc_nodelist *ndlp;
- 
-@@ -11638,12 +11642,33 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	if (icmd->ulpCommand == CMD_ABORT_XRI_CN ||
- 	    icmd->ulpCommand == CMD_CLOSE_XRI_CN ||
- 	    (cmdiocb->iocb_flag & LPFC_DRIVER_ABORTED) != 0)
--		return 0;
-+		return IOCB_ABORTING;
-+
-+	if (!pring) {
-+		if (cmdiocb->iocb_flag & LPFC_IO_FABRIC)
-+			cmdiocb->fabric_iocb_cmpl = lpfc_ignore_els_cmpl;
-+		else
-+			cmdiocb->iocb_cmpl = lpfc_ignore_els_cmpl;
-+		return retval;
-+	}
-+
-+	/*
-+	 * If we're unloading, don't abort iocb on the ELS ring, but change
-+	 * the callback so that nothing happens when it finishes.
-+	 */
-+	if ((vport->load_flag & FC_UNLOADING) &&
-+	    pring->ringno == LPFC_ELS_RING) {
-+		if (cmdiocb->iocb_flag & LPFC_IO_FABRIC)
-+			cmdiocb->fabric_iocb_cmpl = lpfc_ignore_els_cmpl;
-+		else
-+			cmdiocb->iocb_cmpl = lpfc_ignore_els_cmpl;
-+		return retval;
-+	}
- 
- 	/* issue ABTS for this IOCB based on iotag */
- 	abtsiocbp = __lpfc_sli_get_iocbq(phba);
- 	if (abtsiocbp == NULL)
--		return 0;
-+		return IOCB_NORESOURCE;
- 
- 	/* This signals the response to set the correct status
- 	 * before calling the completion handler
-@@ -11655,7 +11680,8 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	iabt->un.acxri.abortContextTag = icmd->ulpContext;
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		iabt->un.acxri.abortIoTag = cmdiocb->sli4_xritag;
--		iabt->un.acxri.abortContextTag = cmdiocb->iotag;
-+		if (pring->ringno == LPFC_ELS_RING)
-+			iabt->un.acxri.abortContextTag = cmdiocb->iotag;
- 	} else {
- 		iabt->un.acxri.abortIoTag = icmd->ulpIoTag;
- 		if (pring->ringno == LPFC_ELS_RING) {
-@@ -11668,8 +11694,10 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abtsiocbp->hba_wqidx = cmdiocb->hba_wqidx;
--	if (cmdiocb->iocb_flag & LPFC_IO_FCP)
-+	if (cmdiocb->iocb_flag & LPFC_IO_FCP) {
-+		abtsiocbp->iocb_flag |= LPFC_IO_FCP;
- 		abtsiocbp->iocb_flag |= LPFC_USE_FCPWQIDX;
-+	}
- 	if (cmdiocb->iocb_flag & LPFC_IO_FOF)
- 		abtsiocbp->iocb_flag |= LPFC_IO_FOF;
- 
-@@ -11678,20 +11706,16 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	else
- 		iabt->ulpCommand = CMD_CLOSE_XRI_CN;
- 
--	abtsiocbp->iocb_cmpl = lpfc_sli_abort_els_cmpl;
-+	if (cmpl)
-+		abtsiocbp->iocb_cmpl = cmpl;
-+	else
-+		abtsiocbp->iocb_cmpl = lpfc_sli_abort_els_cmpl;
- 	abtsiocbp->vport = vport;
- 
--	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
--			 "0339 Abort xri x%x, original iotag x%x, "
--			 "abort cmd iotag x%x\n",
--			 iabt->un.acxri.abortIoTag,
--			 iabt->un.acxri.abortContextTag,
--			 abtsiocbp->iotag);
--
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		pring = lpfc_sli4_calc_ring(phba, abtsiocbp);
- 		if (unlikely(pring == NULL))
--			return 0;
-+			goto abort_iotag_exit;
- 		/* Note: both hbalock and ring_lock need to be set here */
- 		spin_lock_irqsave(&pring->ring_lock, iflags);
- 		retval = __lpfc_sli_issue_iocb(phba, pring->ringno,
-@@ -11702,76 +11726,20 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			abtsiocbp, 0);
- 	}
- 
--	if (retval)
--		__lpfc_sli_release_iocbq(phba, abtsiocbp);
--
--	/*
--	 * Caller to this routine should check for IOCB_ERROR
--	 * and handle it properly.  This routine no longer removes
--	 * iocb off txcmplq and call compl in case of IOCB_ERROR.
--	 */
--	return retval;
--}
--
--/**
-- * lpfc_sli_issue_abort_iotag - Abort function for a command iocb
-- * @phba: Pointer to HBA context object.
-- * @pring: Pointer to driver SLI ring object.
-- * @cmdiocb: Pointer to driver command iocb object.
-- *
-- * This function issues an abort iocb for the provided command iocb. In case
-- * of unloading, the abort iocb will not be issued to commands on the ELS
-- * ring. Instead, the callback function shall be changed to those commands
-- * so that nothing happens when them finishes. This function is called with
-- * hbalock held. The function returns 0 when the command iocb is an abort
-- * request.
-- **/
--int
--lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
--			   struct lpfc_iocbq *cmdiocb)
--{
--	struct lpfc_vport *vport = cmdiocb->vport;
--	int retval = IOCB_ERROR;
--	IOCB_t *icmd = NULL;
--
--	lockdep_assert_held(&phba->hbalock);
--
--	/*
--	 * There are certain command types we don't want to abort.  And we
--	 * don't want to abort commands that are already in the process of
--	 * being aborted.
--	 */
--	icmd = &cmdiocb->iocb;
--	if (icmd->ulpCommand == CMD_ABORT_XRI_CN ||
--	    icmd->ulpCommand == CMD_CLOSE_XRI_CN ||
--	    (cmdiocb->iocb_flag & LPFC_DRIVER_ABORTED) != 0)
--		return 0;
-+abort_iotag_exit:
- 
--	if (!pring) {
--		if (cmdiocb->iocb_flag & LPFC_IO_FABRIC)
--			cmdiocb->fabric_iocb_cmpl = lpfc_ignore_els_cmpl;
--		else
--			cmdiocb->iocb_cmpl = lpfc_ignore_els_cmpl;
--		goto abort_iotag_exit;
--	}
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
-+			 "0339 Abort xri x%x, original iotag x%x, "
-+			 "abort cmd iotag x%x retval x%x\n",
-+			 iabt->un.acxri.abortIoTag,
-+			 iabt->un.acxri.abortContextTag,
-+			 abtsiocbp->iotag, retval);
- 
--	/*
--	 * If we're unloading, don't abort iocb on the ELS ring, but change
--	 * the callback so that nothing happens when it finishes.
--	 */
--	if ((vport->load_flag & FC_UNLOADING) &&
--	    (pring->ringno == LPFC_ELS_RING)) {
--		if (cmdiocb->iocb_flag & LPFC_IO_FABRIC)
--			cmdiocb->fabric_iocb_cmpl = lpfc_ignore_els_cmpl;
--		else
--			cmdiocb->iocb_cmpl = lpfc_ignore_els_cmpl;
--		goto abort_iotag_exit;
-+	if (retval) {
-+		cmdiocb->iocb_flag &= ~LPFC_DRIVER_ABORTED;
-+		__lpfc_sli_release_iocbq(phba, abtsiocbp);
- 	}
- 
--	/* Now, we try to issue the abort to the cmdiocb out */
--	retval = lpfc_sli_abort_iotag_issue(phba, pring, cmdiocb);
--
--abort_iotag_exit:
- 	/*
- 	 * Caller to this routine should check for IOCB_ERROR
- 	 * and handle it properly.  This routine no longer removes
-@@ -11915,6 +11883,33 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t tgt_id, uint64_t lun_id,
- 	return sum;
- }
- 
-+/**
-+ * lpfc_sli4_abort_fcp_cmpl - Completion handler function for aborted FCP IOCBs
-+ * @phba: Pointer to HBA context object
-+ * @cmdiocb: Pointer to command iocb object.
-+ * @wcqe: pointer to the complete wcqe
-+ *
-+ * This function is called when an aborted FCP iocb completes. This
-+ * function is called by the ring event handler with no lock held.
-+ * This function frees the iocb. It is called for sli-4 adapters.
-+ **/
-+void
-+lpfc_sli4_abort_fcp_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-+			 struct lpfc_wcqe_complete *wcqe)
-+{
-+	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+			"3017 ABORT_XRI_CN completing on rpi x%x "
-+			"original iotag x%x, abort cmd iotag x%x "
-+			"status 0x%x, reason 0x%x\n",
-+			cmdiocb->iocb.un.acxri.abortContextTag,
-+			cmdiocb->iocb.un.acxri.abortIoTag,
-+			cmdiocb->iotag,
-+			(bf_get(lpfc_wcqe_c_status, wcqe)
-+			& LPFC_IOCB_STATUS_MASK),
-+			wcqe->parameter);
-+	lpfc_sli_release_iocbq(phba, cmdiocb);
-+}
-+
- /**
-  * lpfc_sli_abort_fcp_cmpl - Completion handler function for aborted FCP IOCBs
-  * @phba: Pointer to HBA context object
-@@ -11968,10 +11963,8 @@ lpfc_sli_abort_iocb(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
- {
- 	struct lpfc_hba *phba = vport->phba;
- 	struct lpfc_iocbq *iocbq;
--	struct lpfc_iocbq *abtsiocb;
--	struct lpfc_sli_ring *pring_s4;
--	IOCB_t *cmd = NULL;
- 	int errcnt = 0, ret_val = 0;
-+	unsigned long iflags;
- 	int i;
- 
- 	/* all I/Os are in process of being flushed */
-@@ -11985,62 +11978,12 @@ lpfc_sli_abort_iocb(struct lpfc_vport *vport, struct lpfc_sli_ring *pring,
- 					       abort_cmd) != 0)
- 			continue;
- 
--		/*
--		 * If the iocbq is already being aborted, don't take a second
--		 * action, but do count it.
--		 */
--		if (iocbq->iocb_flag & LPFC_DRIVER_ABORTED)
--			continue;
--
--		/* issue ABTS for this IOCB based on iotag */
--		abtsiocb = lpfc_sli_get_iocbq(phba);
--		if (abtsiocb == NULL) {
--			errcnt++;
--			continue;
--		}
--
--		/* indicate the IO is being aborted by the driver. */
--		iocbq->iocb_flag |= LPFC_DRIVER_ABORTED;
--
--		cmd = &iocbq->iocb;
--		abtsiocb->iocb.un.acxri.abortType = ABORT_TYPE_ABTS;
--		abtsiocb->iocb.un.acxri.abortContextTag = cmd->ulpContext;
--		if (phba->sli_rev == LPFC_SLI_REV4)
--			abtsiocb->iocb.un.acxri.abortIoTag = iocbq->sli4_xritag;
--		else
--			abtsiocb->iocb.un.acxri.abortIoTag = cmd->ulpIoTag;
--		abtsiocb->iocb.ulpLe = 1;
--		abtsiocb->iocb.ulpClass = cmd->ulpClass;
--		abtsiocb->vport = vport;
--
--		/* ABTS WQE must go to the same WQ as the WQE to be aborted */
--		abtsiocb->hba_wqidx = iocbq->hba_wqidx;
--		if (iocbq->iocb_flag & LPFC_IO_FCP)
--			abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
--		if (iocbq->iocb_flag & LPFC_IO_FOF)
--			abtsiocb->iocb_flag |= LPFC_IO_FOF;
--
--		if (lpfc_is_link_up(phba))
--			abtsiocb->iocb.ulpCommand = CMD_ABORT_XRI_CN;
--		else
--			abtsiocb->iocb.ulpCommand = CMD_CLOSE_XRI_CN;
--
--		/* Setup callback routine and issue the command. */
--		abtsiocb->iocb_cmpl = lpfc_sli_abort_fcp_cmpl;
--		if (phba->sli_rev == LPFC_SLI_REV4) {
--			pring_s4 = lpfc_sli4_calc_ring(phba, iocbq);
--			if (!pring_s4)
--				continue;
--			ret_val = lpfc_sli_issue_iocb(phba, pring_s4->ringno,
--						      abtsiocb, 0);
--		} else
--			ret_val = lpfc_sli_issue_iocb(phba, pring->ringno,
--						      abtsiocb, 0);
--		if (ret_val == IOCB_ERROR) {
--			lpfc_sli_release_iocbq(phba, abtsiocb);
-+		spin_lock_irqsave(&phba->hbalock, iflags);
-+		ret_val = lpfc_sli_issue_abort_iotag(phba, pring, iocbq,
-+						     lpfc_sli_abort_fcp_cmpl);
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+		if (ret_val != IOCB_SUCCESS)
- 			errcnt++;
--			continue;
--		}
- 	}
- 
- 	return errcnt;
-@@ -20551,6 +20494,88 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, struct lpfc_sli4_hdw_queue *qp,
- 	return WQE_ERROR;
- }
- 
-+/**
-+ * lpfc_sli4_issue_abort_iotag - SLI-4 WQE init & issue for the Abort
-+ * @phba: Pointer to HBA context object.
-+ * @cmdiocb: Pointer to driver command iocb object.
-+ * @cmpl: completion function.
-+ *
-+ * Fill the appropriate fields for the abort WQE and call
-+ * internal routine lpfc_sli4_issue_wqe to send the WQE
-+ * This function is called with hbalock held and no ring_lock held.
-+ *
-+ * RETURNS 0 - SUCCESS
-+ **/
-+
-+int
-+lpfc_sli4_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-+			    void *cmpl)
-+{
-+	struct lpfc_vport *vport = cmdiocb->vport;
-+	struct lpfc_iocbq *abtsiocb = NULL;
-+	union lpfc_wqe128 *abtswqe;
-+	struct lpfc_io_buf *lpfc_cmd;
-+	int retval = IOCB_ERROR;
-+	u16 xritag = cmdiocb->sli4_xritag;
-+
-+	/*
-+	 * The scsi command can not be in txq and it is in flight because the
-+	 * pCmd is still pointing at the SCSI command we have to abort. There
-+	 * is no need to search the txcmplq. Just send an abort to the FW.
-+	 */
-+
-+	abtsiocb = __lpfc_sli_get_iocbq(phba);
-+	if (!abtsiocb)
-+		return WQE_NORESOURCE;
-+
-+	/* Indicate the IO is being aborted by the driver. */
-+	cmdiocb->iocb_flag |= LPFC_DRIVER_ABORTED;
-+
-+	abtswqe = &abtsiocb->wqe;
-+	memset(abtswqe, 0, sizeof(*abtswqe));
-+
-+	if (lpfc_is_link_up(phba))
-+		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 1);
-+	else
-+		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 0);
-+	bf_set(abort_cmd_criteria, &abtswqe->abort_cmd, T_XRI_TAG);
-+	abtswqe->abort_cmd.rsrvd5 = 0;
-+	abtswqe->abort_cmd.wqe_com.abort_tag = xritag;
-+	bf_set(wqe_reqtag, &abtswqe->abort_cmd.wqe_com, abtsiocb->iotag);
-+	bf_set(wqe_cmnd, &abtswqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
-+	bf_set(wqe_xri_tag, &abtswqe->generic.wqe_com, 0);
-+	bf_set(wqe_qosd, &abtswqe->abort_cmd.wqe_com, 1);
-+	bf_set(wqe_lenloc, &abtswqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
-+	bf_set(wqe_cmd_type, &abtswqe->abort_cmd.wqe_com, OTHER_COMMAND);
-+
-+	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
-+	abtsiocb->hba_wqidx = cmdiocb->hba_wqidx;
-+	abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
-+	if (cmdiocb->iocb_flag & LPFC_IO_FCP)
-+		abtsiocb->iocb_flag |= LPFC_IO_FCP;
-+	if (cmdiocb->iocb_flag & LPFC_IO_NVME)
-+		abtsiocb->iocb_flag |= LPFC_IO_NVME;
-+	if (cmdiocb->iocb_flag & LPFC_IO_FOF)
-+		abtsiocb->iocb_flag |= LPFC_IO_FOF;
-+	abtsiocb->vport = vport;
-+	abtsiocb->wqe_cmpl = cmpl;
-+
-+	lpfc_cmd = container_of(cmdiocb, struct lpfc_io_buf, cur_iocbq);
-+	retval = lpfc_sli4_issue_wqe(phba, lpfc_cmd->hdwq, abtsiocb);
-+
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI | LOG_NVME_ABTS | LOG_FCP,
-+			 "0359 Abort xri x%x, original iotag x%x, "
-+			 "abort cmd iotag x%x retval x%x\n",
-+			 xritag, cmdiocb->iotag, abtsiocb->iotag, retval);
-+
-+	if (retval) {
-+		cmdiocb->iocb_flag &= ~LPFC_DRIVER_ABORTED;
-+		__lpfc_sli_release_iocbq(phba, abtsiocb);
-+	}
-+
-+	return retval;
-+}
-+
- #ifdef LPFC_MXP_STAT
- /**
-  * lpfc_snapshot_mxp - Snapshot pbl, pvt and busy count
-diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
-index 93d976ea8c5d..3ddaac57f99e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.h
-+++ b/drivers/scsi/lpfc/lpfc_sli.h
-@@ -130,6 +130,9 @@ struct lpfc_iocbq {
- #define IOCB_BUSY           1
- #define IOCB_ERROR          2
- #define IOCB_TIMEDOUT       3
-+#define IOCB_ABORTED        4
-+#define IOCB_ABORTING	    5
-+#define IOCB_NORESOURCE	    6
- 
- #define SLI_WQE_RET_WQE    1    /* Return WQE if cmd ring full */
- 
-@@ -138,6 +141,8 @@ struct lpfc_iocbq {
- #define WQE_ERROR          2
- #define WQE_TIMEDOUT       3
- #define WQE_ABORTED        4
-+#define WQE_ABORTING	   5
-+#define WQE_NORESOURCE	   6
- 
- #define LPFC_MBX_WAKE		1
- #define LPFC_MBX_IMED_UNREG	2
 -- 
 2.26.2
 
 
---000000000000d1c4a605b42a3f0a
+--000000000000b8ee3d05b42a3f53
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -1073,14 +747,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgdiLaxP7w5sSbYCXw
-BkivA82Xm2ZnrXEXDSqt7WCRbrswGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE1MTkyNzE1WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg30RVm434uP+ns51Z
+/uiv3kx1M6gHBHAu74N8xNMA2lQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE1MTkyNzE0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAGNOJi4lIVZ6GI8n+eRBn2lm+WtYW8GuDjDs
-E3/UB3VOPO4mZqBY6VnsVfeiTjN9NUduWE3kvW9ABJQxL888aHt/ltyAVXeeJdVPhI++E86DkE89
-/1dKaKmUC0nUFQRIGJzcFLLO7ZZ8Jb5J6Qj/f4k0Ej1/AXge0YNzxijUd5TIWBQ+BlyTF2XzCEEJ
-b5+MTHKxEEOWvbH2h7S8JO+Ufjl5zN1v/AyZaoWvxzojDRaXy+imFjVbL6siXFubFXTd4Re3NJQz
-TDNcQuSLFsjh+RZtE0gp1yIFsg7qtBlTjaPa1yjPqeYgIqivjA4DfnTvGMO6hc9vCW/eWyoj1AIF
-abU=
---000000000000d1c4a605b42a3f0a--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAGIS2eouxWMbcLFzksC3kkrStP6BEIBEUMiL
+5l05uwMNPYdHNaBfdsx9XDyYVt53RDI8/XdhVv0Y8A8HK62ewK9A82tCJIo23VkBnETLhCsTkbEE
+hjfqMF8F++xk13WXK+TnEh+6xTYfLl0Mh1N1qCk0yPUOQEuJFgPKEHMEloKr0Rcy05pAlwx9A2gt
+2KaC85TmDd6qlA3CUnrsPl7tEgLUlJkRkjm7fl+Njir0DhgY/z01GdwE08Qe1tgPlha0yVKCIqXD
+TQof3gqbaOWtLTVHUritHeCPSi2T8oIMfwfP2RkreVS9SlXtmUTkowrKHodaFJg3fSzL0HpX1axT
+PRc=
+--000000000000b8ee3d05b42a3f53--
