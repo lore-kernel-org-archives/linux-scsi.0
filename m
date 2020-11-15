@@ -2,190 +2,287 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA83C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE6BC6369E
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8499222384
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B95B223C7
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FypTPky/"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Godntm84"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727857AbgKOT0z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Nov 2020 14:26:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38674 "EHLO
+        id S1727864AbgKOT1B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Nov 2020 14:27:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727781AbgKOT0y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:26:54 -0500
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 329F0C0613CF
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:26:54 -0800 (PST)
-Received: by mail-pf1-x443.google.com with SMTP id 131so806632pfb.9
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:26:54 -0800 (PST)
+        with ESMTP id S1727860AbgKOT07 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:26:59 -0500
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E19EC0613D1
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:26:59 -0800 (PST)
+Received: by mail-pl1-x643.google.com with SMTP id k7so7044471plk.3
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:26:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=LbEzhfMqerOPCE9MWjzXOnHWBdhnf16rmleBMKP8jdc=;
-        b=FypTPky/9sldeDHBiTEJvXuLlwyDSbaJLF6NDZTnl+HiJCLEYme5cckYFqqICfl4c4
-         oD/B4WA/eyHthD8LLZ3YtMgRYCq2hIGWqzfA11CygtQ3XL1Kva/P6tFtSqxxkEpUwP0K
-         uXtMyGcKo8M4TYsodbPW6Ky6tvgOGUimNKB6I=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=e/u2ZoJQbj2IzJl8PjjpVEk1NV/fO64VdkAnbytPHv4=;
+        b=Godntm84UUb3O4bomj6gIVAfx5AAYfiSBNUg3JRux2QxCD9RIAA7q7uRIRyGiX2i7b
+         4efz/zpgj3DdD06ltHNsajckKSqI0mNLXjI731Xfc5kcDkJ58EgjL4+/XTKk3n+HHsOs
+         ydjKVVmyhGJJyR3BdLLHmZxlHUGLKElWMeVHU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=LbEzhfMqerOPCE9MWjzXOnHWBdhnf16rmleBMKP8jdc=;
-        b=Q5+cJ47Wua3EYubfJOrsdBxev7fchQWGPxnqG3Qt71yISvjiOWqstJB5uif8dmx+Bl
-         7w5zcR1aWwLcgFYDBLm7oJikU3nCiB1XGeOQSM1LA8AI/NUEAMoxDBicao8BpEc0G1h6
-         +YzCZY9+8ken5lItsIMPGnqme4Fwc+fZ5jrTGUwT084D0y7zYsUMYr2LbsMWt5pscxq5
-         fsydTAKOh/gDSD3O9GcuuT6x3jeOapiG1QrF3Ydlk5HyADAbU6GYw2iVIT59uAh5dLvJ
-         8+SaRFR8FR/WiZDe9q+8Bq1wWwV9/I2hEDDpIIyyJqt1QQaX7xgTBv4O/S1C8WHlK712
-         c3CA==
-X-Gm-Message-State: AOAM532E8ZaGrtsBMhU6v8RdHUzQCkdlyhtD92dbTzh2ITplLe9nn9qF
-        ryJ+SdqOY6G0STM11vDkgYxc+AL35TZGm9/2PQEh9dm16Jf4V/G6XYkNrF76Ev9I3/dAoZ2jp0D
-        fNyzQDcsb+X/remPcGJmag+cdXLhrlLhB2LhQ4alnQmEZQ3IA556S1htIX4rHlpujQWBCDMAkDQ
-        3vaVc=
-X-Google-Smtp-Source: ABdhPJwyHDqucTmc+UPue6crEsCcACbG7oveCwCT8Lmlx9Whda+foYFa/RGAxgbfWi+BG5EJ1rKALw==
-X-Received: by 2002:a17:90a:5c82:: with SMTP id r2mr12186078pji.69.1605468412993;
-        Sun, 15 Nov 2020 11:26:52 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=e/u2ZoJQbj2IzJl8PjjpVEk1NV/fO64VdkAnbytPHv4=;
+        b=VymLij6xBWHKNLLKW0vqkbuAk9g4kVh/9Pg5m0VLSQB4GmbsrkWYxoUUrIYLuPFX1J
+         W5XID49mBtcL9zEPvH7tRzfObhbMrc+unyTQvm9+QACRNiQrie4S8dBqblXKRyVbqIqq
+         rfvRvkJIW4889cwhEY7p5SPq+nP2PkdlkgZ+IYM8m0nB6Pp6hi8dOzgUy+z5CdTZIv2l
+         XiprHTGAbVCFNU5y7YA9aU3k1aLPFGIKsVWWzBAUqQrqdDodIx2O8OeH+IMkPrZqdzEb
+         hAbwOX4Nu9LVFbvClTYA92kdigpVarNQJ1UgDJ0syXDg+4207Jv4Y4wwALbb7yVfoEeb
+         ABZw==
+X-Gm-Message-State: AOAM532QLA5DQTTIZEKoNfGfHUj0XvEJMmKB6EnxTERv8sL3RZNXNg/u
+        212fD9clwzj7LkJ4FxlOniaG5G4aAK61i3BT8Wg/Tm1mGup8NUlyPpfX0u/mSqg7GfUxKP4eFEs
+        kpzDiSC0m0sKgO0YXsDzvc/x2Bp5J8uCETYFv46vQdhuMknf8pJrsa+obUz1s6TUSjBx4SGdytX
+        /rzc4=
+X-Google-Smtp-Source: ABdhPJwWAH3H1JHO7YQsX+k+Lx9eb1/LfG3BiAhF8pZs7O9HQCOVb2ZrKB4DraMe2541FrfitdOvhw==
+X-Received: by 2002:a17:902:aa8a:b029:d3:c9dd:77d1 with SMTP id d10-20020a170902aa8ab02900d3c9dd77d1mr10221065plr.0.1605468417748;
+        Sun, 15 Nov 2020 11:26:57 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.26.51
+        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.26.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2020 11:26:51 -0800 (PST)
+        Sun, 15 Nov 2020 11:26:56 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>
-Subject: [PATCH 00/17] lpfc: Update lpfc to revision 12.8.0.6
-Date:   Sun, 15 Nov 2020 11:26:29 -0800
-Message-Id: <20201115192646.12977-1-james.smart@broadcom.com>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH 03/17] lpfc: Fix removal of scsi transport device get and put on dev structure
+Date:   Sun, 15 Nov 2020 11:26:32 -0800
+Message-Id: <20201115192646.12977-4-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20201115192646.12977-1-james.smart@broadcom.com>
+References: <20201115192646.12977-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000007d441f05b42a3eed"
+        boundary="000000000000c8534c05b42a3e4f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000007d441f05b42a3eed
+--000000000000c8534c05b42a3e4f
 Content-Transfer-Encoding: 8bit
 
-Update lpfc to revision 12.8.0.6
+The lpfc driver is calling get_device and put_device on scsi_fc_transport
+device structure. When this code was removed, the driver triggered an
+Oops in "scsi_is_host_dev" when the first scsi target was unregistered
+from the transport.
 
-This patch set contains several sets of recoding and refactoring.
+The reason the calls were necessary is that the driver is calling
+scsi_remove_host too early, before the target rports are unregistered
+and the scsi devices disconnected from the scsi_host.  The fc_host was
+torn down during fc_remove_host.
 
-A close look was taken at the driver to identify what was causing
-continual small state machine errors as well other repeatitive issues.
-Code review showed several things and this is the first set of changes
-to address the deficiencies.
+Fix by moving the lpfc_pci_remove_one_s3/s4 calls to scsi_remove_host to
+after the nodes are cleaned up.  Remove the get_device and put_device
+calls and the supporting code.
 
-This set of changes addresses the following items:
+Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_els.c     |  4 ----
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 12 ++----------
+ drivers/scsi/lpfc/lpfc_init.c    | 14 +++++++++-----
+ drivers/scsi/lpfc/lpfc_vport.c   |  6 ++++--
+ 4 files changed, 15 insertions(+), 21 deletions(-)
 
-Remote Port (node/ndlp) handling in the discovery engine:
-  It was rather clear that the implementation of refcounting on the
-  remote port node was improper.  A refcount going to zero didn't
-  simply release the node. Instead other logic kicked into play. This
-  then caused other code to be placed within the discovery engine to
-  for node removal, ... if it was actually removed. What happened in
-  many cases was the node structure continued to exist beyond the
-  existence of the remote port. It was stored in a node list that
-  could then be matched by re-discovery events. And it also caused
-  multiple structures to exist on the node list for the same device.
-
-  So this area has been significantly reworked to go back to a
-  standard ref counting scheme, which of course meant that the base
-  model for when and how to take references had to be re-addressed in
-  the different code flows.
-  
-  And of course, once one thing starts working right, new issues were
-  seen. This brought out inconsistencies on when the node is "freed"
-  around transport devloss callbacks which led to stale pointer
-  accesses which had to be addressed. Another example was NPIV, where
-  it brought out a different handling for nodes on an NPIV vport vs
-  the same nodes on a standard physical port. So this was corrected as
-  well.
-
-  While working on the above, it was rather clear that global host
-  locks were taken for node-specific structure changes and the locking
-  was too coarse. Discovery code was reworked to support a node-level
-  lock.
-
-Native SLI-4 WQE use:
-  The other area that was rather ugly was sli-4 handling. Discovery
-  and SCSI io paths were implemented as iocb's, which is a SLI-3
-  construct.  The code then, when on SLI-4 hardware, converted to SLI-4
-  WQEs to then talk to the hardware. However, the nvme path, which is
-  only supported on SLI-4, was only implemnted with WQEs.  What it
-  meant was: there were very subtle bugs creeping in as SLI-4 data
-  structures didn't fully overlay on the SLI-3 structures; there was
-  a lot of duplication of code in different areas; and with the
-  duplication came differences and confusion.
-
-  This patch set reorganizes the IO paths, which includes abort paths,
-  into a formal division between SLI-3 and SLI-4. The basic style is a
-  common routine is called by a code path, which identifies the hw
-  type, and then vectors into SLI-type specific routines which deal
-  specifically with iocbs or WQEs. With different command types also
-  comes different completion handlers.  Although these changes look
-  like a lot of change it is mostly a large refactoring. Old common
-  layers that performed iocb-specific work was moved to SLI-3-specific
-  routines, and routines were created for SLI-4. For SLI-4, a lot of
-  code came from the nvme routines.
-
-  The end result is the common routines, with SLI-4 being natively
-  supported for ELS and SCSI & NVME initiator io paths.
-
-The patches were cut against Martin's 5.11/scsi-queue tree
-
-
-James Smart (17):
-  lpfc: Rework remote port ref counting and node freeing
-  lpfc: Rework locations of ndlp reference taking
-  lpfc: Fix removal of scsi transport device get and put on dev
-    structure
-  lpfc: Fix refcounting around scsi and nvme transport apis
-  lpfc: Rework remote port lock handling
-  lpfc: Remove ndlp when a PLOGI/ADISC/PRLI/REG_RPI ultimately fails
-  lpfc: Unsolicited ELS leaves node in incorrect state while dropping it
-  lpfc: Fix NPIV discovery and Fabric Node detection
-  lpfc: Fix NPIV Fabric Node reference counting
-  lpfc: Refactor wqe structure definitions for common use
-  lpfc: Enable common wqe_template support for both scsi and nvme
-  lpfc: Enable common send_io interface for SCSI and NVME
-  lpfc: convert scsi path to use common io submission path
-  lpfc: convert scsi io completions to sli-3 and sli-4 handlers
-  lpfc: Convert abort handling to sli-3 and sli-4 handlers
-  lpfc: Update lpfc version to 12.8.0.6
-  lpfc: Update changed file copyrights for 2020
-
- drivers/scsi/lpfc/lpfc.h           |    9 +-
- drivers/scsi/lpfc/lpfc_attr.c      |   19 +-
- drivers/scsi/lpfc/lpfc_bsg.c       |   79 +-
- drivers/scsi/lpfc/lpfc_crtn.h      |   18 +-
- drivers/scsi/lpfc/lpfc_ct.c        |   81 +-
- drivers/scsi/lpfc/lpfc_debugfs.c   |    8 +-
- drivers/scsi/lpfc/lpfc_disc.h      |   45 +-
- drivers/scsi/lpfc/lpfc_els.c       | 1285 +++++++++++++++-------------
- drivers/scsi/lpfc/lpfc_hbadisc.c   |  754 +++++-----------
- drivers/scsi/lpfc/lpfc_hw4.h       |   12 +-
- drivers/scsi/lpfc/lpfc_init.c      |  121 ++-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  215 ++---
- drivers/scsi/lpfc/lpfc_nvme.c      |  326 ++-----
- drivers/scsi/lpfc/lpfc_nvme.h      |    4 +-
- drivers/scsi/lpfc/lpfc_nvmet.c     |   60 +-
- drivers/scsi/lpfc/lpfc_scsi.c      | 1133 ++++++++++++++++++------
- drivers/scsi/lpfc/lpfc_sli.c       |  659 +++++++++-----
- drivers/scsi/lpfc/lpfc_sli.h       |    7 +-
- drivers/scsi/lpfc/lpfc_version.h   |    4 +-
- drivers/scsi/lpfc/lpfc_vport.c     |  128 +--
- 20 files changed, 2719 insertions(+), 2248 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 2d7a4a920ba4..b56dc69ff2b2 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1601,7 +1601,6 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 	u32 keep_nlp_fc4_type = 0;
+ 	struct lpfc_nvme_rport *keep_nrport = NULL;
+ 	int  put_node;
+-	int  put_rport;
+ 	unsigned long *active_rrqs_xri_bitmap = NULL;
+ 
+ 	/* Fabric nodes can have the same WWPN so we don't bother searching
+@@ -1804,13 +1803,10 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
+ 		if (rport) {
+ 			rdata = rport->dd_data;
+ 			put_node = rdata->pnode != NULL;
+-			put_rport = ndlp->rport != NULL;
+ 			rdata->pnode = NULL;
+ 			ndlp->rport = NULL;
+ 			if (put_node)
+ 				lpfc_nlp_put(ndlp);
+-			if (put_rport)
+-				put_device(&rport->dev);
+ 		}
+ 	}
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 9d387fbf65a3..71ef50c65dcf 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -117,7 +117,6 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 	struct lpfc_hba   *phba;
+ 	struct lpfc_work_evt *evtp;
+ 	int  put_node;
+-	int  put_rport;
+ 	unsigned long iflags;
+ 
+ 	rdata = rport->dd_data;
+@@ -142,13 +141,10 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 	 */
+ 	if (vport->load_flag & FC_UNLOADING) {
+ 		put_node = rdata->pnode != NULL;
+-		put_rport = ndlp->rport != NULL;
+ 		rdata->pnode = NULL;
+ 		ndlp->rport = NULL;
+ 		if (put_node)
+ 			lpfc_nlp_put(ndlp);
+-		if (put_rport)
+-			put_device(&rport->dev);
+ 		return;
+ 	}
+ 
+@@ -263,7 +259,6 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+ 		ndlp->rport = NULL;
+ 		if (put_node)
+ 			lpfc_nlp_put(ndlp);
+-		put_device(&rport->dev);
+ 
+ 		return fcf_inuse;
+ 	}
+@@ -284,7 +279,6 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+ 	ndlp->rport = NULL;
+ 	if (put_node)
+ 		lpfc_nlp_put(ndlp);
+-	put_device(&rport->dev);
+ 
+ 	if (ndlp->nlp_type & NLP_FABRIC)
+ 		return fcf_inuse;
+@@ -4190,8 +4184,6 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 				lpfc_nlp_put(ndlp);
+ 			rdata->pnode = NULL;
+ 		}
+-		/* drop reference for earlier registeration */
+-		put_device(&rport->dev);
+ 	}
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_RPORT,
+@@ -4203,7 +4195,7 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		return;
+ 
+ 	ndlp->rport = rport = fc_remote_port_add(shost, 0, &rport_ids);
+-	if (!rport || !get_device(&rport->dev)) {
++	if (!rport) {
+ 		dev_printk(KERN_WARNING, &phba->pcidev->dev,
+ 			   "Warning: fc_remote_port_add failed\n");
+ 		return;
+@@ -4244,6 +4236,7 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	    (rport->scsi_target_id < LPFC_MAX_TARGET)) {
+ 		ndlp->nlp_sid = rport->scsi_target_id;
+ 	}
++
+ 	return;
+ }
+ 
+@@ -5217,7 +5210,6 @@ lpfc_nlp_remove(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		rdata = rport->dd_data;
+ 		rdata->pnode = NULL;
+ 		ndlp->rport = NULL;
+-		put_device(&rport->dev);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index add2eb0d729b..72448287a3d1 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12499,12 +12499,15 @@ lpfc_pci_remove_one_s3(struct pci_dev *pdev)
+ 		}
+ 	lpfc_destroy_vport_work_array(phba, vports);
+ 
+-	/* Remove FC host and then SCSI host with the physical port */
++	/* Remove FC host with the physical port */
+ 	fc_remove_host(shost);
+-	scsi_remove_host(shost);
+ 
++	/* Clean up all nodes, mailboxes and IOs. */
+ 	lpfc_cleanup(vport);
+ 
++	/* Remove the shost now that the devices connections are lost. */
++	scsi_remove_host(shost);
++
+ 	/*
+ 	 * Bring down the SLI Layer. This step disable all interrupts,
+ 	 * clears the rings, discards all mailbox commands, and resets
+@@ -13342,7 +13345,6 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
+ 	vport->load_flag |= FC_UNLOADING;
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+-	/* Free the HBA sysfs attributes */
+ 	lpfc_free_sysfs_attr(vport);
+ 
+ 	/* Release all the vports against this physical port */
+@@ -13355,9 +13357,8 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
+ 		}
+ 	lpfc_destroy_vport_work_array(phba, vports);
+ 
+-	/* Remove FC host and then SCSI host with the physical port */
++	/* Remove FC host with the physical port */
+ 	fc_remove_host(shost);
+-	scsi_remove_host(shost);
+ 
+ 	/* Perform ndlp cleanup on the physical port.  The nvme and nvmet
+ 	 * localports are destroyed after to cleanup all transport memory.
+@@ -13370,6 +13371,9 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
+ 	if (phba->cfg_xri_rebalancing)
+ 		lpfc_destroy_multixri_pools(phba);
+ 
++	/* Remove the shost now that the devices connections are lost. */
++	scsi_remove_host(shost);
++
+ 	/*
+ 	 * Bring down the SLI Layer. This step disables all interrupts,
+ 	 * clears the rings, discards all mailbox commands, and resets
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index 6ab78131b94d..0261495b44d3 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -664,9 +664,8 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 		ns_ndlp_referenced = true;
+ 	}
+ 
+-	/* Remove FC host and then SCSI host with the vport */
++	/* Remove FC host to break driver binding. */
+ 	fc_remove_host(shost);
+-	scsi_remove_host(shost);
+ 
+ 	ndlp = lpfc_findnode_did(phba->pport, Fabric_DID);
+ 
+@@ -747,6 +746,9 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 	}
+ 
+ 	lpfc_cleanup(vport);
++
++	/* Remove scsi host now.  The nodes are cleaned up. */
++	scsi_remove_host(shost);
+ 	lpfc_sli_host_down(vport);
+ 
+ 	lpfc_stop_vport_timers(vport);
 -- 
 2.26.2
 
 
---0000000000007d441f05b42a3eed
+--000000000000c8534c05b42a3e4f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -255,14 +352,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgHh9/dCWIA/ZxYQza
-KNG0l9RZz58iibH8emqcVG9NcYEwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE1MTkyNjUzWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgcWAcahPwRInJw8CE
+EitIG5deoxDFBy8k2EwRBQuADnIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE1MTkyNjU4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBABZ1QZixL7ctsGW1XjYqo2MW0bpzMpbpuGre
-ygksmu9PPlcELB7Qe4uYPq+Kd1HKqYfyXXDkYdwKOKAfs7ZWv0M9jppb9b+sn6xubC3aR81WJ7Qn
-ehrDCa0wqQ/PSCaKnaRZ8JRllKDG7umnvcWSQybHatmlWOK2rt/PTbHjMB78qVMZfSJPwitvc09f
-4UJc/4tGNc4LiFiktVpJdUGuSHA8tjG7mk3bCtTGTqjxiP2bEB84u9MCPyHUHJyCNH+q3IKQ+6X2
-ItSxPWYxZ7xvBDIyv+PsL73V1M6U6Y+XZVq9A3T8MMEp79hTOKdXLcK7DXP1Rb2FbaOCRkCUJL44
-Idk=
---0000000000007d441f05b42a3eed--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAK6a5i3YsEiXvM50NthhZULMKMfjLcMOJ6sk
+b1OuygNKz0hTcNGXgyksQyWbEjbknT8s0ZASGOpIIjtAQ3YdFBZh5MvUTlN3xQiNQebE3taxTSBb
+V+I6EV8ST1OuM+jKfJtXEFJYXFR8fezc9VmY6AtSjmkeo2jUojCayxBsd0t+bAyFGTLJ5RdU6HiB
+FfEswPggtCyB6BJimuphcAyBVv6Dn9X9yHWh07qL47a2tMutSZAQCzL9c8ygKww21ah+zVUhfc9x
+eqJufFT3y0fash04V3lHjD45dU0Lla1DVTcTznj5z6HFK4kF4FrzFrxV4a1vh1l9DNKzPxhq3OmT
+L0c=
+--000000000000c8534c05b42a3e4f--
