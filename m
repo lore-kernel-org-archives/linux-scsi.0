@@ -7,265 +7,110 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84DA4C64E7A
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED1FC64E7D
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52AD9223BF
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61DA1223C7
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qpg+tgzy"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DzDBJEq0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727884AbgKOT1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Nov 2020 14:27:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38742 "EHLO
+        id S1727892AbgKOT1T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Nov 2020 14:27:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727879AbgKOT1L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:27:11 -0500
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3BA5C0617A6
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:11 -0800 (PST)
-Received: by mail-pl1-x644.google.com with SMTP id g11so7012696pll.13
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:11 -0800 (PST)
+        with ESMTP id S1727888AbgKOT1R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:27:17 -0500
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE57CC0613D2
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:17 -0800 (PST)
+Received: by mail-pg1-x544.google.com with SMTP id i13so10762459pgm.9
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=zjOJPDeBX3AXCrjD5CQFZUFYeDftOQGdV4WLWjobvEk=;
-        b=Qpg+tgzybkiJbiMDMvIE8jzgq/5j9pBRTCm2KddVSbABRE2eV6/fQDP6yblfzcqQZW
-         1oN8KcsXFJO6FvGuI+Go14XDQORlmSpVSYfp37SZu71mw3rUT6Yw0dGMOMsvO88NeyFx
-         kjdfFQbAX+smSWELQrkVQhQE12h2b1lXMEruo=
+        bh=1ugZKNecJ1jJSKemFdD2RY8QNo5m0OXotOhoJUcd8Pk=;
+        b=DzDBJEq0fErxV5r0Y6Dns3Z2HfsgYl4KhI9G78gELcHHTq/aYohduYLIZXmb5Bq5yk
+         h0+Yx3QeZHREBQUlBff4xouZYNLp9IJsik3ZbDt2YHYXulGBUKuxWOv+G4Rrvx8FShgs
+         /wZuIq0TC3/Im3Iho4rLEZTTrtn/xS6R9SiiA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=zjOJPDeBX3AXCrjD5CQFZUFYeDftOQGdV4WLWjobvEk=;
-        b=haaG3WG8oPKZqolUOZSMuZzrDQa61OHAW5h0nKZkjBDLX9mN4uQQArLzMNArJjIHUU
-         VRfNads/FNWknkwNuxe23rfq1D+Iz63NvT7iUT3M9KQzV35wzmZoPWLOUL1cUtlwiBxl
-         8k2fO/IXMgd/1V/CdTEE85UXYHJHNOJbZfdcFUmlPGx4mZdE0+Ja5bT4XMM+bU00peM5
-         6qkHjPdDmnZjfzEzRIujF4ljls9XfM4vWcZPkU4fhPihw3N/sS+ihCudkJC1+vv1Aaad
-         U6/BeIVWhRNU4JD/o9ZCcsvlBT/af6m4yh7sJctwgUYsShRKSsqnlo6V6i6ouAy6/m6c
-         rivg==
-X-Gm-Message-State: AOAM531fUOi0pcfeMhFCokm3Zn6oTBQheQYTLRA8K7fFF6tTKqFJzk9u
-        vVwchzNK3XEodYSKRd0xD3dSscCyK3V6NVCd3g4R6lIr+PKvg04kB8ui0yDhjnE9rNB/K0j5FMS
-        0Rg/nn9hfR1jNiDmGIySOi7kvnIxb3rgFv3rW0f9XOmCSX3ap0bJ1PsBuTiYiEbLPGz2yhGJv2U
-        yfYzs=
-X-Google-Smtp-Source: ABdhPJxHBljHfTkc0dsJ4aEDfn2BrDW9kdNC09QDzbYUvHKoxX8IXFufsMbkaoo1uMiPYt6PaBWb0w==
-X-Received: by 2002:a17:902:6b84:b029:d8:d13d:14e with SMTP id p4-20020a1709026b84b02900d8d13d014emr10722880plk.29.1605468430477;
-        Sun, 15 Nov 2020 11:27:10 -0800 (PST)
+        bh=1ugZKNecJ1jJSKemFdD2RY8QNo5m0OXotOhoJUcd8Pk=;
+        b=accasnFYFSzDL3BWm7aXS0KFb8AETS0KFU5y9V0J666t3sbOZ06KqtndzTQu6LhRn2
+         ePqcCVgJztoFXibssoilCmlGJJIre0+N/Y4iNaRTE0P5D0/oM1IRvN0/Dpy43YWabycm
+         FwoVJF8LJsePygvgYaJ+HUAM7bmbF7qgJIV/50wxv6og9QWlhAnsYV4/sIrPetJdn9ue
+         qIIRofa95+gLJMaP4ICxlXsKbifopAUu/s5fdMt0S3P6PR10Xw2cXpgr6zFstsZPOYGI
+         mq0iDcwOlfCPnX6DhyVVSoqwIcJ3i+uPaE2x6NWB2vMEf7nxkVkymdMh8M3qd44IhPAd
+         e4Hw==
+X-Gm-Message-State: AOAM532X5oqHJkifEVKt5LfhBH1D3kJGR1shqWYyKi6dSxIs2v6/tmhK
+        E+VYZ4muo8uXR7UJ+UNdKALD9/m2gj60yJcN4Duopq25uNFzRF8ZCPp9TIw7blz+KS/THvxDd0j
+        VX1Zaog06ihrlzgBIskVtFa1W6AC0vwumaCTGKYzyiyiH3Hg+G1yY0dGgqGx7+LGwFkyyurQhwf
+        SSDQg=
+X-Google-Smtp-Source: ABdhPJzdn/7mHQcNSe4CxuACs8ZIQs7tk7aj06jj2NShZC85v45D/oGe3/ui+ShlFZyFrh5sLQBzLA==
+X-Received: by 2002:a17:90a:a393:: with SMTP id x19mr12297049pjp.68.1605468436240;
+        Sun, 15 Nov 2020 11:27:16 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.27.09
+        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.27.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2020 11:27:09 -0800 (PST)
+        Sun, 15 Nov 2020 11:27:15 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 12/17] lpfc: Enable common send_io interface for SCSI and NVME
-Date:   Sun, 15 Nov 2020 11:26:41 -0800
-Message-Id: <20201115192646.12977-13-james.smart@broadcom.com>
+Subject: [PATCH 16/17] lpfc: Update lpfc version to 12.8.0.6
+Date:   Sun, 15 Nov 2020 11:26:45 -0800
+Message-Id: <20201115192646.12977-17-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201115192646.12977-1-james.smart@broadcom.com>
 References: <20201115192646.12977-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008918cf05b42a3f80"
+        boundary="000000000000e4a78b05b42a3fe5"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008918cf05b42a3f80
+--000000000000e4a78b05b42a3fe5
 Content-Transfer-Encoding: 8bit
 
-To setup up common use by the SCSI and NVME io paths, create a new
-routine that issues FCP io commands which can be used by either protocol.
-The new routine addresses sli-3 vs sli-4 differences within its
-implementation.
-
-Replace the (sli-3 centric) iocb routine in the scsi path with this new
-wqe-centric common routine.
+Update lpfc version to 12.8.0.6
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  3 ++
- drivers/scsi/lpfc/lpfc_crtn.h |  2 +
- drivers/scsi/lpfc/lpfc_scsi.c |  6 ++-
- drivers/scsi/lpfc/lpfc_sli.c  | 87 +++++++++++++++++++++++++++++++++++
- 4 files changed, 96 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 2b92aa7a0762..63a87c103bc5 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -669,6 +669,9 @@ struct lpfc_hba {
- 	int (*__lpfc_sli_issue_iocb)
- 		(struct lpfc_hba *, uint32_t,
- 		 struct lpfc_iocbq *, uint32_t);
-+	int (*__lpfc_sli_issue_fcp_io)
-+		(struct lpfc_hba *phba, uint32_t ring_number,
-+		 struct lpfc_iocbq *piocb, uint32_t flag);
- 	void (*__lpfc_sli_release_iocbq)(struct lpfc_hba *,
- 			 struct lpfc_iocbq *);
- 	int (*lpfc_hba_down_post)(struct lpfc_hba *phba);
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 03560478f2ce..2b1540c0c82e 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -320,6 +320,8 @@ void lpfc_sli_def_mbox_cmpl(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *, LPFC_MBOXQ_t *);
- int lpfc_sli_issue_iocb(struct lpfc_hba *, uint32_t,
- 			struct lpfc_iocbq *, uint32_t);
-+int lpfc_sli_issue_fcp_io(struct lpfc_hba *phba, uint32_t ring_number,
-+			  struct lpfc_iocbq *piocb, uint32_t flag);
- int lpfc_sli4_issue_wqe(struct lpfc_hba *phba, struct lpfc_sli4_hdw_queue *qp,
- 			struct lpfc_iocbq *pwqe);
- struct lpfc_sglq *__lpfc_clear_active_sglq(struct lpfc_hba *phba, uint16_t xri);
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index bd605bb87dfc..5ec1fc1372fa 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4634,8 +4634,10 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 	if (unlikely(phba->hdwqstat_on & LPFC_CHECK_SCSI_IO))
- 		this_cpu_inc(phba->sli4_hba.c_stat->xmt_io);
- #endif
--	err = lpfc_sli_issue_iocb(phba, LPFC_FCP_RING,
--				  &lpfc_cmd->cur_iocbq, SLI_IOCB_RET_IOCB);
-+	/* Issue IO to adapter */
-+	err = lpfc_sli_issue_fcp_io(phba, LPFC_FCP_RING,
-+				    &lpfc_cmd->cur_iocbq,
-+				    SLI_IOCB_RET_IOCB);
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	if (start) {
- 		lpfc_cmd->ts_cmd_start = start;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index b1d5b4484015..31c524a3373f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -276,6 +276,7 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe128 *wqe)
- 	/* sanity check on queue memory */
- 	if (unlikely(!q))
- 		return -ENOMEM;
-+
- 	temp_wqe = lpfc_sli4_qe(q, q->host_index);
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index d91ee125abd0..234dca60995b 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
- 	/* If the host has not yet processed the next entry then we are done */
-@@ -10228,6 +10229,71 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
- 	return 0;
- }
+-#define LPFC_DRIVER_VERSION "12.8.0.5"
++#define LPFC_DRIVER_VERSION "12.8.0.6"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
-+/**
-+ * __lpfc_sli_issue_fcp_io_s3 - SLI3 device for sending fcp io iocb
-+ * @phba: Pointer to HBA context object.
-+ * @ring_number: SLI ring number to issue wqe on.
-+ * @piocb: Pointer to command iocb.
-+ * @flag: Flag indicating if this command can be put into txq.
-+ *
-+ * __lpfc_sli_issue_fcp_io_s3 is wrapper function to invoke lockless func to
-+ * send  an iocb command to an HBA with SLI-4 interface spec.
-+ *
-+ * This function takes the hbalock before invoking the lockless version.
-+ * The function will return success after it successfully submit the wqe to
-+ * firmware or after adding to the txq.
-+ **/
-+static int
-+__lpfc_sli_issue_fcp_io_s3(struct lpfc_hba *phba, uint32_t ring_number,
-+			   struct lpfc_iocbq *piocb, uint32_t flag)
-+{
-+	unsigned long iflags;
-+	int rc;
-+
-+	spin_lock_irqsave(&phba->hbalock, iflags);
-+	rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
-+
-+	return rc;
-+}
-+
-+/**
-+ * __lpfc_sli_issue_fcp_io_s4 - SLI4 device for sending fcp io wqe
-+ * @phba: Pointer to HBA context object.
-+ * @ring_number: SLI ring number to issue wqe on.
-+ * @piocb: Pointer to command iocb.
-+ * @flag: Flag indicating if this command can be put into txq.
-+ *
-+ * __lpfc_sli_issue_fcp_io_s4 is used by other functions in the driver to issue
-+ * an wqe command to an HBA with SLI-4 interface spec.
-+ *
-+ * This function is a lockless version. The function will return success
-+ * after it successfully submit the wqe to firmware or after adding to the
-+ * txq.
-+ **/
-+static int
-+__lpfc_sli_issue_fcp_io_s4(struct lpfc_hba *phba, uint32_t ring_number,
-+			   struct lpfc_iocbq *piocb, uint32_t flag)
-+{
-+	struct lpfc_sli_ring *pring;
-+	struct lpfc_queue *eq;
-+	unsigned long iflags;
-+	int rc;
-+
-+	eq = phba->sli4_hba.hdwq[piocb->hba_wqidx].hba_eq;
-+
-+	pring = lpfc_sli4_calc_ring(phba, piocb);
-+	if (unlikely(pring == NULL))
-+		return IOCB_ERROR;
-+
-+	spin_lock_irqsave(&pring->ring_lock, iflags);
-+	rc = __lpfc_sli_issue_iocb(phba, ring_number, piocb, flag);
-+	spin_unlock_irqrestore(&pring->ring_lock, iflags);
-+
-+	lpfc_sli4_poll_eq(eq, LPFC_POLL_FASTPATH);
-+	return rc;
-+}
-+
- /**
-  * __lpfc_sli_issue_iocb_s4 - SLI4 device lockless ver of lpfc_sli_issue_iocb
-  * @phba: Pointer to HBA context object.
-@@ -10324,6 +10390,25 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
- 	return 0;
- }
+ /* Used for SLI 2/3 */
+@@ -32,6 +32,6 @@
  
-+/**
-+ * lpfc_sli_issue_fcp_io - Wrapper func for issuing fcp i/o
-+ *
-+ * This routine wraps the actual fcp i/o function for issusing WQE for sli-4
-+ * or IOCB for sli-3  function.
-+ * pointer from the lpfc_hba struct.
-+ *
-+ * Return codes:
-+ * IOCB_ERROR - Error
-+ * IOCB_SUCCESS - Success
-+ * IOCB_BUSY - Busy
-+ **/
-+int
-+lpfc_sli_issue_fcp_io(struct lpfc_hba *phba, uint32_t ring_number,
-+		      struct lpfc_iocbq *piocb, uint32_t flag)
-+{
-+	return phba->__lpfc_sli_issue_fcp_io(phba, ring_number, piocb, flag);
-+}
-+
- /*
-  * __lpfc_sli_issue_iocb - Wrapper func of lockless version for issuing iocb
-  *
-@@ -10359,10 +10444,12 @@ lpfc_sli_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 	case LPFC_PCI_DEV_LP:
- 		phba->__lpfc_sli_issue_iocb = __lpfc_sli_issue_iocb_s3;
- 		phba->__lpfc_sli_release_iocbq = __lpfc_sli_release_iocbq_s3;
-+		phba->__lpfc_sli_issue_fcp_io = __lpfc_sli_issue_fcp_io_s3;
- 		break;
- 	case LPFC_PCI_DEV_OC:
- 		phba->__lpfc_sli_issue_iocb = __lpfc_sli_issue_iocb_s4;
- 		phba->__lpfc_sli_release_iocbq = __lpfc_sli_release_iocbq_s4;
-+		phba->__lpfc_sli_issue_fcp_io = __lpfc_sli_issue_fcp_io_s4;
- 		break;
- 	default:
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+ #define LPFC_MODULE_DESC "Emulex LightPulse Fibre Channel SCSI driver " \
+ 		LPFC_DRIVER_VERSION
+-#define LPFC_COPYRIGHT "Copyright (C) 2017-2019 Broadcom. All Rights " \
++#define LPFC_COPYRIGHT "Copyright (C) 2017-2020 Broadcom. All Rights " \
+ 		"Reserved. The term \"Broadcom\" refers to Broadcom Inc. " \
+ 		"and/or its subsidiaries."
 -- 
 2.26.2
 
 
---0000000000008918cf05b42a3f80
+--000000000000e4a78b05b42a3fe5
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -335,14 +180,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg4aZcKjGeY5V8H+90
-D1fKoHk1YH66lUA5gahiej1WmwUwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE1MTkyNzExWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgjHKihunOIiDnSsGp
+tW25piGIvsLw9CqA+3Qy2+hzR9EwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE1MTkyNzE3WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAFk47SRxedW3R4anl25ZaZJciySdDOStzTcq
-qO7JyXo1PfJhG0xZnhu5ZaDYRJ/OlaiwWIk03Ma1bO9KbxjIjfgOQNbPejLtZ8tlmRdGyvJUPY/1
-YvfiOGhTx5vyYQhkNZF+Vi/5pe7iHAh7Utl24IC3L9MCJXORdw79orlUh7lgZJvepVbRB3L2FhTj
-KfARpJKeEi4Ys5JMjXKS6ZLPkWND3dYefDsntzTh9fkQbOYa6AwVR/yjH7Kn54Cn3gnzKPMg15x4
-xPYLIvKT4Ef4Z/dCDpV+PSGNpW5FwlovSui1CcRK4WnAA5PxD6O50Jx54JWUliwqEpD6MCKC2DZc
-jY8=
---0000000000008918cf05b42a3f80--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJeBJJCg2rAVrt1E+UrJzwwzGWA4jAYEQsNx
+CE6Hfga0BWeEj0tyuGcWe18QIihy8Zo2ucQGeigcvlp9FhEksFyxQnuQo/qy2upcrprvvE9szT4a
+mrevwQVMHCn3et4yNk/8FU2FQd1ofRKGJ2M/mgcvnuKS8joo2mVy3pYvsibo6KaWSNN5ZblryxYY
+1izVw+J3u7f+kVo6IrzuPvdcS+amuRhMQLHNJ6yoKyhz4M9epbHxMPhzXBxLHp6Wz2I2At/gRgQ1
+CGxrHbOjhXpHcFZQ9uD02HNtkX3GQWA/02lnXopCa5UW187p/n0R5AuQ1ufbfC4MsyyCJpBBTFC2
+aSQ=
+--000000000000e4a78b05b42a3fe5--
