@@ -7,324 +7,421 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 434AEC64E75
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE32C64E7C
 	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D31E22450
+	by mail.kernel.org (Postfix) with ESMTP id 73F1322384
 	for <linux-scsi@archiver.kernel.org>; Sun, 15 Nov 2020 19:27:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fQ4LuqoZ"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="N03FBSyb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727881AbgKOT1M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727883AbgKOT1M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 15 Nov 2020 14:27:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38722 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727876AbgKOT1I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:27:08 -0500
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BAB1C0613CF
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:07 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id 131so806902pfb.9
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:07 -0800 (PST)
+        with ESMTP id S1727861AbgKOT1K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 14:27:10 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8740DC0613D2
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:10 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id c66so11359293pfa.4
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2020 11:27:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=uXD0A4RB1f/zcqW+dLYMOF60xigJE4xgFRURHsQQOZg=;
-        b=fQ4LuqoZwuDy3vhPuu+cI2sFRSzv4vI337zQlZflx+9lSOApisLW/JuxWk/KUdC0UI
-         lhpB3m/isJS1VHDAaPXy7SgE46FbNdMi1LLk/2JZXD6/Iy+qvYwhYx0VPmXSUqcEpRhi
-         m+SElA3aod4X8Jxpv0NPzeu152q12URL8AZcs=
+        bh=oah2QsHwcMd8GPh0MHUWkZhxXfedUa1zp9SbiHkXdZQ=;
+        b=N03FBSybDZl7kQaePmAClOV9oNOXYOoF2BjOYveBXna63R0MHtJkOF0jVmftpGuRGm
+         0PabfrKK77ndQfuvJTg+h86D/n7NrGxthcL1fBc81NkQ7Y+IjSvgUSfa8g3YscamXsBw
+         QVv9BPWBhckZGs2xa16NV+qO94/Khxz+3iwcw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=uXD0A4RB1f/zcqW+dLYMOF60xigJE4xgFRURHsQQOZg=;
-        b=LXtO0T33QQ+orQJ3JWZm3NwxiChN8TBY2eP2KVMYuSs4Nr7R5baj+fgEJpZxMshraQ
-         j+QolVuCGxThsUU6UHdJYqoNWnpo+YeXrEwaQR40fh3bUOWHFcdes6R1I2VF80Iubx37
-         PsONxAyyVPxnJAdU9WxzFz+AWO9ISqmMvZ3QO9iBsod/W4GzeIelkj7VPcnju+nxVLSF
-         FTb1jRIgR4JLW6cqV74VouH1jrYtZnXabrENdybeEzN/f/4DE0ad1su96PcIyRE8lM3i
-         ivUh3kWaoXyyVaUDxgUSBhPwJhTYxrdM8XRj4SeI+hfvDz/T6FBm8SVTH5HbEXi/G7qP
-         CjtQ==
-X-Gm-Message-State: AOAM531bB2Z3GEOkd6FQ1weAQp0x2UGmucFaZC3eWwgsrfogcz4Tl9E/
-        6+865RCrRKGO/rHIuAz7HpNSoR8nQiPdJRHnz8213IGiq4Lfq3FXWxSO5/Xh46AwrwL0LED3zkn
-        YZfuVsCVuFPOC53XqOqttgx/511cJvT8ryMe0DaiJNltoFg/fMSABKMiUYGV4AeMkPjYXPw5NVw
-        IRyGk=
-X-Google-Smtp-Source: ABdhPJwe0e3lU9y6P19crvCWLOKeFmIVsty/xkpJNfxPhEc86wEsjuBtoC906C4JpHWg0Bx1heyXyg==
-X-Received: by 2002:a62:7c95:0:b029:18c:5002:a1ab with SMTP id x143-20020a627c950000b029018c5002a1abmr10705922pfc.40.1605468426228;
-        Sun, 15 Nov 2020 11:27:06 -0800 (PST)
+        bh=oah2QsHwcMd8GPh0MHUWkZhxXfedUa1zp9SbiHkXdZQ=;
+        b=FVl7R29VWZoZ2nFkQXDH2yTGbVMJbenGdKQVs5TNbikDCRuOzIgQI1uRYBNYwB8mqV
+         Qh2TLOqwerXQAJbycsYduo7EdI6FwnclIFgo3CnM2wbFLd4mt2b6O9ijGqD3NJKKl4Kr
+         Axs6gcg5IBTaXqwb3mIjTUHW6h7p7TSiBhq8CcZrAdCg/c4KC2IBG6mMewSeyt0vp4VD
+         YzF3I6I/VwEzH1JxqBFAnpYto8GGWMeqWoIMh/9iyMH5yTGfM60lLjnhMrQCeIKUGQCt
+         mNuoa3/Rtyr3Y3b2XUzai2cjro9npvqvRHHK0mIWEn77Qxev2dtf7udWPulBOTwIFrWd
+         KQow==
+X-Gm-Message-State: AOAM533tOQyz1P9JUUtGYt1R4y7m1uJZJ1VRY1kgTkKtN6+kBr+f7Fd5
+        2qU2NmHQzhHwOvAhSAXse3SS75hnd2m8gOwk0MEF9OhcJ54OhiMeKf0Uc65U8a9nqeurBctDQ9K
+        INYQcAgAfkuutj/Ay8Wf4tTdQoBNVNam4vrwvaY8v4CMLCO0MszrUioUD89aVG9a+srVGahoxPb
+        eEDHU=
+X-Google-Smtp-Source: ABdhPJzaER+sPCWva599IpCgYDoDqpOqhr52RuBp09V2puEnE+0VN28Zf2uL86cntCrC0vbQZb2KCg==
+X-Received: by 2002:aa7:8430:0:b029:18b:b3f5:ea4b with SMTP id q16-20020aa784300000b029018bb3f5ea4bmr10889829pfn.61.1605468429197;
+        Sun, 15 Nov 2020 11:27:09 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.27.04
+        by smtp.gmail.com with ESMTPSA id v126sm15864604pfb.137.2020.11.15.11.27.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2020 11:27:05 -0800 (PST)
+        Sun, 15 Nov 2020 11:27:08 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 09/17] lpfc: Fix NPIV Fabric Node reference counting
-Date:   Sun, 15 Nov 2020 11:26:38 -0800
-Message-Id: <20201115192646.12977-10-james.smart@broadcom.com>
+Subject: [PATCH 11/17] lpfc: Enable common wqe_template support for both scsi and nvme
+Date:   Sun, 15 Nov 2020 11:26:40 -0800
+Message-Id: <20201115192646.12977-12-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201115192646.12977-1-james.smart@broadcom.com>
 References: <20201115192646.12977-1-james.smart@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000466ee005b42a3f68"
+        boundary="00000000000074563005b42a3f9d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000466ee005b42a3f68
+--00000000000074563005b42a3f9d
 Content-Transfer-Encoding: 8bit
 
-While testing initiator-side cable swaps with NPIV, oops occur.
-The reference counts for the Fabric nodes on the NPIV vports isn't
-balanced, resulting in premature node removal.
-
-The following fixes were made:
-- Removed the FC_LBIT check in lpfc_linkup_port. This removed the special
-  case for vports that didn't have them clean up just like the physical
-  port.
-- Removed the unreg_rpi call in lpfc_cleanup_node. In this section, the
-  node is being removed in the context of a reference count release
-  and a mailbox command can't be issued at this point.
-- Remove special case handling in the default mailbox completion handler
-  that allowed the skipping of a node reference. Now, reference counting
-  always requires the removal of the reference.
-- Move the location of the DEVICE_RM event is done during LOGO handling
-  as the driver has additional work to do on the ndlp before puts/releases
-  can be performed.
+The driver is currently using sli-4 wqe templates only for NVME.
+Refactor the template and the placement of the service routine
+so that it can be used by both SCSI and NVME.
 
 Co-developed-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c     | 47 +++++++++++++++++---------------
- drivers/scsi/lpfc/lpfc_hbadisc.c | 29 ++++++++------------
- drivers/scsi/lpfc/lpfc_init.c    |  6 ++--
- drivers/scsi/lpfc/lpfc_sli.c     | 10 +++++--
- 4 files changed, 46 insertions(+), 46 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h |   5 +-
+ drivers/scsi/lpfc/lpfc_init.c |   2 +-
+ drivers/scsi/lpfc/lpfc_nvme.c | 133 +---------------------------------
+ drivers/scsi/lpfc/lpfc_sli.c  | 126 ++++++++++++++++++++++++++++++++
+ 4 files changed, 134 insertions(+), 132 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 6fc42c978730..48095bebd47b 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2835,8 +2835,9 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	/* LOGO completes to NPort <nlp_DID> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "0105 LOGO completes to NPort x%x "
--			 "Data: x%x x%x x%x x%x\n",
--			 ndlp->nlp_DID, irsp->ulpStatus, irsp->un.ulpWord[4],
-+			 "refcnt %d nflags x%x Data: x%x x%x x%x x%x\n",
-+			 ndlp->nlp_DID, kref_read(&ndlp->kref), ndlp->nlp_flag,
-+			 irsp->ulpStatus, irsp->un.ulpWord[4],
- 			 irsp->ulpTimeout, vport->num_disc_nodes);
- 
- 	if (lpfc_els_chk_latt(vport)) {
-@@ -2844,17 +2845,6 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		goto out;
- 	}
- 
--	/* Check to see if link went down during discovery */
--	if (ndlp->nlp_flag & NLP_TARGET_REMOVE) {
--	        /* NLP_EVT_DEVICE_RM should unregister the RPI
--		 * which should abort all outstanding IOs.
--		 */
--		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
--					NLP_EVT_DEVICE_RM);
--		skip_recovery = 1;
--		goto out;
--	}
--
- 	/* The LOGO will not be retried on failure.  A LOGO was
- 	 * issued to the remote rport and a ACC or RJT or no Answer are
- 	 * all acceptable.  Note the failure and move forward with
-@@ -2876,6 +2866,19 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	/* Call state machine. This will unregister the rpi if needed. */
- 	lpfc_disc_state_machine(vport, ndlp, cmdiocb, NLP_EVT_CMPL_LOGO);
- 
-+	/* The driver sets this flag for an NPIV instance that doesn't want to
-+	 * log into the remote port.
-+	 */
-+	if (ndlp->nlp_flag & NLP_TARGET_REMOVE) {
-+		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
-+					NLP_EVT_DEVICE_RM);
-+		lpfc_els_free_iocb(phba, cmdiocb);
-+		lpfc_nlp_put(ndlp);
-+
-+		/* Presume the node was released. */
-+		return;
-+	}
-+
- out:
- 	/* Driver is done with the IO.  */
- 	lpfc_els_free_iocb(phba, cmdiocb);
-@@ -4399,10 +4402,10 @@ lpfc_cmpl_els_logo_acc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		irsp->ulpStatus, irsp->un.ulpWord[4], ndlp->nlp_DID);
- 	/* ACC to LOGO completes to NPort <nlp_DID> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--			 "0109 ACC to LOGO completes to NPort x%x "
-+			 "0109 ACC to LOGO completes to NPort x%x refcnt %d"
- 			 "Data: x%x x%x x%x\n",
--			 ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
--			 ndlp->nlp_rpi);
-+			 ndlp->nlp_DID, kref_read(&ndlp->kref), ndlp->nlp_flag,
-+			 ndlp->nlp_state, ndlp->nlp_rpi);
- 
- 	if (ndlp->nlp_state == NLP_STE_NPR_NODE) {
- 		/* NPort Recovery mode or node is just allocated */
-@@ -8650,9 +8653,9 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	/* ELS command <elsCmd> received from NPORT <did> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			 "0112 ELS command x%x received from NPORT x%x "
--			 "Data: x%x x%x x%x x%x\n",
--			cmd, did, vport->port_state, vport->fc_flag,
--			vport->fc_myDID, vport->fc_prevDID);
-+			 "refcnt %d Data: x%x x%x x%x x%x\n",
-+			 cmd, did, kref_read(&ndlp->kref), vport->port_state,
-+			 vport->fc_flag, vport->fc_myDID, vport->fc_prevDID);
- 
- 	/* reject till our FLOGI completes or PLOGI assigned DID via PT2PT */
- 	if ((vport->port_state < LPFC_FABRIC_CFG_LINK) &&
-@@ -9144,9 +9147,9 @@ lpfc_do_scr_ns_plogi(struct lpfc_hba *phba, struct lpfc_vport *vport)
- 	spin_lock_irq(shost->host_lock);
- 	if (vport->fc_flag & FC_DISC_DELAYED) {
- 		spin_unlock_irq(shost->host_lock);
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"3334 Delay fc port discovery for %d seconds\n",
--				phba->fc_ratov);
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
-+				 "3334 Delay fc port discovery for %d secs\n",
-+				 phba->fc_ratov);
- 		mod_timer(&vport->delayed_disc_tmo,
- 			jiffies + msecs_to_jiffies(1000 * phba->fc_ratov));
- 		return;
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index f3cf988733c2..4c5a0ffec86f 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -4810,8 +4810,14 @@ lpfc_set_unreg_login_mbx_cmpl(struct lpfc_hba *phba, struct lpfc_vport *vport,
- {
- 	unsigned long iflags;
- 
-+	/* Driver always gets a reference on the mailbox job
-+	 * in support of async jobs.
-+	 */
-+	mbox->ctx_ndlp = lpfc_nlp_get(ndlp);
-+	if (!mbox->ctx_ndlp)
-+		return;
-+
- 	if (ndlp->nlp_flag & NLP_ISSUE_LOGO) {
--		mbox->ctx_ndlp = ndlp;
- 		mbox->mbox_cmpl = lpfc_nlp_logo_unreg;
- 
- 	} else if (phba->sli_rev == LPFC_SLI_REV4 &&
-@@ -4819,7 +4825,6 @@ lpfc_set_unreg_login_mbx_cmpl(struct lpfc_hba *phba, struct lpfc_vport *vport,
- 		    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
- 				      LPFC_SLI_INTF_IF_TYPE_2) &&
- 		    (kref_read(&ndlp->kref) > 0)) {
--		mbox->ctx_ndlp = lpfc_nlp_get(ndlp);
- 		mbox->mbox_cmpl = lpfc_sli4_unreg_rpi_cmpl_clr;
- 	} else {
- 		if (vport->load_flag & FC_UNLOADING) {
-@@ -4828,9 +4833,7 @@ lpfc_set_unreg_login_mbx_cmpl(struct lpfc_hba *phba, struct lpfc_vport *vport,
- 				ndlp->nlp_flag |= NLP_RELEASE_RPI;
- 				spin_unlock_irqrestore(&ndlp->lock, iflags);
- 			}
--			lpfc_nlp_get(ndlp);
- 		}
--		mbox->ctx_ndlp = ndlp;
- 		mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
- 	}
- }
-@@ -4888,6 +4891,11 @@ lpfc_unreg_rpi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 			lpfc_unreg_login(phba, vport->vpi, rpi, mbox);
- 			mbox->vport = vport;
- 			lpfc_set_unreg_login_mbx_cmpl(phba, vport, ndlp, mbox);
-+			if (!mbox->ctx_ndlp) {
-+				mempool_free(mbox, phba->mbox_mem_pool);
-+				return 1;
-+			}
-+
- 			if (mbox->mbox_cmpl == lpfc_sli4_unreg_rpi_cmpl_clr)
- 				/*
- 				 * accept PLOGIs after unreg_rpi_cmpl
-@@ -5057,7 +5065,6 @@ lpfc_cleanup_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	struct lpfc_hba  *phba = vport->phba;
- 	LPFC_MBOXQ_t *mb, *nextmb;
- 	struct lpfc_dmabuf *mp;
--	unsigned long iflags;
- 
- 	/* Cleanup node for NPort <nlp_DID> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
-@@ -5125,18 +5132,6 @@ lpfc_cleanup_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	lpfc_cleanup_vports_rrqs(vport, ndlp);
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		ndlp->nlp_flag |= NLP_RELEASE_RPI;
--	if (!lpfc_unreg_rpi(vport, ndlp)) {
--		/* Clean up unregistered and non freed rpis */
--		if ((ndlp->nlp_flag & NLP_RELEASE_RPI) &&
--		    !(ndlp->nlp_rpi == LPFC_RPI_ALLOC_ERROR)) {
--			lpfc_sli4_free_rpi(vport->phba,
--					   ndlp->nlp_rpi);
--			spin_lock_irqsave(&ndlp->lock, iflags);
--			ndlp->nlp_flag &= ~NLP_RELEASE_RPI;
--			ndlp->nlp_rpi = LPFC_RPI_ALLOC_ERROR;
--			spin_unlock_irqrestore(&ndlp->lock, iflags);
--		}
--	}
- 	return 0;
- }
- 
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 903151aa6f02..03560478f2ce 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -590,7 +590,7 @@ struct lpfc_io_buf *lpfc_get_io_buf(struct lpfc_hba *phba,
+ void lpfc_release_io_buf(struct lpfc_hba *phba, struct lpfc_io_buf *ncmd,
+ 			 struct lpfc_sli4_hdw_queue *qp);
+ void lpfc_io_ktime(struct lpfc_hba *phba, struct lpfc_io_buf *ncmd);
+-void lpfc_nvme_cmd_template(void);
++void lpfc_wqe_cmd_template(void);
+ void lpfc_nvmet_cmd_template(void);
+ void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn);
+ void lpfc_nvme_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt);
+@@ -598,3 +598,6 @@ extern int lpfc_enable_nvmet_cnt;
+ extern unsigned long long lpfc_enable_nvmet[];
+ extern int lpfc_no_hba_reset_cnt;
+ extern unsigned long lpfc_no_hba_reset[];
++extern union lpfc_wqe128 lpfc_iread_cmd_template;
++extern union lpfc_wqe128 lpfc_iwrite_cmd_template;
++extern union lpfc_wqe128 lpfc_icmnd_cmd_template;
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f0cbf98e7caa..86d9ab4bcebb 100644
+index 86d9ab4bcebb..f4de75b2f64f 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2851,10 +2851,8 @@ lpfc_cleanup(struct lpfc_vport *vport)
- 			continue;
- 		}
+@@ -14120,7 +14120,7 @@ lpfc_init(void)
+ 		fc_release_transport(lpfc_transport_template);
+ 		goto unregister;
+ 	}
+-	lpfc_nvme_cmd_template();
++	lpfc_wqe_cmd_template();
+ 	lpfc_nvmet_cmd_template();
  
--		/* take care of nodes in unused state before the state
--		 * machine taking action.
--		 */
--		if (ndlp->nlp_state == NLP_STE_UNUSED_NODE) {
-+		if (ndlp->nlp_DID == Fabric_Cntl_DID &&
-+		    ndlp->nlp_state == NLP_STE_UNUSED_NODE) {
- 			lpfc_nlp_put(ndlp);
- 			continue;
- 		}
+ 	/* Initialize in case vector mapping is needed */
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index c5acf6800fb6..5458b8ef949f 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -62,136 +62,6 @@ lpfc_release_nvme_buf(struct lpfc_hba *, struct lpfc_io_buf *);
+ 
+ static struct nvme_fc_port_template lpfc_nvme_template;
+ 
+-static union lpfc_wqe128 lpfc_iread_cmd_template;
+-static union lpfc_wqe128 lpfc_iwrite_cmd_template;
+-static union lpfc_wqe128 lpfc_icmnd_cmd_template;
+-
+-/* Setup WQE templates for NVME IOs */
+-void
+-lpfc_nvme_cmd_template(void)
+-{
+-	union lpfc_wqe128 *wqe;
+-
+-	/* IREAD template */
+-	wqe = &lpfc_iread_cmd_template;
+-	memset(wqe, 0, sizeof(union lpfc_wqe128));
+-
+-	/* Word 0, 1, 2 - BDE is variable */
+-
+-	/* Word 3 - cmd_buff_len, payload_offset_len is zero */
+-
+-	/* Word 4 - total_xfer_len is variable */
+-
+-	/* Word 5 - is zero */
+-
+-	/* Word 6 - ctxt_tag, xri_tag is variable */
+-
+-	/* Word 7 */
+-	bf_set(wqe_cmnd, &wqe->fcp_iread.wqe_com, CMD_FCP_IREAD64_WQE);
+-	bf_set(wqe_pu, &wqe->fcp_iread.wqe_com, PARM_READ_CHECK);
+-	bf_set(wqe_class, &wqe->fcp_iread.wqe_com, CLASS3);
+-	bf_set(wqe_ct, &wqe->fcp_iread.wqe_com, SLI4_CT_RPI);
+-
+-	/* Word 8 - abort_tag is variable */
+-
+-	/* Word 9  - reqtag is variable */
+-
+-	/* Word 10 - dbde, wqes is variable */
+-	bf_set(wqe_qosd, &wqe->fcp_iread.wqe_com, 0);
+-	bf_set(wqe_xchg, &wqe->fcp_iread.wqe_com, LPFC_NVME_XCHG);
+-	bf_set(wqe_iod, &wqe->fcp_iread.wqe_com, LPFC_WQE_IOD_READ);
+-	bf_set(wqe_lenloc, &wqe->fcp_iread.wqe_com, LPFC_WQE_LENLOC_WORD4);
+-	bf_set(wqe_dbde, &wqe->fcp_iread.wqe_com, 0);
+-	bf_set(wqe_wqes, &wqe->fcp_iread.wqe_com, 1);
+-
+-	/* Word 11 - pbde is variable */
+-	bf_set(wqe_cmd_type, &wqe->fcp_iread.wqe_com, COMMAND_DATA_IN);
+-	bf_set(wqe_cqid, &wqe->fcp_iread.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
+-	bf_set(wqe_pbde, &wqe->fcp_iread.wqe_com, 0);
+-
+-	/* Word 12 - is zero */
+-
+-	/* Word 13, 14, 15 - PBDE is variable */
+-
+-	/* IWRITE template */
+-	wqe = &lpfc_iwrite_cmd_template;
+-	memset(wqe, 0, sizeof(union lpfc_wqe128));
+-
+-	/* Word 0, 1, 2 - BDE is variable */
+-
+-	/* Word 3 - cmd_buff_len, payload_offset_len is zero */
+-
+-	/* Word 4 - total_xfer_len is variable */
+-
+-	/* Word 5 - initial_xfer_len is variable */
+-
+-	/* Word 6 - ctxt_tag, xri_tag is variable */
+-
+-	/* Word 7 */
+-	bf_set(wqe_cmnd, &wqe->fcp_iwrite.wqe_com, CMD_FCP_IWRITE64_WQE);
+-	bf_set(wqe_pu, &wqe->fcp_iwrite.wqe_com, PARM_READ_CHECK);
+-	bf_set(wqe_class, &wqe->fcp_iwrite.wqe_com, CLASS3);
+-	bf_set(wqe_ct, &wqe->fcp_iwrite.wqe_com, SLI4_CT_RPI);
+-
+-	/* Word 8 - abort_tag is variable */
+-
+-	/* Word 9  - reqtag is variable */
+-
+-	/* Word 10 - dbde, wqes is variable */
+-	bf_set(wqe_qosd, &wqe->fcp_iwrite.wqe_com, 0);
+-	bf_set(wqe_xchg, &wqe->fcp_iwrite.wqe_com, LPFC_NVME_XCHG);
+-	bf_set(wqe_iod, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_IOD_WRITE);
+-	bf_set(wqe_lenloc, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_LENLOC_WORD4);
+-	bf_set(wqe_dbde, &wqe->fcp_iwrite.wqe_com, 0);
+-	bf_set(wqe_wqes, &wqe->fcp_iwrite.wqe_com, 1);
+-
+-	/* Word 11 - pbde is variable */
+-	bf_set(wqe_cmd_type, &wqe->fcp_iwrite.wqe_com, COMMAND_DATA_OUT);
+-	bf_set(wqe_cqid, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
+-	bf_set(wqe_pbde, &wqe->fcp_iwrite.wqe_com, 0);
+-
+-	/* Word 12 - is zero */
+-
+-	/* Word 13, 14, 15 - PBDE is variable */
+-
+-	/* ICMND template */
+-	wqe = &lpfc_icmnd_cmd_template;
+-	memset(wqe, 0, sizeof(union lpfc_wqe128));
+-
+-	/* Word 0, 1, 2 - BDE is variable */
+-
+-	/* Word 3 - payload_offset_len is variable */
+-
+-	/* Word 4, 5 - is zero */
+-
+-	/* Word 6 - ctxt_tag, xri_tag is variable */
+-
+-	/* Word 7 */
+-	bf_set(wqe_cmnd, &wqe->fcp_icmd.wqe_com, CMD_FCP_ICMND64_WQE);
+-	bf_set(wqe_pu, &wqe->fcp_icmd.wqe_com, 0);
+-	bf_set(wqe_class, &wqe->fcp_icmd.wqe_com, CLASS3);
+-	bf_set(wqe_ct, &wqe->fcp_icmd.wqe_com, SLI4_CT_RPI);
+-
+-	/* Word 8 - abort_tag is variable */
+-
+-	/* Word 9  - reqtag is variable */
+-
+-	/* Word 10 - dbde, wqes is variable */
+-	bf_set(wqe_qosd, &wqe->fcp_icmd.wqe_com, 1);
+-	bf_set(wqe_xchg, &wqe->fcp_icmd.wqe_com, LPFC_NVME_XCHG);
+-	bf_set(wqe_iod, &wqe->fcp_icmd.wqe_com, LPFC_WQE_IOD_NONE);
+-	bf_set(wqe_lenloc, &wqe->fcp_icmd.wqe_com, LPFC_WQE_LENLOC_NONE);
+-	bf_set(wqe_dbde, &wqe->fcp_icmd.wqe_com, 0);
+-	bf_set(wqe_wqes, &wqe->fcp_icmd.wqe_com, 1);
+-
+-	/* Word 11 */
+-	bf_set(wqe_cmd_type, &wqe->fcp_icmd.wqe_com, COMMAND_DATA_IN);
+-	bf_set(wqe_cqid, &wqe->fcp_icmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
+-	bf_set(wqe_pbde, &wqe->fcp_icmd.wqe_com, 0);
+-
+-	/* Word 12, 13, 14, 15 - is zero */
+-}
+-
+ /**
+  * lpfc_nvme_prep_abort_wqe - set up 'abort' work queue entry.
+  * @pwqeq: Pointer to command iocb.
+@@ -1403,6 +1273,9 @@ lpfc_nvme_prep_io_cmd(struct lpfc_vport *vport,
+ 	/* Word 9 */
+ 	bf_set(wqe_reqtag, &wqe->generic.wqe_com, pwqeq->iotag);
+ 
++	/* Word 10 */
++	bf_set(wqe_xchg, &wqe->fcp_iwrite.wqe_com, LPFC_NVME_XCHG);
++
+ 	/* Words 13 14 15 are for PBDE support */
+ 
+ 	pwqeq->vport = vport;
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 4f537a07bac6..116a6822c201 100644
+index 116a6822c201..b1d5b4484015 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2541,8 +2541,12 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 			} else {
- 				__lpfc_sli_rpi_release(vport, ndlp);
- 			}
--			if (vport->load_flag & FC_UNLOADING)
--				lpfc_nlp_put(ndlp);
+@@ -90,12 +90,138 @@ static void __lpfc_sli4_consume_cqe(struct lpfc_hba *phba,
+ 				    struct lpfc_queue *cq,
+ 				    struct lpfc_cqe *cqe);
+ 
++union lpfc_wqe128 lpfc_iread_cmd_template;
++union lpfc_wqe128 lpfc_iwrite_cmd_template;
++union lpfc_wqe128 lpfc_icmnd_cmd_template;
 +
-+			/* The unreg_login mailbox is complete and had a
-+			 * reference that has to be released.  The PLOGI
-+			 * got its own ref.
-+			 */
-+			lpfc_nlp_put(ndlp);
- 			pmb->ctx_ndlp = NULL;
- 		}
- 	}
-@@ -2566,7 +2570,7 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
-  *
-  * This function is the unreg rpi mailbox completion handler. It
-  * frees the memory resources associated with the completed mailbox
-- * command. An additional refrenece is put on the ndlp to prevent
-+ * command. An additional reference is put on the ndlp to prevent
-  * lpfc_nlp_release from freeing the rpi bit in the bitmask before
-  * the unreg mailbox command completes, this routine puts the
-  * reference back.
+ static IOCB_t *
+ lpfc_get_iocb_from_iocbq(struct lpfc_iocbq *iocbq)
+ {
+ 	return &iocbq->iocb;
+ }
+ 
++/* Setup WQE templates for IOs */
++void lpfc_wqe_cmd_template(void)
++{
++	union lpfc_wqe128 *wqe;
++
++	/* IREAD template */
++	wqe = &lpfc_iread_cmd_template;
++	memset(wqe, 0, sizeof(union lpfc_wqe128));
++
++	/* Word 0, 1, 2 - BDE is variable */
++
++	/* Word 3 - cmd_buff_len, payload_offset_len is zero */
++
++	/* Word 4 - total_xfer_len is variable */
++
++	/* Word 5 - is zero */
++
++	/* Word 6 - ctxt_tag, xri_tag is variable */
++
++	/* Word 7 */
++	bf_set(wqe_cmnd, &wqe->fcp_iread.wqe_com, CMD_FCP_IREAD64_WQE);
++	bf_set(wqe_pu, &wqe->fcp_iread.wqe_com, PARM_READ_CHECK);
++	bf_set(wqe_class, &wqe->fcp_iread.wqe_com, CLASS3);
++	bf_set(wqe_ct, &wqe->fcp_iread.wqe_com, SLI4_CT_RPI);
++
++	/* Word 8 - abort_tag is variable */
++
++	/* Word 9  - reqtag is variable */
++
++	/* Word 10 - dbde, wqes is variable */
++	bf_set(wqe_qosd, &wqe->fcp_iread.wqe_com, 0);
++	bf_set(wqe_iod, &wqe->fcp_iread.wqe_com, LPFC_WQE_IOD_READ);
++	bf_set(wqe_lenloc, &wqe->fcp_iread.wqe_com, LPFC_WQE_LENLOC_WORD4);
++	bf_set(wqe_dbde, &wqe->fcp_iread.wqe_com, 0);
++	bf_set(wqe_wqes, &wqe->fcp_iread.wqe_com, 1);
++
++	/* Word 11 - pbde is variable */
++	bf_set(wqe_cmd_type, &wqe->fcp_iread.wqe_com, COMMAND_DATA_IN);
++	bf_set(wqe_cqid, &wqe->fcp_iread.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
++	bf_set(wqe_pbde, &wqe->fcp_iread.wqe_com, 0);
++
++	/* Word 12 - is zero */
++
++	/* Word 13, 14, 15 - PBDE is variable */
++
++	/* IWRITE template */
++	wqe = &lpfc_iwrite_cmd_template;
++	memset(wqe, 0, sizeof(union lpfc_wqe128));
++
++	/* Word 0, 1, 2 - BDE is variable */
++
++	/* Word 3 - cmd_buff_len, payload_offset_len is zero */
++
++	/* Word 4 - total_xfer_len is variable */
++
++	/* Word 5 - initial_xfer_len is variable */
++
++	/* Word 6 - ctxt_tag, xri_tag is variable */
++
++	/* Word 7 */
++	bf_set(wqe_cmnd, &wqe->fcp_iwrite.wqe_com, CMD_FCP_IWRITE64_WQE);
++	bf_set(wqe_pu, &wqe->fcp_iwrite.wqe_com, PARM_READ_CHECK);
++	bf_set(wqe_class, &wqe->fcp_iwrite.wqe_com, CLASS3);
++	bf_set(wqe_ct, &wqe->fcp_iwrite.wqe_com, SLI4_CT_RPI);
++
++	/* Word 8 - abort_tag is variable */
++
++	/* Word 9  - reqtag is variable */
++
++	/* Word 10 - dbde, wqes is variable */
++	bf_set(wqe_qosd, &wqe->fcp_iwrite.wqe_com, 0);
++	bf_set(wqe_iod, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_IOD_WRITE);
++	bf_set(wqe_lenloc, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_LENLOC_WORD4);
++	bf_set(wqe_dbde, &wqe->fcp_iwrite.wqe_com, 0);
++	bf_set(wqe_wqes, &wqe->fcp_iwrite.wqe_com, 1);
++
++	/* Word 11 - pbde is variable */
++	bf_set(wqe_cmd_type, &wqe->fcp_iwrite.wqe_com, COMMAND_DATA_OUT);
++	bf_set(wqe_cqid, &wqe->fcp_iwrite.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
++	bf_set(wqe_pbde, &wqe->fcp_iwrite.wqe_com, 0);
++
++	/* Word 12 - is zero */
++
++	/* Word 13, 14, 15 - PBDE is variable */
++
++	/* ICMND template */
++	wqe = &lpfc_icmnd_cmd_template;
++	memset(wqe, 0, sizeof(union lpfc_wqe128));
++
++	/* Word 0, 1, 2 - BDE is variable */
++
++	/* Word 3 - payload_offset_len is variable */
++
++	/* Word 4, 5 - is zero */
++
++	/* Word 6 - ctxt_tag, xri_tag is variable */
++
++	/* Word 7 */
++	bf_set(wqe_cmnd, &wqe->fcp_icmd.wqe_com, CMD_FCP_ICMND64_WQE);
++	bf_set(wqe_pu, &wqe->fcp_icmd.wqe_com, 0);
++	bf_set(wqe_class, &wqe->fcp_icmd.wqe_com, CLASS3);
++	bf_set(wqe_ct, &wqe->fcp_icmd.wqe_com, SLI4_CT_RPI);
++
++	/* Word 8 - abort_tag is variable */
++
++	/* Word 9  - reqtag is variable */
++
++	/* Word 10 - dbde, wqes is variable */
++	bf_set(wqe_qosd, &wqe->fcp_icmd.wqe_com, 1);
++	bf_set(wqe_iod, &wqe->fcp_icmd.wqe_com, LPFC_WQE_IOD_NONE);
++	bf_set(wqe_lenloc, &wqe->fcp_icmd.wqe_com, LPFC_WQE_LENLOC_NONE);
++	bf_set(wqe_dbde, &wqe->fcp_icmd.wqe_com, 0);
++	bf_set(wqe_wqes, &wqe->fcp_icmd.wqe_com, 1);
++
++	/* Word 11 */
++	bf_set(wqe_cmd_type, &wqe->fcp_icmd.wqe_com, COMMAND_DATA_IN);
++	bf_set(wqe_cqid, &wqe->fcp_icmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
++	bf_set(wqe_pbde, &wqe->fcp_icmd.wqe_com, 0);
++
++	/* Word 12, 13, 14, 15 - is zero */
++}
++
+ #if defined(CONFIG_64BIT) && defined(__LITTLE_ENDIAN)
+ /**
+  * lpfc_sli4_pcimem_bcopy - SLI4 memory copy function
 -- 
 2.26.2
 
 
---000000000000466ee005b42a3f68
+--00000000000074563005b42a3f9d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -394,14 +491,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgRpfmySR9Vtd8rnnX
-tpimlF3KOu5Yhfls4AKE4vys66IwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE1MTkyNzA2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgRii4aAgVgJvRuV9y
+Nvo6GguCQ8h8sp8fWhJ2ECAvdwQwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE1MTkyNzA5WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAIHnqy4kQQDEALh42FryfzoND0HwLoD1pr6P
-xAPjZX1TRlQP4QNsMCNLlh2STErhico8LUc1AujoDVbfYO/BxJv37fZpK8BFx9q68f1LImYO7dWG
-+Sll2p+kMfjpCO2Utpiz5hgTD8h648SsXV6PIM/z1wJLjhhMlq6es2p0xR0Ky5PpiVi9SkG+ryh6
-l7vKSvmLi+/zyVO4kRbosIZ5etnQlAFm3ayguMwG2qwDH4RZPjKjNUoHBzFbb1yumbzDDorqf5GM
-sC1e1SvAemEaXDhun2z1GyAIczwbXNMe9gBgxLThMSdDnNYmfWorWPzyEnBMLLWEsT501mnH5Bxd
-hEo=
---000000000000466ee005b42a3f68--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAE6ZuhCKsGFaebJ952WovhrTaDC4mRr4DlKq
+dLqs1WBrXa50L59eIK8n9aiQU3ZMjXS2WeRhmwGLGcr7O6gX9QaZM+yohTZq2SbDSzhsQ5yxPoGz
+ytz7+Tj23CxpYnr1FTDT3vu4kpn1W+a2xYmLwOs5CxPhVARwk8ErrjXFOqq2gNwgL5a/gjNltW2I
+Flhi+zdeEXQr3p0XFkrbDLuGDpGXWZduEVLhpbZdpHUfrn5PpxlwReu1c/uvvQzjGED98y42GaBj
+RJWwXiN2O+4A5r8jPcM08AWtnNr0PszNOFwVwDiCZKTeqviBzNuN1jA7uiAwH4+GNmXe33y77Tnb
+JJI=
+--00000000000074563005b42a3f9d--
