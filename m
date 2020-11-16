@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C630AC8256E
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6012C6369E
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 982E52074B
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A951206B7
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="in7tsAV0"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FbV09+iw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731207AbgKPPAh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:00:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49278 "EHLO
+        id S1731037AbgKPPB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:01:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731129AbgKPPAF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 10:00:05 -0500
+        with ESMTP id S1731036AbgKPO7x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:53 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA55CC0613D1;
-        Mon, 16 Nov 2020 07:00:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31353C0613D1;
+        Mon, 16 Nov 2020 06:59:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=hARJkWQlpNoJdj/vxwczaVdCfVVvfIUC8NDH/Nikt6k=; b=in7tsAV0pYzdDaH23WhnwAKR3R
-        7xf04zdmNOdEtYs8arbN89y3kw4LApo5bLo3N/m4GrsdUYv2To+bUfGPGTQpzQd4TQGyrpK4e5lHC
-        eCShsJJjHfdRG2ZVv14MPwihM8z3yu6kfNX1CiibXDctlXHH5jeZRUvheSFxZ/0kcEtUXIuEjWms/
-        mhndsgiWlZLvqm1AI73/nDAEmdFQJYfIewjJl63lmaezSXoLWkADqyILaKsE+S6dzaUQc9rbYpEsZ
-        grwi29hhSKISbnn7jD3DaEY2GFWHItE9E68g0ieNppWIL+4Ck8rzVBmAR0Eftf+VYl62odfp1ooaP
-        Zg8s5EIQ==;
+        bh=IuZ426HAkGqkpmUmDFrK/jtW75cQ9xEgfhlt4WVjI90=; b=FbV09+iwI8V/pddqU1sEXr5MRG
+        2LGeCEdJzbpooxAikaWsNr5YfxH34ymPyuCnSJiwiRrphkz09RICgAbMVyHqGKWH6sHHkHvoruwW2
+        nCorG1tvxjOd6vHnEE7swqUtKyD+8syeAG7c9+VEIxM/4sCmK8n7wJLvPzvcwP62k5ghl2GH7p6CA
+        bmJY/GpCYWKc3Q69Wkb4Pf5N62nndPgbrmqv4yTNQic3S4e4YxaEGByMc1ZRJgWTOUB49DbdAAXXh
+        7s2MiZc7fa4gFYEJLSLS59VU/0nxQ+mwt1zxXN8laEEd1sAgMYK6+cPM77anChY7SAPVWwdnlrtv1
+        YRLIq+dw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefz0-0004Hn-7B; Mon, 16 Nov 2020 14:59:54 +0000
+        id 1kefyn-0004Cl-AQ; Mon, 16 Nov 2020 14:59:41 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 72/78] block: use disk_part_iter_exit in disk_part_iter_next
-Date:   Mon, 16 Nov 2020 15:58:03 +0100
-Message-Id: <20201116145809.410558-73-hch@lst.de>
+Subject: [PATCH 63/78] bcache: remove a superflous lookup_bdev all
+Date:   Mon, 16 Nov 2020 15:57:54 +0100
+Message-Id: <20201116145809.410558-64-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,28 +70,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Call disk_part_iter_exit in disk_part_iter_next instead of duplicating
-the functionality.
+Don't bother to call lookup_bdev for just a slightly different error
+message without any functional change.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/md/bcache/super.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 999f7142b04e7d..56bc37e98ed852 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -230,8 +230,7 @@ struct hd_struct *disk_part_iter_next(struct disk_part_iter *piter)
- 	int inc, end;
- 
- 	/* put the last partition */
--	disk_put_part(piter->part);
--	piter->part = NULL;
-+	disk_part_iter_exit(piter);
- 
- 	/* get part_tbl */
- 	rcu_read_lock();
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 46a00134a36ae1..d36ccdda16ed2e 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -2538,15 +2538,7 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
+ 				  sb);
+ 	if (IS_ERR(bdev)) {
+ 		if (bdev == ERR_PTR(-EBUSY)) {
+-			bdev = lookup_bdev(strim(path));
+-			mutex_lock(&bch_register_lock);
+-			if (!IS_ERR(bdev) && bch_is_open(bdev))
+-				err = "device already registered";
+-			else
+-				err = "device busy";
+-			mutex_unlock(&bch_register_lock);
+-			if (!IS_ERR(bdev))
+-				bdput(bdev);
++			err = "device busy";
+ 			if (attr == &ksysfs_register_quiet)
+ 				goto done;
+ 		}
 -- 
 2.29.2
 
