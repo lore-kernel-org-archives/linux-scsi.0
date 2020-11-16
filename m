@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63F7CC71155
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A65C6379F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:57 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17E922344C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FF622344C
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lVGpDrCY"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 17E922344C
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Wf8/hkFa"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 4FF622344C
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-scsi-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730467AbgKPO6l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:58:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48930 "EHLO
+        id S1730655AbgKPO6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:58:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730520AbgKPO6h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:37 -0500
+        with ESMTP id S1728038AbgKPO6p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:45 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51760C0613D3;
-        Mon, 16 Nov 2020 06:58:37 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB0B8C0613D1;
+        Mon, 16 Nov 2020 06:58:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=MbR6eD8Z5sCp9HMp2xRKfZrC0GyX/16idOKOYUQxwmk=; b=lVGpDrCYC4uApK0HXhMfWQu//t
-        v5TNY33739vaVgizhet7Btd0aO7HYFUr4uFDV+hjF3FjzaPwtVUz2Kb7kWA5WHMiCOvV1zLNOLH3Z
-        xYyJ9PyjAQotPS9g4g5yfkhyuQvbAwVKYue6ztUh19mPuVx8DtNsK62BOcbCwnRTuEJ3dvoDg2ldg
-        WeBaZz6b7R0R55We4FXJgz3pLCWNo1XvND1Ep24BS9hOMWi13U/CDCIc7JHWwTXem/0p/fbzf34hi
-        1r3s/4MDxah8TmWEcY0L5xxJ+d6obD1qWfKT/c/iL18LhZNRmRcA2WXg5WAUiLmevTSoEYS+1X/52
-        zWWV8w6g==;
+        bh=CN10BGv9dKVd+RKbbdTxT2BvIyv06ZDMhow0ngUqFVs=; b=Wf8/hkFaNLSd+gPM2W2r4fv5vP
+        kTvVoS3zDf7gbVd/+sUJtkyAqA5lUq9yQxOzaZbEyDVX2S9VcEH6akrikD/EHAskWC5e3u5GFwo94
+        pvyK6vF1xv0yoWZW0Trp2YhTMDwX2yOQJVSOA1j8iKDivtRGQvmQELbe3fJn2yUvmr1OA274aOkkL
+        de9bCAvfPrVUPcqJAHSKnKZg7g+R46oLX8YCc9Mk8CdlBH2cDMS5JaO9BjoWNQj8G+Bge/APmZ6vq
+        FKHpBXoJF7X4vPleICzEeG/Mc88InJcGvDP+Fhh9lnoF/XRSuvgZLsqj2YVXvQLELtvaQnptV5v8a
+        VOhU/gOA==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxY-0003mO-Ss; Mon, 16 Nov 2020 14:58:25 +0000
+        id 1kefxc-0003nE-NO; Mon, 16 Nov 2020 14:58:29 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -59,10 +59,11 @@ Cc:     Justin Sanders <justin@coraid.com>,
         drbd-dev@lists.linbit.com, nbd@other.debian.org,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 11/78] aoe: don't call set_capacity from irq context
-Date:   Mon, 16 Nov 2020 15:57:02 +0100
-Message-Id: <20201116145809.410558-12-hch@lst.de>
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 14/78] nvme: use set_capacity_and_notify in nvme_set_queue_dying
+Date:   Mon, 16 Nov 2020 15:57:05 +0100
+Message-Id: <20201116145809.410558-15-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -73,58 +74,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Updating the block device size from irq context can lead to torn
-writes of the 64-bit value, and prevents us from using normal
-process context locking primitives to serialize access to the 64-bit
-nr_sectors value.  Defer the set_capacity to the already existing
-workqueue handler, where it can be merged with the update of the
-block device size by using set_capacity_and_notify.  As an extra
-bonus this also adds proper uevent notifications for the resize.
+Use the block layer helper to update both the disk and block device
+sizes.  Contrary to the name no notification is sent in this case,
+as a size 0 is special cased.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/block/aoe/aoecmd.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/nvme/host/core.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/drivers/block/aoe/aoecmd.c b/drivers/block/aoe/aoecmd.c
-index 313f0b946fe2b3..ac720bdcd983e7 100644
---- a/drivers/block/aoe/aoecmd.c
-+++ b/drivers/block/aoe/aoecmd.c
-@@ -890,19 +890,13 @@ void
- aoecmd_sleepwork(struct work_struct *work)
- {
- 	struct aoedev *d = container_of(work, struct aoedev, work);
--	struct block_device *bd;
--	u64 ssize;
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 6c144e748f8cae..bc89e8659c403f 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -93,16 +93,6 @@ static void nvme_put_subsystem(struct nvme_subsystem *subsys);
+ static void nvme_remove_invalid_namespaces(struct nvme_ctrl *ctrl,
+ 					   unsigned nsid);
  
- 	if (d->flags & DEVFL_GDALLOC)
- 		aoeblk_gdalloc(d);
+-static void nvme_update_bdev_size(struct gendisk *disk)
+-{
+-	struct block_device *bdev = bdget_disk(disk, 0);
+-
+-	if (bdev) {
+-		bd_set_nr_sectors(bdev, get_capacity(disk));
+-		bdput(bdev);
+-	}
+-}
+-
+ /*
+  * Prepare a queue for teardown.
+  *
+@@ -119,8 +109,7 @@ static void nvme_set_queue_dying(struct nvme_ns *ns)
+ 	blk_set_queue_dying(ns->queue);
+ 	blk_mq_unquiesce_queue(ns->queue);
  
- 	if (d->flags & DEVFL_NEWSIZE) {
--		ssize = get_capacity(d->gd);
--		bd = bdget_disk(d->gd, 0);
--		if (bd) {
--			bd_set_nr_sectors(bd, ssize);
--			bdput(bd);
--		}
-+		set_capacity_and_notify(d->gd, d->ssize);
-+
- 		spin_lock_irq(&d->lock);
- 		d->flags |= DEVFL_UP;
- 		d->flags &= ~DEVFL_NEWSIZE;
-@@ -971,10 +965,9 @@ ataid_complete(struct aoedev *d, struct aoetgt *t, unsigned char *id)
- 	d->geo.start = 0;
- 	if (d->flags & (DEVFL_GDALLOC|DEVFL_NEWSIZE))
- 		return;
--	if (d->gd != NULL) {
--		set_capacity(d->gd, ssize);
-+	if (d->gd != NULL)
- 		d->flags |= DEVFL_NEWSIZE;
--	} else
-+	else
- 		d->flags |= DEVFL_GDALLOC;
- 	schedule_work(&d->work);
+-	set_capacity(ns->disk, 0);
+-	nvme_update_bdev_size(ns->disk);
++	set_capacity_and_notify(ns->disk, 0);
  }
+ 
+ static void nvme_queue_scan(struct nvme_ctrl *ctrl)
 -- 
 2.29.2
 
