@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EA2EC82548
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6914FC82542
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E57722240
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3329F22263
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NxdcCH21"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tNKy0A5I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730914AbgKPO7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49094 "EHLO
+        id S1730886AbgKPO7U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730879AbgKPO7U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:20 -0500
+        with ESMTP id S1730860AbgKPO7R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:17 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CB68C0613CF;
-        Mon, 16 Nov 2020 06:59:20 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45434C0613D1;
+        Mon, 16 Nov 2020 06:59:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=432B/HqYIabrrukDRcMGdzlFQ4i1D0sjcTyhKWP2cJc=; b=NxdcCH21KU0PaY1Ri6HGwnc/L0
-        Pm1N/StwGgisA5L0p+2kPsr3LyRSKmgmK71GuTbdbvT9TCfwbfRA1dvjC1q7rJtFSAtSyf3mHxeWW
-        EZ5rlOqNukX80JHmh+gFjJH5eHC5ab37sgk28CMqNBjsJHct6TH7Aec/aHSrjGlIQeH8J/fYjoVWT
-        m9S/ORPThsGxcTn9lN7RKKBuWsC/aTMeA81vfKRaWx1OhdXImDLKffH2sllTwanrVTcnLmBpn+vIK
-        rxhCqctUbf1QtVmOhyQKeyb0Bskq73OmiuHEGSYFZZUivRg1xuCXEdg0WX9hj3ohTWz5bCrIzwOJR
-        oOsbfaxQ==;
+        bh=j9YzX4Imfj42oekp8Tth+LQoKAxJAOk+J48Ms5WWyRs=; b=tNKy0A5I0JGyRwszKo8CS5i8OD
+        +8V953YfFx3Xman6sQ8F42cjnDZ+fEMnGq+5JSKyBoWRq84B0ROGouApW++jZ44y6feigXqLuqKsR
+        cxqh2lFOkiVIegiphp90kij1qmc1NDslqQZNsGbC21VOg69MDd/n08QOAs5NDSIePC2uZIeQod82Z
+        T6wB+Z9xXg1/0NZKtWCv5t7lkIbvOb2buar5vD5Qry8bhovOugY2M7SSd4S16Dl+mklfVYWbkqbny
+        8IY3ZaEc9JVI0kFlBfL2Zv+6ubgx5Kd03xor/wsERRQOPm0Gj4ArtdUOT7w0cJYRw8cIK/bIaVXYw
+        0ktG/eKQ==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyE-0003y0-K9; Mon, 16 Nov 2020 14:59:06 +0000
+        id 1kefyB-0003xB-Ni; Mon, 16 Nov 2020 14:59:04 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -58,9 +58,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 40/78] ide: remove ide_{,un}register_region
-Date:   Mon, 16 Nov 2020 15:57:31 +0100
-Message-Id: <20201116145809.410558-41-hch@lst.de>
+Subject: [PATCH 38/78] block: rework requesting modules for unclaimed devices
+Date:   Mon, 16 Nov 2020 15:57:29 +0100
+Message-Id: <20201116145809.410558-39-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -71,93 +71,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need to ever register the fake gendisk used for ide-tape.
+Instead of reusing the ranges in bdev_map, add a new helper that is
+called if no ranges was found.  This is a first step to unpeel and
+eventually remove the complex ranges structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ide/ide-probe.c | 32 --------------------------------
- drivers/ide/ide-tape.c  |  2 --
- include/linux/ide.h     |  3 ---
- 3 files changed, 37 deletions(-)
+ block/genhd.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 1ddc45a04418cd..076d34b381720f 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -929,38 +929,6 @@ static struct kobject *ata_probe(dev_t dev, int *part, void *data)
- 	return NULL;
+diff --git a/block/genhd.c b/block/genhd.c
+index 2a20372756625e..8391e7d83a6920 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1028,6 +1028,13 @@ static ssize_t disk_badblocks_store(struct device *dev,
+ 	return badblocks_store(disk->bb, page, len, 0);
  }
  
--static struct kobject *exact_match(dev_t dev, int *part, void *data)
--{
--	struct gendisk *p = data;
--	*part &= (1 << PARTN_BITS) - 1;
--	return &disk_to_dev(p)->kobj;
--}
--
--static int exact_lock(dev_t dev, void *data)
--{
--	struct gendisk *p = data;
--
--	if (!get_disk_and_module(p))
--		return -1;
--	return 0;
--}
--
--void ide_register_region(struct gendisk *disk)
--{
--	blk_register_region(MKDEV(disk->major, disk->first_minor),
--			    disk->minors, NULL, exact_match, exact_lock, disk);
--}
--
--EXPORT_SYMBOL_GPL(ide_register_region);
--
--void ide_unregister_region(struct gendisk *disk)
--{
--	blk_unregister_region(MKDEV(disk->major, disk->first_minor),
--			      disk->minors);
--}
--
--EXPORT_SYMBOL_GPL(ide_unregister_region);
--
- void ide_init_disk(struct gendisk *disk, ide_drive_t *drive)
++static void request_gendisk_module(dev_t devt)
++{
++	if (request_module("block-major-%d-%d", MAJOR(devt), MINOR(devt)) > 0)
++		/* Make old-style 2.4 aliases work */
++		request_module("block-major-%d", MAJOR(devt));
++}
++
+ static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
  {
- 	ide_hwif_t *hwif = drive->hwif;
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 6f26634b22bbec..88b96437b22e62 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -1822,7 +1822,6 @@ static void ide_tape_remove(ide_drive_t *drive)
- 
- 	ide_proc_unregister_driver(drive, tape->driver);
- 	device_del(&tape->dev);
--	ide_unregister_region(tape->disk);
- 
- 	mutex_lock(&idetape_ref_mutex);
- 	put_device(&tape->dev);
-@@ -2026,7 +2025,6 @@ static int ide_tape_probe(ide_drive_t *drive)
- 		      "n%s", tape->name);
- 
- 	g->fops = &idetape_block_ops;
--	ide_register_region(g);
- 
- 	return 0;
- 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 62653769509f89..2c300689a51a5c 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1493,9 +1493,6 @@ static inline void ide_acpi_port_init_devices(ide_hwif_t *hwif) { ; }
- static inline void ide_acpi_set_state(ide_hwif_t *hwif, int on) {}
+ 	struct kobject *kobj;
+@@ -1052,6 +1059,14 @@ static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
+ 		probe = p->probe;
+ 		best = p->range - 1;
+ 		*partno = dev - p->dev;
++
++		if (!probe) {
++			mutex_unlock(&bdev_map_lock);
++			module_put(owner);
++			request_gendisk_module(dev);
++			goto retry;
++		}
++
+ 		if (p->lock && p->lock(dev, data) < 0) {
+ 			module_put(owner);
+ 			continue;
+@@ -1290,15 +1305,6 @@ static const struct seq_operations partitions_op = {
+ };
  #endif
  
--void ide_register_region(struct gendisk *);
--void ide_unregister_region(struct gendisk *);
 -
- void ide_check_nien_quirk_list(ide_drive_t *);
- void ide_undecoded_slave(ide_drive_t *);
+-static struct kobject *base_probe(dev_t devt, int *partno, void *data)
+-{
+-	if (request_module("block-major-%d-%d", MAJOR(devt), MINOR(devt)) > 0)
+-		/* Make old-style 2.4 aliases work */
+-		request_module("block-major-%d", MAJOR(devt));
+-	return NULL;
+-}
+-
+ static void bdev_map_init(void)
+ {
+ 	struct bdev_map *base;
+@@ -1310,7 +1316,6 @@ static void bdev_map_init(void)
  
+ 	base->dev = 1;
+ 	base->range = ~0 ;
+-	base->probe = base_probe;
+ 	for (i = 0; i < 255; i++)
+ 		bdev_map[i] = base;
+ }
 -- 
 2.29.2
 
