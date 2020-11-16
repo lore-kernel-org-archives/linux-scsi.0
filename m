@@ -2,84 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 716E8C64E7C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 17:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A2FC4742C
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 17:51:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F0802227F
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 17:38:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="wH0K96ai"
+	by mail.kernel.org (Postfix) with ESMTP id 4979120B80
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 17:51:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387477AbgKPRht (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 12:37:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49674 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733098AbgKPRhs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Nov 2020 12:37:48 -0500
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0B33E222EC;
-        Mon, 16 Nov 2020 17:37:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605548267;
-        bh=ftduAERcAIXDqH3TIoaKNDFMaog9lpKkHZKNbYpzPJA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=wH0K96aiOcV3zWDXEfO4eGXrSbfel4fzpavvJrcvlGnm+IOvE6CCXcyPRZ9CDEpWQ
-         ERyPgn3goZaj4Rjri8kCDsRD2QqVIDrl9bwMtmzAsZXelVyGcoi/J8IVVb6h9ki8ms
-         Nt6zKSXy/JZjbcTnM2HNzH4y+CQMSryqUl+eemUA=
-Received: by mail-wm1-f52.google.com with SMTP id p22so25432wmg.3;
-        Mon, 16 Nov 2020 09:37:46 -0800 (PST)
-X-Gm-Message-State: AOAM532+D7CgVwSiMMWS3UnCwBorA2v4LkI7ZN8sQJ8ZqWXcaPOmRLIQ
-        WKg7/hX4Hr+f4oBq6+kb0J6ZN8cgd7LU/vzhKLk=
-X-Google-Smtp-Source: ABdhPJwSJNXG5A+c75VC7fB+eg5ocrYD0cMopnWErnzA3/FY5Qe4JfgRdEHZElz1KxxX9qTRF1opV72EejXl51sD+G0=
-X-Received: by 2002:a1c:bbc4:: with SMTP id l187mr17490114wmf.133.1605548265533;
- Mon, 16 Nov 2020 09:37:45 -0800 (PST)
-MIME-Version: 1.0
-References: <20201116145809.410558-1-hch@lst.de> <20201116145809.410558-29-hch@lst.de>
-In-Reply-To: <20201116145809.410558-29-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Mon, 16 Nov 2020 09:37:34 -0800
-X-Gmail-Original-Message-ID: <CAPhsuW5YeO0-Cb=avHu2osRKjz19Lvk4jWqaCdaqFnjbdPJtrw@mail.gmail.com>
-Message-ID: <CAPhsuW5YeO0-Cb=avHu2osRKjz19Lvk4jWqaCdaqFnjbdPJtrw@mail.gmail.com>
-Subject: Re: [PATCH 28/78] md: implement ->set_read_only to hook into BLKROSET processing
+        id S1730759AbgKPRv1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 12:51:27 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37332 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730167AbgKPRv0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 12:51:26 -0500
+Received: by mail-pg1-f195.google.com with SMTP id m9so4266525pgb.4;
+        Mon, 16 Nov 2020 09:51:26 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=6Mo82RwtW0tRIXQ3Gp5UPbF1urCl2OvzBDpL3xdxkBk=;
+        b=bioVQadUwarsgVs/8Rt+0QJOeum7Le0UlEUvCkpddEZ9Y8frwo/1Q8MzU0i5vNpLds
+         RRugMSo+2+JI0FrnddUNqvs/hWGhGm6AownpPsk+vhrcaLP6Rbr3oOAkZTCQFOpVvPCU
+         Dw3Kapmbg4Dh5pOHz4GTzQ44rNgjBOdo97LkgWDs1v9hVkoiOk2TO6AyWf7MuhYc9CD0
+         ZSmY5vdzCbMqL4oFFLIgzvWudrHs0GGNX5TLdjo0ZbloYNxmRElouT6Z99/0f2Fu6S56
+         Hm2IDOphnqvG5R8VNWPXIphzh+ABHwgkym0TJeArdnuAKLgabDMjvwEncpgkCOtw3pbt
+         XtCg==
+X-Gm-Message-State: AOAM530M2jnk6YX1cuoHvEDPqHPQ6mheS84aYODtoaIFuChiPGjyUNot
+        IDd5fv7k6NHdK1PPueuN7GI=
+X-Google-Smtp-Source: ABdhPJzSzZUK4y7AifHwOnkJgtAlU6bO8F/yHhqsPtDvDMoOBkRfzh376MGm/+MZrnfcUXk0ZEo7MA==
+X-Received: by 2002:a17:90b:30d0:: with SMTP id hi16mr58772pjb.144.1605549085961;
+        Mon, 16 Nov 2020 09:51:25 -0800 (PST)
+Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id t7sm32023pji.27.2020.11.16.09.51.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Nov 2020 09:51:24 -0800 (PST)
+Subject: Re: [PATCH v2 7/9] scsi_transport_spi: Freeze request queues instead
+ of quiescing
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Woody Suwalski <terraluna977@gmail.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Stan Johnson <userm57@yahoo.com>
+References: <20201116030459.13963-1-bvanassche@acm.org>
+ <20201116030459.13963-8-bvanassche@acm.org> <20201116172220.GG22007@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <41b15c94-6477-9f6e-b5b8-9b81a143d80f@acm.org>
+Date:   Mon, 16 Nov 2020 09:51:21 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
+MIME-Version: 1.0
+In-Reply-To: <20201116172220.GG22007@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 16, 2020 at 6:58 AM Christoph Hellwig <hch@lst.de> wrote:
->
-> Implement the ->set_read_only method instead of parsing the actual
-> ioctl command.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 11/16/20 9:22 AM, Christoph Hellwig wrote:
+> On Sun, Nov 15, 2020 at 07:04:57PM -0800, Bart Van Assche wrote:
+>> Instead of quiescing the request queues involved in domain validation,
+>> freeze these. As a result, the struct request_queue pm_only member is no
+>> longer set during domain validation. That will allow to modify
+>> scsi_execute() such that it stops setting the BLK_MQ_REQ_PREEMPT flag.
+>> Three additional changes in this patch are that scsi_mq_alloc_queue() is
+>> exported, that scsi_device_quiesce() is no longer exported and that
+>> scsi_target_{quiesce,resume}() have been changed into
+>> scsi_target_{freeze,unfreeze}().
+> 
+> Can you explain why you need the new request_queue?  spi_dv_device seems
+> to generally be called from ->slave_configure where no other I/O
+> should ever be pending.
 
-Acked-by: Song Liu <song@kernel.org>
+Hi Christoph,
 
-[...]
+I think that the following sysfs attribute, defined in 
+drivers/scsi/scsi_transport_spi.c, allows to trigger SPI domain 
+validation at any time:
+
+static DEVICE_ATTR(revalidate, S_IWUSR, NULL, store_spi_revalidate);
+
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1893,6 +1893,7 @@ struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
+>>   	blk_queue_flag_set(QUEUE_FLAG_SCSI_PASSTHROUGH, q);
+>>   	return q;
+>>   }
+>> +EXPORT_SYMBOL_GPL(scsi_mq_alloc_queue);
+> 
+> I'd much rather open scsi_mq_alloc_queue in a new caller, especially
+> given that __scsi_init_queue already is exported.
+
+I will look into this.
+
+Thanks,
+
+Bart.
+
+
