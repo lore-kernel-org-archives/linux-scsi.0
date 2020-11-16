@@ -2,120 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD763C4742C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9761C64E8A
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:37:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E070207BC
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:16:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="JexUH3oN"
+	by mail.kernel.org (Postfix) with ESMTP id 5B1FD20853
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 12:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729486AbgKPKpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 05:45:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37860 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729479AbgKPKpG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 05:45:06 -0500
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABA77C0613CF
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2020 02:45:04 -0800 (PST)
-Received: by mail-ej1-x642.google.com with SMTP id i19so23693386ejx.9
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2020 02:45:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=sek/i1BZU5tFdGfXS3etK+U+9o77+wuSOUC6uxbxR3s=;
-        b=JexUH3oNg/+O/1MGzCxGE6JpTmJeLdN9MxcPPb/eCCszylnA3C8UW1kT2RwVMnHsWN
-         +fCa3M0SaL6oAL/PQJaS4qDOQTaBuziPrk1sZIueT1WrWCv+PeLyLVnCA+Q8gaomZhIe
-         dgyNAeoOBX/cD8hbZ1AJC8VdE2qegCPRqQDH3VfB27aw5w533mzl7wc5ABf3phTU02HH
-         VZCSAhgLGHyzOR5WIFisZ1oh9dC/n4VsBfQjV+iLU3AbvVYpPY4gdw3qJ9SI+Lx2r3Vo
-         PgQkj/Ol0v89APBJbzt6qglQYOZbDxdbUy6ZDUMefFtsPJGrcewIC4pQHSRGOLw74IBd
-         rlEA==
+        id S1729632AbgKPLD7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 06:03:59 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:36012 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727240AbgKPLD6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 06:03:58 -0500
+Received: by mail-wm1-f66.google.com with SMTP id a65so23241607wme.1;
+        Mon, 16 Nov 2020 03:03:55 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=sek/i1BZU5tFdGfXS3etK+U+9o77+wuSOUC6uxbxR3s=;
-        b=tE1fv9jyQpPsOi9HWAkMOTmDjXgt3HahlfO+6QbS+2btS55HDzZNC2RDiZRphTCcJ0
-         yvfjbVMiKou8rzfzGicRF6rtfa3Hn9CleL8l1WgksTmB+ik/72SzJ16JUk3s9/D4gc0I
-         yKc4Snkf8lZhazEibqN95OExVVs8fwakpiBs4X+jd1Me+9eQXDDLihWc3B9aO2Oj1vT3
-         gcFZVAFk6BG+UPRBKjB1I9KctgF6Y37B4zhORaHEM9xWIb/+rH1xcqF6HDYKm8NlMHJF
-         KZOKE9Jw6m8oRvgB40X6Mr/Ar14wH3PgWzfwQY0EVHyWuC7ORxO3uQ4Z7qcBMpwQOJ7s
-         E1bA==
-X-Gm-Message-State: AOAM530o6QCiL1IQj0JFiO3I71I9w8I7R/1Veu7DqpxMyRWILJ7Co9q6
-        uo7ihF2r55tUFV4cvvRgX+nNX2aBcuRRUpnYsp3EVXDcj5dtnw==
-X-Google-Smtp-Source: ABdhPJzsRBZs0RABLzY6Tdu0t6T6Yqz40F1mjZK54r4nhUt/s/Nkw1o860lZqOvGKf1UJRSsE2+NxE2Vb9hxREZS5qU=
-X-Received: by 2002:a17:906:ad8c:: with SMTP id la12mr13607890ejb.521.1605523503286;
- Mon, 16 Nov 2020 02:45:03 -0800 (PST)
-MIME-Version: 1.0
-References: <20201116104119.816527-1-lee.jones@linaro.org>
-In-Reply-To: <20201116104119.816527-1-lee.jones@linaro.org>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Mon, 16 Nov 2020 11:44:52 +0100
-Message-ID: <CAMGffEkMahL5Fw6w6izwOu2wh3RqAebm9-N3KCadS2N177rLKg@mail.gmail.com>
-Subject: Re: [PATCH 1/1] scsi: pm8001: pm8001_hwi: Remove unused variable 'value'
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=vzbLBZlhKCzw8aWCXrtL3fgPKqSslz5XBfEd+0EuZTU=;
+        b=Nl6Y7U6D6g412Y5EyvaYTCNVZaNhDCfo/6IeUY5L73MmH1ugGTNqWUfZwNVqFPpUuE
+         3ca7JXnsSlFG6DkBD0M/W5rYqtXRofEDXF+TGC1G2q5MgiMPqNn4ZVMHnNsGF3eDMVol
+         2YT3k8VnzGI5DI2Q1i1i/Mmb2t19k1IWvBsMtovrFtcU4HYVg+MBAEnAJcFEMqVjVUYb
+         X/4KrWXSIpLt2kiVIep71sLFfz5F68xjog0jEjALedKlZ7hozjzagEFcRJGnVV616aiD
+         fuEToB58/IdcS+czQed2OlljxjugwaGWAx5JGCTtg6lroVat1YImZhURRNYl3eeN7fug
+         Saog==
+X-Gm-Message-State: AOAM530JXqUYKao7xX+4mrxemauNSkwj5o4i9fRmWF6wK9JkfgLYKfPl
+        Xppq3jVCrTEH7pK94zayoQ2w/VrrEJE=
+X-Google-Smtp-Source: ABdhPJxkE593KIIPiNQrAJmMLS9OVFuJKEQLkWmp7EhuYf4WWbZMwfZBIS8Lzv90wIsg3PY9Pwg09A==
+X-Received: by 2002:a1c:a185:: with SMTP id k127mr14596707wme.23.1605524634488;
+        Mon, 16 Nov 2020 03:03:54 -0800 (PST)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id w11sm20204620wmg.36.2020.11.16.03.03.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Nov 2020 03:03:53 -0800 (PST)
+Date:   Mon, 16 Nov 2020 11:03:52 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Andrea Parri <parri.andrea@gmail.com>
+Cc:     Wei Liu <wei.liu@kernel.org>, linux-kernel@vger.kernel.org,
+        "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        linux-hyperv@vger.kernel.org, Andres Beltran <lkmlabelt@gmail.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Saruhan Karademir <skarade@microsoft.com>,
+        Juan Vazquez <juvazq@microsoft.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org,
-        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v9 2/3] scsi: storvsc: Use vmbus_requestor to generate
+ transaction IDs for VMBus hardening
+Message-ID: <20201116110352.obbqxzxw6etdq4cl@liuwe-devbox-debian-v2>
+References: <20201109100402.8946-1-parri.andrea@gmail.com>
+ <20201109100402.8946-3-parri.andrea@gmail.com>
+ <20201113113327.dmium67e32iadqbz@liuwe-devbox-debian-v2>
+ <20201113185424.ujdfx6ot7siqr5qh@liuwe-devbox-debian-v2>
+ <20201113213933.GA4937@andrea>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201113213933.GA4937@andrea>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 16, 2020 at 11:41 AM Lee Jones <lee.jones@linaro.org> wrote:
->
-> Hasn't been used since 2009.
->
-> Fixes the following W=3D1 kernel build warning(s):
->
->  drivers/scsi/pm8001/pm8001_hwi.c: In function =E2=80=98mpi_set_phys_g3_w=
-ith_ssc=E2=80=99:
->  drivers/scsi/pm8001/pm8001_hwi.c:415:6: warning: variable =E2=80=98value=
-=E2=80=99 set but not used [-Wunused-but-set-variable]
->
-> Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-> Signed-off-by: Lee Jones <lee.jones@linaro.org>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Thanks Lee.
-> ---
->  drivers/scsi/pm8001/pm8001_hwi.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
-1_hwi.c
-> index 2054c2b03d928..0a1e09b1cd580 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -416,7 +416,7 @@ int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_=
-ha, u32 shiftValue)
->  static void mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha,
->                                      u32 SSCbit)
->  {
-> -       u32 value, offset, i;
-> +       u32 offset, i;
->         unsigned long flags;
->
->  #define SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR 0x00030000
-> @@ -467,7 +467,7 @@ static void mpi_set_phys_g3_with_ssc(struct pm8001_hb=
-a_info *pm8001_ha,
->         so that the written value will be 0x8090c016.
->         This will ensure only down-spreading SSC is enabled on the SPC.
->         *************************************************************/
-> -       value =3D pm8001_cr32(pm8001_ha, 2, 0xd8);
-> +       pm8001_cr32(pm8001_ha, 2, 0xd8);
->         pm8001_cw32(pm8001_ha, 2, 0xd8, 0x8000C016);
->
->         /*set the shifted destination address to 0x0 to avoid error opera=
-tion */
-> --
-> 2.25.1
->
+On Fri, Nov 13, 2020 at 10:39:33PM +0100, Andrea Parri wrote:
+> On Fri, Nov 13, 2020 at 06:54:24PM +0000, Wei Liu wrote:
+> > On Fri, Nov 13, 2020 at 11:33:27AM +0000, Wei Liu wrote:
+> > > On Mon, Nov 09, 2020 at 11:04:01AM +0100, Andrea Parri (Microsoft) wrote:
+> > > > From: Andres Beltran <lkmlabelt@gmail.com>
+> > > > 
+> > > > Currently, pointers to guest memory are passed to Hyper-V as
+> > > > transaction IDs in storvsc. In the face of errors or malicious
+> > > > behavior in Hyper-V, storvsc should not expose or trust the transaction
+> > > > IDs returned by Hyper-V to be valid guest memory addresses. Instead,
+> > > > use small integers generated by vmbus_requestor as requests
+> > > > (transaction) IDs.
+> > > > 
+> > > > Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
+> > > > Co-developed-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+> > > > Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+> > > > Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+> > > > Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> > > > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> > > > Cc: linux-scsi@vger.kernel.org
+> > > 
+> > > Reviewed-by: Wei Liu <wl@xen.org>
+> > 
+> > Martin already gave his ack back in July. I guess nothing substantial
+> > changed so it should have been carried over?
+> 
+> The only change here happened in v7 and consisted in moving the
+> allocation of the request IDs from the VSC code down into the core
+> vmbus_sendpacket()&co functions.  As mentioned in v7 cover letter,
+> this change was applied to ensure that the allocation in question
+> is performed after the packet is copied into the ring buffer.  On
+> a positive note, this change greatly reduced the diff of this and
+> the following (NetVSC) patches.
+
+Martin and James, are you happy with this change? I would assume you are
+because that means this patch to storvsc is leaner.
+
+Please give an explicit ack if you can. Thanks.
+
+Wei.
+
+> 
+>   Andrea
