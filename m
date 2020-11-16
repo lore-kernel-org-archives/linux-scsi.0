@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45CDAC8256B
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EE70C82570
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09B3720578
+	by mail.kernel.org (Postfix) with ESMTP id E96E62075A
 	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:01:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Iz0K1z2g"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OnR7Hl4G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731212AbgKPPAh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:00:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49276 "EHLO
+        id S1731220AbgKPPAj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:00:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731127AbgKPPAF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 10:00:05 -0500
+        with ESMTP id S1731140AbgKPPAL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 10:00:11 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FDA2C0613CF;
-        Mon, 16 Nov 2020 07:00:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3C13C0613CF;
+        Mon, 16 Nov 2020 07:00:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=9s01ven/lnjzAuhlV063ntSY/vXy7NuM1J7SpBiZFfk=; b=Iz0K1z2gG+m/yrqS3PHmWRLoWX
-        iQ2r9VCIRC1F/onM60kJvAH6c1Mq4RlXW7ec+E4URlz5EGNYvgdquPHqNY52gjE8nE20X9RXX7VMi
-        1DOJ7Vtr4lrIBJ7aVOvb8UqrR2nwcvWP6ZnS5k2cLIXw3A5Dbiaen1+C+S/XhWHMOfqQAtP9C+gT2
-        bC1yTTqhuANia6Zl9uBJicixvJBbdGfQlRzf4UsN7IZa6iajX16uM9PSh5wgGK5K5zsV7yVWM/HD7
-        +fT3KXcxxU4zJu5OS1H+5N5e66rH7O41GjcCcL5p8HAE3cZQ+D+MIf49gWr+tF6YubeZAmAdPRe+t
-        MQay8zLg==;
+        bh=hht0IJxm0Atonm6wFAUEQs4XOgcCelxMQ4knV7FOtuU=; b=OnR7Hl4Gn8Cqes4fUGZG09Ou5b
+        wkdlpWME3XUZyniKD0u6+LvQEZ4jfV5KI0bvgOdKoKy/avRVN1ICpG3ayLr7y9f7mbweYvyb5dtf9
+        LB6vxsD9CHKtKypIkEHeVB91GzwQLjRfxlTFqOarpX4O1io/JrahYaGlAejJ9Wdq1/ICyENnWPCND
+        K6zRNnIdtyLJMuh8Hr4Sfe2rN4rdYR4DXOl0KacL5GfpL0QuIaqSWtKXdNYNYLVFnm5vnjYokZj+O
+        0vQqQ4fnqy8Lr9QzB4VCWPgAQgxp0yphr6N7aK0gOpCB0lKFL+g2IP94YJiiFkRNGuFpsWI78KvwO
+        vmSnReZw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefz1-0004IE-BR; Mon, 16 Nov 2020 14:59:55 +0000
+        id 1kefz6-0004Ja-4t; Mon, 16 Nov 2020 15:00:00 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 73/78] block: use put_device in put_disk
-Date:   Mon, 16 Nov 2020 15:58:04 +0100
-Message-Id: <20201116145809.410558-74-hch@lst.de>
+Subject: [PATCH 76/78] filemap: use ->f_mapping over ->i_mapping consistently
+Date:   Mon, 16 Nov 2020 15:58:07 +0100
+Message-Id: <20201116145809.410558-77-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,27 +70,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use put_device to put the device instead of poking into the internals
-and using kobject_put.
+Use file->f_mapping in all functions that have a struct file available
+to properly handle the case where file_inode(file)->i_mapping !=
+inode->i_mapping.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/filemap.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 56bc37e98ed852..f1e20ec1b62887 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1659,7 +1659,7 @@ EXPORT_SYMBOL(__alloc_disk_node);
- void put_disk(struct gendisk *disk)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index d5e7c2029d16b4..3e3531a757f8db 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2887,13 +2887,13 @@ EXPORT_SYMBOL(filemap_map_pages);
+ vm_fault_t filemap_page_mkwrite(struct vm_fault *vmf)
  {
- 	if (disk)
--		kobject_put(&disk_to_dev(disk)->kobj);
-+		put_device(disk_to_dev(disk));
- }
- EXPORT_SYMBOL(put_disk);
+ 	struct page *page = vmf->page;
+-	struct inode *inode = file_inode(vmf->vma->vm_file);
++	struct inode *inode = vmf->vma->vm_file->f_mapping->host;
+ 	vm_fault_t ret = VM_FAULT_LOCKED;
  
+ 	sb_start_pagefault(inode->i_sb);
+ 	file_update_time(vmf->vma->vm_file);
+ 	lock_page(page);
+-	if (page->mapping != inode->i_mapping) {
++	if (page->mapping != vmf->vma->vm_file->f_mapping) {
+ 		unlock_page(page);
+ 		ret = VM_FAULT_NOPAGE;
+ 		goto out;
+@@ -3149,10 +3149,9 @@ void dio_warn_stale_pagecache(struct file *filp)
+ {
+ 	static DEFINE_RATELIMIT_STATE(_rs, 86400 * HZ, DEFAULT_RATELIMIT_BURST);
+ 	char pathname[128];
+-	struct inode *inode = file_inode(filp);
+ 	char *path;
+ 
+-	errseq_set(&inode->i_mapping->wb_err, -EIO);
++	errseq_set(&filp->f_mapping->wb_err, -EIO);
+ 	if (__ratelimit(&_rs)) {
+ 		path = file_path(filp, pathname, sizeof(pathname));
+ 		if (IS_ERR(path))
+@@ -3179,7 +3178,7 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+ 
+ 	if (iocb->ki_flags & IOCB_NOWAIT) {
+ 		/* If there are pages to writeback, return */
+-		if (filemap_range_has_page(inode->i_mapping, pos,
++		if (filemap_range_has_page(file->f_mapping, pos,
+ 					   pos + write_len - 1))
+ 			return -EAGAIN;
+ 	} else {
 -- 
 2.29.2
 
