@@ -2,156 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A611C56202
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 01:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3CBC63697
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 02:37:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C16DA2227F
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 01:42:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lCzIfI9w"
+	by mail.kernel.org (Postfix) with ESMTP id A2D5D22263
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 02:37:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728359AbgKPBmT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Nov 2020 20:42:19 -0500
-Received: from m42-4.mailgun.net ([69.72.42.4]:21462 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727464AbgKPBmS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 15 Nov 2020 20:42:18 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605490937; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=oELFfS+JC43077ioQij5MVO6J/XlCo1j3sRES4I9xYI=;
- b=lCzIfI9wK8INPDOc2n29iDYgPA+97rajk/WhR7iIKmIFnJQKeFVhKssY1Ex8McmAU8GIwcvw
- 7en1c+mvHJakzvKXYTZsn9krOGdCaifhYVgBfWrTUIsCDzWiG9i+nOAurd8QMHG+LSDSZ9Yr
- z3LMcBe98MLVPEtFet5bTQ9vib0=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 5fb1d8f68e090a8886a85b57 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 16 Nov 2020 01:42:14
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 64E6EC43463; Mon, 16 Nov 2020 01:42:14 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 96DA3C433ED;
-        Mon, 16 Nov 2020 01:42:13 +0000 (UTC)
+        id S1726360AbgKPChK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Nov 2020 21:37:10 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7542 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726338AbgKPChK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 21:37:10 -0500
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CZCrk4ZhYzhZ69;
+        Mon, 16 Nov 2020 10:36:54 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
+ 14.3.487.0; Mon, 16 Nov 2020 10:36:57 +0800
+From:   Kefeng Wang <wangkefeng.wang@huawei.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+CC:     Satish Kharat <satishkh@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Kefeng Wang <wangkefeng.wang@huawei.com>,
+        Hulk Robot <hulkci@huawei.com>
+Subject: [PATCH] scsi: fnic: Fix error return in fnic_probe
+Date:   Mon, 16 Nov 2020 10:41:38 +0800
+Message-ID: <20201116024138.22519-1-wangkefeng.wang@huawei.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 16 Nov 2020 09:42:13 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH RFC v1 1/1] scsi: pm: Leave runtime resume along if block
- layer PM is enabled
-In-Reply-To: <97dea590-5f2e-b4e3-ac64-7c346761c523@acm.org>
-References: <1605249009-13752-1-git-send-email-cang@codeaurora.org>
- <1605249009-13752-2-git-send-email-cang@codeaurora.org>
- <97dea590-5f2e-b4e3-ac64-7c346761c523@acm.org>
-Message-ID: <20f447a438aa98afb18be4642c8888b3@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+If mempool_create_slab_pool fails, return -ENOMEM.
 
-Resent, typo fixed.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/scsi/fnic/fnic_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-On 2020-11-15 04:57, Bart Van Assche wrote:
-> On 11/12/20 10:30 PM, Can Guo wrote:
->> If block layer runtime PM is enabled for one SCSI device, then there 
->> is
->> no need to forcibly change the SCSI device and its request queue's 
->> runtime
->> PM status to active in scsi_dev_type_resume(), since block layer PM 
->> shall
->> resume the SCSI device on the demand of bios.
-> 
-> Please change "along" into "alone" in the subject of this patch (if 
-> that
-> is what you meant).
-> 
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 5f8a7ef8f6a8..4f7befb43d60 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -740,6 +740,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	for (i = 0; i < FNIC_IO_LOCKS; i++)
+ 		spin_lock_init(&fnic->io_req_lock[i]);
+ 
++	err = -ENOMEM;
+ 	fnic->io_req_pool = mempool_create_slab_pool(2, fnic_io_req_cache);
+ 	if (!fnic->io_req_pool)
+ 		goto err_out_free_resources;
+-- 
+2.26.2
 
-Aha, sorry, a typo here.
-
->> +	if (scsi_is_sdev_device(dev)) {
->> +		struct scsi_device *sdev;
->> 
->> +		sdev = to_scsi_device(dev);
-> 
-> A minor comment: I think that "struct scsi_device *sdev =
-> to_scsi_device(dev);" fits on a single line.
-> 
-
-Sure.
-
->> +		 * If block layer runtime PM is enabled for the SCSI device,
->> +		 * let block layer PM handle its runtime PM routines.
-> 
-> Please change "its runtime PM routines" into "runtime resume" or
-> similar. I think that will make the comment more clear.
-> 
-
-Yes, thanks.
-
->> +		if (sdev->request_queue->dev)
->> +			return err;
->> +	}
-> 
-> The 'dev' member only exists in struct request_queue if CONFIG_PM=y so
-> the above won't compile if CONFIG_PM=n. How about adding a function in
-> include/linux/blk-pm.h to check whether or not runtime PM has been 
-> enabled?
-> 
-
-You are right.
-
-> Otherwise this patch looks good to me.
-> 
-
-Actually, I am thinking about removing all the pm_runtime_set_active()
-codes in both scsi_bus_resume_common() and scsi_dev_type_resume() - we
-don't need to forcibly set the runtime PM status to RPM_ACTIVE for 
-either
-SCSI host/target or SCSI devices.
-
-Whenever we access one SCSI device, either block layer or somewhere in
-the path (e.g. throgh sg IOCTL, sg_open() calls 
-scsi_autopm_get_device())
-should runtime resume the device first, and the runtime PM framework 
-makes
-sure device's parent (and its parent's parent and so on)gets resumed as 
-well.
-Thus, the pm_runtime_set_active() seems redundant. What do you think?
-
-Thanks,
-
-Can Guo.
-
-> Thanks,
-> 
-> Bart.
