@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B26EC8254F
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65665C82554
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:02:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03EDE20867
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:02:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 377E0206B7
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:02:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VtALb1vl"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YQQqHRpS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730972AbgKPO7g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49136 "EHLO
+        id S1731326AbgKPPCA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:02:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730943AbgKPO7a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:30 -0500
+        with ESMTP id S1730957AbgKPO7e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:34 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 533E1C0613D1;
-        Mon, 16 Nov 2020 06:59:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAEDFC0617A6;
+        Mon, 16 Nov 2020 06:59:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Ub9jpknBNltWl/xM1z440GPAq6lbWyOu/cfyXRrsD14=; b=VtALb1vlttJ0buxeem4ez+UVG4
-        Hu+Wqzb0QtgrS5QrZw/6aENv47GRNNh/CISIBQASNaoUt+cYAFXDVK4WXECNVL5dVc+xc/uVQOnIg
-        HTLM6KHwDsX+QnIalbhYcS8kk7anQ8yPF0pzoGt/ezmRxs/uYaG5KB5LFuw2m65+v4FLJ9BMD4Ovz
-        FfsRasFisl+b2XzsGmdUtlricIuZ6vBTkUhVjcJ0lMBS4vQc6DLTXfAo6MDzYuO1bB1gpNPStxfTg
-        5oO+avG3iudqBw1sow49CGkIHR2P/HvdJHVOxannWGYHrDjws6h+iO/erNUOkLsTjti8W+DcHNPIc
-        3Oq8t4Bg==;
+        bh=B9SmRAKqCfACKKyGENFkBsseQWLE7CqM6G32RVvIzu4=; b=YQQqHRpSkrytYfsEPQgYxForVD
+        ablAk/WRbGXtgxrxwNPGmkrzt1O8iJfhT5R2bc9kw1ILZs2JspT6CnDAtWi6H1YUByvbdA5f9WyhN
+        uCO93gIlHgtuIV9TH2X+F3LmXC0K4QQezeb3WfKxjzE/QxnV9BXZKeQZppJYBgbbWJVaY6WHdV6Wz
+        o3+F4X3jMir+rU9NgAMuiknEYgx5X5aTQ7lEP6wvCebgL1xLVb4qQYSvAXNIGsZclY1CJa85yva1t
+        3ZOV/mD9/yBkT9Ag7uKj999ThoEG+ydI187GuglZeRckSc1dxAQ1vI9VhLWGyx3iMOWxNRPx1e+V1
+        8b8xJE+w==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyG-0003yI-1n; Mon, 16 Nov 2020 14:59:08 +0000
+        id 1kefyW-00043h-2j; Mon, 16 Nov 2020 14:59:24 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,10 +57,11 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 41/78] swim: don't call blk_register_region
-Date:   Mon, 16 Nov 2020 15:57:32 +0100
-Message-Id: <20201116145809.410558-42-hch@lst.de>
+        Hannes Reinecke <hare@suse.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 52/78] block: switch gendisk lookup to a simple xarray
+Date:   Mon, 16 Nov 2020 15:57:43 +0100
+Message-Id: <20201116145809.410558-53-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -71,59 +72,334 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The swim driver (unlike various other floppy drivers) doesn't have
-magic device nodes for certain modes, and already registers a gendisk
-for each of the floppies supported by a device.  Thus the region
-registered is a no-op and can be removed.
+Now that bdev_map is only used for finding gendisks, we can use
+a simple xarray instead of the regions tracking structure for it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/block/swim.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+ block/genhd.c         | 208 ++++++++----------------------------------
+ include/linux/genhd.h |   7 --
+ 2 files changed, 37 insertions(+), 178 deletions(-)
 
-diff --git a/drivers/block/swim.c b/drivers/block/swim.c
-index 52dd1efa00f9c5..cc6a0bc6c005a7 100644
---- a/drivers/block/swim.c
-+++ b/drivers/block/swim.c
-@@ -745,18 +745,6 @@ static const struct block_device_operations floppy_fops = {
- 	.check_events	 = floppy_check_events,
- };
+diff --git a/block/genhd.c b/block/genhd.c
+index dc8690bc281c16..4a224a3c8e1071 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -27,15 +27,7 @@
  
--static struct kobject *floppy_find(dev_t dev, int *part, void *data)
+ static struct kobject *block_depr;
+ 
+-struct bdev_map {
+-	struct bdev_map *next;
+-	dev_t dev;
+-	unsigned long range;
+-	struct module *owner;
+-	struct kobject *(*probe)(dev_t, int *, void *);
+-	int (*lock)(dev_t, void *);
+-	void *data;
+-} *bdev_map[255];
++static DEFINE_XARRAY(bdev_map);
+ static DEFINE_MUTEX(bdev_map_lock);
+ 
+ /* for extended dynamic devt allocation, currently only one major is used */
+@@ -646,85 +638,26 @@ static char *bdevt_str(dev_t devt, char *buf)
+ 	return buf;
+ }
+ 
+-/*
+- * Register device numbers dev..(dev+range-1)
+- * range must be nonzero
+- * The hash chain is sorted on range, so that subranges can override.
+- */
+-void blk_register_region(dev_t devt, unsigned long range, struct module *module,
+-			 struct kobject *(*probe)(dev_t, int *, void *),
+-			 int (*lock)(dev_t, void *), void *data)
 -{
--	struct swim_priv *swd = data;
--	int drive = (*part & 3);
+-	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
+-	unsigned index = MAJOR(devt);
+-	unsigned i;
+-	struct bdev_map *p;
 -
--	if (drive >= swd->floppy_count)
--		return NULL;
+-	n = min(n, 255u);
+-	p = kmalloc_array(n, sizeof(struct bdev_map), GFP_KERNEL);
+-	if (p == NULL)
+-		return;
 -
--	*part = 0;
--	return get_disk_and_module(swd->unit[drive].disk);
+-	for (i = 0; i < n; i++, p++) {
+-		p->owner = module;
+-		p->probe = probe;
+-		p->lock = lock;
+-		p->dev = devt;
+-		p->range = range;
+-		p->data = data;
+-	}
++static void blk_register_region(struct gendisk *disk)
++{
++	int i;
+ 
+ 	mutex_lock(&bdev_map_lock);
+-	for (i = 0, p -= n; i < n; i++, p++, index++) {
+-		struct bdev_map **s = &bdev_map[index % 255];
+-		while (*s && (*s)->range < range)
+-			s = &(*s)->next;
+-		p->next = *s;
+-		*s = p;
++	for (i = 0; i < disk->minors; i++) {
++		if (xa_insert(&bdev_map, disk_devt(disk) + i, disk, GFP_KERNEL))
++			WARN_ON_ONCE(1);
+ 	}
+ 	mutex_unlock(&bdev_map_lock);
+ }
+-EXPORT_SYMBOL(blk_register_region);
+ 
+-void blk_unregister_region(dev_t devt, unsigned long range)
++static void blk_unregister_region(struct gendisk *disk)
+ {
+-	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
+-	unsigned index = MAJOR(devt);
+-	unsigned i;
+-	struct bdev_map *found = NULL;
++	int i;
+ 
+ 	mutex_lock(&bdev_map_lock);
+-	for (i = 0; i < min(n, 255u); i++, index++) {
+-		struct bdev_map **s;
+-		for (s = &bdev_map[index % 255]; *s; s = &(*s)->next) {
+-			struct bdev_map *p = *s;
+-			if (p->dev == devt && p->range == range) {
+-				*s = p->next;
+-				if (!found)
+-					found = p;
+-				break;
+-			}
+-		}
+-	}
++	for (i = 0; i < disk->minors; i++)
++		xa_erase(&bdev_map, disk_devt(disk) + i);
+ 	mutex_unlock(&bdev_map_lock);
+-	kfree(found);
+-}
+-EXPORT_SYMBOL(blk_unregister_region);
+-
+-static struct kobject *exact_match(dev_t devt, int *partno, void *data)
+-{
+-	struct gendisk *p = data;
+-
+-	return &disk_to_dev(p)->kobj;
 -}
 -
- static int swim_add_floppy(struct swim_priv *swd, enum drive_location location)
- {
- 	struct floppy_state *fs = &swd->unit[swd->floppy_count];
-@@ -846,9 +834,6 @@ static int swim_floppy_init(struct swim_priv *swd)
- 		add_disk(swd->unit[drive].disk);
+-static int exact_lock(dev_t devt, void *data)
+-{
+-	struct gendisk *p = data;
+-
+-	if (!get_disk_and_module(p))
+-		return -1;
+-	return 0;
+ }
+ 
+ static void disk_scan_partitions(struct gendisk *disk)
+@@ -870,8 +803,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+ 		ret = bdi_register(bdi, "%u:%u", MAJOR(devt), MINOR(devt));
+ 		WARN_ON(ret);
+ 		bdi_set_owner(bdi, dev);
+-		blk_register_region(disk_devt(disk), disk->minors, NULL,
+-				    exact_match, exact_lock, disk);
++		blk_register_region(disk);
  	}
+ 	register_disk(parent, disk, groups);
+ 	if (register_queue)
+@@ -984,7 +916,7 @@ void del_gendisk(struct gendisk *disk)
+ 	blk_unregister_queue(disk);
+ 	
+ 	if (!(disk->flags & GENHD_FL_HIDDEN))
+-		blk_unregister_region(disk_devt(disk), disk->minors);
++		blk_unregister_region(disk);
+ 	/*
+ 	 * Remove gendisk pointer from idr so that it cannot be looked up
+ 	 * while RCU period before freeing gendisk is running to prevent
+@@ -1050,54 +982,22 @@ static void request_gendisk_module(dev_t devt)
+ 		request_module("block-major-%d", MAJOR(devt));
+ }
  
--	blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
--			    floppy_find, NULL, swd);
+-static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
++static bool get_disk_and_module(struct gendisk *disk)
+ {
+-	struct kobject *kobj;
+-	struct bdev_map *p;
+-	unsigned long best = ~0UL;
 -
- 	return 0;
- 
- exit_put_disks:
-@@ -932,8 +917,6 @@ static int swim_remove(struct platform_device *dev)
- 	int drive;
- 	struct resource *res;
- 
--	blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
+-retry:
+-	mutex_lock(&bdev_map_lock);
+-	for (p = bdev_map[MAJOR(dev) % 255]; p; p = p->next) {
+-		struct kobject *(*probe)(dev_t, int *, void *);
+-		struct module *owner;
+-		void *data;
 -
- 	for (drive = 0; drive < swd->floppy_count; drive++) {
- 		del_gendisk(swd->unit[drive].disk);
- 		blk_cleanup_queue(swd->unit[drive].disk->queue);
+-		if (p->dev > dev || p->dev + p->range - 1 < dev)
+-			continue;
+-		if (p->range - 1 >= best)
+-			break;
+-		if (!try_module_get(p->owner))
+-			continue;
+-		owner = p->owner;
+-		data = p->data;
+-		probe = p->probe;
+-		best = p->range - 1;
+-		*partno = dev - p->dev;
+-
+-		if (!probe) {
+-			mutex_unlock(&bdev_map_lock);
+-			module_put(owner);
+-			request_gendisk_module(dev);
+-			goto retry;
+-		}
++	struct module *owner;
+ 
+-		if (p->lock && p->lock(dev, data) < 0) {
+-			module_put(owner);
+-			continue;
+-		}
+-		mutex_unlock(&bdev_map_lock);
+-		kobj = probe(dev, partno, data);
+-		/* Currently ->owner protects _only_ ->probe() itself. */
++	if (!disk->fops)
++		return false;
++	owner = disk->fops->owner;
++	if (owner && !try_module_get(owner))
++		return false;
++	if (!kobject_get_unless_zero(&disk_to_dev(disk)->kobj)) {
+ 		module_put(owner);
+-		if (kobj)
+-			return dev_to_disk(kobj_to_dev(kobj));
+-		goto retry;
++		return false;
+ 	}
+-	mutex_unlock(&bdev_map_lock);
+-	return NULL;
+-}
++	return true;
+ 
++}
+ 
+ /**
+  * get_gendisk - get partitioning information for a given device
+@@ -1116,7 +1016,19 @@ struct gendisk *get_gendisk(dev_t devt, int *partno)
+ 	might_sleep();
+ 
+ 	if (MAJOR(devt) != BLOCK_EXT_MAJOR) {
+-		disk = lookup_gendisk(devt, partno);
++		mutex_lock(&bdev_map_lock);
++		disk = xa_load(&bdev_map, devt);
++		if (!disk) {
++			mutex_unlock(&bdev_map_lock);
++			request_gendisk_module(devt);
++			mutex_lock(&bdev_map_lock);
++			disk = xa_load(&bdev_map, devt);
++		}
++		if (disk && !get_disk_and_module(disk))
++			disk = NULL;
++		if (disk)
++			*partno = devt - disk_devt(disk);
++		mutex_unlock(&bdev_map_lock);
+ 	} else {
+ 		struct hd_struct *part;
+ 
+@@ -1320,21 +1232,6 @@ static const struct seq_operations partitions_op = {
+ };
+ #endif
+ 
+-static void bdev_map_init(void)
+-{
+-	struct bdev_map *base;
+-	int i;
+-
+-	base = kzalloc(sizeof(*base), GFP_KERNEL);
+-	if (!base)
+-		panic("cannot allocate bdev_map");
+-
+-	base->dev = 1;
+-	base->range = ~0 ;
+-	for (i = 0; i < 255; i++)
+-		bdev_map[i] = base;
+-}
+-
+ static int __init genhd_device_init(void)
+ {
+ 	int error;
+@@ -1343,7 +1240,6 @@ static int __init genhd_device_init(void)
+ 	error = class_register(&block_class);
+ 	if (unlikely(error))
+ 		return error;
+-	bdev_map_init();
+ 	blk_dev_init();
+ 
+ 	register_blkdev(BLOCK_EXT_MAJOR, "blkext");
+@@ -1892,35 +1788,6 @@ struct gendisk *__alloc_disk_node(int minors, int node_id)
+ }
+ EXPORT_SYMBOL(__alloc_disk_node);
+ 
+-/**
+- * get_disk_and_module - increments the gendisk and gendisk fops module refcount
+- * @disk: the struct gendisk to increment the refcount for
+- *
+- * This increments the refcount for the struct gendisk, and the gendisk's
+- * fops module owner.
+- *
+- * Context: Any context.
+- */
+-struct kobject *get_disk_and_module(struct gendisk *disk)
+-{
+-	struct module *owner;
+-	struct kobject *kobj;
+-
+-	if (!disk->fops)
+-		return NULL;
+-	owner = disk->fops->owner;
+-	if (owner && !try_module_get(owner))
+-		return NULL;
+-	kobj = kobject_get_unless_zero(&disk_to_dev(disk)->kobj);
+-	if (kobj == NULL) {
+-		module_put(owner);
+-		return NULL;
+-	}
+-	return kobj;
+-
+-}
+-EXPORT_SYMBOL(get_disk_and_module);
+-
+ /**
+  * put_disk - decrements the gendisk refcount
+  * @disk: the struct gendisk to decrement the refcount for
+@@ -1957,7 +1824,6 @@ void put_disk_and_module(struct gendisk *disk)
+ 		module_put(owner);
+ 	}
+ }
+-EXPORT_SYMBOL(put_disk_and_module);
+ 
+ static void set_disk_ro_uevent(struct gendisk *gd, int ro)
+ {
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 04f6a6bf577a90..46553d6d602563 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -338,15 +338,8 @@ int blk_add_partitions(struct gendisk *disk, struct block_device *bdev);
+ int blk_drop_partitions(struct block_device *bdev);
+ 
+ extern struct gendisk *__alloc_disk_node(int minors, int node_id);
+-extern struct kobject *get_disk_and_module(struct gendisk *disk);
+ extern void put_disk(struct gendisk *disk);
+ extern void put_disk_and_module(struct gendisk *disk);
+-extern void blk_register_region(dev_t devt, unsigned long range,
+-			struct module *module,
+-			struct kobject *(*probe)(dev_t, int *, void *),
+-			int (*lock)(dev_t, void *),
+-			void *data);
+-extern void blk_unregister_region(dev_t devt, unsigned long range);
+ 
+ #define alloc_disk_node(minors, node_id)				\
+ ({									\
 -- 
 2.29.2
 
