@@ -2,46 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A089EC5519F
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 10:22:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF09C4742C
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51DFE221F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 10:22:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5CC4221F9
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728566AbgKPJpr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 04:45:47 -0500
-Received: from mx2.suse.de ([195.135.220.15]:37474 "EHLO mx2.suse.de"
+        id S1727943AbgKPHuy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 02:50:54 -0500
+Received: from mx2.suse.de ([195.135.220.15]:52654 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726598AbgKPJpq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Nov 2020 04:45:46 -0500
+        id S1726524AbgKPHuy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Nov 2020 02:50:54 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 38778ACE0;
-        Mon, 16 Nov 2020 09:45:45 +0000 (UTC)
-Subject: Re: [PATCH V4 08/12] blk-mq: return budget token from .get_budget
- callback
-To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Omar Sandoval <osandov@fb.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>
-References: <20201116090737.50989-1-ming.lei@redhat.com>
- <20201116090737.50989-9-ming.lei@redhat.com>
+        by mx2.suse.de (Postfix) with ESMTP id 883EEAF96;
+        Mon, 16 Nov 2020 07:50:52 +0000 (UTC)
+Subject: Re: [PATCH v4 07/19] lpfc: vmid: Forward declarations for APIs
+To:     Muneendra <muneendra.kumar@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
+        pbonzini@redhat.com,
+        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
+References: <1604895845-2587-1-git-send-email-muneendra.kumar@broadcom.com>
+ <1604895845-2587-8-git-send-email-muneendra.kumar@broadcom.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <89637fa3-28dc-62e9-57aa-cc4632e37061@suse.de>
-Date:   Mon, 16 Nov 2020 10:45:44 +0100
+Message-ID: <a88e24ae-159e-4cbc-9142-63c21cd85413@suse.de>
+Date:   Mon, 16 Nov 2020 08:50:51 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201116090737.50989-9-ming.lei@redhat.com>
+In-Reply-To: <1604895845-2587-8-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -49,33 +46,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/16/20 10:07 AM, Ming Lei wrote:
-> SCSI uses one global atomic variable to track queue depth for each
-> LUN/request queue.
+On 11/9/20 5:23 AM, Muneendra wrote:
+> From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
 > 
-> This way doesn't scale well when there is lots of CPU cores and the
-> disk is very fast. It has been observed that IOPS is affected a lot
-> by tracking queue depth via sdev->device_busy in IO path.
+> This patch contains the forward declarations of commonly used APIs which
+> are used outside the scope of the file.
 > 
-> Return budget token from .get_budget callback, and the budget token
-> can be passed to driver, so that we can replace the atomic variable
-> with sbitmap_queue, then the scale issue can be fixed.
+> Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
 > 
-> Cc: Omar Sandoval <osandov@fb.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-> Cc: Ewan D. Milne <emilne@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->   block/blk-mq-sched.c    | 17 +++++++++++++----
->   block/blk-mq.c          | 36 +++++++++++++++++++++++++-----------
->   block/blk-mq.h          | 25 +++++++++++++++++++++----
->   drivers/scsi/scsi_lib.c | 16 +++++++++++-----
->   include/linux/blk-mq.h  |  4 ++--
->   5 files changed, 72 insertions(+), 26 deletions(-)
-> Reviewed-by: Hannes Reinecke <hare@suse.de
+> v4:
+> No change
+> 
+> v3:
+> No change
+> 
+> v2:
+> Ported the patch on top of 5.10/scsi-queue
+> ---
+>   drivers/scsi/lpfc/lpfc_crtn.h | 11 +++++++++++
+>   1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+> index 782f6f76f18a..74ca5860ca8e 100644
+> --- a/drivers/scsi/lpfc/lpfc_crtn.h
+> +++ b/drivers/scsi/lpfc/lpfc_crtn.h
+> @@ -600,3 +600,14 @@ extern int lpfc_enable_nvmet_cnt;
+>   extern unsigned long long lpfc_enable_nvmet[];
+>   extern int lpfc_no_hba_reset_cnt;
+>   extern unsigned long lpfc_no_hba_reset[];
+> +
+> +/* vmid interface */
+> +int lpfc_vmid_uvem(struct lpfc_vport *vport, struct lpfc_vmid *vmid, bool ins);
+> +u32 lpfc_vmid_get_cs_ctl(struct lpfc_vport *vport);
+> +int lpfc_vmid_cmd(struct lpfc_vport *vport,
+> +		  int cmdcode, struct lpfc_vmid *vmid);
+> +int lpfc_vmid_hash_fn(char *vmid, int len);
+> +struct lpfc_vmid *lpfc_get_vmid_from_hastable(struct lpfc_vport *vport,
+> +					      u32 hash, u8 *buf);
+> +void lpfc_vmid_vport_cleanup(struct lpfc_vport *vport);
+> +int lpfc_issue_els_qfpa(struct lpfc_vport *vport);
+> 
+uint32_t ...
 
 Cheers,
 
