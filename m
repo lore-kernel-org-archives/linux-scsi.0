@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6914FC82542
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C07A4C82547
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3329F22263
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66EF6241A3
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tNKy0A5I"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k5dNhGax"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730886AbgKPO7U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49084 "EHLO
+        id S1730919AbgKPO7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730860AbgKPO7R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:17 -0500
+        with ESMTP id S1730891AbgKPO7X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:23 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45434C0613D1;
-        Mon, 16 Nov 2020 06:59:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 602CCC0617A6;
+        Mon, 16 Nov 2020 06:59:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=j9YzX4Imfj42oekp8Tth+LQoKAxJAOk+J48Ms5WWyRs=; b=tNKy0A5I0JGyRwszKo8CS5i8OD
-        +8V953YfFx3Xman6sQ8F42cjnDZ+fEMnGq+5JSKyBoWRq84B0ROGouApW++jZ44y6feigXqLuqKsR
-        cxqh2lFOkiVIegiphp90kij1qmc1NDslqQZNsGbC21VOg69MDd/n08QOAs5NDSIePC2uZIeQod82Z
-        T6wB+Z9xXg1/0NZKtWCv5t7lkIbvOb2buar5vD5Qry8bhovOugY2M7SSd4S16Dl+mklfVYWbkqbny
-        8IY3ZaEc9JVI0kFlBfL2Zv+6ubgx5Kd03xor/wsERRQOPm0Gj4ArtdUOT7w0cJYRw8cIK/bIaVXYw
-        0ktG/eKQ==;
+        bh=K+kkAiIfWzB4syRFt+33j5OXLPH83fZlF9ACMDZkYhg=; b=k5dNhGax8VxlBfuaj9EQBdAXgt
+        4072QYhm07kKi1w+W9nEyoMSW3ELii8kjNeM1F9XviJBMC0uEQv6MPhU9nRzHBDI1yZZmWAy9Q0N2
+        fTvPwi+VC8nhfIjC7jFXt9leIcNNiMb0XmPx9eg/JoTwye7h/y7KHjVMVYweaBNLQMktbr4A8iWEt
+        dOTjTgdEq+CLoKYrid8bVvBdmQLTGWBIgPYXUmyZ/n6rnRuKWj+UuQ5XIshtknCUOMSkMwKUNjD5w
+        dJBoojTYMzEvaH9mPATlftM3BLIRcn7GZkGadLtxoUQdZeeK4Y0pHIv111cNROAtxxvV+mZxdO2Kj
+        KOai2cDA==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyB-0003xB-Ni; Mon, 16 Nov 2020 14:59:04 +0000
+        id 1kefyL-0003zc-NO; Mon, 16 Nov 2020 14:59:14 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -58,9 +58,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 38/78] block: rework requesting modules for unclaimed devices
-Date:   Mon, 16 Nov 2020 15:57:29 +0100
-Message-Id: <20201116145809.410558-39-hch@lst.de>
+Subject: [PATCH 45/78] md: use __register_blkdev to allocate devices on demand
+Date:   Mon, 16 Nov 2020 15:57:36 +0100
+Message-Id: <20201116145809.410558-46-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -71,73 +71,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of reusing the ranges in bdev_map, add a new helper that is
-called if no ranges was found.  This is a first step to unpeel and
-eventually remove the complex ranges structure.
+Use the simpler mechanism attached to major_name to allocate a md device
+when a currently unregistered minor is accessed.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Song Liu <song@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- block/genhd.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+ drivers/md/md.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 2a20372756625e..8391e7d83a6920 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1028,6 +1028,13 @@ static ssize_t disk_badblocks_store(struct device *dev,
- 	return badblocks_store(disk->bb, page, len, 0);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index fa31b71a72a35d..b2edf5e0f965b5 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5764,11 +5764,12 @@ static int md_alloc(dev_t dev, char *name)
+ 	return error;
  }
  
-+static void request_gendisk_module(dev_t devt)
-+{
-+	if (request_module("block-major-%d-%d", MAJOR(devt), MINOR(devt)) > 0)
-+		/* Make old-style 2.4 aliases work */
-+		request_module("block-major-%d", MAJOR(devt));
-+}
-+
- static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
+-static struct kobject *md_probe(dev_t dev, int *part, void *data)
++static void md_probe(dev_t dev)
  {
- 	struct kobject *kobj;
-@@ -1052,6 +1059,14 @@ static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
- 		probe = p->probe;
- 		best = p->range - 1;
- 		*partno = dev - p->dev;
-+
-+		if (!probe) {
-+			mutex_unlock(&bdev_map_lock);
-+			module_put(owner);
-+			request_gendisk_module(dev);
-+			goto retry;
-+		}
-+
- 		if (p->lock && p->lock(dev, data) < 0) {
- 			module_put(owner);
- 			continue;
-@@ -1290,15 +1305,6 @@ static const struct seq_operations partitions_op = {
- };
- #endif
- 
--
--static struct kobject *base_probe(dev_t devt, int *partno, void *data)
--{
--	if (request_module("block-major-%d-%d", MAJOR(devt), MINOR(devt)) > 0)
--		/* Make old-style 2.4 aliases work */
--		request_module("block-major-%d", MAJOR(devt));
++	if (MAJOR(dev) == MD_MAJOR && MINOR(dev) >= 512)
++		return;
+ 	if (create_on_open)
+ 		md_alloc(dev, NULL);
 -	return NULL;
--}
--
- static void bdev_map_init(void)
- {
- 	struct bdev_map *base;
-@@ -1310,7 +1316,6 @@ static void bdev_map_init(void)
- 
- 	base->dev = 1;
- 	base->range = ~0 ;
--	base->probe = base_probe;
- 	for (i = 0; i < 255; i++)
- 		bdev_map[i] = base;
  }
+ 
+ static int add_named_array(const char *val, const struct kernel_param *kp)
+@@ -6532,7 +6533,7 @@ static void autorun_devices(int part)
+ 			break;
+ 		}
+ 
+-		md_probe(dev, NULL, NULL);
++		md_probe(dev);
+ 		mddev = mddev_find(dev);
+ 		if (!mddev || !mddev->gendisk) {
+ 			if (mddev)
+@@ -9563,18 +9564,15 @@ static int __init md_init(void)
+ 	if (!md_rdev_misc_wq)
+ 		goto err_rdev_misc_wq;
+ 
+-	if ((ret = register_blkdev(MD_MAJOR, "md")) < 0)
++	ret = __register_blkdev(MD_MAJOR, "md", md_probe);
++	if (ret < 0)
+ 		goto err_md;
+ 
+-	if ((ret = register_blkdev(0, "mdp")) < 0)
++	ret = __register_blkdev(0, "mdp", md_probe);
++	if (ret < 0)
+ 		goto err_mdp;
+ 	mdp_major = ret;
+ 
+-	blk_register_region(MKDEV(MD_MAJOR, 0), 512, THIS_MODULE,
+-			    md_probe, NULL, NULL);
+-	blk_register_region(MKDEV(mdp_major, 0), 1UL<<MINORBITS, THIS_MODULE,
+-			    md_probe, NULL, NULL);
+-
+ 	register_reboot_notifier(&md_notifier);
+ 	raid_table_header = register_sysctl_table(raid_root_table);
+ 
+@@ -9841,9 +9839,6 @@ static __exit void md_exit(void)
+ 	struct list_head *tmp;
+ 	int delay = 1;
+ 
+-	blk_unregister_region(MKDEV(MD_MAJOR,0), 512);
+-	blk_unregister_region(MKDEV(mdp_major,0), 1U << MINORBITS);
+-
+ 	unregister_blkdev(MD_MAJOR,"md");
+ 	unregister_blkdev(mdp_major, "mdp");
+ 	unregister_reboot_notifier(&md_notifier);
 -- 
 2.29.2
 
