@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20A38C82560
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A579FC8255F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8229241A6
+	by mail.kernel.org (Postfix) with ESMTP id 609D822263
 	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gei8YMmy"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YOFzGbUV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730987AbgKPO7l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49174 "EHLO
+        id S1731002AbgKPO7j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731001AbgKPO7j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:39 -0500
+        with ESMTP id S1730987AbgKPO7h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:37 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC7B2C0613CF;
-        Mon, 16 Nov 2020 06:59:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D56C0613CF;
+        Mon, 16 Nov 2020 06:59:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=AuzCwkw90Oy6IPNhoiC+qBglSTsZM+HyoDoCPgOfof0=; b=Gei8YMmy1pPuUmlC/BZRAtHClX
-        92uN480odx4m65CCc4Tfb2n7qkWXXDlvv232pz3oEAX+XbC7INmbsQu431O6VUovjCbxRXS/6+CGm
-        I03IsfR/g+MC38cctw2PBlul5o941KKyElmuVJhnyEIK9fLr9jathnAglj+AJmt+2gxYimOEFvVaN
-        M/TT6NDHo35SQ0IqAeU3wK0Jd6ZgWYZ3++nf1EvXI57cDYNw3hpvRFLXn2hKDcFrK6sI1K2XntRYw
-        SrT2g7HIUak8u4YpPV3kCsIBS/JUz8pIwPLmbN0ck/5og2vPZl4CYZ3h8OXDoTM0q+/eHv9liSw30
-        he5+yUVA==;
+        bh=JcB9e14ZTBoVWi3xdlC8mpSR3JW9dN3IR752p30j0qE=; b=YOFzGbUV9VEtyNxwp7qzlkBkkA
+        Xn0oawKxqvp0rAIqeYWfpnGW5iMkDHaT9Q19LnRvvfRleFF+dEeV1rIXFrxzZ6V3OKsv1gqggDose
+        CZ8HXwPH00Ft2bAKbkVkNVOZSwCoCf+BbjKAUSbeaDWhW2TFIaXsT/mf0vQ14ewbGqO18nmazvj5g
+        b1Wy0xuDKhqpZX+ptswIwNRpIl/sRXy2DRT6yF/1ufD4XI4Nw45co8Yphscy9XmWqZZmCKt0hG1sl
+        9Nlddjx5eT+Hbi58Z8JKvsvZh3X28RVFCimEe1Pj+dy6gOSZ5ekmYcmi5bYlS8agcooKnl5AoCpPZ
+        e88oTXSg==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefya-00045V-AA; Mon, 16 Nov 2020 14:59:28 +0000
+        id 1kefyX-00044O-9l; Mon, 16 Nov 2020 14:59:25 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 55/78] block: change the hash used for looking up block devices
-Date:   Mon, 16 Nov 2020 15:57:46 +0100
-Message-Id: <20201116145809.410558-56-hch@lst.de>
+Subject: [PATCH 53/78] blk-cgroup: fix a hd_struct leak in blkcg_fill_root_iostats
+Date:   Mon, 16 Nov 2020 15:57:44 +0100
+Message-Id: <20201116145809.410558-54-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,64 +70,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adding the minor to the major creates tons of pointless conflicts. Just
-use the dev_t itself, which is 32-bits and thus is guaranteed to fit
-into ino_t.
+disk_get_part needs to be paired with a disk_put_part.
 
+Fixes: ef45fe470e1 ("blk-cgroup: show global disk stats in root cgroup io.stat")
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/block_dev.c | 26 ++------------------------
- 1 file changed, 2 insertions(+), 24 deletions(-)
+ block/blk-cgroup.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index d8664f5c1ff669..29db12c3bb501c 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -870,35 +870,12 @@ void __init bdev_cache_init(void)
- 	blockdev_superblock = bd_mnt->mnt_sb;   /* For writeback */
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c68bdf58c9a6e1..54fbe1e80cc41a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -849,6 +849,7 @@ static void blkcg_fill_root_iostats(void)
+ 			blkg_iostat_set(&blkg->iostat.cur, &tmp);
+ 			u64_stats_update_end(&blkg->iostat.sync);
+ 		}
++		disk_put_part(part);
+ 	}
  }
  
--/*
-- * Most likely _very_ bad one - but then it's hardly critical for small
-- * /dev and can be fixed when somebody will need really large one.
-- * Keep in mind that it will be fed through icache hash function too.
-- */
--static inline unsigned long hash(dev_t dev)
--{
--	return MAJOR(dev)+MINOR(dev);
--}
--
--static int bdev_test(struct inode *inode, void *data)
--{
--	return BDEV_I(inode)->bdev.bd_dev == *(dev_t *)data;
--}
--
--static int bdev_set(struct inode *inode, void *data)
--{
--	BDEV_I(inode)->bdev.bd_dev = *(dev_t *)data;
--	return 0;
--}
--
- static struct block_device *bdget(dev_t dev)
- {
- 	struct block_device *bdev;
- 	struct inode *inode;
- 
--	inode = iget5_locked(blockdev_superblock, hash(dev),
--			bdev_test, bdev_set, &dev);
--
-+	inode = iget_locked(blockdev_superblock, dev);
- 	if (!inode)
- 		return NULL;
- 
-@@ -910,6 +887,7 @@ static struct block_device *bdget(dev_t dev)
- 		bdev->bd_super = NULL;
- 		bdev->bd_inode = inode;
- 		bdev->bd_part_count = 0;
-+		bdev->bd_dev = dev;
- 		inode->i_mode = S_IFBLK;
- 		inode->i_rdev = dev;
- 		inode->i_bdev = bdev;
 -- 
 2.29.2
 
