@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A8EC64E7C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:04:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41913C8301A
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:04:01 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1CDD20867
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB74F20867
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:04:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UeKPjR9H"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org B1CDD20867
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LW4/6M2B"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EB74F20867
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-scsi-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730785AbgKPO7D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49010 "EHLO
+        id S1730777AbgKPO7C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730742AbgKPO66 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:58 -0500
+        with ESMTP id S1730756AbgKPO7B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:01 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DE5EC0613D1;
-        Mon, 16 Nov 2020 06:58:58 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02656C0617A6;
+        Mon, 16 Nov 2020 06:59:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=2smnVJT4M8MVl5MGvHMWtgKudyWqsSN/hT8JKVcTkcU=; b=UeKPjR9HaE3H/C6qkhiTe+Rocu
-        9ShxKNi2wYBSK1rbD5wbPkjZToEWHwpbA4XMmV+yrAvhrlb8waEumxcmLoo6UJpHzT0oVsedCaTNL
-        vW0OMgcrFRZWuj9afM+tWViwsKJaqn/qJwmqXTkY1DXr3Udw+lcZ1Jmvd9j5+tvAB+GIbBJjsq0cu
-        EaxCxhsT192EWhx+hhW0l/8Cx9tvBzSIb1ezyuiHE2R3FTysXBl34PHXfUeZshdFbbBjcZGRonRTx
-        gq9eiawuSsc+VqdBITNC40hyduSCiehl7z2/Koo7uijrjtnSFRlmObRyTCoTBE1CTJke9v1CYf9cY
-        zJjjwESg==;
+        bh=haCFfej0iNxilydygMyUNjj0Bzl5Tk5LXJ0r2tE8cD8=; b=LW4/6M2BzdkZTdqoW9FpaTex6c
+        yeKDdiRW6YnjlyAChX8LOEfPaouAWA0tFFvwyKbNtb7HoVUHscIVNlHgeVi2r165V1Tgx2aKkdZoP
+        5MjECd6pnbCNmIKVL6LmyxCwiO5++Zt+k2n/pjncfbsde1PoD8Cu5ziFp6YpuimOpFnfiFXcluzY4
+        HbgmfYC3nd/XNICvtV7c6pBxIpTCRYdTKbASCAZ7TD3/gUoOQTvaAnYemXljNQV80vURAaL809+Vh
+        hU7hK9mcTqnz4YcJiM0y5yyLVhx38oqqfkWNTgrF7gN0aHG6mAnvRtyuEG1/Rhv1Yoe0OxefT5aK2
+        GBVJ9+jg==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxt-0003sX-50; Mon, 16 Nov 2020 14:58:45 +0000
+        id 1kefxx-0003tO-1m; Mon, 16 Nov 2020 14:58:49 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -60,9 +60,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 25/78] block: don't call into the driver for BLKFLSBUF
-Date:   Mon, 16 Nov 2020 15:57:16 +0100
-Message-Id: <20201116145809.410558-26-hch@lst.de>
+Subject: [PATCH 28/78] md: implement ->set_read_only to hook into BLKROSET processing
+Date:   Mon, 16 Nov 2020 15:57:19 +0100
+Message-Id: <20201116145809.410558-29-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -73,34 +73,115 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-BLKFLSBUF is entirely contained in the block core, and there is no
-good reason to give the driver a hook into processing it.
+Implement the ->set_read_only method instead of parsing the actual
+ioctl command.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/ioctl.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/md/md.c | 62 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 31 insertions(+), 31 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 3fbc382eb926d4..c6d8863f040945 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -369,15 +369,8 @@ static inline int is_unrecognized_ioctl(int ret)
- static int blkdev_flushbuf(struct block_device *bdev, fmode_t mode,
- 		unsigned cmd, unsigned long arg)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 32e375d50fee17..fa31b71a72a35d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7477,7 +7477,6 @@ static inline bool md_ioctl_valid(unsigned int cmd)
  {
--	int ret;
+ 	switch (cmd) {
+ 	case ADD_NEW_DISK:
+-	case BLKROSET:
+ 	case GET_ARRAY_INFO:
+ 	case GET_BITMAP_FILE:
+ 	case GET_DISK_INFO:
+@@ -7504,7 +7503,6 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
+ 	int err = 0;
+ 	void __user *argp = (void __user *)arg;
+ 	struct mddev *mddev = NULL;
+-	int ro;
+ 	bool did_set_md_closing = false;
+ 
+ 	if (!md_ioctl_valid(cmd))
+@@ -7684,35 +7682,6 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
+ 			goto unlock;
+ 		}
+ 		break;
 -
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
+-	case BLKROSET:
+-		if (get_user(ro, (int __user *)(arg))) {
+-			err = -EFAULT;
+-			goto unlock;
+-		}
+-		err = -EINVAL;
 -
--	ret = __blkdev_driver_ioctl(bdev, mode, cmd, arg);
--	if (!is_unrecognized_ioctl(ret))
--		return ret;
+-		/* if the bdev is going readonly the value of mddev->ro
+-		 * does not matter, no writes are coming
+-		 */
+-		if (ro)
+-			goto unlock;
 -
- 	fsync_bdev(bdev);
- 	invalidate_bdev(bdev);
- 	return 0;
+-		/* are we are already prepared for writes? */
+-		if (mddev->ro != 1)
+-			goto unlock;
+-
+-		/* transitioning to readauto need only happen for
+-		 * arrays that call md_write_start
+-		 */
+-		if (mddev->pers) {
+-			err = restart_array(mddev);
+-			if (err == 0) {
+-				mddev->ro = 2;
+-				set_disk_ro(mddev->gendisk, 0);
+-			}
+-		}
+-		goto unlock;
+ 	}
+ 
+ 	/*
+@@ -7806,6 +7775,36 @@ static int md_compat_ioctl(struct block_device *bdev, fmode_t mode,
+ }
+ #endif /* CONFIG_COMPAT */
+ 
++static int md_set_read_only(struct block_device *bdev, bool ro)
++{
++	struct mddev *mddev = bdev->bd_disk->private_data;
++	int err;
++
++	err = mddev_lock(mddev);
++	if (err)
++		return err;
++
++	if (!mddev->raid_disks && !mddev->external) {
++		err = -ENODEV;
++		goto out_unlock;
++	}
++
++	/*
++	 * Transitioning to read-auto need only happen for arrays that call
++	 * md_write_start and which are not ready for writes yet.
++	 */
++	if (!ro && mddev->ro == 1 && mddev->pers) {
++		err = restart_array(mddev);
++		if (err)
++			goto out_unlock;
++		mddev->ro = 2;
++	}
++
++out_unlock:
++	mddev_unlock(mddev);
++	return err;
++}
++
+ static int md_open(struct block_device *bdev, fmode_t mode)
+ {
+ 	/*
+@@ -7883,6 +7882,7 @@ const struct block_device_operations md_fops =
+ #endif
+ 	.getgeo		= md_getgeo,
+ 	.check_events	= md_check_events,
++	.set_read_only	= md_set_read_only,
+ };
+ 
+ static int md_thread(void *arg)
 -- 
 2.29.2
 
