@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70325C64E7A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 725DCC82545
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B084241A7
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D09524248
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sSbJyd5Z"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VdELZpYq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731179AbgKPPAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:00:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49308 "EHLO
+        id S1731164AbgKPPAO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:00:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731152AbgKPPAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 10:00:13 -0500
+        with ESMTP id S1730296AbgKPPAJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 10:00:09 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85461C0613CF;
-        Mon, 16 Nov 2020 07:00:13 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76AC1C0613D2;
+        Mon, 16 Nov 2020 07:00:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=YfjTrndpak8c8C7A2Wr6OEv1ltyYeLktzUiwQ2pu+CA=; b=sSbJyd5Z5KD2Jm06fbaragik+M
-        U4XXVDpuxMNv4/WjvlIpVZ5hUtJVUjJwX0o6moSI38FP1aoBNjPnqu8o8kZG9K4b+WNesnRErmT0w
-        c6uY7DfOfd9C5ydCEyUMR677DxoiIxYLRbGGQfJ2J5j6waIzphSYMTKUR+nE58YtYY8s0sKyBH3Ag
-        gi1DVUl5tW1CH54AIrFJbhR7wa+qgoeCULdOKd8s1qQnapCkGCpIt0k3E1/tTPjMNE85mVQKwftyC
-        EQD17+/p3VVrTmL/7uawHNQSIdYnwo33SsrBvTjwr6J9LQP9HpQU2Rf1rToCbxKxVr+U/txNCS6he
-        amu9O3qQ==;
+        bh=MRrZvPHBJ7MmOJqwCwh6BOwzTdjIUug0RFrQfdUF4D0=; b=VdELZpYq+wC9PRGd7E7gW7f022
+        iWbf/yBwlwECTqIWeSXdM3vxnd7C5rUPQt4zYgr4w4y5VS7aEw4XAXZZL1+gLjTfVzbErgItFolKx
+        NoEr+DW9LtrWG9rcze2kkbyopscePeN91WRL96HJxHAuEnkYQzapbI9qst3MaFX6akHBdBUBm7/eb
+        Ud1nBnozpN0bnLBzUbAJlQGLF7WvSR9ySOqhWBvr5OEnKwbk0b1hc36z3Q1K2nfJ5d/hpkLfSI8aB
+        GuaLrCyXWDM01VUM6hy+z+KyIliSIUOnGWO2OtY/JMGDpZLn+Yks0DpKHFYl+4qlADIgIFPwiG6NQ
+        nFJMH8wg==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefz7-0004KI-Jc; Mon, 16 Nov 2020 15:00:02 +0000
+        id 1kefyy-0004HD-T0; Mon, 16 Nov 2020 14:59:53 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 77/78] fs: simplify the get_super_thawed interface
-Date:   Mon, 16 Nov 2020 15:58:08 +0100
-Message-Id: <20201116145809.410558-78-hch@lst.de>
+Subject: [PATCH 71/78] block: add a bdev_kobj helper
+Date:   Mon, 16 Nov 2020 15:58:02 +0100
+Message-Id: <20201116145809.410558-72-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,108 +70,118 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Merge get_super_thawed and get_super_exclusive_thawed into a single
-function.
+Add a little helper to find the kobject for a struct block_device.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/quota/quota.c   |  4 ++--
- fs/super.c         | 42 +++++++++++-------------------------------
- include/linux/fs.h |  3 +--
- 3 files changed, 14 insertions(+), 35 deletions(-)
+ drivers/md/bcache/super.c |  7 ++-----
+ drivers/md/md.c           |  4 +---
+ fs/btrfs/sysfs.c          | 15 +++------------
+ include/linux/blk_types.h |  3 +++
+ 4 files changed, 9 insertions(+), 20 deletions(-)
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 9af95c7a0bbe3c..21d43933213965 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -876,9 +876,9 @@ static struct super_block *quotactl_block(const char __user *special, int cmd)
- 	if (IS_ERR(bdev))
- 		return ERR_CAST(bdev);
- 	if (quotactl_cmd_onoff(cmd))
--		sb = get_super_exclusive_thawed(bdev);
-+		sb = get_super_thawed(bdev, true);
- 	else if (quotactl_cmd_write(cmd))
--		sb = get_super_thawed(bdev);
-+		sb = get_super_thawed(bdev, false);
- 	else
- 		sb = get_super(bdev);
- 	bdput(bdev);
-diff --git a/fs/super.c b/fs/super.c
-index b327a82bc1946b..50995f8abd1bf1 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -789,8 +789,17 @@ struct super_block *get_super(struct block_device *bdev)
- }
- EXPORT_SYMBOL(get_super);
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index ea2b80c3e44c38..f6edacc81527c7 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1447,8 +1447,7 @@ static int register_bdev(struct cache_sb *sb, struct cache_sb_disk *sb_disk,
+ 		goto err;
  
--static struct super_block *__get_super_thawed(struct block_device *bdev,
--					      bool excl)
-+/**
-+ * get_super_thawed - get thawed superblock of a device
-+ * @bdev: device to get the superblock for
-+ * @excl: lock s_umount exclusive if %true, else shared.
-+ *
-+ * Scans the superblock list and finds the superblock of the file system mounted
-+ * on the device.  The superblock is returned with s_umount held once it is
-+ * thawed (or immediately if it was not frozen), or %NULL if no superblock was
-+ * found.
-+ */
-+struct super_block *get_super_thawed(struct block_device *bdev, bool excl)
- {
- 	while (1) {
- 		struct super_block *s = __get_super(bdev, excl);
-@@ -805,37 +814,8 @@ static struct super_block *__get_super_thawed(struct block_device *bdev,
- 		put_super(s);
+ 	err = "error creating kobject";
+-	if (kobject_add(&dc->disk.kobj, &part_to_dev(bdev->bd_part)->kobj,
+-			"bcache"))
++	if (kobject_add(&dc->disk.kobj, bdev_kobj(bdev), "bcache"))
+ 		goto err;
+ 	if (bch_cache_accounting_add_kobjs(&dc->accounting, &dc->disk.kobj))
+ 		goto err;
+@@ -2342,9 +2341,7 @@ static int register_cache(struct cache_sb *sb, struct cache_sb_disk *sb_disk,
+ 		goto err;
  	}
- }
--
--/**
-- *	get_super_thawed - get thawed superblock of a device
-- *	@bdev: device to get the superblock for
-- *
-- *	Scans the superblock list and finds the superblock of the file system
-- *	mounted on the device. The superblock is returned once it is thawed
-- *	(or immediately if it was not frozen). %NULL is returned if no match
-- *	is found.
-- */
--struct super_block *get_super_thawed(struct block_device *bdev)
--{
--	return __get_super_thawed(bdev, false);
--}
- EXPORT_SYMBOL(get_super_thawed);
  
--/**
-- *	get_super_exclusive_thawed - get thawed superblock of a device
-- *	@bdev: device to get the superblock for
-- *
-- *	Scans the superblock list and finds the superblock of the file system
-- *	mounted on the device. The superblock is returned once it is thawed
-- *	(or immediately if it was not frozen) and s_umount semaphore is held
-- *	in exclusive mode. %NULL is returned if no match is found.
-- */
--struct super_block *get_super_exclusive_thawed(struct block_device *bdev)
--{
--	return __get_super_thawed(bdev, true);
--}
--EXPORT_SYMBOL(get_super_exclusive_thawed);
+-	if (kobject_add(&ca->kobj,
+-			&part_to_dev(bdev->bd_part)->kobj,
+-			"bcache")) {
++	if (kobject_add(&ca->kobj, bdev_kobj(bdev), "bcache")) {
+ 		err = "error calling kobject_add";
+ 		ret = -ENOMEM;
+ 		goto out;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index b2edf5e0f965b5..7ce6047c856ea2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2414,7 +2414,6 @@ EXPORT_SYMBOL(md_integrity_add_rdev);
+ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ {
+ 	char b[BDEVNAME_SIZE];
+-	struct kobject *ko;
+ 	int err;
+ 
+ 	/* prevent duplicates */
+@@ -2477,9 +2476,8 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ 	if ((err = kobject_add(&rdev->kobj, &mddev->kobj, "dev-%s", b)))
+ 		goto fail;
+ 
+-	ko = &part_to_dev(rdev->bdev->bd_part)->kobj;
+ 	/* failure here is OK */
+-	err = sysfs_create_link(&rdev->kobj, ko, "block");
++	err = sysfs_create_link(&rdev->kobj, bdev_kobj(rdev->bdev), "block");
+ 	rdev->sysfs_state = sysfs_get_dirent_safe(rdev->kobj.sd, "state");
+ 	rdev->sysfs_unack_badblocks =
+ 		sysfs_get_dirent_safe(rdev->kobj.sd, "unacknowledged_bad_blocks");
+diff --git a/fs/btrfs/sysfs.c b/fs/btrfs/sysfs.c
+index 279d9262b676d4..24b6c6dc69000a 100644
+--- a/fs/btrfs/sysfs.c
++++ b/fs/btrfs/sysfs.c
+@@ -1232,8 +1232,6 @@ int btrfs_sysfs_add_space_info_type(struct btrfs_fs_info *fs_info,
+ 
+ void btrfs_sysfs_remove_device(struct btrfs_device *device)
+ {
+-	struct hd_struct *disk;
+-	struct kobject *disk_kobj;
+ 	struct kobject *devices_kobj;
+ 
+ 	/*
+@@ -1243,11 +1241,8 @@ void btrfs_sysfs_remove_device(struct btrfs_device *device)
+ 	devices_kobj = device->fs_info->fs_devices->devices_kobj;
+ 	ASSERT(devices_kobj);
+ 
+-	if (device->bdev) {
+-		disk = device->bdev->bd_part;
+-		disk_kobj = &part_to_dev(disk)->kobj;
+-		sysfs_remove_link(devices_kobj, disk_kobj->name);
+-	}
++	if (device->bdev)
++		sysfs_remove_link(devices_kobj, bdev_kobj(device->bdev)->name);
+ 
+ 	if (device->devid_kobj.state_initialized) {
+ 		kobject_del(&device->devid_kobj);
+@@ -1353,11 +1348,7 @@ int btrfs_sysfs_add_device(struct btrfs_device *device)
+ 	nofs_flag = memalloc_nofs_save();
+ 
+ 	if (device->bdev) {
+-		struct hd_struct *disk;
+-		struct kobject *disk_kobj;
 -
- /**
-  * get_active_super - get an active reference to the superblock of a device
-  * @bdev: device to get the superblock for
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 8667d0cdc71e76..d026d177a526bf 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3132,8 +3132,7 @@ extern struct file_system_type *get_filesystem(struct file_system_type *fs);
- extern void put_filesystem(struct file_system_type *fs);
- extern struct file_system_type *get_fs_type(const char *name);
- extern struct super_block *get_super(struct block_device *);
--extern struct super_block *get_super_thawed(struct block_device *);
--extern struct super_block *get_super_exclusive_thawed(struct block_device *bdev);
-+struct super_block *get_super_thawed(struct block_device *bdev, bool excl);
- extern struct super_block *get_active_super(struct block_device *bdev);
- extern void drop_super(struct super_block *sb);
- extern void drop_super_exclusive(struct super_block *sb);
+-		disk = device->bdev->bd_part;
+-		disk_kobj = &part_to_dev(disk)->kobj;
++		struct kobject *disk_kobj = bdev_kobj(device->bdev);
+ 
+ 		ret = sysfs_create_link(devices_kobj, disk_kobj, disk_kobj->name);
+ 		if (ret) {
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 0735e335ca6c0a..5a5ccacb804cdb 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -49,6 +49,9 @@ struct block_device {
+ #define bdev_whole(_bdev) \
+ 	((_bdev)->bd_disk->part0.bdev)
+ 
++#define bdev_kobj(_bdev) \
++	(&part_to_dev((_bdev)->bd_part)->kobj)
++
+ /*
+  * Block error status values.  See block/blk-core:blk_errors for the details.
+  * Alpha cannot write a byte atomically, so we need to use 32-bit value.
 -- 
 2.29.2
 
