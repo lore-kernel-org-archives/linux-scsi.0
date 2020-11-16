@@ -2,44 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28631C83010
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F836C83013
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:06:00 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C87F02344C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE26222450
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:05:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iXlgdH+J"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org C87F02344C
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TpTZ5F4/"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org EE26222450
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-scsi-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731291AbgKPPEp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:04:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48938 "EHLO
+        id S1731385AbgKPPE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:04:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730624AbgKPO6k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:40 -0500
+        with ESMTP id S1730484AbgKPO6e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:34 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D23CC0613CF;
-        Mon, 16 Nov 2020 06:58:40 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07508C0617A6;
+        Mon, 16 Nov 2020 06:58:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=79ABHzAqAgUDi+r50gNTM9KzgxZfWtsd0Ks61Se8Jjk=; b=iXlgdH+JkeL6roCvy9N8OmOptV
-        1Ll+Te6ItuycUsm1mpg5y8MmMvSDVgOMN0DW4BJjUzEL2YXMUw9FI/gCg+GglIDP+2ssWuLid2fb0
-        cJZnJp4fVhOgNW619uL3/Kd6hYd61L2NdpCEsJu2r2sYtsuKn5OWNCme31Wn3/FHGbzcF/v5kYRm2
-        JnXQsbwRBlyoUcHtnndvHGCnGiJjghxupsGPmu0u5FKR/+UjbjsAeA9OHsZoDrRaOzkGH06M+kWrS
-        F/Df603StVMFLWH3uWTjYYJHcHqMIvbijKLsxzszv3RzSONMJItnrjbuYjjQ6SdDQT1ZrHiZj6i2L
-        17QgIiog==;
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=dr8Nr8dbB7J11PqXo+7/b7tximxSHcvF1HcCKGt1IiI=; b=TpTZ5F4/AmdsxM2Cu94cy7eEas
+        3X7DT8n5Y9HTYUNPKGh1eqWOrzm0xYcV10TWm7qZ2DAYxl9FZdzB5TSQwbJco0DGEH8GHNaKj4/uO
+        UapJemi5kTz7ILke6BFMPk1Qp+enisOjgnM5WI66jPW/Vmd0viYdg1qSGiqiQimTL89OKOdtd5INW
+        I0maxo/xPZ0nKatsoAF7NrHgoNRWlnrSm1gKMxhQmVA8vJCsPu08PgWB0cu99api4IM/dOgYmUa59
+        BLoaxWXKPrvz0+ejgB6cVN2tLjQDwxy7EgSet0pUC1cws2cyKk57iZ+SQrQfZqgWnLnZ1UKD1blpx
+        ffC4VyOw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxa-0003md-8r; Mon, 16 Nov 2020 14:58:26 +0000
+        id 1kefxK-0003iO-GD; Mon, 16 Nov 2020 14:58:10 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -59,14 +58,11 @@ Cc:     Justin Sanders <justin@coraid.com>,
         drbd-dev@lists.linbit.com, nbd@other.debian.org,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/78] dm: use set_capacity_and_notify
-Date:   Mon, 16 Nov 2020 15:57:03 +0100
-Message-Id: <20201116145809.410558-13-hch@lst.de>
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: cleanup updating the size of block devices v3
+Date:   Mon, 16 Nov 2020 15:56:51 +0100
+Message-Id: <20201116145809.410558-1-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201116145809.410558-1-hch@lst.de>
-References: <20201116145809.410558-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -74,29 +70,17 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use set_capacity_and_notify to set the size of both the disk and block
-device.  This also gets the uevent notifications for the resize for free.
+Hi Jens,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/md/dm.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+this series builds on top of the work that went into the last merge window,
+and make sure we have a single coherent interfac for updating the size of a
+block device.
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index c18fc25485186d..62ad44925e73ec 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1971,8 +1971,7 @@ static struct dm_table *__bind(struct mapped_device *md, struct dm_table *t,
- 	if (size != dm_get_size(md))
- 		memset(&md->geometry, 0, sizeof(md->geometry));
+Changes since v2:
+ - rebased to the set_capacity_revalidate_and_notify in mainline
+ - keep the loop_set_size function
+ - fix two mixed up acks
  
--	set_capacity(md->disk, size);
--	bd_set_nr_sectors(md->bdev, size);
-+	set_capacity_and_notify(md->disk, size);
- 
- 	dm_table_event_callback(t, event_callback, md);
- 
--- 
-2.29.2
+Changes since v1:
+ - minor spelling fixes
 
