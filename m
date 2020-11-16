@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A35CDC63699
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 03:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1800AC64E7B
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 03:05:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 715BB22284
+	by mail.kernel.org (Postfix) with ESMTP id DD37A22263
 	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 03:05:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726742AbgKPDFP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Nov 2020 22:05:15 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:33747 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726692AbgKPDFO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 22:05:14 -0500
-Received: by mail-pl1-f193.google.com with SMTP id t18so7684258plo.0;
-        Sun, 15 Nov 2020 19:05:14 -0800 (PST)
+        id S1726751AbgKPDFS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Nov 2020 22:05:18 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42543 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726743AbgKPDFS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2020 22:05:18 -0500
+Received: by mail-pf1-f195.google.com with SMTP id 131so2111331pfb.9;
+        Sun, 15 Nov 2020 19:05:18 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=mZIHmdfI6VuvHQbFk9elE6LcTPI0DIedaaHe1HmoEWQ=;
-        b=aVfDMxUSJl3Ye3FqLMgBVE00iYf71oJGEXA0siXjzihcfpTHXrDrFj/1cDONE3X6+Y
-         pt1FRmsFWCNbZoAisjkh8FS9xBN5cJe1s0T4gGxismfrOogMydQXKxh2gXRK/mXImR4y
-         BqygnR5PDQYT7Qj3HbkVZ+4DoRza+mtvWLcbeOWV2iV655kpI4U7nysDmjdV1AtIdx7O
-         eAshjCAOQPwPzQNxeOJ/xoFJURWnid7wPLyyWZmcbcr8gCy6oOladNe1GXQqPdKWJqN7
-         qCx48RkNqu93Ldr3QK+xXw+PGedBkjsbg4r7qbdphgJo7SgQTuy2TBB5fz/RpaHM+8ss
-         Ct6w==
-X-Gm-Message-State: AOAM531KYi99i1a1hCil0Ni3AUrB/fFHuhEJrgbG7Qfc1tLtU+uYE8Ak
-        7p1gL1IQ9cMj1yb9TVl1VlQmW9KxSBw=
-X-Google-Smtp-Source: ABdhPJx/6VW6L7Lds24w5+sY39CJEbCX/iKl6RazpeIUgulPPS7RPBD5bhsbOyWRCgGGqTH1ubNGxg==
-X-Received: by 2002:a17:902:8206:b029:d8:de70:7f7a with SMTP id x6-20020a1709028206b02900d8de707f7amr8537425pln.39.1605495913828;
-        Sun, 15 Nov 2020 19:05:13 -0800 (PST)
+        bh=iEm1L/1xTunB5Bi4Sc1aPphA3G474y7ilmOOODhkU2E=;
+        b=ZPxtNTBeeuCd8aTx1stvJV63hlp1CpmKyr1uQrmufUSStH+zPQtmZGfG/+59ydy/Op
+         SmNJZvUq6pqFaMQjLpJpXmmcIKirSg9TMZj6y7mvajszfBt3Rwt2oRot7RMRcAIkI1jC
+         RyXUvyPMx0BZzRVe/7WawAwcFwqIraoJriABaUix26kTuwDs4om2W0SguzMCo+pdRjWK
+         Y3Ckw+5pEgWAjdJYR4YxdmTgIjGa4ldSbQfsN7VWtFu8lR82VH8yrWOabixBYydqs4DJ
+         LQC1hZodeL9ctLkXr17KQ7tgajA1ib8LmyQ/PwGj583pRZWUmeW5LMU2OLZIAI4aCa65
+         OFwg==
+X-Gm-Message-State: AOAM5310pPblFGIfDLKwgBFxHi2PeX2g3wlaIkfthoJ5sgyVmHXwrSGQ
+        HxkOd16abYk7oJmSTZ6PUAY=
+X-Google-Smtp-Source: ABdhPJyjeSxvVm5IGFzxJYSH+QFNnZjdUr43f9e2y4+Bl/w+qSH5NOKZGrx7rl9yDZTkgfha8+e9mA==
+X-Received: by 2002:a63:2ad0:: with SMTP id q199mr157689pgq.257.1605495917683;
+        Sun, 15 Nov 2020 19:05:17 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id r3sm17148131pjl.23.2020.11.15.19.05.12
+        by smtp.gmail.com with ESMTPSA id r3sm17148131pjl.23.2020.11.15.19.05.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2020 19:05:13 -0800 (PST)
+        Sun, 15 Nov 2020 19:05:16 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
@@ -52,9 +52,9 @@ Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Ming Lei <ming.lei@redhat.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v2 3/9] scsi: Pass a request queue pointer to __scsi_execute()
-Date:   Sun, 15 Nov 2020 19:04:53 -0800
-Message-Id: <20201116030459.13963-4-bvanassche@acm.org>
+Subject: [PATCH v2 5/9] scsi: Do not wait for a request in scsi_eh_lock_door()
+Date:   Sun, 15 Nov 2020 19:04:55 -0800
+Message-Id: <20201116030459.13963-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116030459.13963-1-bvanassche@acm.org>
 References: <20201116030459.13963-1-bvanassche@acm.org>
@@ -64,8 +64,14 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch does not change any functionality but makes a later patch easier
-to read.
+scsi_eh_lock_door() is the only function in the SCSI error handler that
+calls blk_get_request(). It is not guaranteed that a request is available
+when scsi_eh_lock_door() is called. Hence pass the BLK_MQ_REQ_NOWAIT flag
+to blk_get_request(). This patch has a second purpose, namely preventing
+that scsi_eh_lock_door() deadlocks if sdev->request_queue is frozen and if
+a SCSI command is submitted to a SCSI device through a second request
+queue that has not been frozen. A later patch will namely modify the SPI
+DV code such that sdev->requeust_queue is frozen during domain validation.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
@@ -75,82 +81,24 @@ Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c    | 12 +++++-------
- include/scsi/scsi_device.h |  8 ++++----
- 2 files changed, 9 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_error.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 855e48c7514f..e4f9ed355be6 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -221,7 +221,7 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- 
- /**
-  * __scsi_execute - insert request and wait for the result
-- * @sdev:	scsi device
-+ * @q:		queue to insert the request into
-  * @cmd:	scsi command
-  * @data_direction: data direction
-  * @buffer:	data buffer
-@@ -237,7 +237,7 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
-  * Returns the scsi_cmnd result field if a command was executed, or a negative
-  * Linux error code if we didn't get that far.
-  */
--int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
-+int __scsi_execute(struct request_queue *q, const unsigned char *cmd,
- 		 int data_direction, void *buffer, unsigned bufflen,
- 		 unsigned char *sense, struct scsi_sense_hdr *sshdr,
- 		 int timeout, int retries, u64 flags, req_flags_t rq_flags,
-@@ -247,15 +247,13 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d94449188270..6de6e1bf3dcb 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1993,7 +1993,12 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
+ 	struct request *req;
  	struct scsi_request *rq;
- 	int ret = DRIVER_ERROR << 24;
  
--	req = blk_get_request(sdev->request_queue,
--			data_direction == DMA_TO_DEVICE ?
-+	req = blk_get_request(q, data_direction == DMA_TO_DEVICE ?
- 			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
+-	req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN, 0);
++	/*
++	 * It is not guaranteed that a request is available nor that
++	 * sdev->request_queue is unfrozen. Hence the BLK_MQ_REQ_NOWAIT below.
++	 */
++	req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN,
++			      BLK_MQ_REQ_NOWAIT);
  	if (IS_ERR(req))
- 		return ret;
+ 		return;
  	rq = scsi_req(req);
- 
--	if (bufflen &&	blk_rq_map_kern(sdev->request_queue, req,
--					buffer, bufflen, GFP_NOIO))
-+	if (bufflen && blk_rq_map_kern(q, req, buffer, bufflen, GFP_NOIO))
- 		goto out;
- 
- 	rq->cmd_len = COMMAND_SIZE(cmd[0]);
-@@ -268,7 +266,7 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
- 	 */
--	blk_execute_rq(req->q, NULL, req, 1);
-+	blk_execute_rq(q, NULL, req, 1);
- 
- 	/*
- 	 * Some devices (USB mass-storage in particular) may transfer
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 1a5c9a3df6d6..f47fdf9cf788 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -438,7 +438,7 @@ extern const char *scsi_device_state_name(enum scsi_device_state);
- extern int scsi_is_sdev_device(const struct device *);
- extern int scsi_is_target_device(const struct device *);
- extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
--extern int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
-+extern int __scsi_execute(struct request_queue *q, const unsigned char *cmd,
- 			int data_direction, void *buffer, unsigned bufflen,
- 			unsigned char *sense, struct scsi_sense_hdr *sshdr,
- 			int timeout, int retries, u64 flags,
-@@ -449,9 +449,9 @@ extern int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- ({									\
- 	BUILD_BUG_ON((sense) != NULL &&					\
- 		     sizeof(sense) != SCSI_SENSE_BUFFERSIZE);		\
--	__scsi_execute(sdev, cmd, data_direction, buffer, bufflen,	\
--		       sense, sshdr, timeout, retries, flags, rq_flags,	\
--		       resid);						\
-+	__scsi_execute(sdev->request_queue, cmd, data_direction,	\
-+		       buffer, bufflen, sense, sshdr, timeout, retries,	\
-+		       flags, rq_flags, resid);				\
- })
- static inline int scsi_execute_req(struct scsi_device *sdev,
- 	const unsigned char *cmd, int data_direction, void *buffer,
