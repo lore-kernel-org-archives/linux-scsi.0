@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1264C64E7B
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA39C83035
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71E5F22263
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3462F22240
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gRq5Bd6I"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="a7d0WKhP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730790AbgKPO7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49016 "EHLO
+        id S1730853AbgKPO7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730754AbgKPO67 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:59 -0500
+        with ESMTP id S1730816AbgKPO7K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:10 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D51BC0613D2;
-        Mon, 16 Nov 2020 06:58:59 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23764C0613D2;
+        Mon, 16 Nov 2020 06:59:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=lsAXL3hTvnB0lZbP/cBxcA3iF4//0CyS8Nha3XJ9JJw=; b=gRq5Bd6I041r3EGzSNRea27VcV
-        raQcLpJmWj/jK+75OwDsxA43vptbb5bLxmKSp35hPLSybywahfsIEXtmUIrD9ToqHyYTfeCqsn8wJ
-        wQx0MYjiBzcMrM+7ZWQTSUtknggoViJ3wuvotrL9OpbxcIk+6i29Awe1Y+rr6wmnDy5z2lOUyiXz3
-        LW8h++kCUa/3/O3LYkCUURTEpEcW9xBVCEtC0iFWL7xkfc/FqwTqkcVZcvaSmNllVviTiDwS9kVSn
-        J0iO8i2WqgPUw34BttXzbrAtJQsZJyDDz3NhCLwGaOn0B22GTINfKHNlj2O/NnHFU2taSXPwtg2gn
-        SSzCdCgg==;
+        bh=xZanwokwrC93vQLNLNyxIE9cwRexAjHIbs3YFwVPsFg=; b=a7d0WKhPNBtgQ87fZA08kVqe1y
+        s8Sr2lxZqA4u53myzeDnnzR5qIAz6vA3egUoMXd0PFkUGzFv/UxEUPI892XyeOmB7FRMPywqZgzFQ
+        fvJvVKuwSCKubwUgCeDnhSdQj3zjceiRZRQvdQW64tflG1Ubobb0xgCwA9qgVb3P8bufG21KACqxF
+        LdxKiVKNAom0BaCGTkLFBbfzny15lEtGihDxBpVpKvP1ZCnxYnkEVNdSSfERf5h6KpD5Xp1Gipw2N
+        P3IlVQJDBBHLI1ckJlQziKc3EInlMrYDiIlMfsnRoAyesz+vylm3lK1KNLRuTKMEj958SrIUpqIbd
+        95x8ALqA==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxv-0003t5-MO; Mon, 16 Nov 2020 14:58:48 +0000
+        id 1kefy3-0003uy-0n; Mon, 16 Nov 2020 14:58:55 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 27/78] rbd: implement ->set_read_only to hook into BLKROSET processing
-Date:   Mon, 16 Nov 2020 15:57:18 +0100
-Message-Id: <20201116145809.410558-28-hch@lst.de>
+Subject: [PATCH 32/78] block: remove set_device_ro
+Date:   Mon, 16 Nov 2020 15:57:23 +0100
+Message-Id: <20201116145809.410558-33-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,80 +70,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Implement the ->set_read_only method instead of parsing the actual
-ioctl command.
+Fold set_device_ro into its only remaining caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Ilya Dryomov <idryomov@gmail.com>
 ---
- drivers/block/rbd.c | 40 ++++------------------------------------
- 1 file changed, 4 insertions(+), 36 deletions(-)
+ block/genhd.c         | 7 -------
+ block/ioctl.c         | 2 +-
+ include/linux/genhd.h | 1 -
+ 3 files changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index b7a194ffda55b4..2ed79b09439a82 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -692,12 +692,9 @@ static void rbd_release(struct gendisk *disk, fmode_t mode)
- 	put_device(&rbd_dev->dev);
+diff --git a/block/genhd.c b/block/genhd.c
+index 8c350fecfe8bfe..b0f0b0cac9aa7f 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1843,13 +1843,6 @@ static void set_disk_ro_uevent(struct gendisk *gd, int ro)
+ 	kobject_uevent_env(&disk_to_dev(gd)->kobj, KOBJ_CHANGE, envp);
  }
  
--static int rbd_ioctl_set_ro(struct rbd_device *rbd_dev, unsigned long arg)
-+static int rbd_set_read_only(struct block_device *bdev, bool ro)
+-void set_device_ro(struct block_device *bdev, int flag)
+-{
+-	bdev->bd_part->policy = flag;
+-}
+-
+-EXPORT_SYMBOL(set_device_ro);
+-
+ void set_disk_ro(struct gendisk *disk, int flag)
  {
--	int ro;
--
--	if (get_user(ro, (int __user *)arg))
--		return -EFAULT;
-+	struct rbd_device *rbd_dev = bdev->bd_disk->private_data;
- 
- 	/*
- 	 * Both images mapped read-only and snapshots can't be marked
-@@ -710,43 +707,14 @@ static int rbd_ioctl_set_ro(struct rbd_device *rbd_dev, unsigned long arg)
- 		rbd_assert(!rbd_is_snap(rbd_dev));
+ 	struct disk_part_iter piter;
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 96cb4544736468..04255dc5f3bff3 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -371,7 +371,7 @@ static int blkdev_roset(struct block_device *bdev, fmode_t mode,
+ 		if (ret)
+ 			return ret;
  	}
- 
--	/* Let blkdev_roset() handle it */
--	return -ENOTTY;
--}
--
--static int rbd_ioctl(struct block_device *bdev, fmode_t mode,
--			unsigned int cmd, unsigned long arg)
--{
--	struct rbd_device *rbd_dev = bdev->bd_disk->private_data;
--	int ret;
--
--	switch (cmd) {
--	case BLKROSET:
--		ret = rbd_ioctl_set_ro(rbd_dev, arg);
--		break;
--	default:
--		ret = -ENOTTY;
--	}
--
--	return ret;
--}
--
--#ifdef CONFIG_COMPAT
--static int rbd_compat_ioctl(struct block_device *bdev, fmode_t mode,
--				unsigned int cmd, unsigned long arg)
--{
--	return rbd_ioctl(bdev, mode, cmd, arg);
-+	return 0;
+-	set_device_ro(bdev, n);
++	bdev->bd_part->policy = n;
+ 	return 0;
  }
--#endif /* CONFIG_COMPAT */
  
- static const struct block_device_operations rbd_bd_ops = {
- 	.owner			= THIS_MODULE,
- 	.open			= rbd_open,
- 	.release		= rbd_release,
--	.ioctl			= rbd_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl		= rbd_compat_ioctl,
--#endif
-+	.set_read_only		= rbd_set_read_only,
- };
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 4b22bfd9336e1a..8427ad8bef520d 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -304,7 +304,6 @@ extern void del_gendisk(struct gendisk *gp);
+ extern struct gendisk *get_gendisk(dev_t dev, int *partno);
+ extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
  
- /*
+-extern void set_device_ro(struct block_device *bdev, int flag);
+ extern void set_disk_ro(struct gendisk *disk, int flag);
+ 
+ static inline int get_disk_ro(struct gendisk *disk)
 -- 
 2.29.2
 
