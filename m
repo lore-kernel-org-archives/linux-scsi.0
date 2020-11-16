@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95231C61DD8
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E967CC82559
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5996E24248
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DC042463F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Mp/bnXWK"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wYjWzLfz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731133AbgKPPAG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:00:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49250 "EHLO
+        id S1731097AbgKPPAA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:00:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731088AbgKPO77 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:59 -0500
+        with ESMTP id S1731082AbgKPO76 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:58 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 756B6C0613CF;
-        Mon, 16 Nov 2020 06:59:59 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E729EC0613CF;
+        Mon, 16 Nov 2020 06:59:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=U1T3F6kddQ5RAbJP0Kd5aSQRXwgJOO9lO/0pb1NuZu4=; b=Mp/bnXWKW1eCWc4cnpGQF+LzFz
-        +yKGUtIwAwJyLYcIyqIwUzX5kFor/+9XSitRKLGwelhsMyM+jo5MdzNpCHHBJ0Iz9zR3J1N5RDw/L
-        elxhWeRTq9mn68jo7mo+5Q4N7FoDnOiB2Ko1LxyfvZVKKrY7T6HB8yCxAUe+NVO99WAAyihpabqln
-        mDNQgQ32Fsx3DUoMB7bJ5t1bCEfvo9jNviF/wnSQFLIPLYsctwCrVbyO1039CykidDZsBnCUd8INa
-        McCEnHBIAwZ8N3tE8HKmkENLQlH4gRIfZNloYiLCS6I7+1U/hYZQbSbazKQRNqqSS2T9kesdq+8Pe
-        qXSnpaVg==;
+        bh=x6ThtvQgvwHIscZfOUELeo3Uy7svW74ISAsOiTBJTd8=; b=wYjWzLfzQlz5nMoIrs2dUqAKes
+        QFt+YLi/Ow0cGCkVgOnqteaZCNuUDwCov7PJB5hvC6nYp5cVF5aDTygDVep1VuFeVLzibRXVrb0PG
+        FwRPx4XB6Y0FbjEFe92tnC6Dld2W5KJSeAc8kJg120u3mpOcZ4tc9ydP5qFtsdEWA6KBA1phfelhv
+        ykkNgsnmusDbP9O5T8K6xNSTSx6pFYwqjKwfuv8O23V0jhAmUMdhinoTTyaCbb1UQNoqaNS8S8OhY
+        IkQHzpe8v4SVvuc9YJmie1VvzG8FrG8PonETyiwJgsN7wW5Xu/ggXJWk0IApLZbQQsH5DPzic6AvO
+        6QnJMDVw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyu-0004Fd-HL; Mon, 16 Nov 2020 14:59:49 +0000
+        id 1kefyo-0004DN-O9; Mon, 16 Nov 2020 14:59:43 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 68/78] block: remove ->bd_contains
-Date:   Mon, 16 Nov 2020 15:57:59 +0100
-Message-Id: <20201116145809.410558-69-hch@lst.de>
+Subject: [PATCH 64/78] dm: simplify flush_bio initialization in __send_empty_flush
+Date:   Mon, 16 Nov 2020 15:57:55 +0100
+Message-Id: <20201116145809.410558-65-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,220 +70,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that each gendisk has a reference to the block_device referencing
-it, we can just use that everywhere and get rid of ->bd_contain.
+We don't really need the struct block_device to initialize a bio.  So
+switch from using bio_set_dev to manually setting up bi_disk (bi_partno
+will always be zero and has been cleared by bio_init already).
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsicam.c    |  2 +-
- fs/block_dev.c            | 50 +++++++++++++--------------------------
- include/linux/blk_types.h |  4 +++-
- 3 files changed, 20 insertions(+), 36 deletions(-)
+ drivers/md/dm.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
-index 682cf08ab04153..f1553a453616fd 100644
---- a/drivers/scsi/scsicam.c
-+++ b/drivers/scsi/scsicam.c
-@@ -32,7 +32,7 @@
-  */
- unsigned char *scsi_bios_ptable(struct block_device *dev)
- {
--	struct address_space *mapping = dev->bd_contains->bd_inode->i_mapping;
-+	struct address_space *mapping = bdev_whole(dev)->bd_inode->i_mapping;
- 	unsigned char *res = NULL;
- 	struct page *page;
- 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index fd4df132a97590..2348f218d45deb 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -886,7 +886,6 @@ struct block_device *bdev_alloc(struct gendisk *disk, u8 partno)
- 	spin_lock_init(&bdev->bd_size_lock);
- 	bdev->bd_disk = disk;
- 	bdev->bd_partno = partno;
--	bdev->bd_contains = NULL;
- 	bdev->bd_super = NULL;
- 	bdev->bd_inode = inode;
- 	bdev->bd_part_count = 0;
-@@ -1062,7 +1061,7 @@ static bool bd_may_claim(struct block_device *bdev, struct block_device *whole,
-  */
- int bd_prepare_to_claim(struct block_device *bdev, void *holder)
- {
--	struct block_device *whole = bdev->bd_contains;
-+	struct block_device *whole = bdev_whole(bdev);
- 
- retry:
- 	spin_lock(&bdev_lock);
-@@ -1110,7 +1109,7 @@ static void bd_clear_claiming(struct block_device *whole, void *holder)
-  */
- static void bd_finish_claiming(struct block_device *bdev, void *holder)
- {
--	struct block_device *whole = bdev->bd_contains;
-+	struct block_device *whole = bdev_whole(bdev);
- 
- 	spin_lock(&bdev_lock);
- 	BUG_ON(!bd_may_claim(bdev, whole, holder));
-@@ -1139,7 +1138,7 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
- void bd_abort_claiming(struct block_device *bdev, void *holder)
- {
- 	spin_lock(&bdev_lock);
--	bd_clear_claiming(bdev->bd_contains, holder);
-+	bd_clear_claiming(bdev_whole(bdev), holder);
- 	spin_unlock(&bdev_lock);
- }
- EXPORT_SYMBOL(bd_abort_claiming);
-@@ -1434,7 +1433,6 @@ static int bdev_get_gendisk(struct gendisk *disk)
- static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
- 		int for_part)
- {
--	struct block_device *whole = NULL;
- 	struct gendisk *disk = bdev->bd_disk;
- 	int ret;
- 	bool first_open = false, unblock_events = true, need_restart;
-@@ -1445,26 +1443,17 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
- 	if (ret)
- 		goto out;
- 
--	if (bdev->bd_partno) {
--		whole = bdget_disk(disk, 0);
--		if (!whole) {
--			ret = -ENOMEM;
--			goto out_put_disk;
--		}
--	}
--
- 	if (!for_part && (mode & FMODE_EXCL)) {
- 		WARN_ON_ONCE(!holder);
- 		ret = bd_prepare_to_claim(bdev, holder);
- 		if (ret)
--			goto out_put_whole;
-+			goto out_put_disk;
- 	}
- 
- 	disk_block_events(disk);
- 	mutex_lock_nested(&bdev->bd_mutex, for_part);
- 	if (!bdev->bd_openers) {
- 		first_open = true;
--		bdev->bd_contains = bdev;
- 
- 		if (!bdev->bd_partno) {
- 			ret = -ENXIO;
-@@ -1502,10 +1491,10 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
- 				goto out_clear;
- 		} else {
- 			BUG_ON(for_part);
--			ret = __blkdev_get(whole, mode, NULL, 1);
-+			bdgrab(bdev_whole(bdev));
-+			ret = __blkdev_get(bdev_whole(bdev), mode, NULL, 1);
- 			if (ret)
- 				goto out_clear;
--			bdev->bd_contains = bdgrab(whole);
- 			bdev->bd_part = disk_get_part(disk, bdev->bd_partno);
- 			if (!(disk->flags & GENHD_FL_UP) ||
- 			    !bdev->bd_part || !bdev->bd_part->nr_sects) {
-@@ -1519,7 +1508,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
- 		if (bdev->bd_bdi == &noop_backing_dev_info)
- 			bdev->bd_bdi = bdi_get(disk->queue->backing_dev_info);
- 	} else {
--		if (bdev->bd_contains == bdev) {
-+		if (!bdev->bd_partno) {
- 			ret = 0;
- 			if (bdev->bd_disk->fops->open)
- 				ret = bdev->bd_disk->fops->open(bdev, mode);
-@@ -1558,24 +1547,18 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
- 	/* only one opener holds the module reference */
- 	if (!first_open)
- 		module_put(disk->fops->owner);
--	if (whole)
--		bdput(whole);
- 	return 0;
- 
-  out_clear:
- 	disk_put_part(bdev->bd_part);
- 	bdev->bd_part = NULL;
--	if (bdev != bdev->bd_contains)
--		__blkdev_put(bdev->bd_contains, mode, 1);
--	bdev->bd_contains = NULL;
-+	if (bdev_is_partition(bdev))
-+		__blkdev_put(bdev_whole(bdev), mode, 1);
-  out_unlock_bdev:
- 	if (!for_part && (mode & FMODE_EXCL))
- 		bd_abort_claiming(bdev, holder);
- 	mutex_unlock(&bdev->bd_mutex);
- 	disk_unblock_events(disk);
-- out_put_whole:
-- 	if (whole)
--		bdput(whole);
-  out_put_disk:
- 	module_put(disk->fops->owner);
- 	if (need_restart)
-@@ -1765,16 +1748,15 @@ static void __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
- 
- 		bdev_write_inode(bdev);
- 	}
--	if (bdev->bd_contains == bdev) {
-+	if (!bdev_is_partition(bdev)) {
- 		if (disk->fops->release)
- 			disk->fops->release(disk, mode);
- 	}
- 	if (!bdev->bd_openers) {
- 		disk_put_part(bdev->bd_part);
- 		bdev->bd_part = NULL;
--		if (bdev != bdev->bd_contains)
--			victim = bdev->bd_contains;
--		bdev->bd_contains = NULL;
-+		if (bdev_is_partition(bdev))
-+			victim = bdev_whole(bdev);
- 
- 		module_put(disk->fops->owner);
- 	}
-@@ -1789,6 +1771,7 @@ void blkdev_put(struct block_device *bdev, fmode_t mode)
- 	mutex_lock(&bdev->bd_mutex);
- 
- 	if (mode & FMODE_EXCL) {
-+		struct block_device *whole = bdev_whole(bdev);
- 		bool bdev_free;
- 
- 		/*
-@@ -1799,13 +1782,12 @@ void blkdev_put(struct block_device *bdev, fmode_t mode)
- 		spin_lock(&bdev_lock);
- 
- 		WARN_ON_ONCE(--bdev->bd_holders < 0);
--		WARN_ON_ONCE(--bdev->bd_contains->bd_holders < 0);
-+		WARN_ON_ONCE(--whole->bd_holders < 0);
- 
--		/* bd_contains might point to self, check in a separate step */
- 		if ((bdev_free = !bdev->bd_holders))
- 			bdev->bd_holder = NULL;
--		if (!bdev->bd_contains->bd_holders)
--			bdev->bd_contains->bd_holder = NULL;
-+		if (!whole->bd_holders)
-+			whole->bd_holder = NULL;
- 
- 		spin_unlock(&bdev_lock);
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d9b69bbde5cc54..041caca25fc787 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -32,7 +32,6 @@ struct block_device {
- #ifdef CONFIG_SYSFS
- 	struct list_head	bd_holder_disks;
- #endif
--	struct block_device *	bd_contains;
- 	u8			bd_partno;
- 	struct hd_struct *	bd_part;
- 	/* number of times partitions within this device have been opened. */
-@@ -48,6 +47,9 @@ struct block_device {
- 	struct mutex		bd_fsfreeze_mutex;
- } __randomize_layout;
- 
-+#define bdev_whole(_bdev) \
-+	((_bdev)->bd_disk->part0.bdev)
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 54739f1b579bc8..6d7eb72d41f9ea 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1422,18 +1422,12 @@ static int __send_empty_flush(struct clone_info *ci)
+ 	 */
+ 	bio_init(&flush_bio, NULL, 0);
+ 	flush_bio.bi_opf = REQ_OP_WRITE | REQ_PREFLUSH | REQ_SYNC;
++	flush_bio.bi_disk = ci->io->md->disk;
++	bio_associate_blkg(&flush_bio);
 +
- /*
-  * Block error status values.  See block/blk-core:blk_errors for the details.
-  * Alpha cannot write a byte atomically, so we need to use 32-bit value.
+ 	ci->bio = &flush_bio;
+ 	ci->sector_count = 0;
+ 
+-	/*
+-	 * Empty flush uses a statically initialized bio, as the base for
+-	 * cloning.  However, blkg association requires that a bdev is
+-	 * associated with a gendisk, which doesn't happen until the bdev is
+-	 * opened.  So, blkg association is done at issue time of the flush
+-	 * rather than when the device is created in alloc_dev().
+-	 */
+-	bio_set_dev(ci->bio, ci->io->md->bdev);
+-
+ 	BUG_ON(bio_has_data(ci->bio));
+ 	while ((ti = dm_table_get_target(ci->map, target_nr++)))
+ 		__send_duplicate_bios(ci, ti, ti->num_flush_bios, NULL);
 -- 
 2.29.2
 
