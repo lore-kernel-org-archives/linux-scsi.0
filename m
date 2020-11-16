@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DBDC8255C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2CD3C82558
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9B9222263
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:00:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59BF422263
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cAGojbsp"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sXKHf4+K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730990AbgKPO7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49152 "EHLO
+        id S1730924AbgKPO70 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730956AbgKPO7e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:34 -0500
+        with ESMTP id S1730846AbgKPO7X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:23 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90444C0613D3;
-        Mon, 16 Nov 2020 06:59:34 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7533C0613D3;
+        Mon, 16 Nov 2020 06:59:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=G/1St6AKcpua/c8qIsi4IENao5SAFeNTsicWvdwJGKA=; b=cAGojbspvBWLkhCqOD3ExDenEy
-        hsbkbexTXugOliCWH3wwCYbwxpTnVtQvHgLrTwVXI7TrPcURLYokj4yyAxwxnnG9BNHdwGnWa8IJp
-        dYa+F3Gfpccic7jbe1Y8gwBkRHM+oEunUjIG3WI5m5UONDYn9V9VBRbIHSxNQhGM/1JRKjD49Xkx0
-        0pBHsNUFU/UPntTwF6P/GQ0sJw5J/q2+RSCrhYYdXSuMK/KdhdMuk9LCQiscZHIVOefv7v6KYkI86
-        OblDiO3zLuOm232EWEv9/powerW9w8u+EGbE5WQyTuk7Cg+xA59dLIs/S/NWj2DLWnBN8UoHAueaN
-        ZQN++kOA==;
+        bh=soDf5n/4IHZXpRDONsC4iRIWKhhdabm7wm1Ix3YyzkY=; b=sXKHf4+KcwIa5fuTcLVQORl6vc
+        Y03Gwu4v2aKXYxB2gC70w5AjOtoQE1Q1pXkpIHcqxu1afca2PvwHAIEb13ajBGY5qll0Bc+WJnuHt
+        TgCIRD/tv9h7SIzJyRqtqrpqxOYCL5TBFCCOpqvnrOBTaKdroJMy4aFUM6Eu1+1BjsZPfN+VBECoA
+        VBKTChEgoSg7gTk+HdF7LfwwqhGnCtekD9xT9Y736twxTwR4aWyi6Skc6DBIDj8x5uz90PEkL1KLh
+        CVLnyiuFwPdIlcsawji6tbe7dqrYAdB98VJPkjxf9YLh+GLVDgz+CUZ/XticM28L06ss6gSMN118i
+        lq40xEVw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyU-00043H-JC; Mon, 16 Nov 2020 14:59:23 +0000
+        id 1kefyH-0003yd-CW; Mon, 16 Nov 2020 14:59:09 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -58,9 +58,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 51/78] z2ram: use separate gendisk for the different modes
-Date:   Mon, 16 Nov 2020 15:57:42 +0100
-Message-Id: <20201116145809.410558-52-hch@lst.de>
+Subject: [PATCH 42/78] sd: use __register_blkdev to avoid a modprobe for an unregistered dev_t
+Date:   Mon, 16 Nov 2020 15:57:33 +0100
+Message-Id: <20201116145809.410558-43-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -71,167 +71,72 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use separate gendisks (which share a tag_set) for the different operating
-modes instead of redirecting the gendisk lookup using a probe callback.
-This avoids potential problems with aliased block_device instances and
-will eventually allow for removing the blk_register_region framework.
+Switch from using blk_register_region to the probe callback passed to
+__register_blkdev to disable the request_module call for an unclaimed
+dev_t in the SD majors.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/block/z2ram.c | 100 ++++++++++++++++++++++++------------------
- 1 file changed, 58 insertions(+), 42 deletions(-)
+ drivers/scsi/sd.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
-index eafecc9a72b38d..c1d20818e64920 100644
---- a/drivers/block/z2ram.c
-+++ b/drivers/block/z2ram.c
-@@ -63,7 +63,7 @@ static int current_device = -1;
- 
- static DEFINE_SPINLOCK(z2ram_lock);
- 
--static struct gendisk *z2ram_gendisk;
-+static struct gendisk *z2ram_gendisk[Z2MINOR_COUNT];
- 
- static blk_status_t z2_queue_rq(struct blk_mq_hw_ctx *hctx,
- 				const struct blk_mq_queue_data *bd)
-@@ -283,7 +283,7 @@ static int z2_open(struct block_device *bdev, fmode_t mode)
- 
- 		current_device = device;
- 		z2ram_size <<= Z2RAM_CHUNKSHIFT;
--		set_capacity(z2ram_gendisk, z2ram_size >> 9);
-+		set_capacity(z2ram_gendisk[device], z2ram_size >> 9);
- 	}
- 
- 	mutex_unlock(&z2ram_mutex);
-@@ -315,71 +315,87 @@ static const struct block_device_operations z2_fops = {
- 	.release = z2_release,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a2a4f385833d6c..679c2c02504763 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -630,13 +630,11 @@ static struct scsi_driver sd_template = {
  };
  
--static struct kobject *z2_find(dev_t dev, int *part, void *data)
--{
--	*part = 0;
--	return get_disk_and_module(z2ram_gendisk);
--}
--
--static struct request_queue *z2_queue;
- static struct blk_mq_tag_set tag_set;
- 
- static const struct blk_mq_ops z2_mq_ops = {
- 	.queue_rq = z2_queue_rq,
- };
- 
-+static int z2ram_register_disk(int minor)
-+{
-+	struct request_queue *q;
-+	struct gendisk *disk;
-+
-+	disk = alloc_disk(1);
-+	if (!disk)
-+		return -ENOMEM;
-+
-+	q = blk_mq_init_queue(&tag_set);
-+	if (IS_ERR(q)) {
-+		put_disk(disk);
-+		return PTR_ERR(q);
-+	}
-+
-+	disk->major = Z2RAM_MAJOR;
-+	disk->first_minor = minor;
-+	disk->fops = &z2_fops;
-+	if (minor)
-+		sprintf(disk->disk_name, "z2ram%d", minor);
-+	else
-+		sprintf(disk->disk_name, "z2ram");
-+	disk->queue = q;
-+
-+	z2ram_gendisk[minor] = disk;
-+	add_disk(disk);
-+	return 0;
-+}
-+
- static int __init z2_init(void)
+ /*
+- * Dummy kobj_map->probe function.
+- * The default ->probe function will call modprobe, which is
+- * pointless as this module is already loaded.
++ * Don't request a new module, as that could deadlock in multipath
++ * environment.
+  */
+-static struct kobject *sd_default_probe(dev_t devt, int *partno, void *data)
++static void sd_default_probe(dev_t devt)
  {
--	int ret;
-+	int ret, i;
- 
- 	if (!MACH_IS_AMIGA)
- 		return -ENODEV;
- 
--	ret = -EBUSY;
- 	if (register_blkdev(Z2RAM_MAJOR, DEVICE_NAME))
--		goto err;
--
--	ret = -ENOMEM;
--	z2ram_gendisk = alloc_disk(1);
--	if (!z2ram_gendisk)
--		goto out_disk;
--
--	z2_queue = blk_mq_init_sq_queue(&tag_set, &z2_mq_ops, 16,
--					BLK_MQ_F_SHOULD_MERGE);
--	if (IS_ERR(z2_queue)) {
--		ret = PTR_ERR(z2_queue);
--		z2_queue = NULL;
--		goto out_queue;
-+		return -EBUSY;
-+
-+	tag_set.ops = &z2_mq_ops;
-+	tag_set.nr_hw_queues = 1;
-+	tag_set.nr_maps = 1;
-+	tag_set.queue_depth = 16;
-+	tag_set.numa_node = NUMA_NO_NODE;
-+	tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
-+	ret = blk_mq_alloc_tag_set(&tag_set);
-+	if (ret)
-+		goto out_unregister_blkdev;
-+
-+	for (i = 0; i < Z2MINOR_COUNT; i++) {
-+		ret = z2ram_register_disk(i);
-+		if (ret && i == 0)
-+			goto out_free_tagset;
- 	}
- 
--	z2ram_gendisk->major = Z2RAM_MAJOR;
--	z2ram_gendisk->first_minor = 0;
--	z2ram_gendisk->fops = &z2_fops;
--	sprintf(z2ram_gendisk->disk_name, "z2ram");
--
--	z2ram_gendisk->queue = z2_queue;
--	add_disk(z2ram_gendisk);
--	blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT, THIS_MODULE,
--			    z2_find, NULL, NULL);
--
- 	return 0;
- 
--out_queue:
--	put_disk(z2ram_gendisk);
--out_disk:
-+out_free_tagset:
-+	blk_mq_free_tag_set(&tag_set);
-+out_unregister_blkdev:
- 	unregister_blkdev(Z2RAM_MAJOR, DEVICE_NAME);
--err:
- 	return ret;
+-	return NULL;
  }
  
- static void __exit z2_exit(void)
- {
- 	int i, j;
--	blk_unregister_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT);
-+
- 	unregister_blkdev(Z2RAM_MAJOR, DEVICE_NAME);
--	del_gendisk(z2ram_gendisk);
--	put_disk(z2ram_gendisk);
--	blk_cleanup_queue(z2_queue);
-+
-+	for (i = 0; i < Z2MINOR_COUNT; i++) {
-+		del_gendisk(z2ram_gendisk[i]);
-+		blk_cleanup_queue(z2ram_gendisk[i]->queue);
-+		put_disk(z2ram_gendisk[i]);
-+	}
- 	blk_mq_free_tag_set(&tag_set);
+ /*
+@@ -3525,9 +3523,6 @@ static int sd_remove(struct device *dev)
  
- 	if (current_device != -1) {
+ 	free_opal_dev(sdkp->opal_dev);
+ 
+-	blk_register_region(devt, SD_MINORS, NULL,
+-			    sd_default_probe, NULL, NULL);
+-
+ 	mutex_lock(&sd_ref_mutex);
+ 	dev_set_drvdata(dev, NULL);
+ 	put_device(&sdkp->dev);
+@@ -3717,11 +3712,9 @@ static int __init init_sd(void)
+ 	SCSI_LOG_HLQUEUE(3, printk("init_sd: sd driver entry point\n"));
+ 
+ 	for (i = 0; i < SD_MAJORS; i++) {
+-		if (register_blkdev(sd_major(i), "sd") != 0)
++		if (__register_blkdev(sd_major(i), "sd", sd_default_probe))
+ 			continue;
+ 		majors++;
+-		blk_register_region(sd_major(i), SD_MINORS, NULL,
+-				    sd_default_probe, NULL, NULL);
+ 	}
+ 
+ 	if (!majors)
+@@ -3794,10 +3787,8 @@ static void __exit exit_sd(void)
+ 
+ 	class_unregister(&sd_disk_class);
+ 
+-	for (i = 0; i < SD_MAJORS; i++) {
+-		blk_unregister_region(sd_major(i), SD_MINORS);
++	for (i = 0; i < SD_MAJORS; i++)
+ 		unregister_blkdev(sd_major(i), "sd");
+-	}
+ }
+ 
+ module_init(init_sd);
 -- 
 2.29.2
 
