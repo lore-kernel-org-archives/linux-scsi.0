@@ -2,99 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF09C4742C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 588D0C4742C
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 11:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5CC4221F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 11:42:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA78D2224B
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 11:57:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="eaBdGU3R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727943AbgKPHuy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 02:50:54 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52654 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726524AbgKPHuy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Nov 2020 02:50:54 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 883EEAF96;
-        Mon, 16 Nov 2020 07:50:52 +0000 (UTC)
-Subject: Re: [PATCH v4 07/19] lpfc: vmid: Forward declarations for APIs
-To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        tj@kernel.org, linux-nvme@lists.infradead.org
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        pbonzini@redhat.com,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-References: <1604895845-2587-1-git-send-email-muneendra.kumar@broadcom.com>
- <1604895845-2587-8-git-send-email-muneendra.kumar@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <a88e24ae-159e-4cbc-9142-63c21cd85413@suse.de>
-Date:   Mon, 16 Nov 2020 08:50:51 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+        id S1728511AbgKPKl1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 05:41:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37264 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726281AbgKPKl1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 05:41:27 -0500
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E116FC0613CF
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2020 02:41:26 -0800 (PST)
+Received: by mail-wm1-x342.google.com with SMTP id a65so23170915wme.1
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2020 02:41:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GNUQO66qrdOdHSIIOO/s1hb0xndxqjBt91UQm30+zSM=;
+        b=eaBdGU3RDogVhMoxMVTWKeu5mCzcJ6EkO8wmaLAffBpNuaRTr0/bYPye/tXTGVA/YJ
+         L8BSx6nD+tYs5O25wmLBv0Kvz+Vl/I+7vjxPjWQLcrdyT5tq4/rgtJiVBF44h2gi00X9
+         kwfkMIx0yLKM5p5bTprZ8xdcgCcjzOE7iSDdXBjWqDrT6m5cx1HWO700kRVq37o4Cj0s
+         x/9fIDCU4AGoPFmtWnhuk3ltC4ShrEBqsuXRdxBoUkAw1+4b7YHZRxlLWz7S5CtzY7Cm
+         qBuVIGaqu0gVeNl1DpufDrmA/1K3OVAZWaOHsza6XOG6W40xjGwdpIaC8zVHuOa6Ev2Y
+         RsvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=GNUQO66qrdOdHSIIOO/s1hb0xndxqjBt91UQm30+zSM=;
+        b=KR/5Af2i4qO7s9W30RSpzWsOIyQfy5/+LFBSupTbyYJfwROt9MLecaf8amVDQvAo7K
+         escejvspRohVCw6/063bxFBovFKCtJL7m1MQ88mBejSCshmlyCJAyRu6m2Gc5S1vBcxN
+         ePuYGYTFKV9uQh3ejHLF/zz2+YZxmxtZI1B2OP3cmDJ0R1om1wApnbZtD1vYNO2Gt8Sf
+         Q2vkQ7CEXnrG6YnEny/tTvcSR+crW/OQfmFRwrT2jXbIvHh/q/PdeknfINTAPdhD+aPl
+         HjQgm3ArYyWhh1wb9CF7FGuyT+CcVOq8UkdVLO85wj4nbcdfEY7LSV6LUV3y5eCg3BNw
+         8gVA==
+X-Gm-Message-State: AOAM532p+DY41Ot6+Iy4R7pohuiUXUB6KJ1wBy2xOzA4DMzrMgWs3DLg
+        B0ybu0pm+bzosNKRLlbySaxBvA==
+X-Google-Smtp-Source: ABdhPJzBKk5BZ8yxuZV6z8Js1n1trQRG3UwxA+uVCz99sq20IQ7B/qzTBNeeceyyb3JEzQwM02hQdA==
+X-Received: by 2002:a1c:2c2:: with SMTP id 185mr14991445wmc.103.1605523285546;
+        Mon, 16 Nov 2020 02:41:25 -0800 (PST)
+Received: from dell.default ([91.110.221.159])
+        by smtp.gmail.com with ESMTPSA id o197sm18729720wme.17.2020.11.16.02.41.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Nov 2020 02:41:24 -0800 (PST)
+From:   Lee Jones <lee.jones@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>
+Subject: [PATCH 1/1] scsi: pm8001: pm8001_hwi: Remove unused variable 'value'
+Date:   Mon, 16 Nov 2020 10:41:19 +0000
+Message-Id: <20201116104119.816527-1-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <1604895845-2587-8-git-send-email-muneendra.kumar@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/9/20 5:23 AM, Muneendra wrote:
-> From: Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-> 
-> This patch contains the forward declarations of commonly used APIs which
-> are used outside the scope of the file.
-> 
-> Signed-off-by: Gaurav Srivastava  <gaurav.srivastava@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> 
-> ---
-> v4:
-> No change
-> 
-> v3:
-> No change
-> 
-> v2:
-> Ported the patch on top of 5.10/scsi-queue
-> ---
->   drivers/scsi/lpfc/lpfc_crtn.h | 11 +++++++++++
->   1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-> index 782f6f76f18a..74ca5860ca8e 100644
-> --- a/drivers/scsi/lpfc/lpfc_crtn.h
-> +++ b/drivers/scsi/lpfc/lpfc_crtn.h
-> @@ -600,3 +600,14 @@ extern int lpfc_enable_nvmet_cnt;
->   extern unsigned long long lpfc_enable_nvmet[];
->   extern int lpfc_no_hba_reset_cnt;
->   extern unsigned long lpfc_no_hba_reset[];
-> +
-> +/* vmid interface */
-> +int lpfc_vmid_uvem(struct lpfc_vport *vport, struct lpfc_vmid *vmid, bool ins);
-> +u32 lpfc_vmid_get_cs_ctl(struct lpfc_vport *vport);
-> +int lpfc_vmid_cmd(struct lpfc_vport *vport,
-> +		  int cmdcode, struct lpfc_vmid *vmid);
-> +int lpfc_vmid_hash_fn(char *vmid, int len);
-> +struct lpfc_vmid *lpfc_get_vmid_from_hastable(struct lpfc_vport *vport,
-> +					      u32 hash, u8 *buf);
-> +void lpfc_vmid_vport_cleanup(struct lpfc_vport *vport);
-> +int lpfc_issue_els_qfpa(struct lpfc_vport *vport);
-> 
-uint32_t ...
+Hasn't been used since 2009.
 
-Cheers,
+Fixes the following W=1 kernel build warning(s):
 
-Hannes
+ drivers/scsi/pm8001/pm8001_hwi.c: In function ‘mpi_set_phys_g3_with_ssc’:
+ drivers/scsi/pm8001/pm8001_hwi.c:415:6: warning: variable ‘value’ set but not used [-Wunused-but-set-variable]
+
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/pm8001/pm8001_hwi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 2054c2b03d928..0a1e09b1cd580 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -416,7 +416,7 @@ int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
+ static void mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha,
+ 				     u32 SSCbit)
+ {
+-	u32 value, offset, i;
++	u32 offset, i;
+ 	unsigned long flags;
+ 
+ #define SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR 0x00030000
+@@ -467,7 +467,7 @@ static void mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha,
+ 	so that the written value will be 0x8090c016.
+ 	This will ensure only down-spreading SSC is enabled on the SPC.
+ 	*************************************************************/
+-	value = pm8001_cr32(pm8001_ha, 2, 0xd8);
++	pm8001_cr32(pm8001_ha, 2, 0xd8);
+ 	pm8001_cw32(pm8001_ha, 2, 0xd8, 0x8000C016);
+ 
+ 	/*set the shifted destination address to 0x0 to avoid error operation */
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.25.1
+
