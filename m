@@ -6,49 +6,49 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5354EC56202
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 01:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A611C56202
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 01:42:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1BA822280
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 01:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C16DA2227F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 01:42:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="I6T1s1DJ"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lCzIfI9w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728363AbgKPBTx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Nov 2020 20:19:53 -0500
-Received: from m42-4.mailgun.net ([69.72.42.4]:26544 "EHLO m42-4.mailgun.net"
+        id S1728359AbgKPBmT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Nov 2020 20:42:19 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:21462 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728196AbgKPBTx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 15 Nov 2020 20:19:53 -0500
+        id S1727464AbgKPBmS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 15 Nov 2020 20:42:18 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605489592; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1605490937; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=v6KLhXj+620b0Cqk/wXyGVyIAZ1iI29OVn20Cf4L4r0=;
- b=I6T1s1DJpNFbHjxgo3Fjqz4JICGoLeKYr4QHV8cR4tc6mOhYBQCavnPG1+vcn/DCsSbIzDpk
- 6iV1KtsiA2Ic6HPeknagNmE06KvYEyI3hDuaYxHRxm0QIkwGnsDvxjH4J1rUdD9xSvtTgTh+
- ZB/NDayEBd9AI9vKUKjfWR7Uobc=
+ MIME-Version: Sender; bh=oELFfS+JC43077ioQij5MVO6J/XlCo1j3sRES4I9xYI=;
+ b=lCzIfI9wK8INPDOc2n29iDYgPA+97rajk/WhR7iIKmIFnJQKeFVhKssY1Ex8McmAU8GIwcvw
+ 7en1c+mvHJakzvKXYTZsn9krOGdCaifhYVgBfWrTUIsCDzWiG9i+nOAurd8QMHG+LSDSZ9Yr
+ z3LMcBe98MLVPEtFet5bTQ9vib0=
 X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 5fb1d3b857dd92cbec9fe47a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 16 Nov 2020 01:19:52
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 5fb1d8f68e090a8886a85b57 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 16 Nov 2020 01:42:14
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 668A7C43460; Mon, 16 Nov 2020 01:19:51 +0000 (UTC)
+        id 64E6EC43463; Mon, 16 Nov 2020 01:42:14 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 13408C433C6;
-        Mon, 16 Nov 2020 01:19:49 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 96DA3C433ED;
+        Mon, 16 Nov 2020 01:42:13 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Mon, 16 Nov 2020 09:19:49 +0800
+Date:   Mon, 16 Nov 2020 09:42:13 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
@@ -70,7 +70,7 @@ In-Reply-To: <97dea590-5f2e-b4e3-ac64-7c346761c523@acm.org>
 References: <1605249009-13752-1-git-send-email-cang@codeaurora.org>
  <1605249009-13752-2-git-send-email-cang@codeaurora.org>
  <97dea590-5f2e-b4e3-ac64-7c346761c523@acm.org>
-Message-ID: <cd1ae6b2740a0211efe7e602691fd5e4@codeaurora.org>
+Message-ID: <20f447a438aa98afb18be4642c8888b3@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -78,6 +78,8 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Bart,
+
+Resent, typo fixed.
 
 On 2020-11-15 04:57, Bart Van Assche wrote:
 > On 11/12/20 10:30 PM, Can Guo wrote:
@@ -129,6 +131,7 @@ Yes, thanks.
 You are right.
 
 > Otherwise this patch looks good to me.
+> 
 
 Actually, I am thinking about removing all the pm_runtime_set_active()
 codes in both scsi_bus_resume_common() and scsi_dev_type_resume() - we
@@ -141,15 +144,14 @@ the path (e.g. throgh sg IOCTL, sg_open() calls
 scsi_autopm_get_device())
 should runtime resume the device first, and the runtime PM framework 
 makes
-sure device's gets resumed as well. Thus, the pm_runtime_set_active() 
-seems
-redundant. What do you think?
+sure device's parent (and its parent's parent and so on)gets resumed as 
+well.
+Thus, the pm_runtime_set_active() seems redundant. What do you think?
 
 Thanks,
 
 Can Guo.
 
-> 
 > Thanks,
 > 
 > Bart.
