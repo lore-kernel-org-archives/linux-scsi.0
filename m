@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54712C83034
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B6C7C8303A
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0417C22263
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D914F22240
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YqzdVakm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WtUs/ZHH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730855AbgKPO7O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:59:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49058 "EHLO
+        id S1730842AbgKPO7M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:59:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730817AbgKPO7K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:10 -0500
+        with ESMTP id S1730793AbgKPO7I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:08 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57738C0613CF;
-        Mon, 16 Nov 2020 06:59:10 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A55DC0613CF;
+        Mon, 16 Nov 2020 06:59:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=v/lQzgfk3g8cFkaFjGaW1PVi+J4d/Qp7XTb0qTcrcMw=; b=YqzdVakmLdPHF6ezNwy3j22Rhk
-        XQVP6AxA/GIysbqTVVeNbFaXKt7fGm9agC08PMgcnJUJeh74vxBSvOfGIuDA/W9HICp10ASgp343S
-        hLuXPuNnKIIaKSmewfilQzler2ZMSLSZNnA3JzXsI/oA/vpGcupQtF+vIl+sykv24N3IbJmKQaPjW
-        Jn9WRJEVebbUFdcTwhZRo/qo4f5NgH2pRWNmJeZrAnILNTOw/lnNzTwrq9w/rBYEhDgZjS59KWZ4g
-        UrBImqs7+qvykUY+GYj6lm5Ht8/hTyu9yEFUWTYQLA51bItg9eUgBTuodXJbLE5gVUevZsuOFItUu
-        Kp0yfIOw==;
+        bh=yQQZQPCQfQM7CUBXzCMUyqgLnLGQ9YPa8lq6jkcafKI=; b=WtUs/ZHHHWoA+J542Y6mYXW7Ql
+        wMixYk/BvE60aD54t7ExUm0AxV6UzJxr06L6viTlvpgjC2bEe3/zxQDkJkIFlS0bzo78ksny7Nq6W
+        OKlhR7wy5ubVTlN/2Y0WDj6CW0pG+vIu/78iIeWE+YehwQa4BqiEFEcMODKoBOrTVdWrXl0Sdysf+
+        pclwOsbyiCLrKl06HyP8fs+vPQOuBjK9Uq0ldqvVHcha7jCChZf433xQg5wtWEVmIZ0Td1rSjgQ2R
+        mY13xJ5gm6oR6Cum62zjZhpTXXhQHhsumfYYoZ2+ylyEnlTiukpjjXmewaWHdYuHaxhjjM+xQVSh0
+        CxfvNOfw==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefy5-0003vm-UU; Mon, 16 Nov 2020 14:58:58 +0000
+        id 1kefy1-0003uf-KX; Mon, 16 Nov 2020 14:58:53 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 34/78] block: propagate BLKROSET to all partitions
-Date:   Mon, 16 Nov 2020 15:57:25 +0100
-Message-Id: <20201116145809.410558-35-hch@lst.de>
+Subject: [PATCH 31/78] loop: use set_disk_ro
+Date:   Mon, 16 Nov 2020 15:57:22 +0100
+Message-Id: <20201116145809.410558-32-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -70,31 +70,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When setting the whole device read-only (or clearing the read-only
-state), also update the policy for all partitions.  The s390 dasd
-driver has awlways been doing this and it makes a lot of sense.
+Use set_disk_ro instead of set_device_ro to match all other block
+drivers and to ensure all partitions mirror the read-only flag.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/ioctl.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/block/loop.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 6b785181344fe1..22f394d118c302 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -354,7 +354,10 @@ static int blkdev_roset(struct block_device *bdev, fmode_t mode,
- 		if (ret)
- 			return ret;
- 	}
--	bdev->bd_part->policy = n;
-+	if (bdev_is_partition(bdev))
-+		bdev->bd_part->policy = n;
-+	else
-+		set_disk_ro(bdev->bd_disk, n);
- 	return 0;
- }
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 84a36c242e5550..41caf799df721f 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1134,7 +1134,7 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,
+ 	if (error)
+ 		goto out_unlock;
  
+-	set_device_ro(bdev, (lo->lo_flags & LO_FLAGS_READ_ONLY) != 0);
++	set_disk_ro(lo->lo_disk, (lo->lo_flags & LO_FLAGS_READ_ONLY) != 0);
+ 
+ 	lo->use_dio = lo->lo_flags & LO_FLAGS_DIRECT_IO;
+ 	lo->lo_device = bdev;
 -- 
 2.29.2
 
