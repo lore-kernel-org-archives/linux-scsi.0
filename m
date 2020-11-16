@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F1FC64E75
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0759C8300F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:55 +0000 (UTC)
 Received: from vger.kernel.org (unknown [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96F6B206B7
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91F56206B7
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 15:03:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q2Eui2HS"
-DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 96F6B206B7
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="trr8ifok"
+DMARC-Filter: OpenDMARC Filter v1.3.2 mail.kernel.org 91F56206B7
 Authentication-Results: mail.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: mail.kernel.org; spf=pass smtp.mailfrom=linux-scsi-owner@vger.kernel.org
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731357AbgKPPDH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 10:03:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49106 "EHLO
+        id S1731373AbgKPPDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 10:03:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730890AbgKPO7X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:23 -0500
+        with ESMTP id S1730815AbgKPO7P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:59:15 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6677AC0613D2;
-        Mon, 16 Nov 2020 06:59:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FDA2C0613CF;
+        Mon, 16 Nov 2020 06:59:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=PqvTdxKlXNZLdjBDggPe+0dpl8BdkJnU5rWC71hrHK0=; b=q2Eui2HSznBIPI9cSjfWRkLiXv
-        D7M1u2p1A7Bgss7fi8geS+IcBDfPIY7tG3iQsIcsu2pwlnpb6JkzHA9nQPyjhsgzFFr2f5V8gWY0R
-        q0oyrC2H/s5XJqKuazQLgZxzSZuDhrLGiXIEEMHlBXx+6keZzYVXDEBv//T2nzeg8fA0yrA8TgRwk
-        r0eZqTmdEAWKh5MSx2GpdmmFWrOrgA8uPwc9e459z4ahoYIjDlMtNVnWGRW3SsebzThr08Euwj40u
-        FCjdDtLrrY8SFXrtoGuiZV87z8jk53zRslZsCywZYFngjpUQ7WpAm4CkVJQjfGDPL7bghqM+ajoud
-        OS2SyUsg==;
+        bh=HSHstTA5FBmItbRjwbt8hMTbGvjYX3IcG/k6MZ54c5g=; b=trr8ifokY9kZUYDsLpSU9II+9M
+        8iOgO1nNBoSZITeSO6bl6xy7/7QVmOV+Wp/IF2eAc4UazTh4EZjMGH7xMC2tlJ1cltl+f6HNJiFqt
+        M+MdbLlrB1hAhEhOqTv8IbtoPMg0JuE4E3FFqf/AKsqROtJ5cBZEB1aT1wtbW/JeaGVhyB/xyhrIU
+        XjIGpFSG04CEPTZ4UHcdMJuKrv28ynGnyrFeKY7MrJa4DjTd0KsoYD9H2QWkllN8Kh9efXfFFayRp
+        wpgPnaDMPtCgTAFS90qS+ULgU0+e254709WuXfRit4EQSdOHjhmneOoyscxZi13M+fEKAYvQXhDsO
+        VcvGE4yA==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefyI-0003z4-LX; Mon, 16 Nov 2020 14:59:11 +0000
+        id 1kefy9-0003wb-0o; Mon, 16 Nov 2020 14:59:01 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -59,11 +59,10 @@ Cc:     Justin Sanders <justin@coraid.com>,
         drbd-dev@lists.linbit.com, nbd@other.debian.org,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 43/78] brd: use __register_blkdev to allocate devices on demand
-Date:   Mon, 16 Nov 2020 15:57:34 +0100
-Message-Id: <20201116145809.410558-44-hch@lst.de>
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH 36/78] block: open code kobj_map into in block/genhd.c
+Date:   Mon, 16 Nov 2020 15:57:27 +0100
+Message-Id: <20201116145809.410558-37-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -74,116 +73,210 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the simpler mechanism attached to major_name to allocate a brd device
-when a currently unregistered minor is accessed.
+Copy and paste the kobj_map functionality in the block code in preparation
+for completely rewriting it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/block/brd.c | 39 +++++++++++----------------------------
- 1 file changed, 11 insertions(+), 28 deletions(-)
+ block/genhd.c | 130 +++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 117 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index cc49a921339f77..c43a6ab4b1f39f 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -426,14 +426,15 @@ static void brd_free(struct brd_device *brd)
- 	kfree(brd);
- }
+diff --git a/block/genhd.c b/block/genhd.c
+index 8180195b76634b..482f7b89802010 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -17,7 +17,6 @@
+ #include <linux/seq_file.h>
+ #include <linux/slab.h>
+ #include <linux/kmod.h>
+-#include <linux/kobj_map.h>
+ #include <linux/mutex.h>
+ #include <linux/idr.h>
+ #include <linux/log2.h>
+@@ -29,6 +28,16 @@
+ static DEFINE_MUTEX(block_class_lock);
+ static struct kobject *block_depr;
  
--static struct brd_device *brd_init_one(int i, bool *new)
-+static void brd_probe(dev_t dev)
- {
- 	struct brd_device *brd;
-+	int i = MINOR(dev) / max_part;
- 
--	*new = false;
-+	mutex_lock(&brd_devices_mutex);
- 	list_for_each_entry(brd, &brd_devices, brd_list) {
- 		if (brd->brd_number == i)
--			goto out;
-+			goto out_unlock;
- 	}
- 
- 	brd = brd_alloc(i);
-@@ -442,9 +443,9 @@ static struct brd_device *brd_init_one(int i, bool *new)
- 		add_disk(brd->brd_disk);
- 		list_add_tail(&brd->brd_list, &brd_devices);
- 	}
--	*new = true;
--out:
--	return brd;
++struct bdev_map {
++	struct bdev_map *next;
++	dev_t dev;
++	unsigned long range;
++	struct module *owner;
++	struct kobject *(*probe)(dev_t, int *, void *);
++	int (*lock)(dev_t, void *);
++	void *data;
++} *bdev_map[255];
 +
-+out_unlock:
-+	mutex_unlock(&brd_devices_mutex);
- }
+ /* for extended dynamic devt allocation, currently only one major is used */
+ #define NR_EXT_DEVT		(1 << MINORBITS)
  
- static void brd_del_one(struct brd_device *brd)
-@@ -454,23 +455,6 @@ static void brd_del_one(struct brd_device *brd)
- 	brd_free(brd);
- }
+@@ -517,8 +526,6 @@ void unregister_blkdev(unsigned int major, const char *name)
  
--static struct kobject *brd_probe(dev_t dev, int *part, void *data)
--{
--	struct brd_device *brd;
--	struct kobject *kobj;
--	bool new;
+ EXPORT_SYMBOL(unregister_blkdev);
+ 
+-static struct kobj_map *bdev_map;
 -
--	mutex_lock(&brd_devices_mutex);
--	brd = brd_init_one(MINOR(dev) / max_part, &new);
--	kobj = brd ? get_disk_and_module(brd->brd_disk) : NULL;
--	mutex_unlock(&brd_devices_mutex);
--
--	if (new)
--		*part = 0;
--
--	return kobj;
--}
--
- static inline void brd_check_and_reset_par(void)
+ /**
+  * blk_mangle_minor - scatter minor numbers apart
+  * @minor: minor number to mangle
+@@ -645,16 +652,60 @@ void blk_register_region(dev_t devt, unsigned long range, struct module *module,
+ 			 struct kobject *(*probe)(dev_t, int *, void *),
+ 			 int (*lock)(dev_t, void *), void *data)
  {
- 	if (unlikely(!max_part))
-@@ -510,11 +494,12 @@ static int __init brd_init(void)
- 	 *	dynamically.
- 	 */
+-	kobj_map(bdev_map, devt, range, module, probe, lock, data);
+-}
++	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
++	unsigned index = MAJOR(devt);
++	unsigned i;
++	struct bdev_map *p;
++
++	n = min(n, 255u);
++	p = kmalloc_array(n, sizeof(struct bdev_map), GFP_KERNEL);
++	if (p == NULL)
++		return;
  
--	if (register_blkdev(RAMDISK_MAJOR, "ramdisk"))
-+	if (__register_blkdev(RAMDISK_MAJOR, "ramdisk", brd_probe))
- 		return -EIO;
++	for (i = 0; i < n; i++, p++) {
++		p->owner = module;
++		p->probe = probe;
++		p->lock = lock;
++		p->dev = devt;
++		p->range = range;
++		p->data = data;
++	}
++
++	mutex_lock(&block_class_lock);
++	for (i = 0, p -= n; i < n; i++, p++, index++) {
++		struct bdev_map **s = &bdev_map[index % 255];
++		while (*s && (*s)->range < range)
++			s = &(*s)->next;
++		p->next = *s;
++		*s = p;
++	}
++	mutex_unlock(&block_class_lock);
++}
+ EXPORT_SYMBOL(blk_register_region);
  
- 	brd_check_and_reset_par();
+ void blk_unregister_region(dev_t devt, unsigned long range)
+ {
+-	kobj_unmap(bdev_map, devt, range);
+-}
++	unsigned n = MAJOR(devt + range - 1) - MAJOR(devt) + 1;
++	unsigned index = MAJOR(devt);
++	unsigned i;
++	struct bdev_map *found = NULL;
  
-+	mutex_lock(&brd_devices_mutex);
- 	for (i = 0; i < rd_nr; i++) {
- 		brd = brd_alloc(i);
- 		if (!brd)
-@@ -532,9 +517,7 @@ static int __init brd_init(void)
- 		brd->brd_disk->queue = brd->brd_queue;
- 		add_disk(brd->brd_disk);
- 	}
++	mutex_lock(&block_class_lock);
++	for (i = 0; i < min(n, 255u); i++, index++) {
++		struct bdev_map **s;
++		for (s = &bdev_map[index % 255]; *s; s = &(*s)->next) {
++			struct bdev_map *p = *s;
++			if (p->dev == devt && p->range == range) {
++				*s = p->next;
++				if (!found)
++					found = p;
++				break;
++			}
++		}
++	}
++	mutex_unlock(&block_class_lock);
++	kfree(found);
++}
+ EXPORT_SYMBOL(blk_unregister_region);
+ 
+ static struct kobject *exact_match(dev_t devt, int *partno, void *data)
+@@ -976,6 +1027,47 @@ static ssize_t disk_badblocks_store(struct device *dev,
+ 	return badblocks_store(disk->bb, page, len, 0);
+ }
+ 
++static struct gendisk *lookup_gendisk(dev_t dev, int *partno)
++{
++	struct kobject *kobj;
++	struct bdev_map *p;
++	unsigned long best = ~0UL;
++
++retry:
++	mutex_lock(&block_class_lock);
++	for (p = bdev_map[MAJOR(dev) % 255]; p; p = p->next) {
++		struct kobject *(*probe)(dev_t, int *, void *);
++		struct module *owner;
++		void *data;
++
++		if (p->dev > dev || p->dev + p->range - 1 < dev)
++			continue;
++		if (p->range - 1 >= best)
++			break;
++		if (!try_module_get(p->owner))
++			continue;
++		owner = p->owner;
++		data = p->data;
++		probe = p->probe;
++		best = p->range - 1;
++		*partno = dev - p->dev;
++		if (p->lock && p->lock(dev, data) < 0) {
++			module_put(owner);
++			continue;
++		}
++		mutex_unlock(&block_class_lock);
++		kobj = probe(dev, partno, data);
++		/* Currently ->owner protects _only_ ->probe() itself. */
++		module_put(owner);
++		if (kobj)
++			return dev_to_disk(kobj_to_dev(kobj));
++		goto retry;
++	}
++	mutex_unlock(&block_class_lock);
++	return NULL;
++}
++
++
+ /**
+  * get_gendisk - get partitioning information for a given device
+  * @devt: device to get partitioning information for
+@@ -993,11 +1085,7 @@ struct gendisk *get_gendisk(dev_t devt, int *partno)
+ 	might_sleep();
+ 
+ 	if (MAJOR(devt) != BLOCK_EXT_MAJOR) {
+-		struct kobject *kobj;
 -
--	blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS,
--				  THIS_MODULE, brd_probe, NULL, NULL);
-+	mutex_unlock(&brd_devices_mutex);
+-		kobj = kobj_lookup(bdev_map, devt, partno);
+-		if (kobj)
+-			disk = dev_to_disk(kobj_to_dev(kobj));
++		disk = lookup_gendisk(devt, partno);
+ 	} else {
+ 		struct hd_struct *part;
  
- 	pr_info("brd: module loaded\n");
- 	return 0;
-@@ -544,6 +527,7 @@ static int __init brd_init(void)
- 		list_del(&brd->brd_list);
- 		brd_free(brd);
- 	}
-+	mutex_unlock(&brd_devices_mutex);
- 	unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
+@@ -1210,6 +1298,22 @@ static struct kobject *base_probe(dev_t devt, int *partno, void *data)
+ 	return NULL;
+ }
  
- 	pr_info("brd: module NOT loaded !!!\n");
-@@ -557,7 +541,6 @@ static void __exit brd_exit(void)
- 	list_for_each_entry_safe(brd, next, &brd_devices, brd_list)
- 		brd_del_one(brd);
++static void bdev_map_init(void)
++{
++	struct bdev_map *base;
++	int i;
++
++	base = kzalloc(sizeof(*base), GFP_KERNEL);
++	if (!base)
++		panic("cannot allocate bdev_map");
++
++	base->dev = 1;
++	base->range = ~0 ;
++	base->probe = base_probe;
++	for (i = 0; i < 255; i++)
++		bdev_map[i] = base;
++}
++
+ static int __init genhd_device_init(void)
+ {
+ 	int error;
+@@ -1218,7 +1322,7 @@ static int __init genhd_device_init(void)
+ 	error = class_register(&block_class);
+ 	if (unlikely(error))
+ 		return error;
+-	bdev_map = kobj_map_init(base_probe, &block_class_lock);
++	bdev_map_init();
+ 	blk_dev_init();
  
--	blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
- 	unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
- 
- 	pr_info("brd: module unloaded\n");
+ 	register_blkdev(BLOCK_EXT_MAJOR, "blkext");
 -- 
 2.29.2
 
