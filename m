@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB61BC64E8A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F14B9C8300E
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9937322263
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A899A22240
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Nov 2020 14:59:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="byXWvuFW"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gPww3FQI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730647AbgKPO6n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Nov 2020 09:58:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48944 "EHLO
+        id S1730586AbgKPO6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Nov 2020 09:58:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730591AbgKPO6m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:42 -0500
+        with ESMTP id S1730651AbgKPO6q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2020 09:58:46 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE1CC0613CF;
-        Mon, 16 Nov 2020 06:58:42 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1A10C0613CF;
+        Mon, 16 Nov 2020 06:58:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=j/0/qXcDYvQ/KRFTCfbeLrD6BKftlYW1jMJrLTQknrA=; b=byXWvuFWUAS6lZPm5Zeq7p8bBe
-        us/bzllqhkru2czyVVokQTTeYL+/3nVsuU4/rDhYvEj/ImRfWDgds8ciFSHt3DJegL3w+3AQaGHag
-        PKasBfLdKS5E4pWdTFh6/4uyvJRFiUdVWjcV1a5aQvY/kBYNo4iLxhmPSh2kdJdTp7A4ixInIx3wo
-        JpWIePokKzvwp8PcbSTxxumquRpS137WC1RZjgyVjiJeOwfVg8ecKo6rYbXAhcQrObDK5SeQ3EIfa
-        OTrz4SZ5xlHtXA94sJkOV0q/92afNyn3WLIhIoPBbXq1zA8kztmL78I31XmGh7QR7o5AcHIy7rcAn
-        HnC1nGVw==;
+        bh=ud6p7e1IhRULC6wZtzdvOstF28I68kQBPxpGvL+xOgI=; b=gPww3FQIhl5iWeI+g9tG2PGyW2
+        8cFaViQoZFAn3scL7v7e6VlWSSHM0qujAFL7izZSOKnG55zOSstvCPtgh6j+BgcIcjdOLRmWbSuPx
+        87livSCdfMp3Q0CIYUUkcKRJP5Va1JiGvvjNWim+FctICo3+JOPZDui4e1QuYygSU2PpQDLhZqOWf
+        f197DU1YDQPIlLWXNMJiKwoVJLVKNOz6H3aGhMJM8IdhDJMUGVHFFQeJkvMcj1S9q2+rh+/TxUG2Y
+        29p0F2fhazyop6FNc7WioL6g6LusWwAv5JZKRR86YRvfazPlnU/qoUaNKbSGMde0pGudftQZoTtiY
+        4sHWOC/g==;
 Received: from [2001:4bb8:180:6600:255b:7def:a93:4a09] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kefxb-0003mp-ER; Mon, 16 Nov 2020 14:58:27 +0000
+        id 1kefxf-0003ny-QH; Mon, 16 Nov 2020 14:58:32 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
@@ -57,9 +57,9 @@ Cc:     Justin Sanders <justin@coraid.com>,
         ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 13/78] pktcdvd: use set_capacity_and_notify
-Date:   Mon, 16 Nov 2020 15:57:04 +0100
-Message-Id: <20201116145809.410558-14-hch@lst.de>
+Subject: [PATCH 16/78] rbd: use set_capacity_and_notify
+Date:   Mon, 16 Nov 2020 15:57:07 +0100
+Message-Id: <20201116145809.410558-17-hch@lst.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201116145809.410558-1-hch@lst.de>
 References: <20201116145809.410558-1-hch@lst.de>
@@ -74,24 +74,25 @@ Use set_capacity_and_notify to set the size of both the disk and block
 device.  This also gets the uevent notifications for the resize for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Ilya Dryomov <idryomov@gmail.com>
 ---
- drivers/block/pktcdvd.c | 3 +--
+ drivers/block/rbd.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index 467dbd06b7cdb1..4326401cede445 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -2130,8 +2130,7 @@ static int pkt_open_dev(struct pktcdvd_device *pd, fmode_t write)
+diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+index f84128abade319..b7a194ffda55b4 100644
+--- a/drivers/block/rbd.c
++++ b/drivers/block/rbd.c
+@@ -4920,8 +4920,7 @@ static void rbd_dev_update_size(struct rbd_device *rbd_dev)
+ 	    !test_bit(RBD_DEV_FLAG_REMOVING, &rbd_dev->flags)) {
+ 		size = (sector_t)rbd_dev->mapping.size / SECTOR_SIZE;
+ 		dout("setting size to %llu sectors", (unsigned long long)size);
+-		set_capacity(rbd_dev->disk, size);
+-		revalidate_disk_size(rbd_dev->disk, true);
++		set_capacity_and_notify(rbd_dev->disk, size);
  	}
+ }
  
- 	set_capacity(pd->disk, lba << 2);
--	set_capacity(pd->bdev->bd_disk, lba << 2);
--	bd_set_nr_sectors(pd->bdev, lba << 2);
-+	set_capacity_and_notify(pd->bdev->bd_disk, lba << 2);
- 
- 	q = bdev_get_queue(pd->bdev);
- 	if (write) {
 -- 
 2.29.2
 
