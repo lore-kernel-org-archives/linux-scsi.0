@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76D13C6379F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 12:59:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73518C2D0E4
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 13:00:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BE252225E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 12:59:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13D0F2225E
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 13:00:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="jylpcKqV"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="a83cQ7mI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728875AbgKQM6v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 07:58:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54934 "EHLO mail.kernel.org"
+        id S1728475AbgKQM5D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 07:57:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728714AbgKQM5s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 07:57:48 -0500
+        id S1728397AbgKQM5C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 07:57:02 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 370BC2464E;
-        Tue, 17 Nov 2020 12:57:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A26F5223AB;
+        Tue, 17 Nov 2020 12:57:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605617867;
-        bh=/MUdipLcb4JkvDppPS27UAP/oB9I9J9uiNiR54nSO1g=;
+        s=default; t=1605617822;
+        bh=eXBZTuWuecVg6kmx2fimqIY7rN4w6sZwcFXaJAoB4Zw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jylpcKqVW8hCDlNBLEKHqzy4fCLj0xMN0eJpwOXUzR+abXIhUiHlztSivdwvtF1C4
-         9zobbYxRTq8Tp31tZAeO/abolv6l1QqH00Icf2hAPNGgGWSxgJ1VmHddV63WoGgCtR
-         SCz22s6E1dc0Ehe5/815A1jVtKqfAQvgjoMcrSDM=
+        b=a83cQ7mI0T0utDrASQuYRBNum4EazYfRLlfDDsIaaQ+Ewel2bUj0SfTvPtynLnD2s
+         J9mUk3z1YIoQPeb0dVwMgSg/xy1ogZM2KACTpvPtE6xLQDSeqGMtrGLz7KpNKNRCWK
+         sa0AjrxGBbICh74ZgMDoCXSCA5C65YN5oJbrjZAw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
@@ -42,12 +42,12 @@ Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 2/6] scsi: ufs: Fix unbalanced scsi_block_reqs_cnt caused by ufshcd_hold()
-Date:   Tue, 17 Nov 2020 07:57:39 -0500
-Message-Id: <20201117125743.599974-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 05/21] scsi: ufs: Fix unbalanced scsi_block_reqs_cnt caused by ufshcd_hold()
+Date:   Tue, 17 Nov 2020 07:56:36 -0500
+Message-Id: <20201117125652.599614-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201117125743.599974-1-sashal@kernel.org>
-References: <20201117125743.599974-1-sashal@kernel.org>
+In-Reply-To: <20201117125652.599614-1-sashal@kernel.org>
+References: <20201117125652.599614-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -80,12 +80,12 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b2cbdd01ab10b..a63119c35fde8 100644
+index 316b861305eae..0cb3e71f30ffb 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1592,12 +1592,12 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- 		 * work and to enable clocks.
+@@ -1617,12 +1617,12 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
  		 */
+ 		fallthrough;
  	case CLKS_OFF:
 -		ufshcd_scsi_block_requests(hba);
  		hba->clk_gating.state = REQ_CLKS_ON;
