@@ -2,150 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D1DC5519F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:41:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F174C2D0E4
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFA7E21D7E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:41:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ObBpXfzn"
+	by mail.kernel.org (Postfix) with ESMTP id AC5A522203
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:43:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727782AbgKQQkx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 11:40:53 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:26311 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725808AbgKQQkx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 11:40:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605631251;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PrtrctB9G5pEBnZheqS7Drb5ElIcN9MmGROgGZcsg40=;
-        b=ObBpXfznWBzH7WVVgneqirBpNszo0rtMXngfsk8YP3omTrYne/TmhRqme32OhRCNJWiVRo
-        DqxtnxKO4TVyZqMqe9uGwTyvMoyPE7oFJ26YpBpCD5T0tvilKHY2/qbHkaIC016jxNkn4z
-        OSKN1R5FdWCkmdFFEfpzlr8jitOMOkY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-234-QV2m57Y7MBm9bV8zp4uIdg-1; Tue, 17 Nov 2020 11:40:48 -0500
-X-MC-Unique: QV2m57Y7MBm9bV8zp4uIdg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 91A2A80364C;
-        Tue, 17 Nov 2020 16:40:47 +0000 (UTC)
-Received: from localhost (ovpn-115-113.ams2.redhat.com [10.36.115.113])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1B1A35D9CC;
-        Tue, 17 Nov 2020 16:40:43 +0000 (UTC)
-Date:   Tue, 17 Nov 2020 16:40:43 +0000
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     qemu-devel@nongnu.org, fam@euphon.net, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
-        pbonzini@redhat.com, virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
-Message-ID: <20201117164043.GS131917@stefanha-x1.localdomain>
-References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
+        id S1727362AbgKQQmy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 11:42:54 -0500
+Received: from mx2.suse.de ([195.135.220.15]:47670 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727085AbgKQQmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 11:42:54 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 58535AC1F;
+        Tue, 17 Nov 2020 16:42:52 +0000 (UTC)
+Subject: Re: [PATCH V4 11/12] scsi: make sure sdev->queue_depth is <=
+ max(shost->can_queue, 1024)
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>
+References: <20201116090737.50989-1-ming.lei@redhat.com>
+ <20201116090737.50989-12-ming.lei@redhat.com>
+ <4479fc11-5c4f-e575-a253-e08c841c5cb2@suse.de> <20201117021813.GD56247@T590>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <074ce627-127e-180a-f5d6-595eeffa65b8@suse.de>
+Date:   Tue, 17 Nov 2020 17:42:51 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: redhat.com
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="fqIB0bRxfTYxTb/F"
-Content-Disposition: inline
+In-Reply-To: <20201117021813.GD56247@T590>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---fqIB0bRxfTYxTb/F
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 11/17/20 3:18 AM, Ming Lei wrote:
+> On Mon, Nov 16, 2020 at 10:44:54AM +0100, Hannes Reinecke wrote:
+>> On 11/16/20 10:07 AM, Ming Lei wrote:
+>>> Limit scsi device's queue depth is less than max(host->can_queue, 1024)
+>>> in scsi_change_queue_depth(), and 1024 is big enough for saturating
+>>> current fast SCSI LUN(SSD, or raid volume on multiple SSDs).
+>>>
+>>> We need this patch for replacing sdev->device_busy with sbitmap which
+>>> has to be pre-allocated with reasonable max depth.
+>>>
+>>> Cc: Omar Sandoval <osandov@fb.com>
+>>> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+>>> Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+>>> Cc: Ewan D. Milne <emilne@redhat.com>
+>>> Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+>>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+>>> ---
+>>>    drivers/scsi/scsi.c | 11 +++++++++++
+>>>    1 file changed, 11 insertions(+)
+>>>
+>>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+>>> index 24619c3bebd5..a28d48c850cf 100644
+>>> --- a/drivers/scsi/scsi.c
+>>> +++ b/drivers/scsi/scsi.c
+>>> @@ -214,6 +214,15 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+>>>    	scsi_io_completion(cmd, good_bytes);
+>>>    }
+>>> +
+>>> +/*
+>>> + * 1024 is big enough for saturating the fast scsi LUN now
+>>> + */
+>>> +static int scsi_device_max_queue_depth(struct scsi_device *sdev)
+>>> +{
+>>> +	return max_t(int, sdev->host->can_queue, 1024);
+>>> +}
+>>> +
+>>
+>> Shouldn't this rather be initialized with scsi_host->can_queue?
+> 
+> Multiple queues may be used for one single LUN, so in theory we should
+> return max queue depth as host->can_queue * host->nr_hw_queues, but
+> this number can be too big for the sbitmap's pre-allocation.
+> 
+Ah, so that's the problem here.
 
-On Thu, Nov 12, 2020 at 05:18:59PM -0600, Mike Christie wrote:
-> The following kernel patches were made over Michael's vhost branch:
->=20
-> https://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git/log/?h=3Dvh=
-ost
->=20
-> and the vhost-scsi bug fix patchset:
->=20
-> https://lore.kernel.org/linux-scsi/20201112170008.GB1555653@stefanha-x1.l=
-ocaldomain/T/#t
->=20
-> And the qemu patch was made over the qemu master branch.
->=20
-> vhost-scsi currently supports multiple queues with the num_queues
-> setting, but we end up with a setup where the guest's scsi/block
-> layer can do a queue per vCPU and the layers below vhost can do
-> a queue per CPU. vhost-scsi will then do a num_queue virtqueues,
-> but all IO gets set on and completed on a single vhost-scsi thread.
-> After 2 - 4 vqs this becomes a bottleneck.
->=20
-> This patchset allows us to create a worker thread per IO vq, so we
-> can better utilize multiple CPUs with the multiple queues. It
-> implments Jason's suggestion to create the initial worker like
-> normal, then create the extra workers for IO vqs with the
-> VHOST_SET_VRING_ENABLE ioctl command added in this patchset.
+> That is why this patch introduces one reasonable limit on this value
+> of max(sdev->host->can_queue, 1024). Suppose single SSD can be saturated
+> by ~128 requests, we still can saturate one LUN with 8 SSDs behind if
+> the hw queue depth is set as too low.
+> 
+>> These 'should be enough' settings inevitable turn out to be not enough in
+>> the long run ...
+> 
+> I have provided the theory behind this idea, not just simple 'should be
+> enough'.
+> 
+No, it's okay now. I wasn't aware that we had a limitation on the 
+sbitmap pre-allocation.
 
-How does userspace find out the tids and set their CPU affinity?
+You can add my
 
-What is the meaning of the new VHOST_SET_VRING_ENABLE ioctl? It doesn't
-really "enable" or "disable" the vq, requests are processed regardless.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-The purpose of the ioctl isn't clear to me because the kernel could
-automatically create 1 thread per vq without a new ioctl. On the other
-hand, if userspace is supposed to control worker threads then a
-different interface would be more powerful:
+Cheers,
 
-  struct vhost_vq_worker_info {
-      /*
-       * The pid of an existing vhost worker that this vq will be
-       * assigned to. When pid is 0 the virtqueue is assigned to the
-       * default vhost worker. When pid is -1 a new worker thread is
-       * created for this virtqueue. When pid is -2 the virtqueue's
-       * worker thread is unchanged.
-       *
-       * If a vhost worker no longer has any virtqueues assigned to it
-       * then it will terminate.
-       *
-       * The pid of the vhost worker is stored to this field when the
-       * ioctl completes successfully. Use pid -2 to query the current
-       * vhost worker pid.
-       */
-      __kernel_pid_t pid;  /* in/out */
-
-      /* The virtqueue index*/
-      unsigned int vq_idx; /* in */
-  };
-
-  ioctl(vhost_fd, VHOST_SET_VQ_WORKER, &info);
-
-Stefan
-
---fqIB0bRxfTYxTb/F
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl+z/QoACgkQnKSrs4Gr
-c8hlxAgAt5dzFMEBdSdRp7hlgZgQqjlbY0sBm70KpODN/xBzs8Q2v0wdnoQb31pX
-hxrxuWMrrEyu0RPvaCbTZNhTnyU58Eo12Ydeh4DQ+nlJYrk6c91aXU1ii6PvxQDd
-xJNaxUljcMW36zNpL1Qy7BISbEkh2kRCyPmV9OmDhlmGDJfZg0kGlRorga+q9HrJ
-mI/kS2ajFdXy/9ovk38seIcHJRxpWawgN/ORuV5YX8D/y/O7Gb5Cc+l0Ai6Pe5At
-pYjhIw428VQjyQg/L9zGM8oF+llegHH2V7MUfvqFOFRN45JR6bblohEt7x3TrS2j
-U3ufXEGBhhwEEII1h6f2QaC6YUeyuQ==
-=uA/X
------END PGP SIGNATURE-----
-
---fqIB0bRxfTYxTb/F--
-
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
