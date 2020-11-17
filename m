@@ -2,192 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8CC8C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 07:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1439AC6379D
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 07:53:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 382312463C
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 07:44:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A90102465B
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 07:53:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OdQyNL7D"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dd4z/ji2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726774AbgKQHnj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 02:43:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35510 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725978AbgKQHnj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2020 02:43:39 -0500
-Received: from mail-oo1-xc33.google.com (mail-oo1-xc33.google.com [IPv6:2607:f8b0:4864:20::c33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71ABFC0617A6
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2020 23:43:39 -0800 (PST)
-Received: by mail-oo1-xc33.google.com with SMTP id q28so4537564oof.1
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2020 23:43:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=g0yq5l0W1GCRDmXXTrdq78/a81+XXTEdfvFdpD+JBuo=;
-        b=OdQyNL7DZS2DHtOUPASR4VP9kUsr1Ram8hYrucdRybEu1aMNhvh0dvls5pbGCZoMaM
-         JTZZwriSM0IvDmw45PCaIhjpfufaLOTLzxwjEQpBs5cjNrD0GZjee8OtfFsC/PUyNoEd
-         H5Q69/hF4KSbo6KJyVfTfTFoZdeqQFP/9obLs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=g0yq5l0W1GCRDmXXTrdq78/a81+XXTEdfvFdpD+JBuo=;
-        b=emvx8zdmA1vPI5pNtF61eoW6B98EIXZh3IQOvNNcy3IryUfn49L6alfS6W9w3DXbfa
-         9Beco56JsQDggmES1GAyH5XLWp6EgF3JYR3P6uL4m2g4AYPj4fc0ejr3UavcJBAOpzwR
-         sPFUlY9A5bT9NqaM3dPncwjA0RPP3aWzBv+KPdCRCEWHa5/LYAB3CS1oabxMwmhednWP
-         xtbwUj8ugoke/m8UXUS2nDAgZmCQE6K//PMWtbrFM88OiMnR8GODSdKEHOEpKdIEwX8o
-         937XrqXZqib9Z96kdkDe8UQOnvDxGPhOfb0ZWj/kHaf3XOWDH7WUC1tAmp6e/VDum8St
-         U3QA==
-X-Gm-Message-State: AOAM533TB1bChP4cURpmvHp9Kl/anJ+/I5C+eDrjdmz4pFNfZMSyDo7p
-        +wKOfXJVzeESH3q3CoIQENfLjOI3gIiLTgTXTNYErjs86hi83g==
-X-Google-Smtp-Source: ABdhPJyLNwpCdYnoBHYUvWH9B9viGc+BkP0YjZ+q5UhPBqb/BQjttyUyRzH/SbNr+YRpfUYvpAfqdrx3Vy3XLu+ugl8=
-X-Received: by 2002:a4a:cf05:: with SMTP id l5mr2232293oos.7.1605599018638;
- Mon, 16 Nov 2020 23:43:38 -0800 (PST)
-From:   Muneendra Kumar M <muneendra.kumar@broadcom.com>
-References: <1605070685-20945-1-git-send-email-muneendra.kumar@broadcom.com>
- <1605070685-20945-4-git-send-email-muneendra.kumar@broadcom.com> <4e638c14-faf4-0a63-a715-86e9baabedda@suse.de>
-In-Reply-To: <4e638c14-faf4-0a63-a715-86e9baabedda@suse.de>
+        id S1726249AbgKQHxg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 02:53:36 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:53004 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725774AbgKQHxg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 02:53:36 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1605599614;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Q/ESqcgzgFsT4AbtqoLRrUl4kyW0esnycCJV/qp7nn8=;
+        b=dd4z/ji2LRjYRn+m74gYpXbEtcCruH8SijrSYBw8iV2WidQ8bOJz3cymHD0qaZLDJ4gCH+
+        kV/g6yhnOtvKRVaB8MmHDVWAD9DD1ns7/VXaSIdLTXPNYEp82Zw3BJu1zfC2SOvz80zj3N
+        S0HS07x4hIKsnsJqdJRcjeTx3F1zmOs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-587-x8Mf2m0YNeyDAi2egJAt4g-1; Tue, 17 Nov 2020 02:53:30 -0500
+X-MC-Unique: x8Mf2m0YNeyDAi2egJAt4g-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A77778030D1;
+        Tue, 17 Nov 2020 07:53:28 +0000 (UTC)
+Received: from T590 (ovpn-13-195.pek2.redhat.com [10.72.13.195])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 46FB75D9CC;
+        Tue, 17 Nov 2020 07:53:16 +0000 (UTC)
+Date:   Tue, 17 Nov 2020 15:53:13 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>
+Subject: Re: [PATCH V4 05/12] sbitmap: export sbitmap_weight
+Message-ID: <20201117075313.GB74954@T590>
+References: <20201116090737.50989-1-ming.lei@redhat.com>
+ <20201116090737.50989-6-ming.lei@redhat.com>
+ <d05cb6bf-35e6-d939-30a5-6ef3a9c8a679@suse.de>
+ <20201117021030.GC56247@T590>
+ <1183d3b9-bd52-2428-d696-ef02d0134299@suse.de>
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIH8uuDM4YiJUHm/GbjmPgWle4NwQJ0ghWYAYRnUzCpSbn8gA==
-Date:   Tue, 17 Nov 2020 13:13:37 +0530
-Message-ID: <4bf70107a0f27dd0e88fc4166c196101@mail.gmail.com>
-Subject: RE: [PATCH v7 3/5] scsi_transport_fc: Added a new rport state FC_PORTSTATE_MARGINAL
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        michael.christie@oracle.com
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000002cc55f05b448a758"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1183d3b9-bd52-2428-d696-ef02d0134299@suse.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000002cc55f05b448a758
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Nov 17, 2020 at 07:57:40AM +0100, Hannes Reinecke wrote:
+> On 11/17/20 3:10 AM, Ming Lei wrote:
+> > On Mon, Nov 16, 2020 at 10:38:58AM +0100, Hannes Reinecke wrote:
+> > > On 11/16/20 10:07 AM, Ming Lei wrote:
+> > > > SCSI's .device_busy will be converted to sbitmap, and sbitmap_weight
+> > > > is needed, so export the helper.
+> > > > 
+> > > > Cc: Omar Sandoval <osandov@fb.com>
+> > > > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> > > > Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+> > > > Cc: Ewan D. Milne <emilne@redhat.com>
+> > > > Reviewed-by: Hannes Reinecke <hare@suse.de>
+> > > > Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+> > > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > > > ---
+> > > >    include/linux/sbitmap.h |  9 +++++++++
+> > > >    lib/sbitmap.c           | 11 ++++++-----
+> > > >    2 files changed, 15 insertions(+), 5 deletions(-)
+> > > > 
+> > > > diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
+> > > > index 103b41c03311..34343ce3ef6c 100644
+> > > > --- a/include/linux/sbitmap.h
+> > > > +++ b/include/linux/sbitmap.h
+> > > > @@ -346,6 +346,15 @@ static inline int sbitmap_test_bit(struct sbitmap *sb, unsigned int bitnr)
+> > > >     */
+> > > >    void sbitmap_show(struct sbitmap *sb, struct seq_file *m);
+> > > > +
+> > > > +/**
+> > > > + * sbitmap_weight() - Return how many real bits set in a &struct sbitmap.
+> > > > + * @sb: Bitmap to check.
+> > > > + *
+> > > > + * Return: How many real bits set
+> > > > + */
+> > > > +unsigned int sbitmap_weight(const struct sbitmap *sb);
+> > > > +
+> > > >    /**
+> > > >     * sbitmap_bitmap_show() - Write a hex dump of a &struct sbitmap to a &struct
+> > > >     * seq_file.
+> > > > diff --git a/lib/sbitmap.c b/lib/sbitmap.c
+> > > > index dcd6a89b4d2f..fb1d3c2f70a2 100644
+> > > > --- a/lib/sbitmap.c
+> > > > +++ b/lib/sbitmap.c
+> > > > @@ -342,20 +342,21 @@ static unsigned int __sbitmap_weight(const struct sbitmap *sb, bool set)
+> > > >    	return weight;
+> > > >    }
+> > > > -static unsigned int sbitmap_weight(const struct sbitmap *sb)
+> > > > +static unsigned int sbitmap_cleared(const struct sbitmap *sb)
+> > > >    {
+> > > > -	return __sbitmap_weight(sb, true);
+> > > > +	return __sbitmap_weight(sb, false);
+> > > >    }
+> > > > -static unsigned int sbitmap_cleared(const struct sbitmap *sb)
+> > > > +unsigned int sbitmap_weight(const struct sbitmap *sb)
+> > > >    {
+> > > > -	return __sbitmap_weight(sb, false);
+> > > > +	return __sbitmap_weight(sb, true) - sbitmap_cleared(sb);
+> > > >    }
+> > > > +EXPORT_SYMBOL_GPL(sbitmap_weight);
+> > > That is extremely confusing. Why do you change the meaning of
+> > > 'sbitmap_weight' from __sbitmap_weight(sb, true) to
+> > > __sbitmap_weight(sb, true) - __sbitmap_weight(sb, false)?
+> > 
+> > Because the only user of sbitmap_weight() just uses the following way:
+> > 
+> > 	sbitmap_weight(sb) - sbitmap_cleared(sb)
+> > 
+> > Frankly, I think sbitmap_weight(sb) should return real busy bits.
+> > 
+> No argument about that. Just wanted to be clear that this is by intention.
+> 
+> > > Does this mean that the original definition was wrong?
+> > > Or does this mean that this patch implies a different meaning of
+> > > 'sbitmap_weight'?
+> > 
+> > Yeah, this patch changes meaning of sbitmap_weight(), now it is
+> > exported, and we should make it more accurate/readable from user view.
+> > 
+> So can you please state this in the patch description?
 
-Hi Hannes,
-Thanks for the review.
-> +	{ FC_PORTSTATE_LOOPBACK,	"Loopback", 8 },
-> +	{ FC_PORTSTATE_DELETED,		"Deleted", 7 },
-> +	{ FC_PORTSTATE_MARGINAL,	"Marginal", 8 },
+Sure.
 
->Why did you append the length of the string here?
->This doesn't have anything to do with this patch, but rather is an
->improvement/modification of the original code, and should be delegated to =
-a
->separate patch.
-[Muneendra] fc_enum_name_match needs the string length for validation.
-get_fc_port_state_match  will use this as part of setting the port_state in
-sysfs for validation(next patch 4/5).
+Thanks, 
+Ming
 
->   };
->   fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
-> +fc_enum_name_match(port_state, fc_port_state, fc_port_state_names)
->   #define FC_PORTSTATE_MAX_NAMELEN	20
->
-....
-...
-
->Other than that:
-
->Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg HRB 36809 =
-(AG
-N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Felix Imend=C3=B6rffer
-
---0000000000002cc55f05b448a758
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-J/4V6ms/nIUi+/4vPYjckYUbRzkXm1/X0IyUfpp5cgdrFn9jBIk69fQGAUEhnVvwcXnHWotYxZFd
-Xew5Fz0CAwEAAaOCAdMwggHPMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYI
-KwYBBQUHMAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxz
-aWduMnNoYTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5j
-b20vZ3NwZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsG
-AQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAA
-MEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNp
-Z24yc2hhMmczLmNybDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMG
-A1UdJQQMMAoGCCsGAQUFBwMEMB8GA1UdIwQYMBaAFGlygmIxZ5VEhXeRgMQENkmdewthMB0GA1Ud
-DgQWBBR6On9cEmlB2VsuST951zNMSKtFBzANBgkqhkiG9w0BAQsFAAOCAQEAOGDBLQ17Ge8BVULh
-hsKhgh5eDx0mNmRRdhvTJnxOTRX5QsOKvsJGOUbyrKjD3BTTcGmIUti9HmbqDe/3gRTbhu8LA508
-LbMkW5lUoTb8ycBNOKLYhNE8UEOY8jRTUtMEhzT6NJDEE+1hb3kSGfArrrF3Z8pRYiUUhcpC5GKL
-9KsxA+DECRfSGfXJJQSq6nEZUGKhz+dz5CV1s8UIZLe9HEEfyJO4eRP+Fw9X16cthAbY0kpVnAvT
-/j45FAauY/h87uphdvSb5wC9v5w4VO0JKs0yNUjyWXg/RG+6JCvcViLFLAlRCLrcRcVaQwWZQ3YB
-EpmWnHflnrBcah5Ozy137DGCAm8wggJrAgEBMG0wXTELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEds
-b2JhbFNpZ24gbnYtc2ExMzAxBgNVBAMTKkdsb2JhbFNpZ24gUGVyc29uYWxTaWduIDIgQ0EgLSBT
-SEEyNTYgLSBHMwIMX/krgFDQUQNyOf+1MA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEi
-BCB1sMLH/fPs0sa+334XwfdZIDEz1yixFNboyvNrZD9QMTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcN
-AQcBMBwGCSqGSIb3DQEJBTEPFw0yMDExMTcwNzQzMzhaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZI
-AWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEK
-MAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAP3sOoOCwI80gW/pV
-ZnPY3bp04TrmDZrwxDwXVJEIAN80nKJY9jS5E5cf/PsPcyPFAtC9YJNDQWsCmn2DX1Ra6keAWBar
-t9VCcDzX2jf5IPS73e/WmPAVyLBTgCOaD1sH0CmEe2U3zqKJnl0vF5F1CO62/VCwSnvHqG3gnMfs
-F+XQHcfGuwqva1KFy8sRFIaY0Ac58s/3wMcdm5IiyNCSL54wNbwyElvh2GaRDTBdGZrwMgLJ5sLq
-D/F46K6mdSoHy/0B175NlVKLgLXYf/sx0X5Ec59ilUtz07tBl+yzrINEQ+2Wt/pXKyrd8jOWBBNp
-czEynbkSP3560W5bIPZnLg==
---0000000000002cc55f05b448a758--
