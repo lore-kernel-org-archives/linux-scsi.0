@@ -2,121 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F174C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:43:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6AE0C63697
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:47:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC5A522203
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:43:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6085D2467A
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 16:47:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727362AbgKQQmy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 11:42:54 -0500
-Received: from mx2.suse.de ([195.135.220.15]:47670 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727085AbgKQQmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 11:42:54 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 58535AC1F;
-        Tue, 17 Nov 2020 16:42:52 +0000 (UTC)
-Subject: Re: [PATCH V4 11/12] scsi: make sure sdev->queue_depth is <=
- max(shost->can_queue, 1024)
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>
-References: <20201116090737.50989-1-ming.lei@redhat.com>
- <20201116090737.50989-12-ming.lei@redhat.com>
- <4479fc11-5c4f-e575-a253-e08c841c5cb2@suse.de> <20201117021813.GD56247@T590>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <074ce627-127e-180a-f5d6-595eeffa65b8@suse.de>
-Date:   Tue, 17 Nov 2020 17:42:51 +0100
+        id S1728205AbgKQQqv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 11:46:51 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:38100 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727439AbgKQQqv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2020 11:46:51 -0500
+Received: by mail-pj1-f65.google.com with SMTP id gi3so804201pjb.3;
+        Tue, 17 Nov 2020 08:46:50 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=s43DkhroP2fE2p52MdenTBrlylmGcPquO8ir0v8/P+k=;
+        b=VBsGMpd9gkhyUTKC7WBTIFs2tvZ6Wlo7Yl74FzVYob9iOXUCQrHTVpzVCOyGfZLomI
+         8cbF3RQqBi9cKqT8/u0P9oYxQvIhWctHfUx3jbMvUhwA4JhdZNqlCUZtbosQBaQw46dk
+         uomMVL0RMikI7kFgVIlvvYqyCTUiwiwKCCLKWolFmvqnexSjufn4DUwdk7IrSubpd27v
+         wEEoXxHemsku80o2PzA/Jc4qzGz8yzaQvcVdPmN0oY4qvLSS6B7IYkVDtyYnMeLnibax
+         pqZrQglgCNxOFLLsNWMRadstRQNvZK8UpYHVXBew5rWJAB7EMQXjbTWjyWFgVRk2PUzB
+         MxSw==
+X-Gm-Message-State: AOAM53282rKgcI2BxJFOSCEFzzexlt+64REo3hhRhkfi7gEO4GGMSEX4
+        UeKj+hc5vtybtvzJBeV+fMRhvJ5MNFQ=
+X-Google-Smtp-Source: ABdhPJz0hqwFgrU/OtvJed64cAOwajiwlODGtEkQGu6HWuBNUwihdbumB1I5mFm6Z4kOFMlk7z+DuQ==
+X-Received: by 2002:a17:90a:5b0a:: with SMTP id o10mr228686pji.197.1605631610234;
+        Tue, 17 Nov 2020 08:46:50 -0800 (PST)
+Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id t7sm3592605pji.27.2020.11.17.08.46.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Nov 2020 08:46:49 -0800 (PST)
+Subject: Re: [block, scsi, ide] 3e3b42fee6:
+ kmsg.sd#:#:#:#:[sdf]Asking_for_cache_data_failed
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>,
+        0day robot <lkp@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org
+References: <20201117143350.GA17824@xsang-OptiPlex-9020>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <38bed525-3453-f614-7310-ad01f1bc2605@acm.org>
+Date:   Tue, 17 Nov 2020 08:46:46 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201117021813.GD56247@T590>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20201117143350.GA17824@xsang-OptiPlex-9020>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/17/20 3:18 AM, Ming Lei wrote:
-> On Mon, Nov 16, 2020 at 10:44:54AM +0100, Hannes Reinecke wrote:
->> On 11/16/20 10:07 AM, Ming Lei wrote:
->>> Limit scsi device's queue depth is less than max(host->can_queue, 1024)
->>> in scsi_change_queue_depth(), and 1024 is big enough for saturating
->>> current fast SCSI LUN(SSD, or raid volume on multiple SSDs).
->>>
->>> We need this patch for replacing sdev->device_busy with sbitmap which
->>> has to be pre-allocated with reasonable max depth.
->>>
->>> Cc: Omar Sandoval <osandov@fb.com>
->>> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
->>> Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
->>> Cc: Ewan D. Milne <emilne@redhat.com>
->>> Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
->>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
->>> ---
->>>    drivers/scsi/scsi.c | 11 +++++++++++
->>>    1 file changed, 11 insertions(+)
->>>
->>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->>> index 24619c3bebd5..a28d48c850cf 100644
->>> --- a/drivers/scsi/scsi.c
->>> +++ b/drivers/scsi/scsi.c
->>> @@ -214,6 +214,15 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
->>>    	scsi_io_completion(cmd, good_bytes);
->>>    }
->>> +
->>> +/*
->>> + * 1024 is big enough for saturating the fast scsi LUN now
->>> + */
->>> +static int scsi_device_max_queue_depth(struct scsi_device *sdev)
->>> +{
->>> +	return max_t(int, sdev->host->can_queue, 1024);
->>> +}
->>> +
->>
->> Shouldn't this rather be initialized with scsi_host->can_queue?
+On 11/17/20 8:00 AM, kernel test robot wrote:
+> on test machine: 4 threads Intel(R) Core(TM) i5-6500 CPU @ 3.20GHz with 32G memory
 > 
-> Multiple queues may be used for one single LUN, so in theory we should
-> return max queue depth as host->can_queue * host->nr_hw_queues, but
-> this number can be too big for the sbitmap's pre-allocation.
+> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
 > 
-Ah, so that's the problem here.
+> If you fix the issue, kindly add following tag
+> Reported-by: kernel test robot <oliver.sang@intel.com>
 
-> That is why this patch introduces one reasonable limit on this value
-> of max(sdev->host->can_queue, 1024). Suppose single SSD can be saturated
-> by ~128 requests, we still can saturate one LUN with 8 SSDs behind if
-> the hw queue depth is set as too low.
-> 
->> These 'should be enough' settings inevitable turn out to be not enough in
->> the long run ...
-> 
-> I have provided the theory behind this idea, not just simple 'should be
-> enough'.
-> 
-No, it's okay now. I wasn't aware that we had a limitation on the 
-sbitmap pre-allocation.
+Please fix the test bot. The DID_ERROR messages are reported during test 
+block/001 and in the attached dmesg output I found the following:
 
-You can add my
+block/001 (stress device hotplugging)                        [passed]
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Bart.
