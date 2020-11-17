@@ -2,95 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB89C5519F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 10:55:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C59C5519F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 11:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A6212465E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 10:55:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 495162462E
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 11:53:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KYj9uZRj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727468AbgKQKym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 05:54:42 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:43811 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725355AbgKQKym (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2020 05:54:42 -0500
-Received: by mail-wr1-f66.google.com with SMTP id s8so22677732wrw.10;
-        Tue, 17 Nov 2020 02:54:40 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=BV3dR49+TmzbbfuxnWVy7bWUO/ntmS41oS8pplsK7qM=;
-        b=LoCBLHA7zmm8fmdpDwq//I6aRWUQtf69ebZ2Pwork8QdyUD9ODnHnrDFDg0/w4p8s1
-         YD3k8MlCOfSM3EJUo+QZN33rivrnqgwYiE4Jhlw+hjUdzFSoZg44anLLv67ZJFA6sR7G
-         zAbhazIWKOvz0DM/QKWAhbnK4/iyw7ryxZM7T26KbPz2jt2z1jfAxfPV4E7/Kc1LLGBk
-         uZ8nxyey9gh96aVYBQ8AGMQ4yMdMKBbBcG51Q0pw4254KlhgvijM4A/M0d5XGI+20Nlg
-         zqLXDeAlIJ9YmKrETDc8jv7msDrxvfuzmps7wNjR7qgjNLZvdaQaO4BHmQSAvsDK4NX6
-         5NDQ==
-X-Gm-Message-State: AOAM530U5WZ36yj41fOLeOBVsvYR8AVlBL5f1+3JOoMlcS8fp8oKnVrP
-        UVvTq/6ismsg1+y4RkBfOw0=
-X-Google-Smtp-Source: ABdhPJz1z9gh1py8eyXo87F2WkrqWbEC8YZw9py5b+kN+at9lT4vWJKqv8ov+5szql9n/lwJYNmdUA==
-X-Received: by 2002:a05:6000:345:: with SMTP id e5mr23390958wre.333.1605610479790;
-        Tue, 17 Nov 2020 02:54:39 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id g11sm27345546wrq.7.2020.11.17.02.54.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2020 02:54:39 -0800 (PST)
-Date:   Tue, 17 Nov 2020 10:54:37 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-Cc:     linux-kernel@vger.kernel.org,
-        "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH v9 0/3] Drivers: hv: vmbus: vmbus_requestor data
- structure for VMBus hardening
-Message-ID: <20201117105437.xbyjrs4m7garb2lj@liuwe-devbox-debian-v2>
-References: <20201109100402.8946-1-parri.andrea@gmail.com>
+        id S1727526AbgKQLxQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 06:53:16 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58905 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727267AbgKQLxQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 06:53:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1605613995;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ORGIWbDZHVGHQKz+yXjGHqNxxtUKUaElXUNeXuBfTrk=;
+        b=KYj9uZRjcsTGCqXD+KhiKrjItNzYLHnrXJhzxOv3jeP4txNOHJ+VLGVweLs8rE8QyghsuH
+        YFNc49Dvx2ifwS63ZFwnxBazcN4f5Hr/L9XnU/KcW/6R+GrSYTFoav4g3aRWVpfqHb1QKz
+        Xn/QVFwYaxFzZhatxN7J7eJfD7q/GTk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-195-DCiX4ymnPyG1vYC0E1eKrQ-1; Tue, 17 Nov 2020 06:53:11 -0500
+X-MC-Unique: DCiX4ymnPyG1vYC0E1eKrQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 286778018A1;
+        Tue, 17 Nov 2020 11:53:10 +0000 (UTC)
+Received: from localhost (ovpn-113-172.ams2.redhat.com [10.36.113.172])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CC17010013D0;
+        Tue, 17 Nov 2020 11:53:06 +0000 (UTC)
+Date:   Tue, 17 Nov 2020 11:53:05 +0000
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     qemu-devel@nongnu.org, fam@euphon.net, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
+        pbonzini@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 1/1] qemu vhost scsi: add VHOST_SET_VRING_ENABLE support
+Message-ID: <20201117115305.GJ131917@stefanha-x1.localdomain>
+References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
+ <1605223150-10888-2-git-send-email-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1605223150-10888-2-git-send-email-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: redhat.com
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="Ublo+h3cBgJ33ahC"
 Content-Disposition: inline
-In-Reply-To: <20201109100402.8946-1-parri.andrea@gmail.com>
-User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 09, 2020 at 11:03:59AM +0100, Andrea Parri (Microsoft) wrote:
-> Currently, VMbus drivers use pointers into guest memory as request IDs
-> for interactions with Hyper-V. To be more robust in the face of errors
-> or malicious behavior from a compromised Hyper-V, avoid exposing
-> guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
-> bad request ID that is then treated as the address of a guest data
-> structure with no validation. Instead, encapsulate these memory
-> addresses and provide small integers as request IDs.
-> 
-> The first patch creates the definitions for the data structure, provides
-> helper methods to generate new IDs and retrieve data, and
-> allocates/frees the memory needed for vmbus_requestor.
-> 
-> The second and third patches make use of vmbus_requestor to send request
-> IDs to Hyper-V in storvsc and netvsc respectively.
-> 
-> The series is based on 5.10-rc3.  Changelog in the actual patches.
+--Ublo+h3cBgJ33ahC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Applied to hyperv-next. Thanks.
+On Thu, Nov 12, 2020 at 05:19:00PM -0600, Mike Christie wrote:
+> +static int vhost_kernel_set_vring_enable(struct vhost_dev *dev, int enable)
+> +{
+> +    struct vhost_vring_state s;
+> +    int i, ret;
+> +
+> +    s.num = 1;
+> +    for (i = 0; i < dev->nvqs; ++i) {
+> +        s.index = i;
+> +
+> +        ret = vhost_kernel_call(dev, VHOST_SET_VRING_ENABLE, &s);
+> +        /* Ignore kernels that do not support the cmd */
+> +        if (ret == -EPERM)
+> +            return 0;
+> +        if (ret)
+> +            goto disable_vrings;
+> +    }
 
-I also corrected the email address in my reviewed-by tags while
-committing -- should've use my @kernel.org address, not @xen.org.
+The 'enable' argument is ignored and this function acts on all
+virtqueues, while the ioctl acts on a single virtqueue only.
 
-Wei.
+This function's behavior is actually "vhost_kernel_enable_vrings()"
+(plural), not "vhost_kernel_set_vring_enable()" (singular).
+
+Please rename this function and drop the enable argument.
+
+--Ublo+h3cBgJ33ahC
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl+zuaEACgkQnKSrs4Gr
+c8ggbgf/amsccaIgLNwt7fBI9E5/mNlfsgJGbQlcgWAJWJ6giGQfPamIN2qEFbS9
+TbTbc8ng7fqj3q9VA/QSYqqGT4o4S3ejHaluLfL8OG3NQhjB1jl1tv1B1hqUpbjh
+7BvoLZvmN4mEBCwTMInavK7mBXwgIJX6dxAZdU6ZGiW3KjlNQQK01erQax/PFvrz
+siTJLUyQP6RiIctvZ3TREgvdoCo7iS1YkxcDtRQU3Y1aVUSg49pUaq/oeLg5FMDi
+HoIqvlqazYoI/asj1Fgli1qtZMX2tPom7IwdxPc+5pmyHkh4lT1JR0wwulWnwapb
+x/T7SH6sVbYXRrs+JlLTrw7yvtAZwg==
+=9dMr
+-----END PGP SIGNATURE-----
+
+--Ublo+h3cBgJ33ahC--
+
