@@ -2,135 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F43CC63798
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 06:57:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85132C5519F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 07:04:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD8F8241A5
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 06:57:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3415C24248
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 07:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726544AbgKQG5o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 01:57:44 -0500
-Received: from mx2.suse.de ([195.135.220.15]:33426 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725792AbgKQG5n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 01:57:43 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 61E62AC1F;
-        Tue, 17 Nov 2020 06:57:41 +0000 (UTC)
-Subject: Re: [PATCH V4 05/12] sbitmap: export sbitmap_weight
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Omar Sandoval <osandov@fb.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>
-References: <20201116090737.50989-1-ming.lei@redhat.com>
- <20201116090737.50989-6-ming.lei@redhat.com>
- <d05cb6bf-35e6-d939-30a5-6ef3a9c8a679@suse.de> <20201117021030.GC56247@T590>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <1183d3b9-bd52-2428-d696-ef02d0134299@suse.de>
-Date:   Tue, 17 Nov 2020 07:57:40 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
-MIME-Version: 1.0
-In-Reply-To: <20201117021030.GC56247@T590>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1726266AbgKQHE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 02:04:26 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:50152 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725792AbgKQHEZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2020 02:04:25 -0500
+IronPort-SDR: /0Xq/GfFgzxMxAFOUbV/3kMp2dN8VXIVHPNj1JZXiqvoqHwk8Bk1x4LrAaepqru2L7wh7HaE19
+ atCsNnL8Vdx2h8bhrYuVVe7DstUevIL78mL5edn3uyy7CNzX8WV1+KZmtpFo9oyzAID4s8h3Ae
+ PXpOZESnApbk9ePz7z+dZg+RpneIfWZfv8VI0t4ywl+OBhxtpb9ATcWbMNuUt4/rosmKTImeJu
+ VZS8N90MzQAfiZsaJv4ZBRMs596Z8UgnKDAmza46iV9QZmosgjZMtb2AqXddoKTZncFd+b3XkO
+ vEg=
+X-IronPort-AV: E=Sophos;i="5.77,484,1596524400"; 
+   d="scan'208";a="47474916"
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by labrats.qualcomm.com with ESMTP; 16 Nov 2020 23:04:25 -0800
+X-QCInternal: smtphost
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg02-sd.qualcomm.com with ESMTP; 16 Nov 2020 23:04:25 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id 15EA22181A; Mon, 16 Nov 2020 23:04:25 -0800 (PST)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org
+Subject: [PATCH v3 0/3] Fix some racing problems btw err_handler and paths like system PM ops and the task abort callback
+Date:   Mon, 16 Nov 2020 23:04:16 -0800
+Message-Id: <1605596660-2987-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/17/20 3:10 AM, Ming Lei wrote:
-> On Mon, Nov 16, 2020 at 10:38:58AM +0100, Hannes Reinecke wrote:
->> On 11/16/20 10:07 AM, Ming Lei wrote:
->>> SCSI's .device_busy will be converted to sbitmap, and sbitmap_weight
->>> is needed, so export the helper.
->>>
->>> Cc: Omar Sandoval <osandov@fb.com>
->>> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
->>> Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
->>> Cc: Ewan D. Milne <emilne@redhat.com>
->>> Reviewed-by: Hannes Reinecke <hare@suse.de>
->>> Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
->>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
->>> ---
->>>    include/linux/sbitmap.h |  9 +++++++++
->>>    lib/sbitmap.c           | 11 ++++++-----
->>>    2 files changed, 15 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
->>> index 103b41c03311..34343ce3ef6c 100644
->>> --- a/include/linux/sbitmap.h
->>> +++ b/include/linux/sbitmap.h
->>> @@ -346,6 +346,15 @@ static inline int sbitmap_test_bit(struct sbitmap *sb, unsigned int bitnr)
->>>     */
->>>    void sbitmap_show(struct sbitmap *sb, struct seq_file *m);
->>> +
->>> +/**
->>> + * sbitmap_weight() - Return how many real bits set in a &struct sbitmap.
->>> + * @sb: Bitmap to check.
->>> + *
->>> + * Return: How many real bits set
->>> + */
->>> +unsigned int sbitmap_weight(const struct sbitmap *sb);
->>> +
->>>    /**
->>>     * sbitmap_bitmap_show() - Write a hex dump of a &struct sbitmap to a &struct
->>>     * seq_file.
->>> diff --git a/lib/sbitmap.c b/lib/sbitmap.c
->>> index dcd6a89b4d2f..fb1d3c2f70a2 100644
->>> --- a/lib/sbitmap.c
->>> +++ b/lib/sbitmap.c
->>> @@ -342,20 +342,21 @@ static unsigned int __sbitmap_weight(const struct sbitmap *sb, bool set)
->>>    	return weight;
->>>    }
->>> -static unsigned int sbitmap_weight(const struct sbitmap *sb)
->>> +static unsigned int sbitmap_cleared(const struct sbitmap *sb)
->>>    {
->>> -	return __sbitmap_weight(sb, true);
->>> +	return __sbitmap_weight(sb, false);
->>>    }
->>> -static unsigned int sbitmap_cleared(const struct sbitmap *sb)
->>> +unsigned int sbitmap_weight(const struct sbitmap *sb)
->>>    {
->>> -	return __sbitmap_weight(sb, false);
->>> +	return __sbitmap_weight(sb, true) - sbitmap_cleared(sb);
->>>    }
->>> +EXPORT_SYMBOL_GPL(sbitmap_weight);
->> That is extremely confusing. Why do you change the meaning of
->> 'sbitmap_weight' from __sbitmap_weight(sb, true) to
->> __sbitmap_weight(sb, true) - __sbitmap_weight(sb, false)?
-> 
-> Because the only user of sbitmap_weight() just uses the following way:
-> 
-> 	sbitmap_weight(sb) - sbitmap_cleared(sb)
-> 
-> Frankly, I think sbitmap_weight(sb) should return real busy bits.
-> 
-No argument about that. Just wanted to be clear that this is by intention.
+This series mainly fixes racing problems btw err_handler and paths like
+system PM ops, async scan and task abort callback. 
 
->> Does this mean that the original definition was wrong?
->> Or does this mean that this patch implies a different meaning of
->> 'sbitmap_weight'?
-> 
-> Yeah, this patch changes meaning of sbitmap_weight(), now it is
-> exported, and we should make it more accurate/readable from user view.
-> 
-So can you please state this in the patch description?
+This series has been tested with error/fault injections to system PM
+operations, async scan and task abort to the UFS device W-LU.
 
-Cheers,
+Change since v2:
+- Added one more minor change into this series.
 
-Hannes
+Change since v1:
+- Removed Change-Id from commit msg
+
+Can Guo (3):
+  scsi: ufs: Serialize eh_work with system PM events and async scan
+  scsi: ufs: Fix a racing problem between ufshcd_abort and eh_work
+  scsi: ufs: Print host regs in IRQ handler when AH8 error happens
+
+ drivers/scsi/ufs/ufshcd.c | 122 ++++++++++++++++++++++++++++++++--------------
+ drivers/scsi/ufs/ufshcd.h |   3 ++
+ 2 files changed, 88 insertions(+), 37 deletions(-)
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
