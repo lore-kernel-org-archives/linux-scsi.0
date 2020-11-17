@@ -2,170 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89AA3C64E69
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 13:00:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3954FC5519F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 13:04:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E2142225B
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 13:00:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDE692225B
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 13:04:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="k+Ezn9+S"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W00FUIo6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728499AbgKQM5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 07:57:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53850 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728479AbgKQM5E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 07:57:04 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726019AbgKQNE3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 08:04:29 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20396 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726035AbgKQNE2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 08:04:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1605618267;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=kNa5O/Hj0HBQuu1Ns8AweW8QzcPZsqmg4/YkfGYf+Iw=;
+        b=W00FUIo6G7zd3/vrLyGRB3w56n8CP1fw1pco3aQeWqqOX05+7DXFke6dV4P+y5MwRluCeW
+        OXOug9bkIhNkU+ifixMOfxG+azFfVROrShyI8qwn4hpxMknXclGvGx3dFznWVUAQzlOzFK
+        kKpjDW9CpHsXXhYYPi2BJEzE4u7bblM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-521-MyAQ-weGMI6SqUW7jvbcQg-1; Tue, 17 Nov 2020 08:04:25 -0500
+X-MC-Unique: MyAQ-weGMI6SqUW7jvbcQg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 802342464E;
-        Tue, 17 Nov 2020 12:57:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605617823;
-        bh=bmntKh40Rt/hnMj496EtbyZ+MsWTcvjmdL9eQkWgf1s=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=k+Ezn9+SsaOH8msl9HgFsAwY37VhcqnEVfE1aiL2lVjum4O/DKdbWGA8e+kQbADDW
-         fcOLusTLisAO0jIvrShHtclrvsR8R9BND7E0HY6rHWLASxobinB7YZDaas/CvIxzqO
-         tmPEdwUMLzMC3+6JkrMNk5OP0nBUUufF5dgU/ZqY=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.9 06/21] scsi: ufs: Try to save power mode change and UIC cmd completion timeout
-Date:   Tue, 17 Nov 2020 07:56:37 -0500
-Message-Id: <20201117125652.599614-6-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201117125652.599614-1-sashal@kernel.org>
-References: <20201117125652.599614-1-sashal@kernel.org>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1334A6D585;
+        Tue, 17 Nov 2020 13:04:24 +0000 (UTC)
+Received: from localhost (ovpn-115-113.ams2.redhat.com [10.36.115.113])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5EA7D55760;
+        Tue, 17 Nov 2020 13:04:18 +0000 (UTC)
+Date:   Tue, 17 Nov 2020 13:04:17 +0000
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     qemu-devel@nongnu.org, fam@euphon.net, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
+        pbonzini@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 01/10] vhost: remove work arg from vhost_work_flush
+Message-ID: <20201117130417.GK131917@stefanha-x1.localdomain>
+References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
+ <1605223150-10888-3-git-send-email-michael.christie@oracle.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1605223150-10888-3-git-send-email-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: redhat.com
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="EVcIhgQsEzAXu06J"
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Can Guo <cang@codeaurora.org>
+--EVcIhgQsEzAXu06J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-[ Upstream commit 0f52fcb99ea2738a0a0f28e12cf4dd427069dd2a ]
+On Thu, Nov 12, 2020 at 05:19:01PM -0600, Mike Christie wrote:
+> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+> index f22fce5..8795fd3 100644
+> --- a/drivers/vhost/scsi.c
+> +++ b/drivers/vhost/scsi.c
+> @@ -1468,8 +1468,8 @@ static void vhost_scsi_flush(struct vhost_scsi *vs)
+>  	/* Flush both the vhost poll and vhost work */
+>  	for (i = 0; i < VHOST_SCSI_MAX_VQ; i++)
+>  		vhost_scsi_flush_vq(vs, i);
+> -	vhost_work_flush(&vs->dev, &vs->vs_completion_work);
+> -	vhost_work_flush(&vs->dev, &vs->vs_event_work);
+> +	vhost_work_dev_flush(&vs->dev);
+> +	vhost_work_dev_flush(&vs->dev);
 
-Use the uic_cmd->cmd_active as a flag to track the lifecycle of an UIC cmd.
-The flag is set before sending the UIC cmd and cleared in IRQ handler. When
-a PMC or UIC cmd completion timeout happens, if the flag is not set,
-instead of returning timeout error, we still treat it as a successful
-operation.  This is to deal with the scenario in which completion has been
-raised but the one waiting for the completion cannot be awaken in time due
-to kernel scheduling problem.
+These two calls can be combined into a single call now.
 
-Link: https://lore.kernel.org/r/1604384682-15837-3-git-send-email-cang@codeaurora.org
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/ufs/ufshcd.c | 26 ++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h |  2 ++
- 2 files changed, 26 insertions(+), 2 deletions(-)
+--EVcIhgQsEzAXu06J
+Content-Type: application/pgp-signature; name="signature.asc"
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0cb3e71f30ffb..54928a837dad0 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2100,10 +2100,20 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
- 	unsigned long flags;
- 
- 	if (wait_for_completion_timeout(&uic_cmd->done,
--					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
-+					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
- 		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
--	else
-+	} else {
- 		ret = -ETIMEDOUT;
-+		dev_err(hba->dev,
-+			"uic cmd 0x%x with arg3 0x%x completion timeout\n",
-+			uic_cmd->command, uic_cmd->argument3);
-+
-+		if (!uic_cmd->cmd_active) {
-+			dev_err(hba->dev, "%s: UIC cmd has been completed, return the result\n",
-+				__func__);
-+			ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
-+		}
-+	}
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->active_uic_cmd = NULL;
-@@ -2135,6 +2145,7 @@ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
- 	if (completion)
- 		init_completion(&uic_cmd->done);
- 
-+	uic_cmd->cmd_active = 1;
- 	ufshcd_dispatch_uic_cmd(hba, uic_cmd);
- 
- 	return 0;
-@@ -3774,10 +3785,18 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 		dev_err(hba->dev,
- 			"pwr ctrl cmd 0x%x with mode 0x%x completion timeout\n",
- 			cmd->command, cmd->argument3);
-+
-+		if (!cmd->cmd_active) {
-+			dev_err(hba->dev, "%s: Power Mode Change operation has been completed, go check UPMCRS\n",
-+				__func__);
-+			goto check_upmcrs;
-+		}
-+
- 		ret = -ETIMEDOUT;
- 		goto out;
- 	}
- 
-+check_upmcrs:
- 	status = ufshcd_get_upmcrs(hba);
- 	if (status != PWR_LOCAL) {
- 		dev_err(hba->dev,
-@@ -4887,11 +4906,14 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- 			ufshcd_get_uic_cmd_result(hba);
- 		hba->active_uic_cmd->argument3 =
- 			ufshcd_get_dme_attr_val(hba);
-+		if (!hba->uic_async_done)
-+			hba->active_uic_cmd->cmd_active = 0;
- 		complete(&hba->active_uic_cmd->done);
- 		retval = IRQ_HANDLED;
- 	}
- 
- 	if ((intr_status & UFSHCD_UIC_PWR_MASK) && hba->uic_async_done) {
-+		hba->active_uic_cmd->cmd_active = 0;
- 		complete(hba->uic_async_done);
- 		retval = IRQ_HANDLED;
- 	}
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 363589c0bd370..23f46c7b8cb28 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -64,6 +64,7 @@ enum dev_cmd_type {
-  * @argument1: UIC command argument 1
-  * @argument2: UIC command argument 2
-  * @argument3: UIC command argument 3
-+ * @cmd_active: Indicate if UIC command is outstanding
-  * @done: UIC command completion
-  */
- struct uic_command {
-@@ -71,6 +72,7 @@ struct uic_command {
- 	u32 argument1;
- 	u32 argument2;
- 	u32 argument3;
-+	int cmd_active;
- 	struct completion done;
- };
- 
--- 
-2.27.0
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl+zylEACgkQnKSrs4Gr
+c8hrVwf+Mw0t1WPblvn8yE7/N+vf0dXbjADIoB7GyZgfdmFl4j1KGKlUh0ou0Kqb
+Jth2D1ZdGZH640h2T+KEiGahhxXOP5yKL3GuEQcy80cd/93c+jpR4QRnUvg8xCSH
+CrVg4cIAuf8cZAUXDjj7a5VeL7z3yI6Diq6iWX6Y8I8JOMtYBdI4DUeLJjUagIiL
+qv65Rakq6rUcSDuQtl0uJopuWBM9sdntAUCrJLbBZakQThdBW7eu+L0TUbWI+w2k
+iCSNazGQV2yqgRWfN8cKqC2bPG2rVVmghPK3XWCLkjSoNnnEizR/d1BrRLOHs/Rg
+YoNm0XOtXilZ2v9oOenhdNIoekvUpA==
+=j25G
+-----END PGP SIGNATURE-----
+
+--EVcIhgQsEzAXu06J--
 
