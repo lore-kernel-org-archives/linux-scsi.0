@@ -2,115 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C59C5519F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 11:53:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05AA7C64E75
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 12:58:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 495162462E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 11:53:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A20B42151B
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Nov 2020 12:58:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KYj9uZRj"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="YUE1kVOo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727526AbgKQLxQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 06:53:16 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:58905 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727267AbgKQLxQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 06:53:16 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605613995;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ORGIWbDZHVGHQKz+yXjGHqNxxtUKUaElXUNeXuBfTrk=;
-        b=KYj9uZRjcsTGCqXD+KhiKrjItNzYLHnrXJhzxOv3jeP4txNOHJ+VLGVweLs8rE8QyghsuH
-        YFNc49Dvx2ifwS63ZFwnxBazcN4f5Hr/L9XnU/KcW/6R+GrSYTFoav4g3aRWVpfqHb1QKz
-        Xn/QVFwYaxFzZhatxN7J7eJfD7q/GTk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-195-DCiX4ymnPyG1vYC0E1eKrQ-1; Tue, 17 Nov 2020 06:53:11 -0500
-X-MC-Unique: DCiX4ymnPyG1vYC0E1eKrQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728651AbgKQM5b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 07:57:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54706 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728625AbgKQM5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 07:57:30 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 286778018A1;
-        Tue, 17 Nov 2020 11:53:10 +0000 (UTC)
-Received: from localhost (ovpn-113-172.ams2.redhat.com [10.36.113.172])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CC17010013D0;
-        Tue, 17 Nov 2020 11:53:06 +0000 (UTC)
-Date:   Tue, 17 Nov 2020 11:53:05 +0000
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     qemu-devel@nongnu.org, fam@euphon.net, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
-        pbonzini@redhat.com, virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 1/1] qemu vhost scsi: add VHOST_SET_VRING_ENABLE support
-Message-ID: <20201117115305.GJ131917@stefanha-x1.localdomain>
-References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
- <1605223150-10888-2-git-send-email-michael.christie@oracle.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 5CC2D2225E;
+        Tue, 17 Nov 2020 12:57:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605617849;
+        bh=rZhCcoxyzUhsV6+Tfjb0wBJ4sLCM3axaR3A755iBjDg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=YUE1kVOo6VipaWSHkAYE60ksbIsgSjrADNGIRrmqIkAAS48oxrcgWHCQ2iDMF5nVo
+         O0J8TZotu+732GBByDXWELm8ePqN1dgzLFd5qY8eFs1P5ZHUmn5ybuAuXg5TizHKWR
+         /cTtQEP3iMb5x8xK4ks3zo1cW7T4xmdmur6f2HFw=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 02/11] scsi: ufs: Fix unbalanced scsi_block_reqs_cnt caused by ufshcd_hold()
+Date:   Tue, 17 Nov 2020 07:57:16 -0500
+Message-Id: <20201117125725.599833-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201117125725.599833-1-sashal@kernel.org>
+References: <20201117125725.599833-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1605223150-10888-2-git-send-email-michael.christie@oracle.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: redhat.com
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="Ublo+h3cBgJ33ahC"
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---Ublo+h3cBgJ33ahC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+From: Can Guo <cang@codeaurora.org>
 
-On Thu, Nov 12, 2020 at 05:19:00PM -0600, Mike Christie wrote:
-> +static int vhost_kernel_set_vring_enable(struct vhost_dev *dev, int enable)
-> +{
-> +    struct vhost_vring_state s;
-> +    int i, ret;
-> +
-> +    s.num = 1;
-> +    for (i = 0; i < dev->nvqs; ++i) {
-> +        s.index = i;
-> +
-> +        ret = vhost_kernel_call(dev, VHOST_SET_VRING_ENABLE, &s);
-> +        /* Ignore kernels that do not support the cmd */
-> +        if (ret == -EPERM)
-> +            return 0;
-> +        if (ret)
-> +            goto disable_vrings;
-> +    }
+[ Upstream commit da3fecb0040324c08f1587e5bff1f15f36be1872 ]
 
-The 'enable' argument is ignored and this function acts on all
-virtqueues, while the ioctl acts on a single virtqueue only.
+The scsi_block_reqs_cnt increased in ufshcd_hold() is supposed to be
+decreased back in ufshcd_ungate_work() in a paired way. However, if
+specific ufshcd_hold/release sequences are met, it is possible that
+scsi_block_reqs_cnt is increased twice but only one ungate work is
+queued. To make sure scsi_block_reqs_cnt is handled by ufshcd_hold() and
+ufshcd_ungate_work() in a paired way, increase it only if queue_work()
+returns true.
 
-This function's behavior is actually "vhost_kernel_enable_vrings()"
-(plural), not "vhost_kernel_set_vring_enable()" (singular).
+Link: https://lore.kernel.org/r/1604384682-15837-2-git-send-email-cang@codeaurora.org
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Please rename this function and drop the enable argument.
-
---Ublo+h3cBgJ33ahC
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl+zuaEACgkQnKSrs4Gr
-c8ggbgf/amsccaIgLNwt7fBI9E5/mNlfsgJGbQlcgWAJWJ6giGQfPamIN2qEFbS9
-TbTbc8ng7fqj3q9VA/QSYqqGT4o4S3ejHaluLfL8OG3NQhjB1jl1tv1B1hqUpbjh
-7BvoLZvmN4mEBCwTMInavK7mBXwgIJX6dxAZdU6ZGiW3KjlNQQK01erQax/PFvrz
-siTJLUyQP6RiIctvZ3TREgvdoCo7iS1YkxcDtRQU3Y1aVUSg49pUaq/oeLg5FMDi
-HoIqvlqazYoI/asj1Fgli1qtZMX2tPom7IwdxPc+5pmyHkh4lT1JR0wwulWnwapb
-x/T7SH6sVbYXRrs+JlLTrw7yvtAZwg==
-=9dMr
------END PGP SIGNATURE-----
-
---Ublo+h3cBgJ33ahC--
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d538b3d4f74a5..0772327f87d93 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1569,12 +1569,12 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		/* fallthrough */
+ 	case CLKS_OFF:
+-		ufshcd_scsi_block_requests(hba);
+ 		hba->clk_gating.state = REQ_CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+-		queue_work(hba->clk_gating.clk_gating_workq,
+-			   &hba->clk_gating.ungate_work);
++		if (queue_work(hba->clk_gating.clk_gating_workq,
++			       &hba->clk_gating.ungate_work))
++			ufshcd_scsi_block_requests(hba);
+ 		/*
+ 		 * fall through to check if we should wait for this
+ 		 * work to be done or not.
+-- 
+2.27.0
 
