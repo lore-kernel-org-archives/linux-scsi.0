@@ -2,70 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62F55C64E7C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E3FC64E8A
 	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 01:11:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 278622463B
+	by mail.kernel.org (Postfix) with ESMTP id 61D0424671
 	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 01:11:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mGPkoZWN"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="M79okglU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729337AbgKRBLU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728073AbgKRBLU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 17 Nov 2020 20:11:20 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:7868 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728154AbgKRBLR (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:21416 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729108AbgKRBLS (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 20:11:17 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AI12CLq078666;
+        Tue, 17 Nov 2020 20:11:18 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AI11fLv096709;
         Tue, 17 Nov 2020 20:11:11 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=3DB0D4faj7+NR+DNa8Ta+S+mZudClIfGT0ghfDBmFeU=;
- b=mGPkoZWNSGEhCZb1VAYAIRLNoCl7oN14NeepPSvK71Ri1bTvCle30UWOGX7mDEaSGtQl
- wqv7TVYoVLNzbl259LqsP9hlyYxVbOoBFU5jh6sZe2jlDvTr+MaqhYF7uHDNXFIwdDuC
- JD/GBKAUm1ZcEgWXo6MFOux5WCc/vQJbsl2Kfg39FNI7YlQtjax2+NQr5FGtEWm+PqrT
- c4EFcBrGaoOG6oTjHJkaILgcW3sVYweFsPKuaNmEycJxO+rtDSBJsqWZ9H4izCTdeqW+
- 2VSHKJUEZMc7bdY8iagqTvy+7JrHWBBu/3TB79C8LeM4h2o1vEIg2b5wDWM2gsYckMJd uQ== 
+ bh=qlBlMKkNc45GKgll0eG+w8CHNkb4Fcr1XZD0GBNdCiU=;
+ b=M79okglUkTgW2xd2BP+p80up2kv4GAbLdL4N6sGkuAGWHXMR4wEgr7mkVFCtkXnPtCvS
+ 4jv8Fzh5FeI00djQbMjdwbg308DKoAcTfGCf6InV9eZJCU4753Mg4pLm2e/Jfmskvwe4
+ khNLga5N+tN6NR3umXyfkaTbRAw+t+S+USSLzdbTJ9VGgCHWLVBTe0nVhAg2r9G9uWOk
+ JXubtVMXgWwkBoQQhZdNzAtJtYwEHJsCIbdJ3x8u5cojADDKLCcDxtpv/IJvl6+0tFIQ
+ 7iiDZ/jAj7XvH1wGW91gPT3iXHwBoH+i6F5MwL2zNZxibcY3xYsVwGBmB2CtV3ldsW2w kg== 
 Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 34v3yfs3y1-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 34vbvra13v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 17 Nov 2020 20:11:10 -0500
+        Tue, 17 Nov 2020 20:11:11 -0500
 Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AI11g2A010752;
+        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AI11g2B010752;
         Wed, 18 Nov 2020 01:11:10 GMT
 Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-        by ppma03dal.us.ibm.com with ESMTP id 34t6v9h3pe-1
+        by ppma03dal.us.ibm.com with ESMTP id 34t6v9h3pk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Wed, 18 Nov 2020 01:11:10 +0000
 Received: from b03ledav005.gho.boulder.ibm.com (b03ledav005.gho.boulder.ibm.com [9.17.130.236])
-        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AI1AxXR63439194
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AI1B0Ip5046830
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Nov 2020 01:10:59 GMT
+        Wed, 18 Nov 2020 01:11:00 GMT
 Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 55C34BE056;
+        by IMSVA (Postfix) with ESMTP id D5BD3BE04F;
         Wed, 18 Nov 2020 01:11:08 +0000 (GMT)
 Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E7251BE04F;
-        Wed, 18 Nov 2020 01:11:07 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 6975ABE053;
+        Wed, 18 Nov 2020 01:11:08 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav005.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed, 18 Nov 2020 01:11:07 +0000 (GMT)
+        Wed, 18 Nov 2020 01:11:08 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v3 5/6] ibmvfc: add support for target_wwpn field in v2 MADs and vfcFrame
-Date:   Tue, 17 Nov 2020 19:11:03 -0600
-Message-Id: <20201118011104.296999-6-tyreld@linux.ibm.com>
+Subject: [PATCH v3 6/6] ibmvfc: advertise client support for targetWWPN using v2 commands
+Date:   Tue, 17 Nov 2020 19:11:04 -0600
+Message-Id: <20201118011104.296999-7-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201118011104.296999-1-tyreld@linux.ibm.com>
 References: <20201118011104.296999-1-tyreld@linux.ibm.com>
@@ -74,134 +74,39 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
  definitions=2020-11-17_15:2020-11-17,2020-11-17 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- lowpriorityscore=0 adultscore=0 bulkscore=0 spamscore=0 mlxlogscore=999
- priorityscore=1501 malwarescore=0 suspectscore=1 mlxscore=0 clxscore=1015
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 spamscore=0
+ adultscore=0 phishscore=0 suspectscore=1 priorityscore=1501
+ mlxlogscore=999 mlxscore=0 malwarescore=0 clxscore=1015 impostorscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2011180000
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Several version 2 MADs and the version 2 vfcFrame structures introduced
-a new targetWWPN field for better identification of a target over the
-scsi_id.
+The previous patch added support for the targetWWPN field in version 2
+MADs and vfcFrame structures.
 
-Set this field and MAD versioning fields when the VIOS advertises the
-IBMVFC_HANDLE_VF_WWPN capability.
+Set the IBMVFC_CAN_SEND_VF_WWPN bit in our capabailites flag during NPIV
+Login to inform the VIOS that this client supports the feature.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 39 ++++++++++++++++++++++++++++------
- 1 file changed, 33 insertions(+), 6 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 3427c686fb10..83627e11e85e 100644
+index 83627e11e85e..42e4d35e0d35 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1685,9 +1685,10 @@ static struct ibmvfc_cmd *ibmvfc_init_vfc_cmd(struct ibmvfc_event *evt, struct s
- 	size_t offset;
+@@ -1255,7 +1255,7 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+ 		login_info->flags |= cpu_to_be16(IBMVFC_CLIENT_MIGRATED);
  
- 	memset(vfc_cmd, 0, sizeof(*vfc_cmd));
--	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN))
-+	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
- 		offset = offsetof(struct ibmvfc_cmd, v2.rsp);
--	else
-+		vfc_cmd->target_wwpn = cpu_to_be64(rport->port_name);
-+	} else
- 		offset = offsetof(struct ibmvfc_cmd, v1.rsp);
- 	vfc_cmd->resp.va = cpu_to_be64(be64_to_cpu(evt->crq.ioba) + offset);
- 	vfc_cmd->resp.len = cpu_to_be32(sizeof(*rsp));
-@@ -2064,6 +2065,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
- static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
- {
- 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
- 	struct ibmvfc_cmd *tmf;
- 	struct ibmvfc_event *evt = NULL;
- 	union ibmvfc_iu rsp_iu;
-@@ -2081,6 +2083,8 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
- 		iu = ibmvfc_get_fcp_iu(vhost, tmf);
- 
- 		tmf->flags = cpu_to_be16((IBMVFC_NO_MEM_DESC | IBMVFC_TMF));
-+		if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN))
-+			tmf->target_wwpn = cpu_to_be64(rport->port_name);
- 		iu->tmf_flags = type;
- 		evt->sync_iu = &rsp_iu;
- 
-@@ -2271,7 +2275,12 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
- 
- 		tmf = &evt->iu.tmf;
- 		memset(tmf, 0, sizeof(*tmf));
--		tmf->common.version = cpu_to_be32(1);
-+		if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
-+			tmf->common.version = cpu_to_be32(2);
-+			tmf->target_wwpn = cpu_to_be64(rport->port_name);
-+		} else {
-+			tmf->common.version = cpu_to_be32(1);
-+		}
- 		tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
- 		tmf->common.length = cpu_to_be16(sizeof(*tmf));
- 		tmf->scsi_id = cpu_to_be64(rport->port_id);
-@@ -2371,6 +2380,7 @@ static int ibmvfc_match_evt(struct ibmvfc_event *evt, void *match)
- static int ibmvfc_abort_task_set(struct scsi_device *sdev)
- {
- 	struct ibmvfc_host *vhost = shost_priv(sdev->host);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
- 	struct ibmvfc_cmd *tmf;
- 	struct ibmvfc_event *evt, *found_evt;
- 	union ibmvfc_iu rsp_iu;
-@@ -2402,6 +2412,8 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
- 		tmf = ibmvfc_init_vfc_cmd(evt, sdev);
- 		iu = ibmvfc_get_fcp_iu(vhost, tmf);
- 
-+		if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN))
-+			tmf->target_wwpn = cpu_to_be64(rport->port_name);
- 		iu->tmf_flags = IBMVFC_ABORT_TASK_SET;
- 		tmf->flags = cpu_to_be16((IBMVFC_NO_MEM_DESC | IBMVFC_TMF));
- 		evt->sync_iu = &rsp_iu;
-@@ -3483,7 +3495,12 @@ static void ibmvfc_tgt_send_prli(struct ibmvfc_target *tgt)
- 	evt->tgt = tgt;
- 	prli = &evt->iu.prli;
- 	memset(prli, 0, sizeof(*prli));
--	prli->common.version = cpu_to_be32(1);
-+	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
-+		prli->common.version = cpu_to_be32(2);
-+		prli->target_wwpn = cpu_to_be64(tgt->wwpn);
-+	} else {
-+		prli->common.version = cpu_to_be32(1);
-+	}
- 	prli->common.opcode = cpu_to_be32(IBMVFC_PROCESS_LOGIN);
- 	prli->common.length = cpu_to_be16(sizeof(*prli));
- 	prli->scsi_id = cpu_to_be64(tgt->scsi_id);
-@@ -3586,7 +3603,12 @@ static void ibmvfc_tgt_send_plogi(struct ibmvfc_target *tgt)
- 	evt->tgt = tgt;
- 	plogi = &evt->iu.plogi;
- 	memset(plogi, 0, sizeof(*plogi));
--	plogi->common.version = cpu_to_be32(1);
-+	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
-+		plogi->common.version = cpu_to_be32(2);
-+		plogi->target_wwpn = cpu_to_be64(tgt->wwpn);
-+	} else {
-+		plogi->common.version = cpu_to_be32(1);
-+	}
- 	plogi->common.opcode = cpu_to_be32(IBMVFC_PORT_LOGIN);
- 	plogi->common.length = cpu_to_be16(sizeof(*plogi));
- 	plogi->scsi_id = cpu_to_be64(tgt->scsi_id);
-@@ -3986,7 +4008,12 @@ static void ibmvfc_adisc_timeout(struct timer_list *t)
- 	evt->tgt = tgt;
- 	tmf = &evt->iu.tmf;
- 	memset(tmf, 0, sizeof(*tmf));
--	tmf->common.version = cpu_to_be32(1);
-+	if (ibmvfc_check_caps(vhost, IBMVFC_HANDLE_VF_WWPN)) {
-+		tmf->common.version = cpu_to_be32(2);
-+		tmf->target_wwpn = cpu_to_be64(tgt->wwpn);
-+	} else {
-+		tmf->common.version = cpu_to_be32(1);
-+	}
- 	tmf->common.opcode = cpu_to_be32(IBMVFC_TMF_MAD);
- 	tmf->common.length = cpu_to_be16(sizeof(*tmf));
- 	tmf->scsi_id = cpu_to_be64(tgt->scsi_id);
+ 	login_info->max_cmds = cpu_to_be32(max_requests + IBMVFC_NUM_INTERNAL_REQ);
+-	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE);
++	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
+ 	login_info->async.va = cpu_to_be64(vhost->async_crq.msg_token);
+ 	login_info->async.len = cpu_to_be32(vhost->async_crq.size * sizeof(*vhost->async_crq.msgs));
+ 	strncpy(login_info->partition_name, vhost->partition_name, IBMVFC_MAX_NAME);
 -- 
 2.27.0
 
