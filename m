@@ -2,100 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D430CC56202
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 04:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AC86C6369E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 05:18:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE4582463B
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 04:38:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D68B24655
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 05:18:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PkuCBtqN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726310AbgKREiQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 23:38:16 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:36174 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725834AbgKREiQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2020 23:38:16 -0500
-Received: by mail-pg1-f193.google.com with SMTP id t21so336681pgl.3;
-        Tue, 17 Nov 2020 20:38:16 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=PL94uEPHkPgwoSTEUJTRIWLNjp6IL0BpUZlGz8omUG0=;
-        b=C+98vc80BZbtjXpOu2PxS9BhsuTuF5hapx8AIAouAPD+sB+v448AwP5l86ky4aZJjz
-         4z3MHklcBCG1lTTn4TvNa4Z+LCClrk9/TVaIZtDXky9y6V/4XL71x8wD8ZfBPmisaAyy
-         uQDrnfudyCYsdhc0JayRKvf9UyUxqegKg09fFaLpc75tTFVdHrHWzEpeiIU582ruf2GR
-         XI8wlfDRnYgespqwD/14sa35V3l10+u9HoFSNb1ZbMkcLaORtsPVI4uXeaJuGl7ZIbqf
-         6wfnlXNMQWhbDWa/62juDSOGO3Coa9b0g7lh/QCJq16wnQYiANgERgB6WgatD3IxWcKl
-         gS2w==
-X-Gm-Message-State: AOAM532h+CbDiGx3rYzVoJbetaB5SDqXT0JKh9y5Io+5Lw0SR3P7ijmh
-        +TscqKv2RL8AFbbjMSJqdeWK1GY5iP4=
-X-Google-Smtp-Source: ABdhPJycdQm5sVRY0NmyvKoJHUlSfU28PhA3bdEB9g/SGEJmWN03zqCB7ZXzrkb5VHRuRkvrDp8sjw==
-X-Received: by 2002:a63:e00c:: with SMTP id e12mr6376270pgh.441.1605674295582;
-        Tue, 17 Nov 2020 20:38:15 -0800 (PST)
-Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id o132sm22760038pfg.100.2020.11.17.20.38.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Nov 2020 20:38:14 -0800 (PST)
-Subject: Re: [PATCH RFC v1 1/1] scsi: pm: Leave runtime resume along if block
- layer PM is enabled
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-References: <1605249009-13752-1-git-send-email-cang@codeaurora.org>
- <1605249009-13752-2-git-send-email-cang@codeaurora.org>
- <97dea590-5f2e-b4e3-ac64-7c346761c523@acm.org>
- <20f447a438aa98afb18be4642c8888b3@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <6d774277-b055-6924-cf2d-01e874ac3f7b@acm.org>
-Date:   Tue, 17 Nov 2020 20:38:11 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+        id S1726077AbgKRFSI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Nov 2020 00:18:08 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43459 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725497AbgKRFSI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Nov 2020 00:18:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1605676686;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=H80xTT/If52xYm2Cf+wqujtNbekMdRf0VklelR0JXkw=;
+        b=PkuCBtqN57f/ASBK/RqYBfis2JF/UhR/ylWY01J30TYDwpy+p5efOOEBbR/t8jp6vYJ6hH
+        twDXPRa7sYnlWw/F36tdj1YMvViNuN0C7AWatS/7zNevBK9AHVuOogjzmt/iD5XrEmJcEG
+        ho1M3kVwInlEuCmxN0fpf0btodtULww=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-562-8VjkYBvUMCmWoVECWtCZPw-1; Wed, 18 Nov 2020 00:18:03 -0500
+X-MC-Unique: 8VjkYBvUMCmWoVECWtCZPw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C87DE804755;
+        Wed, 18 Nov 2020 05:18:01 +0000 (UTC)
+Received: from [10.72.13.172] (ovpn-13-172.pek2.redhat.com [10.72.13.172])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9B5F860C04;
+        Wed, 18 Nov 2020 05:17:51 +0000 (UTC)
+Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
+To:     Stefan Hajnoczi <stefanha@redhat.com>,
+        Mike Christie <michael.christie@oracle.com>
+Cc:     fam@euphon.net, linux-scsi@vger.kernel.org, mst@redhat.com,
+        qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org,
+        target-devel@vger.kernel.org, pbonzini@redhat.com
+References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
+ <20201117164043.GS131917@stefanha-x1.localdomain>
+From:   Jason Wang <jasowang@redhat.com>
+Message-ID: <bba47572-bec9-794f-5a70-d7f016267022@redhat.com>
+Date:   Wed, 18 Nov 2020 13:17:50 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20f447a438aa98afb18be4642c8888b3@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20201117164043.GS131917@stefanha-x1.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/15/20 5:42 PM, Can Guo wrote:
-> Actually, I am thinking about removing all the pm_runtime_set_active()
-> codes in both scsi_bus_resume_common() and scsi_dev_type_resume() - we
-> don't need to forcibly set the runtime PM status to RPM_ACTIVE for either
-> SCSI host/target or SCSI devices.
-> 
-> Whenever we access one SCSI device, either block layer or somewhere in
-> the path (e.g. throgh sg IOCTL, sg_open() calls scsi_autopm_get_device())
-> should runtime resume the device first, and the runtime PM framework makes
-> sure device's parent (and its parent's parent and so on)gets resumed as
-> well.
-> Thus, the pm_runtime_set_active() seems redundant. What do you think?
 
-Hi Can,
+On 2020/11/18 上午12:40, Stefan Hajnoczi wrote:
+> On Thu, Nov 12, 2020 at 05:18:59PM -0600, Mike Christie wrote:
+>> The following kernel patches were made over Michael's vhost branch:
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git/log/?h=vhost
+>>
+>> and the vhost-scsi bug fix patchset:
+>>
+>> https://lore.kernel.org/linux-scsi/20201112170008.GB1555653@stefanha-x1.localdomain/T/#t
+>>
+>> And the qemu patch was made over the qemu master branch.
+>>
+>> vhost-scsi currently supports multiple queues with the num_queues
+>> setting, but we end up with a setup where the guest's scsi/block
+>> layer can do a queue per vCPU and the layers below vhost can do
+>> a queue per CPU. vhost-scsi will then do a num_queue virtqueues,
+>> but all IO gets set on and completed on a single vhost-scsi thread.
+>> After 2 - 4 vqs this becomes a bottleneck.
+>>
+>> This patchset allows us to create a worker thread per IO vq, so we
+>> can better utilize multiple CPUs with the multiple queues. It
+>> implments Jason's suggestion to create the initial worker like
+>> normal, then create the extra workers for IO vqs with the
+>> VHOST_SET_VRING_ENABLE ioctl command added in this patchset.
+> How does userspace find out the tids and set their CPU affinity?
+>
+> What is the meaning of the new VHOST_SET_VRING_ENABLE ioctl? It doesn't
+> really "enable" or "disable" the vq, requests are processed regardless.
 
-It is not clear to me why the pm_runtime_set_active() calls occur in the
-scsi_pm.c source file since the block layer automatically activates
-block devices if necessary. Maybe these calls are a leftover from a time
-when runtime suspended devices were not resumed automatically by the
-block layer? Anyway, I'm fine with removing these calls.
 
-Thanks,
+Actually I think it should do the real "enable/disable" that tries to 
+follow the virtio spec.
 
-Bart.
+(E.g both PCI and MMIO have something similar).
+
+
+>
+> The purpose of the ioctl isn't clear to me because the kernel could
+> automatically create 1 thread per vq without a new ioctl.
+
+
+It's not necessarily to create or destroy kthread according to 
+VRING_ENABLE but could be a hint.
+
+
+>   On the other
+> hand, if userspace is supposed to control worker threads then a
+> different interface would be more powerful:
+>
+>    struct vhost_vq_worker_info {
+>        /*
+>         * The pid of an existing vhost worker that this vq will be
+>         * assigned to. When pid is 0 the virtqueue is assigned to the
+>         * default vhost worker. When pid is -1 a new worker thread is
+>         * created for this virtqueue. When pid is -2 the virtqueue's
+>         * worker thread is unchanged.
+>         *
+>         * If a vhost worker no longer has any virtqueues assigned to it
+>         * then it will terminate.
+>         *
+>         * The pid of the vhost worker is stored to this field when the
+>         * ioctl completes successfully. Use pid -2 to query the current
+>         * vhost worker pid.
+>         */
+>        __kernel_pid_t pid;  /* in/out */
+>
+>        /* The virtqueue index*/
+>        unsigned int vq_idx; /* in */
+>    };
+>
+>    ioctl(vhost_fd, VHOST_SET_VQ_WORKER, &info);
+
+
+This seems to leave the question to userspace which I'm not sure it's 
+good since it tries to introduce another scheduling layer.
+
+Per vq worker seems be good enough to start with.
+
+Thanks
+
+
+>
+> Stefan
+
