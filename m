@@ -2,118 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58AB4C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 02:35:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1144BC6369E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 03:54:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E687520DD4
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 02:35:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A589D2220B
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 03:54:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dL2R1+5g"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NM9+KWit"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726287AbgKRCf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Nov 2020 21:35:28 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28090 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725779AbgKRCf2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Nov 2020 21:35:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605666927;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=JFrTcci2wlaeLdIrVz8jfx8+3B+YgQbI/x5TyyUOtds=;
-        b=dL2R1+5gXa3h1bfc+IleEAcqLmXanRC8+GaxGWO/zCrJqnwlgMXPMkM0t7i8vd8aHlvvu8
-        IItI+OtGg6CZKHvLSpmpnU0ay6c6D01TLNFPEI90fdj6be1dzxW42zbE/areWwkhg7SADW
-        9rmPAe2n7WOMvbEfwo6dpomcuF9puu4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-588-pAusgSNUOHmc7PBXBskx2w-1; Tue, 17 Nov 2020 21:35:23 -0500
-X-MC-Unique: pAusgSNUOHmc7PBXBskx2w-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727272AbgKRDy3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Nov 2020 22:54:29 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:51256 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725790AbgKRDy2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Nov 2020 22:54:28 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1605671668; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=HgWcu5vua69Grp1B6OILlPqQacb84SME0P+FvoHbIVI=;
+ b=NM9+KWiteH5pCyGHFfiyejkRKzuUr0pgXjFp6bcaUpQL6TbxDnw+aG0rTISahdjH2GeY+VNS
+ MgXR3HE566w/K6bDudRs5YlYe63siW6pElYkdSajorgV0akTLX/kAdsR7y+vbKmxS64zrEj8
+ hleFDzDbmb9ENtmFIqjcfSJ/CvI=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 5fb49af38bd2e3c2227623bf (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 18 Nov 2020 03:54:27
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 55332C43463; Wed, 18 Nov 2020 03:54:27 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9AF5C10074B1;
-        Wed, 18 Nov 2020 02:35:21 +0000 (UTC)
-Received: from T590 (ovpn-13-160.pek2.redhat.com [10.72.13.160])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 12B845B4AB;
-        Wed, 18 Nov 2020 02:35:11 +0000 (UTC)
-Date:   Wed, 18 Nov 2020 10:35:07 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     kernel test robot <lkp@intel.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kbuild-all@lists.01.org,
-        clang-built-linux@googlegroups.com, Omar Sandoval <osandov@fb.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V4 12/12] scsi: replace sdev->device_busy with sbitmap
-Message-ID: <20201118023507.GA92339@T590>
-References: <20201116090737.50989-13-ming.lei@redhat.com>
- <202011161944.U7XHrbsd-lkp@intel.com>
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7229DC433C6;
+        Wed, 18 Nov 2020 03:54:26 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202011161944.U7XHrbsd-lkp@intel.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 18 Nov 2020 11:54:26 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        Jaegeuk Kim <jaegeuk@google.com>
+Subject: Re: [PATCH v5 2/7] scsi: ufs: atomic update for clkgating_enable
+In-Reply-To: <20201117165839.1643377-3-jaegeuk@kernel.org>
+References: <20201117165839.1643377-1-jaegeuk@kernel.org>
+ <20201117165839.1643377-3-jaegeuk@kernel.org>
+Message-ID: <b1294349381a185dac6ee0ddf0bb48f3@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Kashyap & Sumanesh,
-
-On Mon, Nov 16, 2020 at 07:49:31PM +0800, kernel test robot wrote:
-> Hi Ming,
+On 2020-11-18 00:58, Jaegeuk Kim wrote:
+> From: Jaegeuk Kim <jaegeuk@google.com>
 > 
-> Thank you for the patch! Yet something to improve:
+> When giving a stress test which enables/disables clkgating, we hit 
+> device
+> timeout sometimes. This patch avoids subtle racy condition to address 
+> it.
 > 
-> [auto build test ERROR on block/for-next]
-> [also build test ERROR on mkp-scsi/for-next scsi/for-next v5.10-rc4 next-20201116]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch]
+> Note that, this requires a patch to address the device stuck by 
+> REQ_CLKS_OFF in
+> __ufshcd_release().
 > 
-> url:    https://github.com/0day-ci/linux/commits/Ming-Lei/blk-mq-scsi-tracking-device-queue-depth-via-sbitmap/20201116-171449
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-> config: powerpc64-randconfig-r026-20201116 (attached as .config)
-> compiler: clang version 12.0.0 (https://github.com/llvm/llvm-project c044709b8fbea2a9a375e4173a6bd735f6866c0c)
-> reproduce (this is a W=1 build):
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # install powerpc64 cross compiling tool for clang build
->         # apt-get install binutils-powerpc64-linux-gnu
->         # https://github.com/0day-ci/linux/commit/cc286ae987be50d7b8e152cc80a5ccaa8682e3ff
->         git remote add linux-review https://github.com/0day-ci/linux
->         git fetch --no-tags linux-review Ming-Lei/blk-mq-scsi-tracking-device-queue-depth-via-sbitmap/20201116-171449
->         git checkout cc286ae987be50d7b8e152cc80a5ccaa8682e3ff
->         # save the attached .config to linux build tree
->         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross ARCH=powerpc64 
+> The fix is "scsi: ufs: avoid to call REQ_CLKS_OFF to CLKS_OFF".
 > 
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
+
+Reviewed-by: Can Guo <cang@codeaurora.org>
+
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
 > 
-> All errors (new ones prefixed by >>):
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index cc8d5f0c3fdc..6c9269bffcbd 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1808,19 +1808,19 @@ static ssize_t
+> ufshcd_clkgate_enable_store(struct device *dev,
+>  		return -EINVAL;
 > 
-> >> drivers/scsi/megaraid/megaraid_sas_fusion.c:365:41: error: no member named 'device_busy' in 'struct scsi_device'
->            sdev_busy = atomic_read(&scmd->device->device_busy);
-
-This new reference to sdev->device_busy is added by recent shared host
-tag patch, and according to the comment, you may have planed to convert into
-one megaraid internal counter.
-
-        /* TBD - if sml remove device_busy in future, driver
-         * should track counter in internal structure.
-         */
-
-So can you post one patch? And I am happy to fold it into this series.
-
-Thanks,
-Ming
-
+>  	value = !!value;
+> +
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	if (value == hba->clk_gating.is_enabled)
+>  		goto out;
+> 
+> -	if (value) {
+> -		ufshcd_release(hba);
+> -	} else {
+> -		spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (value)
+> +		__ufshcd_release(hba);
+> +	else
+>  		hba->clk_gating.active_reqs++;
+> -		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	}
+> 
+>  	hba->clk_gating.is_enabled = value;
+>  out:
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  	return count;
+>  }
