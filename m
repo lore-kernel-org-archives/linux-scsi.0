@@ -2,89 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 099CCC63777
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 14:13:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A63C63777
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 14:54:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B709924698
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 14:13:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35AC921D91
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 14:54:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ntCI44C4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726404AbgKRONU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Nov 2020 09:13:20 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:60063 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726019AbgKRONU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2020 09:13:20 -0500
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1kfOCx-0005v8-3O; Wed, 18 Nov 2020 14:13:15 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        id S1726831AbgKROyB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Nov 2020 09:54:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42774 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726293AbgKROyB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2020 09:54:01 -0500
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A8E9C0613D4;
+        Wed, 18 Nov 2020 06:54:01 -0800 (PST)
+Received: by mail-wr1-x443.google.com with SMTP id r17so2540435wrw.1;
+        Wed, 18 Nov 2020 06:54:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=noyj//pQAVL0F3TT1GEpmdCZZctT7gUdg23e2fukuL4=;
+        b=ntCI44C4kjqgCGo1yYRBpvXVz5rJOFRbkY02AVMtdy9mPWcyC+k3PY+9uEHczo1c7v
+         28Vb2QzJL3K4jr2VMiaqlsVmyijSVZ6Ui2FoffLAIFf4n8dJYKlpVycSPFBUwUvRE4qR
+         El1eoDUfQp5/s2gbP/l7DxJ5QIzp+ElzUvv7QHZb5WJHdHU/L1Bg6gyUokp07hV7okJY
+         nj+Od9ZWnmFZaNfb0JjB9iQotnHhldsbYXb8Pc5lhoLEAcUtkbZgdXf7akq1G0/02xGb
+         FVT/E4UMFNTt6fPunBOkFLJKk8jXEKk9MpzkOs2TrzR7AhSHZ97Hs9ZSW9daafG2th9g
+         OgWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=noyj//pQAVL0F3TT1GEpmdCZZctT7gUdg23e2fukuL4=;
+        b=NdBR5MLe+dAz4ORXO+gQhCvEKGtjYsBNDCPbULsNMpgn2DpT8P627Qhaa1MJSkeIW0
+         B/2ci2R2Tl3mI1EWbVZRX+GisbXQzHEmNML+TINRQtuiyH5NEpr+vvh1Df43zPLed2Bx
+         HOdRAgxaguVtD/t2DbBGUbkmm+XusKT97fDPH1ucWFrqFtmNVmyzXpZUaKpNmbu2iwvD
+         3KqtJm854OkfBGHSQlXBB4UeKx6ehbVEsTb1NurS/mASbgJgaW2u0RzOnXuavlLqGzAq
+         lW7Mku6h3NQyUHWWFg0azuojUp1pxy4OQ6JEfp0iGdisIEYHKkvxy5U2APbxz+4RDSRc
+         0H0g==
+X-Gm-Message-State: AOAM530VZXm5dZ0XDgpTSWHa0LKXRbIeZvjsHY2te2Rm/lD4jR8PHzGY
+        5HyFahJy5WyB4cIV45bZRcijBps2L8oAzdPK
+X-Google-Smtp-Source: ABdhPJz5Ixt95dpw0tbcmzoh/UimTZIfdS9pfrUy3+Ck7lRj3q7TkGYplYgsiHg0DapKjZ1X7dhkDA==
+X-Received: by 2002:adf:fd85:: with SMTP id d5mr4884502wrr.99.1605711239584;
+        Wed, 18 Nov 2020 06:53:59 -0800 (PST)
+Received: from localhost.localdomain (host-82-51-6-75.retail.telecomitalia.it. [82.51.6.75])
+        by smtp.gmail.com with ESMTPSA id o197sm3973785wme.17.2020.11.18.06.53.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Nov 2020 06:53:58 -0800 (PST)
+From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
+        Michael Kelley <mikelley@microsoft.com>,
+        Juan Vazquez <juvazq@microsoft.com>,
+        Saruhan Karademir <skarade@microsoft.com>,
+        "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] scsi: lpfc: Fix memory leak on lcb_context
-Date:   Wed, 18 Nov 2020 14:13:14 +0000
-Message-Id: <20201118141314.462471-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.28.0
+Subject: [PATCH] scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()
+Date:   Wed, 18 Nov 2020 15:53:48 +0100
+Message-Id: <20201118145348.109879-1-parri.andrea@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Check that the packet is of the expected size at least, don't copy
+data past the packet.
 
-Currently there is an error return path that neglects to free the
-allocation for lcb_context.  Fix this by adding a new error free
-exit path that kfree's lcb_context before returning.  Use this new
-kfree exit path in another exit error path that also kfree's the same
-object, allowing a line of code to be removed.
-
-Addresses-Coverity: ("Resource leak")
-Fixes: 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference taking")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reported-by: Saruhan Karademir <skarade@microsoft.com>
+Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/lpfc/lpfc_els.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Based on hyperv-next.
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 03f47d1b21fe..0d3271b4c130 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -6515,18 +6515,20 @@ lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	lcb_context->ndlp = lpfc_nlp_get(ndlp);
- 	if (!lcb_context->ndlp) {
- 		rjt_err = LSRJT_UNABLE_TPC;
--		goto rjt;
-+		goto rjt_free;
- 	}
+ drivers/scsi/storvsc_drv.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 331a33a04f1ad..629a46a0bab6e 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1270,6 +1270,11 @@ static void storvsc_on_channel_callback(void *context)
  
- 	if (lpfc_sli4_set_beacon(vport, lcb_context, state)) {
- 		lpfc_printf_vlog(ndlp->vport, KERN_ERR, LOG_TRACE_EVENT,
- 				 "0193 failed to send mail box");
--		kfree(lcb_context);
- 		lpfc_nlp_put(ndlp);
- 		rjt_err = LSRJT_UNABLE_TPC;
--		goto rjt;
-+		goto rjt_free;
- 	}
- 	return 0;
+ 		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
+ 
++		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) - vmscsi_size_delta) {
++			dev_err(&device->device, "Invalid packet len\n");
++			continue;
++		}
 +
-+rjt_free:
-+	kfree(lcb_context);
- rjt:
- 	memset(&stat, 0, sizeof(stat));
- 	stat.un.b.lsRjtRsnCode = rjt_err;
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+ 			memcpy(&request->vstor_packet, packet,
 -- 
-2.28.0
+2.25.1
 
