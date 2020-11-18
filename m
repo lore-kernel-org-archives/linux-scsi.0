@@ -2,205 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71BB2C5519F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 07:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0F6C56202
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 08:50:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1230A2080A
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 07:55:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BC4C241A5
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 08:50:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CH+qZkfY"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="kt4lAFIl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726859AbgKRHzG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Nov 2020 02:55:06 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60768 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726831AbgKRHzG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Nov 2020 02:55:06 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605686104;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=nwlkB059N2EU+7oiHQ3QutUUUHuAlq8BMtOzJYPkSzI=;
-        b=CH+qZkfYurOMXMbkQx1p5y0tR3cv7O4SK1jhUcpSQy44vxHVIFe4t0f/YWMynbKugoNu2b
-        fP1+ibq9HiMQFKaNfhgIGaRs28P6MF0IBSP5h6nEHpkyAYbMqBj/374UJ46YXOuyz0iIcI
-        UDbw+XXojZonZ5OerFVFza73EUxH9FU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-278-HKjnb5yfMLCNsH46CJMMxw-1; Wed, 18 Nov 2020 02:55:00 -0500
-X-MC-Unique: HKjnb5yfMLCNsH46CJMMxw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727364AbgKRItw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Nov 2020 03:49:52 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:23951 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726935AbgKRItv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Nov 2020 03:49:51 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1605689390; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=8ubPeUbv9nGA17bHuaYj4qnBJnm2N8KJxhb4W1TPD4Q=;
+ b=kt4lAFIlhIAV/BLCURWuhUdgeTZLDscj/156/6RVmlBycSq4pF/gkr19kG10IhJqqRNUwcY4
+ j/lV0RkIqkNesWjK9Xp0bnfK6NUfbAhK3HKaGZxt/XGZF8KblHkNHCUDq98iZmpk0tD37Gqx
+ PQlyQgpqddA+FjHYS9c3Ww50ivk=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
+ 5fb4e02e309342b9149d05f0 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 18 Nov 2020 08:49:50
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E5590C433ED; Wed, 18 Nov 2020 08:49:49 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9A8421018720;
-        Wed, 18 Nov 2020 07:54:59 +0000 (UTC)
-Received: from [10.72.13.172] (ovpn-13-172.pek2.redhat.com [10.72.13.172])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 657C810013C4;
-        Wed, 18 Nov 2020 07:54:50 +0000 (UTC)
-Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
-To:     Mike Christie <michael.christie@oracle.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>
-Cc:     fam@euphon.net, linux-scsi@vger.kernel.org, mst@redhat.com,
-        qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org,
-        target-devel@vger.kernel.org, pbonzini@redhat.com
-References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
- <20201117164043.GS131917@stefanha-x1.localdomain>
- <bba47572-bec9-794f-5a70-d7f016267022@redhat.com>
- <8318de9f-c585-39f8-d931-1ff5e0341d75@oracle.com>
-From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <e3f8f065-ca17-e4a0-06e5-990bbe8fe947@redhat.com>
-Date:   Wed, 18 Nov 2020 15:54:48 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 05AF5C433C6;
+        Wed, 18 Nov 2020 08:49:47 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <8318de9f-c585-39f8-d931-1ff5e0341d75@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 18 Nov 2020 16:49:47 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH RFC v1 1/1] scsi: pm: Leave runtime resume along if block
+ layer PM is enabled
+In-Reply-To: <6d774277-b055-6924-cf2d-01e874ac3f7b@acm.org>
+References: <1605249009-13752-1-git-send-email-cang@codeaurora.org>
+ <1605249009-13752-2-git-send-email-cang@codeaurora.org>
+ <97dea590-5f2e-b4e3-ac64-7c346761c523@acm.org>
+ <20f447a438aa98afb18be4642c8888b3@codeaurora.org>
+ <6d774277-b055-6924-cf2d-01e874ac3f7b@acm.org>
+Message-ID: <3d58c7a1971bbb2895a30122255ed2e1@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Bart,
 
-On 2020/11/18 下午2:57, Mike Christie wrote:
-> On 11/17/20 11:17 PM, Jason Wang wrote:
->> On 2020/11/18 上午12:40, Stefan Hajnoczi wrote:
->>> On Thu, Nov 12, 2020 at 05:18:59PM -0600, Mike Christie wrote:
->>>> The following kernel patches were made over Michael's vhost branch:
->>>>
->>>> https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git/log/?h=vhost__;!!GqivPVa7Brio!MzCv3wdRfz5dltunazRWGCeUkMg91pPEOLpIivsebLX9vhYDSi_E1V36e9H0NoRys_hU$
->>>> and the vhost-scsi bug fix patchset:
->>>>
->>>> https://urldefense.com/v3/__https://lore.kernel.org/linux-scsi/20201112170008.GB1555653@stefanha-x1.localdomain/T/*t__;Iw!!GqivPVa7Brio!MzCv3wdRfz5dltunazRWGCeUkMg91pPEOLpIivsebLX9vhYDSi_E1V36e9H0NmuPE_m8$
->>>> And the qemu patch was made over the qemu master branch.
->>>>
->>>> vhost-scsi currently supports multiple queues with the num_queues
->>>> setting, but we end up with a setup where the guest's scsi/block
->>>> layer can do a queue per vCPU and the layers below vhost can do
->>>> a queue per CPU. vhost-scsi will then do a num_queue virtqueues,
->>>> but all IO gets set on and completed on a single vhost-scsi thread.
->>>> After 2 - 4 vqs this becomes a bottleneck.
->>>>
->>>> This patchset allows us to create a worker thread per IO vq, so we
->>>> can better utilize multiple CPUs with the multiple queues. It
->>>> implments Jason's suggestion to create the initial worker like
->>>> normal, then create the extra workers for IO vqs with the
->>>> VHOST_SET_VRING_ENABLE ioctl command added in this patchset.
->>> How does userspace find out the tids and set their CPU affinity?
->>>
->>> What is the meaning of the new VHOST_SET_VRING_ENABLE ioctl? It doesn't
->>> really "enable" or "disable" the vq, requests are processed regardless.
->>
->> Actually I think it should do the real "enable/disable" that tries to follow the virtio spec.
->>
-> What does real mean here?
+On 2020-11-18 12:38, Bart Van Assche wrote:
+> On 11/15/20 5:42 PM, Can Guo wrote:
+>> Actually, I am thinking about removing all the pm_runtime_set_active()
+>> codes in both scsi_bus_resume_common() and scsi_dev_type_resume() - we
+>> don't need to forcibly set the runtime PM status to RPM_ACTIVE for 
+>> either
+>> SCSI host/target or SCSI devices.
+>> 
+>> Whenever we access one SCSI device, either block layer or somewhere in
+>> the path (e.g. throgh sg IOCTL, sg_open() calls 
+>> scsi_autopm_get_device())
+>> should runtime resume the device first, and the runtime PM framework 
+>> makes
+>> sure device's parent (and its parent's parent and so on)gets resumed 
+>> as
+>> well.
+>> Thus, the pm_runtime_set_active() seems redundant. What do you think?
+> 
+> Hi Can,
+> 
+> It is not clear to me why the pm_runtime_set_active() calls occur in 
+> the
+> scsi_pm.c source file since the block layer automatically activates
+> block devices if necessary. Maybe these calls are a leftover from a 
+> time
+> when runtime suspended devices were not resumed automatically by the
+> block layer? Anyway, I'm fine with removing these calls.
+> 
+> Thanks,
+> 
+> Bart.
 
+Yes, I agree with you. Let me test the new patch (which removes all the
+pm_runtime_set_active() calls) first, if no issue found, I will upload
+it for review.
 
-I think it means when a vq is disabled, vhost won't process any request 
-from that virtqueue.
+Thanks,
 
-
-> For the vdpa enable call for example, would it be like
-> ifcvf_vdpa_set_vq_ready where it sets the ready bit or more like mlx5_vdpa_set_vq_ready
-> where it can do some more work in the disable case?
-
-
-For vDPA, it would be more complicated.
-
-E.g for IFCVF, it just delay the setting of queue_enable when it get 
-DRIVER_OK. Technically it can passthrough the queue_enable to the 
-hardware as what mlx5e did.
-
-
->
-> For net and something like ifcvf_vdpa_set_vq_ready's design would we have
-> vhost_ring_ioctl() set some vhost_virtqueue enable bit. We then have some helper
-> vhost_vq_is_enabled() and some code to detect if userspace supports the new ioctl.
-
-
-Yes, vhost support backend capability. When userspace negotiate the new 
-capability, we should depend on SET_VRING_ENABLE, if not we can do 
-vhost_vq_is_enable().
-
-
-> And then in vhost_net_set_backend do we call vhost_vq_is_enabled()? What is done
-> for disable then?
-
-
-It needs more thought, but the question is not specific to 
-SET_VRING_ENABLE. Consider guest may zero ring address as well.
-
-For disabling, we can simply flush the work and disable all the polls.
-
-
-> It doesn't seem to buy a lot of new functionality. Is it just
-> so we follow the spec?
-
-
-My understanding is that, since spec defines queue_enable, we should 
-support it in vhost. And we can piggyback the delayed vq creation with 
-this feature. Otherwise we will duplicate the function if we want to 
-support queue_enable.
-
-
->
-> Or do you want it work more like mlx5_vdpa_set_vq_ready? For this in vhost_ring_ioctl
-> when we get the new ioctl we would call into the drivers and have it start queues
-> and stop queues? For enable, what we you do for net for this case?
-
-
-Net is something different, we can simply use SET_BACKEND to disable a 
-specific virtqueue without introducing new ioctls. Notice that, net mq 
-is kind of different with scsi which have a per queue pair vhost device, 
-and the API allows us to set backend for a specific virtqueue.
-
-
-> For disable,
-> would you do something like vhost_net_stop_vq (we don't free up anything allocated
-> in vhost_vring_ioctl calls, but we can stop what we setup in the net driver)?
-
-
-It's up to you, if you think you should free the resources you can do that.
-
-
-> Is this useful for the current net mq design or is this for something like where
-> you would do one vhost net device with multiple vqs?
-
-
-I think SET_VRING_ENABLE is more useful for SCSI since it have a model 
-of multiple vqs per vhost device.
-
-
->
-> My issue/convern is that in general these calls seems useful, but we don't really
-> need them for scsi because vhost scsi is already stuck creating vqs like how it does
-> due to existing users. If we do the ifcvf_vdpa_set_vq_ready type of design where
-> we just set some bit, then the new ioctl does not give us a lot. It's just an extra
-> check and extra code.
->
-> And for the mlx5_vdpa_set_vq_ready type of design, it doesn't seem like it's going
-> to happen a lot where the admin is going to want to remove vqs from a running device.
-
-
-In this case, qemu may just disable the queues of vhost-scsi via 
-SET_VRING_ENABLE and then we can free resources?
-
-
-> And for both addition/removal for scsi we would need code in virtio scsi to handle
-> hot plug removal/addition of a queue and then redoing the multiqueue mappings which
-> would be difficult to add with no one requesting it.
-
-
-Thanks
-
-
->
-
+Can Guo.
