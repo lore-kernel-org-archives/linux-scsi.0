@@ -2,129 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36DB7C56202
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 08:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F8EEC56202
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 09:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF815221E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 08:56:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACDD524654
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Nov 2020 09:05:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fWnmsIYF"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Emb8wF+b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727162AbgKRI4a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Nov 2020 03:56:30 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:24685 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726724AbgKRI4a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Nov 2020 03:56:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605689789;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=oE/IfWvNx94tBWY03gu3UuKE9ZiNz0WGz4c8BQhvfUg=;
-        b=fWnmsIYFi8//KB1kpoGwjshzZ/xz6UFejcisRyhYX3yNq4pJGzEYFdHxzwWThsRwZsWwUH
-        IYToonZWiHqu0d949YpQdbF8+PQluB+/oiaLv7/VmM+ywfev1MgRN2HGQA6jIkyD6glggj
-        kCIrqIkesoJf0uKum6hwoYSjB2U06kI=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-544-eC21-j1sMO65mpAjYkhURQ-1; Wed, 18 Nov 2020 03:56:27 -0500
-X-MC-Unique: eC21-j1sMO65mpAjYkhURQ-1
-Received: by mail-wm1-f72.google.com with SMTP id c131so127225wma.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2020 00:56:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=oE/IfWvNx94tBWY03gu3UuKE9ZiNz0WGz4c8BQhvfUg=;
-        b=Gb4Gxo4Qv1cnrETWzs6zrpy/meriA7rypwySSBIcD3nn9Cj12tqohezr9ra9qR98T0
-         xcFsASbeEe9R+TH0nkbLqhoJuagKoauixx0KysaPIivVlPmeDcWrj2I8ueNfXpziQJ7C
-         ljioE+m0HbqWeXEL6UNXPV8xkryNI/Ivt+1SiTMgvujL3MCaeLzgzMnPWgOHeKoXMLTO
-         XJx64zY7+HfeE6thTLghIzoWPRZcjirNlS+Cz5Dbi3UcYjKxbNooO1dxqm3ZU+w8pUo4
-         jET9/0pEPtMi8QVQ7iIL6iruiIvq3jvylZeulHw4zTOuE/E1DicT/xKrmvKYaOtivqEm
-         LYaQ==
-X-Gm-Message-State: AOAM533z1NLgzDVp8sBQAbht538tk1Ue3KAItXXvTJ1Ai6Vl59HEfVew
-        XNSfCdkwk2wGgNJtep3nW7dRbfN0wIkF4ihe9pKLv8Mnred+aUAB+AuCYM/f5BTQcQFYJ5rI1dl
-        YmJIJD27aTfwdNRJuRILTxw==
-X-Received: by 2002:adf:e6cf:: with SMTP id y15mr3897455wrm.403.1605689786263;
-        Wed, 18 Nov 2020 00:56:26 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxueBisSh/Mu4b5J73GuuCPae8P0OUrhxdSJAhejf3LKVsO4+2I2VmxbqVKsBNYXWpdkhzG3w==
-X-Received: by 2002:adf:e6cf:: with SMTP id y15mr3897444wrm.403.1605689786105;
-        Wed, 18 Nov 2020 00:56:26 -0800 (PST)
-Received: from redhat.com (bzq-109-67-54-78.red.bezeqint.net. [109.67.54.78])
-        by smtp.gmail.com with ESMTPSA id u81sm2799177wmb.27.2020.11.18.00.56.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Nov 2020 00:56:25 -0800 (PST)
-Date:   Wed, 18 Nov 2020 03:56:22 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     stefanha@redhat.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 1/1] vhost scsi: fix lun reset completion handling
-Message-ID: <20201118035452-mutt-send-email-mst@kernel.org>
-References: <1605680660-3671-1-git-send-email-michael.christie@oracle.com>
+        id S1727061AbgKRJFK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Nov 2020 04:05:10 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:54094 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726690AbgKRJFJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2020 04:05:09 -0500
+X-UUID: 60219152979d441796e68b5da55ec20e-20201118
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=sVHPcL5zweKCEakHoExS8RiyEaMih0MIWkOl8zmPlpQ=;
+        b=Emb8wF+bj3IdSOyacyI8v7uXczFHmZwoUWJTBz4k5YTPI2DR/G0+1/dCWRMsDzEFwwfuhxOm5+JMf6CmLU5YZITGvugypWtksKiYAVmie6WehioqDi5qrMvwOKlJvGk1675+HvmC346ZBxm89u7Z6cWmT5FU2fSuFzhdFl6lxYc=;
+X-UUID: 60219152979d441796e68b5da55ec20e-20201118
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1189853474; Wed, 18 Nov 2020 17:05:04 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkexhb01.mediatek.inc
+ (172.21.101.102) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 18 Nov
+ 2020 17:05:02 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 18 Nov 2020 17:05:02 +0800
+Message-ID: <1605690302.18082.1.camel@mtkswgap22>
+Subject: Re: [PATCH v2 9/9] block: Do not accept any requests while suspended
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Can Guo" <cang@codeaurora.org>, Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Date:   Wed, 18 Nov 2020 17:05:02 +0800
+In-Reply-To: <20201116030459.13963-10-bvanassche@acm.org>
+References: <20201116030459.13963-1-bvanassche@acm.org>
+         <20201116030459.13963-10-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1605680660-3671-1-git-send-email-michael.christie@oracle.com>
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 18, 2020 at 12:24:20AM -0600, Mike Christie wrote:
-> vhost scsi owns the scsi se_cmd but lio frees the se_cmd->se_tmr
-> before calling release_cmd, so while with normal cmd completion we
-> can access the se_cmd from the vhost work, we can't do the same with
-> se_cmd->se_tmr. This has us copy the tmf response in
-> vhost_scsi_queue_tm_rsp to our internal vhost-scsi tmf struct for
-> when it gets sent to the guest from our worker thread.
-> 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-
-Is this a fix for
-    vhost scsi: Add support for LUN resets.
-
-If so pls add a Fixes: tag.
-
-> ---
->  drivers/vhost/scsi.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-> index f22fce5..6ff8a5096 100644
-> --- a/drivers/vhost/scsi.c
-> +++ b/drivers/vhost/scsi.c
-> @@ -220,6 +220,7 @@ struct vhost_scsi_tmf {
->  	struct list_head queue_entry;
->  
->  	struct se_cmd se_cmd;
-> +	u8 scsi_resp;
->  	struct vhost_scsi_inflight *inflight;
->  	struct iovec resp_iov;
->  	int in_iovs;
-> @@ -426,6 +427,7 @@ static void vhost_scsi_queue_tm_rsp(struct se_cmd *se_cmd)
->  	struct vhost_scsi_tmf *tmf = container_of(se_cmd, struct vhost_scsi_tmf,
->  						  se_cmd);
->  
-> +	tmf->scsi_resp = se_cmd->se_tmr_req->response;
->  	transport_generic_free_cmd(&tmf->se_cmd, 0);
->  }
->  
-> @@ -1183,7 +1185,7 @@ static void vhost_scsi_tmf_resp_work(struct vhost_work *work)
->  						  vwork);
->  	int resp_code;
->  
-> -	if (tmf->se_cmd.se_tmr_req->response == TMR_FUNCTION_COMPLETE)
-> +	if (tmf->scsi_resp == TMR_FUNCTION_COMPLETE)
->  		resp_code = VIRTIO_SCSI_S_FUNCTION_SUCCEEDED;
->  	else
->  		resp_code = VIRTIO_SCSI_S_FUNCTION_REJECTED;
-> -- 
-> 1.8.3.1
+T24gTW9uLCAyMDIwLTExLTE2IGF0IDExOjA0ICswODAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IEZyb206IEFsYW4gU3Rlcm4gPHN0ZXJuQHJvd2xhbmQuaGFydmFyZC5lZHU+DQo+IA0KPiBi
+bGtfcXVldWVfZW50ZXIoKSBhY2NlcHRzIEJMS19NUV9SRVFfUFJFRU1QVCBpbmRlcGVuZGVudCBv
+ZiB0aGUgcnVudGltZQ0KPiBwb3dlciBtYW5hZ2VtZW50IHN0YXRlLiBTaW5jZSBTQ1NJIGRvbWFp
+biB2YWxpZGF0aW9uIG5vIGxvbmdlciBkZXBlbmRzIG9uDQo+IHRoaXMgYmVoYXZpb3IsIG1vZGlm
+eSB0aGUgYmVoYXZpb3Igb2YgYmxrX3F1ZXVlX2VudGVyKCkgYXMgZm9sbG93czoNCj4gLSBEbyBu
+b3QgYWNjZXB0IGFueSByZXF1ZXN0cyB3aGlsZSBzdXNwZW5kZWQuDQo+IC0gT25seSBwcm9jZXNz
+IHBvd2VyIG1hbmFnZW1lbnQgcmVxdWVzdHMgd2hpbGUgc3VzcGVuZGluZyBvciByZXN1bWluZy4N
+Cj4gDQo+IFN1Ym1pdHRpbmcgQkxLX01RX1JFUV9QUkVFTVBUIHJlcXVlc3RzIHRvIGEgZGV2aWNl
+IHRoYXQgaXMgcnVudGltZS0NCj4gc3VzcGVuZGVkIGNhdXNlcyBydW50aW1lLXN1c3BlbmRlZCBi
+bG9jayBkZXZpY2VzIG5vdCB0byByZXN1bWUgYXMgdGhleQ0KPiBzaG91bGQuIFRoZSByZXF1ZXN0
+IHdoaWNoIHNob3VsZCBjYXVzZSBhIHJ1bnRpbWUgcmVzdW1lIGluc3RlYWQgZ2V0cw0KPiBpc3N1
+ZWQgZGlyZWN0bHksIHdpdGhvdXQgcmVzdW1pbmcgdGhlIGRldmljZSBmaXJzdC4gT2YgY291cnNl
+IHRoZSBkZXZpY2UNCj4gY2FuJ3QgaGFuZGxlIGl0IHByb3Blcmx5LCB0aGUgSS9PIGZhaWxzLCBh
+bmQgdGhlIGRldmljZSByZW1haW5zIHN1c3BlbmRlZC4NCj4gDQo+IFRoZSBwcm9ibGVtIGlzIGZp
+eGVkIGJ5IGNoZWNraW5nIHRoYXQgdGhlIHF1ZXVlJ3MgcnVudGltZS1QTSBzdGF0dXMNCj4gaXNu
+J3QgUlBNX1NVU1BFTkRFRCBiZWZvcmUgYWxsb3dpbmcgYSByZXF1ZXN0IHRvIGJlIGlzc3VlZCwg
+YW5kDQo+IHF1ZXVpbmcgYSBydW50aW1lLXJlc3VtZSByZXF1ZXN0IGlmIGl0IGlzLiAgSW4gcGFy
+dGljdWxhciwgdGhlIGlubGluZQ0KPiBibGtfcG1fcmVxdWVzdF9yZXN1bWUoKSByb3V0aW5lIGlz
+IHJlbmFtZWQgYmxrX3BtX3Jlc3VtZV9xdWV1ZSgpIGFuZA0KPiB0aGUgY29kZSBpcyB1bmlmaWVk
+IGJ5IG1lcmdpbmcgdGhlIHN1cnJvdW5kaW5nIGNoZWNrcyBpbnRvIHRoZQ0KPiByb3V0aW5lLiAg
+SWYgdGhlIHF1ZXVlIGlzbid0IHNldCB1cCBmb3IgcnVudGltZSBQTSwgb3IgdGhlcmUgY3VycmVu
+dGx5DQo+IGlzIG5vIHJlc3RyaWN0aW9uIG9uIGFsbG93ZWQgcmVxdWVzdHMsIHRoZSByZXF1ZXN0
+IGlzIGFsbG93ZWQuDQo+IExpa2V3aXNlIGlmIHRoZSBCTEtfTVFfUkVRX1BSRUVNUFQgZmxhZyBp
+cyBzZXQgYW5kIHRoZSBzdGF0dXMgaXNuJ3QNCj4gUlBNX1NVU1BFTkRFRC4gIE90aGVyd2lzZSBh
+IHJ1bnRpbWUgcmVzdW1lIGlzIHF1ZXVlZCBhbmQgdGhlIHJlcXVlc3QNCj4gaXMgYmxvY2tlZCB1
+bnRpbCBjb25kaXRpb25zIGFyZSBtb3JlIHN1aXRhYmxlLg0KPiANCj4gQ2M6IENhbiBHdW8gPGNh
+bmdAY29kZWF1cm9yYS5vcmc+DQo+IENjOiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0
+ZWsuY29tPg0KPiBDYzogTWluZyBMZWkgPG1pbmcubGVpQHJlZGhhdC5jb20+DQo+IENjOiBSYWZh
+ZWwgSi4gV3lzb2NraSA8cmFmYWVsLmoud3lzb2NraUBpbnRlbC5jb20+DQo+IFJlcG9ydGVkLWFu
+ZC10ZXN0ZWQtYnk6IE1hcnRpbiBLZXBwbGluZ2VyIDxtYXJ0aW4ua2VwcGxpbmdlckBwdXJpLnNt
+Pg0KPiBTaWduZWQtb2ZmLWJ5OiBBbGFuIFN0ZXJuIDxzdGVybkByb3dsYW5kLmhhcnZhcmQuZWR1
+Pg0KPiBTaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJ2YW5hc3NjaGVAYWNtLm9yZz4N
+Cg0KUmV2aWV3ZWQtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQoN
+Cg0K
 
