@@ -8,98 +8,195 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1BF5C56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1734C56201
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A9182078E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 731EE2078E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qj/0BxPQ"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KS6fWOUE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727476AbgKSUdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 15:33:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35456 "EHLO
+        id S1727677AbgKSUdx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 15:33:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727211AbgKSUdk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:33:40 -0500
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6790C0613CF
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:40 -0800 (PST)
-Received: by mail-pl1-x643.google.com with SMTP id s2so3592595plr.9
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:40 -0800 (PST)
+        with ESMTP id S1727211AbgKSUdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:33:53 -0500
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAF73C0613CF
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:52 -0800 (PST)
+Received: by mail-pf1-x443.google.com with SMTP id 131so5596605pfb.9
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:mime-version;
-        bh=yXpwZ4AbOlXxD2NPqhNQpnbgbvMtJ3NxyHBgGd5qrh0=;
-        b=Qj/0BxPQL7pzuDDbXFIqf53VZPHCHd9p8XRgYrbaEyw+Gd12xOmYuK3Vdy0iAsw489
-         NpqzCjxR8BNJMqHxHJT8N7+e6XN+qCxBuJ3t3ULdvkFy51J+Ab72+0VoHnCJ8Fi0jJIm
-         CC5nlJrkaqW33FzMB02EecoXVfIAEFT2WaXPY=
+        bh=/gVskXPc6Hqs1xKEiPyWBINzaglSHF5lzQd1bmx+O7c=;
+        b=KS6fWOUEyPjsFcW7Z6C0EzsLsOjV8jqlfJmwugiuzlCOAuvhvUenBy2I6QBtEY/m3l
+         +2OnJTeh9BgGUmRa4oEakyirwOKrrfWxQrG4eha1EdzCgc2F516b+XaTvIxE388t9AyV
+         H/z95zL1QPyoHGGuZ6CZkmB/N9D0AfyT+YtrQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=yXpwZ4AbOlXxD2NPqhNQpnbgbvMtJ3NxyHBgGd5qrh0=;
-        b=S8tzpVFiu7htRWiwaZslnYoMGlWDqUKVmURh5iVkILBkOAEvJayb50ZnqxadmLaK4V
-         0khCpwTC9YWeBzH5b4xumHpA8iYWRw/aRO1iTlmVBZBaM+00mifC1EKcg38Z305o3k9v
-         ZpkYYOI/Gs919bUG4fVs5UrnAMuv273/kiF6FiOtaEa1kLDIENvYztcGUy3TWrfUbelO
-         ++YE5ekLG13hIPsdIq2zUdVnkMw/zQlUBw23iWhZAwn8KYJ1rTS5v4WcH6dkFS+r3grK
-         +XDE9icmAitz7a8CNsc9X2QR06Ys9oCvyAnzJnEabryENnKuYLS5QTr6IJQcG+yltZ3g
-         6muw==
-X-Gm-Message-State: AOAM533xuq1MF0MENChcAJVD6ItxAv4tN6DFnaliPLNYPDxMLE4X2QWe
-        T4faIHrf646TZBuHV4VykVxwkLy15qvTgp4up9sHMUaNc1ulX+N4o7/zVJ6DYgB5OBFkTBQHYW8
-        Gz/PDrtUDH5RoHd25/reveHpekkhJ4rXHQ/P902iVpnYaHLXIlG49BBfEVpi76aIHaWQ5WU8/kk
-        Oc7d8=
-X-Google-Smtp-Source: ABdhPJw9BQU3k07HxfT2xM8g0Uihs0y5zLt7zot8R4cK/8bw4QTUuvCZSG+OEOyDTjY+uxf97aputA==
-X-Received: by 2002:a17:902:7081:b029:d9:d623:68f8 with SMTP id z1-20020a1709027081b02900d9d62368f8mr5850385plk.54.1605818018990;
-        Thu, 19 Nov 2020 12:33:38 -0800 (PST)
+        bh=/gVskXPc6Hqs1xKEiPyWBINzaglSHF5lzQd1bmx+O7c=;
+        b=Tx0FIuED/UFxbN+XCvygtTx+iw5yWYH9WJHX9eIYy1n9CTBNKw13o6HgKcNuHwoQ6k
+         T8FJRgzRzfnpx+g/rX0QPD4qlnlawaFiax+M9I9xSCziHTHrm2+VKqadWpfH8nnxySnp
+         F0BsQGENloCefIFBG7XM+MJ3K3C0Y/RG5vBFa5aj+izKqiqVi8EVX0F4z1RAbvzWb3ia
+         P91kVEmYJ1yd0rgdgAx/nohKRiKSHQMVZxxCQs27R3ZLidbfFccR42hmQmXjH5MQQd6s
+         F0nQW0vOKe+tkLlfdn7II2q5p9RwmkRPZC1s/FIJbl8+qESk4ytTb0koC0CeZqkRenTi
+         WgTQ==
+X-Gm-Message-State: AOAM532KTlmX09QUoDac8Fog6hYmxIJgaJgyWA1Mc3m+OO2qyfMZfLRg
+        9Dc9jZw6q6uDRKlsdy0ZIYT/KZtYQC6jTuA9jYdkl0aJr6r6XqPk6zrws73qHyOnluh95kMbaFG
+        gvgxCCqe7o//Xq4/YAxZtL4lYqDUmHp71XSD1RWvisMrzik5s0EbdJ/NZkUm154F8FbmZBK0cqi
+        4sYCY=
+X-Google-Smtp-Source: ABdhPJy0E94L/7sTkhndQSYw0yJbED/L2ujFE/KaXQIs6cezwQaREUODIEmWTGlfVLPhYniz2I8UvQ==
+X-Received: by 2002:a63:fe0c:: with SMTP id p12mr13735307pgh.31.1605818031813;
+        Thu, 19 Nov 2020 12:33:51 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id x8sm779965pfi.24.2020.11.19.12.33.36
+        by smtp.gmail.com with ESMTPSA id i19sm570575pgk.44.2020.11.19.12.33.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Nov 2020 12:33:38 -0800 (PST)
+        Thu, 19 Nov 2020 12:33:50 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         kernel test robot <lkp@intel.com>
-Subject: [PATCH] lpfc: Fix missing prototype warning for lpfc_fdmi_vendor_attr_mi
-Date:   Thu, 19 Nov 2020 12:33:28 -0800
-Message-Id: <20201119203328.121772-1-james.smart@broadcom.com>
+Subject: [PATCH] lpfc: Fix set but not used warnings from Rework remote port lock handling
+Date:   Thu, 19 Nov 2020 12:33:40 -0800
+Message-Id: <20201119203340.121819-1-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000009f731205b47ba4d1"
+        boundary="0000000000006437a005b47ba587"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000009f731205b47ba4d1
+--0000000000006437a005b47ba587
 Content-Transfer-Encoding: 8bit
 
-Function needs to be declared as static.
+Remove local variables that are set but not used.
 
-Fixes: 8aaa7bcf07a2 ("scsi: lpfc: Add FDMI Vendor MIB support")
+Fixes: c6adba150191 ("scsi: lpfc: Rework remote port lock handling")
 Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c     | 6 ------
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 4 ----
+ drivers/scsi/lpfc/lpfc_init.c    | 2 --
+ 3 files changed, 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index ef4b8620c0e8..dd0b432f7ac5 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3295,7 +3295,7 @@ lpfc_fdmi_smart_attr_security(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_vendor_attr_mi(struct lpfc_vport *vport,
- 			  struct lpfc_fdmi_attr_def *ad)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 03f47d1b21fe..10ae744a6ace 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2075,7 +2075,6 @@ int
+ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
  {
+ 	struct lpfc_hba  *phba = vport->phba;
+-	struct Scsi_Host *shost;
+ 	struct serv_parm *sp;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct lpfc_iocbq *elsiocb;
+@@ -2113,7 +2112,6 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
+ 	if (!elsiocb)
+ 		return 1;
+ 
+-	shost = lpfc_shost_from_vport(vport);
+ 	spin_lock_irq(&ndlp->lock);
+ 	ndlp->nlp_flag &= ~NLP_FCP_PRLI_RJT;
+ 	spin_unlock_irq(&ndlp->lock);
+@@ -8572,7 +8570,6 @@ static void
+ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		      struct lpfc_vport *vport, struct lpfc_iocbq *elsiocb)
+ {
+-	struct Scsi_Host  *shost;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct ls_rjt stat;
+ 	uint32_t *payload, payload_len;
+@@ -8633,7 +8630,6 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	 * Do not process any unsolicited ELS commands
+ 	 * if the ndlp is in DEV_LOSS
+ 	 */
+-	shost = lpfc_shost_from_vport(vport);
+ 	spin_lock_irq(&ndlp->lock);
+ 	if (ndlp->nlp_flag & NLP_IN_DEV_LOSS) {
+ 		spin_unlock_irq(&ndlp->lock);
+@@ -9403,7 +9399,6 @@ void
+ lpfc_retry_pport_discovery(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_nodelist *ndlp;
+-	struct Scsi_Host  *shost;
+ 
+ 	/* Cancel the all vports retry delay retry timers */
+ 	lpfc_cancel_all_vport_retry_delay_timer(phba);
+@@ -9413,7 +9408,6 @@ lpfc_retry_pport_discovery(struct lpfc_hba *phba)
+ 	if (!ndlp)
+ 		return;
+ 
+-	shost = lpfc_shost_from_vport(phba->pport);
+ 	mod_timer(&ndlp->nlp_delayfunc, jiffies + msecs_to_jiffies(1000));
+ 	spin_lock_irq(&ndlp->lock);
+ 	ndlp->nlp_flag |= NLP_DELAY_TMO;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index c8911a3d00ee..44eddddff0dc 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -84,7 +84,6 @@ lpfc_rport_invalid(struct fc_rport *rport)
+ {
+ 	struct lpfc_rport_data *rdata;
+ 	struct lpfc_nodelist *ndlp;
+-	struct lpfc_vport *vport;
+ 
+ 	if (!rport) {
+ 		pr_err("**** %s: NULL rport, exit.\n", __func__);
+@@ -105,7 +104,6 @@ lpfc_rport_invalid(struct fc_rport *rport)
+ 		return -EINVAL;
+ 	}
+ 
+-	vport = ndlp->vport;
+ 	if (!ndlp->vport) {
+ 		pr_err("**** %s: Null vport on ndlp %p, DID x%x rport %p "
+ 		       "SID x%x\n", __func__, ndlp, ndlp->nlp_DID, rport,
+@@ -6195,7 +6193,6 @@ lpfc_nlp_release(struct kref *kref)
+ struct lpfc_nodelist *
+ lpfc_nlp_get(struct lpfc_nodelist *ndlp)
+ {
+-	struct lpfc_hba *phba;
+ 	unsigned long flags;
+ 
+ 	if (ndlp) {
+@@ -6208,7 +6205,6 @@ lpfc_nlp_get(struct lpfc_nodelist *ndlp)
+ 		 * ndlp reference count that is in the process of being
+ 		 * released.
+ 		 */
+-		phba = ndlp->phba;
+ 		spin_lock_irqsave(&ndlp->lock, flags);
+ 		if (!kref_get_unless_zero(&ndlp->kref)) {
+ 			spin_unlock_irqrestore(&ndlp->lock, flags);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f4de75b2f64f..f4cf60f125f5 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5644,7 +5644,6 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
+ 	int rc;
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_nodelist *ndlp;
+-	struct Scsi_Host  *shost;
+ 	int active_vlink_present;
+ 	struct lpfc_vport **vports;
+ 	int i;
+@@ -5825,7 +5824,6 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
+ 			 */
+ 			mod_timer(&ndlp->nlp_delayfunc,
+ 				  jiffies + msecs_to_jiffies(1000));
+-			shost = lpfc_shost_from_vport(vport);
+ 			spin_lock_irq(&ndlp->lock);
+ 			ndlp->nlp_flag |= NLP_DELAY_TMO;
+ 			spin_unlock_irq(&ndlp->lock);
 -- 
 2.26.2
 
 
---0000000000009f731205b47ba4d1
+--0000000000006437a005b47ba587
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -169,14 +266,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgX9+Og+uoPbkh8lY2
-Ff0/DOlwGo1NO3i2Tt2Xdo7v1QIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE5MjAzMzM5WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgwrl+Kl7xAtRwirjY
+R9Z8df9hQ+0ntbLfaHq2dK8ijCYwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE5MjAzMzUyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBADs8c35k9vXluz2PTdPAAZlhbsLWHKxsyrze
-iYZT/ziXtRmw44+COtzSzr5epSbuHCjJ0yUUt0HC4XgCYcGl3M5MLWDOBtaqTqeCu4e7CF3RIP6R
-U7tls8FFxhZJ5GsmUTZa9qXjxmFThTfkLvSrScm8LKSdmZHcJp75yEn5K7ceA14w58STaYvhIBD7
-gvsESaEaeFQcGCZjdtGEyThtrF4jMVNysynfuk12VMxJuS3QeDlWolTaVsqH48D+J7KJxlKHmRy6
-CZTXECVi0Gup6GB10TEkeTsRxFBgT/E/HxmVWIldgc1yXUUSzsIBVaoI2w73xSRC/nV91L8kJ4dL
-RyE=
---0000000000009f731205b47ba4d1--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAH6W2qNqWp+NatyhH1Mp4bQgeWnNWAHgUbIv
+0PxtfiC3va5DnM8dKbX7Nh0rzYidKGei4RGamdFEqaCnw2c2ybu/K7UE5nl94Rdk0QPd4jhOWeRC
+aDG46DLvD+DJeIvO/H6oZzawHyufkWAI050VyWH+KGu5rRJDjQRU0BOU2yOlfft9bO6CflJ/BLdW
+l5MwllbHLoQ+PUfIB2XPhGAwmwfnYkNzSqcE+s3GDMdsyP9ryXo0wb+BGztiVwSwD7ivhepHded4
+mXwCSKAXRju5XY+q5k7MfdREbeYPa158ozdeVxuqLVZmuyYCgGCF2uBQXlD7YxAJ6lwpMMfCysqI
+Bcc=
+--0000000000006437a005b47ba587--
