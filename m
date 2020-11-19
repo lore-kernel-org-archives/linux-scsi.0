@@ -2,112 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2413C56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8B8C63777
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F1CF221FB
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:34:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 424172225B
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:51:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="evBXhX4L"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hBYfXUQW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727764AbgKSUeT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 15:34:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35556 "EHLO
+        id S1726199AbgKSUvc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 15:51:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727211AbgKSUeS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:34:18 -0500
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BD24C0613CF
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:34:18 -0800 (PST)
-Received: by mail-pg1-x542.google.com with SMTP id i13so5278092pgm.9
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:34:18 -0800 (PST)
+        with ESMTP id S1725843AbgKSUvb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:51:31 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D92B6C0613CF
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:51:29 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id q5so5650496pfk.6
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:51:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=wozjNAESXMorI95NzCDiLka0IgxB12dmfr4dUdaS2mQ=;
-        b=evBXhX4L5JKoPHc3YdT0DrCxNeoLBXaQbP0K0bzNzQX5i4MlzP61cjyZFhCp91Jt0d
-         wXoDf5maO6JEFn1k7N8lnlc8yyNkZLBPXmwrhhktqpFaUgLmcf3anGueNIubWMONuIwD
-         NH4537ZoCDVafdKs+2d5hTWBoZxDp3kE2scqY=
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to;
+        bh=1oUl7FGRKqYpMdRAyYh5TzygLZd6g9sFalY+kJ12ZWM=;
+        b=hBYfXUQWIw2iEo2NiS8lJJ0Ut6wqNSXBCLETPFXZZvf08OIYyhPk0BI3MsDpc/rkj9
+         SKRmNatV3jWip99yn/OAVIaCBJ/rlNXJCzHUMA0X14JfmsuLjr8tGPJ+S6jkDcaPhC42
+         8qDnabeZ5Fj/BFvOb9yKb6vpiZUqwIXTvt1Rs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=wozjNAESXMorI95NzCDiLka0IgxB12dmfr4dUdaS2mQ=;
-        b=HoNWAUX3pS1GLPGkVzlea6xE1ptw7SPFKxnwi0kYQeek1A7O9ernr/ibch85RVZjvk
-         nmXWl1ZsccLc4DU8NHBfk9NbVNUnqLq/V6uFe0TGzNO1vIhLZ7Tug7/56gLxwao10tsS
-         +fR/FuBMtl+hqRMCUu74Mz93RkkvgrMSFbtYDlZQH7W236xLLqYfzSaOglwHub9yoC7I
-         Yogzi/EWDTZfx+g5X7XIx9Vz6uRUZf5sH3X0rHJooU6LmdL2bSX/5ip4NnD0HW6ff5Cf
-         UqYThGi1KQLBsSHGxmtLAnACiOV7DRHtHp45ttcRObrHrt3LmIXW6yiISE0dc8o4a0Zq
-         zZOA==
-X-Gm-Message-State: AOAM5339g24bSGKJbw/Wqb3GOlMBZyDoJMPtzrr4vpRZCCUeNURaGNjU
-        BmFU+EwSth89NaOk2JQtS4yswmC6dg1s5FjE5gWBkbNTY5bnIyKlFyXQTSRd3F2QaF1kJTbLBSN
-        rECCiDmE3JPsIHoxo+95ixnkCXgkjHiAyE3m2MC13u/m5H/3NXm+gwx7ZGde8QXgML60okU/ScW
-        qMeZk=
-X-Google-Smtp-Source: ABdhPJw+asDzSP1taEZeBwXAuKCofK4FYD/C9nKUNswwVpVEW+H2Ape+99YjPwb4f0hXn9+aykAY2A==
-X-Received: by 2002:a17:90a:ea8d:: with SMTP id h13mr6335255pjz.52.1605818057560;
-        Thu, 19 Nov 2020 12:34:17 -0800 (PST)
-Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t8sm739070pfe.65.2020.11.19.12.34.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Nov 2020 12:34:16 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to;
+        bh=1oUl7FGRKqYpMdRAyYh5TzygLZd6g9sFalY+kJ12ZWM=;
+        b=TF3s+HpuBiJSUH+Bo0U/qDWyKKxrO9tbV5JD9Fueut2QOGqvbiBVQQhXHakAjy0wWJ
+         SvrWZuVvuKQDMcUvPBmfg/nU94aaFvKi1k02QIueHlF3HYH78SVjRUaCXQZ8tEOUIwWv
+         AUiB2fNTD+zM/U+VWdXDKHgsX1WAXpeX3g+T71nrYZSx2iXUV/H49cUswLw/2srwaBZz
+         qTvo3Zn220Hv9oL1JeumpCPLm+x/Ii/qGtUQDBlCNZp+46DhnF16rpYliJQrVT0VozgK
+         IeMxH3RKcczaer9A/aTaKOrcSz8ilO9ueGw0GUMIyaR8bakiMcqU1yu66B5E6Ph2PnPQ
+         A+xg==
+X-Gm-Message-State: AOAM533gT0Vd6X2N91tJnBLo/9OqvdtVG4WakTXmSU2dTLswjFzC9MXJ
+        zBD4aEP1uxVjlRBCvjoaEJwMm9oe+yoxsQ==
+X-Google-Smtp-Source: ABdhPJzHatV4D0ya1PFrHsAcE6N6cm8/o+OPuuvTAWv/WtPNbNecNvuWVZ1208ovzEks51EMfM/hZw==
+X-Received: by 2002:a62:1506:0:b029:18b:44dd:6325 with SMTP id 6-20020a6215060000b029018b44dd6325mr11287364pfv.30.1605819089018;
+        Thu, 19 Nov 2020 12:51:29 -0800 (PST)
+Received: from [10.69.69.102] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id kr2sm627038pjb.31.2020.11.19.12.51.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Nov 2020 12:51:28 -0800 (PST)
+Subject: Re: [PATCH -next] scsi: lpfc: Mark lpfc_nvmet_prep_abort_wqe with
+ static keyword
+To:     Zou Wei <zou_wei@huawei.com>, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1605685376-12415-1-git-send-email-zou_wei@huawei.com>
 From:   James Smart <james.smart@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <james.smart@broadcom.com>,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH] lpfc: Fix variable 'vport' set but not used in lpfc_sli4_abts_err_handler
-Date:   Thu, 19 Nov 2020 12:34:07 -0800
-Message-Id: <20201119203407.121913-1-james.smart@broadcom.com>
-X-Mailer: git-send-email 2.26.2
+Message-ID: <cf37197a-7393-a3fb-e955-94cc1c0f0522@broadcom.com>
+Date:   Thu, 19 Nov 2020 12:51:26 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.3
 MIME-Version: 1.0
+In-Reply-To: <1605685376-12415-1-git-send-email-zou_wei@huawei.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ebc1dc05b47ba64a"
+        boundary="00000000000069e66805b47be402"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ebc1dc05b47ba64a
+--00000000000069e66805b47be402
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 
-Remove vport variable that is assigned but not used in
-lpfc_sli4_abts_err_handler().
+On 11/17/2020 11:42 PM, Zou Wei wrote:
+> Fix the following sparse warning:
+>
+> drivers/scsi/lpfc/lpfc_nvmet.c:3340:1: warning: symbol 'lpfc_nvmet_prep_abort_wqe' was not declared. Should it be static?
+>
+> Signed-off-by: Zou Wei <zou_wei@huawei.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+> index c8b9434..a71df87 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvmet.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+> @@ -3336,7 +3336,7 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
+>    *
+>    * This function is called with hbalock held.
+>    **/
+> -void
+> +static void
+>   lpfc_nvmet_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt)
+>   {
+>   	union lpfc_wqe128 *wqe = &pwqeq->wqe;
 
-Fixes: e7dab164a9aa ("scsi: lpfc: Fix scheduling call while in softirq context in lpfc_unreg_rpi")
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 2 --
- 1 file changed, 2 deletions(-)
+Zou, Thank You .  I just submitted the same patch.   Either one Martin 
+wants to take.. :)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 62218e41933e..95caad764fb7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -10700,7 +10700,6 @@ lpfc_sli4_abts_err_handler(struct lpfc_hba *phba,
- 			   struct lpfc_nodelist *ndlp,
- 			   struct sli4_wcqe_xri_aborted *axri)
- {
--	struct lpfc_vport *vport;
- 	uint32_t ext_status = 0;
- 
- 	if (!ndlp) {
-@@ -10710,7 +10709,6 @@ lpfc_sli4_abts_err_handler(struct lpfc_hba *phba,
- 		return;
- 	}
- 
--	vport = ndlp->vport;
- 	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
- 			"3116 Port generated FCP XRI ABORT event on "
- 			"vpi %d rpi %d xri x%x status 0x%x parameter x%x\n",
--- 
-2.26.2
+-- james
+
+Reviewed-by: James Smart <james.smart@broadcom.com>
 
 
---000000000000ebc1dc05b47ba64a
+--00000000000069e66805b47be402
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -177,14 +181,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg2pe5i1cszNzGZIOO
-DQmsNr7E+9+A98mXoDBktU0H3kgwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE5MjAzNDE4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgsRE8h33IO5csMZov
+DO6hav/Uo2sQ6GF6QG+3/KKuoZMwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE5MjA1MTI5WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJz9qjNZ0TmnV/PHTkMrdyEPO9Tmvxh6xHDZ
-LudkbWQ9X/6EtH5Q+4UoL/8U1MIFH9g6YSPF04h/3qUXjTsDHJxEgwifRrAqv1qyTzIy8V1slLq9
-Fzmxhgk5kCPH2aMlU/2k+RVo7T/YRth8B2rP4kStYzwcce8BPTs6tYzTR+Y/Cm0+ehMydOMKbqjV
-4/PyRrioC1FS4THyuWIphTQg+hZRNPIeVNAh8lbkeLKfIqbCZx3M+DTcO33ZTUDuCS1kiHX2IizJ
-6ofvmyyKrQhJqLT4L6m+UryYstbkxrE/wq7iOcfv14CXP3fmKY+Ra/faAMXL5KSRBzmAdpxgXcYf
-OyE=
---000000000000ebc1dc05b47ba64a--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAC06/JULAvWM/DAGA00AifZO5Wperj2DTxFb
+973A/Zh/alIfVsaAeugJmcPdhpqBXP+zfE+zcbmMJ5po8TFpLWBbX6DZKVK1fsk71xbjdZv7LwJZ
+cnyRVpV8PsWEx/zsRV+fLgygWD/x+2mWvRpnH9LYXJaoKv380/YLjF5KUKhWJq5DcLDFS4Y6g7ws
+9AaXjF7q9qTKd+0dU6ltbj6P2OngxB0E8+PhVNaMFTvZsrlplqH5zIJVpKQiXl0cWY0QiwchYRiP
+WXooHosvHU0zbxhGjaqxlYtEAgZNFPpiizMGaGizGf9aJ3oCu/6rBQhF4bp5X2LbbsM9MUNPFubt
+IC4=
+--00000000000069e66805b47be402--
