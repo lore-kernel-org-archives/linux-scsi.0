@@ -2,391 +2,301 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C50CDC388F9
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 04:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A7EC63697
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 06:21:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 518D82467A
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 04:36:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F151246AD
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 06:21:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dhdYVXMn"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AI9LHnMn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726089AbgKSEgZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Nov 2020 23:36:25 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27317 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725964AbgKSEgY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Nov 2020 23:36:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605760581;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=gbkLGlvf7DI7caAjLf39t+hcUXNUVYdZjBj4Pbugdn4=;
-        b=dhdYVXMnRiyfdeRQCOpGps+hmb7dYtwQSAoiZzTMJB3mi0UFw7dDecV5J1zNKYCamvHkFl
-        0EWqK4Iy45FATUIv4DNrlBibw4TOkWAMNufhKjyDrZVSlUVUGHVt6U7rPQwppRQDVI9rZA
-        z80kk+TkxlT6K61pJ1ORIseLWv+/Ox0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-350-NmeeC11COgi-ZG8ZPmW0zQ-1; Wed, 18 Nov 2020 23:36:17 -0500
-X-MC-Unique: NmeeC11COgi-ZG8ZPmW0zQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7E3BC81440F;
-        Thu, 19 Nov 2020 04:36:16 +0000 (UTC)
-Received: from [10.72.13.63] (ovpn-13-63.pek2.redhat.com [10.72.13.63])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 245EE60843;
-        Thu, 19 Nov 2020 04:36:00 +0000 (UTC)
-Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
-To:     Mike Christie <michael.christie@oracle.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>
-Cc:     fam@euphon.net, linux-scsi@vger.kernel.org, mst@redhat.com,
-        qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org,
-        target-devel@vger.kernel.org, pbonzini@redhat.com
-References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
- <20201117164043.GS131917@stefanha-x1.localdomain>
- <bba47572-bec9-794f-5a70-d7f016267022@redhat.com>
- <8318de9f-c585-39f8-d931-1ff5e0341d75@oracle.com>
- <e3f8f065-ca17-e4a0-06e5-990bbe8fe947@redhat.com>
- <d6ffcf17-ab12-4830-cc3c-0f0402fb8a0f@oracle.com>
-From:   Jason Wang <jasowang@redhat.com>
-Message-ID: <e91e9eee-7ff4-3ef6-955a-706276065d9b@redhat.com>
-Date:   Thu, 19 Nov 2020 12:35:59 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726483AbgKSGUn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 01:20:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44890 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725816AbgKSGUn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 01:20:43 -0500
+Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEF30C0613CF
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2020 22:20:42 -0800 (PST)
+Received: by mail-qv1-xf2e.google.com with SMTP id z17so2321285qvy.11
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2020 22:20:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=jZwvY6zMA8/ERUWGoJX2S0Wb0k1Zwfe4gAjnFDUYApM=;
+        b=AI9LHnMnsl7IqsA+mGbO8uTYvGL7B55T//lFLKACPI/Vmk/qvzz6XBU+XsAg2JCZ2j
+         B/2FMJ7HGpxQbVeglu8b5U7WGoag0jrQ+5sJw+2pxs8aCoNxwDkPGIt2nMzyNfMnFd2o
+         3iXJVN/6XXGLGgj6r/Ltv9x1Cx+dJEBWgtU9o=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=jZwvY6zMA8/ERUWGoJX2S0Wb0k1Zwfe4gAjnFDUYApM=;
+        b=RMVRoBCCrjcdLBENGSDC2AOuE9beeIMCe877VIDjnyX6UUIANB/fj5FDcfmHCq7gpF
+         KsVnIFSQLSEnLiS42aQsSqMx8Co4qc6P+5B2Sm4Rp97NeZajHdbiYxrfbT3CQv1T8ehI
+         McYWy49rX09Ab4RHC/WEPERRss4fpZNN4ggz3KbFlFGIGFrFpvU4vSwQg6fKTJShFJYr
+         9lLXl8/EikMwT5e8G93Z/6JMIU27iwPtU54KJrHbl+GqsNv/P1GBiY6yJErjkjX9Uyas
+         fGlssQyj/3uE6amkXkmyJbpeol1QeriZcJuxaGpVQlJ49smuHCzjGG8Ba/RIxfoerlHg
+         Dd/Q==
+X-Gm-Message-State: AOAM533KxxzVzFFU9Er8vR3NvOp8sPJ7rJKkhvUsrpI1IMmQyVPDWEKc
+        FiPPbKBS5TFIcpCtQWDUoOLOKVjk69yEjdsf6/SSAA==
+X-Google-Smtp-Source: ABdhPJxVDq/c3RelSvea0BwhSUfyAbfyleeJ0fAGhGTp9mSsNJHONNDzKi7VwAupnVsNB5MXKLcV/1dvrn1lwuNyBhY=
+X-Received: by 2002:ad4:5888:: with SMTP id dz8mr9933116qvb.34.1605766841701;
+ Wed, 18 Nov 2020 22:20:41 -0800 (PST)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20201116090737.50989-13-ming.lei@redhat.com> <202011161944.U7XHrbsd-lkp@intel.com>
+ <20201118023507.GA92339@T590>
+In-Reply-To: <20201118023507.GA92339@T590>
 MIME-Version: 1.0
-In-Reply-To: <d6ffcf17-ab12-4830-cc3c-0f0402fb8a0f@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQIS9sCgRF18gKjqcruTOMh+o2IV3QHxSRdOAbmfafepOSVGgA==
+Date:   Thu, 19 Nov 2020 11:50:39 +0530
+Message-ID: <36b8e652641fefca6e8f95d3bbaaf3ca@mail.gmail.com>
+Subject: RE: [PATCH V4 12/12] scsi: replace sdev->device_busy with sbitmap
+To:     Ming Lei <ming.lei@redhat.com>, kernel test robot <lkp@intel.com>,
+        Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, kbuild-all@lists.01.org,
+        clang-built-linux@googlegroups.com, Omar Sandoval <osandov@fb.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Hannes Reinecke <hare@suse.de>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000037df3b05b46fbad0"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+--00000000000037df3b05b46fbad0
+Content-Type: text/plain; charset="UTF-8"
 
-On 2020/11/19 上午4:06, Mike Christie wrote:
-> On 11/18/20 1:54 AM, Jason Wang wrote:
->>
->> On 2020/11/18 下午2:57, Mike Christie wrote:
->>> On 11/17/20 11:17 PM, Jason Wang wrote:
->>>> On 2020/11/18 上午12:40, Stefan Hajnoczi wrote:
->>>>> On Thu, Nov 12, 2020 at 05:18:59PM -0600, Mike Christie wrote:
->>>>>> The following kernel patches were made over Michael's vhost branch:
->>>>>>
->>>>>> https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git/log/?h=vhost__;!!GqivPVa7Brio!MzCv3wdRfz5dltunazRWGCeUkMg91pPEOLpIivsebLX9vhYDSi_E1V36e9H0NoRys_hU$ 
->>>>>>
->>>>>> and the vhost-scsi bug fix patchset:
->>>>>>
->>>>>> https://urldefense.com/v3/__https://lore.kernel.org/linux-scsi/20201112170008.GB1555653@stefanha-x1.localdomain/T/*t__;Iw!!GqivPVa7Brio!MzCv3wdRfz5dltunazRWGCeUkMg91pPEOLpIivsebLX9vhYDSi_E1V36e9H0NmuPE_m8$ 
->>>>>>
->>>>>> And the qemu patch was made over the qemu master branch.
->>>>>>
->>>>>> vhost-scsi currently supports multiple queues with the num_queues
->>>>>> setting, but we end up with a setup where the guest's scsi/block
->>>>>> layer can do a queue per vCPU and the layers below vhost can do
->>>>>> a queue per CPU. vhost-scsi will then do a num_queue virtqueues,
->>>>>> but all IO gets set on and completed on a single vhost-scsi thread.
->>>>>> After 2 - 4 vqs this becomes a bottleneck.
->>>>>>
->>>>>> This patchset allows us to create a worker thread per IO vq, so we
->>>>>> can better utilize multiple CPUs with the multiple queues. It
->>>>>> implments Jason's suggestion to create the initial worker like
->>>>>> normal, then create the extra workers for IO vqs with the
->>>>>> VHOST_SET_VRING_ENABLE ioctl command added in this patchset.
->>>>> How does userspace find out the tids and set their CPU affinity?
->>>>>
->>>>> What is the meaning of the new VHOST_SET_VRING_ENABLE ioctl? It 
->>>>> doesn't
->>>>> really "enable" or "disable" the vq, requests are processed 
->>>>> regardless.
->>>>
->>>> Actually I think it should do the real "enable/disable" that tries 
->>>> to follow the virtio spec.
->>>>
->>> What does real mean here?
->>
->>
->> I think it means when a vq is disabled, vhost won't process any 
->> request from that virtqueue.
->>
->>
->>> For the vdpa enable call for example, would it be like
->>> ifcvf_vdpa_set_vq_ready where it sets the ready bit or more like 
->>> mlx5_vdpa_set_vq_ready
->>> where it can do some more work in the disable case?
->>
->>
->> For vDPA, it would be more complicated.
->>
->> E.g for IFCVF, it just delay the setting of queue_enable when it get 
->> DRIVER_OK. Technically it can passthrough the queue_enable to the 
->> hardware as what mlx5e did.
->>
->>
->>>
->>> For net and something like ifcvf_vdpa_set_vq_ready's design would we 
->>> have
->>> vhost_ring_ioctl() set some vhost_virtqueue enable bit. We then have 
->>> some helper
->>> vhost_vq_is_enabled() and some code to detect if userspace supports 
->>> the new ioctl.
->>
->>
->> Yes, vhost support backend capability. When userspace negotiate the 
->> new capability, we should depend on SET_VRING_ENABLE, if not we can 
->> do vhost_vq_is_enable().
->>
->>
->>> And then in vhost_net_set_backend do we call vhost_vq_is_enabled()? 
->>> What is done
->>> for disable then?
->>
->>
->> It needs more thought, but the question is not specific to 
->> SET_VRING_ENABLE. Consider guest may zero ring address as well.
->>
->> For disabling, we can simply flush the work and disable all the polls.
->>
->>
->>> It doesn't seem to buy a lot of new functionality. Is it just
->>> so we follow the spec?
->>
->>
->> My understanding is that, since spec defines queue_enable, we should 
->> support it in vhost. And we can piggyback the delayed vq creation 
->> with this feature. Otherwise we will duplicate the function if we 
->> want to support queue_enable.
+> >
+> > If you fix the issue, kindly add following tag as appropriate
+> > Reported-by: kernel test robot <lkp@intel.com>
+> >
+> > All errors (new ones prefixed by >>):
+> >
+> > >> drivers/scsi/megaraid/megaraid_sas_fusion.c:365:41: error: no
+member
+> named 'device_busy' in 'struct scsi_device'
+> >            sdev_busy = atomic_read(&scmd->device->device_busy);
 >
+> This new reference to sdev->device_busy is added by recent shared host
+tag
+> patch, and according to the comment, you may have planed to convert into
+> one megaraid internal counter.
 >
-> I had actually given up on the delayed vq creation goal. I'm still not 
-> sure how it's related to ENABLE and I think it gets pretty gross.
+>         /* TBD - if sml remove device_busy in future, driver
+>          * should track counter in internal structure.
+>          */
 >
-> 1. If we started from a semi-clean slate, and used the ENABLE ioctl 
-> more like a CREATE ioctl, and did the ENABLE after vhost dev open() 
-> but before any other ioctls, we can allocate the vq when we get the 
-> ENABLE ioctl. This fixes the issue where vhost scsi is allocating 128 
-> vqs at open() time. We can then allocate metadata like the iovecs at 
-> ENABLE time or when we get a setup ioctl that is related to the 
-> metadata, so it fixes that too.
->
-> That makes sense how ENABLE is related to delayed vq allocation and 
-> why we would want it.
->
-> If we now need to support old tools though, then you lose me. To try 
-> and keep the code paths using the same code, then at vhost dev open() 
-> time do we start vhost_dev_init with zero vqs like with the allocate 
-> at ENABLE time case? Then when we get the first vring or dev ioctl, do 
-> we allocate the vq and related metadata? If so, the ENABLE does not 
-> buy us a lot since we get the delayed allocation from the compat code. 
-> Also this compat case gets really messy when we are delaying the 
-> actual vq and not just the metadata.
->
-> If for the compat case, we keep the code that before/during 
-> vhost_dev_init allocates all the vqs and does the initialization, then 
-> we end up with 2 very very different code paths. And we also need a 
-> new modparam or something to tell the drivers to do the old or new 
-> open() behavior.
+> So can you post one patch? And I am happy to fold it into this series.
 
+Ming - Please find the patch for megaraid_sas driver -
+I have used helper inline function just for inter-operability with older
+kernel to support in our out of box driver.
+This way it will be easy for us to replace helper function as per kernel
+version check.
 
-Right, so I think maybe we can take a step back. Instead of depending on 
-explicit new ioctl which may cause a lot of issues, can we do something 
-similar to vhost_vq_is_setup().
+Subject: [PATCH] megaraid_sas: replace sdev_busy with local counter
 
-That means, let's create/destory new workers on SET_VRING_ADDR?
+---
+ drivers/scsi/megaraid/megaraid_sas.h        |  2 ++
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 34 ++++++++++++++++++---
+ 2 files changed, 32 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+b/drivers/scsi/megaraid/megaraid_sas.h
+index 0f808d63580e..0c6a56b24c6e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2019,10 +2019,12 @@ union megasas_frame {
+  * struct MR_PRIV_DEVICE - sdev private hostdata
+  * @is_tm_capable: firmware managed tm_capable flag
+  * @tm_busy: TM request is in progress
++ * @sdev_priv_busy: pending command per sdev
+  */
+ struct MR_PRIV_DEVICE {
+        bool is_tm_capable;
+        bool tm_busy;
++       atomic_t sdev_priv_busy;
+        atomic_t r1_ldio_hint;
+        u8 interface_type;
+        u8 task_abort_tmo;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index fd607287608e..e813ea0ad8b7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -220,6 +220,32 @@ megasas_clear_intr_fusion(struct megasas_instance
+*instance)
+        return 1;
+ }
 
->
-> 2. If we do an approach that is less invasive to the kernel for the 
-> compat case, and do the ENABLE ioctl after other vring ioctl calls 
-> then that would not work for the delayed vq allocation goal since the 
-> ENABLE call is too late.
->
->
->>
->>
->>>
->>> Or do you want it work more like mlx5_vdpa_set_vq_ready? For this in 
->>> vhost_ring_ioctl
->>> when we get the new ioctl we would call into the drivers and have it 
->>> start queues
->>> and stop queues? For enable, what we you do for net for this case?
->>
->>
->> Net is something different, we can simply use SET_BACKEND to disable 
->> a specific virtqueue without introducing new ioctls. Notice that, net 
->> mq is kind of different with scsi which have a per queue pair vhost 
->> device, and the API allows us to set backend for a specific virtqueue.
->
->
-> That's one of the things I am trying to understand. It sounds like 
-> ENABLE is not useful to net. Will net even use/implement the ENABLE 
-> ioctl or just use the SET_BACKEND?
++static inline void
++megasas_sdev_busy_inc(struct scsi_cmnd *scmd)
++{
++       struct MR_PRIV_DEVICE *mr_device_priv_data;
++
++       mr_device_priv_data = scmd->device->hostdata;
++       atomic_inc(&mr_device_priv_data->sdev_priv_busy);
++}
++static inline void
++megasas_sdev_busy_dec(struct scsi_cmnd *scmd)
++{
++       struct MR_PRIV_DEVICE *mr_device_priv_data;
++
++       mr_device_priv_data = scmd->device->hostdata;
++       atomic_dec(&mr_device_priv_data->sdev_priv_busy);
++}
++static inline int
++megasas_sdev_busy_read(struct scsi_cmnd *scmd)
++{
++       struct MR_PRIV_DEVICE *mr_device_priv_data;
++
++       mr_device_priv_data = scmd->device->hostdata;
++       return atomic_read(&mr_device_priv_data->sdev_priv_busy);
++}
++
++
+ /**
+  * megasas_get_cmd_fusion -    Get a command from the free pool
+  * @instance:          Adapter soft state
+@@ -359,10 +385,7 @@ megasas_get_msix_index(struct megasas_instance
+*instance,
+ {
+        int sdev_busy;
 
+-       /* TBD - if sml remove device_busy in future, driver
+-        * should track counter in internal structure.
+-        */
+-       sdev_busy = atomic_read(&scmd->device->device_busy);
++       sdev_busy = megasas_sdev_busy_read(scmd);
 
-I think SET_BACKEND is sufficient for net.
+        if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
+            sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH)) {
+@@ -3390,6 +3413,7 @@ megasas_build_and_issue_cmd_fusion(struct
+megasas_instance *instance,
+         * Issue the command to the FW
+         */
 
++       megasas_sdev_busy_inc(scmd);
+        megasas_fire_cmd_fusion(instance, req_desc);
 
-> What about vsock?
-
-
-For vsock (and scsi as well), their backend is per virtqueue, but the 
-actual issue is there's no uAPI to configure it per vq. The current uAPI 
-is per device.
-
+        if (r1_cmd)
+@@ -3450,6 +3474,7 @@ megasas_complete_r1_command(struct megasas_instance
+*instance,
+                scmd_local->SCp.ptr = NULL;
+                megasas_return_cmd_fusion(instance, cmd);
+                scsi_dma_unmap(scmd_local);
++               megasas_sdev_busy_dec(scmd_local);
+                scmd_local->scsi_done(scmd_local);
+        }
+ }
+@@ -3550,6 +3575,7 @@ complete_cmd_fusion(struct megasas_instance
+*instance, u32 MSIxIndex,
+                                scmd_local->SCp.ptr = NULL;
+                                megasas_return_cmd_fusion(instance,
+cmd_fusion);
+                                scsi_dma_unmap(scmd_local);
++                               megasas_sdev_busy_dec(scmd_local);
+                                scmd_local->scsi_done(scmd_local);
+                        } else  /* Optimal VD - R1 FP command completion.
+*/
+                                megasas_complete_r1_command(instance,
+cmd_fusion);
+--
+2.18.1
 
 >
-> For net it sounds like it's just going to add an extra code path if 
-> you support it.
+> Thanks,
+> Ming
 
+--00000000000037df3b05b46fbad0
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Yes, so if we really want one w(which is still questionable during our 
-discussion). We can start from a SCSI specific one (or an alias of vDPA 
-one).
-
-
->
->
->>
->>
->>> For disable,
->>> would you do something like vhost_net_stop_vq (we don't free up 
->>> anything allocated
->>> in vhost_vring_ioctl calls, but we can stop what we setup in the net 
->>> driver)?
->>
->>
->> It's up to you, if you think you should free the resources you can do 
->> that.
->>
->>
->>> Is this useful for the current net mq design or is this for 
->>> something like where
->>> you would do one vhost net device with multiple vqs?
->>
->>
->> I think SET_VRING_ENABLE is more useful for SCSI since it have a 
->> model of multiple vqs per vhost device.
->
-> That is why I was asking about if you were going to change net.
->
-> It would have been useful for scsi if we had it when mq support was 
-> added and we don't have to support old tools. But now, if enable=true, 
-> is only going to be something where we set some bit so later when 
-> VHOST_SCSI_SET_ENDPOINT is run it we can do what we are already doing 
-> its just extra code. This patch:
-> https://www.spinics.net/lists/linux-scsi/msg150151.html
-> would work without the ENABLE ioctl I mean.
-
-
-That seems to pre-allocate all workers. If we don't care the resources 
-(127 workers) consumption it could be fine.
-
-
->
->
-> And if you guys want to do the completely new interface, then none of 
-> this matters I guess :)
->
-> For disable see below.
->
->>
->>
->>>
->>> My issue/convern is that in general these calls seems useful, but we 
->>> don't really
->>> need them for scsi because vhost scsi is already stuck creating vqs 
->>> like how it does
->>> due to existing users. If we do the ifcvf_vdpa_set_vq_ready type of 
->>> design where
->>> we just set some bit, then the new ioctl does not give us a lot. 
->>> It's just an extra
->>> check and extra code.
->>>
->>> And for the mlx5_vdpa_set_vq_ready type of design, it doesn't seem 
->>> like it's going
->>> to happen a lot where the admin is going to want to remove vqs from 
->>> a running device.
->>
->>
->> In this case, qemu may just disable the queues of vhost-scsi via 
->> SET_VRING_ENABLE and then we can free resources?
->
->
-> Some SCSI background in case it doesn't work like net:
-> -------
-> When the user sets up mq for vhost-scsi/virtio-scsi, for max perf and 
-> no cares about mem use they would normally set num_queues based on the 
-> number of vCPUs and MSI-x vectors. I think the default in qemu now is 
-> to try and detect that value.
->
-> When the virtio_scsi driver is loaded into the guest kernel, it takes 
-> the num_queues value and tells the scsi/block mq layer to create 
-> num_queues multiqueue hw queues.
-
-
-If I read the code correctly, for modern device, guest will set 
-queue_enable for the queues that it wants to use. So in this ideal case, 
-qemu can forward them to VRING_ENABLE and reset VRING_ENABLE during 
-device reset.
-
-But it would be complicated to support legacy device and qemu.
-
-
->
-> ------
->
-> I was trying to say in the previous email that is if all we do is set 
-> some bits to indicate the queue is disabled, free its resources, stop 
-> polling/queueing in the scsi/target layer, flush etc, it does not seem 
-> useful. I was trying to ask when would a user only want this behavior?
-
-
-I think it's device reset, the semantic is that unless the queue is 
-enabled, we should treat it as disabled.
-
-
->
-> I think we need an extra piece where the guests needs to be modified 
-> to handle the queue removal or the block/scsi layers would still send 
-> IO and we would get IO errors. Without this it seems like some extra 
-> code that we will not use.
->
-> And then if we are going to make disable useful like this, what about 
-> enable? We would want to the reverse where we add the queue and the 
-> guest remaps the mq to hw queue layout. To do this, enable has to do 
-> more than just set some bits. There is also an issue with how it would 
-> need to interact with the SET_BACKEND 
-> (VHOST_SCSI_SET_ENDPOINT/VHOST_SCSI_CLEAR_ENDPOINT for scsi) calls.
->
-> I think if we wanted the ENABLE ioctl to work like this then that is 
-> not related to my patches and I like I've written before I think my 
-> patches do not need the ENABLE ioctl in general. We could add the 
-> patch where we create the workers threads from 
-> VHOST_SCSI_SET_ENDPOINT. And if we ever add this queue hotplug type of 
-> code, then the worker thread would just get moved/rearranged with the 
-> other vq modification code in 
-> vhost_scsi_set_endpoint/vhost_scsi_clear_endpoint.
->
-> We could also go the new threading interface route, and also do the 
-> ENABLE ioctl separately.
-
-
-Right, my original idea is to try to make queue_enable (in the spec) 
-work for SCSI and we can use that for any delayed stuffs (vq, or workers).
-
-But it looks not as easy as I imaged.
-
-Thanks
-
-
-
-
+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
+yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
+AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
+MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
+YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
+ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
+FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
+HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
+MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
+BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
+Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
+YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
+pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
+8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
+M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
+1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
+IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
+RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQguVAe1QRB
+zOKbnc2lCOBcC5nExtMgWqr97ufyXWFY3IYwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMjAxMTE5MDYyMDQyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
+BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
+9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAHOp9L42Ep7hufQFarmY70WeVU6b
+xjQZvXsGtFOsgZ6xYHJ7JqmUc9AMb6VINSSYowd/jQHFEUwc0KtodrkDn+5qlsKF7TR0HoZ7yTEV
+HCEz9ZUW/Wv48JrYEiO2SuoP0FO6iy8twKd+bIcw9pggRDyZgg3UsKDM+dc8aQlxB7/6EO7Oc1qk
+OVtjHGjJoecS1+jeupxyGn5I4LxHtr4sXmLirBhGcTOdDjQMFvKs1RxR9wCh0JBdQH+sGzK5E35Z
+GLtNoaj5hwn0p+HMk/lPykmrraMHSb8gtBoAfeACPZ8RJG7bPK2Q9AKQiarWnOCKT9VdeuUKoGwa
+Zh2lSiKTwVE=
+--00000000000037df3b05b46fbad0--
