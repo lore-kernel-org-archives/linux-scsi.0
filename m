@@ -2,47 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E73C6369E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 09:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2856BC63798
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 09:47:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E2A5246E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 09:47:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5FCB246E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 09:47:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="h2S4oN14"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CTTL/vPr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726637AbgKSJrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 04:47:19 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41644 "EHLO
+        id S1726375AbgKSJrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 04:47:22 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:26021 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726375AbgKSJrT (ORCPT
+        by vger.kernel.org with ESMTP id S1726358AbgKSJrW (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Nov 2020 04:47:19 -0500
+        Thu, 19 Nov 2020 04:47:22 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605779237;
+        s=mimecast20190719; t=1605779241;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=wbIzix5WGhVnNEtdaMNSqHmVa7xGqppVr2Rm76QTRVQ=;
-        b=h2S4oN14hAsK6w7p/zGdorxh/AeuxwEtlbIUjrumYC/lfdejMIGe5kFdzZ5WwjTDYkjtC/
-        Bqt8KO2UGsU5X9nSY15zzctmbjOu/VvqgKzsWSndQmYHLBgsN1B9EvngXde3aUnlVqJOMQ
-        NCcriqPTCSYCpqhjCvgqywqx4sjYex0=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1KTiUwVy+emA6v5nYKdFgzkrxs5yXDxztLIktrszjVo=;
+        b=CTTL/vPr3xGRU3XaYqR3JteYEJii4zY/mSwrbo5w0sK4sYjhDWtzY0M/7cdhSq44b6IO9d
+        zr7iaG4a7sZ79c20AlsS0fuDITMAdqIHbLtTDyPNtNebTLsjGiixk0l+a+irXG0V+10U2m
+        wma4K7P3Hi/gpOD4XvlPEtX/HMRJ+Ls=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-219-0hGQCBIFM9yoEyEjlDuYvw-1; Thu, 19 Nov 2020 04:47:15 -0500
-X-MC-Unique: 0hGQCBIFM9yoEyEjlDuYvw-1
+ us-mta-80-_Pmy9buMM2yKj2z8RYp6wg-1; Thu, 19 Nov 2020 04:47:19 -0500
+X-MC-Unique: _Pmy9buMM2yKj2z8RYp6wg-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 137C7185A0E5;
-        Thu, 19 Nov 2020 09:47:14 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9FA4980EDAC;
+        Thu, 19 Nov 2020 09:47:17 +0000 (UTC)
 Received: from localhost (ovpn-13-167.pek2.redhat.com [10.72.13.167])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E44295C1A1;
-        Thu, 19 Nov 2020 09:47:09 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C130F5C1A1;
+        Thu, 19 Nov 2020 09:47:16 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -51,10 +52,13 @@ Cc:     Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH V5 00/13] blk-mq/scsi: tracking device queue depth via sbitmap
-Date:   Thu, 19 Nov 2020 17:46:52 +0800
-Message-Id: <20201119094705.280390-1-ming.lei@redhat.com>
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH V5 01/13] sbitmap: remove sbitmap_clear_bit_unlock
+Date:   Thu, 19 Nov 2020 17:46:53 +0800
+Message-Id: <20201119094705.280390-2-ming.lei@redhat.com>
+In-Reply-To: <20201119094705.280390-1-ming.lei@redhat.com>
+References: <20201119094705.280390-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
@@ -62,96 +66,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-
-scsi uses one global atomic variable to track queue depth for each
-LUN/request queue. This way can't scale well when there is lots of CPU
-cores and the disk is very fast. Broadcom guys has complained that their
-high end HBA can't reach top performance because .device_busy is
-operated in IO path.
-
-Replace the atomic variable sdev->device_busy with sbitmap for
-tracking scsi device queue depth.
-
-Test on scsi_debug shows this way improve IOPS > 20%. Meantime
-the IOPS difference is just ~1% compared with bypassing .device_busy
-on scsi_debug via patches[1]
-
-The 1st 6 patches moves percpu allocation hint into sbitmap, since
-the improvement by doing percpu allocation hint on sbitmap is observable.
-Meantime export helpers for SCSI.
-
-Patch 7 and 8 prepares for the conversion by returning budget token
-from .get_budget callback, meantime passes the budget token to driver
-via 'struct blk_mq_queue_data' in .queue_rq().
-
-The last four patches changes SCSI for switching to track device queue
-depth via sbitmap.
-
-The patchset have been tested by Broadcom, and obvious performance boost
-can be observed on megaraid_sas.
-
-V5:
-	- add comment on sbitmap_weight()
-	- add patch 'megaraid_sas: v2 replace sdev_busy with local counter'
-	  for fixing build failure
-
-V4:
-	- limit max sdev->queue_depth as max(1024, shost->can_queue)
-	- simplify code for moving per-cpu allocation hint into sbitmap
-
-V3:
-	- rebase on both for-5.10/block and 5.10/scsi-queue.
-
-V2:
-	- fix one build failure
-
-
-Kashyap Desai (1):
-  megaraid_sas: v2 replace sdev_busy with local counter
-
-Ming Lei (12):
-  sbitmap: remove sbitmap_clear_bit_unlock
-  sbitmap: maintain allocation round_robin in sbitmap
-  sbitmap: add helpers for updating allocation hint
-  sbitmap: move allocation hint into sbitmap
-  sbitmap: export sbitmap_weight
-  sbitmap: add helper of sbitmap_calculate_shift
-  blk-mq: add callbacks for storing & retrieving budget token
-  blk-mq: return budget token from .get_budget callback
-  scsi: put hot fields of scsi_host_template into one cacheline
-  scsi: add scsi_device_busy() to read sdev->device_busy
-  scsi: make sure sdev->queue_depth is <= max(shost->can_queue, 1024)
-  scsi: replace sdev->device_busy with sbitmap
-
- block/blk-mq-sched.c                        |  17 +-
- block/blk-mq.c                              |  38 ++--
- block/blk-mq.h                              |  25 ++-
- block/kyber-iosched.c                       |   3 +-
- drivers/message/fusion/mptsas.c             |   2 +-
- drivers/scsi/megaraid/megaraid_sas.h        |   2 +
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  47 ++++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c        |   2 +-
- drivers/scsi/scsi.c                         |  13 ++
- drivers/scsi/scsi_lib.c                     |  69 ++++---
- drivers/scsi/scsi_priv.h                    |   3 +
- drivers/scsi/scsi_scan.c                    |  23 ++-
- drivers/scsi/scsi_sysfs.c                   |   4 +-
- drivers/scsi/sg.c                           |   2 +-
- include/linux/blk-mq.h                      |  13 +-
- include/linux/sbitmap.h                     |  85 +++++---
- include/scsi/scsi_cmnd.h                    |   2 +
- include/scsi/scsi_device.h                  |   8 +-
- include/scsi/scsi_host.h                    |  72 ++++---
- lib/sbitmap.c                               | 210 +++++++++++---------
- 20 files changed, 427 insertions(+), 213 deletions(-)
+No one uses this helper any more, so kill it.
 
 Cc: Omar Sandoval <osandov@fb.com>
 Cc: Kashyap Desai <kashyap.desai@broadcom.com>
 Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
 Cc: Ewan D. Milne <emilne@redhat.com>
 Cc: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Tested-by: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ include/linux/sbitmap.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
+diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
+index e40d019c3d9d..51edc05489cb 100644
+--- a/include/linux/sbitmap.h
++++ b/include/linux/sbitmap.h
+@@ -320,12 +320,6 @@ static inline void sbitmap_deferred_clear_bit(struct sbitmap *sb, unsigned int b
+ 	set_bit(SB_NR_TO_BIT(sb, bitnr), addr);
+ }
+ 
+-static inline void sbitmap_clear_bit_unlock(struct sbitmap *sb,
+-					    unsigned int bitnr)
+-{
+-	clear_bit_unlock(SB_NR_TO_BIT(sb, bitnr), __sbitmap_word(sb, bitnr));
+-}
+-
+ static inline int sbitmap_test_bit(struct sbitmap *sb, unsigned int bitnr)
+ {
+ 	return test_bit(SB_NR_TO_BIT(sb, bitnr), __sbitmap_word(sb, bitnr));
 -- 
 2.25.4
 
