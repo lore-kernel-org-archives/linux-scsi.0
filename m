@@ -8,98 +8,98 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C7ECC388F9
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1BF5C56201
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F25A32078E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A9182078E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:33:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ynglw+Q3"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qj/0BxPQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727126AbgKSUd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 15:33:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35424 "EHLO
+        id S1727476AbgKSUdl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 15:33:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726580AbgKSUd2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:33:28 -0500
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DE11C0613CF
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:28 -0800 (PST)
-Received: by mail-pg1-x544.google.com with SMTP id q28so5298829pgk.1
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:28 -0800 (PST)
+        with ESMTP id S1727211AbgKSUdk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:33:40 -0500
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6790C0613CF
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:40 -0800 (PST)
+Received: by mail-pl1-x643.google.com with SMTP id s2so3592595plr.9
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:33:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:mime-version;
-        bh=aav8m9yOYr+g8i/mFQFPbzrWJt18e34GGsRGtQIzU5w=;
-        b=Ynglw+Q3xITa9nzGPyT0JJVVe9j9bQjOcfXpVz9V4mLuie7ZqHI39ScjabLf7eqHcB
-         B6HcGtJ89TvQkdA+PIjq7flcp8xbBnWstZVL4ejR23jmR1Y0veM9CyTppd3onw1T5v5S
-         c+idZOwfgSuMXc094FhOvmSeWCQWkcA0tzavI=
+        bh=yXpwZ4AbOlXxD2NPqhNQpnbgbvMtJ3NxyHBgGd5qrh0=;
+        b=Qj/0BxPQL7pzuDDbXFIqf53VZPHCHd9p8XRgYrbaEyw+Gd12xOmYuK3Vdy0iAsw489
+         NpqzCjxR8BNJMqHxHJT8N7+e6XN+qCxBuJ3t3ULdvkFy51J+Ab72+0VoHnCJ8Fi0jJIm
+         CC5nlJrkaqW33FzMB02EecoXVfIAEFT2WaXPY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=aav8m9yOYr+g8i/mFQFPbzrWJt18e34GGsRGtQIzU5w=;
-        b=O4IMv5EjgJwrZ7upFX3ZUYfZvTFdjdwqPAjgiv+xDGgYIBGUYdj266P5DXeCdONzyY
-         QXq6DYvdJ/5b74/2wwRtMC3W57s5S+hxiYBL5JliHBWET+uuES/Yv9zqBaXU3khFuAhk
-         VB7fV1+BAnv7+axcblZTpjHc3Tgc5OxJVlU4jmRDWUykfar36panHACKhqLwyiTHQx/U
-         mLFVlAxY6lCPgkLcsjCRviCiraQ69LdxuGPygDCwIStDz+CQtrbKoJeBE/feP1fdt8hB
-         Z6BhRz8YviSQrTF8X7fn9UdH5qSy6wX6galqN9/F0y9/TZtoCHZrjnlYfoC5glqbsP4F
-         zpWw==
-X-Gm-Message-State: AOAM530mb8PtBw7sod85Odv1IUaIp7rpIt1QbXJsEHjTIrcTAQdtjFAQ
-        6UDO6oX95kbyyorCMOPRMLcenFidyR3nQRMeC/6PLXIO3sGHiDCgYbdlZsS+clOwDH0j8aQjIAB
-        xRqZVTitdAjDHnX15XTE+7ILGYOrLaY5cCZnc3i01LXVSWN3LFbKNKVD+ym3fqhmX0a4sOIiKUO
-        iTOTU=
-X-Google-Smtp-Source: ABdhPJx+LVk5ZrHzwlYOVrNLdHpWJSj+UImjzL32078ogypuzaQ8oBq1Gpt4sjWkGs9QPtsPd2oFVg==
-X-Received: by 2002:a17:90b:4b07:: with SMTP id lx7mr6196315pjb.230.1605818006216;
-        Thu, 19 Nov 2020 12:33:26 -0800 (PST)
+        bh=yXpwZ4AbOlXxD2NPqhNQpnbgbvMtJ3NxyHBgGd5qrh0=;
+        b=S8tzpVFiu7htRWiwaZslnYoMGlWDqUKVmURh5iVkILBkOAEvJayb50ZnqxadmLaK4V
+         0khCpwTC9YWeBzH5b4xumHpA8iYWRw/aRO1iTlmVBZBaM+00mifC1EKcg38Z305o3k9v
+         ZpkYYOI/Gs919bUG4fVs5UrnAMuv273/kiF6FiOtaEa1kLDIENvYztcGUy3TWrfUbelO
+         ++YE5ekLG13hIPsdIq2zUdVnkMw/zQlUBw23iWhZAwn8KYJ1rTS5v4WcH6dkFS+r3grK
+         +XDE9icmAitz7a8CNsc9X2QR06Ys9oCvyAnzJnEabryENnKuYLS5QTr6IJQcG+yltZ3g
+         6muw==
+X-Gm-Message-State: AOAM533xuq1MF0MENChcAJVD6ItxAv4tN6DFnaliPLNYPDxMLE4X2QWe
+        T4faIHrf646TZBuHV4VykVxwkLy15qvTgp4up9sHMUaNc1ulX+N4o7/zVJ6DYgB5OBFkTBQHYW8
+        Gz/PDrtUDH5RoHd25/reveHpekkhJ4rXHQ/P902iVpnYaHLXIlG49BBfEVpi76aIHaWQ5WU8/kk
+        Oc7d8=
+X-Google-Smtp-Source: ABdhPJw9BQU3k07HxfT2xM8g0Uihs0y5zLt7zot8R4cK/8bw4QTUuvCZSG+OEOyDTjY+uxf97aputA==
+X-Received: by 2002:a17:902:7081:b029:d9:d623:68f8 with SMTP id z1-20020a1709027081b02900d9d62368f8mr5850385plk.54.1605818018990;
+        Thu, 19 Nov 2020 12:33:38 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id c127sm728415pfc.115.2020.11.19.12.33.23
+        by smtp.gmail.com with ESMTPSA id x8sm779965pfi.24.2020.11.19.12.33.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Nov 2020 12:33:25 -0800 (PST)
+        Thu, 19 Nov 2020 12:33:38 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         kernel test robot <lkp@intel.com>
-Subject: [PATCH] lpfc: fix missing prototype for lpfc_nvmet_prep_abort_wqe
-Date:   Thu, 19 Nov 2020 12:33:16 -0800
-Message-Id: <20201119203316.121725-1-james.smart@broadcom.com>
+Subject: [PATCH] lpfc: Fix missing prototype warning for lpfc_fdmi_vendor_attr_mi
+Date:   Thu, 19 Nov 2020 12:33:28 -0800
+Message-Id: <20201119203328.121772-1-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000df03b805b47ba3d3"
+        boundary="0000000000009f731205b47ba4d1"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000df03b805b47ba3d3
+--0000000000009f731205b47ba4d1
 Content-Transfer-Encoding: 8bit
 
-lpfc_nvmet_prep_abort_wqe needs to be declared static
+Function needs to be declared as static.
 
-Fixes: db7531d2b377 ("scsi: lpfc: Convert abort handling to SLI-3 and SLI-4 handlers")
+Fixes: 8aaa7bcf07a2 ("scsi: lpfc: Add FDMI Vendor MIB support")
 Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
+ drivers/scsi/lpfc/lpfc_ct.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index c8b9434ae5cf..a71df8788fff 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -3336,7 +3336,7 @@ lpfc_nvmet_unsol_issue_abort(struct lpfc_hba *phba,
-  *
-  * This function is called with hbalock held.
-  **/
--void
-+static void
- lpfc_nvmet_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt)
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index ef4b8620c0e8..dd0b432f7ac5 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -3295,7 +3295,7 @@ lpfc_fdmi_smart_attr_security(struct lpfc_vport *vport,
+ 	return size;
+ }
+ 
+-int
++static int
+ lpfc_fdmi_vendor_attr_mi(struct lpfc_vport *vport,
+ 			  struct lpfc_fdmi_attr_def *ad)
  {
- 	union lpfc_wqe128 *wqe = &pwqeq->wqe;
 -- 
 2.26.2
 
 
---000000000000df03b805b47ba3d3
+--0000000000009f731205b47ba4d1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -169,14 +169,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgv958CN0mufQ31NpC
-To8v0EL9BzPpDZXW9eXKQN+4Ui8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE5MjAzMzI2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgX9+Og+uoPbkh8lY2
+Ff0/DOlwGo1NO3i2Tt2Xdo7v1QIwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE5MjAzMzM5WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAIk6CiTZhkCMNwlhDhTzbRk76fc9d/vPRB4j
-vfg3RAHyXkHXAKehmM91eAJqpTk2e/SFEBfq/q04DZDE3PyaFytOyuVfdILnDeZiMojE0lyx4HbC
-AZTzklVF8Luh33VnZS3jXROwMaz2Ypl1G65TI6lDJ2/1Ay7INpg1UmErLDpaF99anLZGpJfgouZz
-g8wqcvSBYs4h+6RX6XB1Y5PjvpflSbXHxuig2UjgrasYiToosh15Lf8l+keqph3PV7JkY2T8P04m
-TxXJMj1cmHzBQU8NZjH1GxCbtEIoYyJGq78e1CjsW0d+duDgwvpEY/4uNqx0fjl1RQzK5jwyvCM+
-5tA=
---000000000000df03b805b47ba3d3--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBADs8c35k9vXluz2PTdPAAZlhbsLWHKxsyrze
+iYZT/ziXtRmw44+COtzSzr5epSbuHCjJ0yUUt0HC4XgCYcGl3M5MLWDOBtaqTqeCu4e7CF3RIP6R
+U7tls8FFxhZJ5GsmUTZa9qXjxmFThTfkLvSrScm8LKSdmZHcJp75yEn5K7ceA14w58STaYvhIBD7
+gvsESaEaeFQcGCZjdtGEyThtrF4jMVNysynfuk12VMxJuS3QeDlWolTaVsqH48D+J7KJxlKHmRy6
+CZTXECVi0Gup6GB10TEkeTsRxFBgT/E/HxmVWIldgc1yXUUSzsIBVaoI2w73xSRC/nV91L8kJ4dL
+RyE=
+--0000000000009f731205b47ba4d1--
