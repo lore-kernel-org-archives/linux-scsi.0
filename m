@@ -8,113 +8,125 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE91C388F9
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:57:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A76C6379D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE3EC2224A
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:57:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E68D12224A
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:59:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Fc2PG83F"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="evZumqC0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726300AbgKSU55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 15:57:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39346 "EHLO
+        id S1726468AbgKSU7D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 15:59:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726281AbgKSU54 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:57:56 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4A74C0613D4
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:57:56 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id v21so5350932pgi.2
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:57:56 -0800 (PST)
+        with ESMTP id S1726227AbgKSU7C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:59:02 -0500
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61191C0613D4
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:59:02 -0800 (PST)
+Received: by mail-pl1-x642.google.com with SMTP id 5so3633335plj.8
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:59:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to;
-        bh=uxXLEeENVfDY7xj46ej37lcbSAnL911bZ6KS7kVJ0pA=;
-        b=Fc2PG83FM5TVcFv5UBI4l0kXKxI73woPVlISuOoHh5Kx+9B3uk0Kidw0nj71Ho4q/G
-         gBcyJPQ6iWMoauV7NCp/CcFJ7svw4V9pinaacHFfrG0kTnE6Y75zEHFGtmMws9PLpqU3
-         RxStuA2W/oFhoubGtWAyGZpJG/ttX0HyS/ZeM=
+        bh=TINn+DVq6pDa/Mt36xl1C3VMmRIkAqXnSEExxdAt6Yc=;
+        b=evZumqC0Ki0KYJgNXXWhJa6Q89W26D+NuN2ghromw/y8OZ1vKws3Pd9PzemqYvOSPn
+         0RKevlc6U/YJjngIkbcizpMOisOi29clalBq9rQ4AQKDLrmhFkDsBBxAsPOxrp9NDDOx
+         IWTI45Kk8ywZf1Wcwp0EB8koke4JaVazgmvX8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to;
-        bh=uxXLEeENVfDY7xj46ej37lcbSAnL911bZ6KS7kVJ0pA=;
-        b=YiY18G13dWo7H8UgJo6Bycb25ATAU6krF2zEbdgETLlrs9esE0NJ2TYYkV+useVaMz
-         OQB2m+qnW3V/IVPP7n0j9+bhIiQuKn+8fY7KHu4TxjRUrJab9Q4oI07qy54+YKABxLVs
-         0l0JKtOhDi+Vshxqpr2ERYygdozK5kbONN1Q6m0sXmHW+WDfR1kP+r2nv7dOlH4j7qfF
-         U9qAysWa9uTO9Fm3fszjHvcnbfP7RXeZQm5Q1+7KmUtBYP72wQHWxWwj1jKQ+OTxlErP
-         vwDCwySVnmA2KVE6gRbDm8ApGvLEHDbmZUBQGmr2X+TkEtq9kFtOawH3v4OBEjxJt5Jt
-         TKEg==
-X-Gm-Message-State: AOAM53160BfnxFgXKQTAQmy6g7X89pNA+HwbuDhiGqDhREuLeH1+O5hU
-        qcDpUw2kFoy0WVvRUUCHOGBxug==
-X-Google-Smtp-Source: ABdhPJy5emCThuh7b20r1EJe/RPSOlVX8gi//Bikfv22uE0Qq/Zl68XbOGXfCKTXn//vddxeZeK+6w==
-X-Received: by 2002:a63:b05:: with SMTP id 5mr14044421pgl.267.1605819475934;
-        Thu, 19 Nov 2020 12:57:55 -0800 (PST)
+        bh=TINn+DVq6pDa/Mt36xl1C3VMmRIkAqXnSEExxdAt6Yc=;
+        b=Cvf/zlanaPXF+Cbi+F1GDPihfwp3wFOCsbS3ulhgm7f0KqYgLsP3VhGa52tsxRgEuB
+         8MnxOlvnbgtWhxK/qTRHpHhpA9Efy0GkQR/GEMaCy4O4hy/bV4AVzYQQukEd8VKk6JXb
+         xW75WBgHNeWyGcyM4UWN9s4p1DfLSZyJzYYleIK4Z54LLwjexDkYaIJ0dL/iSO4u35AQ
+         pVNKX6CWSqSOWscn19cvopM+IyDMZKVkqSYPuyhdmbcfsh7qepDrrG9qLBxaMmH2Atr4
+         DTPsw6gCGoHfWuz4pnmzBjDPIylPCVln2nFh/IsHJjc3iZjEqEmnttBFGiQyWY2zxhC0
+         dAVg==
+X-Gm-Message-State: AOAM5310jodnWZcmvfV2q3+UxX8pkoTQttKzQNTpzMhYJKGWJsfy0pjV
+        FW0Ad48htsYsnWIlrqsBUqKOGA==
+X-Google-Smtp-Source: ABdhPJxao05zES8xfImX2F34p5YnS+zpexRkOOpLqRMJKkhDCTpnFl8MFO5nBOzgTIujfKdgrvh8vg==
+X-Received: by 2002:a17:902:b58a:b029:d7:d45c:481c with SMTP id a10-20020a170902b58ab02900d7d45c481cmr10988315pls.55.1605819541664;
+        Thu, 19 Nov 2020 12:59:01 -0800 (PST)
 Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q12sm625798pjl.41.2020.11.19.12.57.54
+        by smtp.gmail.com with ESMTPSA id g15sm745974pfk.184.2020.11.19.12.59.00
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Nov 2020 12:57:55 -0800 (PST)
-Subject: Re: [PATCH][next] scsi: lpfc: remove dead code on second !ndlp check
+        Thu, 19 Nov 2020 12:59:00 -0800 (PST)
+Subject: Re: [PATCH][next] scsi: lpfc: Fix memory leak on lcb_context
 To:     Colin King <colin.king@canonical.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20201118133744.461385-1-colin.king@canonical.com>
+References: <20201118141314.462471-1-colin.king@canonical.com>
 From:   James Smart <james.smart@broadcom.com>
-Message-ID: <1f69784f-989d-a4b2-8d6f-c336916c5731@broadcom.com>
-Date:   Thu, 19 Nov 2020 12:57:52 -0800
+Message-ID: <fba5bb41-c193-d4a9-d85b-a13417150452@broadcom.com>
+Date:   Thu, 19 Nov 2020 12:58:59 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.3
 MIME-Version: 1.0
-In-Reply-To: <20201118133744.461385-1-colin.king@canonical.com>
+In-Reply-To: <20201118141314.462471-1-colin.king@canonical.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000076f50605b47bfbc8"
+        boundary="0000000000006267ec05b47bffe3"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000076f50605b47bfbc8
+--0000000000006267ec05b47bffe3
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
 
 
 
-On 11/18/2020 5:37 AM, Colin King wrote:
+On 11/18/2020 6:13 AM, Colin King wrote:
 > From: Colin Ian King <colin.king@canonical.com>
 >
-> Currently there is a null check on the pointer ndlp that exits via
-> error path issue_ct_rsp_exit followed by another null check on the
-> same pointer that is almost identical to the previous null check
-> stanza and yet can never can be reached because the previous check
-> exited via issue_ct_rsp_exit. This is deadcode and can be removed.
+> Currently there is an error return path that neglects to free the
+> allocation for lcb_context.  Fix this by adding a new error free
+> exit path that kfree's lcb_context before returning.  Use this new
+> kfree exit path in another exit error path that also kfree's the same
+> object, allowing a line of code to be removed.
 >
-> Addresses-Coverity: ("Logically dead code")
+> Addresses-Coverity: ("Resource leak")
+> Fixes: 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference taking")
 > Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
->   drivers/scsi/lpfc/lpfc_bsg.c | 6 ------
->   1 file changed, 6 deletions(-)
+>   drivers/scsi/lpfc/lpfc_els.c | 8 +++++---
+>   1 file changed, 5 insertions(+), 3 deletions(-)
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-> index 35f4998504c1..41e3657c2d8d 100644
-> --- a/drivers/scsi/lpfc/lpfc_bsg.c
-> +++ b/drivers/scsi/lpfc/lpfc_bsg.c
-> @@ -1526,12 +1526,6 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba, struct bsg_job *job, uint32_t tag,
->   			goto issue_ct_rsp_exit;
->   		}
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 03f47d1b21fe..0d3271b4c130 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -6515,18 +6515,20 @@ lpfc_els_rcv_lcb(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+>   	lcb_context->ndlp = lpfc_nlp_get(ndlp);
+>   	if (!lcb_context->ndlp) {
+>   		rjt_err = LSRJT_UNABLE_TPC;
+> -		goto rjt;
+> +		goto rjt_free;
+>   	}
 >   
-> -		/* Check if the ndlp is active */
-> -		if (!ndlp) {
-> -			rc = IOCB_ERROR;
-> -			goto issue_ct_rsp_exit;
-> -		}
-> -
->   		/* get a refernece count so the ndlp doesn't go away while
->   		 * we respond
->   		 */
+>   	if (lpfc_sli4_set_beacon(vport, lcb_context, state)) {
+>   		lpfc_printf_vlog(ndlp->vport, KERN_ERR, LOG_TRACE_EVENT,
+>   				 "0193 failed to send mail box");
+> -		kfree(lcb_context);
+>   		lpfc_nlp_put(ndlp);
+>   		rjt_err = LSRJT_UNABLE_TPC;
+> -		goto rjt;
+> +		goto rjt_free;
+>   	}
+>   	return 0;
+> +
+> +rjt_free:
+> +	kfree(lcb_context);
+>   rjt:
+>   	memset(&stat, 0, sizeof(stat));
+>   	stat.un.b.lsRjtRsnCode = rjt_err;
 Looks good.
 
 Reviewed-by: James Smart <james.smart@broadcom.com>
@@ -122,7 +134,7 @@ Reviewed-by: James Smart <james.smart@broadcom.com>
 -- james
 
 
---00000000000076f50605b47bfbc8
+--0000000000006267ec05b47bffe3
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -192,14 +204,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgbRcw3x5rqtM23cuv
-3+PTGPFVao6kSmyK9uoQ5HYW6IowGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE5MjA1NzU2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgGAY76/OF8H11QjVU
+3q8e+Mb5wVvFnz0oOaVGAHM1df0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE5MjA1OTAyWjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBACe3s9idZCiqt1oyelJLEyJj2JzRfREtdJsZ
-LaeXXJDLwEYNbY4DrOrsavOScSx/gLJx/lEvbm5kY6uDH/JL8FHtGiRdroxEVUOfmRur8WC6i+hx
-Wynl7vcPq04iCQ/hX6Uo8bYLTtmP3WRgR9pwXH/sk2LJylJJyWY8mqTTB2gMWv43W4FnxqcD7e4W
-2Y2g85b4A18djiq76pVxEWSoI3E1d1TNfT54RttNFqKKi+EEnlJ3fYvAcVWKDJ41vz58ZlhKVmb7
-6udN8FTJ4Nmz2xemhFfVURRJMZHZWaNrZjG0nwOnl75BXl/2r7f/FiRWKmD2v/bFwTzO8XaXCR+n
-1DU=
---00000000000076f50605b47bfbc8--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBABxGryAMqfmu+aVEMQ81KxwYUEKE+++71cYd
+bxp7srmXo7K/1GzG0MCZAxse5V0sYDdvN8EDDstZayw3JemY7NFMOi4liuMFp4dluTJQWnK+u8DK
+z7nBTMs2D6tK6hTULKSmXTzMo7vK5t7HVjKZ/87AkvgyvxKm5CrFBKf1rSqSStgY92iVpqZPKgya
+0gTaqM6Ku3MLMD6nYvDdps4YpDgMBBCRxyEkJ4khsyhmhWeJ4D24c4Un58IEClaGlY2Uj2BrEMet
+47gsElW1/KNCdAYQM1MTWCt84z90z1e32htCSHlga7XLJ3EJ7jUeyTTZFKp9gxV8cbBkPQ4R6kAN
+6tA=
+--0000000000006267ec05b47bffe3--
