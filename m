@@ -2,115 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0BD3C388F9
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 07:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A7EDC388F9
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 09:32:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EF8F246D4
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 07:14:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Zv4D+rzl"
+	by mail.kernel.org (Postfix) with ESMTP id 505C32468D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 09:32:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726433AbgKSHOc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 02:14:32 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:41494 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726123AbgKSHOb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Nov 2020 02:14:31 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1605770071; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=XXv1sghWHsOtozF9TjpzQ8BZgyE+fxP4S3fS/+0JJH0=;
- b=Zv4D+rzlwvAbwP4VMMXZVYOjVk3ALudsWb5815CXEa8fmxuFB/TM2PFoAQqGKM4XnbkrDUJT
- /8N/jT7WaiBN9hpyvgG5Je8A3Kk5uNxfwCBo4/JvXVswEwM27pBK/zmnHhbhtftkoAJEPZ+N
- 3EFADvwEYqn+GJ0bJdjX1lWyObM=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-east-1.postgun.com with SMTP id
- 5fb61b51fa67d9becfd6996c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 19 Nov 2020 07:14:25
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 39411C4346D; Thu, 19 Nov 2020 07:14:24 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 25A96C4346B;
-        Thu, 19 Nov 2020 07:14:20 +0000 (UTC)
+        id S1726898AbgKSJcQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 04:32:16 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2130 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726599AbgKSJcP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 04:32:15 -0500
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CcDtj28bWz67FXS;
+        Thu, 19 Nov 2020 17:30:37 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Thu, 19 Nov 2020 10:32:13 +0100
+Received: from [10.200.65.70] (10.200.65.70) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1913.5; Thu, 19 Nov
+ 2020 09:32:11 +0000
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+To:     Thomas Gleixner <tglx@linutronix.de>, <gregkh@linuxfoundation.org>,
+        <rafael@kernel.org>, <martin.petersen@oracle.com>,
+        <jejb@linux.ibm.com>
+CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <maz@kernel.org>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
+ <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
+ <874klmqu2r.fsf@nanos.tec.linutronix.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+Date:   Thu, 19 Nov 2020 09:31:56 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <874klmqu2r.fsf@nanos.tec.linutronix.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 19 Nov 2020 15:14:19 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
-        jiajie.hao@mediatek.com, alice.chao@mediatek.com
-Subject: Re: [PATCH v1] scsi: ufs: Fix race between shutdown and runtime
- resume flow
-In-Reply-To: <20201119062916.12931-1-stanley.chu@mediatek.com>
-References: <20201119062916.12931-1-stanley.chu@mediatek.com>
-Message-ID: <26585f80038d25fc6ee9dddf07e66b93@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-Originating-IP: [10.200.65.70]
+X-ClientProxiedBy: lhreml707-chm.china.huawei.com (10.201.108.56) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-11-19 14:29, Stanley Chu wrote:
-> If UFS host device is in runtime-suspended state while
-> UFS shutdown callback is invoked, UFS device shall be
-> resumed for register accesses. Currently only UFS local
-> runtime resume function will be invoked to wake up the host.
-> This is not enough because if someone triggers runtime
-> resume from block layer, then race may happen between
-> shutdown and runtime resume flow, and finally lead to
-> unlocked register access.
-> 
-> To fix this kind of issues, in ufshcd_shutdown(), use
-> pm_runtime_get_sync() instead of resuming UFS device by
-> ufshcd_runtime_resume() "internally" to let runtime PM
-> framework manage the whole resume flow.
-> 
-> Fixes: 57d104c153d3 ("ufs: add UFS power management support")
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Hi Thomas,
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+>>> +int irq_update_affinity_desc(unsigned int irq,
+>>> +			     struct irq_affinity_desc *affinity)
+>> Just a note on the return value, in the only current callsite -
+>> platform_get_irqs_affinity() - we don't check the return value and
+>> propagate the error. This is because we don't want to fail the interrupt
+>> init just because of problems updating the affinity mask. So I could
+>> print a message to inform the user of error (at the callsite).
+> Well, not sure about that. During init on a platform which does not have
+> the issues with reservation mode there failure cases are:
+> 
+>   1) Interrupt does not exist. Definitely a full fail
+> 
+>   2) Interrupt is already started up. Not a good idea on init() and
+>      a clear fail.
+> 
+>   3) Interrupt has already been switched to managed. Double init is not
+>      really a good sign either.
 
-> ---
->  drivers/scsi/ufs/ufshcd.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
+I just tested that and case 3) would be a problem. I don't see us 
+clearing the managed flag when free'ing the interrupt. So with 
+CONFIG_DEBUG_TEST_DRIVER_REMOVE=y, we attempt this affinity update 
+twice, and error from the irqd_affinity_is_managed() check.
+
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 80cbce414678..bb16cc04f106 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8941,11 +8941,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->  	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
->  		goto out;
+>>> +	/* Requires the interrupt to be shut down */
+>>> +	if (irqd_is_started(&desc->irq_data))
+>> We're missing the unlock here, right?
+> Duh yes.
 > 
-> -	if (pm_runtime_suspended(hba->dev)) {
-> -		ret = ufshcd_runtime_resume(hba);
-> -		if (ret)
-> -			goto out;
-> -	}
-> +	pm_runtime_get_sync(hba->dev);
+>>> +		return -EBUSY;
+>>> +
+>>> +	/* Interrupts which are already managed cannot be modified */
+>>> +	if (irqd_is_managed(&desc->irq_data))
+>> And here, and I figure that this should be irqd_affinity_is_managed()
+> More duh:)
 > 
->  	ret = ufshcd_suspend(hba, UFS_SHUTDOWN_PM);
->  out:
+> I assume you send a fixed variant of this.
+
+Can do.
+
+Thanks,
+John
