@@ -7,177 +7,153 @@ X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F9EC6369E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 15:49:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07582C6379F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 16:12:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC62520643
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 15:49:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B45A422259
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 16:12:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cujHLwiP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ucz61CzU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728860AbgKSPtx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 10:49:53 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:45020 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728819AbgKSPtx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 10:49:53 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AJFOUt7042684;
-        Thu, 19 Nov 2020 15:49:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
+        id S1727884AbgKSQMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 11:12:06 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:54506 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727850AbgKSQMG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 11:12:06 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AJG4LOB128799;
+        Thu, 19 Nov 2020 16:11:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
+ message-id : date : from : to : cc : subject : references : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=DW/CAaNbdJtbzR7qpanjCbN9/cagyJutkwMM+TqrZWo=;
- b=cujHLwiP/NU45L8NOqYcaRC4TAT1X6Y8wuEIPK5bKDowvUuiDTFW4VDMUaLFCeJxEkcf
- rSJigk13cts+R9ikPZZW2iWiXzUxF+jL/0v9DaVg7CH5gcGpjqwjhs36fR8xuGWTEB0n
- RVQqOu0zU1bOhUTTQdxNzUEI9w/nP4goe3Bh+HYNmhgINj9yzd8KEtCpdY8ZP/jPjWkJ
- zG7/K+O+kc51Xhf1gNz7rSj0kt5OcRDkbCD/JnLacHXmMtXGZ6qWHrzkFz/ne5BDeZE8
- 0Oo8L30/n3+jeVm+CqYl6lt39miwKfZGC1FfJMQ9rhY1AZxgxkBQUqBeRtNyXBBdg3wA wg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34t76m63wt-1
+ bh=92SZnX3AmTlsNeLjdzDjgxioxeshvMDSZzrbzEVNdHw=;
+ b=ucz61CzUjt3SQggm8KhfBtBK90thUX5sCvbKDfLnG+TvCfqFfuLmnMafg+YDW2qAfg0i
+ xLKnLvG1pGgDRDHAGrT3NxSgoP0GFjJ1ZfmWTXu26l1H1iilV8sYImSWdVxmjgbuhBWU
+ QgE97hgKD+368JpOfkfJdl1Bc/fTI3qmO47MW0xzdAdJN+nfzM6takSkLgngeKEHxdjU
+ 3W9fpuffPoaObWfmYY8zWx570AZC67fX1S8p1Mx0BFLlIukNL94YwoeuK67xhPX/+DnB
+ /D+KloSU1FfSWCZotg2IlM+4zXoJKQ1ICTSlxtQyeex6LZ1MxKj+4Z20SIzN99ZH3GAz Cw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 34t4rb6bqu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 19 Nov 2020 15:49:32 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AJFkrbF037338;
-        Thu, 19 Nov 2020 15:49:31 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 34ts604nur-1
+        Thu, 19 Nov 2020 16:11:49 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AJG5hbV185393;
+        Thu, 19 Nov 2020 16:11:49 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 34uspwc13c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Nov 2020 15:49:31 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AJFnTgn010818;
-        Thu, 19 Nov 2020 15:49:29 GMT
-Received: from [20.15.0.5] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 19 Nov 2020 07:49:29 -0800
-Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
-To:     Jason Wang <jasowang@redhat.com>,
+        Thu, 19 Nov 2020 16:11:48 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AJGBjtw031464;
+        Thu, 19 Nov 2020 16:11:46 GMT
+Received: from [20.15.0.5] (/73.88.28.6) by default (Oracle Beehive Gateway
+ v4.0) with ESMTP ; Thu, 19 Nov 2020 08:11:41 -0800
+USER-AGENT: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.4.3
+Content-Language: en-US
+MIME-Version: 1.0
+Message-ID: <ceebdc90-3ffc-1563-ff85-12a848bcba18@oracle.com>
+Date:   Thu, 19 Nov 2020 16:11:40 +0000 (UTC)
+From:   Mike Christie <michael.christie@oracle.com>
+To:     "Michael S. Tsirkin" <mst@redhat.com>,
         Stefan Hajnoczi <stefanha@redhat.com>
-Cc:     fam@euphon.net, linux-scsi@vger.kernel.org, mst@redhat.com,
-        qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org,
-        target-devel@vger.kernel.org, pbonzini@redhat.com
+Cc:     qemu-devel@nongnu.org, fam@euphon.net, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, jasowang@redhat.com,
+        pbonzini@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
 References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
  <20201117164043.GS131917@stefanha-x1.localdomain>
- <bba47572-bec9-794f-5a70-d7f016267022@redhat.com>
- <8318de9f-c585-39f8-d931-1ff5e0341d75@oracle.com>
- <e3f8f065-ca17-e4a0-06e5-990bbe8fe947@redhat.com>
- <d6ffcf17-ab12-4830-cc3c-0f0402fb8a0f@oracle.com>
- <e91e9eee-7ff4-3ef6-955a-706276065d9b@redhat.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <0ba1bd55-6772-2d75-4b63-72445830a446@oracle.com>
-Date:   Thu, 19 Nov 2020 09:49:28 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.4.3
-MIME-Version: 1.0
-In-Reply-To: <e91e9eee-7ff4-3ef6-955a-706276065d9b@redhat.com>
+ <b3343762-bb11-b750-46ec-43b5556f2b8e@oracle.com>
+ <20201118113117.GF182763@stefanha-x1.localdomain>
+ <20201119094315-mutt-send-email-mst@kernel.org>
+In-Reply-To: <20201119094315-mutt-send-email-mst@kernel.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9809 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
- suspectscore=0 mlxscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011190117
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 bulkscore=0 suspectscore=0 adultscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011190118
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9809 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- adultscore=0 priorityscore=1501 bulkscore=0 clxscore=1015 mlxlogscore=999
- malwarescore=0 mlxscore=0 spamscore=0 lowpriorityscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011190116
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015
+ malwarescore=0 impostorscore=0 lowpriorityscore=0 priorityscore=1501
+ mlxlogscore=999 adultscore=0 phishscore=0 suspectscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011190118
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/18/20 10:35 PM, Jason Wang wrote:
->> its just extra code. This patch:
->> https://urldefense.com/v3/__https://www.spinics.net/lists/linux-scsi/msg150151.html__;!!GqivPVa7Brio!MJS-iYeBuOljoz2xerETyn4c1N9i0XnOE8oNhz4ebbzCMNeQIP_Iie8zH18L7cY7_hur$ 
->> would work without the ENABLE ioctl I mean.
-> 
-> 
-> That seems to pre-allocate all workers. If we don't care the resources 
-> (127 workers) consumption it could be fine.
-
-It only makes what the user requested via num_queues.
-
-That patch will:
-1. For the default case of num_queues=1 we use the single worker created 
-from the SET_OWNER ioctl.
-2. If num_queues > 1, then it creates a worker thread per num_queue > 1.
-
-
-> 
-> 
->>
->>
->> And if you guys want to do the completely new interface, then none of 
->> this matters I guess :)
->>
->> For disable see below.
->>
+On 11/19/20 8:46 AM, Michael S. Tsirkin wrote:
+> On Wed, Nov 18, 2020 at 11:31:17AM +0000, Stefan Hajnoczi wrote:
+>>> My preference has been:
 >>>
->>>
->>>>
->>>> My issue/convern is that in general these calls seems useful, but we 
->>>> don't really
->>>> need them for scsi because vhost scsi is already stuck creating vqs 
->>>> like how it does
->>>> due to existing users. If we do the ifcvf_vdpa_set_vq_ready type of 
->>>> design where
->>>> we just set some bit, then the new ioctl does not give us a lot. 
->>>> It's just an extra
->>>> check and extra code.
->>>>
->>>> And for the mlx5_vdpa_set_vq_ready type of design, it doesn't seem 
->>>> like it's going
->>>> to happen a lot where the admin is going to want to remove vqs from 
->>>> a running device.
->>>
->>>
->>> In this case, qemu may just disable the queues of vhost-scsi via 
->>> SET_VRING_ENABLE and then we can free resources?
+>>> 1. If we were to ditch cgroups, then add a new interface that would allow
+>>> us to bind threads to a specific CPU, so that it lines up with the guest's
+>>> mq to CPU mapping.
 >>
+>> A 1:1 vCPU/vq->CPU mapping isn't desirable in all cases.
 >>
->> Some SCSI background in case it doesn't work like net:
->> -------
->> When the user sets up mq for vhost-scsi/virtio-scsi, for max perf and 
->> no cares about mem use they would normally set num_queues based on the 
->> number of vCPUs and MSI-x vectors. I think the default in qemu now is 
->> to try and detect that value.
->>
->> When the virtio_scsi driver is loaded into the guest kernel, it takes 
->> the num_queues value and tells the scsi/block mq layer to create 
->> num_queues multiqueue hw queues.
+>> The CPU affinity is a userspace policy decision. The host kernel should
+>> provide a mechanism but not the policy. That way userspace can decide
+>> which workers are shared by multiple vqs and on which physical CPUs they
+>> should run.
 > 
-> 
-> If I read the code correctly, for modern device, guest will set 
-> queue_enable for the queues that it wants to use. So in this ideal case, 
-> qemu can forward them to VRING_ENABLE and reset VRING_ENABLE during 
-> device reset.
-
-I was thinking more you want an event like when a device/LUN is 
-added/removed to a host. Instead of kicking off a device scan, you could 
-call the block helper to remap queues. It would then not be too invasive 
-to running IO. I'll look into reset some more.
-
-
-> 
-> But it would be complicated to support legacy device and qemu.
-> 
-> 
->>
->> ------
->>
->> I was trying to say in the previous email that is if all we do is set 
->> some bits to indicate the queue is disabled, free its resources, stop 
->> polling/queueing in the scsi/target layer, flush etc, it does not seem 
->> useful. I was trying to ask when would a user only want this behavior?
-> 
-> 
-> I think it's device reset, the semantic is that unless the queue is 
-> enabled, we should treat it as disabled.
+> So if we let userspace dictate the threading policy then I think binding
+> vqs to userspace threads and running there makes the most sense,
+> no need to create the threads.
 > 
 
-Ah ok. I I'll look into that some more. A funny thing is that I was 
-trying to test that a while ago, but it wasn't helpful. I'm guessing it 
-didn't work because it didn't implement what you wanted for disable 
-right now :)
+Just to make sure I am on the same page, in one of the first postings of 
+this set at the bottom of the mail:
+
+https://www.spinics.net/lists/linux-scsi/msg148322.html
+
+I asked about a new interface and had done something more like what 
+Stefan posted:
+
+   struct vhost_vq_worker_info {
+       /*
+        * The pid of an existing vhost worker that this vq will be
+        * assigned to. When pid is 0 the virtqueue is assigned to the
+        * default vhost worker. When pid is -1 a new worker thread is
+        * created for this virtqueue. When pid is -2 the virtqueue's
+        * worker thread is unchanged.
+        *
+        * If a vhost worker no longer has any virtqueues assigned to it
+        * then it will terminate.
+        *
+        * The pid of the vhost worker is stored to this field when the
+        * ioctl completes successfully. Use pid -2 to query the current
+        * vhost worker pid.
+        */
+       __kernel_pid_t pid;  /* in/out */
+
+       /* The virtqueue index*/
+       unsigned int vq_idx; /* in */
+   };
+
+This approach is simple and it allowed me to have userspace map queues 
+and threads optimally for our setups.
+
+Note: Stefan, in response to your previous comment, I am just using my 
+1:1 mapping as an example and would make it configurable from userspace.
+
+In the email above are you guys suggesting to execute the SCSI/vhost 
+requests in userspace? We should not do that because:
+
+1. It negates part of what makes vhost fast where we do not have to kick 
+out to userspace then back to the kernel.
+
+2. It's not doable or becomes a crazy mess because vhost-scsi is tied to 
+the scsi/target layer in the kernel. You can't process the scsi command 
+in userspace since the scsi state machine and all its configuration info 
+is in the kernel's scsi/target layer.
+
+For example, I was just the maintainer of the target_core_user module 
+that hooks into LIO/target on the backend (vhost-scsi hooks in on the 
+front end) and passes commands to userspace and there we have a 
+semi-shadow state machine. It gets nasty to try and maintain/sync state 
+between lio/target core in the kernel and in userspace. We also see the 
+perf loss I mentioned in #1.
