@@ -8,104 +8,106 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16ACCC56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2413C56201
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:34:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B174120888
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F1CF221FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 20:34:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="XWlZ3DBu"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="evBXhX4L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727690AbgKSUeF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 15:34:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35520 "EHLO
+        id S1727764AbgKSUeT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 15:34:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727211AbgKSUeF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:34:05 -0500
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33042C0613CF
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:34:05 -0800 (PST)
-Received: by mail-pl1-x642.google.com with SMTP id s2so3593205plr.9
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:34:05 -0800 (PST)
+        with ESMTP id S1727211AbgKSUeS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 15:34:18 -0500
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BD24C0613CF
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:34:18 -0800 (PST)
+Received: by mail-pg1-x542.google.com with SMTP id i13so5278092pgm.9
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2020 12:34:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:mime-version;
-        bh=/6gb4DUVmEQXG4C8GLhP9jSCK5TLyPkdypLd4Y042MM=;
-        b=XWlZ3DBuMoqVxEKVKwuLxFIVxiLHNa4vP5hfTJ2gKSzycOT0Y/FD7yhRWpG1gQoGj+
-         D2gudMePTduGBZ77uzSVF/5pgW7W8gVBYgsz4zq5gLXrLNNV3dMOn1Vl+Nm4YIRnCYM3
-         JcOd6UhBDYx1YaCSXYwzn8VDQZalj0GGY9haU=
+        bh=wozjNAESXMorI95NzCDiLka0IgxB12dmfr4dUdaS2mQ=;
+        b=evBXhX4L5JKoPHc3YdT0DrCxNeoLBXaQbP0K0bzNzQX5i4MlzP61cjyZFhCp91Jt0d
+         wXoDf5maO6JEFn1k7N8lnlc8yyNkZLBPXmwrhhktqpFaUgLmcf3anGueNIubWMONuIwD
+         NH4537ZoCDVafdKs+2d5hTWBoZxDp3kE2scqY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=/6gb4DUVmEQXG4C8GLhP9jSCK5TLyPkdypLd4Y042MM=;
-        b=TR8Qo4v0hqPRULKQ65SBLxfk/UY8PMdVsnKWoFES83TekmpfbN2jXCw4pVJfJZNM/q
-         rnywdcGrlQc5I9EVjH5pSlMv2n39GmRkKi/jij9l5qQ54gm+NTEMScrFb4+CSlS5o0bu
-         D2Vdu/u6uvTZ47CtGj7HYM9g18s7RqhcDy6ZkvSXoQDtP+6yrCBXvZ2FohtU5hKHV5Xg
-         rCMoXnjKv96akUI4zeLHw/DRTbpCctefxFlUgtZODp2xEzFirXldLXAah57KoaZ1qTJg
-         Tvlq47m1Wvz1APyS3+iMTwUyoQSE5nI4/V0x7sdVYsB7w43Al29PxHv5CQ9DxX6vQv7X
-         qKOA==
-X-Gm-Message-State: AOAM530e3VZF25tORvtXS/+38vdyFrFqxih0sPzc3JlQc7gTbj0u5k8i
-        S095/gCuFxVWvYAZ71MLajUfC9uWgC1bEUepegXUlhI7nFr8AshLv60fL0l9KLMfXkuG3BfeJEO
-        +RvbtTWatjT+j96EXFEa7TOMI+GmFosmYPw4Kn4XlTIFlyZTnAYG6OipsNwr5fz+lS2tKIm1gog
-        PtYuI=
-X-Google-Smtp-Source: ABdhPJyu0Eq4FmZERGM+VE4zpzpM/upCCOnVAEkpMvnYp3TpGUDKewwaSzy7N7uez6H/Yp01O/b16g==
-X-Received: by 2002:a17:902:b789:b029:d8:f4a9:c9bc with SMTP id e9-20020a170902b789b02900d8f4a9c9bcmr10691345pls.59.1605818044165;
-        Thu, 19 Nov 2020 12:34:04 -0800 (PST)
+        bh=wozjNAESXMorI95NzCDiLka0IgxB12dmfr4dUdaS2mQ=;
+        b=HoNWAUX3pS1GLPGkVzlea6xE1ptw7SPFKxnwi0kYQeek1A7O9ernr/ibch85RVZjvk
+         nmXWl1ZsccLc4DU8NHBfk9NbVNUnqLq/V6uFe0TGzNO1vIhLZ7Tug7/56gLxwao10tsS
+         +fR/FuBMtl+hqRMCUu74Mz93RkkvgrMSFbtYDlZQH7W236xLLqYfzSaOglwHub9yoC7I
+         Yogzi/EWDTZfx+g5X7XIx9Vz6uRUZf5sH3X0rHJooU6LmdL2bSX/5ip4NnD0HW6ff5Cf
+         UqYThGi1KQLBsSHGxmtLAnACiOV7DRHtHp45ttcRObrHrt3LmIXW6yiISE0dc8o4a0Zq
+         zZOA==
+X-Gm-Message-State: AOAM5339g24bSGKJbw/Wqb3GOlMBZyDoJMPtzrr4vpRZCCUeNURaGNjU
+        BmFU+EwSth89NaOk2JQtS4yswmC6dg1s5FjE5gWBkbNTY5bnIyKlFyXQTSRd3F2QaF1kJTbLBSN
+        rECCiDmE3JPsIHoxo+95ixnkCXgkjHiAyE3m2MC13u/m5H/3NXm+gwx7ZGde8QXgML60okU/ScW
+        qMeZk=
+X-Google-Smtp-Source: ABdhPJw+asDzSP1taEZeBwXAuKCofK4FYD/C9nKUNswwVpVEW+H2Ape+99YjPwb4f0hXn9+aykAY2A==
+X-Received: by 2002:a17:90a:ea8d:: with SMTP id h13mr6335255pjz.52.1605818057560;
+        Thu, 19 Nov 2020 12:34:17 -0800 (PST)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w63sm613767pjj.12.2020.11.19.12.34.01
+        by smtp.gmail.com with ESMTPSA id t8sm739070pfe.65.2020.11.19.12.34.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Nov 2020 12:34:03 -0800 (PST)
+        Thu, 19 Nov 2020 12:34:16 -0800 (PST)
 From:   James Smart <james.smart@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <james.smart@broadcom.com>,
         kernel test robot <lkp@intel.com>
-Subject: [PATCH] lpfc: Fix set but unused variables in lpfc_dev_loss_tmo_handler
-Date:   Thu, 19 Nov 2020 12:33:53 -0800
-Message-Id: <20201119203353.121866-1-james.smart@broadcom.com>
+Subject: [PATCH] lpfc: Fix variable 'vport' set but not used in lpfc_sli4_abts_err_handler
+Date:   Thu, 19 Nov 2020 12:34:07 -0800
+Message-Id: <20201119203407.121913-1-james.smart@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000020d90505b47ba693"
+        boundary="000000000000ebc1dc05b47ba64a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000020d90505b47ba693
+--000000000000ebc1dc05b47ba64a
 Content-Transfer-Encoding: 8bit
 
-Remove set but not used variable shost in lpfc_dev_loss_tmo_handler()
+Remove vport variable that is assigned but not used in
+lpfc_sli4_abts_err_handler().
 
-Fixes: 52edb2caf675 ("scsi: lpfc: Remove ndlp when a PLOGI/ADISC/PRLI/REG_RPI ultimately fails")
+Fixes: e7dab164a9aa ("scsi: lpfc: Fix scheduling call while in softirq context in lpfc_unreg_rpi")
 Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 2 --
+ drivers/scsi/lpfc/lpfc_sli.c | 2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 44eddddff0dc..2b6b5fc671fe 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -244,14 +244,12 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 62218e41933e..95caad764fb7 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -10700,7 +10700,6 @@ lpfc_sli4_abts_err_handler(struct lpfc_hba *phba,
+ 			   struct lpfc_nodelist *ndlp,
+ 			   struct sli4_wcqe_xri_aborted *axri)
  {
- 	struct lpfc_vport *vport;
- 	struct lpfc_hba   *phba;
--	struct Scsi_Host  *shost;
- 	uint8_t *name;
- 	int warn_on = 0;
- 	int fcf_inuse = 0;
- 	unsigned long iflags;
+-	struct lpfc_vport *vport;
+ 	uint32_t ext_status = 0;
  
- 	vport = ndlp->vport;
--	shost = lpfc_shost_from_vport(vport);
- 	name = (uint8_t *)&ndlp->nlp_portname;
- 	phba = vport->phba;
+ 	if (!ndlp) {
+@@ -10710,7 +10709,6 @@ lpfc_sli4_abts_err_handler(struct lpfc_hba *phba,
+ 		return;
+ 	}
  
+-	vport = ndlp->vport;
+ 	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
+ 			"3116 Port generated FCP XRI ABORT event on "
+ 			"vpi %d rpi %d xri x%x status 0x%x parameter x%x\n",
 -- 
 2.26.2
 
 
---00000000000020d90505b47ba693
+--000000000000ebc1dc05b47ba64a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -175,14 +177,14 @@ ZwPZfsjYiUuaCWDGMvVpuBgJtdADOE1v24vgyyLZjtCbvSUzsgKKda3/Z/iwLFCRrIogixS1L6Vg
 9SybOi1fAXGcISX8GzOd85ygu/3dFqvMyCBpNke4vdweIll52KZIMyWji3y2PKJYfgqO+bxo7BAa
 ROYxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDH5i
-rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgvm0U+cQSVF5Tohkx
-xFwqShA6bbZg3wxeauGSWnDw+EMwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjAxMTE5MjAzNDA0WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
+rbJ+nCPBux48wjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg2pe5i1cszNzGZIOO
+DQmsNr7E+9+A98mXoDBktU0H3kgwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMjAxMTE5MjAzNDE4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgB
 ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcw
-CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBADWu1eALR5RrDuLhTTjlweuEhhYL06PRtrZM
-CUU/yGbXLXO1yNoHG4B8pof+FcYCFM/k4ixFgJC7Z7ZpdO3KlAuFNNkhFPg8lX1633xtnGsuB9TN
-KuHuqdnMrMU12NTuyI6a2kbaTZm9DojsJzKDJhJoueKuF5Br+/YjR4CmruioxV7lOGAeXdGYLZZr
-wcEtxzEEo4sJ2YRjOComfJbKQ5Mzwb0jpipK1vCRMwFD4u4IbpM4lE2eDNi68KSvjRJb90XL0xuA
-Lj721v3fRTStv31hd069kda9sWWdfPQHjX9C19IVybXPJxelfUySy+p9lhy8ARy2w87ENQRsxqqo
-67I=
---00000000000020d90505b47ba693--
+CwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJz9qjNZ0TmnV/PHTkMrdyEPO9Tmvxh6xHDZ
+LudkbWQ9X/6EtH5Q+4UoL/8U1MIFH9g6YSPF04h/3qUXjTsDHJxEgwifRrAqv1qyTzIy8V1slLq9
+Fzmxhgk5kCPH2aMlU/2k+RVo7T/YRth8B2rP4kStYzwcce8BPTs6tYzTR+Y/Cm0+ehMydOMKbqjV
+4/PyRrioC1FS4THyuWIphTQg+hZRNPIeVNAh8lbkeLKfIqbCZx3M+DTcO33ZTUDuCS1kiHX2IizJ
+6ofvmyyKrQhJqLT4L6m+UryYstbkxrE/wq7iOcfv14CXP3fmKY+Ra/faAMXL5KSRBzmAdpxgXcYf
+OyE=
+--000000000000ebc1dc05b47ba64a--
