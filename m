@@ -2,131 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E03CCC56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 17:09:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F36FFC6369E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 18:09:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 857692469D
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 17:09:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96933246F3
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Nov 2020 18:09:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q09CUPq3"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="moKefmMk";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="I7WDFyj1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729232AbgKSRJB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 12:09:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60488 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729215AbgKSRJA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 12:09:00 -0500
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99117C0613CF;
-        Thu, 19 Nov 2020 09:08:59 -0800 (PST)
-Received: by mail-pf1-x444.google.com with SMTP id t8so5079720pfg.8;
-        Thu, 19 Nov 2020 09:08:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=s3jwRzYh5eBRDXKSUjnimUTZgZnImvs3tPqk9uLXKM8=;
-        b=Q09CUPq3p7/L63rO5X2XHwdBmQzH9mQPiPutCAYOmwM2YyafFpTWV111jPTCymkG9Y
-         ovduueR9oZ61aWho4Yz17uIz6uTEtuQXdUK4RvAHXzpkmm5rPE1t2Aw4+DSlciucvF5R
-         jotssCUfpFMS6O+6wxZgAKOoZoHVV9f8HTl0+iSjpYCT1HGZhBFXrd3/8HtuVTjl7RYb
-         bfRM/cst8SBFn9Zml/YxCxPxqLQqOnYCl2Dw3TuOxZf/jmFNY5DwqRr7toUCi6oLaFF4
-         QE1LSxuIoEwA9v8eqE65TqJLI3JnEvsRzPIWESo/aSVW59lSNU/8gyo04pJUaw4YwwGt
-         OFaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=s3jwRzYh5eBRDXKSUjnimUTZgZnImvs3tPqk9uLXKM8=;
-        b=ZVUp8p+0DxXTOoA+2kVbq69xUt6XB4Csdg+A/MGXYAUXrXg0dSTAmn4l0nLAcZgq43
-         rRYdDmJD7Zr7fX6e22AeR2u3R+Ei5GMg+ZEUr3vliPEotVVCBoxi3ohp98EEcQrsbpgH
-         u370ICAIgmD3aI+jBe2N85y+GIiEaPUI2XytDqU9px+HMGt6XPXMHkmGA2oes04Up3xE
-         dK1fhO1j0AP0tkmwZaHpf0sNRhHogbX++DQpWDakKn0w3R8T+ijjzVV0R3i14POEwaC+
-         xzy0jwoPValSi2uOjFwWxEf1VDQlzIiEFfiLPpfL8Ee6KhU5ggFbarfQ5SUIq46NZ1rR
-         0U5A==
-X-Gm-Message-State: AOAM530z+RPc27hvkc7/Bd4hjcDtlOL9v9Gn2yvGBK1+Vtqen+TdVJZo
-        qUmziNek1rkOSQwTnjMT+pvIwJd/dkN4NeXvCV8=
-X-Google-Smtp-Source: ABdhPJyDEv/rHjyCS4JMHft6qsXpnMX+lNmHydsgOhE+h0eF4acHxdAjpVUYkUc61MNhiw0Te7O/Sse7gIf5gynlGgY=
-X-Received: by 2002:a63:4e49:: with SMTP id o9mr13956352pgl.61.1605805739158;
- Thu, 19 Nov 2020 09:08:59 -0800 (PST)
+        id S1729085AbgKSSJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 13:09:40 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:35110 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728262AbgKSSJk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 13:09:40 -0500
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1605809378;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=S+E33Uzzr7zAnLy0AQRsQOmLC1q/PMKuY7ohh67YdQM=;
+        b=moKefmMkd6ZQNU9+1ZmFPmSDmArkJR9i/y6D9FitEwpBJ8xV5eTjuOZmm55jCW9Ndpc3OU
+        8YMG9JQp83Xf67y27Y1lNIK0gm3scYUW8oqtJnmqMzPNrfcybInoWrneQeCnVlbPQzB3MZ
+        sgwH1XCgB9lp50kBbWM6appg2hsDVPtLjMKKFKdvk+KLu8HKCe4TqqLdPgZjpUbqxKL4Hx
+        SYk90SU02uDwv9EDoChOrAhSR6jjUvkYIhzHfQDnHDeCFsT5wE4YJglYQfry6d4q1DNmeF
+        oUIQbY+jh7vd5MfWl8wUBBBSuTIPWFcGtuMA6ZpiGV7SBGu78y0qbhtbDXv5SA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1605809378;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=S+E33Uzzr7zAnLy0AQRsQOmLC1q/PMKuY7ohh67YdQM=;
+        b=I7WDFyj1cXy2r4vOuLQk1tLq9bRVnyYq/OxbqnH6i9JRRIqEdkh/yCyNiyBc8V2zGHB91a
+        WGRTcAnHJbN0v4Cw==
+To:     John Garry <john.garry@huawei.com>, gregkh@linuxfoundation.org,
+        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com
+Cc:     linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, maz@kernel.org
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+In-Reply-To: <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de> <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com> <874klmqu2r.fsf@nanos.tec.linutronix.de> <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+Date:   Thu, 19 Nov 2020 19:09:37 +0100
+Message-ID: <87lfexp6am.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
- <20201117164043.GS131917@stefanha-x1.localdomain> <b3343762-bb11-b750-46ec-43b5556f2b8e@oracle.com>
- <20201118113117.GF182763@stefanha-x1.localdomain> <20201119094315-mutt-send-email-mst@kernel.org>
- <ceebdc90-3ffc-1563-ff85-12a848bcba18@oracle.com> <CAJSP0QUvSwX5NCPmfSODV_C+D41E21LZT=oXQ2PLc6baAsGGDQ@mail.gmail.com>
- <ffd88f0c-981e-a102-4b08-f29d6b9a0f71@oracle.com>
-In-Reply-To: <ffd88f0c-981e-a102-4b08-f29d6b9a0f71@oracle.com>
-From:   Stefan Hajnoczi <stefanha@gmail.com>
-Date:   Thu, 19 Nov 2020 17:08:47 +0000
-Message-ID: <CAJSP0QUfqd=QNFa-RikH4dVcLmfcP-pYCwznP3W0zobYkM+KDw@mail.gmail.com>
-Subject: Re: [PATCH 00/10] vhost/qemu: thread per IO SCSI vq
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>, fam <fam@euphon.net>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Jason Wang <jasowang@redhat.com>,
-        qemu-devel <qemu-devel@nongnu.org>,
-        Linux Virtualization <virtualization@lists.linux-foundation.org>,
-        target-devel <target-devel@vger.kernel.org>,
-        Paolo Bonzini <pbonzini@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 19, 2020 at 4:43 PM Mike Christie
-<michael.christie@oracle.com> wrote:
+On Thu, Nov 19 2020 at 09:31, John Garry wrote:
+>>   1) Interrupt does not exist. Definitely a full fail
+>> 
+>>   2) Interrupt is already started up. Not a good idea on init() and
+>>      a clear fail.
+>> 
+>>   3) Interrupt has already been switched to managed. Double init is not
+>>      really a good sign either.
 >
-> On 11/19/20 10:24 AM, Stefan Hajnoczi wrote:
-> > On Thu, Nov 19, 2020 at 4:13 PM Mike Christie
-> > <michael.christie@oracle.com> wrote:
-> >>
-> >> On 11/19/20 8:46 AM, Michael S. Tsirkin wrote:
-> >>> On Wed, Nov 18, 2020 at 11:31:17AM +0000, Stefan Hajnoczi wrote:
-> > struct vhost_run_worker_info {
-> >      struct timespec *timeout;
-> >      sigset_t *sigmask;
-> >
-> >      /* List of virtqueues to process */
-> >      unsigned nvqs;
-> >      unsigned vqs[];
-> > };
-> >
-> > /* This blocks until the timeout is reached, a signal is received, or
-> > the vhost device is destroyed */
-> > int ret = ioctl(vhost_fd, VHOST_RUN_WORKER, &info);
-> >
-> > As you can see, userspace isn't involved with dealing with the
-> > requests. It just acts as a thread donor to the vhost driver.
-> >
-> > We would want the VHOST_RUN_WORKER calls to be infrequent to avoid the
-> > penalty of switching into the kernel, copying in the arguments, etc.
->
-> I didn't get this part. Why have the timeout? When the timeout expires,
-> does userspace just call right back down to the kernel or does it do
-> some sort of processing/operation?
->
-> You could have your worker function run from that ioctl wait for a
-> signal or a wake up call from the vhost_work/poll functions.
+> I just tested that and case 3) would be a problem. I don't see us 
+> clearing the managed flag when free'ing the interrupt. So with 
+> CONFIG_DEBUG_TEST_DRIVER_REMOVE=y, we attempt this affinity update 
+> twice, and error from the irqd_affinity_is_managed() check.
 
-An optional timeout argument is common in blocking interfaces like
-poll(2), recvmmsg(2), etc.
+That means the interrupt is not deallocated and reallocated, which does
+not make sense to me.
 
-Although something can send a signal to the thread instead,
-implementing that in an application is more awkward than passing a
-struct timespec.
+Thanks,
 
-Compared to other blocking calls we don't expect
-ioctl(VHOST_RUN_WORKER) to return soon, so maybe the timeout will
-rarely be used and can be dropped from the interface.
-
-BTW the code I posted wasn't a carefully thought out proposal :). The
-details still need to be considered and I'm going to be offline for
-the next week so maybe someone else can think it through in the
-meantime.
-
-Stefan
+        tglx
