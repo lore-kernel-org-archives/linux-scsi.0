@@ -7,24 +7,23 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6539AC64E7B
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 171D9C63798
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:35:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 181CB22256
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2F102236F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:35:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727052AbgKTHe1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 02:34:27 -0500
-Received: from mx2.suse.de ([195.135.220.15]:56772 "EHLO mx2.suse.de"
+        id S1726321AbgKTHfg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 02:35:36 -0500
+Received: from mx2.suse.de ([195.135.220.15]:57910 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727042AbgKTHe1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Nov 2020 02:34:27 -0500
+        id S1725797AbgKTHfg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Nov 2020 02:35:36 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C2EBBAB3D;
-        Fri, 20 Nov 2020 07:34:25 +0000 (UTC)
-Subject: Re: [PATCH 58/78] init: cleanup match_dev_by_uuid and
- match_dev_by_label
+        by mx2.suse.de (Postfix) with ESMTP id 7837DAB3D;
+        Fri, 20 Nov 2020 07:35:34 +0000 (UTC)
+Subject: Re: [PATCH 59/78] mtip32xx: remove the call to fsync_bdev on removal
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -45,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201116145809.410558-1-hch@lst.de>
- <20201116145809.410558-59-hch@lst.de>
+ <20201116145809.410558-60-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <1742f81b-32e5-4bff-e10c-2c547ee345b6@suse.de>
-Date:   Fri, 20 Nov 2020 08:34:24 +0100
+Message-ID: <5ee8dd18-f420-280c-84b9-78b70f528e26@suse.de>
+Date:   Fri, 20 Nov 2020 08:35:33 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201116145809.410558-59-hch@lst.de>
+In-Reply-To: <20201116145809.410558-60-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -61,13 +60,14 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/16/20 3:57 PM, Christoph Hellwig wrote:
-> Avoid a totally pointless goto label, and use the same style of
-> comparism for both helpers.
+> del_gendisk already calls fsync_bdev for every partition, no need
+> to do this twice.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   init/do_mounts.c | 18 ++++++------------
->   1 file changed, 6 insertions(+), 12 deletions(-)
+>   drivers/block/mtip32xx/mtip32xx.c | 15 ---------------
+>   drivers/block/mtip32xx/mtip32xx.h |  2 --
+>   2 files changed, 17 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
