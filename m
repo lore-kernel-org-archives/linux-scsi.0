@@ -5,75 +5,118 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD5DC63777
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B7BC5519F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:37:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6ACB52224E
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:37:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33DDA22249
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727220AbgKTIhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 03:37:06 -0500
-Received: from smtp25.cstnet.cn ([159.226.251.25]:42786 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727122AbgKTIhF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Nov 2020 03:37:05 -0500
-Received: from localhost.localdomain (unknown [124.16.141.242])
-        by APP-05 (Coremail) with SMTP id zQCowAA3PJQjgLdfJUBbAQ--.19842S2;
-        Fri, 20 Nov 2020 16:36:52 +0800 (CST)
-From:   Xu Wang <vulab@iscas.ac.cn>
-To:     jinpu.wang@cloud.ionos.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: pm8001: remove casting kcalloc
-Date:   Fri, 20 Nov 2020 08:36:48 +0000
-Message-Id: <20201120083648.9319-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: zQCowAA3PJQjgLdfJUBbAQ--.19842S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrtr13Ary7Jr4ftF13Kr45Jrb_yoWftrc_ur
-        W7trn7Kr1UCr4fCa47C3Wjva4q9F48XF1xW3WaqrZ3uas3Gr45Xa9rZr13ZF4Uua1xA3yD
-        Zw18J3WxZryxGjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb2xYjsxI4VW3JwAYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I
-        6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM2
-        8CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0
-        cI8IcVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4
-        A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IE
-        w4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r4j6F4UMc
-        vjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY02Avz4vE14v_GFyl42xK82IY
-        c2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s
-        026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF
-        0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0x
-        vE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E
-        87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIJ5rUUUUU
-X-Originating-IP: [124.16.141.242]
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiAw8GA13qZh0GegAAs5
+        id S1727241AbgKTIh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 03:37:27 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:10613 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727043AbgKTIh1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 03:37:27 -0500
+IronPort-SDR: 35AcR+M7M+hd8eMihQgueRi4jX/bEC4baNV0C2/YDDjIwIpT8iImrAL71rDqQLMHIV9CAgmqVN
+ Wcw6IeVn7GhBI402CzUv63Mcfd7rXwZdkBQE0yut24d9odSJIXepkMaMy5d8y2hOEmwovC1Y/K
+ MLCPvNnCa/hyl6BCwfmdjYBqLyLjr4AX/AAZSi8t2w0WX0xyHNgeEdF/ymL9a58UXIApCLu6Lm
+ +zhHSJhgMVtx0DCi7YxAxVOWu2x3LV59EMYhXEs2fGd8CEd64h2Sm0HOmaOhGE5FO+mUWLqY2/
+ jP4=
+X-IronPort-AV: E=Sophos;i="5.78,356,1599548400"; 
+   d="scan'208";a="47489928"
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by labrats.qualcomm.com with ESMTP; 20 Nov 2020 00:37:27 -0800
+X-QCInternal: smtphost
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg02-sd.qualcomm.com with ESMTP; 20 Nov 2020 00:37:25 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id 02FBD217B5; Fri, 20 Nov 2020 00:37:25 -0800 (PST)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH RFC v2 1/1] scsi: pm: Leave runtime PM status alone during system resume/thaw/restore
+Date:   Fri, 20 Nov 2020 00:37:22 -0800
+Message-Id: <1605861443-11459-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove casting the values returned by kcalloc.
+Runtime resume is handled by runtime PM framework, no need to forcibly
+set runtime PM status to RPM_ACTIVE during system resume/thaw/restore.
 
-Signed-off-by: Xu Wang <vulab@iscas.ac.cn>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 3cf3e58b6979..ac0e598b8ac2 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1187,8 +1187,8 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
- 		goto err_out;
+Changes since v1:
+- Incorporated Bart's comments
+
+---
+ drivers/scsi/scsi_pm.c | 24 +-----------------------
+ 1 file changed, 1 insertion(+), 23 deletions(-)
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 3717eea..908f27f 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -79,25 +79,6 @@ static int scsi_dev_type_resume(struct device *dev,
+ 	scsi_device_resume(to_scsi_device(dev));
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
  
- 	/* Memory region for ccb_info*/
--	pm8001_ha->ccb_info = (struct pm8001_ccb_info *)
--		kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
-+	pm8001_ha->ccb_info =
-+		kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
- 	if (!pm8001_ha->ccb_info) {
- 		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
- 			("Unable to allocate memory for ccb\n"));
+-	if (err == 0) {
+-		pm_runtime_disable(dev);
+-		err = pm_runtime_set_active(dev);
+-		pm_runtime_enable(dev);
+-
+-		/*
+-		 * Forcibly set runtime PM status of request queue to "active"
+-		 * to make sure we can again get requests from the queue
+-		 * (see also blk_pm_peek_request()).
+-		 *
+-		 * The resume hook will correct runtime PM status of the disk.
+-		 */
+-		if (!err && scsi_is_sdev_device(dev)) {
+-			struct scsi_device *sdev = to_scsi_device(dev);
+-
+-			blk_set_runtime_active(sdev->request_queue);
+-		}
+-	}
+-
+ 	return err;
+ }
+ 
+@@ -165,11 +146,8 @@ static int scsi_bus_resume_common(struct device *dev,
+ 		 */
+ 		if (strncmp(scsi_scan_type, "async", 5) != 0)
+ 			async_synchronize_full_domain(&scsi_sd_pm_domain);
+-	} else {
+-		pm_runtime_disable(dev);
+-		pm_runtime_set_active(dev);
+-		pm_runtime_enable(dev);
+ 	}
++
+ 	return 0;
+ }
+ 
 -- 
-2.17.1
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
