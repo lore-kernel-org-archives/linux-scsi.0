@@ -2,202 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EE4C63798
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 01:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1013C63798
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 01:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51A9722256
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 01:36:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XyQUfAho"
+	by mail.kernel.org (Postfix) with ESMTP id A5DF92225B
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 01:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727087AbgKTBfv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 20:35:51 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60051 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726754AbgKTBfv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Nov 2020 20:35:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605836149;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1CXbWMn85vsEetZ5zh1R84Ze1IVkbnw3ZzkmmkOOrow=;
-        b=XyQUfAhomMXLA8gUPOuz+SMqJxt4LEFjY+HyYW+EPCD/gS6MchroIOxk8Pq84PVRCHLQj4
-        pWpmeulK4ktHyqYUgnoBhzxLgObYE/+Gbsa+tK1xGei2tQgKL8DdArtolykM6eQqfsV3JG
-        RSjDEuxaX/jR+KgQuVSKITiKQOlqrVA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-143-thKV15HcN8WCa_4SonMg3Q-1; Thu, 19 Nov 2020 20:35:44 -0500
-X-MC-Unique: thKV15HcN8WCa_4SonMg3Q-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 464DE107ACE3;
-        Fri, 20 Nov 2020 01:35:43 +0000 (UTC)
-Received: from T590 (ovpn-13-9.pek2.redhat.com [10.72.13.9])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C1A6760853;
-        Fri, 20 Nov 2020 01:35:34 +0000 (UTC)
-Date:   Fri, 20 Nov 2020 09:35:29 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Omar Sandoval <osandov@fb.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH V6 10/13] megaraid_sas: v2 replace sdev_busy with local
- counter
-Message-ID: <20201120013529.GA333150@T590>
-References: <20201119094705.280390-1-ming.lei@redhat.com>
- <20201119095147.GB279559@T590>
+        id S1727046AbgKTBhH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 20:37:07 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:40580 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726619AbgKTBhH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 20:37:07 -0500
+Received: by mail-pf1-f195.google.com with SMTP id w14so6307037pfd.7;
+        Thu, 19 Nov 2020 17:37:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3k4Ege4hPbwtePFpIl8JBb2aUYC75ms6Y4XCyy0eV3k=;
+        b=UzeB8+dtXgvtkgMBtSTfqxA+/ttyWvaT+aU0c4SBaulYYr801xhAoOnSLy5u9tFvpl
+         RWVaUzAwUNBC09Sc2wM2E2N4DqWhLR9+eMbC33WwTIX/mHXRgD5wtkJXTJasNfC28jZ8
+         WijvWaBDTRxrV++1lXOUWBcLw+34OjyDe0sscU3zikDaN3s02Bx/DwwYEgLR/jxBjLU0
+         FD2YXVsv4nbG+6UrIrExKqfH5l1NjjumoKfBsV9K2G/wwHQRF9Ezf2nyUcZrc3IcTuxi
+         DL2JU8+gn/3Yv0mm56WRayL7GoJDL9eUQPGmfphloEeXqKSlEgRnJ3Ge0bgmgPKG7QrC
+         lOMw==
+X-Gm-Message-State: AOAM5318iGM52gGr2kR1OK4mjouIQJmXlC5n8llf//Dblgfok/88i6g/
+        BGmAbpHmq2QLdZQInn7piLg=
+X-Google-Smtp-Source: ABdhPJw+zWeacVq6Zt0791qTiDwhg8NzKrYuwR4LlRUBs2yuWUe0Jmk+VbMSmQn5m1aZ1GTBP1bP2g==
+X-Received: by 2002:a63:d547:: with SMTP id v7mr14718445pgi.375.1605836226485;
+        Thu, 19 Nov 2020 17:37:06 -0800 (PST)
+Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id ie21sm1150185pjb.14.2020.11.19.17.37.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Nov 2020 17:37:05 -0800 (PST)
+Subject: Re: [PATCH v2 4/9] scsi: Rework scsi_mq_alloc_queue()
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+References: <20201116030459.13963-1-bvanassche@acm.org>
+ <20201116030459.13963-5-bvanassche@acm.org> <20201116171755.GD22007@lst.de>
+ <cf82c6f3-698c-4dad-b123-fda710e0741e@acm.org>
+Message-ID: <c2b8607a-c3e3-3e75-0727-41947a52caeb@acm.org>
+Date:   Thu, 19 Nov 2020 17:36:59 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201119095147.GB279559@T590>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <cf82c6f3-698c-4dad-b123-fda710e0741e@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From e98ce3cf552ae173f1b8bcb19219f2e88dd3bf86 Mon Sep 17 00:00:00 2001
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Date: Thu, 19 Nov 2020 12:39:01 +0530
-Subject: [PATCH V6 10/13] megaraid_sas: v2 replace sdev_busy with local counter
+On 11/16/20 10:01 AM, Bart Van Assche wrote:
+> On 11/16/20 9:17 AM, Christoph Hellwig wrote:
+>> On Sun, Nov 15, 2020 at 07:04:54PM -0800, Bart Van Assche wrote:
+>>> Do not modify sdev->request_queue. Remove the sdev->request_queue
+>>> assignment. That assignment is superfluous because scsi_mq_alloc_queue()
+>>> only has one caller and that caller calls scsi_mq_alloc_queue() as
+>>> follows:
+>>>
+>>>     sdev->request_queue = scsi_mq_alloc_queue(sdev);
+>>
+>> This looks ok to me.  But is there any good to keep scsi_mq_alloc_queue
+>> around at all?  It is so trivial that it can be open coded in the
+>> currently only caller, as well as a new one if added.
+> 
+> Hi Christoph,
+> 
+> A later patch in this series introduces a second call to
+> scsi_mq_alloc_queue(). Do we really want to have multiple functions that
+> set QUEUE_FLAG_SCSI_PASSTHROUGH? I'm concerned that if the logic for
+> creating a SCSI queue would ever be changed that only the copy in the
+> SCSI core would be updated but not the copy in the SPI code.
 
-use local tracking of per sdev outstanding command since sdev_busy in
-SML is improved for performance reason using sbitmap (earlier it was
-atomic variable).
+(replying to my own email)
 
-Cc: Omar Sandoval <osandov@fb.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Hi Christoph,
 
-Fix checkpatch ERROR and WARNING.
+Is this something that you feel strongly about? I can make this change
+but that would require reaching out again to someone who owns an SPI
+setup for testing this patch series since I do not own an SPI setup
+myself ...
 
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
-V5->V6:
-	- fix one check in megasas_sdev_busy_read
+Thanks,
 
- drivers/scsi/megaraid/megaraid_sas.h        |  2 +
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 47 +++++++++++++++++----
- 2 files changed, 41 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 5e4137f10e0e..2299342d5b2d 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2019,10 +2019,12 @@ union megasas_frame {
-  * struct MR_PRIV_DEVICE - sdev private hostdata
-  * @is_tm_capable: firmware managed tm_capable flag
-  * @tm_busy: TM request is in progress
-+ * @sdev_priv_busy: pending command per sdev
-  */
- struct MR_PRIV_DEVICE {
- 	bool is_tm_capable;
- 	bool tm_busy;
-+	atomic_t sdev_priv_busy;
- 	atomic_t r1_ldio_hint;
- 	u8 interface_type;
- 	u8 task_abort_tmo;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index fd607287608e..e9ec9b7b1c36 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -220,6 +220,40 @@ megasas_clear_intr_fusion(struct megasas_instance *instance)
- 	return 1;
- }
- 
-+static inline void
-+megasas_sdev_busy_inc(struct megasas_instance *instance,
-+		      struct scsi_cmnd *scmd)
-+{
-+	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
-+		struct MR_PRIV_DEVICE *mr_device_priv_data =
-+			scmd->device->hostdata;
-+		atomic_inc(&mr_device_priv_data->sdev_priv_busy);
-+	}
-+}
-+
-+static inline void
-+megasas_sdev_busy_dec(struct megasas_instance *instance,
-+		      struct scsi_cmnd *scmd)
-+{
-+	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
-+		struct MR_PRIV_DEVICE *mr_device_priv_data =
-+			scmd->device->hostdata;
-+		atomic_dec(&mr_device_priv_data->sdev_priv_busy);
-+	}
-+}
-+
-+static inline int
-+megasas_sdev_busy_read(struct megasas_instance *instance,
-+		       struct scsi_cmnd *scmd)
-+{
-+	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
-+		struct MR_PRIV_DEVICE *mr_device_priv_data =
-+			scmd->device->hostdata;
-+		return atomic_read(&mr_device_priv_data->sdev_priv_busy);
-+	}
-+	return 0;
-+}
-+
- /**
-  * megasas_get_cmd_fusion -	Get a command from the free pool
-  * @instance:		Adapter soft state
-@@ -357,15 +391,9 @@ megasas_get_msix_index(struct megasas_instance *instance,
- 		       struct megasas_cmd_fusion *cmd,
- 		       u8 data_arms)
- {
--	int sdev_busy;
--
--	/* TBD - if sml remove device_busy in future, driver
--	 * should track counter in internal structure.
--	 */
--	sdev_busy = atomic_read(&scmd->device->device_busy);
--
- 	if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
--	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH)) {
-+	    (megasas_sdev_busy_read(instance, scmd) >
-+	    (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))) {
- 		cmd->request_desc->SCSIIO.MSIxIndex =
- 			mega_mod64((atomic64_add_return(1, &instance->high_iops_outstanding) /
- 					MR_HIGH_IOPS_BATCH_COUNT), instance->low_latency_index_start);
-@@ -3390,6 +3418,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 	 * Issue the command to the FW
- 	 */
- 
-+	megasas_sdev_busy_inc(instance, scmd);
- 	megasas_fire_cmd_fusion(instance, req_desc);
- 
- 	if (r1_cmd)
-@@ -3450,6 +3479,7 @@ megasas_complete_r1_command(struct megasas_instance *instance,
- 		scmd_local->SCp.ptr = NULL;
- 		megasas_return_cmd_fusion(instance, cmd);
- 		scsi_dma_unmap(scmd_local);
-+		megasas_sdev_busy_dec(instance, scmd_local);
- 		scmd_local->scsi_done(scmd_local);
- 	}
- }
-@@ -3550,6 +3580,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 				scmd_local->SCp.ptr = NULL;
- 				megasas_return_cmd_fusion(instance, cmd_fusion);
- 				scsi_dma_unmap(scmd_local);
-+				megasas_sdev_busy_dec(instance, scmd_local);
- 				scmd_local->scsi_done(scmd_local);
- 			} else	/* Optimal VD - R1 FP command completion. */
- 				megasas_complete_r1_command(instance, cmd_fusion);
--- 
-2.25.4
-
+Bart.
