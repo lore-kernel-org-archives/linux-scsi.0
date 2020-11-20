@@ -7,24 +7,23 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401D7C63777
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:51:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08693C6379F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:52:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6E76222BA
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:50:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD445222BA
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726719AbgKTHud (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 02:50:33 -0500
-Received: from mx2.suse.de ([195.135.220.15]:40876 "EHLO mx2.suse.de"
+        id S1726543AbgKTHvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 02:51:42 -0500
+Received: from mx2.suse.de ([195.135.220.15]:41800 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726618AbgKTHud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Nov 2020 02:50:33 -0500
+        id S1726172AbgKTHvl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Nov 2020 02:51:41 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 55C9CAC23;
-        Fri, 20 Nov 2020 07:50:31 +0000 (UTC)
-Subject: Re: [PATCH 66/78] block: keep a block_device reference for each
- hd_struct
+        by mx2.suse.de (Postfix) with ESMTP id DE27BAB3D;
+        Fri, 20 Nov 2020 07:51:39 +0000 (UTC)
+Subject: Re: [PATCH 67/78] block: simplify the block device claiming interface
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -45,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201116145809.410558-1-hch@lst.de>
- <20201116145809.410558-67-hch@lst.de>
+ <20201116145809.410558-68-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <23914ef5-5245-b468-4168-bc1584e979d2@suse.de>
-Date:   Fri, 20 Nov 2020 08:50:28 +0100
+Message-ID: <64ae3518-094e-a433-0da6-972b230efc28@suse.de>
+Date:   Fri, 20 Nov 2020 08:51:38 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201116145809.410558-67-hch@lst.de>
+In-Reply-To: <20201116145809.410558-68-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -61,37 +60,15 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/16/20 3:57 PM, Christoph Hellwig wrote:
-> To simplify block device lookup and a few other upcomdin areas, make sure
-> that we always have a struct block_device available for each disk and
-> each partition.  The only downside of this is that each device and
-> partition uses a little more memories.  The upside will be that a lot of
-> code can be simplified.
-> 
-> With that all we need to look up the block device is to lookup the inode
-> and do a few sanity checks on the gendisk, instead of the separate lookup
-> for the gendisk.
-> 
-> As part of the change switch bdget() to only find existing block devices,
-> given that we know that the block_device structure must be allocated at
-> probe / partition scan time.
-> 
-> blk-cgroup needed a bit of a special treatment as the only place that
-> wanted to lookup a gendisk outside of the normal blkdev_get path.  It is
-> switched to lookup using the block device hash now that this is the
-> primary lookup path.
+> Stop passing the whole device as a separate argument given that it
+> can be trivially deducted.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   block/blk-cgroup.c         |  42 ++++-----
->   block/blk-iocost.c         |  36 +++----
->   block/blk.h                |   1 -
->   block/genhd.c              | 188 +++----------------------------------
->   block/partitions/core.c    |  28 +++---
->   fs/block_dev.c             | 133 +++++++++++++++-----------
->   include/linux/blk-cgroup.h |   4 +-
->   include/linux/blkdev.h     |   3 +
->   include/linux/genhd.h      |   4 +-
->   9 files changed, 153 insertions(+), 286 deletions(-)
+>   drivers/block/loop.c   | 12 +++-----
+>   fs/block_dev.c         | 69 +++++++++++++++++++-----------------------
+>   include/linux/blkdev.h |  6 ++--
+>   3 files changed, 38 insertions(+), 49 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
