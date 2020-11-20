@@ -4,98 +4,100 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE48C56201
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 04:51:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CCE5C64E8A
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 04:52:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99D5C223AC
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 04:51:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DA0D223C6
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 04:52:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726325AbgKTEvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 23:51:39 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52650 "EHLO
+        id S1726305AbgKTEvi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 23:51:38 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52672 "EHLO
         kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726172AbgKTEvg (ORCPT
+        with ESMTP id S1726189AbgKTEvg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 23:51:36 -0500
 Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
-        id A38082A451; Thu, 19 Nov 2020 23:51:35 -0500 (EST)
+        id BE34E2A452; Thu, 19 Nov 2020 23:51:35 -0500 (EST)
 To:     Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <af25163257796b50bb99d4ede4025cea55787b8f.1605847196.git.fthain@telegraphics.com.au>
+Message-Id: <c1317ae8fdcb498460de5d7ea0bd62a42f5eeca8.1605847196.git.fthain@telegraphics.com.au>
 From:   Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] scsi/atari_scsi: Fix race condition between .queuecommand and
- EH
+Subject: [PATCH] scsi/NCR5380: Reduce NCR5380_maybe_release_dma_irq() call
+ sites
 Date:   Fri, 20 Nov 2020 15:39:56 +1100
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It is possible that bus_reset_cleanup() or .eh_abort_handler could
-be invoked during NCR5380_queuecommand(). If that takes place before
-the new command is enqueued and after the ST-DMA "lock" has been
-acquired, the ST-DMA "lock" will be released again. This will result
-in a lost DMA interrupt and a command timeout. Fix this by excluding
-EH and interrupt handlers while the new command is enqueued.
+Refactor to avoid needless calls to NCR5380_maybe_release_dma_irq().
+This makes the machine code smaller and the source more readable.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
-Michael, would you please send your Acked-by or Reviewed-and-tested-by?
-These two patches taken together should be equivalent to the one you tested
-recently. I've split it into two as that seemed to make more sense.
----
- drivers/scsi/NCR5380.c    |  9 ++++++---
- drivers/scsi/atari_scsi.c | 10 +++-------
- 2 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/scsi/NCR5380.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index d654a6cc4162..ea4b5749e7da 100644
+index ea4b5749e7da..d597d7493a62 100644
 --- a/drivers/scsi/NCR5380.c
 +++ b/drivers/scsi/NCR5380.c
-@@ -580,11 +580,14 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
+@@ -725,7 +725,6 @@ static void NCR5380_main(struct work_struct *work)
  
- 	cmd->result = 0;
+ 			if (!NCR5380_select(instance, cmd)) {
+ 				dsprintk(NDEBUG_MAIN, instance, "main: select complete\n");
+-				maybe_release_dma_irq(instance);
+ 			} else {
+ 				dsprintk(NDEBUG_MAIN | NDEBUG_QUEUES, instance,
+ 				         "main: select failed, returning %p to queue\n", cmd);
+@@ -737,8 +736,10 @@ static void NCR5380_main(struct work_struct *work)
+ 			NCR5380_information_transfer(instance);
+ 			done = 0;
+ 		}
+-		if (!hostdata->connected)
++		if (!hostdata->connected) {
+ 			NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
++			maybe_release_dma_irq(instance);
++		}
+ 		spin_unlock_irq(&hostdata->lock);
+ 		if (!done)
+ 			cond_resched();
+@@ -1844,7 +1845,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 					 */
+ 					NCR5380_write(TARGET_COMMAND_REG, 0);
  
--	if (!NCR5380_acquire_dma_irq(instance))
--		return SCSI_MLQUEUE_HOST_BUSY;
--
- 	spin_lock_irqsave(&hostdata->lock, flags);
+-					maybe_release_dma_irq(instance);
+ 					return;
+ 				case MESSAGE_REJECT:
+ 					/* Accept message by clearing ACK */
+@@ -1976,7 +1976,6 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 					hostdata->busy[scmd_id(cmd)] &= ~(1 << cmd->device->lun);
+ 					cmd->result = DID_ERROR << 16;
+ 					complete_cmd(instance, cmd);
+-					maybe_release_dma_irq(instance);
+ 					return;
+ 				}
+ 				msgout = NOP;
+@@ -2312,7 +2311,6 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
+ 	}
  
-+	if (!NCR5380_acquire_dma_irq(instance)) {
-+		spin_unlock_irqrestore(&hostdata->lock, flags);
-+
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
- 	/*
- 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE
- 	 * commands are added to the head of the queue since any command will
-diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index a82b63a66635..95d7a3586083 100644
---- a/drivers/scsi/atari_scsi.c
-+++ b/drivers/scsi/atari_scsi.c
-@@ -376,15 +376,11 @@ static int falcon_get_lock(struct Scsi_Host *instance)
- 	if (IS_A_TT())
- 		return 1;
+ 	queue_work(hostdata->work_q, &hostdata->main_task);
+-	maybe_release_dma_irq(instance);
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
  
--	if (stdma_is_locked_by(scsi_falcon_intr) &&
--	    instance->hostt->can_queue > 1)
-+	if (stdma_is_locked_by(scsi_falcon_intr))
- 		return 1;
+ 	return result;
+@@ -2368,7 +2366,6 @@ static void bus_reset_cleanup(struct Scsi_Host *instance)
+ 	hostdata->dma_len = 0;
  
--	if (in_interrupt())
--		return stdma_try_lock(scsi_falcon_intr, instance);
--
--	stdma_lock(scsi_falcon_intr, instance);
--	return 1;
-+	/* stdma_lock() may sleep which means it can't be used here */
-+	return stdma_try_lock(scsi_falcon_intr, instance);
+ 	queue_work(hostdata->work_q, &hostdata->main_task);
+-	maybe_release_dma_irq(instance);
  }
  
- #ifndef MODULE
+ /**
 -- 
 2.26.2
 
