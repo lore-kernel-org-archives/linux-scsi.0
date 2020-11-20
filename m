@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08693C6379F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:52:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E445C5519F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:52:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD445222BA
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:52:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC498223B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:52:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726543AbgKTHvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 02:51:42 -0500
-Received: from mx2.suse.de ([195.135.220.15]:41800 "EHLO mx2.suse.de"
+        id S1726614AbgKTHwt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 02:52:49 -0500
+Received: from mx2.suse.de ([195.135.220.15]:42612 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726172AbgKTHvl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Nov 2020 02:51:41 -0500
+        id S1726123AbgKTHws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Nov 2020 02:52:48 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id DE27BAB3D;
-        Fri, 20 Nov 2020 07:51:39 +0000 (UTC)
-Subject: Re: [PATCH 67/78] block: simplify the block device claiming interface
+        by mx2.suse.de (Postfix) with ESMTP id 230CEAC0C;
+        Fri, 20 Nov 2020 07:52:47 +0000 (UTC)
+Subject: Re: [PATCH 68/78] block: remove ->bd_contains
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Justin Sanders <justin@coraid.com>,
         Josef Bacik <josef@toxicpanda.com>,
@@ -44,14 +44,14 @@ Cc:     Justin Sanders <justin@coraid.com>,
         linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
 References: <20201116145809.410558-1-hch@lst.de>
- <20201116145809.410558-68-hch@lst.de>
+ <20201116145809.410558-69-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <64ae3518-094e-a433-0da6-972b230efc28@suse.de>
-Date:   Fri, 20 Nov 2020 08:51:38 +0100
+Message-ID: <3ba54e39-aac0-683a-7edb-7b4172b37cf7@suse.de>
+Date:   Fri, 20 Nov 2020 08:52:46 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201116145809.410558-68-hch@lst.de>
+In-Reply-To: <20201116145809.410558-69-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -60,15 +60,15 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/16/20 3:57 PM, Christoph Hellwig wrote:
-> Stop passing the whole device as a separate argument given that it
-> can be trivially deducted.
+> Now that each gendisk has a reference to the block_device referencing
+> it, we can just use that everywhere and get rid of ->bd_contain.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/block/loop.c   | 12 +++-----
->   fs/block_dev.c         | 69 +++++++++++++++++++-----------------------
->   include/linux/blkdev.h |  6 ++--
->   3 files changed, 38 insertions(+), 49 deletions(-)
+>   drivers/scsi/scsicam.c    |  2 +-
+>   fs/block_dev.c            | 50 +++++++++++++--------------------------
+>   include/linux/blk_types.h |  4 +++-
+>   3 files changed, 20 insertions(+), 36 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
