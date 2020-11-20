@@ -2,97 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBCBC56202
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 03:37:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE48C56201
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 04:51:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5598522267
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 03:37:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="loglzgex"
+	by mail.kernel.org (Postfix) with ESMTP id 99D5C223AC
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 04:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727181AbgKTDhA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Nov 2020 22:37:00 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:38412 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726674AbgKTDg7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 22:36:59 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AK3OxAh096019;
-        Fri, 20 Nov 2020 03:31:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=67dTBmUGckDFPhVupJWT4pclAbMGc1TiRi9QJ/ol3GY=;
- b=loglzgexwG8sza19oTC6ypZun0gEUI92sSd4Nap91uYDY9Ciok9XD2e+5XJElwgy4Ysu
- ncKaifhY78nYxF9aghYQcMoKo2eeO86BqxnrRXpcD9o/JBo2r8y3t87GvflMgpMdz7Xa
- EwNpuz1RYA4Ief0wRTGMZcGCBh9BXJXwZsw6j2I4RXpvfbjtjStOvsy/8HmWgVjVZDTc
- vCbjnUT5k4X7gOjvCG6JB3BxfwWeupabn7bUYQipitbmfkbYEWALbMhEHYNFJFafY13e
- 8RiRlAn9tVNSbwBDM8fGWKjcvN0vSYNBfH233rQMmkxY2W+FoeLJydDdOwjVWd8t0lJe 2g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34t76m8qxn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 20 Nov 2020 03:31:51 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AK3OeZP029073;
-        Fri, 20 Nov 2020 03:31:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 34ts60wh8v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 20 Nov 2020 03:31:50 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AK3VmYF011032;
-        Fri, 20 Nov 2020 03:31:48 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 19 Nov 2020 19:31:48 -0800
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, Lee Jones <lee.jones@linaro.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/1] scsi: pm8001: pm8001_hwi: Remove unused variable 'value'
-Date:   Thu, 19 Nov 2020 22:31:41 -0500
-Message-Id: <160584262848.7157.434419881287888181.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201116104119.816527-1-lee.jones@linaro.org>
-References: <20201116104119.816527-1-lee.jones@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9810 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
- suspectscore=0 mlxscore=0 malwarescore=0 bulkscore=0 mlxlogscore=974
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011200023
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9810 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- adultscore=0 priorityscore=1501 bulkscore=0 clxscore=1015 mlxlogscore=988
- malwarescore=0 mlxscore=0 spamscore=0 lowpriorityscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011200023
+        id S1726325AbgKTEvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Nov 2020 23:51:39 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52650 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726172AbgKTEvg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2020 23:51:36 -0500
+Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
+        id A38082A451; Thu, 19 Nov 2020 23:51:35 -0500 (EST)
+To:     Michael Schmitz <schmitzmic@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <af25163257796b50bb99d4ede4025cea55787b8f.1605847196.git.fthain@telegraphics.com.au>
+From:   Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] scsi/atari_scsi: Fix race condition between .queuecommand and
+ EH
+Date:   Fri, 20 Nov 2020 15:39:56 +1100
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 16 Nov 2020 10:41:19 +0000, Lee Jones wrote:
+It is possible that bus_reset_cleanup() or .eh_abort_handler could
+be invoked during NCR5380_queuecommand(). If that takes place before
+the new command is enqueued and after the ST-DMA "lock" has been
+acquired, the ST-DMA "lock" will be released again. This will result
+in a lost DMA interrupt and a command timeout. Fix this by excluding
+EH and interrupt handlers while the new command is enqueued.
 
-> Hasn't been used since 2009.
-> 
-> Fixes the following W=1 kernel build warning(s):
-> 
->  drivers/scsi/pm8001/pm8001_hwi.c: In function ‘mpi_set_phys_g3_with_ssc’:
->  drivers/scsi/pm8001/pm8001_hwi.c:415:6: warning: variable ‘value’ set but not used [-Wunused-but-set-variable]
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+Michael, would you please send your Acked-by or Reviewed-and-tested-by?
+These two patches taken together should be equivalent to the one you tested
+recently. I've split it into two as that seemed to make more sense.
+---
+ drivers/scsi/NCR5380.c    |  9 ++++++---
+ drivers/scsi/atari_scsi.c | 10 +++-------
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
-Applied to 5.11/scsi-queue, thanks!
-
-[1/1] scsi: pm8001: Remove unused variable 'value'
-      https://git.kernel.org/mkp/scsi/c/a364a3ea32da
-
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index d654a6cc4162..ea4b5749e7da 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -580,11 +580,14 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
+ 
+ 	cmd->result = 0;
+ 
+-	if (!NCR5380_acquire_dma_irq(instance))
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+ 	spin_lock_irqsave(&hostdata->lock, flags);
+ 
++	if (!NCR5380_acquire_dma_irq(instance)) {
++		spin_unlock_irqrestore(&hostdata->lock, flags);
++
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++
+ 	/*
+ 	 * Insert the cmd into the issue queue. Note that REQUEST SENSE
+ 	 * commands are added to the head of the queue since any command will
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index a82b63a66635..95d7a3586083 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -376,15 +376,11 @@ static int falcon_get_lock(struct Scsi_Host *instance)
+ 	if (IS_A_TT())
+ 		return 1;
+ 
+-	if (stdma_is_locked_by(scsi_falcon_intr) &&
+-	    instance->hostt->can_queue > 1)
++	if (stdma_is_locked_by(scsi_falcon_intr))
+ 		return 1;
+ 
+-	if (in_interrupt())
+-		return stdma_try_lock(scsi_falcon_intr, instance);
+-
+-	stdma_lock(scsi_falcon_intr, instance);
+-	return 1;
++	/* stdma_lock() may sleep which means it can't be used here */
++	return stdma_try_lock(scsi_falcon_intr, instance);
+ }
+ 
+ #ifndef MODULE
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.26.2
+
