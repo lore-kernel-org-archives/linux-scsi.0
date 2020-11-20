@@ -2,126 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A361C56201
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 15:51:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AC32C56201
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 16:35:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1075A22269
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 15:51:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oL6P7D1i"
+	by mail.kernel.org (Postfix) with ESMTP id 4BBD12240B
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 16:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728873AbgKTPvM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 10:51:12 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:34470 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728674AbgKTPvM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 10:51:12 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AKFmWhQ169589;
-        Fri, 20 Nov 2020 15:51:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id; s=corp-2020-01-29;
- bh=l6+pRVzeFGek6Xtlp5DkgWLvoPEStjA8e3BjUwTHjtw=;
- b=oL6P7D1iMsksL+ivRFDAWE0WqXJdZVDP/WAsiGyqIMKp5vkzxdvaLF5hiJqyff+J4wrr
- dziCrNzUHnhHYU1vgrQ4RCDDJUSdMc9WPyn4ss3GEGVw0HcidOvfRRSl6ZhIPgrTCQ0X
- iQQrKWiNJ842nG1skrjNYAsxxgw04LImRXmT7r0l10G/dTMUeefNGjBur8d+V1GSsC0d
- uXeL2PJN9hYWQCaFCCY6F4EwfnOAfz7fIvDDuOCCFZvdP3WV5x9F0a2od+xBFbDZq1bv
- zJYYMph+fPCwVuDIrnms2MNFmi6wZde3/b2Edjdv5Lwpefosz/w3JaDojc79BSQapth9 ag== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 34t4rbbd3c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 20 Nov 2020 15:51:07 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AKFVgkW130144;
-        Fri, 20 Nov 2020 15:51:07 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 34umd3md7n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 20 Nov 2020 15:51:07 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AKFp5qd009979;
-        Fri, 20 Nov 2020 15:51:06 GMT
-Received: from ol2.localdomain (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 20 Nov 2020 07:51:05 -0800
-From:   Mike Christie <michael.christie@oracle.com>
-To:     stefanha@redhat.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, mst@redhat.com,
-        virtualization@lists.linux-foundation.org
-Subject: [PATCH 1/1 V3] vhost scsi: fix lun reset completion handling
-Date:   Fri, 20 Nov 2020 09:50:59 -0600
-Message-Id: <1605887459-3864-1-git-send-email-michael.christie@oracle.com>
-X-Mailer: git-send-email 1.8.3.1
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9810 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 mlxscore=0 phishscore=0
- spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011200106
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9810 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015
- malwarescore=0 impostorscore=0 lowpriorityscore=0 priorityscore=1501
- mlxlogscore=999 adultscore=0 phishscore=0 suspectscore=2 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011200107
+        id S1728833AbgKTQfZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 11:35:25 -0500
+Received: from netrider.rowland.org ([192.131.102.5]:44433 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1728220AbgKTQfZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 11:35:25 -0500
+Received: (qmail 620760 invoked by uid 1000); 20 Nov 2020 11:35:24 -0500
+Date:   Fri, 20 Nov 2020 11:35:24 -0500
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH RFC v2 1/1] scsi: pm: Leave runtime PM status alone
+ during system resume/thaw/restore
+Message-ID: <20201120163524.GB619708@rowland.harvard.edu>
+References: <1605861443-11459-1-git-send-email-cang@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1605861443-11459-1-git-send-email-cang@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-vhost scsi owns the scsi se_cmd but lio frees the se_cmd->se_tmr
-before calling release_cmd, so while with normal cmd completion we
-can access the se_cmd from the vhost work, we can't do the same with
-se_cmd->se_tmr. This has us copy the tmf response in
-vhost_scsi_queue_tm_rsp to our internal vhost-scsi tmf struct for
-when it gets sent to the guest from our worker thread.
+On Fri, Nov 20, 2020 at 12:37:22AM -0800, Can Guo wrote:
+> Runtime resume is handled by runtime PM framework, no need to forcibly
+> set runtime PM status to RPM_ACTIVE during system resume/thaw/restore.
 
-Fixes: efd838fec17b ("vhost scsi: Add support for LUN resets.")
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
----
+Sorry, I don't understand this explanation at all.
 
-V3:
-- Fix "Fixes: Fixes:"
-V2:
-- Added fixes line.
+Sure, runtime resume is handled by the runtime PM framework.  But this 
+patch changes the code for system resume, which is completely different.
 
- drivers/vhost/scsi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Following a system resume, the hardware will be at full power.  We don't 
+want the kernel to think that the device is still in runtime suspend; 
+otherwise is would never put the device back into low-power mode.
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index f22fce5..6ff8a5096 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -220,6 +220,7 @@ struct vhost_scsi_tmf {
- 	struct list_head queue_entry;
- 
- 	struct se_cmd se_cmd;
-+	u8 scsi_resp;
- 	struct vhost_scsi_inflight *inflight;
- 	struct iovec resp_iov;
- 	int in_iovs;
-@@ -426,6 +427,7 @@ static void vhost_scsi_queue_tm_rsp(struct se_cmd *se_cmd)
- 	struct vhost_scsi_tmf *tmf = container_of(se_cmd, struct vhost_scsi_tmf,
- 						  se_cmd);
- 
-+	tmf->scsi_resp = se_cmd->se_tmr_req->response;
- 	transport_generic_free_cmd(&tmf->se_cmd, 0);
- }
- 
-@@ -1183,7 +1185,7 @@ static void vhost_scsi_tmf_resp_work(struct vhost_work *work)
- 						  vwork);
- 	int resp_code;
- 
--	if (tmf->se_cmd.se_tmr_req->response == TMR_FUNCTION_COMPLETE)
-+	if (tmf->scsi_resp == TMR_FUNCTION_COMPLETE)
- 		resp_code = VIRTIO_SCSI_S_FUNCTION_SUCCEEDED;
- 	else
- 		resp_code = VIRTIO_SCSI_S_FUNCTION_REJECTED;
--- 
-1.8.3.1
+Alan Stern
 
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+> 
+> Changes since v1:
+> - Incorporated Bart's comments
+> 
+> ---
+>  drivers/scsi/scsi_pm.c | 24 +-----------------------
+>  1 file changed, 1 insertion(+), 23 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index 3717eea..908f27f 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -79,25 +79,6 @@ static int scsi_dev_type_resume(struct device *dev,
+>  	scsi_device_resume(to_scsi_device(dev));
+>  	dev_dbg(dev, "scsi resume: %d\n", err);
+>  
+> -	if (err == 0) {
+> -		pm_runtime_disable(dev);
+> -		err = pm_runtime_set_active(dev);
+> -		pm_runtime_enable(dev);
+> -
+> -		/*
+> -		 * Forcibly set runtime PM status of request queue to "active"
+> -		 * to make sure we can again get requests from the queue
+> -		 * (see also blk_pm_peek_request()).
+> -		 *
+> -		 * The resume hook will correct runtime PM status of the disk.
+> -		 */
+> -		if (!err && scsi_is_sdev_device(dev)) {
+> -			struct scsi_device *sdev = to_scsi_device(dev);
+> -
+> -			blk_set_runtime_active(sdev->request_queue);
+> -		}
+> -	}
+> -
+>  	return err;
+>  }
+>  
+> @@ -165,11 +146,8 @@ static int scsi_bus_resume_common(struct device *dev,
+>  		 */
+>  		if (strncmp(scsi_scan_type, "async", 5) != 0)
+>  			async_synchronize_full_domain(&scsi_sd_pm_domain);
+> -	} else {
+> -		pm_runtime_disable(dev);
+> -		pm_runtime_set_active(dev);
+> -		pm_runtime_enable(dev);
+>  	}
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+> 
