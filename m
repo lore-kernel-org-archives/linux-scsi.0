@@ -2,61 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3EFDC6379D
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 19:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 000F4C6379D
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 19:52:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6647022254
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 19:31:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 955A3206B6
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 19:52:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="GgFl3K9I"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="0HJ898xk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732460AbgKTTay (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 14:30:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50748 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732421AbgKTTap (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 14:30:45 -0500
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE5DBC061A4D
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 11:30:43 -0800 (PST)
-Received: by mail-pg1-x544.google.com with SMTP id i13so8134528pgm.9
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 11:30:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=3bv50j9tOMZCSWAChUvUk5K6TgooTRt3SRcQZBJ9fcA=;
-        b=GgFl3K9IS/lWsdMjkEVVAtTSDzsQ0sxEOabPKwuHzNJyTA7s1nVN/P5Py+wtAIOvbE
-         i43RryzoLL4QMDFVI6bDxTe0ngekUN0rycJ/u5dixn0o4ZWxiMdHtnF6M1zgV7bxdmjG
-         OxnZTS8PQwcd6ZCwnahaxVB8GYQEw6f4nxFx4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=3bv50j9tOMZCSWAChUvUk5K6TgooTRt3SRcQZBJ9fcA=;
-        b=YErh+2so91LFi0ri2xBs1a/pBjp50CV+w4bsY0htcAKUvF/Z8dcTCAIzCd9BtQG6fC
-         CDZpYExqcQYxY7Zss0h6Q6sOrSWF3WfoDu7hVkKBKYjDjPOrUJ2MjnWv2/P8Bd0ifPEx
-         iiidnbZXYUGSA+dpu8ktmbf5KILx/MGvkqjyQVI1YzB5QgbHaZhV9/lO93k89DQOtaTB
-         qpjyQmC1JNuaTuKJL0aHjjfjE4GnKGxwZwBjV7VXAYFaKAIvpMcKYYFRlAYB0SjFtwhL
-         WxtMKXhYv6j1vhW9L2kroIyI059ZQlRJ4hPAKzh/MAL413+aDZYu/0CDJ819N6jHrOVv
-         x0iw==
-X-Gm-Message-State: AOAM530MyLds3mPBLAYw18tRgFrH+q4kyZVu0nf9CRIYV6/YZy5o4asI
-        TnllkgD7zlM1VhgfwAf/LqSsOg==
-X-Google-Smtp-Source: ABdhPJwFn7oz/bfAp6J8E6Vk82WR2gtV/ls3AEWmwH/TblnvnVOa/FKFQXEYpz+4sj3KQLcuYCiPkA==
-X-Received: by 2002:a63:a84f:: with SMTP id i15mr19199286pgp.120.1605900643186;
-        Fri, 20 Nov 2020 11:30:43 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id s5sm4261271pfh.164.2020.11.20.11.30.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2020 11:30:41 -0800 (PST)
-Date:   Fri, 20 Nov 2020 11:30:40 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Jakub Kicinski <kuba@kernel.org>
+        id S1730160AbgKTTvx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 14:51:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48630 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729559AbgKTTvu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Nov 2020 14:51:50 -0500
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.6])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id ADA4D206B6;
+        Fri, 20 Nov 2020 19:51:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605901908;
+        bh=RBzOhaxiAPO90htsWQNreeN48VhmFALIIs8F+S8F2tg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=0HJ898xky9A4AiX47c8E/kv2vloKTCLDsa1B08r0Ns0UI6ViLC8sEEmzvLmSWmHDR
+         rh+QM7asV5JMfRqDaW/zMVHUMAG8pWVLOHT3LXTHM6aAp9QNwMcpVcVlrfF8wRUqJ9
+         pWgdeTKSVxQ+8c5KHivLBQCp2OjpIRpNZteZuQdk=
+Date:   Fri, 20 Nov 2020 11:51:42 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
 Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
         amd-gfx@lists.freedesktop.org, bridge@lists.linux-foundation.org,
@@ -103,48 +81,52 @@ Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         Nathan Chancellor <natechancellor@gmail.com>,
         Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>
 Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
-Message-ID: <202011201129.B13FDB3C@keescook>
+Message-ID: <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <202011201129.B13FDB3C@keescook>
 References: <cover.1605896059.git.gustavoars@kernel.org>
- <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <202011201129.B13FDB3C@keescook>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 20, 2020 at 10:53:44AM -0800, Jakub Kicinski wrote:
-> On Fri, 20 Nov 2020 12:21:39 -0600 Gustavo A. R. Silva wrote:
-> > This series aims to fix almost all remaining fall-through warnings in
-> > order to enable -Wimplicit-fallthrough for Clang.
+On Fri, 20 Nov 2020 11:30:40 -0800 Kees Cook wrote:
+> On Fri, Nov 20, 2020 at 10:53:44AM -0800, Jakub Kicinski wrote:
+> > On Fri, 20 Nov 2020 12:21:39 -0600 Gustavo A. R. Silva wrote:  
+> > > This series aims to fix almost all remaining fall-through warnings in
+> > > order to enable -Wimplicit-fallthrough for Clang.
+> > > 
+> > > In preparation to enable -Wimplicit-fallthrough for Clang, explicitly
+> > > add multiple break/goto/return/fallthrough statements instead of just
+> > > letting the code fall through to the next case.
+> > > 
+> > > Notice that in order to enable -Wimplicit-fallthrough for Clang, this
+> > > change[1] is meant to be reverted at some point. So, this patch helps
+> > > to move in that direction.
+> > > 
+> > > Something important to mention is that there is currently a discrepancy
+> > > between GCC and Clang when dealing with switch fall-through to empty case
+> > > statements or to cases that only contain a break/continue/return
+> > > statement[2][3][4].  
 > > 
-> > In preparation to enable -Wimplicit-fallthrough for Clang, explicitly
-> > add multiple break/goto/return/fallthrough statements instead of just
-> > letting the code fall through to the next case.
+> > Are we sure we want to make this change? Was it discussed before?
 > > 
-> > Notice that in order to enable -Wimplicit-fallthrough for Clang, this
-> > change[1] is meant to be reverted at some point. So, this patch helps
-> > to move in that direction.
+> > Are there any bugs Clangs puritanical definition of fallthrough helped
+> > find?
 > > 
-> > Something important to mention is that there is currently a discrepancy
-> > between GCC and Clang when dealing with switch fall-through to empty case
-> > statements or to cases that only contain a break/continue/return
-> > statement[2][3][4].
+> > IMVHO compiler warnings are supposed to warn about issues that could
+> > be bugs. Falling through to default: break; can hardly be a bug?!  
 > 
-> Are we sure we want to make this change? Was it discussed before?
-> 
-> Are there any bugs Clangs puritanical definition of fallthrough helped
-> find?
-> 
-> IMVHO compiler warnings are supposed to warn about issues that could
-> be bugs. Falling through to default: break; can hardly be a bug?!
+> It's certainly a place where the intent is not always clear. I think
+> this makes all the cases unambiguous, and doesn't impact the machine
+> code, since the compiler will happily optimize away any behavioral
+> redundancy.
 
-It's certainly a place where the intent is not always clear. I think
-this makes all the cases unambiguous, and doesn't impact the machine
-code, since the compiler will happily optimize away any behavioral
-redundancy.
+If none of the 140 patches here fix a real bug, and there is no change
+to machine code then it sounds to me like a W=2 kind of a warning.
 
-
--- 
-Kees Cook
+I think clang is just being annoying here, but if I'm the only one who
+feels this way chances are I'm wrong :)
