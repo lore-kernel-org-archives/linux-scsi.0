@@ -2,100 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6725FC5519F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:58:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D69C63777
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:59:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED36E2053B
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:57:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="Cec7EiJ8"
+	by mail.kernel.org (Postfix) with ESMTP id 87CCD2224E
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:59:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbgKTI57 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 03:57:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37064 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726123AbgKTI57 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 03:57:59 -0500
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8915CC0617A7
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 00:57:58 -0800 (PST)
-Received: by mail-ej1-x643.google.com with SMTP id y17so11765048ejh.11
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 00:57:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=EiYc52m2tsrSbLYvJdrgoMyjgl7EaGY6/zDPA50tx08=;
-        b=Cec7EiJ8XEubQlVqSJhu5SN8P/y6QMztowV+3Oh10KW9i2az9joSNkuMdsf03XPQ/b
-         ExZlIb5qSZzYAG09AqGskUYMOJJWaZ9X47eEWnPOziyeYxQ8oSZbUJqZJIeAhwtwCN7Y
-         3qaOtiiC3OLg2DnvQ9rmgnZeuqdtiYc0INLx3dU2+Ig3BJc6FCq7fr7RgjoKGROhM+Lp
-         Uxwp/M8MIj+SdaCZizGoaqWDJJN0eHtcqlU1gOB/36e9QE4/2+2ZMojsKZHahhmMiv4K
-         mUU8AzV8ZH2yH374RPA0puFu8G/xf3hf7ANBWfT7yg1uN//sd+FDpgXKgaGqkM05Z3Nb
-         4UNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=EiYc52m2tsrSbLYvJdrgoMyjgl7EaGY6/zDPA50tx08=;
-        b=p3+HiXcH/vGeGWavUlEPTRb9jbLid8SlC2YvM8xqjcQGDnbrpMV/8xKw5z+JNV8q4j
-         EhtgvymrHQG1Jn7SRM1RNWS+I38zhxPfrC3ulIxcinDCXWOuyGlGlSbfFHNfLb8007HX
-         Gx6KyEX6pseRFE0jhYHTmmuup5/Ih0+MzoOh2vQA0+yR84kYxC1UMNxDEZuQXxi5KeZR
-         vb6g2rNLmdKgk2gJAqzHlKRbKi5L1NLlXmUX/3lZYRTlCQDOnLbdHxIELTlNHeGQUK9R
-         G6qIlrB9SImUvEW8JAVpGYW8Vt1/6GiCwln5yfm8dy4TVbStYwSWAzGsaLqHmsAFq5IW
-         GFTg==
-X-Gm-Message-State: AOAM531Bxj+wYF5h/osEpOruWO1NGhNb3MFW889QQKdz7/1Kj9C5Xn/4
-        VgxpIPfvEIjpvKRfSLNoBCpaHMvfseoZ6GpI0cnqxVQHTXw=
-X-Google-Smtp-Source: ABdhPJz7tCFvotvmhC8ZHKNycSuT1fJK6d1SFo2zy37PZ6KA/RS9Yoff8JFik8Z4MvHR8biZCBpDoYBU2x3XS7NUTYU=
-X-Received: by 2002:a17:906:6a51:: with SMTP id n17mr14315782ejs.478.1605862677249;
- Fri, 20 Nov 2020 00:57:57 -0800 (PST)
-MIME-Version: 1.0
-References: <20201120083648.9319-1-vulab@iscas.ac.cn>
-In-Reply-To: <20201120083648.9319-1-vulab@iscas.ac.cn>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Fri, 20 Nov 2020 09:57:46 +0100
-Message-ID: <CAMGffE=jcCppveLkaChvyk1hGWn4c8HHUouWhR2_DwKXYoradw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: remove casting kcalloc
-To:     Xu Wang <vulab@iscas.ac.cn>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1727335AbgKTI6o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 03:58:44 -0500
+Received: from mx2.suse.de ([195.135.220.15]:48036 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727159AbgKTI6o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Nov 2020 03:58:44 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 5CAD1AC23;
+        Fri, 20 Nov 2020 08:58:42 +0000 (UTC)
+Subject: Re: [PATCH 74/78] block: merge struct block_device and struct
+ hd_struct
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20201116145809.410558-1-hch@lst.de>
+ <20201116145809.410558-75-hch@lst.de>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <f6e6b948-44c8-50f0-beea-921eb3a268dd@suse.de>
+Date:   Fri, 20 Nov 2020 09:58:40 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
+MIME-Version: 1.0
+In-Reply-To: <20201116145809.410558-75-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 20, 2020 at 9:36 AM Xu Wang <vulab@iscas.ac.cn> wrote:
->
-> Remove casting the values returned by kcalloc.
->
-> Signed-off-by: Xu Wang <vulab@iscas.ac.cn>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Thanks Xu!
+On 11/16/20 3:58 PM, Christoph Hellwig wrote:
+> Instead of having two structures that represent each block device with
+> different lift time rules merged them into a single one.  This also
+> greatly simplifies the reference counting rules, as we can use the inode
+> reference count as the main reference count for the new struct
+> block_device, with the device model reference front ending it for device
+> model interaction.  The percpu refcount in struct hd_struct is entirely
+> gone given that struct block_device must be opened and thus valid for
+> the duration of the I/O.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/scsi/pm8001/pm8001_init.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index 3cf3e58b6979..ac0e598b8ac2 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -1187,8 +1187,8 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
->                 goto err_out;
->
->         /* Memory region for ccb_info*/
-> -       pm8001_ha->ccb_info = (struct pm8001_ccb_info *)
-> -               kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
-> +       pm8001_ha->ccb_info =
-> +               kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
->         if (!pm8001_ha->ccb_info) {
->                 PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
->                         ("Unable to allocate memory for ccb\n"));
-> --
-> 2.17.1
->
+>   block/bio.c                        |   6 +-
+>   block/blk-cgroup.c                 |   9 +-
+>   block/blk-core.c                   |  85 +++++-----
+>   block/blk-flush.c                  |   2 +-
+>   block/blk-lib.c                    |   2 +-
+>   block/blk-merge.c                  |   6 +-
+>   block/blk-mq.c                     |  11 +-
+>   block/blk-mq.h                     |   5 +-
+>   block/blk.h                        |  38 ++---
+>   block/genhd.c                      | 242 +++++++++++------------------
+>   block/ioctl.c                      |   4 +-
+>   block/partitions/core.c            | 221 +++++++-------------------
+>   drivers/block/drbd/drbd_receiver.c |   2 +-
+>   drivers/block/drbd/drbd_worker.c   |   2 +-
+>   drivers/block/zram/zram_drv.c      |   2 +-
+>   drivers/md/bcache/request.c        |   4 +-
+>   drivers/md/dm.c                    |   8 +-
+>   drivers/md/md.c                    |   4 +-
+>   drivers/nvme/target/admin-cmd.c    |  20 +--
+>   drivers/s390/block/dasd.c          |   8 +-
+>   fs/block_dev.c                     |  68 +++-----
+>   fs/ext4/super.c                    |  18 +--
+>   fs/ext4/sysfs.c                    |  10 +-
+>   fs/f2fs/checkpoint.c               |   5 +-
+>   fs/f2fs/f2fs.h                     |   2 +-
+>   fs/f2fs/super.c                    |   6 +-
+>   fs/f2fs/sysfs.c                    |   9 --
+>   include/linux/blk_types.h          |  23 ++-
+>   include/linux/blkdev.h             |  13 +-
+>   include/linux/genhd.h              |  67 ++------
+>   include/linux/part_stat.h          |  17 +-
+>   init/do_mounts.c                   |  20 +--
+>   kernel/trace/blktrace.c            |  54 ++-----
+>   33 files changed, 351 insertions(+), 642 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
