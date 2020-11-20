@@ -2,168 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13515C8300C
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 20:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08D5EC63777
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 22:15:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B37EE2223F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 20:48:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9565222470
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 22:15:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="avd4TaFU"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="WbwFRNfV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730093AbgKTUsM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 15:48:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34856 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729570AbgKTUsF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 15:48:05 -0500
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FFD0C08E9AA
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 12:48:04 -0800 (PST)
-Received: by mail-pg1-x542.google.com with SMTP id 81so8341380pgf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 12:48:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=v0uQ3+ZvQ790GJbfbb1ESqfRrqQ38XoL7hho1t1Gb0k=;
-        b=avd4TaFUM+Ab56B8iWTc3giej2JyPXQeNqj8Vqwh4pMfYMm6E7ROZ43KbUMGq3c2kN
-         Y7wgImiWtwhH33QCuhXwX5xfYnbd8ZoAoymaiVLMsflRM4OrtMTi7raBVieCeB5e9/kv
-         qCr4nXKui27aGXF6t1ziK2ispJ9UlbNRnpYGc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=v0uQ3+ZvQ790GJbfbb1ESqfRrqQ38XoL7hho1t1Gb0k=;
-        b=Q+ZXqBYiqIG0QjfU3YfPSKu+ttzAGS/H6zLNNXjiZ6aBu2nqenVLOEa5nTNYG2NpHr
-         fSM3ok6sFUDoVGD9I6DTWxhCSoqolKTqlrZzYnZmGGQBC5iS1IxIsI2/xNJtGudnJYWy
-         YNFL+gvcrTNAa3XD4E/njWvwG8HbjXLbucdFmkqXhB9xHTZ41RDzmSYPhERTOhlnvaBo
-         ZcP3U/gUgmfefgG6ta0M6hHw8FHB5ZPONWkdvxSvm/XM5JHylCCNekkeQdAGgIubCUSK
-         tm16ma0zbPIya0LE2KVjtx75D4BLLFJDzMy6EtIJkbXSM/N30kfzf4q39c09I/ljBfNU
-         INag==
-X-Gm-Message-State: AOAM530rvqbl1WW06w80q+2L496U4EoxSIBfAqtbMotre61u3BgUGBGS
-        3xMCZ0JVkBTyWN4zf6PilzT2ow==
-X-Google-Smtp-Source: ABdhPJzEbaB+IYipfwOUXoCmdplAutZXXBsmC8OBp1xOfb5CPZl7t2eHSBKNbswFZQhoeAMsBYl7Qg==
-X-Received: by 2002:a62:d108:0:b029:163:d3cf:f00e with SMTP id z8-20020a62d1080000b0290163d3cff00emr15313890pfg.43.1605905283088;
-        Fri, 20 Nov 2020 12:48:03 -0800 (PST)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id a67sm3215381pfa.77.2020.11.20.12.48.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2020 12:48:02 -0800 (PST)
-Date:   Fri, 20 Nov 2020 12:48:01 -0800
-From:   Kees Cook <keescook@chromium.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
-        amd-gfx@lists.freedesktop.org, bridge@lists.linux-foundation.org,
-        ceph-devel@vger.kernel.org, cluster-devel@redhat.com,
-        coreteam@netfilter.org, devel@driverdev.osuosl.org,
-        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
-        dri-devel@lists.freedesktop.org, GR-everest-linux-l2@marvell.com,
-        GR-Linux-NIC-Dev@marvell.com, intel-gfx@lists.freedesktop.org,
-        intel-wired-lan@lists.osuosl.org, keyrings@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
-        linux-afs@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-block@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        linux-ext4@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-geode@lists.infradead.org, linux-gpio@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        linux-i3c@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-integrity@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
-        op-tee@lists.trustedfirmware.org, oss-drivers@netronome.com,
-        patches@opensource.cirrus.com, rds-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org,
-        selinux@vger.kernel.org, target-devel@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net,
-        usb-storage@lists.one-eyed-alien.net,
-        virtualization@lists.linux-foundation.org,
-        wcn36xx@lists.infradead.org, x86@kernel.org,
-        xen-devel@lists.xenproject.org, linux-hardening@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
-Message-ID: <202011201244.78E002D5@keescook>
-References: <cover.1605896059.git.gustavoars@kernel.org>
- <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <202011201129.B13FDB3C@keescook>
- <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        id S1728456AbgKTWOn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 17:14:43 -0500
+Received: from alln-iport-8.cisco.com ([173.37.142.95]:59266 "EHLO
+        alln-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727859AbgKTWOm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 17:14:42 -0500
+X-Greylist: delayed 425 seconds by postgrey-1.27 at vger.kernel.org; Fri, 20 Nov 2020 17:14:42 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=cisco.com; i=@cisco.com; l=2220; q=dns/txt; s=iport;
+  t=1605910482; x=1607120082;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=d/ZOzNowRDL/1pTn09ojrsWHzSzpmXPnHTH02clFZ8g=;
+  b=WbwFRNfVfaSXgLlQK9HHoEm/oNyHFYMMtbGlrgzCmRmPUA6oHGVGJTzt
+   dKHlZl4M+LO1PQxbHk8o9+AT87acHhg4waxsGDOAV2wAQ3iED9xY2MRFB
+   rFRKRzIqzXBbT0hCVX75nyl5kf/9TkQZ/cEYwwzD7zZB7BspBbngW+BqS
+   I=;
+X-IronPort-AV: E=Sophos;i="5.78,357,1599523200"; 
+   d="scan'208";a="614556846"
+Received: from alln-core-7.cisco.com ([173.36.13.140])
+  by alln-iport-8.cisco.com with ESMTP/TLS/DHE-RSA-SEED-SHA; 20 Nov 2020 22:07:36 +0000
+Received: from localhost.cisco.com ([10.193.101.253])
+        (authenticated bits=0)
+        by alln-core-7.cisco.com (8.15.2/8.15.2) with ESMTPSA id 0AKM7S8q017209
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Fri, 20 Nov 2020 22:07:36 GMT
+From:   Karan Tilak Kumar <kartilak@cisco.com>
+To:     satishkh@cisco.com
+Cc:     sebaddel@cisco.com, arulponn@cisco.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH] scsi: fnic: Change shost_printk with FNIC_FCS_DBG
+Date:   Fri, 20 Nov 2020 14:07:12 -0800
+Message-Id: <20201120220712.16708-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
+X-Outbound-Node: alln-core-7.cisco.com
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 20, 2020 at 11:51:42AM -0800, Jakub Kicinski wrote:
-> On Fri, 20 Nov 2020 11:30:40 -0800 Kees Cook wrote:
-> > On Fri, Nov 20, 2020 at 10:53:44AM -0800, Jakub Kicinski wrote:
-> > > On Fri, 20 Nov 2020 12:21:39 -0600 Gustavo A. R. Silva wrote:  
-> > > > This series aims to fix almost all remaining fall-through warnings in
-> > > > order to enable -Wimplicit-fallthrough for Clang.
-> > > > 
-> > > > In preparation to enable -Wimplicit-fallthrough for Clang, explicitly
-> > > > add multiple break/goto/return/fallthrough statements instead of just
-> > > > letting the code fall through to the next case.
-> > > > 
-> > > > Notice that in order to enable -Wimplicit-fallthrough for Clang, this
-> > > > change[1] is meant to be reverted at some point. So, this patch helps
-> > > > to move in that direction.
-> > > > 
-> > > > Something important to mention is that there is currently a discrepancy
-> > > > between GCC and Clang when dealing with switch fall-through to empty case
-> > > > statements or to cases that only contain a break/continue/return
-> > > > statement[2][3][4].  
-> > > 
-> > > Are we sure we want to make this change? Was it discussed before?
-> > > 
-> > > Are there any bugs Clangs puritanical definition of fallthrough helped
-> > > find?
-> > > 
-> > > IMVHO compiler warnings are supposed to warn about issues that could
-> > > be bugs. Falling through to default: break; can hardly be a bug?!  
-> > 
-> > It's certainly a place where the intent is not always clear. I think
-> > this makes all the cases unambiguous, and doesn't impact the machine
-> > code, since the compiler will happily optimize away any behavioral
-> > redundancy.
-> 
-> If none of the 140 patches here fix a real bug, and there is no change
-> to machine code then it sounds to me like a W=2 kind of a warning.
+Replacing shost_printk with FNIC_FCS_DBG so that
+these log messages are controlled by fnic_log_level
+flag in fnic_fip_handler_timer.
 
-I'd like to avoid splitting common -W options between default and W=2
-just based on the compiler. Getting -Wimplicit-fallthrough enabled found
-plenty of bugs, so making sure it works correctly for both compilers
-feels justified to me. (This is just a subset of the same C language
-short-coming.)
+Bumping up version number from 47 to 49 to
+maintain same level as internal version.
 
-> I think clang is just being annoying here, but if I'm the only one who
-> feels this way chances are I'm wrong :)
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+Signed-off-by: Satish Kharat <satishkh@cisco.com>
+---
+ drivers/scsi/fnic/fnic.h     | 2 +-
+ drivers/scsi/fnic/fnic_fcs.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-It's being pretty pedantic, but I don't think it's unreasonable to
-explicitly state how every case ends. GCC's silence for the case of
-"fall through to a break" doesn't really seem justified.
-
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 477513dc23b7..ed00b6061e0c 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -39,7 +39,7 @@
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.6.0.47"
++#define DRV_VERSION		"1.6.0.49"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index e3384afb7cbd..3fc3a7271dc1 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -1349,7 +1349,7 @@ void fnic_handle_fip_timer(struct fnic *fnic)
+ 	}
+ 
+ 	vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
+-	shost_printk(KERN_DEBUG, fnic->lport->host,
++	FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host,
+ 		  "fip_timer: vlan %d state %d sol_count %d\n",
+ 		  vlan->vid, vlan->state, vlan->sol_count);
+ 	switch (vlan->state) {
+@@ -1372,7 +1372,7 @@ void fnic_handle_fip_timer(struct fnic *fnic)
+ 			 * no response on this vlan, remove  from the list.
+ 			 * Try the next vlan
+ 			 */
+-			shost_printk(KERN_INFO, fnic->lport->host,
++			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
+ 				  "Dequeue this VLAN ID %d from list\n",
+ 				  vlan->vid);
+ 			list_del(&vlan->list);
+@@ -1382,7 +1382,7 @@ void fnic_handle_fip_timer(struct fnic *fnic)
+ 				/* we exhausted all vlans, restart vlan disc */
+ 				spin_unlock_irqrestore(&fnic->vlans_lock,
+ 							flags);
+-				shost_printk(KERN_INFO, fnic->lport->host,
++				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host,
+ 					  "fip_timer: vlan list empty, "
+ 					  "trigger vlan disc\n");
+ 				fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
 -- 
-Kees Cook
+2.29.2
+
