@@ -2,118 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D69C63777
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E23FC63777
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 11:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87CCD2224E
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 08:59:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 270D822255
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 11:52:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727335AbgKTI6o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 03:58:44 -0500
-Received: from mx2.suse.de ([195.135.220.15]:48036 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727159AbgKTI6o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Nov 2020 03:58:44 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 5CAD1AC23;
-        Fri, 20 Nov 2020 08:58:42 +0000 (UTC)
-Subject: Re: [PATCH 74/78] block: merge struct block_device and struct
- hd_struct
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20201116145809.410558-1-hch@lst.de>
- <20201116145809.410558-75-hch@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <f6e6b948-44c8-50f0-beea-921eb3a268dd@suse.de>
-Date:   Fri, 20 Nov 2020 09:58:40 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+        id S1728048AbgKTLwa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 06:52:30 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2135 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727366AbgKTLwa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 06:52:30 -0500
+Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CcvxB0lmjz67Ckx;
+        Fri, 20 Nov 2020 19:50:06 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Fri, 20 Nov 2020 12:52:26 +0100
+Received: from [10.47.4.214] (10.47.4.214) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Fri, 20 Nov
+ 2020 11:52:25 +0000
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+To:     Thomas Gleixner <tglx@linutronix.de>, <gregkh@linuxfoundation.org>,
+        <rafael@kernel.org>, <martin.petersen@oracle.com>,
+        <jejb@linux.ibm.com>
+CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <maz@kernel.org>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
+ <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
+ <874klmqu2r.fsf@nanos.tec.linutronix.de>
+ <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+ <87lfexp6am.fsf@nanos.tec.linutronix.de>
+ <3acb7fde-eae2-a223-9cfd-f409cc2abba6@huawei.com>
+ <873615oy8a.fsf@nanos.tec.linutronix.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
+Date:   Fri, 20 Nov 2020 11:52:09 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20201116145809.410558-75-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <873615oy8a.fsf@nanos.tec.linutronix.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.4.214]
+X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/16/20 3:58 PM, Christoph Hellwig wrote:
-> Instead of having two structures that represent each block device with
-> different lift time rules merged them into a single one.  This also
-> greatly simplifies the reference counting rules, as we can use the inode
-> reference count as the main reference count for the new struct
-> block_device, with the device model reference front ending it for device
-> model interaction.  The percpu refcount in struct hd_struct is entirely
-> gone given that struct block_device must be opened and thus valid for
-> the duration of the I/O.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   block/bio.c                        |   6 +-
->   block/blk-cgroup.c                 |   9 +-
->   block/blk-core.c                   |  85 +++++-----
->   block/blk-flush.c                  |   2 +-
->   block/blk-lib.c                    |   2 +-
->   block/blk-merge.c                  |   6 +-
->   block/blk-mq.c                     |  11 +-
->   block/blk-mq.h                     |   5 +-
->   block/blk.h                        |  38 ++---
->   block/genhd.c                      | 242 +++++++++++------------------
->   block/ioctl.c                      |   4 +-
->   block/partitions/core.c            | 221 +++++++-------------------
->   drivers/block/drbd/drbd_receiver.c |   2 +-
->   drivers/block/drbd/drbd_worker.c   |   2 +-
->   drivers/block/zram/zram_drv.c      |   2 +-
->   drivers/md/bcache/request.c        |   4 +-
->   drivers/md/dm.c                    |   8 +-
->   drivers/md/md.c                    |   4 +-
->   drivers/nvme/target/admin-cmd.c    |  20 +--
->   drivers/s390/block/dasd.c          |   8 +-
->   fs/block_dev.c                     |  68 +++-----
->   fs/ext4/super.c                    |  18 +--
->   fs/ext4/sysfs.c                    |  10 +-
->   fs/f2fs/checkpoint.c               |   5 +-
->   fs/f2fs/f2fs.h                     |   2 +-
->   fs/f2fs/super.c                    |   6 +-
->   fs/f2fs/sysfs.c                    |   9 --
->   include/linux/blk_types.h          |  23 ++-
->   include/linux/blkdev.h             |  13 +-
->   include/linux/genhd.h              |  67 ++------
->   include/linux/part_stat.h          |  17 +-
->   init/do_mounts.c                   |  20 +--
->   kernel/trace/blktrace.c            |  54 ++-----
->   33 files changed, 351 insertions(+), 642 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hi Thomas,
 
-Cheers,
+>> Just mentioning a couple of things here, which could be a clue to what
+>> is going on:
+>> - the device is behind mbigen secondary irq controller
+>> - the flow in the LLDD is to allocate all 128 interrupts during probe,
+>> but we only register handlers for a subset with device managed API
+> Right, but if the driver is removed then the interrupts should be
+> deallocated, right?
+> 
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+When removing the driver we just call free_irq(), which removes the 
+handler and disables the interrupt.
+
+But about the irq_desc, this is created when the mapping is created in 
+irq_create_fwspec_mapping(), and I don't see this being torn down in the 
+driver removal, so persistent in that regard.
+
+So for pci msi I can see that we free the irq_desc in pci_disable_msi() 
+-> free_msi_irqs() -> msi_domain_free_irqs() ...
+
+So what I am missing here?
+
+Thanks,
+John
