@@ -7,35 +7,51 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0352C63798
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:17:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F82C6379D
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B6FD223B0
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:17:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 516902158C
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Nov 2020 07:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725805AbgKTHQj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 02:16:39 -0500
-Received: from mx2.suse.de ([195.135.220.15]:44860 "EHLO mx2.suse.de"
+        id S1726483AbgKTHT7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Nov 2020 02:19:59 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46676 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725768AbgKTHQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Nov 2020 02:16:38 -0500
+        id S1725805AbgKTHT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Nov 2020 02:19:58 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 8DA7CAB3D;
-        Fri, 20 Nov 2020 07:16:36 +0000 (UTC)
-Subject: Re: [PATCH v1 1/3] add io_uring with IOPOLL support in scsi layer
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
-        linux-block@vger.kernel.org
-References: <20201015133633.61836-1-kashyap.desai@broadcom.com>
+        by mx2.suse.de (Postfix) with ESMTP id 1A314AB3D;
+        Fri, 20 Nov 2020 07:19:57 +0000 (UTC)
+Subject: Re: [PATCH 30/78] block: don't call into the driver for BLKROSET
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20201116145809.410558-1-hch@lst.de>
+ <20201116145809.410558-31-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <63d3110f-85c3-5b8d-7fbf-234ea1201980@suse.de>
-Date:   Fri, 20 Nov 2020 08:16:35 +0100
+Message-ID: <7cad2b6b-cf14-8cbc-9cea-6f0add4a198c@suse.de>
+Date:   Fri, 20 Nov 2020 08:19:55 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201015133633.61836-1-kashyap.desai@broadcom.com>
+In-Reply-To: <20201116145809.410558-31-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -43,22 +59,14 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/15/20 3:36 PM, Kashyap Desai wrote:
-> io_uring with IOPOLL is not currently supported in scsi mid layer.
-> Outside of that everything else should work and no extra support in the driver is needed.
-> Currently io_uring with IOPOLL support is only available in block layer.
-> This patch is to extend support of mq_poll in scsi layer.
+On 11/16/20 3:57 PM, Christoph Hellwig wrote:
+> Now that all drivers that want to hook into setting or clearing the
+> read-only flag use the set_read_only method, this code can be removed.
 > 
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: sumit.saxena@broadcom.com
-> Cc: chandrakanth.patil@broadcom.com
-> Cc: linux-block@vger.kernel.org
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/scsi_lib.c  | 16 ++++++++++++++++
->   include/scsi/scsi_cmnd.h |  1 +
->   include/scsi/scsi_host.h | 11 +++++++++++
->   3 files changed, 28 insertions(+)
+>   block/ioctl.c | 23 -----------------------
+>   1 file changed, 23 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
