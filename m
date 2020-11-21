@@ -2,115 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C33BC63697
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 04:48:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 239D0C6379D
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 16:23:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28E1621D40
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 04:48:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD733222B8
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 16:23:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hEfpldQO"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="j9twDA62"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbgKUEsJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Nov 2020 23:48:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52454 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725829AbgKUEsJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2020 23:48:09 -0500
-Received: from mail-oi1-x243.google.com (mail-oi1-x243.google.com [IPv6:2607:f8b0:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92F83C0613CF
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 20:48:07 -0800 (PST)
-Received: by mail-oi1-x243.google.com with SMTP id s18so11869048oih.1
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2020 20:48:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=+5tuY8DghcZBvhcmNZ1QBUM0wOMXflva60dOunjBFlM=;
-        b=hEfpldQOix/WT+Po0WGDlXh6hu4sjFQXHsfMLWLFHo/G9OEdGqxAbZqPPQwYx1FZmx
-         I3ZjlJl21PCfzGVogb4UhgsLsAv+2qoreIvLIFQxX1IxPcsgbSw4lEZRBDls6WjhL/g/
-         6pOxExIBguvb0AgbjSaiHDd3Vyim10/H68RS/hcR9HzUMCA7kFYWxvKNEx/hZFcAQHwK
-         RdaGb3b2uBMVORGB1hPZ5MK9Dg2L2QV93WRtLG6Z1/p3TPyLir36KHYX9KtGLZ3tKKe2
-         8+qYQTzLc45hrb8ff0E7tqjlYjnb50Xmu2TKQWhTen/KFC8PYy72xNOI6Qrx0SH2+7Dm
-         ABqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=+5tuY8DghcZBvhcmNZ1QBUM0wOMXflva60dOunjBFlM=;
-        b=P2Bo7kKj1glspzh35tFWwkDydXvSJi676LWcOMohL6SA7Cnx7CgS5Hm3tbXpsHBaaU
-         irl7act+bOXaQKFChRtQv4Aeow1mI83wVr8wkWc+KusHO5ax4hBVLJa/Wjp72DBsJ9zc
-         7UXqcEoBtXvDgXw9mFFKcw/Vqo6ulzEonMANZsJVKpDiGjlESTV8PFwAXhvA8qhCldq7
-         2VW70jjT9BrAYNixj/Cne7HVXruaxErV8ClKn1hpCB31uLWCCJfSFxH5kIU/h2fLnvoG
-         hT8sP9RmwOLc9dsVsvA0vrcs9vozzgpmBNeLQGVZnOJYPdpfF8u+GwEjz+DurBIlWBJd
-         PDXw==
-X-Gm-Message-State: AOAM530lU8e82ryFrz1y8Wy8RHrKJ8Y6oh6bcccu6kRa3wMRGpyekg9n
-        0qD3dbs69p05Dv658kXi0ZaQLQ==
-X-Google-Smtp-Source: ABdhPJzPZMaQkLsy6sCEJGtV7eRVF/ZWjoSa7tpvgaAqhe01hBeXktkYzZLQurCVbDvJibTDsCRJIg==
-X-Received: by 2002:a05:6808:301:: with SMTP id i1mr8853175oie.49.1605934086863;
-        Fri, 20 Nov 2020 20:48:06 -0800 (PST)
-Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id g3sm2875800oif.26.2020.11.20.20.48.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2020 20:48:06 -0800 (PST)
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        id S1727095AbgKUQXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Nov 2020 11:23:20 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:41062 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726365AbgKUQXU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Nov 2020 11:23:20 -0500
+X-UUID: c9ac944a3fd845ee8b6450e96da9aa93-20201122
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=VbMi1WMHImE1SxNiZjVKLJQZc4OmqG02VCrT3cQlEEc=;
+        b=j9twDA628JpFJemsxszvHinXPFQtcKd8dCRj4yMbf2mjG4iKNXWn/bk5WBHXJfa1+nk7AwNMZHF6rTGApHkT3S0czrbGNzs3CBuiIf0WOTxPkYtAov2MM2xONFB5RR4wWDgerN3AwkssMjvYxksBcerLRO0cUOsqdlLKSW+qv/0=;
+X-UUID: c9ac944a3fd845ee8b6450e96da9aa93-20201122
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1844964682; Sun, 22 Nov 2020 00:23:09 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sun, 22 Nov 2020 00:23:05 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sun, 22 Nov 2020 00:23:05 +0800
+Message-ID: <1605975787.10232.0.camel@mtkswgap22>
+Subject: Re: [PATCH] scsi: ufs: Adjust logic in common ADAPT helper
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <cang@codeaurora.org>,
         Asutosh Das <asutoshd@codeaurora.org>,
-        Bean Huo <beanhuo@micron.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: [PATCH] scsi: ufs: Adjust logic in common ADAPT helper
-Date:   Fri, 20 Nov 2020 20:48:10 -0800
-Message-Id: <20201121044810.507288-1-bjorn.andersson@linaro.org>
-X-Mailer: git-send-email 2.28.0
+        Bean Huo <beanhuo@micron.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+Date:   Sun, 22 Nov 2020 00:23:07 +0800
+In-Reply-To: <20201121044810.507288-1-bjorn.andersson@linaro.org>
+References: <20201121044810.507288-1-bjorn.andersson@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-TM-SNTS-SMTP: 5B95A92AAB672D92A148BD01F63A8CC1340096EC2D4807E5D0B315B5ED6BDC822000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The introduction of ufshcd_dme_configure_adapt() refactored out
-duplication from the Mediatek and Qualcomm drivers.
-
-Both these implementations had the logic of:
-    gear_tx == UFS_HS_G4 => PA_INITIAL_ADAPT
-    gear_tx != UFS_HS_G4 => PA_NO_ADAPT
-
-but now both implementations pass PA_INITIAL_ADAPT as "adapt_val" and if
-gear_tx is not UFS_HS_G4 that is replaced with PA_INITIAL_ADAPT. In
-other words, it's PA_INITIAL_ADAPT in both above cases.
-
-The result is that e.g. Qualcomm SM8150 has no longer functional UFS, so
-adjust the logic to match the previous implementation.
-
-Fixes: fc85a74e28fe ("scsi: ufs: Refactor ADAPT configuration function")
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 52e077aa3efe..13281c74cb4f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3618,7 +3618,7 @@ int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
- 	int ret;
- 
- 	if (agreed_gear != UFS_HS_G4)
--		adapt_val = PA_INITIAL_ADAPT;
-+		adapt_val = PA_NO_ADAPT;
- 
- 	ret = ufshcd_dme_set(hba,
- 			     UIC_ARG_MIB(PA_TXHSADAPTTYPE),
--- 
-2.28.0
+T24gRnJpLCAyMDIwLTExLTIwIGF0IDIwOjQ4IC0wODAwLCBCam9ybiBBbmRlcnNzb24gd3JvdGU6
+DQo+IFRoZSBpbnRyb2R1Y3Rpb24gb2YgdWZzaGNkX2RtZV9jb25maWd1cmVfYWRhcHQoKSByZWZh
+Y3RvcmVkIG91dA0KPiBkdXBsaWNhdGlvbiBmcm9tIHRoZSBNZWRpYXRlayBhbmQgUXVhbGNvbW0g
+ZHJpdmVycy4NCj4gDQo+IEJvdGggdGhlc2UgaW1wbGVtZW50YXRpb25zIGhhZCB0aGUgbG9naWMg
+b2Y6DQo+ICAgICBnZWFyX3R4ID09IFVGU19IU19HNCA9PiBQQV9JTklUSUFMX0FEQVBUDQo+ICAg
+ICBnZWFyX3R4ICE9IFVGU19IU19HNCA9PiBQQV9OT19BREFQVA0KPiANCj4gYnV0IG5vdyBib3Ro
+IGltcGxlbWVudGF0aW9ucyBwYXNzIFBBX0lOSVRJQUxfQURBUFQgYXMgImFkYXB0X3ZhbCIgYW5k
+IGlmDQo+IGdlYXJfdHggaXMgbm90IFVGU19IU19HNCB0aGF0IGlzIHJlcGxhY2VkIHdpdGggUEFf
+SU5JVElBTF9BREFQVC4gSW4NCj4gb3RoZXIgd29yZHMsIGl0J3MgUEFfSU5JVElBTF9BREFQVCBp
+biBib3RoIGFib3ZlIGNhc2VzLg0KPiANCj4gVGhlIHJlc3VsdCBpcyB0aGF0IGUuZy4gUXVhbGNv
+bW0gU004MTUwIGhhcyBubyBsb25nZXIgZnVuY3Rpb25hbCBVRlMsIHNvDQo+IGFkanVzdCB0aGUg
+bG9naWMgdG8gbWF0Y2ggdGhlIHByZXZpb3VzIGltcGxlbWVudGF0aW9uLg0KPiANCj4gRml4ZXM6
+IGZjODVhNzRlMjhmZSAoInNjc2k6IHVmczogUmVmYWN0b3IgQURBUFQgY29uZmlndXJhdGlvbiBm
+dW5jdGlvbiIpDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEFuZGVyc3NvbiA8Ympvcm4uYW5kZXJz
+c29uQGxpbmFyby5vcmc+DQoNClRoYW5rcyBmb3IgdGhlIGZpeC4NCg0KUmV2aWV3ZWQtYnk6IFN0
+YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQo=
 
