@@ -2,113 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB63C63798
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30885C5519F
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:32:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2D4F2224A
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:19:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Lvt0xf0A";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="qZT/78tS"
+	by mail.kernel.org (Postfix) with ESMTP id E555E22206
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:32:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727989AbgKURTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Nov 2020 12:19:02 -0500
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:55702 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726562AbgKURTA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 21 Nov 2020 12:19:00 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 2C7E2128048D;
-        Sat, 21 Nov 2020 09:19:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1605979140;
-        bh=oKjwoQQYqAGHYIcGa87tH3kfRh6eNDZ11DRWs/5n6Nc=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=Lvt0xf0A2UjzBqGR2epCNoE7DN6YV9pUrVXD+f22BVAeiOW2KxZsGCImkMcXBrgh/
-         zD0zBdigF+USoIPaRfSUxU4T/o3yBTwQz1ZuRUKYioWvma2ORezv7XJ+/UVZk14HDg
-         znn3A0Y1A4QkkRvYDhfOKnhgBoH92sfIP7bAjSz4=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id dA_Y3gfv-HlR; Sat, 21 Nov 2020 09:19:00 -0800 (PST)
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::527])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 584A71280481;
-        Sat, 21 Nov 2020 09:18:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1605979139;
-        bh=oKjwoQQYqAGHYIcGa87tH3kfRh6eNDZ11DRWs/5n6Nc=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=qZT/78tSZnguNV1yoYzSSmvqmDGgzNIuIpg2PbOws0zqwE5yu2CoK/DoUP3fxAE7/
-         cwr3zThASX8R91ADl4Ew6X2dNx0rQAVJjUjWHCFXFVZg8s5iaP8BFiZuwsxl12vuws
-         rCw1QQ3k1zT/j95+Y6p1vgihiOvqC5dVUCKPWDl0=
-Message-ID: <5843ef910b0e86c00d9c0143dec20f93823b016b.camel@HansenPartnership.com>
-Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     trix@redhat.com, joe@perches.com,
-        clang-built-linux@googlegroups.com
-Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, tboot-devel@lists.sourceforge.net,
-        kvm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devel@acpica.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        intel-gfx@lists.freedesktop.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ibm-acpi-devel@lists.sourceforge.net,
-        platform-driver-x86@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        ecryptfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
-        keyrings@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, alsa-devel@alsa-project.org,
-        bpf@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-nfs@vger.kernel.org, patches@opensource.cirrus.com
-Date:   Sat, 21 Nov 2020 09:18:57 -0800
-In-Reply-To: <20201121165058.1644182-1-trix@redhat.com>
-References: <20201121165058.1644182-1-trix@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S1726562AbgKURcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Nov 2020 12:32:33 -0500
+Received: from netrider.rowland.org ([192.131.102.5]:42347 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1726281AbgKURcd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Nov 2020 12:32:33 -0500
+Received: (qmail 658838 invoked by uid 1000); 21 Nov 2020 12:32:31 -0500
+Date:   Sat, 21 Nov 2020 12:32:31 -0500
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        ziqichen@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH RFC v2 1/1] scsi: pm: Leave runtime PM status alone
+ during system resume/thaw/restore
+Message-ID: <20201121173231.GA657814@rowland.harvard.edu>
+References: <1605861443-11459-1-git-send-email-cang@codeaurora.org>
+ <20201120163524.GB619708@rowland.harvard.edu>
+ <9df460a7-c7fc-4999-bfaa-076229b8a752@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9df460a7-c7fc-4999-bfaa-076229b8a752@acm.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2020-11-21 at 08:50 -0800, trix@redhat.com wrote:
-> A difficult part of automating commits is composing the subsystem
-> preamble in the commit log.  For the ongoing effort of a fixer
-> producing
-> one or two fixes a release the use of 'treewide:' does not seem
-> appropriate.
+On Sat, Nov 21, 2020 at 09:00:02AM -0800, Bart Van Assche wrote:
+> On 11/20/20 8:35 AM, Alan Stern wrote:
+> > On Fri, Nov 20, 2020 at 12:37:22AM -0800, Can Guo wrote:
+> >> Runtime resume is handled by runtime PM framework, no need to forcibly
+> >> set runtime PM status to RPM_ACTIVE during system resume/thaw/restore.
+> > 
+> > Sorry, I don't understand this explanation at all.
+> > 
+> > Sure, runtime resume is handled by the runtime PM framework.  But this 
+> > patch changes the code for system resume, which is completely different.
+> > 
+> > Following a system resume, the hardware will be at full power.  We don't 
+> > want the kernel to think that the device is still in runtime suspend; 
+> > otherwise is would never put the device back into low-power mode.
 > 
-> It would be better if the normal prefix was used.  Unfortunately
-> normal is
-> not consistent across the tree.
+> Hi Alan,
 > 
-> 
-> 	D: Commit subsystem prefix
-> 
-> ex/ for FPGA DFL DRIVERS
-> 
-> 	D: fpga: dfl:
-> 
+> Does this mean that every driver needs similar code for handling runtime
+> suspended devices upon system resume? If so, would it be possible to
+> move that code into the power management core (drivers/base/power)?
 
-I've got to bet this is going to cause more issues than it solves. 
-SCSI uses scsi: <driver>: for drivers but not every driver has a
-MAINTAINERS entry.  We use either scsi: or scsi: core: for mid layer
-things, but we're not consistent.  Block uses blk-<something>: for all
-of it's stuff but almost no <somtehing>s have a MAINTAINERS entry.  So
-the next thing you're going to cause is an explosion of suggested
-MAINTAINERs entries.
+That's a complicated story.
 
-Has anyone actually complained about treewide:?
+In short, many drivers need to do this, but not all.  There is a complex 
+collection of settings available for subsystems or drivers that would 
+like their devices to remain in runtime system across a system sleep.
 
-James
+For the subsystems/drivers that don't care to deal with this complexity 
+or don't have any special requirements -- yes, they all need to include 
+code like this in their system-resume paths.
 
+I had a very long discussion with Rafael Wysocki about all this starting 
+last March; you can find the relevant emails beginning roughly here:
 
+	https://marc.info/?l=linux-pm&m=158516934924947&w=2
+
+and continuing through a few different threads.
+
+Rafael ended up making a large number of changes to the PM core and API 
+to simplify things, straighten them out, and improve the documentation.  
+But we never did try to add this automatic set-runtime-active thing into 
+the core.  Probably we wanted all the other changes to settle down 
+before trying to do it, and then just forgot about it.  In fact, I'm not 
+certain that it is possible now, but we should look into it.
+
+Alan Stern
