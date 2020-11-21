@@ -2,37 +2,56 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF537C6379D
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:10:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB63C63798
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA45F2245F
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:10:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2D4F2224A
+	for <linux-scsi@archiver.kernel.org>; Sat, 21 Nov 2020 17:19:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Lvt0xf0A";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="qZT/78tS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727312AbgKURKT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Nov 2020 12:10:19 -0500
-Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:44438 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726281AbgKURKR (ORCPT
+        id S1727989AbgKURTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Nov 2020 12:19:02 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:55702 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726562AbgKURTA (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 21 Nov 2020 12:10:17 -0500
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay03.hostedemail.com (Postfix) with ESMTP id C09E2837F24A;
-        Sat, 21 Nov 2020 17:10:14 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: crook72_110ffeb27355
-X-Filterd-Recvd-Size: 4090
-Received: from XPS-9350.home (unknown [47.151.128.180])
-        (Authenticated sender: joe@perches.com)
-        by omf05.hostedemail.com (Postfix) with ESMTPA;
-        Sat, 21 Nov 2020 17:10:09 +0000 (UTC)
-Message-ID: <2105f0c05e9eae8bee8e17dcc5314474b3c0bc73.camel@perches.com>
+        Sat, 21 Nov 2020 12:19:00 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 2C7E2128048D;
+        Sat, 21 Nov 2020 09:19:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1605979140;
+        bh=oKjwoQQYqAGHYIcGa87tH3kfRh6eNDZ11DRWs/5n6Nc=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Lvt0xf0A2UjzBqGR2epCNoE7DN6YV9pUrVXD+f22BVAeiOW2KxZsGCImkMcXBrgh/
+         zD0zBdigF+USoIPaRfSUxU4T/o3yBTwQz1ZuRUKYioWvma2ORezv7XJ+/UVZk14HDg
+         znn3A0Y1A4QkkRvYDhfOKnhgBoH92sfIP7bAjSz4=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id dA_Y3gfv-HlR; Sat, 21 Nov 2020 09:19:00 -0800 (PST)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 584A71280481;
+        Sat, 21 Nov 2020 09:18:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1605979139;
+        bh=oKjwoQQYqAGHYIcGa87tH3kfRh6eNDZ11DRWs/5n6Nc=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=qZT/78tSZnguNV1yoYzSSmvqmDGgzNIuIpg2PbOws0zqwE5yu2CoK/DoUP3fxAE7/
+         cwr3zThASX8R91ADl4Ew6X2dNx0rQAVJjUjWHCFXFVZg8s5iaP8BFiZuwsxl12vuws
+         rCw1QQ3k1zT/j95+Y6p1vgihiOvqC5dVUCKPWDl0=
+Message-ID: <5843ef910b0e86c00d9c0143dec20f93823b016b.camel@HansenPartnership.com>
 Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
-From:   Joe Perches <joe@perches.com>
-To:     trix@redhat.com, clang-built-linux@googlegroups.com
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     trix@redhat.com, joe@perches.com,
+        clang-built-linux@googlegroups.com
 Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         xen-devel@lists.xenproject.org, tboot-devel@lists.sourceforge.net,
         kvm@vger.kernel.org, linux-crypto@vger.kernel.org,
@@ -50,79 +69,46 @@ Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         coreteam@netfilter.org, alsa-devel@alsa-project.org,
         bpf@vger.kernel.org, linux-bluetooth@vger.kernel.org,
         linux-nfs@vger.kernel.org, patches@opensource.cirrus.com
-Date:   Sat, 21 Nov 2020 09:10:08 -0800
+Date:   Sat, 21 Nov 2020 09:18:57 -0800
 In-Reply-To: <20201121165058.1644182-1-trix@redhat.com>
 References: <20201121165058.1644182-1-trix@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Sat, 2020-11-21 at 08:50 -0800, trix@redhat.com wrote:
 > A difficult part of automating commits is composing the subsystem
-> preamble in the commit log.  For the ongoing effort of a fixer producing
-> one or two fixes a release the use of 'treewide:' does not seem appropriate.
+> preamble in the commit log.  For the ongoing effort of a fixer
+> producing
+> one or two fixes a release the use of 'treewide:' does not seem
+> appropriate.
 > 
-> It would be better if the normal prefix was used.  Unfortunately normal is
+> It would be better if the normal prefix was used.  Unfortunately
+> normal is
 > not consistent across the tree.
 > 
-> So I am looking for comments for adding a new tag to the MAINTAINERS file
 > 
 > 	D: Commit subsystem prefix
 > 
 > ex/ for FPGA DFL DRIVERS
 > 
 > 	D: fpga: dfl:
+> 
 
-I'm all for it.  Good luck with the effort.  It's not completely trivial.
+I've got to bet this is going to cause more issues than it solves. 
+SCSI uses scsi: <driver>: for drivers but not every driver has a
+MAINTAINERS entry.  We use either scsi: or scsi: core: for mid layer
+things, but we're not consistent.  Block uses blk-<something>: for all
+of it's stuff but almost no <somtehing>s have a MAINTAINERS entry.  So
+the next thing you're going to cause is an explosion of suggested
+MAINTAINERs entries.
 
-From a decade ago:
+Has anyone actually complained about treewide:?
 
-https://lore.kernel.org/lkml/1289919077.28741.50.camel@Joe-Laptop/
+James
 
-(and that thread started with extra semicolon patches too)
-
-> Continuing with cleaning up clang's -Wextra-semi-stmt
-
-> diff --git a/Makefile b/Makefile
-[]
-> @@ -1567,20 +1567,21 @@ help:
->  	 echo  ''
->  	@echo  'Static analysers:'
->  	@echo  '  checkstack      - Generate a list of stack hogs'
->  	@echo  '  versioncheck    - Sanity check on version.h usage'
->  	@echo  '  includecheck    - Check for duplicate included header files'
->  	@echo  '  export_report   - List the usages of all exported symbols'
->  	@echo  '  headerdep       - Detect inclusion cycles in headers'
->  	@echo  '  coccicheck      - Check with Coccinelle'
->  	@echo  '  clang-analyzer  - Check with clang static analyzer'
->  	@echo  '  clang-tidy      - Check with clang-tidy'
-> +	@echo  '  clang-tidy-fix  - Check and fix with clang-tidy'
-
-A pity the ordering of the code below isn't the same as the above.
-
-> -PHONY += clang-tidy clang-analyzer
-> +PHONY += clang-tidy-fix clang-tidy clang-analyzer
-[]
-> -clang-tidy clang-analyzer: $(extmod-prefix)compile_commands.json
-> +clang-tidy-fix clang-tidy clang-analyzer: $(extmod-prefix)compile_commands.json
->  	$(call cmd,clang_tools)
->  else
-> -clang-tidy clang-analyzer:
-> +clang-tidy-fix clang-tidy clang-analyzer:
-
-[]
-
-> diff --git a/scripts/clang-tools/run-clang-tools.py b/scripts/clang-tools/run-clang-tools.py
-[]
-> @@ -22,43 +22,57 @@ def parse_arguments():
-[]
->      parser.add_argument("type",
-> -                        choices=["clang-tidy", "clang-analyzer"],
-> +                        choices=["clang-tidy-fix", "clang-tidy", "clang-analyzer"],
-
-etc...
 
