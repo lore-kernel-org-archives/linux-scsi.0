@@ -2,81 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B84C388F9
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Nov 2020 03:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55429C63697
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Nov 2020 13:39:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16DA920797
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Nov 2020 03:24:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D7CC20771
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Nov 2020 13:39:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BCb+FFzp"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ST2EMlBW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbgKVDXg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Nov 2020 22:23:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33526 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726544AbgKVDXe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Nov 2020 22:23:34 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9E05C0613CF;
-        Sat, 21 Nov 2020 19:23:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=t7P1qjxLtvKyLv5lupmc5Zc5j0L3lqaoBXMlGIL9vWk=; b=BCb+FFzpwYCsAL5/GuZs0qQqU7
-        2wigu715rAloO1MXfHFDjsI/DCCkjrJ0RLz4Myz+wD98+zNWw6243kPWNzvqzMn6Tn8JVpmOuQv+x
-        7EKe3xartwVOhq4ran1ZhW92oaIukRN20h1OI3pPMusUrtae1AY4TqDUCPUPtiDgxz6eQOoVcrvcz
-        Ara6lCihfF7KrYMxKPcv522GOw1XE7kmR9pLBWd69WCJIf1380JdPIessAMMrwuE8sqCmQUL7YEHL
-        BXN0W+EBw/mKx6JrVL7roopk6K2PnHDj+T1EiV35semdke1klNMJQXZf1Gvzraa/TLsC310jvDxAq
-        zJ5cWKdw==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kgfxw-0001fc-2G; Sun, 22 Nov 2020 03:23:04 +0000
-Date:   Sun, 22 Nov 2020 03:23:04 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     trix@redhat.com
-Cc:     joe@perches.com, clang-built-linux@googlegroups.com,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, tboot-devel@lists.sourceforge.net,
-        kvm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devel@acpica.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        intel-gfx@lists.freedesktop.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ibm-acpi-devel@lists.sourceforge.net,
-        platform-driver-x86@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        ecryptfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
-        keyrings@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, alsa-devel@alsa-project.org,
-        bpf@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-nfs@vger.kernel.org, patches@opensource.cirrus.com
-Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
-Message-ID: <20201122032304.GE4327@casper.infradead.org>
-References: <20201121165058.1644182-1-trix@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201121165058.1644182-1-trix@redhat.com>
+        id S1727766AbgKVNi5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Nov 2020 08:38:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55670 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727646AbgKVNi5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 22 Nov 2020 08:38:57 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7B7F92076E;
+        Sun, 22 Nov 2020 13:38:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1606052336;
+        bh=Lv5DzjMq8Mlus4xbHuVC7Ai+4Y/6Rbn2W4UWbEa0T/I=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ST2EMlBWWxsJDC+UePmnrz6G6StDpsWFW6QQEtB+7yJlHbrTeEW585rakSCgWBr1n
+         yj7j6h50cOVNT09J27TP3L0qHzkUY33fx1/FxF6QdtUXBJItQhOYCnKIYjvtTLIt4M
+         CfI6FxNpuWi1/67VOKezd/qZ+22ZxIpchrgPORUQ=
+Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=wait-a-minute.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1kgpZu-00Chhl-D6; Sun, 22 Nov 2020 13:38:54 +0000
+Date:   Sun, 22 Nov 2020 13:38:53 +0000
+Message-ID: <87sg91ik9e.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>, <gregkh@linuxfoundation.org>,
+        <rafael@kernel.org>, <martin.petersen@oracle.com>,
+        <jejb@linux.ibm.com>, <linuxarm@huawei.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+In-Reply-To: <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
+        <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
+        <874klmqu2r.fsf@nanos.tec.linutronix.de>
+        <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+        <87lfexp6am.fsf@nanos.tec.linutronix.de>
+        <3acb7fde-eae2-a223-9cfd-f409cc2abba6@huawei.com>
+        <873615oy8a.fsf@nanos.tec.linutronix.de>
+        <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/26.3
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 62.31.163.78
+X-SA-Exim-Rcpt-To: john.garry@huawei.com, tglx@linutronix.de, gregkh@linuxfoundation.org, rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Nov 21, 2020 at 08:50:58AM -0800, trix@redhat.com wrote:
-> The fixer review is
-> https://reviews.llvm.org/D91789
+On Fri, 20 Nov 2020 11:52:09 +0000,
+John Garry <john.garry@huawei.com> wrote:
 > 
-> A run over allyesconfig for x86_64 finds 62 issues, 5 are false positives.
-> The false positives are caused by macros passed to other macros and by
-> some macro expansions that did not have an extra semicolon.
+> Hi Thomas,
 > 
-> This cleans up about 1,000 of the current 10,000 -Wextra-semi-stmt
-> warnings in linux-next.
+> >> Just mentioning a couple of things here, which could be a clue to what
+> >> is going on:
+> >> - the device is behind mbigen secondary irq controller
+> >> - the flow in the LLDD is to allocate all 128 interrupts during probe,
+> >> but we only register handlers for a subset with device managed API
+> > Right, but if the driver is removed then the interrupts should be
+> > deallocated, right?
+> > 
+> 
+> When removing the driver we just call free_irq(), which removes the
+> handler and disables the interrupt.
+> 
+> But about the irq_desc, this is created when the mapping is created in
+> irq_create_fwspec_mapping(), and I don't see this being torn down in
+> the driver removal, so persistent in that regard.
 
-Are any of them not false-positives?  It's all very well to enable
-stricter warnings, but if they don't fix any bugs, they're just churn.
+If the irq_descs are created via the platform_get_irq() calls in
+platform_get_irqs_affinity(), I'd expect some equivalent helper to
+tear things down as a result, calling irq_dispose_mapping() behind the
+scenes.
+
+> So for pci msi I can see that we free the irq_desc in
+> pci_disable_msi() -> free_msi_irqs() -> msi_domain_free_irqs() ...
+> 
+> So what I am missing here?
+
+I'm not sure the paths are strictly equivalent. On the PCI side, we
+can have something that completely driver agnostic, as it is all
+architectural. In your case, only the endpoint driver knows about what
+happens, and needs to free things accordingly.
+
+Finally, there is the issue in your driver that everything is
+requested using devm_request_irq, which cannot play nicely with an
+explicit irq_desc teardown. You'll probably need to provide the
+equivalent devm helpers for your driver to safely be taken down.
+
+Thanks,
+
+	M.
+
+-- 
+Without deviation from the norm, progress is not possible.
