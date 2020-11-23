@@ -7,280 +7,199 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91C86C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 19:47:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6726FC2D0E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 19:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D64D20721
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 19:47:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 101E720727
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 19:48:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MGDw7QSz"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fJBG/35z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730233AbgKWTrU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 14:47:20 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:26643 "EHLO
+        id S1730642AbgKWTsF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 14:48:05 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35943 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729937AbgKWTrU (ORCPT
+        by vger.kernel.org with ESMTP id S1729809AbgKWTsE (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Nov 2020 14:47:20 -0500
+        Mon, 23 Nov 2020 14:48:04 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606160838;
+        s=mimecast20190719; t=1606160882;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=K5uzYCjplKD+DxD+G0R7UJqygYhBOrFivkxReOyiVA0=;
-        b=MGDw7QSzihj8Q6UqjGyDKoVRNvIRiCkmr12Zjn8l1/+2RGhSWXzgu2PHxDaYj7KwieR76b
-        Foe053Ahc3nNKfUv+H+lCJcqlYrJ4ZtR2I/TdkoCb9bwJUCiEzlVhtJx1+pdEuFTmYRIQ3
-        jZHyXtCH0RbEXCOaV2BvGaj+lgbVoIw=
+        bh=AgzMIFao/YbnZhP4AkImGuWFBkuLt+T46648V6M2VbI=;
+        b=fJBG/35zp8iUJUd4GGC1ITsl+J4r+htSlO2hFlub/r92PpiMogEPF0y+dKIsFKWHRagGNn
+        6cOTU0fef+JqI61Ma7kXQNCjIEKVZXnyxz2rP1ynfD8g+kt0uHT4ge94YTcIn4EUrI4pr2
+        gE2tY5+ZJwP7Mt3MANAGL6qbJKBXgPQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-276-t5lweaIUP4iqmBwfbZvzQw-1; Mon, 23 Nov 2020 14:47:14 -0500
-X-MC-Unique: t5lweaIUP4iqmBwfbZvzQw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-541-o7ROU2iyNPqO6bg8-e2oUA-1; Mon, 23 Nov 2020 14:47:57 -0500
+X-MC-Unique: o7ROU2iyNPqO6bg8-e2oUA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6742D1005E54;
-        Mon, 23 Nov 2020 19:47:13 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A5245BBF0D;
+        Mon, 23 Nov 2020 19:47:47 +0000 (UTC)
 Received: from ovpn-112-111.phx2.redhat.com (ovpn-112-111.phx2.redhat.com [10.3.112.111])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E220060C13;
-        Mon, 23 Nov 2020 19:47:12 +0000 (UTC)
-Message-ID: <11ca876b0520724f84dc762b15e999421b694cf0.camel@redhat.com>
-Subject: Re: [PATCH v7 3/5] scsi_transport_fc: Added a new rport state
- FC_PORTSTATE_MARGINAL
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CABDD5D9EF;
+        Mon, 23 Nov 2020 19:47:45 +0000 (UTC)
+Message-ID: <59b3b1c6d7d25a8d8b9715dcbcd44fdf0ceb0209.camel@redhat.com>
+Subject: Re: [PATCH v7 4/5] scsi_transport_fc: Added store fucntionality to
+ set the rport port_state using sysfs
 From:   "Ewan D. Milne" <emilne@redhat.com>
 To:     Muneendra <muneendra.kumar@broadcom.com>,
-        linux-scsi@vger.kernel.org
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        hare@suse.de
 Cc:     jsmart2021@gmail.com, mkumar@redhat.com
-Date:   Mon, 23 Nov 2020 14:47:12 -0500
-In-Reply-To: <1605070685-20945-4-git-send-email-muneendra.kumar@broadcom.com>
+Date:   Mon, 23 Nov 2020 14:47:45 -0500
+In-Reply-To: <1605070685-20945-5-git-send-email-muneendra.kumar@broadcom.com>
 References: <1605070685-20945-1-git-send-email-muneendra.kumar@broadcom.com>
-         <1605070685-20945-4-git-send-email-muneendra.kumar@broadcom.com>
+         <1605070685-20945-5-git-send-email-muneendra.kumar@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Wed, 2020-11-11 at 10:28 +0530, Muneendra wrote:
-> Added a new rport state FC_PORTSTATE_MARGINAL.
+> Added a store functionality to set rport port_state using sysfs
+> under  fc_remote_ports/rport-*/port_state
 > 
-> Added a new interface fc_eh_should_retry_cmd which Checks if the cmd
-> should be retried or not by checking the rport state.
-> If the rport state is marginal it returns
-> false to make sure there won't be any retries on the cmd.
+> With this functionality the user can move the port_state from
+> Marginal -> Online and Online->Marginal.
 > 
-> Also made changes in fc_remote_port_delete,fc_user_scan_tgt,
-> fc_timeout_deleted_rport functions  to handle the new rport state
-> FC_PORTSTATE_MARGINAL.
+> On Marginal :This interface will set SCMD_NORETRIES_ABORT bit in
+> scmd->state for all the pending io's on the scsi device associated
+> with target port.
+> 
+> On Online :This interface will clear SCMD_NORETRIES_ABORT bit in
+> scmd->state for all the pending io's on the scsi device associated
+> with target port.
+> 
+> Below is the interface provided to set the port state to Marginal
+> and Online.
+> 
+> echo "Marginal" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
+> echo "Online" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
 > 
 > Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 > 
 > ---
 > v7:
-> Removed the changes related to SCMD_NORETRIES_ABORT bit.
-> 
-> Added a new function fc_eh_should_retry_cmd to check whether the cmd
-> should be retried based on the rport state.
+> No change
 > 
 > v6:
 > No change
 > 
 > v5:
-> Made changes to clear the SCMD_NORETRIES_ABORT bit if the port_state
-> has changed from marginal to online due to port_delete and port_add
-> as we need the normal cmd retry behaviour
-> 
-> Made changes in fc_scsi_scan_rport as we are checking
-> FC_PORTSTATE_ONLINE
-> instead of FC_PORTSTATE_ONLINE and FC_PORTSTATE_MARGINAL
+> No change
 > 
 > v4:
-> Made changes in fc_eh_timed_out to call
-> fc_rport_chkmarginal_set_noretries
-> so that SCMD_NORETRIES_ABORT bit in cmd->state is set if rport state
-> is marginal.
-> 
-> Removed the newly added scsi_cmd argument to fc_remote_port_chkready
-> as the current patch handles only SCSI EH timeout/abort case.
+> Addressed the error reported by kernel test robot
+> Removed the code needed to traverse all the devices under rport
+> to set/clear SCMD_NORETRIES_ABORT
+> Removed unncessary comments.
+> Return the error values on failure while setting the port_state
 > 
 > v3:
-> Rearranged the patch so that all the changes with respect to new
-> rport state is part of this patch.
-> Added a new argument to scsi_cmd  to fc_remote_port_chkready
+> Removed the port_state from starget attributes.
+> Enabled the store functionality for port_state under remote port.
+> used the starget_for_each_device to traverse around all the devices
+> under rport
 > 
 > v2:
-> New patch
+> Changed from a noretries_abort attribute under fc_transport/target*/
+> to
+> port_state for changing the port_state to a marginal state
 > ---
->  drivers/scsi/scsi_transport_fc.c | 62 +++++++++++++++++++++++-------
-> --
->  include/scsi/scsi_transport_fc.h |  4 ++-
->  2 files changed, 49 insertions(+), 17 deletions(-)
+>  drivers/scsi/scsi_transport_fc.c | 56
+> ++++++++++++++++++++++++++++++--
+>  1 file changed, 54 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/scsi_transport_fc.c
 > b/drivers/scsi/scsi_transport_fc.c
-> index a926e8f9e56e..ffd25195ae62 100644
+> index ffd25195ae62..d378ca4a60fe 100644
 > --- a/drivers/scsi/scsi_transport_fc.c
 > +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -148,20 +148,23 @@ fc_enum_name_search(host_event_code,
-> fc_host_event_code,
->  static struct {
->  	enum fc_port_state	value;
->  	char			*name;
-> +	int			matchlen;
->  } fc_port_state_names[] = {
-> -	{ FC_PORTSTATE_UNKNOWN,		"Unknown" },
-> -	{ FC_PORTSTATE_NOTPRESENT,	"Not Present" },
-> -	{ FC_PORTSTATE_ONLINE,		"Online" },
-> -	{ FC_PORTSTATE_OFFLINE,		"Offline" },
-> -	{ FC_PORTSTATE_BLOCKED,		"Blocked" },
-> -	{ FC_PORTSTATE_BYPASSED,	"Bypassed" },
-> -	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics" },
-> -	{ FC_PORTSTATE_LINKDOWN,	"Linkdown" },
-> -	{ FC_PORTSTATE_ERROR,		"Error" },
-> -	{ FC_PORTSTATE_LOOPBACK,	"Loopback" },
-> -	{ FC_PORTSTATE_DELETED,		"Deleted" },
-> +	{ FC_PORTSTATE_UNKNOWN,		"Unknown", 7},
-> +	{ FC_PORTSTATE_NOTPRESENT,	"Not Present", 11 },
-> +	{ FC_PORTSTATE_ONLINE,		"Online", 6 },
-> +	{ FC_PORTSTATE_OFFLINE,		"Offline", 7 },
-> +	{ FC_PORTSTATE_BLOCKED,		"Blocked", 7 },
-> +	{ FC_PORTSTATE_BYPASSED,	"Bypassed", 8 },
-> +	{ FC_PORTSTATE_DIAGNOSTICS,	"Diagnostics", 11 },
-> +	{ FC_PORTSTATE_LINKDOWN,	"Linkdown", 8 },
-> +	{ FC_PORTSTATE_ERROR,		"Error", 5 },
-> +	{ FC_PORTSTATE_LOOPBACK,	"Loopback", 8 },
-> +	{ FC_PORTSTATE_DELETED,		"Deleted", 7 },
-> +	{ FC_PORTSTATE_MARGINAL,	"Marginal", 8 },
->  };
->  fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
-> +fc_enum_name_match(port_state, fc_port_state, fc_port_state_names)
->  #define FC_PORTSTATE_MAX_NAMELEN	20
+> @@ -1238,7 +1238,59 @@ show_fc_rport_roles (struct device *dev,
+> struct device_attribute *attr,
+>  static FC_DEVICE_ATTR(rport, roles, S_IRUGO,
+>  		show_fc_rport_roles, NULL);
 >  
->  
-> @@ -2509,7 +2512,8 @@ fc_user_scan_tgt(struct Scsi_Host *shost, uint
-> channel, uint id, u64 lun)
->  		if (rport->scsi_target_id == -1)
->  			continue;
->  
-> -		if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +		if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +			(rport->port_state != FC_PORTSTATE_MARGINAL))
->  			continue;
->  
->  		if ((channel == rport->channel) &&
-> @@ -3373,7 +3377,8 @@ fc_remote_port_delete(struct fc_rport  *rport)
->  
->  	spin_lock_irqsave(shost->host_lock, flags);
->  
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE) {
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL)) {
->  		spin_unlock_irqrestore(shost->host_lock, flags);
->  		return;
->  	}
-> @@ -3515,7 +3520,8 @@ fc_timeout_deleted_rport(struct work_struct
-> *work)
->  	 * target, validate it still is. If not, tear down the
->  	 * scsi_target on it.
->  	 */
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_MARGINAL)) &&
->  	    (rport->scsi_target_id != -1) &&
->  	    !(rport->roles & FC_PORT_ROLE_FCP_TARGET)) {
->  		dev_printk(KERN_ERR, &rport->dev,
-> @@ -3658,7 +3664,8 @@ fc_scsi_scan_rport(struct work_struct *work)
->  	struct fc_internal *i = to_fc_internal(shost->transportt);
->  	unsigned long flags;
->  
-> -	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
-> +	if (((rport->port_state == FC_PORTSTATE_ONLINE) ||
-> +		(rport->port_state == FC_PORTSTATE_MARGINAL)) &&
->  	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
->  	    !(i->f->disable_target_scan)) {
->  		scsi_scan_target(&rport->dev, rport->channel,
-> @@ -3731,6 +3738,28 @@ int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
->  }
->  EXPORT_SYMBOL(fc_block_scsi_eh);
->  
-> +/*
-> + * fc_eh_should_retry_cmd - Checks if the cmd should be retried or
-> not
-> + * @scmd:        The SCSI command to be checked
-> + *
-> + * This checks the rport state to decide if a cmd is
-> + * retryable.
-> + *
-> + * Returns: true if the rport state is not in marginal state.
-> + */
-> +bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd)
+> -fc_private_rport_rd_enum_attr(port_state, FC_PORTSTATE_MAX_NAMELEN);
+> +static ssize_t fc_rport_set_marginal_state(struct device *dev,
+> +						struct device_attribute
+> *attr,
+> +						const char *buf, size_t
+> count)
 > +{
-> +	struct fc_rport *rport = starget_to_rport(scsi_target(scmd-
-> >device));
+> +	struct fc_rport *rport = transport_class_to_rport(dev);
+> +	enum fc_port_state port_state;
+> +	int ret = 0;
 > +
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
-> +		set_host_byte(scmd, DID_TRANSPORT_MARGINAL);
-> +		return false;
-> +	}
-> +	return true;
+> +	ret = get_fc_port_state_match(buf, &port_state);
+> +	if (ret)
+> +		return -EINVAL;
+> +	if (port_state == FC_PORTSTATE_MARGINAL) {
+> +		/*
+> +		 * Change the state to marginal only if the
+> +		 * current rport state is Online
+> +		 * Allow only Online->marginal
+> +		 */
+> +		if (rport->port_state == FC_PORTSTATE_ONLINE)
+> +			rport->port_state = port_state;
+> +		else
+> +			return -EINVAL;
+> +	} else if (port_state == FC_PORTSTATE_ONLINE) {
+> +		/*
+> +		 * Change the state to Online only if the
+> +		 * current rport state is Marginal
+> +		 * Allow only  MArginal->Online
+> +		 */
+> +		if (rport->port_state == FC_PORTSTATE_MARGINAL)
+> +			rport->port_state = port_state;
+> +		else
+> +			return -EINVAL;
+> +	} else
+> +		return -EINVAL;
+> +	return count;
 > +}
-> +EXPORT_SYMBOL_GPL(fc_eh_should_retry_cmd);
 > +
->  /**
->   * fc_vport_setup - allocates and creates a FC virtual port.
->   * @shost:	scsi host the virtual port is connected to.
-> @@ -4162,7 +4191,8 @@ static blk_status_t fc_bsg_rport_prep(struct
-> fc_rport *rport)
->  	    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
->  		return BLK_STS_RESOURCE;
+> +static ssize_t
+> +show_fc_rport_port_state(struct device *dev,
+> +				struct device_attribute *attr, char
+> *buf)
+> +{
+> +	const char *name;
+> +	struct fc_rport *rport = transport_class_to_rport(dev);
+> +
+> +	name = get_fc_port_state_name(rport->port_state);
+> +	if (!name)
+> +		return -EINVAL;
+> +
+> +	return snprintf(buf, 20, "%s\n", name);
+> +}
+> +
+> +static FC_DEVICE_ATTR(rport, port_state, 0444 | 0200,
+> +			show_fc_rport_port_state,
+> fc_rport_set_marginal_state);
+> +
+>  fc_private_rport_rd_attr(scsi_target_id, "%d\n", 20);
 >  
-> -	if (rport->port_state != FC_PORTSTATE_ONLINE)
-> +	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
-> +		(rport->port_state != FC_PORTSTATE_MARGINAL))
->  		return BLK_STS_IOERR;
+>  /*
+> @@ -2681,7 +2733,7 @@ fc_attach_transport(struct fc_function_template
+> *ft)
+>  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_name);
+>  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_id);
+>  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(roles);
+> -	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_state);
+> +	SETUP_PRIVATE_RPORT_ATTRIBUTE_RW(port_state);
+>  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(scsi_target_id);
+>  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RW(fast_io_fail_tmo);
 >  
->  	return BLK_STS_OK;
-> diff --git a/include/scsi/scsi_transport_fc.h
-> b/include/scsi/scsi_transport_fc.h
-> index c759b29e46c7..14214ee121ad 100644
-> --- a/include/scsi/scsi_transport_fc.h
-> +++ b/include/scsi/scsi_transport_fc.h
-> @@ -67,6 +67,7 @@ enum fc_port_state {
->  	FC_PORTSTATE_ERROR,
->  	FC_PORTSTATE_LOOPBACK,
->  	FC_PORTSTATE_DELETED,
-> +	FC_PORTSTATE_MARGINAL,
->  };
->  
->  
-> @@ -742,7 +743,6 @@ struct fc_function_template {
->  	unsigned long	disable_target_scan:1;
->  };
->  
-> -
->  /**
->   * fc_remote_port_chkready - called to validate the remote port
-> state
->   *   prior to initiating io to the port.
-> @@ -758,6 +758,7 @@ fc_remote_port_chkready(struct fc_rport *rport)
->  
->  	switch (rport->port_state) {
->  	case FC_PORTSTATE_ONLINE:
-> +	case FC_PORTSTATE_MARGINAL:
->  		if (rport->roles & FC_PORT_ROLE_FCP_TARGET)
->  			result = 0;
->  		else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
-> @@ -839,6 +840,7 @@ int fc_vport_terminate(struct fc_vport *vport);
->  int fc_block_rport(struct fc_rport *rport);
->  int fc_block_scsi_eh(struct scsi_cmnd *cmnd);
->  enum blk_eh_timer_return fc_eh_timed_out(struct scsi_cmnd *scmd);
-> +bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd);
->  
->  static inline struct Scsi_Host *fc_bsg_to_shost(struct bsg_job *job)
->  {
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
