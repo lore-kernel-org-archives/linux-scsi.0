@@ -2,158 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024B5C63697
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 16:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E25EFC64E7C
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 16:17:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90AB02083E
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 16:15:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E29321D7E
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 16:17:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UkU8aA5m"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jzsPhOCP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388485AbgKWQP0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 11:15:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34326 "EHLO
+        id S2389814AbgKWQRO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 11:17:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732233AbgKWQP0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 11:15:26 -0500
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B0D0C0613CF
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 08:15:24 -0800 (PST)
-Received: by mail-qk1-x744.google.com with SMTP id h11so5861445qkl.4
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 08:15:24 -0800 (PST)
+        with ESMTP id S1730953AbgKWQRN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 11:17:13 -0500
+Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B58B8C0613CF;
+        Mon, 23 Nov 2020 08:17:12 -0800 (PST)
+Received: by mail-io1-xd41.google.com with SMTP id r1so18631487iob.13;
+        Mon, 23 Nov 2020 08:17:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=zhGy/VaesBxfi3+W6fnRnM6MABPlxi883ibFh6RCUrc=;
-        b=UkU8aA5msM+3NFKBzL+CD73tH+XunSbblrgQdP1fvMT3stMPWZYx54aHe0ID222qBg
-         gjAD54S23eLmwz6wMn4D+Ivg5Fg12yqsu/lp/3jq6YPZLcB+TDzBxeHf3m/drQrUlvfF
-         TV/tkA67niDk02YqR7GhtoQ8Vrf1xg8KB0CraEKRf9/bL3JdhtDwx2GPRTZxn2+IyRmF
-         YMg7Iu0Ln8sNKsExiJ2AmDJRbQ3Ya1Ksjxcv2NAyWYUy22tDk2+zc5nU+1X+hXPZywlo
-         Dhaf7iJ85llY3UYtVdCBmVncZJPNA0Wbpe63xbyxvxbf5tVUzTtXS5wG71Bevrd5KqgL
-         Jalw==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9G9wehhbpTZzWWOvGr3rWAgWQ0geLC9Yp77M/YC6Idw=;
+        b=jzsPhOCPkH8JcubkL+ilpCqrpmJxzR/ZZhmza1K1c0eddk7+QY69lMXZ1zjj7yUobv
+         UPOat94Oznz5N+aYQtyK2tx44PHGHvaT6c5ydFaOoT5387NjxS4giDE0liSNJKSpvdGp
+         HKiV67o8ZfM+QomP6uHJNCHgME5k654Lm9OlI5uZEZV/BZyGXhrMcp4osA9RqzKjR7Ze
+         0dIcMPHMz9M6e1KbFfvtyGGjldyt3D137VsBHg9GBRp12UjhpWPsI6mtFPtV54IoaC+K
+         mSdXyd8g5UOodS4awURhueIsrAq2XHUWM9vJndBZGt3fLtR88qq6iY1NEsTPrUzb2MVL
+         n+0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=zhGy/VaesBxfi3+W6fnRnM6MABPlxi883ibFh6RCUrc=;
-        b=OLPVLxJPzqxQtfjPMXBjgZi/DPTmYSEUYrvjpg6RU0uXMPcrcXZxSeadpluDKxbFvt
-         4PbeP41wDgH9VbYzWmod+cfZvnWExvroomkGRXDXoHRFdKFVDruAl8OREYvy7Ixh3a83
-         XXgZSVU/lonp6yRbCp6noWLr3ZYxMO1naDosjXcULz2OXvJrzx/0V4ArceNk7oFcD0eA
-         xYEZ387hfmMstNa1jppW/vJaUvWKMgu3fNwLSRF0/CiVnMNk7phwTv3NETHNRoylQi7g
-         LQQwuKXbewAfVHVDSwCTeSJs6ONvnrcizYGtwUDanP3PTITKDH/yi4sdsBZN/cbpkPTL
-         vOpA==
-X-Gm-Message-State: AOAM533BH3t/u9o7FWu9yd5x2XUkIvxptl7hbhqzbVyLLH0qn0GULMcK
-        vnVle8amYon4wHtPpHcpTzcnmM+vCkaARQWgDCF7Gw==
-X-Google-Smtp-Source: ABdhPJz5zXAygIYM32O8J7GLqxjV+QCZIKRK2OukLZ0cAolOP8zUbmt5N0btqJQfiueHa3G7v1WoJVW2Mczu6ijn7FU=
-X-Received: by 2002:a37:4552:: with SMTP id s79mr205976qka.6.1606148123585;
- Mon, 23 Nov 2020 08:15:23 -0800 (PST)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9G9wehhbpTZzWWOvGr3rWAgWQ0geLC9Yp77M/YC6Idw=;
+        b=hVitWrlh2sxeAFONKORzLus4JyvFA3rcn8QIGBQq2k3uJuVq9YUNy4fCzc2x69GM/K
+         x6rfL2APtZvmrb1QXu5TXk9V3l0N6frUY3Frbobn0kfBusqszKZr4uiJWNdpaCdv56Z/
+         wgziWxLdZgSOzR4FRX9JXiW5o4UOPn1jq8hzDGybC0oJkLOCyFUgLiLrhTnpbS+MLyEH
+         lmEqyVjNf6BTXWC7Ghnn6V46zxeDQZ7iP2c4fd9pUb+1oMUgwzcz3TL4RFIJocGkSwXl
+         TPsa+LquElSljh07DGHwR4mXXm/pXrcSuqcFIzp5JCtS1lDBTj67LON7U4ug71f5MvLC
+         sQWQ==
+X-Gm-Message-State: AOAM530K9rFD6JQ02rXi1spGVMPYez+BJ8N9wPtE6BGR/WFNVYGQ52rc
+        gi/eUmgbUZdvHll24yu2X3FTOrjU/s2OU5ec+po=
+X-Google-Smtp-Source: ABdhPJw5wxDBX8QpwE2CghMfFtPIAtnmG9XIUqmbpxXD9wxvuYGnavpxLlav0NBfuecvTCMrGKLgN0Lee5ktV7i8vQ8=
+X-Received: by 2002:a05:6602:22c7:: with SMTP id e7mr415585ioe.114.1606148231969;
+ Mon, 23 Nov 2020 08:17:11 -0800 (PST)
 MIME-Version: 1.0
-From:   Alexander Potapenko <glider@google.com>
-Date:   Mon, 23 Nov 2020 17:15:12 +0100
-Message-ID: <CAG_fn=V5LczhvXzU5D-NF1sDPF3sr_DfKi-RbyeTT175kcPVxw@mail.gmail.com>
-Subject: Potential double fetch in sg_scsi_ioctl()
-To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc:     Dmitriy Vyukov <dvyukov@google.com>,
-        Merna Zakaria <mernazakaria@google.com>,
-        linux-scsi@vger.kernel.org, mengxu.gatech@gmail.com
+References: <20201121165058.1644182-1-trix@redhat.com> <5843ef910b0e86c00d9c0143dec20f93823b016b.camel@HansenPartnership.com>
+ <87y2ism5or.fsf@intel.com>
+In-Reply-To: <87y2ism5or.fsf@intel.com>
+From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Date:   Mon, 23 Nov 2020 17:17:00 +0100
+Message-ID: <CAKXUXMydH+VtMeuftPRgCg_PYm2iChOMkUYjO=QTG=NRM3QFiw@mail.gmail.com>
+Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
+To:     Jani Nikula <jani.nikula@linux.intel.com>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Tom Rix <trix@redhat.com>, Joe Perches <joe@perches.com>,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        linux-hyperv@vger.kernel.org, kvm@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org,
+        ibm-acpi-devel@lists.sourceforge.net,
+        "open list:ASYMMETRIC KEYS" <keyrings@vger.kernel.org>,
+        linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, cluster-devel@redhat.com,
+        linux-acpi@vger.kernel.org, tboot-devel@lists.sourceforge.net,
+        coreteam@netfilter.org, xen-devel@lists.xenproject.org,
+        MPT-FusionLinux.pdl@broadcom.com,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        alsa-devel@alsa-project.org, intel-gfx@lists.freedesktop.org,
+        ecryptfs@vger.kernel.org, linux-omap@vger.kernel.org,
+        devel@acpica.org, linux-nfs@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>, linux-usb@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-bluetooth@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, patches@opensource.cirrus.com,
+        linux-fsdevel@vger.kernel.org, bpf@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christof, Jens,
+On Mon, Nov 23, 2020 at 4:52 PM Jani Nikula <jani.nikula@linux.intel.com> wrote:
+>
+> On Sat, 21 Nov 2020, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > On Sat, 2020-11-21 at 08:50 -0800, trix@redhat.com wrote:
+> >> A difficult part of automating commits is composing the subsystem
+> >> preamble in the commit log.  For the ongoing effort of a fixer
+> >> producing
+> >> one or two fixes a release the use of 'treewide:' does not seem
+> >> appropriate.
+> >>
+> >> It would be better if the normal prefix was used.  Unfortunately
+> >> normal is
+> >> not consistent across the tree.
+> >>
+> >>
+> >>      D: Commit subsystem prefix
+> >>
+> >> ex/ for FPGA DFL DRIVERS
+> >>
+> >>      D: fpga: dfl:
+> >>
+> >
+> > I've got to bet this is going to cause more issues than it solves.
+>
+> Agreed.
+>
 
-We've found a double-fetch in sg_scsi_ioctl() using a prototype tool
-(see the report below).
+Tom, this a problem only kernel janitors encounter; all other
+developers really do not have that issue. The time spent on creating
+the patch is much larger than the amount saved if the commit log
+header line prefix would be derived automatically. I believe Julia
+Lawall, Arnd Bergmann and Nathan Chancellor as long-term
+high-frequency janitors do have already scripted approaches to that
+issue. Maybe they simply need to share these scripts with you and you
+consolidate them and share with everyone?
 
-Turns out that sg_scsi_ioctl() reads the first byte of sic->data
-twice: first when getting the opcode
-(https://elixir.bootlin.com/linux/latest/source/block/scsi_ioctl.c#L439),
-then when reading the command of the size calculated from that opcode
-(https://elixir.bootlin.com/linux/latest/source/block/scsi_ioctl.c#L464).
+Also, making clean-up patches cumbersome has a positive side as well;
+maintainers are not swamped with fully automated patch submissions.
+There have been some bad experiences with some submitters on that in
+the past...
 
-At this point opcode and req->cmd[0] may mismatch.
-The opcode is then used to determine rq->timeout and req->retries,
-whereas req->cmd[0] is used by the underlying device drivers.
-Not sure invalid timeout or retries is a big deal, but since the
-command length also depends on the opcode, it is possible to trick the
-kernel into using the remnants of the previous command by first
-announcing a short command and then changing the opcode to a longer
-one.
+> > SCSI uses scsi: <driver>: for drivers but not every driver has a
+> > MAINTAINERS entry.  We use either scsi: or scsi: core: for mid layer
+> > things, but we're not consistent.  Block uses blk-<something>: for all
+> > of it's stuff but almost no <somtehing>s have a MAINTAINERS entry.  So
+> > the next thing you're going to cause is an explosion of suggested
+> > MAINTAINERs entries.
+>
+> On the one hand, adoption of new MAINTAINERS entries has been really
+> slow. Look at B, C, or P, for instance. On the other hand, if this were
+> to get adopted, you'll potentially get conflicting prefixes for patches
+> touching multiple files. Then what?
+>
+> I'm guessing a script looking at git log could come up with better
+> suggestions for prefixes via popularity contest than manually maintained
+> MAINTAINERS entries. It might not always get it right, but then human
+> outsiders aren't going to always get it right either.
+>
+> Now you'll only need Someone(tm) to write the script. ;)
+>
+> Something quick like this:
+>
+> git log --since={1year} --pretty=format:%s -- <FILES> |\
+>         grep -v "^\(Merge\|Revert\)" |\
+>         sed 's/:[^:]*$//' |\
+>         sort | uniq -c | sort -rn | head -5
+>
+> already gives me results that really aren't worse than some of the
+> prefixes invented by drive-by contributors.
+>
 
-I've noticed that three years ago Meng Xu has reported the very same
-bug already: https://patchwork.kernel.org/project/linux-block/patch/1505834=
-638-37142-1-git-send-email-mengxu.gatech@gmail.com/
-Was there any followup to that patch?
+I agree I do not see the need to introduce something in MAINTAINERS;
+from my observations maintaining MAINTAINERS, there is sufficient work
+on adoption and maintenance of the existing entries already without
+such an yet another additional entry. Some entries are outdated or
+wrong and the janitor task of cleaning those up is already enough work
+for involved janitors and enough churn for involved maintainers. So a
+machine-learned approach as above is probably good enough, but if you
+think you need more complex rules try to learn them from the data at
+hand... certainly a nice task to do with machine learning on commit
+message prefixes.
 
-Alex
-
-Double fetch report follows:
-
-BUG: multi-read in sg_scsi_ioctl, syscall __x64_sys_ioctl
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-=3D=3D=3D=3D=3D=3D=3D First Address Range Stack =3D=3D=3D=3D=3D=3D=3D
- df_save_stack+0x33/0x70 lib/df-detection.c:202
- add_address+0x2cb/0x370 lib/df-detection.c:48
- sg_scsi_ioctl+0x160/0x560 block/scsi_ioctl.c:439
- sg_ioctl_common+0xdb6/0x1110 drivers/scsi/sg.c:1109
- sg_ioctl+0x49/0xa0 drivers/scsi/sg.c:1163
- vfs_ioctl fs/ioctl.c:48 [inline]
- __do_sys_ioctl fs/ioctl.c:753 [inline]
- __se_sys_ioctl fs/ioctl.c:739 [inline]
- __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:739
- do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-=3D=3D=3D=3D=3D=3D=3D Second Address Range Stack =3D=3D=3D=3D=3D=3D=3D
- df_save_stack+0x33/0x70 lib/df-detection.c:202
- add_address+0x2cb/0x370 lib/df-detection.c:48
- _copy_from_user+0x93/0xe0 lib/usercopy.c:17
- copy_from_user include/linux/uaccess.h:167 [inline]
- sg_scsi_ioctl+0x21a/0x560 block/scsi_ioctl.c:464
- sg_ioctl_common+0xdb6/0x1110 drivers/scsi/sg.c:1109
- sg_ioctl+0x49/0xa0 drivers/scsi/sg.c:1163
- vfs_ioctl fs/ioctl.c:48 [inline]
- __do_sys_ioctl fs/ioctl.c:753 [inline]
- __se_sys_ioctl fs/ioctl.c:739 [inline]
- __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:739
- do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-syscall number 16  System Call: __x64_sys_ioctl+0x0/0x140 fs/ioctl.c:800
-First 0000000020000188 len 1 Caller sg_ioctl_common+0xdb6/0x1110
-drivers/scsi/sg.c:1109
-Second 0000000020000188 len 10 Caller copy_from_user
-include/linux/uaccess.h:167 [inline]
-Second 0000000020000188 len 10 Caller sg_scsi_ioctl+0x21a/0x560
-block/scsi_ioctl.c:464
-
-CPU: 0 PID: 6266 Comm: syz-executor.0 Not tainted 5.9.0-rc4+ #55
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-1 04/01/=
-2014
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-
-
---=20
-Alexander Potapenko
-Software Engineer
-
-Google Germany GmbH
-Erika-Mann-Stra=C3=9Fe, 33
-80636 M=C3=BCnchen
-
-Gesch=C3=A4ftsf=C3=BChrer: Paul Manicle, Halimah DeLaine Prado
-Registergericht und -nummer: Hamburg, HRB 86891
-Sitz der Gesellschaft: Hamburg
+Lukas
