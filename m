@@ -2,150 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB60CC71155
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 13:04:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42341C388F9
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 13:26:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AF242080A
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 13:04:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D27902080A
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 13:26:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="huMDpxd3"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="FG5PK1zM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388393AbgKWNDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 08:03:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40738 "EHLO mail.kernel.org"
+        id S1731962AbgKWN0p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 08:26:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56350 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388335AbgKWNDp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Nov 2020 08:03:45 -0500
-Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
+        id S1731029AbgKWN0o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Nov 2020 08:26:44 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 191D120758;
-        Mon, 23 Nov 2020 13:03:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9466A20782;
+        Mon, 23 Nov 2020 13:26:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606136621;
-        bh=J/TET3MqSRKQBkZDLmw3offBuTNq8xblR6VPj5c7KTQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=huMDpxd34lY8zl81VJt6WrkzA8VbZ3WZKfCc+01YUsnQkEm+dvBfrNL343ZTscxgS
-         4cn7RRAIuR/6lyK6TO0qxACy3TNrSBuTodAx+s4Q2YpvApK9inZpqsbsSdtJmbV9Zx
-         YwwBYqtSxUH9kHvWkiEz2t98c4vnYVnAJ6qqQTEg=
-Date:   Mon, 23 Nov 2020 07:03:48 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Joe Perches <joe@perches.com>, Kees Cook <keescook@chromium.org>,
-        Jakub Kicinski <kuba@kernel.org>, alsa-devel@alsa-project.org,
-        linux-atm-general@lists.sourceforge.net,
-        reiserfs-devel@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        linux-ide@vger.kernel.org, dm-devel@redhat.com,
-        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
-        GR-everest-linux-l2@marvell.com, wcn36xx@lists.infradead.org,
-        samba-technical@lists.samba.org, linux-i3c@lists.infradead.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-afs@lists.infradead.org,
-        usb-storage@lists.one-eyed-alien.net, drbd-dev@lists.linbit.com,
-        devel@driverdev.osuosl.org, linux-cifs@vger.kernel.org,
-        rds-devel@oss.oracle.com,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
-        oss-drivers@netronome.com, bridge@lists.linux-foundation.org,
-        linux-security-module@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org,
-        linux-stm32@st-md-mailman.stormreply.com, cluster-devel@redhat.com,
-        linux-acpi@vger.kernel.org, coreteam@netfilter.org,
-        intel-wired-lan@lists.osuosl.org, linux-input@vger.kernel.org,
-        Miguel Ojeda <ojeda@kernel.org>,
-        tipc-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        selinux@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, linux-geode@lists.infradead.org,
-        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-gpio@vger.kernel.org, op-tee@lists.trustedfirmware.org,
-        linux-mediatek@lists.infradead.org, xen-devel@lists.xenproject.org,
-        nouveau@lists.freedesktop.org, linux-hams@vger.kernel.org,
-        ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org,
-        x86@kernel.org, linux-nfs@vger.kernel.org,
-        GR-Linux-NIC-Dev@marvell.com, linux-mm@kvack.org,
-        netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
-        linux-mmc@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-usb@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, linux-crypto@vger.kernel.org,
-        patches@opensource.cirrus.com, linux-integrity@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [Intel-wired-lan] [PATCH 000/141] Fix fall-through warnings for
- Clang
-Message-ID: <20201123130348.GA3119@embeddedor>
-References: <cover.1605896059.git.gustavoars@kernel.org>
- <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <202011201129.B13FDB3C@keescook>
- <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <202011220816.8B6591A@keescook>
- <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
- <ca071decb87cc7e905411423c05a48f9fd2f58d7.camel@perches.com>
- <0147972a72bc13f3629de8a32dee6f1f308994b5.camel@HansenPartnership.com>
- <d8d1e9add08cdd4158405e77762d4946037208f8.camel@perches.com>
- <dbd2cb703ed9eefa7dde9281ea26ab0f7acc8afe.camel@HansenPartnership.com>
+        s=default; t=1606138002;
+        bh=8TTRPK5WiuKGTuOXJWYuxYVpykJ3HWxVl8s8Ni1hCJA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=FG5PK1zMGDQR+u6XxfELRrOhw+wAbSN2MTcm+Q9qWyqU23rKZSRFbf9kQpXkHOUlY
+         qkcg4TWeCo5Xqdo9kcZrZkb1CWbhHRJyKmjBZIRK0bX3iIn6eF9Oreinud6z8321Hu
+         VhpSh8SqY3179EJuvgVGnzfiy0QldmtPPj+FjQCc=
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1khBrc-00CxET-CA; Mon, 23 Nov 2020 13:26:40 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dbd2cb703ed9eefa7dde9281ea26ab0f7acc8afe.camel@HansenPartnership.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 23 Nov 2020 13:26:40 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>, gregkh@linuxfoundation.org,
+        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+In-Reply-To: <0edc9a11-0b92-537f-1790-6b4b6de4900d@huawei.com>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
+ <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
+ <874klmqu2r.fsf@nanos.tec.linutronix.de>
+ <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+ <87lfexp6am.fsf@nanos.tec.linutronix.de>
+ <3acb7fde-eae2-a223-9cfd-f409cc2abba6@huawei.com>
+ <873615oy8a.fsf@nanos.tec.linutronix.de>
+ <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
+ <87sg91ik9e.wl-maz@kernel.org>
+ <0edc9a11-0b92-537f-1790-6b4b6de4900d@huawei.com>
+User-Agent: Roundcube Webmail/1.4.9
+Message-ID: <afd97dd4b1e102ac9ad49800821231a4@kernel.org>
+X-Sender: maz@kernel.org
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: john.garry@huawei.com, tglx@linutronix.de, gregkh@linuxfoundation.org, rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Nov 22, 2020 at 11:53:55AM -0800, James Bottomley wrote:
-> On Sun, 2020-11-22 at 11:22 -0800, Joe Perches wrote:
-> > On Sun, 2020-11-22 at 11:12 -0800, James Bottomley wrote:
-> > > On Sun, 2020-11-22 at 10:25 -0800, Joe Perches wrote:
-> > > > On Sun, 2020-11-22 at 10:21 -0800, James Bottomley wrote:
-> > > > > Please tell me our reward for all this effort isn't a single
-> > > > > missing error print.
-> > > > 
-> > > > There were quite literally dozens of logical defects found
-> > > > by the fallthrough additions.  Very few were logging only.
-> > > 
-> > > So can you give us the best examples (or indeed all of them if
-> > > someone is keeping score)?  hopefully this isn't a US election
-> > > situation ...
-> > 
-> > Gustavo?  Are you running for congress now?
-> > 
-> > https://lwn.net/Articles/794944/
+Hi John,
+
+On 2020-11-23 12:54, John Garry wrote:
+> Hi Marc,
 > 
-> That's 21 reported fixes of which about 50% seem to produce no change
-> in code behaviour at all, a quarter seem to have no user visible effect
-> with the remaining quarter producing unexpected errors on obscure
-> configuration parameters, which is why no-one really noticed them
-> before.
+>>>> Right, but if the driver is removed then the interrupts should be
+>>>> deallocated, right?
+>>>> 
+>>> 
+>>> When removing the driver we just call free_irq(), which removes the
+>>> handler and disables the interrupt.
+>>> 
+>>> But about the irq_desc, this is created when the mapping is created 
+>>> in
+>>> irq_create_fwspec_mapping(), and I don't see this being torn down in
+>>> the driver removal, so persistent in that regard.
+>> 
+>> If the irq_descs are created via the platform_get_irq() calls in
+>> platform_get_irqs_affinity(), I'd expect some equivalent helper to
+>> tear things down as a result, calling irq_dispose_mapping() behind the
+>> scenes.
+>> 
+> 
+> So this looks lacking in the kernel AFAICS...
+> 
+> So is there a reason for which irq dispose mapping is not a
+> requirement for drivers when finished with the irq? because of shared
+> interrupts?
 
-The really important point here is the number of bugs this has prevented
-and will prevent in the future. See an example of this, below:
+For a bunch of reasons: IRQ number used to be created 1:1 with their
+physical counterpart, so there wasn't a need to "get rid" of the
+associated data structures. Also, people expected their drivers
+to be there for the lifetime of the system (believe it or not,
+hotplug devices are pretty new!).
 
-https://lore.kernel.org/linux-iio/20190813135802.GB27392@kroah.com/
+Shared interrupts are just another part of the problem (although we
+should be able to work out whether there is any action attached to
+the descriptor before blowing it away.
 
-This work is still relevant, even if the total number of issues/bugs
-we find in the process is zero (which is not the case).
+> 
+>>> So for pci msi I can see that we free the irq_desc in
+>>> pci_disable_msi() -> free_msi_irqs() -> msi_domain_free_irqs() ...
+>>> 
+>>> So what I am missing here?
+>> 
+>> I'm not sure the paths are strictly equivalent. On the PCI side, we
+>> can have something that completely driver agnostic, as it is all
+>> architectural. In your case, only the endpoint driver knows about what
+>> happens, and needs to free things accordingly.
+>> 
+>> Finally, there is the issue in your driver that everything is
+>> requested using devm_request_irq, which cannot play nicely with an
+>> explicit irq_desc teardown. You'll probably need to provide the
+>> equivalent devm helpers for your driver to safely be taken down.
+>> 
+> 
+> Yeah, so since we use the devm irq request method, we also need a devm
+> dispose release method as we can't dispose the irq mapping in the
+> remove() method, prior to the irq_free() in the later devm release
+> method.
+> 
+> But it looks like there is more to it than that, which I'm worried is
+> far from non-trivial. For example, just calling irq_dispose_mapping()
+> for removal and then plaform_get_irq()->acpi_get_irq() second time
+> fails as it looks like more tidy-up is needed for removal...
 
-"The sucky thing about doing hard work to deploy hardening is that the
-result is totally invisible by definition (things not happening) [..]"
-- Dmitry Vyukov
+Most probably. I could imagine things failing if there is any trace
+of an existing translation in the ITS or in the platform-MSI layer,
+for example, or if the interrupt is still active...
 
-Thanks
---
-Gustavo
+Thanks,
 
-
-
-
-
+         M.
+-- 
+Jazz is not dead. It just smells funny...
