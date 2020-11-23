@@ -7,31 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B96C6379F
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 17:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18D87C6379D
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 17:45:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0F0D2076E
+	by mail.kernel.org (Postfix) with ESMTP id CDB2A2078E
 	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 17:45:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388479AbgKWRpa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 12:45:30 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:8572 "EHLO
+        id S1732301AbgKWRp3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 12:45:29 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8573 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730840AbgKWRpa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 12:45:30 -0500
+        with ESMTP id S1730844AbgKWRp3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 12:45:29 -0500
 Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CfvgK1c2fzLt6v;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4CfvgK26t3zLtJS;
         Tue, 24 Nov 2020 01:45:01 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.487.0; Tue, 24 Nov 2020 01:45:17 +0800
+ 14.3.487.0; Tue, 24 Nov 2020 01:45:18 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/3] scsi: hisi_sas: Reduce some indirection in v3 hw driver
-Date:   Tue, 24 Nov 2020 01:41:34 +0800
-Message-ID: <1606153296-60088-2-git-send-email-john.garry@huawei.com>
+        <linuxarm@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 2/3] scsi: hisi_sas: Fix up probe error handling for v3 hw
+Date:   Tue, 24 Nov 2020 01:41:35 +0800
+Message-ID: <1606153296-60088-3-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1606153296-60088-1-git-send-email-john.garry@huawei.com>
 References: <1606153296-60088-1-git-send-email-john.garry@huawei.com>
@@ -43,47 +44,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Sometimes local functions are called indirectly from the hw driver, which
-only makes the code harder to follow. Remove these.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Method .hw_init is only called from platform driver probe, which is not
-relevant, so don't set this either.
+Fix some rollbacks in function hisi_sas_v3_probe() and
+interrupt_init_v3_hw().
 
+Fixes: 8d98416a55eb ("scsi: hisi_sas: Switch v3 hw to MQ")
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 7133ca859b5e..db409f6847bb 100644
+index db409f6847bb..f6d0aa3a8c11 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3142,7 +3142,6 @@ static struct scsi_host_template sht_v3_hw = {
- };
- 
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
--	.hw_init = hisi_sas_v3_init,
- 	.setup_itct = setup_itct_v3_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v3_hw,
- 	.complete_hdr_size = sizeof(struct hisi_sas_complete_v3_hdr),
-@@ -3322,7 +3321,7 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (rc)
- 		goto err_out_register_ha;
- 
--	rc = hisi_hba->hw->hw_init(hisi_hba);
-+	rc = hisi_sas_v3_init(hisi_hba);
- 	if (rc)
- 		goto err_out_register_ha;
- 
-@@ -3511,7 +3510,7 @@ static int _resume_v3_hw(struct device *device)
- 		pci_disable_device(pdev);
- 		return rc;
+@@ -2409,8 +2409,7 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			      DRV_NAME " phy", hisi_hba);
+ 	if (rc) {
+ 		dev_err(dev, "could not request phy interrupt, rc=%d\n", rc);
+-		rc = -ENOENT;
+-		goto free_irq_vectors;
++		return -ENOENT;
  	}
--	hisi_hba->hw->phys_init(hisi_hba);
-+	phys_init_v3_hw(hisi_hba);
- 	sas_resume_ha(sha);
- 	clear_bit(HISI_SAS_RESET_BIT, &hisi_hba->flags);
  
+ 	rc = devm_request_irq(dev, pci_irq_vector(pdev, 2),
+@@ -2418,8 +2417,7 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			      DRV_NAME " channel", hisi_hba);
+ 	if (rc) {
+ 		dev_err(dev, "could not request chnl interrupt, rc=%d\n", rc);
+-		rc = -ENOENT;
+-		goto free_irq_vectors;
++		return -ENOENT;
+ 	}
+ 
+ 	rc = devm_request_irq(dev, pci_irq_vector(pdev, 11),
+@@ -2427,8 +2425,7 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			      DRV_NAME " fatal", hisi_hba);
+ 	if (rc) {
+ 		dev_err(dev, "could not request fatal interrupt, rc=%d\n", rc);
+-		rc = -ENOENT;
+-		goto free_irq_vectors;
++		return -ENOENT;
+ 	}
+ 
+ 	if (hisi_sas_intr_conv)
+@@ -2449,16 +2446,11 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 		if (rc) {
+ 			dev_err(dev, "could not request cq%d interrupt, rc=%d\n",
+ 				i, rc);
+-			rc = -ENOENT;
+-			goto free_irq_vectors;
++			return -ENOENT;
+ 		}
+ 	}
+ 
+ 	return 0;
+-
+-free_irq_vectors:
+-	pci_free_irq_vectors(pdev);
+-	return rc;
+ }
+ 
+ static int hisi_sas_v3_init(struct hisi_hba *hisi_hba)
+@@ -3311,11 +3303,11 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	rc = interrupt_preinit_v3_hw(hisi_hba);
+ 	if (rc)
+-		goto err_out_ha;
++		goto err_out_debugfs;
+ 	dev_err(dev, "%d hw queues\n", shost->nr_hw_queues);
+ 	rc = scsi_add_host(shost, dev);
+ 	if (rc)
+-		goto err_out_ha;
++		goto err_out_free_irq_vectors;
+ 
+ 	rc = sas_register_ha(sha);
+ 	if (rc)
+@@ -3342,8 +3334,12 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ err_out_register_ha:
+ 	scsi_remove_host(shost);
+-err_out_ha:
++err_out_free_irq_vectors:
++	pci_free_irq_vectors(pdev);
++err_out_debugfs:
+ 	hisi_sas_debugfs_exit(hisi_hba);
++err_out_ha:
++	hisi_sas_free(hisi_hba);
+ 	scsi_host_put(shost);
+ err_out_regions:
+ 	pci_release_regions(pdev);
 -- 
 2.26.2
 
