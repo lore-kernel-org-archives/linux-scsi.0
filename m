@@ -2,113 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D81C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 16:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB28C63697
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 17:06:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE5422100A
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 16:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AFB120756
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 17:06:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="0MPDPZ7E"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BtEofZ03"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389084AbgKWQr2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 11:47:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39320 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388731AbgKWQr2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 11:47:28 -0500
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19019C0613CF
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 08:47:27 -0800 (PST)
-Received: by mail-pg1-x544.google.com with SMTP id t37so14686285pga.7
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 08:47:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=lsEvSSdUQFp0oECaRYk7+1ABbhEJMev6nFl4IALo0t8=;
-        b=0MPDPZ7E7KUcYrttiouEUl/2pXo8dtrfB9R6izb3p9ndoStNBqVmRzsOVQKtK1S4Yk
-         JKQGJswLHcMGRtczhRIXS16RKbvdEYZKhjYpJ2BnWw+OAKhuBAMM7JPRWUbivQdEqH5K
-         j4grFoq/e7mUQtD3zo3h0kOr3ojUEeCes9a5ZnA/fwxYeUP39eFWZkxFlJVFkp8+Bbn8
-         TCH+tjorEK9U78XOV3i5si4vXR5U8Raq7EPKxqYXdsZtKPZGWhpbi73IQM9bIo68RREn
-         92HGg1I6x8NJURVxa3mg4NoW5fCXyV2UYbiMi6KH7KbraVWGi6TQlXnxw6YpORWloIe6
-         LAPg==
+        id S2389763AbgKWRGN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 12:06:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:45598 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388111AbgKWRGM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Nov 2020 12:06:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606151171;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ETdBmUCF01QVQJOZ+sQu9TUGQeVKu9xOEmE1E5gBvfU=;
+        b=BtEofZ03By1sp6OyH8lSI6IT4Bb/Q48OsWV2XnBXmdgQcceGh9rKSaQV86czSHO4W4CJHn
+        vUaUaH4n0l1WmtKl1NY4JjZQEtZdHR6F0okj/kLdyZp+LnqjvTzaYPmjipu9+IS6RcbTNg
+        lanzsvwsZXvmVS2IMlU/0SstZMlkjqs=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-290-Hr7YH1ePNzSNG8nMOYgdeA-1; Mon, 23 Nov 2020 12:06:09 -0500
+X-MC-Unique: Hr7YH1ePNzSNG8nMOYgdeA-1
+Received: by mail-qt1-f199.google.com with SMTP id r16so3504294qtn.19
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 09:06:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=lsEvSSdUQFp0oECaRYk7+1ABbhEJMev6nFl4IALo0t8=;
-        b=NVQQF6oW8UZFImWv5BNLgMKo7b9K6NGnPH+ucZht1jKeGy3zbgv5wr7rpLcrmIqyNi
-         pe/1wNLCC+XBqM9d6FzC1cGvp0WIEcql6+fUHAGdpLlSEXnExiCWNZ5cK9i1Uk5c04kw
-         pSGrTTXrMi/BB7SpWpNW5REq8lf3KxI6RE5QGbjQpSiKW9/5ggr9yhC2FwQJ82C2nJhR
-         dI/3SVpd0SgBLvBspdAywWxK3egKzml4zhQoQDBkr8uB4y6WvCnuc/V/bFPJx+Gmdq20
-         JBhtykheUhAkGZoZkUxf08Bhgbkh6Aa20Oxaw8/s5C5MEwAhJQChthqnjCUepfivO7NV
-         TD3A==
-X-Gm-Message-State: AOAM532IFljFBunHGuCk1Z4Y4Yf4dw7M7FoY4kLEo3NRWmk+prd3vXT8
-        VOd179K8aVrLa7wHc5FerNKocg==
-X-Google-Smtp-Source: ABdhPJzXXq2e/MpNzZe67SQdfQdx+TLLTFkq0HCZ+xRJjaUM9dXXmE+XrWPx8SdFNCNShRas3jpFzw==
-X-Received: by 2002:a17:90a:e604:: with SMTP id j4mr668677pjy.19.1606150046494;
-        Mon, 23 Nov 2020 08:47:26 -0800 (PST)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id o198sm5576218pfg.102.2020.11.23.08.47.25
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=ETdBmUCF01QVQJOZ+sQu9TUGQeVKu9xOEmE1E5gBvfU=;
+        b=UG5CkBgB7CI++pU0X9r7WlEATmjoJCJUPDmEjKEgVTCdDfcVvMxZ0s6TISZjiWDsqG
+         DP8/XZclmA6NjDdzQkcnIz4Y01Z2m7NZTYIxz5ZcYHZOzv1LE5ahCEns994uPRiDfvR7
+         YMxweYOrSd6xzFduMPm/HEkQR5ANKCeeS49f+5NbCYvUIqVHk29uYXjgsWC7Cb5iJkIf
+         hGZPPpVAP1VWH4vvwFgdhKqH83ntpeK+a42LdYmKQ7k2IUFLzLigVLsIv4t0fT8ZcE8f
+         oSG4HZIALrMOjAgRkx4iEkLPtcd4udOxqJgkov8kuOJcIMJbHPC/meCMULUD6p2bhF8N
+         9U4Q==
+X-Gm-Message-State: AOAM530Q0v6SZawMs4ClpOSaq6kApbxoTfEzDz3J3hCi+2/XffA83qE+
+        9LU8KbsbkA0++nq3jx1DZKtOQNsGF7W7jlrfK4llQmNMROyi8siZUmRm4Wx/xbAWX4vcFzOfg0L
+        OE4fWZDim3kSB4C8aEj3ZeA==
+X-Received: by 2002:ac8:5d53:: with SMTP id g19mr70938qtx.354.1606151169268;
+        Mon, 23 Nov 2020 09:06:09 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwHR8oVpP3xv7xpCkK6lH4mawBfXgRI3GL2dEiLGp13/vfLrDKV7SBtsWnvpv2iFDtHltekRw==
+X-Received: by 2002:ac8:5d53:: with SMTP id g19mr70839qtx.354.1606151168572;
+        Mon, 23 Nov 2020 09:06:08 -0800 (PST)
+Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
+        by smtp.gmail.com with ESMTPSA id o187sm10226153qkb.120.2020.11.23.09.06.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Nov 2020 08:47:25 -0800 (PST)
-Subject: Re: Potential double fetch in sg_scsi_ioctl()
-To:     Alexander Potapenko <glider@google.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     Dmitriy Vyukov <dvyukov@google.com>,
-        Merna Zakaria <mernazakaria@google.com>,
-        linux-scsi@vger.kernel.org, mengxu.gatech@gmail.com
-References: <CAG_fn=V5LczhvXzU5D-NF1sDPF3sr_DfKi-RbyeTT175kcPVxw@mail.gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <f57364cb-481e-87bc-773a-f5e0057e7d7b@kernel.dk>
-Date:   Mon, 23 Nov 2020 09:47:24 -0700
+        Mon, 23 Nov 2020 09:06:07 -0800 (PST)
+Subject: Re: [RFC] MAINTAINERS tag for cleanup robot
+To:     Joe Perches <joe@perches.com>, clang-built-linux@googlegroups.com
+Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, tboot-devel@lists.sourceforge.net,
+        kvm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devel@acpica.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        intel-gfx@lists.freedesktop.org, netdev@vger.kernel.org,
+        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ibm-acpi-devel@lists.sourceforge.net,
+        platform-driver-x86@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        ecryptfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mtd@lists.infradead.org,
+        keyrings@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, alsa-devel@alsa-project.org,
+        bpf@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-nfs@vger.kernel.org, patches@opensource.cirrus.com
+References: <20201121165058.1644182-1-trix@redhat.com>
+ <2105f0c05e9eae8bee8e17dcc5314474b3c0bc73.camel@perches.com>
+ <6e8c1926-4209-8f10-d0f9-72c875a85a88@redhat.com>
+ <859bae8ddae3238116824192f6ddf1c91a381913.camel@perches.com>
+From:   Tom Rix <trix@redhat.com>
+Message-ID: <88eeba27-ee36-df63-8cd9-3cccbe5e0850@redhat.com>
+Date:   Mon, 23 Nov 2020 09:06:03 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <CAG_fn=V5LczhvXzU5D-NF1sDPF3sr_DfKi-RbyeTT175kcPVxw@mail.gmail.com>
+In-Reply-To: <859bae8ddae3238116824192f6ddf1c91a381913.camel@perches.com>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/23/20 9:15 AM, Alexander Potapenko wrote:
-> Hi Christof, Jens,
-> 
-> We've found a double-fetch in sg_scsi_ioctl() using a prototype tool
-> (see the report below).
-> 
-> Turns out that sg_scsi_ioctl() reads the first byte of sic->data
-> twice: first when getting the opcode
-> (https://elixir.bootlin.com/linux/latest/source/block/scsi_ioctl.c#L439),
-> then when reading the command of the size calculated from that opcode
-> (https://elixir.bootlin.com/linux/latest/source/block/scsi_ioctl.c#L464).
-> 
-> At this point opcode and req->cmd[0] may mismatch.
-> The opcode is then used to determine rq->timeout and req->retries,
-> whereas req->cmd[0] is used by the underlying device drivers.
-> Not sure invalid timeout or retries is a big deal, but since the
-> command length also depends on the opcode, it is possible to trick the
-> kernel into using the remnants of the previous command by first
-> announcing a short command and then changing the opcode to a longer
-> one.
-> 
-> I've noticed that three years ago Meng Xu has reported the very same
-> bug already: https://patchwork.kernel.org/project/linux-block/patch/1505834638-37142-1-git-send-email-mengxu.gatech@gmail.com/
-> Was there any followup to that patch?
 
-Doesn't look like it - Christoph made a suggestion, and then the
-original reporter didn't follow up. FWIW, I do agree that just copying
-it once is a better idea than copying twice and then copying the opcode
-again.
+On 11/22/20 10:22 AM, Joe Perches wrote:
+> On Sun, 2020-11-22 at 08:33 -0800, Tom Rix wrote:
+>> On 11/21/20 9:10 AM, Joe Perches wrote:
+>>> On Sat, 2020-11-21 at 08:50 -0800, trix@redhat.com wrote:
+>>>> A difficult part of automating commits is composing the subsystem
+>>>> preamble in the commit log.  For the ongoing effort of a fixer producing
+>>>> one or two fixes a release the use of 'treewide:' does not seem appropriate.
+>>>>
+>>>> It would be better if the normal prefix was used.  Unfortunately normal is
+>>>> not consistent across the tree.
+>>>>
+>>>> So I am looking for comments for adding a new tag to the MAINTAINERS file
+>>>>
+>>>> 	D: Commit subsystem prefix
+>>>>
+>>>> ex/ for FPGA DFL DRIVERS
+>>>>
+>>>> 	D: fpga: dfl:
+>>> I'm all for it.  Good luck with the effort.  It's not completely trivial.
+>>>
+>>> From a decade ago:
+>>>
+>>> https://lore.kernel.org/lkml/1289919077.28741.50.camel@Joe-Laptop/
+>>>
+>>> (and that thread started with extra semicolon patches too)
+>> Reading the history, how about this.
+>>
+>> get_maintainer.pl outputs a single prefix, if multiple files have the
+>> same prefix it works, if they don't its an error.
+>>
+>> Another script 'commit_one_file.sh' does the call to get_mainainter.pl
+>> to get the prefix and be called by run-clang-tools.py to get the fixer
+>> specific message.
+> It's not whether the script used is get_maintainer or any other script,
+> the question is really if the MAINTAINERS file is the appropriate place
+> to store per-subsystem patch specific prefixes.
+>
+> It is.
+>
+> Then the question should be how are the forms described and what is the
+> inheritance priority.  My preference would be to have a default of
+> inherit the parent base and add basename(subsystem dirname).
+>
+> Commit history seems to have standardized on using colons as the separator
+> between the commit prefix and the subject.
+>
+> A good mechanism to explore how various subsystems have uses prefixes in
+> the past might be something like:
+>
+> $ git log --no-merges --pretty='%s' -<commit_count> <subsystem_path> | \
+>   perl -n -e 'print substr($_, 0, rindex($_, ":") + 1) . "\n";' | \
+>   sort | uniq -c | sort -rn
 
--- 
-Jens Axboe
+Thanks, I have shamelessly stolen this line and limited the commits to the maintainer.
+
+I will post something once the generation of the prefixes is done.
+
+Tom
 
