@@ -2,118 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB49C56201
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 03:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D924C6379D
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 03:18:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDFD32137B
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 03:02:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 136E821D40
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Nov 2020 03:18:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726955AbgKWDCE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Nov 2020 22:02:04 -0500
-Received: from netrider.rowland.org ([192.131.102.5]:50693 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1726903AbgKWDCE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2020 22:02:04 -0500
-Received: (qmail 695174 invoked by uid 1000); 22 Nov 2020 22:02:02 -0500
-Date:   Sun, 22 Nov 2020 22:02:02 -0500
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        id S1727901AbgKWDSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Nov 2020 22:18:00 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:44560 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727911AbgKWDSA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2020 22:18:00 -0500
+Received: by mail-pf1-f193.google.com with SMTP id y7so13570163pfq.11;
+        Sun, 22 Nov 2020 19:17:59 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=NS2/LWJgfKnaWgsdnGvEKSQ6HreXoy5m6pflViridOg=;
+        b=mPLpC1/5vBOjn4dQmMC00QMR9G5ANFc9SvPtKAMRxq4vabnmIT0Bg50aCHxsm6cFGz
+         1F7Jya1T0zDAhYizm5mOwx2C1fTHpfqMf6YG91L+dq3JeXwTaijWuix2tQACyBpjFKiq
+         YfFWyubTVa/A2ODv7Z6OdgK9Vc13CMxC5L5gjbDoLCovvNMfzGNQpHWRBzPe0QyogtKQ
+         rZkFITJPJVPlmZGaD0dHtoOJcu/VnzFE9nrMivUEl5E3EOJCKw+jYShkrQ4uJB+Hruzk
+         +isW2RRT+lEzKFvvmajJnT3ORAtHVsdO/GIe3C8hr5fJ8eYJF3sPKDSynL+SNLfmiDmc
+         Sfbg==
+X-Gm-Message-State: AOAM531pB12p49HqzRZvdRIEx1jT6cr/75WzIGF5lZZ3mKbiMwht+G8o
+        Ja0l5eppQ7DMoznHvkrWneE=
+X-Google-Smtp-Source: ABdhPJzrjluYfs7/aZf3abR/AZ1d+Cy6V5LXlpx5SjvPdL7rra3+1TiI3+YBdyWDqYgU0bC9zGkMkw==
+X-Received: by 2002:a65:679a:: with SMTP id e26mr6737241pgr.394.1606101478901;
+        Sun, 22 Nov 2020 19:17:58 -0800 (PST)
+Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id w12sm3578751pfn.136.2020.11.22.19.17.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 22 Nov 2020 19:17:58 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH RFC v2 1/1] scsi: pm: Leave runtime PM status alone
- during system resume/thaw/restore
-Message-ID: <20201123030202.GA694907@rowland.harvard.edu>
-References: <1605861443-11459-1-git-send-email-cang@codeaurora.org>
- <20201120163524.GB619708@rowland.harvard.edu>
- <ff2975f88cc452d134b8bf24c55bec09@codeaurora.org>
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        stable <stable@vger.kernel.org>, Can Guo <cang@codeaurora.org>
+Subject: [PATCH v3 1/9] block: Fix a race in the runtime power management code
+Date:   Sun, 22 Nov 2020 19:17:41 -0800
+Message-Id: <20201123031749.14912-2-bvanassche@acm.org>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201123031749.14912-1-bvanassche@acm.org>
+References: <20201123031749.14912-1-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ff2975f88cc452d134b8bf24c55bec09@codeaurora.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 23, 2020 at 09:23:53AM +0800, Can Guo wrote:
-> Hi Alan,
-> 
-> On 2020-11-21 00:35, Alan Stern wrote:
-> > On Fri, Nov 20, 2020 at 12:37:22AM -0800, Can Guo wrote:
-> > > Runtime resume is handled by runtime PM framework, no need to forcibly
-> > > set runtime PM status to RPM_ACTIVE during system resume/thaw/restore.
-> > 
-> > Sorry, I don't understand this explanation at all.
-> > 
-> > Sure, runtime resume is handled by the runtime PM framework.  But this
-> > patch changes the code for system resume, which is completely different.
-> > 
-> > Following a system resume, the hardware will be at full power.  We don't
-> > want the kernel to think that the device is still in runtime suspend;
-> > otherwise is would never put the device back into low-power mode.
-> 
-> How about adding below lines to the patch?
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index 908f27f..7ebe582 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -75,9 +75,11 @@ static int scsi_dev_type_resume(struct device *dev,
->         const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->         int err = 0;
-> 
-> -       err = cb(dev, pm);
-> -       scsi_device_resume(to_scsi_device(dev));
-> -       dev_dbg(dev, "scsi resume: %d\n", err);
-> +       if (pm_runtime_active(dev)) {
-> +               err = cb(dev, pm);
-> +               scsi_device_resume(to_scsi_device(dev));
-> +               dev_dbg(dev, "scsi resume: %d\n", err);
-> +       }
-> 
->         return err;
->  }
-> 
-> Whenever a device is accessed, the issuer or somewhere in the path
-> should do something like pm_runtime_get_sync (e.g. in sg_open()) or
-> pm_runtime_resume() (e.g. in blk_queue_enter()), in either sync or
-> async way. After the job (read/write/ioctl or whatever) is done,
-> either a pm_runtime_put_sync() or auto runtime suspend puts the device
-> back into runtime suspended/low-power mode. Since the func
-> scsi_bus_suspend_common() does nothing if device is already in runtime
-> suspended mode, scsi_dev_type_resume() should only resume the device
-> if it is runtime active.
+With the current implementation the following race can happen:
+* blk_pre_runtime_suspend() calls blk_freeze_queue_start() and
+  blk_mq_unfreeze_queue().
+* blk_queue_enter() calls blk_queue_pm_only() and that function returns
+  true.
+* blk_queue_enter() calls blk_pm_request_resume() and that function does
+  not call pm_request_resume() because the queue runtime status is
+  RPM_ACTIVE.
+* blk_pre_runtime_suspend() changes the queue status into RPM_SUSPENDING.
 
-You're starting to think along the right lines, but you are ignoring all 
-the other work that people have already done for handling these cases.
+Fix this race by changing the queue runtime status into RPM_SUSPENDING
+before switching q_usage_counter to atomic mode.
 
-Please read Documentation/driver-api/pm/devices.rst very carefully, 
-especially the parts about returning a positive value from the ->prepare 
-callback (also known as "direct-complete" and related to the 
-DPM_FLAG_NO_DIRECT_COMPLETE and DPM_FLAG_SMART_PREPARE flags) and the 
-parts about the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_MAY_SKIP_RESUME 
-flags.  Then think about what you want to accomplish and write a patch 
-that takes all this information into account.
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: stable <stable@vger.kernel.org>
+Fixes: 986d413b7c15 ("blk-mq: Enable support for runtime power management")
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ block/blk-pm.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-Key point: At no time should any part of the kernel think that the 
-device is in a low-power state when it is actually in a high-power 
-state, or vice versa.
-
-Alan Stern
+diff --git a/block/blk-pm.c b/block/blk-pm.c
+index b85234d758f7..17bd020268d4 100644
+--- a/block/blk-pm.c
++++ b/block/blk-pm.c
+@@ -67,6 +67,10 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+ 
+ 	WARN_ON_ONCE(q->rpm_status != RPM_ACTIVE);
+ 
++	spin_lock_irq(&q->queue_lock);
++	q->rpm_status = RPM_SUSPENDING;
++	spin_unlock_irq(&q->queue_lock);
++
+ 	/*
+ 	 * Increase the pm_only counter before checking whether any
+ 	 * non-PM blk_queue_enter() calls are in progress to avoid that any
+@@ -89,15 +93,14 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+ 	/* Switch q_usage_counter back to per-cpu mode. */
+ 	blk_mq_unfreeze_queue(q);
+ 
+-	spin_lock_irq(&q->queue_lock);
+-	if (ret < 0)
++	if (ret < 0) {
++		spin_lock_irq(&q->queue_lock);
++		q->rpm_status = RPM_ACTIVE;
+ 		pm_runtime_mark_last_busy(q->dev);
+-	else
+-		q->rpm_status = RPM_SUSPENDING;
+-	spin_unlock_irq(&q->queue_lock);
++		spin_unlock_irq(&q->queue_lock);
+ 
+-	if (ret)
+ 		blk_clear_pm_only(q);
++	}
+ 
+ 	return ret;
+ }
