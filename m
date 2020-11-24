@@ -2,120 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B9C4C56202
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 21:09:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A32B7C8301A
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 21:26:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAD2E20866
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 21:09:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E00E2086A
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 21:26:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g7LSYe/1"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="oKmDT/E0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729626AbgKXVJ0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Nov 2020 16:09:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48892 "EHLO
+        id S1731592AbgKXV0A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Nov 2020 16:26:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729619AbgKXVJZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2020 16:09:25 -0500
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 168FAC0613D6;
-        Tue, 24 Nov 2020 13:09:23 -0800 (PST)
-Received: by mail-ej1-x642.google.com with SMTP id k9so15718754ejc.11;
-        Tue, 24 Nov 2020 13:09:23 -0800 (PST)
+        with ESMTP id S1731586AbgKXVZo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2020 16:25:44 -0500
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19F1FC061A54
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2020 13:25:44 -0800 (PST)
+Received: by mail-pg1-x541.google.com with SMTP id 81so378394pgf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2020 13:25:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=elrmmGmMMQ6PzIopqvZQCkanN6h0/gWDnjrJZkGJIrc=;
-        b=g7LSYe/1dvjbcmdkl2nhyDWaLYIFni5VjHt4WQ/sh6N4iEqA9z4kUOjkpDf/ZTbbsb
-         geuhN8jGiWp9hCsnMWIAfw9neXc1C82DlAgzW8v+vNCLtYbilVlfHhLogZtDm+Ggs6g7
-         rNQ4Ux8H0Q4jp41z8sKlhyeBNd7hTE81Y06Rcpj/xz7BjJJIJc3EL2vPVY+FmcZocYBK
-         +P4lu6pswz1/nVv3upEM3bTW7GBJnyRtM1EVAo8flLsOde5HWzHxXFN6/TsnGDb1YP6m
-         BDjqmrJfBTs/3Nq2qCsMbLVMJ5Z9GDlft5E6XTpAYu7FrXhk44MVVVfowJlT3Yx7uBUU
-         bkvQ==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Hc7xHQdcWqcI1RL6yWHK3qM7+D3PcB+9wJ1f+Y4kOZ8=;
+        b=oKmDT/E0BiqfYtxGd9S8VgvaixpTRLnYMRrsUV9kaRuJo3R/5oNlOHAboaJA72rvz5
+         cPy+dYNpKpp/tW1abpWiBH/rmtZxXE/MLGj7m5uMt/n+RU1YTE1Rw6QIxNLzAajuHLbW
+         OV/WWZm28UqOigi5ggHh0BMVZishCwQGNb1Ns=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=elrmmGmMMQ6PzIopqvZQCkanN6h0/gWDnjrJZkGJIrc=;
-        b=Wcx4oBxZd6wm8f6ZTPmqmXI8L2iqrBAZ1B7uO27RyT+MDxrYhBekSPwD6tvkczQs7p
-         LzUzvkDwi1jGJq4R3+t2m6+SqyjMRK0huKpFiMR50PbslHOcl+g4YBVKUI7wH+SR/yNu
-         GHocYjQue7s7zJypak9iJFbeZ0I4CVqmYCUknuhDkVRSprW+We4Zgup5kbmVVgDdBfo5
-         kFQXF/iDD0vIEYvPGiGEFhhteUUgZD/JUvz1rAK4KgrhJp7lCtN86NqP/UimrOikSe5C
-         YBEylzt+G9cJ2xKZMHlnjLBL4NvPs2NFHJJgmPiVV6N7AhlXLt6gROyFNnXWg0sgpYIT
-         bojQ==
-X-Gm-Message-State: AOAM5314OYanR9p3cm9TFZSIG+X/NF+zoomVwxNBS5S45c4OwCS1mRi2
-        b/IRLgghTXuYtJzObGQ8ITk=
-X-Google-Smtp-Source: ABdhPJw+oOzt0sqIybHqz+LalDY0mFf5wSqrIieAWHVKK2WTxgTVcNENN+x2eHJPL6OZB9sIwONulw==
-X-Received: by 2002:a17:906:490:: with SMTP id f16mr353412eja.12.1606252161779;
-        Tue, 24 Nov 2020 13:09:21 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bee2a.dynamic.kabel-deutschland.de. [95.91.238.42])
-        by smtp.googlemail.com with ESMTPSA id v8sm52468edt.3.2020.11.24.13.09.20
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 24 Nov 2020 13:09:21 -0800 (PST)
-Message-ID: <9070660d115dd96c70bc3cc90d5c7dab833f36a8.camel@gmail.com>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Refector ufshcd_setup_clocks() to
- remove skip_ref_clk
-From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        ziqichen@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Date:   Tue, 24 Nov 2020 22:09:18 +0100
-In-Reply-To: <1606202906-14485-2-git-send-email-cang@codeaurora.org>
-References: <1606202906-14485-1-git-send-email-cang@codeaurora.org>
-         <1606202906-14485-2-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Hc7xHQdcWqcI1RL6yWHK3qM7+D3PcB+9wJ1f+Y4kOZ8=;
+        b=o4BGNOBzvDo66CuJMUiGyRencmW6vEzckZagASOtxXGHCtgfTeqCWCf9YoPPmrXQyv
+         pJSwnnUhb+lmrJxMHgPHEkHJpaB6+N72dCAzanqE/ykg/6xYqjMXBb7XBYLF/E/bFw7O
+         Rlho3s4xvp/ELwsorrN6P5njartRxMfKeGaHQlSL7A42W7oaAf1r1GQ430Q3EVGLRT3v
+         wrTvLEX8FPXLj5mxzvcc+zeX0ElnQXW360hqlS7xfA9RLXMcqpNoU6XfzB0+US3RBGKF
+         ihUyXqImWeNdt2W5iW/2WS8mB0mdG/2I95l3JJCEwEX9GKlCXyCJ3shDFZwnx6ZdXz06
+         GQEg==
+X-Gm-Message-State: AOAM531Teh0JA+uwy+vywTpTqkFG6UAcjClN6q5l/LAIoyqj3GD7R62o
+        6KOe/7eqfeWqXhOVzHSkuV//Rg==
+X-Google-Smtp-Source: ABdhPJxsDEVO/Xg3mAfgqSRlRs3zdio+GHjlgjpaUz/oJCQVSbFGge5HhgP1eTMpBX6raLsCCheJTQ==
+X-Received: by 2002:a17:90a:c695:: with SMTP id n21mr214694pjt.86.1606253143481;
+        Tue, 24 Nov 2020 13:25:43 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id l10sm163395pjg.3.2020.11.24.13.25.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Nov 2020 13:25:41 -0800 (PST)
+Date:   Tue, 24 Nov 2020 13:25:40 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     Jakub Kicinski <kuba@kernel.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, alsa-devel@alsa-project.org,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        bridge@lists.linux-foundation.org, ceph-devel@vger.kernel.org,
+        cluster-devel@redhat.com, coreteam@netfilter.org,
+        devel@driverdev.osuosl.org, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        GR-everest-linux-l2@marvell.com, GR-Linux-NIC-Dev@marvell.com,
+        intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org,
+        keyrings@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-acpi@vger.kernel.org, linux-afs@lists.infradead.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-atm-general@lists.sourceforge.net,
+        linux-block@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-cifs@vger.kernel.org,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        linux-decnet-user@lists.sourceforge.net,
+        linux-ext4@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-geode@lists.infradead.org, linux-gpio@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        linux-i3c@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-integrity@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-security-module@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
+        op-tee@lists.trustedfirmware.org, oss-drivers@netronome.com,
+        patches@opensource.cirrus.com, rds-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org,
+        selinux@vger.kernel.org, target-devel@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net,
+        usb-storage@lists.one-eyed-alien.net,
+        virtualization@lists.linux-foundation.org,
+        wcn36xx@lists.infradead.org,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        xen-devel@lists.xenproject.org, linux-hardening@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
+Message-ID: <202011241324.B3439A2@keescook>
+References: <cover.1605896059.git.gustavoars@kernel.org>
+ <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011201129.B13FDB3C@keescook>
+ <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011220816.8B6591A@keescook>
+ <CAKwvOdntVfXj2WRR5n6Kw7BfG7FdKpTeHeh5nPu5AzwVMhOHTg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKwvOdntVfXj2WRR5n6Kw7BfG7FdKpTeHeh5nPu5AzwVMhOHTg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-11-23 at 23:28 -0800, Can Guo wrote:
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -229,6 +229,8 @@ struct ufs_dev_cmd {
->   * @max_freq: maximum frequency supported by the clock
->   * @min_freq: min frequency that can be used for clock scaling
->   * @curr_freq: indicates the current frequency that it is set to
-> + * @always_on_while_link_active: indicate that the clk should not be
-> disabled if
-> +                                link is still active
->   * @enabled: variable to check against multiple enable/disable
->   */
->  struct ufs_clk_info {
-> @@ -238,6 +240,7 @@ struct ufs_clk_info {
->         u32 max_freq;
->         u32 min_freq;
->         u32 curr_freq;
-> +       bool always_on_while_link_active;
+On Mon, Nov 23, 2020 at 05:32:51PM -0800, Nick Desaulniers wrote:
+> On Sun, Nov 22, 2020 at 8:17 AM Kees Cook <keescook@chromium.org> wrote:
+> >
+> > On Fri, Nov 20, 2020 at 11:51:42AM -0800, Jakub Kicinski wrote:
+> > > If none of the 140 patches here fix a real bug, and there is no change
+> > > to machine code then it sounds to me like a W=2 kind of a warning.
+> >
+> > FWIW, this series has found at least one bug so far:
+> > https://lore.kernel.org/lkml/CAFCwf11izHF=g1mGry1fE5kvFFFrxzhPSM6qKAO8gxSp=Kr_CQ@mail.gmail.com/
+> 
+> So looks like the bulk of these are:
+> switch (x) {
+>   case 0:
+>     ++x;
+>   default:
+>     break;
+> }
+> 
+> I have a patch that fixes those up for clang:
+> https://reviews.llvm.org/D91895
 
-Can,
-using a sentence as a parameter name looks a little bit clumsy to me.
-The meaning has been explained in the comments section. How about
-simplify it and in line with other parameters in the structure?
+I still think this isn't right -- it's a case statement that runs off
+the end without an explicit flow control determination. I think Clang is
+right to warn for these, and GCC should also warn.
 
-Thanks,
-Bean 
-
->         bool enabled;
->  };
->  
-
+-- 
+Kees Cook
