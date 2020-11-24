@@ -7,71 +7,70 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CE5C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 17:44:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B8BC2D0E4
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 17:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB571206F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 17:44:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E785A206C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 17:47:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="u/mfGZJd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jqVzqsHg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403935AbgKXRoP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Nov 2020 12:44:15 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:57324 "EHLO
+        id S2404008AbgKXRrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Nov 2020 12:47:23 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:60004 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403887AbgKXRoP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2020 12:44:15 -0500
+        with ESMTP id S2403935AbgKXRrX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2020 12:47:23 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AOHea3A017004;
-        Tue, 24 Nov 2020 17:44:07 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AOHeZ2J016959;
+        Tue, 24 Nov 2020 17:45:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
  mime-version : subject : from : in-reply-to : date : cc :
  content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=WIFmrkTepan6PjzJxZUZ4xEDsxGy1sOeQTEnIL3CUL4=;
- b=u/mfGZJdSwetrvbj2Oo9wxBm7BJQfmQkT3XouSlkai+ANTkiJexQrHQtaJRc7yqdhTKq
- Sub+uxwTJjlxWBboiV2liVL0vBPMUzSPkpRFTLYo88xW36A2Cs8Rs2PG+3yEp7neTP47
- xgrfuSKdxRpwDp+W2Yf9axS26fV6gG2TCNlH4sGZBJcOM2rc01cMBOLomFnQDbBYMGsi
- ki7NjH4Ct+2zbJpgP54KMK1OCCkRjEWp/ohCOx8x1c99kMuQdpDKT0oj1qfQpL/n9fll
- fqm5bP/0l/3cakTUyEuKtXLiH0YZCT7EldZMkFlOM5o3MYkMYOMj0caXDCn34InpjfWG Nw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 34xrdav8yk-1
+ s=corp-2020-01-29; bh=SrC1MPaeb8YIM01kqo1k2A7vhURfg43IGThsDyqfzSs=;
+ b=jqVzqsHgvcQ04wy+zJSkuMgbvj/nmWXxvSkIpux+W5lwKYxqZlNwgZLj75GJg+wna50l
+ nFTz9GLG7PurGEFdRZVUUzPZ3B5cmdNXr7hyHgM55CMZcZXPj3LZt3QOkeHVIJN8hTMq
+ njseZgC9ZY9iA5BLNBqwA8/pIbyVT3YwJ5jYdQd+9Tw9KsfpSwdF/lqujFa+O8e5jIGn
+ mjxy5DserYKek7aOpRJY+ogvUvNaxOvuKeo3j5Ek/Tf2Dqo7OAa2hNHtGVUs3tzRsz/q
+ W4vju03Lm3jJ0RRXLEACzwqcfxE+8v37wQrt2Rz682dN2mPu6Y043s6bGOUUEv3nJiKh Hw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 34xrdav957-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 24 Nov 2020 17:44:06 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AOHe0ho104130;
-        Tue, 24 Nov 2020 17:44:06 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 34ycfnms9m-1
+        Tue, 24 Nov 2020 17:45:15 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AOHev1N117360;
+        Tue, 24 Nov 2020 17:43:14 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 34yctwt9rw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Nov 2020 17:44:06 +0000
+        Tue, 24 Nov 2020 17:43:14 +0000
 Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AOHi4KP029609;
-        Tue, 24 Nov 2020 17:44:05 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AOHhDaI012336;
+        Tue, 24 Nov 2020 17:43:13 GMT
 Received: from [192.168.1.15] (/70.114.128.235)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 24 Nov 2020 09:44:04 -0800
+        with ESMTP ; Tue, 24 Nov 2020 09:43:13 -0800
 Content-Type: text/plain;
         charset=us-ascii
 Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
-Subject: Re: [PATCH v7 4/5] scsi_transport_fc: Added store fucntionality to
- set the rport port_state using sysfs
+Subject: Re: [PATCH v7 2/5] scsi: No retries on abort success
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <1605070685-20945-5-git-send-email-muneendra.kumar@broadcom.com>
-Date:   Tue, 24 Nov 2020 11:44:04 -0600
+In-Reply-To: <1605070685-20945-3-git-send-email-muneendra.kumar@broadcom.com>
+Date:   Tue, 24 Nov 2020 11:43:13 -0600
 Cc:     linux-scsi@vger.kernel.org, michael.christie@oracle.com,
         hare@suse.de, jsmart2021@gmail.com, emilne@redhat.com,
         mkumar@redhat.com
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <8D1BAA0B-610D-4A9F-A51B-8BC547717A0B@oracle.com>
+Message-Id: <81652DA5-494A-413C-AB85-914909167855@oracle.com>
 References: <1605070685-20945-1-git-send-email-muneendra.kumar@broadcom.com>
- <1605070685-20945-5-git-send-email-muneendra.kumar@broadcom.com>
+ <1605070685-20945-3-git-send-email-muneendra.kumar@broadcom.com>
 To:     Muneendra <muneendra.kumar@broadcom.com>
 X-Mailer: Apple Mail (2.3608.120.23.2.4)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9815 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 spamscore=0
- adultscore=0 bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011240107
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
+ malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=999 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011240107
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9815 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0 mlxscore=0
  mlxlogscore=999 spamscore=0 phishscore=0 clxscore=1015 malwarescore=0
@@ -87,140 +86,119 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 > On Nov 10, 2020, at 10:58 PM, Muneendra <muneendra.kumar@broadcom.com> =
 wrote:
 >=20
-> Added a store functionality to set rport port_state using sysfs
-> under  fc_remote_ports/rport-*/port_state
+> Added a new optional routine eh_should_retry_cmd
+> in scsi_host_template that allows the transport to decide if a
+> cmd is retryable.Return true if the transport is in a state the
+> cmd should be retried on.
 >=20
-> With this functionality the user can move the port_state from
-> Marginal -> Online and Online->Marginal.
+> Added a new interface scsi_eh_should_retry_cmd which checks and
+> calls the new routine eh_should_retry_cmd.
 >=20
-> On Marginal :This interface will set SCMD_NORETRIES_ABORT bit in
-> scmd->state for all the pending io's on the scsi device associated
-> with target port.
+> Made changes in scmd_eh_abort_handler and scsi_eh_flush_done_q which
+> calls the scsi_eh_should_retry_cmd to check whether the
+> command needs to be retried.
 >=20
-> On Online :This interface will clear SCMD_NORETRIES_ABORT bit in
-> scmd->state for all the pending io's on the scsi device associated
-> with target port.
->=20
-> Below is the interface provided to set the port state to Marginal
-> and Online.
->=20
-> echo "Marginal" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
-> echo "Online" >> /sys/class/fc_remote_ports/rport-X\:Y-Z/port_state
+> The above changes were done based on a patch by Mike Christie.
 >=20
 > Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
 >=20
 > ---
 > v7:
-> No change
+> Added New routine in scsi_host_template to decide if a cmd is
+> retryable instead of checking the same using  SCMD_NORETRIES_ABORT
+> bit as the cmd retry part can be checked by validating the port state.
+>=20
+> Moved the DID_TRANSPORT_MARGINAL changes to previous patch
+> for reordering
 >=20
 > v6:
-> No change
+> Rearranged the patch by merging second hunk of the patch2 in v5
+> to this patch
 >=20
 > v5:
-> No change
->=20
+> added the DID_TRANSPORT_MARGINAL case to
+> scsi_decide_disposition
 > v4:
-> Addressed the error reported by kernel test robot
-> Removed the code needed to traverse all the devices under rport
-> to set/clear SCMD_NORETRIES_ABORT
-> Removed unncessary comments.
-> Return the error values on failure while setting the port_state
+> Modified the comments in the code appropriately
 >=20
 > v3:
-> Removed the port_state from starget attributes.
-> Enabled the store functionality for port_state under remote port.
-> used the starget_for_each_device to traverse around all the devices
-> under rport
+> Merged  first part of the previous patch(v2 patch3) with
+> this patch.
 >=20
 > v2:
-> Changed from a noretries_abort attribute under fc_transport/target*/ =
-to
-> port_state for changing the port_state to a marginal state
+> set the hostbyte as DID_TRANSPORT_MARGINAL instead of
+> DID_TRANSPORT_FAILFAST.
 > ---
-> drivers/scsi/scsi_transport_fc.c | 56 ++++++++++++++++++++++++++++++--
-> 1 file changed, 54 insertions(+), 2 deletions(-)
+> drivers/scsi/scsi_error.c | 17 +++++++++++++++--
+> include/scsi/scsi_host.h  |  6 ++++++
+> 2 files changed, 21 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/drivers/scsi/scsi_transport_fc.c =
-b/drivers/scsi/scsi_transport_fc.c
-> index ffd25195ae62..d378ca4a60fe 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -1238,7 +1238,59 @@ show_fc_rport_roles (struct device *dev, struct =
-device_attribute *attr,
-> static FC_DEVICE_ATTR(rport, roles, S_IRUGO,
-> 		show_fc_rport_roles, NULL);
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 28056ee498b3..1cdfa5a8ca09 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -124,6 +124,17 @@ static bool scsi_cmd_retry_allowed(struct =
+scsi_cmnd *cmd)
+> 	return ++cmd->retries <=3D cmd->allowed;
+> }
 >=20
-> -fc_private_rport_rd_enum_attr(port_state, FC_PORTSTATE_MAX_NAMELEN);
-> +static ssize_t fc_rport_set_marginal_state(struct device *dev,
-> +						struct device_attribute =
-*attr,
-> +						const char *buf, size_t =
-count)
+> +static bool scsi_eh_should_retry_cmd(struct scsi_cmnd *cmd)
 > +{
-> +	struct fc_rport *rport =3D transport_class_to_rport(dev);
-> +	enum fc_port_state port_state;
-> +	int ret =3D 0;
+> +	struct scsi_device *sdev =3D cmd->device;
+> +	struct Scsi_Host *host =3D sdev->host;
 > +
-> +	ret =3D get_fc_port_state_match(buf, &port_state);
-> +	if (ret)
-> +		return -EINVAL;
-> +	if (port_state =3D=3D FC_PORTSTATE_MARGINAL) {
-> +		/*
-> +		 * Change the state to marginal only if the
-> +		 * current rport state is Online
-> +		 * Allow only Online->marginal
-> +		 */
-> +		if (rport->port_state =3D=3D FC_PORTSTATE_ONLINE)
-> +			rport->port_state =3D port_state;
-> +		else
-> +			return -EINVAL;
-> +	} else if (port_state =3D=3D FC_PORTSTATE_ONLINE) {
-> +		/*
-> +		 * Change the state to Online only if the
-> +		 * current rport state is Marginal
-> +		 * Allow only  MArginal->Online
-> +		 */
-> +		if (rport->port_state =3D=3D FC_PORTSTATE_MARGINAL)
-> +			rport->port_state =3D port_state;
-> +		else
-> +			return -EINVAL;
-> +	} else
-> +		return -EINVAL;
-> +	return count;
+> +	if (host->hostt->eh_should_retry_cmd)
+> +		return  host->hostt->eh_should_retry_cmd(cmd);
+> +
+> +	return true;
 > +}
 > +
-> +static ssize_t
-> +show_fc_rport_port_state(struct device *dev,
-> +				struct device_attribute *attr, char =
-*buf)
-> +{
-> +	const char *name;
-> +	struct fc_rport *rport =3D transport_class_to_rport(dev);
-> +
-> +	name =3D get_fc_port_state_name(rport->port_state);
-> +	if (!name)
-> +		return -EINVAL;
-> +
-> +	return snprintf(buf, 20, "%s\n", name);
-> +}
-> +
-> +static FC_DEVICE_ATTR(rport, port_state, 0444 | 0200,
-> +			show_fc_rport_port_state, =
-fc_rport_set_marginal_state);
-> +
-> fc_private_rport_rd_attr(scsi_target_id, "%d\n", 20);
+> /**
+>  * scmd_eh_abort_handler - Handle command aborts
+>  * @work:	command to be aborted.
+> @@ -159,7 +170,8 @@ scmd_eh_abort_handler(struct work_struct *work)
+> 						    "eh timeout, not =
+retrying "
+> 						    "aborted =
+command\n"));
+> 			} else if (!scsi_noretry_cmd(scmd) &&
+> -				   scsi_cmd_retry_allowed(scmd)) {
+> +				   scsi_cmd_retry_allowed(scmd) &&
+> +				scsi_eh_should_retry_cmd(scmd)) {
+> 				SCSI_LOG_ERROR_RECOVERY(3,
+> 					scmd_printk(KERN_WARNING, scmd,
+> 						    "retry aborted =
+command\n"));
+> @@ -2111,7 +2123,8 @@ void scsi_eh_flush_done_q(struct list_head =
+*done_q)
+> 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+> 		list_del_init(&scmd->eh_entry);
+> 		if (scsi_device_online(scmd->device) &&
+> -		    !scsi_noretry_cmd(scmd) && =
+scsi_cmd_retry_allowed(scmd)) {
+> +		    !scsi_noretry_cmd(scmd) && =
+scsi_cmd_retry_allowed(scmd) &&
+> +			scsi_eh_should_retry_cmd(scmd)) {
+> 			SCSI_LOG_ERROR_RECOVERY(3,
+> 				scmd_printk(KERN_INFO, scmd,
+> 					     "%s: flush retry cmd\n",
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 701f178b20ae..e30fd963b97d 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -314,6 +314,12 @@ struct scsi_host_template {
+> 	 * Status: OPTIONAL
+> 	 */
+> 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
+> +	/*
+> +	 * Optional routine that allows the transport to decide if a cmd
+> +	 * is retryable. Return true if the transport is in a state the
+> +	 * cmd should be retried on.
+> +	 */
+> +	bool (*eh_should_retry_cmd)(struct scsi_cmnd *scmd);
 >=20
-> /*
-> @@ -2681,7 +2733,7 @@ fc_attach_transport(struct fc_function_template =
-*ft)
-> 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_name);
-> 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_id);
-> 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(roles);
-> -	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_state);
-> +	SETUP_PRIVATE_RPORT_ATTRIBUTE_RW(port_state);
-> 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(scsi_target_id);
-> 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RW(fast_io_fail_tmo);
->=20
+> 	/* This is an optional routine that allows transport to initiate
+> 	 * LLD adapter or firmware reset using sysfs attribute.
 > --=20
 > 2.26.2
 >=20
