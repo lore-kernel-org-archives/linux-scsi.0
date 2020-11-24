@@ -2,176 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B586C63777
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 06:15:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25631C63777
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 06:23:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CA2420857
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 06:15:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEF9420BED
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 06:23:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="leuk/gZT"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="EMjDhtqv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728126AbgKXGP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Nov 2020 01:15:28 -0500
-Received: from m42-4.mailgun.net ([69.72.42.4]:34212 "EHLO m42-4.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727946AbgKXGP2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Nov 2020 01:15:28 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606198527; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=O64Bagg91WpXTQ6GYKfVVL/aHTO8730H8ll60EFv4Q0=;
- b=leuk/gZTKizDNBBtWZeiGhuae/J668Swqs/90uxl71gino1hXDUcgooFoO4ORxX3SMfMGY9Y
- B2qppXP6AiEISFtuYFP2hFJlHhhrs6D8X5o316+BJwg4SqoJHDRmclsjC4SJwz+CHaProgQC
- +2SEcMO7N9TPPm7Kp6rIpxjkIcU=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5fbca4f6fa67d9becf74d05e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 24 Nov 2020 06:15:18
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 10655C43460; Tue, 24 Nov 2020 06:15:18 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 112CDC433ED;
-        Tue, 24 Nov 2020 06:15:16 +0000 (UTC)
+        id S1729608AbgKXGXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Nov 2020 01:23:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52298 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728601AbgKXGXY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2020 01:23:24 -0500
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B641CC0613CF
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 22:23:22 -0800 (PST)
+Received: by mail-ed1-x543.google.com with SMTP id q16so19608050edv.10
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 22:23:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=g7rAnBCNEOexDsLeiBc8AFxW7GC6geHmTufT6HDd6+M=;
+        b=EMjDhtqvKPL+LhyRWhJ7GpK/6OhFaDspFcOFurIEKoAsnfdSiQH/4lbZOBLFEszfST
+         t3NAqoNEGqJXwsuYU9Ruxskatx7rQP8LPXaz4BIL5tKybwTWrH6IuBAw+kGevXt0twOS
+         5ag1rMgG4v+X6GgUAbanNAQmI9M4AlShLlwH0w5iMaWgN7BuUbHdTLNU+xJ1GnkTuN9y
+         HK3V2qg/n1YQ3juQRlx8hSy9BizRhSo/tvn410sDBBlDgtQ1rNyAmLs6wGZ+GihZvfr+
+         nqu6jdpBjtHlI6TJw22fr9BLwTJ8py4qL7AQzF/73OG9qZ/yZ/yysC25Zehk2sl09QW7
+         OIRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=g7rAnBCNEOexDsLeiBc8AFxW7GC6geHmTufT6HDd6+M=;
+        b=rSJsDAGiIBu+DFOsvL1AC5/ITGIWzHx/Qn1zBCojQMHQxvbeOhCPyED6wy4xae8ED/
+         qX2p1rK8bG8veHSDLWxZlTuFxZoq/IqnVkI+NZ4Gx0p3J7rMKtLjMhzJlBuUv0+luC0z
+         ZHfyGWMtmPHTG59MGKhILA2QDd6G/sWnDc6xZy19SdFsb4F3/iRp/ljBAmpya+BHpOIy
+         uZU/F2ptL/NnO/dvcqbV6MliP3EfJ5SKQCbNWfne3UNZsAIIhaJXa32PIQhlGZ86aMC6
+         Y4myuqpoZQZx4AxBY/6mNKVlSd2nf5Cuw7t7aqLkYpzqzlN+NXhljL6og63iuWF2lQzv
+         eh8A==
+X-Gm-Message-State: AOAM530BXMYo8/k6HbpUVSxjXUwq5d+q08p6bzaDtveREn7uu5XhT/Ic
+        0GRoxbQdQkiD2fHKAwTVjWoSghecrkIE3eBqShKycQ==
+X-Google-Smtp-Source: ABdhPJxQNen1PLZZm50zG1JSrV64LLgD6Xd2GhfeWhmbOTk8Unmf5NUXmVXU3AS/+Ldq1so0yJQO0ALxggx5z3poDXo=
+X-Received: by 2002:aa7:d443:: with SMTP id q3mr2648810edr.262.1606199001305;
+ Mon, 23 Nov 2020 22:23:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 24 Nov 2020 14:15:15 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+References: <cover.1606192458.git.joe@perches.com> <69dc34ff63adfa60b3f203ed2d58143b5692af57.1606192458.git.joe@perches.com>
+In-Reply-To: <69dc34ff63adfa60b3f203ed2d58143b5692af57.1606192458.git.joe@perches.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Tue, 24 Nov 2020 07:23:10 +0100
+Message-ID: <CAMGffE=JTjJkjJC68v5OjDGVs536be8_CxDTHbOh4tHNf8LaPQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: pm8001: Convert pm8001_printk to pm8001_info
+To:     Joe Perches <joe@perches.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        kuohong.wang@mediatek.com
-Subject: Re: [PATCH] scsi: ufs: Don't disable core_clk_unipro if the link is
- active
-In-Reply-To: <1606195221.17338.6.camel@mtkswgap22>
-References: <1606194312-25378-1-git-send-email-cang@codeaurora.org>
- <1606195221.17338.6.camel@mtkswgap22>
-Message-ID: <20ae750e562d80f964045c7c44bd94d6@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
-
-On 2020-11-24 13:20, Stanley Chu wrote:
-> Hi Can,
-> 
-> On Mon, 2020-11-23 at 21:05 -0800, Can Guo wrote:
->> If we want to disable clocks but still keep the link active, both 
->> ref_clk
->> and core_clk_unipro should be skipped.
->> 
-> 
-> "core_clk_unipro" seems used by ufs-qcom only and not defined in the 
-> UFS
-> platform binding document: ufshcd_pltfrm.txt.
-
-Agree.
-
-> 
-> Could you please add the definition first and then it would be
-> reasonable to be used in common driver?
-> 
-> Or, how about add a flag in struct ufs_clk_info indicating if this 
-> clock
-> needs be ON to keep the link active? The flag could be set properly by
-> vendor initialization functions. In this way, we can also remove the
-> hard-coded "ref_clk" in __ufshcd_setup_clocks().
-
-This seems better, I will upload next version to incorporate the idea
-after it is tested.
-
-Thanks,
-
-Can Guo.
-
-> 
-> Thanks.
-> Stanley Chu
-> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index a7857f6..69c2e91 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -222,7 +222,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba 
->> *hba, int tag);
->>  static void ufshcd_hba_exit(struct ufs_hba *hba);
->>  static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
->>  static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
->> -				 bool skip_ref_clk);
->> +				 bool keep_link_active);
->>  static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
->>  static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
->>  static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba 
->> *hba);
->> @@ -1710,7 +1710,6 @@ static void ufshcd_gate_work(struct work_struct 
->> *work)
->>  	if (!ufshcd_is_link_active(hba))
->>  		ufshcd_setup_clocks(hba, false);
->>  	else
->> -		/* If link is active, device ref_clk can't be switched off */
->>  		__ufshcd_setup_clocks(hba, false, true);
->> 
->>  	/*
->> @@ -7991,7 +7990,7 @@ static int ufshcd_init_hba_vreg(struct ufs_hba 
->> *hba)
->>  }
->> 
->>  static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
->> -					bool skip_ref_clk)
->> +					bool keep_link_active)
->>  {
->>  	int ret = 0;
->>  	struct ufs_clk_info *clki;
->> @@ -8009,7 +8008,13 @@ static int __ufshcd_setup_clocks(struct ufs_hba 
->> *hba, bool on,
->> 
->>  	list_for_each_entry(clki, head, list) {
->>  		if (!IS_ERR_OR_NULL(clki->clk)) {
->> -			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
->> +			/*
->> +			 * To keep link active, ref_clk and core_clk_unipro
->> +			 * should be kept ON.
->> +			 */
->> +			if (keep_link_active &&
->> +			    (!strcmp(clki->name, "ref_clk") ||
->> +			     !strcmp(clki->name, "core_clk_unipro")))
->>  				continue;
->> 
->>  			clk_state_changed = on ^ clki->enabled;
->> @@ -8580,7 +8585,6 @@ static int ufshcd_suspend(struct ufs_hba *hba, 
->> enum ufs_pm_op pm_op)
->>  	if (!ufshcd_is_link_active(hba))
->>  		ufshcd_setup_clocks(hba, false);
->>  	else
->> -		/* If link is active, device ref_clk can't be switched off */
->>  		__ufshcd_setup_clocks(hba, false, true);
->> 
->>  	if (ufshcd_is_clkgating_allowed(hba)) {
+On Tue, Nov 24, 2020 at 5:36 AM Joe Perches <joe@perches.com> wrote:
+>
+> Use the more common logging style.
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Thanks!
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 12 ++++++------
+>  drivers/scsi/pm8001/pm8001_sas.c  |  4 ++--
+>  drivers/scsi/pm8001/pm8001_sas.h  |  4 ++--
+>  3 files changed, 10 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 13530d7fb8a6..38907f45c845 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -1293,8 +1293,8 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>                         tasklet_kill(&pm8001_ha->tasklet[j]);
+>  #endif
+>         device_state = pci_choose_state(pdev, state);
+> -       pm8001_printk(pm8001_ha, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+> -                     pdev, pm8001_ha->name, device_state);
+> +       pm8001_info(pm8001_ha, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+> +                   pdev, pm8001_ha->name, device_state);
+>         pci_save_state(pdev);
+>         pci_disable_device(pdev);
+>         pci_set_power_state(pdev, device_state);
+> @@ -1318,16 +1318,16 @@ static int pm8001_pci_resume(struct pci_dev *pdev)
+>         pm8001_ha = sha->lldd_ha;
+>         device_state = pdev->current_state;
+>
+> -       pm8001_printk(pm8001_ha, "pdev=0x%p, slot=%s, resuming from previous operating state [D%d]\n",
+> -                     pdev, pm8001_ha->name, device_state);
+> +       pm8001_info(pm8001_ha, "pdev=0x%p, slot=%s, resuming from previous operating state [D%d]\n",
+> +                   pdev, pm8001_ha->name, device_state);
+>
+>         pci_set_power_state(pdev, PCI_D0);
+>         pci_enable_wake(pdev, PCI_D0, 0);
+>         pci_restore_state(pdev);
+>         rc = pci_enable_device(pdev);
+>         if (rc) {
+> -               pm8001_printk(pm8001_ha, "slot=%s Enable device failed during resume\n",
+> -                             pm8001_ha->name);
+> +               pm8001_info(pm8001_ha, "slot=%s Enable device failed during resume\n",
+> +                           pm8001_ha->name);
+>                 goto err_out_enable;
+>         }
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 4562b0a5062a..d1e9dba2ef19 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -1191,7 +1191,7 @@ int pm8001_abort_task(struct sas_task *task)
+>         phy_id = pm8001_dev->attached_phy;
+>         ret = pm8001_find_tag(task, &tag);
+>         if (ret == 0) {
+> -               pm8001_printk(pm8001_ha, "no tag for task:%p\n", task);
+> +               pm8001_info(pm8001_ha, "no tag for task:%p\n", task);
+>                 return TMF_RESP_FUNC_FAILED;
+>         }
+>         spin_lock_irqsave(&task->task_state_lock, flags);
+> @@ -1313,7 +1313,7 @@ int pm8001_abort_task(struct sas_task *task)
+>                 task->slow_task = NULL;
+>         spin_unlock_irqrestore(&task->task_state_lock, flags);
+>         if (rc != TMF_RESP_FUNC_COMPLETE)
+> -               pm8001_printk(pm8001_ha, "rc= %d\n", rc);
+> +               pm8001_info(pm8001_ha, "rc= %d\n", rc);
+>         return rc;
+>  }
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index 5266756a268b..f2c8cbad3853 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -70,14 +70,14 @@
+>  #define PM8001_DEVIO_LOGGING   0x100 /* development io message logging */
+>  #define PM8001_IOERR_LOGGING   0x200 /* development io err message logging */
+>
+> -#define pm8001_printk(HBA, fmt, ...)                                   \
+> +#define pm8001_info(HBA, fmt, ...)                                     \
+>         pr_info("%s:: %s  %d:" fmt,                                     \
+>                 (HBA)->name, __func__, __LINE__, ##__VA_ARGS__)
+>
+>  #define pm8001_dbg(HBA, level, fmt, ...)                               \
+>  do {                                                                   \
+>         if (unlikely((HBA)->logging_level & PM8001_##level##_LOGGING))  \
+> -               pm8001_printk(HBA, fmt, ##__VA_ARGS__);                 \
+> +               pm8001_info(HBA, fmt, ##__VA_ARGS__);                   \
+>  } while (0)
+>
+>  #define PM8001_USE_TASKLET
+> --
+> 2.26.0
+>
