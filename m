@@ -2,117 +2,307 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCDBC2D0E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62309C56201
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:52:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A248C20866
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:52:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D76752085B
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:52:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UvSTPGEd"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BzvFLz/8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726760AbgKXDw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 22:52:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57386 "EHLO
+        id S1727381AbgKXDw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 22:52:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726559AbgKXDwZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 22:52:25 -0500
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D71C0613CF
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 19:52:25 -0800 (PST)
-Received: by mail-pf1-x441.google.com with SMTP id n137so7106011pfd.3
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 19:52:25 -0800 (PST)
+        with ESMTP id S1726559AbgKXDw3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 22:52:29 -0500
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1722AC0613CF
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 19:52:29 -0800 (PST)
+Received: by mail-pg1-x544.google.com with SMTP id 34so16247015pgp.10
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2020 19:52:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=pQjJaz6bAn+3axCyVIaROEXd94KJG9Od1BrMceG5r84=;
-        b=UvSTPGEdPlp0sNIGie2GfirvZYjSrnPMpWTtX2AV95zmOBroocokXRMOa066Mi3Pd7
-         yeUAbCR7JEjp/YuCOi9YdMHpnJbv3zXwC83UhfrMcdjuG3jer3W85J7V4rqap+RApMHD
-         sxEPVy2pjfnOIJi13+IVpGP1firJHa51NI+EA=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=RfKzpWg95fRhVnkBUQzbGkzIpR9Y6UF9xdACzKQ45ZE=;
+        b=BzvFLz/8dhPzdYk6DOItIhkAGpgZHMBrPmZdYgKZEGYGlfXAID+2pqUn6M4p9EPYVY
+         Mk0S9Hn/WzRti3r6r+xdG5w3Qww/EZvNt/PI3hKRqWpyQMz39KRlrZ6DE6anAuGBz9Ih
+         zYbQiXIVaCD1CHoY1UUh7CcVvlLinSnRoizwQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=pQjJaz6bAn+3axCyVIaROEXd94KJG9Od1BrMceG5r84=;
-        b=k//o91V0xYZRcyhpyGRGo7RJl89BRk+t/nkim2XbbnKamZEc8cC+5X1IeaElbV+Quh
-         PGT3MnMB6ozeG77qWlBzDGE80iLGeYeeTtiz5DsM/ZRUztfhjTih7Dg+aBGTaZB2f3/q
-         HUMkAjxBROP1WkejahZI/xY9ey0vccT6n6anBTerkeLhfRqC+xM2zlsHvEd9wDIowfvv
-         /G4Ucn9RSNASuy0GVFGoWV5dhnd2innAcT0BBtpfAeEz/v35lSwxtJyMRyw6eAF4Bffs
-         x5IfgpmzoGk3RPXYu809ov4i8mb7Q47fnqcIufzlfMHfkuDOrpTvjUHZ5C6NXk0ZDARU
-         O5VQ==
-X-Gm-Message-State: AOAM533h/EDW2sTPsOchgH0/AIg9XZXqYy5bErdYMzbXQCeszOLCTbkg
-        ko7DrWNAsbOYUuYrD2kbPMYLj2N2MuKfh38XZQHUVGdT5zj3C5O9xzssDsLH3SnP8D2+Zyy5OVx
-        CRx3DYcEmBxwDVrzp3zegV90IVudMAj1VZDdV5nBUpymq6Y3cfrRkzYqwBPpsmSc/8z/dVl3FOU
-        emsX0e8VSb54HJJ+0ArhNSi64=
-X-Google-Smtp-Source: ABdhPJw7BBu6+w08jo2Gz4BTCY+Dgu2XnShvhrkpbPXmsipbVj8WQ6xz5x11v/Vk8B+hvRwBfc69Gg==
-X-Received: by 2002:a17:90a:f0c7:: with SMTP id fa7mr2557014pjb.3.1606189944408;
-        Mon, 23 Nov 2020 19:52:24 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=RfKzpWg95fRhVnkBUQzbGkzIpR9Y6UF9xdACzKQ45ZE=;
+        b=tgmYONAoln+YlfXY8oQKaNkMXVZ0LBvq4QY+4tfdqu+A7R+cWGOAAp7K7nOlXe7RW0
+         4yfC+nhXZhWD2eOjcLqNBCmoxMWnZnHpjw55NbDH+qmN6R9ZX6ei3Alg3SGEbcWWvKFd
+         z9QjtHkm7U4mnLmkSMv/UARtHJD6kTWOrkvdNIeEFDUu+7ZWkY8qDXGNHZWpOup+ZcZz
+         /Cw9uYhDBwKHI4u9YgoIqJzxGEPFz3J1Po/0Z6iQd/nBZpT3YNknYZwrvZH0QZbzZ9Gz
+         uV7IB7pqTVga35rAY2ebD7Ed4ffDxKQdpfq+zfj7ISbIL+yqhn7FUdPL76t8WSx22vXE
+         yBPw==
+X-Gm-Message-State: AOAM532LmGPHnTGLYZPyrwywlkufB52pALhAcBHRpUXlOg1e10eLcG1Z
+        YyjK8OtgLD+3+brhxbw1GngvFMqMHndyD9hD+XH7gW1Ayevxi1ClTwzpd5Yo/rD2BS8hDcdFHSo
+        LSrFAe6g9MyO2ZYghOZm9kHbjNsamsOKRyPBE/DH9GrZg0auKd69WZDIlLdbX3DsMc+C/ITOZKH
+        r6XnsCnrKJarm50yzKkBuFc/g=
+X-Google-Smtp-Source: ABdhPJwroxf2Be5wvV/u/i0rkpkL1tDbNhpKK5Zhvfs9DNPA6cPuXJrdVCcDQuRvXaM0YQ+QulipRQ==
+X-Received: by 2002:a17:90a:c17:: with SMTP id 23mr2544998pjs.199.1606189947942;
+        Mon, 23 Nov 2020 19:52:27 -0800 (PST)
 Received: from dhcp-10-123-20-14.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x8sm851093pjr.52.2020.11.23.19.52.20
+        by smtp.gmail.com with ESMTPSA id x8sm851093pjr.52.2020.11.23.19.52.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2020 19:52:23 -0800 (PST)
+        Mon, 23 Nov 2020 19:52:27 -0800 (PST)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 0/8] mpt3sas: Features to enhance driver debugging.
-Date:   Tue, 24 Nov 2020 09:20:11 +0530
-Message-Id: <20201124035019.27975-1-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 1/8] mpt3sas: Sync time stamp periodically between Driver and FW
+Date:   Tue, 24 Nov 2020 09:20:12 +0530
+Message-Id: <20201124035019.27975-2-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20201124035019.27975-1-suganath-prabu.subramani@broadcom.com>
+References: <20201124035019.27975-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001efac405b4d23d2d"
+        boundary="00000000000052004505b4d23d7f"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001efac405b4d23d2d
+--00000000000052004505b4d23d7f
 Content-Transfer-Encoding: 8bit
 
-1. Periodic Time Sync b/w driver and FW.
-Periodic time sync sets the time of the FW to be the same as
-the time of the Driver (HOST). With Existing driver, time stamp
-synchronization occurs only during Driver load and controller
-reset. With Patch1 - Period time sync implementation facilitates
-driver to sync time stamp periodically with IO_UNIT_CONTROL
-request.
+Issue Description:
+In current Driver/FW, the controller timestamp gets updated
+with host time during driver load time or when a controller
+reset is issued. i.e. when host issues the IOCInit request
+message to the HBA FW. This IOCInit message has a field named
+'TimeStamp' using which the host updates the controller
+timestamp. Over a period, sometimes we may observe controller
+time drifting away from host and it is difficult to co-relate
+host logs with controller logs with respect to time.
+And every time driver cannot issue the IOCInit request message
+just for updating the controller timestamp.
 
-2. Persistent support for diag triggers.
-mpt3sas driver support Automatic Firmware Diagnostic Buffer
-feature. As part of this feature, drivers provide Trigger
-from IOCTL and SysFS interface using which user can set/get/
-clear triggers. Driver releases Diagnostic buffer registered
-with firmware if any trigger gets hit. The triggers set by
-user are not persistent across system reboots. As a result
-triggers set by user will be lost after each reboot. This
-patch set uses Persistent Trigger Pages so that triggers set
-by user will not be lost across system reboots.
+Implementation:
+Instead of IOCInit, driver sends IO_UNIT_CONTROL Request to
+sync time stamp periodically with controller. Timestamp
+synchronization interval is specified in 'TimeSyncInterval'
+field of Manufacturing Page11 by controller.
+TimeSyncInterval - 8 bits
+        bits  0-6: Time stamp Synchronization interval value
+        bit     7: Time stamp Synchronization interval unit,
+                (if this bit is one then Timestamp Synchronization
+                interval value is specified in terms of hours else
+                Timestamp Synchronization interval value is
+                specified in terms of minutes).
 
-Suganath Prabu S (8):
-  mpt3sas: Sync time stamp periodically between Driver and FW
-  mpt3sas: Add persistent trigger pages support
-  mpt3sas: Add master triggers persistent Trigger Page
-  mpt3sas: Add Event triggers persistent Trigger Page2
-  mpt3sas: Add SCSI sense triggers persistent Trigger Page3
-  mpt3sas: Add MPI triggers persistent Trigger Page4
-  mpt3sas: Handle trigger page support after reset.
-  mpt3sas: Update driver version to 36.100.00.00
+Driver sends this IO_UNIT_CONTROL Request message from
+watchdog thread (which gets invoked every one second).
+Driver keeps tracks of timer using ioc's timestamp_update_count
+field. This field value gets incremented whenever the watchdog
+thread gets invoked. And whenever this field value is greater
+than or equals to the Time stamp Synchronization interval value
+then driver sends the IO_UNIT_CONTROL Request message to
+controller to update the time stamp and then it resets the
+timestamp_update_count field to zero.
 
- drivers/scsi/mpt3sas/mpt3sas_base.c          | 437 ++++++++++-
- drivers/scsi/mpt3sas/mpt3sas_base.h          |  49 +-
- drivers/scsi/mpt3sas/mpt3sas_config.c        | 760 +++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_trigger_pages.h |  95 +++
- 4 files changed, 1334 insertions(+), 7 deletions(-)
- create mode 100644 drivers/scsi/mpt3sas/mpt3sas_trigger_pages.h
+Syncing Driver and FW timestamp periodically makes
+correlating the FW logs and OS events easier.
 
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 93 ++++++++++++++++++++++++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 14 ++++-
+ 2 files changed, 104 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 93230cd..18d5c3c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -596,6 +596,71 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 	return 0;
+ }
+ 
++/**
++ * _base_sync_drv_fw_timestamp - Sync Drive-Fw TimeStamp.
++ * @ioc: Per Adapter Object
++ *
++ * Return nothing.
++ */
++static void _base_sync_drv_fw_timestamp(struct MPT3SAS_ADAPTER *ioc)
++{
++	Mpi26IoUnitControlRequest_t *mpi_request;
++	Mpi26IoUnitControlReply_t *mpi_reply;
++	u16 smid;
++	ktime_t current_time;
++	u64 TimeStamp = 0;
++	u8 issue_reset = 0;
++
++	mutex_lock(&ioc->scsih_cmds.mutex);
++	if (ioc->scsih_cmds.status != MPT3_CMD_NOT_USED) {
++		ioc_err(ioc, "scsih_cmd in use %s\n", __func__);
++		goto out;
++	}
++	ioc->scsih_cmds.status = MPT3_CMD_PENDING;
++	smid = mpt3sas_base_get_smid(ioc, ioc->scsih_cb_idx);
++	if (!smid) {
++		ioc_err(ioc, "Failed obtaining a smid %s\n", __func__);
++		ioc->scsih_cmds.status = MPT3_CMD_NOT_USED;
++		goto out;
++	}
++	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	ioc->scsih_cmds.smid = smid;
++	memset(mpi_request, 0, sizeof(Mpi26IoUnitControlRequest_t));
++	mpi_request->Function = MPI2_FUNCTION_IO_UNIT_CONTROL;
++	mpi_request->Operation = MPI26_CTRL_OP_SET_IOC_PARAMETER;
++	mpi_request->IOCParameter = MPI26_SET_IOC_PARAMETER_SYNC_TIMESTAMP;
++	current_time = ktime_get_real();
++	TimeStamp = cpu_to_le64(ktime_to_ms(current_time));
++	mpi_request->Reserved7 = (u32) (TimeStamp & 0xFFFFFFFF);
++	mpi_request->IOCParameterValue = (u32) (TimeStamp >> 32);
++	init_completion(&ioc->scsih_cmds.done);
++	ioc->put_smid_default(ioc, smid);
++	dinitprintk(ioc, ioc_info(ioc,
++	    "Io Unit Control Sync TimeStamp (sending), @time %lld ms\n",
++	    TimeStamp));
++	wait_for_completion_timeout(&ioc->scsih_cmds.done,
++		MPT3SAS_TIMESYNC_TIMEOUT_SECONDS*HZ);
++	if (!(ioc->scsih_cmds.status & MPT3_CMD_COMPLETE)) {
++		mpt3sas_check_cmd_timeout(ioc,
++		    ioc->scsih_cmds.status, mpi_request,
++		    sizeof(Mpi2SasIoUnitControlRequest_t)/4, issue_reset);
++		goto issue_host_reset;
++	}
++	if (ioc->scsih_cmds.status & MPT3_CMD_REPLY_VALID) {
++		mpi_reply = ioc->scsih_cmds.reply;
++		dinitprintk(ioc, ioc_info(ioc,
++		    "Io Unit Control sync timestamp (complete): ioc_status(0x%04x), loginfo(0x%08x)\n",
++		    le16_to_cpu(mpi_reply->IOCStatus),
++		    le32_to_cpu(mpi_reply->IOCLogInfo)));
++	}
++issue_host_reset:
++	if (issue_reset)
++		mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
++	ioc->scsih_cmds.status = MPT3_CMD_NOT_USED;
++out:
++	mutex_unlock(&ioc->scsih_cmds.mutex);
++}
++
+ /**
+  * _base_fault_reset_work - workq handling ioc fault conditions
+  * @work: input argument, used to derive ioc
+@@ -720,7 +785,11 @@ _base_fault_reset_work(struct work_struct *work)
+ 			return; /* don't rearm timer */
+ 	}
+ 	ioc->ioc_coredump_loop = 0;
+-
++	if (ioc->time_sync_interval &&
++	    ++ioc->timestamp_update_count >= ioc->time_sync_interval) {
++		ioc->timestamp_update_count = 0;
++		_base_sync_drv_fw_timestamp(ioc);
++	}
+ 	spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+  rearm_timer:
+ 	if (ioc->fault_reset_work_q)
+@@ -744,6 +813,7 @@ mpt3sas_base_start_watchdog(struct MPT3SAS_ADAPTER *ioc)
+ 	if (ioc->fault_reset_work_q)
+ 		return;
+ 
++	ioc->timestamp_update_count = 0;
+ 	/* initialize fault polling */
+ 
+ 	INIT_DELAYED_WORK(&ioc->fault_reset_work, _base_fault_reset_work);
+@@ -4754,7 +4824,24 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
+ 		else
+ 			ioc->nvme_abort_timeout = ioc->manu_pg11.NVMeAbortTO;
+ 	}
+-
++	ioc->time_sync_interval =
++	    ioc->manu_pg11.TimeSyncInterval & MPT3SAS_TIMESYNC_MASK;
++	if (ioc->time_sync_interval) {
++		if (ioc->manu_pg11.TimeSyncInterval & MPT3SAS_TIMESYNC_UNIT_MASK)
++			ioc->time_sync_interval =
++			    ioc->time_sync_interval * SECONDS_PER_HOUR;
++		else
++			ioc->time_sync_interval =
++			    ioc->time_sync_interval * SECONDS_PER_MIN;
++		dinitprintk(ioc, ioc_info(ioc,
++		    "Driver-FW TimeSync interval is %d seconds. ManuPg11 TimeSync Unit is in %s\n",
++		    ioc->time_sync_interval, (ioc->manu_pg11.TimeSyncInterval &
++		    MPT3SAS_TIMESYNC_UNIT_MASK) ? "Hour" : "Minute"));
++	} else {
++		if (ioc->is_gen35_ioc)
++			ioc_warn(ioc,
++			    "TimeSync Interval in Manuf page-11 is not enabled. Periodic Time-Sync will be disabled\n");
++	}
+ 	mpt3sas_config_get_bios_pg2(ioc, &mpi_reply, &ioc->bios_pg2);
+ 	mpt3sas_config_get_bios_pg3(ioc, &mpi_reply, &ioc->bios_pg3);
+ 	mpt3sas_config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
+@@ -6466,6 +6553,8 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+ 		r = -EIO;
+ 	}
+ 
++	/* Reset TimeSync Counter*/
++	ioc->timestamp_update_count = 0;
+ 	return r;
+ }
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 7dab579..cc4815c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -93,6 +93,14 @@
+ /* CoreDump: Default timeout */
+ #define MPT3SAS_DEFAULT_COREDUMP_TIMEOUT_SECONDS	(15) /*15 seconds*/
+ #define MPT3SAS_COREDUMP_LOOP_DONE                     (0xFF)
++#define MPT3SAS_TIMESYNC_TIMEOUT_SECONDS		(10) /* 10 seconds */
++#define MPT3SAS_TIMESYNC_UPDATE_INTERVAL		(900) /* 15 minutes */
++#define MPT3SAS_TIMESYNC_UNIT_MASK			(0x80) /* bit 7 */
++#define MPT3SAS_TIMESYNC_MASK				(0x7F) /* 0 - 6 bits */
++#define SECONDS_PER_MIN					(60)
++#define SECONDS_PER_HOUR				(3600)
++#define MPT3SAS_COREDUMP_LOOP_DONE			(0xFF)
++#define MPI26_SET_IOC_PARAMETER_SYNC_TIMESTAMP		(0x81)
+ 
+ /*
+  * Set MPT3SAS_SG_DEPTH value based on user input.
+@@ -405,7 +413,7 @@ struct Mpi2ManufacturingPage11_t {
+ 	u16	HostTraceBufferMaxSizeKB;	/* 50h */
+ 	u16	HostTraceBufferMinSizeKB;	/* 52h */
+ 	u8	CoreDumpTOSec;			/* 54h */
+-	u8	Reserved8;			/* 55h */
++	u8	TimeSyncInterval;		/* 55h */
+ 	u16	Reserved9;			/* 56h */
+ 	__le32	Reserved10;			/* 58h */
+ };
+@@ -1113,6 +1121,8 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  * @cpu_msix_table_sz: table size
+  * @total_io_cnt: Gives total IO count, used to load balance the interrupts
+  * @ioc_coredump_loop: will have non-zero value when FW is in CoreDump state
++ * @timestamp_update_count: Counter to fire timeSync command
++ * time_sync_interval: Time sync interval read from man page 11
+  * @high_iops_outstanding: used to load balance the interrupts
+  *				within high iops reply queues
+  * @msix_load_balance: Enables load balancing of interrupts across
+@@ -1308,6 +1318,8 @@ struct MPT3SAS_ADAPTER {
+ 	MPT3SAS_FLUSH_RUNNING_CMDS schedule_dead_ioc_flush_running_cmds;
+ 	u32             non_operational_loop;
+ 	u8              ioc_coredump_loop;
++	u32		timestamp_update_count;
++	u32		time_sync_interval;
+ 	atomic64_t      total_io_cnt;
+ 	atomic64_t	high_iops_outstanding;
+ 	bool            msix_load_balance;
 -- 
 2.18.4
 
 
---0000000000001efac405b4d23d2d
+--00000000000052004505b4d23d7f
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -183,13 +373,13 @@ DAYA3uHCdaZTnVbSESs1pk+HAhlZhqrDYXWCG6ya+SIG51Q4PHS6jfst/6xnaSFPhWhIv2hSB2NA
 vWzrcXMq9IfE5HFZXqzOWMP/gUOKk155U6EuRQzVcCpabG8ROpPND3sxggJvMIICawIBATBtMF0x
 CzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxT
 aWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDE84Ya9bsUMoMZ6qKjANBglghkgB
-ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgTqA+DPoRzBtlqCaqCCTHdp0x8c/gZRNeqAND+58w
-LBowGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjAxMTI0MDM1MjI1
+ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgl/qcW7NZ7MeHWVi+Z2sgHT1lveJ3JuTeNR2WaQ8b
+oo4wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjAxMTI0MDM1MjI4
 WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAEC
 MAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqG
-SIb3DQEBAQUABIIBAK3DfNlhxBmP9+5GOTb3VzXhWQIUCuMH2OW/u27biqISRvm44pOJ5i8DCUh6
-HpHuzCSop6I0ZlGiLrgMmOdBi2lJgCYseuzjnAyCkRa+G1qQkckh/TW6ahu5FketutCaSm6AlXEE
-FEEtmNJeDVCgSaTR4xmCz/QSbi2ChngOKnZwdv4kPb5Z9zQp3SqD2C4c8Sg0HxBCg+9Paz9RpzZa
-l7emqvawX6m47y2tfiGeNyF1sL1rYMdr58VpvhD/SmiZ+sZieb8HTJTT3t8mILYN9gXDlb920pwD
-MhVYCnpNiZq18u8IzGjTmexj/Nt3UPFbQgt4RkAdmw4364eAz9o3DlA=
---0000000000001efac405b4d23d2d--
+SIb3DQEBAQUABIIBAIDxEt4XOxkpX1Obu7j2kOtZuEGC5RrNA/UIIngz4+ciieJu2Hax7Qr5UpjU
+/tlTBq4lnPaw0BA/u/0Osp4cqZL1WcVM1KJoRkdnSKqkAvwI6whN3rGgkQbMhB9MzVoRc7dyvUn4
+E0xPwxoqq2WQqNum4RbZPsIrFe2kdFP9n5heNe0ziAuUXd4OG7OBpZzPo6HbRqNc9w/rU42WTp8X
+YQPzk+ObPQnYfD6i0Hsh7LCvA3L3C7lWxgwbYLT8DuEGUiIHwULUDyGj+vx4J4UcLykU06u1EKPr
+hKCi8rKCsg497fd2L2FZfQpcC7k2i1+G7AEnS4GhrAj+oPnP6qL6/O4=
+--00000000000052004505b4d23d7f--
