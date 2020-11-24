@@ -7,84 +7,84 @@ X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB09AC63777
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C899C63777
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:48:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64AA720866
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:25:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4A6F2085B
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Nov 2020 03:48:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oxSJ8ybs"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YJjuMS4G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729059AbgKXDZS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Nov 2020 22:25:18 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:54404 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726876AbgKXDZR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 22:25:17 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO3Aa9x070454;
-        Tue, 24 Nov 2020 03:25:09 GMT
+        id S1726899AbgKXDsY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Nov 2020 22:48:24 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:43872 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726315AbgKXDsX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2020 22:48:23 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO3T03n039012;
+        Tue, 24 Nov 2020 03:48:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=mhHx85ik1onY5BRd3YDTxLGB4IyUoU/YipJlzt03SOU=;
- b=oxSJ8ybsXh3nTcR/zNM+GtrhsqfoNwdqBWy82KvwKboXdQTwfZtHZnW7nT6v2cf/A/qh
- KbUZfv5LS5BgJnnastog/wZwkzRpM5epZwpJGNEXZtiOtojuz/z7rM5vlG4ryBj48ovD
- 1gcCsaZeSK1nY5ZM5MWPxVelV8XYyDIIwiJwnl5W4XsKC4dAxsLD4zoQZfiuzWDZAHwS
- pU9BYjJbRG4hU7G8yfb3qDz/eR02wISXDySMBLxZHDsGz9NWK2DGwb0tkrheTdj2D815
- JsaeV2AHlPrPemOk9ORNyg9EKXOKVqLpPQUOGI7b2lsk+9uQQJX4asm0+yG0qy6n28hY 2A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 34xtum0c5s-1
+ bh=P2tdlic+bz9rYgNxW7PiBXNicBQRSc4EaMXcKO1dJy8=;
+ b=YJjuMS4GkTCgTCiUXhCQbOuxrjfkjBvUkqPKiMTzeZCY0b9t9ZGtKFaN1k91w8vkW22x
+ ZL39D+Wfc+IBl3yrElHH2PZtmFeu/onsDbCwMnXqgazRVtrRAuPGN6N9Y5lzlZUk0BNE
+ ZnBg6XR8E+qXIyKLEmf+WcNBzPBClol52+ESloOBjKPOLfN0C7wnY754ReEtGk98Lwlh
+ jrwI3YOQJ52gbeRE+NRZ6mfsOsABHJ/C7y1uDEJuP3Ore/DmhrE7goKdsK1Sg7xVfW88
+ znbfZrtjOSdaLIbRMe1R7dMjgGeq41owehR0K1ROCOTFCXm/3uD58PXPJgR/PEcIYs6o CA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 34xrdarkr6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 24 Nov 2020 03:25:09 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO39mYC160846;
-        Tue, 24 Nov 2020 03:23:09 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 34yx8j9avb-1
+        Tue, 24 Nov 2020 03:48:20 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO3itWH090772;
+        Tue, 24 Nov 2020 03:48:20 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 34yctvts0h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Nov 2020 03:23:09 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AO3N7lg013849;
-        Tue, 24 Nov 2020 03:23:07 GMT
+        Tue, 24 Nov 2020 03:48:20 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AO3mIpZ031081;
+        Tue, 24 Nov 2020 03:48:19 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 23 Nov 2020 19:23:07 -0800
-To:     Joe Perches <joe@perches.com>
-Cc:     linux-scsi@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] scsi: pm8001: logging neatening
+        with ESMTP ; Mon, 23 Nov 2020 19:48:18 -0800
+To:     Karan Tilak Kumar <kartilak@cisco.com>
+Cc:     satishkh@cisco.com, sebaddel@cisco.com, arulponn@cisco.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: fnic: Avoid looping in TRANS ETH on unload
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1r1ojmoa5.fsf@ca-mkp.ca.oracle.com>
-References: <cover.1605914030.git.joe@perches.com>
-Date:   Mon, 23 Nov 2020 22:23:05 -0500
-In-Reply-To: <cover.1605914030.git.joe@perches.com> (Joe Perches's message of
-        "Fri, 20 Nov 2020 15:16:08 -0800")
+Message-ID: <yq1a6v7mn48.fsf@ca-mkp.ca.oracle.com>
+References: <20201121012145.18522-1-kartilak@cisco.com>
+Date:   Mon, 23 Nov 2020 22:48:16 -0500
+In-Reply-To: <20201121012145.18522-1-kartilak@cisco.com> (Karan Tilak Kumar's
+        message of "Fri, 20 Nov 2020 17:21:45 -0800")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=1
- bulkscore=0 mlxlogscore=890 malwarescore=0 adultscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011240018
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=1
+ malwarescore=0 spamscore=0 phishscore=0 mlxlogscore=961 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011240020
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 lowpriorityscore=0
- malwarescore=0 mlxlogscore=902 impostorscore=0 spamscore=0 mlxscore=0
- phishscore=0 clxscore=1015 suspectscore=1 bulkscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0 mlxscore=0
+ mlxlogscore=992 spamscore=0 phishscore=0 clxscore=1011 malwarescore=0
+ lowpriorityscore=0 adultscore=0 suspectscore=1 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011240018
+ definitions=main-2011240019
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Joe,
+Karan,
 
-> Reduce code duplication and generic neatening of logging macros
+> This change is to avoid looping in fnic_scsi_abort_io before sending
+> fw reset when fnic is in TRANS ETH state and when we have not received
+> any link events.
 
 Applied to 5.11/scsi-staging, thanks!
 
