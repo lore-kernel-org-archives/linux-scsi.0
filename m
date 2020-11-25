@@ -2,189 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3046DC56201
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 09:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ECE0C71155
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 10:38:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABEAB2083E
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 09:50:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBF0720678
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 10:38:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="S+y5lTGk"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YCtEdyPA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726242AbgKYJu5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 04:50:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52996 "EHLO
+        id S1729118AbgKYKhe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 05:37:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726049AbgKYJu5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 04:50:57 -0500
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A4CCC0613D4
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2020 01:50:57 -0800 (PST)
-Received: by mail-pg1-x544.google.com with SMTP id m9so1998856pgb.4
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2020 01:50:57 -0800 (PST)
+        with ESMTP id S1725876AbgKYKh3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 05:37:29 -0500
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 572EAC0613D6;
+        Wed, 25 Nov 2020 02:37:29 -0800 (PST)
+Received: by mail-pl1-x642.google.com with SMTP id b23so898046pls.11;
+        Wed, 25 Nov 2020 02:37:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=JPYgip/RsEihyzoh8iK0QIiJFDN8Q8oI4iD1r+xKpJY=;
-        b=S+y5lTGkFZ6KSMn46KFmyLiCl4g74MYvqF/09qFvVKeV3dEFWJ3x18Wq8euBjpcJ53
-         ZkI1DETaYlnhsv1U0CkfZBK7crHyIrhGpjelay27wD+nhIPCsslnZ3SpoHGJWqPuubnU
-         cCoN8aLXhgqR0qDupLAaf+BnyP5e/xZ2M2xVA=
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=lG3+Uwz8lZti6FSb8xjGyaQfdt5OwV03xvf6+L3ZqWc=;
+        b=YCtEdyPA4vCzWZsMjIt3djSgR9gg7vMRhn3I5LT7lEmWHdT3b/jEkR0QdduouORJ7k
+         kiuUl5RijkS3EJmc3PIdIbhuWrYEtLAccN+wdoprBDsU56ruoUGszfH1Sxvuy4WXIhMK
+         0dDt7R//JtRYOU1+gQ96Rpa2FinP3O1pFccTMutbPTGjvqTac0chojMQO8cZdySzLIim
+         HHsTKo91pUaUTwyxPnWizwDASocTC+n+eyDdN/HKPn9pe4V2vLDA/DOFrCcWbsrVXkvE
+         5CsjPeXzCB0gF8EvrEVdW+qQjVnUcViOyjSAD57xy0gbwLs+FCHLejwxIxOdH/xJHiTG
+         +NRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=JPYgip/RsEihyzoh8iK0QIiJFDN8Q8oI4iD1r+xKpJY=;
-        b=djTNWMEUcb5IiMhrdMjrO06W7Wre26u52TLZGa6Mm4KY8xJySG8o60WnKzLitDKcXS
-         HU41hMMP3FebNDKibfifbqJwWVFbgYXbwoAFLfGl4dit7J9fzGTEVwezj9tp5EBdzNnD
-         lzCSgdPu5fX4jxZQ6yhli6rGTMe0J4FBMtQDt5Ee6voKlfehAivvbP41Igfbm2okzmG6
-         GemGafWypWrBDI1wXzwRU71q9JOOh3dh/Kcg1BedEvKnPdwwU04YVRFSLC6uu0m1B5hu
-         XzvYRc60p8gsk7EDiDrwOdV4Df3JB79kq6ZSTojddVEYSNs2bJGb7h822QfBqmvaGJMa
-         b0Rw==
-X-Gm-Message-State: AOAM531qHKxYcmDhrfo3IHxlj39+Rz2Gn5YUrRnB7pMGX42ppb8u/7Ed
-        biDyPtl3FydbJM0trn8clkKpvUXQ9r72WeV3
-X-Google-Smtp-Source: ABdhPJyFmMUb8SChWbEB98AZ2AZMskrvpL9TnZSDJ8HSEe2qSwsA5ZbsLQ9pB0vlV/M+zl6mgSMleQ==
-X-Received: by 2002:a63:d110:: with SMTP id k16mr2383578pgg.284.1606297856261;
-        Wed, 25 Nov 2020 01:50:56 -0800 (PST)
-Received: from dhcp-10-123-20-14.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id q21sm1742858pgk.3.2020.11.25.01.50.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2020 01:50:55 -0800 (PST)
-From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-To:     stable@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix timeout issue in ioctl commands.
-Date:   Wed, 25 Nov 2020 15:18:38 +0530
-Message-Id: <20201125094838.4340-1-suganath-prabu.subramani@broadcom.com>
-X-Mailer: git-send-email 2.26.2
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=lG3+Uwz8lZti6FSb8xjGyaQfdt5OwV03xvf6+L3ZqWc=;
+        b=HqxCMBnUjIt02wGgCngQgoatqmWXXlAtuei00ZaLA+J48O+B1j6bCYFuvdzJZHAMy9
+         SQZI3ZiFCUDUFHusJmIWT0MC92rOtiWOq6sEYoy8q25N3mDQAz1InmwPUJ2Roy/M3iPa
+         vltnthynrm17qL0rghDuth0vDo20iDxAaR+anXajOpA/0VENftxw7HJGmAtN+2MyxP0c
+         cw4tjtyc+WlxAzt4+qTpy9KvfvIVCmRuF5v3nK5U6GDt/TDSh1+4tewI/akYbvoF8/uY
+         f1WblEOyb3N1rkqS7L34BJzRlxD6yYBVFdYI5Vs/ET0tu9tthm6XyZscWs0u3X//933D
+         hunw==
+X-Gm-Message-State: AOAM5304mZtoVvAcNBp/cPMGh/vdShE0t5qCmjw2XeMKosWoDEmFIXv8
+        IAHmTwESxPjqzwmi9sJ7XwoV7crHuuNgZomTcvU=
+X-Google-Smtp-Source: ABdhPJzEY8ebPN4xZ4jf0ZFVw9i65L6qlCom+E751HZA34/qY3SkadUuuLf2HukIG4qONDPWI5feIsM1VQGLuSbFYSc=
+X-Received: by 2002:a17:902:ead2:b029:da:2596:198e with SMTP id
+ p18-20020a170902ead2b02900da2596198emr1937529pld.21.1606300648824; Wed, 25
+ Nov 2020 02:37:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000029c84d05b4eb5d5b"
+References: <cover.1605896059.git.gustavoars@kernel.org> <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011201129.B13FDB3C@keescook> <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011220816.8B6591A@keescook> <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
+ <CANiq72nZrHWTA4_Msg6MP9snTyenC6-eGfD27CyfNSu7QoVZbw@mail.gmail.com>
+ <1c7d7fde126bc0acf825766de64bf2f9b888f216.camel@HansenPartnership.com>
+ <CANiq72m22Jb5_+62NnwX8xds2iUdWDMAqD8PZw9cuxdHd95W0A@mail.gmail.com>
+ <fc45750b6d0277c401015b7aa11e16cd15f32ab2.camel@HansenPartnership.com>
+ <CANiq72k5tpDoDPmJ0ZWc1DGqm+81Gi-uEENAtvEs9v3SZcx6_Q@mail.gmail.com> <4993259d01a0064f8bb22770503490f9252f3659.camel@HansenPartnership.com>
+In-Reply-To: <4993259d01a0064f8bb22770503490f9252f3659.camel@HansenPartnership.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Wed, 25 Nov 2020 12:38:17 +0200
+Message-ID: <CAHp75VfaewwkLsrht95Q7DaxFk7JpQjwx0KQ7Jvh5f7DUbZkRA@mail.gmail.com>
+Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        amd-gfx@lists.freedesktop.org, bridge@lists.linux-foundation.org,
+        ceph-devel@vger.kernel.org, cluster-devel@redhat.com,
+        coreteam@netfilter.org,
+        "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        drbd-dev@lists.linbit.com,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        GR-everest-linux-l2@marvell.com, GR-Linux-NIC-Dev@marvell.com,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        intel-wired-lan@lists.osuosl.org, keyrings@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        linux-afs@lists.infradead.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-block@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-cifs@vger.kernel.org,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-decnet-user@lists.sourceforge.net,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        "open list:FRAMEBUFFER LAYER" <linux-fbdev@vger.kernel.org>,
+        linux-geode@lists.infradead.org,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        linux-hams@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        linux-i3c@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-iio <linux-iio@vger.kernel.org>,
+        linux-input <linux-input@vger.kernel.org>,
+        linux-integrity <linux-integrity@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>,
+        "open list:MEMORY TECHNOLOGY..." <linux-mtd@lists.infradead.org>,
+        linux-nfs@vger.kernel.org,
+        "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-sctp@vger.kernel.org,
+        linux-security-module <linux-security-module@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        USB <linux-usb@vger.kernel.org>, linux-watchdog@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
+        op-tee@lists.trustedfirmware.org, oss-drivers@netronome.com,
+        patches@opensource.cirrus.com, rds-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org,
+        selinux@vger.kernel.org,
+        target-devel <target-devel@vger.kernel.org>,
+        tipc-discussion@lists.sourceforge.net,
+        usb-storage@lists.one-eyed-alien.net,
+        virtualization@lists.linux-foundation.org,
+        wcn36xx@lists.infradead.org,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        xen-devel@lists.xenproject.org, linux-hardening@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000029c84d05b4eb5d5b
-Content-Transfer-Encoding: 8bit
+On Mon, Nov 23, 2020 at 10:39 PM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Mon, 2020-11-23 at 19:56 +0100, Miguel Ojeda wrote:
+> > On Mon, Nov 23, 2020 at 4:58 PM James Bottomley
+> > <James.Bottomley@hansenpartnership.com> wrote:
 
-Description of issue:
-Patch with commit id "c1a6c5ac4278d406c112cc2f038e6e506feadff9"
-has modified ioctl path 'timeout' variable type to u8 from
-unsigned long. With this maximum timeout value that the driver
-can support is 255 seconds. But for some commands application is
-providing the higher timeout value (512 seconds as default), so
-it will be round off to zero value. Hence timeout is observed
-immediately and the IOCTL request fails.
+...
 
-Fix:
-Inorder to accommodate higher timeout value change datatype back to
-unsigned long.
+> > But if we do the math, for an author, at even 1 minute per line
+> > change and assuming nothing can be automated at all, it would take 1
+> > month of work. For maintainers, a couple of trivial lines is noise
+> > compared to many other patches.
+>
+> So you think a one line patch should take one minute to produce ... I
+> really don't think that's grounded in reality.  I suppose a one line
+> patch only takes a minute to merge with b4 if no-one reviews or tests
+> it, but that's not really desirable.
 
-Cc: <stable@vger.kernel.org> #v4.18+
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In my practice most of the one line patches were either to fix or to
+introduce quite interesting issues.
+1 minute is 2-3 orders less than usually needed for such patches.
+That's why I don't like churn produced by people who often even didn't
+compile their useful contributions.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b21aa55..c8a0ce1 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -664,7 +664,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	Mpi26NVMeEncapsulatedRequest_t *nvme_encap_request = NULL;
- 	struct _pcie_device *pcie_device = NULL;
- 	u16 smid;
--	u8 timeout;
-+	unsigned long timeout;
- 	u8 issue_reset;
- 	u32 sz, sz_arg;
- 	void *psge;
 -- 
-2.27.0
-
-
---00000000000029c84d05b4eb5d5b
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-iUkiVw86iw1/yBRkUHjZV+F5nigRTD1p16yuvarGtyB6rg4jKzna5QV4nk8+hvH80mioAJQGVzts
-8xzpVqdUE0XKNyTxbKeog4Szn+7BAgMBAAGjggHcMIIB2DAOBgNVHQ8BAf8EBAMCBaAwgZ4GCCsG
-AQUFBwEBBIGRMIGOME0GCCsGAQUFBzAChkFodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2Nh
-Y2VydC9nc3BlcnNvbmFsc2lnbjJzaGEyZzNvY3NwLmNydDA9BggrBgEFBQcwAYYxaHR0cDovL29j
-c3AyLmdsb2JhbHNpZ24uY29tL2dzcGVyc29uYWxzaWduMnNoYTJnMzBNBgNVHSAERjBEMEIGCisG
-AQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3Np
-dG9yeS8wCQYDVR0TBAIwADBEBgNVHR8EPTA7MDmgN6A1hjNodHRwOi8vY3JsLmdsb2JhbHNpZ24u
-Y29tL2dzcGVyc29uYWxzaWduMnNoYTJnMy5jcmwwMAYDVR0RBCkwJ4Elc3VnYW5hdGgtcHJhYnUu
-c3VicmFtYW5pQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBRp
-coJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU/c23ZwEKsymUWmWA1y8P9Rg3/S4wDQYJKoZI
-hvcNAQELBQADggEBALOKJyKtCFXYqEKp/a6z7VfKi9uLkcftrcrYXqV3K6PB8j7qnYb37eV1DCBs
-+gdZLkbSE0oBBzV/dqmsngPjBwkLSigxsRg1K44sgdBpolmGw/gESFR8P2tXB0l+UEEq4kzhz6sM
-bCYKYpNz68rpFqaHpBXisSwGMZwPHsfyh2Stv/1cNBG6dGpoUgZcoFjXT7Akx1Tz11FUkRjNsUAc
-DAYA3uHCdaZTnVbSESs1pk+HAhlZhqrDYXWCG6ya+SIG51Q4PHS6jfst/6xnaSFPhWhIv2hSB2NA
-vWzrcXMq9IfE5HFZXqzOWMP/gUOKk155U6EuRQzVcCpabG8ROpPND3sxggJvMIICawIBATBtMF0x
-CzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxT
-aWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDE84Ya9bsUMoMZ6qKjANBglghkgB
-ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgeAu6w8kVmtgPNYsqrpjymmRQE3GuEjFWC07emmJn
-LvgwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjAxMTI1MDk1MDU2
-WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAEC
-MAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqG
-SIb3DQEBAQUABIIBAEL3RN8+LHPxj/nAaeV4BcpgdM6a8kqzQ3EWoloNgI9K/SLI0Cua8gfwWL6Z
-dGVK18vOw10dzH5vP0++WtgGaxzpj0doEuaBLUdya0G/APlSKT17T65t2NNamy6O6SnHTkpXSXH3
-qR2nDIRJy9yUSqOUOHoj40lcEj7DworXomTw0P6RPT7lOz7bbOmWggmmsuVyPzgWtAp5cYXgOUDP
-ZJIcDR+nxu+yED/YzTwUlTacnu/QmgpP+7lE4d8KZAunkcv5lm2VKPuL9zjwE9khkmDcJGSoQuRq
-yR3A+NfUjIwJAWsulet6b0T8m4FWXiKD/b2RNQ7Ql8PxQu2y/b5XVYY=
---00000000000029c84d05b4eb5d5b--
+With Best Regards,
+Andy Shevchenko
