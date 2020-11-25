@@ -2,166 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E00CC56202
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 18:35:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7ECCC56201
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 18:53:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC212206CA
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 18:35:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60B7820679
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 18:53:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="BbS5r5w/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZXqNxXMm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731429AbgKYSfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 13:35:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55482 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730573AbgKYSfb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Nov 2020 13:35:31 -0500
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 031D320656;
-        Wed, 25 Nov 2020 18:35:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606329330;
-        bh=AvwWwggQsctiBxuGyQhxWW/Gg89PzWN5YvEkAcjKnPI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=BbS5r5w/5AdJxK2nGzWZbj+h+cMTl3LQatMhpWdGvcfCkX287ju/Eea0vwchg5XGq
-         erq9I5EhlZIDvLorSeLbPwa+lDbWMP5Mvg8c8WRHf9l6QzUDT/UNb2o05SzLZNkbeg
-         2n8ImiQmdkjqHKRM5eNGPCNE+DA8UzLQ//dY9TPg=
-Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94)
-        (envelope-from <maz@kernel.org>)
-        id 1khzdX-00DbNV-O1; Wed, 25 Nov 2020 18:35:27 +0000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 25 Nov 2020 18:35:27 +0000
-From:   Marc Zyngier <maz@kernel.org>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>, gregkh@linuxfoundation.org,
-        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
-        linuxarm@huawei.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
-In-Reply-To: <702e1729-9a4b-b16f-6a58-33172b1a3220@huawei.com>
-References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
- <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
- <874klmqu2r.fsf@nanos.tec.linutronix.de>
- <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
- <87lfexp6am.fsf@nanos.tec.linutronix.de>
- <3acb7fde-eae2-a223-9cfd-f409cc2abba6@huawei.com>
- <873615oy8a.fsf@nanos.tec.linutronix.de>
- <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
- <87sg91ik9e.wl-maz@kernel.org>
- <0edc9a11-0b92-537f-1790-6b4b6de4900d@huawei.com>
- <afd97dd4b1e102ac9ad49800821231a4@kernel.org>
- <5a314713-c1ee-2d34-bee1-60beae274742@huawei.com>
- <0525a4bcf17a355cd141632d4f3714be@kernel.org>
- <702e1729-9a4b-b16f-6a58-33172b1a3220@huawei.com>
-User-Agent: Roundcube Webmail/1.4.9
-Message-ID: <5a588f5d86010602ff9a90e8f057743c@kernel.org>
-X-Sender: maz@kernel.org
-X-SA-Exim-Connect-IP: 51.254.78.96
-X-SA-Exim-Rcpt-To: john.garry@huawei.com, tglx@linutronix.de, gregkh@linuxfoundation.org, rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        id S1733036AbgKYSxL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 13:53:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52850 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730858AbgKYSxL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 13:53:11 -0500
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE5B3C0613D4;
+        Wed, 25 Nov 2020 10:53:10 -0800 (PST)
+Received: by mail-ej1-x641.google.com with SMTP id mc24so4477820ejb.6;
+        Wed, 25 Nov 2020 10:53:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=FIzwOFVQ1k+jVYEe0U8aYa7Gyp4yB3KJuyl4hIaoCp8=;
+        b=ZXqNxXMmOFlbkMjG0kN2ad3TKs/sxB+I/1Ic8tTB9ggciP3YKxWp672Xr3JJLEr4SU
+         V4SCcAoybtgEkVvJlMxKEEsK4uWj6ezJitxlVTBdVvLcM9n9XMnF4Y/h1W+CGZaFMV0+
+         k5K2wrFhP2uFjumnZOtFbSIm71QQrkqYQuc6ZleTCgq80cJYgjFsB2WP1JLjVKQOUjLV
+         16EibyVY1aYi8F+siWus9aZPeMGGPGVC17dOsHYslxpYXJZA7FsTQ8QCmFxN14/5uoqY
+         Mqh+irp1aH7ywrhbxYgrKz4n/phpwc+bBYrEbIrX8UQ2e4MGGdZ0qoffRxlXm20rV8v3
+         wRjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=FIzwOFVQ1k+jVYEe0U8aYa7Gyp4yB3KJuyl4hIaoCp8=;
+        b=f12cJ757+gcgah47ZLTYrlceILP2+9ssetG2M9/mB8ac4krbfDHC8/X/pnb20X91jO
+         umalRjWtZyIjVaDvKEM38CResuRqeV4Cri7RtV4A80CoXpYOCZ8F11MV3HG9yW6ZESo4
+         Lo+0doUBfBFM94orfJV/gHgFuOhbN6I2ffvPEe4LKQc6kdkQDu+LW4zko2TR5i6EwDqB
+         V3YBr+UULNH2KuNbzlDp6+FDLVVQ/yXckS+cygc/bhsIqJjUuCZbJYIcFRcD216gOrEC
+         WptL2Bmc6eMdjrhvmhlwitdGEqPUAt25zWb4VO9IdnCV1xrjwCgusviBXj1JrUVLlJ0V
+         MB7Q==
+X-Gm-Message-State: AOAM532jjDTuo6WFvzzeGH+GFU5qgulcUZEKMxfgBJ/feUAx87j6fGPd
+        tWiEg7gFglNExt9oP2dPQWfmfA0U6AL6iA==
+X-Google-Smtp-Source: ABdhPJytiqJdiZvNgzxKDgU7MhwJcHTKmSPf4K60mIEtjExwSxlkf/KqXeTPZ560b6D0opyyOioLrg==
+X-Received: by 2002:a17:906:490:: with SMTP id f16mr4389592eja.12.1606330389530;
+        Wed, 25 Nov 2020 10:53:09 -0800 (PST)
+Received: from localhost.localdomain (ip5f5bee2a.dynamic.kabel-deutschland.de. [95.91.238.42])
+        by smtp.gmail.com with ESMTPSA id v8sm1758070edt.3.2020.11.25.10.53.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2020 10:53:09 -0800 (PST)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: ufs: Remove unnecessary if condition in ufshcd_suspend()
+Date:   Wed, 25 Nov 2020 19:53:00 +0100
+Message-Id: <20201125185300.3394-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-11-24 17:38, John Garry wrote:
-> Hi Marc,
-> 
->>> So initially in the msi_prepare method we setup the its dev - this is
->>> from the mbigen probe. Then when all the irqs are unmapped later for
->>> end device driver removal, we release this its device in
->>> its_irq_domain_free(). But I don't see anything to set it up again. 
->>> Is
->>> it improper to have released the its device in this scenario?
->>> Commenting out the release makes things "good" again.
->> 
->> Huh, that's ugly. The issue is that the device that deals with the
->> interrupts isn't the device that the ITS knows about (there isn't a
->> 1:1 mapping between mbigen and the endpoint).
->> 
->> The mbigen is responsible for the creation of the corresponding
->> irqdomain, and and crucially for the "prepare" phase, which results
->> in storing the its_dev pointer in info->scratchpad[0].
->> 
->> As we free all the interrupts associated with the endpoint, we
->> free the its_dev (nothing else needs it at this point). On the
->> next allocation, we reuse the damn its_dev pointer, and we're SOL.
->> This is wrong, because we haven't removed the mbigen, only the
->> device *connected* to the mbigen. And since the mbigen can be shared
->> across endpoints, we can't reliably tear it down at all. Boo.
->> 
->> The only thing to do is to convey that by marking the its_dev as
->> shared so that it isn't deleted when no LPIs are being used. After
->> all, it isn't like the mbigen is going anywhere.
-> 
-> Right, I did consider this.
+From: Bean Huo <beanhuo@micron.com>
 
-FWIW, I've pushed my hack branch[1] out with a couple of patches
-for you to try (the top 3 patches). They allow platform-MSI domains
-created by devices (mbigen, ICU) to be advertised as shared between
-devices, so that the low-level driver can handle that in an appropriate
-way.
+In the case that auto_bkops_enable is false, which means auto bkops
+has been disabled, so no need to call ufshcd_disable_auto_bkops().
 
-I gave it a go on my D05 and nothing blew up, but I can't really remove
-the kernel module, as that's where my disks are... :-/
-Please let me know if that helps.
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
->> It is just that passing that information down isn't a simple affair,
->> as msi_alloc_info_t isn't a generic type... Let me have a think.
-> 
-> I think that there is a way to circumvent the problem, which you might
-> call hacky, but OTOH, not sure if there's much point changing mbigen
-> or related infrastructure at this stage.
-
-Bah, it's a simple change, and there is now more than the mbigen using
-the same API...
-
-> 
-> Anyway, so we have 128 irqs in total for the mbigen domain, but the
-> driver only is interesting in something like irq indexes 1,2,72-81,
-> and 96-112. So we can just dispose the mappings for irq index 0-112 at
-> removal stage, thereby keeping the its device around. We do still call
-> platform_irq_count(), which sets up all 128 mappings, so maybe we
-> should be unmapping all of these - this would be the contentious part.
-> But maybe not, as the device driver is only interested in that subset,
-> and has no business unmapping the rest.
-
-I don't think the driver should mess with interrupts it doesn't own.
-And while the mbigen port that is connected to the SAS controller
-doesn't seem to be shared between endpoints, some other ports definitely
-are:
-
-# cat /sys/kernel/debug/irq/domains/\\_SB.MBI1
-name:   \_SB.MBI1
-  size:   409
-  mapped: 192
-  flags:  0x00000003
-
-[...]
-
-I guess that the other 217 lines are connected somewhere.
-
-> With that change, the platform.c API would work a bit more like the
-> pci msi code equivalent, where we request a min and max number of
-> vectors. In fact, that platform.c change needs to be made anyway as
-> platform_get_irqs_affinity() is broken currently for when nr_cpus <
-> #hw queues.
-> 
-> Thoughts?
-
-I'm happy to look at some code! ;-)
-
-         M.
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 80cbce414678..d169db41ee16 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8543,11 +8543,9 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	}
+ 
+ 	if (req_dev_pwr_mode != hba->curr_dev_pwr_mode) {
+-		if ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
+-		    !ufshcd_is_runtime_pm(pm_op)) {
++		if (!ufshcd_is_runtime_pm(pm_op))
+ 			/* ensure that bkops is disabled */
+ 			ufshcd_disable_auto_bkops(hba);
+-		}
+ 
+ 		if (!hba->dev_info.b_rpm_dev_flush_capable) {
+ 			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
 -- 
-Jazz is not dead. It just smells funny...
+2.17.1
+
