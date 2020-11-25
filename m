@@ -2,108 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F54EC64E7B
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 12:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D65C8301B
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:36:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14EF220715
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 12:28:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38A3121D1A
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:36:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="BDXTt0I1"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tkn/M+il"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729372AbgKYM2T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 07:28:19 -0500
-Received: from m42-4.mailgun.net ([69.72.42.4]:62757 "EHLO m42-4.mailgun.net"
+        id S1730650AbgKYPgb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 10:36:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53788 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727114AbgKYM2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Nov 2020 07:28:18 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606307297; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=iNAPFkL8b7EnXxHK07zTOw6eeK1eE3u8WLYvqlWH7hw=;
- b=BDXTt0I1RM5bwS70cszkBNSWPJfmxWRtmblDYZul+CNaa2RWgbRuPvnH9Abxp6hyNoRatXPf
- SWyJ33+pN0yB1GSXFnA8Y3pC2h59ZSrPfu8wGn9/NuCq4Bi1TlWzCEobkXqTKzZfNh33kI2a
- MtnYLYfQnW9YLe76qg8yMPjX+wI=
-X-Mailgun-Sending-Ip: 69.72.42.4
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 5fbe4de17f0cfa6a1632a13a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 25 Nov 2020 12:28:17
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A8845C43468; Wed, 25 Nov 2020 12:28:16 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id S1730618AbgKYPg3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Nov 2020 10:36:29 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BE92CC433ED;
-        Wed, 25 Nov 2020 12:28:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 949B721D46;
+        Wed, 25 Nov 2020 15:36:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1606318588;
+        bh=pUGDZrd+Ioaup822M6QC2UlHABmuW71vc5EibKGl3Wk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Tkn/M+ilXVg81Snopv2/tL1RZ2uuIvYZRxOTxMySb7LmHoQQay4oa2+8+jwbxBh/M
+         C5eLpXM0ze31k1eNjTchR4D1v9MSk9uhlj5NFvVFKGiTmYChP2SVIpBNaG7Mv9r2bK
+         o6AIXpK9MqIhXVgnkNm3lSj+aHbOHAP0S+lQVpIY=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Maurizio Lombardi <mlombard@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 27/33] scsi: target: iscsi: Fix cmd abort fabric stop race
+Date:   Wed, 25 Nov 2020 10:35:44 -0500
+Message-Id: <20201125153550.810101-27-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201125153550.810101-1-sashal@kernel.org>
+References: <20201125153550.810101-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 25 Nov 2020 20:28:15 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Refector ufshcd_setup_clocks() to
- remove skip_ref_clk
-In-Reply-To: <0b0c545d80f9a0e8106a634063c23a8f0ba895fc.camel@gmail.com>
-References: <1606202906-14485-1-git-send-email-cang@codeaurora.org>
- <1606202906-14485-2-git-send-email-cang@codeaurora.org>
- <9070660d115dd96c70bc3cc90d5c7dab833f36a8.camel@gmail.com>
- <d112935400a5ef115a384a4c753b6d04@codeaurora.org>
- <0b0c545d80f9a0e8106a634063c23a8f0ba895fc.camel@gmail.com>
-Message-ID: <9484cba7b95c6c6fcbafd96bc35c1dee@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-11-25 19:54, Bean Huo wrote:
-> On Wed, 2020-11-25 at 08:53 +0800, Can Guo wrote:
->> > > +       bool always_on_while_link_active;
->> >
->> > Can,
->> > using a sentence as a parameter name looks a little bit clumsy to
->> > me.
->> > The meaning has been explained in the comments section. How about
->> > simplify it and in line with other parameters in the structure?
->> >
->> 
->> Do you have a better name in mind?
->> 
-> no specail input in mind, maybe just "bool eternal_on"
+From: Mike Christie <michael.christie@oracle.com>
 
-It is like plain "always_on", but it cannot tell the whole story.
-If it is not something crutial, let's just let it go first so long
-as it does not break the original functionality. What do you say?
+[ Upstream commit f36199355c64a39fe82cfddc7623d827c7e050da ]
 
-Thanks,
+Maurizio found a race where the abort and cmd stop paths can race as
+follows:
 
-Can Guo.
+ 1. thread1 runs iscsit_release_commands_from_conn and sets
+    CMD_T_FABRIC_STOP.
 
-> 
->> Thanks,
->> 
->> Can Guo.
+ 2. thread2 runs iscsit_aborted_task and then does __iscsit_free_cmd. It
+    then returns from the aborted_task callout and we finish
+    target_handle_abort and do:
+
+    target_handle_abort -> transport_cmd_check_stop_to_fabric ->
+	lio_check_stop_free -> target_put_sess_cmd
+
+    The cmd is now freed.
+
+ 3. thread1 now finishes iscsit_release_commands_from_conn and runs
+    iscsit_free_cmd while accessing a command we just released.
+
+In __target_check_io_state we check for CMD_T_FABRIC_STOP and set the
+CMD_T_ABORTED if the driver is not cleaning up the cmd because of a session
+shutdown. However, iscsit_release_commands_from_conn only sets the
+CMD_T_FABRIC_STOP and does not check to see if the abort path has claimed
+completion ownership of the command.
+
+This adds a check in iscsit_release_commands_from_conn so only the abort or
+fabric stop path cleanup the command.
+
+Link: https://lore.kernel.org/r/1605318378-9269-1-git-send-email-michael.christie@oracle.com
+Reported-by: Maurizio Lombardi <mlombard@redhat.com>
+Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/target/iscsi/iscsi_target.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 7b56fe9f10628..2e18ec42c7045 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -483,8 +483,7 @@ EXPORT_SYMBOL(iscsit_queue_rsp);
+ void iscsit_aborted_task(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
+ {
+ 	spin_lock_bh(&conn->cmd_lock);
+-	if (!list_empty(&cmd->i_conn_node) &&
+-	    !(cmd->se_cmd.transport_state & CMD_T_FABRIC_STOP))
++	if (!list_empty(&cmd->i_conn_node))
+ 		list_del_init(&cmd->i_conn_node);
+ 	spin_unlock_bh(&conn->cmd_lock);
+ 
+@@ -4083,12 +4082,22 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+ 	spin_lock_bh(&conn->cmd_lock);
+ 	list_splice_init(&conn->conn_cmd_list, &tmp_list);
+ 
+-	list_for_each_entry(cmd, &tmp_list, i_conn_node) {
++	list_for_each_entry_safe(cmd, cmd_tmp, &tmp_list, i_conn_node) {
+ 		struct se_cmd *se_cmd = &cmd->se_cmd;
+ 
+ 		if (se_cmd->se_tfo != NULL) {
+ 			spin_lock_irq(&se_cmd->t_state_lock);
+-			se_cmd->transport_state |= CMD_T_FABRIC_STOP;
++			if (se_cmd->transport_state & CMD_T_ABORTED) {
++				/*
++				 * LIO's abort path owns the cleanup for this,
++				 * so put it back on the list and let
++				 * aborted_task handle it.
++				 */
++				list_move_tail(&cmd->i_conn_node,
++					       &conn->conn_cmd_list);
++			} else {
++				se_cmd->transport_state |= CMD_T_FABRIC_STOP;
++			}
+ 			spin_unlock_irq(&se_cmd->t_state_lock);
+ 		}
+ 	}
+-- 
+2.27.0
+
