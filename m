@@ -2,129 +2,260 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74914C56201
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 19:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84EAEC64E90
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 21:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B556206CA
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 19:03:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 440E821527
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 21:10:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I/hFdSZ6"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="AWR/7M4m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731429AbgKYTC4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 14:02:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54358 "EHLO
+        id S1731486AbgKYVKF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 16:10:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730650AbgKYTC4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 14:02:56 -0500
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00A0AC0613D4;
-        Wed, 25 Nov 2020 11:02:55 -0800 (PST)
-Received: by mail-ej1-x644.google.com with SMTP id o9so4550447ejg.1;
-        Wed, 25 Nov 2020 11:02:55 -0800 (PST)
+        with ESMTP id S1731425AbgKYVKE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 16:10:04 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC771C094241
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2020 13:10:03 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id b63so3488119pfg.12
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2020 13:10:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Z/DMutLBZGxo9NPXVt+YC6BHVS50FEMIayBNNBBTrxg=;
-        b=I/hFdSZ61wW4zv+ApmY7lxUsaIp8/Ht/WLIjx4mGzVGJkA07n2VIuxhY3jEvUXPQvv
-         ZNjIjH6KgoPIfMWoSjoaxhaQNNkUwhwCeuxTKLhQZfX3QuMcY/ttJ50cXsMHM+ii0nir
-         aE9+flY3yltw4sgY2OEoHQaAAyG3WiqH64Hwxl/PRH/K9QIg7kFD93Ackwr7eAhKS/nv
-         NUhd+259EsOF7v1Kvy2uj1afCr02O28+Hy+GjeO4MBqZtON/cHP4noWjjn92vDSTKtkO
-         /kmNA/brbx92McZ2es0qIxUEbsBZlcwfNnS/PgUWni1yEw4/6DMtBFjI8mnEk16di+P9
-         B12w==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=5kDOOuMOjwqEdI4fOY8lF/zJwxoesF7EbkKd66qXZt4=;
+        b=AWR/7M4mhE4fi43nRvdimsQoF0WR0/yRvzcmpbbdNnukQZ4s3FUnDOA4HlPrcfy1KL
+         TnDV3Sp7ib0l66wO1u9Qkihqc0ymqk7uAD73hLx1Hbj+4zgGkd46Av0r6N17g4aWHL9f
+         T52peLS6H3gWn2HtVm1n8SJNqsSbmk3lehF9k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Z/DMutLBZGxo9NPXVt+YC6BHVS50FEMIayBNNBBTrxg=;
-        b=a5NG2kI3INyvdrxCc+Z9aB4T/9NPzM+C9bB2wxhzwrP8YDtE/xj7bVFe44+HX4QZlA
-         cVwxTrFHSG9XqILyhEWDeT8HqCvOfvbAMUve4qCgsAuYWGnQRDB/+h/S3Qg9oTGRW/Bh
-         Vx4KyiFvqd4E+zv8OL8wWV3HgPnZRK9Xy9O4DkB/8LG/hHlrT7EQNaHcO2BSaZzVpxQ6
-         pFFo5bFfh1jn8DpI7LOQ16gWYHJHmJMfM2yvEVapwPIBI7mr0QtikjiKkXezyCeEz84b
-         nuWTeUYNhTO+z5dL3qlkjNB5QewNUazJ/PNHi+32EvCm+2sKAqlb78+Wfdt8O1OIec/a
-         80ug==
-X-Gm-Message-State: AOAM5330yOfoKDRH87M8AdmjA8I1ilTqe52X1IUvg+4S2NezXbA7rEsu
-        BaQl7E2tm+nAuBNDnsk4K+E=
-X-Google-Smtp-Source: ABdhPJxkgZy0zQvvllzF/7233lrCrSWXzA0K5vAOZZHx4EYh2eVjg1/FdLcZ0he5sbY8SpK7RzLMig==
-X-Received: by 2002:a17:906:35da:: with SMTP id p26mr4512672ejb.256.1606330974561;
-        Wed, 25 Nov 2020 11:02:54 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bee2a.dynamic.kabel-deutschland.de. [95.91.238.42])
-        by smtp.googlemail.com with ESMTPSA id s19sm1271788ejz.69.2020.11.25.11.02.52
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 25 Nov 2020 11:02:53 -0800 (PST)
-Message-ID: <4e84df2ecb17dfb1fc8070953d8690b29615f409.camel@gmail.com>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Refector ufshcd_setup_clocks() to
- remove skip_ref_clk
-From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Date:   Wed, 25 Nov 2020 20:02:52 +0100
-In-Reply-To: <9484cba7b95c6c6fcbafd96bc35c1dee@codeaurora.org>
-References: <1606202906-14485-1-git-send-email-cang@codeaurora.org>
-         <1606202906-14485-2-git-send-email-cang@codeaurora.org>
-         <9070660d115dd96c70bc3cc90d5c7dab833f36a8.camel@gmail.com>
-         <d112935400a5ef115a384a4c753b6d04@codeaurora.org>
-         <0b0c545d80f9a0e8106a634063c23a8f0ba895fc.camel@gmail.com>
-         <9484cba7b95c6c6fcbafd96bc35c1dee@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=5kDOOuMOjwqEdI4fOY8lF/zJwxoesF7EbkKd66qXZt4=;
+        b=nlYEOgk1L29pT9un7/cVLLu7mzxfUJ8X6neE6I/vJE3W8TpPzE0g4hMJoIofw84oAu
+         rlWXB3jc3upFj9Jg+sh81rWNty8uFiUWIrKohRjhzF6Zrc1E9Q3pz0YkRvmlGwPHf0xD
+         VeTkwmamZiFOX/biKQHIat6TMztHDLID786z+rnkyfgPPC2XmRGRzKOyzeuTlBcZcUzJ
+         yzG1nqe7KmGjtIxlZK2udIsqW6e1t/ZxN4THKGyCTZK0pXRnHB9JbWvXj45m5KDMirml
+         u45LcNLKeCNaQ5JffBs7ZwjQAn0Eyj1UVjJDRUNz4J2pBe8XuHJ+4Il3sEze4xSdWi7a
+         Ek6w==
+X-Gm-Message-State: AOAM531oyUa/8Fxxme+UakEyoa8PZo1auEnAtM4fngTF2WZyC8X2PIay
+        YBfC3SLbL/2Gm0XWRnDzo5T85w==
+X-Google-Smtp-Source: ABdhPJx/eEsXFJ4LN0K87oZeE7bvP2eO9KEt7vLrempCPcmRQAJuuV8YImLC928PO4R7i7Khu5FszQ==
+X-Received: by 2002:a65:6547:: with SMTP id a7mr4391475pgw.198.1606338602870;
+        Wed, 25 Nov 2020 13:10:02 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id x30sm2796297pgc.86.2020.11.25.13.10.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2020 13:10:01 -0800 (PST)
+Date:   Wed, 25 Nov 2020 13:10:00 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Joe Perches <joe@perches.com>,
+        Jakub Kicinski <kuba@kernel.org>, alsa-devel@alsa-project.org,
+        linux-atm-general@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        linux-ide@vger.kernel.org, dm-devel@redhat.com,
+        keyrings@vger.kernel.org, linux-mtd@lists.infradead.org,
+        GR-everest-linux-l2@marvell.com, wcn36xx@lists.infradead.org,
+        samba-technical@lists.samba.org, linux-i3c@lists.infradead.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-afs@lists.infradead.org,
+        usb-storage@lists.one-eyed-alien.net, drbd-dev@lists.linbit.com,
+        devel@driverdev.osuosl.org, linux-cifs@vger.kernel.org,
+        rds-devel@oss.oracle.com,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+        oss-drivers@netronome.com, bridge@lists.linux-foundation.org,
+        linux-security-module@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org,
+        linux-stm32@st-md-mailman.stormreply.com, cluster-devel@redhat.com,
+        linux-acpi@vger.kernel.org, coreteam@netfilter.org,
+        intel-wired-lan@lists.osuosl.org, linux-input@vger.kernel.org,
+        Miguel Ojeda <ojeda@kernel.org>,
+        tipc-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        selinux@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, linux-geode@lists.infradead.org,
+        linux-can@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-gpio@vger.kernel.org, op-tee@lists.trustedfirmware.org,
+        linux-mediatek@lists.infradead.org, xen-devel@lists.xenproject.org,
+        nouveau@lists.freedesktop.org, linux-hams@vger.kernel.org,
+        ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org, linux-hwmon@vger.kernel.org,
+        x86@kernel.org, linux-nfs@vger.kernel.org,
+        GR-Linux-NIC-Dev@marvell.com, linux-mm@kvack.org,
+        netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
+        linux-mmc@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-sctp@vger.kernel.org, linux-usb@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, linux-crypto@vger.kernel.org,
+        patches@opensource.cirrus.com, linux-integrity@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [Intel-wired-lan] [PATCH 000/141] Fix fall-through warnings for
+ Clang
+Message-ID: <202011251240.1E67BE900@keescook>
+References: <202011220816.8B6591A@keescook>
+ <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
+ <ca071decb87cc7e905411423c05a48f9fd2f58d7.camel@perches.com>
+ <0147972a72bc13f3629de8a32dee6f1f308994b5.camel@HansenPartnership.com>
+ <d8d1e9add08cdd4158405e77762d4946037208f8.camel@perches.com>
+ <dbd2cb703ed9eefa7dde9281ea26ab0f7acc8afe.camel@HansenPartnership.com>
+ <20201123130348.GA3119@embeddedor>
+ <8f5611bb015e044fa1c0a48147293923c2d904e4.camel@HansenPartnership.com>
+ <202011241327.BB28F12F6@keescook>
+ <a841536fe65bb33f1c72ce2455a6eb47a0107565.camel@HansenPartnership.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a841536fe65bb33f1c72ce2455a6eb47a0107565.camel@HansenPartnership.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-11-25 at 20:28 +0800, Can Guo wrote:
-> > On Wed, 2020-11-25 at 08:53 +0800, Can Guo wrote:
-> > > > > +       bool always_on_while_link_active;
-> > > > 
-> > > > Can,
-> > > > using a sentence as a parameter name looks a little bit clumsy
-> > > > to
-> > > > me.
-> > > > The meaning has been explained in the comments section. How
-> > > > about
-> > > > simplify it and in line with other parameters in the structure?
-> > > > 
-> > > 
-> > > Do you have a better name in mind?
-> > > 
-> > 
-> > no specail input in mind, maybe just "bool eternal_on"
-> 
-> It is like plain "always_on", but it cannot tell the whole story.
-> If it is not something crutial, let's just let it go first so long
-> as it does not break the original functionality. What do you say?
-> 
-> Thanks,
-> 
-> Can Guo.
+On Tue, Nov 24, 2020 at 11:05:35PM -0800, James Bottomley wrote:
+> Now, what we have seems to be about 6 cases (at least what's been shown
+> in this thread) where a missing break would cause potentially user
+> visible issues.  That means the value of this isn't zero, but it's not
+> a no-brainer massive win either.  That's why I think asking what we've
+> invested vs the return isn't a useless exercise.
 
-Can, 
+The number is much higher[1]. If it were 6 in the entire history of the
+kernel, I would agree with you. :) Some were fixed _before_ Gustavo's
+effort too, which I also count towards the idea of "this is a dangerous
+weakness in C, and now we have stopped it forever."
 
-yes, it is not functional change, but always_on_while_link_active is
-too fat, and not non-productive way.
-anyway, 
+> But the broader point I'm making is just because the compiler people
+> come up with a shiny new warning doesn't necessarily mean the problem
+> it's detecting is one that causes us actual problems in the code base. 
+> I'd really be happier if we had a theory about what classes of CVE or
+> bug we could eliminate before we embrace the next new warning.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+But we did! It was long ago justified and documented[2], and even links to
+the CWE[3] for it. This wasn't random joy over discovering a new warning
+we could turn on, this was turning on a warning that the compiler folks
+finally gave us to handle an entire class of flaws. If we need to update
+the code-base to address it not a useful debate -- that was settled
+already, even if you're only discovering it now. :P. This last patch
+set is about finishing that work for Clang, which is correctly even
+more strict than GCC.
+
+-Kees
+
+[1] https://outflux.net/slides/2019/lss/kspp.pdf calls out specific
+    numbers (about 6.5% of the patches fixed missing breaks):
+	v4.19:  3 of 129
+	v4.20:  2 of  59
+	v5.0:   3 of  56
+	v5.1:  10 of 100
+	v5.2:   6 of  71
+	v5.3:   7 of  69
+
+    And in the history of the kernel, it's been an ongoing source of
+    flaws:
+
+    $ l --no-merges | grep -i 'missing break' | wc -l
+    185
+
+    The frequency of such errors being "naturally" found was pretty
+    steady until the static checkers started warning, and then it was
+    on the rise, but the full effort flushed the rest out, and now it's
+    dropped to almost zero:
+
+      1 v2.6.12
+      3 v2.6.16.28
+      1 v2.6.17
+      1 v2.6.19
+      2 v2.6.21
+      1 v2.6.22
+      3 v2.6.24
+      3 v2.6.29
+      1 v2.6.32
+      1 v2.6.33
+      1 v2.6.35
+      4 v2.6.36
+      3 v2.6.38
+      2 v2.6.39
+      7 v3.0
+      2 v3.1
+      2 v3.2
+      2 v3.3
+      3 v3.4
+      1 v3.5
+      8 v3.6
+      7 v3.7
+      3 v3.8
+      6 v3.9
+      3 v3.10
+      2 v3.11
+      5 v3.12
+      5 v3.13
+      2 v3.14
+      4 v3.15
+      2 v3.16
+      3 v3.17
+      2 v3.18
+      2 v3.19
+      1 v4.0
+      2 v4.1
+      5 v4.2
+      4 v4.5
+      5 v4.7
+      6 v4.8
+      1 v4.9
+      3 v4.10
+      2 v4.11
+      6 v4.12
+      3 v4.13
+      2 v4.14
+      5 v4.15
+      2 v4.16
+      7 v4.18
+      2 v4.19
+      6 v4.20
+      3 v5.0
+     12 v5.1
+      3 v5.2
+      4 v5.3
+      2 v5.4
+      1 v5.8
 
 
+    And the reason it's fully zero, is because we still have the cases we're
+    cleaning up right now. Even this last one from v5.8 is specifically of
+    the same type this series addresses:
+
+        case 4:
+                color_index = TrueCModeIndex;
++               break;
+        default:
+                return;
+        }
+
+
+[2] https://www.kernel.org/doc/html/latest/process/deprecated.html#implicit-switch-case-fall-through
+
+	All switch/case blocks must end in one of:
+
+	break;
+	fallthrough;
+	continue;
+	goto <label>;
+	return [expression];
+
+[3] https://cwe.mitre.org/data/definitions/484.html
+
+-- 
+Kees Cook
