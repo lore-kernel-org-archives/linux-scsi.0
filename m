@@ -5,34 +5,34 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB13C71155
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B873C64E90
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:42:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D008206CA
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:41:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1471A20872
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:42:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="0Bv/uOmr"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="B712rkUA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730929AbgKYPk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 10:40:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55208 "EHLO mail.kernel.org"
+        id S1730624AbgKYPg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 10:36:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53774 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730924AbgKYPhG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Nov 2020 10:37:06 -0500
+        id S1730572AbgKYPg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Nov 2020 10:36:28 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 85E5B21D91;
-        Wed, 25 Nov 2020 15:37:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3374E21D7E;
+        Wed, 25 Nov 2020 15:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606318625;
-        bh=vHbmGitfmFmde25Z8F1SEwm+xaWJLn3EOMGlBjZYEDQ=;
+        s=default; t=1606318587;
+        bh=qMotAVffAEsf++T/AK3uhhl7b0MPcN4XqkYwbcsLpVs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0Bv/uOmrX0YVei28NV6uKMVNLirR/ao+7PEQrqGU8JL6JErIRUyJuUZIOCB0kM1g8
-         mkCuHMO5g7D9EM8Ol+6MgfpVzIRupunz7O46xCHHrxs17UDEe2f/LODPDkTHiIcXM/
-         ayqIghvvz9MvCHs3Mbe/BYLOY0jFe3yysQK5LryY=
+        b=B712rkUADSgUdBEO016V2U1hRL+A6Xtthe0deJeDWfCHhrhBl0RNMIKR6BkVC/kJB
+         7FLcdRPC2XDkoj5qFl1ZE96NjNEQOhFSMY5lS+2002p/qA13GS7L2rfjmjcrgcnbip
+         TcAuJnGm+fqkp/q+UYdeKorDKgYrqJ0C0m1MRX0k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Lee Duncan <lduncan@suse.com>,
@@ -40,12 +40,12 @@ Cc:     Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 19/23] scsi: libiscsi: Fix NOP race condition
-Date:   Wed, 25 Nov 2020 10:36:34 -0500
-Message-Id: <20201125153638.810419-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 26/33] scsi: libiscsi: Fix NOP race condition
+Date:   Wed, 25 Nov 2020 10:35:43 -0500
+Message-Id: <20201125153550.810101-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201125153638.810419-1-sashal@kernel.org>
-References: <20201125153638.810419-1-sashal@kernel.org>
+In-Reply-To: <20201125153550.810101-1-sashal@kernel.org>
+References: <20201125153550.810101-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -85,7 +85,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 18 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 70b99c0e2e678..f954be3d5ee22 100644
+index 1e9c3171fa9f4..f9314f1393fbd 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
 @@ -533,8 +533,8 @@ static void iscsi_complete_task(struct iscsi_task *task, int state)
