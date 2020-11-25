@@ -2,182 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B873C64E90
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E9DC56202
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 17:04:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1471A20872
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 15:42:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20E362083E
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Nov 2020 17:04:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="B712rkUA"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="QHP4fQ+h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730624AbgKYPg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 10:36:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53774 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730572AbgKYPg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Nov 2020 10:36:28 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3374E21D7E;
-        Wed, 25 Nov 2020 15:36:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606318587;
-        bh=qMotAVffAEsf++T/AK3uhhl7b0MPcN4XqkYwbcsLpVs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B712rkUADSgUdBEO016V2U1hRL+A6Xtthe0deJeDWfCHhrhBl0RNMIKR6BkVC/kJB
-         7FLcdRPC2XDkoj5qFl1ZE96NjNEQOhFSMY5lS+2002p/qA13GS7L2rfjmjcrgcnbip
-         TcAuJnGm+fqkp/q+UYdeKorDKgYrqJ0C0m1MRX0k=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lee Duncan <lduncan@suse.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        id S1731064AbgKYREX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 12:04:23 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:20884 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731040AbgKYREX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Nov 2020 12:04:23 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0APH2P7l169603;
+        Wed, 25 Nov 2020 12:04:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to : sender; s=pp1;
+ bh=ONdEbafrjKnm9FRn4qnebqbuL9ulbRiyTVkfSL0+RX4=;
+ b=QHP4fQ+hSHizsmsdKmsX6hsLEmF6Jxnh1vSUsaFaJVwYOchdLbb2Hw8835Z3I96qD62T
+ 9cJvg2JKaADTEFOpl4/7elQHV1z1Zrz+E1ohSTXKZ4IKDpZQEfX6BXPqGARo+NfJIGdi
+ Z6cDlc+jQuijnr9LE+1qPtnmcIjVtvDECA7YunjIhNh72+mPllgJpgrp27jjJUmYu+n9
+ vLL6sobKnu/19uGlTNggrqjWEP0zUXqZVGtmZzBVGteeQrFccy1f1ipaIuhJMvA32Ixz
+ on/xKNiS6OwHupRtvPjDJWuxuQqff1xd05hX9yBysZWbyWeMhPzswJUipZmpuMc0Lj3H GQ== 
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 351ry9necw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 25 Nov 2020 12:04:15 -0500
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0APH1Nw7001157;
+        Wed, 25 Nov 2020 17:04:13 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma04ams.nl.ibm.com with ESMTP id 3518j8gw9h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 25 Nov 2020 17:04:13 +0000
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0APH4Asn63832412
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Nov 2020 17:04:11 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D72F611C052;
+        Wed, 25 Nov 2020 17:04:10 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C542511C04C;
+        Wed, 25 Nov 2020 17:04:10 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.145.2.194])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Wed, 25 Nov 2020 17:04:10 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1khyDB-002ZW3-SE; Wed, 25 Nov 2020 18:04:09 +0100
+Date:   Wed, 25 Nov 2020 18:04:09 +0100
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Qinglang Miao <miaoqinglang@huawei.com>
+Cc:     Steffen Maier <maier@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 26/33] scsi: libiscsi: Fix NOP race condition
-Date:   Wed, 25 Nov 2020 10:35:43 -0500
-Message-Id: <20201125153550.810101-26-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201125153550.810101-1-sashal@kernel.org>
-References: <20201125153550.810101-1-sashal@kernel.org>
+Subject: Re: [PATCH] scsi: zfcp: fix use-after-free in
+ zfcp_sysfs_port_remove_store
+Message-ID: <20201125170409.GA8578@t480-pf1aa2c2>
+References: <20201120074853.31706-1-miaoqinglang@huawei.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201120074853.31706-1-miaoqinglang@huawei.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-25_10:2020-11-25,2020-11-25 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 mlxscore=0 suspectscore=0 malwarescore=0 adultscore=0
+ impostorscore=0 mlxlogscore=999 priorityscore=1501 bulkscore=0
+ clxscore=1011 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011250104
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Lee Duncan <lduncan@suse.com>
+On Fri, Nov 20, 2020 at 03:48:53PM +0800, Qinglang Miao wrote:
+> kfree(port) is called in put_device(&port->dev) so that following
+> use would cause use-after-free bug.
+> 
+> the former put_device is redundant for device_unregister contains
+> put_device already. So just remove it to fix this.
+> 
+> Fixes: 83d4e1c33d93 ("[SCSI] zfcp: cleanup port sysfs attribute usage")
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+> ---
+>  drivers/s390/scsi/zfcp_sysfs.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
+> index 8d9662e8b..06285e452 100644
+> --- a/drivers/s390/scsi/zfcp_sysfs.c
+> +++ b/drivers/s390/scsi/zfcp_sysfs.c
+> @@ -327,8 +327,6 @@ static ssize_t zfcp_sysfs_port_remove_store(struct device *dev,
+>  	list_del(&port->list);
+>  	write_unlock_irq(&adapter->port_list_lock);
+>  
+> -	put_device(&port->dev);
+> -
+>  	zfcp_erp_port_shutdown(port, 0, "syprs_1");
+>  	device_unregister(&port->dev);
+>   out:
 
-[ Upstream commit fe0a8a95e7134d0b44cd407bc0085b9ba8d8fe31 ]
+Hmm, the placement of the put_device() is indeed strange, now that I
+think about it. But just removing it and then having a dangling
+reference also seems wrong - we do get one explicitly in
+`zfcp_get_port_by_wwpn()`.
 
-iSCSI NOPs are sometimes "lost", mistakenly sent to the user-land iscsid
-daemon instead of handled in the kernel, as they should be, resulting in a
-message from the daemon like:
+My first thought would be to move it after the `device_unregister()`
+call, and before the `out:` label.
 
-  iscsid: Got nop in, but kernel supports nop handling.
 
-This can occur because of the new forward- and back-locks, and the fact
-that an iSCSI NOP response can occur before processing of the NOP send is
-complete. This can result in "conn->ping_task" being NULL in
-iscsi_nop_out_rsp(), when the pointer is actually in the process of being
-set.
-
-To work around this, we add a new state to the "ping_task" pointer. In
-addition to NULL (not assigned) and a pointer (assigned), we add the state
-"being set", which is signaled with an INVALID pointer (using "-1").
-
-Link: https://lore.kernel.org/r/20201106193317.16993-1-leeman.duncan@gmail.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/libiscsi.c | 23 +++++++++++++++--------
- include/scsi/libiscsi.h |  3 +++
- 2 files changed, 18 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 1e9c3171fa9f4..f9314f1393fbd 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -533,8 +533,8 @@ static void iscsi_complete_task(struct iscsi_task *task, int state)
- 	if (conn->task == task)
- 		conn->task = NULL;
- 
--	if (conn->ping_task == task)
--		conn->ping_task = NULL;
-+	if (READ_ONCE(conn->ping_task) == task)
-+		WRITE_ONCE(conn->ping_task, NULL);
- 
- 	/* release get from queueing */
- 	__iscsi_put_task(task);
-@@ -738,6 +738,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 						   task->conn->session->age);
- 	}
- 
-+	if (unlikely(READ_ONCE(conn->ping_task) == INVALID_SCSI_TASK))
-+		WRITE_ONCE(conn->ping_task, task);
-+
- 	if (!ihost->workq) {
- 		if (iscsi_prep_mgmt_task(conn, task))
- 			goto free_task;
-@@ -941,8 +944,11 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
-         struct iscsi_nopout hdr;
- 	struct iscsi_task *task;
- 
--	if (!rhdr && conn->ping_task)
--		return -EINVAL;
-+	if (!rhdr) {
-+		if (READ_ONCE(conn->ping_task))
-+			return -EINVAL;
-+		WRITE_ONCE(conn->ping_task, INVALID_SCSI_TASK);
-+	}
- 
- 	memset(&hdr, 0, sizeof(struct iscsi_nopout));
- 	hdr.opcode = ISCSI_OP_NOOP_OUT | ISCSI_OP_IMMEDIATE;
-@@ -957,11 +963,12 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
- 
- 	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
- 	if (!task) {
-+		if (!rhdr)
-+			WRITE_ONCE(conn->ping_task, NULL);
- 		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
- 		return -EIO;
- 	} else if (!rhdr) {
- 		/* only track our nops */
--		conn->ping_task = task;
- 		conn->last_ping = jiffies;
- 	}
- 
-@@ -984,7 +991,7 @@ static int iscsi_nop_out_rsp(struct iscsi_task *task,
- 	struct iscsi_conn *conn = task->conn;
- 	int rc = 0;
- 
--	if (conn->ping_task != task) {
-+	if (READ_ONCE(conn->ping_task) != task) {
- 		/*
- 		 * If this is not in response to one of our
- 		 * nops then it must be from userspace.
-@@ -1923,7 +1930,7 @@ static void iscsi_start_tx(struct iscsi_conn *conn)
-  */
- static int iscsi_has_ping_timed_out(struct iscsi_conn *conn)
- {
--	if (conn->ping_task &&
-+	if (READ_ONCE(conn->ping_task) &&
- 	    time_before_eq(conn->last_recv + (conn->recv_timeout * HZ) +
- 			   (conn->ping_timeout * HZ), jiffies))
- 		return 1;
-@@ -2058,7 +2065,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
- 	 * Checking the transport already or nop from a cmd timeout still
- 	 * running
- 	 */
--	if (conn->ping_task) {
-+	if (READ_ONCE(conn->ping_task)) {
- 		task->have_checked_conn = true;
- 		rc = BLK_EH_RESET_TIMER;
- 		goto done;
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index c25fb86ffae95..b3bbd10eb3f07 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -132,6 +132,9 @@ struct iscsi_task {
- 	void			*dd_data;	/* driver/transport data */
- };
- 
-+/* invalid scsi_task pointer */
-+#define	INVALID_SCSI_TASK	(struct iscsi_task *)-1l
-+
- static inline int iscsi_task_has_unsol_data(struct iscsi_task *task)
- {
- 	return task->unsol_r2t.data_length > task->unsol_r2t.sent;
 -- 
-2.27.0
-
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
