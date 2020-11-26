@@ -7,180 +7,104 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16D91C64E75
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 09:46:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66215C63777
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 09:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAEA520DD4
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 09:46:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EB7320872
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 09:46:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="XI7TGlkm"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="N81CT672"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733292AbgKZJqH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 04:46:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50222 "EHLO
+        id S1733297AbgKZJqK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 04:46:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733263AbgKZJqG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 04:46:06 -0500
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6820C0613D4
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2020 01:46:06 -0800 (PST)
-Received: by mail-pf1-x441.google.com with SMTP id n137so1192391pfd.3
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2020 01:46:06 -0800 (PST)
+        with ESMTP id S1733263AbgKZJqK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 04:46:10 -0500
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 341D3C0613D4
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2020 01:46:10 -0800 (PST)
+Received: by mail-pg1-x52f.google.com with SMTP id k11so1289753pgq.2
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2020 01:46:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version;
-        bh=JdWq9YU+uP+RJLT0L4P9eikVQJsLSrgeLGa5CvoxEZ8=;
-        b=XI7TGlkm3KPY8cURyVKPNHKRkPWkBAWWzuFZoU8nyJycYGiUyN7f3feprzHOS2OV0O
-         lWdZELUrdjRp3wSkoGxVglI1rRiE+6hCN1ShzxAgaE95kL6zwRXB+9KKqHUnnDq/CVLq
-         wxPcZcw4HgrZNKKhcHSUCxAYPI7gfeF/FOi/k=
+        bh=4ihazi1kGNwSEe+v3Gxlv7tpNrUIusPRaHX46UO0oYw=;
+        b=N81CT672Meqh4JtLYZ6+RO09tQ/xM8m3Tc6+yBLq4nPBo9FVM+W/q6jztzzJkXVvkV
+         cqAOhJ2GeFzog0OUZatr6Ey8OGDYDrw5gHmwKXDt1U673ekXcqQ+f6/rF3pfZcBNQ8LG
+         iIoAdKAiViPA5RwDhPrxoMmCbvakYxe8I2arw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version;
-        bh=JdWq9YU+uP+RJLT0L4P9eikVQJsLSrgeLGa5CvoxEZ8=;
-        b=fihko9kQytVxp2Y68KR6OsRs7ybtvUsKIiIOFR9lWM0xiK8Plz4d6ALXPqYFVcaZ/b
-         c3gB/F8MOGuf8p9u+U24PmNa8Zc9jAJGKUhYTQddme3QRU0dWqYqzqrNU3UMFE4lzNzq
-         Gpfe7dBc0OlNT53dNiWFfz9X2Ed2T3GtYHLFYHoeG6HiFY/yk3FJ27Q0A7Bd6G3dRcUh
-         tpWuyzUJ/4qNFSnz48t42g8AZVsX53JsHs0OKpE6Pwc2n58EiYc/1T2+hQBOlXqlEnBC
-         j/4hDIVbiseWiYrQ9+ZLzxrLWl8N7YUONT8O+XFjraP7QyByj7BExqZQSo7yG1K+zqTe
-         v7/A==
-X-Gm-Message-State: AOAM5314t/SGprPgI+R7m9F+wXrsGpqnK2mRs7JC+LnuowGNA2wHu1pb
-        voAwXRzwJRkVljfEweJ+fioogjwn2MXY7JILr+WEh7SEg/Q+E41wyLoTe0MH7PboznT3zOSPiay
-        K5GI15rr22/wR6cKWiqdjAbVQZU1kWrHwWGh7WwFa724k5q7jKdmZQWYR3kBsWAzGpDt6Ic1lzE
-        a6D+gtg2C3N1suGvCHnmcu5p8=
-X-Google-Smtp-Source: ABdhPJyejhLwn92xeewRgh7Am+g+ad2niqnNDMmfzrZaEsaK41N3FcqOVK0xeCqw8tqqdrlamNOTtQ==
-X-Received: by 2002:a17:90a:8:: with SMTP id 8mr2695627pja.236.1606383965588;
-        Thu, 26 Nov 2020 01:46:05 -0800 (PST)
+        bh=4ihazi1kGNwSEe+v3Gxlv7tpNrUIusPRaHX46UO0oYw=;
+        b=DMiQqdChWWMAwTa90NJQ9b/+PlQyAbWGXztobKwB5epS6KQoKBmmgJnxwdW9G4npfo
+         RQ+HhIGjlPmSmV1Eg4oP0a6/Knnk2twk0dz9kkJgeQCMWWHfG/1nG/2iry7ur2jOfBpa
+         Hpxjkaa1IShgn3sYvgu7f7nKZ98b6unCiYbDV7eeREGnmylKvCiv/7o2LzYAKjgrgvso
+         q/G1oZtwfqIeVG2emjSddfCyfgK+6sb6gW5cbuEAFQB/+vgoNemaetr+lISXKm+rCZAL
+         KnsC52lNS3PoDb+TqfkdTnRYA/CjDy48QZr+gBJNs6Q1g24fGC6cllfL/dK6wFN9ogLY
+         28Sg==
+X-Gm-Message-State: AOAM531VgxhyOBoSz0wQeD5rxxQvTpb28Nhyj6ymA1CAqKwJfcBvLNa5
+        1bOXTBQYKVKkElw25NcHsYn5RePfHy/VB2WIQrjUl+yPGZ/OC/b0aA40biCbkOeYiq0G9ZMgm2O
+        7meZXUA44JD34rslmD5cvtH3wdFm3y6SujziA9E7HZ0Oq5Z4eHErBuvb6UmNlGacxZt7RBf7bZi
+        7ZGBjGHlZwMdyq9IyBZNHFP9Q=
+X-Google-Smtp-Source: ABdhPJz+/aXjG/RDKGEgL/ggUk895eneTmyubApuVav/4OHB5jj1NcsjdzD0jv7ZbqxXIB+mFgP/uQ==
+X-Received: by 2002:a17:90a:c90b:: with SMTP id v11mr2715765pjt.181.1606383969057;
+        Thu, 26 Nov 2020 01:46:09 -0800 (PST)
 Received: from dhcp-10-123-20-14.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id i10sm4343220pfk.206.2020.11.26.01.46.02
+        by smtp.gmail.com with ESMTPSA id i10sm4343220pfk.206.2020.11.26.01.46.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Nov 2020 01:46:04 -0800 (PST)
+        Thu, 26 Nov 2020 01:46:08 -0800 (PST)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v1 7/8] mpt3sas: Handle trigger page support after reset.
-Date:   Thu, 26 Nov 2020 15:13:10 +0530
-Message-Id: <20201126094311.8686-8-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v1 8/8] mpt3sas: Update driver version to 36.100.00.00
+Date:   Thu, 26 Nov 2020 15:13:11 +0530
+Message-Id: <20201126094311.8686-9-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201126094311.8686-1-suganath-prabu.subramani@broadcom.com>
 References: <20201126094311.8686-1-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000afcd5005b4ff69d0"
+        boundary="000000000000e2c30105b4ff6925"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000afcd5005b4ff69d0
-Content-Type: text/plain; charset=UTF-8
+--000000000000e2c30105b4ff6925
 Content-Transfer-Encoding: 8bit
 
-Description:
-Handle trigger page support after reset.
-Prior to IOC reset, if firmware is not supporting trigger pages
-and after reset if driver sees the firmware started supporting
-trigger pages. (In case of a reset after firmware
-upgrade) then the driver should handle this by writing the
-already available trigger data from the driver’s internal data
-structure to the corresponding trigger pages NVRAM region and
-also update Trigger flags in Trigger Page-0 NVRAM region
-accordingly.
-
-Implementation:
-Add ioc->supports_trigger_pages, this feature supported flag is
-used to determine whether the pages needs update or not. And also
-this feature supporting flag needs to be updated for every reset as
-it is possible that FW won’t support trigger pages before reset
-and start supporting after reset or vice versa.
-(In case of FW upgrade or downgrade)
+Update driver version to 36.100.00.00
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 50 ++++++++++++++++++++++++++++-
- 1 file changed, 49 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index ce3ef9e..b129f37 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5073,6 +5073,35 @@ _base_get_diag_triggers(struct MPT3SAS_ADAPTER *ioc)
- 		_base_get_mpi_diag_triggers(ioc);
- }
- 
-+/**
-+ * _base_update_diag_trigger_pages - Update the driver trigger pages after
-+ *			online FW update, incase updated FW supports driver
-+ *			trigger pages.
-+ * @ioc : per adapter object
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_update_diag_trigger_pages(struct MPT3SAS_ADAPTER *ioc)
-+{
-+
-+	if (ioc->diag_trigger_master.MasterData)
-+		mpt3sas_config_update_driver_trigger_pg1(ioc,
-+		    &ioc->diag_trigger_master, 1);
-+
-+	if (ioc->diag_trigger_event.ValidEntries)
-+		mpt3sas_config_update_driver_trigger_pg2(ioc,
-+		    &ioc->diag_trigger_event, 1);
-+
-+	if (ioc->diag_trigger_scsi.ValidEntries)
-+		mpt3sas_config_update_driver_trigger_pg3(ioc,
-+		    &ioc->diag_trigger_scsi, 1);
-+
-+	if (ioc->diag_trigger_mpi.ValidEntries)
-+		mpt3sas_config_update_driver_trigger_pg4(ioc,
-+		    &ioc->diag_trigger_mpi, 1);
-+}
-+
- /**
-  * _base_static_config_pages - static start of day config pages
-  * @ioc: per adapter object
-@@ -5082,7 +5111,7 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- {
- 	Mpi2ConfigReply_t mpi_reply;
- 	u32 iounit_pg1_flags;
--
-+	int tg_flags = 0;
- 	ioc->nvme_abort_timeout = 30;
- 	mpt3sas_config_get_manufacturing_pg0(ioc, &mpi_reply, &ioc->manu_pg0);
- 	if (ioc->ir_firmware)
-@@ -5162,6 +5191,25 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- 	if (ioc->is_gen35_ioc) {
- 		if (ioc->is_driver_loading)
- 			_base_get_diag_triggers(ioc);
-+		else {
-+			/*
-+			 * In case of online HBA FW update operation,
-+			 * check whether updated FW supports the driver trigger
-+			 * pages or not.
-+			 * - If previous FW has not supported driver trigger
-+			 *   pages and newer FW supports them then update these
-+			 *   pages with current diag trigger values.
-+			 * - If previous FW has supported driver trigger pages
-+			 *   and new FW doesn't support them then disable
-+			 *   support_trigger_pages flag.
-+			 */
-+			tg_flags = _base_check_for_trigger_pages_support(ioc);
-+			if (!ioc->supports_trigger_pages && tg_flags != -EFAULT)
-+				_base_update_diag_trigger_pages(ioc);
-+			else if (ioc->supports_trigger_pages &&
-+			    tg_flags == -EFAULT)
-+				ioc->supports_trigger_pages = 0;
-+		}
- 	}
- }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 352e6cd..2def7a3 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -77,9 +77,9 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"35.101.00.00"
+-#define MPT3SAS_MAJOR_VERSION		35
+-#define MPT3SAS_MINOR_VERSION		101
++#define MPT3SAS_DRIVER_VERSION		"36.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		36
++#define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
  
 -- 
 2.27.0
 
 
---000000000000afcd5005b4ff69d0
+--000000000000e2c30105b4ff6925
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -251,13 +175,13 @@ DAYA3uHCdaZTnVbSESs1pk+HAhlZhqrDYXWCG6ya+SIG51Q4PHS6jfst/6xnaSFPhWhIv2hSB2NA
 vWzrcXMq9IfE5HFZXqzOWMP/gUOKk155U6EuRQzVcCpabG8ROpPND3sxggJvMIICawIBATBtMF0x
 CzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxT
 aWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMCDE84Ya9bsUMoMZ6qKjANBglghkgB
-ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg/T+PrkRq8EM0wOGYsdy1XT9MEDnAxn9YKY697Df5
-JfcwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjAxMTI2MDk0NjA2
+ZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgRYB7bnMnjDUMUcv3x16mUEUKl88TypIKUIjJTnn8
+61wwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMjAxMTI2MDk0NjA5
 WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAEC
 MAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqG
-SIb3DQEBAQUABIIBAILLThNdY3RTgCSwz66ygDV+/XTQ9c1hL+GoaSbkrT3ydBv7nS3fgX+bk99C
-3AF9pioSHu9LpBud9fXYINX2IPwaUij2mn4bfiB17fliwgZeyDsQES3i2rSerB4NGrIRBzRb/zFO
-H9rlfAPMh3nXAJn/OuQUv5hYOSmS6gpkbB0/sdj+r6eAL/TvssCaG5thGZq3iwEGTcPvHQUDqmbK
-BM8kmBCHsIXzyvAnrP6+e8+btfqKOVp5s3vS72ZpC/nBtMkRGk3ygFTgL80NpGJBBxoja47j28iC
-neE0X79d3FBcvR4+sthD1nIZAUdqzDNbFtBAdE9rZllJamuraHqKflk=
---000000000000afcd5005b4ff69d0--
+SIb3DQEBAQUABIIBAEj6fgY7HYd4k+brEjWTfaEhip02cBG8LsbU2uIJX6DOR0uBGX96QJG+EOSQ
+o0KY1qKMp3iABSqmhsR7bQq51BGveYGFUmnryfmrxtV7ESaarKbiBWDywto5R9PqXTYXAFwBwqCk
+oRRb7HZZCLCoMpdnkhYtY9pDPSx7n86+UvAi8b9dtRREPhJ0soBjpzOIzIJmi0qiCu0cnbVei7zc
+4ZnUA/44Z2jgGjZSOWCjSYs+fKrqID3ucgJWE7A/sZ2LWMu/jp512ULyPfwDM6VCGHIkgKbq2P26
+ertIJT7VwQuLiT9dpHEuawGyCgET25oFAuJhuscTtslpqvtO8jMexu8=
+--000000000000e2c30105b4ff6925--
