@@ -2,162 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA7BFC64E75
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78289C6379D
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:25:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F6312168B
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:16:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1248B21534
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:25:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QvBDhQab"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pPkEQDCu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730822AbgKZBQX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 20:16:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56258 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730747AbgKZBQW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 20:16:22 -0500
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07397C0613D4;
-        Wed, 25 Nov 2020 17:16:22 -0800 (PST)
-Received: by mail-pg1-x541.google.com with SMTP id t3so269912pgi.11;
-        Wed, 25 Nov 2020 17:16:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ffbgfORDd1J1xm3xxXp8xWzEs5sXbivtuhWMZ6CRpX8=;
-        b=QvBDhQabcPJJmll9n1XSftf1/oCdc4AbjJKr3e1lsYr3oC6BYqnsjBtTeyYy83i7U3
-         CiBd9FBSulwPjxAjN7h2emgRFMFS1h+Lw6DqhxGTuZzg7+z7LjtCeMG+R8Iu7GvPbymk
-         ToF3QU0Kl5XY8lJh/Qkx9aL7d+kCec25ZtdGP0mSVt69+sY7dMUe9kHgs59VUC7F5d4d
-         nBojS3btHNUmyJAhv9TgzqtLgQeQkeeQKwwl8KyW2EiBpga6aEsYA+VodfFczjdFHus+
-         VDSakrHxOOPEEYbfR18sM6jijaOJSIrXZ6isVycVVCHpctMR7iHPW0kXlgmPrbk46btj
-         mYxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=ffbgfORDd1J1xm3xxXp8xWzEs5sXbivtuhWMZ6CRpX8=;
-        b=Iv/bUsqeQSLy+OkXsfKmGmruNyD1Z8EkFz/Ci+EJdMwZLkL+8tkaFsoCtyCsRGzaNE
-         txw7vNplI5Adbh8FSFwyHekTyjwzZ0C5VIUbK8DLqUZ0/1tMa0b1PPjxZAV03g38cmMq
-         z2RkW3jxAD4DxePn6oNQU3mxVNPbVUiZEEwnN8Q6/S4CS1LfUWyU1r0aTgEPgm9oSArY
-         EH+i6leygslsyLAB9Z8jZ6ykVAY/U1EomqEXzEl4N1+ILvHEKKfPGeX1T0SFTQSvKJ9I
-         435E7ZwEvnOexItytvVXsRHdxnkIBor94qAVSWNzw5+33OJcfMeDsA57IEFQHMBuLJrD
-         Fjvw==
-X-Gm-Message-State: AOAM532rWmIkXxXFfCZn5jX9T8P9Al4KHIdYf9cVm87PnePXWipIuFXM
-        +1o9lol4sfX0IiiDydi618E=
-X-Google-Smtp-Source: ABdhPJxuwzDVcKoe4o/wMgwyIQrHY+YPGkp4YxJA+sp/vPwpgqgEvxXOvnlOmZ0BtRJFwRde4WH8Zg==
-X-Received: by 2002:a62:8cc6:0:b029:19a:87b1:99bb with SMTP id m189-20020a628cc60000b029019a87b199bbmr637857pfd.6.1606353381534;
-        Wed, 25 Nov 2020 17:16:21 -0800 (PST)
-Received: from google.com (c-67-188-94-199.hsd1.ca.comcast.net. [67.188.94.199])
-        by smtp.gmail.com with ESMTPSA id e128sm2978987pfe.154.2020.11.25.17.16.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2020 17:16:20 -0800 (PST)
-Sender: Minchan Kim <minchan.kim@gmail.com>
-Date:   Wed, 25 Nov 2020 17:16:16 -0800
-From:   Minchan Kim <minchan@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, linux-block@vger.kernel.org,
-        drbd-dev@lists.linbit.com, nbd@other.debian.org,
-        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        sergey.senozhatsky.work@gmail.com
-Subject: Re: [PATCH 61/78] zram:  do not call set_blocksize
-Message-ID: <20201126011616.GB57352@google.com>
-References: <20201116145809.410558-1-hch@lst.de>
- <20201116145809.410558-62-hch@lst.de>
+        id S1730646AbgKZBZb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 20:25:31 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:30803 "EHLO m42-4.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726009AbgKZBZ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Nov 2020 20:25:29 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1606353929; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=V16thVLdBJdUt6KU8AVud/cH+EtHnsC94YUQORQwInc=;
+ b=pPkEQDCu0/IionCXxC9sDpcereCAzcdoE/7T2TCFo3IRcd31LnpHN9ZVvlD1aAWbJ9+ljBnC
+ xlEIYutbwjadys+AkgIK0lFs3RQgSaZlwbEBatIMRk7syi5nbGpaXcysD4UftrfFhKtocsL+
+ 8QdF8PSzqr5gFqNGUFxf4o0Xeds=
+X-Mailgun-Sending-Ip: 69.72.42.4
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 5fbf040022377520eec09504 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 26 Nov 2020 01:25:20
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 65DD8C43465; Thu, 26 Nov 2020 01:25:20 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 32D74C433ED;
+        Thu, 26 Nov 2020 01:25:19 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201116145809.410558-62-hch@lst.de>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 26 Nov 2020 09:25:19 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] scsi: ufs: Refector ufshcd_setup_clocks() to
+ remove skip_ref_clk
+In-Reply-To: <1606352316.23925.1.camel@mtkswgap22>
+References: <1606202906-14485-1-git-send-email-cang@codeaurora.org>
+ <1606202906-14485-2-git-send-email-cang@codeaurora.org>
+ <1606352316.23925.1.camel@mtkswgap22>
+Message-ID: <07687efa0e49a5c2266deadad94c92dd@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 16, 2020 at 03:57:52PM +0100, Christoph Hellwig wrote:
-> set_blocksize is used by file systems to use their preferred buffer cache
-> block size.  Block drivers should not set it.
+On 2020-11-26 08:58, Stanley Chu wrote:
+> Hi Can,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Minchan Kim <minchan@kernel.org>
+> "Refector" in title shall be "Refactor"?
+> 
+> On Mon, 2020-11-23 at 23:28 -0800, Can Guo wrote:
+>> Remove the param skip_ref_clk from __ufshcd_setup_clocks(), but keep a 
+>> flag
+>> in struct ufs_clk_info to tell whether a clock can be disabled or not 
+>> while
+>> the link is active.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+> 
+> Otherwise looks good to me.
+> 
 
-Thanks.
+Sorry, will fix it in next version.
 
-> ---
->  drivers/block/zram/zram_drv.c | 11 +----------
->  drivers/block/zram/zram_drv.h |  1 -
->  2 files changed, 1 insertion(+), 11 deletions(-)
-> 
-> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-> index 3641434a9b154d..d00b5761ec0b21 100644
-> --- a/drivers/block/zram/zram_drv.c
-> +++ b/drivers/block/zram/zram_drv.c
-> @@ -403,13 +403,10 @@ static void reset_bdev(struct zram *zram)
->  		return;
->  
->  	bdev = zram->bdev;
-> -	if (zram->old_block_size)
-> -		set_blocksize(bdev, zram->old_block_size);
->  	blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
->  	/* hope filp_close flush all of IO */
->  	filp_close(zram->backing_dev, NULL);
->  	zram->backing_dev = NULL;
-> -	zram->old_block_size = 0;
->  	zram->bdev = NULL;
->  	zram->disk->fops = &zram_devops;
->  	kvfree(zram->bitmap);
-> @@ -454,7 +451,7 @@ static ssize_t backing_dev_store(struct device *dev,
->  	struct file *backing_dev = NULL;
->  	struct inode *inode;
->  	struct address_space *mapping;
-> -	unsigned int bitmap_sz, old_block_size = 0;
-> +	unsigned int bitmap_sz;
->  	unsigned long nr_pages, *bitmap = NULL;
->  	struct block_device *bdev = NULL;
->  	int err;
-> @@ -509,14 +506,8 @@ static ssize_t backing_dev_store(struct device *dev,
->  		goto out;
->  	}
->  
-> -	old_block_size = block_size(bdev);
-> -	err = set_blocksize(bdev, PAGE_SIZE);
-> -	if (err)
-> -		goto out;
-> -
->  	reset_bdev(zram);
->  
-> -	zram->old_block_size = old_block_size;
->  	zram->bdev = bdev;
->  	zram->backing_dev = backing_dev;
->  	zram->bitmap = bitmap;
-> diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
-> index f2fd46daa76045..712354a4207c77 100644
-> --- a/drivers/block/zram/zram_drv.h
-> +++ b/drivers/block/zram/zram_drv.h
-> @@ -118,7 +118,6 @@ struct zram {
->  	bool wb_limit_enable;
->  	u64 bd_wb_limit;
->  	struct block_device *bdev;
-> -	unsigned int old_block_size;
->  	unsigned long *bitmap;
->  	unsigned long nr_pages;
->  #endif
-> -- 
-> 2.29.2
-> 
+Thanks,
+
+Can Guo.
+
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
