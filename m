@@ -2,71 +2,257 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A66C56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:08:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D09CCC56202
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:11:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 069A82075A
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:08:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69BA020B1F
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 01:11:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="M2FGcjet"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CJdcPtV0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730030AbgKZBIK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 20:08:10 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:37880 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729760AbgKZBIK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 20:08:10 -0500
-X-UUID: da15571322c9404397139d1107ba2857-20201126
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=nuSlFfD2Jjo2YzrPyfDkI8wl2PPyiDyhZDKh8O5xqqc=;
-        b=M2FGcjetToVTX8xMf3eN0Yq7d7Pz3OdtIk7YF3uIXRwm4TQjZE7tEsixh5xL8VBlI/sm5tb2si3rc4BqJCp66COWLUKymrxISLnUZaM0kzleM+T7l2SiRc87xUbte3StYnspvunuySfT5/zdhskEFSfeRnRZ76CQDEPBeAweQaU=;
-X-UUID: da15571322c9404397139d1107ba2857-20201126
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 63321513; Thu, 26 Nov 2020 09:08:07 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 26 Nov 2020 09:08:05 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkcas07.mediatek.inc
- (172.21.101.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 26 Nov
- 2020 09:08:05 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 26 Nov 2020 09:08:05 +0800
-Message-ID: <1606352885.23925.3.camel@mtkswgap22>
-Subject: Re: [PATCH] scsi: ufs: Remove unnecessary if condition in
- ufshcd_suspend()
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Bean Huo <huobean@gmail.com>
-CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <asutoshd@codeaurora.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <bvanassche@acm.org>, <tomas.winkler@intel.com>,
-        <cang@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Date:   Thu, 26 Nov 2020 09:08:05 +0800
-In-Reply-To: <20201125185300.3394-1-huobean@gmail.com>
-References: <20201125185300.3394-1-huobean@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1730469AbgKZBLM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Nov 2020 20:11:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55446 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726009AbgKZBLM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2020 20:11:12 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2381EC0613D4;
+        Wed, 25 Nov 2020 17:11:12 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id q10so137675pfn.0;
+        Wed, 25 Nov 2020 17:11:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=f8bMvE80grJsQDxQbN+SXa4Ok4avPUhhCBLg+N5g7uE=;
+        b=CJdcPtV0FUzyxFptDYgR6iAeEpy/fm/U+qwm7MjSAUITShNs3IGjSdma/ci1d+UdB1
+         /4QBGWKw7GesxoQFO7vGWULXUqZeTgSL72KBwgOOTOpdW6FEjFkGl8KvyOmWfu5zn3C8
+         2D8lQB9/sXcZGuetWYq/y9fJ/4tVoCfZkFM+w/twGxXZf6jIBGOeoFgX3V3eoJ4SxFtL
+         DMlA1WjSzrfwym46BYlZOU4NNlAHgEZUyXcv6V6vuCHVbSrKNoE7MZTnCkoIzELetkkK
+         3iGfzFOaAaJYntoqnGECTiJfY05IPhrPMzUEVWqaaAGWlk8VKPKZsqmpzgCIg3k/819j
+         bQTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=f8bMvE80grJsQDxQbN+SXa4Ok4avPUhhCBLg+N5g7uE=;
+        b=i9YOxFL6AsFIZk3I5DQpmDz/gDFKvYadt1l12LPL174jiWhKGxn2G+nHRAoZdbPiNK
+         tIp9KNCxCM5DNqiPGPy+ppSnvap7tM+DmgSb6mut4BrniebfGuoMaPoAtt5C/RLC+4eR
+         aA9WfpNzPuah7gAPJRAo3ZSkVaxJqvAh0lMgg2rbrr4cIdfPzUxfB+bUAXCAOdYVgE2R
+         LyzIvpKbpvfFm0hmCRM9GJ9UGichuN8yv2mnSt9ZDRn5ma38hMJVWmzfQ+PToVcBmhBu
+         aYtR888KoVd8wG0WGsaU0s/lmkkBOcp+96saw9ipyKnAtwktiuD02nWN4C5xs9+3cBLj
+         z+HQ==
+X-Gm-Message-State: AOAM532jYN0lMS5UX4AL6+ZeHaa7ZZzrj5+If2Cfmk5sGTkliRRKnd5f
+        Blp5e/fVW/nccXM61g0RDzQ=
+X-Google-Smtp-Source: ABdhPJy2rvS54nam6WzB3Gos6rktAfztTZ/apost62cNhHmAqWfXtcE8/JRGjAG0GRNN0NDnAydY0Q==
+X-Received: by 2002:a17:90a:8909:: with SMTP id u9mr643556pjn.100.1606353071628;
+        Wed, 25 Nov 2020 17:11:11 -0800 (PST)
+Received: from google.com (c-67-188-94-199.hsd1.ca.comcast.net. [67.188.94.199])
+        by smtp.gmail.com with ESMTPSA id s10sm3915048pjn.35.2020.11.25.17.11.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2020 17:11:10 -0800 (PST)
+Sender: Minchan Kim <minchan.kim@gmail.com>
+Date:   Wed, 25 Nov 2020 17:11:07 -0800
+From:   Minchan Kim <minchan@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Justin Sanders <justin@coraid.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, linux-block@vger.kernel.org,
+        drbd-dev@lists.linbit.com, nbd@other.debian.org,
+        ceph-devel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-raid@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH 60/78] zram: remove the claim mechanism
+Message-ID: <20201126011107.GA57352@google.com>
+References: <20201116145809.410558-1-hch@lst.de>
+ <20201116145809.410558-61-hch@lst.de>
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201116145809.410558-61-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDIwLTExLTI1IGF0IDE5OjUzICswMTAwLCBCZWFuIEh1byB3cm90ZToNCj4gRnJv
-bTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCj4gDQo+IEluIHRoZSBjYXNlIHRoYXQg
-YXV0b19ia29wc19lbmFibGUgaXMgZmFsc2UsIHdoaWNoIG1lYW5zIGF1dG8gYmtvcHMNCj4gaGFz
-IGJlZW4gZGlzYWJsZWQsIHNvIG5vIG5lZWQgdG8gY2FsbCB1ZnNoY2RfZGlzYWJsZV9hdXRvX2Jr
-b3BzKCkuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBCZWFuIEh1byA8YmVhbmh1b0BtaWNyb24uY29t
-Pg0KDQpSZXZpZXdlZC1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1lZGlhdGVrLmNvbT4N
-Cg==
+On Mon, Nov 16, 2020 at 03:57:51PM +0100, Christoph Hellwig wrote:
+> The zram claim mechanism was added to ensure no new opens come in
+> during teardown.  But the proper way to archive that is to call
+> del_gendisk first, which takes care of all that.  Once del_gendisk
+> is called in the right place, the reset side can also be simplified
+> as no I/O can be outstanding on a block device that is not open.
+
+It would be great if it makes the mess simple. Let me have a question
+Please see below.
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/zram/zram_drv.c | 76 ++++++++++-------------------------
+>  1 file changed, 21 insertions(+), 55 deletions(-)
+> 
+> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+> index 6d15d51cee2b7e..3641434a9b154d 100644
+> --- a/drivers/block/zram/zram_drv.c
+> +++ b/drivers/block/zram/zram_drv.c
+> @@ -1756,64 +1756,33 @@ static ssize_t disksize_store(struct device *dev,
+>  static ssize_t reset_store(struct device *dev,
+>  		struct device_attribute *attr, const char *buf, size_t len)
+>  {
+> -	int ret;
+> -	unsigned short do_reset;
+> -	struct zram *zram;
+> +	struct zram *zram = dev_to_zram(dev);
+>  	struct block_device *bdev;
+> +	unsigned short do_reset;
+> +	int ret = 0;
+>  
+>  	ret = kstrtou16(buf, 10, &do_reset);
+>  	if (ret)
+>  		return ret;
+> -
+>  	if (!do_reset)
+>  		return -EINVAL;
+>  
+> -	zram = dev_to_zram(dev);
+>  	bdev = bdget_disk(zram->disk, 0);
+>  	if (!bdev)
+>  		return -ENOMEM;
+>  
+>  	mutex_lock(&bdev->bd_mutex);
+> -	/* Do not reset an active device or claimed device */
+> -	if (bdev->bd_openers || zram->claim) {
+> -		mutex_unlock(&bdev->bd_mutex);
+> -		bdput(bdev);
+> -		return -EBUSY;
+> -	}
+> -
+> -	/* From now on, anyone can't open /dev/zram[0-9] */
+> -	zram->claim = true;
+> +	if (bdev->bd_openers)
+> +		ret = -EBUSY;
+> +	else
+> +		zram_reset_device(zram);
+>  	mutex_unlock(&bdev->bd_mutex);
+> -
+> -	/* Make sure all the pending I/O are finished */
+> -	fsync_bdev(bdev);
+> -	zram_reset_device(zram);
+>  	bdput(bdev);
+>  
+> -	mutex_lock(&bdev->bd_mutex);
+> -	zram->claim = false;
+> -	mutex_unlock(&bdev->bd_mutex);
+> -
+> -	return len;
+> -}
+> -
+> -static int zram_open(struct block_device *bdev, fmode_t mode)
+> -{
+> -	int ret = 0;
+> -	struct zram *zram;
+> -
+> -	WARN_ON(!mutex_is_locked(&bdev->bd_mutex));
+> -
+> -	zram = bdev->bd_disk->private_data;
+> -	/* zram was claimed to reset so open request fails */
+> -	if (zram->claim)
+> -		ret = -EBUSY;
+> -
+> -	return ret;
+> +	return ret ? ret : len;
+>  }
+>  
+>  static const struct block_device_operations zram_devops = {
+> -	.open = zram_open,
+>  	.submit_bio = zram_submit_bio,
+>  	.swap_slot_free_notify = zram_slot_free_notify,
+>  	.rw_page = zram_rw_page,
+> @@ -1821,7 +1790,6 @@ static const struct block_device_operations zram_devops = {
+>  };
+>  
+>  static const struct block_device_operations zram_wb_devops = {
+> -	.open = zram_open,
+>  	.submit_bio = zram_submit_bio,
+>  	.swap_slot_free_notify = zram_slot_free_notify,
+>  	.owner = THIS_MODULE
+> @@ -1972,34 +1940,32 @@ static int zram_add(void)
+>  	return ret;
+>  }
+>  
+> -static int zram_remove(struct zram *zram)
+> +static bool zram_busy(struct zram *zram)
+>  {
+>  	struct block_device *bdev;
+> +	bool busy = false;
+>  
+>  	bdev = bdget_disk(zram->disk, 0);
+> -	if (!bdev)
+> -		return -ENOMEM;
+> -
+> -	mutex_lock(&bdev->bd_mutex);
+> -	if (bdev->bd_openers || zram->claim) {
+> -		mutex_unlock(&bdev->bd_mutex);
+> +	if (bdev) {
+> +		if (bdev->bd_openers)
+> +			busy = true;
+>  		bdput(bdev);
+> -		return -EBUSY;
+>  	}
+>  
+> -	zram->claim = true;
+> -	mutex_unlock(&bdev->bd_mutex);
+> +	return busy;
+> +}
+>  
+> -	zram_debugfs_unregister(zram);
+> +static int zram_remove(struct zram *zram)
+> +{
+> +	if (zram_busy(zram))
+> +		return -EBUSY;
+>  
+> -	/* Make sure all the pending I/O are finished */
+> -	fsync_bdev(bdev);
+> +	del_gendisk(zram->disk);
+> +	zram_debugfs_unregister(zram);
+>  	zram_reset_device(zram);
+> -	bdput(bdev);
+>  
+>  	pr_info("Removed device: %s\n", zram->disk->disk_name);
+>  
+> -	del_gendisk(zram->disk);
+>  	blk_cleanup_queue(zram->disk->queue);
+>  	put_disk(zram->disk);
+>  	kfree(zram);
+> -- 
+> 2.29.2
+> 
+
+With this patch, how deal with the race?
+
+CPU 1                                     CPU 2
+
+hot_remove_store
+  zram_remove
+    zram_busy
+      return -EBUSY
+                                         open /dev/zram0
+    del_gendisk
+    zram_reset and destroy
 
