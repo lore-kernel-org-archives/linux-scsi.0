@@ -2,66 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1AE0C63777
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 08:52:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67E17C56202
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 08:55:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99A6620DD4
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 08:52:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F6AD20B80
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 08:55:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389038AbgKZIvs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 03:51:48 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51054 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728127AbgKZIvs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Nov 2020 03:51:48 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4919AAC22;
-        Thu, 26 Nov 2020 08:51:46 +0000 (UTC)
-Date:   Thu, 26 Nov 2020 09:51:45 +0100
-From:   Daniel Wagner <dwagner@suse.de>
-To:     John Garry <john.garry@huawei.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com, lenb@kernel.org,
-        rjw@rjwysocki.net, gregkh@linuxfoundation.org, tglx@linutronix.de,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, linux-acpi@vger.kernel.org, maz@kernel.org
+        id S1729672AbgKZIzC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 03:55:02 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2157 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726347AbgKZIzC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 03:55:02 -0500
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4ChWjK6Sxyz67GsH;
+        Thu, 26 Nov 2020 16:52:21 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2106.2; Thu, 26 Nov 2020 09:55:00 +0100
+Received: from [10.210.172.213] (10.210.172.213) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.1913.5; Thu, 26 Nov 2020 08:54:59 +0000
 Subject: Re: [PATCH v3 1/5] genirq/affinity: Add irq_update_affinity_desc()
-Message-ID: <20201126085145.jjioc7belyny5kp4@beryllium.lan>
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <lenb@kernel.org>, <rjw@rjwysocki.net>,
+        <gregkh@linuxfoundation.org>, <tglx@linutronix.de>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <linux-acpi@vger.kernel.org>,
+        <maz@kernel.org>
 References: <1606324841-217570-1-git-send-email-john.garry@huawei.com>
  <1606324841-217570-2-git-send-email-john.garry@huawei.com>
+ <20201126085145.jjioc7belyny5kp4@beryllium.lan>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <47442f07-4ea2-46ed-59a8-c1fa2857f4c4@huawei.com>
+Date:   Thu, 26 Nov 2020 08:54:37 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1606324841-217570-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <20201126085145.jjioc7belyny5kp4@beryllium.lan>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.172.213]
+X-ClientProxiedBy: lhreml707-chm.china.huawei.com (10.201.108.56) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi John,
+Hi Daniel,
 
-On Thu, Nov 26, 2020 at 01:20:37AM +0800, John Garry wrote:
-> +	activated = irqd_is_activated(&desc->irq_data);
-> +	if (activated)
-> +		irq_domain_deactivate_irq(&desc->irq_data);
-> +
-> +	if (affinity->is_managed) {
-> +		irqd_set(&desc->irq_data, IRQD_AFFINITY_MANAGED);
-> +		irqd_set(&desc->irq_data, IRQD_MANAGED_SHUTDOWN);
-> +	}
-> +
-> +	cpumask_copy(desc->irq_common_data.affinity, &affinity->mask);
-> +
-> +	/* Restore the activation state */
-> +	if (activated)
-> +		irq_domain_deactivate_irq(&desc->irq_data);
+> 
+> On Thu, Nov 26, 2020 at 01:20:37AM +0800, John Garry wrote:
+>> +	activated = irqd_is_activated(&desc->irq_data);
+>> +	if (activated)
+>> +		irq_domain_deactivate_irq(&desc->irq_data);
+>> +
+>> +	if (affinity->is_managed) {
+>> +		irqd_set(&desc->irq_data, IRQD_AFFINITY_MANAGED);
+>> +		irqd_set(&desc->irq_data, IRQD_MANAGED_SHUTDOWN);
+>> +	}
+>> +
+>> +	cpumask_copy(desc->irq_common_data.affinity, &affinity->mask);
+>> +
+>> +	/* Restore the activation state */
+>> +	if (activated)
+>> +		irq_domain_deactivate_irq(&desc->irq_data);
+> Shouldn't this be irq_domain_activate_irq() ?
 
-Shouldn't this be irq_domain_activate_irq() ?
+Yeah, I think so. Blushes.
 
-Thanks,
-Daniel
-
-
+Cheers,
+John
