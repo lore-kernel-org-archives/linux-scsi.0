@@ -2,100 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3694C56201
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 02:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C1DC64E75
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 05:39:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 535FC2075A
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 02:07:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="OSTqICcU"
+	by mail.kernel.org (Postfix) with ESMTP id BF884207BC
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 05:39:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732807AbgKZCHh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Nov 2020 21:07:37 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:23017 "EHLO z5.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731736AbgKZCHh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Nov 2020 21:07:37 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606356456; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=eM/OlWlq0U/ubShojsUmq0EBcUvDZy0oih5TzXFbMYE=;
- b=OSTqICcUmu1+gaP9jMx5KpOerJUC5UXkalbfz3+UIdiJVw8aoLpiwICXy00KEuXlSaiNshFN
- JTQEJTvWFbNPS6m8mpT9e/TXeN4KDHV1CZtTXxWBdQyS94f1le7CEUUbcxkqsV9EXYsI0Ucc
- XQtPcijQT2J0yXAmQ8iKwajQHqI=
-X-Mailgun-Sending-Ip: 104.130.96.5
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5fbf0de7a5a29b56a162f767 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 26 Nov 2020 02:07:35
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5A8C8C43467; Thu, 26 Nov 2020 02:07:35 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 75B37C433ED;
-        Thu, 26 Nov 2020 02:07:34 +0000 (UTC)
+        id S1732436AbgKZFis (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 00:38:48 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:43858 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1732307AbgKZFir (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 00:38:47 -0500
+X-UUID: 94748ba0c6a941adaf49993656acca43-20201126
+X-UUID: 94748ba0c6a941adaf49993656acca43-20201126
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 574881674; Thu, 26 Nov 2020 13:38:42 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 26 Nov 2020 13:38:39 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 26 Nov 2020 13:38:40 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <alice.chao@mediatek.com>, <huadian.liu@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 1/3] scsi: ufs: Add error history for abort event in UFS Device W-LUN
+Date:   Thu, 26 Nov 2020 13:38:37 +0800
+Message-ID: <20201126053839.25889-2-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201126053839.25889-1-stanley.chu@mediatek.com>
+References: <20201126053839.25889-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 26 Nov 2020 10:07:34 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: Remove unnecessary if condition in
- ufshcd_suspend()
-In-Reply-To: <20201125185300.3394-1-huobean@gmail.com>
-References: <20201125185300.3394-1-huobean@gmail.com>
-Message-ID: <c241a19195be34886cd754d73bd6d168@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 130BC8D7BEA1DFFC31F184632A009456CB0D0F6DA020AB6400F2F83B92F318792000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-11-26 02:53, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> In the case that auto_bkops_enable is false, which means auto bkops
-> has been disabled, so no need to call ufshcd_disable_auto_bkops().
-> 
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 80cbce414678..d169db41ee16 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8543,11 +8543,9 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	}
-> 
->  	if (req_dev_pwr_mode != hba->curr_dev_pwr_mode) {
-> -		if ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
-> -		    !ufshcd_is_runtime_pm(pm_op)) {
-> +		if (!ufshcd_is_runtime_pm(pm_op))
->  			/* ensure that bkops is disabled */
->  			ufshcd_disable_auto_bkops(hba);
-> -		}
-> 
->  		if (!hba->dev_info.b_rpm_dev_flush_capable) {
->  			ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
+Add error history for abort event in UFS Device W-LUN.
+Besides, use specified value as parameter of ufshcd_update_reg_hist()
+to identify the aborted tag or LUNs.
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0e5473d4699b..28e4def13f21 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6742,8 +6742,10 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	 * To avoid these unnecessary/illegal step we skip to the last error
+ 	 * handling stage: reset and restore.
+ 	 */
+-	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN)
++	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
++		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, lrbp->lun);
+ 		return ufshcd_eh_host_reset_handler(cmd);
++	}
+ 
+ 	ufshcd_hold(hba, false);
+ 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+@@ -6767,7 +6769,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	 */
+ 	scsi_print_command(hba->lrb[tag].cmd);
+ 	if (!hba->req_abort_count) {
+-		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, 0);
++		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, tag);
+ 		ufshcd_print_host_regs(hba);
+ 		ufshcd_print_host_state(hba);
+ 		ufshcd_print_pwr_info(hba);
+-- 
+2.18.0
+
