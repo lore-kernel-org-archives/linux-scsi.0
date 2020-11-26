@@ -2,40 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5AB4C56202
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 10:48:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FE7AC63697
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 11:08:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59C1021527
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 10:48:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEAE820DD4
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 11:08:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+MOZr7a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388401AbgKZKr6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 05:47:58 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2159 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388389AbgKZKr6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 05:47:58 -0500
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4ChZDf0Dz0z67GpV;
-        Thu, 26 Nov 2020 18:46:10 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 26 Nov 2020 11:47:56 +0100
-Received: from [10.210.172.213] (10.210.172.213) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.1913.5; Thu, 26 Nov 2020 10:47:55 +0000
+        id S1728862AbgKZLI2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 06:08:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43334 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727041AbgKZLI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Nov 2020 06:08:27 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F06D720DD4;
+        Thu, 26 Nov 2020 11:08:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1606388907;
+        bh=xbLCeq3DSM++W6DFnu0rSTs3oCF5PlwhHrgqtqEh71g=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=X+MOZr7ah+Gn9iUshVW9PLaatlI2STUtfsKReYHoNLmGkwgerdL+5SvnV5XDFYta8
+         l266UDPPZG7mhvnLYQ0xuLsn7t8dP0YK02NRWsxg8OqsGr3oP86W+4rQPb01pXzftG
+         gBsw9kveYFJaGjt3NOxkm7/6vDviL/5zpJuhClFQ=
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1kiF8S-00DmWZ-PJ; Thu, 26 Nov 2020 11:08:24 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Thu, 26 Nov 2020 11:08:24 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>, gregkh@linuxfoundation.org,
+        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
-To:     Marc Zyngier <maz@kernel.org>
-CC:     Thomas Gleixner <tglx@linutronix.de>, <gregkh@linuxfoundation.org>,
-        <rafael@kernel.org>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>, <linuxarm@huawei.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+In-Reply-To: <80e0a19b-3291-1304-1a5b-0445c49efe31@huawei.com>
 References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
  <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
  <874klmqu2r.fsf@nanos.tec.linutronix.de>
@@ -51,90 +65,81 @@ References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
  <0525a4bcf17a355cd141632d4f3714be@kernel.org>
  <702e1729-9a4b-b16f-6a58-33172b1a3220@huawei.com>
  <5a588f5d86010602ff9a90e8f057743c@kernel.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <80e0a19b-3291-1304-1a5b-0445c49efe31@huawei.com>
-Date:   Thu, 26 Nov 2020 10:47:33 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <5a588f5d86010602ff9a90e8f057743c@kernel.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.210.172.213]
-X-ClientProxiedBy: lhreml707-chm.china.huawei.com (10.201.108.56) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+ <80e0a19b-3291-1304-1a5b-0445c49efe31@huawei.com>
+User-Agent: Roundcube Webmail/1.4.9
+Message-ID: <d696d314514a4bd53c85f2da73a23eed@kernel.org>
+X-Sender: maz@kernel.org
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: john.garry@huawei.com, tglx@linutronix.de, gregkh@linuxfoundation.org, rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Marc,
+Hi John,
 
->> Right, I did consider this.
+On 2020-11-26 10:47, John Garry wrote:
+> Hi Marc,
 > 
-> FWIW, I've pushed my hack branch[1]
+>>> Right, I did consider this.
+>> 
+>> FWIW, I've pushed my hack branch[1]
+> 
+> Did you miss that reference?
 
-Did you miss that reference?
+I did:
 
-> out with a couple of patches
-> for you to try (the top 3 patches). They allow platform-MSI domains
-> created by devices (mbigen, ICU) to be advertised as shared between
-> devices, so that the low-level driver can handle that in an appropriate
-> way.
-> 
-> I gave it a go on my D05 and nothing blew up, but I can't really remove
-> the kernel module, as that's where my disks are... :-/
+https://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/hacks
 
-You still should be able to enable my favorite 
-CONFIG_DEBUG_TEST_DRIVER_REMOVE=y, while the distro still boot. But I'll 
-just test if you want.
+> 
+>> out with a couple of patches
+>> for you to try (the top 3 patches). They allow platform-MSI domains
+>> created by devices (mbigen, ICU) to be advertised as shared between
+>> devices, so that the low-level driver can handle that in an 
+>> appropriate
+>> way.
+>> 
+>> I gave it a go on my D05 and nothing blew up, but I can't really 
+>> remove
+>> the kernel module, as that's where my disks are... :-/
+> 
+> You still should be able to enable my favorite
+> CONFIG_DEBUG_TEST_DRIVER_REMOVE=y, while the distro still boot. But
+> I'll just test if you want.
 
-> Please let me know if that helps.
-> 
->>> It is just that passing that information down isn't a simple affair,
->>> as msi_alloc_info_t isn't a generic type... Let me have a think.
->>
->> I think that there is a way to circumvent the problem, which you might
->> call hacky, but OTOH, not sure if there's much point changing mbigen
->> or related infrastructure at this stage.
-> 
-> Bah, it's a simple change, and there is now more than the mbigen using
-> the same API...
-> 
->>
->> Anyway, so we have 128 irqs in total for the mbigen domain, but the
->> driver only is interesting in something like irq indexes 1,2,72-81,
->> and 96-112. So we can just dispose the mappings for irq index 0-112 at
->> removal stage, thereby keeping the its device around. We do still call
->> platform_irq_count(), which sets up all 128 mappings, so maybe we
->> should be unmapping all of these - this would be the contentious part.
->> But maybe not, as the device driver is only interested in that subset,
->> and has no business unmapping the rest.
-> 
-> I don't think the driver should mess with interrupts it doesn't own.
+Ah! Let me try that then. Having been debugging some ugly driver removal
+lately, I wish I had known that config option and inflicted it on their
+authors...
 
-I would tend to agree. But all 128 lines here are for the SAS 
-controller. It's quite strange, as only about ~20 are useful.
+[...]
 
-> And while the mbigen port that is connected to the SAS controller
-> doesn't seem to be shared between endpoints, some other ports definitely
-> are:
+>> And while the mbigen port that is connected to the SAS controller
+>> doesn't seem to be shared between endpoints, some other ports 
+>> definitely
+>> are:
+>> 
+>> # cat /sys/kernel/debug/irq/domains/\\_SB.MBI1
+>> name:   \_SB.MBI1
+>>   size:   409
+>>   mapped: 192
+>>   flags:  0x00000003
+>> 
+>> [...]
+>> 
+>> I guess that the other 217 lines are connected somewhere.
+>> 
 > 
-> # cat /sys/kernel/debug/irq/domains/\\_SB.MBI1
-> name:   \_SB.MBI1
->   size:   409
->   mapped: 192
->   flags:  0x00000003
-> 
-> [...]
-> 
-> I guess that the other 217 lines are connected somewhere.
+> I think that is not the right one. See
+> https://github.com/tianocore/edk2-platforms/blob/master/Silicon/Hisilicon/Hi1616/D05AcpiTables/Dsdt/D05Sas.asl#L101
 > 
 
-I think that is not the right one. See 
-https://github.com/tianocore/edk2-platforms/blob/master/Silicon/Hisilicon/Hi1616/D05AcpiTables/Dsdt/D05Sas.asl#L101
-
+I know, I was just outlining the fact that some of the mbigen
+ports are shared between devices, and MBI1 seems to be an example
+of that (though my reading of ASL is... primitive).
 
 Thanks,
-John
+
+         M.
+-- 
+Jazz is not dead. It just smells funny...
