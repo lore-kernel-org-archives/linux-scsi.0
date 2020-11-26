@@ -2,51 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBCCC63697
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 11:23:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A79C64E75
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 11:30:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6256A20DD4
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 11:23:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72BF1221FA
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 11:30:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730539AbgKZLXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 06:23:30 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2160 "EHLO
+        id S2389098AbgKZLaT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 06:30:19 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2161 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726985AbgKZLXa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 06:23:30 -0500
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Chb0c2V2Dz67HSx;
-        Thu, 26 Nov 2020 19:20:48 +0800 (CST)
+        with ESMTP id S2388808AbgKZLaT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 06:30:19 -0500
+Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Chb954LpRz67HS9;
+        Thu, 26 Nov 2020 19:28:09 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
+ fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 26 Nov 2020 12:23:27 +0100
+ 15.1.2106.2; Thu, 26 Nov 2020 12:30:17 +0100
 Received: from [10.210.172.213] (10.210.172.213) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.1913.5; Thu, 26 Nov 2020 11:23:25 +0000
-Subject: Re: [PATCH v3 3/5] driver core: platform: Add platform_put_irq()
+ 15.1.1913.5; Thu, 26 Nov 2020 11:30:16 +0000
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
 To:     Marc Zyngier <maz@kernel.org>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <lenb@kernel.org>, <rjw@rjwysocki.net>,
-        <gregkh@linuxfoundation.org>, <tglx@linutronix.de>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <linux-acpi@vger.kernel.org>
-References: <1606324841-217570-1-git-send-email-john.garry@huawei.com>
- <1606324841-217570-4-git-send-email-john.garry@huawei.com>
- <f6fb9ff74c8b361a592a6a4ceebd032d@kernel.org>
+CC:     Thomas Gleixner <tglx@linutronix.de>, <gregkh@linuxfoundation.org>,
+        <rafael@kernel.org>, <martin.petersen@oracle.com>,
+        <jejb@linux.ibm.com>, <linuxarm@huawei.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
+ <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
+ <874klmqu2r.fsf@nanos.tec.linutronix.de>
+ <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+ <87lfexp6am.fsf@nanos.tec.linutronix.de>
+ <3acb7fde-eae2-a223-9cfd-f409cc2abba6@huawei.com>
+ <873615oy8a.fsf@nanos.tec.linutronix.de>
+ <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
+ <87sg91ik9e.wl-maz@kernel.org>
+ <0edc9a11-0b92-537f-1790-6b4b6de4900d@huawei.com>
+ <afd97dd4b1e102ac9ad49800821231a4@kernel.org>
+ <5a314713-c1ee-2d34-bee1-60beae274742@huawei.com>
+ <0525a4bcf17a355cd141632d4f3714be@kernel.org>
+ <702e1729-9a4b-b16f-6a58-33172b1a3220@huawei.com>
+ <5a588f5d86010602ff9a90e8f057743c@kernel.org>
+ <80e0a19b-3291-1304-1a5b-0445c49efe31@huawei.com>
+ <d696d314514a4bd53c85f2da73a23eed@kernel.org>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <4a7359bb-620b-2219-9b88-8a657f716336@huawei.com>
-Date:   Thu, 26 Nov 2020 11:23:04 +0000
+Message-ID: <e96dd9b0-c3a7-f7fb-0317-2fc2107f405a@huawei.com>
+Date:   Thu, 26 Nov 2020 11:29:54 +0000
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <f6fb9ff74c8b361a592a6a4ceebd032d@kernel.org>
+In-Reply-To: <d696d314514a4bd53c85f2da73a23eed@kernel.org>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -58,70 +71,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 26/11/2020 09:28, Marc Zyngier wrote:
-> On 2020-11-25 17:20, John Garry wrote:
->> Add a function to tear down the work which was done in platform_get_irq()
->> for when the device driver is done with the irq.
->>
->> For ACPI companion devices the irq resource is set as disabled, as this
->> resource is configured from platform_get_irq()->acpi_irq_get() and 
->> requires
->> resetting.
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->>  drivers/base/platform.c | 14 ++++++++++++++
->>  1 file changed, 14 insertions(+)
->>
->> diff --git a/drivers/base/platform.c b/drivers/base/platform.c
->> index 88aef93eb4dd..3eeda3746701 100644
->> --- a/drivers/base/platform.c
->> +++ b/drivers/base/platform.c
->> @@ -289,6 +289,20 @@ int platform_irq_count(struct platform_device *dev)
->>  }
->>  EXPORT_SYMBOL_GPL(platform_irq_count);
->>
-
 Hi Marc,
 
->> +void platform_put_irq(struct platform_device *dev, unsigned int num)
->> +{
->> +    unsigned int virq = platform_get_irq(dev, num);
 > 
-> I find it pretty odd to have to recompute the interrupt number,
-> which in turn results in a domain lookup. 
-
-Well we do have the virq available, but then we need to pass the virq 
-and device irq index. But maybe I somehow reverse-lookup the ACPI res 
-somehow from virq, such that we don't require the irq device index.
-
-> It things were refcounted
-> (they aren't yet), irq_dispose_mapping() would have no effect.
+> I did:
 > 
-> <pedant>
-> It also goes against the usual construct where if you obtain an object
-> based on some parameters, the release happens by specifying the object
-> itself, and not the parameters that lead to the object.
-> </pedant>
+> https://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/hacks 
 
-Yes, ideally we can use virq.
+ok, I'll have a look
+
+>>
+>> You still should be able to enable my favorite
+>> CONFIG_DEBUG_TEST_DRIVER_REMOVE=y, while the distro still boot. But
+>> I'll just test if you want.
+> 
+> Ah! Let me try that then. Having been debugging some ugly driver removal
+> lately, I wish I had known that config option and inflicted it on their
+> authors...
+
+Just in case - be careful with this one! It kills the boot of many 
+systems, but D05 should be fine.
 
 > 
->> +
->> +    irq_dispose_mapping(virq);
->> +    if (has_acpi_companion(&dev->dev)) {
->> +        struct resource *r = platform_get_resource(dev, IORESOURCE_IRQ,
->> +                               num);
->> +
->> +        if (r)
->> +            acpi_dev_irqresource_disabled(r, 0);
+> [...]
 > 
-> It looks to me that the ACPI thing is what needs to be promoted to a
-> first class function, releasing all the resources that have used by
-> a given device.
+>>> And while the mbigen port that is connected to the SAS controller
+>>> doesn't seem to be shared between endpoints, some other ports definitely
+>>> are:
+>>>
+>>> # cat /sys/kernel/debug/irq/domains/\\_SB.MBI1
+>>> name:   \_SB.MBI1
+>>>   size:   409
+>>>   mapped: 192
+>>>   flags:  0x00000003
+>>>
+>>> [...]
+>>>
+>>> I guess that the other 217 lines are connected somewhere.
+>>>
+>>
+>> I think that is not the right one. See
+>> https://github.com/tianocore/edk2-platforms/blob/master/Silicon/Hisilicon/Hi1616/D05AcpiTables/Dsdt/D05Sas.asl#L101 
+>>
+>>
+> 
+> I know, I was just outlining the fact that some of the mbigen
+> ports are shared between devices, and MBI1 seems to be an example
+> of that (though my reading of ASL is... primitive).
 
-This is just clearing the irq resource flags, but it could be reasonable 
-(to promote).
+Ah, ok. So this one is for the networking subsystem, and it does have 
+many devices in the topology model, but I can't claim to known much more 
+than that.
 
 Thanks,
 John
