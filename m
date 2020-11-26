@@ -2,171 +2,172 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C398FC56202
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 15:13:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28555C8300F
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 15:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74B7D21D1A
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 15:13:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="lir9ziI2"
+	by mail.kernel.org (Postfix) with ESMTP id E0287221F7
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 15:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391239AbgKZPNH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 10:13:07 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:41854 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389316AbgKZPNH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Nov 2020 10:13:07 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AQF2KPp010743;
-        Thu, 26 Nov 2020 10:12:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to : sender; s=pp1;
- bh=24ioQCaQnbpaw4ZzpAU/UlSxiu/85955NmGjGmE/f+U=;
- b=lir9ziI2xN6ift3gK7vPK6SKtD248KuN8KCZ56ZiPXQbup5PUuRLc3WNo17xYYgm7N6J
- 3uoRy9ZZAjK7DzamFKyBNWG1pvRRcLtqGp2OGx0/fCnbThaJIcKVriuRSbaVKWqTwEc9
- zLEjHSj9D9HNBEotmSOyVGafwKY2guJIWXaKZUUi0y0oPYr279nEeLc22tH3mn5azE44
- 4kYv58HBrVnCb6oNd3qq3Tm1WtyqgUybytubgFAZP6d8YU21NIQD6fAzY3AYQHtgPfxI
- n2cT/SNF4LZ1NrhDRc5EQ5s48cOFnHGEWzcxyov+ieK/zNVt1hXCbNyudxDXZS11AHA4 zg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 352ccemeyc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 26 Nov 2020 10:12:51 -0500
-Received: from m0098410.ppops.net (m0098410.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0AQF2OwB011245;
-        Thu, 26 Nov 2020 10:12:51 -0500
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 352ccemexc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 26 Nov 2020 10:12:51 -0500
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AQF6re1031217;
-        Thu, 26 Nov 2020 15:12:48 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma05fra.de.ibm.com with ESMTP id 352ata03v6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 26 Nov 2020 15:12:48 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AQFCjmK8651342
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Nov 2020 15:12:45 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B3C6611C04C;
-        Thu, 26 Nov 2020 15:12:45 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9BEC611C058;
-        Thu, 26 Nov 2020 15:12:45 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.178.201])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Thu, 26 Nov 2020 15:12:45 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1kiIwt-002zEL-1k; Thu, 26 Nov 2020 16:12:43 +0100
-Date:   Thu, 26 Nov 2020 16:12:42 +0100
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Qinglang Miao <miaoqinglang@huawei.com>
-Cc:     Cornelia Huck <cohuck@redhat.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: zfcp: fix use-after-free in zfcp_unit_remove
-Message-ID: <20201126151242.GI8578@t480-pf1aa2c2>
-References: <20201120074854.31754-1-miaoqinglang@huawei.com>
- <20201125170658.GB8578@t480-pf1aa2c2>
- <4c65bead-2553-171e-54d2-87a9de0330e8@huawei.com>
- <20201126091353.50cf6ab6.cohuck@redhat.com>
- <20201126094259.GE8578@t480-pf1aa2c2>
- <9ba663ad-97fe-6c2a-e15a-45f2de1f0af0@huawei.com>
+        id S2391352AbgKZP2d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 10:28:33 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:39601 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730237AbgKZP21 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 10:28:27 -0500
+Received: by mail-ot1-f65.google.com with SMTP id z24so2172944oto.6;
+        Thu, 26 Nov 2020 07:28:24 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kP9MspVOPl/NnVl8oGn1EIC/+F8CcK5+OXo+jY56Nno=;
+        b=O5lB09TE7ZVoxFrz9jEzoB2CxBaKGu4DfPIKinbX7K3Z9YjWsAZuwpmZCb063hbcml
+         dK6VczxxuljyVvzYk+qi2g3J+dUAo/TP5DSIvXSrQzH4ZIWKpyJKV69WKVmUFQWGTk59
+         HyRyiaz1876USvHOZ7GaFoLxWcyv3avFWcLMFaTeGPv7olYKncnMLKuAAt3+0OJxxYPH
+         DQ25HwL4uMCDIv2MjSAHnWl//kshswom5NK5IvDfZJsIj1yf3jRSCD8P5C21dgNs/Nin
+         KmqrQIgPSTec2jqEzDtGzUMRKKqN0dEVt8W9sTXLxApcT9uMeXWDswIixp6PUrfvH6Cm
+         vXZg==
+X-Gm-Message-State: AOAM5330+/EQ2iKUbotH3l4ZJ+wA3zzJimNEYAc6ksGY5yzOLOtVINtM
+        celE5FwFxauIAoq+Eo6qiYHUpEL51OVNGgVS74k=
+X-Google-Smtp-Source: ABdhPJyYtol6dSfaI6WhgTcuunq7fhBuSULViECyA4Z+K27bCejCuaia55DZ/aziu9dD69JTQZlYwW/4z6Mu7Di+rU4=
+X-Received: by 2002:a05:6830:210a:: with SMTP id i10mr2551843otc.145.1606404504116;
+ Thu, 26 Nov 2020 07:28:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9ba663ad-97fe-6c2a-e15a-45f2de1f0af0@huawei.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-11-26_04:2020-11-26,2020-11-26 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
- lowpriorityscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
- clxscore=1015 spamscore=0 phishscore=0 priorityscore=1501 adultscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011260089
+References: <cover.1605896059.git.gustavoars@kernel.org> <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011201129.B13FDB3C@keescook> <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011220816.8B6591A@keescook> <9b57fd4914b46f38d54087d75e072d6e947cb56d.camel@HansenPartnership.com>
+ <CANiq72nZrHWTA4_Msg6MP9snTyenC6-eGfD27CyfNSu7QoVZbw@mail.gmail.com>
+ <1c7d7fde126bc0acf825766de64bf2f9b888f216.camel@HansenPartnership.com>
+ <CANiq72m22Jb5_+62NnwX8xds2iUdWDMAqD8PZw9cuxdHd95W0A@mail.gmail.com>
+ <fc45750b6d0277c401015b7aa11e16cd15f32ab2.camel@HansenPartnership.com>
+ <CANiq72k5tpDoDPmJ0ZWc1DGqm+81Gi-uEENAtvEs9v3SZcx6_Q@mail.gmail.com>
+ <4993259d01a0064f8bb22770503490f9252f3659.camel@HansenPartnership.com>
+ <CANiq72kqO=bYMJnFS2uYRpgWATJ=uXxZuNUsTXT+3aLtrpnzvQ@mail.gmail.com>
+ <44005bde-f6d4-5eaa-39b8-1a5efeedb2d3@gmail.com> <CANiq72nobq=ptWK-qWxU91JHqkKhMcRtJNnw2XJd5-vSJWZd8Q@mail.gmail.com>
+In-Reply-To: <CANiq72nobq=ptWK-qWxU91JHqkKhMcRtJNnw2XJd5-vSJWZd8Q@mail.gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 26 Nov 2020 16:28:12 +0100
+Message-ID: <CAMuHMdV5kOakvZJMWLxbpigFPS+Xuw6DVYsWCWZy7wGsv3idcw@mail.gmail.com>
+Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
+To:     Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Cc:     Edward Cree <ecree.xilinx@gmail.com>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        linux-atm-general@lists.sourceforge.net,
+        reiserfs-devel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-ide@vger.kernel.org, dm-devel@redhat.com,
+        keyrings@vger.kernel.org,
+        MTD Maling List <linux-mtd@lists.infradead.org>,
+        GR-everest-linux-l2@marvell.com, wcn36xx@lists.infradead.org,
+        samba-technical@lists.samba.org, linux-i3c@lists.infradead.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-afs@lists.infradead.org,
+        usb-storage@lists.one-eyed-alien.net,
+        Lars Ellenberg <drbd-dev@lists.linbit.com>,
+        driverdevel <devel@driverdev.osuosl.org>,
+        linux-cifs@vger.kernel.org, rds-devel@oss.oracle.com,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        oss-drivers@netronome.com, bridge@lists.linux-foundation.org,
+        linux-security-module <linux-security-module@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        linux-stm32@st-md-mailman.stormreply.com, cluster-devel@redhat.com,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        coreteam@netfilter.org, intel-wired-lan@lists.osuosl.org,
+        linux-input <linux-input@vger.kernel.org>,
+        Miguel Ojeda <ojeda@kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>, selinux@vger.kernel.org,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        linux-geode@lists.infradead.org, linux-can@vger.kernel.org,
+        linux-block@vger.kernel.org,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        op-tee@lists.trustedfirmware.org,
+        linux-mediatek@lists.infradead.org, xen-devel@lists.xenproject.org,
+        Nouveau Dev <nouveau@lists.freedesktop.org>,
+        linux-hams@vger.kernel.org,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-hwmon@vger.kernel.org,
+        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>,
+        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
+        GR-Linux-NIC-Dev@marvell.com,
+        tipc-discussion@lists.sourceforge.net,
+        Linux-MM <linux-mm@kvack.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-decnet-user@lists.sourceforge.net,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-sctp@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+        NetFilter <netfilter-devel@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        patches@opensource.cirrus.com, Joe Perches <joe@perches.com>,
+        linux-integrity <linux-integrity@vger.kernel.org>,
+        target-devel <target-devel@vger.kernel.org>,
+        linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 26, 2020 at 08:07:32PM +0800, Qinglang Miao wrote:
-> 在 2020/11/26 17:42, Benjamin Block 写道:
-> > On Thu, Nov 26, 2020 at 09:13:53AM +0100, Cornelia Huck wrote:
-> > > On Thu, 26 Nov 2020 09:27:41 +0800
-> > > Qinglang Miao <miaoqinglang@huawei.com> wrote:
-> > > > 在 2020/11/26 1:06, Benjamin Block 写道:
-> > > > > On Fri, Nov 20, 2020 at 03:48:54PM +0800, Qinglang Miao wrote:
-....
-> > Let's go by example. If we assume the reference count of `unit->dev` is
-> > R, and the function starts with R = 1 (otherwise the deivce would've
-> > been freed already), we get:
-> > 
-> >      int zfcp_unit_remove(struct zfcp_port *port, u64 fcp_lun)
-> >      {
-> >      	struct zfcp_unit *unit;
-> >      	struct scsi_device *sdev;
-> >      	write_lock_irq(&port->unit_list_lock);
-> > // unit->dev (R = 1)
-> >      	unit = _zfcp_unit_find(port, fcp_lun);
-> > // get_device(&unit->dev)
-> > // unit->dev (R = 2)
-> >      	if (unit)
-> >      		list_del(&unit->list);
-> >      	write_unlock_irq(&port->unit_list_lock);
-> >      	if (!unit)
-> >      		return -EINVAL;
-> >      	sdev = zfcp_unit_sdev(unit);
-> >      	if (sdev) {
-> >      		scsi_remove_device(sdev);
-> >      		scsi_device_put(sdev);
-> >      	}
-> > // unit->dev (R = 2)
-> >      	put_device(&unit->dev);
-> > // unit->dev (R = 1)
-> >      	device_unregister(&unit->dev);
-> > // unit->dev (R = 0)
-> >      	return 0;
-> >      }
-> > 
-> > If we now apply this patch, we'd end up with R = 1 after
-> > `device_unregister()`, and the device would not be properly removed.
-> > 
-> > If you still think that's wrong, then you'll need to better explain why.
-> > 
-> Hi Banjamin and Cornelia,
-> 
-> Your replies make me reliaze that I've been holding a mistake understanding
-> of put_device() as well as reference count.
-> 
-> Thanks for you two's patient explanation !!
-> 
-> BTW, should I send a v2 on these two patches to move the position of
-> put_device()?
+Hi Miguel,
 
-Feel free to do so.
+On Thu, Nov 26, 2020 at 3:54 PM Miguel Ojeda
+<miguel.ojeda.sandonis@gmail.com> wrote:
+> On Wed, Nov 25, 2020 at 11:44 PM Edward Cree <ecree.xilinx@gmail.com> wrote:
+> > To make the intent clear, you have to first be certain that you
+> >  understand the intent; otherwise by adding either a break or a
+> >  fallthrough to suppress the warning you are just destroying the
+> >  information that "the intent of this code is unknown".
+>
+> If you don't know what the intent of your own code is, then you
+> *already* have a problem in your hands.
 
-I think having the `put_device()` call after `device_unregister()` in
-both `zfcp_unit_remove()` and `zfcp_sysfs_port_remove_store()` is more
-natural, because it ought to be the last time we touch the object in
-both functions.
+The maintainer is not necessarily the owner/author of the code, and
+thus may not know the intent of the code.
 
+> > or does it flag up code
+> >  that can be mindlessly "fixed" (in which case the warning is
+> >  worthless)?  Proponents in this thread seem to be trying to
+> >  have it both ways.
+>
+> A warning is not worthless just because you can mindlessly fix it.
+> There are many counterexamples, e.g. many
+> checkpatch/lint/lang-format/indentation warnings, functional ones like
+> the `if (a = b)` warning...
+
+BTW, you cannot mindlessly fix the latter, as you cannot know if
+"(a == b)" or "((a = b))" was intended, without understanding the code
+(and the (possibly unavailable) data sheet, and the hardware, ...).
+
+P.S. So far I've stayed out of this thread, as I like it if the compiler
+     flags possible mistakes.  After all I was the one fixing new
+     "may be used uninitialized" warnings thrown up by gcc-4.1, until
+     (a bit later than) support for that compiler was removed...
+
+Gr{oetje,eeting}s,
+
+                        Geert
 
 -- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
