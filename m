@@ -5,48 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1ACAC63697
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 13:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECE7C56202
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 13:30:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E9EB21D1A
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 13:30:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42E1121D7E
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Nov 2020 13:30:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jjM+rY5r";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Sjm02VUm"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ymCbyc72";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="56vEOwTk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390050AbgKZNac (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 08:30:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56752 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389957AbgKZNab (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 08:30:31 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CE74C0613D4
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2020 05:30:31 -0800 (PST)
+        id S2390057AbgKZNad (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 08:30:33 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:56450 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389955AbgKZNad (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 08:30:33 -0500
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1606397429;
+        s=2020; t=1606397430;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YAPMvJwZmNtmAWRutyXilXN5I9e5gBSqyvoXiwLJWcs=;
-        b=jjM+rY5rOgFTB1sn+Rvl965x9DveZ0L3RQHvZWN/hutxhAiqhTcpBWhIY0u029oCCy94gz
-        35JlETmKajxRr6k/Uxzs/Jb2AssdZYO8eHUCmspJiAHIOMnSrgNeqm2L+eN0MFEQXSyU+Y
-        5GyP5f8SRf+kDiynJ/2U+vjRK8/P8AdZNHY8IGxoJqqDX5jq1dL7kJVbAwncQeftDWcJeo
-        qdOIVnrtYPtdPjsInRhSvI+bxPHZxztl51MfNcK7SyrMxedN7QSd9hNbWT6J5F8YXld6RQ
-        dsEnbtmbKyepPiweR3PyA2EpFyJnQwL++V8+XLs129nCUIuE4ql/ZaGmpNYQFA==
+        bh=nCHH+WU06bIildt8jR1f7yAZJ5+Z7ksfyeAxtSEkZIU=;
+        b=ymCbyc72lNOJoMf8MAh/+bYJSFOWyhWk4LQDgL0Bf4p0cxZgu/X9P//oLgEvmaE9j1NlAO
+        iDejMtK/wOQNxEEdQVcEDjwg9Opugw3bs4Rrne8gmv10tN0DpyeWSwWVdq4op2K2fcNVka
+        QsW1YvX5dO6+SohMqlr6BjtyM6r5yPuk7BlHKXcsJSCs2cntkBf2H2/ItzqpUU/EErnkhg
+        PdhL5Lvy4HR6OL2FwXyJI7HLIBzpJryCLuEsT5QDYuhftPDnF/X2xAtQllWAAjhHKbIyPq
+        xPmCUu1nEb6wEaSkQHedS9O3lCBhOnc24+BTWipWFrBghUAAi8CuD5IoOT1hUg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1606397429;
+        s=2020e; t=1606397430;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YAPMvJwZmNtmAWRutyXilXN5I9e5gBSqyvoXiwLJWcs=;
-        b=Sjm02VUmCAqhWj/5R+sVWw3XNIxGn5WuVdXPW6tEXmdDE7d5I/pbXiFJCx5XfSwXtqjUcx
-        /FVhp1TSXrZ2WwAw==
+        bh=nCHH+WU06bIildt8jR1f7yAZJ5+Z7ksfyeAxtSEkZIU=;
+        b=56vEOwTkXDyd7Tk8GeC8Gtc6EyM5DiXVrmPEXaoyCiQugDjuuWpIl8J7nmvRle7ku7VUGm
+        VkfdlHk6tRQVJCAg==
 To:     linux-scsi@vger.kernel.org
 Cc:     Finn Thain <fthain@telegraphics.com.au>,
         GR-QLogic-Storage-Upstream@marvell.com,
@@ -70,9 +67,9 @@ Cc:     Finn Thain <fthain@telegraphics.com.au>,
         Thomas Gleixner <tglx@linutronix.de>,
         "Ahmed S . Darwish" <a.darwish@linutronix.de>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 01/14] scsi: pm80xx: Do not sleep in atomic context.
-Date:   Thu, 26 Nov 2020 14:29:39 +0100
-Message-Id: <20201126132952.2287996-2-bigeasy@linutronix.de>
+Subject: [PATCH 02/14] scsi: hisi_sas: Remove preemptible().
+Date:   Thu, 26 Nov 2020 14:29:40 +0100
+Message-Id: <20201126132952.2287996-3-bigeasy@linutronix.de>
 In-Reply-To: <20201126132952.2287996-1-bigeasy@linutronix.de>
 References: <20201126132952.2287996-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
@@ -83,44 +80,55 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: "Ahmed S. Darwish" <a.darwish@linutronix.de>
 
-hw_event_sas_phy_up() is used in hardirq/softirq context:
+hisi_sas_task_exec() uses preemptible() to see if it's safe to block.
+This does not work for CONFIG_PREEMPT_COUNT=3Dn kernels in which
+preemptible() always returns 0.
 
- pm8001_interrupt_handler_msix() || pm8001_interrupt_handler_intx() || pm80=
-01_tasklet
-   =3D> PM8001_CHIP_DISP->isr() =3D pm80xx_chip_isr()
-     =3D> process_oq() [spin_lock_irqsave(&pm8001_ha->lock,)]
-       =3D> process_one_iomb()
-         =3D> mpi_hw_event()
-           =3D> hw_event_sas_phy_up()
-             =3D> msleep(200)
+The problem is masked when enabling some of the common Kconfig.debug
+options (like CONFIG_DEBUG_ATOMIC_SLEEP), as they implicitly enable the
+preemption counter.
 
-Revert the msleep() back to an mdelay() to avoid sleeping in atomic
-context.
+In general, driver leaf functions should not make logic decisions based
+on the context they're called from. The caller should be the entity
+responsible for explicitly indicating context.
 
-Fixes: 4daf1ef3c681 ("scsi: pm80xx: Convert 'long' mdelay to msleep")
+Since hisi_sas_task_exec() already has a gfp_t flags parameter, use it
+as the explicit context marker.
+
+Fixes: 214e702d4b70 ("scsi: hisi_sas: Adjust task reject period during host=
+ reset")
+Fixes: 550c0d89d52d ("scsi: hisi_sas: Replace in_softirq() check in hisi_sa=
+s_task_exec()")
 Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Vikram Auradkar <auradkar@google.com>
-Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
+Cc: Xiaofei Tan <tanxiaofei@huawei.com>
+Cc: Xiang Chen <chenxiang66@hisilicon.com>
+Cc: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_=
-hwi.c
-index 69f8244539e04..7d838e316657c 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3296,7 +3296,7 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha=
-, void *piomb)
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
- 	if (pm8001_ha->flags =3D=3D PM8001F_RUN_TIME)
--		msleep(200);/*delay a moment to wait disk to spinup*/
-+		mdelay(200);/*delay a moment to wait disk to spinup*/
- 	pm8001_bytes_dmaed(pm8001_ha, phy_id);
- }
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/=
+hisi_sas_main.c
+index c8dd8588f800e..06e65c461f027 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -585,13 +585,7 @@ static int hisi_sas_task_exec(struct sas_task *task, g=
+fp_t gfp_flags,
+ 	dev =3D hisi_hba->dev;
 =20
+ 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags))) {
+-		/*
+-		 * For IOs from upper layer, it may already disable preempt
+-		 * in the IO path, if disable preempt again in down(),
+-		 * function schedule() will report schedule_bug(), so check
+-		 * preemptible() before goto down().
+-		 */
+-		if (!preemptible())
++		if (!gfpflags_allow_blocking(gfp_flags))
+ 			return -EINVAL;
+=20
+ 		down(&hisi_hba->sem);
 --=20
 2.29.2
 
