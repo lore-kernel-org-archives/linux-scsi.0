@@ -2,39 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EBBC63798
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 12:45:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E42BCC63798
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 12:49:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8460922248
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 12:45:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 944D422248
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 12:49:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnE6CEOv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728013AbgK0Mpb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Nov 2020 07:45:31 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2169 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726477AbgK0Mpa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2020 07:45:30 -0500
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CjDnn17sQz67JnM;
-        Fri, 27 Nov 2020 20:43:41 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Fri, 27 Nov 2020 13:45:29 +0100
-Received: from [10.210.170.35] (10.210.170.35) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.1913.5; Fri, 27 Nov 2020 12:45:27 +0000
+        id S1729663AbgK0Mth (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Nov 2020 07:49:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51034 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728910AbgK0Mtg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Nov 2020 07:49:36 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 56A2D22245;
+        Fri, 27 Nov 2020 12:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1606481376;
+        bh=O/YqThBfV0DDchjNcPpY5nb4S87RvOgCC6KdsTcxMHA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=gnE6CEOvCzJfmav0/QlzHQTBcVl0AcWoSvU46yV9nK/6MCbihTkMClU+VWa8qdKY+
+         XZLROqpdp35f5+JUzatV9ade1YtZRXQkS21ma8ZoouQKKlUIprssNUdjBQRzoUkrYU
+         rZYbs/XYUWGWUbVtrFsaKofPGlxiIG51u+LdRO3o=
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1kidBt-00E3r9-6X; Fri, 27 Nov 2020 12:49:33 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 27 Nov 2020 12:49:33 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>, gregkh@linuxfoundation.org,
+        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
-To:     Marc Zyngier <maz@kernel.org>
-CC:     Thomas Gleixner <tglx@linutronix.de>, <gregkh@linuxfoundation.org>,
-        <rafael@kernel.org>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>, <linuxarm@huawei.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+In-Reply-To: <113d72e1-a624-5da9-89cf-eee950e5c984@huawei.com>
 References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
  <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
  <874klmqu2r.fsf@nanos.tec.linutronix.de>
@@ -55,43 +70,47 @@ References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
  <e96dd9b0-c3a7-f7fb-0317-2fc2107f405a@huawei.com>
  <696c04a9-8c13-0fec-08c4-068d4dd5ba67@huawei.com>
  <34953f2d7b61f37ab1333627dc256975@kernel.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <113d72e1-a624-5da9-89cf-eee950e5c984@huawei.com>
-Date:   Fri, 27 Nov 2020 12:45:05 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <34953f2d7b61f37ab1333627dc256975@kernel.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.170.35]
-X-ClientProxiedBy: lhreml706-chm.china.huawei.com (10.201.108.55) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+ <113d72e1-a624-5da9-89cf-eee950e5c984@huawei.com>
+User-Agent: Roundcube Webmail/1.4.9
+Message-ID: <6f3e8b84867936a8301fc3ec62533df9@kernel.org>
+X-Sender: maz@kernel.org
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: john.garry@huawei.com, tglx@linutronix.de, gregkh@linuxfoundation.org, rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/11/2020 09:57, Marc Zyngier wrote:
->> If I understand the code correctly, MSI_ALLOC_FLAGS_SHARED_DEVICE is
->> supposed to be set in info->flags in platform_msi_set_desc(), but this
->> is called per-msi after its_msi_prepare(), so we don't the flags set
->> at the right time. That's how it looks to me...
+On 2020-11-27 12:45, John Garry wrote:
+> On 27/11/2020 09:57, Marc Zyngier wrote:
+>>> If I understand the code correctly, MSI_ALLOC_FLAGS_SHARED_DEVICE is
+>>> supposed to be set in info->flags in platform_msi_set_desc(), but 
+>>> this
+>>> is called per-msi after its_msi_prepare(), so we don't the flags set
+>>> at the right time. That's how it looks to me...
+>> 
+>> Meh. I was trying multiple things, and of course commited the worse
+>> possible approach.
+>> 
+>> I've updated the branch, having verified that we do get the flag in
+>> the ITS now.
 > 
-> Meh. I was trying multiple things, and of course commited the worse
-> possible approach.
+> Hi Marc,
 > 
-> I've updated the branch, having verified that we do get the flag in
-> the ITS now.
+> That looks to work.
 
-Hi Marc,
+Thanks for having given it a go.
 
-That looks to work.
+> So do you have an upstream plan for this? I ask, as if you go with
+> this, then I may change my series to map and unmap all the irqs again
+> - but not sure about that.
 
-So do you have an upstream plan for this? I ask, as if you go with this, 
-then I may change my series to map and unmap all the irqs again - but 
-not sure about that.
+I'll write some commit messages, and post that. Either this weekend,
+or on Monday at the latest.
 
 Thanks,
-John
+
+         M.
+-- 
+Jazz is not dead. It just smells funny...
