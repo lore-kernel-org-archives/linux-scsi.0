@@ -7,126 +7,69 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6F08C63777
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 01:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B10FC63777
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 02:58:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72113221FB
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 01:59:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E79872222A
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 02:58:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392174AbgK0B66 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Nov 2020 20:58:58 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:9517 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727441AbgK0B66 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 20:58:58 -0500
-IronPort-SDR: YqWQHFxxWyhCXue7wDKjcy2Jsgl//SfzvwokYNn6DzM7zzb077SqOqUiBWTk0W3aF/SRrn3CNj
- qcJQFRciJBKFJbCnJ0ZV5MyhekNzU+zlaxvu0WMvXIA+pudSHaTUsaqbOFmewutRKQHQI0HkPK
- iOolkEKPYDIBeTC4oRSP+Iju7m8Kj/kGJmcMHujK8hTcV9j7EbszCPGb6qTmyNwCniXzucma15
- vFFOkFK9gN0QFUkpqMxylvjAsW2LG3yUnrP1JybKtDwQ3YX7wBqw2jmTrLa5gJ935n38Ynv9ls
- Q7g=
-X-IronPort-AV: E=Sophos;i="5.78,373,1599548400"; 
-   d="scan'208";a="29304738"
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by labrats.qualcomm.com with ESMTP; 26 Nov 2020 17:58:57 -0800
-X-QCInternal: smtphost
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 26 Nov 2020 17:58:56 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 284A521864; Thu, 26 Nov 2020 17:58:56 -0800 (PST)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 1/1] scsi: ufs: Remove scale down gear hard code
-Date:   Thu, 26 Nov 2020 17:58:48 -0800
-Message-Id: <1606442334-22641-1-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S2388638AbgK0C6S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Nov 2020 21:58:18 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:7740 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728340AbgK0C6R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2020 21:58:17 -0500
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Chznk5RHPzkgtf;
+        Fri, 27 Nov 2020 10:57:46 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.487.0; Fri, 27 Nov 2020 10:58:04 +0800
+From:   Jing Xiangfeng <jingxiangfeng@huawei.com>
+To:     <kys@microsoft.com>, <haiyangz@microsoft.com>,
+        <sthemmin@microsoft.com>, <wei.liu@kernel.org>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <longli@microsoft.com>, <cavery@redhat.com>
+CC:     <linux-hyperv@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jingxiangfeng@huawei.com>
+Subject: [PATCH] scsi: storvsc: Fix error return in storvsc_probe()
+Date:   Fri, 27 Nov 2020 11:02:06 +0800
+Message-ID: <20201127030206.104616-1-jingxiangfeng@huawei.com>
+X-Mailer: git-send-email 2.20.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of making the scale down gear a hard code, make it a member of
-ufs_clk_scaling struct.
+Fix to return a error code "-ENOMEM" from the error handling case
+instead of 0.
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Fixes: 436ad9413353 ("scsi: storvsc: Allow only one remove lun work item to be issued per lun")
+Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
- drivers/scsi/ufs/ufshcd.h |  2 ++
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ drivers/scsi/storvsc_drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 44254c9..1789df3 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1100,7 +1100,6 @@ static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
-  */
- static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
- {
--	#define UFS_MIN_GEAR_TO_SCALE_DOWN	UFS_HS_G1
- 	int ret = 0;
- 	struct ufs_pa_layer_attr new_pwr_info;
- 
-@@ -1111,16 +1110,16 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
- 		memcpy(&new_pwr_info, &hba->pwr_info,
- 		       sizeof(struct ufs_pa_layer_attr));
- 
--		if (hba->pwr_info.gear_tx > UFS_MIN_GEAR_TO_SCALE_DOWN
--		    || hba->pwr_info.gear_rx > UFS_MIN_GEAR_TO_SCALE_DOWN) {
-+		if (hba->pwr_info.gear_tx > hba->clk_scaling.min_gear ||
-+		    hba->pwr_info.gear_rx > hba->clk_scaling.min_gear) {
- 			/* save the current power mode */
- 			memcpy(&hba->clk_scaling.saved_pwr_info.info,
- 				&hba->pwr_info,
- 				sizeof(struct ufs_pa_layer_attr));
- 
- 			/* scale down gear */
--			new_pwr_info.gear_tx = UFS_MIN_GEAR_TO_SCALE_DOWN;
--			new_pwr_info.gear_rx = UFS_MIN_GEAR_TO_SCALE_DOWN;
-+			new_pwr_info.gear_tx = hba->clk_scaling.min_gear;
-+			new_pwr_info.gear_rx = hba->clk_scaling.min_gear;
- 		}
- 	}
- 
-@@ -1824,6 +1823,9 @@ static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return;
- 
-+	if (!hba->clk_scaling.min_gear)
-+		hba->clk_scaling.min_gear = UFS_HS_G1;
-+
- 	INIT_WORK(&hba->clk_scaling.suspend_work,
- 		  ufshcd_clk_scaling_suspend_work);
- 	INIT_WORK(&hba->clk_scaling.resume_work,
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 6f0f2d4..bdab23e 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -385,6 +385,7 @@ struct ufs_saved_pwr_info {
-  * @workq: workqueue to schedule devfreq suspend/resume work
-  * @suspend_work: worker to suspend devfreq
-  * @resume_work: worker to resume devfreq
-+ * @min_gear: lowest HS gear to scale down to
-  * @is_allowed: tracks if scaling is currently allowed or not
-  * @is_busy_started: tracks if busy period has started or not
-  * @is_suspended: tracks if devfreq is suspended or not
-@@ -399,6 +400,7 @@ struct ufs_clk_scaling {
- 	struct workqueue_struct *workq;
- 	struct work_struct suspend_work;
- 	struct work_struct resume_work;
-+	u32 min_gear;
- 	bool is_allowed;
- 	bool is_busy_started;
- 	bool is_suspended;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 0c65fbd41035..ded00a89bfc4 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1994,8 +1994,10 @@ static int storvsc_probe(struct hv_device *device,
+ 			alloc_ordered_workqueue("storvsc_error_wq_%d",
+ 						WQ_MEM_RECLAIM,
+ 						host->host_no);
+-	if (!host_dev->handle_error_wq)
++	if (!host_dev->handle_error_wq) {
++		ret = -ENOMEM;
+ 		goto err_out2;
++	}
+ 	INIT_WORK(&host_dev->host_scan_work, storvsc_host_scan);
+ 	/* Register the HBA and start the scsi bus scan */
+ 	ret = scsi_add_host(host, &device->device);
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.22.0
 
