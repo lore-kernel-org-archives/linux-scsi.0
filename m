@@ -2,136 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF0DC63777
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3886FC2D0E4
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D201221FF
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1EDD21D91
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:57:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="WfQcDybq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727737AbgK0JrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Nov 2020 04:47:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726802AbgK0JrN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2020 04:47:13 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F979C0613D1
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2020 01:47:13 -0800 (PST)
-Received: from pty.hi.pengutronix.de ([2001:67c:670:100:1d::c5])
-        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1kiaKC-0005UC-C7; Fri, 27 Nov 2020 10:45:56 +0100
-Received: from ukl by pty.hi.pengutronix.de with local (Exim 4.89)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1kiaK4-0002Ad-OH; Fri, 27 Nov 2020 10:45:48 +0100
-Date:   Fri, 27 Nov 2020 10:45:47 +0100
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Geoff Levand <geoff@infradead.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Jens Axboe <axboe@kernel.dk>, Jim Paris <jim@jtan.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        linux-block@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ALSA: ppc: drop if block with always false condition
-Message-ID: <20201127094547.4zcyeycfrriitkqx@pengutronix.de>
-References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
- <CAMuHMdUbfT7ax4BhjMT_DBweab8TDm5e=xMv5f61t9QpQJt1mw@mail.gmail.com>
+        id S1727926AbgK0J5H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Nov 2020 04:57:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55382 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725980AbgK0J5G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Nov 2020 04:57:06 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BFD6021D91;
+        Fri, 27 Nov 2020 09:57:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1606471025;
+        bh=4GugmYkNqqz/xiT8jEHRtT/irIXf154k+PPE5BeKSBI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=WfQcDybqcdPFo5DO6uLw3V+oOZX27NRtuG2/V/m0m5HRPheIQ8d3XZqoXD6MmLNZO
+         +xFMjzmE4Zl5JXo527j+3JVGwyCtvTOEzc8eNRoRRc+89hpS1289tX3F0qPwZdYxSA
+         lxPJ7X4yfwwX+bBvyPdBx/hc6NsXcApz8YwWWmu8=
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1kiaUx-00E1aU-Is; Fri, 27 Nov 2020 09:57:03 +0000
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="taccm5e5wyznne4d"
-Content-Disposition: inline
-In-Reply-To: <CAMuHMdUbfT7ax4BhjMT_DBweab8TDm5e=xMv5f61t9QpQJt1mw@mail.gmail.com>
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c5
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 27 Nov 2020 09:57:03 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>, gregkh@linuxfoundation.org,
+        rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] genirq/affinity: Add irq_update_affinity_desc()
+In-Reply-To: <696c04a9-8c13-0fec-08c4-068d4dd5ba67@huawei.com>
+References: <87ft57r7v3.fsf@nanos.tec.linutronix.de>
+ <78356caa-57a0-b807-fe52-8f12d36c1789@huawei.com>
+ <874klmqu2r.fsf@nanos.tec.linutronix.de>
+ <b86af904-2288-8b53-7e99-e763b73987d0@huawei.com>
+ <87lfexp6am.fsf@nanos.tec.linutronix.de>
+ <3acb7fde-eae2-a223-9cfd-f409cc2abba6@huawei.com>
+ <873615oy8a.fsf@nanos.tec.linutronix.de>
+ <4aab9d3b-6ca6-01c5-f840-459f945c7577@huawei.com>
+ <87sg91ik9e.wl-maz@kernel.org>
+ <0edc9a11-0b92-537f-1790-6b4b6de4900d@huawei.com>
+ <afd97dd4b1e102ac9ad49800821231a4@kernel.org>
+ <5a314713-c1ee-2d34-bee1-60beae274742@huawei.com>
+ <0525a4bcf17a355cd141632d4f3714be@kernel.org>
+ <702e1729-9a4b-b16f-6a58-33172b1a3220@huawei.com>
+ <5a588f5d86010602ff9a90e8f057743c@kernel.org>
+ <80e0a19b-3291-1304-1a5b-0445c49efe31@huawei.com>
+ <d696d314514a4bd53c85f2da73a23eed@kernel.org>
+ <e96dd9b0-c3a7-f7fb-0317-2fc2107f405a@huawei.com>
+ <696c04a9-8c13-0fec-08c4-068d4dd5ba67@huawei.com>
+User-Agent: Roundcube Webmail/1.4.9
+Message-ID: <34953f2d7b61f37ab1333627dc256975@kernel.org>
+X-Sender: maz@kernel.org
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: john.garry@huawei.com, tglx@linutronix.de, gregkh@linuxfoundation.org, rafael@kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-11-26 16:52, John Garry wrote:
+> Hi Marc,
+> 
+>>> 
+>>> https://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/hacks
+>> 
+>> 
+>> ok, I'll have a look
+> 
+> I tried that and it doesn't look to work.
+> 
+> I find that for the its_msi_prepare() call, its_dev->shared does not
+> get set, as MSI_ALLOC_FLAGS_SHARED_DEVICE is not set in info->flags.
+> 
+> If I understand the code correctly, MSI_ALLOC_FLAGS_SHARED_DEVICE is
+> supposed to be set in info->flags in platform_msi_set_desc(), but this
+> is called per-msi after its_msi_prepare(), so we don't the flags set
+> at the right time. That's how it looks to me...
 
---taccm5e5wyznne4d
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Meh. I was trying multiple things, and of course commited the worse
+possible approach.
 
-On Fri, Nov 27, 2020 at 09:35:39AM +0100, Geert Uytterhoeven wrote:
-> Hi Uwe,
->=20
-> On Thu, Nov 26, 2020 at 6:03 PM Uwe Kleine-K=F6nig
-> <u.kleine-koenig@pengutronix.de> wrote:
-> > The remove callback is only called for devices that were probed
-> > successfully before. As the matching probe function cannot complete
-> > without error if dev->match_id !=3D PS3_MATCH_ID_SOUND, we don't have to
-> > check this here.
-> >
-> > Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
->=20
-> Thanks for your patch!
->=20
-> Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
->=20
-> Note that there are similar checks in snd_ps3_driver_probe(), which
-> can be removed, too:
->=20
->         if (WARN_ON(!firmware_has_feature(FW_FEATURE_PS3_LV1)))
->                 return -ENODEV;
->         if (WARN_ON(dev->match_id !=3D PS3_MATCH_ID_SOUND))
->                 return -ENODEV;
+I've updated the branch, having verified that we do get the flag in
+the ITS now.
 
-I had to invest some brain cycles here. For the first:
+Thanks,
 
-Assuming firmware_has_feature(FW_FEATURE_PS3_LV1) always returns the
-same value, snd_ps3_driver_probe is only used after this check succeeds
-because the driver is registered only after this check in
-snd_ps3_init().
-
-The second is superflous because ps3_system_bus_match() yields false if
-this doesn't match the driver's match_id.
-
-Best regards
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---taccm5e5wyznne4d
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAl/AyscACgkQwfwUeK3K
-7AmVbAf/fRHKZiIEMqPckqCjNor4UCILZvO1NJYHzctpPGBT8dETRjBW1ZmWu6MS
-qxv4y7aGSfc8pP5G0LU1rJJYOf7x8PpHEbm5uNM1UOIxzSIniALG7VIeoFIBrGoQ
-QuMcTv73n6ypzsNu87ynqrILEVYNrubD+Sb6B2xZEfPbIcvvwKfUvr8+lBEkabHX
-LbBbYbLL/ivRvUFm/YKvY3vcnTTAj88lURLp6V8EPT+8/TDr7Bfuy5LyjFsKAYsq
-QXNTBRLT8unlG99XvN4urWFVs9NMPKKWgV/e14LGumeL+mM8EQi+UPCnMTPOErWb
-F4a+SZgp6g00Syvd8mJVlWUKEkQUOg==
-=P7Le
------END PGP SIGNATURE-----
-
---taccm5e5wyznne4d--
+         M.
+-- 
+Jazz is not dead. It just smells funny...
