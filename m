@@ -2,211 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4738FC2D0E4
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF0DC63777
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C908C206D8
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:22:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="lLAIN5yA"
+	by mail.kernel.org (Postfix) with ESMTP id 5D201221FF
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 09:47:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727452AbgK0JVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Nov 2020 04:21:31 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:13028 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726014AbgK0JVa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Nov 2020 04:21:30 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0AR92sIY043644;
-        Fri, 27 Nov 2020 04:21:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=3+5uFdJAzDE4hZmH6EUh+WOYOUNSgrvapC3XLw32IjA=;
- b=lLAIN5yANAURYCJl0yBfWvtt3a+Pbq/yJRGKVD1TRzRd4oQDvcBsLf0N9e7Gm0BesOVy
- pn4szDUNuMqu+hdIGo79tHyVDTmayh+YGy6bK6Jrb4L6vU600OmdzXz58lnna4P1iLRi
- Km20hr+bdDI0UIli8Iun2FgmoEJXz4UkCNaS1ETXnap5LYYAsS2OD9/ogH/scIvRsDE2
- xMK7WeE9EyUg0ype3Pj4bLKDQzAgvWQy7u5xq6eSoVLYIGcJ/sa1+fSDAQAr1lCi8A+O
- EdMwRLlDhgQj96pWH98cGCeCOOHnzcx2+AAmPR2a/a5dwwSaSSXL9n4YNP/O3tbNbFUQ eQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 352we6j8dq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 27 Nov 2020 04:21:22 -0500
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0AR93VLw046547;
-        Fri, 27 Nov 2020 04:21:22 -0500
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 352we6j8d4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 27 Nov 2020 04:21:22 -0500
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0AR97Uot002117;
-        Fri, 27 Nov 2020 09:21:20 GMT
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma04fra.de.ibm.com with ESMTP id 352drkgdm6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 27 Nov 2020 09:21:20 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0AR9LHjC53674460
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Nov 2020 09:21:17 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8D9F2AE053;
-        Fri, 27 Nov 2020 09:21:17 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 12C36AE04D;
-        Fri, 27 Nov 2020 09:21:17 +0000 (GMT)
-Received: from oc4120165700.ibm.com (unknown [9.145.51.25])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 27 Nov 2020 09:21:16 +0000 (GMT)
-Subject: Re: [PATCH] scsi: zfcp: fix use-after-free in zfcp_unit_remove
-To:     Benjamin Block <bblock@linux.ibm.com>,
-        Qinglang Miao <miaoqinglang@huawei.com>
-Cc:     Cornelia Huck <cohuck@redhat.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20201120074854.31754-1-miaoqinglang@huawei.com>
- <20201125170658.GB8578@t480-pf1aa2c2>
- <4c65bead-2553-171e-54d2-87a9de0330e8@huawei.com>
- <20201126091353.50cf6ab6.cohuck@redhat.com>
- <20201126094259.GE8578@t480-pf1aa2c2>
- <9ba663ad-97fe-6c2a-e15a-45f2de1f0af0@huawei.com>
- <20201126151242.GI8578@t480-pf1aa2c2>
-From:   Steffen Maier <maier@linux.ibm.com>
-Message-ID: <90356c8e-f523-1d16-45a2-0c8b9fae15c0@linux.ibm.com>
-Date:   Fri, 27 Nov 2020 10:21:16 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        id S1727737AbgK0JrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Nov 2020 04:47:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726802AbgK0JrN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2020 04:47:13 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F979C0613D1
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2020 01:47:13 -0800 (PST)
+Received: from pty.hi.pengutronix.de ([2001:67c:670:100:1d::c5])
+        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1kiaKC-0005UC-C7; Fri, 27 Nov 2020 10:45:56 +0100
+Received: from ukl by pty.hi.pengutronix.de with local (Exim 4.89)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1kiaK4-0002Ad-OH; Fri, 27 Nov 2020 10:45:48 +0100
+Date:   Fri, 27 Nov 2020 10:45:47 +0100
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Geoff Levand <geoff@infradead.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Jens Axboe <axboe@kernel.dk>, Jim Paris <jim@jtan.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        linux-block@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ALSA: ppc: drop if block with always false condition
+Message-ID: <20201127094547.4zcyeycfrriitkqx@pengutronix.de>
+References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
+ <CAMuHMdUbfT7ax4BhjMT_DBweab8TDm5e=xMv5f61t9QpQJt1mw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20201126151242.GI8578@t480-pf1aa2c2>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-11-27_04:2020-11-26,2020-11-27 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- adultscore=0 bulkscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- clxscore=1011 suspectscore=0 mlxscore=0 spamscore=0 phishscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011270052
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="taccm5e5wyznne4d"
+Content-Disposition: inline
+In-Reply-To: <CAMuHMdUbfT7ax4BhjMT_DBweab8TDm5e=xMv5f61t9QpQJt1mw@mail.gmail.com>
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c5
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/26/20 4:12 PM, Benjamin Block wrote:
-> On Thu, Nov 26, 2020 at 08:07:32PM +0800, Qinglang Miao wrote:
->> 在 2020/11/26 17:42, Benjamin Block 写道:
->>> On Thu, Nov 26, 2020 at 09:13:53AM +0100, Cornelia Huck wrote:
->>>> On Thu, 26 Nov 2020 09:27:41 +0800
->>>> Qinglang Miao <miaoqinglang@huawei.com> wrote:
->>>>> 在 2020/11/26 1:06, Benjamin Block 写道:
->>>>>> On Fri, Nov 20, 2020 at 03:48:54PM +0800, Qinglang Miao wrote:
-> ....
->>> Let's go by example. If we assume the reference count of `unit->dev` is
->>> R, and the function starts with R = 1 (otherwise the deivce would've
->>> been freed already), we get:
->>>
->>>       int zfcp_unit_remove(struct zfcp_port *port, u64 fcp_lun)
->>>       {
->>>       	struct zfcp_unit *unit;
->>>       	struct scsi_device *sdev;
->>>       	write_lock_irq(&port->unit_list_lock);
->>> // unit->dev (R = 1)
->>>       	unit = _zfcp_unit_find(port, fcp_lun);
->>> // get_device(&unit->dev)
->>> // unit->dev (R = 2)
->>>       	if (unit)
->>>       		list_del(&unit->list);
->>>       	write_unlock_irq(&port->unit_list_lock);
->>>       	if (!unit)
->>>       		return -EINVAL;
->>>       	sdev = zfcp_unit_sdev(unit);
->>>       	if (sdev) {
->>>       		scsi_remove_device(sdev);
->>>       		scsi_device_put(sdev);
->>>       	}
->>> // unit->dev (R = 2)
->>>       	put_device(&unit->dev);
->>> // unit->dev (R = 1)
->>>       	device_unregister(&unit->dev);
->>> // unit->dev (R = 0)
->>>       	return 0;
->>>       }
->>>
->>> If we now apply this patch, we'd end up with R = 1 after
->>> `device_unregister()`, and the device would not be properly removed.
->>>
->>> If you still think that's wrong, then you'll need to better explain why.
->>>
->> Hi Banjamin and Cornelia,
->>
->> Your replies make me reliaze that I've been holding a mistake understanding
->> of put_device() as well as reference count.
->>
->> Thanks for you two's patient explanation !!
->>
->> BTW, should I send a v2 on these two patches to move the position of
->> put_device()?
-> 
-> Feel free to do so.
-> 
-> I think having the `put_device()` call after `device_unregister()` in
-> both `zfcp_unit_remove()` and `zfcp_sysfs_port_remove_store()` is more
-> natural, because it ought to be the last time we touch the object in
-> both functions.
 
-If you move put_device(), you could add a comment like we did here to explain 
-which (hidden) get_device is undone:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/s390/scsi?id=ef4021fe5fd77ced0323cede27979d80a56211ca
-("scsi: zfcp: fix to prevent port_remove with pure auto scan LUNs (only sdevs)")
-So in this patch it could be:
-	put_device(&unit->dev); /* undo _zfcp_unit_find() */
-And in the other patch it could be:
-	put_device(&port->dev); /* undo zfcp_get_port_by_wwpn() */
-Then it would be clearer next time somebody looks at the code.
+--taccm5e5wyznne4d
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Especially for the other patch on zfcp_sysfs_port_remove_store() moving the 
-put_device(&port->dev) to at least *after* the call of 
-zfcp_erp_port_shutdown(port, 0, "syprs_1") would make the code cleaner to me. 
-Along the idead of passing the port to zfcp_erp_port_shutdown with the 
-reference we got from zfcp_get_port_by_wwpn(). That said, the current code is 
-of course still correct as we currently have the port ref of the earlier 
-device_register so passing the port to zfcp_erp_port_shutdown() is safe.
+On Fri, Nov 27, 2020 at 09:35:39AM +0100, Geert Uytterhoeven wrote:
+> Hi Uwe,
+>=20
+> On Thu, Nov 26, 2020 at 6:03 PM Uwe Kleine-K=F6nig
+> <u.kleine-koenig@pengutronix.de> wrote:
+> > The remove callback is only called for devices that were probed
+> > successfully before. As the matching probe function cannot complete
+> > without error if dev->match_id !=3D PS3_MATCH_ID_SOUND, we don't have to
+> > check this here.
+> >
+> > Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
+>=20
+> Thanks for your patch!
+>=20
+> Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>=20
+> Note that there are similar checks in snd_ps3_driver_probe(), which
+> can be removed, too:
+>=20
+>         if (WARN_ON(!firmware_has_feature(FW_FEATURE_PS3_LV1)))
+>                 return -ENODEV;
+>         if (WARN_ON(dev->match_id !=3D PS3_MATCH_ID_SOUND))
+>                 return -ENODEV;
 
-If we wanted to make the gets and puts nicely nested, then we could move the 
-puts to just before the device_unregister, but that's bike shedding:
-	device_register()   --+
-	get_device() --+      |
-	put_device() --+      |
-	device_unregister() --+
+I had to invest some brain cycles here. For the first:
 
-Benjamin's suggested move location works for me, too. After all, the kdoc of 
-device_unregister explicitly mentions the possibility that other refs might 
-continue to exist after device_unregister was called:
-	device_register()   --+
-	get_device() ---------|--+
-	device_unregister() --+  |
-	put_device() ------------+
+Assuming firmware_has_feature(FW_FEATURE_PS3_LV1) always returns the
+same value, snd_ps3_driver_probe is only used after this check succeeds
+because the driver is registered only after this check in
+snd_ps3_init().
 
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
+The second is superflous because ps3_system_bus_match() yields false if
+this doesn't match the driver's match_id.
 
-Linux on IBM Z Development
+Best regards
+Uwe
 
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--taccm5e5wyznne4d
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAl/AyscACgkQwfwUeK3K
+7AmVbAf/fRHKZiIEMqPckqCjNor4UCILZvO1NJYHzctpPGBT8dETRjBW1ZmWu6MS
+qxv4y7aGSfc8pP5G0LU1rJJYOf7x8PpHEbm5uNM1UOIxzSIniALG7VIeoFIBrGoQ
+QuMcTv73n6ypzsNu87ynqrILEVYNrubD+Sb6B2xZEfPbIcvvwKfUvr8+lBEkabHX
+LbBbYbLL/ivRvUFm/YKvY3vcnTTAj88lURLp6V8EPT+8/TDr7Bfuy5LyjFsKAYsq
+QXNTBRLT8unlG99XvN4urWFVs9NMPKKWgV/e14LGumeL+mM8EQi+UPCnMTPOErWb
+F4a+SZgp6g00Syvd8mJVlWUKEkQUOg==
+=P7Le
+-----END PGP SIGNATURE-----
+
+--taccm5e5wyznne4d--
