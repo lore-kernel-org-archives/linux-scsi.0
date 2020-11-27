@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30B62C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 08:36:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13184C64E8A
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 08:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE2CE221FD
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 08:36:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1DC7221FD
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Nov 2020 08:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728795AbgK0Ifw convert rfc822-to-8bit (ORCPT
+        id S1729272AbgK0IkS convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Nov 2020 03:35:52 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:37585 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728017AbgK0Ifv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2020 03:35:51 -0500
-Received: by mail-ot1-f66.google.com with SMTP id l36so4045127ota.4;
-        Fri, 27 Nov 2020 00:35:51 -0800 (PST)
+        Fri, 27 Nov 2020 03:40:18 -0500
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:46372 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728285AbgK0IkQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2020 03:40:16 -0500
+Received: by mail-ot1-f67.google.com with SMTP id z23so365706oti.13;
+        Fri, 27 Nov 2020 00:40:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc:content-transfer-encoding;
-        bh=xh1hHzZVurhLLa9A5bjYyJ5OP5iFGRKbQx8AzvX3xN4=;
-        b=TrbmmJKaYiHM47lTPaVZ/ifjGAlxFFdjyozKu13tvPrqyATJDuVBo+QeeExGVx+2qL
-         U2pUW6r4wk1GpyzRDF91JSkT+Ty7mNFx0za9PXM4rnaa2JsyATNY0bm3bVgN1L/jAajd
-         Pkp4OYnY/oAIE+Ozy0Q5Q+EhQC7Grt6kmo8AxfaxddRgd+gOitHnXQLup79bnDBPjazC
-         4NYwNffpJLf3YrzJukKq5+vwgV1BM+ikrlG1bg09jz8nJC1yjMeTG+KW3rETQKDDhBC5
-         BsJlnfcCwPRmzFe2HfswIVEwJdhyUDHcmaydnlfzPCnyNfS38lTeBRFJU58p7Igw29iR
-         yMjw==
-X-Gm-Message-State: AOAM5323sr9QAacPDNVaHzmhsCT4u7AAj+hSEX26s7UFEomEHSW3XmAy
-        w1QsRDy9uo8Xz+LqGey41Du9n5/yWv19tQzw9cc=
-X-Google-Smtp-Source: ABdhPJxi+ycxEsm5KsGHfXpYVjf0qoqXVdSm5mG1czf/VSu3Ar1g/6kPH+lbgaSp8/Ea4xlpW0yThv8dOVha3z28GvM=
-X-Received: by 2002:a05:6830:210a:: with SMTP id i10mr4949297otc.145.1606466150802;
- Fri, 27 Nov 2020 00:35:50 -0800 (PST)
+        bh=/D+lVsFpiig9p8Mfv+F/WnI4wKF69UpUHln9lDG06g4=;
+        b=OvGI2LLkQRzeWnjXwcv4a9BF3RX71atfnHf/Y5PY6fvbrzqqEX7jcrwCldbQv9GLpy
+         D8zvGJGvQkfVFIk5XZZL9N94Cp6BH74eATxdOFbkuFKEWK5MO2m1bbD8Bx/fA1oKbu0s
+         YxNyj4Nc0HH/UMiLlq+7Zb0jlNPKltRbw5EVUXX+KWwtvy7bX2HfLLUegeqtGhAy5BMB
+         uhMFch4Mt8DBUbE8QdRRnOqFJurxqXlEFvwNCleXo6mv+FoAv0R7tEppFQTRBrBAuu7Z
+         GrkK3JfGSBgSfVkYuWbCEag4jO9Lo3QQLVN9o4D/mEfP22YxAussd4m460Shl8n1PwqJ
+         qwYA==
+X-Gm-Message-State: AOAM530sxVPmbTv/r6BVfnK9waIhzZDBNLhgE8HwNbMHY41PfivqOp4e
+        m3r+YB4S/MLDqydQ9bbxBwEI8Qe59Y0sqHqM0Y4=
+X-Google-Smtp-Source: ABdhPJy2I/IdfAm6V2ydZbwLB9NPNLYo9PucEpxX/NL/qzuCx8bfpYwJU7BhpITpgvBGwlFRBVNr8EmnqamS0CIYUsg=
+X-Received: by 2002:a9d:686:: with SMTP id 6mr4709371otx.107.1606466415531;
+ Fri, 27 Nov 2020 00:40:15 -0800 (PST)
 MIME-Version: 1.0
-References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
-In-Reply-To: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
+References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de> <20201126165950.2554997-2-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <20201126165950.2554997-2-u.kleine-koenig@pengutronix.de>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 27 Nov 2020 09:35:39 +0100
-Message-ID: <CAMuHMdUbfT7ax4BhjMT_DBweab8TDm5e=xMv5f61t9QpQJt1mw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ALSA: ppc: drop if block with always false condition
+Date:   Fri, 27 Nov 2020 09:40:04 +0100
+Message-ID: <CAMuHMdW4J0xA6T4AWqZdo1go1kxWqVSSo5JXQpUAM4yWEpDdOw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] powerpc/ps3: make system bus's remove and shutdown
+ callbacks return void
 To:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>
 Cc:     Geoff Levand <geoff@infradead.org>,
@@ -79,10 +80,15 @@ Hi Uwe,
 
 On Thu, Nov 26, 2020 at 6:03 PM Uwe Kleine-König
 <u.kleine-koenig@pengutronix.de> wrote:
-> The remove callback is only called for devices that were probed
-> successfully before. As the matching probe function cannot complete
-> without error if dev->match_id != PS3_MATCH_ID_SOUND, we don't have to
-> check this here.
+> The driver core ignores the return value of struct device_driver::remove
+> because there is only little that can be done. For the shutdown callback
+> it's ps3_system_bus_shutdown() which ignores the return value.
+>
+> To simplify the quest to make struct device_driver::remove return void,
+> let struct ps3_system_bus_driver::remove return void, too. All users
+> already unconditionally return 0, this commit makes it obvious that
+> returning an error code is a bad idea and ensures future users behave
+> accordingly.
 >
 > Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 
@@ -90,13 +96,7 @@ Thanks for your patch!
 
 Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Note that there are similar checks in snd_ps3_driver_probe(), which
-can be removed, too:
-
-        if (WARN_ON(!firmware_has_feature(FW_FEATURE_PS3_LV1)))
-                return -ENODEV;
-        if (WARN_ON(dev->match_id != PS3_MATCH_ID_SOUND))
-                return -ENODEV;
+Note that the same can be done for ps3_vuart_port_driver.remove().
 
 Gr{oetje,eeting}s,
 
