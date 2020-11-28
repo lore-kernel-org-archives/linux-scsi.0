@@ -2,133 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF150C71155
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 22:12:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79E94C83012
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 22:12:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C03072224A
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 22:12:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3966A221FD
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 22:12:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="UFjt4iSn";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="5+aGSO4R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389557AbgK1VuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2389543AbgK1VuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 28 Nov 2020 16:50:02 -0500
-Received: from mail-m1272.qiye.163.com ([115.236.127.2]:27661 "EHLO
-        mail-m1272.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387565AbgK1The (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2020 14:37:34 -0500
-X-Greylist: delayed 4199 seconds by postgrey-1.27 at vger.kernel.org; Sat, 28 Nov 2020 14:37:33 EST
-Received: from localhost.localdomain (unknown [113.89.246.41])
-        by mail-m1272.qiye.163.com (Hmail) with ESMTPA id AEEC6B01F56;
-        Sat, 28 Nov 2020 20:27:49 +0800 (CST)
-From:   Ding Hui <dinghui@sangfor.com.cn>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ding Hui <dinghui@sangfor.com.cn>,
-        stable <stable@vger.kernel.org>
-Subject: [PATCH] scsi: ses: Fix crash caused by kfree an invalid pointer
-Date:   Sat, 28 Nov 2020 20:23:02 +0800
-Message-Id: <20201128122302.9490-1-dinghui@sangfor.com.cn>
-X-Mailer: git-send-email 2.17.1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgYFAkeWUFZS1VLWVdZKFlBSE83V1ktWUFJV1kPCR
-        oVCBIfWUFZHx5DTU9NTB0eGk1PVkpNS01OTU1PTUJCQkJVEwETFhoSFyQUDg9ZV1kWGg8SFR0UWU
-        FZT0tIVUpKS0hKTFVLWQY+
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PzY6Qzo5MT8tTk4wSkMUNwxO
-        IUxPCilVSlVKTUtNTk1NT0xLSE9JVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-        QVlKSkhVQ0JVSU9NVU9KWVdZCAFZQUhCTEs3Bg++
-X-HM-Tid: 0a760ed2e10598b7kuuuaeec6b01f56
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42360 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731792AbgK1SzT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2020 13:55:19 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02504C094262
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2020 23:28:55 -0800 (PST)
+Date:   Sat, 28 Nov 2020 08:28:51 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1606548533;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UCYyshmIXHdX0GWRyNmP/18Sr0aiVcjdwJ7YGHsDMLc=;
+        b=UFjt4iSnkcU84D5WV6lmz0tEyLr3Slnf4i1eAazveTqrsL+wHklrS3deJ+1Cf+fIz8CBMx
+        aJdN6pch1OaR05u0dKOYp6xserWOCrbS884kL3EWaO3GvIEtPYosNHmNivwKjkQMBNMpY4
+        co3D8ArpuHigDdpSG4e0J6k2dr9P09VmBqP1g0LKvMkV71zJdQok/IjhA0HaH66mBwvEzz
+        o+pxwnPkMJ0WY2v5u1y4PROkQKwISHMiUloOTsGCes8N8r8nBxyeQ2WK/GI1HeMyZNzJD/
+        V4rWRjJvDPN53YRZdcSJiJ8sYOKCAIaxOIB6VSdCyVDUJrvB7QhQCUWBRKMf4g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1606548533;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UCYyshmIXHdX0GWRyNmP/18Sr0aiVcjdwJ7YGHsDMLc=;
+        b=5+aGSO4RfxGCfzmPYqGAFrlMGFlvaXZcxWsAouMGOgOEcxhZLqqexoTggldcH4aT/ozWOH
+        iCxoPEa9UXvOAuBQ==
+From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
+To:     Finn Thain <fthain@telegraphics.com.au>
+Cc:     Michael Schmitz <schmitzmic@gmail.com>,
+        Andreas Schwab <schwab@linux-m68k.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+        Hannes Reinecke <hare@kernel.org>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        John Garry <john.garry@huawei.com>,
+        linux-m68k@lists.linux-m68k.org,
+        Manish Rangankar <mrangankar@marvell.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        Nilesh Javali <njavali@marvell.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Vikram Auradkar <auradkar@google.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        Xiaofei Tan <tanxiaofei@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 12/14] scsi: NCR5380: Remove in_interrupt().
+Message-ID: <X8H8M2AM0hfMX7aj@lx-t490>
+References: <20201126132952.2287996-1-bigeasy@linutronix.de>
+ <20201126132952.2287996-13-bigeasy@linutronix.de>
+ <alpine.LNX.2.23.453.2011271524140.15@nippy.intranet>
+ <alpine.LNX.2.23.453.2011280802170.6@nippy.intranet>
+ <alpine.LNX.2.23.453.2011280827270.14@nippy.intranet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.23.453.2011280827270.14@nippy.intranet>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We can get a crash when disconnecting the iSCSI session,
-the call trace like this:
+On Sat, Nov 28, 2020 at 08:48:00AM +1100, Finn Thain wrote:
+>
+> On Sat, 28 Nov 2020, Finn Thain wrote:
+>
+> >
+> > diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> > index d654a6cc4162..739def70cffb 100644
+> > --- a/drivers/scsi/NCR5380.c
+> > +++ b/drivers/scsi/NCR5380.c
+> > @@ -223,7 +223,10 @@ static int NCR5380_poll_politely2(struct NCR5380_hostdata *hostdata,
+> >  		cpu_relax();
+> >  	} while (n--);
+> >
+> > -	if (irqs_disabled() || in_interrupt())
+> > +	/* We can't sleep when local irqs are disabled and callers ensure
+> > +	 * that local irqs are disabled whenever we can't sleep.
+> > +	 */
+> > +	if (irqs_disabled())
+> >  		return -ETIMEDOUT;
+> >
+> >  	/* Repeatedly sleep for 1 ms until deadline */
+> >
+>
+> Michael, Andreas, would you please confirm that this is workable on Atari?
+> The driver could sleep when IPL == 2 because arch_irqs_disabled_flags()
+> would return false (on Atari). I'm wondering whether that would deadlock.
 
-  [ffff00002a00fb70] kfree at ffff00000830e224
-  [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
-  [ffff00002a00fbd0] device_del at ffff0000086b6a98
-  [ffff00002a00fc50] device_unregister at ffff0000086b6d58
-  [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
-  [ffff00002a00fca0] scsi_remove_device at ffff000008706134
-  [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
-  [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
-  [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
-  [ffff00002a00fdb0] process_one_work at ffff00000810f35c
-  [ffff00002a00fe00] worker_thread at ffff00000810f648
-  [ffff00002a00fe70] kthread at ffff000008116e98
+Please re-check the commit log:
 
-In ses_intf_add, components count could be 0, and kcalloc 0 size scomp,
-but not saved in edev->component[i].scratch
+  "Linus clearly requested that code which changes behaviour depending
+   on context should either be separated, or the context be explicitly
+   conveyed in an argument passed by the caller."
 
-In this situation, edev->component[0].scratch is an invalid pointer,
-when kfree it in ses_intf_remove_enclosure, a crash like above would happen
-The call trace also could be other random cases when kfree cannot catch
-the invalid pointer
+So, sorry, drivers shouldn't do context-dependent dances anymore.
 
-We should not use edev->component[] array when the components count is 0
-We also need check index when use edev->component[] array in
-ses_enclosure_data_process
+For more context (no pun intended), please check the thread mentioned in
+the cover letter, and also below message:
 
-Tested-by: Zeng Zhicong <timmyzeng@163.com>
-Cc: stable <stable@vger.kernel.org> # 2.6.25+
-Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
----
- drivers/scsi/ses.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+  https://lkml.kernel.org/r/CAKMK7uHAk9-Vy2cof0ws=DrcD52GHiCDiyHbjLd19CgpBU2rKQ@mail.gmail.com
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index c2afba2a5414..f5ef0a91f0eb 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -477,9 +477,6 @@ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
- 	int i;
- 	struct ses_component *scomp;
- 
--	if (!edev->component[0].scratch)
--		return 0;
--
- 	for (i = 0; i < edev->components; i++) {
- 		scomp = edev->component[i].scratch;
- 		if (scomp->addr != efd->addr)
-@@ -565,8 +562,10 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
- 						components++,
- 						type_ptr[0],
- 						name);
--				else
-+				else if (components < edev->components)
- 					ecomp = &edev->component[components++];
-+				else
-+					ecomp = ERR_PTR(-EINVAL);
- 
- 				if (!IS_ERR(ecomp)) {
- 					if (addl_desc_ptr)
-@@ -731,9 +730,11 @@ static int ses_intf_add(struct device *cdev,
- 		buf = NULL;
- 	}
- page2_not_supported:
--	scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
--	if (!scomp)
--		goto err_free;
-+	if (components > 0) {
-+		scomp = kcalloc(components, sizeof(struct ses_component), GFP_KERNEL);
-+		if (!scomp)
-+			goto err_free;
-+	}
- 
- 	edev = enclosure_register(cdev->parent, dev_name(&sdev->sdev_gendev),
- 				  components, &ses_enclosure_callbacks);
-@@ -813,7 +814,8 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
- 	kfree(ses_dev->page2);
- 	kfree(ses_dev);
- 
--	kfree(edev->component[0].scratch);
-+	if (edev->components > 0)
-+		kfree(edev->component[0].scratch);
- 
- 	put_device(&edev->edev);
- 	enclosure_unregister(edev);
--- 
-2.17.1
+Kind regards,
 
+--
+Ahmed S. Darwish
+Linutronix GmbH
