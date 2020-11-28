@@ -2,92 +2,176 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2061C83011
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 22:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F7D9C63777
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 23:28:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9EF4B2222C
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 22:12:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BCE921973
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 23:28:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nl6On1uj"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="FzrKYdy6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389484AbgK1VuB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Nov 2020 16:50:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55556 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730628AbgK0TwS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2020 14:52:18 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08AC2C08E863;
-        Fri, 27 Nov 2020 11:37:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=euM/zmZmiU7XynopsfsNk5VEQJ/eikhYtJwXlpq8tno=; b=nl6On1ujk9wd9PEKkJgg2KJ2Am
-        m8AA3an/yzFOvOzfdYyYfcRQEQMV6C+rNHKxGHpqDzm49BkSsw+5EhhU0P154qkYr9MXuNpi7PREG
-        fPLa8hJsj9oN6M7qgVOHMRcPTnFhMtktGs8woTspm5p63HB4LfTCBfTY+3w6jPlLDCe5rI6brlPWe
-        Wzm7YdlXRMuEt8mo+EDmAHmVkjUP3io6h5+Bil+IHytP1lZ1245P0R6S0s2IchExPIzcixOwncumC
-        FhBV3gK43XgwhLQNaxt5pUzXLAu2p81YKnwCaC/q+zrjSo81jdUaUUkBqIuXwnd/oQ3fdltyGRC9o
-        jz4txzgg==;
-Received: from [2602:306:c5a2:a380:9e7b:efff:fe40:2b26]
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kijYQ-0005Xk-FY; Fri, 27 Nov 2020 19:37:14 +0000
-Subject: Re: [PATCH 1/2] ALSA: ppc: drop if block with always false condition
-To:     =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Jens Axboe <axboe@kernel.dk>, Jim Paris <jim@jtan.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Leonard Goehrs <l.goehrs@pengutronix.de>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org, alsa-devel@alsa-project.org,
-        linux-block@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
-From:   Geoff Levand <geoff@infradead.org>
-Message-ID: <fdaedef8-4734-7ab3-9334-b628f8207c9e@infradead.org>
-Date:   Fri, 27 Nov 2020 11:37:07 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1727348AbgK1X2K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Nov 2020 18:28:10 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:28958 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725989AbgK1X2K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 28 Nov 2020 18:28:10 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0ASN1XG5082691;
+        Sat, 28 Nov 2020 18:27:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=bCG8G51Iyk2zmq31048W8a7dnAA9tSi/D4nkld4h+Y4=;
+ b=FzrKYdy6CY28etVmfrzYxyhMiNZ6WKS07WBmHEMwBx9126W0fzmGl1bOgN4uQ+DCaLg+
+ +Xzy12rw6bRfymYxdnzf3+UwT7dsFooGMEwicM+2fI78fv6rh9V2lFGibGGQIRBZglyR
+ NJXdTAWttoo7ufcldHC9YGkjl3w7PQOC7I9qD0K75MTw1Uu/hG8Y887P1+i8OGzzXMT4
+ Lw5qtAxjqfeYEvD/nINdfq6adO9dtxHEkdN9OAfg/26bD6p2onpoAju5QW9/m+e8o2s7
+ Vi4zDpkw4IpfpbHACRmplTkf2RGrpr08sQm02RHSS3stuRGfJOQxoDY/RQAJ3gG9xnAW /g== 
+Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 353xvv1b6m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 28 Nov 2020 18:27:24 -0500
+Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
+        by ppma03wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0ASNROUT012005;
+        Sat, 28 Nov 2020 23:27:24 GMT
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+        by ppma03wdc.us.ibm.com with ESMTP id 353e68d5jk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 28 Nov 2020 23:27:24 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0ASNRNcr49283466
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 28 Nov 2020 23:27:23 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8F50F7805E;
+        Sat, 28 Nov 2020 23:27:23 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6BD1B7805C;
+        Sat, 28 Nov 2020 23:27:22 +0000 (GMT)
+Received: from jarvis.int.hansenpartnership.com (unknown [9.80.201.242])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Sat, 28 Nov 2020 23:27:22 +0000 (GMT)
+Message-ID: <c5deac044ac409e32d9ad9968ce0dcbc996bfc7a.camel@linux.ibm.com>
+Subject: Re: [PATCH] scsi: ses: Fix crash caused by kfree an invalid pointer
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Ding Hui <dinghui@sangfor.com.cn>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable <stable@vger.kernel.org>
+Date:   Sat, 28 Nov 2020 15:27:21 -0800
+In-Reply-To: <20201128122302.9490-1-dinghui@sangfor.com.cn>
+References: <20201128122302.9490-1-dinghui@sangfor.com.cn>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-In-Reply-To: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-11-28_17:2020-11-26,2020-11-28 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ lowpriorityscore=0 impostorscore=0 bulkscore=0 suspectscore=4
+ priorityscore=1501 mlxscore=0 malwarescore=0 phishscore=0 clxscore=1011
+ adultscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011280144
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Uwe,
-
-On 11/26/20 8:59 AM, Uwe Kleine-König wrote:
-> The remove callback is only called for devices that were probed
-> successfully before. As the matching probe function cannot complete
-> without error if dev->match_id != PS3_MATCH_ID_SOUND, we don't have to
-> check this here.
+On Sat, 2020-11-28 at 20:23 +0800, Ding Hui wrote:
+> We can get a crash when disconnecting the iSCSI session,
+> the call trace like this:
 > 
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+>   [ffff00002a00fb70] kfree at ffff00000830e224
+>   [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
+>   [ffff00002a00fbd0] device_del at ffff0000086b6a98
+>   [ffff00002a00fc50] device_unregister at ffff0000086b6d58
+>   [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
+>   [ffff00002a00fca0] scsi_remove_device at ffff000008706134
+>   [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
+>   [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
+>   [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
+>   [ffff00002a00fdb0] process_one_work at ffff00000810f35c
+>   [ffff00002a00fe00] worker_thread at ffff00000810f648
+>   [ffff00002a00fe70] kthread at ffff000008116e98
+> 
+> In ses_intf_add, components count could be 0, and kcalloc 0 size
+> scomp,
+> but not saved in edev->component[i].scratch
+> 
+> In this situation, edev->component[0].scratch is an invalid pointer,
+> when kfree it in ses_intf_remove_enclosure, a crash like above would
+> happen
+> The call trace also could be other random cases when kfree cannot
+> catch
+> the invalid pointer
+> 
+> We should not use edev->component[] array when the components count
+> is 0
+> We also need check index when use edev->component[] array in
+> ses_enclosure_data_process
+> 
+> Tested-by: Zeng Zhicong <timmyzeng@163.com>
+> Cc: stable <stable@vger.kernel.org> # 2.6.25+
+> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
 
-I tested your two patches plus Leonard's patch 'ALSA: ppc: remove
-redundant checks in PS3 driver probe' applied to v5.9 on the PS3,
-and they seem to work fine.
+This doesn't really look to be the right thing to do: an enclosure
+which has no component can't usefully be controlled by the driver since
+there's nothing for it to do, so what we should do in this situation is
+refuse to attach like the proposed patch below.
 
-Thanks for both your efforts.
+It does seem a bit odd that someone would build an enclosure that
+doesn't enclose anything, so would you mind running
 
-Tested by: Geoff Levand <geoff@infradead.org>
+sg_ses -e 
+
+on it and reporting back what it shows?  It's possible there's another
+type that the enclosure device should be tracking.
+
+Regards,
+
+James
+
+---8>8>8><8<8<8--------
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] scsi: ses: don't attach if enclosure has no components
+
+An enclosure with no components can't usefully be operated by the
+driver (since effectively it has nothing to manage), so report the
+problem and don't attach.  Not attaching also fixes an oops which
+could occur if the driver tries to manage a zero component enclosure.
+
+Reported-by: Ding Hui <dinghui@sangfor.com.cn>
+Cc: stable@vger.kernel.org
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/ses.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index c2afba2a5414..9624298b9c89 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -690,6 +690,11 @@ static int ses_intf_add(struct device *cdev,
+ 		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
+ 			components += type_ptr[1];
+ 	}
++	if (components == 0) {
++		sdev_printk(KERN_ERR, sdev, "enclosure has no enumerated components\n");
++		goto err_free;
++	}
++
+ 	ses_dev->page1 = buf;
+ 	ses_dev->page1_len = len;
+ 	buf = NULL;
+-- 
+2.26.2
+
+
+
