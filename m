@@ -2,90 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 157BBC64E7D
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 07:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A08C64E7B
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 16:48:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFE892080C
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 07:10:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 901F42074B
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 16:48:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZPB8gs+4"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="EhiVNvAk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726218AbgK2HKH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Nov 2020 02:10:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42038 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbgK2HKH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 02:10:07 -0500
-Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E5DAC0613D2;
-        Sat, 28 Nov 2020 23:09:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=XGiZtuFXhffjIPHQFyxIbbqLATdmM5dzCSY80BXYd1A=; b=ZPB8gs+4Ildl17Ejd8/kuFd20Z
-        mja/GjvdqANlS67CC0vUP7IZlpWuKSbrnC/ovCE4VL0LXwS/SBEExmubky8UpXXPUTuifSSWe+jGc
-        f7/gDeaaPIeGvpdJoyL4sa7Yi/deqq0pg6fQPwnjHCyoqa2T3GBtgzxcZ2nL20UE55uyRXGQck4SN
-        a5UdntAqum4pS1Qw6kx991/V8wUYyjSsxxvo3uMx/9Og6Tz3ymeh147pnGrePPNLiPoAh52/7IxxT
-        zIeS09dShtEU05UIP5VEsNPKffdUdRlZab0bO0LIKt54RRwnrQwTfSYKzwgGM/tRMO2Yiam222kZx
-        XWJGWakw==;
-Received: from [2601:1c0:6280:3f0::cc1f] (helo=smtpauth.infradead.org)
-        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kjGpl-0000Ly-QQ; Sun, 29 Nov 2020 07:09:23 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>, linux-scsi@vger.kernel.org,
-        Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] SCSI: bnx2i: requires MMU
-Date:   Sat, 28 Nov 2020 23:09:16 -0800
-Message-Id: <20201129070916.3919-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.26.2
+        id S1727566AbgK2Qry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Nov 2020 11:47:54 -0500
+Received: from mail-dm6nam12on2105.outbound.protection.outlook.com ([40.107.243.105]:4160
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727058AbgK2Qry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 29 Nov 2020 11:47:54 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=FT4zL5Wl5XQPydVCWSOuCy8zp6wtA41s1LjEgXvI9makORASyCGcR3K6t1oG1mka6EmVALA9g/tfRjEwt65Bc68p+tLZisFBl3ezMGUU0H89eOk/w/b/YQyTf6/wr7eKzrWiC/3Km6L17+qcbvThef+Sa7Qv3FYcE8D41Wk7+PJLaSVhL7thKg0zH2JIrZkis8QdFfTakSJwj/C/EiLhUQNooYKwAf85K6Beb56A/YZTPAMtTkNUnB8i7+yixjSd8Dpsi+oWilovJHGLb6SHdeNUtc/gpTzkfv7ngC/L7oXDYhyztX776fYetbOFTp3yNDcr3Q8dhIHyGYZkpnSd1A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AlY4Ok9a99hYK9J1TIQSIiazLHICcjWa0opF3qJMDvw=;
+ b=OSthCG8fEGplzRxBoHyRGhTWofnUW02p2HsGSheBiHylI4fzzjx7omQtw5JOcfvRHQejhLRwaJBLB0PIyu88KGA17Pg4bbz5srDboRSNk6yDEOOUy7UAd6FTfI9yLGusLook22W5YJXIx7pTa+mI/MrjKR0jfzIip0XVTaWrk+pm2mLFD74kwUwS9+ascxrsgdOv6Xb5FkLoj1NDGreFgGOHhT9sAoCSsdYpB4KCpHbOQ5YwT23yUsnfPZj8oJrNOopZS+jyGPUT9ukjW5p606PL+tLOuFZR6GPXuoUGVtWL1uRe7f2dHWaivdJZ3uxZ5NK5iFZUSahrhx+Fpj2doA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AlY4Ok9a99hYK9J1TIQSIiazLHICcjWa0opF3qJMDvw=;
+ b=EhiVNvAkZA6yn5/9baqkmrivINETkIjECKm2Cha3/ZtubNQmq63eSL3KYLTiVHGju2GzFqSYOwNid4Lfa80x1TKc2qMkx6l+jxsMtez3wUejG1/BIJ1lfxKn8lYkYGVwXNdNectNzQzMTes2SCyKd3LfxZLYnLrnoGsA+iU4TvU=
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
+ by MW4PR21MB1908.namprd21.prod.outlook.com (2603:10b6:303:7b::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3632.0; Sun, 29 Nov
+ 2020 16:47:05 +0000
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::b8f6:e748:cdf2:1922]) by MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::b8f6:e748:cdf2:1922%9]) with mapi id 15.20.3632.010; Sun, 29 Nov 2020
+ 16:47:05 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Long Li <longli@microsoft.com>, cavery <cavery@redhat.com>
+CC:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] scsi: storvsc: Fix error return in storvsc_probe()
+Thread-Topic: [PATCH] scsi: storvsc: Fix error return in storvsc_probe()
+Thread-Index: AQHWxGk0UiiKcdIoW0ug+nQpObRPi6nfVSmw
+Date:   Sun, 29 Nov 2020 16:47:04 +0000
+Message-ID: <MW2PR2101MB1052867F6E39E77E165B0B55D7F61@MW2PR2101MB1052.namprd21.prod.outlook.com>
+References: <20201127030206.104616-1-jingxiangfeng@huawei.com>
+In-Reply-To: <20201127030206.104616-1-jingxiangfeng@huawei.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-11-29T16:47:02Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=f63e8575-20ac-4bab-ab80-f79a590a8614;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
+authentication-results: huawei.com; dkim=none (message not signed)
+ header.d=none;huawei.com; dmarc=none action=none header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 046753e0-2a46-4c16-2183-08d89486672b
+x-ms-traffictypediagnostic: MW4PR21MB1908:
+x-ms-exchange-transport-forked: True
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <MW4PR21MB19080627B1604DEEA4D641CFD7F61@MW4PR21MB1908.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:2887;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: MqEBsuZOGQR08Tc40ltyd3EK3K0nFzXGtOpH2HmLWfwBhFGNsFiBS/u1mzgCT99l3tUOf3G7lD55puWqgEeUGYAyFabOcAWs5BN7XoM4TL1ma2RXW5PsCuT8EzZW6dFXQPrclBSrXEopOKaOQVuwTF2agEqJyGl4ikVrLn8xGH2xQzXgWY5MKVG+6ZkTDAeXLtiszNiZgk0Ab0Ljhx+jK8O3LXbMufrNtL79YdcBl4Y4cpZMd0z1Nhup7nYkbSov06GnVHL9B5vuQMpJJSXImrEjx7wNjKv3aoAtKTglfpBuPPIXXovf0OpxuerRNRUp
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(39860400002)(346002)(376002)(366004)(396003)(316002)(110136005)(7696005)(8990500004)(10290500003)(82950400001)(83380400001)(186003)(54906003)(86362001)(52536014)(5660300002)(71200400001)(6506007)(66476007)(478600001)(2906002)(33656002)(66946007)(4326008)(76116006)(66556008)(64756008)(66446008)(8936002)(9686003)(55016002)(26005)(82960400001)(8676002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?+NlB0yCGiBdJnXZjwvqZm5TSLlZVQdFUR3qcHlN3wiP8yh7Rss7Hdk7+3xr+?=
+ =?us-ascii?Q?/ppIustwzly91OCbbDGmt2RDe5mjrUWLDy0hnBYUodOOLlHkQjWA0npbsF/K?=
+ =?us-ascii?Q?SAf6aPWrcwTQjkUJJrnV68GA98K0TyIyZSqn5P74TjE0DDxvZJVHkpK7LRR1?=
+ =?us-ascii?Q?0cWSMG2Q1zPJgAd7tHrK3+a460VB4l2WfTRamNdem79rZ1KVTuiZLSpEBR8H?=
+ =?us-ascii?Q?Xx6l9+aR+To0F54LahAoeqVXX2U/AK782LkLuBEGEe/MyG5qPPebYy5LzcFL?=
+ =?us-ascii?Q?6SOxXTBhLvCM3iQJXkW6g7cTLXg+kkXaPVZPXMZ3L20gV2QinBL3NsSUqz0S?=
+ =?us-ascii?Q?jd7gXyRc48Vdy0uplBfRssFeJfk656fvKMkxyiu2yhCSwosxUo+J87hMA3v5?=
+ =?us-ascii?Q?ayZU6AdIOBzY3RI7Z+3e22Ab9Ku6xPXqiIb7FlEkBQCA1iEn76P4nl8VJrZf?=
+ =?us-ascii?Q?4u41K9iw2L2NhGCuq/F4f9znlATNOjNLkncXGGuUSwUow1IWGA7admG5dG5M?=
+ =?us-ascii?Q?yPGQWgGU3au2GrPNY646c/9jvF1VwIUKoLST5acRnGE+M/dDlqD6uL5B3sNU?=
+ =?us-ascii?Q?tyai3UUiUhZMVwLQqNnerdPzcQRUsgvmBLPq2znqM9M6DwNU67mOy+SSXHe/?=
+ =?us-ascii?Q?X9DPWogis1azCVOQVI4k1C9rM5wapBpWLBD2konLOq4vcP1XIKUb+CeyWwLS?=
+ =?us-ascii?Q?ycCpVNUzY0ukHoFQ60PnA39kqBLzArNreK88E2yz45aNOn2KgnrhtTVQIkaj?=
+ =?us-ascii?Q?1XWsh1B9hIkn072Pi8WBRbKVztp3JjZPdfL7bzNMpCIYhU3eTfKCmLS5St13?=
+ =?us-ascii?Q?7Gt+iRVQnupOACXDYQvz7VM425QqWdTTGYh5A+e11isI1zBQw5uPoDedhjts?=
+ =?us-ascii?Q?9cPGnxay53rxwzRq74mZfbKLL3HUK2nyBgY8e0RFIM2XwpyzSo1MNUEXRebC?=
+ =?us-ascii?Q?kcrZYz9xgUHv6lN8FfRTCzIBzuH9ilNgLf/3osTPFCE=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 046753e0-2a46-4c16-2183-08d89486672b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Nov 2020 16:47:04.9404
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: OP0/Fl9KIeG1aUo2wpZCnvVse2tb2mW2gOf39FEU/RSv7kyl05HORaN/AT1zZjiSR7UBDyPnmpEyXbKcSi8tFuBPyqxMy+/SIHwfiSHFbh0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1908
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI_BNX2_ISCSI kconfig symbol selects CNIC and CNIC selects UIO,
-which depends on MMU.
-Since 'select' does not follow dependency chains, add the same MMU
-dependency to SCSI_BNX2_ISCSI.
+From: Jing Xiangfeng <jingxiangfeng@huawei.com> Sent: Thursday, November 26=
+, 2020 7:02 PM
+>=20
+> Fix to return a error code "-ENOMEM" from the error handling case
+> instead of 0.
+>=20
+> Fixes: 436ad9413353 ("scsi: storvsc: Allow only one remove lun work item =
+to be issued per
+> lun")
+> Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 0c65fbd41035..ded00a89bfc4 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1994,8 +1994,10 @@ static int storvsc_probe(struct hv_device *device,
+>  			alloc_ordered_workqueue("storvsc_error_wq_%d",
+>  						WQ_MEM_RECLAIM,
+>  						host->host_no);
+> -	if (!host_dev->handle_error_wq)
+> +	if (!host_dev->handle_error_wq) {
+> +		ret =3D -ENOMEM;
+>  		goto err_out2;
+> +	}
+>  	INIT_WORK(&host_dev->host_scan_work, storvsc_host_scan);
+>  	/* Register the HBA and start the scsi bus scan */
+>  	ret =3D scsi_add_host(host, &device->device);
+> --
+> 2.22.0
 
-Quietens this kconfig warning:
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
 
-WARNING: unmet direct dependencies detected for CNIC
-  Depends on [n]: NETDEVICES [=y] && ETHERNET [=y] && NET_VENDOR_BROADCOM [=y] && PCI [=y] && (IPV6 [=m] || IPV6 [=m]=n) && MMU [=n]
-  Selected by [m]:
-  - SCSI_BNX2_ISCSI [=m] && SCSI_LOWLEVEL [=y] && SCSI [=y] && NET [=y] && PCI [=y] && (IPV6 [=m] || IPV6 [=m]=n)
-
-Fixes: cf4e6363859d ("[SCSI] bnx2i: Add bnx2i iSCSI driver.")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi@vger.kernel.org
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: Manish Rangankar <mrangankar@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
----
- drivers/scsi/bnx2i/Kconfig            |    1 +
- 1 file changed, 1 insertions(+)
-
---- linux-next-20201125.orig/drivers/scsi/bnx2i/Kconfig
-+++ linux-next-20201125/drivers/scsi/bnx2i/Kconfig
-@@ -4,6 +4,7 @@ config SCSI_BNX2_ISCSI
- 	depends on NET
- 	depends on PCI
- 	depends on (IPV6 || IPV6=n)
-+	depends on MMU
- 	select SCSI_ISCSI_ATTRS
- 	select NETDEVICES
- 	select ETHERNET
