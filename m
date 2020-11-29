@@ -2,176 +2,228 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F7D9C63777
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 23:28:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BD71C3E8C5
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 05:13:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BCE921973
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Nov 2020 23:28:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="FzrKYdy6"
+	by mail.kernel.org (Postfix) with ESMTP id 3A94F2078D
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 05:13:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727348AbgK1X2K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Nov 2020 18:28:10 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:28958 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725989AbgK1X2K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 28 Nov 2020 18:28:10 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0ASN1XG5082691;
-        Sat, 28 Nov 2020 18:27:25 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=bCG8G51Iyk2zmq31048W8a7dnAA9tSi/D4nkld4h+Y4=;
- b=FzrKYdy6CY28etVmfrzYxyhMiNZ6WKS07WBmHEMwBx9126W0fzmGl1bOgN4uQ+DCaLg+
- +Xzy12rw6bRfymYxdnzf3+UwT7dsFooGMEwicM+2fI78fv6rh9V2lFGibGGQIRBZglyR
- NJXdTAWttoo7ufcldHC9YGkjl3w7PQOC7I9qD0K75MTw1Uu/hG8Y887P1+i8OGzzXMT4
- Lw5qtAxjqfeYEvD/nINdfq6adO9dtxHEkdN9OAfg/26bD6p2onpoAju5QW9/m+e8o2s7
- Vi4zDpkw4IpfpbHACRmplTkf2RGrpr08sQm02RHSS3stuRGfJOQxoDY/RQAJ3gG9xnAW /g== 
-Received: from ppma03wdc.us.ibm.com (ba.79.3fa9.ip4.static.sl-reverse.com [169.63.121.186])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 353xvv1b6m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 28 Nov 2020 18:27:24 -0500
-Received: from pps.filterd (ppma03wdc.us.ibm.com [127.0.0.1])
-        by ppma03wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0ASNROUT012005;
-        Sat, 28 Nov 2020 23:27:24 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma03wdc.us.ibm.com with ESMTP id 353e68d5jk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 28 Nov 2020 23:27:24 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0ASNRNcr49283466
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 28 Nov 2020 23:27:23 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8F50F7805E;
-        Sat, 28 Nov 2020 23:27:23 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6BD1B7805C;
-        Sat, 28 Nov 2020 23:27:22 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.80.201.242])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Sat, 28 Nov 2020 23:27:22 +0000 (GMT)
-Message-ID: <c5deac044ac409e32d9ad9968ce0dcbc996bfc7a.camel@linux.ibm.com>
+        id S1725909AbgK2FNE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Nov 2020 00:13:04 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:40795 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725468AbgK2FNE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 00:13:04 -0500
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 1157F2EA00C;
+        Sun, 29 Nov 2020 00:12:23 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id OpmIgPKamWzG; Sun, 29 Nov 2020 00:02:10 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 865D72EA01E;
+        Sun, 29 Nov 2020 00:12:21 -0500 (EST)
+Reply-To: dgilbert@interlog.com
 Subject: Re: [PATCH] scsi: ses: Fix crash caused by kfree an invalid pointer
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Ding Hui <dinghui@sangfor.com.cn>, martin.petersen@oracle.com
+To:     jejb@linux.ibm.com, Ding Hui <dinghui@sangfor.com.cn>,
+        martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         stable <stable@vger.kernel.org>
-Date:   Sat, 28 Nov 2020 15:27:21 -0800
-In-Reply-To: <20201128122302.9490-1-dinghui@sangfor.com.cn>
 References: <20201128122302.9490-1-dinghui@sangfor.com.cn>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+ <c5deac044ac409e32d9ad9968ce0dcbc996bfc7a.camel@linux.ibm.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <4b83e264-2a7e-e877-5f52-16b14b563a87@interlog.com>
+Date:   Sun, 29 Nov 2020 00:12:21 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <c5deac044ac409e32d9ad9968ce0dcbc996bfc7a.camel@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-11-28_17:2020-11-26,2020-11-28 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- lowpriorityscore=0 impostorscore=0 bulkscore=0 suspectscore=4
- priorityscore=1501 mlxscore=0 malwarescore=0 phishscore=0 clxscore=1011
- adultscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011280144
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2020-11-28 at 20:23 +0800, Ding Hui wrote:
-> We can get a crash when disconnecting the iSCSI session,
-> the call trace like this:
+On 2020-11-28 6:27 p.m., James Bottomley wrote:
+> On Sat, 2020-11-28 at 20:23 +0800, Ding Hui wrote:
+>> We can get a crash when disconnecting the iSCSI session,
+>> the call trace like this:
+>>
+>>    [ffff00002a00fb70] kfree at ffff00000830e224
+>>    [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
+>>    [ffff00002a00fbd0] device_del at ffff0000086b6a98
+>>    [ffff00002a00fc50] device_unregister at ffff0000086b6d58
+>>    [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
+>>    [ffff00002a00fca0] scsi_remove_device at ffff000008706134
+>>    [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
+>>    [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
+>>    [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
+>>    [ffff00002a00fdb0] process_one_work at ffff00000810f35c
+>>    [ffff00002a00fe00] worker_thread at ffff00000810f648
+>>    [ffff00002a00fe70] kthread at ffff000008116e98
+>>
+>> In ses_intf_add, components count could be 0, and kcalloc 0 size
+>> scomp,
+>> but not saved in edev->component[i].scratch
+>>
+>> In this situation, edev->component[0].scratch is an invalid pointer,
+>> when kfree it in ses_intf_remove_enclosure, a crash like above would
+>> happen
+>> The call trace also could be other random cases when kfree cannot
+>> catch
+>> the invalid pointer
+>>
+>> We should not use edev->component[] array when the components count
+>> is 0
+>> We also need check index when use edev->component[] array in
+>> ses_enclosure_data_process
+>>
+>> Tested-by: Zeng Zhicong <timmyzeng@163.com>
+>> Cc: stable <stable@vger.kernel.org> # 2.6.25+
+>> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
 > 
->   [ffff00002a00fb70] kfree at ffff00000830e224
->   [ffff00002a00fba0] ses_intf_remove at ffff000001f200e4
->   [ffff00002a00fbd0] device_del at ffff0000086b6a98
->   [ffff00002a00fc50] device_unregister at ffff0000086b6d58
->   [ffff00002a00fc70] __scsi_remove_device at ffff00000870608c
->   [ffff00002a00fca0] scsi_remove_device at ffff000008706134
->   [ffff00002a00fcc0] __scsi_remove_target at ffff0000087062e4
->   [ffff00002a00fd10] scsi_remove_target at ffff0000087064c0
->   [ffff00002a00fd70] __iscsi_unbind_session at ffff000001c872c4
->   [ffff00002a00fdb0] process_one_work at ffff00000810f35c
->   [ffff00002a00fe00] worker_thread at ffff00000810f648
->   [ffff00002a00fe70] kthread at ffff000008116e98
+> This doesn't really look to be the right thing to do: an enclosure
+> which has no component can't usefully be controlled by the driver since
+> there's nothing for it to do, so what we should do in this situation is
+> refuse to attach like the proposed patch below.
 > 
-> In ses_intf_add, components count could be 0, and kcalloc 0 size
-> scomp,
-> but not saved in edev->component[i].scratch
+> It does seem a bit odd that someone would build an enclosure that
+> doesn't enclose anything, so would you mind running
 > 
-> In this situation, edev->component[0].scratch is an invalid pointer,
-> when kfree it in ses_intf_remove_enclosure, a crash like above would
-> happen
-> The call trace also could be other random cases when kfree cannot
-> catch
-> the invalid pointer
+> sg_ses -e
+
+'-e' is the short form of '--enumerate'. That will report the names
+and abbreviations of the diagnostic pages that the utility itself
+knows about (and supports). It won't show anything specific about
+the environment that sg_ses is executed in.
+
+You probably meant:
+   sg_ses <ses_device>
+
+Examples of the likely forms are:
+   sg_ses /dev/bsg/1:0:0:0
+   sg_ses /dev/sg2
+   sg_ses /dev/ses0
+
+This from a nearby machine:
+
+$ lsscsi -gs
+[3:0:0:0]  disk  ATA      Samsung SSD 850  1B6Q  /dev/sda   /dev/sg0    120GB
+[4:0:0:0]  disk  IBM-207x HUSMM8020ASS20   J4B6  /dev/sdc   /dev/sg2    200GB
+[4:0:1:0]  disk  ATA      INTEL SSDSC2KW25 003C  /dev/sdd   /dev/sg3    256GB
+[4:0:2:0]  disk  SEAGATE  ST10000NM0096    E005  /dev/sde   /dev/sg4   10.0TB
+[4:0:3:0]  enclosu Areca Te ARC-802801.37.69 0137  -        /dev/sg5        -
+[4:0:4:0]  enclosu Intel    RES2SV240        0d00  -        /dev/sg6        -
+[7:0:0:0]  disk    Kingston DataTravelerMini PMAP  /dev/sdb /dev/sg1   1.03GB
+[N:0:0:1]  disk    WDC WDS256G1X0C-00ENX0__1       /dev/nvme0n1  -      256GB
+
+# sg_ses /dev/sg5
+   Areca Te  ARC-802801.37.69  0137
+Supported diagnostic pages:
+   Supported Diagnostic Pages [sdp] [0x0]
+   Configuration (SES) [cf] [0x1]
+   Enclosure Status/Control (SES) [ec,es] [0x2]
+   String In/Out (SES) [str] [0x4]
+   Threshold In/Out (SES) [th] [0x5]
+   Element Descriptor (SES) [ed] [0x7]
+   Additional Element Status (SES-2) [aes] [0xa]
+   Supported SES Diagnostic Pages (SES-2) [ssp] [0xd]
+   Download Microcode (SES-2) [dm] [0xe]
+   Subenclosure Nickname (SES-2) [snic] [0xf]
+   Protocol Specific (SAS transport) [] [0x3f]
+
+# sg_ses -p cf /dev/sg5
+   Areca Te  ARC-802801.37.69  0137
+Configuration diagnostic page:
+   number of secondary subenclosures: 0
+   generation code: 0x0
+   enclosure descriptor list
+     Subenclosure identifier: 0 [primary]
+       relative ES process id: 1, number of ES processes: 1
+       number of type descriptor headers: 9
+       enclosure logical identifier (hex): d5b401503fc0ec16
+       enclosure vendor: Areca Te  product: ARC-802801.37.69  rev: 0137
+       vendor-specific data:
+         11 22 33 44 55 00 00 00                             ."3DU...
+
+   type descriptor header and text list
+     Element type: Array device slot, subenclosure id: 0
+       number of possible elements: 24
+       text: ArrayDevicesInSubEnclsr0
+     Element type: Enclosure, subenclosure id: 0
+       number of possible elements: 1
+       text: EnclosureElementInSubEnclsr0
+     Element type: SAS expander, subenclosure id: 0
+       number of possible elements: 1
+       text: SAS Expander
+     Element type: Cooling, subenclosure id: 0
+       number of possible elements: 5
+       text: CoolingElementInSubEnclsr0
+     Element type: Temperature sensor, subenclosure id: 0
+       number of possible elements: 2
+       text: TempSensorsInSubEnclsr0
+     Element type: Voltage sensor, subenclosure id: 0
+       number of possible elements: 2
+       text: VoltageSensorsInSubEnclsr0
+     Element type: SAS connector, subenclosure id: 0
+       number of possible elements: 3
+       text: ConnectorsInSubEnclsr0
+     Element type: Power supply, subenclosure id: 0
+       number of possible elements: 2
+       text: PowerSupplyInSubEnclsr0
+     Element type: Audible alarm, subenclosure id: 0
+       number of possible elements: 1
+       text: AudibleAlarmInSubEnclsr0
+
+Doug Gilbert
+
+> on it and reporting back what it shows?  It's possible there's another
+> type that the enclosure device should be tracking.
 > 
-> We should not use edev->component[] array when the components count
-> is 0
-> We also need check index when use edev->component[] array in
-> ses_enclosure_data_process
+> Regards,
 > 
-> Tested-by: Zeng Zhicong <timmyzeng@163.com>
-> Cc: stable <stable@vger.kernel.org> # 2.6.25+
-> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
-
-This doesn't really look to be the right thing to do: an enclosure
-which has no component can't usefully be controlled by the driver since
-there's nothing for it to do, so what we should do in this situation is
-refuse to attach like the proposed patch below.
-
-It does seem a bit odd that someone would build an enclosure that
-doesn't enclose anything, so would you mind running
-
-sg_ses -e 
-
-on it and reporting back what it shows?  It's possible there's another
-type that the enclosure device should be tracking.
-
-Regards,
-
-James
-
----8>8>8><8<8<8--------
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi: ses: don't attach if enclosure has no components
-
-An enclosure with no components can't usefully be operated by the
-driver (since effectively it has nothing to manage), so report the
-problem and don't attach.  Not attaching also fixes an oops which
-could occur if the driver tries to manage a zero component enclosure.
-
-Reported-by: Ding Hui <dinghui@sangfor.com.cn>
-Cc: stable@vger.kernel.org
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/ses.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index c2afba2a5414..9624298b9c89 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -690,6 +690,11 @@ static int ses_intf_add(struct device *cdev,
- 		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
- 			components += type_ptr[1];
- 	}
-+	if (components == 0) {
-+		sdev_printk(KERN_ERR, sdev, "enclosure has no enumerated components\n");
-+		goto err_free;
-+	}
-+
- 	ses_dev->page1 = buf;
- 	ses_dev->page1_len = len;
- 	buf = NULL;
--- 
-2.26.2
-
-
+> James
+> 
+> ---8>8>8><8<8<8--------
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Subject: [PATCH] scsi: ses: don't attach if enclosure has no components
+> 
+> An enclosure with no components can't usefully be operated by the
+> driver (since effectively it has nothing to manage), so report the
+> problem and don't attach.  Not attaching also fixes an oops which
+> could occur if the driver tries to manage a zero component enclosure.
+> 
+> Reported-by: Ding Hui <dinghui@sangfor.com.cn>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> ---
+>   drivers/scsi/ses.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index c2afba2a5414..9624298b9c89 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -690,6 +690,11 @@ static int ses_intf_add(struct device *cdev,
+>   		    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE)
+>   			components += type_ptr[1];
+>   	}
+> +	if (components == 0) {
+> +		sdev_printk(KERN_ERR, sdev, "enclosure has no enumerated components\n");
+> +		goto err_free;
+> +	}
+> +
+>   	ses_dev->page1 = buf;
+>   	ses_dev->page1_len = len;
+>   	buf = NULL;
+> 
 
