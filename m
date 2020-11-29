@@ -2,162 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A08C64E7B
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 16:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8B72C3E8C5
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 17:34:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 901F42074B
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 16:48:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="EhiVNvAk"
+	by mail.kernel.org (Postfix) with ESMTP id C2D67208D5
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 17:34:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727566AbgK2Qry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Nov 2020 11:47:54 -0500
-Received: from mail-dm6nam12on2105.outbound.protection.outlook.com ([40.107.243.105]:4160
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727058AbgK2Qry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 29 Nov 2020 11:47:54 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FT4zL5Wl5XQPydVCWSOuCy8zp6wtA41s1LjEgXvI9makORASyCGcR3K6t1oG1mka6EmVALA9g/tfRjEwt65Bc68p+tLZisFBl3ezMGUU0H89eOk/w/b/YQyTf6/wr7eKzrWiC/3Km6L17+qcbvThef+Sa7Qv3FYcE8D41Wk7+PJLaSVhL7thKg0zH2JIrZkis8QdFfTakSJwj/C/EiLhUQNooYKwAf85K6Beb56A/YZTPAMtTkNUnB8i7+yixjSd8Dpsi+oWilovJHGLb6SHdeNUtc/gpTzkfv7ngC/L7oXDYhyztX776fYetbOFTp3yNDcr3Q8dhIHyGYZkpnSd1A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AlY4Ok9a99hYK9J1TIQSIiazLHICcjWa0opF3qJMDvw=;
- b=OSthCG8fEGplzRxBoHyRGhTWofnUW02p2HsGSheBiHylI4fzzjx7omQtw5JOcfvRHQejhLRwaJBLB0PIyu88KGA17Pg4bbz5srDboRSNk6yDEOOUy7UAd6FTfI9yLGusLook22W5YJXIx7pTa+mI/MrjKR0jfzIip0XVTaWrk+pm2mLFD74kwUwS9+ascxrsgdOv6Xb5FkLoj1NDGreFgGOHhT9sAoCSsdYpB4KCpHbOQ5YwT23yUsnfPZj8oJrNOopZS+jyGPUT9ukjW5p606PL+tLOuFZR6GPXuoUGVtWL1uRe7f2dHWaivdJZ3uxZ5NK5iFZUSahrhx+Fpj2doA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AlY4Ok9a99hYK9J1TIQSIiazLHICcjWa0opF3qJMDvw=;
- b=EhiVNvAkZA6yn5/9baqkmrivINETkIjECKm2Cha3/ZtubNQmq63eSL3KYLTiVHGju2GzFqSYOwNid4Lfa80x1TKc2qMkx6l+jxsMtez3wUejG1/BIJ1lfxKn8lYkYGVwXNdNectNzQzMTes2SCyKd3LfxZLYnLrnoGsA+iU4TvU=
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
- by MW4PR21MB1908.namprd21.prod.outlook.com (2603:10b6:303:7b::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3632.0; Sun, 29 Nov
- 2020 16:47:05 +0000
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::b8f6:e748:cdf2:1922]) by MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::b8f6:e748:cdf2:1922%9]) with mapi id 15.20.3632.010; Sun, 29 Nov 2020
- 16:47:05 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Jing Xiangfeng <jingxiangfeng@huawei.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Long Li <longli@microsoft.com>, cavery <cavery@redhat.com>
-CC:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] scsi: storvsc: Fix error return in storvsc_probe()
-Thread-Topic: [PATCH] scsi: storvsc: Fix error return in storvsc_probe()
-Thread-Index: AQHWxGk0UiiKcdIoW0ug+nQpObRPi6nfVSmw
-Date:   Sun, 29 Nov 2020 16:47:04 +0000
-Message-ID: <MW2PR2101MB1052867F6E39E77E165B0B55D7F61@MW2PR2101MB1052.namprd21.prod.outlook.com>
-References: <20201127030206.104616-1-jingxiangfeng@huawei.com>
-In-Reply-To: <20201127030206.104616-1-jingxiangfeng@huawei.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-11-29T16:47:02Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=f63e8575-20ac-4bab-ab80-f79a590a8614;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
-authentication-results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=microsoft.com;
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 046753e0-2a46-4c16-2183-08d89486672b
-x-ms-traffictypediagnostic: MW4PR21MB1908:
-x-ms-exchange-transport-forked: True
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <MW4PR21MB19080627B1604DEEA4D641CFD7F61@MW4PR21MB1908.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2887;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: MqEBsuZOGQR08Tc40ltyd3EK3K0nFzXGtOpH2HmLWfwBhFGNsFiBS/u1mzgCT99l3tUOf3G7lD55puWqgEeUGYAyFabOcAWs5BN7XoM4TL1ma2RXW5PsCuT8EzZW6dFXQPrclBSrXEopOKaOQVuwTF2agEqJyGl4ikVrLn8xGH2xQzXgWY5MKVG+6ZkTDAeXLtiszNiZgk0Ab0Ljhx+jK8O3LXbMufrNtL79YdcBl4Y4cpZMd0z1Nhup7nYkbSov06GnVHL9B5vuQMpJJSXImrEjx7wNjKv3aoAtKTglfpBuPPIXXovf0OpxuerRNRUp
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(39860400002)(346002)(376002)(366004)(396003)(316002)(110136005)(7696005)(8990500004)(10290500003)(82950400001)(83380400001)(186003)(54906003)(86362001)(52536014)(5660300002)(71200400001)(6506007)(66476007)(478600001)(2906002)(33656002)(66946007)(4326008)(76116006)(66556008)(64756008)(66446008)(8936002)(9686003)(55016002)(26005)(82960400001)(8676002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?+NlB0yCGiBdJnXZjwvqZm5TSLlZVQdFUR3qcHlN3wiP8yh7Rss7Hdk7+3xr+?=
- =?us-ascii?Q?/ppIustwzly91OCbbDGmt2RDe5mjrUWLDy0hnBYUodOOLlHkQjWA0npbsF/K?=
- =?us-ascii?Q?SAf6aPWrcwTQjkUJJrnV68GA98K0TyIyZSqn5P74TjE0DDxvZJVHkpK7LRR1?=
- =?us-ascii?Q?0cWSMG2Q1zPJgAd7tHrK3+a460VB4l2WfTRamNdem79rZ1KVTuiZLSpEBR8H?=
- =?us-ascii?Q?Xx6l9+aR+To0F54LahAoeqVXX2U/AK782LkLuBEGEe/MyG5qPPebYy5LzcFL?=
- =?us-ascii?Q?6SOxXTBhLvCM3iQJXkW6g7cTLXg+kkXaPVZPXMZ3L20gV2QinBL3NsSUqz0S?=
- =?us-ascii?Q?jd7gXyRc48Vdy0uplBfRssFeJfk656fvKMkxyiu2yhCSwosxUo+J87hMA3v5?=
- =?us-ascii?Q?ayZU6AdIOBzY3RI7Z+3e22Ab9Ku6xPXqiIb7FlEkBQCA1iEn76P4nl8VJrZf?=
- =?us-ascii?Q?4u41K9iw2L2NhGCuq/F4f9znlATNOjNLkncXGGuUSwUow1IWGA7admG5dG5M?=
- =?us-ascii?Q?yPGQWgGU3au2GrPNY646c/9jvF1VwIUKoLST5acRnGE+M/dDlqD6uL5B3sNU?=
- =?us-ascii?Q?tyai3UUiUhZMVwLQqNnerdPzcQRUsgvmBLPq2znqM9M6DwNU67mOy+SSXHe/?=
- =?us-ascii?Q?X9DPWogis1azCVOQVI4k1C9rM5wapBpWLBD2konLOq4vcP1XIKUb+CeyWwLS?=
- =?us-ascii?Q?ycCpVNUzY0ukHoFQ60PnA39kqBLzArNreK88E2yz45aNOn2KgnrhtTVQIkaj?=
- =?us-ascii?Q?1XWsh1B9hIkn072Pi8WBRbKVztp3JjZPdfL7bzNMpCIYhU3eTfKCmLS5St13?=
- =?us-ascii?Q?7Gt+iRVQnupOACXDYQvz7VM425QqWdTTGYh5A+e11isI1zBQw5uPoDedhjts?=
- =?us-ascii?Q?9cPGnxay53rxwzRq74mZfbKLL3HUK2nyBgY8e0RFIM2XwpyzSo1MNUEXRebC?=
- =?us-ascii?Q?kcrZYz9xgUHv6lN8FfRTCzIBzuH9ilNgLf/3osTPFCE=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1728038AbgK2ReJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Nov 2020 12:34:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52438 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725830AbgK2ReJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 12:34:09 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECB5C0613D4
+        for <linux-scsi@vger.kernel.org>; Sun, 29 Nov 2020 09:33:29 -0800 (PST)
+Received: from pty.hi.pengutronix.de ([2001:67c:670:100:1d::c5])
+        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1kjQYS-0006zE-4U; Sun, 29 Nov 2020 18:32:08 +0100
+Received: from ukl by pty.hi.pengutronix.de with local (Exim 4.89)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1kjQYH-0003Mg-0E; Sun, 29 Nov 2020 18:31:57 +0100
+Date:   Sun, 29 Nov 2020 18:31:53 +0100
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     Takashi Iwai <tiwai@suse.de>, Michael Ellerman <mpe@ellerman.id.au>
+Cc:     Geoff Levand <geoff@infradead.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        Jim Paris <jim@jtan.com>, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org, alsa-devel@alsa-project.org,
+        linux-block@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org
+Subject: Re: [PATCH 2/2] powerpc/ps3: make system bus's remove and shutdown
+ callbacks return void
+Message-ID: <20201129173153.jbt3epcxnasbemir@pengutronix.de>
+References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
+ <20201126165950.2554997-2-u.kleine-koenig@pengutronix.de>
+ <s5hv9dphnoh.wl-tiwai@suse.de>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 046753e0-2a46-4c16-2183-08d89486672b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Nov 2020 16:47:04.9404
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: OP0/Fl9KIeG1aUo2wpZCnvVse2tb2mW2gOf39FEU/RSv7kyl05HORaN/AT1zZjiSR7UBDyPnmpEyXbKcSi8tFuBPyqxMy+/SIHwfiSHFbh0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1908
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="q5fwi2prasbljs5f"
+Content-Disposition: inline
+In-Reply-To: <s5hv9dphnoh.wl-tiwai@suse.de>
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c5
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jing Xiangfeng <jingxiangfeng@huawei.com> Sent: Thursday, November 26=
-, 2020 7:02 PM
->=20
-> Fix to return a error code "-ENOMEM" from the error handling case
-> instead of 0.
->=20
-> Fixes: 436ad9413353 ("scsi: storvsc: Allow only one remove lun work item =
-to be issued per
-> lun")
-> Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 0c65fbd41035..ded00a89bfc4 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1994,8 +1994,10 @@ static int storvsc_probe(struct hv_device *device,
->  			alloc_ordered_workqueue("storvsc_error_wq_%d",
->  						WQ_MEM_RECLAIM,
->  						host->host_no);
-> -	if (!host_dev->handle_error_wq)
-> +	if (!host_dev->handle_error_wq) {
-> +		ret =3D -ENOMEM;
->  		goto err_out2;
-> +	}
->  	INIT_WORK(&host_dev->host_scan_work, storvsc_host_scan);
->  	/* Register the HBA and start the scsi bus scan */
->  	ret =3D scsi_add_host(host, &device->device);
-> --
-> 2.22.0
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+--q5fwi2prasbljs5f
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hello Michael,
+
+On Sat, Nov 28, 2020 at 09:48:30AM +0100, Takashi Iwai wrote:
+> On Thu, 26 Nov 2020 17:59:50 +0100,
+> Uwe Kleine-K=F6nig wrote:
+> >=20
+> > The driver core ignores the return value of struct device_driver::remove
+> > because there is only little that can be done. For the shutdown callback
+> > it's ps3_system_bus_shutdown() which ignores the return value.
+> >=20
+> > To simplify the quest to make struct device_driver::remove return void,
+> > let struct ps3_system_bus_driver::remove return void, too. All users
+> > already unconditionally return 0, this commit makes it obvious that
+> > returning an error code is a bad idea and ensures future users behave
+> > accordingly.
+> >=20
+> > Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
+>=20
+> For the sound bit:
+> Acked-by: Takashi Iwai <tiwai@suse.de>
+
+assuming that you are the one who will apply this patch: Note that it
+depends on patch 1 that Takashi already applied to his tree. So you
+either have to wait untils patch 1 appears in some tree that you merge
+before applying, or you have to take patch 1, too. (With Takashi
+optinally dropping it then.)
+
+Best regards
+Uwe
+
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--q5fwi2prasbljs5f
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAl/D2wYACgkQwfwUeK3K
+7AmmxQf+IiMtqhw/kONuYhwVAdprYhlgZyY9iZSe5xHA/6/1zNmBbfhPRm6PfStb
+RRMTewx97J4joVbCv7OhlZBsoA7lnpUKJD05Qt7eXIEMdnuscbTx8YZr/z94s9/Y
+/ElFT8e2Wx6crnEbjWeFcYVTLkGgf1pnUhpFmTq4LwQqqV5lQWUu6JMnS8THMhay
+RCwTJR+P84Nw4wv39uvWN4LFmuDeM5hjnPjoEFBbnAeUtQr62AAh7itX8pTNEyZp
+t6M09QdoxpJWDPe/vRxYZSZdsuE+vXsCuMWH5Kyo0hodOX9m6JpOhsPm/YiaCK5B
+IW1LSeEeHe9uPQSACw7mkNft9x6Zfg==
+=TO3P
+-----END PGP SIGNATURE-----
+
+--q5fwi2prasbljs5f--
