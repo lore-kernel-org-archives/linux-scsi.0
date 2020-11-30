@@ -6,25 +6,26 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59035C3E8C5
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 00:16:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20364C64E7D
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 00:22:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CAA220756
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 00:16:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E75FB20757
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 00:22:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726765AbgK3AQe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Nov 2020 19:16:34 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:47282 "EHLO
+        id S1726370AbgK3AVp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Nov 2020 19:21:45 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:47392 "EHLO
         kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726660AbgK3AQe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 19:16:34 -0500
+        with ESMTP id S1727991AbgK3AVp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 19:21:45 -0500
 Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id B00112AA82;
-        Sun, 29 Nov 2020 19:15:46 -0500 (EST)
-Date:   Mon, 30 Nov 2020 11:15:46 +1100 (AEDT)
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 927AC2AA81;
+        Sun, 29 Nov 2020 19:21:01 -0500 (EST)
+Date:   Mon, 30 Nov 2020 11:21:01 +1100 (AEDT)
 From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Michael Schmitz <schmitzmic@gmail.com>
-cc:     Andreas Schwab <schwab@linux-m68k.org>,
+To:     "Ahmed S. Darwish" <a.darwish@linutronix.de>
+cc:     Michael Schmitz <schmitzmic@gmail.com>,
+        Andreas Schwab <schwab@linux-m68k.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
         Hannes Reinecke <hare@kernel.org>,
@@ -43,73 +44,83 @@ cc:     Andreas Schwab <schwab@linux-m68k.org>,
         Xiaofei Tan <tanxiaofei@huawei.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Ahmed S . Darwish" <a.darwish@linutronix.de>
+        Thomas Gleixner <tglx@linutronix.de>
 Subject: Re: [PATCH 12/14] scsi: NCR5380: Remove in_interrupt().
-In-Reply-To: <3bf3baef-ea46-a9c3-10e9-7705650d07a6@gmail.com>
-Message-ID: <alpine.LNX.2.23.453.2011301115360.6@nippy.intranet>
+In-Reply-To: <X8H8M2AM0hfMX7aj@lx-t490>
+Message-ID: <alpine.LNX.2.23.453.2011301118520.6@nippy.intranet>
 References: <20201126132952.2287996-1-bigeasy@linutronix.de> <20201126132952.2287996-13-bigeasy@linutronix.de> <alpine.LNX.2.23.453.2011271524140.15@nippy.intranet> <alpine.LNX.2.23.453.2011280802170.6@nippy.intranet> <alpine.LNX.2.23.453.2011280827270.14@nippy.intranet>
- <3bf3baef-ea46-a9c3-10e9-7705650d07a6@gmail.com>
+ <X8H8M2AM0hfMX7aj@lx-t490>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="-1463811774-52110738-1606695331=:6"
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Sat, 28 Nov 2020, Ahmed S. Darwish wrote:
 
----1463811774-52110738-1606695331=:6
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Sun, 29 Nov 2020, Michael Schmitz wrote:
-
-> Am 28.11.20 um 10:48 schrieb Finn Thain:
+> On Sat, Nov 28, 2020 at 08:48:00AM +1100, Finn Thain wrote:
+> >
 > > On Sat, 28 Nov 2020, Finn Thain wrote:
 > >
-> >> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> >> index d654a6cc4162..739def70cffb 100644
-> >> --- a/drivers/scsi/NCR5380.c
-> >> +++ b/drivers/scsi/NCR5380.c
-> >> @@ -223,7 +223,10 @@ static int NCR5380_poll_politely2(struct NCR5380_=
-hostdata *hostdata,
-> >>  =09=09cpu_relax();
-> >>  =09} while (n--);
-> >> =20
-> >> -=09if (irqs_disabled() || in_interrupt())
-> >> +=09/* We can't sleep when local irqs are disabled and callers ensure
-> >> +=09 * that local irqs are disabled whenever we can't sleep.
-> >> +=09 */
-> >> +=09if (irqs_disabled())
-> >>  =09=09return -ETIMEDOUT;
-> >> =20
-> >>  =09/* Repeatedly sleep for 1 ms until deadline */
-> >>
-> > Michael, Andreas, would you please confirm that this is workable on=20
-> > Atari? The driver could sleep when IPL =3D=3D 2 because=20
-> > arch_irqs_disabled_flags() would return false (on Atari). I'm=20
-> > wondering whether that would deadlock.
->=20
-> Pretty sure this would deadlock when in interrupt context here.
+> > >
+> > > diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> > > index d654a6cc4162..739def70cffb 100644
+> > > --- a/drivers/scsi/NCR5380.c
+> > > +++ b/drivers/scsi/NCR5380.c
+> > > @@ -223,7 +223,10 @@ static int NCR5380_poll_politely2(struct NCR5380_hostdata *hostdata,
+> > >  		cpu_relax();
+> > >  	} while (n--);
+> > >
+> > > -	if (irqs_disabled() || in_interrupt())
+> > > +	/* We can't sleep when local irqs are disabled and callers ensure
+> > > +	 * that local irqs are disabled whenever we can't sleep.
+> > > +	 */
+> > > +	if (irqs_disabled())
+> > >  		return -ETIMEDOUT;
+> > >
+> > >  	/* Repeatedly sleep for 1 ms until deadline */
+> > >
+> >
+> > Michael, Andreas, would you please confirm that this is workable on Atari?
+> > The driver could sleep when IPL == 2 because arch_irqs_disabled_flags()
+> > would return false (on Atari). I'm wondering whether that would deadlock.
+> 
+> Please re-check the commit log:
+> 
+>   "Linus clearly requested that code which changes behaviour depending
+>    on context should either be separated, or the context be explicitly
+>    conveyed in an argument passed by the caller."
+> 
 
-When in interrupt context, irqs_disabled() is true due to=20
-spinlock_irqsave/restore() in NCR5380_intr().
+Yes, I knew about the discussion around the issues with preempt_count() 
+and CONFIG_PREEMPT. And I don't have any problem with removing 
+in_interrupt(), as you can see from my patch.
 
-My question was really about what would happen if we sleep with IPL =3D=3D =
-2.
+> So, sorry, drivers shouldn't do context-dependent dances anymore.
+> 
 
-> Otherwise, IPL 2 is perfectly OK (which is why=20
-> arch_irqs_disabled_flags() returns false in that case).
->=20
-> If you want to be 100% certain, I can give this one a spin.
->=20
+I don't know what is meant by 'context-dependent'. I suspect that it's 
+left ill-defined because there are many cases where global state is 
+needed, such as those mentioned in the thread you cited, like the 
+memalloc_no*() calls. See also, in_compat_syscall().
 
-Please only test it if you think it will work.
+> For more context (no pun intended), please check the thread mentioned in
+> the cover letter, and also below message:
+> 
+>   https://lkml.kernel.org/r/CAKMK7uHAk9-Vy2cof0ws=DrcD52GHiCDiyHbjLd19CgpBU2rKQ@mail.gmail.com
+> 
 
-> Cheers,
->=20
-> =C2=A0=C2=A0=C2=A0 Michael
->=20
->=20
----1463811774-52110738-1606695331=:6--
+Are you also planning to remove spin_lock_irqsave/restore() and replace 
+these with spin_lock_irq/unlock_irq()? And if not, why do you object to 
+irqs_disabled()?
+
+Please also compare your patch and mine with regard to stack usage, 
+readability and code size. Also consider that adding a new argument to all 
+those functions creates new opportunities for mistakes in new callers.
+
+> Kind regards,
+> 
+> --
+> Ahmed S. Darwish
+> Linutronix GmbH
+> 
