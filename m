@@ -2,204 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
+	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0ECBC63777
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 07:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E3D4C5519F
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 08:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7ADF020857
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 07:42:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89E00206B7
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 08:26:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VxprLGRD"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YXooGNC/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726982AbgK3Hmi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Nov 2020 02:42:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40696 "EHLO
+        id S1726452AbgK3I07 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Nov 2020 03:26:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725965AbgK3Hmh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2020 02:42:37 -0500
-Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63C24C0613CF
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Nov 2020 23:41:57 -0800 (PST)
-Received: by mail-qt1-x82b.google.com with SMTP id f15so7505429qto.13
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Nov 2020 23:41:57 -0800 (PST)
+        with ESMTP id S1725972AbgK3I06 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2020 03:26:58 -0500
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B65AEC0613D2
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2020 00:26:18 -0800 (PST)
+Received: by mail-pl1-x643.google.com with SMTP id l11so6095327plt.1
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2020 00:26:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=BFi0jnKIZFMhJeYPCjt9H6Ouo+m8AFUYKGbdV58NOTI=;
-        b=VxprLGRDqEFENQZ5qMu9rzGJqljnPt05YvI/7bDKOcd1/igCUatrMOpZqUi4B2o/XF
-         OLun+mmlkt9KrZAW37nOkaTc9EFq4bcUnwUrBcj325BaPwkIzorMvHHcxvHMEa+x/1OY
-         r9xQpdyM2ZpjfchEHpdoqSD/+C5yI+X7uXpIg=
+        h=from:to:cc:subject:date:message-id;
+        bh=l/QoZLH6imDTZqeSrwXrwLfKUpYYJOPMUepB/IsyC7Q=;
+        b=YXooGNC/TQfMpRQSO3VleV6wr65CQhxyLbkn54aFMj2rABdi+DtDaD9X4s3vdOHfkv
+         4PlA0u6BQEdM1t4/znKZ+p0KCY3zM6E+bycmFzZZA7ipz7wtjHzsdCS/kEPMyU3XHmae
+         Y1CvAnumZxJoaKot2c9JLl2wYMPHGDBnR84Xg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=BFi0jnKIZFMhJeYPCjt9H6Ouo+m8AFUYKGbdV58NOTI=;
-        b=VR3bQywfLPaHG6UQWyUa9C3X23Jgohkurh+p8Vr0/jEQ3AX69P3vsHhNOAa6XlTlna
-         GcmmIvmTjeDj7QcxmN2WRbWN9vStwK4XZm6fse1hcAN7gbEM/+ru6ngWJSHulUn0BFjP
-         favqmqD8UhTXbzwoU6N3yujQWSZyqZnjNnKQCYH/RMWylwXsUwfqsO3oAwr2SEriFbM0
-         ScLASiF0StXxAK+JtQZ0LAFDDGXIMEEJyUH97GTKktZS5gPFD7vyeuY0qUxnOlJFGfep
-         h0i+/Jnp9uXLDwHkDLdrc/J/Sp78MszDp8iGCy7SV0cAXZxTnAb9ARp6r/J+d7LGPurt
-         3lQA==
-X-Gm-Message-State: AOAM530czpAp3cI0N6GDYZR0OeM4nrNmubzqIxVDhF+kr1Qqy+59Lm/+
-        NtHuG394zW4n3yppuV6tK7exDPEKTPK1JgqxiupFBQ==
-X-Google-Smtp-Source: ABdhPJzYueYlaHvOCGb90M5gPkJ7Z+jSueEXb/fFX6KUi4rlAmxwMpCHCdt3rc+noAaPvan47rg1AFkvYWPiS3DTze4=
-X-Received: by 2002:ac8:7c83:: with SMTP id y3mr19894829qtv.201.1606722116338;
- Sun, 29 Nov 2020 23:41:56 -0800 (PST)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20201015133633.61836-1-kashyap.desai@broadcom.com> <0531d781-38ed-0098-d5b8-727a3e143dde@huawei.com>
-In-Reply-To: <0531d781-38ed-0098-d5b8-727a3e143dde@huawei.com>
-MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQH474dcanfbsV89LhwRzZrrXX/AdAKO++gXqYeAe6A=
-Date:   Mon, 30 Nov 2020 13:11:53 +0530
-Message-ID: <ba2f9cb923dc61e523e4ae41db615f9b@mail.gmail.com>
-Subject: RE: [PATCH v1 1/3] add io_uring with IOPOLL support in scsi layer
-To:     John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
-Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        linux-block@vger.kernel.org
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=l/QoZLH6imDTZqeSrwXrwLfKUpYYJOPMUepB/IsyC7Q=;
+        b=BzfAlrN6VS1KyAKIpsdytNHBzLwxletJaZDd/hz87AIt3n5SEEiufd91JYvwgqb6Z2
+         kWEYxEHM9Dco01lB1LXZyhcf09yUxW6RnNKGQRkkvsP0VWnXbXoq54D433aHoVMs79qJ
+         /ittrW8D3FbpbAYYs3ek0bKdSonwax+3Akxd422JPdkEybEvX9D/pOduExh5Cc7zR7AV
+         TJNgMgPVfB3Dhu3FHGuxk80/SeFuM+brk5Oojp4rMJ6H8rk7e67rQlN0CkuXCxUiklnD
+         rTmT9l05/6pDrjq+lRCqmN7wQfs8o4bjvqwxkmjVVoJRYVV4XPHENrhwX8fFpS7TugzD
+         yGBA==
+X-Gm-Message-State: AOAM533cbwqTHQPoLARDM/+OTiD/hNyv9x1R0wK5T5x4yNxllYGhKeMQ
+        cK2ehT+sJkHe79Gbs7wlVkOIL9K+RhyB4iug
+X-Google-Smtp-Source: ABdhPJwpOHTPhkBWdHSLxyJ/c2uhd5FJ6TCG0IM3aQIN/yBu/Z7Ww+VVOCTU2WEP/5pKP1O4XUrvPg==
+X-Received: by 2002:a17:90a:fcc:: with SMTP id 70mr11781368pjz.168.1606724778148;
+        Mon, 30 Nov 2020 00:26:18 -0800 (PST)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id z206sm16146943pfc.3.2020.11.30.00.26.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Nov 2020 00:26:17 -0800 (PST)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Increase IOCInit request timeout to 30s
+Date:   Mon, 30 Nov 2020 13:57:33 +0530
+Message-Id: <20201130082733.26120-1-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 2.18.4
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000051f3505b54e2502"
+        boundary="000000000000ad2dbd05b54ec351"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000051f3505b54e2502
-Content-Type: text/plain; charset="UTF-8"
+--000000000000ad2dbd05b54ec351
 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c index
-> > 72b12102f777..5a3c383a2bb3 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -1766,6 +1766,19 @@ static void scsi_mq_exit_request(struct
-> blk_mq_tag_set *set, struct request *rq,
-> >   			       cmd->sense_buffer);
-> >   }
-> >
-> > +
-> > +static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx) {
-> > +	struct request_queue *q = hctx->queue;
-> > +	struct scsi_device *sdev = q->queuedata;
-> > +	struct Scsi_Host *shost = sdev->host;
->
-> could we separately set hctx->driver_data = shost or similar for a quicker
-> lookup? I don't see hctx->driver_data set for SCSI currently.
-> Going through the scsi_device looks strange - I know that it is done in
-> scsi_commit_rqs.
+Currently IOCInit request message timeout is set to 10s,
+which may not be sufficient in some scenarios such as HBA
+FW downgrade operation. So, increasing IOCInit request
+timeout to 30s.
 
-John - I have included your comments. Below is add-on patch which handles
-all your comment except one.
-Below is just compiled (not tested patch). Please let me know if you like to
-handle "scsi_init_hctx" in this patch or shall we do it as a separate patch
-(out of this patch series.) ?
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index b129f37..0bc3796 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -6881,7 +6881,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 	r = _base_handshake_req_reply_wait(ioc,
+ 	    sizeof(Mpi2IOCInitRequest_t), (u32 *)&mpi_request,
+-	    sizeof(Mpi2IOCInitReply_t), (u16 *)&mpi_reply, 10);
++	    sizeof(Mpi2IOCInitReply_t), (u16 *)&mpi_reply, 30);
+ 
+ 	if (r != 0) {
+ 		ioc_err(ioc, "%s: handshake failed (r=%d)\n", __func__, r);
+-- 
+2.18.4
 
 
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1769,9 +1769,7 @@ static void scsi_mq_exit_request(struct blk_mq_tag_set
-*set, struct request *rq,
-
- static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
- {
--       struct request_queue *q = hctx->queue;
--       struct scsi_device *sdev = q->queuedata;
--       struct Scsi_Host *shost = sdev->host;
-+       struct Scsi_Host *shost = hctx->driver_data;
-
-        if (shost->hostt->mq_poll)
-                return shost->hostt->mq_poll(shost, hctx->queue_num);
-@@ -1779,6 +1777,14 @@ static int scsi_mq_poll(struct blk_mq_hw_ctx *hctx)
-        return 0;
- }
-
-+static int scsi_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
-+                         unsigned int hctx_idx)
-+{
-+       struct Scsi_Host *shost = data;
-+       hctx->driver_data = shost;
-+       return 0;
-+}
-+
- static int scsi_map_queues(struct blk_mq_tag_set *set)
- {
-        struct Scsi_Host *shost = container_of(set, struct Scsi_Host,
-tag_set);
-@@ -1846,6 +1852,7 @@ static const struct blk_mq_ops scsi_mq_ops_no_commit =
-{
-        .cleanup_rq     = scsi_cleanup_rq,
-        .busy           = scsi_mq_lld_busy,
-        .map_queues     = scsi_map_queues,
-+       .init_hctx      = scsi_init_hctx,
-        .poll           = scsi_mq_poll,
- };
-
-@@ -1875,6 +1882,7 @@ static const struct blk_mq_ops scsi_mq_ops = {
-        .cleanup_rq     = scsi_cleanup_rq,
-        .busy           = scsi_mq_lld_busy,
-        .map_queues     = scsi_map_queues,
-+       .init_hctx      = scsi_init_hctx,
-        .poll           = scsi_mq_poll,
- };
-
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 5844374a85b1..cc30df96f5f7 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -9,8 +9,8 @@
- #include <linux/types.h>
- #include <linux/timer.h>
- #include <linux/scatterlist.h>
--#include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
- #include <scsi/scsi_request.h>
-
- struct Scsi_Host;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 905ee6b00c55..a0cda0f66b84 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -274,7 +274,7 @@ struct scsi_host_template {
-         * SCSI interface of blk_poll - poll for IO completions.
-         * Possible interface only if scsi LLD expose multiple h/w queues.
-         *
--        * Return values: Number of completed entries found.
-+        * Return value: Number of completed entries found.
-         *
-         * Status: OPTIONAL
-         */
-
->
-> > +
-> > +	if (shost->hostt->mq_poll)
->
-> to avoid this check, could we reject if .mq_poll is not set and
-> HCTX_TYPE_POLL is?
-
-Is this urgent or shall we improve later ? I am not able to figure out how
-you want to manage this ? Can you explain little bit ?
-
-Kashyap
-
->
-> > +		return shost->hostt->mq_poll(shost, hctx->queue_num);
-> > +
-> > +	return 0;
-> > +}
-
---000000000000051f3505b54e2502
+--000000000000ad2dbd05b54ec351
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Description: S/MIME Cryptographic Signature
 
-MIIQRQYJKoZIhvcNAQcCoIIQNjCCEDICAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-gg2aMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
+MIIQSwYJKoZIhvcNAQcCoIIQPDCCEDgCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+gg2gMIIE6DCCA9CgAwIBAgIOSBtqCRO9gCTKXSLwFPMwDQYJKoZIhvcNAQELBQAwTDEgMB4GA1UE
 CxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzARBgNVBAMT
 Ckdsb2JhbFNpZ24wHhcNMTYwNjE1MDAwMDAwWhcNMjQwNjE1MDAwMDAwWjBdMQswCQYDVQQGEwJC
 RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25h
@@ -236,40 +141,40 @@ yAzv95ZURUm7lgAJQayzE4aGKAczymvmdLm6AC2upArT9fHxD4q/c2dKg8dEe3jgr25sbwMpjjM5
 RcOO5LlXbKr8EpbsU8Yt5CRsuZRj+9xTaGdWPoO4zzUhw8lo/s7awlOqzJCK6fBdRoyV3XpYKBov
 Hd7NADdBj+1EbddTKJd+82cEHhXXipa0095MJ6RMG3NzdvQXmcIfeg7jLQitChws/zyrVQ4PkX42
 68NXSb7hLi18YIvDQVETI53O9zJrlAGomecsMx86OyXShkDOOyyGeMlhLxS67ttVb9+E7gUJTb0o
-2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFRzCCBC+gAwIBAgIMNJ2hfsaqieGgTtOzMA0GCSqGSIb3
+2HLO02JQZR7rkpeDMdmztcpHWD9fMIIFTTCCBDWgAwIBAgIMGYbVrXj/AWDyoGFSMA0GCSqGSIb3
 DQEBCwUAMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTMwMQYDVQQD
-EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTE0MTE0
-NTE2WhcNMjIwOTE1MTE0NTE2WjCBkDELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
-MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRYwFAYDVQQDEw1LYXNo
-eWFwIERlc2FpMSkwJwYJKoZIhvcNAQkBFhprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTCCASIw
-DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALcJrXmVmbWEd4eX2uEKGBI6v43LPHKbbncKqMGH
-Dez52MTfr4QkOZYWM4Rqv8j6vb8LPlUc9k0CEnC9Yaj9ZzDOcR+gHfoZ3F1JXSVRWdguz25MiB6a
-bU8odXAymhaig9sNJLxiWid3RORmG/w1Nceflo/72Cwttt0ytDTKdF987/aVGqMIxg3NnXM/cn+T
-0wUiccp8WINUie4nuR9pzv5RKGqAzNYyo8krQ2URk+3fGm1cPRoFEVAkwrCs/FOs6LfggC2CC4LB
-yfWKfxJx8FcWmsjkSlrwDu+oVuDUa2wqeKBU12HQ4JAVd+LOb5edsbbFQxgGHu+MPuc/1hl9kTkC
-AwEAAaOCAdEwggHNMA4GA1UdDwEB/wQEAwIFoDCBngYIKwYBBQUHAQEEgZEwgY4wTQYIKwYBBQUH
-MAKGQWh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzcGVyc29uYWxzaWduMnNo
-YTJnM29jc3AuY3J0MD0GCCsGAQUFBzABhjFodHRwOi8vb2NzcDIuZ2xvYmFsc2lnbi5jb20vZ3Nw
-ZXJzb25hbHNpZ24yc2hhMmczME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIB
-FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEQGA1Ud
-HwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NwZXJzb25hbHNpZ24yc2hh
-MmczLmNybDAlBgNVHREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAK
-BggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4EFgQU4dX1
-Yg4eoWXbqyPW/N1ZD/LPIWcwDQYJKoZIhvcNAQELBQADggEBABBuHYKGUwHIhCjd3LieJwKVuJNr
-YohEnZzCoNaOj33/j5thiA4cZehCh6SgrIlFBIktLD7jW9Dwl88Gfcy+RrVa7XK5Hyqwr1JlCVsW
-pNj4hlSJMNNqxNSqrKaD1cR4/oZVPFVnJJYlB01cLVjGMzta9x27e6XEtseo2s7aoPS2l82koMr7
-8S/v9LyyP4X2aRTWOg9RG8D/13rLxFAApfYvCrf0quIUBWw2BXlq3+e3r7pU7j40d6P04VV3Zxws
-M+LbYxcXFT2gXvoYd2Ms8zsLrhO2M6pMzeNGWk2HWTof9s7EEHDjis/MRlbYSNaohV23IUzNlBw7
-1FmvvW5GKK0xggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWdu
-IG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0g
-RzMCDDSdoX7GqonhoE7TszANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQgMiYHWQ9D
-WroAzUOzjyTxwhw8Ue7TxS1WS+N+xxsmqx4wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
-hkiG9w0BCQUxDxcNMjAxMTMwMDc0MTU2WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFlAwQBKjAL
-BglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjALBgkqhkiG
-9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKHAI6DIhAZGJuTrylaVyxlzt+Xx
-82zLtf0BJC6b8W8NgDnS/D1gqMntnE680kMZvmciwm6nhlfZhNPnfOP87hbBhJIUXX2ZFyKFQkJl
-M+Oob0pM7UMZC77QnfvLIzGlKbZCLyDhGitU/T5GKA2YeZfmPi99FA4krMzTB+JL/m4QavxLNkF1
-PZdeGh9Zz2uuWIDAc3OfYE8koYaJ+xeNtQZeScdAXod48pF5YWI6mxLD6FRfXTehDtO79pGjWol0
-vUX34dUAB7GJTJJi/O9azaHTvK1eo3TOJbvx3E5y9O0jLNR2UReUldbAYsXKPA1BNx9DmdKTMYvY
-j58zSMkVBX4=
---000000000000051f3505b54e2502--
+EypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hBMjU2IC0gRzMwHhcNMjAwOTE0MTE1
+MTU2WhcNMjIwOTE1MTE1MTU2WjCBlDELMAkGA1UEBhMCSU4xEjAQBgNVBAgTCUthcm5hdGFrYTES
+MBAGA1UEBxMJQmFuZ2Fsb3JlMRYwFAYDVQQKEw1Ccm9hZGNvbSBJbmMuMRgwFgYDVQQDEw9TcmVl
+a2FudGggUmVkZHkxKzApBgkqhkiG9w0BCQEWHHNyZWVrYW50aC5yZWRkeUBicm9hZGNvbS5jb20w
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC5niRDfOcA/lFVV4Ef3caitEmDttFcfX8E
+gCdwYxGiEDiO37ld/yjXb+HO8Y3Jk+dlVMltv+IdjiUPF+vr+J2NnRBy4sWkgifn+o4/VpUmBLhL
+NW+bBYuIuG4+iUoA9XXuqZZNN55aelW0TperHdzcZSfhByomrRfnBUlH2Spvd/EU4DjW25SXwSF/
++uC6y31UYvj52z/Vzvqpapm6CKt0e+JFxTSdRS6Fsf+f/5/++IM51GSIrrePsCgrgq6S1S9kdKIn
+Rag/s/0IKyxAQsoBcla5ZufuDE5ir/mlnYktkPJdg+kns/OPDsINSyWqNYE9PKy9+3cp/fItNFtH
+krg1AgMBAAGjggHTMIIBzzAOBgNVHQ8BAf8EBAMCBaAwgZ4GCCsGAQUFBwEBBIGRMIGOME0GCCsG
+AQUFBzAChkFodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc3BlcnNvbmFsc2ln
+bjJzaGEyZzNvY3NwLmNydDA9BggrBgEFBQcwAYYxaHR0cDovL29jc3AyLmdsb2JhbHNpZ24uY29t
+L2dzcGVyc29uYWxzaWduMnNoYTJnMzBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEF
+BQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBE
+BgNVHR8EPTA7MDmgN6A1hjNodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzcGVyc29uYWxzaWdu
+MnNoYTJnMy5jcmwwJwYDVR0RBCAwHoEcc3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbTATBgNV
+HSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBRpcoJiMWeVRIV3kYDEBDZJnXsLYTAdBgNVHQ4E
+FgQU1CyhXqcQo40SZ7kFS/AiOnRW6lMwDQYJKoZIhvcNAQELBQADggEBAFeMmmz112eNFAV8Ense
+5WremClV5F3Md1xS0yXKqxlgakUJaOI/Fai7OLQaQqsEoxW6/QqWEi1wbZOccbdritOkL5b7sVUp
+SU9OfuIlV8c3XMLaWSIluy+0ImtRJ49jDCI4KtQESHrqfQRZcc1C/avZvNED3U4b10U6N3SY+59b
+fm2Vlwacwp+8ESTp49DsLcJqc4U/0rUZxLWtgPokzS+ovX+JAu8zx1SmOzUC4hj4Bp6Vnfd5KWUK
+JJQBmQHXii+acSeTgHmPWUYs3tYQ0uIX0Yy8LUWPdGbEq+KWepzY2otC+iVWdngCCv8Nf1Xo1jki
+AGJ6hrlWFE0qJVWv25sxggJvMIICawIBATBtMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
+YWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIFBlcnNvbmFsU2lnbiAyIENBIC0gU0hB
+MjU2IC0gRzMCDBmG1a14/wFg8qBhUjANBglghkgBZQMEAgEFAKCB1DAvBgkqhkiG9w0BCQQxIgQg
+69FTIYanbycKI/oPkIKkOUXv3Qm3a5NUaUWxxH6vYZwwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEH
+ATAcBgkqhkiG9w0BCQUxDxcNMjAxMTMwMDgyNjE4WjBpBgkqhkiG9w0BCQ8xXDBaMAsGCWCGSAFl
+AwQBKjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBCjAL
+BgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAIfWLNoVNTmeBjxqbU+I
+cLvgV0Cri1ry2AHIxPlEOjfrpmIL8LBChW8jd8LvOkNNFnkiqh7GdN9XWLEqDGkvOrlQ264OABom
+KtnmrEANTQ8v0TiaU7lPeZFv4Tr8TxgRVsyF5rF2dLWPGkSrckv3JM/SQGkf7EQCpRmTJaDR9/uT
+unw1CQyVWu/o7tfUyVYSdP1GF10VSxeS1GEqUqRx1iTBS8wNM/dA9KsHuaN+Qrmh2mjfwfxQaWmo
+Evf148e9LYOFE9q+esgGGMOxFBUPmGwaOgQ0Dy9lzEfYhnlMZ26ORSEc4fDM6PmibZGiE/sCMHla
+s2cMFFE3QtEDR9bEnC0=
+--000000000000ad2dbd05b54ec351--
