@@ -4,26 +4,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA131C83014
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 15:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B82A8C8300F
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 15:22:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7049520719
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 15:22:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8752020719
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 15:22:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728086AbgK3PWE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Nov 2020 10:22:04 -0500
-Received: from mx2.suse.de ([195.135.220.15]:33040 "EHLO mx2.suse.de"
+        id S1727914AbgK3PWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Nov 2020 10:22:25 -0500
+Received: from mx2.suse.de ([195.135.220.15]:33464 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728081AbgK3PWE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Nov 2020 10:22:04 -0500
+        id S1728120AbgK3PWZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Nov 2020 10:22:25 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 04144AF0E;
-        Mon, 30 Nov 2020 15:21:23 +0000 (UTC)
-Date:   Mon, 30 Nov 2020 16:21:22 +0100
+        by mx2.suse.de (Postfix) with ESMTP id F0E94AED8;
+        Mon, 30 Nov 2020 15:21:43 +0000 (UTC)
+Date:   Mon, 30 Nov 2020 16:21:43 +0100
 From:   Daniel Wagner <dwagner@suse.de>
 To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Cc:     linux-scsi@vger.kernel.org,
@@ -48,19 +48,19 @@ Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         "Ahmed S . Darwish" <a.darwish@linutronix.de>
-Subject: Re: [PATCH 10/14] scsi: myrb: Remove WARN_ON(in_interrupt()).
-Message-ID: <20201130152122.ewa6pcbtcxnsplic@beryllium.lan>
+Subject: Re: [PATCH 11/14] scsi: myrs: Remove WARN_ON(in_interrupt()).
+Message-ID: <20201130152143.6owoxbntdmsu6pkd@beryllium.lan>
 References: <20201126132952.2287996-1-bigeasy@linutronix.de>
- <20201126132952.2287996-11-bigeasy@linutronix.de>
+ <20201126132952.2287996-12-bigeasy@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201126132952.2287996-11-bigeasy@linutronix.de>
+In-Reply-To: <20201126132952.2287996-12-bigeasy@linutronix.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 26, 2020 at 02:29:48PM +0100, Sebastian Andrzej Siewior wrote:
+On Thu, Nov 26, 2020 at 02:29:49PM +0100, Sebastian Andrzej Siewior wrote:
 > From: "Ahmed S. Darwish" <a.darwish@linutronix.de>
 > 
 > The in_interrupt() macro is ill-defined and does not provide what the
