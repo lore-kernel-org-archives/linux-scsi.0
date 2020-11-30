@@ -3,124 +3,113 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8B72C3E8C5
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 17:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59035C3E8C5
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 00:16:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2D67208D5
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Nov 2020 17:34:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CAA220756
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 00:16:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728038AbgK2ReJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Nov 2020 12:34:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52438 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725830AbgK2ReJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 12:34:09 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECB5C0613D4
-        for <linux-scsi@vger.kernel.org>; Sun, 29 Nov 2020 09:33:29 -0800 (PST)
-Received: from pty.hi.pengutronix.de ([2001:67c:670:100:1d::c5])
-        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1kjQYS-0006zE-4U; Sun, 29 Nov 2020 18:32:08 +0100
-Received: from ukl by pty.hi.pengutronix.de with local (Exim 4.89)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1kjQYH-0003Mg-0E; Sun, 29 Nov 2020 18:31:57 +0100
-Date:   Sun, 29 Nov 2020 18:31:53 +0100
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     Takashi Iwai <tiwai@suse.de>, Michael Ellerman <mpe@ellerman.id.au>
-Cc:     Geoff Levand <geoff@infradead.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, Jens Axboe <axboe@kernel.dk>,
-        Jim Paris <jim@jtan.com>, Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org, alsa-devel@alsa-project.org,
-        linux-block@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org
-Subject: Re: [PATCH 2/2] powerpc/ps3: make system bus's remove and shutdown
- callbacks return void
-Message-ID: <20201129173153.jbt3epcxnasbemir@pengutronix.de>
-References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
- <20201126165950.2554997-2-u.kleine-koenig@pengutronix.de>
- <s5hv9dphnoh.wl-tiwai@suse.de>
+        id S1726765AbgK3AQe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Nov 2020 19:16:34 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:47282 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726660AbgK3AQe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 19:16:34 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id B00112AA82;
+        Sun, 29 Nov 2020 19:15:46 -0500 (EST)
+Date:   Mon, 30 Nov 2020 11:15:46 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Michael Schmitz <schmitzmic@gmail.com>
+cc:     Andreas Schwab <schwab@linux-m68k.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+        Hannes Reinecke <hare@kernel.org>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        John Garry <john.garry@huawei.com>,
+        linux-m68k@lists.linux-m68k.org,
+        Manish Rangankar <mrangankar@marvell.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        Nilesh Javali <njavali@marvell.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Vikram Auradkar <auradkar@google.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        Xiaofei Tan <tanxiaofei@huawei.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Ahmed S . Darwish" <a.darwish@linutronix.de>
+Subject: Re: [PATCH 12/14] scsi: NCR5380: Remove in_interrupt().
+In-Reply-To: <3bf3baef-ea46-a9c3-10e9-7705650d07a6@gmail.com>
+Message-ID: <alpine.LNX.2.23.453.2011301115360.6@nippy.intranet>
+References: <20201126132952.2287996-1-bigeasy@linutronix.de> <20201126132952.2287996-13-bigeasy@linutronix.de> <alpine.LNX.2.23.453.2011271524140.15@nippy.intranet> <alpine.LNX.2.23.453.2011280802170.6@nippy.intranet> <alpine.LNX.2.23.453.2011280827270.14@nippy.intranet>
+ <3bf3baef-ea46-a9c3-10e9-7705650d07a6@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="q5fwi2prasbljs5f"
-Content-Disposition: inline
-In-Reply-To: <s5hv9dphnoh.wl-tiwai@suse.de>
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c5
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed; boundary="-1463811774-52110738-1606695331=:6"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
---q5fwi2prasbljs5f
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+---1463811774-52110738-1606695331=:6
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Hello Michael,
+On Sun, 29 Nov 2020, Michael Schmitz wrote:
 
-On Sat, Nov 28, 2020 at 09:48:30AM +0100, Takashi Iwai wrote:
-> On Thu, 26 Nov 2020 17:59:50 +0100,
-> Uwe Kleine-K=F6nig wrote:
-> >=20
-> > The driver core ignores the return value of struct device_driver::remove
-> > because there is only little that can be done. For the shutdown callback
-> > it's ps3_system_bus_shutdown() which ignores the return value.
-> >=20
-> > To simplify the quest to make struct device_driver::remove return void,
-> > let struct ps3_system_bus_driver::remove return void, too. All users
-> > already unconditionally return 0, this commit makes it obvious that
-> > returning an error code is a bad idea and ensures future users behave
-> > accordingly.
-> >=20
-> > Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
+> Am 28.11.20 um 10:48 schrieb Finn Thain:
+> > On Sat, 28 Nov 2020, Finn Thain wrote:
+> >
+> >> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> >> index d654a6cc4162..739def70cffb 100644
+> >> --- a/drivers/scsi/NCR5380.c
+> >> +++ b/drivers/scsi/NCR5380.c
+> >> @@ -223,7 +223,10 @@ static int NCR5380_poll_politely2(struct NCR5380_=
+hostdata *hostdata,
+> >>  =09=09cpu_relax();
+> >>  =09} while (n--);
+> >> =20
+> >> -=09if (irqs_disabled() || in_interrupt())
+> >> +=09/* We can't sleep when local irqs are disabled and callers ensure
+> >> +=09 * that local irqs are disabled whenever we can't sleep.
+> >> +=09 */
+> >> +=09if (irqs_disabled())
+> >>  =09=09return -ETIMEDOUT;
+> >> =20
+> >>  =09/* Repeatedly sleep for 1 ms until deadline */
+> >>
+> > Michael, Andreas, would you please confirm that this is workable on=20
+> > Atari? The driver could sleep when IPL =3D=3D 2 because=20
+> > arch_irqs_disabled_flags() would return false (on Atari). I'm=20
+> > wondering whether that would deadlock.
 >=20
-> For the sound bit:
-> Acked-by: Takashi Iwai <tiwai@suse.de>
+> Pretty sure this would deadlock when in interrupt context here.
 
-assuming that you are the one who will apply this patch: Note that it
-depends on patch 1 that Takashi already applied to his tree. So you
-either have to wait untils patch 1 appears in some tree that you merge
-before applying, or you have to take patch 1, too. (With Takashi
-optinally dropping it then.)
+When in interrupt context, irqs_disabled() is true due to=20
+spinlock_irqsave/restore() in NCR5380_intr().
 
-Best regards
-Uwe
+My question was really about what would happen if we sleep with IPL =3D=3D =
+2.
 
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+> Otherwise, IPL 2 is perfectly OK (which is why=20
+> arch_irqs_disabled_flags() returns false in that case).
+>=20
+> If you want to be 100% certain, I can give this one a spin.
+>=20
 
---q5fwi2prasbljs5f
-Content-Type: application/pgp-signature; name="signature.asc"
+Please only test it if you think it will work.
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAl/D2wYACgkQwfwUeK3K
-7AmmxQf+IiMtqhw/kONuYhwVAdprYhlgZyY9iZSe5xHA/6/1zNmBbfhPRm6PfStb
-RRMTewx97J4joVbCv7OhlZBsoA7lnpUKJD05Qt7eXIEMdnuscbTx8YZr/z94s9/Y
-/ElFT8e2Wx6crnEbjWeFcYVTLkGgf1pnUhpFmTq4LwQqqV5lQWUu6JMnS8THMhay
-RCwTJR+P84Nw4wv39uvWN4LFmuDeM5hjnPjoEFBbnAeUtQr62AAh7itX8pTNEyZp
-t6M09QdoxpJWDPe/vRxYZSZdsuE+vXsCuMWH5Kyo0hodOX9m6JpOhsPm/YiaCK5B
-IW1LSeEeHe9uPQSACw7mkNft9x6Zfg==
-=TO3P
------END PGP SIGNATURE-----
-
---q5fwi2prasbljs5f--
+> Cheers,
+>=20
+> =C2=A0=C2=A0=C2=A0 Michael
+>=20
+>=20
+---1463811774-52110738-1606695331=:6--
