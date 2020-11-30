@@ -5,56 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB89AC64E90
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 02:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D4E2C8301D
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 02:47:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0A3C20809
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 02:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02F7320771
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 02:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726995AbgK3CrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Nov 2020 21:47:23 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:38656 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726691AbgK3CrW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 21:47:22 -0500
-Received: by mail-pj1-f68.google.com with SMTP id j13so433189pjz.3;
-        Sun, 29 Nov 2020 18:47:07 -0800 (PST)
+        id S1726863AbgK3CrS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Nov 2020 21:47:18 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:40954 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726811AbgK3CrR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2020 21:47:17 -0500
+Received: by mail-pj1-f65.google.com with SMTP id t12so432897pjq.5;
+        Sun, 29 Nov 2020 18:46:56 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=4JgpHAM7ijqDR/daqOEIIKcPlm8O8muBHkiT8mO3EUY=;
-        b=OU5hFKJ7Pj125/WpCiIgABuKzjbZT7By+/pnOy8fcyfCBDBJGfr+UmppqJhn8oslp1
-         rvlZjQFJ7DyLz1pKjysRBA/eASVE0CYuIQr/G0Ku+1xMQx07w27IBtgmtp65nL6ng+Fy
-         jO/oo7dUBZ9wL5rVspSncizF8FKd/tpoSknAFDyEKsKiOughgYolzSBZVQmLQd7gJPtd
-         8B+ANvFToIhYVY0tVrOY8LwPorig/bUu77eD8iG7VBf99taGU3Ns3IIYJlJ6K9ABfnqG
-         /rHCAMVRgRgUE4srDWJtdpeX4XgY/nI9Gih+wyvUW/PMHUyJkAnwLD6zr8zd3t9j612+
-         c4Wg==
-X-Gm-Message-State: AOAM533fmR1+szOtJG4es6TCVM8DjY+e/CANNB7UeHEpU8jOhsQCN7Er
-        gu2Tarp4ZFU7DS4V73Ygg48=
-X-Google-Smtp-Source: ABdhPJySzFwaS9kN5Nehx4yAWHDsKt0CycJXycGTqD+OB5huQZiDmvnMpZPa38YaDmL3k1FJ6d0fow==
-X-Received: by 2002:a17:90a:aa14:: with SMTP id k20mr23553945pjq.131.1606704401812;
-        Sun, 29 Nov 2020 18:46:41 -0800 (PST)
+        bh=VEU+xCwmLM+BtzvRP5JXTk9ZPc+wm9/yMiB5hxhuJk0=;
+        b=MvIh6KFIeZw/NvNX/DS8J+hQMnNvMWfyFbPyTXUHu/FJ5kX8IW/uw8l6Fa43H3V6YJ
+         CFaEY5w8MPuifN7HScmVM/vXnQ4ljcp3U1XqN+6mKvwEeY4lVleaQYkkOr8WkyahsY7W
+         Dvdbl77RW7yBhNWpgmjMEWZUKyzL+lBr5YREPYAOd6dwFZQw4GRxF3+vIhSu2xnkRp/u
+         Q26C2FHsxYa+9O9fGA49c/yYpqy8gaUtMDk5Ft4cxrxQKLZ/pbhmMj+L5aY52KIUJMqp
+         lB3WOfbJ+7KkdTukGSErBmx69/f/bhoAQBaYzvS+ES0Cwf/NxZSlcyW8xHXABo7oDffM
+         RLYg==
+X-Gm-Message-State: AOAM532hnWTMmBaF3NKbv2n4pC6y0Hk5k2f3Fz4eSRW8hPztmEd9eMxp
+        DMtXgLH5sPFVdo/A9YGlu34=
+X-Google-Smtp-Source: ABdhPJxeHWlCShqBgl1RlcInuRhMcfTWzGXDC79erLCIRyaWbXT/fj9BT/a9YIp70TQ/nQHay7KcwA==
+X-Received: by 2002:a17:90a:d086:: with SMTP id k6mr23638224pju.141.1606704390962;
+        Sun, 29 Nov 2020 18:46:30 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id n127sm14734659pfd.143.2020.11.29.18.46.39
+        by smtp.gmail.com with ESMTPSA id n127sm14734659pfd.143.2020.11.29.18.46.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Nov 2020 18:46:40 -0800 (PST)
+        Sun, 29 Nov 2020 18:46:30 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
         linux-block@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>,
+        "David S . Miller" <davem@davemloft.net>,
         Alan Stern <stern@rowland.harvard.edu>,
         Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Subject: [PATCH v4 9/9] block: Do not accept any requests while suspended
-Date:   Sun, 29 Nov 2020 18:46:15 -0800
-Message-Id: <20201130024615.29171-10-bvanassche@acm.org>
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v4 4/9] ide: Mark power management requests with RQF_PM instead of RQF_PREEMPT
+Date:   Sun, 29 Nov 2020 18:46:10 -0800
+Message-Id: <20201130024615.29171-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201130024615.29171-1-bvanassche@acm.org>
 References: <20201130024615.29171-1-bvanassche@acm.org>
@@ -64,102 +65,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Alan Stern <stern@rowland.harvard.edu>
+This is another step that prepares for the removal of RQF_PREEMPT.
 
-blk_queue_enter() accepts BLK_MQ_REQ_PM requests independent of the runtime
-power management state. Now that SCSI domain validation no longer depends
-on this behavior, modify the behavior of blk_queue_enter() as follows:
-- Do not accept any requests while suspended.
-- Only process power management requests while suspending or resuming.
-
-Submitting BLK_MQ_REQ_PM requests to a device that is runtime suspended
-causes runtime-suspended devices not to resume as they should. The request
-which should cause a runtime resume instead gets issued directly, without
-resuming the device first. Of course the device can't handle it properly,
-the I/O fails, and the device remains suspended.
-
-The problem is fixed by checking that the queue's runtime-PM status
-isn't RPM_SUSPENDED before allowing a request to be issued, and
-queuing a runtime-resume request if it is.  In particular, the inline
-blk_pm_request_resume() routine is renamed blk_pm_resume_queue() and
-the code is unified by merging the surrounding checks into the
-routine.  If the queue isn't set up for runtime PM, or there currently
-is no restriction on allowed requests, the request is allowed.
-Likewise if the BLK_MQ_REQ_PM flag is set and the status isn't
-RPM_SUSPENDED.  Otherwise a runtime resume is queued and the request
-is blocked until conditions are more suitable.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reported-and-tested-by: Martin Kepplinger <martin.kepplinger@puri.sm>
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-[ bvanassche: modified commit message and removed Cc: stable because without
-  the previous patches from this series this patch would break parallel SCSI
-  domain validation ]
 ---
- block/blk-core.c |  6 +++---
- block/blk-pm.h   | 14 +++++++++-----
- 2 files changed, 12 insertions(+), 8 deletions(-)
+ drivers/ide/ide-io.c | 2 +-
+ drivers/ide/ide-pm.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index a00bce9f46d8..230880cbf8c8 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -440,7 +440,8 @@ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
- 			 * responsible for ensuring that that counter is
- 			 * globally visible before the queue is unfrozen.
- 			 */
--			if (pm || !blk_queue_pm_only(q)) {
-+			if ((pm && q->rpm_status != RPM_SUSPENDED) ||
-+			    !blk_queue_pm_only(q)) {
- 				success = true;
- 			} else {
- 				percpu_ref_put(&q->q_usage_counter);
-@@ -465,8 +466,7 @@ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index c210ea3bd02f..4867b67b60d6 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -518,7 +518,7 @@ blk_status_t ide_issue_rq(ide_drive_t *drive, struct request *rq,
+ 		 */
+ 		if ((drive->dev_flags & IDE_DFLAG_BLOCKED) &&
+ 		    ata_pm_request(rq) == 0 &&
+-		    (rq->rq_flags & RQF_PREEMPT) == 0) {
++		    (rq->rq_flags & RQF_PM) == 0) {
+ 			/* there should be no pending command at this point */
+ 			ide_unlock_port(hwif);
+ 			goto plug_device;
+diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
+index 192e6c65d34e..82ab308f1aaf 100644
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -77,7 +77,7 @@ int generic_ide_resume(struct device *dev)
+ 	}
  
- 		wait_event(q->mq_freeze_wq,
- 			   (!q->mq_freeze_depth &&
--			    (pm || (blk_pm_request_resume(q),
--				    !blk_queue_pm_only(q)))) ||
-+			    blk_pm_resume_queue(pm, q)) ||
- 			   blk_queue_dying(q));
- 		if (blk_queue_dying(q))
- 			return -ENODEV;
-diff --git a/block/blk-pm.h b/block/blk-pm.h
-index ea5507d23e75..a2283cc9f716 100644
---- a/block/blk-pm.h
-+++ b/block/blk-pm.h
-@@ -6,11 +6,14 @@
- #include <linux/pm_runtime.h>
- 
- #ifdef CONFIG_PM
--static inline void blk_pm_request_resume(struct request_queue *q)
-+static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
- {
--	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
--		       q->rpm_status == RPM_SUSPENDING))
--		pm_request_resume(q->dev);
-+	if (!q->dev || !blk_queue_pm_only(q))
-+		return 1;	/* Nothing to do */
-+	if (pm && q->rpm_status != RPM_SUSPENDED)
-+		return 1;	/* Request allowed */
-+	pm_request_resume(q->dev);
-+	return 0;
- }
- 
- static inline void blk_pm_mark_last_busy(struct request *rq)
-@@ -44,8 +47,9 @@ static inline void blk_pm_put_request(struct request *rq)
- 		--rq->q->nr_pending;
- }
- #else
--static inline void blk_pm_request_resume(struct request_queue *q)
-+static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
- {
-+	return 1;
- }
- 
- static inline void blk_pm_mark_last_busy(struct request *rq)
+ 	memset(&rqpm, 0, sizeof(rqpm));
+-	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, BLK_MQ_REQ_PREEMPT);
++	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, BLK_MQ_REQ_PM);
+ 	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
+ 	ide_req(rq)->special = &rqpm;
+ 	rqpm.pm_step = IDE_PM_START_RESUME;
