@@ -2,29 +2,28 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E236C83014
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6C92C83017
 	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 17:41:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 160882076E
+	by mail.kernel.org (Postfix) with ESMTP id B2BE2207F7
 	for <linux-scsi@archiver.kernel.org>; Mon, 30 Nov 2020 17:41:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387771AbgK3Rkw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Nov 2020 12:40:52 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:8221 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729502AbgK3Rku (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2020 12:40:50 -0500
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4ClCCf5mLVzkjgD;
-        Tue,  1 Dec 2020 01:39:26 +0800 (CST)
+        id S2387664AbgK3Rkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Nov 2020 12:40:46 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:8889 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728451AbgK3Rkq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2020 12:40:46 -0500
+Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4ClCCp0bcGz76Ms;
+        Tue,  1 Dec 2020 01:39:34 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.487.0; Tue, 1 Dec 2020 01:39:50 +0800
+ 14.3.487.0; Tue, 1 Dec 2020 01:39:49 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <lenb@kernel.org>, <rjw@rjwysocki.net>,
@@ -33,12 +32,10 @@ To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, <linux-acpi@vger.kernel.org>,
         <dwagner@suse.de>, "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v4 3/5] ACPI: Drop acpi_dev_irqresource_disabled()
-Date:   Tue, 1 Dec 2020 01:35:57 +0800
-Message-ID: <1606757759-6076-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 0/5] Support managed interrupts for platform devices
+Date:   Tue, 1 Dec 2020 01:35:54 +0800
+Message-ID: <1606757759-6076-1-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1606757759-6076-1-git-send-email-john.garry@huawei.com>
-References: <1606757759-6076-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -47,78 +44,71 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The functionality of acpi_dev_irqresource_disabled() is same as in common
-irqresource_disabled(), so drop acpi_dev_irqresource_disabled() in favour
-of that function.
+So far, managed interrupts are only used for PCI MSIs. This series adds
+platform device support for managed interrupts. Initially this topic was
+discussed at [0].
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/acpi/resource.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+The method to enable managed interrupts is to allocate a group of IRQs for
+the device, and then switch the interrupts to managed - this is done
+through new function irq_update_affinity_desc().
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index ad04824ca3ba..58203193417e 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -380,13 +380,6 @@ unsigned int acpi_dev_get_irq_type(int triggering, int polarity)
- }
- EXPORT_SYMBOL_GPL(acpi_dev_get_irq_type);
- 
--static void acpi_dev_irqresource_disabled(struct resource *res, u32 gsi)
--{
--	res->start = gsi;
--	res->end = gsi;
--	res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED | IORESOURCE_UNSET;
--}
--
- static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
- 				     u8 triggering, u8 polarity, u8 shareable,
- 				     bool legacy)
-@@ -394,7 +387,7 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
- 	int irq, p, t;
- 
- 	if (!valid_IRQ(gsi)) {
--		acpi_dev_irqresource_disabled(res, gsi);
-+		irqresource_disabled(res, gsi);
- 		return;
- 	}
- 
-@@ -426,7 +419,7 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
- 		res->start = irq;
- 		res->end = irq;
- 	} else {
--		acpi_dev_irqresource_disabled(res, gsi);
-+		irqresource_disabled(res, gsi);
- 	}
- }
- 
-@@ -463,7 +456,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 		 */
- 		irq = &ares->data.irq;
- 		if (index >= irq->interrupt_count) {
--			acpi_dev_irqresource_disabled(res, 0);
-+			irqresource_disabled(res, 0);
- 			return false;
- 		}
- 		acpi_dev_get_irqresource(res, irq->interrupts[index],
-@@ -473,7 +466,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 	case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
- 		ext_irq = &ares->data.extended_irq;
- 		if (index >= ext_irq->interrupt_count) {
--			acpi_dev_irqresource_disabled(res, 0);
-+			irqresource_disabled(res, 0);
- 			return false;
- 		}
- 		if (is_gsi(ext_irq))
-@@ -481,7 +474,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 					 ext_irq->triggering, ext_irq->polarity,
- 					 ext_irq->shareable, false);
- 		else
--			acpi_dev_irqresource_disabled(res, 0);
-+			irqresource_disabled(res, 0);
- 		break;
- 	default:
- 		res->flags = 0;
+Function devm_platform_get_irqs_affinity() is added as a helper to manage
+this work, such that we don't need to export irq_update_affinity_desc() or
+irq_create_affinity_masks().
+
+In the devm_platform_get_irqs_affinity() release call a new platform
+method is used to "put" an irq. The reason for this is that per-irq
+mapping (and irq_desc) needs to be recreated anew for re-probing the LLDD,
+such that we don't attempt to reconfigure the managed or any other flag
+for an irq_desc.
+
+For now, the HiSilicon SAS v2 hw driver is switched over. This is used
+in the D05 dev board.
+
+Performance gain observed for 6x SAS SSDs is ~357K -> 420K IOPs for fio read.
+
+This series is tested based on Marc's "MSI: Track device proxying when
+allocating MSIs" series, [1].
+
+[0] https://lore.kernel.org/lkml/84a9411b-4ae3-1928-3d35-1666f2687ec8@huawei.com/
+[1] https://lore.kernel.org/lkml/20201129135208.680293-1-maz@kernel.org/
+
+Changes since v3:
+- Fix genirq change to re-activate interrupt if we have deactivated it
+- Remove standalone platform_put_irq(), and combine code into
+  devm_platform_get_irqs_affinity_release()
+- Add new inline function in ioport.h rather than making
+  acpi_dev_irqresource_disabled() public
+
+Changes since v2:
+- Update genirq change as follows:
+ - Handle when the irq is started, active, or already managed
+ - Reject update when CONFIG_GENERIC_IRQ_RESERVATION_MODE is set
+- Revamp platform.c API as follows:
+ - Make it devm type
+ - Add platform_put_irq() and associated change in ACPI code to allow irq
+   resource to be reset
+ - Unmap irqs for driver removal
+ - Change API to accept min and max vectors
+
+John Garry (5):
+  genirq/affinity: Add irq_update_affinity_desc()
+  resource: Add irqresource_disabled()
+  ACPI: Drop acpi_dev_irqresource_disabled()
+  Driver core: platform: Add devm_platform_get_irqs_affinity()
+  scsi: hisi_sas: Expose HW queues for v2 hw
+
+ drivers/acpi/resource.c                |  17 +---
+ drivers/base/platform.c                | 121 +++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas.h       |   4 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  11 +++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  66 +++++++++++---
+ include/linux/interrupt.h              |   8 ++
+ include/linux/ioport.h                 |   7 ++
+ include/linux/platform_device.h        |   6 ++
+ kernel/irq/manage.c                    |  63 +++++++++++++
+ 9 files changed, 278 insertions(+), 25 deletions(-)
+
 -- 
 2.26.2
 
