@@ -2,103 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CBFAC83016
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:24:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28087C64E7A
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:43:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41E6A20758
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:24:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAFE820857
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:43:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JIHL4cp9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391720AbgLAPXt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 10:23:49 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2184 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390214AbgLAPXt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 10:23:49 -0500
-Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Clm5B6ZqVz67Kmg;
-        Tue,  1 Dec 2020 23:20:46 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Tue, 1 Dec 2020 16:23:06 +0100
-Received: from [10.47.7.145] (10.47.7.145) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 1 Dec 2020
- 15:23:04 +0000
-Subject: Re: [PATCH v4 1/5] genirq/affinity: Add irq_update_affinity_desc()
-To:     Thomas Gleixner <tglx@linutronix.de>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <lenb@kernel.org>,
-        <rjw@rjwysocki.net>, <gregkh@linuxfoundation.org>, <maz@kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <linux-acpi@vger.kernel.org>,
-        <dwagner@suse.de>
-References: <1606757759-6076-1-git-send-email-john.garry@huawei.com>
- <1606757759-6076-2-git-send-email-john.garry@huawei.com>
- <87y2iih1pv.fsf@nanos.tec.linutronix.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <22315d74-0696-85ef-882c-85961cfb4f32@huawei.com>
-Date:   Tue, 1 Dec 2020 15:22:38 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <87y2iih1pv.fsf@nanos.tec.linutronix.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.7.145]
-X-ClientProxiedBy: lhreml725-chm.china.huawei.com (10.201.108.76) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S2388276AbgLAPnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 10:43:31 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:35622 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388237AbgLAPnb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 10:43:31 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1FYvvM195272;
+        Tue, 1 Dec 2020 15:42:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=H4eodoH1mwSQpZp5VBdnpTOQGj/CEIv9rpO5Bhp1Ufk=;
+ b=JIHL4cp9h6SSY1ql560vDA6UQZVG4kem9r3IQndLdWID8fibv4c7n84qDk3WstVcr7aP
+ wF+JL7UzjUfb8tgXu3zrX6p9GInsakxY6RHudGCE5Vrccoe9ZuE/yibiQx8wa1gWNOOQ
+ hx/xUMk6Pg+VrbF5V3Xzuxuo26EVCt1dt1o5q37ef8htApVoIk4Ot+vfu4wv1vM3vDAQ
+ MEFsbKgljh9MvsWI96YIxGPazu41DmnptBTTSj9LOWUmCxnahqmBR6YCwb9+6EHCdgSy
+ eYxCMFahiRoYxSM2plBfkS9gZb3s7MyUiWiP1agB9nVcBqcKNrSkmrTjKZhUjEx90ztY eg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 353c2aubn9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 01 Dec 2020 15:42:48 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1FVKeg012757;
+        Tue, 1 Dec 2020 15:40:48 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 3540fx4vjk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Dec 2020 15:40:48 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B1Feln7019957;
+        Tue, 1 Dec 2020 15:40:47 GMT
+Received: from [192.168.1.15] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 01 Dec 2020 07:40:46 -0800
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
+Subject: Re: [PATCH 01/15] scsi: qla2xxx: Return EBUSY on fcport deletion
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+In-Reply-To: <20201201082730.24158-2-njavali@marvell.com>
+Date:   Tue, 1 Dec 2020 09:40:44 -0600
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <4C604FE2-93E5-41F8-BC3A-691E94CA6646@oracle.com>
+References: <20201201082730.24158-1-njavali@marvell.com>
+ <20201201082730.24158-2-njavali@marvell.com>
+To:     Nilesh Javali <njavali@marvell.com>
+X-Mailer: Apple Mail (2.3608.120.23.2.4)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012010099
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 lowpriorityscore=0
+ clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
+ spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012010099
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Thomas,
 
-I'll go with something extra like:
 
-> 
->> Add a function to allow the affinity of an interrupt be switched to
->> managed, such that interrupts allocated for platform devices may be
->> managed.
-> 
-> Could you please add a paragraph which explains the limitations of that
-> interface?
+> On Dec 1, 2020, at 2:27 AM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> From: Daniel Wagner <dwagner@suse.de>
+>=20
+> When the fcport is about to be deleted we should return EBUSY instead =
+of
+> ENODEV. Only for EBUSY will the request be requeued in a multipath =
+setup.
+>=20
+> Also return EBUSY when the firmware has not yet started to avoid =
+dropping
+> the request.
+>=20
+> Link: https://lore.kernel.org/r/20201014073048.36219-1-dwagner@suse.de
+> Reviewed-by: Arun Easi <aeasi@marvell.com>
+> Signed-off-by: Daniel Wagner <dwagner@suse.de>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+> drivers/scsi/qla2xxx/qla_nvme.c | 6 ++++--
+> 1 file changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c =
+b/drivers/scsi/qla2xxx/qla_nvme.c
+> index 1f9005125313..b7a1dc24db38 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -554,10 +554,12 @@ static int qla_nvme_post_cmd(struct =
+nvme_fc_local_port *lport,
+>=20
+> 	fcport =3D qla_rport->fcport;
+>=20
+> -	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
+> -	    (fcport && fcport->deleted))
+> +	if (!qpair || !fcport)
+> 		return -ENODEV;
+>=20
+> +	if (!qpair->fw_started || fcport->deleted)
+> +		return -EBUSY;
+> +
+> 	vha =3D fcport->vha;
+>=20
+> 	if (!(fcport->nvme_flag & NVME_FLAG_REGISTERED))
+> --=20
+> 2.19.0.rc0
+>=20
 
-This new interface has certain limitations, and attempts to use it in 
-the following circumstances will fail:
-- For when the kernel is configured for generic IRQ reservation mode (in 
-config GENERIC_IRQ_RESERVATION_MODE). The reason being that it could 
-conflict with managed vs. non-managed interrupt accounting there.
-- The interrupt is already started, which should not be the case during init
-- The interrupt is already configured as managed, which means double init
+Looks Good.=20
 
-> 
->> +/**
->> + * irq_update_affinity_desc - Update affinity management for an interrupt
->> + * @irq:	The interrupt number to update
->> + * @affinity:	Pointer to the affinity descriptor
->> + *
->> + * This interface can be used to configure the affinity management of
->> + * interrupts which have been allocated already.
-> 
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-/*
-  * There are certain limitations on when it may be used - attempts to 
-use it for when the kernel is configured for generic IRQ reservation 
-mode (in config GENERIC_IRQ_RESERVATION_MODE) will fail, as it may 
-conflict with managed/non-managed interrupt accounting. In addition, 
-attempts to use it on an interrupt which is already started or which has 
-already been configured as managed will also fail, as these mean invalid 
-init state or double init.
+--
+Himanshu Madhani	 Oracle Linux Engineering
 
-...
-
-Let me know if not good, if not I'll post again soon.
-
-Thanks,
-John
