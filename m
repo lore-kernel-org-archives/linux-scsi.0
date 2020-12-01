@@ -4,43 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DD79C64E7B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E40C71156
 	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 11:32:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADC022080A
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 11:32:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 838F42086A
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 11:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727855AbgLALbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 06:31:53 -0500
-Received: from verein.lst.de ([213.95.11.211]:49324 "EHLO verein.lst.de"
+        id S1728060AbgLALcJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 06:32:09 -0500
+Received: from verein.lst.de ([213.95.11.211]:49336 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726832AbgLALbx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Dec 2020 06:31:53 -0500
+        id S1727852AbgLALcJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Dec 2020 06:32:09 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id D796268B02; Tue,  1 Dec 2020 12:31:09 +0100 (CET)
-Date:   Tue, 1 Dec 2020 12:31:09 +0100
+        id 19C1368B05; Tue,  1 Dec 2020 12:31:27 +0100 (CET)
+Date:   Tue, 1 Dec 2020 12:31:26 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org,
+        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        "David S . Miller" <davem@davemloft.net>,
         Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Can Guo <cang@codeaurora.org>
-Subject: Re: [PATCH v4 2/9] block: Introduce BLK_MQ_REQ_PM
-Message-ID: <20201201113109.GC32252@lst.de>
-References: <20201130024615.29171-1-bvanassche@acm.org> <20201130024615.29171-3-bvanassche@acm.org>
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v4 4/9] ide: Mark power management requests with RQF_PM
+ instead of RQF_PREEMPT
+Message-ID: <20201201113126.GD32252@lst.de>
+References: <20201130024615.29171-1-bvanassche@acm.org> <20201130024615.29171-5-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201130024615.29171-3-bvanassche@acm.org>
+In-Reply-To: <20201130024615.29171-5-bvanassche@acm.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
