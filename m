@@ -6,43 +6,43 @@ X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A75C83018
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 19:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6113C71155
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 19:03:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C77AA20643
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 19:02:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BC812168B
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 19:03:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392331AbgLATCc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 14:02:32 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:40304 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392316AbgLATCc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 14:02:32 -0500
-Received: by mail-ot1-f66.google.com with SMTP id 79so2707664otc.7;
-        Tue, 01 Dec 2020 11:02:16 -0800 (PST)
+        id S2392367AbgLATDY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 14:03:24 -0500
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:45458 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392361AbgLATDY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 14:03:24 -0500
+Received: by mail-ot1-f68.google.com with SMTP id k3so2696268otp.12;
+        Tue, 01 Dec 2020 11:03:08 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=qGCSg/XgNwi3cF4EDoNSb1VDiK1YqRmCPX4AUa7CIjQ=;
-        b=EGcp8hiiEt5jD/ct7NOw/JbsolttCwIgda3u3crCt/4/mINRRzUAJfjdXoBmcnYSX/
-         RofddQP79sQf8H5sFtByOddKaTkFlWqZhnlUvuRFP/fdKeMm1EwUfOduHWYYzfHzT4zi
-         8ftpwDLc1/mKkFgcqzXo0l8J9D9C1Gte/UhLR6ABC3E23h6H91EssqKL/hR6AcHS/HGO
-         EXIKmwu/7k12efz2dCeZoGOXKuywXIHQU62BekTL/FYrp45YMYbmTeY46ulQDL6ah/+Z
-         rzf2Lsbjh23oS0+lGE3iJTr1BDlXhZfKYLtAhqcYE96zbv604OwLBOG+5kR/3OOdCI3E
-         vw0w==
-X-Gm-Message-State: AOAM530YBKfEUvd9ZsdrbKb2VPpffes0cjX0ZeA9YubrAto33fBYgf/+
-        2WTHRJEkUgMcGZK0np22hdCSYHtVhhGfSVgkfwQ=
-X-Google-Smtp-Source: ABdhPJzI3NAp5K2MsFrEh4Ybf5fvmKKvrAttzNfQPSF1b7gj+fuTd6yw4/6cG75pXHja2a/+buZa4WAjrTWQTpSBRQg=
-X-Received: by 2002:a05:6830:2385:: with SMTP id l5mr2868099ots.321.1606849310854;
- Tue, 01 Dec 2020 11:01:50 -0800 (PST)
+        bh=S4nwtnN++PXcnu5S7VLuEP8CX8HDk2g/09v0VasvzIE=;
+        b=Cc6Q1QnCv9wTEjGcmYHh+9Ca8Nu0QhucFa1LT6+eIoiy44gzz/MVyKT+KRn/G3ycz5
+         KbWhEEA1qmrO6aluGQKlWvXMWaF3eD851/d2+J6tjyrnTkoVQZjLEv6z9DM9hynxnvGu
+         hpYZsDtyglJxS7MzAcQ/V0o+P39KNQTTxJfB3dUOr2mrZDCsvSntexp5QlViGjoYNOPz
+         vwMu+Hiafu4yBzWimzaPYzcDw2TLh/BcgTM5wmFLUD4SFruf9lcCnPQfo7bxZA3c98Qi
+         e+TkmoXGicRrES7aHiTUPdQa3TIZuXQsfZKV8Af79z1qHN4rA/8QfyGpdjrmtroZqiZt
+         ARPA==
+X-Gm-Message-State: AOAM533OxdxHKAxmFUwIh/pU5Mr8fsfcEP/hg2aXGaQ89boW0LKQLywL
+        c++9XHqE8PxLE0H/T/3SzUjm5XGdEtTVYHyWq34=
+X-Google-Smtp-Source: ABdhPJzGR+NesdwIyDdJas2CXaIgk6UfRYSZ1sSTqiODL/M3W+gzrpp8l2Q9ipuRL4LAD/fdGa3QPJUhiO5kPbAC3kY=
+X-Received: by 2002:a9d:171a:: with SMTP id i26mr2927492ota.260.1606849363083;
+ Tue, 01 Dec 2020 11:02:43 -0800 (PST)
 MIME-Version: 1.0
-References: <1606757759-6076-1-git-send-email-john.garry@huawei.com> <1606757759-6076-4-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1606757759-6076-4-git-send-email-john.garry@huawei.com>
+References: <1606757759-6076-1-git-send-email-john.garry@huawei.com> <1606757759-6076-3-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1606757759-6076-3-git-send-email-john.garry@huawei.com>
 From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 1 Dec 2020 20:01:39 +0100
-Message-ID: <CAJZ5v0gnwJ37rzi_+FMB-eN1OAW0n86pYN8FWa_Tc4eWvjNv-Q@mail.gmail.com>
-Subject: Re: [PATCH v4 3/5] ACPI: Drop acpi_dev_irqresource_disabled()
+Date:   Tue, 1 Dec 2020 20:02:31 +0100
+Message-ID: <CAJZ5v0jzDSQ8URKkmBYh0P79P3v5OHCwgssnkyVMk1jpZ=DWyQ@mail.gmail.com>
+Subject: Re: [PATCH v4 2/5] resource: Add irqresource_disabled()
 To:     John Garry <john.garry@huawei.com>
 Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -63,81 +63,36 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Mon, Nov 30, 2020 at 6:41 PM John Garry <john.garry@huawei.com> wrote:
 >
-> The functionality of acpi_dev_irqresource_disabled() is same as in common
-> irqresource_disabled(), so drop acpi_dev_irqresource_disabled() in favour
-> of that function.
+> Add a common function to set the fields for a irq resource to disabled,
+> which mimics what is done in acpi_dev_irqresource_disabled(), with a view
+> to replace that function.
 >
 > Signed-off-by: John Garry <john.garry@huawei.com>
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
 > ---
->  drivers/acpi/resource.c | 17 +++++------------
->  1 file changed, 5 insertions(+), 12 deletions(-)
+>  include/linux/ioport.h | 7 +++++++
+>  1 file changed, 7 insertions(+)
 >
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index ad04824ca3ba..58203193417e 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -380,13 +380,6 @@ unsigned int acpi_dev_get_irq_type(int triggering, int polarity)
->  }
->  EXPORT_SYMBOL_GPL(acpi_dev_get_irq_type);
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 5135d4b86cd6..f9bf374f9633 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -307,6 +307,13 @@ struct resource *devm_request_free_mem_region(struct device *dev,
+>  struct resource *request_free_mem_region(struct resource *base,
+>                 unsigned long size, const char *name);
 >
-> -static void acpi_dev_irqresource_disabled(struct resource *res, u32 gsi)
-> -{
-> -       res->start = gsi;
-> -       res->end = gsi;
-> -       res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> -}
-> -
->  static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
->                                      u8 triggering, u8 polarity, u8 shareable,
->                                      bool legacy)
-> @@ -394,7 +387,7 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
->         int irq, p, t;
->
->         if (!valid_IRQ(gsi)) {
-> -               acpi_dev_irqresource_disabled(res, gsi);
-> +               irqresource_disabled(res, gsi);
->                 return;
->         }
->
-> @@ -426,7 +419,7 @@ static void acpi_dev_get_irqresource(struct resource *res, u32 gsi,
->                 res->start = irq;
->                 res->end = irq;
->         } else {
-> -               acpi_dev_irqresource_disabled(res, gsi);
-> +               irqresource_disabled(res, gsi);
->         }
->  }
->
-> @@ -463,7 +456,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->                  */
->                 irq = &ares->data.irq;
->                 if (index >= irq->interrupt_count) {
-> -                       acpi_dev_irqresource_disabled(res, 0);
-> +                       irqresource_disabled(res, 0);
->                         return false;
->                 }
->                 acpi_dev_get_irqresource(res, irq->interrupts[index],
-> @@ -473,7 +466,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->         case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
->                 ext_irq = &ares->data.extended_irq;
->                 if (index >= ext_irq->interrupt_count) {
-> -                       acpi_dev_irqresource_disabled(res, 0);
-> +                       irqresource_disabled(res, 0);
->                         return false;
->                 }
->                 if (is_gsi(ext_irq))
-> @@ -481,7 +474,7 @@ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
->                                          ext_irq->triggering, ext_irq->polarity,
->                                          ext_irq->shareable, false);
->                 else
-> -                       acpi_dev_irqresource_disabled(res, 0);
-> +                       irqresource_disabled(res, 0);
->                 break;
->         default:
->                 res->flags = 0;
+> +static inline void irqresource_disabled(struct resource *res, u32 irq)
+> +{
+> +       res->start = irq;
+> +       res->end = irq;
+> +       res->flags = IORESOURCE_IRQ | IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> +}
+> +
+>  #ifdef CONFIG_IO_STRICT_DEVMEM
+>  void revoke_devmem(struct resource *res);
+>  #else
 > --
 > 2.26.2
 >
