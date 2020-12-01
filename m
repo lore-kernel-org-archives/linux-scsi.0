@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58722C63777
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 02:42:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD405C63777
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 02:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E424320809
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 02:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37B6D20857
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 02:43:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vngfK9Rw"
+	dkim=pass (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="iPopZylG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727254AbgLACmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Nov 2020 21:42:11 -0500
-Received: from z5.mailgun.us ([104.130.96.5]:49181 "EHLO z5.mailgun.us"
+        id S1727288AbgLACnF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Nov 2020 21:43:05 -0500
+Received: from m42-4.mailgun.net ([69.72.42.4]:45198 "EHLO m42-4.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725900AbgLACmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Nov 2020 21:42:10 -0500
+        id S1727126AbgLACnF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Nov 2020 21:43:05 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606790508; h=Content-Transfer-Encoding: Content-Type:
+ s=smtp; t=1606790563; h=Content-Transfer-Encoding: Content-Type:
  In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=zKeaAhcsyBuOUqPQR3JVlrILnSTaBDiXtP5Rw+G7pj8=; b=vngfK9RwJO0nsQQjmKYBfQuD/tAPfiJrxLufgNRF415gOQIyotc11eaL+aFZpuoQBQQPKcEO
- iuYkBG8P4KBhDsgTyv3QBNYr6C6gD4TUT1kiVLh5YLFlPbsTetm1vuatTWtruxRQpnk05EKn
- SAE0eVXSrPuj4mJNYk7lwIWpDHU=
-X-Mailgun-Sending-Ip: 104.130.96.5
+ Subject: Sender; bh=bmnMEgeHu2+d1Q3HLkgVB3Z0SXVqSHWP2jBAsjKGVhc=; b=iPopZylGACWHLH9NfSMGcvV3jwW9QoOKiOuZdr/KgvXZ4Vmr91bAVslXAWGV8BHJpd2dR8i8
+ f58ruiz7aXe4Er3iRmzJkCtAeszu3c5KoHBcf08GjYDXyfGbNHAS/+y+I0dAGVDmho2arikd
+ 575oIUR+RrgJLjypy3GLo3n5dds=
+X-Mailgun-Sending-Ip: 69.72.42.4
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5fc5ad4f2ef3e1355f407e6e (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Dec 2020 02:41:19
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 5fc5ad830f9adc18c787f314 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 01 Dec 2020 02:42:11
  GMT
 Sender: asutoshd=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9DE2CC43465; Tue,  1 Dec 2020 02:41:19 +0000 (UTC)
+        id 6E320C43461; Tue,  1 Dec 2020 02:42:10 +0000 (UTC)
 Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B4240C433C6;
-        Tue,  1 Dec 2020 02:41:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B4240C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 241F9C43460;
+        Tue,  1 Dec 2020 02:42:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 241F9C43460
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v3 1/3] scsi: ufs: Serialize eh_work with system PM events
- and async scan
+Subject: Re: [PATCH v3 2/3] scsi: ufs: Fix a racing problem between
+ ufshcd_abort and eh_work
 To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, ziqichen@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
@@ -63,14 +63,14 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Satya Tangirala <satyat@google.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <1605596660-2987-1-git-send-email-cang@codeaurora.org>
- <1605596660-2987-2-git-send-email-cang@codeaurora.org>
+ <1605596660-2987-3-git-send-email-cang@codeaurora.org>
 From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <89c387c1-586a-3309-9dbb-f1903148df62@codeaurora.org>
-Date:   Mon, 30 Nov 2020 18:41:15 -0800
+Message-ID: <0a3a545b-55f8-e358-7d62-00cde64d40aa@codeaurora.org>
+Date:   Mon, 30 Nov 2020 18:42:07 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.3
 MIME-Version: 1.0
-In-Reply-To: <1605596660-2987-2-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1605596660-2987-3-git-send-email-cang@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,245 +79,180 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/16/2020 11:04 PM, Can Guo wrote:
-> Serialize eh_work with system PM events and async scan to make sure eh_work
-> does not run in parallel with them.
+> In current task abort routine, if task abort happens to the device W-LU,
+> the code directly jumps to ufshcd_eh_host_reset_handler() to perform a
+> full reset and restore then returns FAIL or SUCCESS. Commands sent to the
+> device W-LU are most likely the SSU cmds sent during UFS PM operations. If
+> such SSU cmd enters task abort routine, when ufshcd_eh_host_reset_handler()
+> flushes eh_work, there will be racing because err_handler is serialized
+> with any PM operations.
+> 
+> Since the main idea of aborting one cmd to the device W-LU is to perform
+> a full reset and restore, in order to resolve the racing problem, we merely
+> clean up the lrb taken by this cmd, queue the eh_work and abort the cmd.
+> Since the cmd has been aborted, the PM operation which sends the cmd simply
+> errors out, thus err_handler will not be blocked by ongoing PM operations
+> and err_handler can also recover PM error if any, which comes as another
+> benefit of this change.
+> 
+> Because such cmd is aborted even before it is actually cleared from HW, set
+> the lrb->in_use flag to prevent subsequent cmds, including SCSI cmds and
+> dev cmds, from taking the lrb released by this cmd. Flag lrb->in_use shall
+> evetually be cleared in __ufshcd_transfer_req_compl() invoked by the full
+> reset and restore from err_handler.
 > 
 > Signed-off-by: Can Guo <cang@codeaurora.org>
 > ---
 
 Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
->   drivers/scsi/ufs/ufshcd.c | 64 +++++++++++++++++++++++++++++------------------
->   drivers/scsi/ufs/ufshcd.h |  1 +
->   2 files changed, 41 insertions(+), 24 deletions(-)
+>   drivers/scsi/ufs/ufshcd.c | 55 ++++++++++++++++++++++++++++++++++++-----------
+>   drivers/scsi/ufs/ufshcd.h |  2 ++
+>   2 files changed, 45 insertions(+), 12 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 1d8134e..7e764e8 100644
+> index 7e764e8..cd7394e 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5597,7 +5597,9 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
->   static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->   {
->   	pm_runtime_get_sync(hba->dev);
-> -	if (pm_runtime_suspended(hba->dev)) {
-> +	if (pm_runtime_status_suspended(hba->dev) || hba->is_sys_suspended) {
-> +		enum ufs_pm_op pm_op;
+> @@ -2539,6 +2539,14 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>   		(hba->clk_gating.state != CLKS_ON));
+>   
+>   	lrbp = &hba->lrb[tag];
+> +	if (unlikely(lrbp->in_use)) {
+> +		if (hba->pm_op_in_progress)
+> +			set_host_byte(cmd, DID_BAD_TARGET);
+> +		else
+> +			err = SCSI_MLQUEUE_HOST_BUSY;
+> +		ufshcd_release(hba);
+> +		goto out;
+> +	}
+>   
+>   	WARN_ON(lrbp->cmd);
+>   	lrbp->cmd = cmd;
+> @@ -2781,6 +2789,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>   
+>   	init_completion(&wait);
+>   	lrbp = &hba->lrb[tag];
+> +	if (unlikely(lrbp->in_use)) {
+> +		err = -EBUSY;
+> +		goto out;
+> +	}
 > +
->   		/*
->   		 * Don't assume anything of pm_runtime_get_sync(), if
->   		 * resume fails, irq and clocks can be OFF, and powers
-> @@ -5612,7 +5614,8 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->   		if (!ufshcd_is_clkgating_allowed(hba))
->   			ufshcd_setup_clocks(hba, true);
->   		ufshcd_release(hba);
-> -		ufshcd_vops_resume(hba, UFS_RUNTIME_PM);
-> +		pm_op = hba->is_sys_suspended ? UFS_RUNTIME_PM : UFS_SYSTEM_PM;
-> +		ufshcd_vops_resume(hba, pm_op);
->   	} else {
->   		ufshcd_hold(hba, false);
->   		if (hba->clk_scaling.is_allowed) {
-> @@ -5633,7 +5636,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>   	WARN_ON(lrbp->cmd);
+>   	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+>   	if (unlikely(err))
+> @@ -2797,6 +2810,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
 >   
->   static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
->   {
-> -	return (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
-> +	return (!hba->is_powered || hba->ufshcd_state == UFSHCD_STATE_ERROR ||
->   		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
->   			ufshcd_is_link_broken(hba))));
->   }
-> @@ -5646,6 +5649,7 @@ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
->   	struct request_queue *q;
->   	int ret;
+>   	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
 >   
-> +	hba->is_sys_suspended = false;
->   	/*
->   	 * Set RPM status of hba device to RPM_ACTIVE,
->   	 * this also clears its runtime error.
-> @@ -5704,11 +5708,13 @@ static void ufshcd_err_handler(struct work_struct *work)
+> +out:
+>   	ufshcd_add_query_upiu_trace(hba, tag,
+>   			err ? "query_complete_err" : "query_complete");
 >   
->   	hba = container_of(work, struct ufs_hba, eh_work);
+> @@ -4932,6 +4946,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 >   
-> +	down(&hba->eh_sem);
->   	spin_lock_irqsave(hba->host->host_lock, flags);
->   	if (ufshcd_err_handling_should_stop(hba)) {
->   		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
->   			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
->   		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		up(&hba->eh_sem);
->   		return;
+>   	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+>   		lrbp = &hba->lrb[index];
+> +		lrbp->in_use = false;
+>   		lrbp->compl_time_stamp = ktime_get();
+>   		cmd = lrbp->cmd;
+>   		if (cmd) {
+> @@ -6374,8 +6389,12 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+>   
+>   	init_completion(&wait);
+>   	lrbp = &hba->lrb[tag];
+> -	WARN_ON(lrbp->cmd);
+> +	if (unlikely(lrbp->in_use)) {
+> +		err = -EBUSY;
+> +		goto out;
+> +	}
+>   
+> +	WARN_ON(lrbp->cmd);
+>   	lrbp->cmd = NULL;
+>   	lrbp->sense_bufflen = 0;
+>   	lrbp->sense_buffer = NULL;
+> @@ -6447,6 +6466,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+>   		}
 >   	}
->   	ufshcd_set_eh_in_progress(hba);
-> @@ -5716,20 +5722,18 @@ static void ufshcd_err_handler(struct work_struct *work)
->   	ufshcd_err_handling_prepare(hba);
->   	spin_lock_irqsave(hba->host->host_lock, flags);
->   	ufshcd_scsi_block_requests(hba);
-> -	/*
-> -	 * A full reset and restore might have happened after preparation
-> -	 * is finished, double check whether we should stop.
-> -	 */
-> -	if (ufshcd_err_handling_should_stop(hba)) {
-> -		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> -		goto out;
-> -	}
->   	hba->ufshcd_state = UFSHCD_STATE_RESET;
 >   
->   	/* Complete requests that have door-bell cleared by h/w */
->   	ufshcd_complete_requests(hba);
+> +out:
+>   	blk_put_request(req);
+>   out_unlock:
+>   	up_read(&hba->clk_scaling_lock);
+> @@ -6696,16 +6716,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>   		BUG();
+>   	}
+>   
+> -	/*
+> -	 * Task abort to the device W-LUN is illegal. When this command
+> -	 * will fail, due to spec violation, scsi err handling next step
+> -	 * will be to send LU reset which, again, is a spec violation.
+> -	 * To avoid these unnecessary/illegal step we skip to the last error
+> -	 * handling stage: reset and restore.
+> -	 */
+> -	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN)
+> -		return ufshcd_eh_host_reset_handler(cmd);
+> -
+>   	ufshcd_hold(hba, false);
+>   	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>   	/* If command is already aborted/completed, return SUCCESS */
+> @@ -6726,7 +6736,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>   	 * to reduce repeated printouts. For other aborted requests only print
+>   	 * basic details.
+>   	 */
+> -	scsi_print_command(hba->lrb[tag].cmd);
+> +	scsi_print_command(cmd);
+>   	if (!hba->req_abort_count) {
+>   		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, 0);
+>   		ufshcd_print_host_regs(hba);
+> @@ -6745,6 +6755,27 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>   		goto cleanup;
+>   	}
 >   
 > +	/*
-> +	 * A full reset and restore might have happened after preparation
-> +	 * is finished, double check whether we should stop.
+> +	 * Task abort to the device W-LUN is illegal. When this command
+> +	 * will fail, due to spec violation, scsi err handling next step
+> +	 * will be to send LU reset which, again, is a spec violation.
+> +	 * To avoid these unnecessary/illegal steps, first we clean up
+> +	 * the lrb taken by this cmd and mark the lrb as in_use, then
+> +	 * queue the eh_work and bail.
 > +	 */
-> +	if (ufshcd_err_handling_should_stop(hba))
-> +		goto skip_err_handling;
-> +
->   	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
->   		bool ret;
->   
-> @@ -5737,17 +5741,10 @@ static void ufshcd_err_handler(struct work_struct *work)
->   		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
->   		ret = ufshcd_quirk_dl_nac_errors(hba);
->   		spin_lock_irqsave(hba->host->host_lock, flags);
-> -		if (!ret && !hba->force_reset && ufshcd_is_link_active(hba))
-> +		if (!ret && ufshcd_err_handling_should_stop(hba))
->   			goto skip_err_handling;
->   	}
->   
-> -	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> -	    ufshcd_is_saved_err_fatal(hba) ||
-> -	    ((hba->saved_err & UIC_ERROR) &&
-> -	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-> -				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
-> -		needs_reset = true;
-> -
->   	if ((hba->saved_err & (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) ||
->   	    (hba->saved_uic_err &&
->   	     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
-> @@ -5767,8 +5764,14 @@ static void ufshcd_err_handler(struct work_struct *work)
->   	 * transfers forcefully because they will get cleared during
->   	 * host reset and restore
->   	 */
-> -	if (needs_reset)
-> +	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> +	    ufshcd_is_saved_err_fatal(hba) ||
-> +	    ((hba->saved_err & UIC_ERROR) &&
-> +	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-> +				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))) {
-> +		needs_reset = true;
->   		goto do_reset;
+> +	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
+> +		spin_lock_irqsave(host->host_lock, flags);
+> +		if (lrbp->cmd) {
+> +			__ufshcd_transfer_req_compl(hba, (1UL << tag));
+> +			__set_bit(tag, &hba->outstanding_reqs);
+> +			lrbp->in_use = true;
+> +			hba->force_reset = true;
+> +			ufshcd_schedule_eh_work(hba);
+> +		}
+> +		spin_unlock_irqrestore(host->host_lock, flags);
+> +		goto out;
 > +	}
->   
->   	/*
->   	 * If LINERESET was caught, UFS might have been put to PWM mode,
-> @@ -5876,12 +5879,11 @@ static void ufshcd_err_handler(struct work_struct *work)
->   			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
->   			    __func__, hba->saved_err, hba->saved_uic_err);
->   	}
-> -
-> -out:
->   	ufshcd_clear_eh_in_progress(hba);
->   	spin_unlock_irqrestore(hba->host->host_lock, flags);
->   	ufshcd_scsi_unblock_requests(hba);
->   	ufshcd_err_handling_unprepare(hba);
-> +	up(&hba->eh_sem);
->   }
->   
->   /**
-> @@ -6856,6 +6858,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
->   	 */
->   	scsi_report_bus_reset(hba->host, 0);
->   	if (err) {
-> +		hba->ufshcd_state = UFSHCD_STATE_ERROR;
->   		hba->saved_err |= saved_err;
->   		hba->saved_uic_err |= saved_uic_err;
->   	}
-> @@ -7704,8 +7707,10 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
->   	struct ufs_hba *hba = (struct ufs_hba *)data;
->   	int ret;
->   
-> +	down(&hba->eh_sem);
->   	/* Initialize hba, detect and initialize UFS device */
->   	ret = ufshcd_probe_hba(hba, true);
-> +	up(&hba->eh_sem);
->   	if (ret)
->   		goto out;
->   
-> @@ -8718,6 +8723,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->   	int ret = 0;
->   	ktime_t start = ktime_get();
->   
-> +	down(&hba->eh_sem);
->   	if (!hba || !hba->is_powered)
->   		return 0;
->   
-> @@ -8748,6 +8754,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->   		hba->curr_dev_pwr_mode, hba->uic_link_state);
->   	if (!ret)
->   		hba->is_sys_suspended = true;
-> +	else
-> +		up(&hba->eh_sem);
->   	return ret;
->   }
->   EXPORT_SYMBOL(ufshcd_system_suspend);
-> @@ -8764,8 +8772,10 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->   	int ret = 0;
->   	ktime_t start = ktime_get();
->   
-> -	if (!hba)
-> +	if (!hba) {
-> +		up(&hba->eh_sem);
->   		return -EINVAL;
-> +	}
->   
->   	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
->   		/*
-> @@ -8781,6 +8791,7 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->   		hba->curr_dev_pwr_mode, hba->uic_link_state);
->   	if (!ret)
->   		hba->is_sys_suspended = false;
-> +	up(&hba->eh_sem);
->   	return ret;
->   }
->   EXPORT_SYMBOL(ufshcd_system_resume);
-> @@ -8872,6 +8883,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->   {
->   	int ret = 0;
->   
-> +	down(&hba->eh_sem);
->   	if (!hba->is_powered)
->   		goto out;
->   
-> @@ -8888,6 +8900,8 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->   out:
->   	if (ret)
->   		dev_err(hba->dev, "%s failed, err %d\n", __func__, ret);
-> +	hba->is_powered = false;
-> +	up(&hba->eh_sem);
->   	/* allow force shutdown even in case of errors */
->   	return 0;
->   }
-> @@ -9082,6 +9096,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->   	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
->   	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
->   
-> +	sema_init(&hba->eh_sem, 1);
 > +
->   	/* Initialize UIC command mutex */
->   	mutex_init(&hba->uic_cmd_mutex);
->   
+>   	/* Skip task abort in case previous aborts failed and report failure */
+>   	if (lrbp->req_abort_skip)
+>   		err = -EIO;
 > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 47eb143..1e680bf 100644
+> index 1e680bf..66e5338 100644
 > --- a/drivers/scsi/ufs/ufshcd.h
 > +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -728,6 +728,7 @@ struct ufs_hba {
->   	u32 intr_mask;
->   	u16 ee_ctrl_mask;
->   	bool is_powered;
-> +	struct semaphore eh_sem;
+> @@ -163,6 +163,7 @@ struct ufs_pm_lvl_states {
+>    * @crypto_key_slot: the key slot to use for inline crypto (-1 if none)
+>    * @data_unit_num: the data unit number for the first block for inline crypto
+>    * @req_abort_skip: skip request abort task flag
+> + * @in_use: indicates that this lrb is still in use
+>    */
+>   struct ufshcd_lrb {
+>   	struct utp_transfer_req_desc *utr_descriptor_ptr;
+> @@ -192,6 +193,7 @@ struct ufshcd_lrb {
+>   #endif
 >   
->   	/* Work Queues */
->   	struct workqueue_struct *eh_wq;
+>   	bool req_abort_skip;
+> +	bool in_use;
+>   };
+>   
+>   /**
 > 
 
 
