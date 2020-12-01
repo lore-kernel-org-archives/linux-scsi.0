@@ -7,60 +7,57 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 839C6C64E7A
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A92C64E7A
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 229B7206E3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:29:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED118206E3
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:29:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="YUCbUeL4"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Jv6FzVqh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726708AbgLAI3B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 03:29:01 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53674 "EHLO
+        id S1728524AbgLAI3Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 03:29:25 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33448 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726311AbgLAI3B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 03:29:01 -0500
+        by vger.kernel.org with ESMTP id S1726809AbgLAI3Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 03:29:25 -0500
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B18L16d027368
-        for <linux-scsi@vger.kernel.org>; Tue, 1 Dec 2020 00:28:21 -0800
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B18L16g027368
+        for <linux-scsi@vger.kernel.org>; Tue, 1 Dec 2020 00:28:44 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=wywfcasSSSJGRlMSJAHNtIVTekPQsfDSUfWIxDis7zo=;
- b=YUCbUeL4mnXat4jLZ8qMiqs4Ce6WhQSVRymLckdjJZsgG6DpIgb3BYQzhsux4y8bCM3v
- l0kk2zLS9KcGexJEbaGfHsxI6ZectpNOU0gmwN4ENDWJkRHJdJ1x0XHIPSbZ/VU+Ehjf
- 88OL1wpUOozxCL8GQ5w7GhENdkAvWxrWWETJH4syjo28wzBzOLmado1FyI0cdFiT9An8
- 2WJGTASsOiM5/k72uO4rEnayD4p/KU/uIZHDxefs6z0H3X8uDqP4bTf6GLFdUBnbUyA3
- 8ibpn0+e9f3ZXOIYWX4QIxbf/V9RrihJz8AaUDW+mEdzc6C5hUJD/cyuB+eEFX7KCZ3N Uw== 
+ content-type; s=pfpt0220; bh=1JNBdxo7GpwrJ6Za6f09tknSz33BAUPT/UT7ZR6Lsos=;
+ b=Jv6FzVqhbveAL6W5mpN7x6zoMcPJcWoz+u7NJj+3mQhx/lVlzIib3KQKcheuGnB2puTJ
+ KIVjC7LaueQYOxj/0FcbVTZj77c0cckEuz0RlV/FfD+IXDedIR6tK91saWhw1F0HbOR1
+ RP9EHllcFRLcyvC1MqRmSYl1NJjw7fJZRM+fYDXyLY0mRTto7qHl0yM0pzUqy9JjWx8x
+ 80VrNjXEUlYPke6Pvl2UlslG+ZPCFu0Ru5WQ0Wri6BJmtYtTyzPjvwdjpQVAOu3QrDBC
+ vluMfDxgx76UkEO89PhmZm1vqzxISkbXzIodRnLlxqt1qNu9dp/MwMd7DFONM6/B+umn VA== 
 Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 353mssfkk9-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 353mssfkku-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Dec 2020 00:28:21 -0800
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Dec 2020 00:28:44 -0800
 Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
  (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Dec
- 2020 00:28:20 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Dec
- 2020 00:28:19 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 1 Dec 2020 00:28:19 -0800
+ 2020 00:28:43 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 1 Dec 2020 00:28:43 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 3CEC83F703F;
-        Tue,  1 Dec 2020 00:28:19 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 5C7D53F703F;
+        Tue,  1 Dec 2020 00:28:43 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0B18SJNA024205;
-        Tue, 1 Dec 2020 00:28:19 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0B18Shdl024217;
+        Tue, 1 Dec 2020 00:28:43 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0B18SJC2024204;
-        Tue, 1 Dec 2020 00:28:19 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0B18Sh2t024208;
+        Tue, 1 Dec 2020 00:28:43 -0800
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 01/15] scsi: qla2xxx: Return EBUSY on fcport deletion
-Date:   Tue, 1 Dec 2020 00:27:16 -0800
-Message-ID: <20201201082730.24158-2-njavali@marvell.com>
+Subject: [PATCH 02/15] qla2xxx: Change post del message from debug level to log level
+Date:   Tue, 1 Dec 2020 00:27:17 -0800
+Message-ID: <20201201082730.24158-3-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20201201082730.24158-1-njavali@marvell.com>
 References: <20201201082730.24158-1-njavali@marvell.com>
@@ -72,41 +69,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Daniel Wagner <dwagner@suse.de>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-When the fcport is about to be deleted we should return EBUSY instead of
-ENODEV. Only for EBUSY will the request be requeued in a multipath setup.
+Change the message debug level.
 
-Also return EBUSY when the firmware has not yet started to avoid dropping
-the request.
-
-Link: https://lore.kernel.org/r/20201014073048.36219-1-dwagner@suse.de
-Reviewed-by: Arun Easi <aeasi@marvell.com>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 1f9005125313..b7a1dc24db38 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -554,10 +554,12 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index e28c4b7ec55f..391ac75e3de3 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3558,10 +3558,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 					if (fcport->flags & FCF_FCP2_DEVICE)
+ 						fcport->logout_on_delete = 0;
  
- 	fcport = qla_rport->fcport;
+-					ql_dbg(ql_dbg_disc, vha, 0x20f0,
+-					    "%s %d %8phC post del sess\n",
+-					    __func__, __LINE__,
+-					    fcport->port_name);
++					ql_log(ql_log_warn, vha, 0x20f0,
++					       "%s %d %8phC post del sess\n",
++					       __func__, __LINE__,
++					       fcport->port_name);
  
--	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
--	    (fcport && fcport->deleted))
-+	if (!qpair || !fcport)
- 		return -ENODEV;
- 
-+	if (!qpair->fw_started || fcport->deleted)
-+		return -EBUSY;
-+
- 	vha = fcport->vha;
- 
- 	if (!(fcport->nvme_flag & NVME_FLAG_REGISTERED))
+ 					qlt_schedule_sess_for_deletion(fcport);
+ 					continue;
 -- 
 2.19.0.rc0
 
