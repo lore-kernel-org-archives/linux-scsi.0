@@ -2,109 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AA5AC8301B
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A76BC64E7A
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:28:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28F0A2087D
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:22:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F12E32087C
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:28:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="0ugfFVtm"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="IY7RNccX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387450AbgLAIWJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 03:22:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47644 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727192AbgLAIWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Dec 2020 03:22:07 -0500
-Received: from embeddedor (187-162-31-110.static.axtel.net [187.162.31.110])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 94ECB20659;
-        Tue,  1 Dec 2020 08:21:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1606810884;
-        bh=xHTFstOj6O/KMLPWIJ9livXkeh5E3cNJZoMEX1ICbl0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0ugfFVtmDEFz3qweRxNJGIbdlhHbJEbe+SPrGbc9I44gM+O6I2rVgrcZagGiPQlJe
-         qDa/e9cJY/n7rREFFqWQI6CYR7sTmaWJfiub5J4ReXH3L76qQfPF0XWoTZ+/KCqBa1
-         43uSa/AsDxhQJOFTJrlenu8ULt+S2HlexiyIiZjk=
-Date:   Tue, 1 Dec 2020 02:20:47 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
-        amd-gfx@lists.freedesktop.org, bridge@lists.linux-foundation.org,
-        ceph-devel@vger.kernel.org, cluster-devel@redhat.com,
-        coreteam@netfilter.org, devel@driverdev.osuosl.org,
-        dm-devel@redhat.com, drbd-dev@tron.linbit.com,
-        dri-devel@lists.freedesktop.org, GR-everest-linux-l2@marvell.com,
-        GR-Linux-NIC-Dev@marvell.com, intel-gfx@lists.freedesktop.org,
-        intel-wired-lan@lists.osuosl.org, keyrings@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
-        linux-afs@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-block@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-decnet-user@lists.sourceforge.net,
-        linux-ext4@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-geode@lists.infradead.org, linux-gpio@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        linux-i3c@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-integrity@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
-        op-tee@lists.trustedfirmware.org, oss-drivers@netronome.com,
-        patches@opensource.cirrus.com, rds-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org,
-        selinux@vger.kernel.org, target-devel@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net,
-        usb-storage@lists.one-eyed-alien.net,
-        virtualization@lists.linux-foundation.org,
-        wcn36xx@lists.infradead.org, x86@kernel.org,
-        xen-devel@lists.xenproject.org, linux-hardening@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>,
-        Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
-Message-ID: <20201201082047.GA11832@embeddedor>
-References: <cover.1605896059.git.gustavoars@kernel.org>
- <yq1h7p6gjkk.fsf@ca-mkp.ca.oracle.com>
+        id S1726442AbgLAI2h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 03:28:37 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:6774 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726311AbgLAI2h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 03:28:37 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B18L0cE027295
+        for <linux-scsi@vger.kernel.org>; Tue, 1 Dec 2020 00:27:56 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=6/GcveQrP1EQHE+ISI13pzql72ASjpGCVOHzn8R2fDU=;
+ b=IY7RNccXzO/hEYg1Fnx/K3lnGoV7Evyy1FPiSIkRhkvW/U3ncVSc1m9+fBsWyUgWeZmV
+ hrTbSi2JVdlpbl7nS+pQug1R/4EzJhsZTXQG7StxJMIvxCsfrc3hb1jDW1CYWt2xPGif
+ Wdhz2xDB6CZVX0iEwsVnoCFZ5YswwPQK9TmBiZoJOF96AfZ2KYZnaKT0EKjgZtU82vez
+ TW8ZmJ0p2vqeX3oK/CzbQDw7KG7zXOV5N6jvju5HNVyLTEvAv8TLE6yQCTEAoJEjFOh/
+ IWPXMiZPazYAQz/26GYwJrQ2eqaoWxDS54IyEoAi8Hf9i9/TXwr2rizTEXKT9tUrgefz wg== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 353mssfkj3-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Dec 2020 00:27:56 -0800
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Dec
+ 2020 00:27:55 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Dec
+ 2020 00:27:55 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 1 Dec 2020 00:27:55 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 73C993F703F;
+        Tue,  1 Dec 2020 00:27:55 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0B18Rsiw024201;
+        Tue, 1 Dec 2020 00:27:54 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0B18Rs1e024192;
+        Tue, 1 Dec 2020 00:27:54 -0800
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH 00/15] qla2xxx bug fixes
+Date:   Tue, 1 Dec 2020 00:27:15 -0800
+Message-ID: <20201201082730.24158-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq1h7p6gjkk.fsf@ca-mkp.ca.oracle.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-12-01_01:2020-11-30,2020-12-01 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 01, 2020 at 12:52:27AM -0500, Martin K. Petersen wrote:
-> 
-> Gustavo,
-> 
-> > This series aims to fix almost all remaining fall-through warnings in
-> > order to enable -Wimplicit-fallthrough for Clang.
-> 
-> Applied 20-22,54,120-124 to 5.11/scsi-staging, thanks.
+Martin,
+Please apply the qla2xxx bug fixes to the scsi tree at your
+earliest convenience.
 
-Awesome! :)
+Thanks,
+Nilesh
 
-Thanks, Martin.
---
-Gustavo
+Arun Easi (5):
+  qla2xxx: Fix compilation issue in PPC systems
+  qla2xxx: Fix crash during driver load on big endian machines
+  qla2xxx: Fix FW initialization error on big endian machines
+  qla2xxx: Fix flash update in 28XX adapters on big endian machines
+  qla2xxx: Fix device loss on 4G and older HBAs.
+
+Daniel Wagner (1):
+  scsi: qla2xxx: Return EBUSY on fcport deletion
+
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.00.104-k
+
+Quinn Tran (3):
+  qla2xxx: limit interrupt vectors to number of cpu
+  qla2xxx: tear down session if FW say its down
+  qla2xxx: fix N2N and NVME connect retry failure
+
+Saurav Kashyap (5):
+  qla2xxx: Change post del message from debug level to log level
+  qla2xxx: Don't check for fw_started while posting nvme command
+  qla2xxx: Handle aborts correctly for port undergoing deletion
+  qla2xxx: Fix the call trace for flush workqueue
+  qla2xxx: If fcport is undergoing deletion return IO with retry
+
+ drivers/scsi/qla2xxx/qla_gs.c      |  8 ++--
+ drivers/scsi/qla2xxx/qla_init.c    | 74 ++++++++++++++++++++++--------
+ drivers/scsi/qla2xxx/qla_isr.c     | 34 ++++++++++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |  9 ++--
+ drivers/scsi/qla2xxx/qla_nvme.c    | 14 +++---
+ drivers/scsi/qla2xxx/qla_nx.c      |  2 +-
+ drivers/scsi/qla2xxx/qla_nx2.c     |  4 +-
+ drivers/scsi/qla2xxx/qla_os.c      | 10 ++--
+ drivers/scsi/qla2xxx/qla_sup.c     | 10 ++--
+ drivers/scsi/qla2xxx/qla_tmpl.c    |  9 ++--
+ drivers/scsi/qla2xxx/qla_tmpl.h    |  2 +-
+ drivers/scsi/qla2xxx/qla_version.h |  4 +-
+ 12 files changed, 120 insertions(+), 60 deletions(-)
+
+
+base-commit: cf4d4d8ebdb838ee996e09e3ee18deb9a7737dea
+-- 
+2.19.0.rc0
+
