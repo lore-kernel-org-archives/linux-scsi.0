@@ -7,73 +7,74 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28087C64E7A
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1262CC64E7B
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:46:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAFE820857
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:43:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B1352080A
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 15:46:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JIHL4cp9"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="baOBmOkx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388276AbgLAPnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 10:43:31 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:35622 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388237AbgLAPnb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 10:43:31 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1FYvvM195272;
-        Tue, 1 Dec 2020 15:42:49 GMT
+        id S2390100AbgLAPqL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 10:46:11 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42490 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391944AbgLAPqK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 10:46:10 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1FYv6u135260;
+        Tue, 1 Dec 2020 15:45:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
  mime-version : subject : from : in-reply-to : date : cc :
  content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=H4eodoH1mwSQpZp5VBdnpTOQGj/CEIv9rpO5Bhp1Ufk=;
- b=JIHL4cp9h6SSY1ql560vDA6UQZVG4kem9r3IQndLdWID8fibv4c7n84qDk3WstVcr7aP
- wF+JL7UzjUfb8tgXu3zrX6p9GInsakxY6RHudGCE5Vrccoe9ZuE/yibiQx8wa1gWNOOQ
- hx/xUMk6Pg+VrbF5V3Xzuxuo26EVCt1dt1o5q37ef8htApVoIk4Ot+vfu4wv1vM3vDAQ
- MEFsbKgljh9MvsWI96YIxGPazu41DmnptBTTSj9LOWUmCxnahqmBR6YCwb9+6EHCdgSy
- eYxCMFahiRoYxSM2plBfkS9gZb3s7MyUiWiP1agB9nVcBqcKNrSkmrTjKZhUjEx90ztY eg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 353c2aubn9-1
+ s=corp-2020-01-29; bh=uLb2wYduce1z6ag2SkCHKVGD+fRur6S1xve6KgGkVYY=;
+ b=baOBmOkxYWplzbH+wf54m38nRhIzQdmGaBg26u6gUGAO34ze+hBQKU4yz581zNKP8TNq
+ +exgUnRvb9ZTwF3GKb2t0P03KJCh0paep6qRP2exv475OOaMgs66YDVLqALiIOz943xu
+ MLrcWVARW9T12ruZ9x8I0+XqLwtryqIJXxwLg6Qm1NGYy63Auf3i9bCoIHinFCIGRdUU
+ QV8UrXZmhbjvSYC9LemvXlVYqbVzBgLlILvPWQhk5q5NeYVhvSdbG6hqYk+VkhuukXIl
+ HsRZsUJuD9xleDSNi0Va5OdV7Usc6SI9YLqXKTcBMMlMOJgzHe2A8KFA7U7Ltu4XXbcV cw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 353egkk6mn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 01 Dec 2020 15:42:48 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1FVKeg012757;
-        Tue, 1 Dec 2020 15:40:48 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 3540fx4vjk-1
+        Tue, 01 Dec 2020 15:45:28 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B1FUGGq113352;
+        Tue, 1 Dec 2020 15:45:27 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 3540ashq6r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Dec 2020 15:40:48 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B1Feln7019957;
-        Tue, 1 Dec 2020 15:40:47 GMT
+        Tue, 01 Dec 2020 15:45:27 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B1FjQ1w009072;
+        Tue, 1 Dec 2020 15:45:26 GMT
 Received: from [192.168.1.15] (/70.114.128.235)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Dec 2020 07:40:46 -0800
+        with ESMTP ; Tue, 01 Dec 2020 07:45:26 -0800
 Content-Type: text/plain;
         charset=us-ascii
 Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.4\))
-Subject: Re: [PATCH 01/15] scsi: qla2xxx: Return EBUSY on fcport deletion
+Subject: Re: [PATCH 02/15] qla2xxx: Change post del message from debug level
+ to log level
 From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-In-Reply-To: <20201201082730.24158-2-njavali@marvell.com>
-Date:   Tue, 1 Dec 2020 09:40:44 -0600
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com
+In-Reply-To: <20201201082730.24158-3-njavali@marvell.com>
+Date:   Tue, 1 Dec 2020 09:45:25 -0600
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <4C604FE2-93E5-41F8-BC3A-691E94CA6646@oracle.com>
+Message-Id: <3CCE1C90-64DB-46C7-A49D-9378077CA083@oracle.com>
 References: <20201201082730.24158-1-njavali@marvell.com>
- <20201201082730.24158-2-njavali@marvell.com>
+ <20201201082730.24158-3-njavali@marvell.com>
 To:     Nilesh Javali <njavali@marvell.com>
 X-Mailer: Apple Mail (2.3608.120.23.2.4)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
+ phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012010099
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9822 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 lowpriorityscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2012010099
 Precedence: bulk
@@ -84,53 +85,48 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 > On Dec 1, 2020, at 2:27 AM, Nilesh Javali <njavali@marvell.com> wrote:
 >=20
-> From: Daniel Wagner <dwagner@suse.de>
+> From: Saurav Kashyap <skashyap@marvell.com>
 >=20
-> When the fcport is about to be deleted we should return EBUSY instead =
-of
-> ENODEV. Only for EBUSY will the request be requeued in a multipath =
-setup.
+> Change the message debug level.
 >=20
-> Also return EBUSY when the firmware has not yet started to avoid =
-dropping
-> the request.
->=20
-> Link: https://lore.kernel.org/r/20201014073048.36219-1-dwagner@suse.de
-> Reviewed-by: Arun Easi <aeasi@marvell.com>
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
-> drivers/scsi/qla2xxx/qla_nvme.c | 6 ++++--
-> 1 file changed, 4 insertions(+), 2 deletions(-)
+> drivers/scsi/qla2xxx/qla_gs.c | 8 ++++----
+> 1 file changed, 4 insertions(+), 4 deletions(-)
 >=20
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c =
-b/drivers/scsi/qla2xxx/qla_nvme.c
-> index 1f9005125313..b7a1dc24db38 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -554,10 +554,12 @@ static int qla_nvme_post_cmd(struct =
-nvme_fc_local_port *lport,
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c =
+b/drivers/scsi/qla2xxx/qla_gs.c
+> index e28c4b7ec55f..391ac75e3de3 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -3558,10 +3558,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t =
+*vha, srb_t *sp)
+> 					if (fcport->flags & =
+FCF_FCP2_DEVICE)
+> 						fcport->logout_on_delete =
+=3D 0;
 >=20
-> 	fcport =3D qla_rport->fcport;
+> -					ql_dbg(ql_dbg_disc, vha, 0x20f0,
+> -					    "%s %d %8phC post del =
+sess\n",
+> -					    __func__, __LINE__,
+> -					    fcport->port_name);
+> +					ql_log(ql_log_warn, vha, 0x20f0,
+> +					       "%s %d %8phC post del =
+sess\n",
+> +					       __func__, __LINE__,
+> +					       fcport->port_name);
 >=20
-> -	if (!qpair || !fcport || (qpair && !qpair->fw_started) ||
-> -	    (fcport && fcport->deleted))
-> +	if (!qpair || !fcport)
-> 		return -ENODEV;
->=20
-> +	if (!qpair->fw_started || fcport->deleted)
-> +		return -EBUSY;
-> +
-> 	vha =3D fcport->vha;
->=20
-> 	if (!(fcport->nvme_flag & NVME_FLAG_REGISTERED))
+> 					=
+qlt_schedule_sess_for_deletion(fcport);
+> 					continue;
 > --=20
 > 2.19.0.rc0
 >=20
 
-Looks Good.=20
-
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+I am okay with the change just curious, Would it not flood message file =
+for large number of sessions?
 
 --
 Himanshu Madhani	 Oracle Linux Engineering
