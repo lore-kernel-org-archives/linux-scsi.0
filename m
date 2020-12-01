@@ -7,57 +7,60 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9214DC64E7A
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:30:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B60C64E7B
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:30:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23568206E3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:30:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C94D5206E3
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Dec 2020 08:30:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="kfVCWbyP"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="GEsTMIme"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726760AbgLAIaP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 03:30:15 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60994 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726415AbgLAIaP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 03:30:15 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B18LctX009899
-        for <linux-scsi@vger.kernel.org>; Tue, 1 Dec 2020 00:29:33 -0800
+        id S1726858AbgLAIai (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 03:30:38 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22974 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726415AbgLAIai (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 03:30:38 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B18Kwl5026330
+        for <linux-scsi@vger.kernel.org>; Tue, 1 Dec 2020 00:29:57 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=CxDJuc+w1TNKnGZKEa9UjipFEM2yz02nGvXU4LAHtX4=;
- b=kfVCWbyPQnYkaciKpI+czl6FQ6EvQdSMMTSHKbUqIFQaVDDU0xKXDh7ml0zAvR4RFys7
- KDV8NHGsXMUDHutajs3UfLEP69djtBejzjMMSxfIqMB+RWYRud0+lrN7rnG+d0/dgXlT
- 0oZvux+JoN0oFrb7/BLgnS+f3C946cgF6NvEPylb5872bv7zqejNBbYG+Bn612PsEWKX
- vqXPP4BX+wa1zWfuhX2AUnSh0ZcChXn6BFceQCrPgaxHw0Wbtpglpno8h7fJ+wUfr7Ph
- IZN1jy/KwrETtHoFyM1ifzleIIQdtd0EQuTo4DaAS8MwCwp/MCCkKsw4VRLM4/NknhcO wg== 
+ content-type; s=pfpt0220; bh=q8XrmEn98aZj6HqTHvp1q/nB1Hkoa5e3ZszbIhbRymQ=;
+ b=GEsTMImeukBocuBM76yJ6Uvwx9/DDWa6WmJ0J0o4i1gQonbMYd1bdhB1QUGGAFckTV3k
+ LK9sY27XK8TUhJSiZVgeMib4w8j0On0ipqFoOBASB2HjJ4gcmMJCW7IQQDMvioFh132z
+ 55vU5dbFp1yhB49SiCs4AB/VJfRTn8/90Ms2h5u1c10M67ep3y+/WIkcvF1jVyAIlA77
+ 3Aw6bDp/otaHsC/IuWCGLsfywPeLJUyepfuHVrCJy/xPWFjZlgJvUfjzBOO/qu7zNZg0
+ 35Z830Ed7CSM8wU/8FVDhg02G6RemB0CCR1hrYdlts8E9K+nc5z8nfmC1/TCUY+YBPr8 QQ== 
 Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 353pxsf717-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 353mssfkp5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Dec 2020 00:29:33 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Dec 2020 00:29:57 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Dec
- 2020 00:29:31 -0800
+ 2020 00:29:56 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Dec
+ 2020 00:29:55 -0800
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 1 Dec 2020 00:29:31 -0800
+ Transport; Tue, 1 Dec 2020 00:29:56 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 9DCA43F703F;
-        Tue,  1 Dec 2020 00:29:31 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id BD3353F703F;
+        Tue,  1 Dec 2020 00:29:55 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0B18TVKT024225;
-        Tue, 1 Dec 2020 00:29:31 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0B18TteY024237;
+        Tue, 1 Dec 2020 00:29:55 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0B18TVZb024224;
-        Tue, 1 Dec 2020 00:29:31 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0B18Ttca024228;
+        Tue, 1 Dec 2020 00:29:55 -0800
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 04/15] qla2xxx: tear down session if FW say its down
-Date:   Tue, 1 Dec 2020 00:27:19 -0800
-Message-ID: <20201201082730.24158-5-njavali@marvell.com>
+Subject: [PATCH 05/15] qla2xxx: Don't check for fw_started while posting nvme command
+Date:   Tue, 1 Dec 2020 00:27:20 -0800
+Message-ID: <20201201082730.24158-6-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20201201082730.24158-1-njavali@marvell.com>
 References: <20201201082730.24158-1-njavali@marvell.com>
@@ -69,84 +72,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-The completion status 0x28 (ppc = be = 0x2800) below indicate session
-is not there, trigger session deletion.
+NVMe commands can come only after successful addition of rport and nvme
+connect, and rport is only registered after FW started bit is set. Remove the
+redundant check.
 
-qla2xxx [000b:04:00.1]-8009:8: DEVICE RESET ISSUED nexus=8:1:51 cmd=c000001432d0f600.
-qla2xxx [000b:04:00.1]-5039:8: Async-tmf error - hdl=67b completion status(2800).
-qla2xxx [000b:04:00.1]-8030:8: TM IOCB failed (102).
-qla2xxx [000b:04:00.1]-800c:8: do_reset failed for cmd=c000001432d0f600.
-qla2xxx [000b:04:00.1]-800f:8: DEVICE RESET FAILED: Task management failed nexus=8:1:51 cmd=c000001432d0f600.
-qla2xxx [000b:04:00.1]-8009:8: DEVICE RESET ISSUED nexus=8:1:52 cmd=c000001432d0c200.
-qla2xxx [000b:04:00.1]-5039:8: Async-tmf error - hdl=67c completion status(2800).
-qla2xxx [000b:04:00.1]-8030:8: TM IOCB failed (102).
-
-Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_nvme.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 77dd7630c3f8..f9142dbec112 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2226,11 +2226,13 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 	srb_t *sp;
- 	struct srb_iocb *iocb;
- 	struct sts_entry_24xx *sts = (struct sts_entry_24xx *)tsk;
-+	u16 comp_status;
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index b7a1dc24db38..d4159d5a4ffd 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -554,19 +554,15 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
  
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, tsk);
- 	if (!sp)
- 		return;
+ 	fcport = qla_rport->fcport;
  
-+	comp_status = le16_to_cpu(sts->comp_status);
- 	iocb = &sp->u.iocb_cmd;
- 	type = sp->name;
- 	fcport = sp->fcport;
-@@ -2244,7 +2246,7 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 	} else if (sts->comp_status != cpu_to_le16(CS_COMPLETE)) {
- 		ql_log(ql_log_warn, fcport->vha, 0x5039,
- 		    "Async-%s error - hdl=%x completion status(%x).\n",
--		    type, sp->handle, sts->comp_status);
-+		    type, sp->handle, comp_status);
- 		iocb->u.tmf.data = QLA_FUNCTION_FAILED;
- 	} else if ((le16_to_cpu(sts->scsi_status) &
- 	    SS_RESPONSE_INFO_LEN_VALID)) {
-@@ -2260,6 +2262,30 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 		}
- 	}
+-	if (!qpair || !fcport)
+-		return -ENODEV;
+-
+-	if (!qpair->fw_started || fcport->deleted)
++	if (unlikely(!qpair || !fcport || fcport->deleted))
+ 		return -EBUSY;
  
-+	switch (comp_status) {
-+	case CS_PORT_LOGGED_OUT:
-+	case CS_PORT_CONFIG_CHG:
-+	case CS_PORT_BUSY:
-+	case CS_INCOMPLETE:
-+	case CS_PORT_UNAVAILABLE:
-+	case CS_TIMEOUT:
-+	case CS_RESET:
-+		if (atomic_read(&fcport->state) == FCS_ONLINE) {
-+			ql_dbg(ql_dbg_disc, fcport->vha, 0x3021,
-+			       "-Port to be marked lost on fcport=%02x%02x%02x, current port state= %s comp_status %x.\n",
-+			       fcport->d_id.b.domain, fcport->d_id.b.area,
-+			       fcport->d_id.b.al_pa,
-+			       port_state_str[FCS_ONLINE],
-+			       comp_status);
+-	vha = fcport->vha;
+-
+ 	if (!(fcport->nvme_flag & NVME_FLAG_REGISTERED))
+ 		return -ENODEV;
+ 
+-	if (test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
+-	    (qpair && !qpair->fw_started) || fcport->deleted)
++	vha = fcport->vha;
 +
-+			qlt_schedule_sess_for_deletion(fcport);
-+		}
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
- 	if (iocb->u.tmf.data != QLA_SUCCESS)
- 		ql_dump_buffer(ql_dbg_async + ql_dbg_buffer, sp->vha, 0x5055,
- 		    sts, sizeof(*sts));
++	if (test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags))
+ 		return -EBUSY;
+ 
+ 	/*
 -- 
 2.19.0.rc0
 
