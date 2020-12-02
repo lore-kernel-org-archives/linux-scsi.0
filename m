@@ -2,46 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B0A0C83019
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 12:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3C1DC83018
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 12:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B76B322203
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 12:15:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E31722203
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 12:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388824AbgLBMOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 07:14:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49940 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388813AbgLBMOo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 07:14:44 -0500
-Received: from ozlabs.org (bilbo.ozlabs.org [IPv6:2401:3900:2:1::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EF84C0617A6;
-        Wed,  2 Dec 2020 04:14:20 -0800 (PST)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4CmHvM13p4z9sW0;
-        Wed,  2 Dec 2020 23:14:07 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
-        s=201909; t=1606911257;
-        bh=dHdu5NS4Xw4IX9X/GFAxYuxXCqWGRcHQlDUnVy182gE=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=qtDh7IvvHnc1+eKidZ76vTxF/6g74s2Qv4NdJCP3ZbL1MvM7SMn0lhAVe5tKSzbZQ
-         HAZWdo85rrG0VGkeOEqwRUPOnvHmcNv66RNAVaUJFUprFf5SkMq27aOekm8dbPRCY5
-         gkzvsxHN3LwDnlCxInjPmxzTiDx21ibFqTqqu3eDy34Z8nkx1csBez+MJFFdL11gkd
-         f/LwaVwDLEtHeYQ1e4yz1BkCIl0n6WAAZmXjde8XppUxjXPuEllv155QVe9hK1naST
-         fh3/pL4XJyDtWcjIvBpmTiEV3p97PKO/mL+YIWoTYOapjBgcldMx3HEGaWB6OkoQ9g
-         G0I0mDDBKdB0w==
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>, Takashi Iwai <tiwai@suse.de>
-Cc:     Geoff Levand <geoff@infradead.org>,
+        id S1729895AbgLBMW6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 07:22:58 -0500
+Received: from mx2.suse.de ([195.135.220.15]:33000 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727502AbgLBMW5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Dec 2020 07:22:57 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id C3ECDAB7F;
+        Wed,  2 Dec 2020 12:22:15 +0000 (UTC)
+Date:   Wed, 02 Dec 2020 13:22:14 +0100
+Message-ID: <s5hzh2w8kjt.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Michael Ellerman <mpe@ellerman.id.au>
+Cc:     Uwe =?UTF-8?B?S2xlaW5lLUvDtm5pZw==?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Geoff Levand <geoff@infradead.org>,
         Jaroslav Kysela <perex@perex.cz>,
         Takashi Iwai <tiwai@suse.com>, Jens Axboe <axboe@kernel.dk>,
         Jim Paris <jim@jtan.com>, Arnd Bergmann <arnd@arndb.de>,
@@ -59,50 +47,62 @@ Cc:     Geoff Levand <geoff@infradead.org>,
         linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
         dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org
 Subject: Re: [PATCH 2/2] powerpc/ps3: make system bus's remove and shutdown callbacks return void
-In-Reply-To: <20201129173153.jbt3epcxnasbemir@pengutronix.de>
-References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de> <20201126165950.2554997-2-u.kleine-koenig@pengutronix.de> <s5hv9dphnoh.wl-tiwai@suse.de> <20201129173153.jbt3epcxnasbemir@pengutronix.de>
-Date:   Wed, 02 Dec 2020 23:14:06 +1100
-Message-ID: <875z5kwgkx.fsf@mpe.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <875z5kwgkx.fsf@mpe.ellerman.id.au>
+References: <20201126165950.2554997-1-u.kleine-koenig@pengutronix.de>
+        <20201126165950.2554997-2-u.kleine-koenig@pengutronix.de>
+        <s5hv9dphnoh.wl-tiwai@suse.de>
+        <20201129173153.jbt3epcxnasbemir@pengutronix.de>
+        <875z5kwgkx.fsf@mpe.ellerman.id.au>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
+ (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI 1.14.6 - "Maruoka")
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de> writes:
-> Hello Michael,
->
-> On Sat, Nov 28, 2020 at 09:48:30AM +0100, Takashi Iwai wrote:
->> On Thu, 26 Nov 2020 17:59:50 +0100,
->> Uwe Kleine-K=C3=B6nig wrote:
->> >=20
->> > The driver core ignores the return value of struct device_driver::remo=
-ve
->> > because there is only little that can be done. For the shutdown callba=
-ck
->> > it's ps3_system_bus_shutdown() which ignores the return value.
->> >=20
->> > To simplify the quest to make struct device_driver::remove return void,
->> > let struct ps3_system_bus_driver::remove return void, too. All users
->> > already unconditionally return 0, this commit makes it obvious that
->> > returning an error code is a bad idea and ensures future users behave
->> > accordingly.
->> >=20
->> > Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
->>=20
->> For the sound bit:
->> Acked-by: Takashi Iwai <tiwai@suse.de>
->
-> assuming that you are the one who will apply this patch: Note that it
-> depends on patch 1 that Takashi already applied to his tree. So you
-> either have to wait untils patch 1 appears in some tree that you merge
-> before applying, or you have to take patch 1, too. (With Takashi
-> optinally dropping it then.)
+On Wed, 02 Dec 2020 13:14:06 +0100,
+Michael Ellerman wrote:
+> 
+> Uwe Kleine-König <u.kleine-koenig@pengutronix.de> writes:
+> > Hello Michael,
+> >
+> > On Sat, Nov 28, 2020 at 09:48:30AM +0100, Takashi Iwai wrote:
+> >> On Thu, 26 Nov 2020 17:59:50 +0100,
+> >> Uwe Kleine-König wrote:
+> >> > 
+> >> > The driver core ignores the return value of struct device_driver::remove
+> >> > because there is only little that can be done. For the shutdown callback
+> >> > it's ps3_system_bus_shutdown() which ignores the return value.
+> >> > 
+> >> > To simplify the quest to make struct device_driver::remove return void,
+> >> > let struct ps3_system_bus_driver::remove return void, too. All users
+> >> > already unconditionally return 0, this commit makes it obvious that
+> >> > returning an error code is a bad idea and ensures future users behave
+> >> > accordingly.
+> >> > 
+> >> > Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+> >> 
+> >> For the sound bit:
+> >> Acked-by: Takashi Iwai <tiwai@suse.de>
+> >
+> > assuming that you are the one who will apply this patch: Note that it
+> > depends on patch 1 that Takashi already applied to his tree. So you
+> > either have to wait untils patch 1 appears in some tree that you merge
+> > before applying, or you have to take patch 1, too. (With Takashi
+> > optinally dropping it then.)
+> 
+> Thanks. I've picked up both patches.
+> 
+> If Takashi doesn't want to rebase his tree to drop patch 1 that's OK, it
+> will just arrive in mainline via two paths, but git should handle it.
 
-Thanks. I've picked up both patches.
+Yeah, I'd like to avoid rebasing, so let's get it merge from both
+trees.  git can handle such a case gracefully.
 
-If Takashi doesn't want to rebase his tree to drop patch 1 that's OK, it
-will just arrive in mainline via two paths, but git should handle it.
 
-cheers
+thanks,
+
+Takashi
