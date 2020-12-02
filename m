@@ -2,92 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26711C64E7C
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:17:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB4E8C64E8A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:21:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE51B206E3
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:17:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89CF522202
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:21:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388334AbgLBKRa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 05:17:30 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:5394 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388027AbgLBKR3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 05:17:29 -0500
-IronPort-SDR: 9UxQbMwQrfGuYT9lIOj5WjTrjhFzSwzyG6QEhDWBrSD49wqaGUZEdP3dCnlByAeE5xCMYfPpZS
- mnYuhMQcNvnTQkHrhxhgA9lCdYKB4i9ti8RTSlmxIzHbi610pP8lOpFumlvvCaH+2oWMMkEKXe
- DXpxqrM8QgAaGo+WBlvGXnYr+3jl4KSxI5WQupW2cjDSTORT6dGe1YD60puHOQJ0Kmct4cfHCg
- iXowTCd7Hx++wVosUPvdikOkOZeylp9RAnH4UO06K2lAO8BwCqPB9d/Ga10BX9uSViV1FFvaZU
- yOs=
+        id S1727875AbgLBKVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 05:21:18 -0500
+Received: from mga17.intel.com ([192.55.52.151]:11190 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726999AbgLBKVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Dec 2020 05:21:17 -0500
+IronPort-SDR: /2VZTNvg07CkGomuxFZxitSx1EP3D86Ux18t87HJJTYGg7dVGludhkoUyajKpLqxtWI1t4Qa/+
+ Q0MxU8nypzWw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9822"; a="152821040"
 X-IronPort-AV: E=Sophos;i="5.78,386,1599548400"; 
-   d="scan'208";a="47540141"
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by labrats.qualcomm.com with ESMTP; 02 Dec 2020 02:16:49 -0800
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg03-sd.qualcomm.com with ESMTP; 02 Dec 2020 02:16:48 -0800
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id EF2002108B; Wed,  2 Dec 2020 02:16:48 -0800 (PST)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH V6 3/3] scsi: ufs: Print host regs in IRQ handler when AH8 error happens
-Date:   Wed,  2 Dec 2020 02:16:33 -0800
-Message-Id: <1606904194-20806-4-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1606904194-20806-1-git-send-email-cang@codeaurora.org>
-References: <1606904194-20806-1-git-send-email-cang@codeaurora.org>
+   d="scan'208";a="152821040"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2020 02:20:36 -0800
+IronPort-SDR: usmZG6ykcOge6j+qtpi+/AmT7L0AXlqzuqIbYqemdNdLlFUJlTiJl5ooTETocVtz/JPXYtBe2U
+ Z7G8CvCkmxLg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.78,386,1599548400"; 
+   d="scan'208";a="537934763"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.94]) ([10.237.72.94])
+  by fmsmga006.fm.intel.com with ESMTP; 02 Dec 2020 02:20:35 -0800
+Subject: Re: [PATCH] docs: ABI: sysfs-driver-ufs: Add DeepSleep power mode
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     linux-doc@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20201106153615.13033-1-adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <fc4a5df4-8913-474c-07c0-1daf71750e8a@intel.com>
+Date:   Wed, 2 Dec 2020 12:20:11 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
+MIME-Version: 1.0
+In-Reply-To: <20201106153615.13033-1-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When AH8 error happens, all the regs and states are dumped in err handler.
-Sometime we need to look into host regs right after AH8 error happens,
-which is before leaving the IRQ handler.
+On 6/11/20 5:36 pm, Adrian Hunter wrote:
+> A patch for DeepSleep is in the scsi queue, but as per mkp:
+> 
+> 	I left out the sysfs ABI piece due to the conflicts.
+> 	I suggest you send that piece through the doc tree.
+> 
+> Ergo this patch.
+> 
+> Link: https://lore.kernel.org/r/yq1imaksb3g.fsf@ca-mkp.ca.oracle.com/
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Hongwu Su<hongwus@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Will anyone apply this?
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e21b40c..e8e6e68 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6058,7 +6058,8 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
- 		hba->saved_uic_err |= hba->uic_error;
- 
- 		/* dump controller state before resetting */
--		if ((hba->saved_err & (INT_FATAL_ERRORS)) ||
-+		if ((hba->saved_err &
-+		     (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) ||
- 		    (hba->saved_uic_err &&
- 		     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
- 			dev_err(hba->dev, "%s: saved_err 0x%x saved_uic_err 0x%x\n",
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+>  Documentation/ABI/testing/sysfs-driver-ufs | 34 +++++++++++++---------
+>  1 file changed, 20 insertions(+), 14 deletions(-)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+> index adc0d0e91607..e77fa784d6d8 100644
+> --- a/Documentation/ABI/testing/sysfs-driver-ufs
+> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
+> @@ -916,21 +916,24 @@ Date:		September 2014
+>  Contact:	Subhash Jadavani <subhashj@codeaurora.org>
+>  Description:	This entry could be used to set or show the UFS device
+>  		runtime power management level. The current driver
+> -		implementation supports 6 levels with next target states:
+> +		implementation supports 7 levels with next target states:
+>  
+>  		==  ====================================================
+> -		0   an UFS device will stay active, an UIC link will
+> +		0   UFS device will stay active, UIC link will
+>  		    stay active
+> -		1   an UFS device will stay active, an UIC link will
+> +		1   UFS device will stay active, UIC link will
+>  		    hibernate
+> -		2   an UFS device will moved to sleep, an UIC link will
+> +		2   UFS device will be moved to sleep, UIC link will
+>  		    stay active
+> -		3   an UFS device will moved to sleep, an UIC link will
+> +		3   UFS device will be moved to sleep, UIC link will
+>  		    hibernate
+> -		4   an UFS device will be powered off, an UIC link will
+> +		4   UFS device will be powered off, UIC link will
+>  		    hibernate
+> -		5   an UFS device will be powered off, an UIC link will
+> +		5   UFS device will be powered off, UIC link will
+>  		    be powered off
+> +		6   UFS device will be moved to deep sleep, UIC link
+> +		will be powered off. Note, deep sleep might not be
+> +		supported in which case this value will not be accepted
+>  		==  ====================================================
+>  
+>  What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_dev_state
+> @@ -954,21 +957,24 @@ Date:		September 2014
+>  Contact:	Subhash Jadavani <subhashj@codeaurora.org>
+>  Description:	This entry could be used to set or show the UFS device
+>  		system power management level. The current driver
+> -		implementation supports 6 levels with next target states:
+> +		implementation supports 7 levels with next target states:
+>  
+>  		==  ====================================================
+> -		0   an UFS device will stay active, an UIC link will
+> +		0   UFS device will stay active, UIC link will
+>  		    stay active
+> -		1   an UFS device will stay active, an UIC link will
+> +		1   UFS device will stay active, UIC link will
+>  		    hibernate
+> -		2   an UFS device will moved to sleep, an UIC link will
+> +		2   UFS device will be moved to sleep, UIC link will
+>  		    stay active
+> -		3   an UFS device will moved to sleep, an UIC link will
+> +		3   UFS device will be moved to sleep, UIC link will
+>  		    hibernate
+> -		4   an UFS device will be powered off, an UIC link will
+> +		4   UFS device will be powered off, UIC link will
+>  		    hibernate
+> -		5   an UFS device will be powered off, an UIC link will
+> +		5   UFS device will be powered off, UIC link will
+>  		    be powered off
+> +		6   UFS device will be moved to deep sleep, UIC link
+> +		will be powered off. Note, deep sleep might not be
+> +		supported in which case this value will not be accepted
+>  		==  ====================================================
+>  
+>  What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_dev_state
+> 
 
