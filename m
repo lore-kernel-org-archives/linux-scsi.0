@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E154DC83017
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:25:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBD93C83013
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:26:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A556F21D7F
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:25:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97B3521D7F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:26:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387420AbgLBQZh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 11:25:37 -0500
-Received: from verein.lst.de ([213.95.11.211]:54899 "EHLO verein.lst.de"
+        id S2387434AbgLBQZy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 11:25:54 -0500
+Received: from verein.lst.de ([213.95.11.211]:54904 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387405AbgLBQZh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Dec 2020 11:25:37 -0500
+        id S2387405AbgLBQZy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Dec 2020 11:25:54 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 8505F68AFE; Wed,  2 Dec 2020 17:24:55 +0100 (CET)
-Date:   Wed, 2 Dec 2020 17:24:55 +0100
+        id BE87A68B02; Wed,  2 Dec 2020 17:25:12 +0100 (CET)
+Date:   Wed, 2 Dec 2020 17:25:12 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 12/34] dc395: drop private SAM status code definitions
-Message-ID: <20201202162455.GH32254@lst.de>
-References: <20201202115249.37690-1-hare@suse.de> <20201202115249.37690-13-hare@suse.de>
+Subject: Re: [PATCH 13/34] qla4xxx: use standard SAM status definitions
+Message-ID: <20201202162512.GI32254@lst.de>
+References: <20201202115249.37690-1-hare@suse.de> <20201202115249.37690-14-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201202115249.37690-13-hare@suse.de>
+In-Reply-To: <20201202115249.37690-14-hare@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
