@@ -2,85 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E4BC64E7B
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 13:30:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C42D7C64E7C
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 14:50:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81BE02075A
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 13:30:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62D22221EB
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 14:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727114AbgLBNaV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 08:30:21 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13002 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725973AbgLBNaU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 08:30:20 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B2DPNeE002435
-        for <linux-scsi@vger.kernel.org>; Wed, 2 Dec 2020 05:29:40 -0800
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 3568jf8g8r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Dec 2020 05:29:40 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Dec
- 2020 05:29:39 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 2 Dec 2020 05:29:39 -0800
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id E73C93F7040;
-        Wed,  2 Dec 2020 05:29:38 -0800 (PST)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0B2DTcI8020119;
-        Wed, 2 Dec 2020 05:29:38 -0800
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0B2DTcaR020110;
-        Wed, 2 Dec 2020 05:29:38 -0800
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v2 15/15] qla2xxx: Update version to 10.02.00.104-k
-Date:   Wed, 2 Dec 2020 05:23:12 -0800
-Message-ID: <20201202132312.19966-16-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20201202132312.19966-1-njavali@marvell.com>
-References: <20201202132312.19966-1-njavali@marvell.com>
+        id S1728199AbgLBOtu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 09:49:50 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42581 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727629AbgLBOtu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 09:49:50 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606920504;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3/ciYHLKJ3yILLDkyTRzHDrbddemmdv1ABt1jTeUwBY=;
+        b=cbxIcb2ZQ+QplGyxzL6us2gWxLd+CdRgVQ1d1sEqLqRh3BvLVhKXUv5G1HVYzKf1pOqKxC
+        IJtawwOo5rh4NTYaep+0IaITZzmQ/6CzOR1z2ZpTJoZNvhWNZHG0QzesvENeDDs0PalwqO
+        F+nCSveuR+gmUgDiOw6b5pbUW2w3PuI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-7-D1PchtsSN9eOsqlRyAadYQ-1; Wed, 02 Dec 2020 09:48:21 -0500
+X-MC-Unique: D1PchtsSN9eOsqlRyAadYQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 86DBD185E48E;
+        Wed,  2 Dec 2020 14:48:20 +0000 (UTC)
+Received: from localhost (ovpn-114-255.ams2.redhat.com [10.36.114.255])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F2C0C5D6BA;
+        Wed,  2 Dec 2020 14:48:16 +0000 (UTC)
+Date:   Wed, 2 Dec 2020 14:48:15 +0000
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        mst@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 1/1 V2] vhost scsi: fix lun reset completion handling
+Message-ID: <20201202144815.GN655829@stefanha-x1.localdomain>
+References: <1605716857-4949-1-git-send-email-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-12-02_06:2020-11-30,2020-12-02 signatures=0
+In-Reply-To: <1605716857-4949-1-git-send-email-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: redhat.com
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="dPW7zu3hTOhZvCDO"
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+--dPW7zu3hTOhZvCDO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index c2d4da52f4a9..ccec858875dd 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -6,9 +6,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.02.00.103-k"
-+#define QLA2XXX_VERSION      "10.02.00.104-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	2
- #define QLA_DRIVER_PATCH_VER	0
--#define QLA_DRIVER_BETA_VER	103
-+#define QLA_DRIVER_BETA_VER	104
--- 
-2.19.0.rc0
+On Wed, Nov 18, 2020 at 10:27:37AM -0600, Mike Christie wrote:
+> vhost scsi owns the scsi se_cmd but lio frees the se_cmd->se_tmr
+> before calling release_cmd, so while with normal cmd completion we
+> can access the se_cmd from the vhost work, we can't do the same with
+> se_cmd->se_tmr. This has us copy the tmf response in
+> vhost_scsi_queue_tm_rsp to our internal vhost-scsi tmf struct for
+> when it gets sent to the guest from our worker thread.
+>=20
+> Fixes: Fixes: efd838fec17b ("vhost scsi: Add support for LUN resets.")
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+> ---
+>=20
+> V2:
+> - Added fixes line.
+>=20
+>  drivers/vhost/scsi.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+
+Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+This will go through Michael Tsirkin or Martin K. Petersen's tree.
+
+--dPW7zu3hTOhZvCDO
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl/HqS8ACgkQnKSrs4Gr
+c8jtgggAxim0I6O6jk2HCjqRjI0QXlKtp0ziC1scmHzQSibKHY+nJ5CiZ45ec5lV
+mZofBAD7UDhyo+nBTxZN1eTWsE42CPBEcicLX8ZmUCUfjtUtM1o7MumfdTJ0ezt2
+MtVi00JVN4AIrJYG74a9V7v/KCctNHoaCUCy/kXJYb++tuPFBFKWe2OuNncKVJe5
+f6QvCIHvdTAHDDnjz4HvVlJZLBOjzbGenPntQ6NxYFCm9Lsk1WyPJEQhxdUvfvBL
+wzbSC2Wzbqp7h06WXoQMZxTbFfl1sA4KnQM+aT1u+O54YCck7UoxnYo8sj9JzYqa
+g8+8MjtpZxwB3tmuKFcCEzE25ZHQ3g==
+=SZ59
+-----END PGP SIGNATURE-----
+
+--dPW7zu3hTOhZvCDO--
 
