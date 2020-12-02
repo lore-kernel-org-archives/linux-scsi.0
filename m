@@ -2,333 +2,187 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B376C71155
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 08:44:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F045AC64E7C
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 08:50:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7DDC206D5
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 08:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88D75206E3
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 08:50:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387902AbgLBIoZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 03:44:25 -0500
-Received: from a2.mail.mailgun.net ([198.61.254.61]:14211 "EHLO
-        a2.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387831AbgLBIoZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 03:44:25 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606898646; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Tjux7g/oxkaz91qH2NYLtWwu3lkY7opDX3tqkgtTSiQ=;
- b=Qyp5N1xQpiV4jt975cqUmjQ/f5Q2eSgef3R1SrOGz6vtgFaJaHVDqQjzSyXfv0Juuz33ldsM
- NHbfaJo38S4ZYt2JoHH3UClzH7sFCU6fuztGhQKYlfHSkCWUQRsXS3mciJz7egtJMldaI/lq
- Ze5Fq6XQB9fDivcmqZN2H8P1cxE=
-X-Mailgun-Sending-Ip: 198.61.254.61
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 5fc753aee084c5047806aee8 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Dec 2020 08:43:26
- GMT
-Sender: nguyenb=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C00DDC43460; Wed,  2 Dec 2020 08:43:25 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0C1D4C433C6;
-        Wed,  2 Dec 2020 08:43:23 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 02 Dec 2020 00:43:23 -0800
-From:   nguyenb@codeaurora.org
+        id S2387738AbgLBIto (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 03:49:44 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:58774 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726814AbgLBIto (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 03:49:44 -0500
+X-UUID: 2e873bc0e0ed48fca6459f821cdb2a8d-20201202
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=J+p7100q/+E3KI6T29sI3GeFvL+A9jcdok4BLN/F3Q0=;
+        b=ECU/RGR5DnHJrXJFtS2jk/43vrkt9J1YF/h6rxw+mgVWUbCiLpnwRBk4M1rImfVyHiQspcE8EFrOc8GJKcg7MlRX4y0hXaJEHibcbCs3ZtpoaLJobam2LOS68nWBHE8r474RmaIDiz+oZ9jfDadhXlaVUxiAugGQosaba9OLZJE=;
+X-UUID: 2e873bc0e0ed48fca6459f821cdb2a8d-20201202
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1648069929; Wed, 02 Dec 2020 16:48:56 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 2 Dec 2020 16:48:54 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 2 Dec 2020 16:48:55 +0800
+Message-ID: <1606898935.23925.40.camel@mtkswgap22>
+Subject: Re: [PATCH V5 2/3] scsi: ufs: Fix a race condition between
+ ufshcd_abort and eh_work
+From:   Stanley Chu <stanley.chu@mediatek.com>
 To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, hongwus@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
+        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
+        <saravanak@google.com>, <salyzyn@google.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        "Bart Van Assche" <bvanassche@acm.org>,
         Satya Tangirala <satyat@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V5 1/3] scsi: ufs: Serialize eh_work with system PM events
- and async scan
-In-Reply-To: <1606897475-16907-2-git-send-email-cang@codeaurora.org>
+        open list <linux-kernel@vger.kernel.org>
+Date:   Wed, 2 Dec 2020 16:48:55 +0800
+In-Reply-To: <1606897475-16907-3-git-send-email-cang@codeaurora.org>
 References: <1606897475-16907-1-git-send-email-cang@codeaurora.org>
- <1606897475-16907-2-git-send-email-cang@codeaurora.org>
-Message-ID: <a481be679134f0c6cc2d0fcd2eee8d0a@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+         <1606897475-16907-3-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-02 00:24, Can Guo wrote:
-> Serialize eh_work with system PM events and async scan to make sure 
-> eh_work
-> does not run in parallel with them.
-> 
-> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-> Reviewed-by: Hongwu Su<hongwus@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 64 
-> +++++++++++++++++++++++++++++------------------
->  drivers/scsi/ufs/ufshcd.h |  1 +
->  2 files changed, 41 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 47c544d..f0bb3fc 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5597,7 +5597,9 @@ static inline void
-> ufshcd_schedule_eh_work(struct ufs_hba *hba)
->  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->  {
->  	pm_runtime_get_sync(hba->dev);
-> -	if (pm_runtime_suspended(hba->dev)) {
-> +	if (pm_runtime_status_suspended(hba->dev) || hba->is_sys_suspended) {
-> +		enum ufs_pm_op pm_op;
-> +
->  		/*
->  		 * Don't assume anything of pm_runtime_get_sync(), if
->  		 * resume fails, irq and clocks can be OFF, and powers
-> @@ -5612,7 +5614,8 @@ static void ufshcd_err_handling_prepare(struct
-> ufs_hba *hba)
->  		if (!ufshcd_is_clkgating_allowed(hba))
->  			ufshcd_setup_clocks(hba, true);
->  		ufshcd_release(hba);
-> -		ufshcd_vops_resume(hba, UFS_RUNTIME_PM);
-> +		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
-> +		ufshcd_vops_resume(hba, pm_op);
->  	} else {
->  		ufshcd_hold(hba, false);
->  		if (hba->clk_scaling.is_allowed) {
-> @@ -5633,7 +5636,7 @@ static void ufshcd_err_handling_unprepare(struct
-> ufs_hba *hba)
-> 
->  static inline bool ufshcd_err_handling_should_stop(struct ufs_hba 
-> *hba)
->  {
-> -	return (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
-> +	return (!hba->is_powered || hba->ufshcd_state == UFSHCD_STATE_ERROR 
-> ||
->  		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
->  			ufshcd_is_link_broken(hba))));
->  }
-> @@ -5646,6 +5649,7 @@ static void ufshcd_recover_pm_error(struct 
-> ufs_hba *hba)
->  	struct request_queue *q;
->  	int ret;
-> 
-> +	hba->is_sys_suspended = false;
->  	/*
->  	 * Set RPM status of hba device to RPM_ACTIVE,
->  	 * this also clears its runtime error.
-> @@ -5704,11 +5708,13 @@ static void ufshcd_err_handler(struct 
-> work_struct *work)
-> 
->  	hba = container_of(work, struct ufs_hba, eh_work);
-> 
-> +	down(&hba->eh_sem);
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	if (ufshcd_err_handling_should_stop(hba)) {
->  		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
->  			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
->  		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		up(&hba->eh_sem);
->  		return;
->  	}
->  	ufshcd_set_eh_in_progress(hba);
-> @@ -5716,20 +5722,18 @@ static void ufshcd_err_handler(struct 
-> work_struct *work)
->  	ufshcd_err_handling_prepare(hba);
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	ufshcd_scsi_block_requests(hba);
-> -	/*
-> -	 * A full reset and restore might have happened after preparation
-> -	 * is finished, double check whether we should stop.
-> -	 */
-> -	if (ufshcd_err_handling_should_stop(hba)) {
-> -		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> -		goto out;
-> -	}
->  	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> 
->  	/* Complete requests that have door-bell cleared by h/w */
->  	ufshcd_complete_requests(hba);
-> 
-> +	/*
-> +	 * A full reset and restore might have happened after preparation
-> +	 * is finished, double check whether we should stop.
-> +	 */
-> +	if (ufshcd_err_handling_should_stop(hba))
-> +		goto skip_err_handling;
-> +
->  	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
->  		bool ret;
-> 
-> @@ -5737,17 +5741,10 @@ static void ufshcd_err_handler(struct 
-> work_struct *work)
->  		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
->  		ret = ufshcd_quirk_dl_nac_errors(hba);
->  		spin_lock_irqsave(hba->host->host_lock, flags);
-> -		if (!ret && !hba->force_reset && ufshcd_is_link_active(hba))
-> +		if (!ret && ufshcd_err_handling_should_stop(hba))
->  			goto skip_err_handling;
->  	}
-> 
-> -	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> -	    ufshcd_is_saved_err_fatal(hba) ||
-> -	    ((hba->saved_err & UIC_ERROR) &&
-> -	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-> -				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
-> -		needs_reset = true;
-> -
->  	if ((hba->saved_err & (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) 
-> ||
->  	    (hba->saved_uic_err &&
->  	     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
-> @@ -5767,8 +5764,14 @@ static void ufshcd_err_handler(struct 
-> work_struct *work)
->  	 * transfers forcefully because they will get cleared during
->  	 * host reset and restore
->  	 */
-> -	if (needs_reset)
-> +	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> +	    ufshcd_is_saved_err_fatal(hba) ||
-> +	    ((hba->saved_err & UIC_ERROR) &&
-> +	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
-> +				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))) {
-> +		needs_reset = true;
->  		goto do_reset;
-> +	}
-> 
->  	/*
->  	 * If LINERESET was caught, UFS might have been put to PWM mode,
-> @@ -5876,12 +5879,11 @@ static void ufshcd_err_handler(struct 
-> work_struct *work)
->  			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x 
-> saved_uic_err 0x%x",
->  			    __func__, hba->saved_err, hba->saved_uic_err);
->  	}
-> -
-> -out:
->  	ufshcd_clear_eh_in_progress(hba);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	ufshcd_scsi_unblock_requests(hba);
->  	ufshcd_err_handling_unprepare(hba);
-> +	up(&hba->eh_sem);
->  }
-> 
->  /**
-> @@ -6856,6 +6858,7 @@ static int ufshcd_reset_and_restore(struct 
-> ufs_hba *hba)
->  	 */
->  	scsi_report_bus_reset(hba->host, 0);
->  	if (err) {
-> +		hba->ufshcd_state = UFSHCD_STATE_ERROR;
->  		hba->saved_err |= saved_err;
->  		hba->saved_uic_err |= saved_uic_err;
->  	}
-> @@ -7704,8 +7707,10 @@ static void ufshcd_async_scan(void *data,
-> async_cookie_t cookie)
->  	struct ufs_hba *hba = (struct ufs_hba *)data;
->  	int ret;
-> 
-> +	down(&hba->eh_sem);
->  	/* Initialize hba, detect and initialize UFS device */
->  	ret = ufshcd_probe_hba(hba, true);
-> +	up(&hba->eh_sem);
->  	if (ret)
->  		goto out;
-> 
-> @@ -8718,6 +8723,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->  	int ret = 0;
->  	ktime_t start = ktime_get();
-> 
-> +	down(&hba->eh_sem);
->  	if (!hba || !hba->is_powered)
->  		return 0;
-> 
-> @@ -8748,6 +8754,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	if (!ret)
->  		hba->is_sys_suspended = true;
-> +	else
-> +		up(&hba->eh_sem);
->  	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_system_suspend);
-> @@ -8764,8 +8772,10 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->  	int ret = 0;
->  	ktime_t start = ktime_get();
-> 
-> -	if (!hba)
-> +	if (!hba) {
-> +		up(&hba->eh_sem);
->  		return -EINVAL;
-> +	}
-> 
->  	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
->  		/*
-> @@ -8781,6 +8791,7 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	if (!ret)
->  		hba->is_sys_suspended = false;
-> +	up(&hba->eh_sem);
->  	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_system_resume);
-> @@ -8872,6 +8883,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->  {
->  	int ret = 0;
-> 
-> +	down(&hba->eh_sem);
->  	if (!hba->is_powered)
->  		goto out;
-> 
-> @@ -8888,6 +8900,8 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->  out:
->  	if (ret)
->  		dev_err(hba->dev, "%s failed, err %d\n", __func__, ret);
-> +	hba->is_powered = false;
-> +	up(&hba->eh_sem);
->  	/* allow force shutdown even in case of errors */
->  	return 0;
->  }
-> @@ -9082,6 +9096,8 @@ int ufshcd_init(struct ufs_hba *hba, void
-> __iomem *mmio_base, unsigned int irq)
->  	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
->  	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
-> 
-> +	sema_init(&hba->eh_sem, 1);
-> +
->  	/* Initialize UIC command mutex */
->  	mutex_init(&hba->uic_cmd_mutex);
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 47eb143..1e680bf 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -728,6 +728,7 @@ struct ufs_hba {
->  	u32 intr_mask;
->  	u16 ee_ctrl_mask;
->  	bool is_powered;
-> +	struct semaphore eh_sem;
-> 
->  	/* Work Queues */
->  	struct workqueue_struct *eh_wq;
-Reviewed-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+SGkgQ2FuLA0KDQpPbiBXZWQsIDIwMjAtMTItMDIgYXQgMDA6MjQgLTA4MDAsIENhbiBHdW8gd3Jv
+dGU6DQo+IEluIGN1cnJlbnQgdGFzayBhYm9ydCByb3V0aW5lLCBpZiB0YXNrIGFib3J0IGhhcHBl
+bnMgdG8gdGhlIGRldmljZSBXLUxVLA0KPiB0aGUgY29kZSBkaXJlY3RseSBqdW1wcyB0byB1ZnNo
+Y2RfZWhfaG9zdF9yZXNldF9oYW5kbGVyKCkgdG8gcGVyZm9ybSBhDQo+IGZ1bGwgcmVzZXQgYW5k
+IHJlc3RvcmUgdGhlbiByZXR1cm5zIEZBSUwgb3IgU1VDQ0VTUy4gQ29tbWFuZHMgc2VudCB0byB0
+aGUNCj4gZGV2aWNlIFctTFUgYXJlIG1vc3QgbGlrZWx5IHRoZSBTU1UgY21kcyBzZW50IGR1cmlu
+ZyBVRlMgUE0gb3BlcmF0aW9ucy4gSWYNCj4gc3VjaCBTU1UgY21kIGVudGVycyB0YXNrIGFib3J0
+IHJvdXRpbmUsIHdoZW4gdWZzaGNkX2VoX2hvc3RfcmVzZXRfaGFuZGxlcigpDQo+IGZsdXNoZXMg
+ZWhfd29yaywgaXQgd2lsbCBnZXQgc3R1Y2sgdGhlcmUgc2luY2UgZXJyX2hhbmRsZXIgaXMgc2Vy
+aWFsaXplZA0KPiB3aXRoIFBNIG9wZXJhdGlvbnMuDQo+IA0KPiBJbiBvcmRlciB0byB1bmJsb2Nr
+IGFib3ZlIGNhbGwgcGF0aCwgd2UgbWVyZWx5IGNsZWFuIHVwIHRoZSBscmIgdGFrZW4gYnkNCj4g
+dGhpcyBjbWQsIHF1ZXVlIHRoZSBlaF93b3JrIGFuZCByZXR1cm4gU1VDQ0VTUy4gT25jZSB0aGUg
+Y21kIGlzIGFib3J0ZWQsDQo+IHRoZSBQTSBvcGVyYXRpb24gd2hpY2ggc2VuZHMgb3V0IHRoZSBj
+bWQganVzdCBlcnJvcnMgb3V0LCB0aGVuIGVycl9oYW5kbGVyDQo+IHNoYWxsIGJlIGFibGUgdG8g
+cHJvY2VlZCB3aXRoIHRoZSBmdWxsIHJlc2V0IGFuZCByZXN0b3JlLg0KPiANCj4gSW4gdGhpcyBz
+Y2VuYXJpbywgdGhlIGNtZCBpcyBhYm9ydGVkIGV2ZW4gYmVmb3JlIGl0IGlzIGFjdHVhbGx5IGNs
+ZWFyZWQgYnkNCj4gSFcsIHNldCB0aGUgbHJiLT5pbl91c2UgZmxhZyB0byBwcmV2ZW50IHN1YnNl
+cXVlbnQgY21kcywgaW5jbHVkaW5nIFNDU0kNCj4gY21kcyBhbmQgZGV2IGNtZHMsIGZyb20gdGFr
+aW5nIHRoZSBscmIgcmVsZWFzZWQgZnJvbSBhYm9ydC4gVGhlIGZsYWcgc2hhbGwNCj4gZXZldHVh
+bGx5IGJlIGNsZWFyZWQgaW4gX191ZnNoY2RfdHJhbnNmZXJfcmVxX2NvbXBsKCkgaW52b2tlZCBi
+eSB0aGUgZnVsbA0KPiByZXNldCBhbmQgcmVzdG9yZSBmcm9tIGVycl9oYW5kbGVyLg0KPiANCj4g
+UmV2aWV3ZWQtYnk6IEFzdXRvc2ggRGFzIDxhc3V0b3NoZEBjb2RlYXVyb3JhLm9yZz4NCj4gU2ln
+bmVkLW9mZi1ieTogQ2FuIEd1byA8Y2FuZ0Bjb2RlYXVyb3JhLm9yZz4NCj4gLS0tDQo+ICBkcml2
+ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIHwgNTUgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrLS0tLS0tLS0tLS0NCj4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggfCAgMiArKw0K
+PiAgMiBmaWxlcyBjaGFuZ2VkLCA0NSBpbnNlcnRpb25zKCspLCAxMiBkZWxldGlvbnMoLSkNCj4g
+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3Np
+L3Vmcy91ZnNoY2QuYw0KPiBpbmRleCBmMGJiM2ZjLi5mYTkwZTE1IDEwMDY0NA0KPiAtLS0gYS9k
+cml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNk
+LmMNCj4gQEAgLTI1MzksNiArMjUzOSwxNCBAQCBzdGF0aWMgaW50IHVmc2hjZF9xdWV1ZWNvbW1h
+bmQoc3RydWN0IFNjc2lfSG9zdCAqaG9zdCwgc3RydWN0IHNjc2lfY21uZCAqY21kKQ0KPiAgCQko
+aGJhLT5jbGtfZ2F0aW5nLnN0YXRlICE9IENMS1NfT04pKTsNCj4gIA0KPiAgCWxyYnAgPSAmaGJh
+LT5scmJbdGFnXTsNCj4gKwlpZiAodW5saWtlbHkobHJicC0+aW5fdXNlKSkgew0KPiArCQlpZiAo
+aGJhLT5wbV9vcF9pbl9wcm9ncmVzcykNCj4gKwkJCXNldF9ob3N0X2J5dGUoY21kLCBESURfQkFE
+X1RBUkdFVCk7DQo+ICsJCWVsc2UNCj4gKwkJCWVyciA9IFNDU0lfTUxRVUVVRV9IT1NUX0JVU1k7
+DQo+ICsJCXVmc2hjZF9yZWxlYXNlKGhiYSk7DQo+ICsJCWdvdG8gb3V0Ow0KPiArCX0NCj4gIA0K
+PiAgCVdBUk5fT04obHJicC0+Y21kKTsNCj4gIAlscmJwLT5jbWQgPSBjbWQ7DQo+IEBAIC0yNzgx
+LDYgKzI3ODksMTEgQEAgc3RhdGljIGludCB1ZnNoY2RfZXhlY19kZXZfY21kKHN0cnVjdCB1ZnNf
+aGJhICpoYmEsDQo+ICANCj4gIAlpbml0X2NvbXBsZXRpb24oJndhaXQpOw0KPiAgCWxyYnAgPSAm
+aGJhLT5scmJbdGFnXTsNCj4gKwlpZiAodW5saWtlbHkobHJicC0+aW5fdXNlKSkgew0KPiArCQll
+cnIgPSAtRUJVU1k7DQo+ICsJCWdvdG8gb3V0Ow0KPiArCX0NCj4gKw0KPiAgCVdBUk5fT04obHJi
+cC0+Y21kKTsNCj4gIAllcnIgPSB1ZnNoY2RfY29tcG9zZV9kZXZfY21kKGhiYSwgbHJicCwgY21k
+X3R5cGUsIHRhZyk7DQo+ICAJaWYgKHVubGlrZWx5KGVycikpDQo+IEBAIC0yNzk3LDYgKzI4MTAs
+NyBAQCBzdGF0aWMgaW50IHVmc2hjZF9leGVjX2Rldl9jbWQoc3RydWN0IHVmc19oYmEgKmhiYSwN
+Cj4gIA0KPiAgCWVyciA9IHVmc2hjZF93YWl0X2Zvcl9kZXZfY21kKGhiYSwgbHJicCwgdGltZW91
+dCk7DQo+ICANCj4gK291dDoNCj4gIAl1ZnNoY2RfYWRkX3F1ZXJ5X3VwaXVfdHJhY2UoaGJhLCB0
+YWcsDQo+ICAJCQllcnIgPyAicXVlcnlfY29tcGxldGVfZXJyIiA6ICJxdWVyeV9jb21wbGV0ZSIp
+Ow0KPiAgDQo+IEBAIC00OTMyLDYgKzQ5NDYsNyBAQCBzdGF0aWMgdm9pZCBfX3Vmc2hjZF90cmFu
+c2Zlcl9yZXFfY29tcGwoc3RydWN0IHVmc19oYmEgKmhiYSwNCj4gIA0KPiAgCWZvcl9lYWNoX3Nl
+dF9iaXQoaW5kZXgsICZjb21wbGV0ZWRfcmVxcywgaGJhLT5udXRycykgew0KPiAgCQlscmJwID0g
+JmhiYS0+bHJiW2luZGV4XTsNCj4gKwkJbHJicC0+aW5fdXNlID0gZmFsc2U7DQo+ICAJCWxyYnAt
+PmNvbXBsX3RpbWVfc3RhbXAgPSBrdGltZV9nZXQoKTsNCj4gIAkJY21kID0gbHJicC0+Y21kOw0K
+PiAgCQlpZiAoY21kKSB7DQo+IEBAIC02Mzc0LDggKzYzODksMTIgQEAgc3RhdGljIGludCB1ZnNo
+Y2RfaXNzdWVfZGV2bWFuX3VwaXVfY21kKHN0cnVjdCB1ZnNfaGJhICpoYmEsDQo+ICANCj4gIAlp
+bml0X2NvbXBsZXRpb24oJndhaXQpOw0KPiAgCWxyYnAgPSAmaGJhLT5scmJbdGFnXTsNCj4gLQlX
+QVJOX09OKGxyYnAtPmNtZCk7DQo+ICsJaWYgKHVubGlrZWx5KGxyYnAtPmluX3VzZSkpIHsNCj4g
+KwkJZXJyID0gLUVCVVNZOw0KPiArCQlnb3RvIG91dDsNCj4gKwl9DQo+ICANCj4gKwlXQVJOX09O
+KGxyYnAtPmNtZCk7DQo+ICAJbHJicC0+Y21kID0gTlVMTDsNCj4gIAlscmJwLT5zZW5zZV9idWZm
+bGVuID0gMDsNCj4gIAlscmJwLT5zZW5zZV9idWZmZXIgPSBOVUxMOw0KPiBAQCAtNjQ0Nyw2ICs2
+NDY2LDcgQEAgc3RhdGljIGludCB1ZnNoY2RfaXNzdWVfZGV2bWFuX3VwaXVfY21kKHN0cnVjdCB1
+ZnNfaGJhICpoYmEsDQo+ICAJCX0NCj4gIAl9DQo+ICANCj4gK291dDoNCj4gIAlibGtfcHV0X3Jl
+cXVlc3QocmVxKTsNCj4gIG91dF91bmxvY2s6DQo+ICAJdXBfcmVhZCgmaGJhLT5jbGtfc2NhbGlu
+Z19sb2NrKTsNCj4gQEAgLTY2OTYsMTYgKzY3MTYsNiBAQCBzdGF0aWMgaW50IHVmc2hjZF9hYm9y
+dChzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQpDQo+ICAJCUJVRygpOw0KPiAgCX0NCj4gIA0KPiAtCS8q
+DQo+IC0JICogVGFzayBhYm9ydCB0byB0aGUgZGV2aWNlIFctTFVOIGlzIGlsbGVnYWwuIFdoZW4g
+dGhpcyBjb21tYW5kDQo+IC0JICogd2lsbCBmYWlsLCBkdWUgdG8gc3BlYyB2aW9sYXRpb24sIHNj
+c2kgZXJyIGhhbmRsaW5nIG5leHQgc3RlcA0KPiAtCSAqIHdpbGwgYmUgdG8gc2VuZCBMVSByZXNl
+dCB3aGljaCwgYWdhaW4sIGlzIGEgc3BlYyB2aW9sYXRpb24uDQo+IC0JICogVG8gYXZvaWQgdGhl
+c2UgdW5uZWNlc3NhcnkvaWxsZWdhbCBzdGVwIHdlIHNraXAgdG8gdGhlIGxhc3QgZXJyb3INCj4g
+LQkgKiBoYW5kbGluZyBzdGFnZTogcmVzZXQgYW5kIHJlc3RvcmUuDQo+IC0JICovDQo+IC0JaWYg
+KGxyYnAtPmx1biA9PSBVRlNfVVBJVV9VRlNfREVWSUNFX1dMVU4pDQo+IC0JCXJldHVybiB1ZnNo
+Y2RfZWhfaG9zdF9yZXNldF9oYW5kbGVyKGNtZCk7DQo+IC0NCj4gIAl1ZnNoY2RfaG9sZChoYmEs
+IGZhbHNlKTsNCj4gIAlyZWcgPSB1ZnNoY2RfcmVhZGwoaGJhLCBSRUdfVVRQX1RSQU5TRkVSX1JF
+UV9ET09SX0JFTEwpOw0KPiAgCS8qIElmIGNvbW1hbmQgaXMgYWxyZWFkeSBhYm9ydGVkL2NvbXBs
+ZXRlZCwgcmV0dXJuIFNVQ0NFU1MgKi8NCj4gQEAgLTY3MjYsNyArNjczNiw3IEBAIHN0YXRpYyBp
+bnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gIAkgKiB0byByZWR1Y2Ug
+cmVwZWF0ZWQgcHJpbnRvdXRzLiBGb3Igb3RoZXIgYWJvcnRlZCByZXF1ZXN0cyBvbmx5IHByaW50
+DQo+ICAJICogYmFzaWMgZGV0YWlscy4NCj4gIAkgKi8NCj4gLQlzY3NpX3ByaW50X2NvbW1hbmQo
+aGJhLT5scmJbdGFnXS5jbWQpOw0KPiArCXNjc2lfcHJpbnRfY29tbWFuZChjbWQpOw0KPiAgCWlm
+ICghaGJhLT5yZXFfYWJvcnRfY291bnQpIHsNCj4gIAkJdWZzaGNkX3VwZGF0ZV9yZWdfaGlzdCgm
+aGJhLT51ZnNfc3RhdHMudGFza19hYm9ydCwgMCk7DQo+ICAJCXVmc2hjZF9wcmludF9ob3N0X3Jl
+Z3MoaGJhKTsNCj4gQEAgLTY3NDUsNiArNjc1NSwyNyBAQCBzdGF0aWMgaW50IHVmc2hjZF9hYm9y
+dChzdHJ1Y3Qgc2NzaV9jbW5kICpjbWQpDQo+ICAJCWdvdG8gY2xlYW51cDsNCj4gIAl9DQo+ICAN
+Cj4gKwkvKg0KPiArCSAqIFRhc2sgYWJvcnQgdG8gdGhlIGRldmljZSBXLUxVTiBpcyBpbGxlZ2Fs
+LiBXaGVuIHRoaXMgY29tbWFuZA0KPiArCSAqIHdpbGwgZmFpbCwgZHVlIHRvIHNwZWMgdmlvbGF0
+aW9uLCBzY3NpIGVyciBoYW5kbGluZyBuZXh0IHN0ZXANCj4gKwkgKiB3aWxsIGJlIHRvIHNlbmQg
+TFUgcmVzZXQgd2hpY2gsIGFnYWluLCBpcyBhIHNwZWMgdmlvbGF0aW9uLg0KPiArCSAqIFRvIGF2
+b2lkIHRoZXNlIHVubmVjZXNzYXJ5L2lsbGVnYWwgc3RlcHMsIGZpcnN0IHdlIGNsZWFuIHVwDQo+
+ICsJICogdGhlIGxyYiB0YWtlbiBieSB0aGlzIGNtZCBhbmQgbWFyayB0aGUgbHJiIGFzIGluX3Vz
+ZSwgdGhlbg0KPiArCSAqIHF1ZXVlIHRoZSBlaF93b3JrIGFuZCBiYWlsLg0KPiArCSAqLw0KPiAr
+CWlmIChscmJwLT5sdW4gPT0gVUZTX1VQSVVfVUZTX0RFVklDRV9XTFVOKSB7DQo+ICsJCXNwaW5f
+bG9ja19pcnFzYXZlKGhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KPiArCQlpZiAobHJicC0+Y21k
+KSB7DQo+ICsJCQlfX3Vmc2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoaGJhLCAoMVVMIDw8IHRhZykp
+Ow0KDQpUaGUgdGltZWQgb3V0ICJ0YWciIGlzIGNsZWFyZWQgb25jZSBoZXJlLg0KDQo+ICsJCQlf
+X3NldF9iaXQodGFnLCAmaGJhLT5vdXRzdGFuZGluZ19yZXFzKTsNCj4gKwkJCWxyYnAtPmluX3Vz
+ZSA9IHRydWU7DQo+ICsJCQloYmEtPmZvcmNlX3Jlc2V0ID0gdHJ1ZTsNCj4gKwkJCXVmc2hjZF9z
+Y2hlZHVsZV9laF93b3JrKGhiYSk7DQoNClRoZSBzYW1lICJ0YWciIHdvdWxkIGJlIGNsZWFyZWQg
+YWdhaW4gaW4gZXJyb3IgaGFuZGxlciB3aXRoDQpfX3Vmc2hjZF90cmFuc2Zlcl9yZXFfY29tcGwo
+KS4NCg0KSW4gX191ZnNoY2RfdHJhbnNmZXJfcmVxX2NvbXBsLCBoYmEtPmNsa19zY2FsaW5nLmFj
+dGl2ZV9yZXFzIHdpbGwgYmUNCmRlY3JlYXNlZCBpZiBjbGstc2NhbGluZyBpcyBzdXBwb3J0ZWQg
+YXMgYmVsb3csDQoNCglpZiAodWZzaGNkX2lzX2Nsa3NjYWxpbmdfc3VwcG9ydGVkKGhiYSkpDQoJ
+CWhiYS0+Y2xrX3NjYWxpbmcuYWN0aXZlX3JlcXMtLTsNCg0KV2lsbCBiZSB0aGUgaGJhLT5jbGtf
+c2NhbGluZy5hY3RpdmVfcmVxcyB2YWx1ZSBiZWNvbWUgYWJub3JtYWwgYnkgdGhpcw0KZmxvdz8N
+Cg0KVGhhbmtzLA0KU3RhbmxleSBDaHUNCg0KPiArCQl9DQo+ICsJCXNwaW5fdW5sb2NrX2lycXJl
+c3RvcmUoaG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ICsJCWdvdG8gb3V0Ow0KPiArCX0NCj4g
+Kw0KPiAgCS8qIFNraXAgdGFzayBhYm9ydCBpbiBjYXNlIHByZXZpb3VzIGFib3J0cyBmYWlsZWQg
+YW5kIHJlcG9ydCBmYWlsdXJlICovDQo+ICAJaWYgKGxyYnAtPnJlcV9hYm9ydF9za2lwKQ0KPiAg
+CQllcnIgPSAtRUlPOw0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCBi
+L2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgNCj4gaW5kZXggMWU2ODBiZi4uNjZlNTMzOCAxMDA2
+NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiArKysgYi9kcml2ZXJzL3Nj
+c2kvdWZzL3Vmc2hjZC5oDQo+IEBAIC0xNjMsNiArMTYzLDcgQEAgc3RydWN0IHVmc19wbV9sdmxf
+c3RhdGVzIHsNCj4gICAqIEBjcnlwdG9fa2V5X3Nsb3Q6IHRoZSBrZXkgc2xvdCB0byB1c2UgZm9y
+IGlubGluZSBjcnlwdG8gKC0xIGlmIG5vbmUpDQo+ICAgKiBAZGF0YV91bml0X251bTogdGhlIGRh
+dGEgdW5pdCBudW1iZXIgZm9yIHRoZSBmaXJzdCBibG9jayBmb3IgaW5saW5lIGNyeXB0bw0KPiAg
+ICogQHJlcV9hYm9ydF9za2lwOiBza2lwIHJlcXVlc3QgYWJvcnQgdGFzayBmbGFnDQo+ICsgKiBA
+aW5fdXNlOiBpbmRpY2F0ZXMgdGhhdCB0aGlzIGxyYiBpcyBzdGlsbCBpbiB1c2UNCj4gICAqLw0K
+PiAgc3RydWN0IHVmc2hjZF9scmIgew0KPiAgCXN0cnVjdCB1dHBfdHJhbnNmZXJfcmVxX2Rlc2Mg
+KnV0cl9kZXNjcmlwdG9yX3B0cjsNCj4gQEAgLTE5Miw2ICsxOTMsNyBAQCBzdHJ1Y3QgdWZzaGNk
+X2xyYiB7DQo+ICAjZW5kaWYNCj4gIA0KPiAgCWJvb2wgcmVxX2Fib3J0X3NraXA7DQo+ICsJYm9v
+bCBpbl91c2U7DQo+ICB9Ow0KPiAgDQo+ICAvKioNCg0K
+
