@@ -7,40 +7,41 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 766FBC64E7B
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:33:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F9F6C83014
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23C732173E
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:33:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3075921D7F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 16:33:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730757AbgLBQc5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 11:32:57 -0500
-Received: from verein.lst.de ([213.95.11.211]:54944 "EHLO verein.lst.de"
+        id S1730726AbgLBQd3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 11:33:29 -0500
+Received: from verein.lst.de ([213.95.11.211]:54947 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728160AbgLBQc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Dec 2020 11:32:57 -0500
+        id S1726307AbgLBQd3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Dec 2020 11:33:29 -0500
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id CEABC68B05; Wed,  2 Dec 2020 17:32:15 +0100 (CET)
-Date:   Wed, 2 Dec 2020 17:32:15 +0100
+        id AF91967373; Wed,  2 Dec 2020 17:32:47 +0100 (CET)
+Date:   Wed, 2 Dec 2020 17:32:47 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 17/34] stex: do not set COMMAND_COMPLETE
-Message-ID: <20201202163215.GL32254@lst.de>
-References: <20201202115249.37690-1-hare@suse.de> <20201202115249.37690-18-hare@suse.de>
+Subject: Re: [PATCH 18/34] nsp_cs: drop internal SCSI message definition
+Message-ID: <20201202163247.GM32254@lst.de>
+References: <20201202115249.37690-1-hare@suse.de> <20201202115249.37690-19-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201202115249.37690-18-hare@suse.de>
+In-Reply-To: <20201202115249.37690-19-hare@suse.de>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 02, 2020 at 12:52:32PM +0100, Hannes Reinecke wrote:
-> COMMAND_COMPLETE is defined as '0', so setting it is quite pointless.
+On Wed, Dec 02, 2020 at 12:52:33PM +0100, Hannes Reinecke wrote:
+> Use the standard SCSI message definitions instead of the
+> driver-internal ones.
 
 Looks good,
 
