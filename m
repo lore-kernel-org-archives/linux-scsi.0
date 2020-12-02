@@ -2,222 +2,258 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05F92C64E8A
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0348EC64E8A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:37:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8ED9C22206
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:32:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95F6B221E9
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:37:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728709AbgLBHcZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 02:32:25 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:51794 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725912AbgLBHcZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 02:32:25 -0500
-X-UUID: 6c38703280d64d318e7357894a6dc86b-20201202
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=CpPyiLMJrrxyf2vyfy2S7KO0yxSrOAYsG/sr6Dk78A0=;
-        b=EH+TTm/f7vGZESP6icuJzREim6kdy4BixEbTHt5vRVEFb8mqz7EbSFb5PZhUMJSufs9qSg5NjxlUkLQwArNODf2uJMcVM8sjui0rfnewsWnxL0G8yYODn2W73c6GTUjBJShPGDPLP/V6UYAYj6VJrOgYU5PZIcTnM73a6LN9+BE=;
-X-UUID: 6c38703280d64d318e7357894a6dc86b-20201202
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 2137858267; Wed, 02 Dec 2020 15:31:36 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 2 Dec 2020 15:31:35 +0800
-Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 2 Dec 2020 15:31:35 +0800
-Message-ID: <1606894295.23925.32.camel@mtkswgap22>
-Subject: Re: [PATCH v4 1/3] scsi: ufs: Serialize eh_work with system PM
- events and async scan
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
-        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
-        <saravanak@google.com>, <salyzyn@google.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Date:   Wed, 2 Dec 2020 15:31:35 +0800
-In-Reply-To: <1606880829-27500-2-git-send-email-cang@codeaurora.org>
-References: <1606880829-27500-1-git-send-email-cang@codeaurora.org>
-         <1606880829-27500-2-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1727641AbgLBHhW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 02:37:22 -0500
+Received: from a2.mail.mailgun.net ([198.61.254.61]:39157 "EHLO
+        a2.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725912AbgLBHhW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 02:37:22 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1606894622; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=zn9zKUogHkTpu4hqDPdgxv9s4TFFHlGGfE+xtDidB9c=;
+ b=RlyQaZ325+l0q6PLvHamq7LOreDysgiYqwYNZ+wKlYKdjtg2jA4YkTG0iOEqATiIryTtDVhW
+ B+DEvQ7OOaULZkoujmqCqmIvIrZc+2kIDiLMeZ8+nA1IQsGfVtWWI77aTj3KB8IjgCPooBJY
+ AoY9Du7lDufgchazHPtpqjJ8KbA=
+X-Mailgun-Sending-Ip: 198.61.254.61
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n09.prod.us-west-2.postgun.com with SMTP id
+ 5fc74401265512b1b2a82d07 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Dec 2020 07:36:33
+ GMT
+Sender: nguyenb=quicinc.com@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 5DECAC43462; Wed,  2 Dec 2020 07:36:33 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 727A0C433ED;
+        Wed,  2 Dec 2020 07:36:31 +0000 (UTC)
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 01 Dec 2020 23:36:31 -0800
+From:   nguyenb@quicinc.com
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
+        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        nguyenb@codeaurora.org, kuohong.wang@mediatek.com,
+        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        andy.teng@mediatek.com, chaotian.jing@mediatek.com,
+        cc.chou@mediatek.com, jiajie.hao@mediatek.com,
+        alice.chao@mediatek.com
+Subject: Re: [RFC PATCH v1] scsi: ufs: Remove pre-defined initial VCC voltage
+ values
+In-Reply-To: <1606805690.23925.29.camel@mtkswgap22>
+References: <20201130091610.2752-1-stanley.chu@mediatek.com>
+ <568660cd-80e6-1b8f-d426-4614c9159ff4@codeaurora.org>
+ <X8V83T+Tx6teNLOR@builder.lan>
+ <4335d590-0506-d920-8e7f-f0f0372780f9@codeaurora.org>
+ <1606785904.23925.25.camel@mtkswgap22>
+ <d998857a-1744-a8bb-1a3e-77166c171f37@codeaurora.org>
+ <1606805690.23925.29.camel@mtkswgap22>
+Message-ID: <66ec58decfa1a0096cf5ed34560655ee@quicinc.com>
+X-Sender: nguyenb@quicinc.com
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQ2FuLA0KDQpPbiBUdWUsIDIwMjAtMTItMDEgYXQgMTk6NDcgLTA4MDAsIENhbiBHdW8gd3Jv
-dGU6DQo+IFNlcmlhbGl6ZSBlaF93b3JrIHdpdGggc3lzdGVtIFBNIGV2ZW50cyBhbmQgYXN5bmMg
-c2NhbiB0byBtYWtlIHN1cmUgZWhfd29yaw0KPiBkb2VzIG5vdCBydW4gaW4gcGFyYWxsZWwgd2l0
-aCB0aGVtLg0KPiANCj4gUmV2aWV3ZWQtYnk6IEFzdXRvc2ggRGFzIDxhc3V0b3NoZEBjb2RlYXVy
-b3JhLm9yZz4NCj4gUmV2aWV3ZWQtYnk6IEhvbmd3dSBTdTxob25nd3VzQGNvZGVhdXJvcmEub3Jn
-Pg0KPiBTaWduZWQtb2ZmLWJ5OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJvcmEub3JnPg0KPiAtLS0N
-Cj4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCA2NCArKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLQ0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCB8
-ICAxICsNCj4gIDIgZmlsZXMgY2hhbmdlZCwgNDEgaW5zZXJ0aW9ucygrKSwgMjQgZGVsZXRpb25z
-KC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZl
-cnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gaW5kZXggMWQ4MTM0ZS4uN2U3NjRlOCAxMDA2NDQNCj4g
-LS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvdWZz
-L3Vmc2hjZC5jDQo+IEBAIC01NTk3LDcgKzU1OTcsOSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgdWZz
-aGNkX3NjaGVkdWxlX2VoX3dvcmsoc3RydWN0IHVmc19oYmEgKmhiYSkNCj4gIHN0YXRpYyB2b2lk
-IHVmc2hjZF9lcnJfaGFuZGxpbmdfcHJlcGFyZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPiAgew0K
-PiAgCXBtX3J1bnRpbWVfZ2V0X3N5bmMoaGJhLT5kZXYpOw0KPiAtCWlmIChwbV9ydW50aW1lX3N1
-c3BlbmRlZChoYmEtPmRldikpIHsNCj4gKwlpZiAocG1fcnVudGltZV9zdGF0dXNfc3VzcGVuZGVk
-KGhiYS0+ZGV2KSB8fCBoYmEtPmlzX3N5c19zdXNwZW5kZWQpIHsNCj4gKwkJZW51bSB1ZnNfcG1f
-b3AgcG1fb3A7DQo+ICsNCj4gIAkJLyoNCj4gIAkJICogRG9uJ3QgYXNzdW1lIGFueXRoaW5nIG9m
-IHBtX3J1bnRpbWVfZ2V0X3N5bmMoKSwgaWYNCj4gIAkJICogcmVzdW1lIGZhaWxzLCBpcnEgYW5k
-IGNsb2NrcyBjYW4gYmUgT0ZGLCBhbmQgcG93ZXJzDQo+IEBAIC01NjEyLDcgKzU2MTQsOCBAQCBz
-dGF0aWMgdm9pZCB1ZnNoY2RfZXJyX2hhbmRsaW5nX3ByZXBhcmUoc3RydWN0IHVmc19oYmEgKmhi
-YSkNCj4gIAkJaWYgKCF1ZnNoY2RfaXNfY2xrZ2F0aW5nX2FsbG93ZWQoaGJhKSkNCj4gIAkJCXVm
-c2hjZF9zZXR1cF9jbG9ja3MoaGJhLCB0cnVlKTsNCj4gIAkJdWZzaGNkX3JlbGVhc2UoaGJhKTsN
-Cj4gLQkJdWZzaGNkX3ZvcHNfcmVzdW1lKGhiYSwgVUZTX1JVTlRJTUVfUE0pOw0KPiArCQlwbV9v
-cCA9IGhiYS0+aXNfc3lzX3N1c3BlbmRlZCA/IFVGU19SVU5USU1FX1BNIDogVUZTX1NZU1RFTV9Q
-TTsNCg0KUGVyaGFwcyB0eXBvIGhlcmU/IFNoYWxsIGJlIGFzIGJlbG93Pw0KDQpwbV9vcCA9IGhi
-YS0+aXNfc3lzX3N1c3BlbmRlZCA/IFVGU19TWVNURU1fUE0gOiBVRlNfUlVOVElNRV9QTTsNCg0K
-T3RoZXJ3aXNlIGxvb2tzIGdvb2QgdG8gbWUuDQoNClRoYW5rcywNClN0YW5sZXkgQ2h1DQoNCj4g
-KwkJdWZzaGNkX3ZvcHNfcmVzdW1lKGhiYSwgcG1fb3ApOw0KPiAgCX0gZWxzZSB7DQo+ICAJCXVm
-c2hjZF9ob2xkKGhiYSwgZmFsc2UpOw0KPiAgCQlpZiAoaGJhLT5jbGtfc2NhbGluZy5pc19hbGxv
-d2VkKSB7DQo+IEBAIC01NjMzLDcgKzU2MzYsNyBAQCBzdGF0aWMgdm9pZCB1ZnNoY2RfZXJyX2hh
-bmRsaW5nX3VucHJlcGFyZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPiAgDQo+ICBzdGF0aWMgaW5s
-aW5lIGJvb2wgdWZzaGNkX2Vycl9oYW5kbGluZ19zaG91bGRfc3RvcChzdHJ1Y3QgdWZzX2hiYSAq
-aGJhKQ0KPiAgew0KPiAtCXJldHVybiAoaGJhLT51ZnNoY2Rfc3RhdGUgPT0gVUZTSENEX1NUQVRF
-X0VSUk9SIHx8DQo+ICsJcmV0dXJuICghaGJhLT5pc19wb3dlcmVkIHx8IGhiYS0+dWZzaGNkX3N0
-YXRlID09IFVGU0hDRF9TVEFURV9FUlJPUiB8fA0KPiAgCQkoIShoYmEtPnNhdmVkX2VyciB8fCBo
-YmEtPnNhdmVkX3VpY19lcnIgfHwgaGJhLT5mb3JjZV9yZXNldCB8fA0KPiAgCQkJdWZzaGNkX2lz
-X2xpbmtfYnJva2VuKGhiYSkpKSk7DQo+ICB9DQo+IEBAIC01NjQ2LDYgKzU2NDksNyBAQCBzdGF0
-aWMgdm9pZCB1ZnNoY2RfcmVjb3Zlcl9wbV9lcnJvcihzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPiAg
-CXN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxOw0KPiAgCWludCByZXQ7DQo+ICANCj4gKwloYmEtPmlz
-X3N5c19zdXNwZW5kZWQgPSBmYWxzZTsNCj4gIAkvKg0KPiAgCSAqIFNldCBSUE0gc3RhdHVzIG9m
-IGhiYSBkZXZpY2UgdG8gUlBNX0FDVElWRSwNCj4gIAkgKiB0aGlzIGFsc28gY2xlYXJzIGl0cyBy
-dW50aW1lIGVycm9yLg0KPiBAQCAtNTcwNCwxMSArNTcwOCwxMyBAQCBzdGF0aWMgdm9pZCB1ZnNo
-Y2RfZXJyX2hhbmRsZXIoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiAgDQo+ICAJaGJhID0g
-Y29udGFpbmVyX29mKHdvcmssIHN0cnVjdCB1ZnNfaGJhLCBlaF93b3JrKTsNCj4gIA0KPiArCWRv
-d24oJmhiYS0+ZWhfc2VtKTsNCj4gIAlzcGluX2xvY2tfaXJxc2F2ZShoYmEtPmhvc3QtPmhvc3Rf
-bG9jaywgZmxhZ3MpOw0KPiAgCWlmICh1ZnNoY2RfZXJyX2hhbmRsaW5nX3Nob3VsZF9zdG9wKGhi
-YSkpIHsNCj4gIAkJaWYgKGhiYS0+dWZzaGNkX3N0YXRlICE9IFVGU0hDRF9TVEFURV9FUlJPUikN
-Cj4gIAkJCWhiYS0+dWZzaGNkX3N0YXRlID0gVUZTSENEX1NUQVRFX09QRVJBVElPTkFMOw0KPiAg
-CQlzcGluX3VubG9ja19pcnFyZXN0b3JlKGhiYS0+aG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+
-ICsJCXVwKCZoYmEtPmVoX3NlbSk7DQo+ICAJCXJldHVybjsNCj4gIAl9DQo+ICAJdWZzaGNkX3Nl
-dF9laF9pbl9wcm9ncmVzcyhoYmEpOw0KPiBAQCAtNTcxNiwyMCArNTcyMiwxOCBAQCBzdGF0aWMg
-dm9pZCB1ZnNoY2RfZXJyX2hhbmRsZXIoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiAgCXVm
-c2hjZF9lcnJfaGFuZGxpbmdfcHJlcGFyZShoYmEpOw0KPiAgCXNwaW5fbG9ja19pcnFzYXZlKGhi
-YS0+aG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ICAJdWZzaGNkX3Njc2lfYmxvY2tfcmVxdWVz
-dHMoaGJhKTsNCj4gLQkvKg0KPiAtCSAqIEEgZnVsbCByZXNldCBhbmQgcmVzdG9yZSBtaWdodCBo
-YXZlIGhhcHBlbmVkIGFmdGVyIHByZXBhcmF0aW9uDQo+IC0JICogaXMgZmluaXNoZWQsIGRvdWJs
-ZSBjaGVjayB3aGV0aGVyIHdlIHNob3VsZCBzdG9wLg0KPiAtCSAqLw0KPiAtCWlmICh1ZnNoY2Rf
-ZXJyX2hhbmRsaW5nX3Nob3VsZF9zdG9wKGhiYSkpIHsNCj4gLQkJaWYgKGhiYS0+dWZzaGNkX3N0
-YXRlICE9IFVGU0hDRF9TVEFURV9FUlJPUikNCj4gLQkJCWhiYS0+dWZzaGNkX3N0YXRlID0gVUZT
-SENEX1NUQVRFX09QRVJBVElPTkFMOw0KPiAtCQlnb3RvIG91dDsNCj4gLQl9DQo+ICAJaGJhLT51
-ZnNoY2Rfc3RhdGUgPSBVRlNIQ0RfU1RBVEVfUkVTRVQ7DQo+ICANCj4gIAkvKiBDb21wbGV0ZSBy
-ZXF1ZXN0cyB0aGF0IGhhdmUgZG9vci1iZWxsIGNsZWFyZWQgYnkgaC93ICovDQo+ICAJdWZzaGNk
-X2NvbXBsZXRlX3JlcXVlc3RzKGhiYSk7DQo+ICANCj4gKwkvKg0KPiArCSAqIEEgZnVsbCByZXNl
-dCBhbmQgcmVzdG9yZSBtaWdodCBoYXZlIGhhcHBlbmVkIGFmdGVyIHByZXBhcmF0aW9uDQo+ICsJ
-ICogaXMgZmluaXNoZWQsIGRvdWJsZSBjaGVjayB3aGV0aGVyIHdlIHNob3VsZCBzdG9wLg0KPiAr
-CSAqLw0KPiArCWlmICh1ZnNoY2RfZXJyX2hhbmRsaW5nX3Nob3VsZF9zdG9wKGhiYSkpDQo+ICsJ
-CWdvdG8gc2tpcF9lcnJfaGFuZGxpbmc7DQo+ICsNCj4gIAlpZiAoaGJhLT5kZXZfcXVpcmtzICYg
-VUZTX0RFVklDRV9RVUlSS19SRUNPVkVSWV9GUk9NX0RMX05BQ19FUlJPUlMpIHsNCj4gIAkJYm9v
-bCByZXQ7DQo+ICANCj4gQEAgLTU3MzcsMTcgKzU3NDEsMTAgQEAgc3RhdGljIHZvaWQgdWZzaGNk
-X2Vycl9oYW5kbGVyKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4gIAkJLyogcmVsZWFzZSB0
-aGUgbG9jayBhcyB1ZnNoY2RfcXVpcmtfZGxfbmFjX2Vycm9ycygpIG1heSBzbGVlcCAqLw0KPiAg
-CQlyZXQgPSB1ZnNoY2RfcXVpcmtfZGxfbmFjX2Vycm9ycyhoYmEpOw0KPiAgCQlzcGluX2xvY2tf
-aXJxc2F2ZShoYmEtPmhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KPiAtCQlpZiAoIXJldCAmJiAh
-aGJhLT5mb3JjZV9yZXNldCAmJiB1ZnNoY2RfaXNfbGlua19hY3RpdmUoaGJhKSkNCj4gKwkJaWYg
-KCFyZXQgJiYgdWZzaGNkX2Vycl9oYW5kbGluZ19zaG91bGRfc3RvcChoYmEpKQ0KPiAgCQkJZ290
-byBza2lwX2Vycl9oYW5kbGluZzsNCj4gIAl9DQo+ICANCj4gLQlpZiAoaGJhLT5mb3JjZV9yZXNl
-dCB8fCB1ZnNoY2RfaXNfbGlua19icm9rZW4oaGJhKSB8fA0KPiAtCSAgICB1ZnNoY2RfaXNfc2F2
-ZWRfZXJyX2ZhdGFsKGhiYSkgfHwNCj4gLQkgICAgKChoYmEtPnNhdmVkX2VyciAmIFVJQ19FUlJP
-UikgJiYNCj4gLQkgICAgIChoYmEtPnNhdmVkX3VpY19lcnIgJiAoVUZTSENEX1VJQ19ETF9OQUNf
-UkVDRUlWRURfRVJST1IgfA0KPiAtCQkJCSAgICBVRlNIQ0RfVUlDX0RMX1RDeF9SRVBMQVlfRVJS
-T1IpKSkpDQo+IC0JCW5lZWRzX3Jlc2V0ID0gdHJ1ZTsNCj4gLQ0KPiAgCWlmICgoaGJhLT5zYXZl
-ZF9lcnIgJiAoSU5UX0ZBVEFMX0VSUk9SUyB8IFVGU0hDRF9VSUNfSElCRVJOOF9NQVNLKSkgfHwN
-Cj4gIAkgICAgKGhiYS0+c2F2ZWRfdWljX2VyciAmJg0KPiAgCSAgICAgKGhiYS0+c2F2ZWRfdWlj
-X2VyciAhPSBVRlNIQ0RfVUlDX1BBX0dFTkVSSUNfRVJST1IpKSkgew0KPiBAQCAtNTc2Nyw4ICs1
-NzY0LDE0IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF9lcnJfaGFuZGxlcihzdHJ1Y3Qgd29ya19zdHJ1
-Y3QgKndvcmspDQo+ICAJICogdHJhbnNmZXJzIGZvcmNlZnVsbHkgYmVjYXVzZSB0aGV5IHdpbGwg
-Z2V0IGNsZWFyZWQgZHVyaW5nDQo+ICAJICogaG9zdCByZXNldCBhbmQgcmVzdG9yZQ0KPiAgCSAq
-Lw0KPiAtCWlmIChuZWVkc19yZXNldCkNCj4gKwlpZiAoaGJhLT5mb3JjZV9yZXNldCB8fCB1ZnNo
-Y2RfaXNfbGlua19icm9rZW4oaGJhKSB8fA0KPiArCSAgICB1ZnNoY2RfaXNfc2F2ZWRfZXJyX2Zh
-dGFsKGhiYSkgfHwNCj4gKwkgICAgKChoYmEtPnNhdmVkX2VyciAmIFVJQ19FUlJPUikgJiYNCj4g
-KwkgICAgIChoYmEtPnNhdmVkX3VpY19lcnIgJiAoVUZTSENEX1VJQ19ETF9OQUNfUkVDRUlWRURf
-RVJST1IgfA0KPiArCQkJCSAgICBVRlNIQ0RfVUlDX0RMX1RDeF9SRVBMQVlfRVJST1IpKSkpIHsN
-Cj4gKwkJbmVlZHNfcmVzZXQgPSB0cnVlOw0KPiAgCQlnb3RvIGRvX3Jlc2V0Ow0KPiArCX0NCj4g
-IA0KPiAgCS8qDQo+ICAJICogSWYgTElORVJFU0VUIHdhcyBjYXVnaHQsIFVGUyBtaWdodCBoYXZl
-IGJlZW4gcHV0IHRvIFBXTSBtb2RlLA0KPiBAQCAtNTg3NiwxMiArNTg3OSwxMSBAQCBzdGF0aWMg
-dm9pZCB1ZnNoY2RfZXJyX2hhbmRsZXIoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiAgCQkJ
-ZGV2X2Vycl9yYXRlbGltaXRlZChoYmEtPmRldiwgIiVzOiBleGl0OiBzYXZlZF9lcnIgMHgleCBz
-YXZlZF91aWNfZXJyIDB4JXgiLA0KPiAgCQkJICAgIF9fZnVuY19fLCBoYmEtPnNhdmVkX2Vyciwg
-aGJhLT5zYXZlZF91aWNfZXJyKTsNCj4gIAl9DQo+IC0NCj4gLW91dDoNCj4gIAl1ZnNoY2RfY2xl
-YXJfZWhfaW5fcHJvZ3Jlc3MoaGJhKTsNCj4gIAlzcGluX3VubG9ja19pcnFyZXN0b3JlKGhiYS0+
-aG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ICAJdWZzaGNkX3Njc2lfdW5ibG9ja19yZXF1ZXN0
-cyhoYmEpOw0KPiAgCXVmc2hjZF9lcnJfaGFuZGxpbmdfdW5wcmVwYXJlKGhiYSk7DQo+ICsJdXAo
-JmhiYS0+ZWhfc2VtKTsNCj4gIH0NCj4gIA0KPiAgLyoqDQo+IEBAIC02ODU2LDYgKzY4NTgsNyBA
-QCBzdGF0aWMgaW50IHVmc2hjZF9yZXNldF9hbmRfcmVzdG9yZShzdHJ1Y3QgdWZzX2hiYSAqaGJh
-KQ0KPiAgCSAqLw0KPiAgCXNjc2lfcmVwb3J0X2J1c19yZXNldChoYmEtPmhvc3QsIDApOw0KPiAg
-CWlmIChlcnIpIHsNCj4gKwkJaGJhLT51ZnNoY2Rfc3RhdGUgPSBVRlNIQ0RfU1RBVEVfRVJST1I7
-DQo+ICAJCWhiYS0+c2F2ZWRfZXJyIHw9IHNhdmVkX2VycjsNCj4gIAkJaGJhLT5zYXZlZF91aWNf
-ZXJyIHw9IHNhdmVkX3VpY19lcnI7DQo+ICAJfQ0KPiBAQCAtNzcwNCw4ICs3NzA3LDEwIEBAIHN0
-YXRpYyB2b2lkIHVmc2hjZF9hc3luY19zY2FuKHZvaWQgKmRhdGEsIGFzeW5jX2Nvb2tpZV90IGNv
-b2tpZSkNCj4gIAlzdHJ1Y3QgdWZzX2hiYSAqaGJhID0gKHN0cnVjdCB1ZnNfaGJhICopZGF0YTsN
-Cj4gIAlpbnQgcmV0Ow0KPiAgDQo+ICsJZG93bigmaGJhLT5laF9zZW0pOw0KPiAgCS8qIEluaXRp
-YWxpemUgaGJhLCBkZXRlY3QgYW5kIGluaXRpYWxpemUgVUZTIGRldmljZSAqLw0KPiAgCXJldCA9
-IHVmc2hjZF9wcm9iZV9oYmEoaGJhLCB0cnVlKTsNCj4gKwl1cCgmaGJhLT5laF9zZW0pOw0KPiAg
-CWlmIChyZXQpDQo+ICAJCWdvdG8gb3V0Ow0KPiAgDQo+IEBAIC04NzE4LDYgKzg3MjMsNyBAQCBp
-bnQgdWZzaGNkX3N5c3RlbV9zdXNwZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICAJaW50IHJl
-dCA9IDA7DQo+ICAJa3RpbWVfdCBzdGFydCA9IGt0aW1lX2dldCgpOw0KPiAgDQo+ICsJZG93bigm
-aGJhLT5laF9zZW0pOw0KPiAgCWlmICghaGJhIHx8ICFoYmEtPmlzX3Bvd2VyZWQpDQo+ICAJCXJl
-dHVybiAwOw0KPiAgDQo+IEBAIC04NzQ4LDYgKzg3NTQsOCBAQCBpbnQgdWZzaGNkX3N5c3RlbV9z
-dXNwZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICAJCWhiYS0+Y3Vycl9kZXZfcHdyX21vZGUs
-IGhiYS0+dWljX2xpbmtfc3RhdGUpOw0KPiAgCWlmICghcmV0KQ0KPiAgCQloYmEtPmlzX3N5c19z
-dXNwZW5kZWQgPSB0cnVlOw0KPiArCWVsc2UNCj4gKwkJdXAoJmhiYS0+ZWhfc2VtKTsNCj4gIAly
-ZXR1cm4gcmV0Ow0KPiAgfQ0KPiAgRVhQT1JUX1NZTUJPTCh1ZnNoY2Rfc3lzdGVtX3N1c3BlbmQp
-Ow0KPiBAQCAtODc2NCw4ICs4NzcyLDEwIEBAIGludCB1ZnNoY2Rfc3lzdGVtX3Jlc3VtZShzdHJ1
-Y3QgdWZzX2hiYSAqaGJhKQ0KPiAgCWludCByZXQgPSAwOw0KPiAgCWt0aW1lX3Qgc3RhcnQgPSBr
-dGltZV9nZXQoKTsNCj4gIA0KPiAtCWlmICghaGJhKQ0KPiArCWlmICghaGJhKSB7DQo+ICsJCXVw
-KCZoYmEtPmVoX3NlbSk7DQo+ICAJCXJldHVybiAtRUlOVkFMOw0KPiArCX0NCj4gIA0KPiAgCWlm
-ICghaGJhLT5pc19wb3dlcmVkIHx8IHBtX3J1bnRpbWVfc3VzcGVuZGVkKGhiYS0+ZGV2KSkNCj4g
-IAkJLyoNCj4gQEAgLTg3ODEsNiArODc5MSw3IEBAIGludCB1ZnNoY2Rfc3lzdGVtX3Jlc3VtZShz
-dHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPiAgCQloYmEtPmN1cnJfZGV2X3B3cl9tb2RlLCBoYmEtPnVp
-Y19saW5rX3N0YXRlKTsNCj4gIAlpZiAoIXJldCkNCj4gIAkJaGJhLT5pc19zeXNfc3VzcGVuZGVk
-ID0gZmFsc2U7DQo+ICsJdXAoJmhiYS0+ZWhfc2VtKTsNCj4gIAlyZXR1cm4gcmV0Ow0KPiAgfQ0K
-PiAgRVhQT1JUX1NZTUJPTCh1ZnNoY2Rfc3lzdGVtX3Jlc3VtZSk7DQo+IEBAIC04ODcyLDYgKzg4
-ODMsNyBAQCBpbnQgdWZzaGNkX3NodXRkb3duKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICB7DQo+
-ICAJaW50IHJldCA9IDA7DQo+ICANCj4gKwlkb3duKCZoYmEtPmVoX3NlbSk7DQo+ICAJaWYgKCFo
-YmEtPmlzX3Bvd2VyZWQpDQo+ICAJCWdvdG8gb3V0Ow0KPiAgDQo+IEBAIC04ODg4LDYgKzg5MDAs
-OCBAQCBpbnQgdWZzaGNkX3NodXRkb3duKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICBvdXQ6DQo+
-ICAJaWYgKHJldCkNCj4gIAkJZGV2X2VycihoYmEtPmRldiwgIiVzIGZhaWxlZCwgZXJyICVkXG4i
-LCBfX2Z1bmNfXywgcmV0KTsNCj4gKwloYmEtPmlzX3Bvd2VyZWQgPSBmYWxzZTsNCj4gKwl1cCgm
-aGJhLT5laF9zZW0pOw0KPiAgCS8qIGFsbG93IGZvcmNlIHNodXRkb3duIGV2ZW4gaW4gY2FzZSBv
-ZiBlcnJvcnMgKi8NCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4gQEAgLTkwODIsNiArOTA5Niw4IEBA
-IGludCB1ZnNoY2RfaW5pdChzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB2b2lkIF9faW9tZW0gKm1taW9f
-YmFzZSwgdW5zaWduZWQgaW50IGlycSkNCj4gIAlJTklUX1dPUksoJmhiYS0+ZWhfd29yaywgdWZz
-aGNkX2Vycl9oYW5kbGVyKTsNCj4gIAlJTklUX1dPUksoJmhiYS0+ZWVoX3dvcmssIHVmc2hjZF9l
-eGNlcHRpb25fZXZlbnRfaGFuZGxlcik7DQo+ICANCj4gKwlzZW1hX2luaXQoJmhiYS0+ZWhfc2Vt
-LCAxKTsNCj4gKw0KPiAgCS8qIEluaXRpYWxpemUgVUlDIGNvbW1hbmQgbXV0ZXggKi8NCj4gIAlt
-dXRleF9pbml0KCZoYmEtPnVpY19jbWRfbXV0ZXgpOw0KPiAgDQo+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiBpbmRl
-eCA0N2ViMTQzLi4xZTY4MGJmIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
-ZC5oDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgNCj4gQEAgLTcyOCw2ICs3Mjgs
-NyBAQCBzdHJ1Y3QgdWZzX2hiYSB7DQo+ICAJdTMyIGludHJfbWFzazsNCj4gIAl1MTYgZWVfY3Ry
-bF9tYXNrOw0KPiAgCWJvb2wgaXNfcG93ZXJlZDsNCj4gKwlzdHJ1Y3Qgc2VtYXBob3JlIGVoX3Nl
-bTsNCj4gIA0KPiAgCS8qIFdvcmsgUXVldWVzICovDQo+ICAJc3RydWN0IHdvcmtxdWV1ZV9zdHJ1
-Y3QgKmVoX3dxOw0KDQo=
+On 2020-11-30 22:54, Stanley Chu wrote:
+> Hi Asutosh,
+> 
+> On Mon, 2020-11-30 at 19:07 -0800, Asutosh Das (asd) wrote:
+>> On 11/30/2020 5:25 PM, Stanley Chu wrote:
+>> > On Mon, 2020-11-30 at 15:54 -0800, Asutosh Das (asd) wrote:
+>> >> On 11/30/2020 3:14 PM, Bjorn Andersson wrote:
+>> >>> On Mon 30 Nov 16:51 CST 2020, Asutosh Das (asd) wrote:
+>> >>>
+>> >>>> On 11/30/2020 1:16 AM, Stanley Chu wrote:
+>> >>>>> UFS specficication allows different VCC configurations for UFS devices,
+>> >>>>> for example,
+>> >>>>> 	(1). 2.70V - 3.60V (By default)
+>> >>>>> 	(2). 1.70V - 1.95V (Activated if "vcc-supply-1p8" is declared in
+>> >>>>>                              device tree)
+>> >>>>> 	(3). 2.40V - 2.70V (Supported since UFS 3.x)
+>> >>>>>
+>> >>>>> With the introduction of UFS 3.x products, an issue is happening that
+>> >>>>> UFS driver will use wrong "min_uV/max_uV" configuration to toggle VCC
+>> >>>>> regulator on UFU 3.x products with VCC configuration (3) used.
+>> >>>>>
+>> >>>>> To solve this issue, we simply remove pre-defined initial VCC voltage
+>> >>>>> values in UFS driver with below reasons,
+>> >>>>>
+>> >>>>> 1. UFS specifications do not define how to detect the VCC configuration
+>> >>>>>       supported by attached device.
+>> >>>>>
+>> >>>>> 2. Device tree already supports standard regulator properties.
+>> >>>>>
+>> >>>>> Therefore VCC voltage shall be defined correctly in device tree, and
+>> >>>>> shall not be changed by UFS driver. What UFS driver needs to do is simply
+>> >>>>> enabling or disabling the VCC regulator only.
+>> >>>>>
+>> >>>>> This is a RFC conceptional patch. Please help review this and feel
+>> >>>>> free to feedback any ideas. Once this concept is accepted, and then
+>> >>>>> I would post a more completed patch series to fix this issue.
+>> >>>>>
+>> >>>>> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+>> >>>>> ---
+>> >>>>>     drivers/scsi/ufs/ufshcd-pltfrm.c | 10 +---------
+>> >>>>>     1 file changed, 1 insertion(+), 9 deletions(-)
+>> >>>>>
+>> >>>>> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> >>>>> index a6f76399b3ae..3965be03c136 100644
+>> >>>>> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> >>>>> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+>> >>>>> @@ -133,15 +133,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+>> >>>>>     		vreg->max_uA = 0;
+>> >>>>>     	}
+>> >>>>> -	if (!strcmp(name, "vcc")) {
+>> >>>>> -		if (of_property_read_bool(np, "vcc-supply-1p8")) {
+>> >>>>> -			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
+>> >>>>> -			vreg->max_uV = UFS_VREG_VCC_1P8_MAX_UV;
+>> >>>>> -		} else {
+>> >>>>> -			vreg->min_uV = UFS_VREG_VCC_MIN_UV;
+>> >>>>> -			vreg->max_uV = UFS_VREG_VCC_MAX_UV;
+>> >>>>> -		}
+>> >>>>> -	} else if (!strcmp(name, "vccq")) {
+>> >>>>> +	if (!strcmp(name, "vccq")) {
+>> >>>>>     		vreg->min_uV = UFS_VREG_VCCQ_MIN_UV;
+>> >>>>>     		vreg->max_uV = UFS_VREG_VCCQ_MAX_UV;
+>> >>>>>     	} else if (!strcmp(name, "vccq2")) {
+>> >>>>>
+>> >>>>
+>> >>>> Hi Stanley
+>> >>>>
+>> >>>> Thanks for the patch. Bao (nguyenb) was also working towards something
+>> >>>> similar.
+>> >>>> Would it be possible for you to take into account the scenario in which the
+>> >>>> same platform supports both 2.x and 3.x UFS devices?
+>> >>>>
+>> >>>> These've different voltage requirements, 2.4v-3.6v.
+>> >>>> I'm not sure if standard dts regulator properties can support this.
+>> >>>>
+>> >>>
+>> >>> What is the actual voltage requirement for these devices and how does
+>> >>> the software know what voltage to pick in this range?
+>> >>>
+>> >>> Regards,
+>> >>> Bjorn
+>> >>>
+>> >>>> -asd
+>> >>>>
+>> >>>>
+>> >>>> --
+>> >>>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+>> >>>> Linux Foundation Collaborative Project
+>> >>
+>> >> For platforms that support both 2.x (2.7v-3.6v) and 3.x (2.4v-2.7v), the
+>> >> voltage requirements (Vcc) are 2.4v-3.6v. The software initializes the
+>> >> ufs device at 2.95v & reads the version and if the device is 3.x, it may
+>> >> do the following:
+>> >> - Set the device power mode to SLEEP
+>> >> - Disable the Vcc
+>> >> - Enable the Vcc and set it to 2.5v
+>> >> - Set the device power mode to ACTIVE
+>> >>
+>> >> All of the above may be done at HS-G1 & moved to max supported gear
+>> >> based on the device version, perhaps?
+>> >
+>> > Hi Asutosh,
+>> >
+>> > Thanks for sharing this idea.
+>> >
+>> > 1. I did not see above flow defined in UFS specifications, please
+>> > correct me if I was wrong.
+>> >
+>> > 2. For above flow, the concern is that I am not sure if all devices
+>> > supporting VCC (2.4v - 2.7v) can accept higher voltage, say 2.95v, for
+>> > version detection.
+>> >
+>> > 3. For version detection, another concern is that I am not sure if all
+>> > 3.x devices support VCC (2.4v - 2.7v) only, or in other words, I am not
+>> > sure if all 2.x devices support VCC (2.7v - 3.6v) only. The above rule
+>> > will break any devices not obeying this "conventions".
+>> >
+>> > For platforms that support both 2.x (2.7v-3.6v) and 3.x (2.4v-2.7v),
+>> >
+>> > It would be good for UFS drivers detecting the correct voltage if the
+>> > protocol is well-defined in specifications. Until that day, any
+>> > "non-standard" way may be better implemented in vendor's ops?
+>> >
+>> > If the vop concept works on your platform, we could still keep struct
+>> > ufs_vreg and allow vendors to configure proper min_uV and max_uV to make
+>> > regulator_set_voltage() works during VCC toggling flow. Without specific
+>> > vendor configurations, min_uV and max_uV would be NULL by default and
+>> > UFS core driver will only enable/disasble VCC regulator only without
+>> > adjusting its voltage.
+>> >
+>> 
+>> I think this would work. Do you plan to implement this?
+>> If not, I can take this up. Please let me know.
+> 
+> Thanks for the understanding and support.
+> 
+> I would like to re-post this patch to simply removing the pre-defined
+> initial values of all device powers.
+> 
+> For vop idea supporting the voltage detection way, could you please 
+> take
+> it up since this would be better to fit what you need for fixing this
+> issue?
+> 
+> Thanks,
+> Stanley Chu
+While we are on this topic, another similar concern is how to set the 
+UFS's regulators loading to Low Power Mode (LPM).
+Currently, the UFS_VREG_LPM_LOAD_UA is hardcoded to 1mA in the driver, 
+and it is invoked by the ufshcd_config_vreg_lpm().
+However, for some platforms, to put the regulators into LPM mode, it may 
+be a different value than 1mA.
+Should we be using ufs_vreg's min_uA in the ufshcd_config_vreg_lpm() 
+instead of using the hardcoded value?
+And the ufs_vreg's min_uA value would be parsed by the vendor's code?
+We can post a proposal if this sounds ok.
 
+Regards,
+Bao
+
+> 
+> 
+>> 
+>> > Maybe one possible another idea is to decide the correct voltage and
+>> > configure regulator properly before kernel?
+>> >
+>> > Thanks,
+>> > Stanley Chu
+>> >
+>> >>
+>> >> Am open to other ideas though.
+>> >>
+>> >> -asd
+>> >>
+>> >
+>> 
+>> -asd
+>> 
+>> 
