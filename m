@@ -4,66 +4,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 102F0C83014
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF6DC8300F
 	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 00:55:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9F9D207FF
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 00:55:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E1732084C
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 00:55:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727812AbgLBAyv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Dec 2020 19:54:51 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49806 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727272AbgLBAy3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 19:54:29 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B20Vijd182554;
+        id S1727624AbgLBAy3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Dec 2020 19:54:29 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:31936 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727517AbgLBAy2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Dec 2020 19:54:28 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B20XBIM191252;
         Tue, 1 Dec 2020 19:53:37 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=8SKHXreeXnAxivNJZYlFp1JB2nIJzGebUGC5aDCotBk=;
- b=HNyQAZa0RSCFZzbNOHD/AnvLH4dQGK8FYEmPE4EnEx3eddeI9IOnqA8QOr9rFdRL/Sbz
- PQ0gwnfd1xhAVIGjQI0O344YVqNiJdjcgQyDLACQJh8RZLdndmkmwCYEiStlms6X105E
- DDyxTRZdOBB8LjtKcHLR7sLife6Mcv+LkHEcAPpTRdmDGCUujPQWwGCNXTBxwnrbQkKQ
- Yq4dGBJFWOQCKUwbTUUNW0LZzblAwv7IcuatFbOOPwobl5DwempNO9sMGBsSJ5mLUGAl
- flb8mtRjalhp91vASkvqsLlBp1w+0+neKgSBBptVSjBVzE5E6RDHTRW/tsYxvW3c9qkE Vg== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 355he4en04-1
+ bh=CnHVvUkUx6YZ9zjf2V3StKrmNCJc7WEt8essI7a2Vhg=;
+ b=mq+4JhMUYJ9EzVr+H/JTmDSqvVWtVFUogQikkYSNCnXkeMNL/g3Gg3Muh7D6cooXuI8k
+ +JdyBtFMZmxdzteC+JhGParGKLRS3S4K7dIn8x4/BxISdrLpjxsD3f//8iz7pjQNcR7t
+ QB/FyFkXJBMvE98nGKGiRkIpu3UXRPLdlRmbMd6OZstn4p6Zx0ygZLFNPny5c8HuPP0Z
+ 1062ZzxtZCSG56XQJBv7J+CbWK/gYtv/50SyBIbqfcUfS1Bre9U7ZsJuX5+xNZGUyinj
+ j9qI1U8f9G/EgwTgRcoTBoLjDz//0/qjGsENv/3EDE5BxZZ/Z1Z5eyQ10dI7j4Iz8g74 uA== 
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 355y6cj9ud-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Dec 2020 19:53:37 -0500
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B20bSlY019036;
-        Wed, 2 Dec 2020 00:53:36 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma01dal.us.ibm.com with ESMTP id 355rf7c11q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 02 Dec 2020 00:53:36 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B20rZ4K51773932
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Dec 2020 19:53:35 -0500
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B20cNlI028139;
         Wed, 2 Dec 2020 00:53:35 GMT
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+        by ppma03dal.us.ibm.com with ESMTP id 353e69beeu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 00:53:35 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B20rNu69765470
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 2 Dec 2020 00:53:23 GMT
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F37F77805E;
-        Wed,  2 Dec 2020 00:53:34 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 738217805C;
+        Wed,  2 Dec 2020 00:53:33 +0000 (GMT)
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 841377805F;
-        Wed,  2 Dec 2020 00:53:34 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 16E7878066;
+        Wed,  2 Dec 2020 00:53:33 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed,  2 Dec 2020 00:53:34 +0000 (GMT)
+        Wed,  2 Dec 2020 00:53:33 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH v2 07/17] ibmvfc: define Sub-CRQ interrupt handler routine
-Date:   Tue,  1 Dec 2020 18:53:19 -0600
-Message-Id: <20201202005329.4538-8-tyreld@linux.ibm.com>
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v2 04/17] ibmvfc: add alloc/dealloc routines for SCSI Sub-CRQ Channels
+Date:   Tue,  1 Dec 2020 18:53:16 -0600
+Message-Id: <20201202005329.4538-5-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201202005329.4538-1-tyreld@linux.ibm.com>
 References: <20201202005329.4538-1-tyreld@linux.ibm.com>
@@ -72,44 +71,208 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
  definitions=2020-12-01_12:2020-11-30,2020-12-01 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 impostorscore=0
- lowpriorityscore=0 spamscore=0 priorityscore=1501 clxscore=1015
- malwarescore=0 suspectscore=1 bulkscore=0 mlxscore=0 mlxlogscore=984
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012010142
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=999
+ mlxscore=0 suspectscore=3 priorityscore=1501 clxscore=1015 adultscore=0
+ lowpriorityscore=0 malwarescore=0 impostorscore=0 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012020000
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simple handler that calls Sub-CRQ drain routine directly.
+Allocate a set of Sub-CRQs in advance. During channel setup the client
+and VIOS negotiate the number of queues the VIOS supports and the number
+that the client desires to request. Its possible that the final channel
+resources allocated is less than requested, but the client is still
+responsible for sending handles for every queue it is hoping for.
+
+Also, provide deallocation cleanup routines.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 128 +++++++++++++++++++++++++++++++++
+ drivers/scsi/ibmvscsi/ibmvfc.h |   1 +
+ 2 files changed, 129 insertions(+)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index e9da3f60c793..a3e2d627c1ac 100644
+index 64674054dbae..4860487c6779 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3458,6 +3458,16 @@ static void ibmvfc_drain_sub_crq(struct ibmvfc_sub_queue *scrq)
- 	}
+@@ -793,6 +793,8 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+ 	unsigned long flags;
+ 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
+ 	struct ibmvfc_crq_queue *crq = &vhost->crq;
++	struct ibmvfc_sub_queue *scrq;
++	int i;
+ 
+ 	/* Close the CRQ */
+ 	do {
+@@ -809,6 +811,14 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+ 	memset(crq->msgs, 0, PAGE_SIZE);
+ 	crq->cur = 0;
+ 
++	if (vhost->scsi_scrqs.scrqs) {
++		for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++) {
++			scrq = &vhost->scsi_scrqs.scrqs[i];
++			memset(scrq->msgs, 0, PAGE_SIZE);
++			scrq->cur = 0;
++		}
++	}
++
+ 	/* And re-open it again */
+ 	rc = plpar_hcall_norets(H_REG_CRQ, vdev->unit_address,
+ 				crq->msg_token, PAGE_SIZE);
+@@ -4983,6 +4993,117 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
+ 	return retrc;
  }
  
-+static irqreturn_t ibmvfc_interrupt_scsi(int irq, void *scrq_instance)
++static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
++				  int index)
 +{
-+	struct ibmvfc_sub_queue *scrq = (struct ibmvfc_sub_queue *)scrq_instance;
++	struct device *dev = vhost->dev;
++	struct vio_dev *vdev = to_vio_dev(dev);
++	struct ibmvfc_sub_queue *scrq = &vhost->scsi_scrqs.scrqs[index];
++	int rc = -ENOMEM;
 +
-+	ibmvfc_toggle_scrq_irq(scrq, 0);
-+	ibmvfc_drain_sub_crq(scrq);
++	ENTER;
 +
-+	return IRQ_HANDLED;
++	scrq->msgs = (struct ibmvfc_sub_crq *)get_zeroed_page(GFP_KERNEL);
++	if (!scrq->msgs)
++		return rc;
++
++	scrq->size = PAGE_SIZE / sizeof(*scrq->msgs);
++	scrq->msg_token = dma_map_single(dev, scrq->msgs, PAGE_SIZE,
++					 DMA_BIDIRECTIONAL);
++
++	if (dma_mapping_error(dev, scrq->msg_token))
++		goto dma_map_failed;
++
++	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
++			   &scrq->cookie, &scrq->hw_irq);
++
++	if (rc) {
++		dev_warn(dev, "Error registering sub-crq: %d\n", rc);
++		dev_warn(dev, "Firmware may not support MQ\n");
++		goto reg_failed;
++	}
++
++	scrq->hwq_id = index;
++	scrq->vhost = vhost;
++
++	LEAVE;
++	return 0;
++
++reg_failed:
++	dma_unmap_single(dev, scrq->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
++dma_map_failed:
++	free_page((unsigned long)scrq->msgs);
++	LEAVE;
++	return rc;
++}
++
++static void ibmvfc_deregister_scsi_channel(struct ibmvfc_host *vhost, int index)
++{
++	struct device *dev = vhost->dev;
++	struct vio_dev *vdev = to_vio_dev(dev);
++	struct ibmvfc_sub_queue *scrq = &vhost->scsi_scrqs.scrqs[index];
++	long rc;
++
++	ENTER;
++
++	do {
++		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
++					scrq->cookie);
++	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
++
++	if (rc)
++		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
++
++	dma_unmap_single(dev, scrq->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
++	free_page((unsigned long)scrq->msgs);
++	LEAVE;
++}
++
++static int ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
++{
++	int i, j;
++
++	ENTER;
++
++	vhost->scsi_scrqs.scrqs = kcalloc(IBMVFC_SCSI_HW_QUEUES,
++					  sizeof(*vhost->scsi_scrqs.scrqs),
++					  GFP_KERNEL);
++	if (!vhost->scsi_scrqs.scrqs)
++		return -1;
++
++	for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++) {
++		if (ibmvfc_register_scsi_channel(vhost, i)) {
++			for (j = i; j > 0; j--)
++				ibmvfc_deregister_scsi_channel(vhost, j - 1);
++			kfree(vhost->scsi_scrqs.scrqs);
++			vhost->scsi_scrqs.scrqs = NULL;
++			vhost->scsi_scrqs.active_queues = 0;
++			LEAVE;
++			return -1;
++		}
++	}
++
++	LEAVE;
++	return 0;
++}
++
++static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
++{
++	int i;
++
++	ENTER;
++	if (!vhost->scsi_scrqs.scrqs)
++		return;
++
++	for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++)
++		ibmvfc_deregister_scsi_channel(vhost, i);
++
++	kfree(vhost->scsi_scrqs.scrqs);
++	vhost->scsi_scrqs.scrqs = NULL;
++	vhost->scsi_scrqs.active_queues = 0;
++	LEAVE;
 +}
 +
  /**
-  * ibmvfc_init_tgt - Set the next init job step for the target
-  * @tgt:		ibmvfc target struct
+  * ibmvfc_free_mem - Free memory for vhost
+  * @vhost:	ibmvfc host struct
+@@ -5239,6 +5360,12 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 		goto remove_shost;
+ 	}
+ 
++	if (vhost->mq_enabled) {
++		rc = ibmvfc_init_sub_crqs(vhost);
++		if (rc)
++			dev_warn(dev, "Failed to allocate Sub-CRQs. rc=%d\n", rc);
++	}
++
+ 	if (shost_to_fc_host(shost)->rqst_q)
+ 		blk_queue_max_segments(shost_to_fc_host(shost)->rqst_q, 1);
+ 	dev_set_drvdata(dev, vhost);
+@@ -5296,6 +5423,7 @@ static int ibmvfc_remove(struct vio_dev *vdev)
+ 	ibmvfc_purge_requests(vhost, DID_ERROR);
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 	ibmvfc_free_event_pool(vhost);
++	ibmvfc_release_sub_crqs(vhost);
+ 
+ 	ibmvfc_free_mem(vhost);
+ 	spin_lock(&ibmvfc_driver_lock);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index b3cd35cbf067..986ce4530382 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -838,6 +838,7 @@ struct ibmvfc_host {
+ 	mempool_t *tgt_pool;
+ 	struct ibmvfc_crq_queue crq;
+ 	struct ibmvfc_async_crq_queue async_crq;
++	struct ibmvfc_scsi_channels scsi_scrqs;
+ 	struct ibmvfc_npiv_login login_info;
+ 	union ibmvfc_npiv_login_data *login_buf;
+ 	dma_addr_t login_buf_dma;
 -- 
 2.27.0
 
