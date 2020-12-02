@@ -2,96 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 808C0C64E8A
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:00:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F82CC64E8A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:06:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2737C20679
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:00:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B54E22203
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:06:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388364AbgLBKAf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 05:00:35 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22912 "EHLO
+        id S2388122AbgLBKGD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 05:06:03 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:35937 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388247AbgLBKAf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 05:00:35 -0500
+        by vger.kernel.org with ESMTP id S1728118AbgLBKGC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 05:06:02 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606903149;
+        s=mimecast20190719; t=1606903476;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Z8AQZAgl1UdsrqF/icNEETV75RA2NfX+ehHLJ3NCqqw=;
-        b=Kq1r/uonnBSAH1jbjHcbExoxR/xzT6kcikXuBbGStrieklNcW663SwHtu0CbVW+ITr31LW
-        5tR4+aebYPshiDLXcRF6vc81cfHHEXCs/JPU+xnF+OLGFFR1MeTbPg0lyHzMB6L+R31AdO
-        JDx4EGOEpymUFiZ1GG9WMwWcmQkWbBA=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-133-rZXBYnZSPXexmq6MtnsnNQ-1; Wed, 02 Dec 2020 04:59:07 -0500
-X-MC-Unique: rZXBYnZSPXexmq6MtnsnNQ-1
-Received: by mail-wm1-f71.google.com with SMTP id o203so2654778wmo.3
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Dec 2020 01:59:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Z8AQZAgl1UdsrqF/icNEETV75RA2NfX+ehHLJ3NCqqw=;
-        b=LI32zBcBe7TK31+eL4uTmeaabp2pVl1W+GrrgO5O7VAfZXdPwS6z94OrFo2UeOHKuk
-         PdFAVnARowtTZHUcmV2IuimdE0OHIq8xroOqWI2YlAUcxKIKxjsDTpBbRmHbt1G7uvej
-         Fgicsi9g+AiESc7IFPgphBmBeyq7qjvgsj8TqG23TlQ8Ga7YTY6/ABPOfzL8fxeXd1fs
-         +o1hqmoKclcjIuL4M6g8ooxFFdiEnn7jnrud2K41Z9BDcVBXHRrCBvk+pgvtqQKSdKej
-         ViaFuVvnoSICuYdDJ+10DlL7Y4S5K8KhABhO2UKEPk37UQNUxqqnSqHRgOpJCRJ3Uop9
-         na8g==
-X-Gm-Message-State: AOAM530NwYvswGHRi6QMs+lHAVayw/e6pWAsITyDX2izzlczpiVDXHF+
-        RacmOHHCU2CNWKTWGYApO10gZ8aEwtLZVQA3ZRl1S/t3i1qgIajvsIZtIQN6Wftq1E71iS537gO
-        MMTvJu/56kvNJXclAB2y4JQ==
-X-Received: by 2002:a7b:cf30:: with SMTP id m16mr2177307wmg.145.1606903146601;
-        Wed, 02 Dec 2020 01:59:06 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxlyOpsA5OFT6XaiG7rTTB0hoZWxmFeJV5oLJmK4wvaw9/zUbY1bAYBODC22GlGVObe124jzQ==
-X-Received: by 2002:a7b:cf30:: with SMTP id m16mr2177290wmg.145.1606903146488;
-        Wed, 02 Dec 2020 01:59:06 -0800 (PST)
-Received: from redhat.com (bzq-79-176-44-197.red.bezeqint.net. [79.176.44.197])
-        by smtp.gmail.com with ESMTPSA id z11sm1418191wmc.39.2020.12.02.01.59.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Dec 2020 01:59:05 -0800 (PST)
-Date:   Wed, 2 Dec 2020 04:59:03 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     stefanha@redhat.com, qemu-devel@nongnu.org, fam@euphon.net,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        jasowang@redhat.com, pbonzini@redhat.com,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 1/1] qemu vhost scsi: add VHOST_SET_VRING_ENABLE support
-Message-ID: <20201202045807-mutt-send-email-mst@kernel.org>
-References: <1605223150-10888-1-git-send-email-michael.christie@oracle.com>
- <1605223150-10888-2-git-send-email-michael.christie@oracle.com>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=NddWbL3iw/gQzLMebZ3zSWl7XRTb2Z+lkIWnSvOPPuA=;
+        b=FwijM2uwNYFXK/nzkiC4Y0Ou7ElusthD6l6RLAGa7xsv2x5K4/XgQRAM6WXuyDgyXnbBl9
+        1fgKvlN7+jjGtnRmrEY0fwIxKH7bqQ7qIXfhjwo6sqmagRnH6ieNmdVLrSGI1wROYMXrgh
+        WAAcXpd+Zifoy5AEKRm+wGedInoy9o8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-450-LqzsIg6mODih0ShqtuFDmQ-1; Wed, 02 Dec 2020 05:04:32 -0500
+X-MC-Unique: LqzsIg6mODih0ShqtuFDmQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D4C0C1005D7E;
+        Wed,  2 Dec 2020 10:04:30 +0000 (UTC)
+Received: from localhost (ovpn-13-72.pek2.redhat.com [10.72.13.72])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B471460854;
+        Wed,  2 Dec 2020 10:04:26 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Ewan Milne <emilne@redhat.com>, Long Li <longli@microsoft.com>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: core: fix race between handling STS_RESOURCE and completion
+Date:   Wed,  2 Dec 2020 18:04:19 +0800
+Message-Id: <20201202100419.525144-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1605223150-10888-2-git-send-email-michael.christie@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 12, 2020 at 05:19:00PM -0600, Mike Christie wrote:
-> diff --git a/linux-headers/linux/vhost.h b/linux-headers/linux/vhost.h
-> index 7523218..98dd919 100644
-> --- a/linux-headers/linux/vhost.h
-> +++ b/linux-headers/linux/vhost.h
-> @@ -70,6 +70,7 @@
->  #define VHOST_VRING_BIG_ENDIAN 1
->  #define VHOST_SET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x13, struct vhost_vring_state)
->  #define VHOST_GET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x14, struct vhost_vring_state)
-> +#define VHOST_SET_VRING_ENABLE _IOW(VHOST_VIRTIO, 0x15, struct vhost_vring_state)
+When queuing IO request to LLD, STS_RESOURCE may be returned because:
 
-OK so first we need the kernel patches, then update the header, then
-we can apply the qemu patch.
+- host in recovery or blocked
+- target queue throttling or blocked
+- LLD rejection
 
->  /* The following ioctls use eventfd file descriptors to signal and poll
->   * for events. */
-> -- 
-> 1.8.3.1
+Any one of the above doesn't happen frequently enough.
+
+BLK_STS_DEV_RESOURCE is returned to block layer for avoiding unnecessary
+re-run queue, and it is just one small optimization. However, all
+in-flight requests originated from this scsi device may be completed
+just after reading 'sdev->device_busy', so BLK_STS_DEV_RESOURCE is
+returned to block layer. And the current failed IO won't get chance
+to be queued any more, since it is invisible at that time for either
+scsi_run_queue_async() or blk-mq's RESTART.
+
+Fix the issue by not returning BLK_STS_DEV_RESOURCE in this situation.
+
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Ewan Milne <emilne@redhat.com>
+Cc: Long Li <longli@microsoft.com>
+Tested-by: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Reported-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 60c7a7d74852..03c6d0620bfd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1703,8 +1703,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		break;
+ 	case BLK_STS_RESOURCE:
+ 	case BLK_STS_ZONE_RESOURCE:
+-		if (atomic_read(&sdev->device_busy) ||
+-		    scsi_device_blocked(sdev))
++		if (scsi_device_blocked(sdev))
+ 			ret = BLK_STS_DEV_RESOURCE;
+ 		break;
+ 	default:
+-- 
+2.28.0
 
