@@ -7,42 +7,43 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4193BC64E7C
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:16:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB665C83018
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0F602222E
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:16:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 714B62222A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 07:17:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387595AbgLBHQL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 02:16:11 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38004 "EHLO mx2.suse.de"
+        id S2387623AbgLBHRU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 02:17:20 -0500
+Received: from mx2.suse.de ([195.135.220.15]:38652 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387591AbgLBHQL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Dec 2020 02:16:11 -0500
+        id S1728673AbgLBHRU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Dec 2020 02:17:20 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id ADFD2ABD2;
-        Wed,  2 Dec 2020 07:15:29 +0000 (UTC)
-Subject: Re: [PATCH v4 8/9] block: Remove RQF_PREEMPT and BLK_MQ_REQ_PREEMPT
+        by mx2.suse.de (Postfix) with ESMTP id 5FF5FABD2;
+        Wed,  2 Dec 2020 07:16:38 +0000 (UTC)
+Subject: Re: [PATCH v4 9/9] block: Do not accept any requests while suspended
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+        linux-block@vger.kernel.org,
         Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Martin Kepplinger <martin.kepplinger@puri.sm>
 References: <20201130024615.29171-1-bvanassche@acm.org>
- <20201130024615.29171-9-bvanassche@acm.org>
+ <20201130024615.29171-10-bvanassche@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <497a5191-3c95-83ea-953b-8709cee0e23f@suse.de>
-Date:   Wed, 2 Dec 2020 08:15:28 +0100
+Message-ID: <aff67678-19ff-996f-1d32-6035f6dec811@suse.de>
+Date:   Wed, 2 Dec 2020 08:16:35 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201130024615.29171-9-bvanassche@acm.org>
+In-Reply-To: <20201130024615.29171-10-bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -51,24 +52,46 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/30/20 3:46 AM, Bart Van Assche wrote:
-> Remove flag RQF_PREEMPT and BLK_MQ_REQ_PREEMPT since these are no longer
-> used by any kernel code.
+> From: Alan Stern <stern@rowland.harvard.edu>
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Can Guo <cang@codeaurora.org>
-> Cc: Stanley Chu <stanley.chu@mediatek.com>
-> Cc: Alan Stern <stern@rowland.harvard.edu>
+> blk_queue_enter() accepts BLK_MQ_REQ_PM requests independent of the runtime
+> power management state. Now that SCSI domain validation no longer depends
+> on this behavior, modify the behavior of blk_queue_enter() as follows:
+> - Do not accept any requests while suspended.
+> - Only process power management requests while suspending or resuming.
+> 
+> Submitting BLK_MQ_REQ_PM requests to a device that is runtime suspended
+> causes runtime-suspended devices not to resume as they should. The request
+> which should cause a runtime resume instead gets issued directly, without
+> resuming the device first. Of course the device can't handle it properly,
+> the I/O fails, and the device remains suspended.
+> 
+> The problem is fixed by checking that the queue's runtime-PM status
+> isn't RPM_SUSPENDED before allowing a request to be issued, and
+> queuing a runtime-resume request if it is.  In particular, the inline
+> blk_pm_request_resume() routine is renamed blk_pm_resume_queue() and
+> the code is unified by merging the surrounding checks into the
+> routine.  If the queue isn't set up for runtime PM, or there currently
+> is no restriction on allowed requests, the request is allowed.
+> Likewise if the BLK_MQ_REQ_PM flag is set and the status isn't
+> RPM_SUSPENDED.  Otherwise a runtime resume is queued and the request
+> is blocked until conditions are more suitable.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Can Guo <cang@codeaurora.org>
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
 > Cc: Ming Lei <ming.lei@redhat.com>
 > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Martin Kepplinger <martin.kepplinger@puri.sm>
+> Reported-and-tested-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> [ bvanassche: modified commit message and removed Cc: stable because without
+>    the previous patches from this series this patch would break parallel SCSI
+>    domain validation ]
 > ---
->   block/blk-core.c       | 7 +++----
->   block/blk-mq-debugfs.c | 1 -
->   block/blk-mq.c         | 2 --
->   include/linux/blk-mq.h | 2 --
->   include/linux/blkdev.h | 6 +-----
->   5 files changed, 4 insertions(+), 14 deletions(-)
+>   block/blk-core.c |  6 +++---
+>   block/blk-pm.h   | 14 +++++++++-----
+>   2 files changed, 12 insertions(+), 8 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
