@@ -2,149 +2,305 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08245C64E7C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C474C83012
 	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5ACE22202
+	by mail.kernel.org (Postfix) with ESMTP id 0A8D722203
 	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:17:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729448AbgLBKRV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 05:17:21 -0500
-Received: from m42-5.mailgun.net ([69.72.42.5]:26801 "EHLO m42-5.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729375AbgLBKRU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Dec 2020 05:17:20 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606904220; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=PtTR3K77Jj6EGHE+NEYqNB3DHE430N+l6KIpgZc7+Vg=;
- b=D0GG2IOEYxZ83gZvvpSaJ9c1WTrMX6oP3oiDz11Wes6/7bOI2WsshAete9rA+jSITV30l1qW
- XZwAl5R1NoASib4z/Dlp350InbiSk+NzSpaRTXKSiBjvPOSj7wVqFOWnwh+FSrLEb2F/rEud
- x4/cG2oya0ws7jd98mk1LCZNb0Y=
-X-Mailgun-Sending-Ip: 69.72.42.5
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
- 5fc76981f2eedd9084073f1f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Dec 2020 10:16:33
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4C1F8C43464; Wed,  2 Dec 2020 10:16:32 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7586C433C6;
-        Wed,  2 Dec 2020 10:16:30 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 02 Dec 2020 18:16:30 +0800
+        id S2387413AbgLBKRZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 05:17:25 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:11204 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729375AbgLBKRY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 05:17:24 -0500
+IronPort-SDR: FnPHHDm2PH02/Ni+IVhE04AvMr/f0CQaHIDeQykdpDjjzNXNa3YevixckuBPhSmCLsdoggodq9
+ k6wAS/sZ8teq7KUgHXvlBor23wKor63S5DRP98FsnJtqoZhAAPhYWAg0e8JeOxt5E2De8SFuf+
+ 4P0ido0RV3MzWGNAkhc+HelywKnwhjnP5quxWuqlwj1Pq5ItFXdNAmT56Zw6hV+NjbsLOTihCX
+ OZ97VYQeTHGLTYPXThcKoA86+YFYjMpNNLJDkwuvRYpOLw7U44pkwRSQJHxY6/2Q9K4zbRnto/
+ RLQ=
+X-IronPort-AV: E=Sophos;i="5.78,386,1599548400"; 
+   d="scan'208";a="47540140"
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by labrats.qualcomm.com with ESMTP; 02 Dec 2020 02:16:42 -0800
+X-QCInternal: smtphost
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg03-sd.qualcomm.com with ESMTP; 02 Dec 2020 02:16:40 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id ADB172108B; Wed,  2 Dec 2020 02:16:40 -0800 (PST)
 From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
-        jiajie.hao@mediatek.com, alice.chao@mediatek.com
-Subject: Re: [PATCH v3] scsi: ufs: Remove pre-defined initial voltage values
- of device powers
-In-Reply-To: <20201202091819.22363-1-stanley.chu@mediatek.com>
-References: <20201202091819.22363-1-stanley.chu@mediatek.com>
-Message-ID: <3d3e5d90774423243b071b20191e9ce4@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH V6 1/3] scsi: ufs: Serialize eh_work with system PM events and async scan
+Date:   Wed,  2 Dec 2020 02:16:31 -0800
+Message-Id: <1606904194-20806-2-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1606904194-20806-1-git-send-email-cang@codeaurora.org>
+References: <1606904194-20806-1-git-send-email-cang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-02 17:18, Stanley Chu wrote:
-> UFS specficication allows different VCC configurations for UFS devices,
-> for example,
-> 	(1). 2.70V - 3.60V (Activated by default in UFS core driver)
-> 	(2). 1.70V - 1.95V (Activated if "vcc-supply-1p8" is declared in
->                           device tree)
-> 	(3). 2.40V - 2.70V (Supported since UFS 3.x)
-> 
-> With the introduction of UFS 3.x products, an issue is happening that
-> UFS driver will use wrong "min_uV-max_uV" values to configure the
-> voltage of VCC regulator on UFU 3.x products with the configuration (3)
-> used.
-> 
-> To solve this issue, we simply remove pre-defined initial VCC voltage
-> values in UFS core driver with below reasons,
-> 
-> 1. UFS specifications do not define how to detect the VCC configuration
->    supported by attached device.
-> 
-> 2. Device tree already supports standard regulator properties.
-> 
-> Therefore VCC voltage shall be defined correctly in device tree, and
-> shall not changed by UFS driver. What UFS driver needs to do is simply
-> enable or disable the VCC regulator only.
-> 
-> Similar change is applied to VCCQ and VCCQ2 as well.
-> 
-> Note that we keep struct ufs_vreg unchanged. This allows vendors to
-> configure proper min_uV and max_uV of any regulators to make
-> regulator_set_voltage() works during regulator toggling flow in the
-> future. Without specific vendor configurations, min_uV and max_uV will
-> be NULL by default and UFS core driver will enable or disable the
-> regulator only without adjusting its voltage.
-> 
-> Acked-by: Avri Altman <avri.altman@wdc.com>
-> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Serialize eh_work with system PM events and async scan to make sure eh_work
+does not run in parallel with them.
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Reviewed-by: Hongwu Su<hongwus@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 64 +++++++++++++++++++++++++++++------------------
+ drivers/scsi/ufs/ufshcd.h |  1 +
+ 2 files changed, 41 insertions(+), 24 deletions(-)
 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->  drivers/scsi/ufs/ufshcd-pltfrm.c | 19 -------------------
->  1 file changed, 19 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c 
-> b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> index 0619cfbfbdbb..1a69949a4ea1 100644
-> --- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-> +++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-> @@ -134,25 +134,6 @@ static int ufshcd_populate_vreg(struct device
-> *dev, const char *name,
->  		dev_info(dev, "%s: unable to find %s\n", __func__, prop_name);
->  		vreg->max_uA = 0;
->  	}
-> -
-> -	if (!strcmp(name, "vcc")) {
-> -		if (of_property_read_bool(np, "vcc-supply-1p8")) {
-> -			vreg->min_uV = UFS_VREG_VCC_1P8_MIN_UV;
-> -			vreg->max_uV = UFS_VREG_VCC_1P8_MAX_UV;
-> -		} else {
-> -			vreg->min_uV = UFS_VREG_VCC_MIN_UV;
-> -			vreg->max_uV = UFS_VREG_VCC_MAX_UV;
-> -		}
-> -	} else if (!strcmp(name, "vccq")) {
-> -		vreg->min_uV = UFS_VREG_VCCQ_MIN_UV;
-> -		vreg->max_uV = UFS_VREG_VCCQ_MAX_UV;
-> -	} else if (!strcmp(name, "vccq2")) {
-> -		vreg->min_uV = UFS_VREG_VCCQ2_MIN_UV;
-> -		vreg->max_uV = UFS_VREG_VCCQ2_MAX_UV;
-> -	}
-> -
-> -	goto out;
-> -
->  out:
->  	if (!ret)
->  		*out_vreg = vreg;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 47c544d..f0bb3fc 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5597,7 +5597,9 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ {
+ 	pm_runtime_get_sync(hba->dev);
+-	if (pm_runtime_suspended(hba->dev)) {
++	if (pm_runtime_status_suspended(hba->dev) || hba->is_sys_suspended) {
++		enum ufs_pm_op pm_op;
++
+ 		/*
+ 		 * Don't assume anything of pm_runtime_get_sync(), if
+ 		 * resume fails, irq and clocks can be OFF, and powers
+@@ -5612,7 +5614,8 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ 		if (!ufshcd_is_clkgating_allowed(hba))
+ 			ufshcd_setup_clocks(hba, true);
+ 		ufshcd_release(hba);
+-		ufshcd_vops_resume(hba, UFS_RUNTIME_PM);
++		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
++		ufshcd_vops_resume(hba, pm_op);
+ 	} else {
+ 		ufshcd_hold(hba, false);
+ 		if (hba->clk_scaling.is_allowed) {
+@@ -5633,7 +5636,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+ 
+ static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
+ {
+-	return (hba->ufshcd_state == UFSHCD_STATE_ERROR ||
++	return (!hba->is_powered || hba->ufshcd_state == UFSHCD_STATE_ERROR ||
+ 		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
+ 			ufshcd_is_link_broken(hba))));
+ }
+@@ -5646,6 +5649,7 @@ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
+ 	struct request_queue *q;
+ 	int ret;
+ 
++	hba->is_sys_suspended = false;
+ 	/*
+ 	 * Set RPM status of hba device to RPM_ACTIVE,
+ 	 * this also clears its runtime error.
+@@ -5704,11 +5708,13 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 
+ 	hba = container_of(work, struct ufs_hba, eh_work);
+ 
++	down(&hba->eh_sem);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	if (ufshcd_err_handling_should_stop(hba)) {
+ 		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+ 			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
++		up(&hba->eh_sem);
+ 		return;
+ 	}
+ 	ufshcd_set_eh_in_progress(hba);
+@@ -5716,20 +5722,18 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	ufshcd_err_handling_prepare(hba);
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_scsi_block_requests(hba);
+-	/*
+-	 * A full reset and restore might have happened after preparation
+-	 * is finished, double check whether we should stop.
+-	 */
+-	if (ufshcd_err_handling_should_stop(hba)) {
+-		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+-			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+-		goto out;
+-	}
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 
+ 	/* Complete requests that have door-bell cleared by h/w */
+ 	ufshcd_complete_requests(hba);
+ 
++	/*
++	 * A full reset and restore might have happened after preparation
++	 * is finished, double check whether we should stop.
++	 */
++	if (ufshcd_err_handling_should_stop(hba))
++		goto skip_err_handling;
++
+ 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
+ 		bool ret;
+ 
+@@ -5737,17 +5741,10 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		/* release the lock as ufshcd_quirk_dl_nac_errors() may sleep */
+ 		ret = ufshcd_quirk_dl_nac_errors(hba);
+ 		spin_lock_irqsave(hba->host->host_lock, flags);
+-		if (!ret && !hba->force_reset && ufshcd_is_link_active(hba))
++		if (!ret && ufshcd_err_handling_should_stop(hba))
+ 			goto skip_err_handling;
+ 	}
+ 
+-	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
+-	    ufshcd_is_saved_err_fatal(hba) ||
+-	    ((hba->saved_err & UIC_ERROR) &&
+-	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
+-				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR))))
+-		needs_reset = true;
+-
+ 	if ((hba->saved_err & (INT_FATAL_ERRORS | UFSHCD_UIC_HIBERN8_MASK)) ||
+ 	    (hba->saved_uic_err &&
+ 	     (hba->saved_uic_err != UFSHCD_UIC_PA_GENERIC_ERROR))) {
+@@ -5767,8 +5764,14 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 	 * transfers forcefully because they will get cleared during
+ 	 * host reset and restore
+ 	 */
+-	if (needs_reset)
++	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
++	    ufshcd_is_saved_err_fatal(hba) ||
++	    ((hba->saved_err & UIC_ERROR) &&
++	     (hba->saved_uic_err & (UFSHCD_UIC_DL_NAC_RECEIVED_ERROR |
++				    UFSHCD_UIC_DL_TCx_REPLAY_ERROR)))) {
++		needs_reset = true;
+ 		goto do_reset;
++	}
+ 
+ 	/*
+ 	 * If LINERESET was caught, UFS might have been put to PWM mode,
+@@ -5876,12 +5879,11 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x saved_uic_err 0x%x",
+ 			    __func__, hba->saved_err, hba->saved_uic_err);
+ 	}
+-
+-out:
+ 	ufshcd_clear_eh_in_progress(hba);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	ufshcd_scsi_unblock_requests(hba);
+ 	ufshcd_err_handling_unprepare(hba);
++	up(&hba->eh_sem);
+ }
+ 
+ /**
+@@ -6856,6 +6858,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
+ 	 */
+ 	scsi_report_bus_reset(hba->host, 0);
+ 	if (err) {
++		hba->ufshcd_state = UFSHCD_STATE_ERROR;
+ 		hba->saved_err |= saved_err;
+ 		hba->saved_uic_err |= saved_uic_err;
+ 	}
+@@ -7704,8 +7707,10 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	struct ufs_hba *hba = (struct ufs_hba *)data;
+ 	int ret;
+ 
++	down(&hba->eh_sem);
+ 	/* Initialize hba, detect and initialize UFS device */
+ 	ret = ufshcd_probe_hba(hba, true);
++	up(&hba->eh_sem);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -8718,6 +8723,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 	int ret = 0;
+ 	ktime_t start = ktime_get();
+ 
++	down(&hba->eh_sem);
+ 	if (!hba || !hba->is_powered)
+ 		return 0;
+ 
+@@ -8748,6 +8754,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = true;
++	else
++		up(&hba->eh_sem);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_suspend);
+@@ -8764,8 +8772,10 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 	int ret = 0;
+ 	ktime_t start = ktime_get();
+ 
+-	if (!hba)
++	if (!hba) {
++		up(&hba->eh_sem);
+ 		return -EINVAL;
++	}
+ 
+ 	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
+ 		/*
+@@ -8781,6 +8791,7 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = false;
++	up(&hba->eh_sem);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_resume);
+@@ -8872,6 +8883,7 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+ 
++	down(&hba->eh_sem);
+ 	if (!hba->is_powered)
+ 		goto out;
+ 
+@@ -8888,6 +8900,8 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ out:
+ 	if (ret)
+ 		dev_err(hba->dev, "%s failed, err %d\n", __func__, ret);
++	hba->is_powered = false;
++	up(&hba->eh_sem);
+ 	/* allow force shutdown even in case of errors */
+ 	return 0;
+ }
+@@ -9082,6 +9096,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
+ 	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
+ 
++	sema_init(&hba->eh_sem, 1);
++
+ 	/* Initialize UIC command mutex */
+ 	mutex_init(&hba->uic_cmd_mutex);
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 47eb143..1e680bf 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -728,6 +728,7 @@ struct ufs_hba {
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+ 	bool is_powered;
++	struct semaphore eh_sem;
+ 
+ 	/* Work Queues */
+ 	struct workqueue_struct *eh_wq;
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
