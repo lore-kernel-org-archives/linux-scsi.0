@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7E6C83014
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEAACC83017
 	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 11:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3A382222E
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 11:55:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CA4D22206
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 11:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729633AbgLBLzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 06:55:12 -0500
-Received: from mx2.suse.de ([195.135.220.15]:41096 "EHLO mx2.suse.de"
+        id S1729768AbgLBLzO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 06:55:14 -0500
+Received: from mx2.suse.de ([195.135.220.15]:41220 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726641AbgLBLzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Dec 2020 06:55:10 -0500
+        id S1729757AbgLBLzO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Dec 2020 06:55:14 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A3654AE65;
+        by mx2.suse.de (Postfix) with ESMTP id D2F10AE6E;
         Wed,  2 Dec 2020 11:53:04 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 31/34] storvsc: Return DID_ERROR for invalid commands
-Date:   Wed,  2 Dec 2020 12:52:46 +0100
-Message-Id: <20201202115249.37690-32-hare@suse.de>
+Subject: [PATCH 26/34] dpt_i2o: use DID_ERROR instead of INITIATOR_ERROR message
+Date:   Wed,  2 Dec 2020 12:52:41 +0100
+Message-Id: <20201202115249.37690-27-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201202115249.37690-1-hare@suse.de>
 References: <20201202115249.37690-1-hare@suse.de>
@@ -38,26 +38,28 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ILLEGAL_COMMAND is a sense code, not a driver byte.
+Change the error code for an invalid SCSI opcode to DID_ERROR;
+INITIATOR_ERROR is a scsi parallel message which doesn't apply
+for RAID HBAs.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/storvsc_drv.c | 2 +-
+ drivers/scsi/dpt_i2o.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 0c65fbd41035..c6ba1878b1e6 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1641,7 +1641,7 @@ static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
- 	 * this. So, don't send it.
- 	 */
- 	case SET_WINDOW:
--		scmnd->result = ILLEGAL_REQUEST << 16;
-+		scmnd->result = DID_ERROR << 16;
- 		allowed = false;
- 		break;
- 	default:
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 4251212acbbe..a18a4a08f049 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -2226,7 +2226,7 @@ static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd, struct adpt_d
+ 		default:
+ 			printk(KERN_WARNING"%s: scsi opcode 0x%x not supported.\n",
+ 			     pHba->name, cmd->cmnd[0]);
+-			cmd->result = (DID_OK <<16) | (INITIATOR_ERROR << 8);
++			cmd->result = (DID_ERROR <<16);
+ 			cmd->scsi_done(cmd);
+ 			return 	0;
+ 		}
 -- 
 2.16.4
 
