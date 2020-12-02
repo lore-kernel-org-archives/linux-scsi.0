@@ -5,26 +5,26 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16243C8301E
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C67C8301C
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:41:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5C4122202
+	by mail.kernel.org (Postfix) with ESMTP id 3A44220872
 	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 10:41:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388721AbgLBKl4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 05:41:56 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:8493 "EHLO
+        id S2388664AbgLBKll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 05:41:41 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:8494 "EHLO
         szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388619AbgLBKlk (ORCPT
+        with ESMTP id S2388621AbgLBKlk (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 05:41:40 -0500
 Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4CmFqS633fzhllW;
+        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4CmFqS6P6rzhlmG;
         Wed,  2 Dec 2020 18:40:36 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.487.0; Wed, 2 Dec 2020 18:40:49 +0800
+ 14.3.487.0; Wed, 2 Dec 2020 18:40:47 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <lenb@kernel.org>, <rjw@rjwysocki.net>,
@@ -33,9 +33,9 @@ To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linuxarm@huawei.com>, <linux-acpi@vger.kernel.org>,
         <dwagner@suse.de>, "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v5 4/5] Driver core: platform: Add devm_platform_get_irqs_affinity()
-Date:   Wed, 2 Dec 2020 18:36:56 +0800
-Message-ID: <1606905417-183214-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v5 1/5] genirq/affinity: Add irq_update_affinity_desc()
+Date:   Wed, 2 Dec 2020 18:36:53 +0800
+Message-ID: <1606905417-183214-2-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1606905417-183214-1-git-send-email-john.garry@huawei.com>
 References: <1606905417-183214-1-git-send-email-john.garry@huawei.com>
@@ -47,186 +47,133 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drivers for multi-queue platform devices may also want managed interrupts
-for handling HW queue completion interrupts, so add support.
+Add a function to allow the affinity of an interrupt be switched to
+managed, such that interrupts allocated for platform devices may be
+managed.
 
-The function accepts an affinity descriptor pointer, which covers all IRQs
-expected for the device.
+This new interface has certain limitations, and attempts to use it in the
+following circumstances will fail:
+- For when the kernel is configured for generic IRQ reservation mode (in
+  config GENERIC_IRQ_RESERVATION_MODE). The reason being that it could
+  conflict with managed vs. non-managed interrupt accounting.
+- The interrupt is already started, which should not be the case during
+  init
+- The interrupt is already configured as managed, which means double init
 
-The function is devm class as the only current in-tree user will also use
-devm method for requesting the interrupts; as such, the function is made
-as devm as it can ensure ordering of freeing the irq and disposing of the
-mapping.
-
+Suggested-by: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/base/platform.c         | 121 ++++++++++++++++++++++++++++++++
- include/linux/platform_device.h |   6 ++
- 2 files changed, 127 insertions(+)
+ include/linux/interrupt.h |  8 +++++
+ kernel/irq/manage.c       | 70 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 78 insertions(+)
 
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index 88aef93eb4dd..ea8add164b89 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -15,6 +15,8 @@
- #include <linux/of_irq.h>
- #include <linux/module.h>
- #include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/ioport.h>
- #include <linux/dma-mapping.h>
- #include <linux/memblock.h>
- #include <linux/err.h>
-@@ -289,6 +291,125 @@ int platform_irq_count(struct platform_device *dev)
- }
- EXPORT_SYMBOL_GPL(platform_irq_count);
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index ee8299eb1f52..870b3251e174 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -352,6 +352,8 @@ extern int irq_can_set_affinity(unsigned int irq);
+ extern int irq_select_affinity(unsigned int irq);
  
-+struct irq_affinity_devres {
-+	unsigned int count;
-+	unsigned int irq[];
-+};
-+
-+static void platform_disable_acpi_irq(struct platform_device *pdev, int index)
+ extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
++extern int irq_update_affinity_desc(unsigned int irq,
++				    struct irq_affinity_desc *affinity);
+ 
+ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+@@ -387,6 +389,12 @@ static inline int irq_set_affinity_hint(unsigned int irq,
+ 	return -EINVAL;
+ }
+ 
++static inline int irq_update_affinity_desc(unsigned int irq,
++					   struct irq_affinity_desc *affinity)
 +{
-+	struct resource *r;
-+
-+	r = platform_get_resource(pdev, IORESOURCE_IRQ, index);
-+	if (r)
-+		irqresource_disabled(r, 0);
++	return -EINVAL;
 +}
 +
-+static void devm_platform_get_irqs_affinity_release(struct device *dev,
-+						    void *res)
-+{
-+	struct irq_affinity_devres *ptr = res;
-+	int i;
-+
-+	for (i = 0; i < ptr->count; i++) {
-+		irq_dispose_mapping(ptr->irq[i]);
-+
-+		if (has_acpi_companion(dev))
-+			platform_disable_acpi_irq(to_platform_device(dev), i);
-+	}
-+}
-+
+ static inline int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
+ {
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index c460e0496006..c826ba4141fe 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -371,6 +371,76 @@ int irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask,
+ 	return ret;
+ }
+ 
 +/**
-+ * devm_platform_get_irqs_affinity - devm method to get a set of IRQs for a
-+ *				device using an interrupt affinity descriptor
-+ * @dev: platform device pointer
-+ * @affd: affinity descriptor
-+ * @minvec: minimum count of interrupt vectors
-+ * @maxvec: maximum count of interrupt vectors
-+ * @irqs: pointer holder for IRQ numbers
++ * irq_update_affinity_desc - Update affinity management for an interrupt
++ * @irq:	The interrupt number to update
++ * @affinity:	Pointer to the affinity descriptor
 + *
-+ * Gets a set of IRQs for a platform device, and updates IRQ afffinty according
-+ * to the passed affinity descriptor
++ * This interface can be used to configure the affinity management of
++ * interrupts which have been allocated already.
 + *
-+ * Return: Number of vectors on success, negative error number on failure.
++ * There are certain limitations on when it may be used - attempts to use it
++ * for when the kernel is configured for generic IRQ reservation mode (in
++ * config GENERIC_IRQ_RESERVATION_MODE) will fail, as it may conflict with
++ * managed/non-managed interrupt accounting. In addition, attempts to use it on
++ * an interrupt which is already started or which has already been configured
++ * as managed will also fail, as these mean invalid init state or double init.
 + */
-+int devm_platform_get_irqs_affinity(struct platform_device *dev,
-+				    struct irq_affinity *affd,
-+				    unsigned int minvec,
-+				    unsigned int maxvec,
-+				    int **irqs)
++int irq_update_affinity_desc(unsigned int irq,
++			     struct irq_affinity_desc *affinity)
 +{
-+	struct irq_affinity_devres *ptr;
-+	struct irq_affinity_desc *desc;
-+	size_t size;
-+	int i, ret, nvec;
++	struct irq_desc *desc;
++	unsigned long flags;
++	bool activated;
++	int ret = 0;
 +
-+	if (!affd)
-+		return -EPERM;
++	/*
++	 * Supporting this with the reservation scheme used by x86 needs
++	 * some more thought. Fail it for now.
++	 */
++	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
++		return -EOPNOTSUPP;
 +
-+	if (maxvec < minvec)
-+		return -ERANGE;
++	desc = irq_get_desc_buslock(irq, &flags, 0);
++	if (!desc)
++		return -EINVAL;
 +
-+	nvec = platform_irq_count(dev);
-+
-+	if (nvec < minvec)
-+		return -ENOSPC;
-+
-+	nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
-+	if (nvec < minvec)
-+		return -ENOSPC;
-+
-+	if (nvec > maxvec)
-+		nvec = maxvec;
-+
-+	size = sizeof(*ptr) + sizeof(unsigned int) * nvec;
-+	ptr = devres_alloc(devm_platform_get_irqs_affinity_release, size,
-+			   GFP_KERNEL);
-+	if (!ptr)
-+		return -ENOMEM;
-+
-+	ptr->count = nvec;
-+
-+	for (i = 0; i < nvec; i++) {
-+		int irq = platform_get_irq(dev, i);
-+		if (irq < 0) {
-+			ret = irq;
-+			goto err_free_devres;
-+		}
-+		ptr->irq[i] = irq;
++	/* Requires the interrupt to be shut down */
++	if (irqd_is_started(&desc->irq_data)) {
++		ret = -EBUSY;
++		goto out_unlock;
 +	}
 +
-+	desc = irq_create_affinity_masks(nvec, affd);
-+	if (!desc) {
-+		ret = -ENOMEM;
-+		goto err_free_devres;
++	/* Interrupts which are already managed cannot be modified */
++	if (irqd_affinity_is_managed(&desc->irq_data)) {
++		ret = -EBUSY;
++		goto out_unlock;
 +	}
 +
-+	for (i = 0; i < nvec; i++) {
-+		ret = irq_update_affinity_desc(ptr->irq[i], &desc[i]);
-+		if (ret) {
-+			dev_err(&dev->dev, "failed to update irq%d affinity descriptor (%d)\n",
-+				ptr->irq[i], ret);
-+			goto err_free_desc;
-+		}
++	/*
++	 * Deactivate the interrupt. That's required to undo
++	 * anything an earlier activation has established.
++	 */
++	activated = irqd_is_activated(&desc->irq_data);
++	if (activated)
++		irq_domain_deactivate_irq(&desc->irq_data);
++
++	if (affinity->is_managed) {
++		irqd_set(&desc->irq_data, IRQD_AFFINITY_MANAGED);
++		irqd_set(&desc->irq_data, IRQD_MANAGED_SHUTDOWN);
 +	}
 +
-+	devres_add(&dev->dev, ptr);
++	cpumask_copy(desc->irq_common_data.affinity, &affinity->mask);
 +
-+	kfree(desc);
++	/* Restore the activation state */
++	if (activated)
++		irq_domain_activate_irq(&desc->irq_data, false);
 +
-+	*irqs = ptr->irq;
-+
-+	return nvec;
-+
-+err_free_desc:
-+	kfree(desc);
-+err_free_devres:
-+	devres_free(ptr);
++out_unlock:
++	irq_put_desc_busunlock(desc, flags);
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(devm_platform_get_irqs_affinity);
 +
- /**
-  * platform_get_resource_byname - get a resource for a device by name
-  * @dev: platform device
-diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
-index 77a2aada106d..4d75633e6735 100644
---- a/include/linux/platform_device.h
-+++ b/include/linux/platform_device.h
-@@ -15,6 +15,7 @@
- #define PLATFORM_DEVID_NONE	(-1)
- #define PLATFORM_DEVID_AUTO	(-2)
- 
-+struct irq_affinity;
- struct mfd_cell;
- struct property_entry;
- struct platform_device_id;
-@@ -70,6 +71,11 @@ devm_platform_ioremap_resource_byname(struct platform_device *pdev,
- extern int platform_get_irq(struct platform_device *, unsigned int);
- extern int platform_get_irq_optional(struct platform_device *, unsigned int);
- extern int platform_irq_count(struct platform_device *);
-+extern int devm_platform_get_irqs_affinity(struct platform_device *dev,
-+					   struct irq_affinity *affd,
-+					   unsigned int minvec,
-+					   unsigned int maxvec,
-+					   int **irqs);
- extern struct resource *platform_get_resource_byname(struct platform_device *,
- 						     unsigned int,
- 						     const char *);
+ int __irq_set_affinity(unsigned int irq, const struct cpumask *mask, bool force)
+ {
+ 	struct irq_desc *desc = irq_to_desc(irq);
 -- 
 2.26.2
 
