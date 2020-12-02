@@ -2,122 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B62C64E7C
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 18:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07270C8301A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 18:28:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2F6A22249
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 18:11:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0A4622248
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 18:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727108AbgLBSLP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 13:11:15 -0500
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:34733 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726283AbgLBSLP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 13:11:15 -0500
-Received: by mail-pl1-f194.google.com with SMTP id l11so1585300plt.1
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Dec 2020 10:10:59 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=FQk6NXRx7Mwr6gK/uXUeynHy9lZUYrVvflCpRueBLI8=;
-        b=r5T2HtT3hNEJh4U/fXopUkg1aQjVpVQFy85SA8cNLf9wJiyHxQuqp6hlTYQFIePEAX
-         NplKDJIvaYf1Qzuw55QnnCwJ6kHTuKwpQ1gtswwrC1TNGDlI8YBKoB9d0IepA6DfbTOi
-         o4FfyEPUeJz3MbzlzrpE6V6qJFBJ6Fl61mnlF/G/4YAvhhLjOk21asGv6jmotDYhkm2o
-         3QC+JxJ9+BRBEpB02n5J4XdBPSO1hQbQxXZdHm9prhhevipIyZcCxW14dO9SjoppYPMk
-         BGuHzIdJFUH2IgMo1V1GykAOB71irKg/Supx23lNoCId+Q09VSamlEXpawvyk43dIDl8
-         tXoQ==
-X-Gm-Message-State: AOAM530kZBQtOkGSeYUi/1JI1qr/MXxbuqO2EYgQbe9HwNkc6sUhDz7W
-        VenEz9hMeSrTwqpRTxS32BI=
-X-Google-Smtp-Source: ABdhPJzEfhugBmJY0DZZgtCjJ1WkH/P+dE3Eih3APa4qgZpf8GTpecuCE9VQkRv7vjqSJYFvaJPjhw==
-X-Received: by 2002:a17:902:c401:b029:da:6fa4:d208 with SMTP id k1-20020a170902c401b02900da6fa4d208mr3753778plk.33.1606932633973;
-        Wed, 02 Dec 2020 10:10:33 -0800 (PST)
-Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id j19sm444808pff.74.2020.12.02.10.10.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Dec 2020 10:10:33 -0800 (PST)
-Subject: Re: [PATCH] scsi: core: fix race between handling STS_RESOURCE and
- completion
-To:     Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Hannes Reinecke <hare@suse.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Ewan Milne <emilne@redhat.com>, Long Li <longli@microsoft.com>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>
-References: <20201202100419.525144-1-ming.lei@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <5f17e0b1-2bee-7dd2-6049-58088691204b@acm.org>
-Date:   Wed, 2 Dec 2020 10:10:30 -0800
+        id S2387600AbgLBS23 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 13:28:29 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59280 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726684AbgLBS23 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 13:28:29 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B2I9hmh099761;
+        Wed, 2 Dec 2020 13:27:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=5LaODwLC6YPp/x+bscelk6pXJv+ND+Uc0TuABB3Q0y0=;
+ b=cUapUli4OjiIIc6L9xUU7EJRWm6eb2uU/adSMJ5XHHsnDA81Za7GHJ09RZcgn74VnVKe
+ WwGuq04nH609M3GuTpgFOTofBYPoEDu/K5guJ+h+ui9gJOXbzavtAUR4rr3Kbw60ImZn
+ H6QDs8l//IGeXp5wCbJrzZDfHcebIdn5CPm1pS+AxLsL/a092hg8dCzHipKas13owcQE
+ iw9afu2CC8r2XSvYyIIOTYpwH6mtnb2k2ZpZln6M7FaplPOqbgE26QbbJSfWOkivRvQT
+ iBwdgUg4isnxrQ/AVHscGukV3dmqDbCjhZtM6O0SbScqD83XSb5TjTcnP7Le4iaDswHS cA== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 356741k3m4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 13:27:39 -0500
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B2IRWme031494;
+        Wed, 2 Dec 2020 18:27:38 GMT
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+        by ppma04wdc.us.ibm.com with ESMTP id 354ysukhc8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 18:27:38 +0000
+Received: from b01ledav002.gho.pok.ibm.com (b01ledav002.gho.pok.ibm.com [9.57.199.107])
+        by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B2IRcl81835644
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 2 Dec 2020 18:27:38 GMT
+Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3A6C2124052;
+        Wed,  2 Dec 2020 18:27:38 +0000 (GMT)
+Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5F9AD124053;
+        Wed,  2 Dec 2020 18:27:37 +0000 (GMT)
+Received: from oc6034535106.ibm.com (unknown [9.211.78.151])
+        by b01ledav002.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed,  2 Dec 2020 18:27:37 +0000 (GMT)
+Subject: Re: [PATCH v2 15/17] ibmvfc: send Cancel MAD down each hw scsi
+ channel
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com
+References: <20201202005329.4538-1-tyreld@linux.ibm.com>
+ <20201202005329.4538-16-tyreld@linux.ibm.com>
+From:   Brian King <brking@linux.vnet.ibm.com>
+Message-ID: <21a7c970-2184-0524-5b42-1920eaa422a2@linux.vnet.ibm.com>
+Date:   Wed, 2 Dec 2020 12:27:36 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.0
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <20201202100419.525144-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20201202005329.4538-16-tyreld@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-12-02_10:2020-11-30,2020-12-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
+ mlxlogscore=999 spamscore=0 bulkscore=0 priorityscore=1501 impostorscore=0
+ clxscore=1015 adultscore=0 lowpriorityscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012020103
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/2/20 2:04 AM, Ming Lei wrote:
-> When queuing IO request to LLD, STS_RESOURCE may be returned because:
+On 12/1/20 6:53 PM, Tyrel Datwyler wrote:
+> In general the client needs to send Cancel MADs and task management
+> commands down the same channel as the command(s) intended to cancel or
+> abort. The client assigns cancel keys per LUN and thus must send a
+> Cancel down each channel commands were submitted for that LUN. Further,
+> the client then must wait for those cancel completions prior to
+> submitting a LUN RESET or ABORT TASK SET.
 > 
-> - host in recovery or blocked
-> - target queue throttling or blocked
-> - LLD rejection
+> Allocate event pointers for each possible scsi channel and assign an
+> event for each channel that requires a cancel. Wait for completion each
+> submitted cancel.
 > 
-> Any one of the above doesn't happen frequently enough.
-> 
-> BLK_STS_DEV_RESOURCE is returned to block layer for avoiding unnecessary
-> re-run queue, and it is just one small optimization. However, all
-> in-flight requests originated from this scsi device may be completed
-> just after reading 'sdev->device_busy', so BLK_STS_DEV_RESOURCE is
-> returned to block layer. And the current failed IO won't get chance
-> to be queued any more, since it is invisible at that time for either
-> scsi_run_queue_async() or blk-mq's RESTART.
-> 
-> Fix the issue by not returning BLK_STS_DEV_RESOURCE in this situation.
-> 
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Ewan Milne <emilne@redhat.com>
-> Cc: Long Li <longli@microsoft.com>
-> Tested-by: "chenxiang (M)" <chenxiang66@hisilicon.com>
-> Reported-by: John Garry <john.garry@huawei.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 > ---
->   drivers/scsi/scsi_lib.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 106 +++++++++++++++++++++------------
+>  1 file changed, 68 insertions(+), 38 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 60c7a7d74852..03c6d0620bfd 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1703,8 +1703,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->   		break;
->   	case BLK_STS_RESOURCE:
->   	case BLK_STS_ZONE_RESOURCE:
-> -		if (atomic_read(&sdev->device_busy) ||
-> -		    scsi_device_blocked(sdev))
-> +		if (scsi_device_blocked(sdev))
->   			ret = BLK_STS_DEV_RESOURCE;
->   		break;
->   	default:
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index 0b6284020f06..97e8eed04b01 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -2339,32 +2339,52 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+>  {
+>  	struct ibmvfc_host *vhost = shost_priv(sdev->host);
+>  	struct ibmvfc_event *evt, *found_evt;
+> -	union ibmvfc_iu rsp;
+> -	int rsp_rc = -EBUSY;
+> +	struct ibmvfc_event **evt_list;
+> +	union ibmvfc_iu *rsp;
+> +	int rsp_rc = 0;
+>  	unsigned long flags;
+>  	u16 status;
+> +	int num_hwq = 1;
+> +	int i;
+> +	int ret = 0;
+>  
+>  	ENTER;
+>  	spin_lock_irqsave(vhost->host->host_lock, flags);
+> -	found_evt = NULL;
+> -	list_for_each_entry(evt, &vhost->sent, queue) {
+> -		if (evt->cmnd && evt->cmnd->device == sdev) {
+> -			found_evt = evt;
+> -			break;
+> +	if (vhost->using_channels && vhost->scsi_scrqs.active_queues)
+> +		num_hwq = vhost->scsi_scrqs.active_queues;
+> +
+> +	evt_list = kcalloc(num_hwq, sizeof(*evt_list), GFP_KERNE> +	rsp = kcalloc(num_hwq, sizeof(*rsp), GFP_KERNEL);
 
-Since this patch modifies code introduced in commit 86ff7c2a80cd 
-("blk-mq: introduce BLK_STS_DEV_RESOURCE"), does this patch perhaps 
-needs a Fixes: tag?
+Can't this just go on the stack? We don't want to be allocating memory
+during error recovery. Or, alternatively, you could put this in the
+vhost structure and protect it with a mutex. We only have enough events
+to single thread these anyway.
 
-Thanks,
+> +
+> +	for (i = 0; i < num_hwq; i++) {
+> +		sdev_printk(KERN_INFO, sdev, "Cancelling outstanding commands on queue %d.\n", i);
 
-Bart.
+Prior to this patch, if there was nothing outstanding to the device and cancel_all was called,
+no messages would get printed. This is changing that behavior. Is that intentional? Additionally,
+it looks like this will get a lot more vebose, logging a message for each hw queue, regardless
+of whether there was anything outstanding. Perhaps you want to move this down to after the check
+for !found_evt?
+
+> +
+> +		found_evt = NULL;
+> +		list_for_each_entry(evt, &vhost->sent, queue) {
+> +			if (evt->cmnd && evt->cmnd->device == sdev && evt->hwq == i) {
+> +				found_evt = evt;
+> +				break;
+> +			}
+>  		}
+> -	}
+>  
+
+
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
