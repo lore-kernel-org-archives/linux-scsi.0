@@ -2,108 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C42D7C64E7C
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 14:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 185E9C64E8A
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 15:15:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62D22221EB
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 14:50:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADD4E20656
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 15:15:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728199AbgLBOtu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 09:49:50 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42581 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727629AbgLBOtu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 09:49:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606920504;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3/ciYHLKJ3yILLDkyTRzHDrbddemmdv1ABt1jTeUwBY=;
-        b=cbxIcb2ZQ+QplGyxzL6us2gWxLd+CdRgVQ1d1sEqLqRh3BvLVhKXUv5G1HVYzKf1pOqKxC
-        IJtawwOo5rh4NTYaep+0IaITZzmQ/6CzOR1z2ZpTJoZNvhWNZHG0QzesvENeDDs0PalwqO
-        F+nCSveuR+gmUgDiOw6b5pbUW2w3PuI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-7-D1PchtsSN9eOsqlRyAadYQ-1; Wed, 02 Dec 2020 09:48:21 -0500
-X-MC-Unique: D1PchtsSN9eOsqlRyAadYQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 86DBD185E48E;
-        Wed,  2 Dec 2020 14:48:20 +0000 (UTC)
-Received: from localhost (ovpn-114-255.ams2.redhat.com [10.36.114.255])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F2C0C5D6BA;
-        Wed,  2 Dec 2020 14:48:16 +0000 (UTC)
-Date:   Wed, 2 Dec 2020 14:48:15 +0000
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        mst@redhat.com, virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 1/1 V2] vhost scsi: fix lun reset completion handling
-Message-ID: <20201202144815.GN655829@stefanha-x1.localdomain>
-References: <1605716857-4949-1-git-send-email-michael.christie@oracle.com>
+        id S1727417AbgLBPOz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 10:14:55 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36674 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726037AbgLBPOy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 10:14:54 -0500
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B2F3sED030945;
+        Wed, 2 Dec 2020 10:14:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=h84cSOlopcWusOjL07ba67mQF7/WGrI1uXEh7kzAE08=;
+ b=qeifDUYE5HniSrQnFusY9kJADNIYkZK0mcq75Rc5ldEkn+k14x8dVt7s2ax2gwGdHGd0
+ RCB4max7Cdy9AJ6dY4pqUlWiqbND+IwzKLGrhWrlbdyP7uakSuCcNp05q9GMFD76nM4o
+ oZcYtsP8VeahOZUR8/QOm/Yhcq/JlLwUhKyfQydU8cJJFPC48YOSFtEYF5XJALN6bAiL
+ KudE3hdLDdADMThAZoUF8VyxrfmTICREiavtrS5WWRHDiqdFN7phfrki2oJv8zL4B33B
+ D9mYgUIsnoYbE2xGLCCCGzsI9AXJ9NUGf8ytlxRrdLCK6Z+Qu8u3kXz/HPQt7FIS7q2R MQ== 
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 355vcr4vwn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 10:14:07 -0500
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B2FDUC0018020;
+        Wed, 2 Dec 2020 15:14:06 GMT
+Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
+        by ppma01dal.us.ibm.com with ESMTP id 355rf7j1xc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 15:14:06 +0000
+Received: from b01ledav005.gho.pok.ibm.com (b01ledav005.gho.pok.ibm.com [9.57.199.110])
+        by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B2FE5Fn49742170
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 2 Dec 2020 15:14:05 GMT
+Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3CCDEAE062;
+        Wed,  2 Dec 2020 15:14:05 +0000 (GMT)
+Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5DB94AE066;
+        Wed,  2 Dec 2020 15:14:04 +0000 (GMT)
+Received: from oc6034535106.ibm.com (unknown [9.211.78.151])
+        by b01ledav005.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed,  2 Dec 2020 15:14:04 +0000 (GMT)
+Subject: Re: [PATCH v2 01/17] ibmvfc: add vhost fields and defaults for MQ
+ enablement
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com
+References: <20201202005329.4538-1-tyreld@linux.ibm.com>
+ <20201202005329.4538-2-tyreld@linux.ibm.com>
+From:   Brian King <brking@linux.vnet.ibm.com>
+Message-ID: <a11c0e6a-cfa6-0dc4-5d34-6fd35ae1f29b@linux.vnet.ibm.com>
+Date:   Wed, 2 Dec 2020 09:14:03 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
 MIME-Version: 1.0
-In-Reply-To: <1605716857-4949-1-git-send-email-michael.christie@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=stefanha@redhat.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: redhat.com
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="dPW7zu3hTOhZvCDO"
-Content-Disposition: inline
+In-Reply-To: <20201202005329.4538-2-tyreld@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-12-02_08:2020-11-30,2020-12-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
+ mlxscore=0 lowpriorityscore=0 adultscore=0 impostorscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 mlxlogscore=999
+ phishscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012020089
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---dPW7zu3hTOhZvCDO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Nov 18, 2020 at 10:27:37AM -0600, Mike Christie wrote:
-> vhost scsi owns the scsi se_cmd but lio frees the se_cmd->se_tmr
-> before calling release_cmd, so while with normal cmd completion we
-> can access the se_cmd from the vhost work, we can't do the same with
-> se_cmd->se_tmr. This has us copy the tmf response in
-> vhost_scsi_queue_tm_rsp to our internal vhost-scsi tmf struct for
-> when it gets sent to the guest from our worker thread.
->=20
-> Fixes: Fixes: efd838fec17b ("vhost scsi: Add support for LUN resets.")
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+On 12/1/20 6:53 PM, Tyrel Datwyler wrote:
+> Introduce several new vhost fields for managing MQ state of the adapter
+> as well as initial defaults for MQ enablement.
+> 
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 > ---
->=20
-> V2:
-> - Added fixes line.
->=20
->  drivers/vhost/scsi.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/scsi/ibmvscsi/ibmvfc.c |  9 ++++++++-
+>  drivers/scsi/ibmvscsi/ibmvfc.h | 13 +++++++++++--
+>  2 files changed, 19 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index 42e4d35e0d35..f1d677a7423d 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -5161,12 +5161,13 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+>  	}
+>  
+>  	shost->transportt = ibmvfc_transport_template;
+> -	shost->can_queue = max_requests;
+> +	shost->can_queue = (max_requests / IBMVFC_SCSI_HW_QUEUES);
 
-Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+This doesn't look right. can_queue is the SCSI host queue depth, not the MQ queue depth.
 
-This will go through Michael Tsirkin or Martin K. Petersen's tree.
+>  	shost->max_lun = max_lun;
+>  	shost->max_id = max_targets;
+>  	shost->max_sectors = IBMVFC_MAX_SECTORS;
+>  	shost->max_cmd_len = IBMVFC_MAX_CDB_LEN;
+>  	shost->unique_id = shost->host_no;
+> +	shost->nr_hw_queues = IBMVFC_SCSI_HW_QUEUES;
+>  
+>  	vhost = shost_priv(shost);
+>  	INIT_LIST_HEAD(&vhost->sent);
 
---dPW7zu3hTOhZvCDO
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl/HqS8ACgkQnKSrs4Gr
-c8jtgggAxim0I6O6jk2HCjqRjI0QXlKtp0ziC1scmHzQSibKHY+nJ5CiZ45ec5lV
-mZofBAD7UDhyo+nBTxZN1eTWsE42CPBEcicLX8ZmUCUfjtUtM1o7MumfdTJ0ezt2
-MtVi00JVN4AIrJYG74a9V7v/KCctNHoaCUCy/kXJYb++tuPFBFKWe2OuNncKVJe5
-f6QvCIHvdTAHDDnjz4HvVlJZLBOjzbGenPntQ6NxYFCm9Lsk1WyPJEQhxdUvfvBL
-wzbSC2Wzbqp7h06WXoQMZxTbFfl1sA4KnQM+aT1u+O54YCck7UoxnYo8sj9JzYqa
-g8+8MjtpZxwB3tmuKFcCEzE25ZHQ3g==
-=SZ59
------END PGP SIGNATURE-----
-
---dPW7zu3hTOhZvCDO--
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
 
