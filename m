@@ -2,114 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BB1C64E7C
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 19:36:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB1C2C8300F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 22:10:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB91322203
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 19:36:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EDE122249
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 22:10:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729188AbgLBTgP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 14:36:15 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:49904 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726704AbgLBTgP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 14:36:15 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B2JZJD5081809;
-        Wed, 2 Dec 2020 19:35:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+        id S1726330AbgLBWKe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 17:10:34 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:27854 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726032AbgLBWKe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 17:10:34 -0500
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B2M2nsS158328;
+        Wed, 2 Dec 2020 17:09:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=Uw/G6EZJX4YmYr9zvI3PxyPsOjo4URTdPNU+xzFSpbI=;
- b=mUvVUxfUeAmdBNWskzbjHiey6o43hvXms+gLOXLAck+v0d7lt03gUQEaCOL640/LjciN
- +fneCgdzzmLW4Jq6t7nOF/itlITNpklr25XcjcL+xXlxJMLfXYs4hGnqN+aYVR+PGGO4
- QWtUYfHQS+eV8mND3PD+VL74LMPoz5EW/q4rJ2a0hK3xcQwyhx0zHqNRumWMZPrj0PWM
- mDJdW3edyYHvc4r/axxNEergyug8lifElv204LI+vnQAGAsRITXKkOq772dQtKxAUJB7
- 2d4zR1/pR2jWo6j10RbOe3TXcsi9GGORoCJkb9KGrRyY9RNwIZN7wNTENNerFwJWoxSD hw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 353c2b2etx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 02 Dec 2020 19:35:19 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B2JUTr0151963;
-        Wed, 2 Dec 2020 19:35:19 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 35404psauy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Dec 2020 19:35:19 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B2JZIEV006449;
-        Wed, 2 Dec 2020 19:35:18 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Dec 2020 11:35:17 -0800
-Subject: Re: [PATCH] scsi: iscsi: fix inappropriate use of put_device
-To:     Qinglang Miao <miaoqinglang@huawei.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20201120074852.31658-1-miaoqinglang@huawei.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <331a17b8-3219-cb73-90c8-4b814202a78f@oracle.com>
-Date:   Wed, 2 Dec 2020 13:35:16 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+ content-type : content-transfer-encoding; s=pp1;
+ bh=xOYcIgHRxpLn8jOA98hLWOaGUzeQ/EDE9H3coqngL2E=;
+ b=S5rUwgl5WvVo0v6flhO4nvx5J6HMurIfIkARfcNCGcYkY9q3z1Q9CNq5MzBrb4iMrcpB
+ CwY4FtIFGZ78HKwNrrHQKlpdvEJKTph3aoceWkLJYsuG+m0B+r3FlHoFWjkngwJ0ttV6
+ HdDrAtV5L2fDJjLgJtm+VBq8x1VJYfPHP+nl5UnDAt9+16Dx6TapND06jkbn555mXGou
+ cUoz4twhEpo0dxsg7Ss4gSzf/jdQnC6f2zDdPPZAvLqKHZuR0z3o6qIMHbR67Y5IILue
+ elGurBCukrpfEf/Yongtn0M7NL4ESLkJBssmz0C8VgXeW7wQ9+TM/Qg3U8Uz2/BcQtch jg== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 356a0vjxqc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 17:09:46 -0500
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B2M7Ul4029871;
+        Wed, 2 Dec 2020 22:09:45 GMT
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+        by ppma04wdc.us.ibm.com with ESMTP id 354ysumrku-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 02 Dec 2020 22:09:45 +0000
+Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
+        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B2M9i5j9306800
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 2 Dec 2020 22:09:44 GMT
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8A6FB1120B8;
+        Wed,  2 Dec 2020 22:09:44 +0000 (GMT)
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 320581120B5;
+        Wed,  2 Dec 2020 22:09:43 +0000 (GMT)
+Received: from oc6857751186.ibm.com (unknown [9.65.215.138])
+        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed,  2 Dec 2020 22:09:43 +0000 (GMT)
+Subject: Re: [PATCH v2 15/17] ibmvfc: send Cancel MAD down each hw scsi
+ channel
+To:     Brian King <brking@linux.vnet.ibm.com>,
+        james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com
+References: <20201202005329.4538-1-tyreld@linux.ibm.com>
+ <20201202005329.4538-16-tyreld@linux.ibm.com>
+ <21a7c970-2184-0524-5b42-1920eaa422a2@linux.vnet.ibm.com>
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+Message-ID: <0e1760c8-ced0-cd50-391f-29a5a9ea340a@linux.ibm.com>
+Date:   Wed, 2 Dec 2020 14:09:42 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-In-Reply-To: <20201120074852.31658-1-miaoqinglang@huawei.com>
+In-Reply-To: <21a7c970-2184-0524-5b42-1920eaa422a2@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 bulkscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 phishscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012020115
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 lowpriorityscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012020115
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-12-02_13:2020-11-30,2020-12-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ bulkscore=0 adultscore=0 clxscore=1015 suspectscore=0 lowpriorityscore=0
+ phishscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 impostorscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012020134
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/20/20 1:48 AM, Qinglang Miao wrote:
-> kfree(conn) is called inside put_device(&conn->dev) so that
-> another one would cause use-after-free. Besides, device_unregister
-> should be used here rather than put_device.
+On 12/2/20 10:27 AM, Brian King wrote:
+> On 12/1/20 6:53 PM, Tyrel Datwyler wrote:
+>> In general the client needs to send Cancel MADs and task management
+>> commands down the same channel as the command(s) intended to cancel or
+>> abort. The client assigns cancel keys per LUN and thus must send a
+>> Cancel down each channel commands were submitted for that LUN. Further,
+>> the client then must wait for those cancel completions prior to
+>> submitting a LUN RESET or ABORT TASK SET.
+>>
+>> Allocate event pointers for each possible scsi channel and assign an
+>> event for each channel that requires a cancel. Wait for completion each
+>> submitted cancel.
+>>
+>> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+>> ---
+>>  drivers/scsi/ibmvscsi/ibmvfc.c | 106 +++++++++++++++++++++------------
+>>  1 file changed, 68 insertions(+), 38 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+>> index 0b6284020f06..97e8eed04b01 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+>> @@ -2339,32 +2339,52 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+>>  {
+>>  	struct ibmvfc_host *vhost = shost_priv(sdev->host);
+>>  	struct ibmvfc_event *evt, *found_evt;
+>> -	union ibmvfc_iu rsp;
+>> -	int rsp_rc = -EBUSY;
+>> +	struct ibmvfc_event **evt_list;
+>> +	union ibmvfc_iu *rsp;
+>> +	int rsp_rc = 0;
+>>  	unsigned long flags;
+>>  	u16 status;
+>> +	int num_hwq = 1;
+>> +	int i;
+>> +	int ret = 0;
+>>  
+>>  	ENTER;
+>>  	spin_lock_irqsave(vhost->host->host_lock, flags);
+>> -	found_evt = NULL;
+>> -	list_for_each_entry(evt, &vhost->sent, queue) {
+>> -		if (evt->cmnd && evt->cmnd->device == sdev) {
+>> -			found_evt = evt;
+>> -			break;
+>> +	if (vhost->using_channels && vhost->scsi_scrqs.active_queues)
+>> +		num_hwq = vhost->scsi_scrqs.active_queues;
+>> +
+>> +	evt_list = kcalloc(num_hwq, sizeof(*evt_list), GFP_KERNE> +	rsp = kcalloc(num_hwq, sizeof(*rsp), GFP_KERNEL);
 > 
-> Fixes: f3c893e3dbb5 ("scsi: iscsi: Fail session and connection on transport registration failure")
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 2eb3e4f93..2e68c0a87 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2313,7 +2313,9 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
->  	return conn;
->  
->  release_conn_ref:
-> -	put_device(&conn->dev);
-> +	device_unregister(&conn->dev);
-> +	put_device(&session->dev);
-> +	return NULL;
->  release_parent_ref:
->  	put_device(&session->dev);
->  free_conn:
-> 
+> Can't this just go on the stack? We don't want to be allocating memory
+> during error recovery. Or, alternatively, you could put this in the
+> vhost structure and protect it with a mutex. We only have enough events
+> to single thread these anyway.
+Yes, this could just go on the stack.
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+> 
+>> +
+>> +	for (i = 0; i < num_hwq; i++) {
+>> +		sdev_printk(KERN_INFO, sdev, "Cancelling outstanding commands on queue %d.\n", i);
+> 
+> Prior to this patch, if there was nothing outstanding to the device and cancel_all was called,
+> no messages would get printed. This is changing that behavior. Is that intentional? Additionally,
+> it looks like this will get a lot more vebose, logging a message for each hw queue, regardless
+> of whether there was anything outstanding. Perhaps you want to move this down to after the check
+> for !found_evt?
+
+It would actually print "no commands found to cancel". I think its fair to make
+it less verbose or at least make them dbg output for each queue.
+
+-Tyrel
+
+> 
+>> +
+>> +		found_evt = NULL;
+>> +		list_for_each_entry(evt, &vhost->sent, queue) {
+>> +			if (evt->cmnd && evt->cmnd->device == sdev && evt->hwq == i) {
+>> +				found_evt = evt;
+>> +				break;
+>> +			}
+>>  		}
+>> -	}
+>>  
+> 
+> 
+> 
 
