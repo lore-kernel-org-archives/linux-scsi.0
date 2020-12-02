@@ -2,68 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E2BC64E7B
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 17:59:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B62C64E7C
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 18:11:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2537221FA
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 17:59:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2F6A22249
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Dec 2020 18:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730910AbgLBR7X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 12:59:23 -0500
-Received: from a2.mail.mailgun.net ([198.61.254.61]:62716 "EHLO
-        a2.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730905AbgLBR7W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 12:59:22 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606931941; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=d20BTJhJuOfIeJ6dTfjs7Aw/4YtAMOVaiif/uqb3Chc=; b=wLnrCuuO+2RnZfg8i/LovmDn2ERLy4Oau8GybMtjdku+8SWuU/1Hiflfpr/y/VWVvCr6xyg2
- c+yqu+MrbbryBg4ePXMaIaV0AoxIwhWFHM/EDZ0f2r8ZY193DIzLSbmaGfhYazXgTF/dbsC1
- F+Ln+Q7DWv0MLu0Egq1VbqJBGPA=
-X-Mailgun-Sending-Ip: 198.61.254.61
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5fc7d5c97edc97d061e452c5 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Dec 2020 17:58:33
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AA702C43469; Wed,  2 Dec 2020 17:58:31 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 121FBC43461;
-        Wed,  2 Dec 2020 17:58:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 121FBC43461
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH 1/3] scsi: ufs: Add "wb_on" sysfs node to control WB
- on/off
-To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20201130181143.5739-1-huobean@gmail.com>
- <20201130181143.5739-2-huobean@gmail.com>
- <2a380908-3eb4-2cdc-4156-03e8946ffd88@codeaurora.org>
- <30767ee7973670b86bff61d1d7b2044f17640b75.camel@gmail.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <64458f93-55ed-ae62-e7c2-d4c54721b2b1@codeaurora.org>
-Date:   Wed, 2 Dec 2020 09:58:29 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.3
+        id S1727108AbgLBSLP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 13:11:15 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:34733 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726283AbgLBSLP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 13:11:15 -0500
+Received: by mail-pl1-f194.google.com with SMTP id l11so1585300plt.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Dec 2020 10:10:59 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=FQk6NXRx7Mwr6gK/uXUeynHy9lZUYrVvflCpRueBLI8=;
+        b=r5T2HtT3hNEJh4U/fXopUkg1aQjVpVQFy85SA8cNLf9wJiyHxQuqp6hlTYQFIePEAX
+         NplKDJIvaYf1Qzuw55QnnCwJ6kHTuKwpQ1gtswwrC1TNGDlI8YBKoB9d0IepA6DfbTOi
+         o4FfyEPUeJz3MbzlzrpE6V6qJFBJ6Fl61mnlF/G/4YAvhhLjOk21asGv6jmotDYhkm2o
+         3QC+JxJ9+BRBEpB02n5J4XdBPSO1hQbQxXZdHm9prhhevipIyZcCxW14dO9SjoppYPMk
+         BGuHzIdJFUH2IgMo1V1GykAOB71irKg/Supx23lNoCId+Q09VSamlEXpawvyk43dIDl8
+         tXoQ==
+X-Gm-Message-State: AOAM530kZBQtOkGSeYUi/1JI1qr/MXxbuqO2EYgQbe9HwNkc6sUhDz7W
+        VenEz9hMeSrTwqpRTxS32BI=
+X-Google-Smtp-Source: ABdhPJzEfhugBmJY0DZZgtCjJ1WkH/P+dE3Eih3APa4qgZpf8GTpecuCE9VQkRv7vjqSJYFvaJPjhw==
+X-Received: by 2002:a17:902:c401:b029:da:6fa4:d208 with SMTP id k1-20020a170902c401b02900da6fa4d208mr3753778plk.33.1606932633973;
+        Wed, 02 Dec 2020 10:10:33 -0800 (PST)
+Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id j19sm444808pff.74.2020.12.02.10.10.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Dec 2020 10:10:33 -0800 (PST)
+Subject: Re: [PATCH] scsi: core: fix race between handling STS_RESOURCE and
+ completion
+To:     Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Hannes Reinecke <hare@suse.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Ewan Milne <emilne@redhat.com>, Long Li <longli@microsoft.com>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>
+References: <20201202100419.525144-1-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <5f17e0b1-2bee-7dd2-6049-58088691204b@acm.org>
+Date:   Wed, 2 Dec 2020 10:10:30 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-In-Reply-To: <30767ee7973670b86bff61d1d7b2044f17640b75.camel@gmail.com>
+In-Reply-To: <20201202100419.525144-1-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -71,74 +67,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/2/2020 8:20 AM, Bean Huo wrote:
-> On Mon, 2020-11-30 at 15:19 -0800, Asutosh Das (asd) wrote:
->>> +             return -EINVAL;
->>> +
->>> +     pm_runtime_get_sync(hba->dev);
->>> +     res = ufshcd_wb_ctrl(hba, wb_enable);
->>
->> Say, a platform supports clock-scaling and this bit is toggled.
->> The control goes into ufshcd_wb_ctrl for both this sysfs and
->> clock-scaling contexts. The clock-scaling context passes all checks
->> and
->> blocks on waiting for this wb control to be disabled and then tries
->> to
->> enable wb when it's already disabled. Perhaps that's a race there?
+On 12/2/20 2:04 AM, Ming Lei wrote:
+> When queuing IO request to LLD, STS_RESOURCE may be returned because:
 > 
-> Hi Asutosh
-> Appreciate your review.
-> There is only inconsistent problem between clock-scaling and sysfs,
-> since hba->dev_cmd.lock can garantee there is only one can change
-> fWriteBoosterEn. But this is only happening on user willfully wants to
-> control WB through sysfs even they know the platform supports clock-
-> scaling.
+> - host in recovery or blocked
+> - target queue throttling or blocked
+> - LLD rejection
 > 
-> Since this is for the platform which doesn't support clock-scaling, I
-> think based on your comments, it should be acceptable for you like
-> this:
+> Any one of the above doesn't happen frequently enough.
+> 
+> BLK_STS_DEV_RESOURCE is returned to block layer for avoiding unnecessary
+> re-run queue, and it is just one small optimization. However, all
+> in-flight requests originated from this scsi device may be completed
+> just after reading 'sdev->device_busy', so BLK_STS_DEV_RESOURCE is
+> returned to block layer. And the current failed IO won't get chance
+> to be queued any more, since it is invisible at that time for either
+> scsi_run_queue_async() or blk-mq's RESTART.
+> 
+> Fix the issue by not returning BLK_STS_DEV_RESOURCE in this situation.
+> 
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Ewan Milne <emilne@redhat.com>
+> Cc: Long Li <longli@microsoft.com>
+> Tested-by: "chenxiang (M)" <chenxiang66@hisilicon.com>
+> Reported-by: John Garry <john.garry@huawei.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>   drivers/scsi/scsi_lib.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 60c7a7d74852..03c6d0620bfd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1703,8 +1703,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>   		break;
+>   	case BLK_STS_RESOURCE:
+>   	case BLK_STS_ZONE_RESOURCE:
+> -		if (atomic_read(&sdev->device_busy) ||
+> -		    scsi_device_blocked(sdev))
+> +		if (scsi_device_blocked(sdev))
+>   			ret = BLK_STS_DEV_RESOURCE;
+>   		break;
+>   	default:
 
-Or a synchronization primitive b/w the 2 contexts would work just as 
-well. However, I don't have an issue if the user is denied toggling of 
-wb anyway. LGTM.
+Since this patch modifies code introduced in commit 86ff7c2a80cd 
+("blk-mq: introduce BLK_STS_DEV_RESOURCE"), does this patch perhaps 
+needs a Fixes: tag?
 
-> 
-> 
-> +static ssize_t wb_on_store(struct device *dev, struct device_attribute
-> *attr,
-> +                          const char *buf, size_t count)
-> +{
-> +       struct ufs_hba *hba = dev_get_drvdata(dev);
-> +       unsigned int wb_enable;
-> +       ssize_t res;
-> +
-> +       if (ufshcd_is_clkscaling_supported(hba)) {
-> +          dev_err(dev, "supports dynamic clk scaling, control WB
-> +                       through sysfs is not allowed!");
-> +          return -EOPNOTSUPP;
-> +       }
-> +       if (!ufshcd_is_wb_allowed(hba))
-> +               return -EOPNOTSUPP;
-> +
-> +       if (kstrtouint(buf, 0, &wb_enable))
-> +               return -EINVAL;
-> +
-> +       if (wb_enable != 0 && wb_enable != 1)
-> +               return -EINVAL;
-> +
-> +       pm_runtime_get_sync(hba->dev);
-> +       res = ufshcd_wb_ctrl(hba, wb_enable);
-> +       pm_runtime_put_sync(hba->dev);
-> +
-> +       return res < 0 ? res : count;
-> +}
-> 
-> thanks,
-> Bean
-> 
-> 
+Thanks,
 
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Bart.
