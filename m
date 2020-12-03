@@ -2,51 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6F0C4361A
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 22:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E600C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 22:32:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C723207AE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 22:04:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11865223E4
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 22:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbgLCWDu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 17:03:50 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40696 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726507AbgLCWDu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 17:03:50 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 3239222866;
-        Thu,  3 Dec 2020 17:03:07 -0500 (EST)
-Date:   Fri, 4 Dec 2020 09:02:39 +1100 (AEDT)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Hannes Reinecke <hare@suse.de>
-cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 27/34] esp_scsi: use host byte as last argument to
- esp_cmd_is_done()
-In-Reply-To: <20201202115249.37690-28-hare@suse.de>
-Message-ID: <alpine.LNX.2.23.453.2012040851230.6@nippy.intranet>
-References: <20201202115249.37690-1-hare@suse.de> <20201202115249.37690-28-hare@suse.de>
+        id S1728252AbgLCWcX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 17:32:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55496 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726208AbgLCWcX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Dec 2020 17:32:23 -0500
+From:   Arnd Bergmann <arnd@kernel.org>
+Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH] ufshcd: fix Wsometimes-uninitialized warning
+Date:   Thu,  3 Dec 2020 23:31:26 +0100
+Message-Id: <20201203223137.1205933-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2 Dec 2020, Hannes Reinecke wrote:
+From: Arnd Bergmann <arnd@arndb.de>
 
-> Just pass in the host byte to esp_cmd_is_done(), and set the
-> status or message bytes before calling this function.
-> 
+clang complains about a possible code path in which a variable is
+used without an initialization:
 
-There are 3 such callsites but in 2 you've not done so.
+drivers/scsi/ufs/ufshcd.c:7690:3: error: variable 'sdp' is used uninitialized whenever 'if' condition is false [-Werror,-Wsometimes-uninitialized]
+                BUG_ON(1);
+                ^~~~~~~~~
+include/asm-generic/bug.h:63:36: note: expanded from macro 'BUG_ON'
+ #define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while (0)
+                                   ^~~~~~~~~~~~~~~~~~~
 
-Are you relying on the mid-layer to initialize the unset bytes to zero?
+Turn the BUG_ON(1) into an unconditional BUG() that makes it clear
+to clang that this code path is never hit.
 
-Wouldn't it be more readable to explicitly set the status and message 
-bytes, as per the existing code?
+Fixes: 4f3e900b6282 ("scsi: ufs: Clear UAC for FFU and RPMB LUNs")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index f165baee937f..b4f7c4263334 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7687,7 +7687,7 @@ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+ 	else if (wlun == UFS_UPIU_RPMB_WLUN)
+ 		sdp = hba->sdev_rpmb;
+ 	else
+-		BUG_ON(1);
++		BUG();
+ 	if (sdp) {
+ 		ret = scsi_device_get(sdp);
+ 		if (!ret && !scsi_device_online(sdp)) {
+-- 
+2.27.0
+
