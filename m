@@ -2,111 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16812C63777
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7546C71156
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:39:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B323720758
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:34:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 561B52086A
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:39:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727177AbgLCFej (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 00:34:39 -0500
-Received: from a2.mail.mailgun.net ([198.61.254.61]:61932 "EHLO
-        a2.mail.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726230AbgLCFej (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 00:34:39 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1606973660; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=sqV3wNOA6wV/oHBe9aLAtgMazUTZWFPTZRerFCF5Yc8=;
- b=vdQC13pXd3yCqOptwfP0vlNJN9PiaDwkGnMJ360ejhXT7DXifGb+7GknC0VrhtyRM0VCZVon
- Se8eTfYmo1TJV+efMbHhXTytKa/8irULMqqGXcZSPzgki+kID3WOz4iFrYVZvJlxzFCTr9ui
- hl7GHvff4n3ExgHUBG04fbbeA7Y=
-X-Mailgun-Sending-Ip: 198.61.254.61
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 5fc878ae89b9bc626853cdf3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 03 Dec 2020 05:33:34
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6672AC43462; Thu,  3 Dec 2020 05:33:33 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3B3D9C433ED;
-        Thu,  3 Dec 2020 05:33:32 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 03 Dec 2020 13:33:32 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
-        jiajie.hao@mediatek.com, alice.chao@mediatek.com,
-        huadian.liu@mediatek.com
-Subject: Re: [PATCH v1 1/3] scsi: ufs: Add error history for abort event in
- UFS Device W-LUN
-In-Reply-To: <20201126053839.25889-2-stanley.chu@mediatek.com>
-References: <20201126053839.25889-1-stanley.chu@mediatek.com>
- <20201126053839.25889-2-stanley.chu@mediatek.com>
-Message-ID: <e22b55de9d0b0dd26b26b1425180592c@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        id S1727186AbgLCFir (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 00:38:47 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:16664 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726327AbgLCFir (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 00:38:47 -0500
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20201203053819epoutp0110f5dfb893a88ed0e094ccf9ac3dfee9~NHj9ZUaG90849908499epoutp01i
+        for <linux-scsi@vger.kernel.org>; Thu,  3 Dec 2020 05:38:19 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20201203053819epoutp0110f5dfb893a88ed0e094ccf9ac3dfee9~NHj9ZUaG90849908499epoutp01i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1606973899;
+        bh=4jHWrpokghYMgMz6L5AJmcV9eOz8vrld1J3+tnwGXaQ=;
+        h=From:To:Subject:Date:References:From;
+        b=ryv/sA+zk5hYG+fkUgTfJMURcR7GovMwAJKGRjDLcU+vSeFnZr8esc+BPrPWoPxIe
+         OFx6j+23VHu6PefMfOS/gw8zDFFbKea2cWPkoPuCS3PN52KRlM1CTSQTwaIKFMaQ9D
+         2OzUL2vUUEH7QBzN2tGWq0UcRw5mKzQtpZyEpZvw=
+Received: from epsmges1p1.samsung.com (unknown [182.195.42.53]) by
+        epcas1p3.samsung.com (KnoxPortal) with ESMTP id
+        20201203053819epcas1p38ff6db6abc3ab5bce9fce8f1d9b3dfbc~NHj8_eaLy2374623746epcas1p3h;
+        Thu,  3 Dec 2020 05:38:19 +0000 (GMT)
+Received: from epcas1p3.samsung.com ( [182.195.41.47]) by
+        epsmges1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E1.67.02418.AC978CF5; Thu,  3 Dec 2020 14:38:18 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20201203053818epcas1p2aef4dce58afcac06fb28354146254c8d~NHj8qiJFm0736507365epcas1p2A;
+        Thu,  3 Dec 2020 05:38:18 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20201203053818epsmtrp1f58f1ffac9a13b6eb8409fe936ac67d7~NHj8qAoH20244902449epsmtrp1M;
+        Thu,  3 Dec 2020 05:38:18 +0000 (GMT)
+X-AuditID: b6c32a35-c0dff70000010972-db-5fc879caa481
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        7C.1B.08745.AC978CF5; Thu,  3 Dec 2020 14:38:18 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.101.68]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20201203053818epsmtip10f22134837e3406d1052d92b81dfa2b0~NHj8dzZFB1208412084epsmtip1Y;
+        Thu,  3 Dec 2020 05:38:18 +0000 (GMT)
+From:   Jintae Jang <jt77.jang@samsung>
+To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jt77.jang@samsung.com
+Subject: [PATCH] scsi: ufs: Adjust ufshcd_hold() during sending attribute
+ requests
+Date:   Thu,  3 Dec 2020 14:25:32 +0900
+Message-Id: <1606973132-5937-1-git-send-email-user@jang-Samsung-DeskTop-System>
+X-Mailer: git-send-email 1.9.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjkeLIzCtJLcpLzFFi42LZdlhTX/dU5Yl4g0NvrC12PD/DbtF9fQeb
+        xfLj/5gcmD0+Pr3F4tG3ZRWjx+dNcgHMUVw2Kak5mWWpRfp2CVwZqw7cYSo4wFsxc6FhA+Mn
+        ri5GTg4JAROJOc1drF2MXBxCAjsYJZ4umMAI4XxilDjz4iYbhPOZUWJz835GmJa1k7dDJXYx
+        SizZ3sMKV7Vg3iMmkCo2AVWJnVcPsoHYIgLBEgumbQWzhQVCJL7c+cwOYrMA1Xz9eIoZxOYV
+        8JdYeXQD1AY5iZPHJoMNlRD4ziZx/8NJdoiEi8S2ZRdYIWxhiVfHt0DFpSRe9rcB2RwczAKa
+        Eut36UOEFSV2/p4LNpNZgE/i3VeQQzmA4rwSHW1CECXKEv9/HGOGsCUltk/dAWV7SPQc+cYC
+        YgsJxEpM+/2DfQKj5CyEBQsYGVcxiqUWFOempxYbFhjqFSfmFpfmpesl5+duYgRHlZbpDsaJ
+        bz/oHWJk4mA8xCjBwawkwsvy70i8EG9KYmVValF+fFFpTmrxIUZpDhYlcd4/2h3xQgLpiSWp
+        2ampBalFMFkmDk6pBia3kl8zK//zmliuiXnMdnR5uZPJE84Fb2IMbS5fD+G7GCfxxULiauhv
+        HjZJzjkbf2ht60radtv/7oFdonfitkc+qVvHe+d4zqtdNj8XTGu2mTc/p+BJ+dq6w1+npN3J
+        c+l3Zov6+Hnh/zOGWholP7afE1+sHvnexp6Xk+fW18W/haV1V55tVrJfacBtWzHBKJNpWt96
+        CUH71ZIBM1wyRJqqnTj7LvbaNggaS3MoKV95q5Y1X/vCCQHvPN8zt09XKC07JTKNfVFvl+8L
+        dZklfzJCUkR/Vki8k3t4XmzPp+8/VDgKJ2a525WJHgufGKv95t/9+9WVwUlN7Y9/Ba1T2/fh
+        se+dqLeb+dMd37dfzlFiKc5INNRiLipOBAAWKRzMGQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrMJMWRmVeSWpSXmKPExsWy7bCSnO6pyhPxBosuK1rseH6G3aL7+g42
+        i+XH/zE5MHt8fHqLxaNvyypGj8+b5AKYo7hsUlJzMstSi/TtErgyVh24w1RwgLdi5kLDBsZP
+        XF2MnBwSAiYSaydvZ+ti5OIQEtjBKLHx3R0miISkxIzG9axdjBxAtrDE4cPFEDUfGSUOtN1n
+        A6lhE1CV2Hn1IJgtIhAq8fxnLyOILSwQJNG9/A47iM0CVPP14ylmEJtXwF9i5dENjBDz5SRO
+        HpvMOoGRewEjwypGydSC4tz03GLDAqO81HK94sTc4tK8dL3k/NxNjGB/a2ntYNyz6oPeIUYm
+        DsZDjBIczEoivCz/jsQL8aYkVlalFuXHF5XmpBYfYpTmYFES5/06a2GckEB6YklqdmpqQWoR
+        TJaJg1OqgWlpruAL3nLdsv+yby79m/xk5bIj3z839a1IOfQojUmkw2TTZGm5gGVib68sY1ex
+        skte8vZAxMzExflH9j2bt69uQUV9E3eUn9ixJ0uCvvqEBhk+VY/YqpxYEOK/3P/Atxksb85l
+        cEqutzmwesr9g+pT3pTruUb+Oc0VLdbpVvHzWKm8YuuVWpG+2JTu9Y81s1YYWoanbswK9bA/
+        ujxYhyfr3ORbkikLZ0389JN/yff5k8UXO21bvvJ/wqu813ILUzWLRNYvOrAi+vu+Ht/kyleS
+        J79fSPM85HFLetWvSdY3qyYXrH14SyN+Z9+5HC4TtovR1rxxkl+vznmafyz8t46/vTqj5svb
+        /FvOzfr38HaBEktxRqKhFnNRcSIAm1MqQGYCAAA=
+X-CMS-MailID: 20201203053818epcas1p2aef4dce58afcac06fb28354146254c8d
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+X-CMS-RootMailID: 20201203053818epcas1p2aef4dce58afcac06fb28354146254c8d
+References: <CGME20201203053818epcas1p2aef4dce58afcac06fb28354146254c8d@epcas1p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-11-26 13:38, Stanley Chu wrote:
-> Add error history for abort event in UFS Device W-LUN.
-> Besides, use specified value as parameter of ufshcd_update_reg_hist()
-> to identify the aborted tag or LUNs.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 0e5473d4699b..28e4def13f21 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6742,8 +6742,10 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->  	 * To avoid these unnecessary/illegal step we skip to the last error
->  	 * handling stage: reset and restore.
->  	 */
-> -	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN)
-> +	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
-> +		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, lrbp->lun);
->  		return ufshcd_eh_host_reset_handler(cmd);
-> +	}
-> 
->  	ufshcd_hold(hba, false);
->  	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> @@ -6767,7 +6769,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->  	 */
->  	scsi_print_command(hba->lrb[tag].cmd);
->  	if (!hba->req_abort_count) {
-> -		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, 0);
-> +		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, tag);
->  		ufshcd_print_host_regs(hba);
->  		ufshcd_print_host_state(hba);
->  		ufshcd_print_pwr_info(hba);
+From: jintae jang <jt77.jang@samsung.com>
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Invalidation check of arguments should have been checked before
+ufshcd_hold(). It can help to prevent ufshcd_hold()/
+ufshcd_release() from being invoked unnecessarily.
+
+Signed-off-by: jintae jang <jt77.jang@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 51b4e0a..0b60931 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2978,14 +2978,14 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ 
+ 	BUG_ON(!hba);
+ 
+-	ufshcd_hold(hba, false);
+ 	if (!attr_val) {
+ 		dev_err(hba->dev, "%s: attribute value required for opcode 0x%x\n",
+ 				__func__, opcode);
+-		err = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
++	ufshcd_hold(hba, false);
++
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
+ 			selector);
+@@ -3069,21 +3069,20 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
+ 
+ 	BUG_ON(!hba);
+ 
+-	ufshcd_hold(hba, false);
+ 	if (!desc_buf) {
+ 		dev_err(hba->dev, "%s: descriptor buffer required for opcode 0x%x\n",
+ 				__func__, opcode);
+-		err = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
+ 	if (*buf_len < QUERY_DESC_MIN_SIZE || *buf_len > QUERY_DESC_MAX_SIZE) {
+ 		dev_err(hba->dev, "%s: descriptor buffer size (%d) is out of range\n",
+ 				__func__, *buf_len);
+-		err = -EINVAL;
+-		goto out;
++		return -EINVAL;
+ 	}
+ 
++	ufshcd_hold(hba, false);
++
+ 	mutex_lock(&hba->dev_cmd.lock);
+ 	ufshcd_init_query(hba, &request, &response, opcode, idn, index,
+ 			selector);
+-- 
+1.9.1
+
