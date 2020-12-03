@@ -2,161 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BC32C71156
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 11:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 697F6C63777
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 12:06:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D2AE2225D
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 11:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02A2422201
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 12:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730309AbgLCLpq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 06:45:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42902 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726061AbgLCLpq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 06:45:46 -0500
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78D9DC061A4D;
-        Thu,  3 Dec 2020 03:45:05 -0800 (PST)
-Received: by mail-ej1-x642.google.com with SMTP id n26so2999581eju.6;
-        Thu, 03 Dec 2020 03:45:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=MfxZi61CCL1kARU1/n7nH9whoSlX/OiuqfTorhvl0nE=;
-        b=fk8rUNOdcRGdBxKLOp4tc8VQOF4t8uAWrNXy838Qp80NxsPFnnXhX+j1zHa/9AxiyS
-         pa7uyz/pW4zrLFmrzzxKa+aQ5YGqrDJEGA5r54UhfFUh6rKmy7co0ZSgmQ5s0SOgPcoe
-         koJuDOB4qKsWR0WrQyRixgcO7tQMAcPsilWWbTXK5T4kp33sVopqheANa/voqUfFL1Hl
-         xHNhJxGbs74GbZzCxTSlUYcwiVnSZe3d2/SxFRiBDlHDKyGXRd88D+4W3oPX2cEJOSVd
-         9ABWiU2MX393XVcSr2ePPX9DZFmfod9gvCREby6NnDbjnslR3h39BY+kTDjHhDymOHQm
-         xIKA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=MfxZi61CCL1kARU1/n7nH9whoSlX/OiuqfTorhvl0nE=;
-        b=IhWlkl/RIj+r8LJQZt+dh9D18D/5IZr//nTVb33L6HjPUGubOvdLUoDUoTi52r1n5e
-         ptbAR6e4iMc1yCnCmq+wJNSSsFc95spXeU2p97zu+FDT/k7H+5XZaesKiAviqKN8eICt
-         W9CF91/B8l5m/AfuTXvnXu0rHbKe1Grfdh/suWkEpchmlyQI3kqdJIlSdcEZ0/d/sgiM
-         DXkEBZ8mK0MNEVrTnyYCD5RnDKRIafaVO+k8cXEnaJt9HMyFh8/OV90Wtt1h8zPOZd6o
-         wqlISfSUZ0GsXnWrwHFjAXkM5sDBDkGN0mwKJ2586+Iw2UKPjcazeIH6zC3+B4X38U8Z
-         KTVw==
-X-Gm-Message-State: AOAM531umOAofcTK4AExP6zaasnN8YYsU75peMylodjuYyI8TIdeAg3a
-        mHRnAes9b8A587tLZT/cxm8=
-X-Google-Smtp-Source: ABdhPJxWfZD1DiNyoLIA2IQFbnTuTzw2F+I6PbMw2FWMlzr+CgNuDf9YRvJLV5fo3gN1YZWm80UWOg==
-X-Received: by 2002:a17:906:edc4:: with SMTP id sb4mr2086206ejb.21.1606995904139;
-        Thu, 03 Dec 2020 03:45:04 -0800 (PST)
-Received: from ubuntu-laptop ([2a01:598:b905:79de:6c3d:3b27:f281:55d5])
-        by smtp.googlemail.com with ESMTPSA id bo5sm980673edb.44.2020.12.03.03.45.02
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 03 Dec 2020 03:45:03 -0800 (PST)
-Message-ID: <2578a5fa2323f46b29dc8808b948ed5eaea6fbca.camel@gmail.com>
-Subject: Re: [PATCH 2/3] scsi: ufs: Keep device power on only
- fWriteBoosterBufferFlushDuringHibernate == 1
-From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Thu, 03 Dec 2020 12:45:00 +0100
-In-Reply-To: <DM6PR04MB657551290696C7EBD8339328FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20201130181143.5739-1-huobean@gmail.com>
-         <20201130181143.5739-3-huobean@gmail.com>
-         <BY5PR04MB6599826730BD3FB0E547E60587F30@BY5PR04MB6599.namprd04.prod.outlook.com>
-         <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
-         <2dafb87ff450776c0406311bb7e235e9816f6ecf.camel@gmail.com>
-         <DM6PR04MB657551290696C7EBD8339328FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S2387883AbgLCMGi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 07:06:38 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:57464 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726884AbgLCMGi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 07:06:38 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3Bx1Vt105799;
+        Thu, 3 Dec 2020 12:03:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=mEpRFiNKnG2ABwP47dDamNoZNQLncqQeYcI+mwUMkYg=;
+ b=Um+MccciO4d31mxMT4fatxqTR3rCsXR5iWDBmHq5vO26nlvGouVUOfIkDbeH2vRCJK5i
+ di9X36AWpz7D2Ca6rs4J4svpzcUMUoMV4lPyv2zTcEHc0FMtp/jfPSlTGoSRnuBFtilT
+ v/dS2/v0FIiSMIaRBbwuK2c5+gUhwkgOlTtA4QH9qbKdJ2gSWCmGgQs32ZhUVAJ3FHjA
+ PKngfEhD+ThcmYPHxX+V3fxim7hfk2Yu0grgh0Vesi538joh9ssyAsIK0CO1u/e1qVeT
+ ek9N6rVTQd7JjeUlNe0niDgIv0MtF69hh/cuOf0M79WRTAuaVIXNWgTVos2W/lTFlAxh Mw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 353egkwey2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 03 Dec 2020 12:03:25 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3BuN3E089683;
+        Thu, 3 Dec 2020 12:03:24 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 3540aw0jm1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Dec 2020 12:03:24 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B3C3KcZ018060;
+        Thu, 3 Dec 2020 12:03:20 GMT
+Received: from kadam (/102.36.221.92)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 03 Dec 2020 04:03:19 -0800
+Date:   Thu, 3 Dec 2020 15:03:08 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Thomas Lamprecht <t.lamprecht@proxmox.com>
+Cc:     James.Bottomley@suse.de,
+        jayamohank@HDRedirect-LB5-1afb6e2973825a56.elb.us-east-1.amazonaws.com,
+        jejb@linux.ibm.com, jitendra.bhivare@broadcom.com,
+        kernel-janitors@vger.kernel.org, ketan.mukadam@broadcom.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, subbu.seetharaman@broadcom.com,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: be2iscsi: Fix a theoretical leak in
+ beiscsi_create_eqs()
+Message-ID: <20201203120308.GM2789@kadam>
+References: <20200928091300.GD377727@mwanda>
+ <54f36c62-10bf-8736-39ce-27ece097d9de@proxmox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <54f36c62-10bf-8736-39ce-27ece097d9de@proxmox.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
+ phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012030074
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1011 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012030074
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2020-12-03 at 10:46 +0000, Avri Altman wrote:
-> > > > From: Bean Huo <beanhuo@micron.com>
-> > > > 
-> > > > Keep device power mode as active power mode and VCC supply only
-> > > > if
-> > > > fWriteBoosterBufferFlushDuringHibernate setting 1 is
-> > > > successful.
+On Thu, Dec 03, 2020 at 11:10:09AM +0100, Thomas Lamprecht wrote:
+> > The be_fill_queue() function can only fail when "eq_vaddress" is NULL
+> > and since it's non-NULL here that means the function call can't fail.
+> > But imagine if it could, then in that situation we would want to store
+> > the "paddr" so that dma memory can be released.
 > > 
-> > Hi Avri
-> > Thanks so much taking time reiew.
-> > 
-> > > Why would it fail?
-> > 
-> > During the reliability testing in harsh environments, such as:
-> > EMS testing, in the high/low-temperature environment. The system
-> > would
-> > reboot itself, there will be programming failure very likely.
-> > If we assume failure will never hit, why we capture its result
-> > following with dev_err(). If you keep using your phone in a harsh
-> > environment, you will see this print message.
-> > 
-> > Of course, in a normal environment, the chance of failure likes you
-> > to
-> > win a lottery, but the possibility still exists.
+> > Fixes: bfead3b2cb46 ("[SCSI] be2iscsi: Adding msix and mcc_rings V3")
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> Exactly.
-
-so, you agree the possiblity of failure  exists.
-
-> Hence we need-not any extra logic protecting device management
-> command failures.
-
-what extra logic? 
-
-> 
-> if reading the configuration pass correctly, and UFSHCD_CAP_WB_EN is
-> set,
-
-
-UFSHCD_CAP_WB_EN set is DRAM level. still in the cache.
-
-> one should expect that any other functionality would work.
-> 
-No,  The programming will consume more power than reading, the
-later setting will more possbile fail than reading.
-
-> Otherwise, any non-standard behavior should be added with a quirk.
+> This came in here through the stable 5.4 tree with v5.4.74, and we have some
+> users of ours report that it results in kernel oopses and delayed boot on their
+> HP DL 380 Gen 9 (and other Gen 9, FWICT) servers:
 > 
 
-NO, this is not what is standard or non-standard. This is independent
-of UFS device/controller. It is a software design. IMO, we didn't deal
-with programming status that is a potential bug. If having to impose to
-a component, do you think should be controller or device? Instead of
-addin a quirk, I prefer dropping this patch.
+Thanks for the report Thomas.  I see the bug in my patch:
+
+drivers/scsi/be2iscsi/be_main.c
+  3008                  eq_for_mcc = 1;
+  3009          else
+  3010                  eq_for_mcc = 0;
+  3011          for (i = 0; i < (phba->num_cpus + eq_for_mcc); i++) {
+  3012                  eq = &phwi_context->be_eq[i].q;
+  3013                  mem = &eq->dma_mem;
+  3014                  phwi_context->be_eq[i].phba = phba;
+  3015                  eq_vaddress = dma_alloc_coherent(&phba->pcidev->dev,
+  3016                                                     num_eq_pages * PAGE_SIZE,
+  3017                                                     &paddr, GFP_KERNEL);
+  3018                  if (!eq_vaddress) {
+  3019                          ret = -ENOMEM;
+  3020                          goto create_eq_error;
+  3021                  }
+  3022  
+  3023                  mem->dma = paddr;
+                        ^^^^^^^^^^^^^^^^
+I moved this assignment ahead of the call to be_fill_queue().
+
+  3024                  mem->va = eq_vaddress;
+  3025                  ret = be_fill_queue(eq, phba->params.num_eq_entries,
+  3026                                      sizeof(struct be_eq_entry), eq_vaddress);
+  3027                  if (ret) {
+  3028                          beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+  3029                                      "BM_%d : be_fill_queue Failed for EQ\n");
+  3030                          goto create_eq_error;
+  3031                  }
 
 
+drivers/scsi/be2iscsi/be_main.c
+  2978  static int be_fill_queue(struct be_queue_info *q,
+  2979                  u16 len, u16 entry_size, void *vaddress)
+  2980  {
+  2981          struct be_dma_mem *mem = &q->dma_mem;
+  2982  
+  2983          memset(q, 0, sizeof(*q));
+                ^^^^^^^^^^^^^^^^^^^^^^^
+But the first thing that it does is it overwrites it with zeros.
 
+  2984          q->len = len;
+  2985          q->entry_size = entry_size;
+  2986          mem->size = len * entry_size;
+  2987          mem->va = vaddress;
 
-> Thanks,
-> Avri
-> > 
-> > 
-> > > Since UFSHCD_CAP_WB_EN is toggled off on ufshcd_wb_probe If the
-> > > device doesn't support wb,
-> > > The check ufshcd_is_wb_allowed should suffice, isn't it?
-> > > 
-> > 
-> > No, UFSHCD_CAP_WB_EN only tells us if the platform supports WB,
-> > doesn't tell us fWriteBoosterBufferFlushDuringHibernate status.
-> > 
-> > Thanks,
-> > Bean
+It also overwrites the "mem->va = eq_vaddress;" assignment as well, but
+but it sets that back again here...
 
+  2988          if (!mem->va)
+  2989                  return -ENOMEM;
+  2990          memset(mem->va, 0, mem->size);
+  2991          return 0;
+  2992  }
+
+I will just revert my patch.  This code is messy but it works so far as
+I can see.
+
+regards,
+dan carpenter
