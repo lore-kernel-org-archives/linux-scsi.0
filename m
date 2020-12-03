@@ -2,246 +2,345 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BCBAC63777
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:20:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8B6CC63777
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:22:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22CE0206E3
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:20:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43C4F20C56
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 05:22:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726727AbgLCFUE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 00:20:04 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:37579 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726143AbgLCFUE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 00:20:04 -0500
-X-UUID: e736cab66be04b8b9cf47b26d9082e80-20201203
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=IR9GIF9gfEHIAJs0etv7b233QVEgwmFSvI6BAKS8O3s=;
-        b=DLQTC3g7ETY/2RGzBkdGm3lFulhmsDmO+nOYRbAIG9Da+rLLSnN69LxYYRTr5Zshl0mvZGBEJ54wXPmbiHF4JEcLQmnh3JYFB/fVECV9EyTD/ljjehhYzMa9Zou/7ylQoGNUnZXRbd1ieCXgJdrnyCBn44WqTje4IXTFKUmurqA=;
-X-UUID: e736cab66be04b8b9cf47b26d9082e80-20201203
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 17840846; Thu, 03 Dec 2020 13:19:16 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 3 Dec 2020 13:19:15 +0800
-Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 3 Dec 2020 13:19:08 +0800
-Message-ID: <1606972749.23925.58.camel@mtkswgap22>
-Subject: Re: [PATCH V7 2/3] scsi: ufs: Fix a race condition between
- ufshcd_abort and eh_work
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
-        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
-        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
-        <saravanak@google.com>, <salyzyn@google.com>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        id S1727002AbgLCFWY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 00:22:24 -0500
+Received: from m42-5.mailgun.net ([69.72.42.5]:11219 "EHLO m42-5.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725872AbgLCFWY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Dec 2020 00:22:24 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1606972923; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=HahUMtWlaBoRTtgNit+apwzv1egG3PuGsmOhLWWfRXM=;
+ b=rdlZqAuuc/AcmozYWnVmhKHJz2fLRkofHhPylYJ69pFDJMUGfVGW2MaqrLfADtEPI+egXO7M
+ 09mKlwC6lYa2XKbAXgUVq3tig+VNATsbXYgrwnyxQDtoUn2vtgYrE+eJit/1zaXGrzxf8tkT
+ Q2nT+5IghauJULwKMRibucIJWrw=
+X-Mailgun-Sending-Ip: 69.72.42.5
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n10.prod.us-west-2.postgun.com with SMTP id
+ 5fc875de2571f1091a9385d2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 03 Dec 2020 05:21:34
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 18A18C43462; Thu,  3 Dec 2020 05:21:34 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C4CB0C433C6;
+        Thu,  3 Dec 2020 05:21:31 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 03 Dec 2020 13:21:31 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Bean Huo <beanhuo@micron.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
+        Bart Van Assche <bvanassche@acm.org>,
         Satya Tangirala <satyat@google.com>,
         open list <linux-kernel@vger.kernel.org>
-Date:   Thu, 3 Dec 2020 13:19:09 +0800
-In-Reply-To: <843a2bb60b16929239ac5ee100bac465@codeaurora.org>
+Subject: Re: [PATCH V7 2/3] scsi: ufs: Fix a race condition between
+ ufshcd_abort and eh_work
+In-Reply-To: <1606972749.23925.58.camel@mtkswgap22>
 References: <1606910644-21185-1-git-send-email-cang@codeaurora.org>
-         <1606910644-21185-3-git-send-email-cang@codeaurora.org>
-         <1606962078.23925.47.camel@mtkswgap22>
-         <dcb7f5c9738ff18a15b3d15615de0d92@codeaurora.org>
-         <1606971101.23925.56.camel@mtkswgap22>
-         <843a2bb60b16929239ac5ee100bac465@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+ <1606910644-21185-3-git-send-email-cang@codeaurora.org>
+ <1606962078.23925.47.camel@mtkswgap22>
+ <dcb7f5c9738ff18a15b3d15615de0d92@codeaurora.org>
+ <1606971101.23925.56.camel@mtkswgap22>
+ <843a2bb60b16929239ac5ee100bac465@codeaurora.org>
+ <1606972749.23925.58.camel@mtkswgap22>
+Message-ID: <77285270581ceec46f5204f04173b6ca@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDIwLTEyLTAzIGF0IDEzOjExICswODAwLCBDYW4gR3VvIHdyb3RlOg0KPiBPbiAy
-MDIwLTEyLTAzIDEyOjUxLCBTdGFubGV5IENodSB3cm90ZToNCj4gPiBPbiBUaHUsIDIwMjAtMTIt
-MDMgYXQgMTI6MDEgKzA4MDAsIENhbiBHdW8gd3JvdGU6DQo+ID4+IE9uIDIwMjAtMTItMDMgMTA6
-MjEsIFN0YW5sZXkgQ2h1IHdyb3RlOg0KPiA+PiA+IE9uIFdlZCwgMjAyMC0xMi0wMiBhdCAwNDow
-NCAtMDgwMCwgQ2FuIEd1byB3cm90ZToNCj4gPj4gPj4gSW4gY3VycmVudCB0YXNrIGFib3J0IHJv
-dXRpbmUsIGlmIHRhc2sgYWJvcnQgaGFwcGVucyB0byB0aGUgZGV2aWNlDQo+ID4+ID4+IFctTFUs
-DQo+ID4+ID4+IHRoZSBjb2RlIGRpcmVjdGx5IGp1bXBzIHRvIHVmc2hjZF9laF9ob3N0X3Jlc2V0
-X2hhbmRsZXIoKSB0byBwZXJmb3JtIGENCj4gPj4gPj4gZnVsbCByZXNldCBhbmQgcmVzdG9yZSB0
-aGVuIHJldHVybnMgRkFJTCBvciBTVUNDRVNTLiBDb21tYW5kcyBzZW50IHRvDQo+ID4+ID4+IHRo
-ZQ0KPiA+PiA+PiBkZXZpY2UgVy1MVSBhcmUgbW9zdCBsaWtlbHkgdGhlIFNTVSBjbWRzIHNlbnQg
-ZHVyaW5nIFVGUyBQTQ0KPiA+PiA+PiBvcGVyYXRpb25zLiBJZg0KPiA+PiA+PiBzdWNoIFNTVSBj
-bWQgZW50ZXJzIHRhc2sgYWJvcnQgcm91dGluZSwgd2hlbg0KPiA+PiA+PiB1ZnNoY2RfZWhfaG9z
-dF9yZXNldF9oYW5kbGVyKCkNCj4gPj4gPj4gZmx1c2hlcyBlaF93b3JrLCBpdCB3aWxsIGdldCBz
-dHVjayB0aGVyZSBzaW5jZSBlcnJfaGFuZGxlciBpcw0KPiA+PiA+PiBzZXJpYWxpemVkDQo+ID4+
-ID4+IHdpdGggUE0gb3BlcmF0aW9ucy4NCj4gPj4gPj4NCj4gPj4gPj4gSW4gb3JkZXIgdG8gdW5i
-bG9jayBhYm92ZSBjYWxsIHBhdGgsIHdlIG1lcmVseSBjbGVhbiB1cCB0aGUgbHJiIHRha2VuDQo+
-ID4+ID4+IGJ5DQo+ID4+ID4+IHRoaXMgY21kLCBxdWV1ZSB0aGUgZWhfd29yayBhbmQgcmV0dXJu
-IFNVQ0NFU1MuIE9uY2UgdGhlIGNtZCBpcw0KPiA+PiA+PiBhYm9ydGVkLA0KPiA+PiA+PiB0aGUg
-UE0gb3BlcmF0aW9uIHdoaWNoIHNlbmRzIG91dCB0aGUgY21kIGp1c3QgZXJyb3JzIG91dCwgdGhl
-bg0KPiA+PiA+PiBlcnJfaGFuZGxlcg0KPiA+PiA+PiBzaGFsbCBiZSBhYmxlIHRvIHByb2NlZWQg
-d2l0aCB0aGUgZnVsbCByZXNldCBhbmQgcmVzdG9yZS4NCj4gPj4gPj4NCj4gPj4gPj4gSW4gdGhp
-cyBzY2VuYXJpbywgdGhlIGNtZCBpcyBhYm9ydGVkIGV2ZW4gYmVmb3JlIGl0IGlzIGFjdHVhbGx5
-DQo+ID4+ID4+IGNsZWFyZWQgYnkNCj4gPj4gPj4gSFcsIHNldCB0aGUgbHJiLT5pbl91c2UgZmxh
-ZyB0byBwcmV2ZW50IHN1YnNlcXVlbnQgY21kcywgaW5jbHVkaW5nDQo+ID4+ID4+IFNDU0kNCj4g
-Pj4gPj4gY21kcyBhbmQgZGV2IGNtZHMsIGZyb20gdGFraW5nIHRoZSBscmIgcmVsZWFzZWQgZnJv
-bSBhYm9ydC4gVGhlIGZsYWcNCj4gPj4gPj4gc2hhbGwNCj4gPj4gPj4gZXZldHVhbGx5IGJlIGNs
-ZWFyZWQgaW4gX191ZnNoY2RfdHJhbnNmZXJfcmVxX2NvbXBsKCkgaW52b2tlZCBieSB0aGUNCj4g
-Pj4gPj4gZnVsbA0KPiA+PiA+PiByZXNldCBhbmQgcmVzdG9yZSBmcm9tIGVycl9oYW5kbGVyLg0K
-PiA+PiA+Pg0KPiA+PiA+PiBSZXZpZXdlZC1ieTogQXN1dG9zaCBEYXMgPGFzdXRvc2hkQGNvZGVh
-dXJvcmEub3JnPg0KPiA+PiA+PiBTaWduZWQtb2ZmLWJ5OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJv
-cmEub3JnPg0KPiA+PiA+PiAtLS0NCj4gPj4gPj4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMg
-fCA2MA0KPiA+PiA+PiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0t
-LS0tLQ0KPiA+PiA+PiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCB8ICAyICsrDQo+ID4+ID4+
-ICAyIGZpbGVzIGNoYW5nZWQsIDQ5IGluc2VydGlvbnMoKyksIDEzIGRlbGV0aW9ucygtKQ0KPiA+
-PiA+Pg0KPiA+PiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2Ry
-aXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gPj4gPj4gaW5kZXggZjBiYjNmYy4uMjZjMWZhMCAx
-MDA2NDQNCj4gPj4gPj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiA+PiA+PiAr
-KysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4+ID4+IEBAIC0yNTM5LDYgKzI1Mzks
-MTQgQEAgc3RhdGljIGludCB1ZnNoY2RfcXVldWVjb21tYW5kKHN0cnVjdCBTY3NpX0hvc3QNCj4g
-Pj4gPj4gKmhvc3QsIHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gPj4gPj4gIAkJKGhiYS0+Y2xr
-X2dhdGluZy5zdGF0ZSAhPSBDTEtTX09OKSk7DQo+ID4+ID4+DQo+ID4+ID4+ICAJbHJicCA9ICZo
-YmEtPmxyYlt0YWddOw0KPiA+PiA+PiArCWlmICh1bmxpa2VseShscmJwLT5pbl91c2UpKSB7DQo+
-ID4+ID4+ICsJCWlmIChoYmEtPnBtX29wX2luX3Byb2dyZXNzKQ0KPiA+PiA+PiArCQkJc2V0X2hv
-c3RfYnl0ZShjbWQsIERJRF9CQURfVEFSR0VUKTsNCj4gPj4gPj4gKwkJZWxzZQ0KPiA+PiA+PiAr
-CQkJZXJyID0gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsNCj4gPj4gPj4gKwkJdWZzaGNkX3JlbGVh
-c2UoaGJhKTsNCj4gPj4gPj4gKwkJZ290byBvdXQ7DQo+ID4+ID4+ICsJfQ0KPiA+PiA+Pg0KPiA+
-PiA+PiAgCVdBUk5fT04obHJicC0+Y21kKTsNCj4gPj4gPj4gIAlscmJwLT5jbWQgPSBjbWQ7DQo+
-ID4+ID4+IEBAIC0yNzgxLDYgKzI3ODksMTEgQEAgc3RhdGljIGludCB1ZnNoY2RfZXhlY19kZXZf
-Y21kKHN0cnVjdCB1ZnNfaGJhDQo+ID4+ID4+ICpoYmEsDQo+ID4+ID4+DQo+ID4+ID4+ICAJaW5p
-dF9jb21wbGV0aW9uKCZ3YWl0KTsNCj4gPj4gPj4gIAlscmJwID0gJmhiYS0+bHJiW3RhZ107DQo+
-ID4+ID4+ICsJaWYgKHVubGlrZWx5KGxyYnAtPmluX3VzZSkpIHsNCj4gPj4gPj4gKwkJZXJyID0g
-LUVCVVNZOw0KPiA+PiA+PiArCQlnb3RvIG91dDsNCj4gPj4gPj4gKwl9DQo+ID4+ID4+ICsNCj4g
-Pj4gPj4gIAlXQVJOX09OKGxyYnAtPmNtZCk7DQo+ID4+ID4+ICAJZXJyID0gdWZzaGNkX2NvbXBv
-c2VfZGV2X2NtZChoYmEsIGxyYnAsIGNtZF90eXBlLCB0YWcpOw0KPiA+PiA+PiAgCWlmICh1bmxp
-a2VseShlcnIpKQ0KPiA+PiA+PiBAQCAtMjc5Nyw2ICsyODEwLDcgQEAgc3RhdGljIGludCB1ZnNo
-Y2RfZXhlY19kZXZfY21kKHN0cnVjdCB1ZnNfaGJhDQo+ID4+ID4+ICpoYmEsDQo+ID4+ID4+DQo+
-ID4+ID4+ICAJZXJyID0gdWZzaGNkX3dhaXRfZm9yX2Rldl9jbWQoaGJhLCBscmJwLCB0aW1lb3V0
-KTsNCj4gPj4gPj4NCj4gPj4gPj4gK291dDoNCj4gPj4gPj4gIAl1ZnNoY2RfYWRkX3F1ZXJ5X3Vw
-aXVfdHJhY2UoaGJhLCB0YWcsDQo+ID4+ID4+ICAJCQllcnIgPyAicXVlcnlfY29tcGxldGVfZXJy
-IiA6ICJxdWVyeV9jb21wbGV0ZSIpOw0KPiA+PiA+Pg0KPiA+PiA+PiBAQCAtNDkyOSw5ICs0OTQz
-LDExIEBAIHN0YXRpYyB2b2lkIF9fdWZzaGNkX3RyYW5zZmVyX3JlcV9jb21wbChzdHJ1Y3QNCj4g
-Pj4gPj4gdWZzX2hiYSAqaGJhLA0KPiA+PiA+PiAgCXN0cnVjdCBzY3NpX2NtbmQgKmNtZDsNCj4g
-Pj4gPj4gIAlpbnQgcmVzdWx0Ow0KPiA+PiA+PiAgCWludCBpbmRleDsNCj4gPj4gPj4gKwlib29s
-IHVwZGF0ZV9zY2FsaW5nID0gZmFsc2U7DQo+ID4+ID4+DQo+ID4+ID4+ICAJZm9yX2VhY2hfc2V0
-X2JpdChpbmRleCwgJmNvbXBsZXRlZF9yZXFzLCBoYmEtPm51dHJzKSB7DQo+ID4+ID4+ICAJCWxy
-YnAgPSAmaGJhLT5scmJbaW5kZXhdOw0KPiA+PiA+PiArCQlscmJwLT5pbl91c2UgPSBmYWxzZTsN
-Cj4gPj4gPj4gIAkJbHJicC0+Y29tcGxfdGltZV9zdGFtcCA9IGt0aW1lX2dldCgpOw0KPiA+PiA+
-PiAgCQljbWQgPSBscmJwLT5jbWQ7DQo+ID4+ID4+ICAJCWlmIChjbWQpIHsNCj4gPj4gPj4gQEAg
-LTQ5NDQsMTUgKzQ5NjAsMTcgQEAgc3RhdGljIHZvaWQgX191ZnNoY2RfdHJhbnNmZXJfcmVxX2Nv
-bXBsKHN0cnVjdA0KPiA+PiA+PiB1ZnNfaGJhICpoYmEsDQo+ID4+ID4+ICAJCQkvKiBEbyBub3Qg
-dG91Y2ggbHJicCBhZnRlciBzY3NpIGRvbmUgKi8NCj4gPj4gPj4gIAkJCWNtZC0+c2NzaV9kb25l
-KGNtZCk7DQo+ID4+ID4+ICAJCQlfX3Vmc2hjZF9yZWxlYXNlKGhiYSk7DQo+ID4+ID4+ICsJCQl1
-cGRhdGVfc2NhbGluZyA9IHRydWU7DQo+ID4+ID4+ICAJCX0gZWxzZSBpZiAobHJicC0+Y29tbWFu
-ZF90eXBlID09IFVUUF9DTURfVFlQRV9ERVZfTUFOQUdFIHx8DQo+ID4+ID4+ICAJCQlscmJwLT5j
-b21tYW5kX3R5cGUgPT0gVVRQX0NNRF9UWVBFX1VGU19TVE9SQUdFKSB7DQo+ID4+ID4+ICAJCQlp
-ZiAoaGJhLT5kZXZfY21kLmNvbXBsZXRlKSB7DQo+ID4+ID4+ICAJCQkJdWZzaGNkX2FkZF9jb21t
-YW5kX3RyYWNlKGhiYSwgaW5kZXgsDQo+ID4+ID4+ICAJCQkJCQkiZGV2X2NvbXBsZXRlIik7DQo+
-ID4+ID4+ICAJCQkJY29tcGxldGUoaGJhLT5kZXZfY21kLmNvbXBsZXRlKTsNCj4gPj4gPj4gKwkJ
-CQl1cGRhdGVfc2NhbGluZyA9IHRydWU7DQo+ID4+ID4+ICAJCQl9DQo+ID4+ID4+ICAJCX0NCj4g
-Pj4gPj4gLQkJaWYgKHVmc2hjZF9pc19jbGtzY2FsaW5nX3N1cHBvcnRlZChoYmEpKQ0KPiA+PiA+
-PiArCQlpZiAodWZzaGNkX2lzX2Nsa3NjYWxpbmdfc3VwcG9ydGVkKGhiYSkgJiYgdXBkYXRlX3Nj
-YWxpbmcpDQo+ID4+ID4+ICAJCQloYmEtPmNsa19zY2FsaW5nLmFjdGl2ZV9yZXFzLS07DQo+ID4+
-ID4+ICAJfQ0KPiA+PiA+Pg0KPiA+PiA+PiBAQCAtNjM3NCw4ICs2MzkyLDEyIEBAIHN0YXRpYyBp
-bnQgdWZzaGNkX2lzc3VlX2Rldm1hbl91cGl1X2NtZChzdHJ1Y3QNCj4gPj4gPj4gdWZzX2hiYSAq
-aGJhLA0KPiA+PiA+Pg0KPiA+PiA+PiAgCWluaXRfY29tcGxldGlvbigmd2FpdCk7DQo+ID4+ID4+
-ICAJbHJicCA9ICZoYmEtPmxyYlt0YWddOw0KPiA+PiA+PiAtCVdBUk5fT04obHJicC0+Y21kKTsN
-Cj4gPj4gPj4gKwlpZiAodW5saWtlbHkobHJicC0+aW5fdXNlKSkgew0KPiA+PiA+PiArCQllcnIg
-PSAtRUJVU1k7DQo+ID4+ID4+ICsJCWdvdG8gb3V0Ow0KPiA+PiA+PiArCX0NCj4gPj4gPj4NCj4g
-Pj4gPj4gKwlXQVJOX09OKGxyYnAtPmNtZCk7DQo+ID4+ID4+ICAJbHJicC0+Y21kID0gTlVMTDsN
-Cj4gPj4gPj4gIAlscmJwLT5zZW5zZV9idWZmbGVuID0gMDsNCj4gPj4gPj4gIAlscmJwLT5zZW5z
-ZV9idWZmZXIgPSBOVUxMOw0KPiA+PiA+PiBAQCAtNjQ0Nyw2ICs2NDY5LDcgQEAgc3RhdGljIGlu
-dCB1ZnNoY2RfaXNzdWVfZGV2bWFuX3VwaXVfY21kKHN0cnVjdA0KPiA+PiA+PiB1ZnNfaGJhICpo
-YmEsDQo+ID4+ID4+ICAJCX0NCj4gPj4gPj4gIAl9DQo+ID4+ID4+DQo+ID4+ID4+ICtvdXQ6DQo+
-ID4+ID4+ICAJYmxrX3B1dF9yZXF1ZXN0KHJlcSk7DQo+ID4+ID4+ICBvdXRfdW5sb2NrOg0KPiA+
-PiA+PiAgCXVwX3JlYWQoJmhiYS0+Y2xrX3NjYWxpbmdfbG9jayk7DQo+ID4+ID4+IEBAIC02Njk2
-LDE2ICs2NzE5LDYgQEAgc3RhdGljIGludCB1ZnNoY2RfYWJvcnQoc3RydWN0IHNjc2lfY21uZCAq
-Y21kKQ0KPiA+PiA+PiAgCQlCVUcoKTsNCj4gPj4gPj4gIAl9DQo+ID4+ID4+DQo+ID4+ID4+IC0J
-LyoNCj4gPj4gPj4gLQkgKiBUYXNrIGFib3J0IHRvIHRoZSBkZXZpY2UgVy1MVU4gaXMgaWxsZWdh
-bC4gV2hlbiB0aGlzIGNvbW1hbmQNCj4gPj4gPj4gLQkgKiB3aWxsIGZhaWwsIGR1ZSB0byBzcGVj
-IHZpb2xhdGlvbiwgc2NzaSBlcnIgaGFuZGxpbmcgbmV4dCBzdGVwDQo+ID4+ID4+IC0JICogd2ls
-bCBiZSB0byBzZW5kIExVIHJlc2V0IHdoaWNoLCBhZ2FpbiwgaXMgYSBzcGVjIHZpb2xhdGlvbi4N
-Cj4gPj4gPj4gLQkgKiBUbyBhdm9pZCB0aGVzZSB1bm5lY2Vzc2FyeS9pbGxlZ2FsIHN0ZXAgd2Ug
-c2tpcCB0byB0aGUgbGFzdCBlcnJvcg0KPiA+PiA+PiAtCSAqIGhhbmRsaW5nIHN0YWdlOiByZXNl
-dCBhbmQgcmVzdG9yZS4NCj4gPj4gPj4gLQkgKi8NCj4gPj4gPj4gLQlpZiAobHJicC0+bHVuID09
-IFVGU19VUElVX1VGU19ERVZJQ0VfV0xVTikNCj4gPj4gPj4gLQkJcmV0dXJuIHVmc2hjZF9laF9o
-b3N0X3Jlc2V0X2hhbmRsZXIoY21kKTsNCj4gPj4gPj4gLQ0KPiA+PiA+PiAgCXVmc2hjZF9ob2xk
-KGhiYSwgZmFsc2UpOw0KPiA+PiA+PiAgCXJlZyA9IHVmc2hjZF9yZWFkbChoYmEsIFJFR19VVFBf
-VFJBTlNGRVJfUkVRX0RPT1JfQkVMTCk7DQo+ID4+ID4+ICAJLyogSWYgY29tbWFuZCBpcyBhbHJl
-YWR5IGFib3J0ZWQvY29tcGxldGVkLCByZXR1cm4gU1VDQ0VTUyAqLw0KPiA+PiA+PiBAQCAtNjcy
-Niw3ICs2NzM5LDcgQEAgc3RhdGljIGludCB1ZnNoY2RfYWJvcnQoc3RydWN0IHNjc2lfY21uZCAq
-Y21kKQ0KPiA+PiA+PiAgCSAqIHRvIHJlZHVjZSByZXBlYXRlZCBwcmludG91dHMuIEZvciBvdGhl
-ciBhYm9ydGVkIHJlcXVlc3RzIG9ubHkNCj4gPj4gPj4gcHJpbnQNCj4gPj4gPj4gIAkgKiBiYXNp
-YyBkZXRhaWxzLg0KPiA+PiA+PiAgCSAqLw0KPiA+PiA+PiAtCXNjc2lfcHJpbnRfY29tbWFuZCho
-YmEtPmxyYlt0YWddLmNtZCk7DQo+ID4+ID4+ICsJc2NzaV9wcmludF9jb21tYW5kKGNtZCk7DQo+
-ID4+ID4+ICAJaWYgKCFoYmEtPnJlcV9hYm9ydF9jb3VudCkgew0KPiA+PiA+PiAgCQl1ZnNoY2Rf
-dXBkYXRlX3JlZ19oaXN0KCZoYmEtPnVmc19zdGF0cy50YXNrX2Fib3J0LCAwKTsNCj4gPj4gPj4g
-IAkJdWZzaGNkX3ByaW50X2hvc3RfcmVncyhoYmEpOw0KPiA+PiA+PiBAQCAtNjc0NSw2ICs2NzU4
-LDI3IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4g
-Pj4gPj4gIAkJZ290byBjbGVhbnVwOw0KPiA+PiA+PiAgCX0NCj4gPj4gPj4NCj4gPj4gPj4gKwkv
-Kg0KPiA+PiA+PiArCSAqIFRhc2sgYWJvcnQgdG8gdGhlIGRldmljZSBXLUxVTiBpcyBpbGxlZ2Fs
-LiBXaGVuIHRoaXMgY29tbWFuZA0KPiA+PiA+PiArCSAqIHdpbGwgZmFpbCwgZHVlIHRvIHNwZWMg
-dmlvbGF0aW9uLCBzY3NpIGVyciBoYW5kbGluZyBuZXh0IHN0ZXANCj4gPj4gPj4gKwkgKiB3aWxs
-IGJlIHRvIHNlbmQgTFUgcmVzZXQgd2hpY2gsIGFnYWluLCBpcyBhIHNwZWMgdmlvbGF0aW9uLg0K
-PiA+PiA+PiArCSAqIFRvIGF2b2lkIHRoZXNlIHVubmVjZXNzYXJ5L2lsbGVnYWwgc3RlcHMsIGZp
-cnN0IHdlIGNsZWFuIHVwDQo+ID4+ID4+ICsJICogdGhlIGxyYiB0YWtlbiBieSB0aGlzIGNtZCBh
-bmQgbWFyayB0aGUgbHJiIGFzIGluX3VzZSwgdGhlbg0KPiA+PiA+PiArCSAqIHF1ZXVlIHRoZSBl
-aF93b3JrIGFuZCBiYWlsLg0KPiA+PiA+PiArCSAqLw0KPiA+PiA+PiArCWlmIChscmJwLT5sdW4g
-PT0gVUZTX1VQSVVfVUZTX0RFVklDRV9XTFVOKSB7DQo+ID4+ID4+ICsJCXNwaW5fbG9ja19pcnFz
-YXZlKGhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KPiA+PiA+PiArCQlpZiAobHJicC0+Y21kKSB7
-DQo+ID4+ID4+ICsJCQlfX3Vmc2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoaGJhLCAoMVVMIDw8IHRh
-ZykpOw0KPiA+PiA+PiArCQkJX19zZXRfYml0KHRhZywgJmhiYS0+b3V0c3RhbmRpbmdfcmVxcyk7
-DQo+ID4+ID4+ICsJCQlscmJwLT5pbl91c2UgPSB0cnVlOw0KPiA+PiA+PiArCQkJaGJhLT5mb3Jj
-ZV9yZXNldCA9IHRydWU7DQo+ID4+ID4+ICsJCQl1ZnNoY2Rfc2NoZWR1bGVfZWhfd29yayhoYmEp
-Ow0KPiA+PiA+DQo+ID4+ID4gdWZzaGNkX3NjaGVkdWxlX2VoX3dvcmsoKSB3aWxsIHNldCBoYmEt
-PnVmc2hjZF9zdGF0ZSBhcw0KPiA+PiA+IFVGU0hDRF9TVEFURV9FSF9TQ0hFRFVMRURfRkFUQUwu
-IFdoaWxlIGluIHRoaXMgc3RhdGUsDQo+ID4+ID4gdWZzaGNkX3F1ZXVlY29tbWFuZCgpIHdpbGwg
-c2V0X2hvc3RfYnl0ZShESURfQkFEX1RBUkdFVCkgd2hpY2ggaXMNCj4gPj4gPiBzaW1pbGFyIGFz
-IHdoYXQgeW91IHdvdWxkIGxpa2UgdG8gZG8gaW4gdGhpcyBwYXRjaC4NCj4gPj4gPg0KPiA+PiA+
-IElzIHRoaXMgZW5vdWdoIGZvciBhdm9pZGluZyByZXVzaW5nIHRhZyBpc3N1ZT8gSnVzdCB3b25k
-ZXIgaWYNCj4gPj4gPiBscnBiLT5pbl91c2UgZmxhZyBpcyByZWFsbHkgcmVxdWlyZWQgdG8gYmUg
-YWRkZWQuDQo+ID4+IA0KPiA+PiBIaSBTdGFubGV5LA0KPiA+PiANCj4gPj4gVGhhbmtzIGZvciB0
-aGUgZGlzY3Vzc2lvbi4NCj4gPj4gDQo+ID4+IFRvIGJlIGFjY3VyYXRlLCBpdCBpcyB0byBwcmV2
-ZW50IGxyYiBmcm9tIGJlaW5nIHJlLXVzZWQsIG5vdCB0aGUNCj4gPj4gdGFnLg0KPiA+PiBCbG9j
-ayBsYXllciBhbmQvb3Igc2NzaSBsYXllciBjYW4gcmUtdXNlIHRoZSB0YWcgcmlnaHQgYWZ0ZXIN
-Cj4gPj4gd2UgYWJvcnQgdGhlIGNtZCwgYnV0IHRoZSBscmIgaXMgZW1wdHkgc2luY2Ugd2UgY2xl
-YXJlZCBpdCBmcm9tDQo+ID4+IGFib3J0IHBhdGggYW5kIHdlIG5lZWQgdG8gbWFrZSBzdXJlIHRo
-ZSBscmIgc3RheXMgZW1wdHkgYmVmb3JlIHRoZQ0KPiA+PiBmdWxsIHJlc2V0IGFuZCByZXN0b3Jl
-IGhhcHBlbnMuDQo+ID4gDQo+ID4gV2hhdCBpcyB0aGUgZGVmaW5pdGlvbiBvZiAiZW1wdHkiIGhl
-cmU/DQo+IA0KPiBZZXMsIGl0IG1lYW5zIGxyYi0+Y21kIGlzIE5VTEwuDQo+IA0KPiA+IA0KPiA+
-IElmIGl0IG1lYW5zIGxyYi0+Y21kIHNoYWxsIGJlIGVtcHR5ICh0byBub3QgaW52b2tpbmcgc2Nz
-aV9kb25lIGFnYWluKSwNCj4gPiB0aGVuIHRoZSBoYmEtPnVmc2hjZF9zdGF0ZSBjaGVjayBpbiB1
-ZnNoY2RfcXVldWVjb21tZW5kKCkgd2lsbCBhbHNvDQo+ID4gY2xlYXIgdGhlIHJlLXVzZWQgbHJi
-LT5jbWQgaWYgdWZzaGNkX3N0YXRlIGlzIGluDQo+ID4gVUZTSENEX1NUQVRFX0VIX1NDSEVEVUxF
-RF9GQVRBTCBjYXNlLg0KPiANCj4gWWVzLCBidXQgdGhhdCB3b3VsZCBoYXZlIGEgcmFjZSBjb25k
-aXRpb24gLSBzYXkgYSBjbWQgcmUtdXNlcyB0aGUgdGFnIA0KPiBhbmQNCj4gb2NjdXBpZXMgdGhl
-IGxyYiBpbiBxdWV1ZWNvbW1hbmQsIGF0IHRoZSBzYW1lIHRpbWUgdGhlIHJlYWwgY29tcGxldGlv
-biANCj4gSVJRDQo+IG9mIHByZXZpb3VzIGNtZCBjb21lcyAoYWx0aHJvdWdoIHdlIGFib3J0ZWQg
-aXQgZHVlIHRvIGl0IHRpbWVkIG91dCwgYnV0IA0KPiB0aGUNCj4gY29tcGxldGlvbiBJUlEgY2Fu
-IGNvbWUgYXQgYW55IHRpbWUgYmVmb3JlIHRoZSBmdWxsIHJlc2V0IGFuZCByZXN0b3JlIGlzDQo+
-IHBlcmZvcm1lZCksIHRoZW4gdGhlIG5ldyBjbWQgd2lsbCBiZSB3cm9uZ2x5IGNvbXBsZXRlZCBi
-eSBJUlEgaGFuZGxlciANCj4gZnJvbQ0KPiBfX3Vmc2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoKSB3
-aGljaCBpcyBhY3R1YWxseSBmaXJlZCBieSB0aGUgbGFzdCBjbWQsIA0KPiBzbw0KPiB3ZSBuZWVk
-IHRvIGJsb2NrIGl0IGV2ZW4gYmVmb3JlIHRoZSBjbWQgdGFrZXMgdGhlIGxyYiAtIGJlZm9yZQ0K
-PiANCj4gbHJicC0+Y21kID0gY21kOw0KDQpJIHNlZS4NClRoYW5rcyBmb3IgdGhlIGV4cGxhbmF0
-aW9uLg0KDQo+IA0KPiA+IA0KPiA+IEhvd2V2ZXIgdWZzaGNkX3N0YXRlIGNhbm5vdCBwcm90ZWN0
-IG90aGVyIHBhdGhzIG5vdywgZm9yIGV4YW1wbGUsDQo+ID4gdWZzaGNkX2V4ZWNfZGV2X2NtZCgp
-LCBzbyBscmJwLT5pbl91c2UgbWF5IGJlIHJlcXVpcmVkIGZvciB0aGlzIHVzYWdlLA0KPiA+IG9y
-IHVmc2hjZF9zdGF0ZSBjaGVjayBjYW4gYmUgYWRkZWQgdG8gaGVscC4NCj4gPiANCj4gPiBCVFcs
-IHdvdWxkIHlvdSBhbHNvIG5lZWQgdG8gY29uc2lkZXIgdWZzaGNkX2lzc3VlX2Rldm1hbl91cGl1
-X2NtZCgpIA0KPiA+IHRoYXQNCj4gPiBpcyBhbm90aGVyIHBvc3NpYmxlIHBhdGggdG8gcmUtdXNl
-IGxyYj8NCj4gDQo+IEluIHRoaXMgY2hhbmdlLCB0aGVyZSBhcmUgY2hlY2tzIG9mIGxyYi0+aW5f
-dXNlIGluIA0KPiB1ZnNoY2RfcXVldWVjb21tYW5kKCksDQo+IHVmc2hjZF9leGVjX2Rldl9jbWQo
-KSBhbmQgdWZzaGNkX2lzc3VlX2Rldm1hbl91cGl1X2NtZCgpLg0KDQpPb3BzIEkgbWlzc2VkIGl0
-LiBTb3JyeSBmb3IgdGhpcyBub2lzZS4NCg0KRmVlbCBmcmVlIHRvIGFkZA0KUmV2aWV3ZWQtYnk6
-IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQoNCg0KDQoNCg==
+On 2020-12-03 13:19, Stanley Chu wrote:
+> On Thu, 2020-12-03 at 13:11 +0800, Can Guo wrote:
+>> On 2020-12-03 12:51, Stanley Chu wrote:
+>> > On Thu, 2020-12-03 at 12:01 +0800, Can Guo wrote:
+>> >> On 2020-12-03 10:21, Stanley Chu wrote:
+>> >> > On Wed, 2020-12-02 at 04:04 -0800, Can Guo wrote:
+>> >> >> In current task abort routine, if task abort happens to the device
+>> >> >> W-LU,
+>> >> >> the code directly jumps to ufshcd_eh_host_reset_handler() to perform a
+>> >> >> full reset and restore then returns FAIL or SUCCESS. Commands sent to
+>> >> >> the
+>> >> >> device W-LU are most likely the SSU cmds sent during UFS PM
+>> >> >> operations. If
+>> >> >> such SSU cmd enters task abort routine, when
+>> >> >> ufshcd_eh_host_reset_handler()
+>> >> >> flushes eh_work, it will get stuck there since err_handler is
+>> >> >> serialized
+>> >> >> with PM operations.
+>> >> >>
+>> >> >> In order to unblock above call path, we merely clean up the lrb taken
+>> >> >> by
+>> >> >> this cmd, queue the eh_work and return SUCCESS. Once the cmd is
+>> >> >> aborted,
+>> >> >> the PM operation which sends out the cmd just errors out, then
+>> >> >> err_handler
+>> >> >> shall be able to proceed with the full reset and restore.
+>> >> >>
+>> >> >> In this scenario, the cmd is aborted even before it is actually
+>> >> >> cleared by
+>> >> >> HW, set the lrb->in_use flag to prevent subsequent cmds, including
+>> >> >> SCSI
+>> >> >> cmds and dev cmds, from taking the lrb released from abort. The flag
+>> >> >> shall
+>> >> >> evetually be cleared in __ufshcd_transfer_req_compl() invoked by the
+>> >> >> full
+>> >> >> reset and restore from err_handler.
+>> >> >>
+>> >> >> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+>> >> >> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> >> >> ---
+>> >> >>  drivers/scsi/ufs/ufshcd.c | 60
+>> >> >> +++++++++++++++++++++++++++++++++++++----------
+>> >> >>  drivers/scsi/ufs/ufshcd.h |  2 ++
+>> >> >>  2 files changed, 49 insertions(+), 13 deletions(-)
+>> >> >>
+>> >> >> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> >> >> index f0bb3fc..26c1fa0 100644
+>> >> >> --- a/drivers/scsi/ufs/ufshcd.c
+>> >> >> +++ b/drivers/scsi/ufs/ufshcd.c
+>> >> >> @@ -2539,6 +2539,14 @@ static int ufshcd_queuecommand(struct Scsi_Host
+>> >> >> *host, struct scsi_cmnd *cmd)
+>> >> >>  		(hba->clk_gating.state != CLKS_ON));
+>> >> >>
+>> >> >>  	lrbp = &hba->lrb[tag];
+>> >> >> +	if (unlikely(lrbp->in_use)) {
+>> >> >> +		if (hba->pm_op_in_progress)
+>> >> >> +			set_host_byte(cmd, DID_BAD_TARGET);
+>> >> >> +		else
+>> >> >> +			err = SCSI_MLQUEUE_HOST_BUSY;
+>> >> >> +		ufshcd_release(hba);
+>> >> >> +		goto out;
+>> >> >> +	}
+>> >> >>
+>> >> >>  	WARN_ON(lrbp->cmd);
+>> >> >>  	lrbp->cmd = cmd;
+>> >> >> @@ -2781,6 +2789,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba
+>> >> >> *hba,
+>> >> >>
+>> >> >>  	init_completion(&wait);
+>> >> >>  	lrbp = &hba->lrb[tag];
+>> >> >> +	if (unlikely(lrbp->in_use)) {
+>> >> >> +		err = -EBUSY;
+>> >> >> +		goto out;
+>> >> >> +	}
+>> >> >> +
+>> >> >>  	WARN_ON(lrbp->cmd);
+>> >> >>  	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+>> >> >>  	if (unlikely(err))
+>> >> >> @@ -2797,6 +2810,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba
+>> >> >> *hba,
+>> >> >>
+>> >> >>  	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+>> >> >>
+>> >> >> +out:
+>> >> >>  	ufshcd_add_query_upiu_trace(hba, tag,
+>> >> >>  			err ? "query_complete_err" : "query_complete");
+>> >> >>
+>> >> >> @@ -4929,9 +4943,11 @@ static void __ufshcd_transfer_req_compl(struct
+>> >> >> ufs_hba *hba,
+>> >> >>  	struct scsi_cmnd *cmd;
+>> >> >>  	int result;
+>> >> >>  	int index;
+>> >> >> +	bool update_scaling = false;
+>> >> >>
+>> >> >>  	for_each_set_bit(index, &completed_reqs, hba->nutrs) {
+>> >> >>  		lrbp = &hba->lrb[index];
+>> >> >> +		lrbp->in_use = false;
+>> >> >>  		lrbp->compl_time_stamp = ktime_get();
+>> >> >>  		cmd = lrbp->cmd;
+>> >> >>  		if (cmd) {
+>> >> >> @@ -4944,15 +4960,17 @@ static void __ufshcd_transfer_req_compl(struct
+>> >> >> ufs_hba *hba,
+>> >> >>  			/* Do not touch lrbp after scsi done */
+>> >> >>  			cmd->scsi_done(cmd);
+>> >> >>  			__ufshcd_release(hba);
+>> >> >> +			update_scaling = true;
+>> >> >>  		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
+>> >> >>  			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+>> >> >>  			if (hba->dev_cmd.complete) {
+>> >> >>  				ufshcd_add_command_trace(hba, index,
+>> >> >>  						"dev_complete");
+>> >> >>  				complete(hba->dev_cmd.complete);
+>> >> >> +				update_scaling = true;
+>> >> >>  			}
+>> >> >>  		}
+>> >> >> -		if (ufshcd_is_clkscaling_supported(hba))
+>> >> >> +		if (ufshcd_is_clkscaling_supported(hba) && update_scaling)
+>> >> >>  			hba->clk_scaling.active_reqs--;
+>> >> >>  	}
+>> >> >>
+>> >> >> @@ -6374,8 +6392,12 @@ static int ufshcd_issue_devman_upiu_cmd(struct
+>> >> >> ufs_hba *hba,
+>> >> >>
+>> >> >>  	init_completion(&wait);
+>> >> >>  	lrbp = &hba->lrb[tag];
+>> >> >> -	WARN_ON(lrbp->cmd);
+>> >> >> +	if (unlikely(lrbp->in_use)) {
+>> >> >> +		err = -EBUSY;
+>> >> >> +		goto out;
+>> >> >> +	}
+>> >> >>
+>> >> >> +	WARN_ON(lrbp->cmd);
+>> >> >>  	lrbp->cmd = NULL;
+>> >> >>  	lrbp->sense_bufflen = 0;
+>> >> >>  	lrbp->sense_buffer = NULL;
+>> >> >> @@ -6447,6 +6469,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct
+>> >> >> ufs_hba *hba,
+>> >> >>  		}
+>> >> >>  	}
+>> >> >>
+>> >> >> +out:
+>> >> >>  	blk_put_request(req);
+>> >> >>  out_unlock:
+>> >> >>  	up_read(&hba->clk_scaling_lock);
+>> >> >> @@ -6696,16 +6719,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>> >> >>  		BUG();
+>> >> >>  	}
+>> >> >>
+>> >> >> -	/*
+>> >> >> -	 * Task abort to the device W-LUN is illegal. When this command
+>> >> >> -	 * will fail, due to spec violation, scsi err handling next step
+>> >> >> -	 * will be to send LU reset which, again, is a spec violation.
+>> >> >> -	 * To avoid these unnecessary/illegal step we skip to the last error
+>> >> >> -	 * handling stage: reset and restore.
+>> >> >> -	 */
+>> >> >> -	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN)
+>> >> >> -		return ufshcd_eh_host_reset_handler(cmd);
+>> >> >> -
+>> >> >>  	ufshcd_hold(hba, false);
+>> >> >>  	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>> >> >>  	/* If command is already aborted/completed, return SUCCESS */
+>> >> >> @@ -6726,7 +6739,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>> >> >>  	 * to reduce repeated printouts. For other aborted requests only
+>> >> >> print
+>> >> >>  	 * basic details.
+>> >> >>  	 */
+>> >> >> -	scsi_print_command(hba->lrb[tag].cmd);
+>> >> >> +	scsi_print_command(cmd);
+>> >> >>  	if (!hba->req_abort_count) {
+>> >> >>  		ufshcd_update_reg_hist(&hba->ufs_stats.task_abort, 0);
+>> >> >>  		ufshcd_print_host_regs(hba);
+>> >> >> @@ -6745,6 +6758,27 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>> >> >>  		goto cleanup;
+>> >> >>  	}
+>> >> >>
+>> >> >> +	/*
+>> >> >> +	 * Task abort to the device W-LUN is illegal. When this command
+>> >> >> +	 * will fail, due to spec violation, scsi err handling next step
+>> >> >> +	 * will be to send LU reset which, again, is a spec violation.
+>> >> >> +	 * To avoid these unnecessary/illegal steps, first we clean up
+>> >> >> +	 * the lrb taken by this cmd and mark the lrb as in_use, then
+>> >> >> +	 * queue the eh_work and bail.
+>> >> >> +	 */
+>> >> >> +	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
+>> >> >> +		spin_lock_irqsave(host->host_lock, flags);
+>> >> >> +		if (lrbp->cmd) {
+>> >> >> +			__ufshcd_transfer_req_compl(hba, (1UL << tag));
+>> >> >> +			__set_bit(tag, &hba->outstanding_reqs);
+>> >> >> +			lrbp->in_use = true;
+>> >> >> +			hba->force_reset = true;
+>> >> >> +			ufshcd_schedule_eh_work(hba);
+>> >> >
+>> >> > ufshcd_schedule_eh_work() will set hba->ufshcd_state as
+>> >> > UFSHCD_STATE_EH_SCHEDULED_FATAL. While in this state,
+>> >> > ufshcd_queuecommand() will set_host_byte(DID_BAD_TARGET) which is
+>> >> > similar as what you would like to do in this patch.
+>> >> >
+>> >> > Is this enough for avoiding reusing tag issue? Just wonder if
+>> >> > lrpb->in_use flag is really required to be added.
+>> >>
+>> >> Hi Stanley,
+>> >>
+>> >> Thanks for the discussion.
+>> >>
+>> >> To be accurate, it is to prevent lrb from being re-used, not the
+>> >> tag.
+>> >> Block layer and/or scsi layer can re-use the tag right after
+>> >> we abort the cmd, but the lrb is empty since we cleared it from
+>> >> abort path and we need to make sure the lrb stays empty before the
+>> >> full reset and restore happens.
+>> >
+>> > What is the definition of "empty" here?
+>> 
+>> Yes, it means lrb->cmd is NULL.
+>> 
+>> >
+>> > If it means lrb->cmd shall be empty (to not invoking scsi_done again),
+>> > then the hba->ufshcd_state check in ufshcd_queuecommend() will also
+>> > clear the re-used lrb->cmd if ufshcd_state is in
+>> > UFSHCD_STATE_EH_SCHEDULED_FATAL case.
+>> 
+>> Yes, but that would have a race condition - say a cmd re-uses the tag
+>> and
+>> occupies the lrb in queuecommand, at the same time the real completion
+>> IRQ
+>> of previous cmd comes (althrough we aborted it due to it timed out, 
+>> but
+>> the
+>> completion IRQ can come at any time before the full reset and restore 
+>> is
+>> performed), then the new cmd will be wrongly completed by IRQ handler
+>> from
+>> __ufshcd_transfer_req_compl() which is actually fired by the last cmd,
+>> so
+>> we need to block it even before the cmd takes the lrb - before
+>> 
+>> lrbp->cmd = cmd;
+> 
+> I see.
+> Thanks for the explanation.
+> 
+>> 
+>> >
+>> > However ufshcd_state cannot protect other paths now, for example,
+>> > ufshcd_exec_dev_cmd(), so lrbp->in_use may be required for this usage,
+>> > or ufshcd_state check can be added to help.
+>> >
+>> > BTW, would you also need to consider ufshcd_issue_devman_upiu_cmd()
+>> > that
+>> > is another possible path to re-use lrb?
+>> 
+>> In this change, there are checks of lrb->in_use in
+>> ufshcd_queuecommand(),
+>> ufshcd_exec_dev_cmd() and ufshcd_issue_devman_upiu_cmd().
+> 
+> Oops I missed it. Sorry for this noise.
+> 
+> Feel free to add
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
 
+Thanks for your review! :)
+
+Regards,
+
+Can Guo.
