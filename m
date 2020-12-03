@@ -7,51 +7,50 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90103C71155
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 08:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0451BC83013
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 08:22:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39254217A0
+	by mail.kernel.org (Postfix) with ESMTP id BEEFF21527
 	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 08:22:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388385AbgLCIWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 03:22:06 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:59958 "EHLO mta-01.yadro.com"
+        id S2388389AbgLCIWQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 03:22:16 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:59974 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388286AbgLCIWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Dec 2020 03:22:06 -0500
+        id S2388109AbgLCIWQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Dec 2020 03:22:16 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id D11EC412DF;
-        Thu,  3 Dec 2020 08:21:24 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 42FB14138D;
+        Thu,  3 Dec 2020 08:21:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1606983683; x=1608798084; bh=bVn+HIZliuuX3OZc5WnIyyho5Dj51W9C6f8
-        03/z4Lbk=; b=TieMRrRyB5WdSrPIuFcNFdPJrd0qO9/qQSemp/tu1zzM+YVW2D1
-        4Nf0I3oKV83uUzW5sbmbZDo0cVqvzHHP8Sftal8s6wrXeIMANmWGf96asLVqsGpZ
-        1OdvLiyQLgYPtwJDm+NvJnCWkdpjLc7H25qFfhnZhsIegsc4gDdmX02s=
+        1606983694; x=1608798095; bh=3rDzzptYBWQEIKaNxfPGPFrSpOoWPhMr0G6
+        WZUAIhtM=; b=d8QKOarECU/XjGeUT/gpI3rDv8Ni+ttDlZp0QTOCVXdn/RLV5ec
+        INs6eSr9mF2Yee0wbu9rOR0gpHIm+8xBCuVc5ppAxNQOZ6kqaRpKiO1oRVGm6ig+
+        gXdzLiP6wsQoEOV2hB3kU3mZYvFmCZxCCNfv2/BMAs6ADg40NsbIlYr8=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id sPiQD2T6765o; Thu,  3 Dec 2020 11:21:23 +0300 (MSK)
+        with ESMTP id heP7vBsU7tYx; Thu,  3 Dec 2020 11:21:34 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 587B041393;
-        Thu,  3 Dec 2020 11:21:23 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 1F9724136B;
+        Thu,  3 Dec 2020 11:21:34 +0300 (MSK)
 Received: from localhost (172.17.204.63) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 3 Dec
- 2020 11:21:22 +0300
+ 2020 11:21:33 +0300
 From:   Anastasia Kovaleva <a.kovaleva@yadro.com>
 To:     <martin.petersen@oracle.com>
 CC:     <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Konstantin Vinogradov <k.vinogradov@yadro.com>
-Subject: [RESEND PATCH 1/3] scsi: target: core: Set residuals for 4Kn devices
-Date:   Thu, 3 Dec 2020 11:20:33 +0300
-Message-ID: <20201203082035.54566-2-a.kovaleva@yadro.com>
+        <linux@yadro.com>, Anastasia Kovaleva <a.kovaleva@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [RESEND PATCH 2/3] scsi: target: core: Signal WRITE residuals
+Date:   Thu, 3 Dec 2020 11:20:34 +0300
+Message-ID: <20201203082035.54566-3-a.kovaleva@yadro.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20201203082035.54566-1-a.kovaleva@yadro.com>
 References: <20201203082035.54566-1-a.kovaleva@yadro.com>
@@ -65,45 +64,85 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Roman Bolshakov <r.bolshakov@yadro.com>
+According to RFC 7143 11.4.5.2.:
 
-TCM always fails SBC commands with residuals for 4Kn devices when the
-command is processed by sbc_parse_cdb(). That prevents residual
-signalling to the transport driver because residual kind and residual
-amount aren't set. It also makes residual handling different from
-512-byte formatted devices - if there are residuals 512-byte LUN would
-proceed with command execution while 4K-byte LUN would fail.
+  If SPDTL > EDTL for a task, iSCSI Overflow MUST be signaled in the
+  SCSI Response PDU as specified in Section 11.4.5.1.  The Residual
+  Count MUST be set to the numerical value of (SPDTL - EDTL).
 
-Based-on: https://patchwork.kernel.org/project/target-devel/patch/20170523234854.21452-31-bart.vanassche@sandisk.com/
-Based-on-patch-by: Bart Van Assche <bvanassche@acm.org>
+  If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
+  SCSI Response PDU as specified in Section 11.4.5.1.  The Residual
+  Count MUST be set to the numerical value of (EDTL - SPDTL).
+
+libiscsi has residual write tests that check residual kind and residual
+amount and all of them (Write10Residuals, Write12Residuals,
+Write16Residuals) currently fail.
+
+One of the reasons why they fail is because target completes write
+commands with INVALID FIELD IN CDB before setting the Overflow/Underflow
+bit and residual amount.
+
+Set the Overflow/Underflow bit and the residual amount before failing a
+write to comply with RFC 7143.
+
+Signed-off-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Signed-off-by: Konstantin Vinogradov <k.vinogradov@yadro.com>
 ---
- drivers/target/target_core_transport.c | 11 -----------
- 1 file changed, 11 deletions(-)
+ drivers/target/target_core_transport.c | 34 +++++++++++++++-----------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index fca4bd079d02..f27a7d6cc1e0 100644
+index f27a7d6cc1e0..eb51298cab4f 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -1332,17 +1332,6 @@ target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
+@@ -1313,6 +1313,26 @@ target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
+ 			" %u does not match SCSI CDB Length: %u for SAM Opcode:"
+ 			" 0x%02x\n", cmd->se_tfo->fabric_name,
+ 				cmd->data_length, size, cmd->t_task_cdb[0]);
++		/*
++		 * For READ command for the overflow case keep the existing
++		 * fabric provided ->data_length. Otherwise for the underflow
++		 * case, reset ->data_length to the smaller SCSI expected data
++		 * transfer length.
++		 */
++		if (size > cmd->data_length) {
++			cmd->se_cmd_flags |= SCF_OVERFLOW_BIT;
++			cmd->residual_count = (size - cmd->data_length);
++		} else {
++			cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
++			cmd->residual_count = (cmd->data_length - size);
++			/*
++			 * Do not truncate ->data_length for WRITE command to
++			 * dump all payload
++			 */
++			if (cmd->data_direction == DMA_FROM_DEVICE) {
++				cmd->data_length = size;
++			}
++		}
+ 
+ 		if (cmd->data_direction == DMA_TO_DEVICE) {
+ 			if (cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) {
+@@ -1332,20 +1352,6 @@ target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
  				return TCM_INVALID_CDB_FIELD;
  			}
  		}
 -		/*
--		 * Reject READ_* or WRITE_* with overflow/underflow for
--		 * type SCF_SCSI_DATA_CDB.
+-		 * For the overflow case keep the existing fabric provided
+-		 * ->data_length.  Otherwise for the underflow case, reset
+-		 * ->data_length to the smaller SCSI expected data transfer
+-		 * length.
 -		 */
--		if (dev->dev_attrib.block_size != 512)  {
--			pr_err("Failing OVERFLOW/UNDERFLOW for LBA op"
--				" CDB on non 512-byte sector setup subsystem"
--				" plugin: %s\n", dev->transport->name);
--			/* Returns CHECK_CONDITION + INVALID_CDB_FIELD */
--			return TCM_INVALID_CDB_FIELD;
+-		if (size > cmd->data_length) {
+-			cmd->se_cmd_flags |= SCF_OVERFLOW_BIT;
+-			cmd->residual_count = (size - cmd->data_length);
+-		} else {
+-			cmd->se_cmd_flags |= SCF_UNDERFLOW_BIT;
+-			cmd->residual_count = (cmd->data_length - size);
+-			cmd->data_length = size;
 -		}
- 		/*
- 		 * For the overflow case keep the existing fabric provided
- 		 * ->data_length.  Otherwise for the underflow case, reset
+ 	}
+ 
+ 	return target_check_max_data_sg_nents(cmd, dev, size);
 -- 
 2.24.3 (Apple Git-128)
 
