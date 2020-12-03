@@ -7,62 +7,63 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFBA3C64E7C
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 909F8C64E7C
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FE6B21D91
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49804221EB
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727872AbgLCCJC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 21:09:02 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:16990 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729411AbgLCCJC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 21:09:02 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B321hco159395;
-        Wed, 2 Dec 2020 21:08:12 -0500
+        id S1729508AbgLCCJF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 21:09:05 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:1494 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729492AbgLCCJE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 21:09:04 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B323DPa075533;
+        Wed, 2 Dec 2020 21:08:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=THr3PwzrisLGs197EgpbEA4rC/U8om6fT6y4XZnnpL0=;
- b=C16QrCKubYmpygmHlMZ0grJMXqpJFgSA4eO6LZWrq3AGpDV4G2mn9q5zZ8jr96lVdH9y
- 8QaUytZ5cBDdX1IMU6CwEEXge9UIPC46zk8M5/e7zfJZRtuLJW+eTg/eraDQzJaEVTvz
- n5aPLVZgcXM+tKTcmdurye1JEsHZgPWl6EKlZCuf0O9qnW/BeFLmGS3JY7v2SYikz7Ji
- U5J0Np1i5fK2DawWmzeNKfme6HU0t4pHlcUNywFfmUfxWiO0wrz+WK+3mnSgsWvOqAuS
- n/AnZRwiyXQftW/PzRUBj59/03QOL8ihzJJjQBBqNap+/ZN7TxmyJ+AkZsiP6tM4dM6i pg== 
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3569tgx4ku-1
+ bh=z6egoUa+qQtR2sJZG4f7jZZtFPKGyk8whFHKiL+TM4A=;
+ b=oI/zXjAnq4UVGk1keO5jQrDRJWRD1Xj102FY2HvmKS0u/GLdnOlv5cuNhYnd0fUfACte
+ 5XQfcgkJ8vwiBv6MNVH07fxc51HjS+LHz4M4M+qDL1n1JlUafh7FiO0UlxoAB1EHTL//
+ PIiGvD71HLEux1UIFRAuz15nJQGRHlsfraL6q/y6mUqC/tGCeRfnoEhjxZt0h6q+XROu
+ aW6DuMCYg8wx0vRvVcrgw6M1bdCJGtFVM2kZlD+21HYGZ96FTFqJdLVyt6e3GPwy4Rbr
+ d0OS10NfT2sPbqzBCLMfEZI4tAoQGE3AeMZXfYc38gRPGuzDkIpK/UOwCXXb1zn+D5Tn pA== 
+Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 356jdgexa6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 02 Dec 2020 21:08:12 -0500
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B31uStT006206;
-        Thu, 3 Dec 2020 02:08:11 GMT
+        Wed, 02 Dec 2020 21:08:19 -0500
+Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
+        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B327VCg010528;
+        Thu, 3 Dec 2020 02:08:18 GMT
 Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma03dal.us.ibm.com with ESMTP id 353e69pd7w-1
+        by ppma01dal.us.ibm.com with ESMTP id 355rf7pxaq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 03 Dec 2020 02:08:11 +0000
+        Thu, 03 Dec 2020 02:08:18 +0000
 Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B328AtF62390658
+        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B328G2g11338322
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 3 Dec 2020 02:08:10 GMT
+        Thu, 3 Dec 2020 02:08:17 GMT
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0343D78063;
-        Thu,  3 Dec 2020 02:08:10 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id DB90C78066;
+        Thu,  3 Dec 2020 02:08:16 +0000 (GMT)
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 77A847805C;
-        Thu,  3 Dec 2020 02:08:09 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 4F83C78064;
+        Thu,  3 Dec 2020 02:08:16 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu,  3 Dec 2020 02:08:09 +0000 (GMT)
+        Thu,  3 Dec 2020 02:08:16 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v3 01/18] ibmvfc: add vhost fields and defaults for MQ enablement
-Date:   Wed,  2 Dec 2020 20:07:49 -0600
-Message-Id: <20201203020806.14747-2-tyreld@linux.ibm.com>
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH v3 11/18] ibmvfc: set and track hw queue in ibmvfc_event struct
+Date:   Wed,  2 Dec 2020 20:07:59 -0600
+Message-Id: <20201203020806.14747-12-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20201203020806.14747-1-tyreld@linux.ibm.com>
 References: <20201203020806.14747-1-tyreld@linux.ibm.com>
@@ -71,95 +72,68 @@ Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
  definitions=2020-12-02_14:2020-11-30,2020-12-02 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- mlxlogscore=999 suspectscore=1 clxscore=1015 lowpriorityscore=0
- adultscore=0 spamscore=0 impostorscore=0 bulkscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012030006
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 impostorscore=0
+ phishscore=0 clxscore=1015 suspectscore=1 mlxscore=0 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 mlxlogscore=999 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012030009
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce several new vhost fields for managing MQ state of the adapter
-as well as initial defaults for MQ enablement.
+Extract the hwq id from a SCSI command and store it in the ibmvfc_event
+structure to identify which Sub-CRQ to send the command down when
+channels are being utilized.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c |  9 ++++++++-
- drivers/scsi/ibmvscsi/ibmvfc.h | 13 +++++++++++--
- 2 files changed, 19 insertions(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 5 +++++
+ drivers/scsi/ibmvscsi/ibmvfc.h | 1 +
+ 2 files changed, 6 insertions(+)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 42e4d35e0d35..f1d677a7423d 100644
+index 0eb91ac86d96..b51ae17883b7 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -5161,12 +5161,13 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+@@ -1397,6 +1397,7 @@ static void ibmvfc_init_event(struct ibmvfc_event *evt,
+ 	evt->crq.format = format;
+ 	evt->done = done;
+ 	evt->eh_comp = NULL;
++	evt->hwq = 0;
+ }
+ 
+ /**
+@@ -1748,6 +1749,8 @@ static int ibmvfc_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 	struct ibmvfc_cmd *vfc_cmd;
+ 	struct ibmvfc_fcp_cmd_iu *iu;
+ 	struct ibmvfc_event *evt;
++	u32 tag_and_hwq = blk_mq_unique_tag(cmnd->request);
++	u16 hwq = blk_mq_unique_tag_to_hwq(tag_and_hwq);
+ 	int rc;
+ 
+ 	if (unlikely((rc = fc_remote_port_chkready(rport))) ||
+@@ -1775,6 +1778,8 @@ static int ibmvfc_queuecommand_lck(struct scsi_cmnd *cmnd,
  	}
  
- 	shost->transportt = ibmvfc_transport_template;
--	shost->can_queue = max_requests;
-+	shost->can_queue = (max_requests / IBMVFC_SCSI_HW_QUEUES);
- 	shost->max_lun = max_lun;
- 	shost->max_id = max_targets;
- 	shost->max_sectors = IBMVFC_MAX_SECTORS;
- 	shost->max_cmd_len = IBMVFC_MAX_CDB_LEN;
- 	shost->unique_id = shost->host_no;
-+	shost->nr_hw_queues = IBMVFC_SCSI_HW_QUEUES;
+ 	vfc_cmd->correlation = cpu_to_be64(evt);
++	if (vhost->using_channels)
++		evt->hwq = hwq % vhost->scsi_scrqs.active_queues;
  
- 	vhost = shost_priv(shost);
- 	INIT_LIST_HEAD(&vhost->sent);
-@@ -5178,6 +5179,12 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- 	vhost->partition_number = -1;
- 	vhost->log_level = log_level;
- 	vhost->task_set = 1;
-+
-+	vhost->mq_enabled = IBMVFC_MQ;
-+	vhost->client_scsi_channels = IBMVFC_SCSI_CHANNELS;
-+	vhost->using_channels = 0;
-+	vhost->do_enquiry = 1;
-+
- 	strcpy(vhost->partition_name, "UNKNOWN");
- 	init_waitqueue_head(&vhost->work_wait_q);
- 	init_waitqueue_head(&vhost->init_wait_q);
+ 	if (likely(!(rc = ibmvfc_map_sg_data(cmnd, evt, vfc_cmd, vhost->dev))))
+ 		return ibmvfc_send_event(evt, vhost, 0);
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index 9d58cfd774d3..e095daada70e 100644
+index dff26dbd912c..e0ffb0416223 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.h
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -41,16 +41,21 @@
- #define IBMVFC_DEFAULT_LOG_LEVEL	2
- #define IBMVFC_MAX_CDB_LEN		16
- #define IBMVFC_CLS3_ERROR		0
-+#define IBMVFC_MQ			0
-+#define IBMVFC_SCSI_CHANNELS		0
-+#define IBMVFC_SCSI_HW_QUEUES		1
-+#define IBMVFC_MIG_NO_SUB_TO_CRQ	0
-+#define IBMVFC_MIG_NO_N_TO_M		0
+@@ -781,6 +781,7 @@ struct ibmvfc_event {
+ 	struct completion comp;
+ 	struct completion *eh_comp;
+ 	struct timer_list timer;
++	u16 hwq;
+ };
  
- /*
-  * Ensure we have resources for ERP and initialization:
-- * 1 for ERP
-  * 1 for initialization
-  * 1 for NPIV Logout
-  * 2 for BSG passthru
-  * 2 for each discovery thread
-+ * 1 ERP for each possible HW Queue
-  */
--#define IBMVFC_NUM_INTERNAL_REQ	(1 + 1 + 1 + 2 + (disc_threads * 2))
-+#define IBMVFC_NUM_INTERNAL_REQ	(1 + 1 + 2 + (disc_threads * 2) + IBMVFC_SCSI_HW_QUEUES)
- 
- #define IBMVFC_MAD_SUCCESS		0x00
- #define IBMVFC_MAD_NOT_SUPPORTED	0xF1
-@@ -826,6 +831,10 @@ struct ibmvfc_host {
- 	int delay_init;
- 	int scan_complete;
- 	int logged_in;
-+	int mq_enabled;
-+	int using_channels;
-+	int do_enquiry;
-+	int client_scsi_channels;
- 	int aborting_passthru;
- 	int events_to_log;
- #define IBMVFC_AE_LINKUP	0x0001
+ /* a pool of event structs for use */
 -- 
 2.27.0
 
