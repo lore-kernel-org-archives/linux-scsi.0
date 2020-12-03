@@ -2,105 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6E3C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 18:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D85DC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 19:10:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7EB46208A9
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 18:25:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4DA0221EC
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 19:10:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2501911AbgLCSYp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 13:24:45 -0500
-Received: from new2-smtp.messagingengine.com ([66.111.4.224]:42691 "EHLO
-        new2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2436500AbgLCSYo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 13:24:44 -0500
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailnew.nyi.internal (Postfix) with ESMTP id D7B78580497;
-        Thu,  3 Dec 2020 13:23:57 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute4.internal (MEProxy); Thu, 03 Dec 2020 13:23:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm2; bh=QP4GaR0zm1Ub7XkhQv7Jc4kTE+P
-        vBmdV/xXIkDwGDfw=; b=wT+g8Ll/pQ8FMT4zqCiKH/h9As0f4dO1bzOL/RDUgvA
-        Ch3nfQYuo+pYX95KoSt7eArBrElM4qqm/YXeTHajiDT+KbbXrMJnE8UunuXZceQ6
-        m0m4CTwYxoWjl0LD77aPvNrJ1vcCsNrt2hEDvVwTooJmVFZF8pRF+YdMoB7x06NI
-        0XYpLkWofT3DI3dASB+GB0R/rgzjePtV7C+x2yi5HTlI19ix90bqen2VgBSunZ6i
-        tyKGWQMvQyfd1gbsk7j29LU6dayu3uakkPYXENh7qqO6d2GgKxr2c7b/LZMl3qm5
-        wFrHY9Re9lH3fIsKcW7HirJHDplR/rqROjhCP5mi8Ng==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=QP4GaR
-        0zm1Ub7XkhQv7Jc4kTE+PvBmdV/xXIkDwGDfw=; b=bBI4c2++tMa0ofW+kUNIBf
-        Hd5X/T6hZW7N1ds+yFn2PUI3PqO+xVNSS4IFC17Z+hNr0GyloQ6+NTbKZLVpiY+J
-        rgCQ0jb7patAKWnmO4MsfKM4YeR44xhMRzqSKH2H96Ji0nkjxlC8JfxVcc6O2Vt3
-        txaDnKp9g7gwp739T5xWzEJO/EKdnLf2UdpOJvT1Zam5PZYmdr8LG4vRK0rVTT87
-        3m6gFANslVNlfuRqhseKGEAPM1l5/IK02qWV7qZDN2PT+q6rO+IuH6R6wwQHNU3o
-        2t7OSviN+RxwIfbqwVZQF8nuRnaxGz0ado41B28g5BKOhBHsw6z/s267zK/Z/nYA
-        ==
-X-ME-Sender: <xms:PS3JX9x2kFt4KUjjW5kZ4QVwljZ5dH6nLy4lPMc_r_fMpWL_bmFW5w>
-    <xme:PS3JX9RfEmrzENRtDcRu8BpUh4mv5-rdCTu5M9DIDZTx4nA8jbrHnEpXOGoGsL8jx
-    zbqsk2hy-C5yg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrudeiiedguddufecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enucfjughrpeffhffvuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepifhrvghg
-    ucfmjfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnhepveeuhe
-    ejgfffgfeivddukedvkedtleelleeghfeljeeiueeggeevueduudekvdetnecukfhppeek
-    fedrkeeirdejgedrieegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrg
-    hilhhfrhhomhepghhrvghgsehkrhhorghhrdgtohhm
-X-ME-Proxy: <xmx:PS3JX3Wdu9LuHIiIUh3vBTKSZoe74V9PK-H5GuTPZk05SepySzrcGw>
-    <xmx:PS3JX_iUGCy_AlDyAPRnLe-Xi7QZs6DLslBc6R-P2ituSA2FSd_HgA>
-    <xmx:PS3JX_ABMn1naBiHJRY0N44GoQOisk4Vpd1B6PyfPrnH9rBNM19_Pg>
-    <xmx:PS3JXz7w3J7NK4BTgOTnOSDEDXj5MLshEAyONZR0npGHxXndIRKdug>
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 693E0108005B;
-        Thu,  3 Dec 2020 13:23:56 -0500 (EST)
-Date:   Thu, 3 Dec 2020 19:25:05 +0100
-From:   Greg KH <greg@kroah.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Thomas Lamprecht <t.lamprecht@proxmox.com>,
-        James.Bottomley@suse.de,
-        jayamohank@hdredirect-lb5-1afb6e2973825a56.elb.us-east-1.amazonaws.com,
-        jejb@linux.ibm.com, jitendra.bhivare@broadcom.com,
-        kernel-janitors@vger.kernel.org, ketan.mukadam@broadcom.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: be2iscsi: revert "Fix a theoretical leak in
- beiscsi_create_eqs()"
-Message-ID: <X8ktgeCVhGPw4wnW@kroah.com>
-References: <54f36c62-10bf-8736-39ce-27ece097d9de@proxmox.com>
- <X8jXkt6eThjyVP1v@mwanda>
+        id S1729124AbgLCTKA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 14:10:00 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:60176 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727374AbgLCTJ7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 14:09:59 -0500
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 48F7A2EA21C;
+        Thu,  3 Dec 2020 14:09:18 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id vaotILf9rNDk; Thu,  3 Dec 2020 13:58:47 -0500 (EST)
+Received: from [192.168.48.23] (host-104-157-204-209.dyn.295.ca [104.157.204.209])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 8D6922EA01A;
+        Thu,  3 Dec 2020 14:09:17 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v2 3/4] scsi_debug : iouring iopoll support
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-block@vger.kernel.org
+References: <20201203034100.29716-1-kashyap.desai@broadcom.com>
+ <20201203034100.29716-4-kashyap.desai@broadcom.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <97ab044f-7426-6182-f3c3-cfd179637009@interlog.com>
+Date:   Thu, 3 Dec 2020 14:09:17 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <X8jXkt6eThjyVP1v@mwanda>
+In-Reply-To: <20201203034100.29716-4-kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Dec 03, 2020 at 03:18:26PM +0300, Dan Carpenter wrote:
-> My patch caused kernel Oopses and delays in boot.  Revert it.
+See my comment further down.
+
+On 2020-12-02 10:40 p.m., Kashyap Desai wrote:
+> Add support of iouring iopoll interface in scsi_debug.
+> This feature requires shared hosttag support in kernel and driver.
 > 
-> The problem was that I moved the "mem->dma = paddr;" before the call to
-> be_fill_queue().  But the first thing that the be_fill_queue() function
-> does is memset the whole struct to zero which overwrites the assignment.
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+> Tested-by: Douglas Gilbert <dgilbert@interlog.com>
 > 
-> Fixes: 38b2db564d9a ("scsi: be2iscsi: Fix a theoretical leak in beiscsi_create_eqs()")
-> Reported-by: Thomas Lamprecht <t.lamprecht@proxmox.com>
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Cc: dgilbert@interlog.com
+> Cc: linux-block@vger.kernel.org
+> ---
+>   drivers/scsi/scsi_debug.c | 130 ++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 130 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 24c0f7ec0351..4ced913f2b39 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -829,6 +829,7 @@ static int sdeb_zbc_max_open = DEF_ZBC_MAX_OPEN_ZONES;
+>   static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
+>   
+>   static int submit_queues = DEF_SUBMIT_QUEUES;  /* > 1 for multi-queue (mq) */
+> +static int poll_queues; /* iouring iopoll interface.*/
+>   static struct sdebug_queue *sdebug_q_arr;  /* ptr to array of submit queues */
+>   
+>   static DEFINE_RWLOCK(atomic_rw);
+> @@ -5432,6 +5433,14 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+>   	cmnd->host_scribble = (unsigned char *)sqcp;
+>   	sd_dp = sqcp->sd_dp;
+>   	spin_unlock_irqrestore(&sqp->qc_lock, iflags);
+> +
+> +	/* Do not complete IO from default completion path.
+> +	 * Let it to be on queue.
+> +	 * Completion should happen from mq_poll interface.
+> +	 */
+> +	if ((sqp - sdebug_q_arr) >= (submit_queues - poll_queues))
+> +		return 0;
+> +
+>   	if (!sd_dp) {
+>   		sd_dp = kzalloc(sizeof(*sd_dp), GFP_ATOMIC);
+>   		if (!sd_dp) {
+> @@ -5615,6 +5624,7 @@ module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
+>   module_param_named(statistics, sdebug_statistics, bool, S_IRUGO | S_IWUSR);
+>   module_param_named(strict, sdebug_strict, bool, S_IRUGO | S_IWUSR);
+>   module_param_named(submit_queues, submit_queues, int, S_IRUGO);
+> +module_param_named(poll_queues, poll_queues, int, S_IRUGO);
+>   module_param_named(tur_ms_to_ready, sdeb_tur_ms_to_ready, int, S_IRUGO);
+>   module_param_named(unmap_alignment, sdebug_unmap_alignment, int, S_IRUGO);
+>   module_param_named(unmap_granularity, sdebug_unmap_granularity, int, S_IRUGO);
+> @@ -5677,6 +5687,7 @@ MODULE_PARM_DESC(opt_xferlen_exp, "optimal transfer length granularity exponent
+>   MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
+>   MODULE_PARM_DESC(per_host_store, "If set, next positive add_host will get new store (def=0)");
+>   MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
+> +MODULE_PARM_DESC(poll_queues, "support for iouring iopoll queues (1 to max(submit_queues - 1)");
+>   MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+>   MODULE_PARM_DESC(random, "If set, uniformly randomize command duration between 0 and delay_in_ns");
+>   MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
+> @@ -7200,6 +7211,104 @@ static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+>   	return check_condition_result;
+>   }
+>   
+> +static int sdebug_map_queues(struct Scsi_Host *shost)
+> +{
+> +	int i, qoff;
+> +
+> +	if (shost->nr_hw_queues == 1)
+> +		return 0;
+> +
+> +	for (i = 0, qoff = 0; i < HCTX_MAX_TYPES; i++) {
+> +		struct blk_mq_queue_map *map = &shost->tag_set.map[i];
+> +
+> +		map->nr_queues  = 0;
+> +
+> +		if (i == HCTX_TYPE_DEFAULT)
+> +			map->nr_queues = submit_queues - poll_queues;
+> +		else if (i == HCTX_TYPE_POLL)
+> +			map->nr_queues = poll_queues;
+> +
+> +		if (!map->nr_queues) {
+> +			BUG_ON(i == HCTX_TYPE_DEFAULT);
+> +			continue;
+> +		}
+> +
+> +		map->queue_offset = qoff;
+> +		blk_mq_map_queues(map);
+> +
+> +		qoff += map->nr_queues;
+> +	}
+> +
+> +	return 0;
+> +
+> +}
+> +
+> +static int sdebug_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+> +{
+> +	int qc_idx;
+> +	int retiring = 0;
+> +	unsigned long iflags;
+> +	struct sdebug_queue *sqp;
+> +	struct sdebug_queued_cmd *sqcp;
+> +	struct scsi_cmnd *scp;
+> +	struct sdebug_dev_info *devip;
+> +	int num_entries = 0;
+> +
+> +	sqp = sdebug_q_arr + queue_num;
+> +
+> +	do {
+> +		spin_lock_irqsave(&sqp->qc_lock, iflags);
+> +		qc_idx = find_first_bit(sqp->in_use_bm, sdebug_max_queue);
+> +		if (unlikely((qc_idx < 0) || (qc_idx >= sdebug_max_queue)))
+> +			goto out;
 
-Can someone please add:
-	Cc: stable <stable@vger.kernel.org>
-to this so we know to pick it up quickly there?
+If you are rolling this patchset again, perhaps you could change the "if"
+above to:
+		if (likely(qc_idx >= sdebug_max_queue))
 
-thanks,
+since find_first_bit() returns unsigned long. Also, if we are polling,
+unless the storage is extremely fast, we should see find_first_bit()
+not finding any bits set most of the time. In that case it will return 
+sdebug_max_queue, so flag it as (more) likely. That should also indicate
+to someone reading the code that the "goto out" in this case is _not_
+an error path and may well be the fast path.
 
-greg k-h
+Doug Gilbert
