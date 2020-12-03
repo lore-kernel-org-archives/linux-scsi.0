@@ -2,144 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9D4C83016
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 08:22:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6687C63777
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 09:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EE1E21527
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 08:22:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F6BA20872
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 09:41:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388391AbgLCIWY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 03:22:24 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:59984 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388310AbgLCIWY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Dec 2020 03:22:24 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 2484041393;
-        Thu,  3 Dec 2020 08:21:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1606983701; x=1608798102; bh=Pa5q8sNdwcpWjsaEwJFBHcPa+a+xs4vWLBc
-        7977tF18=; b=AaJ7OP35fFLu6xtLQdzLNoQOwfNTQUtzLHAjbC1DCIOMNGeC9Qr
-        f0OUL12tCc3vJ2cX13RCbSP4BfRw4zrBuMZZuN6pAsxL4XuixNwPT24s+6HnlOSF
-        hhxj2ESa7AN1YX33to/qbsl2FMK2ExhNaJIwDarfEc99b0tkKXd8AsUw=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Z2l8Da-osMNy; Thu,  3 Dec 2020 11:21:41 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id F27C94136B;
-        Thu,  3 Dec 2020 11:21:40 +0300 (MSK)
-Received: from localhost (172.17.204.63) by T-EXCH-03.corp.yadro.com
- (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 3 Dec
- 2020 11:21:40 +0300
-From:   Anastasia Kovaleva <a.kovaleva@yadro.com>
-To:     <martin.petersen@oracle.com>
-CC:     <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux@yadro.com>, Anastasia Kovaleva <a.kovaleva@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [RESEND PATCH 3/3] scsi: target: core: Change ASCQ for residual write
-Date:   Thu, 3 Dec 2020 11:20:35 +0300
-Message-ID: <20201203082035.54566-4-a.kovaleva@yadro.com>
-X-Mailer: git-send-email 2.24.3 (Apple Git-128)
-In-Reply-To: <20201203082035.54566-1-a.kovaleva@yadro.com>
-References: <20201203082035.54566-1-a.kovaleva@yadro.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [172.17.204.63]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-03.corp.yadro.com (172.17.100.103)
+        id S2388639AbgLCJlP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 04:41:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51442 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387782AbgLCJlP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 04:41:15 -0500
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A34C7C061A4D;
+        Thu,  3 Dec 2020 01:40:34 -0800 (PST)
+Received: by mail-ej1-x643.google.com with SMTP id x16so2461983ejj.7;
+        Thu, 03 Dec 2020 01:40:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=VnJR4zvxLaYxaLIi7m7JIB9O5uK8FoHDelrZFzVzmI0=;
+        b=Eu54DIQUEZly4iruNoc5w4/RdW3QRPdwSP9inV/oTmJGr41KwLQXfr4MRUgaNV+4Me
+         nSAxINR9fWr/k+VtUtPeKbLbBmFIeFXD5I5qdBvSQGqNa9bJ1UaFvvLEMGkQJgjo2Q9a
+         uXVjhYpC8krcRlobmeyoMBK5r5i3Ep5z/ovF6qkoi8p62dpiKD6TCVuvBzi8jfl3vW7p
+         d1ImNLJf/Q/JZd5feVZ+jq+QVj8AMLqw+4Neqk/qI7qNLzleFfq1SKM9470MmvsX8+cx
+         Nrb+bnFHULTqfjsh8Mn0narznctkjjIspcDD+2OQic6inKsBmM1q3Kd5ofHx2yiXoSTY
+         5D/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=VnJR4zvxLaYxaLIi7m7JIB9O5uK8FoHDelrZFzVzmI0=;
+        b=NIlGxl6S+s+6teucROobbcqxdOvnzenab6k7rl3XYE/FL+e6bZE8i+1RL7Eo8OcEPm
+         DccOJ7z5qE6YvVn+Q9H3jHJJuO5PTI48ccJQVFdrBkZppPmd3jWTymiJIAERbcduv/fF
+         +YuN33nm0euFDxi0M1S1M8vZiS5WQhMZOZLepUSll77ydZxE8TqfQ0JYGwIKMIU20vUY
+         q8tdmNEeRuH97GkB/ozE2edQaoIJcUSL6y6W7EzgTO4KLkaPgEOK0VGiJtiVsrgnUZ9P
+         n+EFSr27ChHwmfnqK/XvV+3ZwsQgiEFOz7MPVEJyIkOlElPsQ8SBjJMmpdbSfiSzhx5K
+         qKpg==
+X-Gm-Message-State: AOAM531WmlbiS7PL3QdLkYpXcRd+7I1qZcHG2Q/uF09BhjJrBaWRmBRc
+        NA581lLbrXfEdrmHUvOHj/M=
+X-Google-Smtp-Source: ABdhPJwGJ9pPFbYF4BWoB553PT4T4LgJH8IHJmJUErAxvv8iBybvVyQNbVF4VCLrXzoCsYxN0GTVEQ==
+X-Received: by 2002:a17:906:add7:: with SMTP id lb23mr1831288ejb.352.1606988433419;
+        Thu, 03 Dec 2020 01:40:33 -0800 (PST)
+Received: from ubuntu-laptop ([2a01:598:b905:79de:6c3d:3b27:f281:55d5])
+        by smtp.googlemail.com with ESMTPSA id ci20sm427075ejc.26.2020.12.03.01.40.31
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 03 Dec 2020 01:40:32 -0800 (PST)
+Message-ID: <2dafb87ff450776c0406311bb7e235e9816f6ecf.camel@gmail.com>
+Subject: Re: [PATCH 2/3] scsi: ufs: Keep device power on only
+ fWriteBoosterBufferFlushDuringHibernate == 1
+From:   Bean Huo <huobean@gmail.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Thu, 03 Dec 2020 10:40:30 +0100
+In-Reply-To: <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20201130181143.5739-1-huobean@gmail.com>
+         <20201130181143.5739-3-huobean@gmail.com>
+         <BY5PR04MB6599826730BD3FB0E547E60587F30@BY5PR04MB6599.namprd04.prod.outlook.com>
+         <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-According to FCP-4 (9.4.2):
+On Thu, 2020-12-03 at 07:27 +0000, Avri Altman wrote:
+> > 
+> > From: Bean Huo <beanhuo@micron.com>
+> > 
+> > Keep device power mode as active power mode and VCC supply only if
+> > fWriteBoosterBufferFlushDuringHibernate setting 1 is successful.
 
-  If the command requested that data beyond the length specified by the
-  FCP_DL field be transferred, then the device server shall set the
-  FCP_RESID_OVER bit (see 9.5.8) to one in the FCP_RSP IU and:
+Hi Avri
+Thanks so much taking time reiew.
 
-  a) process the command normally except that data beyond the FCP_DL
-  count shall not be requested or transferred;
+> Why would it fail?
 
-  b) transfer no data and return CHECK CONDITION status with the sense
-  key set to ILLEGAL REQUEST and the additional sense code set to INVALID
-  FIELD IN COMMAND INFORMATION UNIT; or
+During the reliability testing in harsh environments, such as:
+EMS testing, in the high/low-temperature environment. The system would
+reboot itself, there will be programming failure very likely.
+If we assume failure will never hit, why we capture its result
+following with dev_err(). If you keep using your phone in a harsh
+environment, you will see this print message.
 
-  c) may transfer data and return CHECK CONDITION status with the sense
-  key set to ABORTED COMMAND and the additional sense code set to
-  INVALID FIELD IN COMMAND INFORMATION UNIT.
+Of course, in a normal environment, the chance of failure likes you to
+win a lottery, but the possibility still exists.
 
-TCM follows b) and transfers no data for residual writes but returns
-INVALID FIELD IN CDB instead of INVALID FIELD IN COMMAND INFORMATION
-UNIT.
+  
+> Since UFSHCD_CAP_WB_EN is toggled off on ufshcd_wb_probe If the
+> device doesn't support wb,
+> The check ufshcd_is_wb_allowed should suffice, isn't it?
+> 
 
-Change the ASCQ to INVALID FIELD IN COMMAND INFORMATION UNIT to meet the
-standart.
+No, UFSHCD_CAP_WB_EN only tells us if the platform supports WB,
+doesn't tell us fWriteBoosterBufferFlushDuringHibernate status.
 
-Signed-off-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
----
- drivers/target/target_core_transport.c | 8 +++++++-
- include/target/target_core_base.h      | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+Thanks,
+Bean
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index eb51298cab4f..94cee131f5b7 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1338,7 +1338,7 @@ target_cmd_size_check(struct se_cmd *cmd, unsigned int size)
- 			if (cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) {
- 				pr_err_ratelimited("Rejecting underflow/overflow"
- 						   " for WRITE data CDB\n");
--				return TCM_INVALID_CDB_FIELD;
-+				return TCM_INVALID_FIELD_IN_COMMAND_IU;
- 			}
- 			/*
- 			 * Some fabric drivers like iscsi-target still expect to
-@@ -1879,6 +1879,7 @@ void transport_generic_request_failure(struct se_cmd *cmd,
- 	case TCM_UNSUPPORTED_TARGET_DESC_TYPE_CODE:
- 	case TCM_TOO_MANY_SEGMENT_DESCS:
- 	case TCM_UNSUPPORTED_SEGMENT_DESC_TYPE_CODE:
-+	case TCM_INVALID_FIELD_IN_COMMAND_IU:
- 		break;
- 	case TCM_OUT_OF_RESOURCES:
- 		cmd->scsi_status = SAM_STAT_TASK_SET_FULL;
-@@ -3205,6 +3206,11 @@ static const struct sense_detail sense_detail_table[] = {
- 		.asc = 0x55,
- 		.ascq = 0x04, /* INSUFFICIENT REGISTRATION RESOURCES */
- 	},
-+	[TCM_INVALID_FIELD_IN_COMMAND_IU] = {
-+		.key = ILLEGAL_REQUEST,
-+		.asc = 0x0e,
-+		.ascq = 0x03, /* INVALID FIELD IN COMMAND INFORMATION UNIT */
-+	},
- };
- 
- /**
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 63dd12124139..54dcc0eb25fa 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -187,6 +187,7 @@ enum tcm_sense_reason_table {
- 	TCM_UNSUPPORTED_SEGMENT_DESC_TYPE_CODE	= R(0x1c),
- 	TCM_INSUFFICIENT_REGISTRATION_RESOURCES	= R(0x1d),
- 	TCM_LUN_BUSY				= R(0x1e),
-+	TCM_INVALID_FIELD_IN_COMMAND_IU         = R(0x1f),
- #undef R
- };
- 
--- 
-2.24.3 (Apple Git-128)
 
