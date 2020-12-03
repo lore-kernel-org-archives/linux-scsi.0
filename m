@@ -2,143 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DAB5C83012
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 12:21:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2603EC64E8A
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 12:32:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3E2522241
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 12:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF05C22245
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 12:32:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388652AbgLCMVn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 07:21:43 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:42258 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388034AbgLCMVm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 07:21:42 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3CFPi9126840;
-        Thu, 3 Dec 2020 12:18:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type : in-reply-to;
- s=corp-2020-01-29; bh=5kE4tnaIOoWss+wgn2FM156GixL1Gar5ddM0M3j3rvU=;
- b=dJjfz5qs2JVgWiSsqHNpQOmb5inr2oiLjB9OgiG2hl3bGpcfjcI9tIx8TO2VCI2IWTjB
- n2ZAVo+fvSIDIzfhMN0CZb9i9lHPRzelf6RGgCdD23aPptKspTkmAPUGf0YjQinI+Vuu
- emKaLfkIVfvwm/KYyaQk8Wslv3EsXA/70rdkCJyn/GuiV8bbw4wfboj5ATPG+gRgmpCP
- OcrEtNpHzUn0092A3F0skPcMQ8rHemLsAWlOsx9I8kI2muYaJ9hMBf05/4QHK3o6O4a1
- nko0kdJ4vGKOtfAM5zuxRuHCzvRwVRPFXHVWRVMM9ZZDq9MWoWfbAD4jpMX1TpDhGBCd Uw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 353c2b5nam-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 03 Dec 2020 12:18:37 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B3CGF4W002649;
-        Thu, 3 Dec 2020 12:18:37 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 3540f1rv3r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Dec 2020 12:18:37 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B3CIZ6C007548;
-        Thu, 3 Dec 2020 12:18:35 GMT
-Received: from mwanda (/102.36.221.92)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 04:18:34 -0800
-Date:   Thu, 3 Dec 2020 15:18:26 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Thomas Lamprecht <t.lamprecht@proxmox.com>
-Cc:     James.Bottomley@suse.de,
-        jayamohank@hdredirect-lb5-1afb6e2973825a56.elb.us-east-1.amazonaws.com,
-        jejb@linux.ibm.com, jitendra.bhivare@broadcom.com,
-        kernel-janitors@vger.kernel.org, ketan.mukadam@broadcom.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, subbu.seetharaman@broadcom.com,
-        stable@vger.kernel.org
-Subject: [PATCH] scsi: be2iscsi: revert "Fix a theoretical leak in
- beiscsi_create_eqs()"
-Message-ID: <X8jXkt6eThjyVP1v@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <54f36c62-10bf-8736-39ce-27ece097d9de@proxmox.com>
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
- suspectscore=0 bulkscore=0 spamscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012030076
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9823 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 lowpriorityscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012030076
+        id S2387700AbgLCMcY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 07:32:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50092 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726213AbgLCMcY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 07:32:24 -0500
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A65CC061A51;
+        Thu,  3 Dec 2020 04:31:44 -0800 (PST)
+Received: by mail-ed1-x541.google.com with SMTP id b2so1907456edm.3;
+        Thu, 03 Dec 2020 04:31:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=G7EMVCQFdO/l7+xXFqfNviq49dXz5V317P0jmeOaabc=;
+        b=H7ytE7HHdtRggQc+72AxsSmd1kZOtSSvRS6MJuSFSSmMiFbASHNy00x4wpAB8SQ9pG
+         oL4ttJdLKcWwRWEXu8pGz08keZ1cz//0wcUlmdDQGB1an6AUHMhZ0Jc0F6Z1tGCnEWeu
+         22c/ovfRNLLSNsR+hex8NffNI/O+kqtvrBK4Hth+rgjFJ+8hqn3yGRA3TcCp1BVkzqLp
+         vvWjrvgZder3og/LqMLnRRyrbXiGIRYtEQH936a/29lXq+5xn2h1BAwOqRrqrNybMi/X
+         Gj7lwenhLK8CrEMSQMpoK4REb5XHl/0RL4WnJCdqGZfnArrLGJLXsaNFjnrFNt21emEW
+         U0/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=G7EMVCQFdO/l7+xXFqfNviq49dXz5V317P0jmeOaabc=;
+        b=cQbwleKmcMnAL/+vkR/GRsvtTAi0Ib52MB0XWcyZzQN1luC0qIOXG5Sf+3mBBxsbVT
+         L+UWXoeI2TGtWIBwbuQ8uwmMl1LbAEoZ87AG4Nx8iHZOMLaVpraxg6DjSbjorvuC2qRj
+         UJU+VUCNxBgEPEBv7ZpFnh1tk+MpYXcDvvCX5aJSI2PEoncl2Q2xA42pV0y6ZvfCHBoK
+         D9AUZqZM1azaggdNNp4v+PKm1+crHg30WFFAOEBpV7EJDyn+5dSES8+JZ12VdgWLg/2y
+         N690JoqTUkcUQk8IFX3B9u3H98tqCHoUVCr0VPPnE5ZOTL3A5DP7++bl4cBADpsmXZi+
+         pq8A==
+X-Gm-Message-State: AOAM5318Q7ce7mBZAZ7Q3FST4bgDp8xB1toNXL4YsMI6BB3i3q41ubvV
+        RcRgNxB9MttJm28S69lOWoQ=
+X-Google-Smtp-Source: ABdhPJwOALp/xW4Bo9XnK7hnDAPuWILbFvpEfHsztYVMnOcAvD+OA5kELXPpzfyGIf3Y3rWgVKtz1A==
+X-Received: by 2002:a50:e688:: with SMTP id z8mr2658883edm.129.1606998702824;
+        Thu, 03 Dec 2020 04:31:42 -0800 (PST)
+Received: from ubuntu-laptop ([2a01:598:b905:79de:6c3d:3b27:f281:55d5])
+        by smtp.googlemail.com with ESMTPSA id e19sm1069738edr.61.2020.12.03.04.31.41
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 03 Dec 2020 04:31:42 -0800 (PST)
+Message-ID: <5b26c234d357512c0bffccf733d6ed8c5dd3a517.camel@gmail.com>
+Subject: Re: [PATCH 2/3] scsi: ufs: Keep device power on only
+ fWriteBoosterBufferFlushDuringHibernate == 1
+From:   Bean Huo <huobean@gmail.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Thu, 03 Dec 2020 13:31:40 +0100
+In-Reply-To: <DM6PR04MB65750B6EF8B374476E255FA7FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20201130181143.5739-1-huobean@gmail.com>
+         <20201130181143.5739-3-huobean@gmail.com>
+         <BY5PR04MB6599826730BD3FB0E547E60587F30@BY5PR04MB6599.namprd04.prod.outlook.com>
+         <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
+         <2dafb87ff450776c0406311bb7e235e9816f6ecf.camel@gmail.com>
+         <DM6PR04MB657551290696C7EBD8339328FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
+         <2578a5fa2323f46b29dc8808b948ed5eaea6fbca.camel@gmail.com>
+         <DM6PR04MB65750B6EF8B374476E255FA7FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-My patch caused kernel Oopses and delays in boot.  Revert it.
+On Thu, 2020-12-03 at 12:15 +0000, Avri Altman wrote:
+> > so, you agree the possiblity of failure  exists.
+> 
+> I was more relating to the lottery part.
+It doesn't matter. even the possibility of winning a lottery is very
+low, but still there is.
+> > 
+> > > Hence we need-not any extra logic protecting device management
+> > > command failures.
+> > 
+> > what extra logic?
+> > 
+> > > 
+> > > if reading the configuration pass correctly, and UFSHCD_CAP_WB_EN
+> > > is
+> > > set,
+> > 
+> > 
+> > UFSHCD_CAP_WB_EN set is DRAM level. still in the cache.
+> > 
+> > > one should expect that any other functionality would work.
+> > > 
+> > 
+> > No,  The programming will consume more power than reading, the
+> > later setting will more possbile fail than reading.
+> > 
+> > > Otherwise, any non-standard behavior should be added with a
+> > > quirk.
+> > > 
+> > 
+> > NO, this is not what is standard or non-standard. This is
+> > independent
+> > of UFS device/controller. It is a software design. IMO, we didn't
+> > deal
+> > with programming status that is a potential bug. If having to
+> > impose to
+> > a component, do you think should be controller or device? Instead
+> > of
+> > addin a quirk, I prefer dropping this patch.
+> 
+> It seems you are adding some special treatment in case some device
+> management command failed,
+> A vanishingly unlikely event but a one that has significant impact
+> over power consumption.
 
-The problem was that I moved the "mem->dma = paddr;" before the call to
-be_fill_queue().  But the first thing that the be_fill_queue() function
-does is memset the whole struct to zero which overwrites the assignment.
+again, there is nothing with device. Obviously, you didn't do system
+reliability testing in harsh environment. you don't believe this is WB
+driver bug. I will send my next version patch with a fix-tag. even It
+cannot merge. but I want to highlight it is a bug.
 
-Fixes: 38b2db564d9a ("scsi: be2iscsi: Fix a theoretical leak in beiscsi_create_eqs()")
-Reported-by: Thomas Lamprecht <t.lamprecht@proxmox.com>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-My original patch was basically a clean up patch and to try silence a
-static checker warning.  I've already updated the static checker to not
-warn about impossible leaks and in this case we know that be_fill_queue()
-cannot fail.
+Thanks,
+Bean
 
-I was tempted to delete the "mem->va = eq_vaddress;" assignment as a
-clean up but I didn't.  :P
-
- drivers/scsi/be2iscsi/be_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 50e464224d47..90fcddb76f46 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3020,7 +3020,6 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
- 			goto create_eq_error;
- 		}
- 
--		mem->dma = paddr;
- 		mem->va = eq_vaddress;
- 		ret = be_fill_queue(eq, phba->params.num_eq_entries,
- 				    sizeof(struct be_eq_entry), eq_vaddress);
-@@ -3030,6 +3029,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
- 			goto create_eq_error;
- 		}
- 
-+		mem->dma = paddr;
- 		ret = beiscsi_cmd_eq_create(&phba->ctrl, eq,
- 					    BEISCSI_EQ_DELAY_DEF);
- 		if (ret) {
-@@ -3086,7 +3086,6 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
- 			goto create_cq_error;
- 		}
- 
--		mem->dma = paddr;
- 		ret = be_fill_queue(cq, phba->params.num_cq_entries,
- 				    sizeof(struct sol_cqe), cq_vaddress);
- 		if (ret) {
-@@ -3096,6 +3095,7 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
- 			goto create_cq_error;
- 		}
- 
-+		mem->dma = paddr;
- 		ret = beiscsi_cmd_cq_create(&phba->ctrl, cq, eq, false,
- 					    false, 0);
- 		if (ret) {
--- 
-2.29.2
 
