@@ -2,293 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B3D0C8302B
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1FF8C83038
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EDD6221EB
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB11B22201
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 02:09:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387560AbgLCCJZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Dec 2020 21:09:25 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60358 "EHLO
+        id S1729380AbgLCCJB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Dec 2020 21:09:01 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45642 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729484AbgLCCJD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 21:09:03 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B322kkq095936;
-        Wed, 2 Dec 2020 21:08:18 -0500
+        by vger.kernel.org with ESMTP id S1727835AbgLCCJA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2020 21:09:00 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B326WgZ065377;
+        Wed, 2 Dec 2020 21:08:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=PrWHp6v1nGVxzxhSWuM+ug2bmLfl1sSykYOEHPe8fKw=;
- b=BwB6DiiYiOKtkhZk1Pg9bSDFDJi11piMmCYzQD8bB8VNUhOG2SC94qXikRJxh9wdVbe9
- X2xOQ31p6jMil3VQ6DfEzjXdCJZUFTJh+YMumoZ7EycXRcwsWDJUV8KlPjst3X6BHcUt
- bHvDOWPYVyV6AO/03FiqxW2WyExSa6OAsMQeYx8eHAdlowZtpbdISsuJNOyVdn7F+zq6
- AcgqGcBV4tmvbcetqIFEy4saRIwCq1BSwb/Ztwxoj9ev4plDc8/BhbRqiS7KqtFFpgcF
- ElPBhXfBYZr9EWcHlR0kXdQN4y/YbXeHLZP0nyn1MrJ0crOsbTN5XseWd1z8pFfc7jBO RA== 
-Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 356jfcxxfm-1
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=byTD4NKmU+qfCqX3DcTp3BJ5vLnURAwlR4Q01sTDRLI=;
+ b=GAufvn4ODxhCDr31bhpA7pHo6OIQTOySKP1kHvcYIfMYM4UX2HWMoCMCrQudvzTdDo+M
+ H+CcztkOHQZEOgfe13JnVeRGl4HTown53G1lLzbQ926aQ/c26t1I3OUyxk3B/1pTsKPD
+ jrY9e/obFMEXhoZ1iQ9ocmSQzm3MTRfPwChvJ7e+KwUM2vH8JgaXmoGuyI0OAZlvo6Ci
+ 0Ai7LT7Efpes6Iepr+bypHjXjc1vxn09yuUtGkNrRsQ/PEDj5olpM3jCm4qvN1fF2P6z
+ ghLPVajJmS2M54wOzv03w7nQy9z9HwGRtQ9xbtf9mAHZ1N3OHCS5NfyES+AoYuZx4d9P bw== 
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 356jg86ufu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 02 Dec 2020 21:08:18 -0500
-Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B327Xcd010551;
-        Thu, 3 Dec 2020 02:08:17 GMT
+        Wed, 02 Dec 2020 21:08:11 -0500
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B31uL3P013325;
+        Thu, 3 Dec 2020 02:08:10 GMT
 Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-        by ppma01dal.us.ibm.com with ESMTP id 355rf7pxah-1
+        by ppma01wdc.us.ibm.com with ESMTP id 355vrfvc75-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 03 Dec 2020 02:08:17 +0000
+        Thu, 03 Dec 2020 02:08:10 +0000
 Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B3288JO36438716
+        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B32821Q36110948
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 3 Dec 2020 02:08:09 GMT
+        Thu, 3 Dec 2020 02:08:02 GMT
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 83C2178064;
-        Thu,  3 Dec 2020 02:08:15 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 5D39C78063;
+        Thu,  3 Dec 2020 02:08:09 +0000 (GMT)
 Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EC4C978060;
-        Thu,  3 Dec 2020 02:08:14 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id D13E078060;
+        Thu,  3 Dec 2020 02:08:08 +0000 (GMT)
 Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
         by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu,  3 Dec 2020 02:08:14 +0000 (GMT)
+        Thu,  3 Dec 2020 02:08:08 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     james.bottomley@hansenpartnership.com
 Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH v3 09/18] ibmvfc: implement channel enquiry and setup commands
-Date:   Wed,  2 Dec 2020 20:07:57 -0600
-Message-Id: <20201203020806.14747-10-tyreld@linux.ibm.com>
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v3 00/18] ibmvfc: initial MQ development
+Date:   Wed,  2 Dec 2020 20:07:48 -0600
+Message-Id: <20201203020806.14747-1-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201203020806.14747-1-tyreld@linux.ibm.com>
-References: <20201203020806.14747-1-tyreld@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
  definitions=2020-12-02_14:2020-11-30,2020-12-02 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- phishscore=0 priorityscore=1501 bulkscore=0 impostorscore=0 suspectscore=4
- mlxlogscore=999 spamscore=0 malwarescore=0 mlxscore=0 clxscore=1015
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ spamscore=0 clxscore=1015 mlxlogscore=999 lowpriorityscore=0
+ malwarescore=0 bulkscore=0 priorityscore=1501 impostorscore=0 phishscore=0
+ suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012030009
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-New NPIV_ENQUIRY_CHANNEL and NPIV_SETUP_CHANNEL management datagrams
-(MADs) were defined in a previous patchset. If the client advertises a
-desire to use channels and the partner VIOS is channel capable then the
-client must proceed with channel enquiry to determine the maximum number
-of channels the VIOS is capable of providing, and registering SubCRQs
-via channel setup with the VIOS immediately following NPIV Login. This
-handshaking should not be performed for subsequent NPIV Logins unless
-the CRQ connection has been reset.
+Recent updates in pHyp Firmware and VIOS releases provide new infrastructure
+towards enabling Subordinate Command Response Queues (Sub-CRQs) such that each
+Sub-CRQ is a channel backed by an actual hardware queue in the FC stack on the
+partner VIOS. Sub-CRQs are registered with the firmware via hypercalls and then
+negotiated with the VIOS via new Management Datagrams (MADs) for channel setup.
 
-Implement these two new MADs and issue them following a successful NPIV
-login where the VIOS has set the SUPPORT_CHANNELS capability bit in the
-NPIV Login response.
+This initial implementation adds the necessary Sub-CRQ framework and implements
+the new MADs for negotiating and assigning a set of Sub-CRQs to associated VIOS
+HW backed channels. The event pool and locking still leverages the legacy single
+queue implementation, and as such lock contention is problematic when increasing
+the number of queues. However, this initial work demonstrates a 1.2x factor
+increase in IOPs when configured with two HW queues despite lock contention.
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.c | 135 ++++++++++++++++++++++++++++++++-
- drivers/scsi/ibmvscsi/ibmvfc.h |   3 +
- 2 files changed, 136 insertions(+), 2 deletions(-)
+changes in v2:
+* Patch 4: changed firmware support logging to dev_warn_once
+* Patch 6: adjusted locking
+* Patch 15: dropped logging verbosity, moved cancel event tracking into subqueue
+* Patch 17: removed write permission for migration module parameters
+	    drive hard reset after update to num of scsi channels
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 6b299df786fc..d584a4ce0682 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -806,6 +806,8 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	vhost->state = IBMVFC_NO_CRQ;
- 	vhost->logged_in = 0;
-+	vhost->do_enquiry = 1;
-+	vhost->using_channels = 0;
- 
- 	/* Clean out the queue */
- 	memset(crq->msgs, 0, PAGE_SIZE);
-@@ -4476,6 +4478,118 @@ static void ibmvfc_discover_targets(struct ibmvfc_host *vhost)
- 		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
- }
- 
-+static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
-+{
-+	struct ibmvfc_host *vhost = evt->vhost;
-+	u32 mad_status = be16_to_cpu(evt->xfer_iu->channel_setup.common.status);
-+	int level = IBMVFC_DEFAULT_LOG_LEVEL;
-+
-+	ibmvfc_free_event(evt);
-+
-+	switch (mad_status) {
-+	case IBMVFC_MAD_SUCCESS:
-+		ibmvfc_dbg(vhost, "Channel Setup succeded\n");
-+		vhost->do_enquiry = 0;
-+		break;
-+	case IBMVFC_MAD_FAILED:
-+		level += ibmvfc_retry_host_init(vhost);
-+		ibmvfc_log(vhost, level, "Channel Setup failed\n");
-+		fallthrough;
-+	case IBMVFC_MAD_DRIVER_FAILED:
-+		return;
-+	default:
-+		dev_err(vhost->dev, "Invalid Channel Setup response: 0x%x\n",
-+			mad_status);
-+		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-+		return;
-+	}
-+
-+	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
-+	wake_up(&vhost->work_wait_q);
-+}
-+
-+static void ibmvfc_channel_setup(struct ibmvfc_host *vhost)
-+{
-+	struct ibmvfc_channel_setup_mad *mad;
-+	struct ibmvfc_channel_setup *setup_buf = vhost->channel_setup_buf;
-+	struct ibmvfc_event *evt = ibmvfc_get_event(vhost);
-+
-+	memset(setup_buf, 0, sizeof(*setup_buf));
-+	setup_buf->flags = cpu_to_be32(IBMVFC_CANCEL_CHANNELS);
-+
-+	ibmvfc_init_event(evt, ibmvfc_channel_setup_done, IBMVFC_MAD_FORMAT);
-+	mad = &evt->iu.channel_setup;
-+	memset(mad, 0, sizeof(*mad));
-+	mad->common.version = cpu_to_be32(1);
-+	mad->common.opcode = cpu_to_be32(IBMVFC_CHANNEL_SETUP);
-+	mad->common.length = cpu_to_be16(sizeof(*mad));
-+	mad->buffer.va = cpu_to_be64(vhost->channel_setup_dma);
-+	mad->buffer.len = cpu_to_be32(sizeof(*vhost->channel_setup_buf));
-+
-+	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_INIT_WAIT);
-+
-+	if (!ibmvfc_send_event(evt, vhost, default_timeout))
-+		ibmvfc_dbg(vhost, "Sent channel setup\n");
-+	else
-+		ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
-+}
-+
-+static void ibmvfc_channel_enquiry_done(struct ibmvfc_event *evt)
-+{
-+	struct ibmvfc_host *vhost = evt->vhost;
-+	struct ibmvfc_channel_enquiry *rsp = &evt->xfer_iu->channel_enquiry;
-+	u32 mad_status = be16_to_cpu(rsp->common.status);
-+	int level = IBMVFC_DEFAULT_LOG_LEVEL;
-+
-+	switch (mad_status) {
-+	case IBMVFC_MAD_SUCCESS:
-+		ibmvfc_dbg(vhost, "Channel Enquiry succeeded\n");
-+		vhost->max_vios_scsi_channels = be32_to_cpu(rsp->num_scsi_subq_channels);
-+		ibmvfc_free_event(evt);
-+		break;
-+	case IBMVFC_MAD_FAILED:
-+		level += ibmvfc_retry_host_init(vhost);
-+		ibmvfc_log(vhost, level, "Channel Enquiry failed\n");
-+		fallthrough;
-+	case IBMVFC_MAD_DRIVER_FAILED:
-+		ibmvfc_free_event(evt);
-+		return;
-+	default:
-+		dev_err(vhost->dev, "Invalid Channel Enquiry response: 0x%x\n",
-+			mad_status);
-+		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-+		ibmvfc_free_event(evt);
-+		return;
-+	}
-+
-+	ibmvfc_channel_setup(vhost);
-+}
-+
-+static void ibmvfc_channel_enquiry(struct ibmvfc_host *vhost)
-+{
-+	struct ibmvfc_channel_enquiry *mad;
-+	struct ibmvfc_event *evt = ibmvfc_get_event(vhost);
-+
-+	ibmvfc_init_event(evt, ibmvfc_channel_enquiry_done, IBMVFC_MAD_FORMAT);
-+	mad = &evt->iu.channel_enquiry;
-+	memset(mad, 0, sizeof(*mad));
-+	mad->common.version = cpu_to_be32(1);
-+	mad->common.opcode = cpu_to_be32(IBMVFC_CHANNEL_ENQUIRY);
-+	mad->common.length = cpu_to_be16(sizeof(*mad));
-+
-+	if (IBMVFC_MIG_NO_SUB_TO_CRQ)
-+		mad->flags |= cpu_to_be32(IBMVFC_NO_CHANNELS_TO_CRQ_SUPPORT);
-+	if (IBMVFC_MIG_NO_N_TO_M)
-+		mad->flags |= cpu_to_be32(IBMVFC_NO_N_TO_M_CHANNELS_SUPPORT);
-+
-+	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_INIT_WAIT);
-+
-+	if (!ibmvfc_send_event(evt, vhost, default_timeout))
-+		ibmvfc_dbg(vhost, "Send channel enquiry\n");
-+	else
-+		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-+}
-+
- /**
-  * ibmvfc_npiv_login_done - Completion handler for NPIV Login
-  * @evt:	ibmvfc event struct
-@@ -4557,8 +4671,14 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
- 
- 	vhost->host->can_queue = be32_to_cpu(rsp->max_cmds) - IBMVFC_NUM_INTERNAL_REQ;
- 	vhost->host->max_sectors = npiv_max_sectors;
--	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
--	wake_up(&vhost->work_wait_q);
-+
-+	if (ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPORT_CHANNELS) && vhost->do_enquiry) {
-+		ibmvfc_channel_enquiry(vhost);
-+	} else {
-+		vhost->do_enquiry = 0;
-+		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
-+		wake_up(&vhost->work_wait_q);
-+	}
- }
- 
- /**
-@@ -5331,9 +5451,20 @@ static int ibmvfc_alloc_mem(struct ibmvfc_host *vhost)
- 		goto free_trace;
- 	}
- 
-+	vhost->channel_setup_buf = dma_alloc_coherent(dev, sizeof(*vhost->channel_setup_buf),
-+						      &vhost->channel_setup_dma,
-+						      GFP_KERNEL);
-+
-+	if (!vhost->channel_setup_buf) {
-+		dev_err(dev, "Couldn't allocate Channel Setup buffer\n");
-+		goto free_tgt_pool;
-+	}
-+
- 	LEAVE;
- 	return 0;
- 
-+free_tgt_pool:
-+	mempool_destroy(vhost->tgt_pool);
- free_trace:
- 	kfree(vhost->trace);
- free_disc_buffer:
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index 986ce4530382..dff26dbd912c 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -842,10 +842,13 @@ struct ibmvfc_host {
- 	struct ibmvfc_npiv_login login_info;
- 	union ibmvfc_npiv_login_data *login_buf;
- 	dma_addr_t login_buf_dma;
-+	struct ibmvfc_channel_setup *channel_setup_buf;
-+	dma_addr_t channel_setup_dma;
- 	int disc_buf_sz;
- 	int log_level;
- 	struct ibmvfc_discover_targets_entry *disc_buf;
- 	struct mutex passthru_mutex;
-+	int max_vios_scsi_channels;
- 	int task_set;
- 	int init_retries;
- 	int discovery_threads;
+changes in v2:
+* Patch 4: NULL'd scsi_scrq reference after deallocation
+* Patch 6: Added switch case to handle XPORT event
+* Patch 9: fixed ibmvfc_event leak and double free
+* added support for cancel command with MQ
+* added parameter toggles for MQ settings
+
+Tyrel Datwyler (18):
+  ibmvfc: add vhost fields and defaults for MQ enablement
+  ibmvfc: define hcall wrapper for registering a Sub-CRQ
+  ibmvfc: add Subordinate CRQ definitions
+  ibmvfc: add alloc/dealloc routines for SCSI Sub-CRQ Channels
+  ibmvfc: add Sub-CRQ IRQ enable/disable routine
+  ibmvfc: add handlers to drain and complete Sub-CRQ responses
+  ibmvfc: define Sub-CRQ interrupt handler routine
+  ibmvfc: map/request irq and register Sub-CRQ interrupt handler
+  ibmvfc: implement channel enquiry and setup commands
+  ibmvfc: advertise client support for using hardware channels
+  ibmvfc: set and track hw queue in ibmvfc_event struct
+  ibmvfc: send commands down HW Sub-CRQ when channelized
+  ibmvfc: register Sub-CRQ handles with VIOS during channel setup
+  ibmvfc: add cancel mad initialization helper
+  ibmvfc: send Cancel MAD down each hw scsi channel
+  ibmvfc: enable MQ and set reasonable defaults
+  ibmvfc: provide modules parameters for MQ settings
+  ibmvfc: drop host lock when completing commands in CRQ
+
+ drivers/scsi/ibmvscsi/ibmvfc.c | 721 +++++++++++++++++++++++++++++----
+ drivers/scsi/ibmvscsi/ibmvfc.h |  79 +++-
+ 2 files changed, 711 insertions(+), 89 deletions(-)
+
 -- 
 2.27.0
 
