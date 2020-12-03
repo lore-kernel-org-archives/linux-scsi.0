@@ -2,153 +2,203 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A3B5C63777
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D877FC71155
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B591820B80
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:28:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 443C921741
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:29:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388206AbgLCH2j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 02:28:39 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:39916 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388202AbgLCH2i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 02:28:38 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1606980517; x=1638516517;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=xns4Y9pHSsoPS1zlMGhe8Kd07vxUDPf2MdOfyN/HrVQ=;
-  b=OD4PZqzdUPIjUmho3LKGbiUWVQ4h/gCPGM4Oy+JYm5a3pHhX4MKdvNlq
-   4Ib+vaQvcq8lr7zuQ4DNJ/Rrptuh98Rv6ur6FLeSH7zhoMh7jdhJMW2gp
-   qMWf+jPdh3usKS+H5/yWlqIfmVku21aRvsnAM+0mAOS+atangALLYA0/k
-   sxtbHGOM7ZcPmQqg/kuWqPJRFAiDkFG/mbkHFJvx6kfVHlF09RC6oiskN
-   pMPYkfS7e7OlW1lqs0ldqkiwz/4QnL261ktP1nHsgo9I3EtkLEjX4bFRc
-   A5G9CCZyxlQ6QTE5lnJCGH3Nhg5h7xUky9en2i3mcdNID/v9mMxqxm4eI
-   g==;
-IronPort-SDR: lzEJgRdXxaU4aFViYLSgbqSfRMyi/DcqpbB5vSreNJrnALSmHPGw1+bHCTCojsmFuptdOKEzNL
- g5wL6xxuY488Qbt+2QXNE33HR50C0H05WGg98x7EpCkrH/QLFHjT+KvDJAlPOmksJe8DG5/+t+
- ujMfLEs44cdbTi+otexMhtjd/Dm1p8Yicm5oEo2ANgvAcQuaKq50MKMOeWdx1tebI81cCXt6vy
- nB4l9D6OTcm6we08YSCQXw10tXWv0W5VfyJrow/lONd5xe5mBO+pzannZtMgRkFDaTHaP4pTGE
- KlA=
-X-IronPort-AV: E=Sophos;i="5.78,388,1599494400"; 
-   d="scan'208";a="154181850"
-Received: from mail-bn8nam12lp2173.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.173])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Dec 2020 15:27:29 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ipkiK5xKwePG3IErYNGla0ywYP7dDYa9f1mcyFStHU98iQPw7ymT8cAZZB55wOTHUrFYYtJn8AtkGrgB1wc3iBsnJPg2RtdsrA/9g5Ob2swptNJ6sOUb6rcmqnCXVUCv8sOBXixHJHhPq30sbUEBKoDjY0MyBapxcsBvj/JVJmPuLZD9KHYtd8BGuYB4OEyeUg5/eiCFNJJQBzLAuSQyIYfuDD6YyytKco/fqviBWEeIyuMhCaqaBWUEujjYi5UzMpKBs6WwwJG1XnhpgPU4wOvm1bodLkKHzB8Ge3QFoo1mdbicPoOQay9maRMOEZ3T6WChqW7Zuq5KCGprzIJPkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xns4Y9pHSsoPS1zlMGhe8Kd07vxUDPf2MdOfyN/HrVQ=;
- b=ob6YxjizqkrdlVwA90zM8CqnSSNVUgJk2VorAyWxPlVcQ5kJgGINvfan4qKbbJiB98yS7WDJv4Qq5ln0sEu9aNnjw1gf79ASCuP0E4IVUxsRiwZFJtDJloHBFy3Xgz4j7x5Xy+xtw9K/yvgiY86p3i4wK66b4eF3yPiVXQ16v6oyGTnuGAlaY65EjU0dHbDJdI8OLVXfzkjm6Uv285K2KGBvoPplMJd+uY4I7dUng+joCPjG54MbbfYq2VOeScD3iQDMU3+BNJM8W2OG+y7Mo8zSNUxXZgcDmHfqt6MVoRZiPmXIyc6MeZxGUp+dA+mge6zJlpAsrEUQKz/3uAohEQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xns4Y9pHSsoPS1zlMGhe8Kd07vxUDPf2MdOfyN/HrVQ=;
- b=kuIONMoBukAKIAL1hp4o+OJL2lGuz4927uWECdcmnCPRt8KbxkGXedYS6GQogRoM6EhOBc2Q62wA20RU19tu7GWFGa8gdFwdbv+z+kBOvYdIsv86OCAS9SCnWsx9uXXSTnjByZXRG98DiyIvSxlQB7cSe7O3i3sDvQ4Cecug7us=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB4025.namprd04.prod.outlook.com (2603:10b6:5:b0::20) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3589.21; Thu, 3 Dec 2020 07:27:28 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6%8]) with mapi id 15.20.3632.019; Thu, 3 Dec 2020
- 07:27:28 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/3] scsi: ufs: Keep device power on only
- fWriteBoosterBufferFlushDuringHibernate == 1
-Thread-Topic: [PATCH 2/3] scsi: ufs: Keep device power on only
- fWriteBoosterBufferFlushDuringHibernate == 1
-Thread-Index: AQHWx0S43WodiAJh60uyT+kBS7g50qnkYW5wgACaOBA=
-Date:   Thu, 3 Dec 2020 07:27:28 +0000
-Message-ID: <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20201130181143.5739-1-huobean@gmail.com>
- <20201130181143.5739-3-huobean@gmail.com>
- <BY5PR04MB6599826730BD3FB0E547E60587F30@BY5PR04MB6599.namprd04.prod.outlook.com>
-In-Reply-To: <BY5PR04MB6599826730BD3FB0E547E60587F30@BY5PR04MB6599.namprd04.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: ca50db9a-901a-432d-8981-08d8975ce3af
-x-ms-traffictypediagnostic: DM6PR04MB4025:
-x-microsoft-antispam-prvs: <DM6PR04MB402551A979D2C0D582F17BFFFCF20@DM6PR04MB4025.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:2803;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: xWgpa9mT6qTJnX3mYjyk1RGGNzUKV94vb7H268F+AvhCuPylJZGP1sdCXFjZcLgmTtw6TDl0o5UByNu5wucGgc+K+qWy1NK+1R3X/yYtemM0vWuQtLPRxuFVpP0+FTEcAwHJ4CDlai5Cn4S8UjddEqPgMJNpl9nqx0qQUwXhTDoHlCaQrxSJ6xpEbegRGEJ8J4UX1pwTsSJ/KW+Wlv2N/eiiNv947asnWUFn91v54t3XAhTKZ68fHa8LXYH0IAEHLQXPeL8Rqma/4meMlQ20QAt0EG5BIKhqxJi8ce6Y9ovBwhTpVI45DbepoITIiVZlBPKMGKzOjNy9Uh9CIDUopEVGAPsACJG+3J7adxoZWvMABmg1dUcfrDk3ha8jhQZRl56aazFMXc8Y2fQqPzsfzQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(376002)(396003)(346002)(136003)(366004)(66946007)(66556008)(54906003)(66476007)(55016002)(76116006)(9686003)(2906002)(316002)(71200400001)(86362001)(8676002)(110136005)(4326008)(8936002)(33656002)(5660300002)(64756008)(186003)(66446008)(7696005)(26005)(7416002)(52536014)(4744005)(6506007)(478600001)(145543001)(213903007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?HFa5gNuAlW0w36gWWTwq+ie7Dh1CwGJYLUZL+bH+MAYZodRmkEJ6IHVtXeGb?=
- =?us-ascii?Q?qEHHKevSCszkrtaaoJAB5L3X0wXnRY3fUcghrG+9yUOVKuiO+mU0V09qhwgb?=
- =?us-ascii?Q?sNHtwXgjTGswmo/0kgBzN+DRbEQsRubN2Lbo0GpApT/rDCCeqn9EelNY5i1J?=
- =?us-ascii?Q?/Z9Lt6y7Z06sepHrmKQD/nOP8aBaP05MU6E1hZUneg0lMZMiPyDTlxrqIB0S?=
- =?us-ascii?Q?6npweYVnPAYtzpSItCqxZiWQDhpqIVBiQ5B431iuHe9fXXfZQz71A5p6VFrs?=
- =?us-ascii?Q?c1dTzGzByxbYUUua4uTjxEQc8vAyB6SyzqFa8ucrXUcYcNkuQkZ5erzeymEY?=
- =?us-ascii?Q?72JqIYJUKyzwe02p5QZanX6UFNvARSjy6poiBbAiiw8TSGAj5QsGgR3DtVTe?=
- =?us-ascii?Q?HIGda+IkVQPCS6XLmXt/LV0sgqUO4BLqzWWrurNXA0NHXXy0WKumlKmImawo?=
- =?us-ascii?Q?qTbIBnCSDF1pC0a532FdTo8Vt7uWvZYtWVJGOpaU1D0/5jqUbNcXauX0Asvs?=
- =?us-ascii?Q?A9ZV17NKxKo3vOlOYNWQexGAtbOKiYEwF315RWgPlMiudOS6TBBpgSb8ZtkU?=
- =?us-ascii?Q?CUSHrxfdqCrg7fxLztq/DQNU9vZYzun0H5OYf+D3fkDreI+RVhyXCEQhpMEt?=
- =?us-ascii?Q?Mm3g/OgwxuQWqUCegvmqROU3cnJQ1I01TxLWCl3KWnivCbRzWy2pjnLVsBXT?=
- =?us-ascii?Q?vWfsQvvZdsEwW+Xr9wE8Sx6ixKQCVFUZILukcB58opsp1WgBS7BpTuoHmiqk?=
- =?us-ascii?Q?Q4t6JyI8GS8UwbwriPXYiFLZb9/ZSvT2CAHaZ39ezwe/1KDyNCa0U0MT+ZoN?=
- =?us-ascii?Q?tgauwXHB5Zy/jw85rVoLrsw6Zb1b+UX4frO4OR3YknNr0WX92i9HnwrKJQCM?=
- =?us-ascii?Q?DuYTd79FdeJ2VN+8kKo9EEb/z8hvETkCrVY75ifdTpdxZVYRxSJfRg88rw9Q?=
- =?us-ascii?Q?isJSTyrhDaoB8mI8G0iFMwV5GoZip1D30oQXZMYHHCU=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S2388169AbgLCH32 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 02:29:28 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60435 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388140AbgLCH31 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 02:29:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606980480;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=r1k4wx0RVXIRwAtoYOZLIrYpm5gPE+9hi+XUm0sx93I=;
+        b=G8GUc54ZxazTBdF5eVPLYVldtPpgoaWj2Nn6M/u2KtdguFCJEz62iaWm1q3ujLPW6YZ1vN
+        PDrF174UtzLDsUkyxdRIQKyXabC9GY7YSHXndZvW7KnyyyIHp2cjF6jgfh2OrfSOGP1StO
+        +ARTSIWQ5EMD3RSTZJ+8mpAAdxqzHjc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-266-uHFmrJhsO8Oz1uKrVuIbbQ-1; Thu, 03 Dec 2020 02:27:56 -0500
+X-MC-Unique: uHFmrJhsO8Oz1uKrVuIbbQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B82B51009456;
+        Thu,  3 Dec 2020 07:27:54 +0000 (UTC)
+Received: from T590 (ovpn-13-173.pek2.redhat.com [10.72.13.173])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 60B0D60BF1;
+        Thu,  3 Dec 2020 07:27:46 +0000 (UTC)
+Date:   Thu, 3 Dec 2020 15:27:38 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v4 5/9] scsi: Do not wait for a request in
+ scsi_eh_lock_door()
+Message-ID: <20201203072738.GB633702@T590>
+References: <20201130024615.29171-1-bvanassche@acm.org>
+ <20201130024615.29171-6-bvanassche@acm.org>
+ <bdadfbcd-76c4-4658-0b36-b7666fa1dc7b@suse.de>
+ <6e5fbc73-881e-69c7-54ce-381b8b695b3c@acm.org>
+ <b56cf3af-940f-62ed-2a79-eb80599e2f44@suse.de>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ca50db9a-901a-432d-8981-08d8975ce3af
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Dec 2020 07:27:28.5075
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: fLvHSglSlBUf3TUlc5XiPzJNY8a4elRp0TaoDQ/6I1ruxNxvzBMZ2Hi3AQufBZhpSWAnNI7RpItEKjc5gI0Cpw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4025
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <b56cf3af-940f-62ed-2a79-eb80599e2f44@suse.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> From: Bean Huo <beanhuo@micron.com>
->=20
-> Keep device power mode as active power mode and VCC supply only if
-> fWriteBoosterBufferFlushDuringHibernate setting 1 is successful.
-Why would it fail?
-Since UFSHCD_CAP_WB_EN is toggled off on ufshcd_wb_probe If the device does=
-n't support wb,
-The check ufshcd_is_wb_allowed should suffice, isn't it?
+On Thu, Dec 03, 2020 at 08:18:57AM +0100, Hannes Reinecke wrote:
+> On 12/3/20 6:10 AM, Bart Van Assche wrote:
+> > On 12/1/20 11:06 PM, Hannes Reinecke wrote:
+> > > On 11/30/20 3:46 AM, Bart Van Assche wrote:
+> > > > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > > > index d94449188270..6de6e1bf3dcb 100644
+> > > > --- a/drivers/scsi/scsi_error.c
+> > > > +++ b/drivers/scsi/scsi_error.c
+> > > > @@ -1993,7 +1993,12 @@ static void scsi_eh_lock_door(struct
+> > > > scsi_device *sdev)
+> > > >        struct request *req;
+> > > >        struct scsi_request *rq;
+> > > >    -    req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN, 0);
+> > > > +    /*
+> > > > +     * It is not guaranteed that a request is available nor that
+> > > > +     * sdev->request_queue is unfrozen. Hence the BLK_MQ_REQ_NOWAIT
+> > > > below.
+> > > > +     */
+> > > > +    req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN,
+> > > > +                  BLK_MQ_REQ_NOWAIT);
+> > > >        if (IS_ERR(req))
+> > > >            return;
+> > > >        rq = scsi_req(req);
+> > > > 
+> > > 
+> > > Well ... had been thinking about that one, too.
+> > > The idea of this function is that prior to SCSI EH the device was locked
+> > > via scsi_set_medium_removal(). And during SCSI EH the device might have
+> > > become unlocked, so we need to lock it again.
+> > > However, scsi_set_medium_removal() not only issues the
+> > > PREVENT_ALLOW_MEDIUM_REMOVAL command, but also sets the 'locked' flag
+> > > based on the result.
+> > > So if we fail to get a request here, shouldn't we unset the 'locked'
+> > > flag, too?
+> > 
+> > Probably not. My interpretation of the 'locked' flag is that it
+> > represents the door state before error handling began. The following
+> > code in the SCSI error handler restores the door state after a bus reset:
+> > 
+> > 	if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
+> > 		scsi_eh_lock_door(sdev);
+> > 		sdev->was_reset = 0;
+> > 	}
+> > 
+> > > And what does happen if we fail here? There is no return value, hence
+> > > SCSI EH might run to completion, and the system will continue
+> > > with an unlocked door ...
+> > > Not sure if that's a good idea.
+> > 
+> > How about applying the following patch on top of patch 5/9?
+> > 
+> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > index 6de6e1bf3dcb..feac7262e40e 100644
+> > --- a/drivers/scsi/scsi_error.c
+> > +++ b/drivers/scsi/scsi_error.c
+> > @@ -1988,7 +1988,7 @@ static void eh_lock_door_done(struct request *req, blk_status_t status)
+> >    * 	We queue up an asynchronous "ALLOW MEDIUM REMOVAL" request on the
+> >    * 	head of the devices request queue, and continue.
+> >    */
+> > -static void scsi_eh_lock_door(struct scsi_device *sdev)
+> > +static int scsi_eh_lock_door(struct scsi_device *sdev)
+> >   {
+> >   	struct request *req;
+> >   	struct scsi_request *rq;
+> > @@ -2000,7 +2000,7 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
+> >   	req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN,
+> >   			      BLK_MQ_REQ_NOWAIT);
+> >   	if (IS_ERR(req))
+> > -		return;
+> > +		return PTR_ERR(req);
+> >   	rq = scsi_req(req);
+> > 
+> >   	rq->cmd[0] = ALLOW_MEDIUM_REMOVAL;
+> > @@ -2016,6 +2016,7 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
+> >   	rq->retries = 5;
+> > 
+> >   	blk_execute_rq_nowait(req->q, NULL, req, 1, eh_lock_door_done);
+> > +	return 0;
+> >   }
+> > 
+> >   /**
+> > @@ -2037,8 +2038,8 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
+> >   	 * is no point trying to lock the door of an off-line device.
+> >   	 */
+> >   	shost_for_each_device(sdev, shost) {
+> > -		if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
+> > -			scsi_eh_lock_door(sdev);
+> > +		if (scsi_device_online(sdev) && sdev->was_reset &&
+> > +		    sdev->locked && scsi_eh_lock_door(sdev) == 0) {
+> >   			sdev->was_reset = 0;
+> >   		}
+> >   	}
+> > 
+> I probably didn't make myself clear.
+> As per SBC (in this case, sbc3r36) the effects of
+> PREVENT_ALLOW_MEDIUM_REMOVAL are being reset by a successfull LUN Reset,
+> Hard Reset, Power/On Reset, or an I_T Nexus loss. Which incidentally maps
+> nicely onto SCSI EH, so after a successful SCSI EH the door will be unlocked
+> (which is why we need to call scsi_eh_lock_door()).
+> In the SCSI midlayer this state is being reflected by the 'locked' flag.
+> Now, if scsi_eh_lock_door() is _not_ being executed due to a
+> blk_get_request() failure, the device remains unlocked, and as such the
+> 'locked' flag would need to be _unset_.
+> 
+> So I was thinking more along these lines:
+> 
+> @@ -2030,7 +2037,8 @@ static void scsi_restart_operations(struct Scsi_Host
+> *shost)
+>          */
+>         shost_for_each_device(sdev, shost) {
+>                 if (scsi_device_online(sdev) && sdev->was_reset &&
+> sdev->locked) {
+> -                       scsi_eh_lock_door(sdev);
+> +                       if (scsi_eh_lock_door(sdev) < 0)
+> +                               sdev->locked = 0;
+
+BTW, scsi_eh_lock_door() returns void, and it can't be sync because
+there may not be any driver tag available. Even though it is available,
+the host state isn't running yet, so the command can't be queued to LLD
+yet.
+
+Maybe the above lines should be put after host state is updated to
+RUNNING.
+
+Also changing to NOWAIT can't avoid the issue completely, what if 'none'
+is used?
+
 
 Thanks,
-Avri
+Ming
+
