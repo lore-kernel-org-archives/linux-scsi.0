@@ -2,181 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75524C63777
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E77C71156
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:25:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F86E20BED
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:19:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ADB520B80
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Dec 2020 07:25:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388075AbgLCHTl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Dec 2020 02:19:41 -0500
-Received: from mx2.suse.de ([195.135.220.15]:34740 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728612AbgLCHTk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Dec 2020 02:19:40 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 7A7C6ABCE;
-        Thu,  3 Dec 2020 07:18:58 +0000 (UTC)
-Subject: Re: [PATCH v4 5/9] scsi: Do not wait for a request in
- scsi_eh_lock_door()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-References: <20201130024615.29171-1-bvanassche@acm.org>
- <20201130024615.29171-6-bvanassche@acm.org>
- <bdadfbcd-76c4-4658-0b36-b7666fa1dc7b@suse.de>
- <6e5fbc73-881e-69c7-54ce-381b8b695b3c@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <b56cf3af-940f-62ed-2a79-eb80599e2f44@suse.de>
-Date:   Thu, 3 Dec 2020 08:18:57 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+        id S2388136AbgLCHZe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Dec 2020 02:25:34 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:48022 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725912AbgLCHZe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2020 02:25:34 -0500
+X-UUID: 3b0365861baa45ae857e90cb2efd3347-20201203
+X-UUID: 3b0365861baa45ae857e90cb2efd3347-20201203
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 2137833836; Thu, 03 Dec 2020 15:24:48 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 3 Dec 2020 15:24:44 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 3 Dec 2020 15:24:45 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <alice.chao@mediatek.com>, <huadian.liu@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v2 0/3] Refine error history and introduce event_notify vop
+Date:   Thu, 3 Dec 2020 15:24:40 +0800
+Message-ID: <20201203072443.6663-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-In-Reply-To: <6e5fbc73-881e-69c7-54ce-381b8b695b3c@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-TM-SNTS-SMTP: C4D933F04B8EEE2591AD9993567FE9F7560B576AB4461CA834E1FE9700733EDB2000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/3/20 6:10 AM, Bart Van Assche wrote:
-> On 12/1/20 11:06 PM, Hannes Reinecke wrote:
->> On 11/30/20 3:46 AM, Bart Van Assche wrote:
->>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>> index d94449188270..6de6e1bf3dcb 100644
->>> --- a/drivers/scsi/scsi_error.c
->>> +++ b/drivers/scsi/scsi_error.c
->>> @@ -1993,7 +1993,12 @@ static void scsi_eh_lock_door(struct
->>> scsi_device *sdev)
->>>        struct request *req;
->>>        struct scsi_request *rq;
->>>    -    req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN, 0);
->>> +    /*
->>> +     * It is not guaranteed that a request is available nor that
->>> +     * sdev->request_queue is unfrozen. Hence the BLK_MQ_REQ_NOWAIT
->>> below.
->>> +     */
->>> +    req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN,
->>> +                  BLK_MQ_REQ_NOWAIT);
->>>        if (IS_ERR(req))
->>>            return;
->>>        rq = scsi_req(req);
->>>
->>
->> Well ... had been thinking about that one, too.
->> The idea of this function is that prior to SCSI EH the device was locked
->> via scsi_set_medium_removal(). And during SCSI EH the device might have
->> become unlocked, so we need to lock it again.
->> However, scsi_set_medium_removal() not only issues the
->> PREVENT_ALLOW_MEDIUM_REMOVAL command, but also sets the 'locked' flag
->> based on the result.
->> So if we fail to get a request here, shouldn't we unset the 'locked'
->> flag, too?
-> 
-> Probably not. My interpretation of the 'locked' flag is that it
-> represents the door state before error handling began. The following
-> code in the SCSI error handler restores the door state after a bus reset:
-> 
-> 	if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
-> 		scsi_eh_lock_door(sdev);
-> 		sdev->was_reset = 0;
-> 	}
-> 
->> And what does happen if we fail here? There is no return value, hence
->> SCSI EH might run to completion, and the system will continue
->> with an unlocked door ...
->> Not sure if that's a good idea.
-> 
-> How about applying the following patch on top of patch 5/9?
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 6de6e1bf3dcb..feac7262e40e 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1988,7 +1988,7 @@ static void eh_lock_door_done(struct request *req, blk_status_t status)
->    * 	We queue up an asynchronous "ALLOW MEDIUM REMOVAL" request on the
->    * 	head of the devices request queue, and continue.
->    */
-> -static void scsi_eh_lock_door(struct scsi_device *sdev)
-> +static int scsi_eh_lock_door(struct scsi_device *sdev)
->   {
->   	struct request *req;
->   	struct scsi_request *rq;
-> @@ -2000,7 +2000,7 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
->   	req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN,
->   			      BLK_MQ_REQ_NOWAIT);
->   	if (IS_ERR(req))
-> -		return;
-> +		return PTR_ERR(req);
->   	rq = scsi_req(req);
-> 
->   	rq->cmd[0] = ALLOW_MEDIUM_REMOVAL;
-> @@ -2016,6 +2016,7 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
->   	rq->retries = 5;
-> 
->   	blk_execute_rq_nowait(req->q, NULL, req, 1, eh_lock_door_done);
-> +	return 0;
->   }
-> 
->   /**
-> @@ -2037,8 +2038,8 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
->   	 * is no point trying to lock the door of an off-line device.
->   	 */
->   	shost_for_each_device(sdev, shost) {
-> -		if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
-> -			scsi_eh_lock_door(sdev);
-> +		if (scsi_device_online(sdev) && sdev->was_reset &&
-> +		    sdev->locked && scsi_eh_lock_door(sdev) == 0) {
->   			sdev->was_reset = 0;
->   		}
->   	}
-> 
-I probably didn't make myself clear.
-As per SBC (in this case, sbc3r36) the effects of 
-PREVENT_ALLOW_MEDIUM_REMOVAL are being reset by a successfull LUN Reset, 
-Hard Reset, Power/On Reset, or an I_T Nexus loss. Which incidentally 
-maps nicely onto SCSI EH, so after a successful SCSI EH the door will be 
-unlocked (which is why we need to call scsi_eh_lock_door()).
-In the SCSI midlayer this state is being reflected by the 'locked' flag.
-Now, if scsi_eh_lock_door() is _not_ being executed due to a 
-blk_get_request() failure, the device remains unlocked, and as such the 
-'locked' flag would need to be _unset_.
+Hi,
+This series refines error history functions and introduce a new event_notify vop to allow vendor to get notification of important events.
 
-So I was thinking more along these lines:
+Change since v1:
+  - Change notify_event() to event_notify() to follow vop naming covention.
 
-@@ -2030,7 +2037,8 @@ static void scsi_restart_operations(struct 
-Scsi_Host *shost)
-          */
-         shost_for_each_device(sdev, shost) {
-                 if (scsi_device_online(sdev) && sdev->was_reset && 
-sdev->locked) {
--                       scsi_eh_lock_door(sdev);
-+                       if (scsi_eh_lock_door(sdev) < 0)
-+                               sdev->locked = 0;
-                         sdev->was_reset = 0;
-                 }
-         }
+Stanley Chu (3):
+  scsi: ufs: Add error history for abort event in UFS Device W-LUN
+  scsi: ufs: Refine error history functions
+  scsi: ufs: Introduce event_notify variant function
 
+ drivers/scsi/ufs/ufshcd.c | 122 ++++++++++++++++++++++----------------
+ drivers/scsi/ufs/ufshcd.h |  82 ++++++++++++-------------
+ 2 files changed, 112 insertions(+), 92 deletions(-)
 
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.18.0
+
