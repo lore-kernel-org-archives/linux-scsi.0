@@ -2,90 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E911C1B087
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 883EBC4361B
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A870229C9
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:49:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53FCC22CAD
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:51:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387801AbgLDQtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 11:49:43 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:48542 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731057AbgLDQtn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 11:49:43 -0500
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1607100541;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fVEfPPD9NE4f5E+YaRSwLsnYrJkOxX3+vwZtkdse0DI=;
-        b=JU0l8O7vyRyZKX7y6MQY/xAfWPlmC+uQ+iEYXqBDcjbT20ERSvcaaNMb7T02B1TGWfc2In
-        vl0pYoJEAEfV5B4wT8sXUd+bitffRWK4V6Qp1o+ZhyPnzqpwXbKicBPRcxqQD6d43x2phX
-        Y7BwLMvfG8pRVVnaojx0BrxFqp3NUQZRAeFl2o576Nv6T9sMOJVS72YZTg3X61CfUeGrlI
-        2qknB+gWh54xdxbZMxUGYpFWGURTcrkxtwkVckH+XgUzqaMXXxpfY75LDZK1yeLsOgV8lK
-        mzTqFWBVXsfN8Htm53YuQ4MDPv6gTfLP+jphy0E3ldmBCq5THtWMk53ozSUr2w==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1607100541;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fVEfPPD9NE4f5E+YaRSwLsnYrJkOxX3+vwZtkdse0DI=;
-        b=ONHXERhPkRLPUfPSM7oeLR+/Sh5Zvi/X0sl348EPxAQa2NjgrkzrFfT8x8temtczhdShRT
-        6r4Bkd+/qyXqyBDA==
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Ahmed S . Darwish" <a.darwish@linutronix.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 2/3] sr: Switch the sector size back to 2048 if sr_read_sector() changed it.
-Date:   Fri,  4 Dec 2020 17:48:49 +0100
-Message-Id: <20201204164850.2343359-2-bigeasy@linutronix.de>
-In-Reply-To: <20201204164850.2343359-1-bigeasy@linutronix.de>
-References: <20201204164803.ovwurzs3257em2rp@linutronix.de>
- <20201204164850.2343359-1-bigeasy@linutronix.de>
+        id S1730957AbgLDQv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 11:51:28 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:35824 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729617AbgLDQv2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 11:51:28 -0500
+Received: by mail-pf1-f195.google.com with SMTP id c79so4113211pfc.2;
+        Fri, 04 Dec 2020 08:51:13 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=tKNG89IP0eWAuFAmQbkXENZV9Tbmi4dU4MxDvBA7mFI=;
+        b=OfUNSUs5OxS2as7eBxQdTZXATgCM9VvgbpYwrkxk2Ok51AW9WU1Dbem2i14dSOaPVU
+         Ki0X7/cmuq87VlyBZlHKNOmxHZZYKN15nhhfDpitfcgPJQcGiMT10fAOy1Oco9oUBgbV
+         V1O4qdZq2ef0bLDSrWfbE0TQXia8Hgr6K+M/o3zDGs+GruFatt+3yiVgmPnAB0NEu99F
+         BVMgw9+uF5D6eqNxSvIxwJ+axyCz0VPqLy7VTwhuoEf9yeN6m4cYUBMKtVmlphd01GD4
+         0VBRMTWv++TkWjO5aifejOmxMd9RVZJQFbXBCZfIZUH0Z3rmvfBLF6hxpqVfSFFGmVdO
+         iDTw==
+X-Gm-Message-State: AOAM531ogFjfZAO+LBBfTAcRjuRGJxEuRp2sqnEdobUR25fYvMJrdKbv
+        QMicZtvKn76CAK9nBz+xeIo=
+X-Google-Smtp-Source: ABdhPJyVjoClBTZulB9nZ/rWWhlx2xF6FBwXReB+wzB03dYuTytWT/YAJkp7loPNHUyzV5nqAtAYEg==
+X-Received: by 2002:a63:4:: with SMTP id 4mr8059058pga.443.1607100647637;
+        Fri, 04 Dec 2020 08:50:47 -0800 (PST)
+Received: from [192.168.3.218] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id w2sm2687796pjb.22.2020.12.04.08.50.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 04 Dec 2020 08:50:46 -0800 (PST)
+Subject: Re: [PATCH v4 5/9] scsi: Do not wait for a request in
+ scsi_eh_lock_door()
+To:     Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+References: <20201130024615.29171-1-bvanassche@acm.org>
+ <20201130024615.29171-6-bvanassche@acm.org>
+ <bdadfbcd-76c4-4658-0b36-b7666fa1dc7b@suse.de>
+ <6e5fbc73-881e-69c7-54ce-381b8b695b3c@acm.org>
+ <b56cf3af-940f-62ed-2a79-eb80599e2f44@suse.de> <20201203072738.GB633702@T590>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <32732e89-e425-2b71-4564-35e243f170bc@acm.org>
+Date:   Fri, 4 Dec 2020 08:50:44 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20201203072738.GB633702@T590>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sr_read_sector() is hardly used since v2.3.16. Its only purpose is to
-check if it is a XA medium via sr_is_xa(). This check is only enabled if
-the module parameter `xa_test' is enabled.
+On 12/2/20 11:27 PM, Ming Lei wrote:
+> BTW, scsi_eh_lock_door() returns void, and it can't be sync because
+> there may not be any driver tag available. Even though it is available,
+> the host state isn't running yet, so the command can't be queued to LLD
+> yet.
+> 
+> Maybe the above lines should be put after host state is updated to
+> RUNNING.
+> 
+> Also changing to NOWAIT can't avoid the issue completely, what if 'none'
+> is used?
 
-Change the sector size back to 2048 if it was changed. With this change,
-there is no lazy sector size changing left.
+Hi Ming,
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- drivers/scsi/sr_ioctl.c | 2 ++
- 1 file changed, 2 insertions(+)
+I am considering to drop this patch since the latest version of the SPI
+DV patch no longer introduces a new blk_mq_freeze_queue() call in the
+SPI DV code. In other words, any potential issues with
+scsi_eh_lock_door() are existing issues and are not made worse by my
+patch series.
 
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index ffcf902da3901..5703f8400b73c 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -549,6 +549,8 @@ static int sr_read_sector(Scsi_CD *cd, int lba, int blk=
-size, unsigned char *dest
- 	cgc.timeout =3D IOCTL_TIMEOUT;
- 	rc =3D sr_do_ioctl(cd, &cgc);
-=20
-+	if (blksize !=3D CD_FRAMESIZE)
-+		rc |=3D sr_set_blocklength(cd, CD_FRAMESIZE);
- 	return rc;
- }
-=20
---=20
-2.29.2
+Thanks,
 
+Bart.
