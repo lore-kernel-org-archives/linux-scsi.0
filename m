@@ -2,107 +2,183 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C691BC4361B
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 07:57:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C0C1C0018C
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 07:57:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80D2A22597
+	by mail.kernel.org (Postfix) with ESMTP id D1BD422583
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 07:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728843AbgLDH5b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728855AbgLDH5b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 4 Dec 2020 02:57:31 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:59604 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728504AbgLDH5a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 02:57:30 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B47n3wj025329;
+Received: from userp2130.oracle.com ([156.151.31.86]:43716 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728746AbgLDH5b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 02:57:31 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B47ncq2001125;
         Fri, 4 Dec 2020 07:56:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id; s=corp-2020-01-29;
- bh=/IkvsxgKtDG7G77mi39un+hOQiCxxrJGsS+Plwpl5C8=;
- b=skSCBoQBhbz+sP5vJHOVpVVY7f9Qoca60W7JM/28CTV/W5+lBzbPexdvyOaEoo+tieEi
- V3554Z3VO0StNv1gR1WYwRtBNXsfWz4tzMGaBEPbm4nTMBH3jNWo7zf0rGMW70m+9gvV
- RYPg++Usjsfb6f5esTD+CZ7QAT4I7OCuYvLs/8lgfN9cIfEsfrzgy79fxxedGmN9bHdp
- QEVK2HNpRXSndEnb0zC3/1bzGAZe4Anl9CSc3mwUDqktXmiUnR5VLuq7n5DkzeND40zL
- /IwUM/SP81Vdf3qRqV4gGyGPorKZMdllKf9v6kCzqqbCfTr5c4lH3TVK+wrEVXtOYeeL rA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 353egm1u7n-1
+ date : message-id : in-reply-to : references; s=corp-2020-01-29;
+ bh=cZyFI5n2A7L4LJEbKIRH1MmYalBJ/jDJniUTE4TPNew=;
+ b=Ppv4m4l7cgFbVdP7wkoduSe53bWB30h3dJcYkb4ktZAQ7Io0rKDk28YhqwKyihjMiD3R
+ gcl+lesvbuxQOHHpDZFcfokbTLFPqrjGbny8uupno4fsbPCwwMs56zkPjBkDkVk2mMvj
+ CzOwM9CQrSJQLjRotwMfCTm9JnSpOoeliYXoL65yFeyMkRdHT9aScfA/3oQGyiM74PON
+ YV+lZr4WqsWNm17tSYfI7rl2UACF1WddB1/ye1RGeg2qv88J1yP6D1YERVRItJwQRDa8
+ AmJTCU5IgPcF8PJpx8rLewW57SrG2GQmBvM6PUjQHASe/2XRjTKV8TgDi8lk0AyiNWby OA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 353dyr1wtw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 04 Dec 2020 07:56:45 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B47oP0j083639;
+        Fri, 04 Dec 2020 07:56:46 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B47oXHD066700;
         Fri, 4 Dec 2020 07:56:45 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 3540axn8qv-1
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 35404ryfsj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Fri, 04 Dec 2020 07:56:45 +0000
 Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B47ugYP007223;
-        Fri, 4 Dec 2020 07:56:44 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B47ujlS015544;
+        Fri, 4 Dec 2020 07:56:45 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Dec 2020 23:56:42 -0800
+        with ESMTP ; Thu, 03 Dec 2020 23:56:45 -0800
 From:   Mike Christie <michael.christie@oracle.com>
 To:     sgarzare@redhat.com, stefanha@redhat.com,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
         virtualization@lists.linux-foundation.org
-Subject: [RFC PATCH 0/8] vhost: allow userspace to control vq cpu affinity
-Date:   Fri,  4 Dec 2020 01:56:25 -0600
-Message-Id: <1607068593-16932-1-git-send-email-michael.christie@oracle.com>
+Subject: [RFC PATCH 4/8] vhost: move msg_handler to new ops struct
+Date:   Fri,  4 Dec 2020 01:56:29 -0600
+Message-Id: <1607068593-16932-5-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1607068593-16932-1-git-send-email-michael.christie@oracle.com>
+References: <1607068593-16932-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- phishscore=0 mlxscore=0 adultscore=0 malwarescore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ malwarescore=0 mlxscore=0 mlxlogscore=999 phishscore=0 spamscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012040045
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9824 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 lowpriorityscore=0 malwarescore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012040045
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
+ clxscore=1015 mlxscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
+ suspectscore=0 lowpriorityscore=0 phishscore=0 adultscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012040045
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These patches were made over mst's vhost branch.
+The next patch adds a callout so drivers can perform some action when we
+bind a vq to a cpu, so this patch moves the msg_handler callout to a new
+vhost_dev_ops struct just to keep all the callouts better organized.
 
-The following patches, made over mst's vhost branch, allow userspace
-to set each vq's cpu affinity. Currently, with cgroups the worker thread
-inherits the affinity settings, but we are at the mercy of the CPU
-scheduler for where the vq's IO will be executed on. This can result in
-the scheduler sometimes hammering a couple queues on the host instead of
-spreading it out like how the guest's app might have intended if it was
-mq aware.
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+---
+ drivers/vhost/vdpa.c  |  7 +++++--
+ drivers/vhost/vhost.c | 10 ++++------
+ drivers/vhost/vhost.h | 11 ++++++-----
+ 3 files changed, 15 insertions(+), 13 deletions(-)
 
-This version of the patches is not what you guys were talking about
-initially like with the interface that was similar to nbd's old
-(3.x kernel days) NBD_DO_IT ioctl where userspace calls down to the
-kernel and we run from that context. These patches instead just
-allow userspace to tell the kernel which CPU a vq should run on.
-We then use the kernel's workqueue code to handle the thread
-management.
-
-I wanted to post this version first, because it is flexible
-in that userspace can set things up so devs/vqs share threads/CPUs
-and we don't have to worry about replicating a bunch of features
-that the workqueue code already has like dynamic thread creation,
-blocked work detection, idle thread detection and thread reaping,
-and it also has an interface to control how many threads can be
-created and which CPUs work can run on if we want to further restrict
-that from userspace.
-
-Note that these patches have been lightly tested. I more wanted
-to get comments on the overall approach, because I know it's
-not really what you were thinking about. But while I worked
-on being able to share threads with multiple devices, I kept
-coming back to the existing workqueue code and thinking I'll
-just copy and paste that.
-
+diff --git a/drivers/vhost/vdpa.c b/drivers/vhost/vdpa.c
+index ef688c8..1c8c2bf 100644
+--- a/drivers/vhost/vdpa.c
++++ b/drivers/vhost/vdpa.c
+@@ -844,6 +844,10 @@ static void vhost_vdpa_set_iova_range(struct vhost_vdpa *v)
+ 	}
+ }
+ 
++static struct vhost_dev_ops vdpa_dev_ops = {
++	.msg_handler	= vhost_vdpa_process_iotlb_msg,
++};
++
+ static int vhost_vdpa_open(struct inode *inode, struct file *filep)
+ {
+ 	struct vhost_vdpa *v;
+@@ -871,8 +875,7 @@ static int vhost_vdpa_open(struct inode *inode, struct file *filep)
+ 		vqs[i] = &v->vqs[i];
+ 		vqs[i]->handle_kick = handle_vq_kick;
+ 	}
+-	vhost_dev_init(dev, vqs, nvqs, 0, 0, 0, false,
+-		       vhost_vdpa_process_iotlb_msg);
++	vhost_dev_init(dev, vqs, nvqs, 0, 0, 0, false, &vdpa_dev_ops);
+ 
+ 	dev->iotlb = vhost_iotlb_alloc(0, 0);
+ 	if (!dev->iotlb) {
+diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+index 78d9535..ee2551c 100644
+--- a/drivers/vhost/vhost.c
++++ b/drivers/vhost/vhost.c
+@@ -467,9 +467,7 @@ static size_t vhost_get_desc_size(struct vhost_virtqueue *vq,
+ void vhost_dev_init(struct vhost_dev *dev,
+ 		    struct vhost_virtqueue **vqs, int nvqs,
+ 		    int iov_limit, int weight, int byte_weight,
+-		    bool use_worker,
+-		    int (*msg_handler)(struct vhost_dev *dev,
+-				       struct vhost_iotlb_msg *msg))
++		    bool use_worker, struct vhost_dev_ops *ops)
+ {
+ 	struct vhost_virtqueue *vq;
+ 	int i;
+@@ -486,7 +484,7 @@ void vhost_dev_init(struct vhost_dev *dev,
+ 	dev->weight = weight;
+ 	dev->byte_weight = byte_weight;
+ 	dev->use_worker = use_worker;
+-	dev->msg_handler = msg_handler;
++	dev->ops = ops;
+ 	init_llist_head(&dev->work_list);
+ 	init_waitqueue_head(&dev->wait);
+ 	INIT_LIST_HEAD(&dev->read_list);
+@@ -1164,8 +1162,8 @@ ssize_t vhost_chr_write_iter(struct vhost_dev *dev,
+ 		goto done;
+ 	}
+ 
+-	if (dev->msg_handler)
+-		ret = dev->msg_handler(dev, &msg);
++	if (dev->ops && dev->ops->msg_handler)
++		ret = dev->ops->msg_handler(dev, &msg);
+ 	else
+ 		ret = vhost_process_iotlb_msg(dev, &msg);
+ 	if (ret) {
+diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
+index 575c818..64fa638 100644
+--- a/drivers/vhost/vhost.h
++++ b/drivers/vhost/vhost.h
+@@ -143,6 +143,10 @@ struct vhost_msg_node {
+   struct list_head node;
+ };
+ 
++struct vhost_dev_ops {
++	int (*msg_handler)(struct vhost_dev *dev, struct vhost_iotlb_msg *msg);
++};
++
+ struct vhost_dev {
+ 	struct mm_struct *mm;
+ 	struct mutex mutex;
+@@ -162,16 +166,13 @@ struct vhost_dev {
+ 	int byte_weight;
+ 	u64 kcov_handle;
+ 	bool use_worker;
+-	int (*msg_handler)(struct vhost_dev *dev,
+-			   struct vhost_iotlb_msg *msg);
++	struct vhost_dev_ops *ops;
+ };
+ 
+ bool vhost_exceeds_weight(struct vhost_virtqueue *vq, int pkts, int total_len);
+ void vhost_dev_init(struct vhost_dev *, struct vhost_virtqueue **vqs,
+ 		    int nvqs, int iov_limit, int weight, int byte_weight,
+-		    bool use_worker,
+-		    int (*msg_handler)(struct vhost_dev *dev,
+-				       struct vhost_iotlb_msg *msg));
++		    bool use_worker, struct vhost_dev_ops *ops);
+ long vhost_dev_set_owner(struct vhost_dev *dev);
+ bool vhost_dev_has_owner(struct vhost_dev *dev);
+ long vhost_dev_check_owner(struct vhost_dev *);
+-- 
+1.8.3.1
 
