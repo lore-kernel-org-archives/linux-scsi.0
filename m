@@ -4,46 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB5BC1B0D8
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA180C2BB40
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:49:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 44DE822AAF
+	by mail.kernel.org (Postfix) with ESMTP id B1C76205CB
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388030AbgLDQto (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 11:49:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59184 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387952AbgLDQto (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 11:49:44 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA66AC061A51;
-        Fri,  4 Dec 2020 08:49:03 -0800 (PST)
+        id S1731063AbgLDQtm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 11:49:42 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:48530 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731021AbgLDQtl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 11:49:41 -0500
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1607100542;
+        s=2020; t=1607100539;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DpTRFsFRc9/tXI4gMGMyZKDuQbOkXJKaQdzwiNLDT4s=;
-        b=B2ciP1NhXnAP2waJrjFFjcIJNjngJI2TpMagMN8GdkeNnK1sXK51i0yj1MC5V8skJKqmMn
-        eirkdoY4S9b3nOqgQ5iHgjkcUJSwaMLYyUnx9i80FjVb5w5Fp3fDZNchVZPilhYcfTCNdb
-        l0iXjWv953QSZtg5203RWoGpcg95FeZKyK0Nh9s9pfT+2RZaII/PRyoZCQd0JtSPlyl2Al
-        Z22Fz7sBawLkXfbhR6tasTqrsosI53pgzR1j2fVuedKASFTIwh3mSjXoVcurNJslVjgoeJ
-        7ewva/AIcRwspIPBqzu2xV4f3fSLlSs/8H0FNr/yawsSJnQihNG3EkaMORMZ5A==
+        bh=zVmduwuXX/EtsNpL6GIUNu67EAHxRaD9Jr2TF6Y1iUI=;
+        b=4PpF9phaFYkXNRjhGjolQ11N8z0op2VsWnINy5E+SDH8/1kg2275pS+r+gceqDCWQSI/Sy
+        FKAWv3iouz6ndnQbeZew4Ty9ckiAtsUGo0EPwPTtRPi6ihTuaOmlqSOZUxW13hDuaP6y4w
+        +x8PCz1W9xgRrVN/V4DIz7gQ/2foEsadVYX2TLs+Ku8uxx7yyR0R/hMDZj714//5+FGBGz
+        Vl5Y7nL6vmd7788r0mhAfUYh0P4E1K1CGEvuk6kDzkTKloqgDDMTpAaciNprzw5LdqJrur
+        7iNLUraY/FGXZcmQDwEX2b2USG0FSuBqBr71Cp3odOwC8qIAzuPp2UtZRg4ITw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1607100542;
+        s=2020e; t=1607100539;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DpTRFsFRc9/tXI4gMGMyZKDuQbOkXJKaQdzwiNLDT4s=;
-        b=kpO714HqfqwQQV8oJZbFASHdsbfVXcctd3YyQFFmAgzpyk8q247LzdIRp2XcipqjG3bcge
-        kHFunfrSRej0InCw==
+        bh=zVmduwuXX/EtsNpL6GIUNu67EAHxRaD9Jr2TF6Y1iUI=;
+        b=ofh5NU+CKTUaCBB/NQB487eCfWL4VEphmdxik8LzRyunDLdSwglElK41h+mhRPKcUVdAwR
+        Js6vEj+z4eJ71/Bw==
 To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -51,85 +48,61 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         "Ahmed S . Darwish" <a.darwish@linutronix.de>,
         Thomas Gleixner <tglx@linutronix.de>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 3/3] sr: Remove in_interrupt() usage in sr_init_command().
-Date:   Fri,  4 Dec 2020 17:48:50 +0100
-Message-Id: <20201204164850.2343359-3-bigeasy@linutronix.de>
-In-Reply-To: <20201204164850.2343359-1-bigeasy@linutronix.de>
+Subject: [PATCH 1/3] cdrom: Reset sector_size back it is not 2048.
+Date:   Fri,  4 Dec 2020 17:48:48 +0100
+Message-Id: <20201204164850.2343359-1-bigeasy@linutronix.de>
+In-Reply-To: <20201204164803.ovwurzs3257em2rp@linutronix.de>
 References: <20201204164803.ovwurzs3257em2rp@linutronix.de>
- <20201204164850.2343359-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The in_interrupt() check in sr_init_command() is a leftover from the
-past, pre v2.3.16 era to be exact. Back then the ioctl() was served by
-`sr' itself and sector size changes by CDROMREADMODE2 (as noted in the
-comment) were accounted within sr's data structures which allowed a
-"lazy" reset so it could be skipped on the next request and reset back
-to the default value once the device node was closed or before a command
-from the blockqueue was issued.
+In v2.4.0-test2pre2 mmc_ioctl_cdrom_read_data() was extended by issuing
+a MODE_SELECT opcode to change the sector size and READ_10 to perform
+the actual read if the READ_CD opcode is not support.
+The sector size is never changed back to the previous value of 2048
+bytes which is however denoted by the comment for version 3.09 of the
+cdrom.c file.
 
-This does not work like that anymore. The CDROMREADMODE2 is served by
-cdrom's mmc_ioctl() function which may change the sector size but the
-`sr' driver does not learn about it and so its ->sector_size is not
-updated.
-The ioctl() resets the changed sector size back to 2048.
-sr_read_sector() also resets the sector size back to the default once it
-is done.
-
-Remove the conditional sector size update from sr_init_command() and
-sr_release() because it is not needed.
+Use cdrom_switch_blocksize() to change the sector size only if the
+requested size deviates from 2048. Change it back to 2048 after the read
+operation if a change was mode.
 
 Link: https://lkml.kernel.org/r/20201204164803.ovwurzs3257em2rp@linutronix.=
 de
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
-This change makes also ide-cd providing the last non-empty
-cdrom_device_info::release callback.
+ drivers/cdrom/cdrom.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
- drivers/scsi/sr.c | 17 -----------------
- 1 file changed, 17 deletions(-)
-
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index fd4b582110b29..e4633b84c556a 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -416,19 +416,7 @@ static blk_status_t sr_init_command(struct scsi_cmnd *=
-SCpnt)
- 		goto out;
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 0c271b9e3c5b7..8f0e52a714938 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2996,13 +2996,15 @@ static noinline int mmc_ioctl_cdrom_read_data(struc=
+t cdrom_device_info *cdi,
+ 		 * SCSI-II devices are not required to support
+ 		 * READ_CD, so let's try switching block size
+ 		 */
+-		/* FIXME: switch back again... */
+-		ret =3D cdrom_switch_blocksize(cdi, blocksize);
+-		if (ret)
+-			goto out;
++		if (blocksize !=3D CD_FRAMESIZE) {
++			ret =3D cdrom_switch_blocksize(cdi, blocksize);
++			if (ret)
++				goto out;
++		}
+ 		cgc->sshdr =3D NULL;
+ 		ret =3D cdrom_read_cd(cdi, cgc, lba, blocksize, 1);
+-		ret |=3D cdrom_switch_blocksize(cdi, blocksize);
++		if (blocksize !=3D CD_FRAMESIZE)
++			ret |=3D cdrom_switch_blocksize(cdi, CD_FRAMESIZE);
  	}
-=20
--	/*
--	 * we do lazy blocksize switching (when reading XA sectors,
--	 * see CDROMREADMODE2 ioctl)=20
--	 */
- 	s_size =3D cd->device->sector_size;
--	if (s_size > 2048) {
--		if (!in_interrupt())
--			sr_set_blocklength(cd, 2048);
--		else
--			scmd_printk(KERN_INFO, SCpnt,
--				    "can't switch blocksize: in interrupt\n");
--	}
--
- 	if (s_size !=3D 512 && s_size !=3D 1024 && s_size !=3D 2048) {
- 		scmd_printk(KERN_ERR, SCpnt, "bad sector size %d\n", s_size);
- 		goto out;
-@@ -701,11 +689,6 @@ static int sr_open(struct cdrom_device_info *cdi, int =
-purpose)
-=20
- static void sr_release(struct cdrom_device_info *cdi)
- {
--	struct scsi_cd *cd =3D cdi->handle;
--
--	if (cd->device->sector_size > 2048)
--		sr_set_blocklength(cd, 2048);
--
- }
-=20
- static int sr_probe(struct device *dev)
+ 	if (!ret && copy_to_user(arg, cgc->buffer, blocksize))
+ 		ret =3D -EFAULT;
 --=20
 2.29.2
 
