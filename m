@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEB80C4361A
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7205C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B45E422C9E
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C44AE22D01
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727219AbgLDXDJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 18:03:09 -0500
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:4901 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725885AbgLDXDI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 18:03:08 -0500
+        id S1727230AbgLDXDK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 18:03:10 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1374 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725885AbgLDXDJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 18:03:09 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607122987; x=1638658987;
+  t=1607122989; x=1638658989;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=yTJ/yR/sJyPKxTtb8oiP0CyUtZwvhCJcfxTURsmMWxU=;
-  b=yNVhiyiA0faqCVQZq9O7Gd3xF7BgAISfNyazoQbxrLqq3fIVcwX4XEz2
-   rL9i/UldGaBVbIGo1YGH3Jkx+bDpUtE++C/Q67ntUlhpos6JD9cWkIpor
-   Izzf1DKJawblTo15nBT5EzN4l0NjGd50CS8t/EbeOT03oaIpM7kyNno5I
-   8VHZwIGObByjOAvPp+kasPLIBEOZJv7vZLo/adw5KYHH9SJRur1Ro9KAT
-   f6HRORlraXAxCVIVJxwz5rfHJ0enueAnafwThO++1EImwrcjU2tOd/Qtv
-   2rL2P+cR27rSbHVx4Tik+dN6Vry9ymlG1wxYzi7qip/RtmRwwVerR3Kwd
+  bh=votB9wXp5KI1r3R9o1Wg6925asMQ2aoSjMqDU7bBlDY=;
+  b=JJiuHyE88w5x0IWwf8JEAqPxCVnDg/RJ5xqZAqwXSSHDXZ8yGE+uuBo7
+   Aw33TH9BMv9EaluTuiyjbdKH5Eq0GkhLCysJ/v/KtOKHLTUBbkhpVh7ex
+   ieLUs8IlshbOLm/CzKjYlvMv1vus5WHkehHsS+ep8Jjg5QquHcdOYOB27
+   ED8goiGfuADnjoRDo6JLlBU5TeKbhmaqNMSB19fvoCFexvjhIIfNGuZdR
+   U34XTN/x+vNkOqjmtP0aBs0T+7L9ESL/f/1j3IzIOltCAQqt/vyAQH6KM
+   za2PxQuH++xesUH8oZl5OHuAs9lz8zH5f2YAkWsxsuSWdFKzrxchVYghz
    g==;
-IronPort-SDR: 0r4jHZKo7FqxRfqziLbMpzadbIhIrIgloN7dJPE+FFrBTGnw0DOfGDbtVsyoqGQ6s1/GWM/h+J
- NzQ8TV6ghnBalcRVRn65CPYlBdTfnp8aJp7H0fEdQnLd5Px4kR8sNcUmxJGv0xrA5tx6G+KuBJ
- j60//BM7EVtsZ9atMl/u1aXSRT3s84xA1IL4dO8q2x1BpvEPRhR5JNGyp/5Bm3WSHmymyWXIX3
- mMwhsQlRy3Kypt5eFE4o1eAB5NjwH1O5FeyIwLNEJbfp/evRODqpZAPAlXuziH2rxUpKp/O7sk
- +4o=
+IronPort-SDR: jMXEpSCEnWdDBqAbVwLBRj37BMqDDcEDiKJvOmB8AFdoTfI9xGe1j/5AccYycxgpyuO3ie96M/
+ nwiC7zmis74jkDIglC4xND2hcogCeUpFt13RYfELDALCZuomPQJHdftfuy9PfvwEArkyjPu5Gp
+ Sg3X8CWv1UuEOogyUd+rpmZ0rreiCyOdG3HY/PJxuplSqVwjKkFPy63ZjEtSZzYW2bYk5P2IxS
+ TC4ywJllCLEeGbjWsoD7RHxgmHF/wdATN/3k2Pqc420f0lEx8/iJvNldXwVThCcSMVm3f2oggK
+ mqY=
 X-IronPort-AV: E=Sophos;i="5.78,393,1599548400"; 
-   d="scan'208";a="106273061"
+   d="scan'208";a="101548508"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 04 Dec 2020 16:01:50 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 04 Dec 2020 16:01:34 -0700
 Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 4 Dec 2020 16:01:49 -0700
+ 15.1.1979.3; Fri, 4 Dec 2020 16:01:31 -0700
 Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex04.mchp-main.com
  (10.10.85.152) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Fri, 4 Dec 2020 16:01:48 -0700
-Subject: [PATCH 10/25] smartpqi: add stream detection
+ Transport; Fri, 4 Dec 2020 16:01:31 -0700
+Subject: [PATCH 07/25] smartpqi: update AIO Sub Page 0x02 support
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -56,8 +56,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 4 Dec 2020 17:01:48 -0600
-Message-ID: <160712290881.21372.8579870523469517845.stgit@brunhilda>
+Date:   Fri, 4 Dec 2020 17:01:31 -0600
+Message-ID: <160712289129.21372.649253271818958012.stgit@brunhilda>
 In-Reply-To: <160712276179.21372.51526310810782843.stgit@brunhilda>
 References: <160712276179.21372.51526310810782843.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -68,156 +68,194 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Enhance performance by adding sequential stream detection.
-  for R5/R6 sequential write requests.
-  * Reduce stripe lock contention with full-stripe write
-    operations.
+From: Kevin Barnett <kevin.barnett@microchip.com>
+
+The specification for AIO Sub-Page (0x02) has changed slightly.
+* bring the driver into conformance with the spec.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    8 +++
- drivers/scsi/smartpqi/smartpqi_init.c |   87 +++++++++++++++++++++++++++++++--
- 2 files changed, 89 insertions(+), 6 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |   12 ++++---
+ drivers/scsi/smartpqi/smartpqi_init.c |   60 +++++++++++++++++++++------------
+ 2 files changed, 47 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index a5e271dd2742..343f06e44220 100644
+index 31281cddadfe..eb23c3cf59c0 100644
 --- a/drivers/scsi/smartpqi/smartpqi.h
 +++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1042,6 +1042,12 @@ struct pqi_scsi_dev_raid_map_data {
+@@ -1028,13 +1028,13 @@ struct pqi_scsi_dev_raid_map_data {
+ 	u8	cdb_length;
+ 
+ 	/* RAID 1 specific */
+-#define NUM_RAID1_MAP_ENTRIES 3
++#define NUM_RAID1_MAP_ENTRIES	3
+ 	u32	num_it_nexus_entries;
+ 	u32	it_nexus[NUM_RAID1_MAP_ENTRIES];
+ 
+ 	/* RAID 5 / RAID 6 specific */
+-	u32	p_parity_it_nexus; /* aio_handle */
+-	u32	q_parity_it_nexus; /* aio_handle */
++	u32	p_parity_it_nexus;	/* aio_handle */
++	u32	q_parity_it_nexus;	/* aio_handle */
+ 	u8	xor_mult;
+ 	u64	row;
+ 	u64	stripe_lba;
+@@ -1044,6 +1044,7 @@ struct pqi_scsi_dev_raid_map_data {
  
  #define RAID_CTLR_LUNID		"\0\0\0\0\0\0\0\0"
  
-+#define NUM_STREAMS_PER_LUN	8
 +
-+struct pqi_stream_data {
-+	u64	next_lba;
-+	u32	last_accessed;
-+};
- 
  struct pqi_scsi_dev {
  	int	devtype;		/* as reported by INQUIRY commmand */
-@@ -1097,6 +1103,7 @@ struct pqi_scsi_dev {
- 	struct list_head add_list_entry;
- 	struct list_head delete_list_entry;
- 
-+	struct pqi_stream_data stream_data[NUM_STREAMS_PER_LUN];
- 	atomic_t scsi_cmds_outstanding;
- 	atomic_t raid_bypass_cnt;
- };
-@@ -1296,6 +1303,7 @@ struct pqi_ctrl_info {
- 	u8		enable_r5_writes : 1;
- 	u8		enable_r6_writes : 1;
- 	u8		lv_drive_type_mix_valid : 1;
-+	u8		enable_stream_detection : 1;
- 
- 	u8		ciss_report_log_flags;
+ 	u8	device_type;		/* as reported by */
+@@ -1302,7 +1303,8 @@ struct pqi_ctrl_info {
  	u32		max_transfer_encrypted_sas_sata;
+ 	u32		max_transfer_encrypted_nvme;
+ 	u32		max_write_raid_5_6;
+-
++	u32		max_write_raid_1_10_2drive;
++	u32		max_write_raid_1_10_3drive;
+ 
+ 	struct list_head scsi_device_list;
+ 	spinlock_t	scsi_device_list_lock;
+@@ -1533,6 +1535,8 @@ struct bmic_sense_feature_io_page_aio_subpage {
+ 	__le16	max_transfer_encrypted_sas_sata;
+ 	__le16	max_transfer_encrypted_nvme;
+ 	__le16	max_write_raid_5_6;
++	__le16	max_write_raid_1_10_2drive;
++	__le16	max_write_raid_1_10_3drive;
+ };
+ 
+ struct bmic_smp_request {
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index ddd2ed8f4283..25896e7dbd1b 100644
+index 25a3aa763bba..34ff1b3679f1 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5652,8 +5652,82 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
- 	atomic_dec(&device->scsi_cmds_outstanding);
+@@ -696,6 +696,19 @@ static int pqi_identify_physical_device(struct pqi_ctrl_info *ctrl_info,
+ 	return rc;
  }
  
--static int pqi_scsi_queue_command(struct Scsi_Host *shost,
-+static bool pqi_is_parity_write_stream(struct pqi_ctrl_info *ctrl_info,
- 	struct scsi_cmnd *scmd)
++static inline u32 pqi_aio_limit_to_bytes(__le16 *limit)
 +{
-+	u32 oldest_jiffies;
-+	u8 lru_index;
-+	int i;
-+	int rc;
-+	struct pqi_scsi_dev *device;
-+	struct pqi_stream_data *pqi_stream_data;
-+	struct pqi_scsi_dev_raid_map_data rmd;
++	u32 bytes;
 +
-+	if (!ctrl_info->enable_stream_detection)
-+		return false;
++	bytes = get_unaligned_le16(limit);
++	if (bytes == 0)
++		bytes = ~0;
++	else
++		bytes *= 1024;
 +
-+	rc = pqi_get_aio_lba_and_block_count(scmd, &rmd);
-+	if (rc)
-+		return false;
-+
-+	/* Check writes only. */
-+	if (!rmd.is_write)
-+		return false;
-+
-+	device = scmd->device->hostdata;
-+
-+	/* Check for RAID 5/6 streams. */
-+	if (device->raid_level != SA_RAID_5 && device->raid_level != SA_RAID_6)
-+		return false;
-+
-+	/*
-+	 * If controller does not support AIO RAID{5,6} writes, need to send
-+	 * requests down non-AIO path.
-+	 */
-+	if ((device->raid_level == SA_RAID_5 && !ctrl_info->enable_r5_writes) ||
-+		(device->raid_level == SA_RAID_6 && !ctrl_info->enable_r6_writes))
-+		return true;
-+
-+	lru_index = 0;
-+	oldest_jiffies = INT_MAX;
-+	for (i = 0; i < NUM_STREAMS_PER_LUN; i++) {
-+		pqi_stream_data = &device->stream_data[i];
-+		/*
-+		 * Check for adjacent request or request is within
-+		 * the previous request.
-+		 */
-+		if ((pqi_stream_data->next_lba &&
-+			rmd.first_block >= pqi_stream_data->next_lba) &&
-+			rmd.first_block <= pqi_stream_data->next_lba +
-+				rmd.block_cnt) {
-+			pqi_stream_data->next_lba = rmd.first_block +
-+				rmd.block_cnt;
-+			pqi_stream_data->last_accessed = jiffies;
-+			return true;
-+		}
-+
-+		/* unused entry */
-+		if (pqi_stream_data->last_accessed == 0) {
-+			lru_index = i;
-+			break;
-+		}
-+
-+		/* Find entry with oldest last accessed time. */
-+		if (pqi_stream_data->last_accessed <= oldest_jiffies) {
-+			oldest_jiffies = pqi_stream_data->last_accessed;
-+			lru_index = i;
-+		}
-+	}
-+
-+	/* Set LRU entry. */
-+	pqi_stream_data = &device->stream_data[lru_index];
-+	pqi_stream_data->last_accessed = jiffies;
-+	pqi_stream_data->next_lba = rmd.first_block + rmd.block_cnt;
-+
-+	return false;
++	return bytes;
 +}
 +
-+static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- {
- 	int rc;
- 	struct pqi_ctrl_info *ctrl_info;
-@@ -5699,11 +5773,12 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 		raid_bypassed = false;
- 		if (device->raid_bypass_enabled &&
- 			!blk_rq_is_passthrough(scmd->request)) {
--			rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device,
--				scmd, queue_group);
--			if (rc == 0 || rc == SCSI_MLQUEUE_HOST_BUSY) {
--				raid_bypassed = true;
--				atomic_inc(&device->raid_bypass_cnt);
-+			if (!pqi_is_parity_write_stream(ctrl_info, scmd)) {
-+				rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device, scmd, queue_group);
-+				if (rc == 0 || rc == SCSI_MLQUEUE_HOST_BUSY) {
-+					raid_bypassed = true;
-+					atomic_inc(&device->raid_bypass_cnt);
-+				}
- 			}
- 		}
- 		if (!raid_bypassed)
+ #pragma pack(1)
+ 
+ struct bmic_sense_feature_buffer {
+@@ -707,11 +720,11 @@ struct bmic_sense_feature_buffer {
+ 
+ #define MINIMUM_AIO_SUBPAGE_BUFFER_LENGTH	\
+ 	offsetofend(struct bmic_sense_feature_buffer, \
+-		aio_subpage.max_write_raid_5_6)
++		aio_subpage.max_write_raid_1_10_3drive)
+ 
+ #define MINIMUM_AIO_SUBPAGE_LENGTH	\
+ 	(offsetofend(struct bmic_sense_feature_io_page_aio_subpage, \
+-		max_write_raid_5_6) - \
++		max_write_raid_1_10_3drive) - \
+ 		sizeof_field(struct bmic_sense_feature_io_page_aio_subpage, header))
+ 
+ static int pqi_get_advanced_raid_bypass_config(struct pqi_ctrl_info *ctrl_info)
+@@ -753,33 +766,28 @@ static int pqi_get_advanced_raid_bypass_config(struct pqi_ctrl_info *ctrl_info)
+ 			BMIC_SENSE_FEATURE_IO_PAGE_AIO_SUBPAGE ||
+ 		get_unaligned_le16(&buffer->aio_subpage.header.page_length) <
+ 			MINIMUM_AIO_SUBPAGE_LENGTH) {
+-		rc = -EINVAL;
+ 		goto error;
+ 	}
+ 
+ 	ctrl_info->max_transfer_encrypted_sas_sata =
+-		get_unaligned_le16(
++		pqi_aio_limit_to_bytes(
+ 			&buffer->aio_subpage.max_transfer_encrypted_sas_sata);
+-	if (ctrl_info->max_transfer_encrypted_sas_sata)
+-		ctrl_info->max_transfer_encrypted_sas_sata *= 1024;
+-	else
+-		ctrl_info->max_transfer_encrypted_sas_sata = ~0;
+ 
+ 	ctrl_info->max_transfer_encrypted_nvme =
+-		get_unaligned_le16(
++		pqi_aio_limit_to_bytes(
+ 			&buffer->aio_subpage.max_transfer_encrypted_nvme);
+-	if (ctrl_info->max_transfer_encrypted_nvme)
+-		ctrl_info->max_transfer_encrypted_nvme *= 1024;
+-	else
+-		ctrl_info->max_transfer_encrypted_nvme = ~0;
+ 
+ 	ctrl_info->max_write_raid_5_6 =
+-		get_unaligned_le16(
++		pqi_aio_limit_to_bytes(
+ 			&buffer->aio_subpage.max_write_raid_5_6);
+-	if (ctrl_info->max_write_raid_5_6)
+-		ctrl_info->max_write_raid_5_6 *= 1024;
+-	else
+-		ctrl_info->max_write_raid_5_6 = ~0;
++
++	ctrl_info->max_write_raid_1_10_2drive =
++		pqi_aio_limit_to_bytes(
++			&buffer->aio_subpage.max_write_raid_1_10_2drive);
++
++	ctrl_info->max_write_raid_1_10_3drive =
++		pqi_aio_limit_to_bytes(
++			&buffer->aio_subpage.max_write_raid_1_10_3drive);
+ 
+ error:
+ 	kfree(buffer);
+@@ -2387,9 +2395,13 @@ static bool pqi_aio_raid_level_supported(struct pqi_ctrl_info *ctrl_info,
+ 	case SA_RAID_0:
+ 		break;
+ 	case SA_RAID_1:
+-		fallthrough;
++		if (rmd->is_write && (!ctrl_info->enable_r1_writes ||
++			rmd->data_length > ctrl_info->max_write_raid_1_10_2drive))
++			is_supported = false;
++		break;
+ 	case SA_RAID_ADM:
+-		if (rmd->is_write && !ctrl_info->enable_r1_writes)
++		if (rmd->is_write && (!ctrl_info->enable_r1_writes ||
++			rmd->data_length > ctrl_info->max_write_raid_1_10_3drive))
+ 			is_supported = false;
+ 		break;
+ 	case SA_RAID_5:
+@@ -8136,6 +8148,8 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
+ 	ctrl_info->max_transfer_encrypted_nvme =
+ 		PQI_DEFAULT_MAX_TRANSFER_ENCRYPTED_NVME;
+ 	ctrl_info->max_write_raid_5_6 = PQI_DEFAULT_MAX_WRITE_RAID_5_6;
++	ctrl_info->max_write_raid_1_10_2drive = ~0;
++	ctrl_info->max_write_raid_1_10_3drive = ~0;
+ 
+ 	return ctrl_info;
+ }
+@@ -9565,7 +9579,7 @@ static void __attribute__((unused)) verify_structures(void)
+ 		page_length) != 2);
+ 
+ 	BUILD_BUG_ON(sizeof(struct bmic_sense_feature_io_page_aio_subpage)
+-		!= 14);
++		!= 18);
+ 	BUILD_BUG_ON(offsetof(struct bmic_sense_feature_io_page_aio_subpage,
+ 		header) != 0);
+ 	BUILD_BUG_ON(offsetof(struct bmic_sense_feature_io_page_aio_subpage,
+@@ -9582,6 +9596,10 @@ static void __attribute__((unused)) verify_structures(void)
+ 		max_transfer_encrypted_nvme) != 10);
+ 	BUILD_BUG_ON(offsetof(struct bmic_sense_feature_io_page_aio_subpage,
+ 		max_write_raid_5_6) != 12);
++	BUILD_BUG_ON(offsetof(struct bmic_sense_feature_io_page_aio_subpage,
++		max_write_raid_1_10_2drive) != 14);
++	BUILD_BUG_ON(offsetof(struct bmic_sense_feature_io_page_aio_subpage,
++		max_write_raid_1_10_3drive) != 16);
+ 
+ 	BUILD_BUG_ON(PQI_ADMIN_IQ_NUM_ELEMENTS > 255);
+ 	BUILD_BUG_ON(PQI_ADMIN_OQ_NUM_ELEMENTS > 255);
 
