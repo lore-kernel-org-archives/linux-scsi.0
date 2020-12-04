@@ -2,111 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8AEC0018C
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 15:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DA65C4361A
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:08:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D5C122C9C
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 15:49:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9560227C3
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 16:08:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730877AbgLDPtg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 10:49:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49792 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730148AbgLDPtg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 10:49:36 -0500
-Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 114BBC061A55
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Dec 2020 07:48:56 -0800 (PST)
-Received: by mail-qv1-xf30.google.com with SMTP id ec16so2969287qvb.0
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Dec 2020 07:48:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=PA56DtQ3U6OS3ADt3JtiQH9iJ5okRT03tMtGP16RXIA=;
-        b=p4AZo33WMTXTpz74XuTaQCvr8JjiLn7ypdk62+VPzm5BdMKt9igpjZmiV4Ts4qi6+J
-         SKGTsVwNJHxvNy9D43S5RpkEjJtwvyjUcFbtGl6g7qLXlUFpBTsSCxXpBePSHE5OPbfm
-         mksQaolb9sXzm7+22TDrXsouNjPDrgzfQk55cGZ8dcksUDtecVBuIrV/rL0rDS4FIXGa
-         CvPH8RXGjKym1lMM679nc6sYC/ea1CzYYsrPdIStasXpT1d5deVX/6/ey0wtHLMxDXaU
-         REoOC8e2HrqtsbjM8fzvA/EMqQSINaRo0nL6ofS1dQc6bP4Jew/L1eiqWwgkD+J/NGRS
-         Uo0g==
+        id S1729842AbgLDQIY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 11:08:24 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:39416 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725923AbgLDQIY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 11:08:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607098017;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=9eAbWgXkbv2eDi+txBHbhzeU9UsROTvRNfv5Pgs5m+M=;
+        b=fxVQ7oJtBADuZolPKwcGemA9dq5Yk0KaQe94HiQzVU+N25InimNB+GE4SKAjKDWyrYjbVt
+        en8KFDtRt97GyeCykgSG7OwFScZqQyRZAvcSDzzObCkQRiCfObam5/UaHQfv+3js9FJ6ym
+        a9Z8S869pnJF4zBQRpuUNIYlRvg3xoA=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-203-uUXoP6B2NaeWYODiq0jZLQ-1; Fri, 04 Dec 2020 11:06:55 -0500
+X-MC-Unique: uUXoP6B2NaeWYODiq0jZLQ-1
+Received: by mail-wm1-f71.google.com with SMTP id q1so2099787wmq.2
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Dec 2020 08:06:55 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=PA56DtQ3U6OS3ADt3JtiQH9iJ5okRT03tMtGP16RXIA=;
-        b=ZzY2WPKiStz7Lr8K3cL11il9zvxN6V5JGNazaJwAtjp2Z/61knj36123R55IVUOIla
-         JNrk2UfrmTWpJPpKL6b3t7xuBr8Ypoo1MmyQwP4g7FqEcMqzU7gapuZqAIzFg4CVWqI+
-         We6RiIndo4BKAfrbcBOCNgjeDKelSBNAGHnIB12RipuTICvRV27zE5m2S4wzd74VxQNY
-         AZbGV+wnAW+zYXbrJGjc/IHkmdO5gK6qDD2mnUOo1WzE0ZcYO8XgrhOqEQt5DHqZOj2Y
-         OufT+q2/c3JE0H213kUdwXeovmrBMKvGR+DnacYOccrwEY6Rv8ywqBPrYNUFc+aVDhyO
-         Eixg==
-X-Gm-Message-State: AOAM530L4kfWCIoOhH1F/10UJZbnYKjR9uPBamnq2oCcljwdfPBt+3br
-        3ntiPEIyPoIYay4EXhVljUyB9A==
-X-Google-Smtp-Source: ABdhPJxnvGuh1h4AicIp2Z2Ob074CL8yAHW4/pb+/Ip6VIx5jqWNzkUvWI0x5L/Pf3ERPP+MY/J4+Q==
-X-Received: by 2002:a0c:e18f:: with SMTP id p15mr6149469qvl.12.1607096935114;
-        Fri, 04 Dec 2020 07:48:55 -0800 (PST)
-Received: from [192.168.1.45] (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
-        by smtp.gmail.com with ESMTPSA id y1sm5586436qky.63.2020.12.04.07.48.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 04 Dec 2020 07:48:54 -0800 (PST)
-To:     Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
-From:   Josef Bacik <josef@toxicpanda.com>
-Subject: [LSFMMBPF 2021] A status update
-Message-ID: <fd5264ac-c84d-e1d4-01e2-62b9c05af892@toxicpanda.com>
-Date:   Fri, 4 Dec 2020 10:48:53 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.1
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9eAbWgXkbv2eDi+txBHbhzeU9UsROTvRNfv5Pgs5m+M=;
+        b=KdHMze4sgxYrss91lsOCww+f8698gJShCivXeRPmEyYKG+zapXsuevuEptp7eO1Jpq
+         xIQtomdvREfj5hvnxA4LMAvtD7g/Mq9PsIsJKiZRJVEMoW+/qjdDjepqEptRsowIor0p
+         XT8zbrWN/gQB3Ijz14l0SLT7r5fzlQvLhOjBJYcJ0q70trQs5I5vO0zTlwvmt3g/feUV
+         2YO+NxOAuy0qVAT1aqC6kfCwU2kVOmqz5EeeE/KBR/P88PAGiCisGTzyyiv3kPUK4HJO
+         CEv3wJ4wFoF2LCn/xfFyOTR+ywlVl8ylvAJrPvgkAtYlJDvqbX7n1ch6+9FIPESZt6wn
+         mDsA==
+X-Gm-Message-State: AOAM5305yzYC5mBCSRP4GXji+fBomvzhjm03lXKIpbvdHKHgTO/oYm31
+        3ub1rQUOPa7ZbFm4uzNJJEKZA1vY7uchuzO7WQe89hePoD6unxkMFtXJX81v/sPmyn9F/1+wPgN
+        VM3MgIMBJkpdipp3kx0aQyw==
+X-Received: by 2002:adf:f2d1:: with SMTP id d17mr5697084wrp.339.1607098014702;
+        Fri, 04 Dec 2020 08:06:54 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyh1gDOi04oyZ2v1FusnkNbGm/lSr5qmo45s0i41AvRQyKg5Lky0V7syJMDHqbbPfTgzo71XQ==
+X-Received: by 2002:adf:f2d1:: with SMTP id d17mr5697059wrp.339.1607098014454;
+        Fri, 04 Dec 2020 08:06:54 -0800 (PST)
+Received: from steredhat (host-79-17-248-175.retail.telecomitalia.it. [79.17.248.175])
+        by smtp.gmail.com with ESMTPSA id b83sm3766348wmd.48.2020.12.04.08.06.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Dec 2020 08:06:53 -0800 (PST)
+Date:   Fri, 4 Dec 2020 17:06:51 +0100
+From:   Stefano Garzarella <sgarzare@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     stefanha@redhat.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
+        pbonzini@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [RFC PATCH 0/8] vhost: allow userspace to control vq cpu affinity
+Message-ID: <20201204160651.7wlselx4jm6k66mb@steredhat>
+References: <1607068593-16932-1-git-send-email-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <1607068593-16932-1-git-send-email-michael.christie@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+Hi Mike,
 
-We on the program committee hope everybody has been able to stay safe and 
-healthy during this challenging time, and look forward to being able to see all 
-of you in person again when it is safe.
+On Fri, Dec 04, 2020 at 01:56:25AM -0600, Mike Christie wrote:
+>These patches were made over mst's vhost branch.
+>
+>The following patches, made over mst's vhost branch, allow userspace
+>to set each vq's cpu affinity. Currently, with cgroups the worker thread
+>inherits the affinity settings, but we are at the mercy of the CPU
+>scheduler for where the vq's IO will be executed on. This can result in
+>the scheduler sometimes hammering a couple queues on the host instead of
+>spreading it out like how the guest's app might have intended if it was
+>mq aware.
+>
+>This version of the patches is not what you guys were talking about
+>initially like with the interface that was similar to nbd's old
+>(3.x kernel days) NBD_DO_IT ioctl where userspace calls down to the
+>kernel and we run from that context. These patches instead just
+>allow userspace to tell the kernel which CPU a vq should run on.
+>We then use the kernel's workqueue code to handle the thread
+>management.
 
-The current plans for LSFMMBPF 2021 are to schedule an in person conference in 
-H2 (after June) of 2021.  The tentative plan is to use the same hotel that we 
-had planned to use for 2020, as we still have contracts with them.  However 
-clearly that is not set in stone.  The Linux Foundation has done a wonderful job 
-of working with us to formulate a plan and figure out the logistics that will 
-work the best for everybody, I really can't thank them enough for their help.
+I agree that reusing kernel's workqueue code would be a good strategy.
 
-Once we have a finalized date we will redo the CFP emails, probably coming out 
-March time frame.  If you have any questions or concerns please feel free to 
-respond to this email, or email me or any of the other PC members privately and 
-we will do our best to answer your questions.  Rest assured the general timing 
-of the conference is going to take into account the wide variety of schedules 
-that we are dealing with, and we will do our best to come up with something that 
-works for as many as people as possible.
+One concern is how easy it is to implement an adaptive polling strategy 
+using workqueues. From what I've seen, adding some polling of both 
+backend and virtqueue helps to eliminate interrupts and reduce latency.
 
-We hope that you and your families continue to stay safe and health.  Thank you 
-on behalf of the program committee:
+Anyway, I'll take a closer look at your patches next week. :-)
 
-	Josef Bacik (Filesystems)
-	Amir Goldstein (Filesystems)
-	Martin K. Petersen (Storage)
-	Omar Sandoval (Storage)
-	Michal Hocko (MM)
-	Dan Williams (MM)
-	Alexei Starovoitov (BPF)
-	Daniel Borkmann (BPF)
+Thanks,
+Stefano
+
+>
+>I wanted to post this version first, because it is flexible
+>in that userspace can set things up so devs/vqs share threads/CPUs
+>and we don't have to worry about replicating a bunch of features
+>that the workqueue code already has like dynamic thread creation,
+>blocked work detection, idle thread detection and thread reaping,
+>and it also has an interface to control how many threads can be
+>created and which CPUs work can run on if we want to further restrict
+>that from userspace.
+>
+>Note that these patches have been lightly tested. I more wanted
+>to get comments on the overall approach, because I know it's
+>not really what you were thinking about. But while I worked
+>on being able to share threads with multiple devices, I kept
+>coming back to the existing workqueue code and thinking I'll
+>just copy and paste that.
+>
+>
+
