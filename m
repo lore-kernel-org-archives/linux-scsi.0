@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2680FC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:51 +0000 (UTC)
-Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFC2122D01
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C184C0018C
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:50 +0000 (UTC)
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by mail.kernel.org (Postfix) with ESMTP id CBD0B22D01
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:03:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727883AbgLDXDu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 18:03:50 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1374 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727348AbgLDXDu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 18:03:50 -0500
+        id S1727517AbgLDXDt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 18:03:49 -0500
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:48973 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727348AbgLDXDs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 18:03:48 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607123030; x=1638659030;
+  t=1607123028; x=1638659028;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=pjfu8r41g7xridLJ0i98fuv1C0sQXap513gkj+n0C0U=;
-  b=rs2u2irvubLQ+tj4MNLTTB29c1LX6ND4DtHquUXA3OyXTc08Ze8H/ClQ
-   IETGUtBYJlicMUJpLSCAgkJfU07akrCG2MhEsZ53fpjx8yedzoctlkWxC
-   62BIivno6Jkh+06tT9UgPH/JiKg4SP13CtJUP+WZ8ZJxC2EpgrmHOXww3
-   z9zVjsIKsv1dQbkkE6n1ZBJx2AbNcO5baOGqUtTHivnq344O+tKjzwofY
-   NTh2dOEAzpH8P6b8521QoGYlHx/Cvu2AI6thUEC24MfLcpBO8I9l1iys8
-   7LXoshgouD1zLDNptbYl1xF3qe1pM3wdjjxoiuxUDTR9lLXxdIV63lmXe
-   w==;
-IronPort-SDR: VlnmJrKOkz0xcXXor1YBRJp0bDt+WSY/eKU4GKIIqPMo3XFVo1lHHULUrxg4GJ+5RgISNMCMIo
- dbdoI5Nkh6IG5Qi2Wbl6vXuuuz3uLx82dW73Fx3DKqOHaSzyhIWXcgGP4kMavOpbl9MdyhtFWx
- gRFb4/Gd2MvUeEXr8bQOihm+ysEIp1rY2HGGKZnFL1mMC+L1W2FVo+zT42LcZT7FRSDV0shHkK
- yWA9eNlxTvMPpUoEXHgE7HBb1t+9vFMugYbe2rhaGWn7ntZAY/a3sOyB1iODcQEarmozl0jPU7
- IG0=
+  bh=V3ZFAee8kjnF5fem46YCVTq9Tu6zPg0HPIuxEfi3qMU=;
+  b=t+XH9hp0Fbh/aFtNUGUrIbO/CnLB1JiH/AKXLXYR0TTErDpKBK8e8PzO
+   ie1qAJP0gMHH2sD95KUKXfPfbZ/Suo6UsXRBPlidp/WGoJqJ27/DiktPU
+   OfK0+UJGBdFNyKrlyLnmcGQr12wqki07Nx29oTi6Bgqz8sKh52OSNExm0
+   79i38GydGS5+xDTiUnhp06PTnPu3A3/+lHQnY+GJcsDWzipNKiryPdYzl
+   YVMRV6VFBdbKEO63LeUv87TSdFmMLcw3hTcmQgENkktU5Nvv7kq0ts5PR
+   ShP31PoU9/ojT4fmRo4hbAOuW1gHI0T03Us5hRxnKlZrJEw0iU/mBEzsE
+   A==;
+IronPort-SDR: 7LT+VtB3CGeep+rRP7SU6ZS16lhK/LWRF9RtTp5n2BZLdSsjQqXaAJ3zfPXQqPQTQw5U9VCrQ6
+ wQj7lfN/llAl2wDovGgSz1igmpR+Tq+Le/0v1EJAqEV9EVPWRsL/Z92x8b51qar+Atvhv/Saoq
+ FO9nFxvjEl26DdM78QCdBPHjCBNoLMllNnnP5n84Mto5ea9BkL1LRsejAweeFE3AQs5NIOuVae
+ GZ8M32t+iaxRrC2mQymqXXHXu06jWFqkZ/5AYQ5gghoAvv41R/8btNshG00/Q+rv0EcElP+Xk4
+ 2cc=
 X-IronPort-AV: E=Sophos;i="5.78,393,1599548400"; 
-   d="scan'208";a="101548802"
+   d="scan'208";a="95934708"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 04 Dec 2020 16:02:20 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 04 Dec 2020 16:02:59 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 4 Dec 2020 16:02:18 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Fri, 4 Dec 2020 16:02:17 -0700
-Subject: [PATCH 15/25] smartpqi: fix host qdepth limit
+ 15.1.1979.3; Fri, 4 Dec 2020 16:02:59 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Fri, 4 Dec 2020 16:02:58 -0700
+Subject: [PATCH 22/25] smartpqi: update enclosure identifier in sysf
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -56,8 +56,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 4 Dec 2020 17:02:17 -0600
-Message-ID: <160712293782.21372.12605446472261001024.stgit@brunhilda>
+Date:   Fri, 4 Dec 2020 17:02:58 -0600
+Message-ID: <160712297842.21372.14060743747106039439.stgit@brunhilda>
 In-Reply-To: <160712276179.21372.51526310810782843.stgit@brunhilda>
 References: <160712276179.21372.51526310810782843.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -68,100 +68,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-* Correct scsi-mid-layer sending more requests than
-  exposed host Q depth causing firmware ASSERT issue.
-  * Add host Qdepth counter.
+* Update enclosure identifier field corresponding to
+  physical devices in lsscsi/sysfs.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    2 ++
- drivers/scsi/smartpqi/smartpqi_init.c |   19 ++++++++++++++++---
- 2 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 0b94c755a74c..c3b103b15924 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1345,6 +1345,8 @@ struct pqi_ctrl_info {
- 	struct work_struct ofa_quiesce_work;
- 	u32		ofa_bytes_requested;
- 	u16		ofa_cancel_reason;
-+
-+	atomic_t	total_scmds_outstanding;
- };
- 
- enum pqi_ctrl_mode {
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 0472ba6de43b..a9856cc9a951 100644
+index cfc5505e8234..01e62eb08583 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5509,6 +5509,8 @@ static inline bool pqi_is_bypass_eligible_request(struct scsi_cmnd *scmd)
- void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
+@@ -1841,7 +1841,6 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
+ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
+ 	struct pqi_scsi_dev *new_device)
  {
- 	struct pqi_scsi_dev *device;
-+	struct pqi_ctrl_info *ctrl_info;
-+	struct Scsi_Host *shost;
- 
- 	if (!scmd->device) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
-@@ -5521,7 +5523,11 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
- 		return;
- 	}
- 
-+	shost = scmd->device->host;
-+	ctrl_info = shost_to_hba(shost);
-+
- 	atomic_dec(&device->scsi_cmds_outstanding);
-+	atomic_dec(&ctrl_info->total_scmds_outstanding);
- }
- 
- static bool pqi_is_parity_write_stream(struct pqi_ctrl_info *ctrl_info,
-@@ -5609,6 +5615,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 	bool raid_bypassed;
- 
- 	device = scmd->device->hostdata;
-+	ctrl_info = shost_to_hba(shost);
- 
- 	if (!device) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
-@@ -5617,8 +5624,11 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 	}
- 
- 	atomic_inc(&device->scsi_cmds_outstanding);
--
--	ctrl_info = shost_to_hba(shost);
-+	if (atomic_inc_return(&ctrl_info->total_scmds_outstanding) >
-+		ctrl_info->scsi_ml_can_queue) {
-+		rc = SCSI_MLQUEUE_HOST_BUSY;
-+		goto out;
-+	}
- 
- 	if (pqi_ctrl_offline(ctrl_info) || pqi_device_in_remove(device)) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
-@@ -5661,8 +5671,10 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 	}
- 
- out:
--	if (rc)
-+	if (rc) {
- 		atomic_dec(&device->scsi_cmds_outstanding);
-+		atomic_dec(&ctrl_info->total_scmds_outstanding);
-+	}
- 
- 	return rc;
- }
-@@ -7985,6 +7997,7 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 
- 	INIT_WORK(&ctrl_info->event_work, pqi_event_worker);
- 	atomic_set(&ctrl_info->num_interrupts, 0);
-+	atomic_set(&ctrl_info->total_scmds_outstanding, 0);
- 
- 	INIT_DELAYED_WORK(&ctrl_info->rescan_work, pqi_rescan_worker);
- 	INIT_DELAYED_WORK(&ctrl_info->update_time_work, pqi_update_time_worker);
+-	existing_device->devtype = new_device->devtype;
+ 	existing_device->device_type = new_device->device_type;
+ 	existing_device->bus = new_device->bus;
+ 	if (new_device->target_lun_valid) {
 
