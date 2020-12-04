@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A751C1B0D9
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:04:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12F57C2BB48
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:04:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B1C822525
+	by mail.kernel.org (Postfix) with ESMTP id D7E5F22525
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387994AbgLDKDk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 05:03:40 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51240 "EHLO mx2.suse.de"
+        id S1729212AbgLDKDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 05:03:46 -0500
+Received: from mx2.suse.de ([195.135.220.15]:51214 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387862AbgLDKDc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Dec 2020 05:03:32 -0500
+        id S1729408AbgLDKDp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Dec 2020 05:03:45 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 639DEAF35;
+        by mx2.suse.de (Postfix) with ESMTP id 7B34BAF3E;
         Fri,  4 Dec 2020 10:01:48 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 35/37] ncr53c8xx: Use SAM status values
-Date:   Fri,  4 Dec 2020 11:01:38 +0100
-Message-Id: <20201204100140.140863-36-hare@suse.de>
+Subject: [PATCH 36/37] dc395x: drop internal result accessors
+Date:   Fri,  4 Dec 2020 11:01:39 +0100
+Message-Id: <20201204100140.140863-37-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201204100140.140863-1-hare@suse.de>
 References: <20201204100140.140863-1-hare@suse.de>
@@ -38,313 +38,218 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use SAM status values instead of the driver-defined ones.
-This also fixes a potential bug as the driver-defined values
-declare 'COMMAND TERMINATED' with a value of 0x20, whereas
-SCSI-II defines it with a value of 0x22.
+Drop the internal SCSI result accessors and use the
+midlayer-defined ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/ncr53c8xx.c | 83 +++++++++++++++++++++++++++---------------------
- drivers/scsi/ncr53c8xx.h | 16 ----------
- 2 files changed, 46 insertions(+), 53 deletions(-)
+ drivers/scsi/dc395x.c | 85 +++++++++++++++++++++------------------------------
+ 1 file changed, 34 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
-index 03d70138ad58..71e97384102a 100644
---- a/drivers/scsi/ncr53c8xx.c
-+++ b/drivers/scsi/ncr53c8xx.c
-@@ -148,6 +148,11 @@ static int ncr_debug = SCSI_NCR_DEBUG_FLAGS;
- 	#define DEBUG_FLAGS	SCSI_NCR_DEBUG_FLAGS
- #endif
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index b1125012bee0..f44e5390ef0d 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -160,22 +160,6 @@
+ #define DC395x_write16(acb,address,value)	outw((value), acb->io_port_base + (address))
+ #define DC395x_write32(acb,address,value)	outl((value), acb->io_port_base + (address))
  
-+/*
-+ * Locally used status flag
-+ */
-+#define SAM_STAT_ILLEGAL	0xff
-+
- static inline struct list_head *ncr_list_pop(struct list_head *head)
- {
- 	if (!list_empty(head)) {
-@@ -998,8 +1003,6 @@ typedef u32 tagmap_t;
- **	Other definitions
- */
- 
--#define ScsiResult(host_code, scsi_code) (((host_code) << 16) + ((scsi_code) & 0x7f))
+-/* cmd->result */
+-#define RES_TARGET		0x000000FF	/* Target State */
+-#define RES_TARGET_LNX  STATUS_MASK	/* Only official ... */
+-#define RES_ENDMSG		0x0000FF00	/* End Message */
+-#define RES_DID			0x00FF0000	/* DID_ codes */
+-#define RES_DRV			0xFF000000	/* DRIVER_ codes */
 -
- #define initverbose (driver_setup.verbose)
- #define bootverbose (np->verbose)
- 
-@@ -2430,7 +2433,7 @@ static	struct script script0 __initdata = {
- 	*/
- 	SCR_FROM_REG (SS_REG),
- 		0,
--	SCR_CALL ^ IFFALSE (DATA (S_GOOD)),
-+	SCR_CALL ^ IFFALSE (DATA (SAM_STAT_GOOD)),
- 		PADDRH (bad_status),
- 
- #ifndef	SCSI_NCR_CCB_DONE_SUPPORT
-@@ -2879,7 +2882,7 @@ static	struct scripth scripth0 __initdata = {
- 		8,
- 	SCR_TO_REG (HS_REG),
- 		0,
--	SCR_LOAD_REG (SS_REG, S_GOOD),
-+	SCR_LOAD_REG (SS_REG, SAM_STAT_GOOD),
- 		0,
- 	SCR_JUMP,
- 		PADDR (cleanup_ok),
-@@ -3341,15 +3344,15 @@ static	struct scripth scripth0 __initdata = {
- 		PADDRH (reset),
- }/*-------------------------< BAD_STATUS >-----------------*/,{
- 	/*
--	**	If command resulted in either QUEUE FULL,
-+	**	If command resulted in either TASK_SET FULL,
- 	**	CHECK CONDITION or COMMAND TERMINATED,
- 	**	call the C code.
- 	*/
--	SCR_INT ^ IFTRUE (DATA (S_QUEUE_FULL)),
-+	SCR_INT ^ IFTRUE (DATA (SAM_STAT_TASK_SET_FULL)),
- 		SIR_BAD_STATUS,
--	SCR_INT ^ IFTRUE (DATA (S_CHECK_COND)),
-+	SCR_INT ^ IFTRUE (DATA (SAM_STAT_CHECK_CONDITION)),
- 		SIR_BAD_STATUS,
--	SCR_INT ^ IFTRUE (DATA (S_TERMINATED)),
-+	SCR_INT ^ IFTRUE (DATA (SAM_STAT_COMMAND_TERMINATED)),
- 		SIR_BAD_STATUS,
- 	SCR_RETURN,
- 		0,
-@@ -4371,7 +4374,7 @@ static int ncr_queue_command (struct ncb *np, struct scsi_cmnd *cmd)
- 	*/
- 	cp->actualquirks		= 0;
- 	cp->host_status			= cp->nego_status ? HS_NEGOTIATE : HS_BUSY;
--	cp->scsi_status			= S_ILLEGAL;
-+	cp->scsi_status			= SAM_STAT_ILLEGAL;
- 	cp->parity_status		= 0;
- 
- 	cp->xerr_status			= XE_OK;
-@@ -4602,7 +4605,7 @@ static int ncr_reset_bus (struct ncb *np, struct scsi_cmnd *cmd, int sync_reset)
-  * in order to keep it alive.
-  */
- 	if (!found && sync_reset && !retrieve_from_waiting_list(0, np, cmd)) {
--		cmd->result = DID_RESET << 16;
-+		set_host_byte(cmd, DID_RESET);
- 		ncr_queue_done_cmd(np, cmd);
- 	}
- 
-@@ -4630,7 +4633,7 @@ static int ncr_abort_command (struct ncb *np, struct scsi_cmnd *cmd)
-  * First, look for the scsi command in the waiting list
-  */
- 	if (remove_from_waiting_list(np, cmd)) {
--		cmd->result = ScsiResult(DID_ABORT, 0);
-+		set_host_byte(cmd, DID_ABORT);
- 		ncr_queue_done_cmd(np, cmd);
- 		return SCSI_ABORT_SUCCESS;
- 	}
-@@ -4895,7 +4898,8 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 	**	Print out any error for debugging purpose.
- 	*/
- 	if (DEBUG_FLAGS & (DEBUG_RESULT|DEBUG_TINY)) {
--		if (cp->host_status!=HS_COMPLETE || cp->scsi_status!=S_GOOD) {
-+		if (cp->host_status != HS_COMPLETE ||
-+		    cp->scsi_status != SAM_STAT_GOOD) {
- 			PRINT_ADDR(cmd, "ERROR: cmd=%x host_status=%x "
- 					"scsi_status=%x\n", cmd->cmnd[0],
- 					cp->host_status, cp->scsi_status);
-@@ -4905,15 +4909,16 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 	/*
- 	**	Check the status.
- 	*/
-+	cmd->result = 0;
- 	if (   (cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_GOOD ||
--		    cp->scsi_status == S_COND_MET)) {
-+		&& (cp->scsi_status == SAM_STAT_GOOD ||
-+		    cp->scsi_status == SAM_STAT_CONDITION_MET)) {
- 		/*
- 		 *	All went well (GOOD status).
--		 *	CONDITION MET status is returned on 
-+		 *	CONDITION MET status is returned on
- 		 *	`Pre-Fetch' or `Search data' success.
- 		 */
--		cmd->result = ScsiResult(DID_OK, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
- 
- 		/*
- 		**	@RESID@
-@@ -4944,11 +4949,11 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 			}
- 		}
- 	} else if ((cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_CHECK_COND)) {
-+		&& (cp->scsi_status == SAM_STAT_CHECK_CONDITION)) {
- 		/*
- 		**   Check condition code
- 		*/
--		cmd->result = DID_OK << 16 | S_CHECK_COND;
-+		set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
- 
- 		/*
- 		**	Copy back sense data to caller's buffer.
-@@ -4965,20 +4970,20 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 			printk (".\n");
- 		}
- 	} else if ((cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_CONFLICT)) {
-+		&& (cp->scsi_status == SAM_STAT_RESERVATION_CONFLICT)) {
- 		/*
- 		**   Reservation Conflict condition code
- 		*/
--		cmd->result = DID_OK << 16 | S_CONFLICT;
--	
-+		set_status_byte(cmd, SAM_STAT_RESERVATION_CONFLICT);
-+
- 	} else if ((cp->host_status == HS_COMPLETE)
--		&& (cp->scsi_status == S_BUSY ||
--		    cp->scsi_status == S_QUEUE_FULL)) {
-+		&& (cp->scsi_status == SAM_STAT_BUSY ||
-+		    cp->scsi_status == SAM_STAT_TASK_SET_FULL)) {
- 
- 		/*
- 		**   Target is busy.
- 		*/
--		cmd->result = ScsiResult(DID_OK, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
- 
- 	} else if ((cp->host_status == HS_SEL_TIMEOUT)
- 		|| (cp->host_status == HS_TIMEOUT)) {
-@@ -4986,21 +4991,24 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 		/*
- 		**   No response
- 		*/
--		cmd->result = ScsiResult(DID_TIME_OUT, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
-+		set_host_byte(cmd, DID_TIME_OUT);
- 
- 	} else if (cp->host_status == HS_RESET) {
- 
- 		/*
- 		**   SCSI bus reset
- 		*/
--		cmd->result = ScsiResult(DID_RESET, cp->scsi_status);
-+		set_status_byte(cmd, sp->scsi_status);
-+		set_host_byte(cmd, DID_RESET);
- 
- 	} else if (cp->host_status == HS_ABORTED) {
- 
- 		/*
- 		**   Transfer aborted
- 		*/
--		cmd->result = ScsiResult(DID_ABORT, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
-+		set_host_byte(cmd, DID_ABORT);
- 
- 	} else {
- 
-@@ -5010,7 +5018,8 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 		PRINT_ADDR(cmd, "COMMAND FAILED (%x %x) @%p.\n",
- 			cp->host_status, cp->scsi_status, cp);
- 
--		cmd->result = ScsiResult(DID_ERROR, cp->scsi_status);
-+		set_status_byte(cmd, cp->scsi_status);
-+		set_host_byte(cmd, DID_ERROR);
- 	}
- 
- 	/*
-@@ -5026,10 +5035,10 @@ void ncr_complete (struct ncb *np, struct ccb *cp)
- 
- 		if (cp->host_status==HS_COMPLETE) {
- 			switch (cp->scsi_status) {
--			case S_GOOD:
-+			case SAM_STAT_GOOD:
- 				printk ("  GOOD");
- 				break;
--			case S_CHECK_COND:
-+			case SAM_STAT_CHECK_CONDITION:
- 				printk ("  SENSE:");
- 				p = (u_char*) &cmd->sense_buffer;
- 				for (i=0; i<14; i++)
-@@ -6564,7 +6573,7 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 
- 	switch(s_status) {
- 	default:	/* Just for safety, should never happen */
--	case S_QUEUE_FULL:
-+	case SAM_STAT_TASK_SET_FULL:
- 		/*
- 		**	Decrease number of tags to the number of 
- 		**	disconnected commands.
-@@ -6588,15 +6597,15 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 		*/
- 		cp->phys.header.savep = cp->startp;
- 		cp->host_status = HS_BUSY;
--		cp->scsi_status = S_ILLEGAL;
-+		cp->scsi_status = SAM_STAT_ILLEGAL;
- 
- 		ncr_put_start_queue(np, cp);
- 		if (disc_cnt)
- 			INB (nc_ctest2);		/* Clear SIGP */
- 		OUTL_DSP (NCB_SCRIPT_PHYS (np, reselect));
- 		return;
--	case S_TERMINATED:
--	case S_CHECK_COND:
-+	case SAM_STAT_COMMAND_TERMINATED:
-+	case SAM_STAT_CHECK_CONDIION:
- 		/*
- 		**	If we were requesting sense, give up.
- 		*/
-@@ -6646,7 +6655,7 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 		cp->phys.header.wlastp	= startp;
- 
- 		cp->host_status = HS_BUSY;
--		cp->scsi_status = S_ILLEGAL;
-+		cp->scsi_status = SAM_STAT_ILLEGAL;
- 		cp->auto_sense	= s_status;
- 
- 		cp->start.schedule.l_paddr =
-@@ -8035,7 +8044,7 @@ printk("ncr53c8xx_queue_command\n");
-      spin_lock_irqsave(&np->smp_lock, flags);
- 
-      if ((sts = ncr_queue_command(np, cmd)) != DID_OK) {
--	  cmd->result = sts << 16;
-+	     set_host_byte(cmd, sts;
- #ifdef DEBUG_NCR53C8XX
- printk("ncr53c8xx : command not queued - result=%d\n", sts);
- #endif
-@@ -8226,7 +8235,7 @@ static void process_waiting_list(struct ncb *np, int sts)
- #ifdef DEBUG_WAITING_LIST
- 	printk("%s: cmd %lx done forced sts=%d\n", ncr_name(np), (u_long) wcmd, sts);
- #endif
--			wcmd->result = sts << 16;
-+			set_host_byte(wcmd, sts);
- 			ncr_queue_done_cmd(np, wcmd);
- 		}
- 	}
-diff --git a/drivers/scsi/ncr53c8xx.h b/drivers/scsi/ncr53c8xx.h
-index 8326f5f01e07..fa14b5ca8783 100644
---- a/drivers/scsi/ncr53c8xx.h
-+++ b/drivers/scsi/ncr53c8xx.h
-@@ -1238,22 +1238,6 @@ struct scr_tblsel {
- **-----------------------------------------------------------
- */
- 
--/*
--**	Status
--*/
+-#define MK_RES(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt))
+-#define MK_RES_LNX(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt)<<1)
 -
--#define	S_GOOD		(0x00)
--#define	S_CHECK_COND	(0x02)
--#define	S_COND_MET	(0x04)
--#define	S_BUSY		(0x08)
--#define	S_INT		(0x10)
--#define	S_INT_COND_MET	(0x14)
--#define	S_CONFLICT	(0x18)
--#define	S_TERMINATED	(0x20)
--#define	S_QUEUE_FULL	(0x28)
--#define	S_ILLEGAL	(0xff)
--#define	S_SENSE		(0x80)
+-#define SET_RES_TARGET(who,tgt) { who &= ~RES_TARGET; who |= (int)(tgt); }
+-#define SET_RES_TARGET_LNX(who,tgt) { who &= ~RES_TARGET_LNX; who |= (int)(tgt) << 1; }
+-#define SET_RES_MSG(who,msg) { who &= ~RES_ENDMSG; who |= (int)(msg) << 8; }
+-#define SET_RES_DID(who,did) { who &= ~RES_DID; who |= (int)(did) << 16; }
+-#define SET_RES_DRV(who,drv) { who &= ~RES_DRV; who |= (int)(drv) << 24; }
 -
+ #define TAG_NONE 255
+ 
  /*
-  * End of ncrreg from FreeBSD
-  */
+@@ -986,7 +970,8 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd, void (*done)(struct s
+ 		cmd, cmd->device->id, (u8)cmd->device->lun, cmd->cmnd[0]);
+ 
+ 	/* Assume BAD_TARGET; will be cleared later */
+-	cmd->result = DID_BAD_TARGET << 16;
++	cmd->result = 0;
++	set_host_byte(cmd, DID_BAD_TARGET);
+ 
+ 	/* ignore invalid targets */
+ 	if (cmd->device->id >= acb->scsi_host->max_id ||
+@@ -1250,7 +1235,8 @@ static int dc395x_eh_abort(struct scsi_cmnd *cmd)
+ 		free_tag(dcb, srb);
+ 		list_add_tail(&srb->list, &acb->srb_free_list);
+ 		dprintkl(KERN_DEBUG, "eh_abort: Command was waiting\n");
+-		cmd->result = DID_ABORT << 16;
++		cmd->result = 0;
++		set_host_byte(cmd, DID_ABORT);
+ 		return SUCCESS;
+ 	}
+ 	srb = find_cmd(cmd, &dcb->srb_going_list);
+@@ -3178,6 +3164,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 	dprintkdbg(DBG_SG, "srb_done: srb=%p sg=%i(%i/%i) buf=%p\n",
+ 		   srb, scsi_sg_count(cmd), srb->sg_index, srb->sg_count,
+ 		   scsi_sgtalbe(cmd));
++	cmd->result = 0;
+ 	status = srb->target_status;
+ 	if (srb->flag & AUTO_REQSENSE) {
+ 		dprintkdbg(DBG_0, "srb_done: AUTO_REQSENSE1\n");
+@@ -3187,7 +3174,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		 */
+ 		srb->flag &= ~AUTO_REQSENSE;
+ 		srb->adapter_status = 0;
+-		srb->target_status = CHECK_CONDITION << 1;
++		srb->target_status = SAM_STAT_CHECK_CONDITION;
+ 		if (debug_enabled(DBG_1)) {
+ 			switch (cmd->sense_buffer[2] & 0x0f) {
+ 			case NOT_READY:
+@@ -3234,23 +3221,22 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 					*((unsigned int *)(cmd->sense_buffer + 3)));
+ 		}
+ 
+-		if (status == (CHECK_CONDITION << 1)) {
+-			cmd->result = DID_BAD_TARGET << 16;
++		if (status == SAM_STAT_CHECK_CONDITION) {
++			set_host_byte(cmd, DID_BAD_TARGET);
+ 			goto ckc_e;
+ 		}
+ 		dprintkdbg(DBG_0, "srb_done: AUTO_REQSENSE2\n");
+ 
+ 		if (srb->total_xfer_length
+-		    && srb->total_xfer_length >= cmd->underflow)
+-			cmd->result =
+-			    MK_RES_LNX(DRIVER_SENSE, DID_OK,
+-				       srb->end_message, CHECK_CONDITION);
+-		/*SET_RES_DID(cmd->result,DID_OK) */
+-		else
+-			cmd->result =
+-			    MK_RES_LNX(DRIVER_SENSE, DID_OK,
+-				       srb->end_message, CHECK_CONDITION);
+-
++		    && srb->total_xfer_length >= cmd->underflow) {
++			set_driver_byte(cmd, DRIVER_SENSE);
++			set_msg_byte(cmd, srb->end_message);
++			set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
++		} else {
++			set_driver_byte(cmd, DRIVER_SENSE);
++			set_msg_byte(cmd, srb->end_message);
++			set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
++		}
+ 		goto ckc_e;
+ 	}
+ 
+@@ -3259,10 +3245,10 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		/*
+ 		 * target status..........................
+ 		 */
+-		if (status_byte(status) == CHECK_CONDITION) {
++		if (status == SAM_STAT_CHECK_CONDITION) {
+ 			request_sense(acb, dcb, srb);
+ 			return;
+-		} else if (status_byte(status) == QUEUE_FULL) {
++		} else if (status == SAM_STAT_TASK_SET_FULL) {
+ 			tempcnt = (u8)list_size(&dcb->srb_going_list);
+ 			dprintkl(KERN_INFO, "QUEUE_FULL for dev <%02i-%i> with %i cmnds\n",
+ 			     dcb->target_id, dcb->target_lun, tempcnt);
+@@ -3278,12 +3264,12 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		} else if (status == SCSI_STAT_SEL_TIMEOUT) {
+ 			srb->adapter_status = H_SEL_TIMEOUT;
+ 			srb->target_status = 0;
+-			cmd->result = DID_NO_CONNECT << 16;
++			set_host_byte(cmd, DID_NO_CONNECT);
+ 		} else {
+ 			srb->adapter_status = 0;
+-			SET_RES_DID(cmd->result, DID_ERROR);
+-			SET_RES_MSG(cmd->result, srb->end_message);
+-			SET_RES_TARGET(cmd->result, status);
++			set_host_byte(cmd, DID_ERROR);
++			set_msg_byte(cmd, srb->end_message);
++			set_status_byte(cmd, status);
+ 
+ 		}
+ 	} else {
+@@ -3293,16 +3279,16 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		status = srb->adapter_status;
+ 		if (status & H_OVER_UNDER_RUN) {
+ 			srb->target_status = 0;
+-			SET_RES_DID(cmd->result, DID_OK);
+-			SET_RES_MSG(cmd->result, srb->end_message);
++			set_host_byte(cmd, DID_OK);
++			set_msg_byte(cmd, srb->end_message);
+ 		} else if (srb->status & PARITY_ERROR) {
+-			SET_RES_DID(cmd->result, DID_PARITY);
+-			SET_RES_MSG(cmd->result, srb->end_message);
++			set_host_byte(cmd, DID_PARITY);
++			set_msg_byte(cmd, srb->end_message);
+ 		} else {	/* No error */
+ 
+ 			srb->adapter_status = 0;
+ 			srb->target_status = 0;
+-			SET_RES_DID(cmd->result, DID_OK);
++			set_host_byte(cmd, DID_OK);
+ 		}
+ 	}
+ 
+@@ -3323,14 +3309,14 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		base = scsi_kmap_atomic_sg(sg, scsi_sg_count(cmd), &offset, &len);
+ 		ptr = (struct ScsiInqData *)(base + offset);
+ 
+-		if (!ckc_only && (cmd->result & RES_DID) == 0
++		if (!ckc_only && host_byte(cmd->result) == DID_OK
+ 		    && cmd->cmnd[2] == 0 && scsi_bufflen(cmd) >= 8
+ 		    && dir != DMA_NONE && ptr && (ptr->Vers & 0x07) >= 2)
+ 			dcb->inquiry7 = ptr->Flags;
+ 
+ 	/*if( srb->cmd->cmnd[0] == INQUIRY && */
+ 	/*  (host_byte(cmd->result) == DID_OK || status_byte(cmd->result) & CHECK_CONDITION) ) */
+-		if ((cmd->result == (DID_OK << 16) ||
++		if (cmd->result == 0 ||
+ 		     status_byte(cmd->result) == CHECK_CONDITION)) {
+ 			if (!dcb->init_tcq_flag) {
+ 				add_dev(acb, dcb, ptr);
+@@ -3382,16 +3368,14 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
+ 		struct scsi_cmnd *p;
+ 
+ 		list_for_each_entry_safe(srb, tmp, &dcb->srb_going_list, list) {
+-			int result;
+-
+ 			p = srb->cmd;
+-			result = MK_RES(0, did_flag, 0, 0);
+ 			printk("G:%p(%02i-%i) ", p,
+ 			       p->device->id, (u8)p->device->lun);
+ 			list_del(&srb->list);
+ 			free_tag(dcb, srb);
+ 			list_add_tail(&srb->list, &acb->srb_free_list);
+-			p->result = result;
++			p->result = 0;
++			set_host_byte(p, did_flag);
+ 			pci_unmap_srb_sense(acb, srb);
+ 			pci_unmap_srb(acb, srb);
+ 			if (force) {
+@@ -3412,14 +3396,13 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
+ 
+ 		/* Waiting queue */
+ 		list_for_each_entry_safe(srb, tmp, &dcb->srb_waiting_list, list) {
+-			int result;
+ 			p = srb->cmd;
+ 
+-			result = MK_RES(0, did_flag, 0, 0);
+ 			printk("W:%p<%02i-%i>", p, p->device->id,
+ 			       (u8)p->device->lun);
+ 			list_move_tail(&srb->list, &acb->srb_free_list);
+-			p->result = result;
++			p->result = 0;
++			set_host_byte(p, did_flag);
+ 			pci_unmap_srb_sense(acb, srb);
+ 			pci_unmap_srb(acb, srb);
+ 			if (force) {
 -- 
 2.16.4
 
