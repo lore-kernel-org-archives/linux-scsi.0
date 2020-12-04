@@ -2,181 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D82F3C4361B
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 12:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D67C4361A
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 13:11:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94B3622A85
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 12:11:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EE9D22AAC
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 13:11:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730110AbgLDMLN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 07:11:13 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42286 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730159AbgLDMLK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 07:11:10 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0B4Bxsol031196;
-        Fri, 4 Dec 2020 04:10:07 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : subject
- : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0220;
- bh=wA4xBSSsGal/tA3HJx7g62qfjzndjfjElG+Kg8ewmaU=;
- b=Fzs187LaQnpekny2setSZ/skIIRCy+1uNscwS9w81B7dqcYLIqPG7B3KVYlRndRJOAUN
- +RqvsF8YvX85A5YuUeIhtdPCy1dH7PU+dt4Ek5ta1HRYF4ea4WfzNdxFdOUZ7jjj9Ghz
- yPMC5LM0knkW1r52WuIQyEbk/cWQJPah1lKmPAAfk9tsdL6wFGyLlwlu3PItdBbUQtBN
- 5nMJmRcO0pBOjbAu5b1A+0qlhhygr/i4eCYqX20M7YMMlYECNiOXjQ0yni+CMhn+sNH8
- MliqCQsvPlDjEAXSFD92yORktQNG3837Y4awY2QdrSCERt1iqZfpG5Cb/1V8jsUVAbDu AA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 357jsjg9yt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 04 Dec 2020 04:10:07 -0800
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 4 Dec
- 2020 04:10:06 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 4 Dec
- 2020 04:10:05 -0800
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (104.47.59.174)
- by SC-EXCH03.marvell.com (10.93.176.83) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Fri, 4 Dec 2020 04:10:04 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZRAnbEwPnV5NFxRxi7gDcxPvRPo7ZSSaG+sMZFHFZik4VcXNFjKCaU8UgRDEKE/1C5hczsq8vxBJl/Bmb5p5Elzr/XyML759LPJ2IKKmSXGmGi5pNcK/PQpj0XZQygYh4l3+ipIHtwJUmauKtpu1J95bplSNv86KBlgwx1NEYqlVxauoQywwe9G7TXGyH+tDLNVieaVVHRrSTCYmD+oP7OoDRvgMBKutvVsALFj3Ii9X7FIAyG1kCm6AAj0Kg7Lw+ciyZHOZVwB415ieYGecwn5auExpcfgHzg8GtKaLfyGceeLARBdNChl9xkaf4S4IHETx8+VzPBLaOnR103jr5A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wA4xBSSsGal/tA3HJx7g62qfjzndjfjElG+Kg8ewmaU=;
- b=dg0NUjN/OFfuRNJ8OHOW2A4QvpRhy8i/EgYuuCNCLIaGpaMbieVnTpwd0uTNoJDO+kK/ohb+pPxcUFGYh3Muf9emqOZOLUvEJsfHmrKEEOjumSJdHHTh4wLDnSIVkUdiMhlac5gSVvIXDUQlasYFNhtPQVv8oC996CNasshxCqLerIDHRI2JBo/jVAqVleiSfZiLA2O1uKJoKpGTKc05CxmGOkS//je9izk63pnpa/k2UwOBDsODOFFcyQLHHUtU8SpfikF5WIijBQIY8A7P9ZWLeWnh6GNKhywX6VmYvQOAOGMF5JcbPHnCcmjzBV8OJCVQFTbIU5EPUh92i9CQAA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wA4xBSSsGal/tA3HJx7g62qfjzndjfjElG+Kg8ewmaU=;
- b=O3rXfhos3sYtVrusSaVXocL3TI2XMs9S5TSkfCj17vIt/MEvC3FzXZDAE7olpfemboftFeXJqPczazZsq73TvW3U5/63cn1ZPaA66PI40d8bPTHJ9rsLIGaCYG+8Kp3AYrnY1JcT/PW0rCt0mcYpWmnsCz4aQ6Wi468R87x4WWM=
-Received: from BYAPR18MB2998.namprd18.prod.outlook.com (2603:10b6:a03:136::14)
- by SJ0PR18MB4044.namprd18.prod.outlook.com (2603:10b6:a03:2ed::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3632.17; Fri, 4 Dec
- 2020 12:10:04 +0000
-Received: from BYAPR18MB2998.namprd18.prod.outlook.com
- ([fe80::7475:4e06:6e00:1553]) by BYAPR18MB2998.namprd18.prod.outlook.com
- ([fe80::7475:4e06:6e00:1553%4]) with mapi id 15.20.3632.018; Fri, 4 Dec 2020
- 12:10:03 +0000
-From:   Manish Rangankar <mrangankar@marvell.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        "subbu.seetharaman@broadcom.com" <subbu.seetharaman@broadcom.com>,
-        "ketan.mukadam@broadcom.com" <ketan.mukadam@broadcom.com>,
-        "jitendra.bhivare@broadcom.com" <jitendra.bhivare@broadcom.com>,
-        "lduncan@suse.com" <lduncan@suse.com>,
-        "cleech@redhat.com" <cleech@redhat.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "varun@chelsio.com" <varun@chelsio.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "james.bottomley@hansenpartnership.com" 
-        <james.bottomley@hansenpartnership.com>
-Subject: RE: [EXT] [RFC PATCH 00/15] libiscsi: lock clean ups
-Thread-Topic: [EXT] [RFC PATCH 00/15] libiscsi: lock clean ups
-Thread-Index: AQHWyClEWbBPvU3sKEm4tkEveqjdmqnm2beg
-Date:   Fri, 4 Dec 2020 12:10:03 +0000
-Message-ID: <BYAPR18MB2998D0E155BDC4C595820965D8F10@BYAPR18MB2998.namprd18.prod.outlook.com>
-References: <1606858196-5421-1-git-send-email-michael.christie@oracle.com>
-In-Reply-To: <1606858196-5421-1-git-send-email-michael.christie@oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=marvell.com;
-x-originating-ip: [106.193.86.132]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 873631ab-3d92-4664-f8fe-08d8984d8802
-x-ms-traffictypediagnostic: SJ0PR18MB4044:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SJ0PR18MB404405C0426AED5C9AF6AD56D8F10@SJ0PR18MB4044.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6108;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Xoscazv+Fa6T57IC5BdnuyAF9DFgVc0QfEZoqvYCCI+va+RleDG9qhf2el96iHDrQ1ilUf5HIhlg4Z5PzDn9X9d+1kDnrjuxQeOUBVAtFoLVlPc+hZd5Pm/tJeZ4icBRGn8JaxCNM0Ks1q73aXn4Y8/8CQKnHtqJfjkfR1C009aIECMVc4qkXB8wvWBTFsirq2kfu2V0pD9AAEevCbnfsqA2FczVMlap/VP6Bfg3ryJtsnB6xm9HqUh4yI0tTu+LkNWkpIiPjQXryIAWF7vu39eqm8aNEVuLcHNQU+qHb9gIDfSlgphm2AsiyXkOjTQXMZbsb1slClFBL5AficAHAOa0vXRzRqLKhKNlvm73tmbtriNPHhy6OXpgDtdIXfXJ
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR18MB2998.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(136003)(396003)(366004)(346002)(376002)(66476007)(64756008)(66556008)(186003)(83380400001)(7416002)(478600001)(53546011)(66946007)(76116006)(2906002)(55016002)(9686003)(6506007)(921005)(86362001)(26005)(66446008)(7696005)(52536014)(8676002)(5660300002)(71200400001)(8936002)(33656002)(316002)(110136005);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?zEM5diK+2I6zl5BzajuN/iRz85Y3mi1FcMlI50bFJme79/YfZ39m8tLJA++Q?=
- =?us-ascii?Q?fXE3pCtUVqOmZT0Tbp3loAPFnZxBB6aLLE1H3igX4qMcb0/yK+38tgPLnmbh?=
- =?us-ascii?Q?cQRx7iXNouyKM8ITkUns6Tf7twQOgBlOoH68M+c08T4MJoC0PukBZTWggB4g?=
- =?us-ascii?Q?AfbCB+CCidaxEqnuGz5Ud+IskqlSwVJB0zDEV/2ZyvHbx6JaFr44UNs8ZGBg?=
- =?us-ascii?Q?sFcw+c4LguromQN8YYwdAKvMPTR9I0t6U+95Jaq2bL+H62xQL1ipQTqcDxpT?=
- =?us-ascii?Q?SN3kXhJYTIduzhQQzaOfdN7yyLPRbxtrm9GneKsQOQpnKCdxr7VRRQZM7dj4?=
- =?us-ascii?Q?UtuzAZ99Hr61DwRYK1W2Fcw31AiFs3xXubtL1wayh6RamYZcsAYk4TBOhfb7?=
- =?us-ascii?Q?vTuz2RRIUoLTF1WuvzxWpOwdPbetBeHsfth0CJBDCR0dKIjky7iam+prGDmX?=
- =?us-ascii?Q?J/ARA5IPQK+Byf8PLHOr/mKk95rZDdcYy8VAozcrAiIVc1sG599ChV84ZhdG?=
- =?us-ascii?Q?Y4t2ZHkC0pHmMN3DK9yH9ihz0TlaPqioamvKVIfcU+GYHnJv9mhFQvefY52I?=
- =?us-ascii?Q?HbZx+ZRuWcCviTP2jeZ11S/BQncbXxXhHyFJIeppp9ZEItqpdOyRemHYeTY6?=
- =?us-ascii?Q?SFJvaysxKFPzdXaxJ1Sf+ak/CTVqUg+lK3fOAZmkVoUnidb/9lVkPqCvkcWZ?=
- =?us-ascii?Q?Tv/ELgkhisRXMT/j8x+78wqM0YrtONp0PYSbl9e6dAWb+jG0KM4o4/VzoCg7?=
- =?us-ascii?Q?5RPEDQFFBu6arAaxF3hCaAZuLtKCyAztarkxhrPjKmjwVGVr3En9Qtv5YtX1?=
- =?us-ascii?Q?0vGcJWFhF2Q2Z9OqX0YuOow2w+o97RzBYBs9UQCSOQZ9soPoh2mnis7wySVx?=
- =?us-ascii?Q?Hsomsgtxz2L+9jY4cMw04S069W0QQmbg3TU/09A2afU5Z1atnZ33maNfgwZS?=
- =?us-ascii?Q?7wYF0d/wSLZfZOlUtq+2MN8YJCQUeaW4uNHACp8cRHU=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727004AbgLDNLU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 08:11:20 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22552 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728066AbgLDNLU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 08:11:20 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B4D4n5B195101;
+        Fri, 4 Dec 2020 08:10:31 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to : sender; s=pp1;
+ bh=2re6ZhL9EGLPSFOa590Lhw2IyMBxMx3ZD3FeOmRe8MY=;
+ b=Qij7k718Wvfq/xB/TWTEa/rksnoPV1vp3bs7kBbrVEW337GF5WHxt4ilx4lzpXW6b9SY
+ rexw8GV1JXQh7S+kLRbcGHlk+DFeO3OcxzDCW2t1Zk4qHe5zD6ItR1CwhFdi15Ftj65i
+ lfDAuZSVDqWzvsxKI2cqhwZmH9O67S+/baiJKhnerWfKST/Ro+r/Kcx5LfcfszBnLK/t
+ IwKDJSF/6hcGAi4li7a8b36jctYRGBm0fYhThkBSeOg29SaAmOtyH8hcb1FMi3wolG/y
+ /YNX/JWZs9NNrQ7bj7MTaNZWguOMqTqGRUb1sqdprh/gwXniHv1YNUqzS/n5XuuoXUry vQ== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3578ammqjp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Dec 2020 08:10:31 -0500
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B4Cmt1l000372;
+        Fri, 4 Dec 2020 13:10:29 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma06ams.nl.ibm.com with ESMTP id 354fpdd1rs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Dec 2020 13:10:29 +0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B4DARlk7930530
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 4 Dec 2020 13:10:27 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 01C81AE057;
+        Fri,  4 Dec 2020 13:10:27 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id CF14FAE056;
+        Fri,  4 Dec 2020 13:10:25 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.145.180.48])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Fri,  4 Dec 2020 13:10:25 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1klAqJ-000F08-NN; Fri, 04 Dec 2020 14:09:47 +0100
+Date:   Fri, 4 Dec 2020 14:09:36 +0100
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 14/37] zfcp: do not set COMMAND_COMPLETE
+Message-ID: <20201204130936.GA7858@t480-pf1aa2c2>
+References: <20201204100140.140863-1-hare@suse.de>
+ <20201204100140.140863-15-hare@suse.de>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR18MB2998.namprd18.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 873631ab-3d92-4664-f8fe-08d8984d8802
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Dec 2020 12:10:03.4045
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: aqBdrZx1q13zzvoRrpjgCedvwxwvUpxPXUzPNVpe1ToCnsBIgHFMg+qcy6Z7Opq0Z6Z3ccxcUHdrklJaiFgSwQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR18MB4044
-X-OriginatorOrg: marvell.com
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201204100140.140863-15-hare@suse.de>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-12-04_03:2020-12-04,2020-12-04 signatures=0
+ definitions=2020-12-04_04:2020-12-04,2020-12-04 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ adultscore=0 mlxlogscore=999 spamscore=0 impostorscore=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 mlxscore=0
+ clxscore=1011 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012040075
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Fri, Dec 04, 2020 at 11:01:17AM +0100, Hannes Reinecke wrote:
+> COMMAND_COMPLETE is defined as '0', and it is a SCSI parallel message
+> to boot. So drop the call to set_msg_byte().
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/s390/scsi/zfcp_fc.h | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/s390/scsi/zfcp_fc.h b/drivers/s390/scsi/zfcp_fc.h
+> index 6902ae1f8e4f..8aaf409ce9cb 100644
+> --- a/drivers/s390/scsi/zfcp_fc.h
+> +++ b/drivers/s390/scsi/zfcp_fc.h
+> @@ -275,7 +275,6 @@ void zfcp_fc_eval_fcp_rsp(struct fcp_resp_with_ext *fcp_rsp,
+>  	u32 sense_len, resid;
+>  	u8 rsp_flags;
+>  
+> -	set_msg_byte(scsi, COMMAND_COMPLETE);
+>  	scsi->result |= fcp_rsp->resp.fr_status;
+>  
+>  	rsp_flags = fcp_rsp->resp.fr_flags;
+> -- 
+> 2.16.4
+> 
 
-> -----Original Message-----
-> From: Mike Christie <michael.christie@oracle.com>
-> Sent: Wednesday, December 2, 2020 3:00 AM
-> To: subbu.seetharaman@broadcom.com;
-> ketan.mukadam@broadcom.com; jitendra.bhivare@broadcom.com;
-> lduncan@suse.com; cleech@redhat.com; Nilesh Javali
-> <njavali@marvell.com>; Manish Rangankar <mrangankar@marvell.com>;
-> GR-QLogic-Storage-Upstream <GR-QLogic-Storage-
-> Upstream@marvell.com>; varun@chelsio.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-> james.bottomley@hansenpartnership.com
-> Subject: [EXT] [RFC PATCH 00/15] libiscsi: lock clean ups
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
-> The following patches made over Linus's current tree cleanup the locking =
-in
-> libiscsi so we again, for the main IO path, have the frwd lock only used =
-in
-> the xmit/queue path and the back lock used in the completion path and no
-> taskqueuelock. The EH paths still use both the frwd/back lock though.
->=20
-> These patches are not ready for merging. I have only tested iscsi_tcp.
-> Also, even though the changes to the offload drivers look like minimal AP=
-I
-> use changes, I wanted to try and get some tests done as the changes affec=
-t
-> the main IO and error paths.
->=20
-Mike,
+Thanks, Hannes.
 
-We will run the sanity test for qedi and bnx2i.
+Acked-by: Benjamin Block <bblock@linux.ibm.com>
 
-Thanks,
-Manish=20
+-- 
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
