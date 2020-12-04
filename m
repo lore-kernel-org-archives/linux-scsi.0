@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45412C2BB40
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A16C2BB48
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:03:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9BAE22955
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:03:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 568D822955
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387866AbgLDKD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 05:03:29 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51208 "EHLO mx2.suse.de"
+        id S2387837AbgLDKDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 05:03:30 -0500
+Received: from mx2.suse.de ([195.135.220.15]:51210 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387828AbgLDKD2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Dec 2020 05:03:28 -0500
+        id S2387776AbgLDKD1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Dec 2020 05:03:27 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 2C25EAF26;
+        by mx2.suse.de (Postfix) with ESMTP id 03A90AD6D;
         Fri,  4 Dec 2020 10:01:48 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 22/37] scsi_debug: do not set COMMAND_COMPLETE
-Date:   Fri,  4 Dec 2020 11:01:25 +0100
-Message-Id: <20201204100140.140863-23-hare@suse.de>
+Subject: [PATCH 16/37] hpsa: do not set COMMAND_COMPLETE
+Date:   Fri,  4 Dec 2020 11:01:19 +0100
+Message-Id: <20201204100140.140863-17-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201204100140.140863-1-hare@suse.de>
 References: <20201204100140.140863-1-hare@suse.de>
@@ -38,28 +38,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-COMMAND_COMPLETE is defined as '0', so setting it is quite pointless.
+COMMAND_COMPLETE is defined as '0', and it is a SCSI parallel message
+to boot. So drop the call to set_msg_byte().
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/scsi_debug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hpsa.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 24c0f7ec0351..93048f13a4e3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -853,7 +853,7 @@ static const int illegal_condition_result =
- 	(DRIVER_SENSE << 24) | (DID_ABORT << 16) | SAM_STAT_CHECK_CONDITION;
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index f10489e4f804..2ccf5596c9cf 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2396,7 +2396,6 @@ static int handle_ioaccel_mode2_error(struct ctlr_info *h,
+ 			break;
+ 		case IOACCEL2_STATUS_SR_UNDERRUN:
+ 			cmd->result = (DID_OK << 16);		/* host byte */
+-			cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
+ 			ioaccel2_resid = get_unaligned_le32(
+ 						&c2->error_data.resid_cnt[0]);
+ 			scsi_set_resid(cmd, ioaccel2_resid);
+@@ -2597,8 +2596,7 @@ static void complete_scsi_command(struct CommandList *cp)
+ 		(c2->sg[0].chain_indicator == IOACCEL2_CHAIN))
+ 		hpsa_unmap_ioaccel2_sg_chain_block(h, c2);
  
- static const int device_qfull_result =
--	(DID_OK << 16) | (COMMAND_COMPLETE << 8) | SAM_STAT_TASK_SET_FULL;
-+	(DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+-	cmd->result = (DID_OK << 16); 		/* host byte */
+-	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
++	cmd->result = (DID_OK << 16);		/* host byte */
  
- static const int condition_met_result = SAM_STAT_CONDITION_MET;
- 
+ 	/* SCSI command has already been cleaned up in SML */
+ 	if (dev->was_removed) {
 -- 
 2.16.4
 
