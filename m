@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86272C2BBCA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B275C2BBCD
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:04:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3927F22525
+	by mail.kernel.org (Postfix) with ESMTP id 0F15A22795
 	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 10:04:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729408AbgLDKDr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2387430AbgLDKDr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 4 Dec 2020 05:03:47 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51216 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51210 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729332AbgLDKDp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 4 Dec 2020 05:03:45 -0500
+        id S1728701AbgLDKDq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 4 Dec 2020 05:03:46 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9341AAF43;
+        by mx2.suse.de (Postfix) with ESMTP id 7B641AF40;
         Fri,  4 Dec 2020 10:01:48 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 34/37] advansys: kill driver_defined status byte accessors
-Date:   Fri,  4 Dec 2020 11:01:37 +0100
-Message-Id: <20201204100140.140863-35-hare@suse.de>
+Subject: [PATCH 37/37] scsi: use non-shifted status values
+Date:   Fri,  4 Dec 2020 11:01:40 +0100
+Message-Id: <20201204100140.140863-38-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201204100140.140863-1-hare@suse.de>
 References: <20201204100140.140863-1-hare@suse.de>
@@ -38,224 +38,131 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace the driver-defined status byte accessors by the
-mid-layer defined ones.
+Use standard SAM status values intead of shifting the linux ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/advansys.c | 84 ++++++++++++++-----------------------------------
- 1 file changed, 24 insertions(+), 60 deletions(-)
+ drivers/scsi/3w-9xxx.c                | 3 ++-
+ drivers/scsi/3w-xxxx.c                | 6 ++++--
+ drivers/scsi/arcmsr/arcmsr_hba.c      | 2 +-
+ drivers/scsi/megaraid.c               | 6 +++---
+ drivers/scsi/megaraid/megaraid_mbox.c | 8 ++++----
+ 5 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 79830e77afa9..9529074c8886 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -2085,12 +2085,6 @@ do { \
- #define ASC_BUSY        0
- #define ASC_ERROR       (-1)
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 48fcc0ad1db7..9adcf67980a6 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1342,7 +1342,8 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
+ 				/* If error, command failed */
+ 				if (error == 1) {
+ 					/* Ask for a host reset */
+-					cmd->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++					cmd->result =
++						(DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 				}
  
--/* struct scsi_cmnd function return codes */
--#define STATUS_BYTE(byte)   (byte)
--#define MSG_BYTE(byte)      ((byte) << 8)
--#define HOST_BYTE(byte)     ((byte) << 16)
--#define DRIVER_BYTE(byte)   ((byte) << 24)
--
- #define ASC_STATS(shost, counter) ASC_STATS_ADD(shost, counter, 1)
- #ifndef ADVANSYS_STATS
- #define ASC_STATS_ADD(shost, counter, count)
-@@ -5986,10 +5980,10 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	/*
- 	 * 'done_status' contains the command's ending status.
- 	 */
-+	scp->result = 0;
- 	switch (scsiqp->done_status) {
- 	case QD_NO_ERROR:
- 		ASC_DBG(2, "QD_NO_ERROR\n");
--		scp->result = 0;
+ 				/* Report residual bytes for single sgl */
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index d90b9fca4aea..8fca8eddcf1a 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -429,7 +429,8 @@ static int tw_decode_sense(TW_Device_Extension *tw_dev, int request_id, int fill
+ 					/* Additional sense code qualifier */
+ 					tw_dev->srb[request_id]->sense_buffer[13] = tw_sense_table[i][3];
  
- 		/*
- 		 * Check for an underrun condition.
-@@ -6010,47 +6004,33 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 		ASC_DBG(2, "QD_WITH_ERROR\n");
- 		switch (scsiqp->host_status) {
- 		case QHSTA_NO_ERROR:
-+			set_status_byte(scp, scsiqp->scsi_status);
- 			if (scsiqp->scsi_status == SAM_STAT_CHECK_CONDITION) {
- 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
- 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
- 						  SCSI_SENSE_BUFFERSIZE);
--				/*
--				 * Note: The 'status_byte()' macro used by
--				 * target drivers defined in scsi.h shifts the
--				 * status byte returned by host drivers right
--				 * by 1 bit.  This is why target drivers also
--				 * use right shifted status byte definitions.
--				 * For instance target drivers use
--				 * CHECK_CONDITION, defined to 0x1, instead of
--				 * the SCSI defined check condition value of
--				 * 0x2. Host drivers are supposed to return
--				 * the status byte as it is defined by SCSI.
--				 */
--				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
--				    STATUS_BYTE(scsiqp->scsi_status);
--			} else {
--				scp->result = STATUS_BYTE(scsiqp->scsi_status);
-+				set_driver_byte(scp, DRIVER_SENSE);
+-					tw_dev->srb[request_id]->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++					tw_dev->srb[request_id]->result =
++						(DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 					return TW_ISR_DONT_RESULT; /* Special case for isr to not over-write result */
+ 				}
+ 			}
+@@ -2161,7 +2162,8 @@ static irqreturn_t tw_interrupt(int irq, void *dev_instance)
+ 				/* If error, command failed */
+ 				if (error == 1) {
+ 					/* Ask for a host reset */
+-					tw_dev->srb[request_id]->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++					tw_dev->srb[request_id]->result =
++						(DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 				}
+ 
+ 				/* Now complete the io */
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index f241ae15496a..8bd10cea325e 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1337,7 +1337,7 @@ static void arcmsr_report_sense_info(struct CommandControlBlock *ccb)
+ 
+ 	struct scsi_cmnd *pcmd = ccb->pcmd;
+ 	struct SENSE_DATA *sensebuffer = (struct SENSE_DATA *)pcmd->sense_buffer;
+-	pcmd->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++	pcmd->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 	if (sensebuffer) {
+ 		int sense_data_length =
+ 			sizeof(struct SENSE_DATA) < SCSI_SENSE_BUFFERSIZE
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 80f546976c7e..59ae862c5328 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -1585,7 +1585,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 
+ 				cmd->result = (DRIVER_SENSE << 24) |
+ 					(DID_OK << 16) |
+-					(CHECK_CONDITION << 1);
++					SAM_STAT_CHECK_CONDITION;
+ 			}
+ 			else {
+ 				if (mbox->m_out.cmd == MEGA_MBOXCMD_EXTPTHRU) {
+@@ -1595,11 +1595,11 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 
+ 					cmd->result = (DRIVER_SENSE << 24) |
+ 						(DID_OK << 16) |
+-						(CHECK_CONDITION << 1);
++						SAM_STAT_CHECK_CONDITION;
+ 				} else {
+ 					cmd->sense_buffer[0] = 0x70;
+ 					cmd->sense_buffer[2] = ABORTED_COMMAND;
+-					cmd->result |= (CHECK_CONDITION << 1);
++					cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 				}
  			}
  			break;
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 4a27ac869f2e..3b758a8b2889 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1577,7 +1577,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 				scp->sense_buffer[0] = 0x70;
+ 				scp->sense_buffer[2] = ILLEGAL_REQUEST;
+ 				scp->sense_buffer[12] = MEGA_INVALID_FIELD_IN_CDB;
+-				scp->result = CHECK_CONDITION << 1;
++				scp->result = SAM_STAT_CHECK_CONDITION;
+ 				return NULL;
+ 			}
  
- 		default:
- 			/* Some other QHSTA error occurred. */
- 			ASC_DBG(1, "host_status 0x%x\n", scsiqp->host_status);
--			scp->result = HOST_BYTE(DID_BAD_TARGET);
-+			set_host_byte(scp, DID_BAD_TARGET);
- 			break;
- 		}
- 		break;
+@@ -2302,7 +2302,7 @@ megaraid_mbox_dpc(unsigned long devp)
+ 						14);
  
- 	case QD_ABORTED_BY_HOST:
- 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
--		scp->result =
--		    HOST_BYTE(DID_ABORT) | STATUS_BYTE(scsiqp->scsi_status);
-+		set_status_byte(scp, scsiqp->scsi_status);
-+		set_host_byte(scp, DID_ABORT);
- 		break;
+ 				scp->result = DRIVER_SENSE << 24 |
+-					DID_OK << 16 | CHECK_CONDITION << 1;
++					DID_OK << 16 | SAM_STAT_CHECK_CONDITION;
+ 			}
+ 			else {
+ 				if (mbox->cmd == MBOXCMD_EXTPTHRU) {
+@@ -2312,11 +2312,11 @@ megaraid_mbox_dpc(unsigned long devp)
  
- 	default:
- 		ASC_DBG(1, "done_status 0x%x\n", scsiqp->done_status);
--		scp->result =
--		    HOST_BYTE(DID_ERROR) | STATUS_BYTE(scsiqp->scsi_status);
-+		set_status_byte(scp, scsiqp->scsi_status);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	}
- 
-@@ -6752,10 +6732,10 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
- 	/*
- 	 * 'qdonep' contains the command's ending status.
- 	 */
-+	scp->result = 0;
- 	switch (qdonep->d3.done_stat) {
- 	case QD_NO_ERROR:
- 		ASC_DBG(2, "QD_NO_ERROR\n");
--		scp->result = 0;
- 
- 		/*
- 		 * Check for an underrun condition.
-@@ -6775,51 +6755,35 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
- 		ASC_DBG(2, "QD_WITH_ERROR\n");
- 		switch (qdonep->d3.host_stat) {
- 		case QHSTA_NO_ERROR:
-+			set_status_byte(scp, qdonep->d3.scsi_stat);
- 			if (qdonep->d3.scsi_stat == SAM_STAT_CHECK_CONDITION) {
- 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
- 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
- 						  SCSI_SENSE_BUFFERSIZE);
--				/*
--				 * Note: The 'status_byte()' macro used by
--				 * target drivers defined in scsi.h shifts the
--				 * status byte returned by host drivers right
--				 * by 1 bit.  This is why target drivers also
--				 * use right shifted status byte definitions.
--				 * For instance target drivers use
--				 * CHECK_CONDITION, defined to 0x1, instead of
--				 * the SCSI defined check condition value of
--				 * 0x2. Host drivers are supposed to return
--				 * the status byte as it is defined by SCSI.
--				 */
--				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
--				    STATUS_BYTE(qdonep->d3.scsi_stat);
--			} else {
--				scp->result = STATUS_BYTE(qdonep->d3.scsi_stat);
-+				set_driver_byte(scp, DRIVER_SENSE);
+ 					scp->result = DRIVER_SENSE << 24 |
+ 						DID_OK << 16 |
+-						CHECK_CONDITION << 1;
++						SAM_STAT_CHECK_CONDITION;
+ 				} else {
+ 					scp->sense_buffer[0] = 0x70;
+ 					scp->sense_buffer[2] = ABORTED_COMMAND;
+-					scp->result = CHECK_CONDITION << 1;
++					scp->result = SAM_STAT_CHECK_CONDITION;
+ 				}
  			}
  			break;
- 
- 		default:
- 			/* QHSTA error occurred */
- 			ASC_DBG(1, "host_stat 0x%x\n", qdonep->d3.host_stat);
--			scp->result = HOST_BYTE(DID_BAD_TARGET);
-+			set_host_byte(scp, DID_BAD_TARGET);
- 			break;
- 		}
- 		break;
- 
- 	case QD_ABORTED_BY_HOST:
- 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
--		scp->result =
--		    HOST_BYTE(DID_ABORT) | MSG_BYTE(qdonep->d3.
--						    scsi_msg) |
--		    STATUS_BYTE(qdonep->d3.scsi_stat);
-+		set_status_byte(scp, qdonep->d3.scsi_stat);
-+		set_msg_byte(scp, qdonep->d3.scsi_msg);
-+		set_host_byte(scp, DID_ABORT);
- 		break;
- 
- 	default:
- 		ASC_DBG(1, "done_stat 0x%x\n", qdonep->d3.done_stat);
--		scp->result =
--		    HOST_BYTE(DID_ERROR) | MSG_BYTE(qdonep->d3.
--						    scsi_msg) |
--		    STATUS_BYTE(qdonep->d3.scsi_stat);
-+		set_status_byte(scp, qdonep->d3.scsi_stat);
-+		set_msg_byte(scp, qdonep->d3.scsi_msg);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	}
- 
-@@ -7558,7 +7522,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 				"sg_tablesize %d\n", use_sg,
- 				scp->device->host->sg_tablesize);
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_ERROR);
-+			set_host_byte(scp, DID_ERROR);
- 			return ASC_ERROR;
- 		}
- 
-@@ -7566,7 +7530,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 			use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
- 		if (!asc_sg_head) {
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_SOFT_ERROR);
-+			set_host_byte(scp, DID_SOFT_ERROR);
- 			return ASC_ERROR;
- 		}
- 
-@@ -7809,7 +7773,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 				   "ADV_MAX_SG_LIST %d\n", use_sg,
- 				   scp->device->host->sg_tablesize);
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_ERROR);
-+			set_host_byte(scp, DID_ERROR);
- 			reqp->cmndp = NULL;
- 			scp->host_scribble = NULL;
- 
-@@ -7821,7 +7785,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 		ret = adv_get_sglist(boardp, reqp, scsiqp, scp, use_sg);
- 		if (ret != ADV_SUCCESS) {
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_ERROR);
-+			set_host_byte(scp, DID_ERROR);
- 			reqp->cmndp = NULL;
- 			scp->host_scribble = NULL;
- 
-@@ -8518,13 +8482,13 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() ASC_ERROR, "
- 			"err_code 0x%x\n", err_code);
- 		ASC_STATS(scp->device->host, exe_error);
--		scp->result = HOST_BYTE(DID_ERROR);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	default:
- 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() unknown, "
- 			"err_code 0x%x\n", err_code);
- 		ASC_STATS(scp->device->host, exe_unknown);
--		scp->result = HOST_BYTE(DID_ERROR);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	}
- 
 -- 
 2.16.4
 
