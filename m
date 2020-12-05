@@ -2,30 +2,29 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7FD6C4167B
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 02:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FE8C1B0D9
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 02:40:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA79E22E00
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 02:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 306AB22DFA
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 02:40:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727911AbgLECkb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 21:40:31 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:53958 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725300AbgLECk1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 21:40:27 -0500
-X-UUID: 70cd198581f44444950f03ccd8f8c3ae-20201205
-X-UUID: 70cd198581f44444950f03ccd8f8c3ae-20201205
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        id S1728477AbgLECko (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 21:40:44 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:43895 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728234AbgLECkn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 21:40:43 -0500
+X-UUID: e161a0b7e0cd44a1b36dd5b3f52031c4-20201205
+X-UUID: e161a0b7e0cd44a1b36dd5b3f52031c4-20201205
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 24090389; Sat, 05 Dec 2020 10:39:42 +0800
+        with ESMTP id 1541445786; Sat, 05 Dec 2020 10:39:40 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
  mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
  15.0.1497.2; Sat, 5 Dec 2020 10:39:37 +0800
@@ -46,9 +45,9 @@ CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
         <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
         <alice.chao@mediatek.com>, <huadian.liu@mediatek.com>,
         Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v4 8/8] scsi: ufs-mediatek: Introduce event_notify implementation
-Date:   Sat, 5 Dec 2020 10:39:38 +0800
-Message-ID: <20201205023938.13848-9-stanley.chu@mediatek.com>
+Subject: [PATCH v4 4/8] scsi: ufs-dwc: Use phy_initialization helper
+Date:   Sat, 5 Dec 2020 10:39:34 +0800
+Message-ID: <20201205023938.13848-5-stanley.chu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20201205023938.13848-1-stanley.chu@mediatek.com>
 References: <20201205023938.13848-1-stanley.chu@mediatek.com>
@@ -59,98 +58,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce event_notify implementation on MediaTek UFS platform.
-
-A vendor-specific tracepoint is added that could be used
-for debugging purpose.
+Use phy_initialization helper instead of direct invoking.
 
 Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 ---
- drivers/scsi/ufs/ufs-mediatek-trace.h | 37 +++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-mediatek.c       | 12 +++++++++
- 2 files changed, 49 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufs-mediatek-trace.h
+ drivers/scsi/ufs/ufshcd-dwc.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek-trace.h b/drivers/scsi/ufs/ufs-mediatek-trace.h
-new file mode 100644
-index 000000000000..8c47f54f3e6b
---- /dev/null
-+++ b/drivers/scsi/ufs/ufs-mediatek-trace.h
-@@ -0,0 +1,37 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2020 MediaTek Inc.
-+ */
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM ufs_mtk
-+
-+#if !defined(_TRACE_EVENT_UFS_MEDIATEK_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_EVENT_UFS_MEDIATEK_H
-+
-+#include <linux/tracepoint.h>
-+
-+TRACE_EVENT(ufs_mtk_event,
-+	TP_PROTO(unsigned int type, unsigned int data),
-+	TP_ARGS(type, data),
-+
-+	TP_STRUCT__entry(
-+		__field(unsigned int, type)
-+		__field(unsigned int, data)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->type = type;
-+		__entry->data = data;
-+	),
-+
-+	TP_printk("ufs:event=%u data=%u",
-+		  __entry->type, __entry->data)
-+	);
-+#endif
-+
-+#undef TRACE_INCLUDE_PATH
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_PATH .
-+#define TRACE_INCLUDE_FILE ufs-mediatek-trace
-+#include <trace/define_trace.h>
-+
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 1d3c5cd4592e..3522458db3bb 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -24,6 +24,9 @@
- #include "unipro.h"
- #include "ufs-mediatek.h"
+diff --git a/drivers/scsi/ufs/ufshcd-dwc.c b/drivers/scsi/ufs/ufshcd-dwc.c
+index 6a901da2d15a..5bb9d3a88795 100644
+--- a/drivers/scsi/ufs/ufshcd-dwc.c
++++ b/drivers/scsi/ufs/ufshcd-dwc.c
+@@ -120,13 +120,10 @@ int ufshcd_dwc_link_startup_notify(struct ufs_hba *hba,
+ 	if (status == PRE_CHANGE) {
+ 		ufshcd_dwc_program_clk_div(hba, DWC_UFS_REG_HCLKDIV_DIV_125);
  
-+#define CREATE_TRACE_POINTS
-+#include "ufs-mediatek-trace.h"
-+
- #define ufs_mtk_smc(cmd, val, res) \
- 	arm_smccc_smc(MTK_SIP_UFS_CONTROL, \
- 		      cmd, val, 0, 0, 0, 0, 0, &(res))
-@@ -1002,6 +1005,14 @@ static void ufs_mtk_fixup_dev_quirks(struct ufs_hba *hba)
- 	ufshcd_fixup_dev_quirks(hba, ufs_mtk_dev_fixups);
- }
- 
-+static void ufs_mtk_event_notify(struct ufs_hba *hba,
-+				 enum ufs_event_type evt, void *data)
-+{
-+	unsigned int val = *(u32 *)data;
-+
-+	trace_ufs_mtk_event(evt, val);
-+}
-+
- /*
-  * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
-  *
-@@ -1021,6 +1032,7 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.resume              = ufs_mtk_resume,
- 	.dbg_register_dump   = ufs_mtk_dbg_register_dump,
- 	.device_reset        = ufs_mtk_device_reset,
-+	.event_notify        = ufs_mtk_event_notify,
- };
- 
- /**
+-		if (hba->vops->phy_initialization) {
+-			err = hba->vops->phy_initialization(hba);
+-			if (err) {
+-				dev_err(hba->dev, "Phy setup failed (%d)\n",
+-									err);
+-				goto out;
+-			}
++		err = ufshcd_vops_phy_initialization(hba);
++		if (err) {
++			dev_err(hba->dev, "Phy setup failed (%d)\n", err);
++			goto out;
+ 		}
+ 	} else { /* POST_CHANGE */
+ 		err = ufshcd_dwc_link_is_up(hba);
 -- 
 2.18.0
 
