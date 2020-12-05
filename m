@@ -2,102 +2,260 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D748C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19BEAC4361A
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 00:16:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B5A022D01
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Dec 2020 23:04:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFB7F22D58
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 00:16:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728750AbgLDXEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Dec 2020 18:04:35 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:1478 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725985AbgLDXEe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 18:04:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607123074; x=1638659074;
-  h=subject:from:to:cc:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=RFHTOJk4jL1L+AndjkrMk4I5uYjcqb32AdpDg2Rd02w=;
-  b=viKSNspFoUGOAuvWbhs2C7dRpI744UuDSm4WMz9lVLDe0QnNlpSzDv+Z
-   YBbKCGjIXUQuf4afjrWLZg5uM3VcA2ZKf6CV+FiRiBtefogkOpsZQ8vuA
-   7SRndO0mHBmKEen3KQL5HtqLMoMD88ykplq4pSxTeRBuOrxVZvmGdr9+z
-   1BGjPdsSWYouf261gWrftyUioq8qkfectrxlgZiFBRSlMKmHXEmIAUOop
-   7FSfX0XZGt6fC1U1fjl2PXX/yPicYehujw5dVcBvwTLZAuatPX/+LZ7P6
-   +AYiwtzt8hKzJnwKJDTHpjBqdYSBGiAogbImjopCCBHse5sRKVwF6UMvV
-   w==;
-IronPort-SDR: Lfe9yF4M96NeK4OjkZcurMVwBzanpttOeORHNHDBlkxbI1VN27wuvflDVVksgHwewDmMROXl2E
- X0vcrsPuQ74cOvNCtmFLB68uSxn77nldOaGeBJQhjJZ1+oJdKrXW3ZPWwiOF/2ejbtzJQBBGUE
- vwHgcMqznbUVITEk9i2PbzSPEj1s8h89rhK5LNjGN1jXnRnSNOeXctaKRII08qjkMIsgXR18JA
- oG3SSFgG3j0xeQkdWOJuw0X4RZJMCPlDAFj56xyNsDQRlNjodRdsNaKIkf0YBTMs6GwUIXzzex
- kXY=
-X-IronPort-AV: E=Sophos;i="5.78,393,1599548400"; 
-   d="scan'208";a="101548957"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 04 Dec 2020 16:03:16 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Fri, 4 Dec 2020 16:03:16 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Fri, 4 Dec 2020 16:03:16 -0700
-Subject: [PATCH 25/25] smartpqi: update version to 2.1.6-005
-From:   Don Brace <don.brace@microchip.com>
-To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
-        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
-        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
-        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
-        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
-CC:     <linux-scsi@vger.kernel.org>
-Date:   Fri, 4 Dec 2020 17:03:15 -0600
-Message-ID: <160712299585.21372.913012583816104187.stgit@brunhilda>
-In-Reply-To: <160712276179.21372.51526310810782843.stgit@brunhilda>
-References: <160712276179.21372.51526310810782843.stgit@brunhilda>
-User-Agent: StGit/0.23-dirty
+        id S1727392AbgLEAQF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Dec 2020 19:16:05 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41140 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726730AbgLEAQE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Dec 2020 19:16:04 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0B508H2h104220;
+        Fri, 4 Dec 2020 19:15:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=WgM17G/SUjkBI+KP1DQtZj0n82LAcN9MHV72Ex2/3bs=;
+ b=gJiJGbRJBZqonN2zy7rGQV+66+pBuTGaidQPzcxAisbAbxB7cmklxVhv4l0exZmoXQhe
+ NmuRvDCv1z1b4HwTo1I2+4burOiS6Agd/mq2VICoxtM8QT4poHSxHSXw2qUuYDGio2tK
+ g7m06dKTWRge21nsvXCaJOxwPYcIQrDctye7s72KvUS9s/Nz1bTcMZ0kLVz6rGA1MYIQ
+ XHYGcE2YLWtr3b8WGLeG71IrFSyUrxQKk+7RTmwaeTEFQsVveQz9iNPy4S493v7B50i8
+ DFlDpAJSqOlOgY1WgmqXLHTLlZkp1vQ2HnFLI2weaCCZXpANZ4aGA84x80cOGVkF76NB 9A== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 357h7gm53t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 04 Dec 2020 19:15:12 -0500
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0B507ctY015599;
+        Sat, 5 Dec 2020 00:15:11 GMT
+Received: from b01cxnp22035.gho.pok.ibm.com (b01cxnp22035.gho.pok.ibm.com [9.57.198.25])
+        by ppma04wdc.us.ibm.com with ESMTP id 354ysv5r6v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 05 Dec 2020 00:15:11 +0000
+Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
+        by b01cxnp22035.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0B50FB3262783756
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 5 Dec 2020 00:15:11 GMT
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 20949112066;
+        Sat,  5 Dec 2020 00:15:11 +0000 (GMT)
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E3B1E112063;
+        Sat,  5 Dec 2020 00:15:08 +0000 (GMT)
+Received: from oc6857751186.ibm.com (unknown [9.65.215.138])
+        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
+        Sat,  5 Dec 2020 00:15:08 +0000 (GMT)
+Subject: Re: [PATCH v3 04/18] ibmvfc: add alloc/dealloc routines for SCSI
+ Sub-CRQ Channels
+To:     Brian King <brking@linux.vnet.ibm.com>,
+        james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com
+References: <20201203020806.14747-1-tyreld@linux.ibm.com>
+ <20201203020806.14747-5-tyreld@linux.ibm.com>
+ <b372b257-49d8-16ae-2390-9617222e4cd9@linux.vnet.ibm.com>
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+Message-ID: <42213f04-a971-add5-1295-e3df95e2530a@linux.ibm.com>
+Date:   Fri, 4 Dec 2020 16:15:08 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <b372b257-49d8-16ae-2390-9617222e4cd9@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
+ definitions=2020-12-04_13:2020-12-04,2020-12-04 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 malwarescore=0
+ suspectscore=2 spamscore=0 priorityscore=1501 impostorscore=0
+ mlxlogscore=999 lowpriorityscore=0 adultscore=0 mlxscore=0 bulkscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012040134
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-* Update version for tracking
+On 12/4/20 6:47 AM, Brian King wrote:
+> On 12/2/20 8:07 PM, Tyrel Datwyler wrote:
+>> @@ -4983,6 +4993,118 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
+>>  	return retrc;
+>>  }
+>>  
+>> +static int ibmvfc_register_scsi_channel(struct ibmvfc_host *vhost,
+>> +				  int index)
+>> +{
+>> +	struct device *dev = vhost->dev;
+>> +	struct vio_dev *vdev = to_vio_dev(dev);
+>> +	struct ibmvfc_sub_queue *scrq = &vhost->scsi_scrqs.scrqs[index];
+>> +	int rc = -ENOMEM;
+>> +
+>> +	ENTER;
+>> +
+>> +	scrq->msgs = (struct ibmvfc_sub_crq *)get_zeroed_page(GFP_KERNEL);
+>> +	if (!scrq->msgs)
+>> +		return rc;
+>> +
+>> +	scrq->size = PAGE_SIZE / sizeof(*scrq->msgs);
+>> +	scrq->msg_token = dma_map_single(dev, scrq->msgs, PAGE_SIZE,
+>> +					 DMA_BIDIRECTIONAL);
+>> +
+>> +	if (dma_mapping_error(dev, scrq->msg_token))
+>> +		goto dma_map_failed;
+>> +
+>> +	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
+>> +			   &scrq->cookie, &scrq->hw_irq);
+>> +
+>> +	if (rc) {
+>> +		dev_warn(dev, "Error registering sub-crq: %d\n", rc);
+>> +		if (rc == H_PARAMETER)
+>> +			dev_warn_once(dev, "Firmware may not support MQ\n");
+>> +		goto reg_failed;
+>> +	}
+>> +
+>> +	scrq->hwq_id = index;
+>> +	scrq->vhost = vhost;
+>> +
+>> +	LEAVE;
+>> +	return 0;
+>> +
+>> +reg_failed:
+>> +	dma_unmap_single(dev, scrq->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
+>> +dma_map_failed:
+>> +	free_page((unsigned long)scrq->msgs);
+>> +	LEAVE;
+>> +	return rc;
+>> +}
+>> +
+>> +static void ibmvfc_deregister_scsi_channel(struct ibmvfc_host *vhost, int index)
+>> +{
+>> +	struct device *dev = vhost->dev;
+>> +	struct vio_dev *vdev = to_vio_dev(dev);
+>> +	struct ibmvfc_sub_queue *scrq = &vhost->scsi_scrqs.scrqs[index];
+>> +	long rc;
+>> +
+>> +	ENTER;
+>> +
+>> +	do {
+>> +		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
+>> +					scrq->cookie);
+>> +	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
+>> +
+>> +	if (rc)
+>> +		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
+>> +
+>> +	dma_unmap_single(dev, scrq->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
+>> +	free_page((unsigned long)scrq->msgs);
+>> +	LEAVE;
+>> +}
+>> +
+>> +static int ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+>> +{
+>> +	int i, j;
+>> +
+>> +	ENTER;
+>> +
+>> +	vhost->scsi_scrqs.scrqs = kcalloc(IBMVFC_SCSI_HW_QUEUES,
+>> +					  sizeof(*vhost->scsi_scrqs.scrqs),
+>> +					  GFP_KERNEL);
+>> +	if (!vhost->scsi_scrqs.scrqs)
+>> +		return -1;
+>> +
+>> +	for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++) {
+>> +		if (ibmvfc_register_scsi_channel(vhost, i)) {
+>> +			for (j = i; j > 0; j--)
+>> +				ibmvfc_deregister_scsi_channel(vhost, j - 1);
+>> +			kfree(vhost->scsi_scrqs.scrqs);
+>> +			vhost->scsi_scrqs.scrqs = NULL;
+>> +			vhost->scsi_scrqs.active_queues = 0;
+>> +			LEAVE;
+>> +			return -1;
+>> +		}
+>> +	}
+>> +
+>> +	LEAVE;
+>> +	return 0;
+>> +}
+>> +
+>> +static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+>> +{
+>> +	int i;
+>> +
+>> +	ENTER;
+>> +	if (!vhost->scsi_scrqs.scrqs)
+>> +		return;
+>> +
+>> +	for (i = 0; i < IBMVFC_SCSI_HW_QUEUES; i++)
+>> +		ibmvfc_deregister_scsi_channel(vhost, i);
+>> +
+>> +	kfree(vhost->scsi_scrqs.scrqs);
+>> +	vhost->scsi_scrqs.scrqs = NULL;
+>> +	vhost->scsi_scrqs.active_queues = 0;
+>> +	LEAVE;
+>> +}
+>> +
+>>  /**
+>>   * ibmvfc_free_mem - Free memory for vhost
+>>   * @vhost:	ibmvfc host struct
+>> @@ -5239,6 +5361,12 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+>>  		goto remove_shost;
+>>  	}
+>>  
+>> +	if (vhost->mq_enabled) {
+>> +		rc = ibmvfc_init_sub_crqs(vhost);
+>> +		if (rc)
+>> +			dev_warn(dev, "Failed to allocate Sub-CRQs. rc=%d\n", rc);
+> 
+> So, I think if you end up down this path, you will have:
+> 
+> vhost->scsi_scrqs.scrqs == NULL
+> vhost->scsi_scrqs.active_queues == 0
+> 
+> And you proceed with discovery. You will proceed with enquiry and channel setup.
+> Then, I think you could end up in queuecommand doing this
+> 
+> evt->hwq = hwq % vhost->scsi_scrqs.active_queues;
+> 
+> And that is a divide by zero...
 
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Gerry Morong <gerry.morong@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Actually, we would bite the dust earlier than that but it requires the sub-crq
+allocation to fail for a reason other than lack of firmware support. In the no
+firmware support case the VIOS doesn't report channel support and we skip the
+enquiry and setup steps. However, in the case where there is support and
+allocation fails we would dereference a NULL pointer trying to write the channel
+sub-crq handles into the channel_setup MAD.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 55f3c2d2c52c..2c13c6a19e4c 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -33,11 +33,11 @@
- #define BUILD_TIMESTAMP
- #endif
- 
--#define DRIVER_VERSION		"1.2.16-012"
--#define DRIVER_MAJOR		1
--#define DRIVER_MINOR		2
--#define DRIVER_RELEASE		16
--#define DRIVER_REVISION		12
-+#define DRIVER_VERSION		"2.1.6-005"
-+#define DRIVER_MAJOR		2
-+#define DRIVER_MINOR		1
-+#define DRIVER_RELEASE		6
-+#define DRIVER_REVISION		5
- 
- #define DRIVER_NAME		"Microsemi PQI Driver (v" \
- 				DRIVER_VERSION BUILD_TIMESTAMP ")"
+> 
+> I wonder if it would be better in this scenario where registering the sub crqs fails,
+> if you just did:
+> 
+> vhost->do_enquiry = 0;
+> vhost->mq_enabled = 0;
+> vhost->using_channels = 0;
+> 
+> It looks like you only try to allocate the subcrqs in probe, so if that fails, we'd
+> never end up using mq, so just disabling in this case seems reasonable.
+
+This breaks migration from legacy to a target with channel support. It appears
+that migration for that case is already broken anyways. Need to rethink sub-crq
+setup. Maybe best to actually do it during the negoation steps instead of in probe.
+
+-Tyrel
+
+> 
+> Thanks,
+> 
+> Brian
+> 
 
