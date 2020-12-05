@@ -2,120 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F023C4361A
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 11:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E47C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 12:58:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D66722D6F
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 11:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86C7B22DFA
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Dec 2020 12:58:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729491AbgLELGo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Dec 2020 06:06:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57778 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729340AbgLELE7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Dec 2020 06:04:59 -0500
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7BCDC0613D1;
-        Sat,  5 Dec 2020 03:04:16 -0800 (PST)
-Received: by mail-ej1-x644.google.com with SMTP id a16so12486706ejj.5;
-        Sat, 05 Dec 2020 03:04:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:in-reply-to:references:date
-         :mime-version:content-transfer-encoding;
-        bh=NHruUIRUPikDpSK6wixebj+vz7uT4fAyp4/i/do8fV8=;
-        b=W0/7KLvOybvPHt9/gLEJ2+/fnwDOiUQ0v1CmDyPHhjbZl9DeSZv5qG0e2gESoM4UCO
-         biPJLR1X+G1El98j815+M/L46QJm81cc17aOYg/dKUqF6llsIl4zAIFPFpt9OIwMNXyQ
-         WRy+qhiFlxG/nm+7IiYAkFYSU9RrFlCBmMCGD0kGPp+cn9qQ46fJ10MHHRLeUPhFP3AA
-         2R5RnEFCjsv16TJUAVVaBmLPSRyE/lYeRh5EOqbrOrI4tsNXKtusJ9fG6jMsVFQaGAqn
-         p5HSzIBb5ejuiEWFLSBs8QX186Gd6bpAyECcOXqSbhbvsGXn8hgqFp00GAYnhv0id7FT
-         i6/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:in-reply-to
-         :references:date:mime-version:content-transfer-encoding;
-        bh=NHruUIRUPikDpSK6wixebj+vz7uT4fAyp4/i/do8fV8=;
-        b=O5fJmPGpec03AF/nQNcQUIxbQVcWTZfc0gN7Lh+/05Vp/WC99SnReG/t+g53yKlfXO
-         TZ+coV50fcroCrSkWi1byDchzcGp1kxBNHs1NKcyqQqW/hgwduNq0PmovbPtQ2t3k88w
-         sW/GmP9p1pk5R31XIEPkKKU5+MyIxORn03EZhbKacCvXWxhNUo2kYb581X3btv443JLh
-         72KV2N/mVUIJmplbs1/Ip1VnxKYb0VDu2+ZhG7b9DNe4Itt0qJHc5jFJidCqv/BGtq4W
-         eR+LWoE7f9f51s7Z/0evM4xhdE2nIlJ3CZF17rMk0f0Y1+e/BdvllDBOw/K12wi3GFj5
-         JD3A==
-X-Gm-Message-State: AOAM5334AhaMuy6LHS++ta78KN81IE8d85dIzd+ZOIFN3JYaeiJSVppv
-        KhXpGQ31wsvHI0FPVD9rvl0=
-X-Google-Smtp-Source: ABdhPJw1M6GA3TK87awBb7U1UCkDdWQ40/pNmPu/G2RzenLtohJsLODrRYOyIpEZwwlJkVjukxbDsg==
-X-Received: by 2002:a17:906:38c8:: with SMTP id r8mr11360628ejd.39.1607166255415;
-        Sat, 05 Dec 2020 03:04:15 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.googlemail.com with ESMTPSA id u1sm5436338edf.65.2020.12.05.03.04.14
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Sat, 05 Dec 2020 03:04:14 -0800 (PST)
-Message-ID: <d323ea3e12dbd8a7683c6d6c194f422519157728.camel@gmail.com>
-Subject: Re: [PATCH 2/3] scsi: ufs: Keep device power on only
- fWriteBoosterBufferFlushDuringHibernate == 1
-From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20201130181143.5739-1-huobean@gmail.com>
-         <20201130181143.5739-3-huobean@gmail.com>
-         <BY5PR04MB6599826730BD3FB0E547E60587F30@BY5PR04MB6599.namprd04.prod.outlook.com>
-         <DM6PR04MB6575B7ECCEA7335B2CFC2AC4FCF20@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Date:   Thu, 03 Dec 2020 10:36:08 +0100
-Mime-Version: 1.0
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Content-Transfer-Encoding: 7bit
+        id S1726498AbgLEM5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Dec 2020 07:57:41 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:37018 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726017AbgLEM4S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Dec 2020 07:56:18 -0500
+X-UUID: ca0b76851a0d481f98c679ab85488cbe-20201205
+X-UUID: ca0b76851a0d481f98c679ab85488cbe-20201205
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1406827756; Sat, 05 Dec 2020 20:01:05 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 5 Dec 2020 20:00:39 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 5 Dec 2020 20:00:42 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
+        <alice.chao@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 1/4] scsi: ufs: Remove unused setup_regulators variant function
+Date:   Sat, 5 Dec 2020 20:00:38 +0800
+Message-ID: <20201205120041.26869-2-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20201205120041.26869-1-stanley.chu@mediatek.com>
+References: <20201205120041.26869-1-stanley.chu@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2020-12-03 at 07:27 +0000, Avri Altman wrote:
-> > 
-> > From: Bean Huo <beanhuo@micron.com>
-> > 
-> > Keep device power mode as active power mode and VCC supply only if
-> > fWriteBoosterBufferFlushDuringHibernate setting 1 is successful.
-> 
-Hi Avri
-Thanks so much taking time reiew.
+Since setup_regulators variant function is not used by any
+vendors, simply remove it.
 
-> Why would it fail?
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 10 +---------
+ drivers/scsi/ufs/ufshcd.h | 10 ----------
+ 2 files changed, 1 insertion(+), 19 deletions(-)
 
-During the reliability testing in harsh environments, such as:
-EMS testing, in the high/low-temperature environment. The system would
-reboot itself, there will be programming failure very likely.
-If we assume failure will never hit, why we capture its result
-following with dev_err(). If you keep using your phone in a harsh
-environment, you will see this print message.
-
-Of course, in a normal environment, the chance of failure likes you to
-win a lottery, but the possibility still exists.
-
-  
-> Since UFSHCD_CAP_WB_EN is toggled off on ufshcd_wb_probe If the
-> device doesn't support wb,
-> The check ufshcd_is_wb_allowed should suffice, isn't it?
-> 
-Tot at all, UFSHCD_CAP_WB_EN only tells us if the platform supports WB,
-doesn't tell us fWriteBoosterBufferFlushDuringHibernate status.
-
-Thanks,
-Bean
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 11a4aad09f3a..c2f611516ea7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8171,16 +8171,10 @@ static int ufshcd_variant_hba_init(struct ufs_hba *hba)
+ 		goto out;
+ 
+ 	err = ufshcd_vops_init(hba);
+-	if (err)
+-		goto out;
+-
+-	err = ufshcd_vops_setup_regulators(hba, true);
+-	if (err)
+-		ufshcd_vops_exit(hba);
+-out:
+ 	if (err)
+ 		dev_err(hba->dev, "%s: variant %s init failed err %d\n",
+ 			__func__, ufshcd_get_var_name(hba), err);
++out:
+ 	return err;
+ }
+ 
+@@ -8189,8 +8183,6 @@ static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
+ 	if (!hba->vops)
+ 		return;
+ 
+-	ufshcd_vops_setup_regulators(hba, false);
+-
+ 	ufshcd_vops_exit(hba);
+ }
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 7a7e056a33a9..21de7607611f 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -277,7 +277,6 @@ struct ufs_pwr_mode_info {
+  * @get_ufs_hci_version: called to get UFS HCI version
+  * @clk_scale_notify: notifies that clks are scaled up/down
+  * @setup_clocks: called before touching any of the controller registers
+- * @setup_regulators: called before accessing the host controller
+  * @hce_enable_notify: called before and after HCE enable bit is set to allow
+  *                     variant specific Uni-Pro initialization.
+  * @link_startup_notify: called before and after Link startup is carried out
+@@ -307,7 +306,6 @@ struct ufs_hba_variant_ops {
+ 				    enum ufs_notify_change_status);
+ 	int	(*setup_clocks)(struct ufs_hba *, bool,
+ 				enum ufs_notify_change_status);
+-	int     (*setup_regulators)(struct ufs_hba *, bool);
+ 	int	(*hce_enable_notify)(struct ufs_hba *,
+ 				     enum ufs_notify_change_status);
+ 	int	(*link_startup_notify)(struct ufs_hba *,
+@@ -1119,14 +1117,6 @@ static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on,
+ 	return 0;
+ }
+ 
+-static inline int ufshcd_vops_setup_regulators(struct ufs_hba *hba, bool status)
+-{
+-	if (hba->vops && hba->vops->setup_regulators)
+-		return hba->vops->setup_regulators(hba, status);
+-
+-	return 0;
+-}
+-
+ static inline int ufshcd_vops_hce_enable_notify(struct ufs_hba *hba,
+ 						bool status)
+ {
+-- 
+2.18.0
 
