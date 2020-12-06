@@ -2,99 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD7B0C2BB40
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:14:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EB8AC4167B
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:16:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A67E02312F
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:14:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44DE3230FA
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:16:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726746AbgLFKOq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Dec 2020 05:14:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34034 "EHLO
+        id S1726209AbgLFKQ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Dec 2020 05:16:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725822AbgLFKO3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 05:14:29 -0500
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F797C0613D0;
-        Sun,  6 Dec 2020 02:13:49 -0800 (PST)
-Received: by mail-ej1-x642.google.com with SMTP id ce23so11383092ejb.8;
-        Sun, 06 Dec 2020 02:13:48 -0800 (PST)
+        with ESMTP id S1725804AbgLFKQ6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 05:16:58 -0500
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36296C0613D0;
+        Sun,  6 Dec 2020 02:16:12 -0800 (PST)
+Received: by mail-lf1-x12b.google.com with SMTP id u18so13762824lfd.9;
+        Sun, 06 Dec 2020 02:16:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
+        h=subject:to:cc:references:from:organization:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=o3woUKLEE6wEcnBKypRYNGZMB9+xn3IKHhO5cYS1A30=;
-        b=V0iZLo5XMiinxvv5L1ffXpJRF9rSKaReN2td6SRBqn7Y6+7nL0onHO3zBfK9UJYoYd
-         vc29jT9G/xaV1hMEHbr4zXbfNa4P86cHCFjnsJlzf562mmFakLh3XSm38Sd7FcUhHqVE
-         pEq8U7hQRxkHt2E9EmwAQuSqDefrrSdQaCdgiwCNzndhw64KO8JhzCKgvzbYhMHmTKSQ
-         DE4NmQEC6m24xEl86hLo+cF+fGUXSJkp/OxQK15aNFFCZlPboOe4BqSFmL1WYqjRAo9M
-         UIt1VOSVUz0qIwUSOGsDRUIn7KX/WGyN8FUJNLSgsy+UBIpcSXPiVFnMel3ko2p6kxIY
-         mPRA==
+        bh=WHV07lAOVmhSmkP5MngljG1mtktpzKayNMNHBzWj6Lc=;
+        b=f38mKdf7dAAFQ1WpYRMiX1k3BkdvcSG5X0TxntQ5iKUL7I1WItPMjlum2Ayeb/hmYx
+         F1S8ImgpDUQVwofJQOx6Q0CG9H5bMEpH2ehPDUgDvyBezdxC52O0nKhJ+zinsXW4nuz0
+         Erq33WEyG2yrioEs249m2NGP2YKeF2oYODi/IPBrxi1VHP5oNKQaHlvobPDIJZM8sC8r
+         LcGI3AyMTu/gu9lHxEGJXqXaXfjt8YCbPet0Rnh0fUijjL7YVbajayzj5e3lsoEw9cWd
+         s2ZKW3kyCGWtGfekWVWr4XUSEr8YUs617mwGQvqwlVdb2kxHR3z8ttsAquigAr9mLwoT
+         +Iuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=o3woUKLEE6wEcnBKypRYNGZMB9+xn3IKHhO5cYS1A30=;
-        b=IdhRPHVy05+oLOY25rqibLMB2z2M9cq0JfR6RGh5v88lqk4QKobtsjzv3koJGORuUO
-         KcA+Y7KB3bWhgWnG+YB8AYvC5UO78L/rvNzIA4aTUOH/CVhugfmt6FRVRfBPpCTMiGcY
-         4z3Ozul04bKASZW2bW/C5e5IguYWh9wJsSSe86zcI7nAbkvoNd+usvpg8vm+wBURDk6Z
-         AmyQeGFw3uch/n4vGtNsqOiixvxrkpoduuMpBXD9/D4uaWiZzMyeUyalY9a6b9rjtTbU
-         szRFy4J4ZwaSppeYepKh/MasLF1P0Cd6HrNUGvUlzhmWfbzGPyDmletz8+/LirlZaL6I
-         blbw==
-X-Gm-Message-State: AOAM530mRo3WqLiwoMsayR4ptOV0Tu4r2TWCCgtCs4bddQD5tp1uhByp
-        h7m/fjrIFC5N2mYAPbjhQDA=
-X-Google-Smtp-Source: ABdhPJzRdaxYklwSkZt+6LjbGOc9MFgHtdT72fpEr09ToDDfoWdDtJJtfXne6HdYWuBV7MaGqqq+5w==
-X-Received: by 2002:a17:906:9613:: with SMTP id s19mr14721362ejx.351.1607249627830;
-        Sun, 06 Dec 2020 02:13:47 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id f24sm7701919ejf.117.2020.12.06.02.13.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Dec 2020 02:13:47 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/3] Three changes for UFS WriteBooster
-Date:   Sun,  6 Dec 2020 11:13:32 +0100
-Message-Id: <20201206101335.3418-1-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        h=x-gm-message-state:subject:to:cc:references:from:organization
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=WHV07lAOVmhSmkP5MngljG1mtktpzKayNMNHBzWj6Lc=;
+        b=fiK0ZA/qQKN/2iDMnQSo1qyr7BHsb9dbZJ0GQDHkcJfqtLEwoR+6vMMZZFa0vHWBEc
+         /+dpSQXrUhqIvklogkE1WzJy4JakwwwF4Kf1iEiTrqWEGTIBMRI50b0NFUDVm0HEADHH
+         YYoVGE0jjonJqkgk3CRgNX50q40eWiEjZKMHTAQQOqKMWWrOGiF8JmAfDT9+e6soOd2v
+         /OsqBgb6LQWxkDNIWdhepgd7FtmBZ3q3kjCOSSTzBpNuBx+4CZeLMIHBHu2gLV6Wt0ri
+         1/6MTGeV8m9w7F/Q9D0fOoEYUuBVInO+9fKN0rPDd+Z+TlSbDZ6gxw2N/ythSg9yP2bz
+         R2xg==
+X-Gm-Message-State: AOAM533fPi0Z9DYECS6IHPjvnZOxIwKnnmqrKcqy4JlH3TjeR5chnsN9
+        bHZzaULIHRlkoDlorX9wjjslepAImBk=
+X-Google-Smtp-Source: ABdhPJyATWIKiA4tyYtxbtxJZGhv50GEP/5neZh9nMFgHvQe4Q1TZRv7HUHQD1YoO8KrKXlx4/1Dqg==
+X-Received: by 2002:a05:6512:419:: with SMTP id u25mr6080248lfk.222.1607249770583;
+        Sun, 06 Dec 2020 02:16:10 -0800 (PST)
+Received: from [192.168.1.100] ([31.173.86.115])
+        by smtp.gmail.com with ESMTPSA id g8sm2460815lfb.223.2020.12.06.02.16.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 06 Dec 2020 02:16:10 -0800 (PST)
+Subject: Re: [RFC] block: avoid the unnecessary blk_bio_discard_split()
+To:     Tom Yan <tom.ty89@gmail.com>, linux-block@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+References: <20201206061537.3870-1-tom.ty89@gmail.com>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Organization: Brain-dead Software
+Message-ID: <55e0b8be-a16b-9895-fde5-b325773ae0e7@gmail.com>
+Date:   Sun, 6 Dec 2020 13:16:04 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201206061537.3870-1-tom.ty89@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+Hello!
 
-Changelog:
-v1--v2:
-  1. Take is_hibern8_wb_flush checkup out from function
-     ufshcd_wb_need_flush() in patch 2/3
-  2. Add UFSHCD_CAP_CLK_SCALING checkup in patch 1/3. that means
-     only for the platform, which doesn't support UFSHCD_CAP_CLK_SCALING,
-     can control WB through "wb_on".
+On 06.12.2020 9:15, Tom Yan wrote:
 
-Bean Huo (3):
-  scsi: ufs: Add "wb_on" sysfs node to control WB on/off
-  scsi: ufs: Keep device active mode only
-    fWriteBoosterBufferFlushDuringHibernate == 1
-  scsi: ufs: Changes comment in the function ufshcd_wb_probe()
+> It doesn't seem necessary to have the redundant layer of splitting.
+> The request size will even be more consistent / aligned to the cap.
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> ---
+>   block/blk-lib.c   | 5 ++++-
+>   block/blk-merge.c | 2 +-
+>   block/blk.h       | 8 ++++++--
+>   3 files changed, 11 insertions(+), 4 deletions(-)
+> 
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index e90614fd8d6a..f606184a9050 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -85,9 +85,12 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+>   		 *   is split in device drive, the split ones are very probably
+>   		 *   to be aligned to discard_granularity of the device's queue.
+>   		 */
+> -		if (granularity_aligned_lba == sector_mapped)
+> +		if (granularity_aligned_lba == sector_mapped) {
+>   			req_sects = min_t(sector_t, nr_sects,
+>   					  bio_aligned_discard_max_sectors(q));
+> +			if (!req_sects)
+> +				return -EOPNOTSUPP;
+> +		}
+>   		else
 
- drivers/scsi/ufs/ufs-sysfs.c | 40 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs.h       |  2 ++
- drivers/scsi/ufs/ufshcd.c    | 30 +++++++++++++++++----------
- drivers/scsi/ufs/ufshcd.h    |  2 ++
- 4 files changed, 63 insertions(+), 11 deletions(-)
+    Needs to be } else { according to the CodingStyle doc...
 
--- 
-2.17.1
+>   			req_sects = min_t(sector_t, nr_sects,
+>   					  granularity_aligned_lba - sector_mapped);
+[...]
 
+MBR, Sergei
