@@ -8,90 +8,135 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88725C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 05:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDE39C4361B
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 06:16:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63737230FA
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 05:54:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 924FB22D0B
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 06:16:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725863AbgLFFy0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Dec 2020 00:54:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50788 "EHLO
+        id S1725980AbgLFGQd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Dec 2020 01:16:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbgLFFyZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 00:54:25 -0500
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53469C0613D4;
-        Sat,  5 Dec 2020 21:53:45 -0800 (PST)
-Received: by mail-pl1-x636.google.com with SMTP id f1so5402112plt.12;
-        Sat, 05 Dec 2020 21:53:45 -0800 (PST)
+        with ESMTP id S1725867AbgLFGQb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 01:16:31 -0500
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1A16C0613D0;
+        Sat,  5 Dec 2020 22:15:45 -0800 (PST)
+Received: by mail-pg1-x533.google.com with SMTP id f17so6262673pge.6;
+        Sat, 05 Dec 2020 22:15:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=QQbA5rQ723r8QeqL5SQIpU3wuJWTt34+LMrl2zPvWzI=;
-        b=kEeaItSLHlONkaJv0x51eFsNJj+NF0gxMzrjGqxHmMXWUn4fhrQmrltG9lMTdzE0cc
-         VgoAV2apKcoA/2tVCuNLWtdfAASidy1m4haZysfQUux1KrW/dsHl4ThAXcxy4Z9evrEo
-         F8H/9TcI4Puhr14HVGRqQCOxey25iyCW3Lz2+MQKN2NiGBffl6xp/WM2P37ZqCRK86w1
-         7eh6K/6Docy2w2Keq1YuoOor3VngiMXreSB6Xat2Pn+ncun+BkouyTjWOLhsN6IFcsZY
-         ClgN7ME7RngwyxYnT1jI3/475WitQv72EsHzgbELBgTusfajZZRTFX9t5ONflArOHiD8
-         Kp0A==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3iY7xWUkkJgoMW+4AR8JwjKubekss48iTys3v/kd3eg=;
+        b=uAPLklUdTtDmd1EI4fXfEPcS4Sm25nW916e0AcBZ0vyuENbF5MBosqUQFQwOL/QYAe
+         VQlUgOuxa3IH6Bxk/uXpeNzO/eWXbKZehzstNV+YefL//GfIsb3QFoxJAgQxE1q71YZ5
+         21KJuThudJMkC3c/E/rAPwgitxR/u+yDLeAHLLP0nETRmlapjsuzgRQhMn2kGh5zyGSk
+         KW0GaCvclaOTqJwBGJ/FNPHBa5kL4ghjN/o9vUJgiWPwyWc1oux9tOE9Qf0ZL0lzs1ct
+         wCdC6uGqfRhUsa8OHJyf8E2v4GBBTCjYFCL8jDeN4WHHWBnRA/n4OyS++z0g1nSYsFKX
+         IbvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=QQbA5rQ723r8QeqL5SQIpU3wuJWTt34+LMrl2zPvWzI=;
-        b=ujeHulEC+rQ6f8hQ4vGSv9Dpny9QsIYAygY51b7aQLMoburO76yWw7qItTsseLLAIO
-         HOIN3CJ4OI1ALURC9g9qA8XVw/tnOnsjKdu//A5ghffn21rt2xyYe3Qag7jLuNURtuTe
-         3gwoM259814s9KvHb9D38ghIpPqnr77Dg8SR9Vf+qekhpoXJVS0rGvBoXRHklYBcs7nG
-         1Bmv4BpF+Zfb9XBN32x4O12M7xzA22vFKgIrYjgsCRUoWh4NAsJaDDBmgEe+5M56q4HN
-         AVDtCxqOIS1/ACtuG3+l18mcaY3QcpRyoXaapTpJ99pPpcut9daUcsRwcvhTnvRwF65O
-         JR6Q==
-X-Gm-Message-State: AOAM5325OhInw8ETc8mUSoBYE3/7uvrsJGs8D79lRLHF5++FKAMKferY
-        GKA9SOz/pvqlm/VeP5DQHANyMQjgr6g=
-X-Google-Smtp-Source: ABdhPJwgyllaAJUxLtjj7f/qRUGt0E4nRD+cNxYj3JetskReH7WtO788wO3U4+IY2vTy0vb3HywHHA==
-X-Received: by 2002:a17:902:6a87:b029:da:e253:dd6a with SMTP id n7-20020a1709026a87b02900dae253dd6amr4399704plk.81.1607234024592;
-        Sat, 05 Dec 2020 21:53:44 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3iY7xWUkkJgoMW+4AR8JwjKubekss48iTys3v/kd3eg=;
+        b=Qvty+p72wwi37IfxHQuPfsCWjOE4thX5wbET5Lpe4bKSJCDHlODU/WWxdx5MgveVhR
+         hI3TASo7GiILNT3v5tnSESY0JErM7bYnH9GSJ2X3AVoSDpKMZpQp8kKWcUibaowRozwa
+         kQEAqidd2g66yJtYDqf+ZChHfKtYzoWetIlqMAJd32aAR+jcG9Fgt/b80R+XuR6nDicD
+         5X7+N36mroiJ1yrud4gDn0gtB3RIa8jWC9e57tFI3wMSNxXynPVfhwQoo7+mCMC2NBwE
+         +SJzbSJBLQHo97S2NyX9Af7QcpBONHVak03EPt/3xqPW0/MhYZDg8LMG7HjemykYaJ0r
+         C8Yw==
+X-Gm-Message-State: AOAM530xWefA/dPkt9ZHKN1Tx6PP70/TI1m5KXV0eHfx0A/YdWHfaoCv
+        xDslKxRhvc1qJ9Fd35BGEO+MhhfzKnE=
+X-Google-Smtp-Source: ABdhPJyLxwBKfnwMw/t8/hJx8muCnThR0g5TgM7L8uYFFgMxcUTEfa5p0Ruq+1kA2OB5BPhAe30x+Q==
+X-Received: by 2002:a62:1a47:0:b029:19b:c093:2766 with SMTP id a68-20020a621a470000b029019bc0932766mr11252370pfa.10.1607235344811;
+        Sat, 05 Dec 2020 22:15:44 -0800 (PST)
 Received: from archlinux.. ([161.81.68.216])
-        by smtp.gmail.com with ESMTPSA id a14sm4360094pfl.141.2020.12.05.21.53.43
+        by smtp.gmail.com with ESMTPSA id c205sm10110250pfc.160.2020.12.05.22.15.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Dec 2020 21:53:44 -0800 (PST)
+        Sat, 05 Dec 2020 22:15:44 -0800 (PST)
 From:   Tom Yan <tom.ty89@gmail.com>
 To:     linux-block@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH 3/3] block: set REQ_PREFLUSH to the final bio from __blkdev_issue_zero_pages()
-Date:   Sun,  6 Dec 2020 13:53:32 +0800
-Message-Id: <20201206055332.3144-3-tom.ty89@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Tom Yan <tom.ty89@gmail.com>
+Subject: [RFC] block: avoid the unnecessary blk_bio_discard_split()
+Date:   Sun,  6 Dec 2020 14:15:37 +0800
+Message-Id: <20201206061537.3870-1-tom.ty89@gmail.com>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201206055332.3144-1-tom.ty89@gmail.com>
-References: <20201206055332.3144-1-tom.ty89@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Mimicking blkdev_issue_flush(). Seems like a right thing to do, as
-they are a bunch of REQ_OP_WRITE.
+It doesn't seem necessary to have the redundant layer of splitting.
+The request size will even be more consistent / aligned to the cap.
 
 Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 ---
- block/blk-lib.c | 2 ++
- 1 file changed, 2 insertions(+)
+ block/blk-lib.c   | 5 ++++-
+ block/blk-merge.c | 2 +-
+ block/blk.h       | 8 ++++++--
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
 diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 354dcab760c7..5579fdea893d 100644
+index e90614fd8d6a..f606184a9050 100644
 --- a/block/blk-lib.c
 +++ b/block/blk-lib.c
-@@ -422,6 +422,8 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	} else if (!(flags & BLKDEV_ZERO_NOFALLBACK)) {
- 		ret = __blkdev_issue_zero_pages(bdev, sector, nr_sects,
- 						gfp_mask, &bio);
-+		if (bio)
-+			bio->bi_opf |= REQ_PREFLUSH;
- 	} else {
- 		/* No zeroing offload support */
- 		ret = -EOPNOTSUPP;
+@@ -85,9 +85,12 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		 *   is split in device drive, the split ones are very probably
+ 		 *   to be aligned to discard_granularity of the device's queue.
+ 		 */
+-		if (granularity_aligned_lba == sector_mapped)
++		if (granularity_aligned_lba == sector_mapped) {
+ 			req_sects = min_t(sector_t, nr_sects,
+ 					  bio_aligned_discard_max_sectors(q));
++			if (!req_sects)
++				return -EOPNOTSUPP;
++		}
+ 		else
+ 			req_sects = min_t(sector_t, nr_sects,
+ 					  granularity_aligned_lba - sector_mapped);
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index bcf5e4580603..2439216585d9 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -59,6 +59,7 @@ static inline bool req_gap_front_merge(struct request *req, struct bio *bio)
+ 	return bio_will_gap(req->q, NULL, bio, req->bio);
+ }
+ 
++/* deprecated */
+ static struct bio *blk_bio_discard_split(struct request_queue *q,
+ 					 struct bio *bio,
+ 					 struct bio_set *bs,
+@@ -303,7 +304,6 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
+ 	switch (bio_op(*bio)) {
+ 	case REQ_OP_DISCARD:
+ 	case REQ_OP_SECURE_ERASE:
+-		split = blk_bio_discard_split(q, *bio, &q->bio_split, nr_segs);
+ 		break;
+ 	case REQ_OP_WRITE_ZEROES:
+ 		split = blk_bio_write_zeroes_split(q, *bio, &q->bio_split,
+diff --git a/block/blk.h b/block/blk.h
+index dfab98465db9..e7e31a8c4930 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -281,8 +281,12 @@ static inline unsigned int bio_allowed_max_sectors(struct request_queue *q)
+ static inline unsigned int bio_aligned_discard_max_sectors(
+ 					struct request_queue *q)
+ {
+-	return round_down(UINT_MAX, q->limits.discard_granularity) >>
+-			SECTOR_SHIFT;
++	unsigned int discard_max_sectors, granularity;
++	discard_max_sectors = min(q->limits.max_discard_sectors,
++				  bio_allowed_max_sectors(q));
++	/* Zero-sector (unknown) and one-sector granularities are the same.  */
++	granularity = max(q->limits.discard_granularity >> SECTOR_SHIFT, 1U)
++	return round_down(max, granularity);
+ }
+ 
+ /*
 -- 
 2.29.2
 
