@@ -2,128 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 639D2C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 14:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 270FDC4167B
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 14:15:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F3AF2312F
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 14:08:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFD672313F
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 14:15:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728039AbgLFOIi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Dec 2020 09:08:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41786 "EHLO
+        id S1728446AbgLFOPP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Dec 2020 09:15:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727989AbgLFOIh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 09:08:37 -0500
+        with ESMTP id S1726757AbgLFOPP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 09:15:15 -0500
 Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67831C0613D0;
-        Sun,  6 Dec 2020 06:07:57 -0800 (PST)
-Received: by mail-ed1-x543.google.com with SMTP id d18so10850654edt.7;
-        Sun, 06 Dec 2020 06:07:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5861C0613D0;
+        Sun,  6 Dec 2020 06:14:34 -0800 (PST)
+Received: by mail-ed1-x543.google.com with SMTP id dk8so7998310edb.1;
+        Sun, 06 Dec 2020 06:14:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc:content-transfer-encoding;
-        bh=aPZZJwlWG0at/TteZM/eCvvmq6bb2WZ0OxZRPSGS3iw=;
-        b=KtFyW/cooS3YMe5bAdo6WcZUOOCmHZxsIS7Fh6G77AA7GPyHYnVpJiL0mEZtcDxpBR
-         z6OjUX+nOBBhita63EKkfe+OzZOWKWbX+QRBv4oztbKRxxcMA4Q9uiir0qGcSA4ZBFha
-         5inZDHxadoIg9HB/mKcdX/q6VLcRRl5tVeETs0mlts9oBxQFh0lCzIGLdRkwwTom9L6o
-         cljSC6Jmo8yfgUJRwKuwNaJd60J8B24evKcEDoXLwyvXES6/tqTeFcOdclVUkNqP1713
-         UueEoD4OrWRTVncFfw9hCB24K0OiCvuMfkawZAmFA4IXsbno2hgBYEM5HXf4vIH41z0L
-         3/lQ==
+        bh=eNOEAWekcaikssB8glzCwEs1qMsl24PtYgQQ8j4uLPA=;
+        b=CbZo57z4+74s79nVAmWVNgfudPLp6+nhTYJe96sZlmIRGMmo50jT/v07k2DkbRUSy4
+         KIcSuHxNJyOm+IBZ4LSZbgJFvzRs+34nt40gjM4m5msOtu6WYsL5mNO+gieNtBGG4pUY
+         U4oromD2SOu3D7hn87g/kzaMEjevNyrDdTqTYpV13hbXSQtDtQtXSSfN3fIKSpWD6p0L
+         yqUrkE9Zluz7at03qIFO9dg2AcPzCwwIGWITcanLg+v7Fd6Zov4fFAKQH+r0bN3QE1Tp
+         irrhwGrJjEgvgPIilzNlxqYOVyvw9ccMaqn12RjphcrP8mVKxvkFEWeRdiWqH6UXi4pP
+         d/bA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc:content-transfer-encoding;
-        bh=aPZZJwlWG0at/TteZM/eCvvmq6bb2WZ0OxZRPSGS3iw=;
-        b=qo8r7/kGnw3plRGMCJNHzIJeDeGm85d3h0Kr9vXMC9hWPJO2yAPJxMleXD7pcexmON
-         RMP2pQjdgVCje/ZcAyrW2JJ5AcL26uia8eQHTwRqzsaUh7sWVKDDpnUd6yubKwOszhFr
-         8E1Si5aGd5QQwc8jC4uEAUTXuNRaJXGoQ7WjPb4Wm6n7WlbT/esJ5JdEldnZBzHyUq6q
-         bFSiLV3AtVriBDfZ6cJbZxisM7Pj/izinfoJ2Ousi6WGnbEQn+mLRRJSYwgXvZVV8c5M
-         McQEMAwELY3R/DPYyWbLh/XNgaQMdQEiGM4ux+mSfKjcVWCDsddaKqt73h7BKITDynYW
-         6C/w==
-X-Gm-Message-State: AOAM530EjKg/5+FghY/7kwv997b5xhfdlqi1wotiVgzZPulcvagdzFsp
-        4pz0Rvj9ltK0cLADVFRhAxxeYiG9b+NVnrUdTVo=
-X-Google-Smtp-Source: ABdhPJxlXVw4t3l+Mr6a3bmux/YN56LiLdE3Rr50zdAPF5glIWS5QBf/TWvHS84sHC0oNTu/8k1gp56WF/bpCAJ2isE=
-X-Received: by 2002:aa7:d545:: with SMTP id u5mr15739906edr.113.1607263676017;
- Sun, 06 Dec 2020 06:07:56 -0800 (PST)
+        bh=eNOEAWekcaikssB8glzCwEs1qMsl24PtYgQQ8j4uLPA=;
+        b=Yz/j/MNguW8P00jydw7fl5bpoBs5VlfgD3ftqf2IgyW5nbkjVeZnq8Vmc8aEWbDNak
+         ptksKBgbmM4vIVp0WSfzLws+J6usoBjKhN3jYQGkabT6FRZvhChgYPHRDe1LstStjRF2
+         laPO+B48UxWdtlaFfSBfu8q+r9pqJBBVrDWN5ZnvHj6OqQY0ClPx9Sz/sv6YEYjXMhU4
+         UZ9EpTVZ0kt3VN9659p2TzqzUOiwewmULWhxVsjT9qmPtF6bNzptgILTruuJhBJXQH0h
+         jtMad5GrNicRTpow5i010yG/KSNkphwmJzVh1J1ewcLuHsu3GKj1/bpI6zLPgLqie71A
+         hrcQ==
+X-Gm-Message-State: AOAM532yw7/cYe0rH6bxoWsNdJjcg1iPUbaT8kNbW6xqHGdWPJgkTmHP
+        lIvMSCKJ553LSJd9Lsgh2xcw33gP4S/v1VzavgUThmD5
+X-Google-Smtp-Source: ABdhPJwMzwl0myNqVWFT9vOi76GZ9A3LwUs0yivTqa0T15pIy63R3eaLaR0Rm7RLAj3m8WwBQQIMm3Wu4rdRMUTXubE=
+X-Received: by 2002:aa7:d545:: with SMTP id u5mr15767814edr.113.1607264073463;
+ Sun, 06 Dec 2020 06:14:33 -0800 (PST)
 MIME-Version: 1.0
-References: <20201206055332.3144-1-tom.ty89@gmail.com> <7987f7f1-d608-26d0-3f2f-86a7bd7cc03d@suse.de>
- <CAGnHSEmKsbgdprMebd-1gwpU52n4WkWb04cro1_z50g47-QjrQ@mail.gmail.com> <ba469342-b94b-4d2d-4af0-085711979a52@suse.de>
-In-Reply-To: <ba469342-b94b-4d2d-4af0-085711979a52@suse.de>
+References: <20201206055332.3144-1-tom.ty89@gmail.com> <20201206055332.3144-3-tom.ty89@gmail.com>
+ <2eb8f838-0ec6-3e70-356b-8c04baba2fc4@suse.de> <CAGnHSEk0C6VNQysGiysPS1yEXwu4U8PVCaVB2RR7oEgnr4Xz=w@mail.gmail.com>
+ <4304d959-9155-3126-a858-28b338968916@suse.de>
+In-Reply-To: <4304d959-9155-3126-a858-28b338968916@suse.de>
 From:   Tom Yan <tom.ty89@gmail.com>
-Date:   Sun, 6 Dec 2020 22:07:44 +0800
-Message-ID: <CAGnHSEkTZAvRZc3UyHAsOFdV8r=QpgV=KauqQqYwYHJUF+kAFg@mail.gmail.com>
-Subject: Re: [PATCH 1/3] block: try one write zeroes request before going further
+Date:   Sun, 6 Dec 2020 22:14:22 +0800
+Message-ID: <CAGnHSEmMB5bfkCqyk=USHnmFr+Z1HA9UQ8whBD08K1hwvM2Scw@mail.gmail.com>
+Subject: Re: [PATCH 3/3] block: set REQ_PREFLUSH to the final bio from __blkdev_issue_zero_pages()
 To:     Hannes Reinecke <hare@suse.de>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, tom.leiming@gmail.com,
-        axboe@fb.com
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Yes it does have "dependency" to the blk_next_bio() patch. I just
-somehow missed that.
-
-The problem is, I don't think I'm trying to change the logic of
-bio_chain(), or even that of blk_next_bio(). It really just looks like
-a careless mistake, that the arguments were typed in the wrong order.
-
-Adding those who signed off the original commit (block: remove struct
-bio_batch / 9082e87b) here too to the CC list.
-
-
-On Sun, 6 Dec 2020 at 21:56, Hannes Reinecke <hare@suse.de> wrote:
+On Sun, 6 Dec 2020 at 22:05, Hannes Reinecke <hare@suse.de> wrote:
 >
-> On 12/6/20 2:25 PM, Tom Yan wrote:
-> > I think you misunderstood it. The goal of this patch is to split the
-> > current situation into two chains (or one unchained bio + a series of
-> > chained bio). The first one is an attempt/trial which makes sure that
-> > the latter large bio chain can actually be handled (as per the
-> > "command capability" of the device).
+> On 12/6/20 2:32 PM, Tom Yan wrote:
+> > Why? Did you miss that it is in the condition where
+> > __blkdev_issue_zero_pages() is called (i.e. it's not WRITE SAME but
+> > WRITE). From what I gathered REQ_PREFLUSH triggers a write back cache
+> > (that is on the device; not sure about dirty pages) flush, wouldn't it
+> > be a right thing to do after we performed a series of WRITE (which is
+> > more or less purposed to get a drive wiped clean).
 > >
-> Oh, I think I do get what you're trying to do. And, in fact, I don't
-> argue with what you're trying to achieve.
 >
-> What I would like to see, though, is keep the current bio_chain logic
-> intact (irrespective of your previous patch, which should actually be
-> part of this series), and just lift the first check out of the loop:
+> But what makes 'zero_pages' special as compared to, say, WRITE_SAME?
+> One could use WRITE SAME with '0' content, arriving at pretty much the
+> same content than usine zeroout without unmapping. And neither of them
+> worries about cache flushing.
+> Nor should they, IMO.
+
+Because we are writing actual pages (just that they are zero and
+"shared memory" in the system) to the device, instead of triggering a
+special command (with a specific parameter)?
+
 >
-> @@ -262,9 +262,14 @@ static int __blkdev_issue_write_zeroes(struct
-> block_device *bdev,
->
->          if (max_write_zeroes_sectors =3D=3D 0)
->                  return -EOPNOTSUPP;
-> -
-> +       new =3D bio_alloc(gfp_mask, 0);
-> +       bio_chain(bio, new);
-> +       if (submit_bio_wait(bio) =3D=3D BLK_STS_NOTSUPP) {
-> +               bio_put(new);
-> +               return -ENOPNOTSUPP;
-> +       }
-> +       bio =3D new;
->          while (nr_sects) {
-> -               bio =3D blk_next_bio(bio, 0, gfp_mask);
->                  bio->bi_iter.bi_sector =3D sector;
->                  bio_set_dev(bio, bdev);
->                  bio->bi_opf =3D REQ_OP_WRITE_ZEROES;
-> @@ -279,6 +284,7 @@ static int __blkdev_issue_write_zeroes(struct
-> block_device *bdev,
->                          bio->bi_iter.bi_size =3D nr_sects << 9;
->                          nr_sects =3D 0;
->                  }
-> +               bio =3D blk_next_bio(bio, 0, gfp_mask);
->                  cond_resched();
->          }
->
-> (The error checking from submit_bio_wait() could be improved :-)
+> These are 'native' block layer calls, providing abstract accesses to
+> hardware functionality. If an application wants to use them, it would be
+> the task of the application to insert a 'flush' if it deems neccessary.
+> (There _is_ blkdev_issue_flush(), after all).
+
+Well my argument would be the call has the purpose of "wiping" so it
+should try to "atomically" guarantee that the wiping is synced. It's
+like a complement to REQ_SYNC in the final submit_bio_wait().
+
 >
 > Cheers,
 >
