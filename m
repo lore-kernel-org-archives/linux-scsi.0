@@ -2,96 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E86ECC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 16:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B57C4167B
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 16:43:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF4EF2333F
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 16:06:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76F3E2336D
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 16:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726642AbgLFQGO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Dec 2020 11:06:14 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36110 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726186AbgLFQGN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 6 Dec 2020 11:06:13 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E3631ACD5;
-        Sun,  6 Dec 2020 16:05:31 +0000 (UTC)
-Subject: Re: [PATCH 3/3] block: set REQ_PREFLUSH to the final bio from
- __blkdev_issue_zero_pages()
-To:     Tom Yan <tom.ty89@gmail.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20201206055332.3144-1-tom.ty89@gmail.com>
- <20201206055332.3144-3-tom.ty89@gmail.com>
- <2eb8f838-0ec6-3e70-356b-8c04baba2fc4@suse.de>
- <CAGnHSEk0C6VNQysGiysPS1yEXwu4U8PVCaVB2RR7oEgnr4Xz=w@mail.gmail.com>
- <4304d959-9155-3126-a858-28b338968916@suse.de>
- <CAGnHSEmMB5bfkCqyk=USHnmFr+Z1HA9UQ8whBD08K1hwvM2Scw@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <b18fa5df-2a18-e29c-911b-483dcb451f06@suse.de>
-Date:   Sun, 6 Dec 2020 17:05:31 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
-MIME-Version: 1.0
-In-Reply-To: <CAGnHSEmMB5bfkCqyk=USHnmFr+Z1HA9UQ8whBD08K1hwvM2Scw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1727809AbgLFQna (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Dec 2020 11:43:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37224 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727617AbgLFQn3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 11:43:29 -0500
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7D26C0613D0;
+        Sun,  6 Dec 2020 08:42:42 -0800 (PST)
+Received: by mail-ej1-x642.google.com with SMTP id x16so16004779ejj.7;
+        Sun, 06 Dec 2020 08:42:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Q6ExZ117A0aM/vhFUmbVwSY0OK3ssVDA0XzgyTgogbY=;
+        b=oa5Ad8htSNHvj/Tdm++f/s9AvO7MoWOrXJPAb0LPxHNfb06kZbPQliv8BmR+toZIZx
+         n2LBLRyULnezXirBOE6iL2pe1Ws+o61u7/bqMHrtIgTQpFfc1LnIDgbXKdM8S2bp4vmw
+         Fh8QSyyo9uO4LZy87oDnh8eg3ivL2Vyqyt809od1mUvAS2UXp6SZS+WJs6XDcVlIvUiL
+         Xexr7BjA9sMuGNd7E7Pzb6dWzUyKBYeNnhtgt7DmEnfHPtGfklX8gL4l70+huUesGrF6
+         3GNmIG/Kd0ZXHKG/k+Tdqfnahim/T8GujSAF6djpBb5b4er2Yl0G6HjJptr4/UTyXNP7
+         2QfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Q6ExZ117A0aM/vhFUmbVwSY0OK3ssVDA0XzgyTgogbY=;
+        b=aCBhZPYibcOXyUwxEilEIVvjoOZAus710s+amdeS+zH7i75aklZjPuKfqp2zm8/jeo
+         oye+FvCI1vt19LoKMdMgvBMp1SKxzwVMPcwTt0zBi0++4Y1jGFdeqVHeC1ZSWVwgRVAt
+         NAocn/iE9bGM9UPVeC7JT3994bzibiAs0oHkDOGNq8oHO7TyIrgpNdhPYI7PNdnIp/zg
+         +8UoBrCwB8R4QOldqFCV0CRfagW6KS3qbVbsxPR5DW0MLRYVYGNJvF60seX0C6Ws3Gtt
+         JBRZvB9ymR87vAwY/jn6PzXFIom+XKdmdv95V1w/XKhiveO/Ec7knSbisQJMjZ+YPVBe
+         wj/Q==
+X-Gm-Message-State: AOAM533D6KY5yw0YDKeghteS4yV7NqYut3+qhTkqCZF28+ZUEiR8PMNH
+        bKVNk/tV/pO0afk8n1MCn+U=
+X-Google-Smtp-Source: ABdhPJwRwV6diyTTT5KoBZRaVFt58XwWp1CREVd+1bXwTOoMBkPt0oikx99d/RIKB5NW8OQjqusfkw==
+X-Received: by 2002:a17:906:3ecf:: with SMTP id d15mr15817372ejj.297.1607272961621;
+        Sun, 06 Dec 2020 08:42:41 -0800 (PST)
+Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.gmail.com with ESMTPSA id e19sm9157524edr.61.2020.12.06.08.42.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Dec 2020 08:42:41 -0800 (PST)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        rostedt@goodmis.org
+Subject: [PATCH v1 0/3] Three fixes for the UPIU trace
+Date:   Sun,  6 Dec 2020 17:42:23 +0100
+Message-Id: <20201206164226.6595-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/6/20 3:14 PM, Tom Yan wrote:
-> On Sun, 6 Dec 2020 at 22:05, Hannes Reinecke <hare@suse.de> wrote:
->>
->> On 12/6/20 2:32 PM, Tom Yan wrote:
->>> Why? Did you miss that it is in the condition where
->>> __blkdev_issue_zero_pages() is called (i.e. it's not WRITE SAME but
->>> WRITE). From what I gathered REQ_PREFLUSH triggers a write back cache
->>> (that is on the device; not sure about dirty pages) flush, wouldn't it
->>> be a right thing to do after we performed a series of WRITE (which is
->>> more or less purposed to get a drive wiped clean).
->>>
->>
->> But what makes 'zero_pages' special as compared to, say, WRITE_SAME?
->> One could use WRITE SAME with '0' content, arriving at pretty much the
->> same content than usine zeroout without unmapping. And neither of them
->> worries about cache flushing.
->> Nor should they, IMO.
-> 
-> Because we are writing actual pages (just that they are zero and
-> "shared memory" in the system) to the device, instead of triggering a
-> special command (with a specific parameter)?
-> 
+From: Bean Huo <beanhuo@micron.com>
 
-But these pages are ephemeral, and never visible to the user.
 
->>
->> These are 'native' block layer calls, providing abstract accesses to
->> hardware functionality. If an application wants to use them, it would be
->> the task of the application to insert a 'flush' if it deems neccessary.
->> (There _is_ blkdev_issue_flush(), after all).
-> 
-> Well my argument would be the call has the purpose of "wiping" so it
-> should try to "atomically" guarantee that the wiping is synced. It's
-> like a complement to REQ_SYNC in the final submit_bio_wait().
-> 
-That's an assumption.
 
-It would be valid if blkdev_issue_zeroout() would only allow to wipe the 
-entire disk. As it stands, it doesn't, and so we shouldn't presume what 
-users might want to do with it.
+Bean Huo (3):
+  scsi: ufs: Distinguish between query REQ and query RSP in query trace
+  scsi: ufs: Distinguish between TM request UPIU and response UPIU in TM
+    UPIU trace
+  scsi: ufs: Make UPIU trace easier differentiate among CDB, OSF, and TM
 
-Cheers,
+ drivers/scsi/ufs/ufshcd.c  | 21 ++++++++++++++++-----
+ include/trace/events/ufs.h | 10 +++++++---
+ 2 files changed, 23 insertions(+), 8 deletions(-)
 
-Hannes
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.17.1
+
