@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 405ECC19425
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D504C1B0D8
 	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:14:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F19B62311B
-	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:14:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BD852333E
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Dec 2020 10:14:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726604AbgLFKOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 6 Dec 2020 05:14:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34046 "EHLO
+        id S1726035AbgLFKOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Dec 2020 05:14:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726035AbgLFKOh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 05:14:37 -0500
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65501C0613D4;
-        Sun,  6 Dec 2020 02:13:51 -0800 (PST)
-Received: by mail-ed1-x541.google.com with SMTP id d18so10475888edt.7;
-        Sun, 06 Dec 2020 02:13:51 -0800 (PST)
+        with ESMTP id S1726181AbgLFKOa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2020 05:14:30 -0500
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53CA4C0613D1;
+        Sun,  6 Dec 2020 02:13:50 -0800 (PST)
+Received: by mail-ed1-x543.google.com with SMTP id c7so10486778edv.6;
+        Sun, 06 Dec 2020 02:13:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=DzTqd9dkl5EkbKVipIPtqS62+QvHIcMxfNkqNfnETf0=;
-        b=ioqAM6y+ez21ZM4xdfyLATaiLpkXrrYMyJi/PiGZarxFrmRB2uS4yBfoPB6Y6urYSm
-         yVLTFxmq2pFZ1HJ6NvQC8aY4VRHfiZe/L6ygDh8kKBTgCiXHHrv4qhjHgj9tyrqtrJDa
-         Qm+EDB01FvYrYPhqZtQvIz4QudWX37F/0JetxUv+V0yqoOU0kaexpE2XFanv9SnXC47N
-         e2rmPfnH53Ajvk9PuJsn3D+a9uTQHI6qBDmVGLNwjvtzSTiR44U0xkxsNUd1TF+mcS3x
-         bz6AZ2X9wul/YouDlHJslvuYcoFDD67LjE37bQ3ZCmmjsa4eGbKGAsX5dQLb/mnDkeus
-         snag==
+        bh=ZdbsWuYcR4owa0ugaVEt1w9R8x4VEIMlOHbG6PqGjpc=;
+        b=hdHIUUDQcvGQNdSq3PA6aDJhp4DPSbVBWAvgC8aCdT5QEnP8q5hnW2xeI2Xk5zuQ+7
+         XUomhewxichdqZzOd3c7ZwA4HAcXlHHGPUi4EMws+S+Mlgp4kzFMX3eXjtHF/CBH1sa8
+         Yx097P5VF16BjtUfZW/oOi5C9hMUixKcpTRlfkyGdFDVCYaebmgWGtJzqbe0VZYvflrD
+         RhYEx2g4TdWHznYgg1TRjeLedRqutDV88TcoQy8rdG8Wv0IPizR94fOZ7iUkwCaefVdq
+         Cnb1IKYd+ScfjA6jB23LHVFVzYFTCRLuUhXP+K+86G3RtEmCjS1hLeJyJJgKp/5xqBzS
+         5aFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=DzTqd9dkl5EkbKVipIPtqS62+QvHIcMxfNkqNfnETf0=;
-        b=AeVA8PNyzSWhFQJuZUk6FDRgx2KOeqP1ATJmwnsn7tWf3FIlEUU5O60ElWuRNZsmT2
-         RrpktISkf9aNX65TeukCQoqIk7W0vxFQ1EQ37HY+gsn60vggIEqa2QpyHVSGrRGHIsjc
-         woWRzKjt2U49d05Joh9YGtwWXfiw1zBcLNMfiF08RCOksjw/hubHG8riKAa4F5kfi+T+
-         vH5b3pEbMv0NbNc1fgFzOQxoHXS5DCgp6IS5HGJSoFkJCx+o4EDF7PJP+PgKUZVrGXxx
-         kmKtyQERQ7EsV9LcSGG7n/B0DJayC/zINl/B6twJ6luKL4fqVABX2A/Zh/t8jpDjPF08
-         r4ow==
-X-Gm-Message-State: AOAM531NBtFTrrVCZncTcqvwW/vtgYxMfImXLTkQfwq3pVFu9crHOQov
-        Y9mwgnwpuaOLqw1xb+W8dK4=
-X-Google-Smtp-Source: ABdhPJzpP9j7qajOfYX98NuVK48hM76s+4TnOkp6Bfgfv4GqBBweq16YGAUt8DgxAZPnSi5YDtKRmw==
-X-Received: by 2002:a05:6402:366:: with SMTP id s6mr3807855edw.44.1607249630163;
-        Sun, 06 Dec 2020 02:13:50 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id f24sm7701919ejf.117.2020.12.06.02.13.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=ZdbsWuYcR4owa0ugaVEt1w9R8x4VEIMlOHbG6PqGjpc=;
+        b=tryA+uQB1wEXeiujKKxRPC8p0sdIAG2v0w21yOaOWRBJAFrWCbLTkITdah5W3rc+10
+         TGKZFjJyQAH6PJ4eNeyYKWSh4lvBU5TTkblLRiUHYvLlpbRZ/aMrEKgiLeUpWCRiaKu1
+         u1xF0GCFGKgO4YlGPnn45yewJ1VECVDGoG+JQBc8tcfbIUDMW1MXiadhzshz27hxopY5
+         KIF0I2HfCOLWQ8yNSsBzeRU0EAXC6zkxS+GEUjTneTdGPfa7jYSG1tx1QAGWsT/WaScg
+         lrwYK4Zj0hIMawajvE/kKhkxQht+4mNaRa2Djz0AysH6eFvgHA+lDPwH3jp5EGGgY7Nq
+         IsGA==
+X-Gm-Message-State: AOAM5323kBq1r0aSu+eK5qGd2BA/fVdYNcXsoS30ANqFtzng8nyzSw1o
+        hyR7t6En/+xOVchj/k2FHCA=
+X-Google-Smtp-Source: ABdhPJx3SeXdhiVUfCBm9wor68PC8LWCPxQ53v/7MtKtk7OouV+WhVR5irFHp52jFlmXmKz69fHi1A==
+X-Received: by 2002:a50:b586:: with SMTP id a6mr15354121ede.206.1607249629002;
         Sun, 06 Dec 2020 02:13:49 -0800 (PST)
+Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.gmail.com with ESMTPSA id f24sm7701919ejf.117.2020.12.06.02.13.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Dec 2020 02:13:48 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -62,9 +62,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] scsi: ufs: Keep device active mode only fWriteBoosterBufferFlushDuringHibernate == 1
-Date:   Sun,  6 Dec 2020 11:13:34 +0100
-Message-Id: <20201206101335.3418-3-huobean@gmail.com>
+Subject: [PATCH v2 1/3] scsi: ufs: Add "wb_on" sysfs node to control WB on/off
+Date:   Sun,  6 Dec 2020 11:13:33 +0100
+Message-Id: <20201206101335.3418-2-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201206101335.3418-1-huobean@gmail.com>
 References: <20201206101335.3418-1-huobean@gmail.com>
@@ -74,93 +74,117 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-According to the JEDEC UFS 3.1 Spec, If fWriteBoosterBufferFlushDuringHibernate
-is set to one, the device flushes the WriteBooster Buffer data automatically
-whenever the link enters the hibernate (HIBERN8) state. While the flushing
-operation is in progress, the device should be kept in Active power mode.
-Currently, we set this flag during the UFSHCD probe stage, but we didn't deal
-with its programming failure. Even this failure is less likely to occur, but
-still it is possible.
-This patch is to add checkup of fWriteBoosterBufferFlushDuringHibernate setting,
-keep the device as "active power mode" only when this flag be successfully set
-to 1.
+Currently UFS WriteBooster driver uses clock scaling up/down to set
+WB on/off, for the platform which doesn't support UFSHCD_CAP_CLK_SCALING,
+WB will be always on. Provide a sysfs attribute to enable/disable WB
+during runtime. Write 1/0 to "wb_on" sysfs node to enable/disable UFS WB.
 
-Fixes: 51dd905bd2f6 ("scsi: ufs: Fix WriteBooster flush during runtime suspend")
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufs.h    |  2 ++
- drivers/scsi/ufs/ufshcd.c | 20 +++++++++++++++-----
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufs-sysfs.c | 40 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.c    |  3 +--
+ drivers/scsi/ufs/ufshcd.h    |  2 ++
+ 3 files changed, 43 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index d593edb48767..311d5f7a024d 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -530,6 +530,8 @@ struct ufs_dev_info {
- 	bool f_power_on_wp_en;
- 	/* Keeps information if any of the LU is power on write protected */
- 	bool is_lu_power_on_wp;
-+	/* Indicates if flush WB buffer during hibern8 successfully enabled */
-+	bool is_hibern8_wb_flush;
- 	/* Maximum number of general LU supported by the UFS device */
- 	u8 max_lu_supported;
- 	u8 wb_dedicated_lu;
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 30332592e624..da38d760944b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -285,10 +285,16 @@ static inline void ufshcd_wb_config(struct ufs_hba *hba)
- 		dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__, ret);
- 	else
- 		dev_info(hba->dev, "%s: Write Booster Configured\n", __func__);
-+
- 	ret = ufshcd_wb_toggle_flush_during_h8(hba, true);
--	if (ret)
-+	if (ret) {
- 		dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
- 			__func__, ret);
-+		hba->dev_info.is_hibern8_wb_flush = false;
-+	} else {
-+		hba->dev_info.is_hibern8_wb_flush = true;
-+	}
-+
- 	ufshcd_wb_toggle_flush(hba, true);
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 08e72b7eef6a..b3bf7fca00e5 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -189,6 +189,44 @@ static ssize_t auto_hibern8_store(struct device *dev,
+ 	return count;
  }
  
-@@ -5448,6 +5454,7 @@ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
- 
- 	if (!ufshcd_is_wb_allowed(hba))
- 		return false;
++static ssize_t wb_on_show(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
 +
- 	/*
- 	 * The ufs device needs the vcc to be ON to flush.
- 	 * With user-space reduction enabled, it's enough to enable flush
-@@ -8540,6 +8547,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	enum ufs_pm_level pm_lvl;
- 	enum ufs_dev_pwr_mode req_dev_pwr_mode;
- 	enum uic_link_state req_link_state;
-+	bool hibern8;
- 
- 	hba->pm_op_in_progress = 1;
- 	if (!ufshcd_is_shutdown_pm(pm_op)) {
-@@ -8599,11 +8607,13 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		 * Hibern8, keep device power mode as "active power mode"
- 		 * and VCC supply.
- 		 */
-+		hibern8 = req_link_state == UIC_LINK_HIBERN8_STATE ||
-+			(req_link_state == UIC_LINK_ACTIVE_STATE &&
-+			 ufshcd_is_auto_hibern8_enabled(hba));
++	return scnprintf(buf, PAGE_SIZE, "%d\n", hba->wb_enabled);
++}
 +
- 		hba->dev_info.b_rpm_dev_flush_capable =
--			hba->auto_bkops_enabled ||
--			(((req_link_state == UIC_LINK_HIBERN8_STATE) ||
--			((req_link_state == UIC_LINK_ACTIVE_STATE) &&
--			ufshcd_is_auto_hibern8_enabled(hba))) &&
-+			hba->auto_bkops_enabled || (hibern8 &&
-+			hba->dev_info.is_hibern8_wb_flush &&
- 			ufshcd_wb_need_flush(hba));
- 	}
++static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
++			   const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned int wb_enable;
++	ssize_t res;
++
++	if (ufshcd_is_clkscaling_supported(hba)) {
++		/* If the platform supports UFSHCD_CAP_AUTO_BKOPS_SUSPEND, turn
++		 * WB on/off will be done while clock scaling up/down.
++		 */
++		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
++		return -EOPNOTSUPP;
++	}
++	if (!ufshcd_is_wb_allowed(hba))
++		return -EOPNOTSUPP;
++
++	if (kstrtouint(buf, 0, &wb_enable))
++		return -EINVAL;
++
++	if (wb_enable != 0 && wb_enable != 1)
++		return -EINVAL;
++
++	pm_runtime_get_sync(hba->dev);
++	res = ufshcd_wb_ctrl(hba, wb_enable);
++	pm_runtime_put_sync(hba->dev);
++
++	return res < 0 ? res : count;
++}
++
+ static DEVICE_ATTR_RW(rpm_lvl);
+ static DEVICE_ATTR_RO(rpm_target_dev_state);
+ static DEVICE_ATTR_RO(rpm_target_link_state);
+@@ -196,6 +234,7 @@ static DEVICE_ATTR_RW(spm_lvl);
+ static DEVICE_ATTR_RO(spm_target_dev_state);
+ static DEVICE_ATTR_RO(spm_target_link_state);
+ static DEVICE_ATTR_RW(auto_hibern8);
++static DEVICE_ATTR_RW(wb_on);
  
+ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_rpm_lvl.attr,
+@@ -205,6 +244,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
+ 	&dev_attr_spm_target_dev_state.attr,
+ 	&dev_attr_spm_target_link_state.attr,
+ 	&dev_attr_auto_hibern8.attr,
++	&dev_attr_wb_on.attr,
+ 	NULL
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 92d433d5f3ca..30332592e624 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -247,7 +247,6 @@ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+ static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
+ static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
+-static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
+ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+@@ -5307,7 +5306,7 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
+ 				__func__, err);
+ }
+ 
+-static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
++int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 	u8 index;
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 61344c49c2cc..c61584dff74a 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1068,6 +1068,8 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 			     u8 *desc_buff, int *buff_len,
+ 			     enum query_opcode desc_op);
+ 
++int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
++
+ /* Wrapper functions for safely calling variant operations */
+ static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
+ {
 -- 
 2.17.1
 
