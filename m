@@ -2,82 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA1CBC1B0E3
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 05:50:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AE1BC4361B
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 06:32:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D136B22A85
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 05:50:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BBFE229EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 06:32:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726041AbgLGFuv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 00:50:51 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:60583 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725799AbgLGFuv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 00:50:51 -0500
-X-UUID: 9559639d0b5a4169aed1f4ad40a2a174-20201207
-X-UUID: 9559639d0b5a4169aed1f4ad40a2a174-20201207
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 585174363; Mon, 07 Dec 2020 13:50:08 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 7 Dec 2020 13:50:05 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 7 Dec 2020 13:50:05 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <alice.chao@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH] scsi: ufs: Enable WB flush during suspend only if WB is enabled
-Date:   Mon, 7 Dec 2020 13:50:06 +0800
-Message-ID: <20201207055006.24471-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1725832AbgLGGcB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 01:32:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50706 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725681AbgLGGcB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 01:32:01 -0500
+Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03A69C0613D0
+        for <linux-scsi@vger.kernel.org>; Sun,  6 Dec 2020 22:31:14 -0800 (PST)
+Received: by mail-ed1-x544.google.com with SMTP id k4so12504946edl.0
+        for <linux-scsi@vger.kernel.org>; Sun, 06 Dec 2020 22:31:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=znkNDbBbDHgiw3XuSJL4fJ/G0rYMAONXrt8IiNgFFbU=;
+        b=LwVK4ZXjHxG6TEIGTfyDazx/Ar7ZdZ0eNsSD/0lmiEZ0U/kU43+94DVJDURGP31Z5G
+         MgB8b2+zCjERyB6O6M4HmvhUKxjfVgUb7+uOfRGw4/AuLE6537mq6PnoXAAAb1MyviIa
+         vPBAKF+q8RCAQv85B2nKk1xxnQvTwyUmZLqwKhcn6EXjtU13dVFHNd2menbrVtaZI3WJ
+         +49DdF57iB4cAOB4mjtPDJA3lTa9da5jyMRXV7Y5S/aCkZGWNtQ1zAqnrxsCB3LMm4Mr
+         JKbEzkteAYGmNSD2SDT50vleOf4JtVeywZHPdV2/YEo0NASDI7RhRC5M2Gvg+OVlLSpR
+         Qngw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=znkNDbBbDHgiw3XuSJL4fJ/G0rYMAONXrt8IiNgFFbU=;
+        b=Vo6/ANQbJYs0OW1ThKyjRanvmNE7st3AUuq2zqN2n7YyHcYS9Z/etKO5fCCaUv4Mwo
+         2guOdw1OVkbD1uov6qIj3VHKUVV+xjqWI/X/Wg+ayXZhqojIxHc0KIC/2eDioJos8Q8B
+         R2vtAKl2XdEHh4HYnHhjvgXYQNSOCokjfh+gjrkAw/vbO7pXvFoC83/2VSoSdGj1n1Bj
+         nC/ZJShWnh9J/D0PGrGXSHdgKo8t+GC1Ia23+xmbywQH0XftI70ZmIB6yX2pZscEqyKR
+         mD5N3Xl+rHCMOG68rnHZL8Lcczy6PPIEPn4AKZwBGcmV0lCH3C8NZ5UF7SHop8Z0JVEU
+         cqzQ==
+X-Gm-Message-State: AOAM531LMxCILUDVgdRzZ4DgGZCZyToGqZNMHPYQb5DAu9Rtpp05IYTX
+        Sx6OE/i/wprbLuEo5AAUPmLDV4NcLhZPtHxcX3G0sA==
+X-Google-Smtp-Source: ABdhPJwfBrX+e82YelPH9Jp/p4Cg4viJ21MyZZkDIkh4rc3Xd6Ezl2TcopjFp6CrVIr3j2esYaVQrEEWTIK4TqHR0DQ=
+X-Received: by 2002:a50:ab51:: with SMTP id t17mr18550168edc.89.1607322673512;
+ Sun, 06 Dec 2020 22:31:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 7ECFD28C327FC532B2FC8FDB68299D886D91BB65601C989360DB1525EEFAE1122000:8
-X-MTK:  N
+References: <20201205115551.2079471-1-zhangqilong3@huawei.com>
+In-Reply-To: <20201205115551.2079471-1-zhangqilong3@huawei.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Mon, 7 Dec 2020 07:31:02 +0100
+Message-ID: <CAMGffEk0=krTjXQftCzTLM_=dcqhxxz=1DPX_FzTjmSCkFV0oQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm80xx: Fix error return in pm8001_pci_probe
+To:     Zhang Qilong <zhangqilong3@huawei.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-WriteBootser flush during suspend is not necessary to be enabled if
-WriteBooster feature is disabled. Simply adding a check to prevent
-unexpected power drain.
-
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
----
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4879e87577e1..89fa8b9ac11d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5458,7 +5458,7 @@ static bool ufshcd_wb_need_flush(struct ufs_hba *hba)
- 	u32 avail_buf;
- 	u8 index;
- 
--	if (!ufshcd_is_wb_allowed(hba))
-+	if (!ufshcd_is_wb_allowed(hba) || !hba->wb_enabled)
- 		return false;
- 	/*
- 	 * The ufs device needs the vcc to be ON to flush.
--- 
-2.18.0
-
+On Sat, Dec 5, 2020 at 12:53 PM Zhang Qilong <zhangqilong3@huawei.com> wrote:
+>
+> Forget to set error code when pm8001_configure_phy_settings
+> failed. We fixed it by using rc to store return value of
+> pm8001_configure_phy_settings.
+>
+> Fixes: 279094079a442 ("[SCSI] pm80xx: Phy settings support for motherboard controller.")
+> Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Thx
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 9a5d284f076a..ee2de177d0d0 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -1127,7 +1127,8 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+>
+>         pm8001_init_sas_add(pm8001_ha);
+>         /* phy setting support for motherboard controller */
+> -       if (pm8001_configure_phy_settings(pm8001_ha))
+> +       rc = pm8001_configure_phy_settings(pm8001_ha);
+> +       if (rc)
+>                 goto err_out_shost;
+>
+>         pm8001_post_sas_ha_init(shost, chip);
+> --
+> 2.25.4
+>
