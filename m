@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B37C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50215C1B0D8
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 12:49:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8E6823403
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 12:49:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E46E233FB
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 12:49:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726096AbgLGMt5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 07:49:57 -0500
-Received: from mx2.suse.de ([195.135.220.15]:43272 "EHLO mx2.suse.de"
+        id S1726100AbgLGMt6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 07:49:58 -0500
+Received: from mx2.suse.de ([195.135.220.15]:43274 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726081AbgLGMt5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Dec 2020 07:49:57 -0500
+        id S1726067AbgLGMt4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Dec 2020 07:49:56 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B041EAE64;
+        by mx2.suse.de (Postfix) with ESMTP id C8091AE69;
         Mon,  7 Dec 2020 12:48:31 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/35] bfa: drop driver-defined SCSI status codes
-Date:   Mon,  7 Dec 2020 13:47:53 +0100
-Message-Id: <20201207124819.95822-10-hare@suse.de>
+Subject: [PATCH 14/35] zfcp: do not set COMMAND_COMPLETE
+Date:   Mon,  7 Dec 2020 13:47:58 +0100
+Message-Id: <20201207124819.95822-15-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201207124819.95822-1-hare@suse.de>
 References: <20201207124819.95822-1-hare@suse.de>
@@ -38,70 +38,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drop the driver-defined SCSI status code and use the generic ones
-instead.
+COMMAND_COMPLETE is defined as '0', and it is a SCSI parallel message
+to boot. So drop the call to set_msg_byte().
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 ---
- drivers/scsi/bfa/bfa_fc.h    | 15 ---------------
- drivers/scsi/bfa/bfa_fcpim.c |  2 +-
- drivers/scsi/bfa/bfad_im.c   |  2 +-
- 3 files changed, 2 insertions(+), 17 deletions(-)
+ drivers/s390/scsi/zfcp_fc.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-index b00fb2409c50..d536270bbe9f 100644
---- a/drivers/scsi/bfa/bfa_fc.h
-+++ b/drivers/scsi/bfa/bfa_fc.h
-@@ -33,21 +33,6 @@ struct scsi_cdb_s {
- 	u8         scsi_cdb[SCSI_MAX_CDBLEN];
- };
+diff --git a/drivers/s390/scsi/zfcp_fc.h b/drivers/s390/scsi/zfcp_fc.h
+index 6902ae1f8e4f..8aaf409ce9cb 100644
+--- a/drivers/s390/scsi/zfcp_fc.h
++++ b/drivers/s390/scsi/zfcp_fc.h
+@@ -275,7 +275,6 @@ void zfcp_fc_eval_fcp_rsp(struct fcp_resp_with_ext *fcp_rsp,
+ 	u32 sense_len, resid;
+ 	u8 rsp_flags;
  
--/* ------------------------------------------------------------
-- * SCSI status byte values
-- * ------------------------------------------------------------
-- */
--#define SCSI_STATUS_GOOD                   0x00
--#define SCSI_STATUS_CHECK_CONDITION        0x02
--#define SCSI_STATUS_CONDITION_MET          0x04
--#define SCSI_STATUS_BUSY                   0x08
--#define SCSI_STATUS_INTERMEDIATE           0x10
--#define SCSI_STATUS_ICM                    0x14 /* intermediate condition met */
--#define SCSI_STATUS_RESERVATION_CONFLICT   0x18
--#define SCSI_STATUS_COMMAND_TERMINATED     0x22
--#define SCSI_STATUS_QUEUE_FULL             0x28
--#define SCSI_STATUS_ACA_ACTIVE             0x30
--
- #define SCSI_MAX_ALLOC_LEN      0xFF    /* maximum allocarion length */
+-	set_msg_byte(scsi, COMMAND_COMPLETE);
+ 	scsi->result |= fcp_rsp->resp.fr_status;
  
- /*
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index 38d1c453074d..7ad22288071b 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -2146,7 +2146,7 @@ __bfa_cb_ioim_comp(void *cbarg, bfa_boolean_t complete)
- 		/*
- 		 * setup sense information, if present
- 		 */
--		if ((m->scsi_status == SCSI_STATUS_CHECK_CONDITION) &&
-+		if ((m->scsi_status == SAM_STAT_CHECK_CONDITION) &&
- 					m->sns_len) {
- 			sns_len = m->sns_len;
- 			snsinfo = BFA_SNSINFO_FROM_TAG(ioim->fcpim->fcp,
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 22f06be2606f..6b5841b1c06e 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -106,7 +106,7 @@ bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
- 	struct bfad_itnim_data_s *itnim_data;
- 	struct bfad_itnim_s *itnim;
- 
--	cmnd->result = DID_OK << 16 | SCSI_STATUS_GOOD;
-+	cmnd->result = DID_OK << 16 | SAM_STAT_GOOD;
- 
- 	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
- 	if (cmnd->device->host != NULL)
+ 	rsp_flags = fcp_rsp->resp.fr_flags;
 -- 
 2.16.4
 
