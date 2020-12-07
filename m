@@ -2,102 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78533C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 10:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D47E8C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 11:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3457522B3B
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 10:16:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7B602158C
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 11:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726379AbgLGKQz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 05:16:55 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2213 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725802AbgLGKQz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 05:16:55 -0500
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CqJzJ57Nhz67Mb8;
-        Mon,  7 Dec 2020 18:13:00 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Mon, 7 Dec 2020 11:16:13 +0100
-Received: from [10.210.170.143] (10.210.170.143) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Mon, 7 Dec 2020 10:16:12 +0000
-Subject: Re: [PATCH 03/21] scsi: add scsi_{get,put}_internal_cmd() helper
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
-        <linux-scsi@vger.kernel.org>, chenxiang <chenxiang66@hisilicon.com>
-References: <20200703130122.111448-1-hare@suse.de>
- <20200703130122.111448-4-hare@suse.de>
- <5b9e5684-2235-7ba7-f81f-6dc46ee141e9@huawei.com>
- <b60ff356-b17b-128a-7b32-8cef3a234286@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2debadf2-a120-e73f-7fd6-14a3eb89e320@huawei.com>
-Date:   Mon, 7 Dec 2020 10:15:40 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <b60ff356-b17b-128a-7b32-8cef3a234286@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.170.143]
-X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S1726456AbgLGLAQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 06:00:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35512 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbgLGLAP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 06:00:15 -0500
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DE3DC0613D0;
+        Mon,  7 Dec 2020 02:59:35 -0800 (PST)
+Received: by mail-ej1-x641.google.com with SMTP id n26so18834684eju.6;
+        Mon, 07 Dec 2020 02:59:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=ueepF1yzZbMICZuzK5SyCCKVIYjp8Ub6eatZHwC5SNQ=;
+        b=Uj3sJueNflNH5hUhwt0vjG3oYCYO+JvWwURqSIkaAssBzmL9l0UksVHzWDm3qtz2tJ
+         K2m/NH2IdmMK5JHKkmP1rQvuZ8ND6SqV+WJ7jnZvE5Eyn2HHH+Je5moW1QNHSWCyEpDu
+         v/pxS7OwzqkPBZf9XdCP/TY/+iTf/wAi+/bR4ovxnTn/pvxrSdiEqGpTmENEooWhkXFS
+         YrmBG+XL7/DfLNeH7Csw7rlznTI7736WIW6Y2Bum3XMNeT/Gq4Oua5l8dCecVZSpCWuv
+         D4jzSoJ2ktoxY+57WJj5i5Xo4XKLTKhCr/BZ4yAaOQmrtJIxGFSZxYmr+jZYqJS6tGqN
+         KUXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=ueepF1yzZbMICZuzK5SyCCKVIYjp8Ub6eatZHwC5SNQ=;
+        b=thT23nSDShPr2xX/3NpUDpMxhD8gKoOlhwBUCCx2CGBgKgNgyTkWjvcfvr7lpRSS1X
+         Pz+eomatxnB8PT+t1dJxAbApNEFkS+gYT9WkaHAfDBBI/rUKACHNp+518Dad2BuWnMx0
+         iQHN6OkaFeSjqOgeGVVXleH3jl7Y6gnPRVpdg/BBAt8F+my1SM9FeuEh+KysEZFlHI6l
+         rSHkLVmFYdgNX27REs8z4+E561h56aEYmjR2w15btXSATP+MvZmIG2IXnV3vHVjCLpNF
+         xhXhByZCiv+/KymjSLi1bKqJvATo8xgEBFFiwpDAAQqS8mWkLZUdfmPAqzZvZnnXyMfV
+         GmPQ==
+X-Gm-Message-State: AOAM5327hIC8otNbF9ym3IEPjjHUbvLFrDpvfJe4WCOu4BXzjATJRJQH
+        58CTcBu3hoLa64vhr6RAJKY=
+X-Google-Smtp-Source: ABdhPJwdVXVVZBusMiT3eABzfCHMmKAbPpc8SyCWfIQKwVGaIl4aMaqM9p8ahtPH/YufDw7gFzoe9g==
+X-Received: by 2002:a17:906:52d9:: with SMTP id w25mr17646791ejn.504.1607338773893;
+        Mon, 07 Dec 2020 02:59:33 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.googlemail.com with ESMTPSA id h23sm11571690ejg.37.2020.12.07.02.59.32
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 07 Dec 2020 02:59:33 -0800 (PST)
+Message-ID: <062aa9e8f37c2e50032241ff8ddc1dcbc8051ba9.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: Enable WB flush during suspend only if WB is
+ enabled
+From:   Bean Huo <huobean@gmail.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     beanhuo@micron.com, asutoshd@codeaurora.org, cang@codeaurora.org,
+        matthias.bgg@gmail.com, bvanassche@acm.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
+        chaotian.jing@mediatek.com, cc.chou@mediatek.com,
+        jiajie.hao@mediatek.com, alice.chao@mediatek.com
+Date:   Mon, 07 Dec 2020 11:59:31 +0100
+In-Reply-To: <20201207055006.24471-1-stanley.chu@mediatek.com>
+References: <20201207055006.24471-1-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16/11/2020 09:03, Hannes Reinecke wrote:
-> On 11/16/20 9:56 AM, John Garry wrote:
->> On 03/07/2020 14:01, Hannes Reinecke wrote:
->>> Add helper functions to allow LLDDs to allocate and free
->>> internal commands.
->>
->> Hi Hannes,
->>
->> Is there any way to ensure that the request allocated is associated 
->> with some determined HW queue here?
->>
->> The reason for this requirement is that sometimes the LLDD must submit 
->> some internal IO (for which we allocate an "internal command") on a 
->> specific HW queue. An example of this is internal abort IO commands, 
->> which should be submitted on the same queue as the IO which we are 
->> attempting to abort was submitted.
->>
->> So, for sure, the LLDD does not have to honor the hwq associated with 
->> the request and submit on the desired queue, but then we lose the 
->> blk-mq CPU hotplug protection. And maybe other problems.
->>
->> One way to achieve this is to run scsi_get_internal_cmd() on a CPU 
->> associated with the desired HW queue, but that's a bit hacky. Not sure 
->> of another way.
->>
-> Hmm. You are correct for the 'abort' command; that typically needs to be 
-> submitted to a specific hwq.
+On Mon, 2020-12-07 at 13:50 +0800, Stanley Chu wrote:
+> WriteBootser flush during suspend is not necessary to be enabled if
+> WriteBooster feature is disabled. Simply adding a check to prevent
+> unexpected power drain.
 > 
-> Let me think about it...
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 4879e87577e1..89fa8b9ac11d 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5458,7 +5458,7 @@ static bool ufshcd_wb_need_flush(struct ufs_hba
+> *hba)
+>         u32 avail_buf;
+>         u8 index;
+>  
+> -       if (!ufshcd_is_wb_allowed(hba))
+> +       if (!ufshcd_is_wb_allowed(hba) || !hba->wb_enabled)
+>                 return false;
+>         /*
+>          * The ufs device needs the vcc to be ON to flush.
 
 
-Hannes,
+Hi Stanley
 
-Earlier you mentioned " some drivers not only the command needs a tag, 
-but the sgls also, thereby completely messing up our mq tags logic.
-So to map those we'd need to allocate _several_ tags for one command ..."
+In the 3.1 Spec:
 
-Which drivers are these? Can you provide a pointer? Is this the blocker?
+"If the fWriteBoosterEn flag is set to zero, data written to any
+logical unit is written in normal storage.
+If the fWriteBoosterEn flag is set to one and the device is configured
+in “shared buffer” mode, data written to any logical unit is written in
+the shared WriteBooster Buffer."
 
-Thanks,
-John
+so, IMO, fWriteBoosterEn is independant with WB buffer flush.
+
+as for the flush:
+
+"There are two methods for flushing data from the WriteBooster Buffer
+to the normal storage: one is using an explicit flush command, the
+other enabling the flushing during link hibernate state. If the
+fWriteBoosterBufferFlushEn flag is set to one, the device shall flush
+the data stored in the WriteBooster Buffer to the normal storage. If
+fWriteBoosterBufferFlushDuringHibernate is set to one, the device
+flushes the WriteBooster Buffer data automatically whenever the link
+enters the hibernate (HIBERN8) state."
+
+IMO, for the flush, it is controlled by fWriteBoosterBufferFlushEn and
+fWriteBoosterBufferFlushDuringHibernate.
+
+how do you understand the above two paragraphs from Spec?
+
+
+thanks,
+Bean
+
+
