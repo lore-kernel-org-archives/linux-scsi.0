@@ -2,111 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 384AEC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 19:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA77C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 22:11:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6C8E238A0
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 19:25:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DB0423976
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 22:11:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725874AbgLGTZh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 14:25:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58148 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725888AbgLGTZg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 14:25:36 -0500
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52993C061793
-        for <linux-scsi@vger.kernel.org>; Mon,  7 Dec 2020 11:24:56 -0800 (PST)
-Received: by mail-ej1-x642.google.com with SMTP id d17so21124098ejy.9
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Dec 2020 11:24:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=javigon-com.20150623.gappssmtp.com; s=20150623;
-        h=from:date:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=IVD1p2kuvVXrBfr0DQp8uX8UYpU8DuPwPA/j+U9iw7o=;
-        b=BT+NDgyuc4B9FYRdUmCPvz8gjOkn6+mHA6vCDn6QzeHfUUeVlC9fv9qefVr60Fi4o8
-         N+o33ru5BmuDsrganRp9xPYlw9T4COKiKzJVIiibRWtkGYUeWzfA+vwEjIThXkXCM/Ob
-         v+IduKCrHlR2/fbICCriKjUrIp3nu1m1Yjdr6Q9zzZw8wQ+/MzIoQ+PIjpI2AHX08tNF
-         o79x236sD+eQzaNCTTmeXMydo7bCcfYZv2T91v+5zWh9xA1eXU1ksRhuj/YKDJDQ4LB1
-         0EJPtboMkRXu+WFzXkzP01egTvP5VfJha5u1lyfPXyF4vmUc1wpvHu9UBb6KiowaNlCa
-         iHoQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:date:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=IVD1p2kuvVXrBfr0DQp8uX8UYpU8DuPwPA/j+U9iw7o=;
-        b=AGJ7PztT30RqGvL/wKtz2ORuS8DbBQnjgLozaADZlS/Q2ip7WW3Jsi86Qt5BzZt3DE
-         B5sBlNiSp71uJJffHKXTE4yoMNR+kKu0omJly6ktWr1tnWqyf5JlqmWAqY8zylX2QEn/
-         cMfEW7Ui+WS8KDr9+Y9GUHvjyFIW+Z8dLcTHWY/q4Ml6VVRBd4k+th4YxqucwvbX7XFa
-         /l95spPd+ORSSme3QhOgpP0ZAjRfdIW7jDt9NLd8YUXIKnZgTYGj5rxe51Kv6BgYggG/
-         br8kKpGU7S4shzF6rg+rc50DKvD6A7G+FZ6LsB0lG6eviVjVm33MY4g8jhtwVvYSOyn6
-         M1Gw==
-X-Gm-Message-State: AOAM531ZEZ05yMe8qkzqQQx6u1/WaFfMBL25zEqTPwmDO6ZXYlh+USsf
-        pijXuP50aQ3odeSuCuWtUar1Vw==
-X-Google-Smtp-Source: ABdhPJz9bYSQy3NHjmWx84lzpD6uTWLsBYmyjEhdoYT4EzGm+iefSEkI4OwWBZ212/zNmk1iIBD9rw==
-X-Received: by 2002:a17:906:b08b:: with SMTP id x11mr20225762ejy.302.1607369095020;
-        Mon, 07 Dec 2020 11:24:55 -0800 (PST)
-Received: from localhost (5.186.124.214.cgn.fibianet.dk. [5.186.124.214])
-        by smtp.gmail.com with ESMTPSA id b17sm13218700eju.76.2020.12.07.11.24.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 11:24:54 -0800 (PST)
-From:   "Javier =?utf-8?B?R29uesOhbGV6?=" <javier@javigon.com>
-X-Google-Original-From: Javier =?utf-8?B?R29uesOhbGV6?= <javier.gonz@samsung.com>
-Date:   Mon, 7 Dec 2020 20:24:53 +0100
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        SelvaKumar S <selvakuma.s1@samsung.com>,
-        linux-nvme@lists.infradead.org, kbusch@kernel.org, axboe@kernel.dk,
-        damien.lemoal@wdc.com, sagi@grimberg.me,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dm-devel@redhat.com, snitzer@redhat.com, selvajove@gmail.com,
-        nj.shetty@samsung.com, joshi.k@samsung.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/2] add simple copy support
-Message-ID: <20201207192453.vc6clbdhz73hzs7l@mpHalley>
-References: <CGME20201204094719epcas5p23b3c41223897de3840f92ae3c229cda5@epcas5p2.samsung.com>
- <20201204094659.12732-1-selvakuma.s1@samsung.com>
- <20201207141123.GC31159@lst.de>
- <01fe46ac-16a5-d4db-f23d-07a03d3935f3@suse.de>
+        id S1727591AbgLGWLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 17:11:51 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:22365 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726483AbgLGWLv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 17:11:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1607379025;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=MfX0igj0b424WZLltq2sfIPaez7a65qopk0NiV1vHwg=;
+        b=XyjjCyjfxZy/L/tJAEzs/ugc2MrDXYH0UfLQAHVDjxhjrBhsRMEO179N9IHS6H0E/Tbus2
+        96B9afp5ntX44aeXZc0SdqYZbc7X6M5a0NtOBCTLile2BvLF8GIZhrypTGwLc/6kwgUo8B
+        9s8cI+czTkYemIx1T+ZZrPYipnPKSy8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-332-TpVo35b8PH-FSL6FXj8O2Q-1; Mon, 07 Dec 2020 17:10:23 -0500
+X-MC-Unique: TpVo35b8PH-FSL6FXj8O2Q-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7D7671935780
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Dec 2020 22:10:22 +0000 (UTC)
+Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4234B5D6AB
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Dec 2020 22:10:22 +0000 (UTC)
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: sd: suppress suprious block errors when WRITE SAME is being disabled
+Date:   Mon,  7 Dec 2020 17:10:21 -0500
+Message-Id: <20201207221021.28243-1-emilne@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-In-Reply-To: <01fe46ac-16a5-d4db-f23d-07a03d3935f3@suse.de>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 07.12.2020 15:56, Hannes Reinecke wrote:
->On 12/7/20 3:11 PM, Christoph Hellwig wrote:
->>So, I'm really worried about:
->>
->>  a) a good use case.  GC in f2fs or btrfs seem like good use cases, as
->>     does accelating dm-kcopyd.  I agree with Damien that lifting dm-kcopyd
->>     to common code would also be really nice.  I'm not 100% sure it should
->>     be a requirement, but it sure would be nice to have
->>     I don't think just adding an ioctl is enough of a use case for complex
->>     kernel infrastructure.
->>  b) We had a bunch of different attempts at SCSI XCOPY support form IIRC
->>     Martin, Bart and Mikulas.  I think we need to pull them into this
->>     discussion, and make sure whatever we do covers the SCSI needs.
->>
->And we shouldn't forget that the main issue which killed all previous 
->implementations was a missing QoS guarantee.
->It's nice to have simply copy, but if the implementation is _slower_ 
->than doing it by hand from the OS there is very little point in even 
->attempting to do so.
->I can't see any provisions for that in the TPAR, leading me to the 
->assumption that NVMe simple copy will suffer from the same issue.
->
->So if we can't address this I guess this attempt will fail, too.
+The block layer code will split a large zeroout request into multiple bios
+and if WRITE SAME is disabled because the storage device reports that it
+does not support it (or support the length used), we can get an error message
+from the block layer despite the setting of RQF_QUIET on the first request.
+This is because more than one request may have already been submitted.
 
-Good point. We can share some performance data on how Simple Copy scales
-in terms of bw / latency and the CPU usage. Do you have anything else in
-mind?
+Fix this by setting RQF_QUIET when BLK_STS_TARGET is returned to fail the
+request early, we don't need to log a message because we did not actually
+submit the command to the device, and the block layer code will handle the
+error by submitting individual write bios.
+
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/sd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b1267f1f3a89..1032905bbe76 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -874,8 +874,10 @@ static blk_status_t sd_setup_write_zeroes_cmnd(struct scsi_cmnd *cmd)
+ 		}
+ 	}
+ 
+-	if (sdp->no_write_same)
++	if (sdp->no_write_same) {
++		rq->rq_flags |= RQF_QUIET;
+ 		return BLK_STS_TARGET;
++	}
+ 
+ 	if (sdkp->ws16 || lba > 0xffffffff || nr_blocks > 0xffff)
+ 		return sd_setup_write_same16_cmnd(cmd, false);
+-- 
+2.18.1
+
