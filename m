@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A76C1B0E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDCCC1B087
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 12:50:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF1A0233FB
+	by mail.kernel.org (Postfix) with ESMTP id C7CF323428
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 12:50:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726160AbgLGMuO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 07:50:14 -0500
-Received: from mx2.suse.de ([195.135.220.15]:43274 "EHLO mx2.suse.de"
+        id S1726156AbgLGMuN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 07:50:13 -0500
+Received: from mx2.suse.de ([195.135.220.15]:43230 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726143AbgLGMuO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Dec 2020 07:50:14 -0500
+        id S1725939AbgLGMuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Dec 2020 07:50:12 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 26FFAB13D;
-        Mon,  7 Dec 2020 12:48:32 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id F41A7AEAC;
+        Mon,  7 Dec 2020 12:48:31 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 34/35] advansys: kill driver_defined status byte accessors
-Date:   Mon,  7 Dec 2020 13:48:18 +0100
-Message-Id: <20201207124819.95822-35-hare@suse.de>
+Subject: [PATCH 21/35] initio: drop internal SCSI message definition
+Date:   Mon,  7 Dec 2020 13:48:05 +0100
+Message-Id: <20201207124819.95822-22-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20201207124819.95822-1-hare@suse.de>
 References: <20201207124819.95822-1-hare@suse.de>
@@ -38,224 +38,262 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace the driver-defined status byte accessors by the
-mid-layer defined ones.
+Use the standard SCSI message definitions instead of the
+driver-internal ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/advansys.c | 84 ++++++++++++++-----------------------------------
- 1 file changed, 24 insertions(+), 60 deletions(-)
+ drivers/scsi/initio.c | 64 ++++++++++++++++++++++++++-------------------------
+ drivers/scsi/initio.h | 25 --------------------
+ 2 files changed, 33 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 79830e77afa9..9529074c8886 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -2085,12 +2085,6 @@ do { \
- #define ASC_BUSY        0
- #define ASC_ERROR       (-1)
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index ca16ef45d8dc..814acc57069d 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -1315,15 +1315,15 @@ static int initio_state_1(struct initio_host * host)
+ 		}
+ 		if ((active_tc->flags & (TCF_WDTR_DONE | TCF_NO_WDTR)) == 0) {
+ 			active_tc->flags |= TCF_WDTR_DONE;
+-			outb(MSG_EXTEND, host->addr + TUL_SFifo);
++			outb(EXTENDED_MESSAGE, host->addr + TUL_SFifo);
+ 			outb(2, host->addr + TUL_SFifo);	/* Extended msg length */
+-			outb(3, host->addr + TUL_SFifo);	/* Sync request */
++			outb(EXTENDED_SDTR, host->addr + TUL_SFifo);	/* Sync request */
+ 			outb(1, host->addr + TUL_SFifo);	/* Start from 16 bits */
+ 		} else if ((active_tc->flags & (TCF_SYNC_DONE | TCF_NO_SYNC_NEGO)) == 0) {
+ 			active_tc->flags |= TCF_SYNC_DONE;
+-			outb(MSG_EXTEND, host->addr + TUL_SFifo);
++			outb(EXTENDED_MESSAGE, host->addr + TUL_SFifo);
+ 			outb(3, host->addr + TUL_SFifo);	/* extended msg length */
+-			outb(1, host->addr + TUL_SFifo);	/* sync request */
++			outb(EXTENDED_SDTR, host->addr + TUL_SFifo);	/* sync request */
+ 			outb(initio_rate_tbl[active_tc->flags & TCF_SCSI_RATE], host->addr + TUL_SFifo);
+ 			outb(MAX_OFFSET, host->addr + TUL_SFifo);	/* REQ/ACK offset */
+ 		}
+@@ -1409,16 +1409,16 @@ static int initio_state_3(struct initio_host * host)
  
--/* struct scsi_cmnd function return codes */
--#define STATUS_BYTE(byte)   (byte)
--#define MSG_BYTE(byte)      ((byte) << 8)
--#define HOST_BYTE(byte)     ((byte) << 16)
--#define DRIVER_BYTE(byte)   ((byte) << 24)
+ 		case MSG_OUT:	/* Message out phase            */
+ 			if (active_tc->flags & (TCF_SYNC_DONE | TCF_NO_SYNC_NEGO)) {
+-				outb(MSG_NOP, host->addr + TUL_SFifo);		/* msg nop */
++				outb(NOP, host->addr + TUL_SFifo);		/* msg nop */
+ 				outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 				if (wait_tulip(host) == -1)
+ 					return -1;
+ 			} else {
+ 				active_tc->flags |= TCF_SYNC_DONE;
+ 
+-				outb(MSG_EXTEND, host->addr + TUL_SFifo);
++				outb(EXTENDED_MESSAGE, host->addr + TUL_SFifo);
+ 				outb(3, host->addr + TUL_SFifo);	/* ext. msg len */
+-				outb(1, host->addr + TUL_SFifo);	/* sync request */
++				outb(EXTENDED_SDTR, host->addr + TUL_SFifo);	/* sync request */
+ 				outb(initio_rate_tbl[active_tc->flags & TCF_SCSI_RATE], host->addr + TUL_SFifo);
+ 				outb(MAX_OFFSET, host->addr + TUL_SFifo);	/* REQ/ACK offset */
+ 				outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+@@ -1479,7 +1479,7 @@ static int initio_state_4(struct initio_host * host)
+ 					return -1;
+ 				return 6;
+ 			} else {
+-				outb(MSG_NOP, host->addr + TUL_SFifo);		/* msg nop */
++				outb(NOP, host->addr + TUL_SFifo);		/* msg nop */
+ 				outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 				if (wait_tulip(host) == -1)
+ 					return -1;
+@@ -1616,7 +1616,7 @@ static int initio_state_6(struct initio_host * host)
+ 			break;
+ 
+ 		case MSG_OUT:	/* Message out phase            */
+-			outb(MSG_NOP, host->addr + TUL_SFifo);		/* msg nop */
++			outb(NOP, host->addr + TUL_SFifo);		/* msg nop */
+ 			outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 			if (wait_tulip(host) == -1)
+ 				return -1;
+@@ -1789,9 +1789,9 @@ int initio_status_msg(struct initio_host * host)
+ 
+ 	if (host->phase == MSG_OUT) {
+ 		if (host->jsstatus0 & TSS_PAR_ERROR)
+-			outb(MSG_PARITY, host->addr + TUL_SFifo);
++			outb(MSG_PARITY_ERROR, host->addr + TUL_SFifo);
+ 		else
+-			outb(MSG_NOP, host->addr + TUL_SFifo);
++			outb(NOP, host->addr + TUL_SFifo);
+ 		outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 		return wait_tulip(host);
+ 	}
+@@ -1802,7 +1802,7 @@ int initio_status_msg(struct initio_host * host)
+ 				return -1;
+ 			if (host->phase != MSG_OUT)
+ 				return initio_bad_seq(host);
+-			outb(MSG_PARITY, host->addr + TUL_SFifo);
++			outb(MSG_PARITY_ERROR, host->addr + TUL_SFifo);
+ 			outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 			return wait_tulip(host);
+ 		}
+@@ -1815,7 +1815,8 @@ int initio_status_msg(struct initio_host * host)
+ 			return initio_wait_done_disc(host);
+ 
+ 		}
+-		if (msg == MSG_LINK_COMP || msg == MSG_LINK_FLAG) {
++		if (msg == LINKED_CMD_COMPLETE ||
++		    msg == LINKED_FLG_CMD_COMPLETE) {
+ 			if ((scb->tastat & 0x18) == 0x10)
+ 				return initio_msgin_accept(host);
+ 		}
+@@ -1930,7 +1931,8 @@ int int_initio_resel(struct initio_host * host)
+ 			return -1;
+ 		msg = inb(host->addr + TUL_SFifo);	/* Read Tag Message    */
+ 
+-		if (msg < MSG_STAG || msg > MSG_OTAG)		/* Is simple Tag      */
++		if (msg < SIMPLE_QUEUE_TAG || msg > ORDERED_QUEUE_TAG)
++			/* Is simple Tag      */
+ 			goto no_tag;
+ 
+ 		if (initio_msgin_accept(host) == -1)
+@@ -2010,7 +2012,7 @@ static int initio_msgout_abort_targ(struct initio_host * host)
+ 	if (host->phase != MSG_OUT)
+ 		return initio_bad_seq(host);
+ 
+-	outb(MSG_ABORT, host->addr + TUL_SFifo);
++	outb(ABORT_TASK_SET, host->addr + TUL_SFifo);
+ 	outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 
+ 	return initio_wait_disc(host);
+@@ -2033,7 +2035,7 @@ static int initio_msgout_abort_tag(struct initio_host * host)
+ 	if (host->phase != MSG_OUT)
+ 		return initio_bad_seq(host);
+ 
+-	outb(MSG_ABORT_TAG, host->addr + TUL_SFifo);
++	outb(ABORT_TASK, host->addr + TUL_SFifo);
+ 	outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 
+ 	return initio_wait_disc(host);
+@@ -2059,15 +2061,15 @@ static int initio_msgin(struct initio_host * host)
+ 			return -1;
+ 
+ 		switch (inb(host->addr + TUL_SFifo)) {
+-		case MSG_DISC:	/* Disconnect msg */
++		case DISCONNECT:	/* Disconnect msg */
+ 			outb(TSC_MSG_ACCEPT, host->addr + TUL_SCmd);
+ 			return initio_wait_disc(host);
+-		case MSG_SDP:
+-		case MSG_RESTORE:
+-		case MSG_NOP:
++		case SAVE_POINTERS:
++		case RESTORE_POINTERS:
++		case NOP:
+ 			initio_msgin_accept(host);
+ 			break;
+-		case MSG_REJ:	/* Clear ATN first              */
++		case MESSAGE_REJECT:	/* Clear ATN first              */
+ 			outb((inb(host->addr + TUL_SSignal) & (TSC_SET_ACK | 7)),
+ 				host->addr + TUL_SSignal);
+ 			active_tc = host->active_tc;
+@@ -2076,13 +2078,13 @@ static int initio_msgin(struct initio_host * host)
+ 					host->addr + TUL_SSignal);
+ 			initio_msgin_accept(host);
+ 			break;
+-		case MSG_EXTEND:	/* extended msg */
++		case EXTENDED_MESSAGE:	/* extended msg */
+ 			initio_msgin_extend(host);
+ 			break;
+-		case MSG_IGNOREWIDE:
++		case IGNORE_WIDE_RESIDUE:
+ 			initio_msgin_accept(host);
+ 			break;
+-		case MSG_COMP:
++		case COMMAND_COMPLETE:
+ 			outb(TSC_FLUSH_FIFO, host->addr + TUL_SCtrl0);
+ 			outb(TSC_MSG_ACCEPT, host->addr + TUL_SCmd);
+ 			return initio_wait_done_disc(host);
+@@ -2104,7 +2106,7 @@ static int initio_msgout_reject(struct initio_host * host)
+ 		return -1;
+ 
+ 	if (host->phase == MSG_OUT) {
+-		outb(MSG_REJ, host->addr + TUL_SFifo);		/* Msg reject           */
++		outb(MESSAGE_REJECT, host->addr + TUL_SFifo);		/* Msg reject           */
+ 		outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 		return wait_tulip(host);
+ 	}
+@@ -2113,7 +2115,7 @@ static int initio_msgout_reject(struct initio_host * host)
+ 
+ static int initio_msgout_ide(struct initio_host * host)
+ {
+-	outb(MSG_IDE, host->addr + TUL_SFifo);		/* Initiator Detected Error */
++	outb(INITIATOR_ERROR, host->addr + TUL_SFifo);		/* Initiator Detected Error */
+ 	outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 	return wait_tulip(host);
+ }
+@@ -2167,9 +2169,9 @@ static int initio_msgin_extend(struct initio_host * host)
+ 
+ 		initio_sync_done(host);
+ 
+-		outb(MSG_EXTEND, host->addr + TUL_SFifo);
++		outb(EXTENDED_MESSAGE, host->addr + TUL_SFifo);
+ 		outb(3, host->addr + TUL_SFifo);
+-		outb(1, host->addr + TUL_SFifo);
++		outb(EXTENDED_SDTR, host->addr + TUL_SFifo);
+ 		outb(host->msg[2], host->addr + TUL_SFifo);
+ 		outb(host->msg[3], host->addr + TUL_SFifo);
+ 		outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+@@ -2199,9 +2201,9 @@ static int initio_msgin_extend(struct initio_host * host)
+ 	if (initio_msgin_accept(host) != MSG_OUT)
+ 		return host->phase;
+ 	/* WDTR msg out                 */
+-	outb(MSG_EXTEND, host->addr + TUL_SFifo);
++	outb(EXTENDED_MESSAGE, host->addr + TUL_SFifo);
+ 	outb(2, host->addr + TUL_SFifo);
+-	outb(3, host->addr + TUL_SFifo);
++	outb(EXTENDED_WDTR, host->addr + TUL_SFifo);
+ 	outb(host->msg[2], host->addr + TUL_SFifo);
+ 	outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 	return wait_tulip(host);
+@@ -2391,7 +2393,7 @@ int initio_bus_device_reset(struct initio_host * host)
+ 		}
+ 		tmp = tmp->next;
+ 	}
+-	outb(MSG_DEVRST, host->addr + TUL_SFifo);
++	outb(TARGET_RESET, host->addr + TUL_SFifo);
+ 	outb(TSC_XF_FIFO_OUT, host->addr + TUL_SCmd);
+ 	return initio_wait_disc(host);
+ 
+diff --git a/drivers/scsi/initio.h b/drivers/scsi/initio.h
+index 219b901bdc25..9fd010cf1f8a 100644
+--- a/drivers/scsi/initio.h
++++ b/drivers/scsi/initio.h
+@@ -433,31 +433,6 @@ struct scsi_ctrl_blk {
+ #define TARGET_BUSY     0x08
+ #define INI_QUEUE_FULL	0x28
+ 
+-/* SCSI MESSAGE */
+-#define MSG_COMP        0x00
+-#define MSG_EXTEND      0x01
+-#define MSG_SDP         0x02
+-#define MSG_RESTORE     0x03
+-#define MSG_DISC        0x04
+-#define MSG_IDE         0x05
+-#define MSG_ABORT       0x06
+-#define MSG_REJ         0x07
+-#define MSG_NOP         0x08
+-#define MSG_PARITY      0x09
+-#define MSG_LINK_COMP   0x0A
+-#define MSG_LINK_FLAG   0x0B
+-#define MSG_DEVRST      0x0C
+-#define MSG_ABORT_TAG   0x0D
 -
- #define ASC_STATS(shost, counter) ASC_STATS_ADD(shost, counter, 1)
- #ifndef ADVANSYS_STATS
- #define ASC_STATS_ADD(shost, counter, count)
-@@ -5986,10 +5980,10 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	/*
- 	 * 'done_status' contains the command's ending status.
- 	 */
-+	scp->result = 0;
- 	switch (scsiqp->done_status) {
- 	case QD_NO_ERROR:
- 		ASC_DBG(2, "QD_NO_ERROR\n");
--		scp->result = 0;
- 
- 		/*
- 		 * Check for an underrun condition.
-@@ -6010,47 +6004,33 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 		ASC_DBG(2, "QD_WITH_ERROR\n");
- 		switch (scsiqp->host_status) {
- 		case QHSTA_NO_ERROR:
-+			set_status_byte(scp, scsiqp->scsi_status);
- 			if (scsiqp->scsi_status == SAM_STAT_CHECK_CONDITION) {
- 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
- 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
- 						  SCSI_SENSE_BUFFERSIZE);
--				/*
--				 * Note: The 'status_byte()' macro used by
--				 * target drivers defined in scsi.h shifts the
--				 * status byte returned by host drivers right
--				 * by 1 bit.  This is why target drivers also
--				 * use right shifted status byte definitions.
--				 * For instance target drivers use
--				 * CHECK_CONDITION, defined to 0x1, instead of
--				 * the SCSI defined check condition value of
--				 * 0x2. Host drivers are supposed to return
--				 * the status byte as it is defined by SCSI.
--				 */
--				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
--				    STATUS_BYTE(scsiqp->scsi_status);
--			} else {
--				scp->result = STATUS_BYTE(scsiqp->scsi_status);
-+				set_driver_byte(scp, DRIVER_SENSE);
- 			}
- 			break;
- 
- 		default:
- 			/* Some other QHSTA error occurred. */
- 			ASC_DBG(1, "host_status 0x%x\n", scsiqp->host_status);
--			scp->result = HOST_BYTE(DID_BAD_TARGET);
-+			set_host_byte(scp, DID_BAD_TARGET);
- 			break;
- 		}
- 		break;
- 
- 	case QD_ABORTED_BY_HOST:
- 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
--		scp->result =
--		    HOST_BYTE(DID_ABORT) | STATUS_BYTE(scsiqp->scsi_status);
-+		set_status_byte(scp, scsiqp->scsi_status);
-+		set_host_byte(scp, DID_ABORT);
- 		break;
- 
- 	default:
- 		ASC_DBG(1, "done_status 0x%x\n", scsiqp->done_status);
--		scp->result =
--		    HOST_BYTE(DID_ERROR) | STATUS_BYTE(scsiqp->scsi_status);
-+		set_status_byte(scp, scsiqp->scsi_status);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	}
- 
-@@ -6752,10 +6732,10 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
- 	/*
- 	 * 'qdonep' contains the command's ending status.
- 	 */
-+	scp->result = 0;
- 	switch (qdonep->d3.done_stat) {
- 	case QD_NO_ERROR:
- 		ASC_DBG(2, "QD_NO_ERROR\n");
--		scp->result = 0;
- 
- 		/*
- 		 * Check for an underrun condition.
-@@ -6775,51 +6755,35 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
- 		ASC_DBG(2, "QD_WITH_ERROR\n");
- 		switch (qdonep->d3.host_stat) {
- 		case QHSTA_NO_ERROR:
-+			set_status_byte(scp, qdonep->d3.scsi_stat);
- 			if (qdonep->d3.scsi_stat == SAM_STAT_CHECK_CONDITION) {
- 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
- 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
- 						  SCSI_SENSE_BUFFERSIZE);
--				/*
--				 * Note: The 'status_byte()' macro used by
--				 * target drivers defined in scsi.h shifts the
--				 * status byte returned by host drivers right
--				 * by 1 bit.  This is why target drivers also
--				 * use right shifted status byte definitions.
--				 * For instance target drivers use
--				 * CHECK_CONDITION, defined to 0x1, instead of
--				 * the SCSI defined check condition value of
--				 * 0x2. Host drivers are supposed to return
--				 * the status byte as it is defined by SCSI.
--				 */
--				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
--				    STATUS_BYTE(qdonep->d3.scsi_stat);
--			} else {
--				scp->result = STATUS_BYTE(qdonep->d3.scsi_stat);
-+				set_driver_byte(scp, DRIVER_SENSE);
- 			}
- 			break;
- 
- 		default:
- 			/* QHSTA error occurred */
- 			ASC_DBG(1, "host_stat 0x%x\n", qdonep->d3.host_stat);
--			scp->result = HOST_BYTE(DID_BAD_TARGET);
-+			set_host_byte(scp, DID_BAD_TARGET);
- 			break;
- 		}
- 		break;
- 
- 	case QD_ABORTED_BY_HOST:
- 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
--		scp->result =
--		    HOST_BYTE(DID_ABORT) | MSG_BYTE(qdonep->d3.
--						    scsi_msg) |
--		    STATUS_BYTE(qdonep->d3.scsi_stat);
-+		set_status_byte(scp, qdonep->d3.scsi_stat);
-+		set_msg_byte(scp, qdonep->d3.scsi_msg);
-+		set_host_byte(scp, DID_ABORT);
- 		break;
- 
- 	default:
- 		ASC_DBG(1, "done_stat 0x%x\n", qdonep->d3.done_stat);
--		scp->result =
--		    HOST_BYTE(DID_ERROR) | MSG_BYTE(qdonep->d3.
--						    scsi_msg) |
--		    STATUS_BYTE(qdonep->d3.scsi_stat);
-+		set_status_byte(scp, qdonep->d3.scsi_stat);
-+		set_msg_byte(scp, qdonep->d3.scsi_msg);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	}
- 
-@@ -7558,7 +7522,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 				"sg_tablesize %d\n", use_sg,
- 				scp->device->host->sg_tablesize);
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_ERROR);
-+			set_host_byte(scp, DID_ERROR);
- 			return ASC_ERROR;
- 		}
- 
-@@ -7566,7 +7530,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 			use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
- 		if (!asc_sg_head) {
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_SOFT_ERROR);
-+			set_host_byte(scp, DID_SOFT_ERROR);
- 			return ASC_ERROR;
- 		}
- 
-@@ -7809,7 +7773,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 				   "ADV_MAX_SG_LIST %d\n", use_sg,
- 				   scp->device->host->sg_tablesize);
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_ERROR);
-+			set_host_byte(scp, DID_ERROR);
- 			reqp->cmndp = NULL;
- 			scp->host_scribble = NULL;
- 
-@@ -7821,7 +7785,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
- 		ret = adv_get_sglist(boardp, reqp, scsiqp, scp, use_sg);
- 		if (ret != ADV_SUCCESS) {
- 			scsi_dma_unmap(scp);
--			scp->result = HOST_BYTE(DID_ERROR);
-+			set_host_byte(scp, DID_ERROR);
- 			reqp->cmndp = NULL;
- 			scp->host_scribble = NULL;
- 
-@@ -8518,13 +8482,13 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() ASC_ERROR, "
- 			"err_code 0x%x\n", err_code);
- 		ASC_STATS(scp->device->host, exe_error);
--		scp->result = HOST_BYTE(DID_ERROR);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	default:
- 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() unknown, "
- 			"err_code 0x%x\n", err_code);
- 		ASC_STATS(scp->device->host, exe_unknown);
--		scp->result = HOST_BYTE(DID_ERROR);
-+		set_host_byte(scp, DID_ERROR);
- 		break;
- 	}
- 
+-/* Queue tag msg: Simple_quque_tag, Head_of_queue_tag, Ordered_queue_tag */
+-#define MSG_STAG        0x20
+-#define MSG_HTAG        0x21
+-#define MSG_OTAG        0x22
+-
+-#define MSG_IGNOREWIDE  0x23
+-
+-#define MSG_IDENT   0x80
+-
+ /***********************************************************************
+ 		Target Device Control Structure
+ **********************************************************************/
 -- 
 2.16.4
 
