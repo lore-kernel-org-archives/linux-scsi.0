@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE83C0018C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC3F4C1B0E3
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 08:32:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3413E22ADF
+	by mail.kernel.org (Postfix) with ESMTP id B175223331
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 08:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726332AbgLGIcc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 03:32:32 -0500
-Received: from mga18.intel.com ([134.134.136.126]:13254 "EHLO mga18.intel.com"
+        id S1726352AbgLGIcf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 03:32:35 -0500
+Received: from mga18.intel.com ([134.134.136.126]:13261 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726252AbgLGIcc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Dec 2020 03:32:32 -0500
-IronPort-SDR: SDmEUkXlomrCCxfL8QxFAidXOWypC3FlcrpcSYy7gChyeV87ymo8FGTpop2letfLSSPLcgzGYj
- cOly/OgOe0ag==
-X-IronPort-AV: E=McAfee;i="6000,8403,9827"; a="161432211"
+        id S1726252AbgLGIcf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Dec 2020 03:32:35 -0500
+IronPort-SDR: 0NMVvgbeHeUkuaflr8tocZu5s42iouqSuW/sqUlMVzQZjAAXdpsrj+U2IgRH21dWvB3zpOy3af
+ 4765jDM4MamQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9827"; a="161432217"
 X-IronPort-AV: E=Sophos;i="5.78,399,1599548400"; 
-   d="scan'208";a="161432211"
+   d="scan'208";a="161432217"
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2020 00:31:52 -0800
-IronPort-SDR: y6wbGilWuAaNA3Jo0anaRb+6xJ35613dCBEan3DV/OcUQftTccLnxHow7BYRwJ4pFo73sQf/rD
- LEY2R0qB/HUQ==
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2020 00:31:54 -0800
+IronPort-SDR: S3wySTyKyzo8BfN52OSwbouJZxSLyuY/jwP46LrF1IMTPujvHvIuTNYcX8LQiIEK5NdtRuMvQo
+ Cqw9SsyaLt1A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,399,1599548400"; 
-   d="scan'208";a="332024915"
+   d="scan'208";a="332024920"
 Received: from ahunter-desktop.fi.intel.com ([10.237.72.94])
-  by orsmga003.jf.intel.com with ESMTP; 07 Dec 2020 00:31:49 -0800
+  by orsmga003.jf.intel.com with ESMTP; 07 Dec 2020 00:31:52 -0800
 From:   Adrian Hunter <adrian.hunter@intel.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>
@@ -41,9 +41,9 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH 1/4] scsi: ufs-pci: Fix restore from S4 for Intel controllers
-Date:   Mon,  7 Dec 2020 10:31:17 +0200
-Message-Id: <20201207083120.26732-2-adrian.hunter@intel.com>
+Subject: [PATCH 2/4] scsi: ufs-pci: Ensure UFS device is in PowerDown mode for suspend-to-disk ->poweroff()
+Date:   Mon,  7 Dec 2020 10:31:18 +0200
+Message-Id: <20201207083120.26732-3-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201207083120.26732-1-adrian.hunter@intel.com>
 References: <20201207083120.26732-1-adrian.hunter@intel.com>
@@ -52,73 +52,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, ufshcd-pci is the only UFS driver with support for
-suspend-to-disk PM callbacks (i.e. freeze/thaw/restore/poweroff). These
-callbacks are set by the macro SET_SYSTEM_SLEEP_PM_OPS to the same
-functions as system suspend/resume. That will work with spm_lvl 5 because
-spm_lvl 5 will result in a full restore for the ->restore() callback.
-In the absence of a full restore, the host controller registers will
-have values set up by the restore kernel (the kernel that boots and
-loads the restore image) which are not necessarily the same. However it
-turns out, the only registers that sometimes need restore are the base
-address registers. This has gone un-noticed because, depending on IOMMU
-settings, the kernel can end up allocating the same addresses every
-time.
-
-For Intel controllers, an spm_lvl other than 5 can be used, so to support
-S4 (suspend-to-disk) with spm_lvl other than 5, restore the base address
-registers.
+The expectation for suspend-to-disk is that devices will be powered-off,
+so the UFS device should be put in PowerDown mode. If spm_lvl is not 5,
+then that will not happen. Change the pm callbacks to force spm_lvl 5 for
+suspend-to-disk poweroff.
 
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
- drivers/scsi/ufs/ufshcd-pci.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/scsi/ufs/ufshcd-pci.c | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index df3a564c3e33..360c25f1f061 100644
+index 360c25f1f061..5d33c39fa82f 100644
 --- a/drivers/scsi/ufs/ufshcd-pci.c
 +++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -163,6 +163,24 @@ static void ufs_intel_common_exit(struct ufs_hba *hba)
- 	intel_ltr_hide(hba->dev);
+@@ -227,6 +227,30 @@ static int ufshcd_pci_resume(struct device *dev)
+ {
+ 	return ufshcd_system_resume(dev_get_drvdata(dev));
  }
- 
-+static int ufs_intel_resume(struct ufs_hba *hba, enum ufs_pm_op op)
++
++/**
++ * ufshcd_pci_poweroff - suspend-to-disk poweroff function
++ * @dev: pointer to PCI device handle
++ *
++ * Returns 0 if successful
++ * Returns non-zero otherwise
++ */
++static int ufshcd_pci_poweroff(struct device *dev)
 +{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int spm_lvl = hba->spm_lvl;
++	int ret;
++
 +	/*
-+	 * To support S4 (suspend-to-disk) with spm_lvl other than 5, the base
-+	 * address registers must be restored because the restore kernel can
-+	 * have used different addresses.
++	 * For poweroff we need to set the UFS device to PowerDown mode.
++	 * Force spm_lvl to ensure that.
 +	 */
-+	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-+		      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
-+	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
-+		      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
-+	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
-+		      REG_UTP_TASK_REQ_LIST_BASE_L);
-+	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
-+		      REG_UTP_TASK_REQ_LIST_BASE_H);
-+	return 0;
++	hba->spm_lvl = 5;
++	ret = ufshcd_system_suspend(hba);
++	hba->spm_lvl = spm_lvl;
++	return ret;
 +}
 +
- static int ufs_intel_ehl_init(struct ufs_hba *hba)
- {
- 	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
-@@ -174,6 +192,7 @@ static struct ufs_hba_variant_ops ufs_intel_cnl_hba_vops = {
- 	.init			= ufs_intel_common_init,
- 	.exit			= ufs_intel_common_exit,
- 	.link_startup_notify	= ufs_intel_link_startup_notify,
-+	.resume			= ufs_intel_resume,
- };
+ #endif /* !CONFIG_PM_SLEEP */
  
- static struct ufs_hba_variant_ops ufs_intel_ehl_hba_vops = {
-@@ -181,6 +200,7 @@ static struct ufs_hba_variant_ops ufs_intel_ehl_hba_vops = {
- 	.init			= ufs_intel_ehl_init,
- 	.exit			= ufs_intel_common_exit,
- 	.link_startup_notify	= ufs_intel_link_startup_notify,
-+	.resume			= ufs_intel_resume,
- };
+ #ifdef CONFIG_PM
+@@ -322,8 +346,14 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ }
  
- #ifdef CONFIG_PM_SLEEP
+ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
+-	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_pci_suspend,
+-				ufshcd_pci_resume)
++#ifdef CONFIG_PM_SLEEP
++	.suspend	= ufshcd_pci_suspend,
++	.resume		= ufshcd_pci_resume,
++	.freeze		= ufshcd_pci_suspend,
++	.thaw		= ufshcd_pci_resume,
++	.poweroff	= ufshcd_pci_poweroff,
++	.restore	= ufshcd_pci_resume,
++#endif
+ 	SET_RUNTIME_PM_OPS(ufshcd_pci_runtime_suspend,
+ 			   ufshcd_pci_runtime_resume,
+ 			   ufshcd_pci_runtime_idle)
 -- 
 2.17.1
 
