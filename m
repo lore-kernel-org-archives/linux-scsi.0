@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA57C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC0CC0018C
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 08:33:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92C6A22BE8
+	by mail.kernel.org (Postfix) with ESMTP id BA25522B3B
 	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 08:33:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726369AbgLGIcq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 03:32:46 -0500
-Received: from mga18.intel.com ([134.134.136.126]:13251 "EHLO mga18.intel.com"
+        id S1726396AbgLGIcs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 03:32:48 -0500
+Received: from mga18.intel.com ([134.134.136.126]:13254 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726249AbgLGIcq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Dec 2020 03:32:46 -0500
-IronPort-SDR: Cs0tu3KhERXuoAp37vTrldmXb7r45nfWeJUgJ9Q2WcLPO4H+ma594e4qxvQZ9zwL9mmG7OuVG1
- czLg7n6kU0hw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9827"; a="161432223"
+        id S1726249AbgLGIcs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Dec 2020 03:32:48 -0500
+IronPort-SDR: eHQJWv3IvLn9LQOr1HuNu/YUNJGmSurVufRCmSrHt3AVN3zHlNuPVg06tDZP8Y2mnue+0jLsri
+ yfECtr7Qwmyg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9827"; a="161432228"
 X-IronPort-AV: E=Sophos;i="5.78,399,1599548400"; 
-   d="scan'208";a="161432223"
+   d="scan'208";a="161432228"
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2020 00:31:58 -0800
-IronPort-SDR: zEB0OS12rZDdLeqnnQGsqpfyFhrVzz1eP+0fUTZDPYjokj3IJDhy9aKWux4Sm2En/HVLa75q9D
- Us4PcmqxOuVQ==
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2020 00:32:00 -0800
+IronPort-SDR: JjxdfrRNaKQ7m6Nnlggyqm8cdDzxp8ceH3Zb8CXbU1Hp8cu119VRdfF7+Zc9BJl1eVqg1gV7MS
+ 9EuwPjzrzxiQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,399,1599548400"; 
-   d="scan'208";a="332024934"
+   d="scan'208";a="332024960"
 Received: from ahunter-desktop.fi.intel.com ([10.237.72.94])
-  by orsmga003.jf.intel.com with ESMTP; 07 Dec 2020 00:31:55 -0800
+  by orsmga003.jf.intel.com with ESMTP; 07 Dec 2020 00:31:58 -0800
 From:   Adrian Hunter <adrian.hunter@intel.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>
@@ -41,9 +41,9 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH 3/4] scsi: ufs-pci: Fix recovery from hibernate exit errors for Intel controllers
-Date:   Mon,  7 Dec 2020 10:31:19 +0200
-Message-Id: <20201207083120.26732-4-adrian.hunter@intel.com>
+Subject: [PATCH 4/4] scsi: ufs-pci: Enable UFSHCD_CAP_RPM_AUTOSUSPEND for Intel controllers
+Date:   Mon,  7 Dec 2020 10:31:20 +0200
+Message-Id: <20201207083120.26732-5-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201207083120.26732-1-adrian.hunter@intel.com>
 References: <20201207083120.26732-1-adrian.hunter@intel.com>
@@ -52,43 +52,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Intel controllers can end up in an unrecoverable state after a hibernate
-exit error unless a full reset and restore is done before anything else.
-Force that to happen.
+Enable runtime PM auto-suspend by default for Intel host controllers.
 
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
- drivers/scsi/ufs/ufshcd-pci.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/scsi/ufs/ufshcd-pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 5d33c39fa82f..888d8c9ca3a5 100644
+index 888d8c9ca3a5..fadd566025b8 100644
 --- a/drivers/scsi/ufs/ufshcd-pci.c
 +++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -178,6 +178,23 @@ static int ufs_intel_resume(struct ufs_hba *hba, enum ufs_pm_op op)
- 		      REG_UTP_TASK_REQ_LIST_BASE_L);
- 	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
- 		      REG_UTP_TASK_REQ_LIST_BASE_H);
-+
-+	if (ufshcd_is_link_hibern8(hba)) {
-+		int ret = ufshcd_uic_hibern8_exit(hba);
-+
-+		if (!ret) {
-+			ufshcd_set_link_active(hba);
-+		} else {
-+			dev_err(hba->dev, "%s: hibern8 exit failed %d\n",
-+				__func__, ret);
-+			/*
-+			 * Force reset and restore. Any other actions can lead
-+			 * to an unrecoverable state.
-+			 */
-+			ufshcd_set_link_off(hba);
-+		}
-+	}
-+
- 	return 0;
- }
+@@ -148,6 +148,8 @@ static int ufs_intel_common_init(struct ufs_hba *hba)
+ {
+ 	struct intel_host *host;
  
++	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
++
+ 	host = devm_kzalloc(hba->dev, sizeof(*host), GFP_KERNEL);
+ 	if (!host)
+ 		return -ENOMEM;
 -- 
 2.17.1
 
