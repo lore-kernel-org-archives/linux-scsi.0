@@ -3,85 +3,121 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F22C1B0D9
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 14:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB400C4167B
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 14:12:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0111B235E4
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 14:02:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE3BA236FB
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Dec 2020 14:12:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727366AbgLGOBx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 09:01:53 -0500
-Received: from mx2.suse.de ([195.135.220.15]:33014 "EHLO mx2.suse.de"
+        id S1727243AbgLGOMI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 09:12:08 -0500
+Received: from verein.lst.de ([213.95.11.211]:42032 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726168AbgLGOBx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Dec 2020 09:01:53 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 07D97AB63;
-        Mon,  7 Dec 2020 14:01:12 +0000 (UTC)
-Subject: Re: [PATCH 01/35] scsi: drop gdth driver
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
+        id S1727134AbgLGOMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Dec 2020 09:12:07 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 7321567373; Mon,  7 Dec 2020 15:11:23 +0100 (CET)
+Date:   Mon, 7 Dec 2020 15:11:23 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     SelvaKumar S <selvakuma.s1@samsung.com>
+Cc:     linux-nvme@lists.infradead.org, kbusch@kernel.org, axboe@kernel.dk,
+        damien.lemoal@wdc.com, hch@lst.de, sagi@grimberg.me,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dm-devel@redhat.com, snitzer@redhat.com, selvajove@gmail.com,
+        nj.shetty@samsung.com, joshi.k@samsung.com,
+        javier.gonz@samsung.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Mikulas Patocka <mpatocka@redhat.com>,
         linux-scsi@vger.kernel.org
-References: <20201207124819.95822-1-hare@suse.de>
- <20201207124819.95822-2-hare@suse.de> <20201207133850.GB29249@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d6950d53-97aa-9487-8014-c91d74b824d4@suse.de>
-Date:   Mon, 7 Dec 2020 15:01:11 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+Subject: Re: [RFC PATCH v2 0/2] add simple copy support
+Message-ID: <20201207141123.GC31159@lst.de>
+References: <CGME20201204094719epcas5p23b3c41223897de3840f92ae3c229cda5@epcas5p2.samsung.com> <20201204094659.12732-1-selvakuma.s1@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20201207133850.GB29249@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201204094659.12732-1-selvakuma.s1@samsung.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/7/20 2:38 PM, Christoph Hellwig wrote:
-> On Mon, Dec 07, 2020 at 01:47:45PM +0100, Hannes Reinecke wrote:
->> The gdth driver refers to a SCSI parallel, PCI-only HBA RAID adapter
->> which was manufactured by the now-defunct ICP Vortex company, later
->> acquired by Adaptec and superseded by the aacraid series of controllers.
->> The driver itself would require a major overhaul before any modifications
->> can be attempted, but seeing that it's unlikely to have any users left
->> it should rather be removed completely.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
+So, I'm really worried about:
+
+ a) a good use case.  GC in f2fs or btrfs seem like good use cases, as
+    does accelating dm-kcopyd.  I agree with Damien that lifting dm-kcopyd
+    to common code would also be really nice.  I'm not 100% sure it should
+    be a requirement, but it sure would be nice to have
+    I don't think just adding an ioctl is enough of a use case for complex
+    kernel infrastructure.
+ b) We had a bunch of different attempts at SCSI XCOPY support form IIRC
+    Martin, Bart and Mikulas.  I think we need to pull them into this
+    discussion, and make sure whatever we do covers the SCSI needs.
+
+On Fri, Dec 04, 2020 at 03:16:57PM +0530, SelvaKumar S wrote:
+> This patchset tries to add support for TP4065a ("Simple Copy Command"),
+> v2020.05.04 ("Ratified")
 > 
-> That is no the tag I gave you..
+> The Specification can be found in following link.
+> https://nvmexpress.org/wp-content/uploads/NVM-Express-1.4-Ratified-TPs-1.zip
 > 
-Bah, s**t. You are right.
-Original tag was:
-
-Cautiously-Acked-by: Christoph Hellwig <hch@lst.de>
-
-
-But it'll be up to mkp to decide what'll happen with this beast.
-It has cropped up on virtually every patchset I've been working on, so I 
-really would like to get it out of the way.
-
-I might even have some cards floating around in case the decision is to 
-keep it, but I've already found in testing the other drivers that 
-getting _disks_ will be a major pain.
-Plus in the 10-odd years we (ie SUSE) didn't have a _single_ incident 
-involving this driver, which it typically a sure sign that no-one is 
-using it.
-
-Martin?
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+> This is an RFC. Looking forward for any feedbacks or other alternate
+> designs for plumbing simple copy to IO stack.
+> 
+> Simple copy command is a copy offloading operation and is  used to copy
+> multiple contiguous ranges (source_ranges) of LBA's to a single destination
+> LBA within the device reducing traffic between host and device.
+> 
+> This implementation accepts destination, no of sources and arrays of
+> source ranges from application and attach it as payload to the bio and
+> submits to the device.
+> 
+> Following limits are added to queue limits and are exposed in sysfs
+> to userspace
+> 	- *max_copy_sectors* limits the sum of all source_range length
+> 	- *max_copy_nr_ranges* limits the number of source ranges
+> 	- *max_copy_range_sectors* limit the maximum number of sectors
+> 		that can constitute a single source range.
+> 
+> Changes from v1:
+> 
+> 1. Fix memory leak in __blkdev_issue_copy
+> 2. Unmark blk_check_copy inline
+> 3. Fix line break in blk_check_copy_eod
+> 4. Remove p checks and made code more readable
+> 5. Don't use bio_set_op_attrs and remove op and set
+>    bi_opf directly
+> 6. Use struct_size to calculate total_size
+> 7. Fix partition remap of copy destination
+> 8. Remove mcl,mssrl,msrc from nvme_ns
+> 9. Initialize copy queue limits to 0 in nvme_config_copy
+> 10. Remove return in QUEUE_FLAG_COPY check
+> 11. Remove unused OCFS
+> 
+> SelvaKumar S (2):
+>   block: add simple copy support
+>   nvme: add simple copy support
+> 
+>  block/blk-core.c          |  94 ++++++++++++++++++++++++++---
+>  block/blk-lib.c           | 123 ++++++++++++++++++++++++++++++++++++++
+>  block/blk-merge.c         |   2 +
+>  block/blk-settings.c      |  11 ++++
+>  block/blk-sysfs.c         |  23 +++++++
+>  block/blk-zoned.c         |   1 +
+>  block/bounce.c            |   1 +
+>  block/ioctl.c             |  43 +++++++++++++
+>  drivers/nvme/host/core.c  |  87 +++++++++++++++++++++++++++
+>  include/linux/bio.h       |   1 +
+>  include/linux/blk_types.h |  15 +++++
+>  include/linux/blkdev.h    |  15 +++++
+>  include/linux/nvme.h      |  43 ++++++++++++-
+>  include/uapi/linux/fs.h   |  13 ++++
+>  14 files changed, 461 insertions(+), 11 deletions(-)
+> 
+> -- 
+> 2.25.1
+---end quoted text---
