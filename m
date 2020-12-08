@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34954C2BB40
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B8A7C47434
 	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:28:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 002A623AA8
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F13F23AC8
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:28:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729441AbgLHU2C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Dec 2020 15:28:02 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:25999 "EHLO
+        id S1728279AbgLHU2Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Dec 2020 15:28:25 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:25043 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727554AbgLHU2C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 15:28:02 -0500
+        with ESMTP id S1726889AbgLHU2Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 15:28:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607459281; x=1638995281;
+  t=1607459304; x=1638995304;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=UZbBIqWW3Pc7AUD4R+mdvpPPoiUdaisJsNUOLylhxiw=;
-  b=N7o6w7EaWouPrjyCq5tGABFBoJSRFlZEYuAlt7t1DKwlEAb9k6jN1pjF
-   tMZ0g+unUhOLbvC2RhhpjMoo+u05MNy/1oXt45BQPsTjiN3GR+rCIytY4
-   gRdokzJTx61SmmlCdDZg6Y8M1VAxI4uI9nvCUKL18ib+IdK/DzvAAUAV5
-   WaoS6MneX++953jbKQD/Fnh0FWQUP1Xl16w2RGHzMEZskBPRBozJ/a0Yt
-   NMTUIIzvo469PVaL4k3KAKtrDQb0GrL5LfysVguuLErP8RStQ9In98Ydo
-   i6iwQ/SHLCdjtNp5I6qkGC2n6mqTDRBazbArJC45mCfJoHyWSCt2H6QCl
-   g==;
-IronPort-SDR: jqyx5U3IVYYakxEk+679tqgaImIFmgwQQm0ppJAJnchOnUmUYAeW5vCRpNLNYm8rKCmGVFQMdJ
- HqmxoQur9p7rv+4+C7dGhz3QbopTsYpIfu4xfA6/MP7G7fRzwRuELMqKAuSKlKO+5rEd0P6qfX
- PFQkEJf/5y72jpa93J8vGRRDzW+6YtVs7M7ZBM/OQ33/loKuoA7LTjIdFyVk/17uug9WjBf111
- R9vcguy1XbsAQMkg+bnm1ljlDBErMG8qnEl7xiXCcCqgLlmq4kqbTsts6wTH3HCaWJU5nsl6lx
- TnA=
+  bh=fqD7fIXJQqqYfdO/Mbuy67NUTWTwq/GqW2j5bgoM1y8=;
+  b=FYjFVMFW8FwXRZque7O7ZNcC6PR9W/gZ5mSU+HRJxJUzgX70uPnQKRiq
+   UAHnD+3vgtcS6ka428kXS/t8UzHhSlo2QSjrET1yyGQbJLJuJxN6TfV/y
+   emoMk9xIwHIs4RhOidj2yoObyqlkxzP8ob/BsaGW+eROhEHaWqcaQLxZ8
+   RDv2arQ0c6wben/6R3mGg2wheN5i310lyQI5/+cMFPbUxdZp5W3sljYQ9
+   x769ddWiuGjYKqhahWbRK+ZuD/japVoshnJM9aNwFK3RX9rIBT9ecZ7SS
+   Qjbti0beQvvh1m1SNJtWOScX1yKL3HSOuoZvNCxokZMFB4+TCLE0a8Bej
+   w==;
+IronPort-SDR: jz94RpKbISzteC7pGtjBKcnHX7VfpA+a1gPKw+VBvwouiQQDQYUNQOH5axcX4LUafcoScOWjNt
+ CypNfK7Ir8qal3+y5vnrZgrhBNFieFrsmIkwQghwrTCRPEPLmWx614XpagTuTRr0I3jEeFVkye
+ NZGGv4e5BTjENk2qjbYvN38cYrBSHQUKyM9X1JOE6e1GjVA0z2/Pf7fBIOz0lMd9Hl5NmqyKm+
+ p7/T2LYT9dRZw63glaxKafEaG1098vVpu5b9+aU+OqoDmEYDEOfw2cwjI28S5Ixt5C+1qwdRXb
+ pCI=
 X-IronPort-AV: E=Sophos;i="5.78,403,1599548400"; 
-   d="scan'208";a="102012198"
+   d="scan'208";a="102012247"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Dec 2020 12:38:03 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Dec 2020 12:38:15 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 8 Dec 2020 12:38:03 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Tue, 8 Dec 2020 12:38:02 -0700
-Subject: [PATCH V2 15/25] smartpqi: fix host qdepth limit
+ 15.1.1979.3; Tue, 8 Dec 2020 12:38:14 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Tue, 8 Dec 2020 12:38:14 -0700
+Subject: [PATCH V2 17/25] smartpqi: change timing of release of QRM memory
+ during OFA
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -56,8 +57,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Tue, 8 Dec 2020 13:38:02 -0600
-Message-ID: <160745628247.13450.11175417497723758181.stgit@brunhilda>
+Date:   Tue, 8 Dec 2020 13:38:14 -0600
+Message-ID: <160745629407.13450.7299440442704498059.stgit@brunhilda>
 In-Reply-To: <160745609917.13450.11882890596851148601.stgit@brunhilda>
 References: <160745609917.13450.11882890596851148601.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -68,100 +69,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+From: Kevin Barnett <kevin.barnett@microchip.com>
 
-* Correct scsi-mid-layer sending more requests than
-  exposed host Q depth causing firmware ASSERT issue.
-  * Add host Qdepth counter.
+* Release QRM memory (OFA buffer) on OFA error conditions.
+* Controller is left in a bad state which can cause a kernel panic
+    upon reboot after an unsuccessful OFA.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    2 ++
- drivers/scsi/smartpqi/smartpqi_init.c |   19 ++++++++++++++++---
- 2 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 0b94c755a74c..c3b103b15924 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -1345,6 +1345,8 @@ struct pqi_ctrl_info {
- 	struct work_struct ofa_quiesce_work;
- 	u32		ofa_bytes_requested;
- 	u16		ofa_cancel_reason;
-+
-+	atomic_t	total_scmds_outstanding;
- };
- 
- enum pqi_ctrl_mode {
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index af2ef5b5d019..b9c50411a4e2 100644
+index cdeaeb162504..e7d86356bc5a 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5572,6 +5572,8 @@ static inline bool pqi_is_bypass_eligible_request(struct scsi_cmnd *scmd)
- void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
- {
- 	struct pqi_scsi_dev *device;
-+	struct pqi_ctrl_info *ctrl_info;
-+	struct Scsi_Host *shost;
+@@ -3299,8 +3299,6 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
+ 	else
+ 		reset_status = RESET_INITIATE_FIRMWARE;
  
- 	if (!scmd->device) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
-@@ -5584,7 +5586,11 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
- 		return;
- 	}
- 
-+	shost = scmd->device->host;
-+	ctrl_info = shost_to_hba(shost);
-+
- 	atomic_dec(&device->scsi_cmds_outstanding);
-+	atomic_dec(&ctrl_info->total_scmds_outstanding);
- }
- 
- static bool pqi_is_parity_write_stream(struct pqi_ctrl_info *ctrl_info,
-@@ -5672,6 +5678,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 	bool raid_bypassed;
- 
- 	device = scmd->device->hostdata;
-+	ctrl_info = shost_to_hba(shost);
- 
- 	if (!device) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
-@@ -5680,8 +5687,11 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 	}
- 
- 	atomic_inc(&device->scsi_cmds_outstanding);
+-	pqi_ofa_free_host_buffer(ctrl_info);
 -
--	ctrl_info = shost_to_hba(shost);
-+	if (atomic_inc_return(&ctrl_info->total_scmds_outstanding) >
-+		ctrl_info->scsi_ml_can_queue) {
-+		rc = SCSI_MLQUEUE_HOST_BUSY;
-+		goto out;
-+	}
+ 	delay_secs = PQI_POST_RESET_DELAY_SECS;
  
- 	if (pqi_ctrl_offline(ctrl_info) || pqi_device_in_remove(device)) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
-@@ -5724,8 +5734,10 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
- 	}
- 
- out:
--	if (rc)
-+	if (rc) {
- 		atomic_dec(&device->scsi_cmds_outstanding);
-+		atomic_dec(&ctrl_info->total_scmds_outstanding);
-+	}
- 
- 	return rc;
- }
-@@ -8048,6 +8060,7 @@ static struct pqi_ctrl_info *pqi_alloc_ctrl_info(int numa_node)
- 
- 	INIT_WORK(&ctrl_info->event_work, pqi_event_worker);
- 	atomic_set(&ctrl_info->num_interrupts, 0);
-+	atomic_set(&ctrl_info->total_scmds_outstanding, 0);
- 
- 	INIT_DELAYED_WORK(&ctrl_info->rescan_work, pqi_rescan_worker);
- 	INIT_DELAYED_WORK(&ctrl_info->update_time_work, pqi_update_time_worker);
+ 	switch (reset_status) {
+@@ -3316,6 +3314,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
+ 		ctrl_info->pqi_mode_enabled = false;
+ 		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
+ 		rc = pqi_ofa_ctrl_restart(ctrl_info, delay_secs);
++		pqi_ofa_free_host_buffer(ctrl_info);
+ 		pqi_ctrl_ofa_done(ctrl_info);
+ 		dev_info(&ctrl_info->pci_dev->dev,
+ 				"Online Firmware Activation: %s\n",
+@@ -3326,6 +3325,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
+ 				"Online Firmware Activation ABORTED\n");
+ 		if (ctrl_info->soft_reset_handshake_supported)
+ 			pqi_clear_soft_reset_status(ctrl_info);
++		pqi_ofa_free_host_buffer(ctrl_info);
+ 		pqi_ctrl_ofa_done(ctrl_info);
+ 		pqi_ofa_ctrl_unquiesce(ctrl_info);
+ 		break;
+@@ -3335,6 +3335,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
+ 		dev_err(&ctrl_info->pci_dev->dev,
+ 			"unexpected Online Firmware Activation reset status: 0x%x\n",
+ 			reset_status);
++		pqi_ofa_free_host_buffer(ctrl_info);
+ 		pqi_ctrl_ofa_done(ctrl_info);
+ 		pqi_ofa_ctrl_unquiesce(ctrl_info);
+ 		pqi_take_ctrl_offline(ctrl_info);
 
