@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B8A7C47434
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D48FBC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:29:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F13F23AC8
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:28:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0D6123AA8
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 20:29:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728279AbgLHU2Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Dec 2020 15:28:25 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:25043 "EHLO
+        id S1729520AbgLHU22 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Dec 2020 15:28:28 -0500
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:25111 "EHLO
         esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726889AbgLHU2Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 15:28:24 -0500
+        with ESMTP id S1728679AbgLHU21 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 15:28:27 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607459304; x=1638995304;
+  t=1607459307; x=1638995307;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=fqD7fIXJQqqYfdO/Mbuy67NUTWTwq/GqW2j5bgoM1y8=;
-  b=FYjFVMFW8FwXRZque7O7ZNcC6PR9W/gZ5mSU+HRJxJUzgX70uPnQKRiq
-   UAHnD+3vgtcS6ka428kXS/t8UzHhSlo2QSjrET1yyGQbJLJuJxN6TfV/y
-   emoMk9xIwHIs4RhOidj2yoObyqlkxzP8ob/BsaGW+eROhEHaWqcaQLxZ8
-   RDv2arQ0c6wben/6R3mGg2wheN5i310lyQI5/+cMFPbUxdZp5W3sljYQ9
-   x769ddWiuGjYKqhahWbRK+ZuD/japVoshnJM9aNwFK3RX9rIBT9ecZ7SS
-   Qjbti0beQvvh1m1SNJtWOScX1yKL3HSOuoZvNCxokZMFB4+TCLE0a8Bej
-   w==;
-IronPort-SDR: jz94RpKbISzteC7pGtjBKcnHX7VfpA+a1gPKw+VBvwouiQQDQYUNQOH5axcX4LUafcoScOWjNt
- CypNfK7Ir8qal3+y5vnrZgrhBNFieFrsmIkwQghwrTCRPEPLmWx614XpagTuTRr0I3jEeFVkye
- NZGGv4e5BTjENk2qjbYvN38cYrBSHQUKyM9X1JOE6e1GjVA0z2/Pf7fBIOz0lMd9Hl5NmqyKm+
- p7/T2LYT9dRZw63glaxKafEaG1098vVpu5b9+aU+OqoDmEYDEOfw2cwjI28S5Ixt5C+1qwdRXb
- pCI=
+  bh=o8n6IXsJ9+mt36VLdzraJcx72Zuw24OUqd5ySqIEO+M=;
+  b=QBkaA7EQXbIZIBFZ8ivoxzK3qRjRKy7uTQk/gr5iqMjSt0vi/p2N1Mfd
+   K7OPJpLYtLk6RSEeE5H8dXIJEgbq+yJxOVFpYTTycn6rT3SV6z/8go+zB
+   bb2pZfzLsKJINP8fKXCzjyPP+qCFS8fOafNhqpBxB1ZYNu2rtgDCpjY0G
+   DozLooZa0yfFPUb4DSEd1vd/5T+iqhAy0qJ1tbaICTY75p5LkGLJ96pFn
+   Mx1eBnmHQw89F7NYSxowV4HR7Hl5W7XFpoaJ7mYzJFu6BDioCxjSh002Y
+   g4AXw/cOgb6jx0gIbtmNuQBUzE52pqW+MyJl/DAi7OjCAxQgtIZhdxob6
+   A==;
+IronPort-SDR: AZHfpqfAZzBcpOel1gFXuRodcFvxaAzFTKl69swirfBJJ4LSFoI7CAo7FXWEJbzLrIsPdhGBGb
+ +qAXNGTwgBJ35bK9JksAQjFYac32ikJr+TEmHKP3p6IZLssDTvZ0RuoXgymo4tweTLUW8p7PKF
+ 43LpnObtrxmW/JPg7Mv8eVKQ5mebfhuCQrVW+HI6t5HUv2RN8FCBvniWdiFE6znR8eljB75zKe
+ ODZ6OePPBF6D9w3xIvyYPFTmBNlUEy+4laMOl59dW6HThHhh+RhyxYD+opsVvtyFJo99LVETA9
+ ldY=
 X-IronPort-AV: E=Sophos;i="5.78,403,1599548400"; 
-   d="scan'208";a="102012247"
+   d="scan'208";a="102012279"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Dec 2020 12:38:15 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Dec 2020 12:38:28 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
  chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 8 Dec 2020 12:38:14 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
- (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Tue, 8 Dec 2020 12:38:14 -0700
-Subject: [PATCH V2 17/25] smartpqi: change timing of release of QRM memory
- during OFA
+ 15.1.1979.3; Tue, 8 Dec 2020 12:38:26 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex03.mchp-main.com
+ (10.10.85.151) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Tue, 8 Dec 2020 12:38:25 -0700
+Subject: [PATCH V2 19/25] smartpqi: add phy id support for the physical
+ drives
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -57,8 +57,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Tue, 8 Dec 2020 13:38:14 -0600
-Message-ID: <160745629407.13450.7299440442704498059.stgit@brunhilda>
+Date:   Tue, 8 Dec 2020 13:38:25 -0600
+Message-ID: <160745630568.13450.516225004166779126.stgit@brunhilda>
 In-Reply-To: <160745609917.13450.11882890596851148601.stgit@brunhilda>
 References: <160745609917.13450.11882890596851148601.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -69,55 +69,80 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microchip.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-* Release QRM memory (OFA buffer) on OFA error conditions.
-* Controller is left in a bad state which can cause a kernel panic
-    upon reboot after an unsuccessful OFA.
+* Display topology using PHY numbers.
+* PHY(both local and remote) numbers corresponding to physical drives
+    are read from BMIC_IDENTIFY_PHYSICAL_DEVICE.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h               |    1 +
+ drivers/scsi/smartpqi/smartpqi_init.c          |   10 ++++++++++
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c |    1 +
+ 3 files changed, 12 insertions(+)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index c3b103b15924..8220957bc69b 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1089,6 +1089,7 @@ struct pqi_scsi_dev {
+ 	u8	phy_connected_dev_type;
+ 	u8	box[8];
+ 	u16	phys_connector[8];
++	u8	phy_id;
+ 	bool	raid_bypass_configured;	/* RAID bypass configured */
+ 	bool	raid_bypass_enabled;	/* RAID bypass enabled */
+ 	u32	next_bypass_group;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index cdeaeb162504..e7d86356bc5a 100644
+index 0cb137a46d6b..43e238b0c27d 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3299,8 +3299,6 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 	else
- 		reset_status = RESET_INITIATE_FIRMWARE;
+@@ -1435,6 +1435,8 @@ static void pqi_get_volume_status(struct pqi_ctrl_info *ctrl_info,
+ 	device->volume_offline = volume_offline;
+ }
  
--	pqi_ofa_free_host_buffer(ctrl_info);
--
- 	delay_secs = PQI_POST_RESET_DELAY_SECS;
++#define PQI_DEVICE_PHY_MAP_SUPPORTED	0x10
++
+ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device,
+ 	struct bmic_identify_physical_device *id_phys)
+@@ -1474,6 +1476,13 @@ static int pqi_get_physical_device_info(struct pqi_ctrl_info *ctrl_info,
+ 	memcpy(&device->page_83_identifier, &id_phys->page_83_identifier,
+ 		sizeof(device->page_83_identifier));
  
- 	switch (reset_status) {
-@@ -3316,6 +3314,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 		ctrl_info->pqi_mode_enabled = false;
- 		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
- 		rc = pqi_ofa_ctrl_restart(ctrl_info, delay_secs);
-+		pqi_ofa_free_host_buffer(ctrl_info);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		dev_info(&ctrl_info->pci_dev->dev,
- 				"Online Firmware Activation: %s\n",
-@@ -3326,6 +3325,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 				"Online Firmware Activation ABORTED\n");
- 		if (ctrl_info->soft_reset_handshake_supported)
- 			pqi_clear_soft_reset_status(ctrl_info);
-+		pqi_ofa_free_host_buffer(ctrl_info);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		pqi_ofa_ctrl_unquiesce(ctrl_info);
- 		break;
-@@ -3335,6 +3335,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 		dev_err(&ctrl_info->pci_dev->dev,
- 			"unexpected Online Firmware Activation reset status: 0x%x\n",
- 			reset_status);
-+		pqi_ofa_free_host_buffer(ctrl_info);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		pqi_ofa_ctrl_unquiesce(ctrl_info);
- 		pqi_take_ctrl_offline(ctrl_info);
++	if ((id_phys->even_more_flags & PQI_DEVICE_PHY_MAP_SUPPORTED) &&
++		id_phys->phy_count)
++		device->phy_id =
++			id_phys->phy_to_phy_map[device->active_path_index];
++	else
++		device->phy_id = 0xFF;
++
+ 	return 0;
+ }
+ 
+@@ -1840,6 +1849,7 @@ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
+ 	existing_device->aio_handle = new_device->aio_handle;
+ 	existing_device->volume_status = new_device->volume_status;
+ 	existing_device->active_path_index = new_device->active_path_index;
++	existing_device->phy_id = new_device->phy_id;
+ 	existing_device->path_map = new_device->path_map;
+ 	existing_device->bay = new_device->bay;
+ 	existing_device->box_index = new_device->box_index;
+diff --git a/drivers/scsi/smartpqi/smartpqi_sas_transport.c b/drivers/scsi/smartpqi/smartpqi_sas_transport.c
+index 77923c6ec2c6..71e83d5fdd02 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sas_transport.c
++++ b/drivers/scsi/smartpqi/smartpqi_sas_transport.c
+@@ -92,6 +92,7 @@ static int pqi_sas_port_add_rphy(struct pqi_sas_port *pqi_sas_port,
+ 
+ 	identify = &rphy->identify;
+ 	identify->sas_address = pqi_sas_port->sas_address;
++	identify->phy_identifier = pqi_sas_port->device->phy_id;
+ 
+ 	if (pqi_sas_port->device &&
+ 		pqi_sas_port->device->is_expander_smp_device) {
 
