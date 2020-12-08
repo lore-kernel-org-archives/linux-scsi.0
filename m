@@ -2,75 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC2BC4167B
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 22:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E14CDC433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 23:01:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53CCF23AFD
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 22:57:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE91423A7B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 23:01:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731579AbgLHW5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Dec 2020 17:57:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34106 "EHLO
+        id S1731580AbgLHXAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Dec 2020 18:00:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728147AbgLHW51 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 17:57:27 -0500
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08933C061793
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Dec 2020 14:56:47 -0800 (PST)
-Received: by mail-lf1-x12e.google.com with SMTP id l11so758123lfg.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Dec 2020 14:56:46 -0800 (PST)
+        with ESMTP id S1731346AbgLHXAt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 18:00:49 -0500
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2333C0613D6
+        for <linux-scsi@vger.kernel.org>; Tue,  8 Dec 2020 15:00:03 -0800 (PST)
+Received: by mail-pg1-x52f.google.com with SMTP id t3so13597811pgi.11
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Dec 2020 15:00:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Dp63dIdRcJ+RLwNco+dq+wSG9tRy12b3KCEuVvbzzL8=;
-        b=LhNqYMYEDwYKbHkLZ330pI728saYOj9rxKzqq4j1aGuQmsKxAeEGqoVNujajZbkkmQ
-         CRMFF7OWR2loXvYd7gVB2TcOB9g60xRH/EEhVLhSbBWqeao2CwGTCFuIpvf1aeYyl94K
-         PmZNAPNRCemrWOyyf+xxHNkCZjddQnjYUHrLU=
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=cvX4Xg5ko6vGqIjHH66x4K4QBryzq3vXXA2jw9y8g7s=;
+        b=GXND6WILUV13nGMPNsvyp3jDZl5GKURlUac6Fy1bWTowxbY6/Ty0LYcGcMZDExzJzr
+         jz+hOI6q4ic3GN++qDpJy+Fj4YhKRMPpCJe920iDoJHNphm5pCxN3ym3xSumCeNvDQ73
+         u9pjeY3qFpUiDo1XjFmBspf2nCeUJf6ErndeVw4gJjsORB7bqbBWy90BfgparUJ2c8xD
+         cASwGT1bnldPaDRKzHNx3UWARJ4KIyoBm1jxwrmJjsvlimHeV3We98PobuR/oyqaAOKd
+         WN4I+WsC//jShMx6S+Wax8hy98aONzhoqXoaq/JOpYGDwMS0zgffzHFeX3mMV0bIdF5P
+         zOQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Dp63dIdRcJ+RLwNco+dq+wSG9tRy12b3KCEuVvbzzL8=;
-        b=almcH2up6RgJCPHKrO59w2OIeu9ydkR3cJJl5dmNClwIWGWxYHgJlsKKjZ++DLieOb
-         1EWe+8Vn1+DgyEh/UQpcDpII/NS54DSx7td4NE8RZ8bjwMJphJ6blFfcIq9ojrMT975d
-         Ey5wazlaVww0IS+BYl/KafliKzVyJUg2vfQ5Kl3zw5T1iIH5RPfhX9AgBOqseXzcAYLR
-         o66K2WsMnnK6lJjs1HriZ/0hzPW8eLxQl5o+3W6J8EaCiAVc0lCWgBXuy3EbR+rsNiCp
-         8A2IvD8v2zjljkeL/lug0/CpMcxz1rC31ZdXllk52KQ6/R3LEY6CgfvTELvsRUFooZkJ
-         0DBA==
-X-Gm-Message-State: AOAM5315FuWSGqSL+Kxpx4fr5VSeCsrtICda6IFKaVlJnL8ojP+IG78N
-        EBtHAelW7Ra3/L/QcwROdUc3PLbkLCN0Mw==
-X-Google-Smtp-Source: ABdhPJwg3Xh/Xknp7xHKs2XbFdJkm/Q/v4xZ/PjRqm0kV4EZiayWEH/F22eiknnMo/3yWYIGNFJgkA==
-X-Received: by 2002:a19:88c3:: with SMTP id k186mr1098395lfd.276.1607468203944;
-        Tue, 08 Dec 2020 14:56:43 -0800 (PST)
-Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com. [209.85.167.54])
-        by smtp.gmail.com with ESMTPSA id e20sm4129ljn.8.2020.12.08.14.56.43
-        for <linux-scsi@vger.kernel.org>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=cvX4Xg5ko6vGqIjHH66x4K4QBryzq3vXXA2jw9y8g7s=;
+        b=XBjv870x51dWZ4EBq+NeDWHC/iKpc+nBK/v9vpyrTcUWRYjtszPFT/gdOpUkZ3Rre3
+         NoKBwYO68OQvUeniDf7sVEVtnibbIHoIV2J64Har381d5ykMjjjRzk5Se8Qzde/xsFzM
+         NPJ5xq86wr9fM7b2t+Mp92yf3LgvMFFFPnhexJWxfEC66di1AXQHa0FG/as4HP0lGmuQ
+         ps3jjxyiDuV3XFjdNO/fM9QWF/tsWB1nKXEQYtJKe3nrQ0VeUKptIYtKCJKBkHfGvR8G
+         fJOSJsGBkMdhnXXTus/ky6fAnkzOxksOg5rZUTGWAuvROHvSoPDO/4+6wlYBsqqxD0D/
+         IY/A==
+X-Gm-Message-State: AOAM533AmlZz2zto80pN2FHo85J4szCiIhQ3DFlreFcT8ikaDkh6dtYp
+        OWkyDrIwRkNBzJTNVhlyBxjn6ilBl2tTZg==
+X-Google-Smtp-Source: ABdhPJxp2R1oGJVXiZr63+jfMbon4n0SOZ/r/L2AlBnsAR7h5DkJcSKPLsOYmbePi+uRVkaf/tfpLA==
+X-Received: by 2002:a65:68da:: with SMTP id k26mr260441pgt.303.1607468403277;
+        Tue, 08 Dec 2020 15:00:03 -0800 (PST)
+Received: from [192.168.1.134] ([66.219.217.173])
+        by smtp.gmail.com with ESMTPSA id 125sm225182pfy.111.2020.12.08.15.00.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Dec 2020 14:56:43 -0800 (PST)
-Received: by mail-lf1-f54.google.com with SMTP id 23so637713lfg.10
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Dec 2020 14:56:43 -0800 (PST)
-X-Received: by 2002:ac2:4831:: with SMTP id 17mr11506247lft.487.1607468200941;
- Tue, 08 Dec 2020 14:56:40 -0800 (PST)
-MIME-Version: 1.0
-References: <alpine.DEB.2.22.394.2012081813310.2680@hadrien>
- <CAHk-=wi=R7uAoaVK9ewDPdCYDn1i3i19uoOzXEW5Nn8UV-1_AA@mail.gmail.com>
- <yq1sg8gunxy.fsf@ca-mkp.ca.oracle.com> <CAHk-=whThuW=OckyeH0rkJ5vbbbpJzMdt3YiMEE7Y5JuU1EkUQ@mail.gmail.com>
- <9106e994-bb4b-4148-1280-f08f71427420@huawei.com> <CAHk-=wjsWB612YA0OSpVPkzePxQWyqcSGDaY1-x3R2AgjOCqSQ@mail.gmail.com>
- <alpine.DEB.2.22.394.2012082339470.16458@hadrien> <ca63ada5-76a6-dae9-e759-838386831f83@kernel.dk>
- <yq1mtynud0n.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1mtynud0n.fsf@ca-mkp.ca.oracle.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue, 8 Dec 2020 14:56:24 -0800
-X-Gmail-Original-Message-ID: <CAHk-=whCChtPRmGZqZM8XeCAFhfRzX8ts4RFKeXgGUyuNtWGMQ@mail.gmail.com>
-Message-ID: <CAHk-=whCChtPRmGZqZM8XeCAFhfRzX8ts4RFKeXgGUyuNtWGMQ@mail.gmail.com>
+        Tue, 08 Dec 2020 15:00:02 -0800 (PST)
 Subject: Re: problem booting 5.10
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Julia Lawall <julia.lawall@inria.fr>,
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Julia Lawall <julia.lawall@inria.fr>,
         John Garry <john.garry@huawei.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
@@ -78,16 +67,42 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Julia Lawall <julia.lawall@inria.fr>,
         linux-scsi <linux-scsi@vger.kernel.org>,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         Ming Lei <ming.lei@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+References: <alpine.DEB.2.22.394.2012081813310.2680@hadrien>
+ <CAHk-=wi=R7uAoaVK9ewDPdCYDn1i3i19uoOzXEW5Nn8UV-1_AA@mail.gmail.com>
+ <yq1sg8gunxy.fsf@ca-mkp.ca.oracle.com>
+ <CAHk-=whThuW=OckyeH0rkJ5vbbbpJzMdt3YiMEE7Y5JuU1EkUQ@mail.gmail.com>
+ <9106e994-bb4b-4148-1280-f08f71427420@huawei.com>
+ <CAHk-=wjsWB612YA0OSpVPkzePxQWyqcSGDaY1-x3R2AgjOCqSQ@mail.gmail.com>
+ <alpine.DEB.2.22.394.2012082339470.16458@hadrien>
+ <ca63ada5-76a6-dae9-e759-838386831f83@kernel.dk>
+ <yq1mtynud0n.fsf@ca-mkp.ca.oracle.com>
+ <CAHk-=whCChtPRmGZqZM8XeCAFhfRzX8ts4RFKeXgGUyuNtWGMQ@mail.gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <1364ec02-bfae-328e-8f55-14ac953dd30d@kernel.dk>
+Date:   Tue, 8 Dec 2020 16:00:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <CAHk-=whCChtPRmGZqZM8XeCAFhfRzX8ts4RFKeXgGUyuNtWGMQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 8, 2020 at 2:54 PM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> Oh, I just realized the megaraid patch went in through block.
+On 12/8/20 3:56 PM, Linus Torvalds wrote:
+> On Tue, Dec 8, 2020 at 2:54 PM Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>>
+>> Oh, I just realized the megaraid patch went in through block.
+> 
+> I'll take this as an "ack" for the revert, though ;)
 
-I'll take this as an "ack" for the revert, though ;)
+You can add mine too, if you wish.
 
-          Linus
+We'll follow up in 5.11 time once the other fixes have landed.
+
+-- 
+Jens Axboe
+
