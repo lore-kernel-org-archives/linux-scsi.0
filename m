@@ -2,131 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C57C193FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 04:51:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3C31C4361B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 04:53:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 710F723A5B
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 04:51:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87DFD23A5A
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 04:53:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727070AbgLHEvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Dec 2020 23:51:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33150 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbgLHEvl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 23:51:41 -0500
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81F7DC061749;
-        Mon,  7 Dec 2020 20:51:01 -0800 (PST)
-Received: by mail-ed1-x544.google.com with SMTP id i24so8352583edj.8;
-        Mon, 07 Dec 2020 20:51:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=LpBxApSP8rCkKlkJaOOFJxIK7H0arGSthSf/Abqc1f0=;
-        b=VcYmqqFkZcsz7ruK90wqwWcXsd76SC0LUJJ98io9ZKofQcbxNTMBIXLdfU/iaC0MpG
-         /VDzjogKNREO57usDtzHJ5gBV4zXFWKvPbBmfiunp5uKqvt31DFaAN0vY/72GVkNbbG3
-         odiQjoM5lrXpeu7ExSfIl20XVCYp4/NHEqEu83rUF03bAXO7U4Y9RLIQNWMrbVzYINiY
-         kOSvwzl/VpcNjHA0CYD9MlE1gTm4uvu/hxPOw6d6682gqYIS1xNgEeIrCGo5E5Rlkhqt
-         CucT/2rIdbGpjmIxyJoIJPyCIgF9ij8TShnlQJc8TjPXrz/98fvgKpaPRQSwOXPFEo2w
-         rCKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=LpBxApSP8rCkKlkJaOOFJxIK7H0arGSthSf/Abqc1f0=;
-        b=EZ35Eh9aRC/0hVRdxRy2FEgylUovJ6FEzGcHS00Sverftg7nZ0Ln25vqJNJiDWNkrL
-         JMDhyrsTJLjjBUgAYhXV92Ebv9WTxpG5gp11KOy/x5DDDnjT9B7S0/QH648w8uaah1lH
-         M8fjqdZmGP8ned2sno7wr6Ze/Hy5NjyAJg/fuC2vkJzmpZefz1A3tgC3a6Px2v21dGCo
-         iM7jUr5pj8G/lg1OzmrzaBmJHkw0qnyLgoiCoY3GfPr7xRhg1o5Kp0vJNsv1BDWPB8q9
-         80zoEsz0MnnZ0q15OI6MlbH1mQMEEu8kv2qUyN29dOIkebgb1+9PviqOvZNqqsFOkDwq
-         HiLg==
-X-Gm-Message-State: AOAM530lF1tb/fOY6bngMZrPrPCKfFJ3R9UP48ahoDLPkmkU6bLl0ziJ
-        oGCKTF0k/jWXc+F958bdCH8=
-X-Google-Smtp-Source: ABdhPJwJWwskX0ehYSyo/1zgQiqkcF4qXSsR/UjOZTLyj1endimvm9CQVWDIrjMNDUJyKgV7JIh+rg==
-X-Received: by 2002:a05:6402:b57:: with SMTP id bx23mr22763851edb.191.1607403060074;
-        Mon, 07 Dec 2020 20:51:00 -0800 (PST)
-Received: from andrea (host-95-239-64-30.retail.telecomitalia.it. [95.239.64.30])
-        by smtp.gmail.com with ESMTPSA id t26sm14439420eji.22.2020.12.07.20.50.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 20:50:59 -0800 (PST)
-Date:   Tue, 8 Dec 2020 05:50:50 +0100
-From:   Andrea Parri <parri.andrea@gmail.com>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v2] Drivers: hv: vmbus: Copy packets sent by Hyper-V out
- of the ring buffer
-Message-ID: <20201208045050.GA9609@andrea>
-References: <20201109100727.9207-1-parri.andrea@gmail.com>
- <MW2PR2101MB1052B7CBB14283AA066BF125D7CF1@MW2PR2101MB1052.namprd21.prod.outlook.com>
+        id S1726918AbgLHExA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Dec 2020 23:53:00 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:50420 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726828AbgLHEw7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2020 23:52:59 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B84nhS1099105;
+        Tue, 8 Dec 2020 04:52:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=E4fuYebIERG0aZIT7o+2O4xvcUKPOiV+ErzyiVg+jiM=;
+ b=o1lnbsMGtMgW5ccSznVAK3t8qZNdJ/SfExuib7PMJQa3OYAbvw9UHpQ53Lt1wrsYCeno
+ bX96mjXuh1Opn99qeE6AnBfyRQGVD9ZNVzxQVbxo+vUBc4ADSSGDEkr2QORZIcIdqfLO
+ SA3ht5n6YAZxa5q/oRYj1WTd/ESXLtnoKX9Rduu+ZO3RalrUZZOrONalQLJNgCAta/zP
+ 31cYoB1BwHhQgxOwhhNHt7m3H6O8SU8/FXlNz8ccTdG/xXNfiaqVxmXRnflEX19hhtS6
+ x9bJoIwZ8kHLWfUz1PFv3J0AFl8oPzmI9n14Cj5Cgh44rUUt1RA9rc7S09HL+2tPMbj9 sw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 357yqbrwbu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 08 Dec 2020 04:52:16 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B84ocSc155424;
+        Tue, 8 Dec 2020 04:52:15 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 358kys9m1p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Dec 2020 04:52:15 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B84qEtl028165;
+        Tue, 8 Dec 2020 04:52:14 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 07 Dec 2020 20:52:14 -0800
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] lpfc: Correct null ndlp reference on routine exit
+Date:   Mon,  7 Dec 2020 23:52:02 -0500
+Message-Id: <160740299786.710.5429624924898215992.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20201130181226.16675-1-james.smart@broadcom.com>
+References: <20201130181226.16675-1-james.smart@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <MW2PR2101MB1052B7CBB14283AA066BF125D7CF1@MW2PR2101MB1052.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9828 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 mlxscore=0
+ malwarescore=0 suspectscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012080029
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9828 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ clxscore=1015 malwarescore=0 bulkscore=0 phishscore=0 adultscore=0
+ spamscore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012080029
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > @@ -419,17 +446,52 @@ static u32 hv_pkt_iter_avail(const struct hv_ring_buffer_info *rbi)
-> >  struct vmpacket_descriptor *hv_pkt_iter_first(struct vmbus_channel *channel)
-> >  {
-> >  	struct hv_ring_buffer_info *rbi = &channel->inbound;
-> > -	struct vmpacket_descriptor *desc;
-> > +	struct vmpacket_descriptor *desc, *desc_copy;
-> > +	u32 bytes_avail, pkt_len, pkt_offset;
-> > 
-> > -	hv_debug_delay_test(channel, MESSAGE_DELAY);
-> > -	if (hv_pkt_iter_avail(rbi) < sizeof(struct vmpacket_descriptor))
-> > +	desc = hv_pkt_iter_first_raw(channel);
-> > +	if (!desc)
-> >  		return NULL;
-> > 
-> > -	desc = hv_get_ring_buffer(rbi) + rbi->priv_read_index;
-> > -	if (desc)
-> > -		prefetch((char *)desc + (desc->len8 << 3));
-> > +	bytes_avail = hv_pkt_iter_avail(rbi);
-> > +
-> > +	/*
-> > +	 * Ensure the compiler does not use references to incoming Hyper-V values (which
-> > +	 * could change at any moment) when reading local variables later in the code
-> > +	 */
-> > +	pkt_len = READ_ONCE(desc->len8) << 3;
-> > +	pkt_offset = READ_ONCE(desc->offset8) << 3;
-> > +
-> > +	/*
-> > +	 * If pkt_len is invalid, set it to the smaller of hv_pkt_iter_avail() and
-> > +	 * rbi->pkt_buffer_size
-> > +	 */
-> > +	if (rbi->pkt_buffer_size < bytes_avail)
-> > +		bytes_avail = rbi->pkt_buffer_size;
-> 
-> I think the above could be combined with the earlier call to hv_pkt_iter_avail(),
-> and more logically expressed as:
-> 
-> 	bytes_avail = min(rbi->pkt_buffer_size, hv_pkt_iter_avail(rbi));
-> 
-> 
-> This is a minor nit.  Everything else in this patch looks good to me.
+On Mon, 30 Nov 2020 10:12:26 -0800, James Smart wrote:
 
-Thanks for the feedback, Michael; I'll send v3 to address it shortly.
+> smatch correctly called out a logic error with accessing a pointer after
+> checking it for null.
+>  drivers/scsi/lpfc/lpfc_els.c:2043 lpfc_cmpl_els_plogi()
+>  error: we previously assumed 'ndlp' could be null (see line 1942)
+> 
+> Adjust the exit point to avoid the trace printf ndlp reference. A trace
+> entry was already generated when the ndlp was checked for null.
 
-  Andrea
+Applied to 5.11/scsi-queue, thanks!
+
+[1/1] lpfc: Correct null ndlp reference on routine exit
+      https://git.kernel.org/mkp/scsi/c/9d8de441db26
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
