@@ -4,89 +4,101 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21F70C19437
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 22:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE57C4361B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 22:52:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4DFB23AFE
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 22:48:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FC3123A7B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Dec 2020 22:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730775AbgLHWsD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Dec 2020 17:48:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:52639 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725940AbgLHWsC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 17:48:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607467596;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=cMekdasT4/RuifFDN/rH2Fl3X1h1kIxQzyY1Zx8OrOI=;
-        b=XvsjqZt9o2aaK5hsqD5KRL6/p6G9z5Cg2Ni0RKYJbXt2gseyZRkSqSew9c05fEbyohIdTM
-        bkNP07N/1GB/FBFoA4/0YV5Aw56cINoOT71RuFkL79lgOV7IU1dqQXTKncuR+S/Kwh1+U/
-        mcAk3qHW/wTW/E1An9qxWIccnrFNkp0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-51-scN4ZhBWNbu9QSIXUr_WVw-1; Tue, 08 Dec 2020 17:46:33 -0500
-X-MC-Unique: scN4ZhBWNbu9QSIXUr_WVw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BB65C800D55;
-        Tue,  8 Dec 2020 22:46:32 +0000 (UTC)
-Received: from ovpn-112-111.phx2.redhat.com (ovpn-112-111.phx2.redhat.com [10.3.112.111])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 570C910016F6;
-        Tue,  8 Dec 2020 22:46:32 +0000 (UTC)
-Message-ID: <296fddc04dd70d2a608d3f9faf6bc26915ed518b.camel@redhat.com>
-Subject: Re: [PATCH 1/3] block: try one write zeroes request before going
- further
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Tom Yan <tom.ty89@gmail.com>, linux-block@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org
-Date:   Tue, 08 Dec 2020 17:46:31 -0500
-In-Reply-To: <20201206055332.3144-1-tom.ty89@gmail.com>
-References: <20201206055332.3144-1-tom.ty89@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+        id S1731352AbgLHWwK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Dec 2020 17:52:10 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:52328 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728147AbgLHWwJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2020 17:52:09 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B8MnJ4h167149;
+        Tue, 8 Dec 2020 22:51:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=3+QUZSt2q2jWmzvwsgmOVm1eKlyky2fgihAM4ea9S5I=;
+ b=yBJMH4oZbyn/4+iPwjViFVp2Zl4jHs29sXx9X1EaGJn3ya6cN8MlCQbmXrABTdEpPz/3
+ MFpg6gLFNe5LqG3zdoTIriY/LX50N57vjRmAUJivn0J2PnkpgDN1sgy/kUAD0zGn6HHP
+ NCImuuwuiMGPaE14DJAq4mDpOJ4JBhmi+OYjjw98GOhcKuckG9z/KQ+noaCg/4ZfQhKx
+ d6UsTKZlWtAM2IFt8xh0q405PJ3OGpDCoWa7wp+CWEPhjx7secUq0NYPSj4i6YGf4Haq
+ OQVQVJ15kw6v2b3dUv8IsUTtWlbKLHgzEpsEffnh40n8Q/iobcmkKqZIYgr+Rnr6/l37 eQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 35825m5dm1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 08 Dec 2020 22:51:15 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B8MofZP046160;
+        Tue, 8 Dec 2020 22:51:15 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 358kytmpc4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Dec 2020 22:51:15 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B8MpAZq015951;
+        Tue, 8 Dec 2020 22:51:11 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 08 Dec 2020 14:51:10 -0800
+To:     Julia Lawall <julia.lawall@inria.fr>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        nicolas.palix@univ-grenoble-alpes.fr,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>
+Subject: Re: problem booting 5.10
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1sg8fud7y.fsf@ca-mkp.ca.oracle.com>
+References: <alpine.DEB.2.22.394.2012081813310.2680@hadrien>
+        <CAHk-=wi=R7uAoaVK9ewDPdCYDn1i3i19uoOzXEW5Nn8UV-1_AA@mail.gmail.com>
+        <yq1sg8gunxy.fsf@ca-mkp.ca.oracle.com>
+        <CAHk-=whThuW=OckyeH0rkJ5vbbbpJzMdt3YiMEE7Y5JuU1EkUQ@mail.gmail.com>
+        <9106e994-bb4b-4148-1280-f08f71427420@huawei.com>
+        <CAHk-=wjsWB612YA0OSpVPkzePxQWyqcSGDaY1-x3R2AgjOCqSQ@mail.gmail.com>
+        <alpine.DEB.2.22.394.2012082339470.16458@hadrien>
+Date:   Tue, 08 Dec 2020 17:51:07 -0500
+In-Reply-To: <alpine.DEB.2.22.394.2012082339470.16458@hadrien> (Julia Lawall's
+        message of "Tue, 8 Dec 2020 23:40:44 +0100 (CET)")
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9829 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 mlxscore=0
+ malwarescore=0 suspectscore=1 mlxlogscore=852 bulkscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012080143
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9829 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 bulkscore=0
+ phishscore=0 mlxlogscore=863 clxscore=1015 priorityscore=1501 mlxscore=0
+ spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012080143
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2020-12-06 at 13:53 +0800, Tom Yan wrote:
-> At least the SCSI disk driver is "benevolent" when it try to decide
-> whether the device actually supports write zeroes, i.e. unless the
-> device explicity report otherwise, it assumes it does at first.
-> 
-> Therefore before we pile up bios that would fail at the end, we try
-> the command/request once, as not doing so could trigger quite a
-> disaster in at least certain case. For example, the host controller
-> can be messed up entirely when one does `blkdiscard -z` a UAS drive.
-> 
 
-It's not as simple as that.  There are some SCSI devices that support
-WRITE ZEROES, but do not return the MAXIMUM WRITE SAME LENGTH in the
-block device limits VPD page.  So, some commands might work, and others
-might not.  In particular, a commonly-used hypervisor does this.
+Julia,
 
-The sd driver disables the use of write same if certain errors are
-returned (INVALID COMMAND w/ INVALID COMMAND OPCODE or INVALID FIELD IN
-CDB), but if you do a blkdiscard -z of an entire drive a whole lot of
-bios/requests are already queued by the time you get that.
+> This solves the problem.  Starting from 5.10-rc7 and doing this revert, I
+> get a kernel that boots.
 
-Higher level code checks to see if write zeroes is supported, and
-won't queue the requests once it is turned off, but that doesn't
-happen until a command fails.  We also check in command setup, see
-my earlier patch which deals with spurious blk_update_request errors
-if the disablement of write same gets detected there...  I explicitly
-did not try to fix that by "testing" with one bio for the reason
-Christoph mentions.
+Thanks for testing!
 
--Ewan
+I'll go ahead and revert 103fbf8e4020 in 5.10/scsi-fixes. We can revisit
+this change in 5.11 when Ming's fixes are in place.
 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
