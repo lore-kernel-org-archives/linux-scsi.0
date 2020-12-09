@@ -2,271 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1E76C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 08:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BFC0C4361B
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 08:23:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8359F23B7D
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 08:09:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD7B823B97
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 08:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728510AbgLIICz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 03:02:55 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:38320 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728437AbgLIICp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 03:02:45 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607500939; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=2K04sH2o7E+7Xad82QadBqnzfPh01tJKf3TiTO1/FtI=;
- b=qhfN+j0XzTxOn5s+xHa1OVZpM9z1IhNnuXNsS1vW7RD3LCt35erv04wZvtIShQRHD4XD4vil
- J1wD21xlLRp6rc15io6a8ZIMsAzH5fDDbHsZreCBxYwMxQ8Owow12KdJH/vIRI5W/dWpZwgx
- h1AhAxPD0fcfO9sPwb/TJtBVf5M=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5fd0844e395c822bfe698e16 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 09 Dec 2020 08:01:18
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 47D0CC43466; Wed,  9 Dec 2020 08:01:18 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 60CCDC433C6;
-        Wed,  9 Dec 2020 08:01:16 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 09 Dec 2020 16:01:16 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Ziqi Chen <ziqichen@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        id S1726367AbgLIIXM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 03:23:12 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:37611 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726253AbgLIIXM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 03:23:12 -0500
+X-UUID: 5cbf7747fc934a73b9dccfafea129beb-20201209
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=tZQgclW7QtXGrfoKik3mkK/gxZ2Tg8scqcXCmVvIFJ0=;
+        b=Dc4ejFaoTxbMHcV0vefC1/HaqdU1fbqcMvlIiSGRhl3/vvbuYI8L7nE1cqWEo/v9LfiAFkUS/0V5ZB3ykI9kPszYoLFYuNAfQ3NxdAVKEheLAzClWW/6FLsNqN7yo0Yt6gA8Ola3iZXWFEq7oryHtK3PKNvVjLkCWoB+ybDnJ+4=;
+X-UUID: 5cbf7747fc934a73b9dccfafea129beb-20201209
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 364962277; Wed, 09 Dec 2020 16:22:28 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by mtkexhb02.mediatek.inc
+ (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 9 Dec
+ 2020 16:22:27 +0800
+Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 9 Dec 2020 16:22:27 +0800
+Message-ID: <1607502147.3580.33.camel@mtkswgap22>
+Subject: Re: [PATCH v1 2/2] scsi: ufs: Clean up some lines from
+ ufshcd_hba_exit()
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
+        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
+        <saravanak@google.com>, <salyzyn@google.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Fix ufs power down/on specs violation
-In-Reply-To: <1607497774-76579-1-git-send-email-ziqichen@codeaurora.org>
-References: <1607497774-76579-1-git-send-email-ziqichen@codeaurora.org>
-Message-ID: <6105ea481f6a42fb0e5133e442a51549@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        "Bart Van Assche" <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Wed, 9 Dec 2020 16:22:27 +0800
+In-Reply-To: <1607497100-27570-3-git-send-email-cang@codeaurora.org>
+References: <1607497100-27570-1-git-send-email-cang@codeaurora.org>
+         <1607497100-27570-3-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-09 15:09, Ziqi Chen wrote:
-> As per specs, e.g, JESD220E chapter 7.2, while powering
-> off/on the ufs device, RST_N signal and REF_CLK signal
-> should be between VSS(Ground) and VCCQ/VCCQ2.
-> 
-> Power down:
-> 1. Assert RST_N low
-> 2. Turn-off REF_CLK
-> 3. Turn-off VCC
-> 4. Turn-off VCCQ/VCCQ2.
-> power on:
-> 1. Turn-on VCC
-> 2. Turn-on VCCQ/VCCQ2
-> 3. Turn-On REF_CLK
-> 4. Deassert RST_N high.
-> 
-> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 14 ++++++++++----
->  drivers/scsi/ufs/ufshcd.c   | 19 +++++++++----------
->  drivers/scsi/ufs/ufshcd.h   |  4 ++--
->  3 files changed, 21 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 1e434cc..5ed3a63d 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -582,6 +582,9 @@ static int ufs_qcom_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		ufs_qcom_disable_lane_clks(host);
->  		phy_power_off(phy);
-> 
-> +		if (hba->vops && hba->vops->device_reset)
-> +			hba->vops->device_reset(hba, false);
-> +
->  	} else if (!ufs_qcom_is_link_active(hba)) {
->  		ufs_qcom_disable_lane_clks(host);
->  	}
-> @@ -1400,10 +1403,11 @@ static void ufs_qcom_dump_dbg_regs(struct 
-> ufs_hba *hba)
->  /**
->   * ufs_qcom_device_reset() - toggle the (optional) device reset line
->   * @hba: per-adapter instance
-> + * @toggle: need pulling up or not
->   *
->   * Toggles the (optional) reset line to reset the attached device.
->   */
-> -static int ufs_qcom_device_reset(struct ufs_hba *hba)
-> +static int ufs_qcom_device_reset(struct ufs_hba *hba, bool toggle)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> 
-> @@ -1416,10 +1420,12 @@ static int ufs_qcom_device_reset(struct ufs_hba 
-> *hba)
->  	 * be on the safe side.
->  	 */
->  	gpiod_set_value_cansleep(host->device_reset, 1);
-> -	usleep_range(10, 15);
-> 
-> -	gpiod_set_value_cansleep(host->device_reset, 0);
-> -	usleep_range(10, 15);
-> +	if (toggle) {
-> +		usleep_range(10, 15);
-> +		gpiod_set_value_cansleep(host->device_reset, 0);
-> +		usleep_range(10, 15);
-> +	}
-> 
->  	return 0;
->  }
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 92d433d..5ab1c02 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8633,8 +8633,6 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	if (ret)
->  		goto set_dev_active;
-> 
-> -	ufshcd_vreg_set_lpm(hba);
-> -
->  disable_clks:
->  	/*
->  	 * Call vendor specific suspend callback. As these callbacks may 
-> access
-> @@ -8664,6 +8662,7 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
-> 
->  	/* Put the host controller in low power mode if possible */
->  	ufshcd_hba_vreg_set_lpm(hba);
-> +	ufshcd_vreg_set_lpm(hba);
->  	goto out;
-> 
->  set_link_active:
-> @@ -8729,18 +8728,18 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	old_link_state = hba->uic_link_state;
-> 
->  	ufshcd_hba_vreg_set_hpm(hba);
-> +	ret = ufshcd_vreg_set_hpm(hba);
-> +	if (ret)
-> +		goto out;
-> +
->  	/* Make sure clocks are enabled before accessing controller */
->  	ret = ufshcd_setup_clocks(hba, true);
->  	if (ret)
-> -		goto out;
-> +		goto disable_vreg;
-> 
->  	/* enable the host irq as host controller would be active soon */
->  	ufshcd_enable_irq(hba);
-> 
-> -	ret = ufshcd_vreg_set_hpm(hba);
-> -	if (ret)
-> -		goto disable_irq_and_vops_clks;
-> -
->  	/*
->  	 * Call vendor specific resume callback. As these callbacks may 
-> access
->  	 * vendor specific host controller register space call them when the
-> @@ -8748,7 +8747,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	 */
->  	ret = ufshcd_vops_resume(hba, pm_op);
->  	if (ret)
-> -		goto disable_vreg;
-> +		goto disable_irq_and_vops_clks;
-> 
->  	/* For DeepSleep, the only supported option is to have the link off 
-> */
->  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
-> !ufshcd_is_link_off(hba));
-> @@ -8815,8 +8814,6 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	ufshcd_link_state_transition(hba, old_link_state, 0);
->  vendor_suspend:
->  	ufshcd_vops_suspend(hba, pm_op);
-> -disable_vreg:
-> -	ufshcd_vreg_set_lpm(hba);
->  disable_irq_and_vops_clks:
->  	ufshcd_disable_irq(hba);
->  	if (hba->clk_scaling.is_allowed)
-> @@ -8827,6 +8824,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->  					hba->clk_gating.state);
->  	}
-> +disable_vreg:
-> +	ufshcd_vreg_set_lpm(hba);
->  out:
->  	hba->pm_op_in_progress = 0;
->  	if (ret)
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 61344c4..47c7dab6 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -323,7 +323,7 @@ struct ufs_hba_variant_ops {
->  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->  	void	(*dbg_register_dump)(struct ufs_hba *hba);
->  	int	(*phy_initialization)(struct ufs_hba *);
-> -	int	(*device_reset)(struct ufs_hba *hba);
-> +	int	(*device_reset)(struct ufs_hba *hba, bool);
->  	void	(*config_scaling_param)(struct ufs_hba *hba,
->  					struct devfreq_dev_profile *profile,
->  					void *data);
-> @@ -1211,7 +1211,7 @@ static inline void
-> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
->  static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
->  {
->  	if (hba->vops && hba->vops->device_reset) {
-> -		int err = hba->vops->device_reset(hba);
-> +		int err = hba->vops->device_reset(hba, true);
-> 
->  		if (!err)
->  			ufshcd_set_ufs_dev_active(hba);
-
-
-Please check Stanley's new change 
-https://lore.kernel.org/patchwork/patch/1350843/.
-
-You may want to re-name the func ufschd_vops_device_reset() to
-ufshcd_vops_toggle_device_reset(sturct ufs_hba *hba, bool up) and
-similarly re-name device_reset() to toggle_device_reset(hba, up).
-Then in the new func ufshcd_device_reset(), call 
-ufshcd_vops_toggle_device_reset()
-twice, once to toggle up, once to toggle down. In this way, you will be
-able to use ufshcd_vops_toggle_device_reset() in ufshcd_suspend().
-
-This is just a rough idea.
-
-Thanks,
-
-Can Guo.
-
+SGkgQ2FuLA0KDQpPbiBUdWUsIDIwMjAtMTItMDggYXQgMjI6NTggLTA4MDAsIENhbiBHdW8gd3Jv
+dGU6DQo+IHVmc2hjZF9oYmFfZXhpdCgpIGlzIGFsd2F5cyBjYWxsZWQgYWZ0ZXIgdWZzaGNkX2V4
+aXRfY2xrX3NjYWxpbmcoKSBhbmQNCj4gdWZzaGNkX2V4aXRfY2xrX2dhdGluZygpLCBzbyBubyBu
+ZWVkIHRvIHN1c3BlbmQgY2xvY2sgc2NhbGluZyBhZ2FpbiBpbg0KPiB1ZnNoY2RfaGJhX2V4aXQo
+KS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IENhbiBHdW8gPGNhbmdAY29kZWF1cm9yYS5vcmc+DQo+
+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8IDUgKy0tLS0NCj4gIDEgZmlsZSBj
+aGFuZ2VkLCAxIGluc2VydGlvbigrKSwgNCBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0K
+PiBpbmRleCAxMjI2NmJkLi4wYTViMTk3IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZz
+L3Vmc2hjZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gQEAgLTc3NjUs
+NiArNzc2NSw3IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF9hc3luY19zY2FuKHZvaWQgKmRhdGEsIGFz
+eW5jX2Nvb2tpZV90IGNvb2tpZSkNCj4gIAlpZiAocmV0KSB7DQo+ICAJCXBtX3J1bnRpbWVfcHV0
+X3N5bmMoaGJhLT5kZXYpOw0KPiAgCQl1ZnNoY2RfZXhpdF9jbGtfc2NhbGluZyhoYmEpOw0KPiAr
+CQl1ZnNoY2RfZXhpdF9jbGtfZ2F0aW5nKGhiYSk7DQoNCkhvdyBhYm91dCBtb3ZpbmcgYWJvdmUg
+dHdvIGxpbmVzIHRvIHVmc2hjZF9oYmFfZXhpdCgpPw0KDQpPdGhlcndpc2UgbG9va3MgZ29vZCB0
+byBtZSENClJldmlld2VkLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleWMuY2h1QG1lZGlhdGVrLmNv
+bT4NCg0KPiAgCQl1ZnNoY2RfaGJhX2V4aXQoaGJhKTsNCj4gIAl9DQo+ICB9DQo+IEBAIC04MjAz
+LDEwICs4MjA0LDYgQEAgc3RhdGljIHZvaWQgdWZzaGNkX2hiYV9leGl0KHN0cnVjdCB1ZnNfaGJh
+ICpoYmEpDQo+ICAJaWYgKGhiYS0+aXNfcG93ZXJlZCkgew0KPiAgCQl1ZnNoY2RfdmFyaWFudF9o
+YmFfZXhpdChoYmEpOw0KPiAgCQl1ZnNoY2Rfc2V0dXBfdnJlZyhoYmEsIGZhbHNlKTsNCj4gLQkJ
+dWZzaGNkX3N1c3BlbmRfY2xrc2NhbGluZyhoYmEpOw0KPiAtCQlpZiAodWZzaGNkX2lzX2Nsa3Nj
+YWxpbmdfc3VwcG9ydGVkKGhiYSkpDQo+IC0JCQlpZiAoaGJhLT5kZXZmcmVxKQ0KPiAtCQkJCXVm
+c2hjZF9zdXNwZW5kX2Nsa3NjYWxpbmcoaGJhKTsNCj4gIAkJdWZzaGNkX3NldHVwX2Nsb2Nrcyho
+YmEsIGZhbHNlKTsNCj4gIAkJdWZzaGNkX3NldHVwX2hiYV92cmVnKGhiYSwgZmFsc2UpOw0KPiAg
+CQloYmEtPmlzX3Bvd2VyZWQgPSBmYWxzZTsNCg0K
 
