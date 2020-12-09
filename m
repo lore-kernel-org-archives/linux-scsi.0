@@ -2,124 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E26A8C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 19:40:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D89C4361B
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 20:52:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B60A723BC6
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 19:40:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 035FC23D1C
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 20:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731229AbgLITjr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 14:39:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41352 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730981AbgLITjq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Dec 2020 14:39:46 -0500
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 21BDB23BC6;
-        Wed,  9 Dec 2020 19:39:06 +0000 (UTC)
-Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94)
-        (envelope-from <maz@kernel.org>)
-        id 1kn5Il-00HSt3-S7; Wed, 09 Dec 2020 19:39:04 +0000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 09 Dec 2020 19:39:03 +0000
-From:   Marc Zyngier <maz@kernel.org>
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, lenb@kernel.org, rjw@rjwysocki.net,
-        tglx@linutronix.de, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        linux-acpi@vger.kernel.org, dwagner@suse.de
-Subject: Re: [PATCH v5 4/5] Driver core: platform: Add
- devm_platform_get_irqs_affinity()
-In-Reply-To: <X9Ehy28876ezAOLH@kroah.com>
-References: <1606905417-183214-1-git-send-email-john.garry@huawei.com>
- <1606905417-183214-5-git-send-email-john.garry@huawei.com>
- <X9EYRNDXS1Xcy4iU@kroah.com>
- <36730230-9fd7-8c6c-b997-328beea2fc31@huawei.com>
- <X9Ehy28876ezAOLH@kroah.com>
-User-Agent: Roundcube Webmail/1.4.9
-Message-ID: <ed238cc6e4a6b865b2dc965f52fe0550@kernel.org>
-X-Sender: maz@kernel.org
-X-SA-Exim-Connect-IP: 51.254.78.96
-X-SA-Exim-Rcpt-To: gregkh@linuxfoundation.org, john.garry@huawei.com, jejb@linux.ibm.com, martin.petersen@oracle.com, lenb@kernel.org, rjw@rjwysocki.net, tglx@linutronix.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com, linux-acpi@vger.kernel.org, dwagner@suse.de
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        id S1730961AbgLIUwg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 15:52:36 -0500
+Received: from mail-m973.mail.163.com ([123.126.97.3]:40624 "EHLO
+        mail-m973.mail.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbgLIUwg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 15:52:36 -0500
+X-Greylist: delayed 23315 seconds by postgrey-1.27 at vger.kernel.org; Wed, 09 Dec 2020 15:52:36 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=gQ5estX4aQOus4o3RQ
+        hPJH0633LIum7VHgBpqNT4W2E=; b=I3Y2w6F3Fet1/easBiGugG9pw30b5mBVc7
+        Wxsb9fU6XrZO9vM9akdqoH9a+4IUhKZ0xVg3dNMxw0gqEERcMjEO317oXTdNsMgM
+        wh0ZcckQYCkjDyFLQ98MClTd7ypy5919tDcUHEXWjWedbhtCd+j5ernkd5MRkGxV
+        p5vKH4HpM=
+Received: from localhost.localdomain (unknown [202.112.113.212])
+        by smtp3 (Coremail) with SMTP id G9xpCgA3nqOWx9BfiyalOg--.64718S4;
+        Wed, 09 Dec 2020 20:48:26 +0800 (CST)
+From:   Xiaohui Zhang <ruc_zhangxiaohui@163.com>
+To:     Xiaohui Zhang <ruc_zhangxiaohui@163.com>,
+        John Garry <john.garry@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/1] hisi_sas: Fix possible buffer overflows in prep_ssp_v3_hw
+Date:   Wed,  9 Dec 2020 20:48:18 +0800
+Message-Id: <20201209124818.25122-1-ruc_zhangxiaohui@163.com>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: G9xpCgA3nqOWx9BfiyalOg--.64718S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Zr13Ww4fCr1kXFy5uryfZwb_yoW8Gw4fpr
+        W8uay2vrWkJw48Kan2gF4xZr90qa1kGr1Fgayj9a4rA3W5Ja4xCa42krW2qay5Cw47ZF1U
+        WrsrJryUWa1kGrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Ub4SrUUUUU=
+X-Originating-IP: [202.112.113.212]
+X-CM-SenderInfo: puxfs6pkdqw5xldrx3rl6rljoofrz/xtbBRRr1MFPAIxgz8wAAsy
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-09 19:13, Greg KH wrote:
-> On Wed, Dec 09, 2020 at 07:04:02PM +0000, John Garry wrote:
->> On 09/12/2020 18:32, Greg KH wrote:
->> > On Wed, Dec 02, 2020 at 06:36:56PM +0800, John Garry wrote:
->> > > Drivers for multi-queue platform devices may also want managed interrupts
->> > > for handling HW queue completion interrupts, so add support.
->> >
->> 
->> Hi Greg,
->> 
->> > Why would a platform device want all of this?  Shouldn't such a device
->> > be on a "real" bus instead?
->> 
->> For this HW version, the device is on the system bus, directly 
->> addressable
->> by the CPU.
-> 
-> What do you mean by "system bus"?
-> 
->> Motivation is that I wanted to switch the HW completion queues to use
->> managed interrupts.
-> 
-> Fair enough, seems like overkill for a "platform" bus though :)
+From: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
 
-You should see the box, really... ;-)
+prep_ssp_v3_hw() calls memcpy() without checking the destination
+size may trigger a buffer overflower.
 
-> 
->> > What in-kernel driver needs this complexity?  I can't take new apis
->> > without a real user in the tree, sorry.
->> 
->> It's in the final patch in the series 
->> https://lore.kernel.org/linux-scsi/1606905417-183214-1-git-send-email-john.garry@huawei.com/T/#m0df7e7cd6f0819b99aaeb6b7f8939ef1e17b8a83.
-> 
-> Ah, I missed that, I thought that was some high-speed scsi thing, not a
-> tiny platform driver...
-> 
->> I don't anticipate a huge number of users of this API in future, as 
->> most
->> multi-queue devices are PCI devices; so we could do the work of this 
->> API in
->> the driver itself, but the preference was not to export genirq 
->> functions
->> like irq_update_affinity_desc() or irq_create_affinity_masks(), and 
->> rather
->> have a common helper in the core platform code.
-> 
-> Ok, I'd like to have the irq maintainers/developers ack this before
-> taking it in the driver core, as someone is going to have to maintain
-> this crazy thing for forever if it gets merged.
+buf_cmd should be a ssp_tmf_iu struct through the analysis of
+the command below:
+buf_cmd = hisi_sas_cmd_hdr_addr_mem(slot) +
+        sizeof(struct ssp_frame_hdr);
 
-I'm actually quite happy with this, and as it turns out, the crazy
-system that has this SAS thing keeps my backside warm all year long.
-As long as this machine keeps ticking, I'm happy to help with this.
+Then buf_cmd + 12 should point to tag, so the length parameter
+of memcpy() should not exceed sizeof(__be16)+sizeof(u8)*14):
+struct ssp_tmf_iu {
+    u8     lun[8];
+    u16    _r_a;
+    u8     tmf;
+    u8     _r_b;
+    __be16 tag;
+    u8     _r_c[14];
+} __attribute__ ((packed));
 
-So if that helps:
+Signed-off-by: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Acked-by: Marc Zyngier <maz@kernel.org>
-
-We need to work out the merge strategy for the whole lot though, given
-that it crosses 3 subsystems over two series...
-
-         M.
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7133ca859..d02831c17 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1267,7 +1267,9 @@ static void prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
+ 	memcpy(buf_cmd, &task->ssp_task.LUN, 8);
+ 	if (!tmf) {
+ 		buf_cmd[9] = ssp_task->task_attr | (ssp_task->task_prio << 3);
+-		memcpy(buf_cmd + 12, scsi_cmnd->cmnd, scsi_cmnd->cmd_len);
++		memcpy(buf_cmd + 12, scsi_cmnd->cmnd,
++		       min_t(unsigned short, scsi_cmnd->cmd_len,
++			     sizeof(__be16) + sizeof(u8) * 14));
+ 	} else {
+ 		buf_cmd[10] = tmf->tmf;
+ 		switch (tmf->tmf) {
 -- 
-Jazz is not dead. It just smells funny...
+2.17.1
+
