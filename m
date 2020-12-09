@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BF6C19425
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 05:30:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF215C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 05:30:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9636223B77
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 05:30:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E07023B4B
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 05:30:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727661AbgLIFar (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 00:30:47 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:43385 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727648AbgLIFan (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 00:30:43 -0500
-Received: by mail-pl1-f196.google.com with SMTP id y10so330784plr.10;
-        Tue, 08 Dec 2020 21:30:28 -0800 (PST)
+        id S1727664AbgLIFas (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 00:30:48 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:45179 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727649AbgLIFap (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 00:30:45 -0500
+Received: by mail-pg1-f195.google.com with SMTP id v29so453695pgk.12;
+        Tue, 08 Dec 2020 21:30:30 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=BHwoHOMvig80TKhMF0enCCYk2D2TdkshHI6fRWVwlZw=;
-        b=XP9w+/VsEk0rJbKHKBkF+OBfrJgDjtmFEFJj3EnrPSN5q0XtHqSerB+Q+a5K6Qwrrt
-         f14qjAHmfkrlovuNlhuz0AuXaY2oQcravYZeVWuhzSDzg12SeO/8PRywTxtLnNyQLU0O
-         QGpCQRqNuTsDKJQTyqQqfowDuWE5aFYgSsMqDQSlO1mJNs1+7ISgKmcJoaufefMwOvOb
-         AzIrXp8Yaum1U5O5keBDeauGHysms89Qzbp70FD5QW72OLr01Fh+r7gpRcpSlbj4XfKA
-         HMSgXUWF8k5g+gW+LArz1GQrO8W0CH7JQexfRGosiW2UT8yKuLJTjzSLqFXRJOsYS9PI
-         QfXw==
-X-Gm-Message-State: AOAM531TVUrWi26HPlfGndLRhlBup3VZ/jSurf7dTmeM48kWVVhGVGyd
-        Ywfkjwls2g9D9p8F8PjZfz79dXwz/LE=
-X-Google-Smtp-Source: ABdhPJwdtRwo+u1GUyNNyDZw6TWPNo8HFr+jXCVil7K7eolcWEqiLd5J9E0DxTMgCUP321EJbuS0bg==
-X-Received: by 2002:a17:902:24b:b029:d6:cd52:61e3 with SMTP id 69-20020a170902024bb02900d6cd5261e3mr619537plc.2.1607491802543;
-        Tue, 08 Dec 2020 21:30:02 -0800 (PST)
+        bh=kpaABBaTm2eEnOhP2FWFHi2c3i6BhMnLZ0O2VqeGX/g=;
+        b=CktDdddCDo+Plpg6tAk4m615JUuY42JPRcanMVZcnd/jA0Vu7UrmcMljLO/uY4PJ3q
+         EW6mv37hwZJbTmQeuvXblbUqoV/K+36EsHqwslCHUmDjmEiKZCwR5x1GhEwt5QR/g7Om
+         SJgCziMsfRiratZrfogFzXk3AYC2G6ynAZd7Ue+6RsgQLSuJFZ+knqf7FmeZfnM1R8L7
+         qy3e7eZQfRQYG+OHSg7mVWgt8FmURVBzhKP6apRhRSWlKcYGgTsdrarkN+mJVuffH72H
+         Q8AZgwpBG1kVom0Yw9FvUIppy5doNeK9gVmoqAGt5gc49PQl54Op8mfmf2dXhnX6wvSx
+         v5jA==
+X-Gm-Message-State: AOAM531jEYk67DEKOLIrHRPvrhrR8AaA79tNx3lYak6X/xTRmLpQWgc0
+        3nZk71AVfczIAU8Zxh61PS8=
+X-Google-Smtp-Source: ABdhPJycZlGY1AHx6RrCm9ftrvm5cSb0hC0HgyExFOgJQVRMzZ0cV+22sQUFwyXgFcFCfsof+C4TwQ==
+X-Received: by 2002:a63:6d49:: with SMTP id i70mr503148pgc.216.1607491804634;
+        Tue, 08 Dec 2020 21:30:04 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id 77sm753097pfv.16.2020.12.08.21.30.00
+        by smtp.gmail.com with ESMTPSA id 77sm753097pfv.16.2020.12.08.21.30.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Dec 2020 21:30:01 -0800 (PST)
+        Tue, 08 Dec 2020 21:30:03 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
@@ -51,10 +51,10 @@ Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Alan Stern <stern@rowland.harvard.edu>,
         Stanley Chu <stanley.chu@mediatek.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        stable <stable@vger.kernel.org>, Can Guo <cang@codeaurora.org>
-Subject: [PATCH v5 1/8] block: Fix a race in the runtime power management code
-Date:   Tue,  8 Dec 2020 21:29:44 -0800
-Message-Id: <20201209052951.16136-2-bvanassche@acm.org>
+        Can Guo <cang@codeaurora.org>
+Subject: [PATCH v5 2/8] block: Introduce BLK_MQ_REQ_PM
+Date:   Tue,  8 Dec 2020 21:29:45 -0800
+Message-Id: <20201209052951.16136-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201209052951.16136-1-bvanassche@acm.org>
 References: <20201209052951.16136-1-bvanassche@acm.org>
@@ -64,67 +64,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-With the current implementation the following race can happen:
-* blk_pre_runtime_suspend() calls blk_freeze_queue_start() and
-  blk_mq_unfreeze_queue().
-* blk_queue_enter() calls blk_queue_pm_only() and that function returns
-  true.
-* blk_queue_enter() calls blk_pm_request_resume() and that function does
-  not call pm_request_resume() because the queue runtime status is
-  RPM_ACTIVE.
-* blk_pre_runtime_suspend() changes the queue status into RPM_SUSPENDING.
+Introduce the BLK_MQ_REQ_PM flag. This flag makes the request allocation
+functions set RQF_PM. This is the first step towards removing
+BLK_MQ_REQ_PREEMPT.
 
-Fix this race by changing the queue runtime status into RPM_SUSPENDING
-before switching q_usage_counter to atomic mode.
-
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-Acked-by: Stanley Chu <stanley.chu@mediatek.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Jens Axboe <axboe@kernel.dk>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: stable <stable@vger.kernel.org>
-Fixes: 986d413b7c15 ("blk-mq: Enable support for runtime power management")
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Cc: Can Guo <cang@codeaurora.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-pm.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ block/blk-core.c       | 7 ++++---
+ block/blk-mq.c         | 2 ++
+ include/linux/blk-mq.h | 2 ++
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-pm.c b/block/blk-pm.c
-index b85234d758f7..17bd020268d4 100644
---- a/block/blk-pm.c
-+++ b/block/blk-pm.c
-@@ -67,6 +67,10 @@ int blk_pre_runtime_suspend(struct request_queue *q)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 2db8bda43b6e..10696f9fb6ac 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -424,11 +424,11 @@ EXPORT_SYMBOL(blk_cleanup_queue);
+ /**
+  * blk_queue_enter() - try to increase q->q_usage_counter
+  * @q: request queue pointer
+- * @flags: BLK_MQ_REQ_NOWAIT and/or BLK_MQ_REQ_PREEMPT
++ * @flags: BLK_MQ_REQ_NOWAIT, BLK_MQ_REQ_PM and/or BLK_MQ_REQ_PREEMPT
+  */
+ int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags)
+ {
+-	const bool pm = flags & BLK_MQ_REQ_PREEMPT;
++	const bool pm = flags & (BLK_MQ_REQ_PM | BLK_MQ_REQ_PREEMPT);
  
- 	WARN_ON_ONCE(q->rpm_status != RPM_ACTIVE);
+ 	while (true) {
+ 		bool success = false;
+@@ -630,7 +630,8 @@ struct request *blk_get_request(struct request_queue *q, unsigned int op,
+ 	struct request *req;
  
-+	spin_lock_irq(&q->queue_lock);
-+	q->rpm_status = RPM_SUSPENDING;
-+	spin_unlock_irq(&q->queue_lock);
-+
- 	/*
- 	 * Increase the pm_only counter before checking whether any
- 	 * non-PM blk_queue_enter() calls are in progress to avoid that any
-@@ -89,15 +93,14 @@ int blk_pre_runtime_suspend(struct request_queue *q)
- 	/* Switch q_usage_counter back to per-cpu mode. */
- 	blk_mq_unfreeze_queue(q);
+ 	WARN_ON_ONCE(op & REQ_NOWAIT);
+-	WARN_ON_ONCE(flags & ~(BLK_MQ_REQ_NOWAIT | BLK_MQ_REQ_PREEMPT));
++	WARN_ON_ONCE(flags & ~(BLK_MQ_REQ_NOWAIT | BLK_MQ_REQ_PM |
++			       BLK_MQ_REQ_PREEMPT));
  
--	spin_lock_irq(&q->queue_lock);
--	if (ret < 0)
-+	if (ret < 0) {
-+		spin_lock_irq(&q->queue_lock);
-+		q->rpm_status = RPM_ACTIVE;
- 		pm_runtime_mark_last_busy(q->dev);
--	else
--		q->rpm_status = RPM_SUSPENDING;
--	spin_unlock_irq(&q->queue_lock);
-+		spin_unlock_irq(&q->queue_lock);
- 
--	if (ret)
- 		blk_clear_pm_only(q);
-+	}
- 
- 	return ret;
- }
+ 	req = blk_mq_alloc_request(q, op, flags);
+ 	if (!IS_ERR(req) && q->mq_ops->initialize_rq_fn)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 1b25ec2fe9be..b5880a1fb38d 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -292,6 +292,8 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+ 	rq->mq_hctx = data->hctx;
+ 	rq->rq_flags = 0;
+ 	rq->cmd_flags = data->cmd_flags;
++	if (data->flags & BLK_MQ_REQ_PM)
++		rq->rq_flags |= RQF_PM;
+ 	if (data->flags & BLK_MQ_REQ_PREEMPT)
+ 		rq->rq_flags |= RQF_PREEMPT;
+ 	if (blk_queue_io_stat(data->q))
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index b23eeca4d677..c00e856c6fb1 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -444,6 +444,8 @@ enum {
+ 	BLK_MQ_REQ_NOWAIT	= (__force blk_mq_req_flags_t)(1 << 0),
+ 	/* allocate from reserved pool */
+ 	BLK_MQ_REQ_RESERVED	= (__force blk_mq_req_flags_t)(1 << 1),
++	/* set RQF_PM */
++	BLK_MQ_REQ_PM		= (__force blk_mq_req_flags_t)(1 << 2),
+ 	/* set RQF_PREEMPT */
+ 	BLK_MQ_REQ_PREEMPT	= (__force blk_mq_req_flags_t)(1 << 3),
+ };
