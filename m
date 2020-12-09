@@ -2,103 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A8D1C19425
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:28:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29444C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 451CD23B77
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:28:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC70122BF3
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:39:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730386AbgLIRYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 12:24:32 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:60344 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731424AbgLIRYV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 12:24:21 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B9HJSMb111569;
-        Wed, 9 Dec 2020 17:23:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=O3Pupwi7ZGQhD0ZmyIFflO7qZgfz88NmGvswkWzghIc=;
- b=gTz6fntGMCfJKc44xRKdgqldvDiQ6RqqWWL1XZhbajJOqDdkuj3fG2wtjQVr/QK/y4Wb
- VrpRruBYm0IJ98ATjA2++TNH/H1+fzU87Q+mI0JDNTmEku7XegawjqrpXCYQB1Ljvr9Q
- TABCUIbwha8poKLmyb16MKMZsvStGPgy5QPqGoOC6VKjfsy75vkU7nnLqeCRNjL/2kpa
- d5S/rXfINs4/zuXS/beUf5hHwsq+BApA/OdfdX4GkJDBidJtN9fyM+8NBycH8Xh4A/eX
- KjUb+ckxxZKBJ6PLlb8us4XJ6viDrf0OyAQD5u6IroRVlvAtptlDSRa24y+ScicUlrII Zw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 35825m9csk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 09 Dec 2020 17:23:30 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B9HJlsN075744;
-        Wed, 9 Dec 2020 17:23:30 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 358m50wgkg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Dec 2020 17:23:30 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0B9HNS75017656;
-        Wed, 9 Dec 2020 17:23:28 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Dec 2020 09:23:28 -0800
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     "Ahmed S. Darwish" <a.darwish@linutronix.de>,
-        Finn Thain <fthain@telegraphics.com.au>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        id S1732844AbgLIRj0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 12:39:26 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2236 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732053AbgLIRjZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 12:39:25 -0500
+Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CrkkC2Gbfz67Mb9;
+        Thu, 10 Dec 2020 01:36:35 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Wed, 9 Dec 2020 18:38:41 +0100
+Received: from [10.210.171.175] (10.210.171.175) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Wed, 9 Dec 2020 17:38:40 +0000
+Subject: Re: [PATCH v2 1/1] hisi_sas: Fix possible buffer overflows in
+ prep_ssp_v3_hw
+To:     Xiaohui Zhang <ruc_zhangxiaohui@163.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Sebastian A. Siewior" <bigeasy@linutronix.de>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: NCR5380: Remove context check
-Date:   Wed,  9 Dec 2020 12:23:13 -0500
-Message-Id: <160753457755.14816.7863858983010100701.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201206075157.19067-1-a.darwish@linutronix.de>
-References: <alpine.LNX.2.23.453.2012051512300.6@nippy.intranet> <20201206075157.19067-1-a.darwish@linutronix.de>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20201209124818.25122-1-ruc_zhangxiaohui@163.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <87979504-6540-6b38-88df-938390ae5d3c@huawei.com>
+Date:   Wed, 9 Dec 2020 17:38:05 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9829 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=0
- bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012090122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9829 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
- phishscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501 mlxscore=0
- spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012090122
+In-Reply-To: <20201209124818.25122-1-ruc_zhangxiaohui@163.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.175]
+X-ClientProxiedBy: lhreml738-chm.china.huawei.com (10.201.108.188) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 6 Dec 2020 08:51:57 +0100, Ahmed S. Darwish wrote:
-
-> NCR5380_poll_politely2() uses in_interrupt() and irqs_disabled() to
-> check if it is safe to sleep.
+On 09/12/2020 12:48, Xiaohui Zhang wrote:
+> From: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
 > 
-> Such usage in drivers is phased out and Linus clearly requested that
-> code which changes behaviour depending on context should either be
-> separated, or the context be explicitly conveyed in an argument passed
-> by the caller.
+> prep_ssp_v3_hw() calls memcpy() without checking the destination
+> size may trigger a buffer overflower.
 > 
-> [...]
+> buf_cmd should be a ssp_tmf_iu struct through the analysis of
 
-Applied to 5.11/scsi-queue, thanks!
+hmmm... but you change the !tmf path.
 
-[1/1] scsi: NCR5380: Remove context check
-      https://git.kernel.org/mkp/scsi/c/e7734ef14ead
+> the command below:
+> buf_cmd = hisi_sas_cmd_hdr_addr_mem(slot) +
+>          sizeof(struct ssp_frame_hdr);
+> 
+> Then buf_cmd + 12 should point to tag, so the length parameter
+> of memcpy() should not exceed sizeof(__be16)+sizeof(u8)*14):
+> struct ssp_tmf_iu {
+>      u8     lun[8];
+>      u16    _r_a;
+>      u8     tmf;
+>      u8     _r_b;
+>      __be16 tag;
+>      u8     _r_c[14];
+> } __attribute__ ((packed));
+> 
+> Signed-off-by: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
+> ---
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index 7133ca859..d02831c17 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -1267,7 +1267,9 @@ static void prep_ssp_v3_hw(struct hisi_hba *hisi_hba,
+>   	memcpy(buf_cmd, &task->ssp_task.LUN, 8);
+>   	if (!tmf) {
+>   		buf_cmd[9] = ssp_task->task_attr | (ssp_task->task_prio << 3);
+> -		memcpy(buf_cmd + 12, scsi_cmnd->cmnd, scsi_cmnd->cmd_len);
+> +		memcpy(buf_cmd + 12, scsi_cmnd->cmnd,
+> +		       min_t(unsigned short, scsi_cmnd->cmd_len,
+> +			     sizeof(__be16) + sizeof(u8) * 14));
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Again, this is not the right thing to do, and I don't think that this 
+code needs fixing at all.
+
+There should be a contract already that the driver is not sent cdb len > 
+16, and this is sizeof(ssp_command_iu.cdb).
+
+And, if we were sent too much data, then we would/should error.
+
+Thanks,
+John
