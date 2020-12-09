@@ -2,259 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6930C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 07:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B1CEC4361B
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 07:35:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80E6623B79
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 07:29:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF60323444
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 07:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726365AbgLIH2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 02:28:52 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:55179 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726330AbgLIH2w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 02:28:52 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607498907; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Za3/3s0IT9nTkiYYrm8GewkVHrUptsStzqDVs8Ae4Uc=;
- b=bkJCa7qxAYmibAm/OmdpcHnK2AwLidGkJJUwEjzBy5jHgTHsNR9c8d8cQ9fLuWCuor4IUD8L
- GWwl9fK+hSGq7dNSp7H9XN1zSRtLTeyYzfp+uYPNdQRCY5ft1OSQhwDcmTAd5UcpR2Lkzin3
- nEW5CkXuIVcrmHgn2rKswHmJpUo=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 5fd07c7cd8cf5d213ff60a43 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 09 Dec 2020 07:27:56
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7B866C433CA; Wed,  9 Dec 2020 07:27:55 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1C9C4C433C6;
-        Wed,  9 Dec 2020 07:27:53 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 09 Dec 2020 15:27:53 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Ziqi Chen <ziqichen@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1728395AbgLIHfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 02:35:12 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36480 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728416AbgLIHfI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Dec 2020 02:35:08 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 7F7CAACC6;
+        Wed,  9 Dec 2020 07:34:26 +0000 (UTC)
+Subject: Re: [PATCH v5 5/8] scsi_transport_spi: Set RQF_PM for domain
+ validation commands
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Woody Suwalski <terraluna977@gmail.com>,
+        Can Guo <cang@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Fix ufs power down/on specs violation
-In-Reply-To: <1607497774-76579-1-git-send-email-ziqichen@codeaurora.org>
-References: <1607497774-76579-1-git-send-email-ziqichen@codeaurora.org>
-Message-ID: <00c4aee20f54448e93792387b598730b@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Stan Johnson <userm57@yahoo.com>
+References: <20201209052951.16136-1-bvanassche@acm.org>
+ <20201209052951.16136-6-bvanassche@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <7e4cc6ea-7f49-8fc0-f5d7-848c24419e31@suse.de>
+Date:   Wed, 9 Dec 2020 08:34:25 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.4.0
+MIME-Version: 1.0
+In-Reply-To: <20201209052951.16136-6-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-09 15:09, Ziqi Chen wrote:
-> As per specs, e.g, JESD220E chapter 7.2, while powering
-> off/on the ufs device, RST_N signal and REF_CLK signal
-> should be between VSS(Ground) and VCCQ/VCCQ2.
+On 12/9/20 6:29 AM, Bart Van Assche wrote:
+> Disable runtime power management during domain validation. Since a later
+> patch removes RQF_PREEMPT, set RQF_PM for domain validation commands such
+> that these are executed in the quiesced SCSI device state.
 > 
-> Power down:
-> 1. Assert RST_N low
-> 2. Turn-off REF_CLK
-> 3. Turn-off VCC
-> 4. Turn-off VCCQ/VCCQ2.
-> power on:
-> 1. Turn-on VCC
-> 2. Turn-on VCCQ/VCCQ2
-> 3. Turn-On REF_CLK
-> 4. Deassert RST_N high.
-> 
-> Signed-off-by: Ziqi Chen <ziqichen@codeaurora.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Jens Axboe <axboe@kernel.dk>
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Woody Suwalski <terraluna977@gmail.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Stan Johnson <userm57@yahoo.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/ufs/ufs-qcom.c | 14 ++++++++++----
->  drivers/scsi/ufs/ufshcd.c   | 19 +++++++++----------
->  drivers/scsi/ufs/ufshcd.h   |  4 ++--
->  3 files changed, 21 insertions(+), 16 deletions(-)
+>   drivers/scsi/scsi_transport_spi.c | 27 +++++++++++++++++++--------
+>   1 file changed, 19 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 1e434cc..5ed3a63d 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -582,6 +582,9 @@ static int ufs_qcom_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		ufs_qcom_disable_lane_clks(host);
->  		phy_power_off(phy);
-> 
-> +		if (hba->vops && hba->vops->device_reset)
-> +			hba->vops->device_reset(hba, false);
-> +
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Instead of doing the pull-down in ufshcd_vops_suspend(), can we do
-it in ufshcd_suspend()? Since it is a common problem for all soc
-vendors.
+Cheers,
 
->  	} else if (!ufs_qcom_is_link_active(hba)) {
->  		ufs_qcom_disable_lane_clks(host);
->  	}
-> @@ -1400,10 +1403,11 @@ static void ufs_qcom_dump_dbg_regs(struct 
-> ufs_hba *hba)
->  /**
->   * ufs_qcom_device_reset() - toggle the (optional) device reset line
->   * @hba: per-adapter instance
-> + * @toggle: need pulling up or not
->   *
->   * Toggles the (optional) reset line to reset the attached device.
->   */
-> -static int ufs_qcom_device_reset(struct ufs_hba *hba)
-> +static int ufs_qcom_device_reset(struct ufs_hba *hba, bool toggle)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> 
-> @@ -1416,10 +1420,12 @@ static int ufs_qcom_device_reset(struct ufs_hba 
-> *hba)
->  	 * be on the safe side.
->  	 */
->  	gpiod_set_value_cansleep(host->device_reset, 1);
-> -	usleep_range(10, 15);
-> 
-> -	gpiod_set_value_cansleep(host->device_reset, 0);
-> -	usleep_range(10, 15);
-> +	if (toggle) {
-> +		usleep_range(10, 15);
-> +		gpiod_set_value_cansleep(host->device_reset, 0);
-> +		usleep_range(10, 15);
-> +	}
-> 
->  	return 0;
->  }
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 92d433d..5ab1c02 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8633,8 +8633,6 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	if (ret)
->  		goto set_dev_active;
-> 
-> -	ufshcd_vreg_set_lpm(hba);
-> -
->  disable_clks:
->  	/*
->  	 * Call vendor specific suspend callback. As these callbacks may 
-> access
-> @@ -8664,6 +8662,7 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
-> 
->  	/* Put the host controller in low power mode if possible */
->  	ufshcd_hba_vreg_set_lpm(hba);
-> +	ufshcd_vreg_set_lpm(hba);
-
-Can you put ufshcd_vreg_set_lpm() before ufshcd_hba_vreg_set_lpm()?
-
->  	goto out;
-> 
->  set_link_active:
-> @@ -8729,18 +8728,18 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	old_link_state = hba->uic_link_state;
-> 
->  	ufshcd_hba_vreg_set_hpm(hba);
-> +	ret = ufshcd_vreg_set_hpm(hba);
-> +	if (ret)
-> +		goto out;
-> +
->  	/* Make sure clocks are enabled before accessing controller */
->  	ret = ufshcd_setup_clocks(hba, true);
->  	if (ret)
-> -		goto out;
-> +		goto disable_vreg;
-> 
->  	/* enable the host irq as host controller would be active soon */
->  	ufshcd_enable_irq(hba);
-> 
-> -	ret = ufshcd_vreg_set_hpm(hba);
-> -	if (ret)
-> -		goto disable_irq_and_vops_clks;
-> -
->  	/*
->  	 * Call vendor specific resume callback. As these callbacks may 
-> access
->  	 * vendor specific host controller register space call them when the
-> @@ -8748,7 +8747,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	 */
->  	ret = ufshcd_vops_resume(hba, pm_op);
->  	if (ret)
-> -		goto disable_vreg;
-> +		goto disable_irq_and_vops_clks;
-> 
->  	/* For DeepSleep, the only supported option is to have the link off 
-> */
->  	WARN_ON(ufshcd_is_ufs_dev_deepsleep(hba) && 
-> !ufshcd_is_link_off(hba));
-> @@ -8815,8 +8814,6 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	ufshcd_link_state_transition(hba, old_link_state, 0);
->  vendor_suspend:
->  	ufshcd_vops_suspend(hba, pm_op);
-> -disable_vreg:
-> -	ufshcd_vreg_set_lpm(hba);
->  disable_irq_and_vops_clks:
->  	ufshcd_disable_irq(hba);
->  	if (hba->clk_scaling.is_allowed)
-> @@ -8827,6 +8824,8 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->  					hba->clk_gating.state);
->  	}
-> +disable_vreg:
-> +	ufshcd_vreg_set_lpm(hba);
->  out:
->  	hba->pm_op_in_progress = 0;
->  	if (ret)
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 61344c4..47c7dab6 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -323,7 +323,7 @@ struct ufs_hba_variant_ops {
->  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->  	void	(*dbg_register_dump)(struct ufs_hba *hba);
->  	int	(*phy_initialization)(struct ufs_hba *);
-> -	int	(*device_reset)(struct ufs_hba *hba);
-> +	int	(*device_reset)(struct ufs_hba *hba, bool);
->  	void	(*config_scaling_param)(struct ufs_hba *hba,
->  					struct devfreq_dev_profile *profile,
->  					void *data);
-> @@ -1211,7 +1211,7 @@ static inline void
-> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
->  static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
->  {
->  	if (hba->vops && hba->vops->device_reset) {
-> -		int err = hba->vops->device_reset(hba);
-> +		int err = hba->vops->device_reset(hba, true);
-> 
->  		if (!err)
->  			ufshcd_set_ufs_dev_active(hba);
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
