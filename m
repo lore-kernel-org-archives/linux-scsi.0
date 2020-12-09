@@ -8,77 +8,72 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 544E6C4361B
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C02DBC4361B
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:26:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22E1A23AA8
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:25:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DBBE23A5A
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 17:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732450AbgLIRZI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1732562AbgLIRZI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 9 Dec 2020 12:25:08 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:34774 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:34698 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732477AbgLIRY6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 12:24:58 -0500
+        with ESMTP id S1732438AbgLIRYy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 12:24:54 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B9HJopo058999;
-        Wed, 9 Dec 2020 17:24:04 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B9HJMiq058822;
+        Wed, 9 Dec 2020 17:23:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=yVP8hzy1AwhZc1OZLvSSH4nn+zlDgukvqxfFINAXqJQ=;
- b=lcVtKhEYV0zplaRRieiJeJHn65HOLozN1+17PYagI8Ill0wFhvipZoLG+APz5SSk+HLV
- Ego7OhRRAEADILIO5olx2nTnCAOqM8CK5xNe04dWJT/Y0Vc/AtO1McNzFcYTuUmAesIi
- y2SRO2LZr0y6J3y1JRGcj3uWVHFvsuq9H88HAbl7+Rm9TGQbA3R53z7VhLV/9K6dR4oF
- aZNX0FpKaVMW9156x8DjaEcQ+yjwTKq4L7zN6FUJ0iRVWJ3mPXrigzXmiBVLUxGqrfUW
- uajF8uWDJAhr19WY8rMKBktybQi0JzMyP3mQtYFTZfEeit0WZ9da0vReLTMmRNk7PXJW Dw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 357yqc1fp7-1
+ bh=rMmfjPpxsr6u3sGGRuFzxzF7rzYtcwNYg6utZgeCcbo=;
+ b=ZfWAyWE8xo9ePF1XSFwOvCkZo87iIeRxm/yWkDXRN/T7qL5JaXgwcQJAyJJEEw1EuAO6
+ yLHpeJcRwyxv3bTSwIIMH9ZAsZ2bG4awXBICfOjsuUNNfRcP/24i/LlmPRXVGqn3PNXw
+ MmgR+xP1Zx5sJzlbapByMIKhBmxYQ5geCZ5Q8QQvhp6zU9bhB41uI4xjOIDJ30EIaSfJ
+ zL92ffeE/CxDzz42zKRN2HVHwlJ7xXVut68/vg4CNUVoGhQZxMEupS20pkpWYHCjue7z
+ +7ogJ/yCLaC2XMwXl01lD57PYO9u8iyOc+s/PsnaUx3Hi56j/fgzX6ThbHPzwJOuhmiK KQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 357yqc1fne-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 09 Dec 2020 17:24:03 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B9HKrSL100140;
-        Wed, 9 Dec 2020 17:24:03 GMT
+        Wed, 09 Dec 2020 17:23:56 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B9HJmkf075867;
+        Wed, 9 Dec 2020 17:23:55 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 358ksqdk7y-1
+        by userp3030.oracle.com with ESMTP id 358m50wgyt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Dec 2020 17:24:03 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B9HO2Ts014403;
-        Wed, 9 Dec 2020 17:24:02 GMT
+        Wed, 09 Dec 2020 17:23:55 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B9HNsB9014315;
+        Wed, 9 Dec 2020 17:23:54 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Dec 2020 09:24:02 -0800
+        with ESMTP ; Wed, 09 Dec 2020 09:23:54 -0800
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Stanley Chu <stanley.chu@mediatek.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, linux-scsi@vger.kernel.org, jejb@linux.ibm.com
+To:     Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Qinglang Miao <miaoqinglang@huawei.com>,
+        Lee Duncan <lduncan@suse.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        beanhuo@micron.com, jiajie.hao@mediatek.com,
-        chun-hung.wu@mediatek.com, cc.chou@mediatek.com,
-        asutoshd@codeaurora.org, chaotian.jing@mediatek.com,
-        matthias.bgg@gmail.com, alice.chao@mediatek.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        andy.teng@mediatek.com, bvanassche@acm.org,
-        huadian.liu@mediatek.com, kuohong.wang@mediatek.com,
-        cang@codeaurora.org, linux-mediatek@lists.infradead.org,
-        peter.wang@mediatek.com
-Subject: Re: [PATCH v5 0/4] scsi: ufs: Refine error history and introduce event_notify vop
-Date:   Wed,  9 Dec 2020 12:23:23 -0500
-Message-Id: <160753457754.14816.15980863701992917932.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        open-iscsi@googlegroups.com
+Subject: Re: [PATCH] scsi: iscsi: fix inappropriate use of put_device
+Date:   Wed,  9 Dec 2020 12:23:18 -0500
+Message-Id: <160753457753.14816.8140218142483943973.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20201205115901.26815-1-stanley.chu@mediatek.com>
-References: <20201205115901.26815-1-stanley.chu@mediatek.com>
+In-Reply-To: <20201120074852.31658-1-miaoqinglang@huawei.com>
+References: <20201120074852.31658-1-miaoqinglang@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9829 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
- bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2012090122
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=0
+ bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=931
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012090122
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9829 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
- clxscore=1015 malwarescore=0 bulkscore=0 phishscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=945
+ clxscore=1011 malwarescore=0 bulkscore=0 phishscore=0 adultscore=0
  spamscore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012090122
@@ -86,28 +81,16 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 5 Dec 2020 19:58:57 +0800, Stanley Chu wrote:
+On Fri, 20 Nov 2020 15:48:52 +0800, Qinglang Miao wrote:
 
-> This series refines error history functions and introduces a new event_notify vop to allow vendor to get notification of important events.
-> 
-> Changes since v4:
->   - Seperate patch sets according to Avri's suggestion
-> 
-> Changes since v3:
->   - Fix build warning in patch [8/8]
-> 
-> [...]
+> kfree(conn) is called inside put_device(&conn->dev) so that
+> another one would cause use-after-free. Besides, device_unregister
+> should be used here rather than put_device.
 
 Applied to 5.11/scsi-queue, thanks!
 
-[1/4] scsi: ufs: Add error history for abort event in UFS Device W-LUN
-      https://git.kernel.org/mkp/scsi/c/eb3d2611df2e
-[2/4] scsi: ufs: Refine error history functions
-      https://git.kernel.org/mkp/scsi/c/e965e5e00b23
-[3/4] scsi: ufs: Introduce event_notify variant function
-      https://git.kernel.org/mkp/scsi/c/172614a9d0e8
-[4/4] scsi: ufs-mediatek: Introduce event_notify implementation
-      https://git.kernel.org/mkp/scsi/c/ca1bb061d644
+[1/1] scsi: iscsi: fix inappropriate use of put_device
+      https://git.kernel.org/mkp/scsi/c/6dc1c7ab6f04
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
