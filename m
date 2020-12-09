@@ -2,130 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8A98C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 13:32:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC686C19425
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 13:36:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 851FE23406
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 13:32:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A28523B45
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 13:36:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732357AbgLINcb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 08:32:31 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:34680 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732040AbgLINcb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 08:32:31 -0500
-Received: by mail-wr1-f66.google.com with SMTP id k14so1775810wrn.1;
-        Wed, 09 Dec 2020 05:32:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=9PtDfW/fN1jLsypWqYWwwBwZf0lR76Ldk40gi59pMdo=;
-        b=sMWfov+x8jmPCsQqGLg5ZlvYl0o0la+T3Ge6yRK13u8yn+2YsRdA69y8fG6IKv1Zam
-         LXxtESBzIEmElNlz64ZWckV7BkOv7ai6t8rp+SCSdNEOtGWsHUbq243ET6UNc2nXYcod
-         BWO86QgHlWC2+kj1nb/UkhXLZWrVV8itQI5qjVJSwOSAj8aoI+BJgfJrFvlCHtTr4a0N
-         eLJhXIFqnBAthGZ4UwGmPYWhEPmD4Ht1s6EfflHZapX/OPx/AXXUbKOFmGWUXQ7vqt8t
-         TX8U+nwF/mGfq1ZwdokJlnsDYr6NctFV87HK3HU1MDWYwFkSF+a3oVRD/MvBaeaseThu
-         zwOQ==
-X-Gm-Message-State: AOAM531RKiqL16MwQwm2ze+JhuBUGg/dyGQCZ8Cla1y+mAzOeyucpynx
-        Ui7hXHJPchOec3c2ihEc22o=
-X-Google-Smtp-Source: ABdhPJzgA9POoPvraoSpQ+3TYDe9Ond5pY/EKttmqTmFrmzJ5aL050+glxM75oFsMItIzggbDr9y2w==
-X-Received: by 2002:adf:a34d:: with SMTP id d13mr2818997wrb.194.1607520708604;
-        Wed, 09 Dec 2020 05:31:48 -0800 (PST)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id z21sm3343249wmk.20.2020.12.09.05.31.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Dec 2020 05:31:48 -0800 (PST)
-Date:   Wed, 9 Dec 2020 13:31:46 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Xiaohui Zhang <ruc_zhangxiaohui@163.com>
-Cc:     Michael Kelley <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/1] scsi: Fix possible buffer overflows in
- storvsc_queuecommand
-Message-ID: <20201209133146.yskq5rnxpdaiqhrc@liuwe-devbox-debian-v2>
-References: <20201208131918.31534-1-ruc_zhangxiaohui@163.com>
- <MW2PR2101MB10523F50AA4497A9E116FBC0D7CD1@MW2PR2101MB1052.namprd21.prod.outlook.com>
- <56cde2c6.bb9.176451a57d7.Coremail.ruc_zhangxiaohui@163.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <56cde2c6.bb9.176451a57d7.Coremail.ruc_zhangxiaohui@163.com>
-User-Agent: NeoMutt/20180716
+        id S1732398AbgLINgZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 08:36:25 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:39396 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732206AbgLINgZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 08:36:25 -0500
+IronPort-SDR: I126Nt3ViAB86vyipeafsp5jpovx2n3VEz/+wTBMZ68bDgePC/UagqTuh80TZ2mU55GQBZjUEx
+ WgxMccWextHVpyAvbDb7VdqQfLBEzt8VHi0GtbiUN1ZeXEWohMj3gOq9bsihUlQrlGwAI+Y0md
+ gQho2Yb2KdMhm0CARGG/XDZ3lq/yZGw2PC+0iGzELFUwAcD6SseyvVqLcyYNjPh7DYhHRU3gjD
+ NOTSwu6RvRFRww02XAERw7gqqS55+BCYEApT8PLf9NZOK9AOGLbErbtKJvQ7mc+nRmJO91laWz
+ F5g=
+X-IronPort-AV: E=Sophos;i="5.78,405,1599548400"; 
+   d="scan'208";a="29333083"
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by labrats.qualcomm.com with ESMTP; 09 Dec 2020 05:35:45 -0800
+X-QCInternal: smtphost
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg03-sd.qualcomm.com with ESMTP; 09 Dec 2020 05:35:44 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id 2218421340; Wed,  9 Dec 2020 05:35:44 -0800 (PST)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Subject: [PATCH v2 0/2] Two changes related with UFS clock scaling
+Date:   Wed,  9 Dec 2020 05:35:39 -0800
+Message-Id: <1607520942-22254-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 09, 2020 at 09:25:23AM +0800, Xiaohui Zhang wrote:
-> 
-> 
-> 
-> At 2020-12-09 01:52:42, "Michael Kelley" <mikelley@microsoft.com> wrote:
-> >From: Xiaohui Zhang <ruc_zhangxiaohui@163.com>  Sent: Tuesday, December 8, 2020 5:19 AM
-> >> 
-> >> From: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
-> >> 
-> >> storvsc_queuecommand() calls memcpy() without checking
-> >> the destination size may trigger a buffer overflower,
-> >> which a local user could use to cause denial of service
-> >> or the execution of arbitrary code.
-> >> Fix it by putting the length check before calling memcpy().
-> >> 
-> >> Signed-off-by: Zhang Xiaohui <ruc_zhangxiaohui@163.com>
-> >> ---
-> >>  drivers/scsi/storvsc_drv.c | 2 ++
-> >>  1 file changed, 2 insertions(+)
-> >> 
-> >> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> >> index 0c65fbd41..09b60a4c0 100644
-> >> --- a/drivers/scsi/storvsc_drv.c
-> >> +++ b/drivers/scsi/storvsc_drv.c
-> >> @@ -1729,6 +1729,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct
-> >> scsi_cmnd *scmnd)
-> >> 
-> >>  	vm_srb->cdb_length = scmnd->cmd_len;
-> >> 
-> >> +	if (vm_srb->cdb_length > STORVSC_MAX_CMD_LEN)
-> >> +		vm_srb->cdb_length = STORVSC_MAX_CMD_LEN;
-> >>  	memcpy(vm_srb->cdb, scmnd->cmnd, vm_srb->cdb_length);
-> >> 
-> >>  	sgl = (struct scatterlist *)scsi_sglist(scmnd);
-> >> --
-> >> 2.17.1
-> >
-> >At first glance, this new test isn't necessary.  storvsc_queuecommand() gets
-> >called from scsi_dispatch_cmd(), where just before the queuecommand function
-> >is called, the cmd_len field is checked against the maximum command length
-> >defined for the SCSI controller.  In the case of storvsc, that maximum command
-> >length is STORVSC_MAX_CMD_LEN as set in storvsc_probe().  There's a comment
-> >in scsi_dispatch_cmd() that covers this exact case.
-> >
-> >You are correct that we need to make sure there's no buffer overflow.  Are
-> >you seeing any other path where storvsc_queuecommand() could be called
-> 
-> >without the cmd_len being checked?
-> 
-> 
-> Hello, maybe storvsc_queuecommand() could be called without the cmd_len 
-> being checked in scsi_send_eh_cmnd().
+This series is made based on 5.11/scsi-fixes branch.
+The 1st change allows contexts to prevent clock scaling from being invoked through sysfs nodes like clkscale_enable.
+The 2nd change is just a minor code cleanup.
 
-In that case, a better approach is to fix the SCSI layer instead of
-individual drivers, right? Storvsc can't be the only one that is
-affected by this issue.
+Change since v1:
+- Updated the 2nd change
 
-Truncating the command solves the buffer overflow issue but it doesn't
-make sense to issue a truncated command to the controller.
+Can Guo (2):
+  scsi: ufs: Protect some contexts from unexpected clock scaling
+  scsi: ufs: Clean up ufshcd_exit_clk_scaling/gating()
 
-Wei.
+ drivers/scsi/ufs/ufshcd.c | 116 ++++++++++++++++++++++++++--------------------
+ drivers/scsi/ufs/ufshcd.h |   6 +++
+ 2 files changed, 71 insertions(+), 51 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
