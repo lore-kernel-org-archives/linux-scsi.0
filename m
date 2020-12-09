@@ -2,136 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FB6CC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 09:18:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 224B1C4361B
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 09:20:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC23523A6C
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 09:18:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB78823BC4
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Dec 2020 09:20:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728623AbgLIJR5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Dec 2020 04:17:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44672 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726044AbgLIJRy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 04:17:54 -0500
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CC70C061794
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Dec 2020 01:17:08 -0800 (PST)
-Received: by mail-ej1-x642.google.com with SMTP id lt17so1070744ejb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Dec 2020 01:17:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=javigon-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=rhhiMX6lpyZpBTo++Wq1vgh3A63oG1sQxoZyJsc1aQg=;
-        b=P8oh5+/uu8rb5ugbhTx6O474H6hkBIwZA2qWENj5ag15EIY80CWadHdfGxQnhTAuMR
-         kbNk5JfBb6loUdVGVyaPVhWtBQ1NjpEdFVcn9tYOFB+qOgEbDjlfscYtu/qIoCbb5Chz
-         7CiywHUQ67e3O04cgul518A1o0MfGZcqFpTZZnlXt5erd32JVIX/kIoOcJ7E6df5xpPw
-         s6IYn+e1e1RXF/Z/qwRHiSnu9S2JvHXZspsCFFn7MliNwtnecrsJyM+LopbOJALx3N8D
-         G9qQkXTWUv6aPxfla3mKnk96yIxMBMESNCDYDoAhR8RSGIVe6yWfam74imuEnHfJJPwT
-         XFCg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=rhhiMX6lpyZpBTo++Wq1vgh3A63oG1sQxoZyJsc1aQg=;
-        b=UmFOmmYAUEsiIR+osMrFvaJ15/85om+qRYZqQ/bgOHpIRp30TISrXD5ZNMz1JZz3nc
-         x4/Cy1clQwfOZBMyx0qmCTXQlSwUvc4/Amt3NxXkQdXCQlK4PHyT+77DOoqGXz7e+lCV
-         xqC27OhHDw91HJrwObQeISX1b9cnasr2r9YVGjqkLBc6p0sL54mqiOmM2xQls46az+uu
-         /oHUvT6CnoePheUzFcjCwcD+t8CdnRPM6aFPRCykxASUmf1i9ivPBdRxorS0f8o0+scA
-         TNaYmoJVWEjX39ZvMbcgR73xQzKMuKT0NUsa+v1KtuaU3/FhYY6C+FjoCJCBsghvv6zg
-         nm7w==
-X-Gm-Message-State: AOAM533s5NKNVdTKoLNngwH4vrI+rUsA4YdiZNJGvLOUmm4P7CKCq2ja
-        RvEeAByh854sXKGloulRCvn7PA==
-X-Google-Smtp-Source: ABdhPJxbBbOAPum4JxhLDvVO8oH4bCpyUFUBf6xuJ19RfGwEp+yksU2UBrKm/QCGpkEPA7yZYkCfcA==
-X-Received: by 2002:a17:906:a857:: with SMTP id dx23mr1242029ejb.189.1607505427041;
-        Wed, 09 Dec 2020 01:17:07 -0800 (PST)
-Received: from localhost (5.186.124.214.cgn.fibianet.dk. [5.186.124.214])
-        by smtp.gmail.com with ESMTPSA id j20sm874968ejy.124.2020.12.09.01.17.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Dec 2020 01:17:06 -0800 (PST)
-Date:   Wed, 9 Dec 2020 10:17:05 +0100
-From:   Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        SelvaKumar S <selvakuma.s1@samsung.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "selvajove@gmail.com" <selvajove@gmail.com>,
-        "nj.shetty@samsung.com" <nj.shetty@samsung.com>,
-        "joshi.k@samsung.com" <joshi.k@samsung.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 0/2] add simple copy support
-Message-ID: <20201209091705.brzbbqedavtxvhms@mpHalley>
-References: <CGME20201204094719epcas5p23b3c41223897de3840f92ae3c229cda5@epcas5p2.samsung.com>
- <20201204094659.12732-1-selvakuma.s1@samsung.com>
- <20201207141123.GC31159@lst.de>
- <01fe46ac-16a5-d4db-f23d-07a03d3935f3@suse.de>
- <20201207192453.vc6clbdhz73hzs7l@mpHalley>
- <SN4PR0401MB35988951265391511EBC8C6E9BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
- <20201208122248.utv7pqthmmn6uwv6@mpHalley>
- <SN4PR0401MB35983464199FB173FB0C29479BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
- <20201208131333.xoxincxcnh7iz33z@mpHalley>
- <SN4PR0401MB3598226CD4A32F65320A47379BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+        id S1728979AbgLIJUm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Dec 2020 04:20:42 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:9406 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728168AbgLIJUj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2020 04:20:39 -0500
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4CrWhX0b80z7BM4;
+        Wed,  9 Dec 2020 17:19:24 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Wed, 9 Dec 2020
+ 17:19:48 +0800
+From:   Wu Bo <wubo40@huawei.com>
+To:     <linux-scsi@vger.kernel.org>, <open-iscsi@googlegroups.com>
+CC:     <lduncan@suse.com>, <cleech@redhat.com>, <lutianxiong@huawei.com>,
+        <linfeilong@huawei.com>, <liuzhiqiang26@huawei.com>,
+        <wubo40@huawei.com>, <haowenchao@huawei.com>
+Subject: [bug report] scsi:iscsi:NULL pointer dereference in iscsi_eh_cmd_timed_out function
+Date:   Wed, 9 Dec 2020 17:40:47 +0800
+Message-ID: <1607506847-291724-1-git-send-email-wubo40@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <SN4PR0401MB3598226CD4A32F65320A47379BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.27]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08.12.2020 13:24, Johannes Thumshirn wrote:
->On 08/12/2020 14:13, Javier González wrote:
->> On 08.12.2020 12:37, Johannes Thumshirn wrote:
->>> On 08/12/2020 13:22, Javier González wrote:
->>>> Good idea. Are you thinking of a sysfs entry to select the backend?
->>>
->>> Not sure on this one, initially I thought of a sysfs file, but then
->>> how would you do it. One "global" sysfs entry is probably a bad idea.
->>> Having one per block device to select native vs emulation maybe? And
->>> a good way to benchmark.
->>
->> I was thinking a per block device to target the use case where a certain
->> implementation / workload is better one way or the other.
->
->Yes something along those lines.
->
->>>
->>> The other idea would be a benchmark loop on boot like the raid library
->>> does.
->>>
->>> Then on the other hand, there might be workloads that run faster with
->>> the emulation and some that run faster with the hardware acceleration.
->>>
->>> I think these points are the reason the last attempts got stuck.
->>
->> Yes. I believe that any benchmark we run would be biased in a certain
->> way. If we can move forward with a sysfs entry and default to legacy
->> path, we would not alter current behavior and enable NVMe copy offload
->> (for now) for those that want to use it. We can then build on top of it.
->>
->> Does this sound like a reasonable approach?
->>
->
->Yes this sounds like a reasonable approach to me.
+Hi,
 
-Cool. We will add this to the V3 then.
+When testing kernel 4.18 version, NULL pointer dereference problem occurs
+in iscsi_eh_cmd_timed_out function.
 
-Thanks Johannes!
+I think this bug in the upstream is still exists.
+
+In iscsi_eh_cmd_timed_out(), iscsi_task is protected by session->frwd_lock.
+But in following four functions which calling iscsi_free_task(),
+sc->SCP.ptr(equal to iscsi_task) is not protected by session->frwd_lock.
+So contention window exists between iscsi_eh_cmd_timed_out() 
+and iscsi_free_task(), which causes the NULL pointer dereference problem.
+
+  iscsi_complete_task(struct iscsi_task *task, int state)
+    -> __iscsi_put_task(task);
+	-> iscsi_free_task(task);
+	{
+		if (sc) {
+			/* SCSI eh reuses commands to verify us */
+			sc->SCp.ptr = NULL;
+			...
+		 }
+	}
+
+No frwd_lock lock protection before calling iscsi_complete_task:
+
+  1). iscsi_scsi_cmd_rsp
+     	-> iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+
+  2). iscsi_data_in_rsp
+        -> iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+
+  3). iscsi_nop_out_rsp
+        -> iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+
+  4). __iscsi_complete_pdu
+	-> iscsi_complete_task(task, ISCSI_TASK_COMPLETED);
+
+Calltrace:
+[380751.840862] BUG: unable to handle kernel NULL pointer dereference at 0000000000000138
+[380751.843709] PGD 0 P4D 0
+[380751.844770] Oops: 0000 [#1] SMP PTI
+[380751.846283] CPU: 0 PID: 403 Comm: kworker/0:1H Kdump: loaded Tainted: G
+[380751.851467] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996)
+[380751.856521] Workqueue: kblockd blk_mq_timeout_work
+[380751.858527] RIP: 0010:iscsi_eh_cmd_timed_out+0x15e/0x2e0 [libiscsi]
+[380751.861129] Code: 83 ea 01 48 8d 74 d0 08 48 8b 10 48 8b 4a 50 48 85 c9 74 2c 48 39 d5 74
+[380751.868811] RSP: 0018:ffffc1e280a5fd58 EFLAGS: 00010246
+[380751.870978] RAX: ffff9fd1e84e15e0 RBX: ffff9fd1e84e6dd0 RCX: 0000000116acc580
+[380751.873791] RDX: ffff9fd1f97a9400 RSI: ffff9fd1e84e1800 RDI: ffff9fd1e4d6d420
+[380751.876059] RBP: ffff9fd1e4d49000 R08: 0000000116acc580 R09: 0000000116acc580
+[380751.878284] R10: 0000000000000000 R11: 0000000000000000 R12: ffff9fd1e6e931e8
+[380751.880500] R13: ffff9fd1e84e6ee0 R14: 0000000000000010 R15: 0000000000000003
+[380751.882687] FS:  0000000000000000(0000) GS:ffff9fd1fac00000(0000) knlGS:0000000000000000
+[380751.885236] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[380751.887059] CR2: 0000000000000138 CR3: 000000011860a001 CR4: 00000000003606f0
+[380751.889308] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[380751.891523] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[380751.893738] Call Trace:
+[380751.894639]  scsi_times_out+0x60/0x1c0
+[380751.895861]  blk_mq_check_expired+0x144/0x200
+[380751.897302]  ? __switch_to_asm+0x35/0x70
+[380751.898551]  blk_mq_queue_tag_busy_iter+0x195/0x2e0
+[380751.900091]  ? __blk_mq_requeue_request+0x100/0x100
+[380751.901611]  ? __switch_to_asm+0x41/0x70
+[380751.902853]  ? __blk_mq_requeue_request+0x100/0x100
+[380751.904398]  blk_mq_timeout_work+0x54/0x130
+[380751.905740]  process_one_work+0x195/0x390
+[380751.907228]  worker_thread+0x30/0x390
+[380751.908713]  ? process_one_work+0x390/0x390
+[380751.910350]  kthread+0x10d/0x130
+[380751.911470]  ? kthread_flush_work_fn+0x10/0x10
+[380751.913007]  ret_from_fork+0x35/0x40
+
+crash> dis -l iscsi_eh_cmd_timed_out+0x15e
+xxxxx/drivers/scsi/libiscsi.c: 2062
+
+1970 enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
+{
+...
+1984         spin_lock_bh(&session->frwd_lock);
+1985         task = (struct iscsi_task *)sc->SCp.ptr;
+1986         if (!task) {    
+1987                 /*
+1988                  * Raced with completion. Blk layer has taken ownership
+1989                  * so let timeout code complete it now.
+1990                  */     
+1991                 rc = BLK_EH_DONE;
+1992                 goto done;
+1993         }
+
+...
+
+2052         for (i = 0; i < conn->session->cmds_max; i++) {
+2053                 running_task = conn->session->cmds[i];
+2054                 if (!running_task->sc || running_task == task ||
+2055                      running_task->state != ISCSI_TASK_RUNNING)
+2056                         continue;
+2057
+2058                 /*
+2059                  * Only check if cmds started before this one have made
+2060                  * progress, or this could never fail
+2061                  */
+2062                 if (time_after(running_task->sc->jiffies_at_alloc,  <---
+2063                                task->sc->jiffies_at_alloc))
+2064                         continue;
+2065
+...
+}
+
+carsh> struct scsi_cmnd ffff9fd1e6e931e8
+struct scsi_cmnd {
+  ...
+  SCp = {
+    ptr = 0x0,   <--- iscsi_task
+    this_residual = 0,
+    ...
+  },
+}
+
