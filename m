@@ -7,49 +7,48 @@ X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36254C4361B
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:38:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F789C0018C
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:39:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE63023E51
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:38:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2172B23B45
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:39:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393271AbgLJUi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Dec 2020 15:38:28 -0500
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:13293 "EHLO
+        id S2403938AbgLJUjF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Dec 2020 15:39:05 -0500
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:44703 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404653AbgLJUhV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2020 15:37:21 -0500
+        with ESMTP id S2404641AbgLJUhJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2020 15:37:09 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607632641; x=1639168641;
+  t=1607632629; x=1639168629;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=n26blj5N7CQZKCNhBxhXS0TfPvrHTI1mUYbPNBWrfoI=;
-  b=x+BMEGg1+ZNMtAzy7HnkM98nb1hTIWIeWLn536E/DCMwFo+CB3Tc0jRO
-   i2sz2dFU6gIL+5JiP4Rk3CgsrO4B70LLjlV1dUJNAsvkTVb9bmgKtwxX3
-   IhMSyoKWdfzpEQswMFE83z53n44KYMeOfrhYwyoyFmgrrrrhsrBLRR64N
-   v5rCd9Vt/i6ttRRpaXTzSSfgbC+AFDF1673teTuBAKa/vLbtu1k2pKkS2
-   1eMf6MvdIEC9dvoJXrZtCCFGso7O7DP1dxPIiv1p01snuy4sdMUNesBKL
-   O+Yo5OEfV/LfUNpCjXhrVeuPiPiwGuS64mvkRSv90/Zoxgamg6t2AlxeC
+  bh=zfJU0rkRYKLOEpDN2ohtgJG/aoT0ah3mnho7Sl1eXw0=;
+  b=yBNnOewWAey8YZZfWOEbwLXVjuiKkiCT/Q+FLYZqFzPOTvBoz5pzDuK/
+   5+U75NMtDOmcoxSvxnzD2F4XsWujshk6AlxuOqZ3RdkAwnRRVkpBWBE94
+   PYcIsklQpDtYRINdp8SDWKU4qDv1aoAJb9+CjWdqKhUvVyTBIlGKzN9/Q
+   nLiBULHk3QBQLTeNFhNhQnTkeuP0PHyjM+MS+MbeLX8AXWHsjb5I/MWMn
+   51Q4cS05EbttbnEgPx+5/sjeCTUyj6e+FzD1h3qxhYkniu1LYyv6aUrk1
+   0q7TTJprg8xclbrSpuB11oX7cQY9fO8f18amo+RMzrGtxjwuE0h000owj
    g==;
-IronPort-SDR: 943p/+GvSbTPKorlgBMCy/D73MSCQtc0u7oVho+ocGIj8OYWYBQjraGGy1aQDvOJ9niKElyDwi
- EBYihim8auXqiwHuR8cRstc9cMRaWLb3N6uiNFQLp1Ok8OPbVxgZlkYBpdaug+tQeQzEHIxYxe
- fGSNsAtVcdkfEidAADGoxBf0PnmWHWg25ynERem5EWn0FekeyUKDSzv18xSphWffRGxlGD1bYj
- opOZuD7wQqIeoGs8ARGFU87+OAvsTWDexZBr4e5mRD2/qxmSNouq2UKOh+MOimh8S4s687ua6q
- wBg=
+IronPort-SDR: 711gYyRurMF6urjV+4XbGazc/+jJxGCQ922UU8DO4fQrsQjA5sw5iljugXMC2sCShW7YxL+MPu
+ 5INQwfpPg+dV18Yckgya+B8Iw55gSfXkxxxBIRM5g43svOUCiddi1OOCWpv6OwrnkLdA+O+Si1
+ /vnypGmpTQLVeMUu7dHPqYVtcwLG87dyfGYXd28lz6M75gr/AWm/baskKAMB69pPHMBPSlfFPs
+ SxBHxsgb21LRt5DTit0iZUrXjAkr5pnWeHoiP1SpCDPEI98WCt4k77FXK/DfYq9lmQ2vRvsstC
+ 8gk=
 X-IronPort-AV: E=Sophos;i="5.78,409,1599548400"; 
-   d="scan'208";a="102325193"
+   d="scan'208";a="102325152"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Dec 2020 13:36:03 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Dec 2020 13:35:58 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Thu, 10 Dec 2020 13:35:59 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Thu, 10 Dec 2020 13:35:59 -0700
-Subject: [PATCH V3 17/25] smartpqi: change timing of release of QRM memory
- during OFA
+ 15.1.1979.3; Thu, 10 Dec 2020 13:35:36 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Thu, 10 Dec 2020 13:35:36 -0700
+Subject: [PATCH V3 13/25] smartpqi: disable write_same for nvme hba disks
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -57,8 +56,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Thu, 10 Dec 2020 14:35:59 -0600
-Message-ID: <160763255925.26927.7798016026983421676.stgit@brunhilda>
+Date:   Thu, 10 Dec 2020 14:35:36 -0600
+Message-ID: <160763253599.26927.2206478699294629813.stgit@brunhilda>
 In-Reply-To: <160763241302.26927.17487238067261230799.stgit@brunhilda>
 References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -71,53 +70,35 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microchip.com>
 
-* Release QRM memory (OFA buffer) on OFA error conditions.
-* Controller is left in a bad state which can cause a kernel panic
-    upon reboot after an unsuccessful OFA.
+* Controller do not support SCSI WRITE SAME
+  for NVMe drives in HBA mode
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 456ea8732312..552072812771 100644
+index 19b8dc9ea6ad..1eb677bc6c69 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3305,8 +3305,6 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 	else
- 		reset_status = RESET_INITIATE_FIRMWARE;
+@@ -6280,10 +6280,13 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
+ 			scsi_change_queue_depth(sdev,
+ 				device->advertised_queue_depth);
+ 		}
+-		if (pqi_is_logical_device(device))
++		if (pqi_is_logical_device(device)) {
+ 			pqi_disable_write_same(sdev);
+-		else
++		} else {
+ 			sdev->allow_restart = 1;
++			if (device->device_type == SA_DEVICE_TYPE_NVME)
++				pqi_disable_write_same(sdev);
++		}
+ 	}
  
--	pqi_ofa_free_host_buffer(ctrl_info);
--
- 	delay_secs = PQI_POST_RESET_DELAY_SECS;
- 
- 	switch (reset_status) {
-@@ -3322,6 +3320,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 		ctrl_info->pqi_mode_enabled = false;
- 		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
- 		rc = pqi_ofa_ctrl_restart(ctrl_info, delay_secs);
-+		pqi_ofa_free_host_buffer(ctrl_info);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		dev_info(&ctrl_info->pci_dev->dev,
- 				"Online Firmware Activation: %s\n",
-@@ -3332,6 +3331,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 				"Online Firmware Activation ABORTED\n");
- 		if (ctrl_info->soft_reset_handshake_supported)
- 			pqi_clear_soft_reset_status(ctrl_info);
-+		pqi_ofa_free_host_buffer(ctrl_info);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		pqi_ofa_ctrl_unquiesce(ctrl_info);
- 		break;
-@@ -3341,6 +3341,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
- 		dev_err(&ctrl_info->pci_dev->dev,
- 			"unexpected Online Firmware Activation reset status: 0x%x\n",
- 			reset_status);
-+		pqi_ofa_free_host_buffer(ctrl_info);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		pqi_ofa_ctrl_unquiesce(ctrl_info);
- 		pqi_take_ctrl_offline(ctrl_info);
+ 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
 
