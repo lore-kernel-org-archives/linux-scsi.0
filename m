@@ -2,84 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7FE3C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 16:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8930DC433FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 17:36:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E4712388B
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 16:38:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3034F23DE3
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 17:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391173AbgLJQin (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Dec 2020 11:38:43 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2242 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390577AbgLJQid (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2020 11:38:33 -0500
-Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CsKJt4gsFz67Mn0;
-        Fri, 11 Dec 2020 00:35:10 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 10 Dec 2020 17:37:49 +0100
-Received: from [10.210.172.228] (10.210.172.228) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 10 Dec 2020 16:37:48 +0000
-Subject: Re: [PATCH v5 4/5] Driver core: platform: Add
- devm_platform_get_irqs_affinity()
-To:     Greg KH <gregkh@linuxfoundation.org>,
-        Marc Zyngier <maz@kernel.org>, <tglx@linutronix.de>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <lenb@kernel.org>, <rjw@rjwysocki.net>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <linux-acpi@vger.kernel.org>,
-        <dwagner@suse.de>
-References: <1606905417-183214-1-git-send-email-john.garry@huawei.com>
- <1606905417-183214-5-git-send-email-john.garry@huawei.com>
- <X9EYRNDXS1Xcy4iU@kroah.com>
- <36730230-9fd7-8c6c-b997-328beea2fc31@huawei.com>
- <X9Ehy28876ezAOLH@kroah.com> <ed238cc6e4a6b865b2dc965f52fe0550@kernel.org>
- <X9I+2ydy8VDOaiec@kroah.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2cce8111-37b9-e29b-6f9a-4866891f7a7c@huawei.com>
-Date:   Thu, 10 Dec 2020 16:37:13 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <X9I+2ydy8VDOaiec@kroah.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
+        id S2392022AbgLJRfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Dec 2020 12:35:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33228 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392789AbgLJRfc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2020 12:35:32 -0500
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159DFC0613CF;
+        Thu, 10 Dec 2020 09:34:52 -0800 (PST)
+Received: by mail-ed1-x541.google.com with SMTP id c7so6402793edv.6;
+        Thu, 10 Dec 2020 09:34:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=FEqXylzJnhyP5wm7scZDvKf6/krakNPXkfWkNPRzS5k=;
+        b=RZ6uskt9xr3e73phy2hVIm7xogs/sSJRj9aVgfwfKPhUQiuCuQxKV+lrv4qyAADMgN
+         e4KLOrS3fuIIbeKqYGrWJCpNoVVU/M5AkqA5Y3A6XbRcaP4cuHr9m7T2BVULH/Rw4KnP
+         9KADwlRA0XcyPhIbn54RJ1kN6vaq4n2111LKBqJPiKZI289JbjEWv7Dyq4y922uQqY8D
+         EDJO//nfZPUg7XFoAdGEXuNCq024czb7PBKhN9N1GowqxgE+4TG0KnExr240VdAl6noy
+         cnUCp+yOG6km+gLW3KWTFgSpBvvAJuaTRlrfmudTxaq0bt49kgNoba/08VTn4vXkXArO
+         mddQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=FEqXylzJnhyP5wm7scZDvKf6/krakNPXkfWkNPRzS5k=;
+        b=GELAmEGPgMZyF6wWykNrIiEICc5cHKtXOirOVDq8RYkE4+av2AbjbcT8RhLF+xmCAv
+         5lu5kX5NpFho5D9DPq/ANuiPNNNhb7JTY/JToOCgmedCIS1QR1f3My2TJyMMJA4WLIaG
+         6nC5Ak6axfI805PhHJtTxmFgz+k5w0zEupu30Isf41HQWFWOtRZGKryC5aQP2hMghc7i
+         gWIDzcLZfAeErj4EjQY1SWRFuqDQjYZxeQCMLArwBEoqVUsfEIAeVDPbo0Lts9Sf1WSZ
+         TfslMmOrYMnDrfoD/TNWz4SFsNc8InvSmhXnRWa0fxmtCRpfRG9ahaCbiuuqTNmlrUlT
+         sPIQ==
+X-Gm-Message-State: AOAM531kkBwSpCQxKhn0/Rx0BZb0CTwFB5OHc56qtFxj+I21RvdSBL1g
+        uC+2UvNrE0Rcih7KsIXKqmU=
+X-Google-Smtp-Source: ABdhPJzhqxHn3kSMYX44//PlBagQ9Lhsmdn9y9AGxfdDap1WzxVwB0J8uXiRwMNX4FaZW2VB0EXJNQ==
+X-Received: by 2002:a50:8741:: with SMTP id 1mr7971377edv.349.1607621690847;
+        Thu, 10 Dec 2020 09:34:50 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.googlemail.com with ESMTPSA id 2sm4883388ejw.65.2020.12.10.09.34.49
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 10 Dec 2020 09:34:50 -0800 (PST)
+Message-ID: <a2338ef6da3d4ed4093547ba87e13e94d8dd2a45.camel@gmail.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: Protect some contexts from unexpected
+ clock scaling
+From:   Bean Huo <huobean@gmail.com>
+To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Thu, 10 Dec 2020 18:34:49 +0100
+In-Reply-To: <1607520942-22254-2-git-send-email-cang@codeaurora.org>
+References: <1607520942-22254-1-git-send-email-cang@codeaurora.org>
+         <1607520942-22254-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.172.228]
-X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Greg,
+Hi Can
 
-> {sigh} why do hardware engineers ignore sane busses...
-
-The next HW version is an integrated PCI endpoint, so there is hope.
-
+On Wed, 2020-12-09 at 05:35 -0800, Can Guo wrote:
 > 
-> Anyway, if you all are going to maintain this, no objection from me, it
-> should go through the irq tree.
+>  
+> @@ -1160,6 +1166,7 @@ static void
+> ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+>  {
+>  	up_write(&hba->clk_scaling_lock);
+>  	ufshcd_scsi_unblock_requests(hba);
+> +	ufshcd_release(hba);
+>  }
+>  
+>  /**
+> @@ -1175,12 +1182,9 @@ static int ufshcd_devfreq_scale(struct ufs_hba
+> *hba, bool scale_up)
+>  {
+>  	int ret = 0;
+>  
+> -	/* let's not get into low power until clock scaling is
+> completed */
+> -	ufshcd_hold(hba, false);
+> -
+>  	ret = ufshcd_clock_scaling_prepare(hba);
+>  	if (ret)
+> -		goto out;
+> +		return ret;
+>  
+>  	/* scale down the gear before scaling down clocks */
+>  	if (!scale_up) {
+> @@ -1212,8 +1216,6 @@ static int ufshcd_devfreq_scale(struct ufs_hba
+> *hba, bool scale_up)
+>  
+>  out_unprepare:
+>  	ufshcd_clock_scaling_unprepare(hba);
+> -out:
+> -	ufshcd_release(hba);
+>  	return ret;
+>  }
 
-OK, thanks. So this is getting quite late for 5.11, and none of it has 
-seen -next obviously. However, the changes are additive and should only 
-affect a single driver now. I'm talking about this series now, not 
-Marc's companion series.
+I didn't understand why moving ufshcd_hold/ufshcd_release into
+ufshcd_clock_scaling_prepare()/ufshcd_clock_scaling_unprepare().
 
-I just need to hear from Thomas on any merge preference.
 
-Thanks,
-John
+>  
+> @@ -1294,15 +1296,8 @@ static int ufshcd_devfreq_target(struct device
+> *dev,
+>  	}
+>  	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
+>  
+> -	pm_runtime_get_noresume(hba->dev);
+> -	if (!pm_runtime_active(hba->dev)) {
+> -		pm_runtime_put_noidle(hba->dev);
+> -		ret = -EAGAIN;
+> -		goto out;
+> -	}
+>  	start = ktime_get();
+>  	ret = ufshcd_devfreq_scale(hba, scale_up);
+> -	pm_runtime_put(hba->dev);
+>  
+
+which branch are you working on?  I didn't see this part codes in the
+branch 5.11/scsi-queue and 5.11/scsi-staging.
+
+Bean
 
 
