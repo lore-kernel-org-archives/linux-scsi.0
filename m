@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8AF7C4167B
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63B6CC4361B
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:38:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A28523E25
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:38:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E1CC23E26
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Dec 2020 20:38:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404455AbgLJUhz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Dec 2020 15:37:55 -0500
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:55295 "EHLO
+        id S2404271AbgLJUh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Dec 2020 15:37:27 -0500
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:60408 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404660AbgLJUhf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2020 15:37:35 -0500
+        with ESMTP id S2404639AbgLJUhJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2020 15:37:09 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1607632654; x=1639168654;
+  t=1607632629; x=1639168629;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bLnVp0QamLrqNtK3ruUOoBbZI6LE/aaXlXCfnzZPe3Y=;
-  b=iNmO+0lgrzTIgcvxQW2Nm8BlH1HxkZFC28uON6qtYsSqrqec1xl1iycG
-   Sj07RCjrFbAEpegXfvnlR341l0wqlxPvog3uOpzyoWAVSATxE08w/UKDr
-   aVltpqApq3xCzf07BXqjDAJu5uVHOJIdomyDCZDZ9V0D69p+lfgol8g+N
-   KCBEGQLhcHBT0ZhUR+/QcRjkQsh7sQxfL1fzUdov9/ZwZlyeF/Nxe0s3O
-   lyxWiKgeqmw5WPYpSZH5kamXmZtb2I0tSPON6m4l1jqru9ckXF2uXVRYd
-   Eiw1HhIH/g/0i8XViRH6XMUdF4LygGLuuHOSl9awmZ2zJ8fjA/HMkbC/L
-   A==;
-IronPort-SDR: BvePX5Y+5oBuFygQRo/Yjie1A+m1ycyI1WtRILhosT2IueTOzbFeEh8sGRL6EjfJU+xrXH6eJe
- JO36E7CwbfJMyRZtkuVfkkTnnEgw1gUy4jjnEV33YNheHSXrF8Kxo69sFCn7cSuosz/vcwIfTL
- jgDS8y46cDlZh51Sex7UIu6Uc5rKfr9v3/SOAZVOKfbbL0RPOOQGXHDF7IGuEmlplCZEsILnKf
- 3jJVCsYRdNGzdp7H3e75NnRNYF7/lNIWfLFxMYWuq5Lr2ZlyObJhy9/lCxrtoG/1loRs9QoGyS
- b98=
+  bh=1XDWa90Kcn/OyHyZWhxlNsP0stchyXp5uXblwrFhBp8=;
+  b=gUW0ISORN3R5q6cCPNiDHq/wxZgVXa9JfVV8BULpvOUGqm78wEmDHS5r
+   dq6m/aKXpvv0eZqarWXq3q/vJqJRaykL3KX3OHJbWY7uzrc0iCYjhW/GT
+   FUdKJKv0SWGo7K52hVU/arSUDp3nbOnBcUL72sK36iw310D08QtBrgs18
+   WFnI4CEYdIBJWtCj6ajKg83sccWZmj1fQAAo2LrAdInI7dg6blvbswDiQ
+   FNpyM8gG0J5v6mehNxUszdLd1QAS427uzgHUYK61u29PVIeYKCemYibgn
+   lu2xfttjlthXJzNdKkgkNu2Be+aKSgNbBqzzRDSJ5ryKM5tldjet42cJ7
+   Q==;
+IronPort-SDR: +EZipUBGAFSdSy3DEhSICM2O+NRBai/WcdGrq6VLA3eWOB1B4HT9CTvpJM0b3zBUbigpiAyL+3
+ sm3+a4Uuu+8ZefBiZl4snExIyRrmeg9RuG0lD/oYGMubBNQWEF4qy1Aua9smd+2ekXKrvnAbXI
+ 8PPLPgnSwrH0tks2K5y4rXuZ19+Gd9/Og2U8kvYMro4aUwOEd3BpcXB8Qkpl5+skBJzx9Qs/3d
+ mU0wZQj/jCMisRrYSQgkdT6BZlPwcVJBsEsAhu6K7hwIYmQO4uSQz9rngzhLSI4bl8ZMejtLHz
+ kck=
 X-IronPort-AV: E=Sophos;i="5.78,409,1599548400"; 
-   d="scan'208";a="36986807"
+   d="scan'208";a="96675154"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Dec 2020 13:35:55 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 10 Dec 2020 13:36:29 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Thu, 10 Dec 2020 13:35:54 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Thu, 10 Dec 2020 13:35:53 -0700
-Subject: [PATCH V3 16/25] smartpqi: convert snprintf to scnprintf
+ 15.1.1979.3; Thu, 10 Dec 2020 13:36:28 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Thu, 10 Dec 2020 13:36:28 -0700
+Subject: [PATCH V3 22/25] smartpqi: update enclosure identifier in sysf
 From:   Don Brace <don.brace@microchip.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -56,8 +56,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
         <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Thu, 10 Dec 2020 14:35:53 -0600
-Message-ID: <160763255345.26927.17474892658811246984.stgit@brunhilda>
+Date:   Thu, 10 Dec 2020 14:36:28 -0600
+Message-ID: <160763258826.26927.5141004289781904133.stgit@brunhilda>
 In-Reply-To: <160763241302.26927.17487238067261230799.stgit@brunhilda>
 References: <160763241302.26927.17487238067261230799.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -68,121 +68,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microchip.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-The entire Linux kernel has been slowly migrating from snprintf
-to scnprintf, so we are doing our part. This article explains
-the rationale for this change:
-    https: //lwn.net/Articles/69419/
+* Update enclosure identifier field corresponding to
+  physical devices in lsscsi/sysfs.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 4e088f47d95f..456ea8732312 100644
+index 1c51a59f1da6..40ae82470d8c 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1750,7 +1750,7 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
- 	ssize_t count;
- 	char buffer[PQI_DEV_INFO_BUFFER_LENGTH];
- 
--	count = snprintf(buffer, PQI_DEV_INFO_BUFFER_LENGTH,
-+	count = scnprintf(buffer, PQI_DEV_INFO_BUFFER_LENGTH,
- 		"%d:%d:", ctrl_info->scsi_host->host_no, device->bus);
- 
- 	if (device->target_lun_valid)
-@@ -6405,14 +6405,13 @@ static ssize_t pqi_firmware_version_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->firmware_version);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->firmware_version);
- }
- 
- static ssize_t pqi_driver_version_show(struct device *dev,
- 	struct device_attribute *attr, char *buffer)
+@@ -1841,7 +1841,6 @@ static void pqi_dev_info(struct pqi_ctrl_info *ctrl_info,
+ static void pqi_scsi_update_device(struct pqi_scsi_dev *existing_device,
+ 	struct pqi_scsi_dev *new_device)
  {
--	return snprintf(buffer, PAGE_SIZE, "%s\n",
--			DRIVER_VERSION BUILD_TIMESTAMP);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", DRIVER_VERSION BUILD_TIMESTAMP);
- }
- 
- static ssize_t pqi_serial_number_show(struct device *dev,
-@@ -6424,7 +6423,7 @@ static ssize_t pqi_serial_number_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->serial_number);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->serial_number);
- }
- 
- static ssize_t pqi_model_show(struct device *dev,
-@@ -6436,7 +6435,7 @@ static ssize_t pqi_model_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->model);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->model);
- }
- 
- static ssize_t pqi_vendor_show(struct device *dev,
-@@ -6448,7 +6447,7 @@ static ssize_t pqi_vendor_show(struct device *dev,
- 	shost = class_to_shost(dev);
- 	ctrl_info = shost_to_hba(shost);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->vendor);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->vendor);
- }
- 
- static ssize_t pqi_host_rescan_store(struct device *dev,
-@@ -6642,7 +6641,7 @@ static ssize_t pqi_unique_id_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE,
-+	return scnprintf(buffer, PAGE_SIZE,
- 		"%02X%02X%02X%02X%02X%02X%02X%02X"
- 		"%02X%02X%02X%02X%02X%02X%02X%02X\n",
- 		unique_id[0], unique_id[1], unique_id[2], unique_id[3],
-@@ -6675,7 +6674,7 @@ static ssize_t pqi_lunid_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "0x%8phN\n", lunid);
-+	return scnprintf(buffer, PAGE_SIZE, "0x%8phN\n", lunid);
- }
- 
- #define MAX_PATHS	8
-@@ -6787,7 +6786,7 @@ static ssize_t pqi_sas_address_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "0x%016llx\n", sas_address);
-+	return scnprintf(buffer, PAGE_SIZE, "0x%016llx\n", sas_address);
- }
- 
- static ssize_t pqi_ssd_smart_path_enabled_show(struct device *dev,
-@@ -6845,7 +6844,7 @@ static ssize_t pqi_raid_level_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "%s\n", raid_level);
-+	return scnprintf(buffer, PAGE_SIZE, "%s\n", raid_level);
- }
- 
- static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
-@@ -6872,7 +6871,7 @@ static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
--	return snprintf(buffer, PAGE_SIZE, "0x%x\n", raid_bypass_cnt);
-+	return scnprintf(buffer, PAGE_SIZE, "0x%x\n", raid_bypass_cnt);
- }
- 
- static DEVICE_ATTR(lunid, 0444, pqi_lunid_show, NULL);
+-	existing_device->devtype = new_device->devtype;
+ 	existing_device->device_type = new_device->device_type;
+ 	existing_device->bus = new_device->bus;
+ 	if (new_device->target_lun_valid) {
 
