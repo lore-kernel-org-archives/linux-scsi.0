@@ -2,116 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABB0C4361B
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 18:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 397FAC4361B
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 18:55:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B43B23F5C
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 18:48:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0443A23F38
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 18:55:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394087AbgLKRGT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Dec 2020 12:06:19 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21351 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2394278AbgLKRF2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Dec 2020 12:05:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1607706242;
+        id S1727110AbgLKRKH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Dec 2020 12:10:07 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:36448 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394888AbgLKRJ6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 12:09:58 -0500
+Date:   Fri, 11 Dec 2020 18:09:15 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1607706556;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=W7UY2I3GoBLSPd0Ton2Uhm7zhxW0pOwaS+4enBrxYLY=;
-        b=NYnYmm6pmtEOi0Kpf1bwisd00v1XQX5XDi8bCJfhm7836MZvCKKguUuXvrG0OJVJWSP9hX
-        EqK7StfGMVU0p3TCI81TerKLcAJe3ldJIA/vitzs4ZkYURUzd2Zl6StHI+hyieECNQw7vP
-        K/+ySA+xg4M85i3QPPGbQ6PPnXx6+aU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-234-y-RRIHHHPgqy5o9pGaoSLA-1; Fri, 11 Dec 2020 12:03:58 -0500
-X-MC-Unique: y-RRIHHHPgqy5o9pGaoSLA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDC031934102;
-        Fri, 11 Dec 2020 17:03:55 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 77E0F60BD9;
-        Fri, 11 Dec 2020 17:03:55 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 0BBH3t1k028577;
-        Fri, 11 Dec 2020 12:03:55 -0500
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 0BBH3q7E028573;
-        Fri, 11 Dec 2020 12:03:52 -0500
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Fri, 11 Dec 2020 12:03:52 -0500 (EST)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-cc:     SelvaKumar S <selvakuma.s1@samsung.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "hch@lst.de" <hch@lst.de>, "sagi@grimberg.me" <sagi@grimberg.me>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "hare@suse.de" <hare@suse.de>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "selvajove@gmail.com" <selvajove@gmail.com>,
-        "nj.shetty@samsung.com" <nj.shetty@samsung.com>,
-        "joshi.k@samsung.com" <joshi.k@samsung.com>,
-        "javier.gonz@samsung.com" <javier.gonz@samsung.com>
-Subject: Re: [RFC PATCH v3 1/2] block: add simple copy support
-In-Reply-To: <SN4PR0401MB359867B95139ACD1ACFF0E709BCA0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-Message-ID: <alpine.LRH.2.02.2012111200490.27753@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20201211135139.49232-1-selvakuma.s1@samsung.com> <CGME20201211135200epcas5p217eaa00b35a59b3468c198d85309fd7d@epcas5p2.samsung.com> <20201211135139.49232-2-selvakuma.s1@samsung.com>
- <SN4PR0401MB359867B95139ACD1ACFF0E709BCA0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+        bh=XEPcSsvC9fYuECCjhf6t+mlOYTaraVj1DDsWYpglnac=;
+        b=CgZm+xezQmrEaWVNUh1EKPb1pSkUYm0XZuvU68LmW3+ZYD7ofmslf2wURxvTCwyB3P40nT
+        UwIJ/gfHqkWR+8jUY37rZfjpjeZ0P3r1KIX9uNCe175UCvDjtBhRayN3sLm0hLMNii2eZ6
+        /HS9oTn/vabzVW4+ZC8NYyajgtRQdzw+cwnXyrZs2aVjfCwM7w8KY/WnFCXgD1UgFz8C5g
+        s+oMwXueWQaCf8f9wO6IhfeBnxbjrDvz/FEco+6uBYZE9xoi2zIGtBUxi4+4hZbx2LAQH3
+        6OJrm70n49dw11Re6rO3JUnTLb6yArP+WcbaPkPJXAIA434Oy1yOEGcBeX5OjA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1607706556;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=XEPcSsvC9fYuECCjhf6t+mlOYTaraVj1DDsWYpglnac=;
+        b=1fA13v3OmFQtgMHvHfuWAlGfbNIrYVn6jyzl/W1gc8TWOrNdsmzk7sXcRp7O2yCfjO2lTa
+        GskvFAEX8fhLcCBw==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Ahmed S . Darwish" <a.darwish@linutronix.de>,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH 3/3] sr: Remove in_interrupt() usage in sr_init_command().
+Message-ID: <20201211170915.4bs2huyptnsmlwvf@linutronix.de>
+References: <20201204164803.ovwurzs3257em2rp@linutronix.de>
+ <20201204164850.2343359-1-bigeasy@linutronix.de>
+ <20201204164850.2343359-3-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20201204164850.2343359-3-bigeasy@linutronix.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On Fri, 11 Dec 2020, Johannes Thumshirn wrote:
-
-> On 11/12/2020 15:57, SelvaKumar S wrote:
-> [...] 
-> > +int blk_copy_emulate(struct block_device *bdev, struct blk_copy_payload *payload,
-> > +		gfp_t gfp_mask)
-> > +{
-> > +	struct request_queue *q = bdev_get_queue(bdev);
-> > +	struct bio *bio;
-> > +	void *buf = NULL;
-> > +	int i, nr_srcs, max_range_len, ret, cur_dest, cur_size;
-> > +
-> > +	nr_srcs = payload->copy_range;
-> > +	max_range_len = q->limits.max_copy_range_sectors << SECTOR_SHIFT;
-> > +	cur_dest = payload->dest;
-> > +	buf = kvmalloc(max_range_len, GFP_ATOMIC);
+On 2020-12-04 17:48:50 [+0100], To linux-scsi@vger.kernel.org wrote:
+> The in_interrupt() check in sr_init_command() is a leftover from the
+> past, pre v2.3.16 era to be exact. Back then the ioctl() was served by
+> `sr' itself and sector size changes by CDROMREADMODE2 (as noted in the
+> comment) were accounted within sr's data structures which allowed a
+> "lazy" reset so it could be skipped on the next request and reset back
+> to the default value once the device node was closed or before a command
+> from the blockqueue was issued.
 > 
-> Why GFP_ATOMIC and not the passed in gfp_mask? Especially as this is a kvmalloc()
-> which has the potential to grow quite big.
+> This does not work like that anymore. The CDROMREADMODE2 is served by
+> cdrom's mmc_ioctl() function which may change the sector size but the
+> `sr' driver does not learn about it and so its ->sector_size is not
+> updated.
+> The ioctl() resets the changed sector size back to 2048.
+> sr_read_sector() also resets the sector size back to the default once it
+> is done.
+> 
+> Remove the conditional sector size update from sr_init_command() and
+> sr_release() because it is not needed.
+> 
+> Link: https://lkml.kernel.org/r/20201204164803.ovwurzs3257em2rp@linutronix.de
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-You are right, this is confusing.
+Any chance to get this reviewed/merged?
 
-There's this piece of code at the top of kvmalloc_node:
-        if ((flags & GFP_KERNEL) != GFP_KERNEL)
-                return kmalloc_node(size, flags, node);
-
-So, when you use GFP_ATOMIC flag, it will always fall back to kmalloc.
-
-Mikulas
-
+Sebastian
