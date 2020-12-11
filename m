@@ -2,158 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D95B5C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 11:15:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E67B9C4361B
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 13:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88BD523EF3
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 11:15:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B58DB23F2A
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 13:16:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732188AbgLKLOK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Dec 2020 06:14:10 -0500
-Received: from so254-31.mailgun.net ([198.61.254.31]:22997 "EHLO
-        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728535AbgLKLNy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 06:13:54 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1607685209; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=PBY8aqnlVgCM7hbrorF7TMQ4B0ULW8YavEYCyNWzl3k=;
- b=CoMyZOaOFD/SXNTUvnG8fIkKYn+kUfygM6DJJWPR63Fb4dZkRn5skFtOuk3wB1xs1N0F8Q/D
- eVUff777uw5n80bBVKbjqBZ7YtDRPWAERLJd3daGlMjo1afBIvY7QeMhcF8zwYdSGx4iysTy
- klyirSH41P19owIU7mNsIoKgSLs=
-X-Mailgun-Sending-Ip: 198.61.254.31
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5fd3543f35a25d1b16a4ec43 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Dec 2020 11:13:03
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 618B4C43464; Fri, 11 Dec 2020 11:13:02 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 86718C433CA;
-        Fri, 11 Dec 2020 11:13:01 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 11 Dec 2020 19:13:01 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S2436736AbgLKNP0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Dec 2020 08:15:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33102 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404463AbgLKNPT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 08:15:19 -0500
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF36DC0613CF;
+        Fri, 11 Dec 2020 05:14:38 -0800 (PST)
+Received: by mail-ej1-x643.google.com with SMTP id ce23so12264179ejb.8;
+        Fri, 11 Dec 2020 05:14:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=P/PXvREWzGnG1B3AGlYhNPwfEngYC/155XNt7j1HiY4=;
+        b=b3304GJZrl9gVbA/sa3d6SWrH4NvzgrNYBmYaRGdyqUoL2ulxRsciA/4d6vAouT3eD
+         W2NqWIIqDGCP7snYR96h/JvkMEMiHgMd+QsoufPqExebWtPgXS4DoJ6RGuTifvOuqotN
+         ohDpT+IqeIh7VajSCXiZn8db/A/TxqHQrqnmfwqNnMyDOnjsQ8omXVSP5qCYGaAR5Zil
+         4vDZt+6GrKKinx6I4U90uiMbg5hISQxQ9urHHCaSRNjYHMnFdXvDnB2Qw0J2HS9zpp7o
+         YSUxjRD42DMSpzF2II+rBjLOW7Iga45bL22ZLdcNiF3i89jx6Z4JM93suv/mnPXnfp2j
+         y5sQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=P/PXvREWzGnG1B3AGlYhNPwfEngYC/155XNt7j1HiY4=;
+        b=SWogXB/ygXFsKBd50FoscsrrmUK11gMufGNjYNT5BYOaVPTL6TuO2NOfpapUadwv0T
+         joLeIXF5l8LMMjIh+9HTU6K2hSpuA/d0HWeC/u22KSARBMqeAxHb5KLinq9vcuyrEmNZ
+         9X7zxCxaHMQPWveGQaVpldwQhJXLQ75ZBlC7Kdwq7Xf1bc3xMZBi9aT9krDQLNFLAMRF
+         6GPHx8tM+5Checu9tD4BLUif1VzQQ+AUmbgDhrINiN+fU2vc6zF7YleAA9UyLNrmxlNM
+         FE2y8avtvqZsbXBx6+fycsZqJRzpWyncJUGdsNjVSzro8ZEnZj84xnfnBG0GNT+MXq8q
+         SwJw==
+X-Gm-Message-State: AOAM533HNow44kuleVP0yYYisVuh8i1uepPIdVZqr2nVCExyigby729R
+        huhN+CxSGU3+1Ps1ViDj8U7YTChpbQFIbtSm
+X-Google-Smtp-Source: ABdhPJzKJpaE09o03THDnC19Asrnu/XTbMrmi++Zv98q7dqWeyBoZH2oupdV0JwYvS6clQ+CGnJMaA==
+X-Received: by 2002:a17:906:7f10:: with SMTP id d16mr10835685ejr.104.1607692477085;
+        Fri, 11 Dec 2020 05:14:37 -0800 (PST)
+Received: from localhost.localdomain (host-95-239-64-30.retail.telecomitalia.it. [95.239.64.30])
+        by smtp.gmail.com with ESMTPSA id v18sm7474948edx.30.2020.12.11.05.14.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Dec 2020 05:14:35 -0800 (PST)
+From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
+To:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org
+Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] scsi: ufs: Protect some contexts from unexpected
- clock scaling
-In-Reply-To: <48363aee8a746a43440f86f620d9d2e0@codeaurora.org>
-References: <1607520942-22254-1-git-send-email-cang@codeaurora.org>
- <1607520942-22254-2-git-send-email-cang@codeaurora.org>
- <a2338ef6da3d4ed4093547ba87e13e94d8dd2a45.camel@gmail.com>
- <48363aee8a746a43440f86f620d9d2e0@codeaurora.org>
-Message-ID: <cecf35ca445e175aacb1c2942a74951e@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        linux-scsi@vger.kernel.org
+Subject: [PATCH] Revert "scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()"
+Date:   Fri, 11 Dec 2020 14:14:04 +0100
+Message-Id: <20201211131404.21359-1-parri.andrea@gmail.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-11 09:36, Can Guo wrote:
-> On 2020-12-11 01:34, Bean Huo wrote:
->> Hi Can
->> 
->> On Wed, 2020-12-09 at 05:35 -0800, Can Guo wrote:
->>> 
->>> 
->>> @@ -1160,6 +1166,7 @@ static void
->>> ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
->>>  {
->>>  	up_write(&hba->clk_scaling_lock);
->>>  	ufshcd_scsi_unblock_requests(hba);
->>> +	ufshcd_release(hba);
->>>  }
->>> 
->>>  /**
->>> @@ -1175,12 +1182,9 @@ static int ufshcd_devfreq_scale(struct ufs_hba
->>> *hba, bool scale_up)
->>>  {
->>>  	int ret = 0;
->>> 
->>> -	/* let's not get into low power until clock scaling is
->>> completed */
->>> -	ufshcd_hold(hba, false);
->>> -
->>>  	ret = ufshcd_clock_scaling_prepare(hba);
->>>  	if (ret)
->>> -		goto out;
->>> +		return ret;
->>> 
->>>  	/* scale down the gear before scaling down clocks */
->>>  	if (!scale_up) {
->>> @@ -1212,8 +1216,6 @@ static int ufshcd_devfreq_scale(struct ufs_hba
->>> *hba, bool scale_up)
->>> 
->>>  out_unprepare:
->>>  	ufshcd_clock_scaling_unprepare(hba);
->>> -out:
->>> -	ufshcd_release(hba);
->>>  	return ret;
->>>  }
->> 
->> I didn't understand why moving ufshcd_hold/ufshcd_release into
->> ufshcd_clock_scaling_prepare()/ufshcd_clock_scaling_unprepare().
->> 
->> 
->>> 
->>> @@ -1294,15 +1296,8 @@ static int ufshcd_devfreq_target(struct device
->>> *dev,
->>>  	}
->>>  	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
->>> 
->>> -	pm_runtime_get_noresume(hba->dev);
->>> -	if (!pm_runtime_active(hba->dev)) {
->>> -		pm_runtime_put_noidle(hba->dev);
->>> -		ret = -EAGAIN;
->>> -		goto out;
->>> -	}
->>>  	start = ktime_get();
->>>  	ret = ufshcd_devfreq_scale(hba, scale_up);
->>> -	pm_runtime_put(hba->dev);
->>> 
->> 
->> which branch are you working on?  I didn't see this part codes in the
->> branch 5.11/scsi-queue and 5.11/scsi-staging.
->> 
->> Bean
-> 
-> As I mentioned in my cover-letter, this is based on 5.11/scsi-fixes.
-> These codes came from one of my earlier changes, but since this change
-> can cover the old change's functionality, so I removed the codes.
-> 
-> Can Guo.
+This reverts commit 3b8c72d076c42bf27284cda7b2b2b522810686f8.
 
-Hi Bean,
+Dexuan reported a regression where StorVSC fails to probe a device (and
+where, consequently, the VM may fail to boot).  The root-cause analysis
+led to a long-standing race condition that is exposed by the validation
+/commit in question.  Let's put the new validation aside until a proper
+solution for that race condition is in place.
 
-Sorry for the typo, it is branch 5.10/scsi-fixes.
+Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+Cc: Dexuan Cui <decui@microsoft.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/storvsc_drv.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Thanks,
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 99c8ff81de746..ded00a89bfc4e 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1246,11 +1246,6 @@ static void storvsc_on_channel_callback(void *context)
+ 		request = (struct storvsc_cmd_request *)
+ 			((unsigned long)desc->trans_id);
+ 
+-		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) - vmscsi_size_delta) {
+-			dev_err(&device->device, "Invalid packet len\n");
+-			continue;
+-		}
+-
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+ 			memcpy(&request->vstor_packet, packet,
+-- 
+2.25.1
 
-Can Guo.
