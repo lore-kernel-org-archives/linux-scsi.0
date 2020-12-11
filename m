@@ -2,186 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3A5BC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:03:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81579C4167B
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D87323ED2
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:03:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4121C23ED2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405800AbgLKOCU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Dec 2020 09:02:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40374 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2395187AbgLKOCG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 09:02:06 -0500
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A8DBC0617A7;
-        Fri, 11 Dec 2020 06:00:55 -0800 (PST)
-Received: by mail-ed1-x541.google.com with SMTP id i24so9414517edj.8;
-        Fri, 11 Dec 2020 06:00:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=gr2XJl42rv3oVZgNGsbktH407LTsgPIoPeTR72KZolo=;
-        b=NHcmN/iXMsw6ZzTILGUUMUhiwjq8IFvbwnhr32AfUJUfERHb9Y2xP8ghOPITGb+Bor
-         vjxEqGX6Xp05MY1TWiPyG9paCYtedoqplaPdYMKcu4N2/3tNWivr0egC68bdmrB3FSyr
-         hA0ZAoa3Y/9apYZlJu1D1QePXSe+yYimZezjybYiyUPLXo9VSFQvmDehFu8m/YtQbFhL
-         KrRIQsJKkXMuMEOaFSUpR59kHVFEa1BhTi2uGh2CDVdmYKin6TmiZd1VVyH4oxSguRiq
-         KNFEHNXl0SD2MIeq7uHpNu7H7eGFreLgTHy7EZTCc03NQlNaBiMQB+04Zg2XOuOLVwsj
-         mlDw==
+        id S2405844AbgLKOCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Dec 2020 09:02:52 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:41852 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2395045AbgLKOCW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 09:02:22 -0500
+Received: by mail-wr1-f67.google.com with SMTP id a12so9135176wrv.8;
+        Fri, 11 Dec 2020 06:02:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=gr2XJl42rv3oVZgNGsbktH407LTsgPIoPeTR72KZolo=;
-        b=bbS5jqSf3CrVjUvH9mnKVFuohGEgrDngJPmHb8elXUofOzIwQFTK58+GI45GOqDfOX
-         R4VFxtb+uR3rPAnshxRbkJOT4Fk+hYLPJyyR9U5baaiuXddqJ/fkJNIxPd9sYV39rpN0
-         N2ETayA1vu3R5QMovqGBvigY93pB80mq46oUY7+qMXpnzSw4mfzracG7B19sLBRUKZMQ
-         v/BCQYJiJAxaecg7nKGjbcK0Rdk8WGYT3sZZFNSiM+aSkBeu2GYYVQaS3+hZCSq41J8e
-         +nf2gGmCx9PrujznnQ569UYbWafNRElR1jNKCc0RyJ6/LS64826HPkY3rtBIWSd6G3NB
-         biiw==
-X-Gm-Message-State: AOAM5306ktZNoKqCnoCbraVRq2+TvfsJ9wYqtF4Ixx9+0og5Rer2p/3k
-        pc4w+o3JpX8zh5IojCH48Lo=
-X-Google-Smtp-Source: ABdhPJzGweQ185WwTWnQ72Qyip+ZPnmaRKQQYrLSNqrWQz4v2Rvf7vlEpc9Jqx6ADWmes4VbweRJWQ==
-X-Received: by 2002:aa7:d919:: with SMTP id a25mr11609987edr.81.1607695253857;
-        Fri, 11 Dec 2020 06:00:53 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id z24sm7797818edr.9.2020.12.11.06.00.52
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=1hvkBnuTRFKVp4hIMELee8T2SRcywd+sthSvyux1z8M=;
+        b=hu263V2i2DT2JybAT5Mo8HH01HKuoiJvqQknviwfKGaj7V9drXbrzsL5sWCyzrO0M3
+         nxLIwh7IgnsXY9Rh3PL3nK7sbG6cHYAWDJqRy5wELqglUauDbZgj1qAk4x7GI/Y3PjyN
+         fXByk/yna+myR1U/wsdePUzG5wlpo/g774OpAtASBKL3eNjpdHDd0T8cTX0qiARUJ/+x
+         cXbq7zO7oXXAypcKV2O7HAWmSp0C1QmcC1BU5vSZr8BCyWgAVI3Iysul32+5zGqdhDna
+         95z1KwUJhOIgmlT5dm1mLGdk+wZ3LU/nNqLRprJ0xn/FA11Y3gPRflflPZKJkFEO7PKx
+         EcIQ==
+X-Gm-Message-State: AOAM531u6sSzRsABMknKS8AaiPldI4G1ozgpB5ImXWAuTAN5t8eNc2hM
+        gAJd6JX12gB7M7vtWUg+QsaAq9bYLZY=
+X-Google-Smtp-Source: ABdhPJy3O58hzjGzqK1POhoqM66qCWhxyO+Cg67sIdwBnZyQQiuOXv0wfTtuDF0ze3XcmxPKs1PIDw==
+X-Received: by 2002:adf:8b5a:: with SMTP id v26mr6360906wra.138.1607695300661;
+        Fri, 11 Dec 2020 06:01:40 -0800 (PST)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id c129sm14736891wma.31.2020.12.11.06.01.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Dec 2020 06:00:53 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 5/6] scsi: ufs: Cleanup WB buffer flush toggle implementation
-Date:   Fri, 11 Dec 2020 15:00:34 +0100
-Message-Id: <20201211140035.20016-6-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201211140035.20016-1-huobean@gmail.com>
-References: <20201211140035.20016-1-huobean@gmail.com>
+        Fri, 11 Dec 2020 06:01:39 -0800 (PST)
+Date:   Fri, 11 Dec 2020 14:01:37 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] Revert "scsi: storvsc: Validate length of incoming
+ packet in storvsc_on_channel_callback()"
+Message-ID: <20201211140137.taqjndaqjjo25srj@liuwe-devbox-debian-v2>
+References: <20201211131404.21359-1-parri.andrea@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201211131404.21359-1-parri.andrea@gmail.com>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Fri, Dec 11, 2020 at 02:14:04PM +0100, Andrea Parri (Microsoft) wrote:
+> This reverts commit 3b8c72d076c42bf27284cda7b2b2b522810686f8.
+> 
+> Dexuan reported a regression where StorVSC fails to probe a device (and
+> where, consequently, the VM may fail to boot).  The root-cause analysis
+> led to a long-standing race condition that is exposed by the validation
+> /commit in question.  Let's put the new validation aside until a proper
+> solution for that race condition is in place.
+> 
+> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+> Cc: Dexuan Cui <decui@microsoft.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
 
-Delete ufshcd_wb_buf_flush_enable() and ufshcd_wb_buf_flush_disable(),
-move the implementation into ufshcd_wb_toggle_flush().
+Hi Martin
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshcd.c | 69 ++++++++++++++-------------------------
- 1 file changed, 24 insertions(+), 45 deletions(-)
+Sorry for the last minute patch. We would very like this goes into 5.10
+if possible; otherwise Linux 5.10 is going to be broken on Hyper-V.  :-(
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0998e6103cd7..fb3c98724005 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -244,10 +244,8 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg);
- static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
--static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
--static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
- static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
--static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
-+static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
- 
-@@ -5398,60 +5396,41 @@ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
- 				index, NULL);
- }
- 
--static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
--{
--	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
--		return;
--
--	if (enable)
--		ufshcd_wb_buf_flush_enable(hba);
--	else
--		ufshcd_wb_buf_flush_disable(hba);
--
--}
--
--static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba)
-+static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
- {
- 	int ret;
- 	u8 index;
-+	enum query_opcode opcode;
- 
--	if (!ufshcd_is_wb_allowed(hba) || hba->dev_info.wb_buf_flush_enabled)
-+	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
- 		return 0;
- 
--	index = ufshcd_wb_get_query_index(hba);
--	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
--				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
--				      index, NULL);
--	if (ret)
--		dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
--			__func__, ret);
--	else
--		hba->dev_info.wb_buf_flush_enabled = true;
--
--	dev_dbg(hba->dev, "WB - Flush enabled: %d\n", ret);
--	return ret;
--}
--
--static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba)
--{
--	int ret;
--	u8 index;
--
--	if (!ufshcd_is_wb_allowed(hba) || !hba->dev_info.wb_buf_flush_enabled)
-+	if (!ufshcd_is_wb_allowed(hba) ||
-+	    hba->dev_info.wb_buf_flush_enabled == enable)
- 		return 0;
- 
-+	if (enable)
-+		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
-+	else
-+		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-+
- 	index = ufshcd_wb_get_query_index(hba);
--	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
--				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
--				      index, NULL);
-+	ret = ufshcd_query_flag_retry(hba, opcode,
-+				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, index,
-+				      NULL);
- 	if (ret) {
--		dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
--			 __func__, ret);
--	} else {
--		hba->dev_info.wb_buf_flush_enabled = false;
--		dev_dbg(hba->dev, "WB - Flush disabled: %d\n", ret);
-+		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
-+			enable ? "enable" : "disable", ret);
-+		goto out;
- 	}
- 
-+	if (enable)
-+		hba->dev_info.wb_buf_flush_enabled = true;
-+	else
-+		hba->dev_info.wb_buf_flush_enabled = false;
-+
-+	dev_dbg(hba->dev, "WB-Buf Flush %s\n", enable ? "enabled" : "disabled");
-+out:
- 	return ret;
- }
- 
--- 
-2.17.1
-
+Wei.
