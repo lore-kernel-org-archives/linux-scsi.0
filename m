@@ -2,79 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9445CC4361B
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 10:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D95B5C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 11:15:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DD7E23DE3
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 10:18:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88BD523EF3
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 11:15:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733092AbgLKKRm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Dec 2020 05:17:42 -0500
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:65239 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731920AbgLKKQ7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Dec 2020 05:16:59 -0500
-X-IronPort-AV: E=Sophos;i="5.78,411,1599516000"; 
-   d="scan'208";a="482414463"
-Received: from 173.121.68.85.rev.sfr.net (HELO hadrien) ([85.68.121.173])
-  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Dec 2020 11:16:15 +0100
-Date:   Fri, 11 Dec 2020 11:16:15 +0100 (CET)
-From:   Julia Lawall <julia.lawall@inria.fr>
-X-X-Sender: jll@hadrien
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kbuild-all@lists.01.org,
-        Denis Efremov <efremov@linux.com>
-Subject: [PATCH] scsi: megaraid: fix ifnullfree.cocci warnings
-Message-ID: <alpine.DEB.2.22.394.2012111113060.2669@hadrien>
-User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
+        id S1732188AbgLKLOK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Dec 2020 06:14:10 -0500
+Received: from so254-31.mailgun.net ([198.61.254.31]:22997 "EHLO
+        so254-31.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728535AbgLKLNy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 06:13:54 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1607685209; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=PBY8aqnlVgCM7hbrorF7TMQ4B0ULW8YavEYCyNWzl3k=;
+ b=CoMyZOaOFD/SXNTUvnG8fIkKYn+kUfygM6DJJWPR63Fb4dZkRn5skFtOuk3wB1xs1N0F8Q/D
+ eVUff777uw5n80bBVKbjqBZ7YtDRPWAERLJd3daGlMjo1afBIvY7QeMhcF8zwYdSGx4iysTy
+ klyirSH41P19owIU7mNsIoKgSLs=
+X-Mailgun-Sending-Ip: 198.61.254.31
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
+ 5fd3543f35a25d1b16a4ec43 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Dec 2020 11:13:03
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 618B4C43464; Fri, 11 Dec 2020 11:13:02 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 86718C433CA;
+        Fri, 11 Dec 2020 11:13:01 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 11 Dec 2020 19:13:01 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bean Huo <huobean@gmail.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] scsi: ufs: Protect some contexts from unexpected
+ clock scaling
+In-Reply-To: <48363aee8a746a43440f86f620d9d2e0@codeaurora.org>
+References: <1607520942-22254-1-git-send-email-cang@codeaurora.org>
+ <1607520942-22254-2-git-send-email-cang@codeaurora.org>
+ <a2338ef6da3d4ed4093547ba87e13e94d8dd2a45.camel@gmail.com>
+ <48363aee8a746a43440f86f620d9d2e0@codeaurora.org>
+Message-ID: <cecf35ca445e175aacb1c2942a74951e@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: kernel test robot <lkp@intel.com>
+On 2020-12-11 09:36, Can Guo wrote:
+> On 2020-12-11 01:34, Bean Huo wrote:
+>> Hi Can
+>> 
+>> On Wed, 2020-12-09 at 05:35 -0800, Can Guo wrote:
+>>> 
+>>> 
+>>> @@ -1160,6 +1166,7 @@ static void
+>>> ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+>>>  {
+>>>  	up_write(&hba->clk_scaling_lock);
+>>>  	ufshcd_scsi_unblock_requests(hba);
+>>> +	ufshcd_release(hba);
+>>>  }
+>>> 
+>>>  /**
+>>> @@ -1175,12 +1182,9 @@ static int ufshcd_devfreq_scale(struct ufs_hba
+>>> *hba, bool scale_up)
+>>>  {
+>>>  	int ret = 0;
+>>> 
+>>> -	/* let's not get into low power until clock scaling is
+>>> completed */
+>>> -	ufshcd_hold(hba, false);
+>>> -
+>>>  	ret = ufshcd_clock_scaling_prepare(hba);
+>>>  	if (ret)
+>>> -		goto out;
+>>> +		return ret;
+>>> 
+>>>  	/* scale down the gear before scaling down clocks */
+>>>  	if (!scale_up) {
+>>> @@ -1212,8 +1216,6 @@ static int ufshcd_devfreq_scale(struct ufs_hba
+>>> *hba, bool scale_up)
+>>> 
+>>>  out_unprepare:
+>>>  	ufshcd_clock_scaling_unprepare(hba);
+>>> -out:
+>>> -	ufshcd_release(hba);
+>>>  	return ret;
+>>>  }
+>> 
+>> I didn't understand why moving ufshcd_hold/ufshcd_release into
+>> ufshcd_clock_scaling_prepare()/ufshcd_clock_scaling_unprepare().
+>> 
+>> 
+>>> 
+>>> @@ -1294,15 +1296,8 @@ static int ufshcd_devfreq_target(struct device
+>>> *dev,
+>>>  	}
+>>>  	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
+>>> 
+>>> -	pm_runtime_get_noresume(hba->dev);
+>>> -	if (!pm_runtime_active(hba->dev)) {
+>>> -		pm_runtime_put_noidle(hba->dev);
+>>> -		ret = -EAGAIN;
+>>> -		goto out;
+>>> -	}
+>>>  	start = ktime_get();
+>>>  	ret = ufshcd_devfreq_scale(hba, scale_up);
+>>> -	pm_runtime_put(hba->dev);
+>>> 
+>> 
+>> which branch are you working on?  I didn't see this part codes in the
+>> branch 5.11/scsi-queue and 5.11/scsi-staging.
+>> 
+>> Bean
+> 
+> As I mentioned in my cover-letter, this is based on 5.11/scsi-fixes.
+> These codes came from one of my earlier changes, but since this change
+> can cover the old change's functionality, so I removed the codes.
+> 
+> Can Guo.
 
-NULL check before vfree is not needed.
+Hi Bean,
 
-Generated by: scripts/coccinelle/free/ifnullfree.cocci
+Sorry for the typo, it is branch 5.10/scsi-fixes.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Julia Lawall <julia.lawall@inria.fr>
----
+Thanks,
 
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
-head:   33dc9614dc208291d0c4bcdeb5d30d481dcd2c4c
-commit: 5e0c074e5b4be02d57d1b60abc3391afe7edd088 coccinelle: ifnullfree: add vfree(), kvfree*() functions
-:::::: branch date: 3 hours ago
-:::::: commit date: 3 months ago
-
-Please take the patch only if it's a positive warning. Thanks!
-
- megaraid_sas_fusion.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3917,8 +3917,7 @@ megasas_free_host_crash_buffer(struct me
- {
- 	unsigned int i;
- 	for (i = 0; i < instance->drv_buf_alloc; i++) {
--		if (instance->crash_buf[i])
--			vfree(instance->crash_buf[i]);
-+		vfree(instance->crash_buf[i]);
- 	}
- 	instance->drv_buf_index = 0;
- 	instance->drv_buf_alloc = 0;
+Can Guo.
