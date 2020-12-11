@@ -2,59 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E459CC2BBD5
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3A5BC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:03:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEAC024158
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:02:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D87323ED2
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Dec 2020 14:03:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403885AbgLKOBp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Dec 2020 09:01:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40264 "EHLO
+        id S2405800AbgLKOCU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 11 Dec 2020 09:02:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2395095AbgLKOB1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 09:01:27 -0500
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE24CC0613D6;
-        Fri, 11 Dec 2020 06:00:46 -0800 (PST)
-Received: by mail-ed1-x544.google.com with SMTP id u19so9455468edx.2;
-        Fri, 11 Dec 2020 06:00:46 -0800 (PST)
+        with ESMTP id S2395187AbgLKOCG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Dec 2020 09:02:06 -0500
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A8DBC0617A7;
+        Fri, 11 Dec 2020 06:00:55 -0800 (PST)
+Received: by mail-ed1-x541.google.com with SMTP id i24so9414517edj.8;
+        Fri, 11 Dec 2020 06:00:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=72cACysZDLkGnBT4ag2igYzkfQSf/FBKFU7gwyj+muA=;
-        b=Buj+BU84hTkSyt/2MvqYt6Ms9JH0uylV1kJFLt4Ta6U1SGvXZPZP9cew5P6/DzZLnP
-         zI+cgen/gDzAl08XU1/f2IuiPY6UuA49/U7PJGvDyZL+CC8STCW2aF0m4JHmOczhiLBm
-         +ZeKH8nfT/QwlngxM1aIOiqNw7L8ZOdnnpfHIFWeZ+3O6+MsJEwf2jP+XK2KRTO5ftjG
-         Q4F8doeOxHxzILLQl9I6DoIuVsYWpSoZxG/HutOBiZtXAy7OnX61TtDgKwMkzbc4W7la
-         eLsM6Vc99vpSxoT3PLwtYpYJw890Jij3Td8jrTapJybh8Ev6g3J0sle59yfgB9kW9n7f
-         pMDQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=gr2XJl42rv3oVZgNGsbktH407LTsgPIoPeTR72KZolo=;
+        b=NHcmN/iXMsw6ZzTILGUUMUhiwjq8IFvbwnhr32AfUJUfERHb9Y2xP8ghOPITGb+Bor
+         vjxEqGX6Xp05MY1TWiPyG9paCYtedoqplaPdYMKcu4N2/3tNWivr0egC68bdmrB3FSyr
+         hA0ZAoa3Y/9apYZlJu1D1QePXSe+yYimZezjybYiyUPLXo9VSFQvmDehFu8m/YtQbFhL
+         KrRIQsJKkXMuMEOaFSUpR59kHVFEa1BhTi2uGh2CDVdmYKin6TmiZd1VVyH4oxSguRiq
+         KNFEHNXl0SD2MIeq7uHpNu7H7eGFreLgTHy7EZTCc03NQlNaBiMQB+04Zg2XOuOLVwsj
+         mlDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=72cACysZDLkGnBT4ag2igYzkfQSf/FBKFU7gwyj+muA=;
-        b=sOx42qyU02wczQN7o9rMUwcKK5qEdwpQkJnfEiAw0PmsNGPW14zIwjCbHotg5Jpjcc
-         BySG5uW6mth7ZmaW7afS7IGWZWB+hMd5KoRQJcUwtYpiZmZUMJzmu9ol9mHArRV/fkRE
-         MKtEJmrKBxrt0LO76u2g2OZloERgrPb0tVTuai6hvp4N57XbcZl/p1Y06bcIhmWbD+Eh
-         1q5082/pd1WVtVMMrDywxsrY5WCFegWGEMYMj4peb3kUqnhQXRp08qghM0G8/4zsH7JB
-         TtRs2cy3riFPSIoq7feaMc6qjIG/BA+d/4MIAHD446l7Zo3f7Ic2KTLo0b/xLx5GMxJH
-         Rqbw==
-X-Gm-Message-State: AOAM533QPgBxt4VJ33nZENDeoHw9NIWz4MZWq1iZQIalXP4dJhHInlJR
-        OapfzicU5sZVHz2HGz0Tqaw=
-X-Google-Smtp-Source: ABdhPJwPJPujKQGyoKUcLcI9Fax4dxFU9y+tuK3AeK7EKaHQg/RMTYRvo030GoTdKlZFMU2sFEaLoQ==
-X-Received: by 2002:a50:d5c1:: with SMTP id g1mr12266359edj.299.1607695245435;
-        Fri, 11 Dec 2020 06:00:45 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=gr2XJl42rv3oVZgNGsbktH407LTsgPIoPeTR72KZolo=;
+        b=bbS5jqSf3CrVjUvH9mnKVFuohGEgrDngJPmHb8elXUofOzIwQFTK58+GI45GOqDfOX
+         R4VFxtb+uR3rPAnshxRbkJOT4Fk+hYLPJyyR9U5baaiuXddqJ/fkJNIxPd9sYV39rpN0
+         N2ETayA1vu3R5QMovqGBvigY93pB80mq46oUY7+qMXpnzSw4mfzracG7B19sLBRUKZMQ
+         v/BCQYJiJAxaecg7nKGjbcK0Rdk8WGYT3sZZFNSiM+aSkBeu2GYYVQaS3+hZCSq41J8e
+         +nf2gGmCx9PrujznnQ569UYbWafNRElR1jNKCc0RyJ6/LS64826HPkY3rtBIWSd6G3NB
+         biiw==
+X-Gm-Message-State: AOAM5306ktZNoKqCnoCbraVRq2+TvfsJ9wYqtF4Ixx9+0og5Rer2p/3k
+        pc4w+o3JpX8zh5IojCH48Lo=
+X-Google-Smtp-Source: ABdhPJzGweQ185WwTWnQ72Qyip+ZPnmaRKQQYrLSNqrWQz4v2Rvf7vlEpc9Jqx6ADWmes4VbweRJWQ==
+X-Received: by 2002:aa7:d919:: with SMTP id a25mr11609987edr.81.1607695253857;
+        Fri, 11 Dec 2020 06:00:53 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id z24sm7797818edr.9.2020.12.11.06.00.44
+        by smtp.gmail.com with ESMTPSA id z24sm7797818edr.9.2020.12.11.06.00.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Dec 2020 06:00:44 -0800 (PST)
+        Fri, 11 Dec 2020 06:00:53 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -62,49 +62,126 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 0/6] Several changes for UFS WriteBooster
-Date:   Fri, 11 Dec 2020 15:00:29 +0100
-Message-Id: <20201211140035.20016-1-huobean@gmail.com>
+Subject: [PATCH v4 5/6] scsi: ufs: Cleanup WB buffer flush toggle implementation
+Date:   Fri, 11 Dec 2020 15:00:34 +0100
+Message-Id: <20201211140035.20016-6-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201211140035.20016-1-huobean@gmail.com>
+References: <20201211140035.20016-1-huobean@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Changelog:
-v3--v4:
-  1. Rebase patch on 5.11/scsi-staging
-  2. Add WB cleanup patches 3/6, 4/6 adn 5/6
+Delete ufshcd_wb_buf_flush_enable() and ufshcd_wb_buf_flush_disable(),
+move the implementation into ufshcd_wb_toggle_flush().
 
-v2--v3:
-  1. Change multi-line comments style in patch 1/3 (Can Guo)
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 69 ++++++++++++++-------------------------
+ 1 file changed, 24 insertions(+), 45 deletions(-)
 
-v1--v2:
-  1. Take is_hibern8_wb_flush checkup out from function
-     ufshcd_wb_need_flush() in patch 2/3
-  2. Add UFSHCD_CAP_CLK_SCALING checkup in patch 1/3. that means
-     only for the platform, which doesn't support UFSHCD_CAP_CLK_SCALING,
-     can control WB through "wb_on".
-
-Bean Huo (6):
-  scsi: ufs: Add "wb_on" sysfs node to control WB on/off
-  scsi: ufs: Changes comment in the function ufshcd_wb_probe()
-  scsi: ufs: Group UFS WB related flags to struct ufs_dev_info
-  scsi: ufs: Remove d_wb_alloc_units from struct ufs_dev_info
-  scsi: ufs: Cleanup WB buffer flush toggle implementation
-  scsi: ufs: Keep device active mode only
-    fWriteBoosterBufferFlushDuringHibernate == 1
-
- drivers/scsi/ufs/ufs-sysfs.c |  41 +++++++++++++
- drivers/scsi/ufs/ufs.h       |  33 +++++-----
- drivers/scsi/ufs/ufshcd.c    | 114 +++++++++++++++--------------------
- drivers/scsi/ufs/ufshcd.h    |   4 +-
- 4 files changed, 112 insertions(+), 80 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0998e6103cd7..fb3c98724005 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -244,10 +244,8 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg);
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+-static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
+-static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
+ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
++static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+ 
+@@ -5398,60 +5396,41 @@ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+ 				index, NULL);
+ }
+ 
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+-{
+-	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
+-		return;
+-
+-	if (enable)
+-		ufshcd_wb_buf_flush_enable(hba);
+-	else
+-		ufshcd_wb_buf_flush_disable(hba);
+-
+-}
+-
+-static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba)
++static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 	u8 index;
++	enum query_opcode opcode;
+ 
+-	if (!ufshcd_is_wb_allowed(hba) || hba->dev_info.wb_buf_flush_enabled)
++	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
+ 		return 0;
+ 
+-	index = ufshcd_wb_get_query_index(hba);
+-	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+-				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
+-				      index, NULL);
+-	if (ret)
+-		dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
+-			__func__, ret);
+-	else
+-		hba->dev_info.wb_buf_flush_enabled = true;
+-
+-	dev_dbg(hba->dev, "WB - Flush enabled: %d\n", ret);
+-	return ret;
+-}
+-
+-static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba)
+-{
+-	int ret;
+-	u8 index;
+-
+-	if (!ufshcd_is_wb_allowed(hba) || !hba->dev_info.wb_buf_flush_enabled)
++	if (!ufshcd_is_wb_allowed(hba) ||
++	    hba->dev_info.wb_buf_flush_enabled == enable)
+ 		return 0;
+ 
++	if (enable)
++		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
++	else
++		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
++
+ 	index = ufshcd_wb_get_query_index(hba);
+-	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+-				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
+-				      index, NULL);
++	ret = ufshcd_query_flag_retry(hba, opcode,
++				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, index,
++				      NULL);
+ 	if (ret) {
+-		dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
+-			 __func__, ret);
+-	} else {
+-		hba->dev_info.wb_buf_flush_enabled = false;
+-		dev_dbg(hba->dev, "WB - Flush disabled: %d\n", ret);
++		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
++			enable ? "enable" : "disable", ret);
++		goto out;
+ 	}
+ 
++	if (enable)
++		hba->dev_info.wb_buf_flush_enabled = true;
++	else
++		hba->dev_info.wb_buf_flush_enabled = false;
++
++	dev_dbg(hba->dev, "WB-Buf Flush %s\n", enable ? "enabled" : "disabled");
++out:
+ 	return ret;
+ }
+ 
 -- 
 2.17.1
 
