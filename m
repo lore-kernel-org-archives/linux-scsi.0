@@ -6,18 +6,18 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 158F6C4361B
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:22:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FF15C4361B
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDB57230FA
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:22:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70BA5230FA
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439485AbgLLQKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2439474AbgLLQKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 12 Dec 2020 11:10:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57712 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:59454 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2439459AbgLLQKe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 12 Dec 2020 11:10:34 -0500
+        id S2439444AbgLLQKV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 12 Dec 2020 11:10:21 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -27,12 +27,12 @@ Cc:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
         linux-scsi@vger.kernel.org,
         Saruhan Karademir <skarade@microsoft.com>,
         Sasha Levin <sashal@kernel.org>, devel@linuxdriverproject.org
-Subject: [PATCH AUTOSEL 4.19 7/9] scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()
-Date:   Sat, 12 Dec 2020 11:08:46 -0500
-Message-Id: <20201212160848.2335307-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 15/23] scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()
+Date:   Sat, 12 Dec 2020 11:07:56 -0500
+Message-Id: <20201212160804.2334982-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201212160848.2335307-1-sashal@kernel.org>
-References: <20201212160848.2335307-1-sashal@kernel.org>
+In-Reply-To: <20201212160804.2334982-1-sashal@kernel.org>
+References: <20201212160804.2334982-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,10 +61,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 0c2ba075bc713..d6ccfcdbc323f 100644
+index 8f5f5dc863a4a..6779ee4edfee3 100644
 --- a/drivers/scsi/storvsc_drv.c
 +++ b/drivers/scsi/storvsc_drv.c
-@@ -1181,6 +1181,11 @@ static void storvsc_on_channel_callback(void *context)
+@@ -1246,6 +1246,11 @@ static void storvsc_on_channel_callback(void *context)
  		request = (struct storvsc_cmd_request *)
  			((unsigned long)desc->trans_id);
  
