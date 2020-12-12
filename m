@@ -2,109 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2604C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 17:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3765BC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:10:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFD5C22B3B
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 17:32:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E98A822571
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:10:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407691AbgLLRav (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Dec 2020 12:30:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55276 "EHLO
+        id S2404493AbgLLSJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Dec 2020 13:09:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726230AbgLLRak (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 12:30:40 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8F30C0613CF;
-        Sat, 12 Dec 2020 09:29:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=OS3WrB4ugpp1U/aXEmCX3ul3flmQslrlc4KkVZvbGZg=; b=EXmO+rQ0GyMYewmeVqsVxUEeQP
-        gpCAq5CzMPaK7QNb2aHIaQGMqVK4u0GvMCFCKXISPdeKE0T2oJRgsn47/LIByR4IdqRiGI47snIwR
-        FVagUbAnrOvRIrzTdSjI+8MJkYRBnoS1LDvOc5GTbVhSuByBd5st374mkzApcbKteaXOiMusRw+H6
-        U/XnQ4s6ELZ7SLGPtTwomKyBtinZlQX2wsnO3aetNEfWfCtoIdhPnpzrMZnOwlK+O760mW5Lvnve3
-        V1Khqe0pu2p4juqZnRrA1lIu/sUam7A1o4/Fwm3Mpvj7I31/CFuQa7ppyK8Nnc5bMYkRjIlksrvwI
-        gHmsVcQw==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1ko8iT-0003a2-Qm; Sat, 12 Dec 2020 17:29:57 +0000
-Date:   Sat, 12 Dec 2020 17:29:57 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Josef Bacik <josef@toxicpanda.com>
-Cc:     Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
-Subject: Re: [LSFMMBPF 2021] A status update
-Message-ID: <20201212172957.GE2443@casper.infradead.org>
-References: <fd5264ac-c84d-e1d4-01e2-62b9c05af892@toxicpanda.com>
+        with ESMTP id S1727208AbgLLSJv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 13:09:51 -0500
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2D4CC0613CF;
+        Sat, 12 Dec 2020 10:09:10 -0800 (PST)
+Received: by mail-ej1-x641.google.com with SMTP id f23so16895926ejk.2;
+        Sat, 12 Dec 2020 10:09:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kVgdL2B7MTt0Fzgc35wnEsVqokD6iC4w8zTszx314Y4=;
+        b=Du9m54PjDwlP5wo1ECsQM6S8frjG935mP18a3g5nrtzcEV+xYnN5xCLt6+sqqS9bma
+         hKAgdp0WegfNrDEzBWk5y7bh1Tbrz/fyn7NkB1u3vXH8mT8Wp6R1T/0xjMjndFgJF7AA
+         KOiuU00unQgQb/xYtLrtykxXv6GwE6TPpfSERfxhtxwk/gZBqR1iGifOWsQTqg2e3M88
+         oAIscXj8U3h0yT/SXHdbSQOB+dDzUM8UU/v+ftUh751M5mLrd7uzNaSnOew6RVqpNgrv
+         +4NpVCYYdhRnP/uyfh7CEKllsNCPtZdlAENaU7BPJepX52V79m6PR0sVdM6iaA154bFA
+         2Fjw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=kVgdL2B7MTt0Fzgc35wnEsVqokD6iC4w8zTszx314Y4=;
+        b=osUTqAmMwmQ5D66rpDLxfoIq2Jm4/Evzk7y0tohPCQIsw5jMOuhZFY4eQ+3VQW8vkR
+         VNHJrFtzfAx+yWRki6Ct9CTlEIZs1A5UW5YxY40KTSi19f8SiFMj0GOh3hBA3+nx8An7
+         B7x4ZkdBXvz6sxYINOU6fD/Y7G5D2lm4yxgXDdlxg9EcPjo+QPxjyBVv7Tk/zeuG8T9w
+         OY0lvVKZwes1uOvqRL6jlD570Hrb6HXlfiK7LBSsGfmTCjk3zSsgbdXVdVoGUetFyPtk
+         0Yj65fq0LH0rh9v/CZqUhyknH66iOG6bh55VLfHdYWNZWF8CJJ+yE5hr8wBwNgMLCsS0
+         H52Q==
+X-Gm-Message-State: AOAM532rez46OdsqqvYRwNxARA7TfdtPeugZkFIsb2ErswVakqzPHflO
+        bCLzP5EVAi9oV49XRnxNp2gt6SO+xtqCKA==
+X-Google-Smtp-Source: ABdhPJzpxDZXq2LngrrD2U0C+WNEJA9HPd6RiX8heFfecpVlSOhMcFt2AMLxw0pk+Ea5PJwnHWWQtA==
+X-Received: by 2002:a17:906:c244:: with SMTP id bl4mr15408500ejb.430.1607796548785;
+        Sat, 12 Dec 2020 10:09:08 -0800 (PST)
+Received: from andrea (host-95-239-64-30.retail.telecomitalia.it. [95.239.64.30])
+        by smtp.gmail.com with ESMTPSA id c12sm11158312edw.55.2020.12.12.10.09.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 12 Dec 2020 10:09:08 -0800 (PST)
+Date:   Sat, 12 Dec 2020 19:09:01 +0100
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Saruhan Karademir <skarade@microsoft.com>,
+        devel@linuxdriverproject.org
+Subject: Re: [PATCH AUTOSEL 5.9 15/23] scsi: storvsc: Validate length of
+ incoming packet in storvsc_on_channel_callback()
+Message-ID: <20201212180901.GA19225@andrea>
+References: <20201212160804.2334982-1-sashal@kernel.org>
+ <20201212160804.2334982-15-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fd5264ac-c84d-e1d4-01e2-62b9c05af892@toxicpanda.com>
+In-Reply-To: <20201212160804.2334982-15-sashal@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 04, 2020 at 10:48:53AM -0500, Josef Bacik wrote:
-> We on the program committee hope everybody has been able to stay safe and
-> healthy during this challenging time, and look forward to being able to see
-> all of you in person again when it is safe.
+Hi Sasha,
+
+On Sat, Dec 12, 2020 at 11:07:56AM -0500, Sasha Levin wrote:
+> From: "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
 > 
-> The current plans for LSFMMBPF 2021 are to schedule an in person conference
-> in H2 (after June) of 2021.  The tentative plan is to use the same hotel
-> that we had planned to use for 2020, as we still have contracts with them.
-> However clearly that is not set in stone.  The Linux Foundation has done a
-> wonderful job of working with us to formulate a plan and figure out the
-> logistics that will work the best for everybody, I really can't thank them
-> enough for their help.
+> [ Upstream commit 3b8c72d076c42bf27284cda7b2b2b522810686f8 ]
 
-Thank you all for doing your best in the face of this disruption.  I
-really appreciate all the work you're putting in, and I can't wait to
-see you all again in person.
+FYI, we found that this commit introduced a regression and posted a
+revert:
 
-I hosted a Zoom call yesterday on the topic of Page Folios, and uploaded
-the video.  There was interest expressed in the call on doing a follow-up
-call on the topic of GUP (get_user_pages and friends).  It would probably
-also be good to have meetings on other topics.
+  https://lkml.kernel.org/r/20201211131404.21359-1-parri.andrea@gmail.com
 
-I don't want this to be seen in any way as taking away from LSFMMBPF.
-I see Zoom calls as an interim solution to not having face-to-face
-meetings.
+Same comment for the AUTOSEL 5.4, 4.19 and 4.14 you've just posted.
 
-I'd like to solicit feedback from this group on:
+  Andrea
 
- - Time of day.  There is no good time that suits everyone around
-   the world.  With developers in basically every inhabited time zone, the
-   call will definitely take place in the middle of somebody's night, and
-   during somebody else's normal family time.  Publishing the recordings
-   helps ameliorate some of this, but I feel we should shift the time
-   around.  Having it at the same time of day helps people fit it into
-   their schedule of other meetings (and meals), but I think the benefits
-   of allowing more people to participate live outweighs the costs.
- - Schedule.  Friday's probably a bad day to have it, as it ends up
-   being Saturday for some people.  It can move around the week too.
-   Also, probably wise to not have it over Christmas as most developers
-   have that period as family time.
- - Topics.  I'm sure there's no shortage of things to discuss!  I'm
-   happy to organise meetings for people even on topics I have no direct
-   interest in.
 
-And most urgently, when should we have the GUP meeting?  On the call,
-I suggested Friday the 8th of January, but I'm happy to set something
-up for next week if we'd like to talk more urgently.  Please propose a
-date & time.  I know we have people in Portugal and Nova Scotia who need
-to be involved live, so a time friendly to UTC+0 and UTC-4 would be good.
-
-Thanks!
+> 
+> Check that the packet is of the expected size at least, don't copy data
+> past the packet.
+> 
+> Link: https://lore.kernel.org/r/20201118145348.109879-1-parri.andrea@gmail.com
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Reported-by: Saruhan Karademir <skarade@microsoft.com>
+> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+> ---
+>  drivers/scsi/storvsc_drv.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 8f5f5dc863a4a..6779ee4edfee3 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1246,6 +1246,11 @@ static void storvsc_on_channel_callback(void *context)
+>  		request = (struct storvsc_cmd_request *)
+>  			((unsigned long)desc->trans_id);
+>  
+> +		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) - vmscsi_size_delta) {
+> +			dev_err(&device->device, "Invalid packet len\n");
+> +			continue;
+> +		}
+> +
+>  		if (request == &stor_device->init_request ||
+>  		    request == &stor_device->reset_request) {
+>  			memcpy(&request->vstor_packet, packet,
+> -- 
+> 2.27.0
+> 
