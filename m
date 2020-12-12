@@ -3,21 +3,21 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28EC0C4361B
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:23:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FACEC4361B
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:26:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA7E220769
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:23:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B31B20769
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 16:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407539AbgLLQWU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Dec 2020 11:22:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59454 "EHLO mail.kernel.org"
+        id S2404997AbgLLQYs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Dec 2020 11:24:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57714 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2439472AbgLLQKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 12 Dec 2020 11:10:40 -0500
+        id S2439462AbgLLQKe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 12 Dec 2020 11:10:34 -0500
 From:   Sasha Levin <sashal@kernel.org>
 Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -25,12 +25,12 @@ Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 7/8] scsi: mpt3sas: Increase IOCInit request timeout to 30s
-Date:   Sat, 12 Dec 2020 11:08:58 -0500
-Message-Id: <20201212160859.2335412-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 8/9] scsi: mpt3sas: Increase IOCInit request timeout to 30s
+Date:   Sat, 12 Dec 2020 11:08:47 -0500
+Message-Id: <20201212160848.2335307-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201212160859.2335412-1-sashal@kernel.org>
-References: <20201212160859.2335412-1-sashal@kernel.org>
+In-Reply-To: <20201212160848.2335307-1-sashal@kernel.org>
+References: <20201212160848.2335307-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,10 +57,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 556971c5f0b0e..20bf1fa7f2733 100644
+index 9fbe20e38ad07..07959047d4dc4 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4575,7 +4575,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
+@@ -5771,7 +5771,7 @@ _base_send_ioc_init(struct MPT3SAS_ADAPTER *ioc)
  
  	r = _base_handshake_req_reply_wait(ioc,
  	    sizeof(Mpi2IOCInitRequest_t), (u32 *)&mpi_request,
