@@ -2,149 +2,219 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE5AC4361B
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:13:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2843FC4361B
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 19:33:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10DCB22571
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:13:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F203D21BE5
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 19:33:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407604AbgLLSNd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Dec 2020 13:13:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33642 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731634AbgLLSNd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 13:13:33 -0500
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A502C0613CF
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Dec 2020 10:12:53 -0800 (PST)
-Received: by mail-pf1-x42b.google.com with SMTP id f9so9258363pfc.11
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Dec 2020 10:12:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=5eAISqvfkmOn++ITl10B8x6QLhTwQg5u8IJ6e8re5Iw=;
-        b=JbAFEoiVfdFJaup+7ebU01Q70BfwrBLiixMf2Ot0TQcGVaE/8qOCA1KPx9DSQvpa+J
-         +iNCIEtAjfgsImO8VWDrO0m4R4O6Q+x+1EQBfGsqV9oDTnvG4xcLe0UQ4Ns/ReoEig4G
-         uDcimW9gPtWcnJJih2wuxulM0csTkjuc4b33FAm3of2GingLivtkhizu60f4RhY+KhzO
-         bmVJJQmF1kiJSCvwlzgHqAwqLtlxcISe6bZ7KaELTjmzzX2JzJoP55dIIMelKPGOMcTh
-         7ABYYtL5L2KL0gOH27rSIu6VtDIV5+fTLjkZ2phuxxud6Lyl2Q82oP0r8APbyDTrfUD0
-         HLeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=5eAISqvfkmOn++ITl10B8x6QLhTwQg5u8IJ6e8re5Iw=;
-        b=Gk9QxIYai1gF2YMRxWGP6T82lOS6B+Gdon2JdXJ3srsiJY/vQqnoVjrIMKXGHVAnWx
-         7nMaWYUDfbXjUhcoKNZlsECgqZv5vDvLW2LqO2FR+LNnpdPI8+eyFFpY8pZhI+xtMOlq
-         EkW75mRgeZi+78mKNUJgWGKUN/5O5w48N7Fvy+r43D1ZUi+QJWqvTOnKfdUTzzugl66q
-         XvqvevaqBYVte0R+H2GsVWCPTPS2B7X4iF8ZIGr+HL5/edWl4MqfVvTZQLfJuLaDjD2W
-         6HuNgZt1VUuXuLxelNL2XAEOoWj8NvIw9wcG1pelHkN8b//orqwTnBK6ICcBOY0Yzbv6
-         yMhg==
-X-Gm-Message-State: AOAM530ABMYtLDxQNOJ6rQnV/1NsuIZuVfWJqZsCRT4Rpgt9fpD7vOI5
-        /8Wr5vGXk3z4xbgP8m25qRZ2JQ==
-X-Google-Smtp-Source: ABdhPJwed2ITpNCS6LAaJ5DjKRinq+z3IawhawvRDxYoWw2T5Lu9iA8QaHOvAkJI7vfFW9/YGsjq7w==
-X-Received: by 2002:a63:308:: with SMTP id 8mr1487880pgd.15.1607796772522;
-        Sat, 12 Dec 2020 10:12:52 -0800 (PST)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id i11sm14936688pfo.129.2020.12.12.10.12.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 12 Dec 2020 10:12:51 -0800 (PST)
-Subject: Re: [PATCH 0/3] Remove in_interrupt() usage in sr.
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Ahmed S. Darwish" <a.darwish@linutronix.de>,
-        Thomas Gleixner <tglx@linutronix.de>
-References: <20201204164803.ovwurzs3257em2rp@linutronix.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <c69b3d26-6fb7-674b-a3a6-bec80da2cff4@kernel.dk>
-Date:   Sat, 12 Dec 2020 11:12:50 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S2407741AbgLLTdg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Dec 2020 14:33:36 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:37496 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2404498AbgLLTdg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 12 Dec 2020 14:33:36 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 2DE9C1280862;
+        Sat, 12 Dec 2020 11:32:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1607801576;
+        bh=ySLxiaULiztpp+29NfcC4MnDIuxzi3G/V8W5xOLkf2A=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=rAN79vKowMb1Ut1iHYA03ED/PNk3iK4xHVYVhntJG853cPTPTyOdOjqbV6g+uOTxl
+         0YXUCQuYZIJDv4/x0VCyAAk9iacydBsYwVBJ8DQr1aHWplfXHaPhONYce0cwi0bwM1
+         JSR6exo38dOSyllaqkHXkwlGsoCor1RtuzPHhlNw=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id HbFaAmR6yZTN; Sat, 12 Dec 2020 11:32:56 -0800 (PST)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C25671280817;
+        Sat, 12 Dec 2020 11:32:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1607801576;
+        bh=ySLxiaULiztpp+29NfcC4MnDIuxzi3G/V8W5xOLkf2A=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=rAN79vKowMb1Ut1iHYA03ED/PNk3iK4xHVYVhntJG853cPTPTyOdOjqbV6g+uOTxl
+         0YXUCQuYZIJDv4/x0VCyAAk9iacydBsYwVBJ8DQr1aHWplfXHaPhONYce0cwi0bwM1
+         JSR6exo38dOSyllaqkHXkwlGsoCor1RtuzPHhlNw=
+Message-ID: <a66d77104855fe9cec651d3c51aef288c2676dc2.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.10-rc7
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 12 Dec 2020 11:32:54 -0800
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-In-Reply-To: <20201204164803.ovwurzs3257em2rp@linutronix.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/4/20 9:48 AM, Sebastian Andrzej Siewior wrote:
-> Before v2.1.62 sr_read_sector() did MODE_SELECT to set the requested sector size,
-> issued READ_10 and then used MODE_SELECT to select a sector size of 2048 bytes.
-> This function was used to serve ioctl()'s command CDROMREADMODE2 and CDROMREADRAW
-> which do not use 2048 bytes as sector size.
-> 
-> In v2.1.62 sr_read_sector() changed to use READ_CD first and fallback to
-> MODE_SELECT and READ_10 if READ_CD was not supported. Since this version it did
-> not reset the sector size back to 2048 after the READ_10 opcode and
-> instead gained a lazy reset in do_sr_request() and sr_release().
-> It kept the new sector size and only changed if needed. On closing the
-> device node sr_release() reset the sector size back to its default
-> value.
-> 
-> In v2.3.16 the ioctl() (CDROMREADMODE2, CDROMREADRAW) were consolidated since
-> both stacks (SCSI and IDE) did mostly the same thing. For the ioctl handling
-> the SCSI implementation (doing sr_read_sector()) was removed and the ioctl was
-> now served based on what the IDE implementation had to offer which was
-> using cdrom_read_block(). cdrom_read_block() was also updated to use
-> READ_CD and invoke the ->generic_packeto() callback.
-> It is worth noting that READ_CD is now mandatory by the software stack.
-> The old function with the fallback (sr_read_sector()) is only used
-> sr_is_xa().
-> 
-> In v2.4.0-test2pre2 it is no longer mandatory to support the READ_CD
-> opcode. A fallback mechanism was added in case the device did not
-> supported the opcode. The mechanism had a small variance compared to the
-> one from v2.1.62 and did: MODE_SELECT of the requested sector size,
-> READ_10 and MODE_SELECT of the _requested_ sector size instead the
-> previous sector size. To quote a comment from the changelog
-> area of the file from when the change was introduced:
-> | -- Fix Video-CD on SCSI drives that don't support READ_CD command. In
-> | that case switch block size and issue plain READ_10 again, then switch
-> | back.
-> 
-> but the code did not switch back, the changed sector size remained. The comment
-> around the code says:
-> |/* FIXME: switch back again... */
-> 
-> which leaves me puzzled. My interpretation of my archaeological research
-> is that MODE_SELECT + READ_10 + FIXME was added first as the needed
-> workaround. Later within the same release the FIXME was addressed by
-> unfortunately using the wrong sector size, the FIXME comment remained
-> and the changelog comment was added.
-> 
-> This is what we have today. Lets move on with this background in mind.
-> 
-> The in_interrupt() check in sr_init_command() is a leftover from v2.1.62
-> change when the delayed sector size reset was used. It remained even
-> after it was no longer used after v2.3.16. 
-> 
-> The sector size change was introduced back in v2.4.0-test2pre2 for SCSI
-> devices that lack the READ_CD command but it was implemented
-> differently. It sends directly a CDB which is not inspected by
-> sr_packet() so the ->sector_size variable is never updated as it used
-> to be back at the time when ioctl() was served by `sr'. As a consequence
-> sr_release() is not resetting the sector size nor does
-> sr_init_command(). I did not find anything that would allow to update
-> the sector size at run time (other than a media change).
-> 
-> Side note: sr_init_command() is often invoked indirectly by
-> __blk_mq_run_hw_queue() which has a WARN_ON_ONCE(in_interrupt()) check
-> and acquires a rcu_readlock() so sleeping is not allowed and not
-> detected by in_interrupt().
+Five small fixes: four in drivers: hisi_sas: fix internal queue
+timeout, be2iscsi: revert a prior fix causing problems, bnx2i: add
+missing dependency, storvsc: late arriving revert of a problem fix, and
+one in the core.  The core one is a minor change to stop paying
+attention to the busy count when returning out of resources because
+there's a race window where the queue might not restart due to missing
+returning I/O.
 
-Applied, thanks.
+The patch is available here:
 
--- 
-Jens Axboe
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Andrea Parri (Microsoft) (1):
+      Revert "scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()"
+
+Dan Carpenter (1):
+      scsi: be2iscsi: Revert "Fix a theoretical leak in beiscsi_create_eqs()"
+
+Ming Lei (1):
+      scsi: core: Fix race between handling STS_RESOURCE and completion
+
+Randy Dunlap (1):
+      scsi: bnx2i: Requires MMU
+
+Xiang Chen (1):
+      scsi: hisi_sas: Select a suitable queue for internal I/Os
+
+And the diffstat:
+
+ drivers/scsi/be2iscsi/be_main.c        | 4 ++--
+ drivers/scsi/bnx2i/Kconfig             | 1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 6 ++++++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 5 +++++
+ drivers/scsi/scsi_lib.c                | 3 +--
+ drivers/scsi/storvsc_drv.c             | 5 -----
+ 6 files changed, 15 insertions(+), 9 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 202ba925c494..5c3513a4b450 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3020,7 +3020,6 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 			goto create_eq_error;
+ 		}
+ 
+-		mem->dma = paddr;
+ 		mem->va = eq_vaddress;
+ 		ret = be_fill_queue(eq, phba->params.num_eq_entries,
+ 				    sizeof(struct be_eq_entry), eq_vaddress);
+@@ -3030,6 +3029,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 			goto create_eq_error;
+ 		}
+ 
++		mem->dma = paddr;
+ 		ret = beiscsi_cmd_eq_create(&phba->ctrl, eq,
+ 					    BEISCSI_EQ_DELAY_DEF);
+ 		if (ret) {
+@@ -3086,7 +3086,6 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
+ 			goto create_cq_error;
+ 		}
+ 
+-		mem->dma = paddr;
+ 		ret = be_fill_queue(cq, phba->params.num_cq_entries,
+ 				    sizeof(struct sol_cqe), cq_vaddress);
+ 		if (ret) {
+@@ -3096,6 +3095,7 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
+ 			goto create_cq_error;
+ 		}
+ 
++		mem->dma = paddr;
+ 		ret = beiscsi_cmd_cq_create(&phba->ctrl, cq, eq, false,
+ 					    false, 0);
+ 		if (ret) {
+diff --git a/drivers/scsi/bnx2i/Kconfig b/drivers/scsi/bnx2i/Kconfig
+index 75ace2302fed..0cc06c2ce0b8 100644
+--- a/drivers/scsi/bnx2i/Kconfig
++++ b/drivers/scsi/bnx2i/Kconfig
+@@ -4,6 +4,7 @@ config SCSI_BNX2_ISCSI
+ 	depends on NET
+ 	depends on PCI
+ 	depends on (IPV6 || IPV6=n)
++	depends on MMU
+ 	select SCSI_ISCSI_ATTRS
+ 	select NETDEVICES
+ 	select ETHERNET
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index c8dd8588f800..274ccf18ce2d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -452,6 +452,12 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 		blk_tag = blk_mq_unique_tag(scmd->request);
+ 		dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
+ 		*dq_pointer = dq = &hisi_hba->dq[dq_index];
++	} else if (hisi_hba->shost->nr_hw_queues)  {
++		struct Scsi_Host *shost = hisi_hba->shost;
++		struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
++		int queue = qmap->mq_map[raw_smp_processor_id()];
++
++		*dq_pointer = dq = &hisi_hba->dq[queue];
+ 	} else {
+ 		*dq_pointer = dq = sas_dev->dq;
+ 	}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7133ca859b5e..960de375ce69 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2452,6 +2452,11 @@ static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
+ 			rc = -ENOENT;
+ 			goto free_irq_vectors;
+ 		}
++		cq->irq_mask = pci_irq_get_affinity(pdev, i + BASE_VECTORS_V3_HW);
++		if (!cq->irq_mask) {
++			dev_err(dev, "could not get cq%d irq affinity!\n", i);
++			return -ENOENT;
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 60c7a7d74852..03c6d0620bfd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1703,8 +1703,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		break;
+ 	case BLK_STS_RESOURCE:
+ 	case BLK_STS_ZONE_RESOURCE:
+-		if (atomic_read(&sdev->device_busy) ||
+-		    scsi_device_blocked(sdev))
++		if (scsi_device_blocked(sdev))
+ 			ret = BLK_STS_DEV_RESOURCE;
+ 		break;
+ 	default:
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 99c8ff81de74..ded00a89bfc4 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1246,11 +1246,6 @@ static void storvsc_on_channel_callback(void *context)
+ 		request = (struct storvsc_cmd_request *)
+ 			((unsigned long)desc->trans_id);
+ 
+-		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) - vmscsi_size_delta) {
+-			dev_err(&device->device, "Invalid packet len\n");
+-			continue;
+-		}
+-
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+ 			memcpy(&request->vstor_packet, packet,
 
