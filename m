@@ -2,131 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3765BC433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE5AC4361B
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:13:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E98A822571
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10DCB22571
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Dec 2020 18:13:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404493AbgLLSJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Dec 2020 13:09:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33038 "EHLO
+        id S2407604AbgLLSNd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Dec 2020 13:13:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727208AbgLLSJv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 13:09:51 -0500
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2D4CC0613CF;
-        Sat, 12 Dec 2020 10:09:10 -0800 (PST)
-Received: by mail-ej1-x641.google.com with SMTP id f23so16895926ejk.2;
-        Sat, 12 Dec 2020 10:09:10 -0800 (PST)
+        with ESMTP id S1731634AbgLLSNd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 13:13:33 -0500
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A502C0613CF
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Dec 2020 10:12:53 -0800 (PST)
+Received: by mail-pf1-x42b.google.com with SMTP id f9so9258363pfc.11
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Dec 2020 10:12:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=kVgdL2B7MTt0Fzgc35wnEsVqokD6iC4w8zTszx314Y4=;
-        b=Du9m54PjDwlP5wo1ECsQM6S8frjG935mP18a3g5nrtzcEV+xYnN5xCLt6+sqqS9bma
-         hKAgdp0WegfNrDEzBWk5y7bh1Tbrz/fyn7NkB1u3vXH8mT8Wp6R1T/0xjMjndFgJF7AA
-         KOiuU00unQgQb/xYtLrtykxXv6GwE6TPpfSERfxhtxwk/gZBqR1iGifOWsQTqg2e3M88
-         oAIscXj8U3h0yT/SXHdbSQOB+dDzUM8UU/v+ftUh751M5mLrd7uzNaSnOew6RVqpNgrv
-         +4NpVCYYdhRnP/uyfh7CEKllsNCPtZdlAENaU7BPJepX52V79m6PR0sVdM6iaA154bFA
-         2Fjw==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=5eAISqvfkmOn++ITl10B8x6QLhTwQg5u8IJ6e8re5Iw=;
+        b=JbAFEoiVfdFJaup+7ebU01Q70BfwrBLiixMf2Ot0TQcGVaE/8qOCA1KPx9DSQvpa+J
+         +iNCIEtAjfgsImO8VWDrO0m4R4O6Q+x+1EQBfGsqV9oDTnvG4xcLe0UQ4Ns/ReoEig4G
+         uDcimW9gPtWcnJJih2wuxulM0csTkjuc4b33FAm3of2GingLivtkhizu60f4RhY+KhzO
+         bmVJJQmF1kiJSCvwlzgHqAwqLtlxcISe6bZ7KaELTjmzzX2JzJoP55dIIMelKPGOMcTh
+         7ABYYtL5L2KL0gOH27rSIu6VtDIV5+fTLjkZ2phuxxud6Lyl2Q82oP0r8APbyDTrfUD0
+         HLeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=kVgdL2B7MTt0Fzgc35wnEsVqokD6iC4w8zTszx314Y4=;
-        b=osUTqAmMwmQ5D66rpDLxfoIq2Jm4/Evzk7y0tohPCQIsw5jMOuhZFY4eQ+3VQW8vkR
-         VNHJrFtzfAx+yWRki6Ct9CTlEIZs1A5UW5YxY40KTSi19f8SiFMj0GOh3hBA3+nx8An7
-         B7x4ZkdBXvz6sxYINOU6fD/Y7G5D2lm4yxgXDdlxg9EcPjo+QPxjyBVv7Tk/zeuG8T9w
-         OY0lvVKZwes1uOvqRL6jlD570Hrb6HXlfiK7LBSsGfmTCjk3zSsgbdXVdVoGUetFyPtk
-         0Yj65fq0LH0rh9v/CZqUhyknH66iOG6bh55VLfHdYWNZWF8CJJ+yE5hr8wBwNgMLCsS0
-         H52Q==
-X-Gm-Message-State: AOAM532rez46OdsqqvYRwNxARA7TfdtPeugZkFIsb2ErswVakqzPHflO
-        bCLzP5EVAi9oV49XRnxNp2gt6SO+xtqCKA==
-X-Google-Smtp-Source: ABdhPJzpxDZXq2LngrrD2U0C+WNEJA9HPd6RiX8heFfecpVlSOhMcFt2AMLxw0pk+Ea5PJwnHWWQtA==
-X-Received: by 2002:a17:906:c244:: with SMTP id bl4mr15408500ejb.430.1607796548785;
-        Sat, 12 Dec 2020 10:09:08 -0800 (PST)
-Received: from andrea (host-95-239-64-30.retail.telecomitalia.it. [95.239.64.30])
-        by smtp.gmail.com with ESMTPSA id c12sm11158312edw.55.2020.12.12.10.09.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 12 Dec 2020 10:09:08 -0800 (PST)
-Date:   Sat, 12 Dec 2020 19:09:01 +0100
-From:   Andrea Parri <parri.andrea@gmail.com>
-To:     Sasha Levin <sashal@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=5eAISqvfkmOn++ITl10B8x6QLhTwQg5u8IJ6e8re5Iw=;
+        b=Gk9QxIYai1gF2YMRxWGP6T82lOS6B+Gdon2JdXJ3srsiJY/vQqnoVjrIMKXGHVAnWx
+         7nMaWYUDfbXjUhcoKNZlsECgqZv5vDvLW2LqO2FR+LNnpdPI8+eyFFpY8pZhI+xtMOlq
+         EkW75mRgeZi+78mKNUJgWGKUN/5O5w48N7Fvy+r43D1ZUi+QJWqvTOnKfdUTzzugl66q
+         XvqvevaqBYVte0R+H2GsVWCPTPS2B7X4iF8ZIGr+HL5/edWl4MqfVvTZQLfJuLaDjD2W
+         6HuNgZt1VUuXuLxelNL2XAEOoWj8NvIw9wcG1pelHkN8b//orqwTnBK6ICcBOY0Yzbv6
+         yMhg==
+X-Gm-Message-State: AOAM530ABMYtLDxQNOJ6rQnV/1NsuIZuVfWJqZsCRT4Rpgt9fpD7vOI5
+        /8Wr5vGXk3z4xbgP8m25qRZ2JQ==
+X-Google-Smtp-Source: ABdhPJwed2ITpNCS6LAaJ5DjKRinq+z3IawhawvRDxYoWw2T5Lu9iA8QaHOvAkJI7vfFW9/YGsjq7w==
+X-Received: by 2002:a63:308:: with SMTP id 8mr1487880pgd.15.1607796772522;
+        Sat, 12 Dec 2020 10:12:52 -0800 (PST)
+Received: from [192.168.1.134] ([66.219.217.173])
+        by smtp.gmail.com with ESMTPSA id i11sm14936688pfo.129.2020.12.12.10.12.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 12 Dec 2020 10:12:51 -0800 (PST)
+Subject: Re: [PATCH 0/3] Remove in_interrupt() usage in sr.
+To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Saruhan Karademir <skarade@microsoft.com>,
-        devel@linuxdriverproject.org
-Subject: Re: [PATCH AUTOSEL 5.9 15/23] scsi: storvsc: Validate length of
- incoming packet in storvsc_on_channel_callback()
-Message-ID: <20201212180901.GA19225@andrea>
-References: <20201212160804.2334982-1-sashal@kernel.org>
- <20201212160804.2334982-15-sashal@kernel.org>
+        "Ahmed S. Darwish" <a.darwish@linutronix.de>,
+        Thomas Gleixner <tglx@linutronix.de>
+References: <20201204164803.ovwurzs3257em2rp@linutronix.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <c69b3d26-6fb7-674b-a3a6-bec80da2cff4@kernel.dk>
+Date:   Sat, 12 Dec 2020 11:12:50 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201212160804.2334982-15-sashal@kernel.org>
+In-Reply-To: <20201204164803.ovwurzs3257em2rp@linutronix.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Sasha,
-
-On Sat, Dec 12, 2020 at 11:07:56AM -0500, Sasha Levin wrote:
-> From: "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
+On 12/4/20 9:48 AM, Sebastian Andrzej Siewior wrote:
+> Before v2.1.62 sr_read_sector() did MODE_SELECT to set the requested sector size,
+> issued READ_10 and then used MODE_SELECT to select a sector size of 2048 bytes.
+> This function was used to serve ioctl()'s command CDROMREADMODE2 and CDROMREADRAW
+> which do not use 2048 bytes as sector size.
 > 
-> [ Upstream commit 3b8c72d076c42bf27284cda7b2b2b522810686f8 ]
-
-FYI, we found that this commit introduced a regression and posted a
-revert:
-
-  https://lkml.kernel.org/r/20201211131404.21359-1-parri.andrea@gmail.com
-
-Same comment for the AUTOSEL 5.4, 4.19 and 4.14 you've just posted.
-
-  Andrea
-
-
+> In v2.1.62 sr_read_sector() changed to use READ_CD first and fallback to
+> MODE_SELECT and READ_10 if READ_CD was not supported. Since this version it did
+> not reset the sector size back to 2048 after the READ_10 opcode and
+> instead gained a lazy reset in do_sr_request() and sr_release().
+> It kept the new sector size and only changed if needed. On closing the
+> device node sr_release() reset the sector size back to its default
+> value.
 > 
-> Check that the packet is of the expected size at least, don't copy data
-> past the packet.
+> In v2.3.16 the ioctl() (CDROMREADMODE2, CDROMREADRAW) were consolidated since
+> both stacks (SCSI and IDE) did mostly the same thing. For the ioctl handling
+> the SCSI implementation (doing sr_read_sector()) was removed and the ioctl was
+> now served based on what the IDE implementation had to offer which was
+> using cdrom_read_block(). cdrom_read_block() was also updated to use
+> READ_CD and invoke the ->generic_packeto() callback.
+> It is worth noting that READ_CD is now mandatory by the software stack.
+> The old function with the fallback (sr_read_sector()) is only used
+> sr_is_xa().
 > 
-> Link: https://lore.kernel.org/r/20201118145348.109879-1-parri.andrea@gmail.com
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Reported-by: Saruhan Karademir <skarade@microsoft.com>
-> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> ---
->  drivers/scsi/storvsc_drv.c | 5 +++++
->  1 file changed, 5 insertions(+)
+> In v2.4.0-test2pre2 it is no longer mandatory to support the READ_CD
+> opcode. A fallback mechanism was added in case the device did not
+> supported the opcode. The mechanism had a small variance compared to the
+> one from v2.1.62 and did: MODE_SELECT of the requested sector size,
+> READ_10 and MODE_SELECT of the _requested_ sector size instead the
+> previous sector size. To quote a comment from the changelog
+> area of the file from when the change was introduced:
+> | -- Fix Video-CD on SCSI drives that don't support READ_CD command. In
+> | that case switch block size and issue plain READ_10 again, then switch
+> | back.
 > 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 8f5f5dc863a4a..6779ee4edfee3 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1246,6 +1246,11 @@ static void storvsc_on_channel_callback(void *context)
->  		request = (struct storvsc_cmd_request *)
->  			((unsigned long)desc->trans_id);
->  
-> +		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) - vmscsi_size_delta) {
-> +			dev_err(&device->device, "Invalid packet len\n");
-> +			continue;
-> +		}
-> +
->  		if (request == &stor_device->init_request ||
->  		    request == &stor_device->reset_request) {
->  			memcpy(&request->vstor_packet, packet,
-> -- 
-> 2.27.0
+> but the code did not switch back, the changed sector size remained. The comment
+> around the code says:
+> |/* FIXME: switch back again... */
 > 
+> which leaves me puzzled. My interpretation of my archaeological research
+> is that MODE_SELECT + READ_10 + FIXME was added first as the needed
+> workaround. Later within the same release the FIXME was addressed by
+> unfortunately using the wrong sector size, the FIXME comment remained
+> and the changelog comment was added.
+> 
+> This is what we have today. Lets move on with this background in mind.
+> 
+> The in_interrupt() check in sr_init_command() is a leftover from v2.1.62
+> change when the delayed sector size reset was used. It remained even
+> after it was no longer used after v2.3.16. 
+> 
+> The sector size change was introduced back in v2.4.0-test2pre2 for SCSI
+> devices that lack the READ_CD command but it was implemented
+> differently. It sends directly a CDB which is not inspected by
+> sr_packet() so the ->sector_size variable is never updated as it used
+> to be back at the time when ioctl() was served by `sr'. As a consequence
+> sr_release() is not resetting the sector size nor does
+> sr_init_command(). I did not find anything that would allow to update
+> the sector size at run time (other than a media change).
+> 
+> Side note: sr_init_command() is often invoked indirectly by
+> __blk_mq_run_hw_queue() which has a WARN_ON_ONCE(in_interrupt()) check
+> and acquires a rcu_readlock() so sleeping is not allowed and not
+> detected by in_interrupt().
+
+Applied, thanks.
+
+-- 
+Jens Axboe
+
