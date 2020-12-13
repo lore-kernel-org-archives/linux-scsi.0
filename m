@@ -2,75 +2,213 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFF12C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 16:14:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C5DC433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 16:15:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CFE22336D
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 16:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 309232335A
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 16:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390250AbgLMQOT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Dec 2020 11:14:19 -0500
-Received: from labrats.qualcomm.com ([199.106.110.90]:3392 "EHLO
+        id S2394240AbgLMQOx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Dec 2020 11:14:53 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:3052 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730046AbgLMQOF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Dec 2020 11:14:05 -0500
-IronPort-SDR: bGx20VdDlpimfn9vPSGhu9w8brfrvdEMy6Cjw5a222cJd9u8kfAIfpI94HhFy5w6DhOyyKuddY
- /84Fx7tRghQhmOFG8e8cwp5HZFdbCZf8BeQqgHVXf14V9aAw77nmYAfNgscNdCYLcVKs2Bppky
- 7Ov+o/CPweTgph6AaAbRQoAe1xH2EfBAqsDIvw25HsMw4U3ogKOwUrXIIEIKK3Z7mj11MpbTzF
- OJYu98W9vwDmjY3MlRAZcxRUw0pNCAaP6IYELxI0RUmEoWNC/2oWxqSVJ/QX0RfDwCL8UL3iry
- ciw=
+        with ESMTP id S1730046AbgLMQOm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Dec 2020 11:14:42 -0500
+IronPort-SDR: HywL4VtA8vGB1q9gv1AzcmYRbyt5xzjYk9zTfTxCHN2kpdJ+zC14/V+jPJUSAnBcfI+rb278WI
+ WY4DjYZC9QVWCtJoDXnUvPRMliUi1jSVzgJHk8+7qUrYxyoSypcvH2my60or8o0TTC62RR86ok
+ RKzHJBwgoop82jFQ3SSwBA310tx8uU+0LnvcS0zUUIg3TLnb7SFkB7BZZRUN+NMuGgK1l4JihD
+ Bs/UoH4bVFC0p23R3mKVpZq9PnA0R/3RGBv9WkoRBhmXlco/kP8UTPhAeyGtTqoiJZbtaEn7JY
+ nXs=
 X-IronPort-AV: E=Sophos;i="5.78,416,1599548400"; 
-   d="scan'208";a="47580259"
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by labrats.qualcomm.com with ESMTP; 13 Dec 2020 08:13:22 -0800
+   d="scan'208";a="29356136"
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by labrats.qualcomm.com with ESMTP; 13 Dec 2020 08:13:35 -0800
 X-QCInternal: smtphost
-Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 13 Dec 2020 08:13:21 -0800
+Received: from stor-presley.qualcomm.com ([192.168.140.85])
+  by ironmsg01-sd.qualcomm.com with ESMTP; 13 Dec 2020 08:13:34 -0800
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id A7A0821616; Sun, 13 Dec 2020 08:13:21 -0800 (PST)
+        id C607521616; Sun, 13 Dec 2020 08:13:33 -0800 (PST)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Subject: [PATCH v3 0/3] Three changes related with UFS clock scaling
-Date:   Sun, 13 Dec 2020 08:13:16 -0800
-Message-Id: <1607876000-3293-1-git-send-email-cang@codeaurora.org>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 2/3] scsi: ufs: Clean up ufshcd_exit_clk_scaling/gating()
+Date:   Sun, 13 Dec 2020 08:13:18 -0800
+Message-Id: <1607876000-3293-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1607876000-3293-1-git-send-email-cang@codeaurora.org>
+References: <1607876000-3293-1-git-send-email-cang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series is made based on 5.10/scsi-fixes branch.
+ufshcd_hba_exit() is always called after ufshcd_exit_clk_scaling() and
+ufshcd_exit_clk_gating(), so move ufshcd_exit_clk_scaling/gating() to
+ufshcd_hba_exit().
 
-Current devfreq framework allows sysfs nodes like governor, min_freq and max_freq to be changed even after devfreq device is suspended.
-Meanwhile, devfreq_suspend_device() cannot/wouldn't synchronize ongoing execution invoked through sysfs nodes menitioned above either.
-It means that UFS clock scaling can be invoked at any time (clkscale_enable is same) regardless of the state of UFS host and/or device.
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 32 +++++++++++++++-----------------
+ drivers/scsi/ufs/ufshcd.h |  4 ++++
+ 2 files changed, 19 insertions(+), 17 deletions(-)
 
-The 1st change allows contexts to prevent clock scaling from being invoked through sysfs nodes like clkscale_enable.
-The 2nd change is just a minor code cleanup.
-The 3rd change revert one old change which can be covered by the 1st change. For branches which do not have this change yet, it can be ignored.
-
-Change since v2:
-- Split the 1st change to two changes - the 1st change and the 3rd change
-
-Change since v1:
-- Updated the 2nd change
-
-Can Guo (3):
-  scsi: ufs: Protect some contexts from unexpected clock scaling
-  scsi: ufs: Clean up ufshcd_exit_clk_scaling/gating()
-  scsi: ufs: Revert "Make sure clk scaling happens only when HBA is
-    runtime ACTIVE"
-
- drivers/scsi/ufs/ufshcd.c | 121 +++++++++++++++++++++++++++-------------------
- drivers/scsi/ufs/ufshcd.h |   6 +++
- 2 files changed, 76 insertions(+), 51 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 59dac09..f2ca087 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1858,11 +1858,14 @@ static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
+ 	snprintf(wq_name, sizeof(wq_name), "ufs_clkscaling_%d",
+ 		 hba->host->host_no);
+ 	hba->clk_scaling.workq = create_singlethread_workqueue(wq_name);
++
++	hba->clk_scaling.is_initialized = true;
+ }
+ 
+ static void ufshcd_exit_clk_scaling(struct ufs_hba *hba)
+ {
+-	if (!ufshcd_is_clkscaling_supported(hba))
++	if (!ufshcd_is_clkscaling_supported(hba) ||
++	    !hba->clk_scaling.is_initialized)
+ 		return;
+ 
+ 	if (hba->devfreq)
+@@ -1906,12 +1909,16 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	hba->clk_gating.enable_attr.attr.mode = 0644;
+ 	if (device_create_file(hba->dev, &hba->clk_gating.enable_attr))
+ 		dev_err(hba->dev, "Failed to create sysfs for clkgate_enable\n");
++
++	hba->clk_gating.is_initialized = true;
+ }
+ 
+ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+ {
+-	if (!ufshcd_is_clkgating_allowed(hba))
++	if (!ufshcd_is_clkgating_allowed(hba) ||
++	    !hba->clk_gating.is_initialized)
+ 		return;
++
+ 	device_remove_file(hba->dev, &hba->clk_gating.delay_attr);
+ 	device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
+ 	cancel_work_sync(&hba->clk_gating.ungate_work);
+@@ -7776,7 +7783,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 	 */
+ 	if (ret) {
+ 		pm_runtime_put_sync(hba->dev);
+-		ufshcd_exit_clk_scaling(hba);
+ 		ufshcd_hba_exit(hba);
+ 	}
+ }
+@@ -8213,12 +8219,12 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
+ static void ufshcd_hba_exit(struct ufs_hba *hba)
+ {
+ 	if (hba->is_powered) {
++		ufshcd_exit_clk_scaling(hba);
++		ufshcd_exit_clk_gating(hba);
++		if (hba->eh_wq)
++			destroy_workqueue(hba->eh_wq);
+ 		ufshcd_variant_hba_exit(hba);
+ 		ufshcd_setup_vreg(hba, false);
+-		ufshcd_suspend_clkscaling(hba);
+-		if (ufshcd_is_clkscaling_supported(hba))
+-			if (hba->devfreq)
+-				ufshcd_suspend_clkscaling(hba);
+ 		ufshcd_setup_clocks(hba, false);
+ 		ufshcd_setup_hba_vreg(hba, false);
+ 		hba->is_powered = false;
+@@ -8967,13 +8973,9 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	blk_mq_free_tag_set(&hba->tmf_tag_set);
+ 	blk_cleanup_queue(hba->cmd_queue);
+ 	scsi_remove_host(hba->host);
+-	destroy_workqueue(hba->eh_wq);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+ 	ufshcd_hba_stop(hba);
+-
+-	ufshcd_exit_clk_scaling(hba);
+-	ufshcd_exit_clk_gating(hba);
+ 	ufshcd_hba_exit(hba);
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_remove);
+@@ -9172,7 +9174,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	err = devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hba);
+ 	if (err) {
+ 		dev_err(hba->dev, "request irq failed\n");
+-		goto exit_gating;
++		goto out_disable;
+ 	} else {
+ 		hba->is_irq_enabled = true;
+ 	}
+@@ -9180,7 +9182,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	err = scsi_add_host(host, hba->dev);
+ 	if (err) {
+ 		dev_err(hba->dev, "scsi_add_host failed\n");
+-		goto exit_gating;
++		goto out_disable;
+ 	}
+ 
+ 	hba->cmd_queue = blk_mq_init_queue(&hba->host->tag_set);
+@@ -9263,10 +9265,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	blk_cleanup_queue(hba->cmd_queue);
+ out_remove_scsi_host:
+ 	scsi_remove_host(hba->host);
+-exit_gating:
+-	ufshcd_exit_clk_scaling(hba);
+-	ufshcd_exit_clk_gating(hba);
+-	destroy_workqueue(hba->eh_wq);
+ out_disable:
+ 	hba->is_irq_enabled = false;
+ 	ufshcd_hba_exit(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 9fcecba..3c57847 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -347,6 +347,7 @@ enum clk_gating_state {
+  * @delay_attr: sysfs attribute to control delay_attr
+  * @enable_attr: sysfs attribute to enable/disable clock gating
+  * @is_enabled: Indicates the current status of clock gating
++ * @is_initialized: Indicates whether clock gating is initialized or not
+  * @active_reqs: number of requests that are pending and should be waited for
+  * completion before gating clocks.
+  */
+@@ -359,6 +360,7 @@ struct ufs_clk_gating {
+ 	struct device_attribute delay_attr;
+ 	struct device_attribute enable_attr;
+ 	bool is_enabled;
++	bool is_initialized;
+ 	int active_reqs;
+ 	struct workqueue_struct *clk_gating_workq;
+ };
+@@ -384,6 +386,7 @@ struct ufs_saved_pwr_info {
+  * @resume_work: worker to resume devfreq
+  * @is_enabled: tracks if scaling is currently enabled or not
+  * @is_allowed: tracks if scaling is currently allowed or not
++ * @is_initialized: Indicates whether clock scaling is initialized or not
+  * @is_busy_started: tracks if busy period has started or not
+  * @is_suspended: tracks if devfreq is suspended or not
+  */
+@@ -399,6 +402,7 @@ struct ufs_clk_scaling {
+ 	struct work_struct resume_work;
+ 	bool is_enabled;
+ 	bool is_allowed;
++	bool is_initialized;
+ 	bool is_busy_started;
+ 	bool is_suspended;
+ };
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
