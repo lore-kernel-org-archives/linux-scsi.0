@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42DA5C4361B
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 03:12:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3282C433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 03:12:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A58023108
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 03:12:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAF1A2310B
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Dec 2020 03:12:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392028AbgLMDMS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Dec 2020 22:12:18 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:60524 "EHLO
+        id S2392012AbgLMDMT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Dec 2020 22:12:19 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:60234 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391926AbgLMDMD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 22:12:03 -0500
+        with ESMTP id S2390401AbgLMDL5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Dec 2020 22:11:57 -0500
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BD34701074800;
-        Sun, 13 Dec 2020 03:11:13 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BD36uKI075803;
+        Sun, 13 Dec 2020 03:11:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=PUTWQmNlpUEGWFNlBelQBYuw6eazhJg7zjW4MTAk9yE=;
- b=CTG6ynuQAqU7V/Cr938ussbboF8zFalnO1ktQ6ZBVAVseJLH+6iptWEtpTYtd//90xt1
- hPiVxEgwGvY/I1pbvKxDECkSinm7oyomsi1pVlGcDNMvfLMwMwf7C2/qqA4aEZAfG045
- Kxub4LUBoTt3WCHsQaZ0UZd55d1U1mLTMLU16DYkELJ4Oy21Prjlhfdko4VKPuGeBOMx
- /AaXil0HRI/VF188kP/Py5qTOZup93ECsUqJEBRycsMPbv+V4BZ2NBoL7f28mQDSF8ET
- lVtO89n2P1TRhd+9M4EQvOidIEVKTK+HqV3/s8pWxJSS46wec3xyZypiRiD45FEQinxX +g== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 35cn9r1jda-1
+ bh=7xXar9XK3/DE9jZYLQzeVfdtRYzDcgrdrtYlzNkMCic=;
+ b=h9YCrFvMjkNq54deO7/7aJH/N0HTTkM2kol1H3YmatGeTIcJWJ42Osc4gTMPEmLUNRQ/
+ IE69La2xtpVii10KuIetptCtdActUf6iwiK3OoBNjDr5iU+bUZhu2DEQnkUYpC+2vAze
+ bOjWbKHNt1RoIJ40kSlSLOKgD8F5mCPHSgJIQKw3pt6Qh4Oo9V1YPDex+gA6Mh0JhwBF
+ bwIgU1ZpDKqg03QghSOfycAz8K/31+tUlYEtP4oqfafKDj55kfLFTLlQBq/jBBi3SlbW
+ uvyfdqbW1Rrke/4otP/9PYEY5LHa0OKvD3NOB28lOybyHnjNsxtNGstsIyDDNwFlTSWW og== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 35cn9r1jd4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 13 Dec 2020 03:11:13 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BD36mYo181298;
-        Sun, 13 Dec 2020 03:09:13 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 35d7rvaehw-1
+        Sun, 13 Dec 2020 03:11:05 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BD35xib042746;
+        Sun, 13 Dec 2020 03:09:05 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 35d7st3dan-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 13 Dec 2020 03:09:12 +0000
+        Sun, 13 Dec 2020 03:09:05 +0000
 Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0BD39BdX010272;
-        Sun, 13 Dec 2020 03:09:11 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BD394QB015092;
+        Sun, 13 Dec 2020 03:09:04 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 12 Dec 2020 19:09:11 -0800
+        with ESMTP ; Sat, 12 Dec 2020 19:09:03 -0800
 From:   Mike Christie <michael.christie@oracle.com>
 To:     lduncan@suse.com, cleech@redhat.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         varun@chelsio.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
-Subject: [RFC PATCH 15/18] libiscsi: use blk/scsi-ml mq cmd pre-allocator
-Date:   Sat, 12 Dec 2020 21:08:43 -0600
-Message-Id: <1607828926-3658-16-git-send-email-michael.christie@oracle.com>
+Subject: [RFC PATCH 08/18] qedi: implement alloc_task_priv/free_task_priv
+Date:   Sat, 12 Dec 2020 21:08:36 -0600
+Message-Id: <1607828926-3658-9-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1607828926-3658-1-git-send-email-michael.christie@oracle.com>
 References: <1607828926-3658-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9833 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- adultscore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 mlxscore=0 suspectscore=0 malwarescore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2009150000 definitions=main-2012130023
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9833 signatures=668683
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
@@ -74,228 +74,186 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This has us use the blk/scsi-ml mq cmd pre-allocator for scsi tasks.
-We now do not need the back/frwd locks for scsi task allocation.
-We still need it for mgmt tasks, but that will be fixed in the next
-patch.
+Have qedi use the alloc_task_priv/free_task_priv instead of
+rolling its own loops.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/libiscsi.c | 81 +++++++++++++++++++++----------------------------
- include/scsi/libiscsi.h | 13 +++++---
- 2 files changed, 42 insertions(+), 52 deletions(-)
+ drivers/scsi/qedi/qedi_iscsi.c | 106 ++++++++++++++++-------------------------
+ 1 file changed, 41 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 462a308..e46f9ea 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -550,7 +550,6 @@ static void iscsi_free_task(struct iscsi_task *task)
- 		return;
- 
- 	iscsi_free_itt(session, task);
--	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
- 
- 	/*
- 	 * if the window opened when we processed a data/r2t pdu make sure we
-@@ -562,7 +561,9 @@ static void iscsi_free_task(struct iscsi_task *task)
- 		iscsi_conn_queue_work(conn);
- 	}
- 
--	if (sc) {
-+	if (!sc) {
-+		kfifo_in(&session->mgmt_pool.queue, (void *)&task, sizeof(void *));
-+	} else {
- 		/* SCSI eh reuses commands to verify us */
- 		sc->SCp.ptr = NULL;
- 		/*
-@@ -811,13 +812,13 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
- 		BUG_ON(conn->c_stage == ISCSI_CONN_INITIAL_STAGE);
- 		BUG_ON(conn->c_stage == ISCSI_CONN_STOPPED);
- 
--		if (!kfifo_out(&session->cmdpool.queue,
--				 (void*)&task, sizeof(void*)))
-+		if (!kfifo_out(&session->mgmt_pool.queue, (void *)&task,
-+			       sizeof(void *)))
- 			return NULL;
- 
- 		if (iscsi_alloc_itt(session, task)) {
- 			spin_lock(&session->back_lock);
--			kfifo_in(&session->cmdpool.queue, (void *)&task,
-+			kfifo_in(&session->mgmt_pool.queue, (void *)&task,
- 				 sizeof(void *));
- 			spin_unlock(&session->back_lock);
- 			return NULL;
-@@ -1720,14 +1721,10 @@ static void iscsi_xmitworker(struct work_struct *work)
- 	} while (rc >= 0 || rc == -EAGAIN);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 08c0540..a76f595 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -160,32 +160,30 @@ static int qedi_conn_alloc_login_resources(struct qedi_ctx *qedi,
+ 	return -ENOMEM;
  }
  
--static inline struct iscsi_task *iscsi_alloc_task(struct iscsi_conn *conn,
--						  struct scsi_cmnd *sc)
-+static struct iscsi_task *iscsi_init_scsi_task(struct iscsi_conn *conn,
-+					       struct scsi_cmnd *sc)
+-static void qedi_destroy_cmd_pool(struct qedi_ctx *qedi,
+-				  struct iscsi_session *session)
++static void qedi_free_sget(struct qedi_ctx *qedi, struct qedi_cmd *cmd)
  {
--	struct iscsi_task *task;
--
--	if (!kfifo_out(&conn->session->cmdpool.queue,
--			 (void *) &task, sizeof(void *)))
--		return NULL;
-+	struct iscsi_task *task = scsi_cmd_priv(sc);
+-	int i;
++	if (!cmd->io_tbl.sge_tbl)
++		return;
  
- 	sc->SCp.phase = conn->session->age;
- 	sc->SCp.ptr = (char *) task;
-@@ -1830,22 +1827,16 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 		goto fault;
+-	for (i = 0; i < session->cmds_max; i++) {
+-		struct iscsi_task *task = session->cmds[i];
+-		struct qedi_cmd *cmd = task->dd_data;
+-
+-		if (cmd->io_tbl.sge_tbl)
+-			dma_free_coherent(&qedi->pdev->dev,
+-					  QEDI_ISCSI_MAX_BDS_PER_CMD *
+-					  sizeof(struct scsi_sge),
+-					  cmd->io_tbl.sge_tbl,
+-					  cmd->io_tbl.sge_tbl_dma);
+-
+-		if (cmd->sense_buffer)
+-			dma_free_coherent(&qedi->pdev->dev,
+-					  SCSI_SENSE_BUFFERSIZE,
+-					  cmd->sense_buffer,
+-					  cmd->sense_buffer_dma);
+-	}
++	dma_free_coherent(&qedi->pdev->dev,
++			  QEDI_ISCSI_MAX_BDS_PER_CMD * sizeof(struct scsi_sge),
++			  cmd->io_tbl.sge_tbl, cmd->io_tbl.sge_tbl_dma);
+ }
+ 
+-static int qedi_alloc_sget(struct qedi_ctx *qedi, struct iscsi_session *session,
+-			   struct qedi_cmd *cmd)
++static void qedi_free_task_priv(struct iscsi_session *session,
++				struct iscsi_task *task)
++{
++	struct qedi_ctx *qedi = iscsi_host_priv(session->host);
++	struct qedi_cmd *cmd = task->dd_data;
++
++	qedi_free_sget(qedi, cmd);
++
++	if (cmd->sense_buffer)
++		dma_free_coherent(&qedi->pdev->dev, SCSI_SENSE_BUFFERSIZE,
++				  cmd->sense_buffer, cmd->sense_buffer_dma);
++}
++
++static int qedi_alloc_sget(struct qedi_ctx *qedi, struct qedi_cmd *cmd)
+ {
+ 	struct qedi_io_bdt *io = &cmd->io_tbl;
+ 	struct scsi_sge *sge;
+@@ -195,8 +193,8 @@ static int qedi_alloc_sget(struct qedi_ctx *qedi, struct iscsi_session *session,
+ 					 sizeof(*sge),
+ 					 &io->sge_tbl_dma, GFP_KERNEL);
+ 	if (!io->sge_tbl) {
+-		iscsi_session_printk(KERN_ERR, session,
+-				     "Could not allocate BD table.\n");
++		shost_printk(KERN_ERR, qedi->shost,
++			    "Could not allocate BD table.\n");
+ 		return -ENOMEM;
  	}
  
--	spin_lock_bh(&session->frwd_lock);
--	if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
--		spin_unlock_bh(&session->frwd_lock);
--		reason = FAILURE_SESSION_IN_RECOVERY;
--		sc->result = DID_REQUEUE << 16;
--		goto fault;
+@@ -204,33 +202,29 @@ static int qedi_alloc_sget(struct qedi_ctx *qedi, struct iscsi_session *session,
+ 	return 0;
+ }
+ 
+-static int qedi_setup_cmd_pool(struct qedi_ctx *qedi,
+-			       struct iscsi_session *session)
++static int qedi_alloc_task_priv(struct iscsi_session *session,
++				struct iscsi_task *task)
+ {
+-	int i;
++	struct qedi_ctx *qedi = iscsi_host_priv(session->host);
++	struct qedi_cmd *cmd = task->dd_data;
+ 
+-	for (i = 0; i < session->cmds_max; i++) {
+-		struct iscsi_task *task = session->cmds[i];
+-		struct qedi_cmd *cmd = task->dd_data;
++	task->hdr = &cmd->hdr;
++	task->hdr_max = sizeof(struct iscsi_hdr);
+ 
+-		task->hdr = &cmd->hdr;
+-		task->hdr_max = sizeof(struct iscsi_hdr);
++	if (qedi_alloc_sget(qedi, cmd))
++		return -ENOMEM;
+ 
+-		if (qedi_alloc_sget(qedi, session, cmd))
+-			goto free_sgets;
+-
+-		cmd->sense_buffer = dma_alloc_coherent(&qedi->pdev->dev,
+-						       SCSI_SENSE_BUFFERSIZE,
+-						       &cmd->sense_buffer_dma,
+-						       GFP_KERNEL);
+-		if (!cmd->sense_buffer)
+-			goto free_sgets;
+-	}
++	cmd->sense_buffer = dma_alloc_coherent(&qedi->pdev->dev,
++					       SCSI_SENSE_BUFFERSIZE,
++					       &cmd->sense_buffer_dma,
++					       GFP_KERNEL);
++	if (!cmd->sense_buffer)
++		goto free_sgets;
+ 
+ 	return 0;
+ 
+ free_sgets:
+-	qedi_destroy_cmd_pool(qedi, session);
++	qedi_free_sget(qedi, cmd);
+ 	return -ENOMEM;
+ }
+ 
+@@ -264,27 +258,7 @@ static int qedi_setup_cmd_pool(struct qedi_ctx *qedi,
+ 		return NULL;
+ 	}
+ 
+-	if (qedi_setup_cmd_pool(qedi, cls_session->dd_data)) {
+-		QEDI_ERR(&qedi->dbg_ctx,
+-			 "Failed to setup cmd pool for ep=%p\n", qedi_ep);
+-		goto session_teardown;
 -	}
 -
--	task = iscsi_alloc_task(conn, sc);
--	if (!task) {
--		spin_unlock_bh(&session->frwd_lock);
--		reason = FAILURE_OOM;
--		goto reject;
--	}
-+	task = iscsi_init_scsi_task(conn, sc);
- 
-+	spin_lock_bh(&session->frwd_lock);
- 	if (!ihost->workq) {
-+		if (test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx)) {
-+			reason = FAILURE_SESSION_IN_RECOVERY;
-+			sc->result = DID_REQUEUE << 16;
-+			goto prepd_fault;
-+		}
-+
- 		if (iscsi_check_cmdsn_window_closed(conn)) {
- 			reason = FAILURE_WINDOW_CLOSED;
- 			goto prepd_reject;
-@@ -1880,7 +1871,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 	spin_lock_bh(&session->back_lock);
- 	iscsi_complete_task(task, ISCSI_TASK_REQUEUE_SCSIQ);
- 	spin_unlock_bh(&session->back_lock);
--reject:
-+
- 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
- 			  sc->cmnd[0], reason);
- 	return SCSI_MLQUEUE_TARGET_BUSY;
-@@ -2958,19 +2949,16 @@ struct iscsi_cls_session *
- 	if (!session->cmds)
- 		goto cmds_alloc_fail;
- 
--	/* initialize SCSI PDU commands pool */
--	if (iscsi_pool_init(&session->cmdpool, session->cmds_max, NULL,
-+	/* initialize mgmt PDU pool */
-+	if (iscsi_pool_init(&session->mgmt_pool, ISCSI_MGMT_CMDS_MAX,
-+			    (void ***)&session->mgmt_cmds,
- 			    cmd_task_size + sizeof(struct iscsi_task)))
--		goto cmdpool_alloc_fail;
+ 	return cls_session;
 -
--	for (cmd_i = 0; cmd_i < session->cmds_max; cmd_i++) {
--		struct iscsi_task *task = session->cmds[cmd_i];
-+		goto mgmt_pool_alloc_fail;
+-session_teardown:
+-	iscsi_session_teardown(cls_session);
+-	return NULL;
+-}
+-
+-static void qedi_session_destroy(struct iscsi_cls_session *cls_session)
+-{
+-	struct iscsi_session *session = cls_session->dd_data;
+-	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
+-	struct qedi_ctx *qedi = iscsi_host_priv(shost);
+-
+-	qedi_destroy_cmd_pool(qedi, session);
+-	iscsi_session_teardown(cls_session);
+ }
  
--		if (cmd_task_size)
--			task->dd_data = &task[1];
--		task->state = ISCSI_TASK_FREE;
--		INIT_LIST_HEAD(&task->running);
-+	for (cmd_i = 0; cmd_i < ISCSI_MGMT_CMDS_MAX; cmd_i++) {
-+		struct iscsi_task *task = session->mgmt_cmds[cmd_i];
+ static struct iscsi_cls_conn *
+@@ -1398,7 +1372,7 @@ struct iscsi_transport qedi_iscsi_transport = {
+ 	.caps = CAP_RECOVERY_L0 | CAP_HDRDGST | CAP_MULTI_R2T | CAP_DATADGST |
+ 		CAP_DATA_PATH_OFFLOAD | CAP_TEXT_NEGO,
+ 	.create_session = qedi_session_create,
+-	.destroy_session = qedi_session_destroy,
++	.destroy_session = iscsi_session_teardown,
+ 	.create_conn = qedi_conn_create,
+ 	.bind_conn = qedi_conn_bind,
+ 	.start_conn = qedi_conn_start,
+@@ -1410,6 +1384,8 @@ struct iscsi_transport qedi_iscsi_transport = {
+ 	.get_session_param = iscsi_session_get_param,
+ 	.get_host_param = qedi_host_get_param,
+ 	.send_pdu = iscsi_conn_send_pdu,
++	.alloc_task_priv = qedi_alloc_task_priv,
++	.free_task_priv = qedi_free_task_priv,
+ 	.get_stats = qedi_conn_get_stats,
+ 	.xmit_task = qedi_task_xmit,
+ 	.cleanup_task = qedi_cleanup_task,
+@@ -1625,7 +1601,7 @@ void qedi_clear_session_ctx(struct iscsi_cls_session *cls_sess)
  
-+		iscsi_init_task(task);
- 		if (iscsit->alloc_task_priv) {
- 			if (iscsit->alloc_task_priv(session, task))
- 				goto free_task_priv;
-@@ -2993,8 +2981,8 @@ struct iscsi_cls_session *
- 			iscsit->free_task_priv(session, session->cmds[cmd_i]);
- 	}
+ 	qedi_conn_destroy(qedi_conn->cls_conn);
  
--	iscsi_pool_free(&session->cmdpool);
--cmdpool_alloc_fail:
-+	iscsi_pool_free(&session->mgmt_pool);
-+mgmt_pool_alloc_fail:
- 	kfree(session->cmds);
- cmds_alloc_fail:
- 	sbitmap_free(&session->itts);
-@@ -3023,7 +3011,7 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
- 						    session->cmds[cmd_i]);
- 	}
+-	qedi_session_destroy(cls_sess);
++	iscsi_session_teardown(cls_sess);
+ }
  
--	iscsi_pool_free(&session->cmdpool);
-+	iscsi_pool_free(&session->mgmt_pool);
- 
- 	iscsi_remove_session(cls_session);
- 
-@@ -3090,9 +3078,8 @@ struct iscsi_cls_conn *
- 
- 	/* allocate login_task used for the login/text sequences */
- 	spin_lock_bh(&session->frwd_lock);
--	if (!kfifo_out(&session->cmdpool.queue,
--                         (void*)&conn->login_task,
--			 sizeof(void*))) {
-+	if (!kfifo_out(&session->mgmt_pool.queue, (void *)&conn->login_task,
-+		       sizeof(void *))) {
- 		spin_unlock_bh(&session->frwd_lock);
- 		goto login_task_alloc_fail;
- 	}
-@@ -3116,8 +3103,8 @@ struct iscsi_cls_conn *
- 	iscsi_free_itt(session, conn->login_task);
- login_itt_fail:
- 	spin_lock_bh(&session->frwd_lock);
--	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
--		    sizeof(void*));
-+	kfifo_in(&session->mgmt_pool.queue, (void *)&conn->login_task,
-+		 sizeof(void *));
- 	spin_unlock_bh(&session->frwd_lock);
- login_task_alloc_fail:
- 	iscsi_destroy_conn(cls_conn);
-@@ -3161,8 +3148,8 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 	kfree(conn->local_ipaddr);
- 	/* regular RX path uses back_lock */
- 	spin_lock_bh(&session->back_lock);
--	kfifo_in(&session->cmdpool.queue, (void*)&conn->login_task,
--		    sizeof(void*));
-+	kfifo_in(&session->mgmt_pool.queue, (void *)&conn->login_task,
-+		 sizeof(void *));
- 	spin_unlock_bh(&session->back_lock);
- 	iscsi_free_itt(session, conn->login_task);
- 	if (session->leadconn == conn)
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 406e8a2..8a8d491 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -331,19 +331,22 @@ struct iscsi_session {
- 						 * in the eh paths, cmdsn  *
- 						 * suspend bit and session *
- 						 * resources:              *
--						 * - cmdpool kfifo_out ,   *
--						 * - mgmtpool, queues	   */
-+						 * - kfifo_out mgmt_pool,  *
-+						 * - queues	           */
- 	spinlock_t		back_lock;	/* protects cmdsn_exp      *
- 						 * cmdsn_max,              *
--						 * cmdpool kfifo_in        */
-+						 * mgmt_pool kfifo_in      */
- 	int			state;		/* session state           */
- 	int			age;		/* counts session re-opens */
- 
- 	int			scsi_cmds_max; 	/* max scsi commands */
- 	int			cmds_max;	/* size of cmds array */
--	struct iscsi_task	**cmds;		/* Original Cmds arr */
--	struct iscsi_pool	cmdpool;	/* PDU's pool */
-+	struct iscsi_task	**cmds;		/* Lookup map of all tasks */
- 	struct sbitmap		itts;
-+
-+	struct iscsi_task	**mgmt_cmds;
-+	struct iscsi_pool	mgmt_pool;
-+
- 	void			*dd_data;	/* LLD private data */
- };
- 
+ void qedi_process_tcp_error(struct qedi_endpoint *ep,
 -- 
 1.8.3.1
 
