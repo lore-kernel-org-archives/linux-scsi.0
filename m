@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 436D9C2BB48
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33470C4361B
 	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 20:21:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 119EB2250F
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 20:21:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0BE921D42
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 20:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503065AbgLNUVT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 15:21:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43738 "EHLO
+        id S2503061AbgLNUVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 15:21:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727855AbgLNUVH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 15:21:07 -0500
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F784C0613D6;
-        Mon, 14 Dec 2020 12:20:27 -0800 (PST)
-Received: by mail-ej1-x644.google.com with SMTP id qw4so24334348ejb.12;
-        Mon, 14 Dec 2020 12:20:27 -0800 (PST)
+        with ESMTP id S2502992AbgLNUVL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 15:21:11 -0500
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 162A8C06179C;
+        Mon, 14 Dec 2020 12:20:31 -0800 (PST)
+Received: by mail-ej1-x643.google.com with SMTP id j22so6381051eja.13;
+        Mon, 14 Dec 2020 12:20:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=e2p6ovsTZi3RI/1s5tiOcO3cGPDLijFKcdx9hDvuso4=;
-        b=jhWGEXIsT7wblDPiUbRKmNvCe3+UbZDYw9Cb+ohgdlYrv+8fdsF80eF7JhLeVl3274
-         5r8mD1JVvM0ar8eDyXs58QDvYXVCQJNfMYyQT0q2k7256GBw9IolXB9D6NDEIyizE6tX
-         i3EqNOLyUMO2j63q+o3xGD3/DFVAyee+qyUyqvHt10RiNin+ZHZiUWTRZLrVo7NTUUa+
-         UfEJ3dGTs92SQ7xM9j/YEV7Ja0IgFqcwNsQy87aYHK2M8WRFnaYSladHDHOVUfp0jG71
-         8VecjINNPfcMP9RmXVfpPIuYwZmbp7i9NZLpIiyKvKEgWnHNgOnwqmypsQjcWXXH8y0v
-         EW/Q==
+        bh=MDUTAHSnLQf17rDCvTDFruIhmvOHEpBhNEFUu+lMa4s=;
+        b=kRJ91+DDQZ6kWB3QxvEUPEZD5Jgt7e+I7J3Fuy0W1o1pkPn/wieQhypllwEy5uvLeX
+         +00+JRQlpYrfQLc1u8unP4KOiReU3Mn1ixKZCqM4brGeXCeymXwkkA5BJ7CBvA+/1Oe5
+         nc8Qoz+/Gh2MZcuNHU0wrZkzQcK5u306OpEUh/vSwOkv1hDikbEBuusH2Z9YGhrrZylu
+         nmYaJS11hj6mgvKqRwzyq6jcWFCSH+APaGnJ8ABJcrz5tamPtoA7J5Y4UnxIIKQSdj3M
+         +NirRgndyDmMqFDdmUa09SVYemV0gkXUpbjUJ5fux5EA894kF4MuSx+sMCWNDHBfidFb
+         Qkyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=e2p6ovsTZi3RI/1s5tiOcO3cGPDLijFKcdx9hDvuso4=;
-        b=hvYk+0l0zunOuLqvYu7I+9k0U+fRoXetLQDNPAqSyBTyqrlxStMRh5p+bX+8jdzx3R
-         VDbGS3rS0DYCBD26bE83QBvFfyEMjfhWFQhezASI7crPKog1wdGaOGs3c59/7ucIatdO
-         +KgunUl8EQEi1gOAnCbQXuYKwZPKPR3nTffLXvoPQrw0zCuchAh/lHjDCmyQAGJ0uOGS
-         DUFAUkp688zP263QOLy9pZvyP6hD4SPOprOgspMYmIMLmBFZy7pBikopm52ZTL9QyGRP
-         6Vkjlt+IeN9vJdOkM8wVWqluxEuzNCNVRkUxfDaBlGm4E2lyqusBWE+4Jrl+e1yE/qh0
-         9jtg==
-X-Gm-Message-State: AOAM533FDC8hFakFPfaEZ+15YRnrCK5uNV9JbET3wgNYQh+s0qT7d2DK
-        50sbAlH5vtiydUdM3N7M/SE=
-X-Google-Smtp-Source: ABdhPJyUN46LzuPeZ3au8ZcYHb4l6lEitKROqN88NkJ4nLISi9FFJdEtrtK9Oui0eAKRh9Dt5voCyg==
-X-Received: by 2002:a17:906:4705:: with SMTP id y5mr23882838ejq.112.1607977225892;
-        Mon, 14 Dec 2020 12:20:25 -0800 (PST)
+        bh=MDUTAHSnLQf17rDCvTDFruIhmvOHEpBhNEFUu+lMa4s=;
+        b=DPWgwjQ501qAWPJWuiAzaU0JlxaPuLIQVUQS5qcy44XufPZTSBMZTuM0a07WkJj1B/
+         Z7KQOreexFEL3szGY7C1xBQsYqXSvWPUYEpTCXI98CHqK7mSSFsnTGfz1OrQNdy+2k1L
+         8DT7RXeuBI3RfP8JZrA1AIiCWqgqK+zCSl4EJiSrrGN63CE6Gyeh29uJrM+srIIOjD5q
+         8dBUnfhJylF6EQDqE6rQ1AaCpEbEZYfdf8inpfW2cLsyx1tw5PYndn9Z3fdIhPjB+gBT
+         g7DetnuD/ve2h2XOP8of+DbJgLIvtrfxZRV+0jrCQy8U0O4gmHW1B646fJPvvpl570UM
+         megw==
+X-Gm-Message-State: AOAM533L+0tWV4SipbCgnvAvtI9XLs0Ogh3xWIGZmuzW59gzNUGCm7Jg
+        t5xJ25LPbulOLo8UP7khMkU=
+X-Google-Smtp-Source: ABdhPJxBf0Qqfsbbaqfe50wiiKREJ1hGKmNxQBkp1lnOon//BtJGgCIbOi1u52Kvi7keooyu1lJxtw==
+X-Received: by 2002:a17:907:961b:: with SMTP id gb27mr23634089ejc.313.1607977229777;
+        Mon, 14 Dec 2020 12:20:29 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id r7sm9334634edh.86.2020.12.14.12.20.25
+        by smtp.gmail.com with ESMTPSA id r7sm9334634edh.86.2020.12.14.12.20.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Dec 2020 12:20:25 -0800 (PST)
+        Mon, 14 Dec 2020 12:20:29 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -62,9 +62,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org, rostedt@goodmis.org, joe@perches.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/6] scsi: ufs: Remove stringize operator '#' restriction
-Date:   Mon, 14 Dec 2020 21:20:09 +0100
-Message-Id: <20201214202014.13835-2-huobean@gmail.com>
+Subject: [PATCH v3 4/6] scsi: ufs: Distinguish between query REQ and query RSP in query trace
+Date:   Mon, 14 Dec 2020 21:20:12 +0100
+Message-Id: <20201214202014.13835-5-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201214202014.13835-1-huobean@gmail.com>
 References: <20201214202014.13835-1-huobean@gmail.com>
@@ -74,84 +74,55 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Current EM macro definition, we use stringize operator '#', which turns
-the argument it precedes into a quoted string. Thus requires the symbol
-of __print_symbolic() should be the string corresponding to the name of
-the enum.
+Currently, in the query completion trace print,  since we use
+hba->lrb[tag].ucd_req_ptr and didn't differentiate UPIU between
+request and response, thus header and transaction-specific field
+in UPIU printed by query trace are identical. This is not very
+practical. As below:
 
-However, we have other cases, the symbol and enum name are not the same,
-we can redefine EM/EMe, but there will introduce some redundant codes.
-This patch is to remove this restriction, let others reuse the current
-EM/EMe definition.
+query_send: HDR:16 00 00 0e 00 81 00 00 00 00 00 00, CDB:06 0e 03 00 00 00 00 00 00 00 00 00 00 00 00 00
+query_complete: HDR:16 00 00 0e 00 81 00 00 00 00 00 00, CDB:06 0e 03 00 00 00 00 00 00 00 00 00 00 00 00 00
 
+For the failure analysis, we want to understand the real response
+reported by the UFS device, however, the current query trace tells
+us nothing. After this patch, the query trace on the query_send, and
+the above a pair of query_send and query_complete will be:
+
+query_send: HDR:16 00 00 0e 00 81 00 00 00 00 00 00, CDB:06 0e 03 00 00 00 00 00 00 00 00 00 00 00 00 00
+ufshcd_upiu: HDR:36 00 00 0e 00 81 00 00 00 00 00 00, CDB:06 0e 03 00 00 00 00 00 00 00 00 01 00 00 00 00
+
+Acked-by: Avri Altman <avri.altman@wdc.com>
 Acked-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- include/trace/events/ufs.h | 40 +++++++++++++++++++-------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 0bd54a184391..fa755394bc0f 100644
---- a/include/trace/events/ufs.h
-+++ b/include/trace/events/ufs.h
-@@ -20,28 +20,28 @@
- 		{ SYNCHRONIZE_CACHE,	"SYNC" },			\
- 		{ UNMAP,		"UNMAP" })
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index f4a071d12542..d0b054aa0a3c 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -318,12 +318,18 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+ 					enum ufs_trace_str_t str_t)
+ {
+-	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
++	struct utp_upiu_req *rq_rsp;
  
--#define UFS_LINK_STATES			\
--	EM(UIC_LINK_OFF_STATE)		\
--	EM(UIC_LINK_ACTIVE_STATE)	\
--	EMe(UIC_LINK_HIBERN8_STATE)
--
--#define UFS_PWR_MODES			\
--	EM(UFS_ACTIVE_PWR_MODE)		\
--	EM(UFS_SLEEP_PWR_MODE)		\
--	EM(UFS_POWERDOWN_PWR_MODE)	\
--	EMe(UFS_DEEPSLEEP_PWR_MODE)
--
--#define UFSCHD_CLK_GATING_STATES	\
--	EM(CLKS_OFF)			\
--	EM(CLKS_ON)			\
--	EM(REQ_CLKS_OFF)		\
--	EMe(REQ_CLKS_ON)
-+#define UFS_LINK_STATES						\
-+	EM(UIC_LINK_OFF_STATE,		"UIC_LINK_OFF_STATE")		\
-+	EM(UIC_LINK_ACTIVE_STATE,	"UIC_LINK_ACTIVE_STATE")	\
-+	EMe(UIC_LINK_HIBERN8_STATE,	"UIC_LINK_HIBERN8_STATE")
+ 	if (!trace_ufshcd_upiu_enabled())
+ 		return;
+ 
+-	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, &rq->qr);
++	if (str_t == UFS_QUERY_SEND)
++		rq_rsp = hba->lrb[tag].ucd_req_ptr;
++	else
++		rq_rsp = (struct utp_upiu_req *)hba->lrb[tag].ucd_rsp_ptr;
 +
-+#define UFS_PWR_MODES							\
-+	EM(UFS_ACTIVE_PWR_MODE,		"UFS_ACTIVE_PWR_MODE")		\
-+	EM(UFS_SLEEP_PWR_MODE,		"UFS_SLEEP_PWR_MODE")		\
-+	EM(UFS_POWERDOWN_PWR_MODE,	"UFS_POWERDOWN_PWR_MODE")	\
-+	EMe(UFS_DEEPSLEEP_PWR_MODE,	"UFS_DEEPSLEEP_PWR_MODE")
-+
-+#define UFSCHD_CLK_GATING_STATES				\
-+	EM(CLKS_OFF,			"CLKS_OFF")		\
-+	EM(CLKS_ON,			"CLKS_ON")		\
-+	EM(REQ_CLKS_OFF,		"REQ_CLKS_OFF")		\
-+	EMe(REQ_CLKS_ON,		"REQ_CLKS_ON")
++	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq_rsp->header,
++			  &rq_rsp->qr);
+ }
  
- /* Enums require being exported to userspace, for user tool parsing */
- #undef EM
- #undef EMe
--#define EM(a)	TRACE_DEFINE_ENUM(a);
--#define EMe(a)	TRACE_DEFINE_ENUM(a);
-+#define EM(a, b)	TRACE_DEFINE_ENUM(a);
-+#define EMe(a, b)	TRACE_DEFINE_ENUM(a);
- 
- UFS_LINK_STATES;
- UFS_PWR_MODES;
-@@ -53,8 +53,8 @@ UFSCHD_CLK_GATING_STATES;
-  */
- #undef EM
- #undef EMe
--#define EM(a)	{ a, #a },
--#define EMe(a)	{ a, #a }
-+#define EM(a, b)	{a, b},
-+#define EMe(a, b)	{a, b}
- 
- TRACE_EVENT(ufshcd_clk_gating,
- 
+ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
 -- 
 2.17.1
 
