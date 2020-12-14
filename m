@@ -5,121 +5,150 @@ X-Spam-Level:
 X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A57C4361B
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 22:28:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A7A0C2BB48
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 22:44:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB3FC224F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 22:28:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD1DF22509
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 22:44:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439698AbgLNW1l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 17:27:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35274 "EHLO
+        id S2441170AbgLNWiN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 17:38:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729522AbgLNW1k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 17:27:40 -0500
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D21FC0613D6;
-        Mon, 14 Dec 2020 14:27:00 -0800 (PST)
-Received: by mail-ed1-x541.google.com with SMTP id p22so18874050edu.11;
-        Mon, 14 Dec 2020 14:27:00 -0800 (PST)
+        with ESMTP id S2441091AbgLNWiN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 17:38:13 -0500
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F15AEC0613D3;
+        Mon, 14 Dec 2020 14:37:32 -0800 (PST)
+Received: by mail-ej1-x641.google.com with SMTP id j22so6871903eja.13;
+        Mon, 14 Dec 2020 14:37:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=9luV3WbxPFSpfKcSxGTt+i2DTKMuuCfUMkAWdvBYnQ8=;
-        b=kS2Adh400G0tNs14Wunz/+BXHNaef+bplNXckFElS9vOk/aIbsMpN13Mw5YX8ss1Zf
-         HkPwcQ3iL4qsP9iS1TWHQs6C0rtfeppvo0iyni++sLkPyVSLTGyfgvGaqkvsJ7y4Ini/
-         LHCDmTHdVhGA/JWaYzLffVJAU+gfUp7n2csFcazC+hk5HzkikOo26nO7pTwUyhJafwKU
-         9mlE0uZGsYpJlbD0U9lan0Os7AN9ViFsB4PyovJYjpNrKgS5eFNzXP8ZF1bR9OSZDBHi
-         3dcfBDWSe1G/4vsxLHZREus7Ffz51YLJ29KZd/vjPrkiZOXCbxvGpa8r4UQQ3taAR2oZ
-         3Wgg==
+        bh=Re4a9ic6X/qC8lw0qDnD/+52GEZaZivwedL28Be9r2Y=;
+        b=awVQa3kIBFg3XgQ3iLiQoHd85wN1hZNmnRqSKJPr5nFQTqPc25ZijKUOeo/u8bm+Q6
+         DJdDqUj8ULg6Zm1XBRfkG+WNh8+6bj1HPvUJJOYomwhsm4+aldPmzX9fm/9V6TNX6fUe
+         SJsQiArzxHu93na/vvaWCmnsHylEvimCJECib2/v9jskzJ4pgc2oFY6ixFoyg65bHeGU
+         1Vow9HTwBXK9QzhDo7y8miHxyxwNpHOZSEH2OkBGQoptzF0arjo7agQsEISmYnrg5nR/
+         bk1Evt9h4bE3jqDgRPz2habnVAyWK4oIl2nkN6Xwtb5WEFmR/XnFstxcTfSQ2VeKjd4D
+         Owmg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=9luV3WbxPFSpfKcSxGTt+i2DTKMuuCfUMkAWdvBYnQ8=;
-        b=Nj+Kg4RoP2nHN7RxgV/AQXAkY+DgFx3+8CZKiifdZqL3lUER/H1ViEhX3cqXEnEdrx
-         Q+T9bkY6QoTswZy7ns2YmsTf/IYbGm2tRrPZFR9DI+4Dd+rRtKV120majMuflGQ32YjP
-         0CAbCA5pl+0V2fFqHEnAe8t/Q2YbN68Eej7dkbSkEZy601nG6+8+5dhXqmBW+4iOUX4g
-         WUhh8G8qDp2pr5/i1o2uXxe7BfIZfF70zKvSMw2SfyqLo5Pv9j3QU0vIkp7ObAru/UF/
-         0EJQHudAKV4aA6Zh/Hn1ICskJceCyHVKATjdOMjbTFmJBQtE0xWmbmCWKcGBcx+Cdn/V
-         JEgw==
-X-Gm-Message-State: AOAM531YT+jXMEoqYQAl/No3Iwsainxxmj6IHnC/m5i/+ZRVzABZQiXC
-        zUD1FvmqEUth2i8kMVxJvg8=
-X-Google-Smtp-Source: ABdhPJwHL6hPC8jxHxTuBp6MbCoN3XRzcPwg8KD/sr7DdnkrTpxZ3otko5xBe0AQ37OFk09V8Ma/Eg==
-X-Received: by 2002:a50:d757:: with SMTP id i23mr27217416edj.116.1607984819259;
-        Mon, 14 Dec 2020 14:26:59 -0800 (PST)
+        bh=Re4a9ic6X/qC8lw0qDnD/+52GEZaZivwedL28Be9r2Y=;
+        b=UDY0U+7YKEqF0bCwJpOuGs1rF2DDdlsAq7VfC1AAbOKUoZpLGaRvVEOdByKdGeBpj7
+         7KL0qYJQC9kDCLI7+kQD/HLGcx9YrKgU0bJqCdd/TZxrHnMPD/l4kcP+pCO1Ef36C4j6
+         X5O3PxOAnwN/plzFwyc32Y5G/zGBF7GOxDG9OCW/rhug5gSbdmPB5dOHoAbrkm6hRxU8
+         /y6BPRLwJSzQS6p42LQnC18hvSSIPg8iDO4DoJ//LOYj6aeVzMuJ+SFVao8NCTN3EQAz
+         wQS+tElVpU3v96xIRFaaQcvWpo9madpqRBAw0MYOyPzr7D4kqhmripLCmacBVAU0GPpm
+         rdTw==
+X-Gm-Message-State: AOAM5328Q2YRXg9BxNqq1wgbflptFadtarJIoJTCYYe99Na3OphAR82P
+        FcmFy09vhuci5c1tlONx5io=
+X-Google-Smtp-Source: ABdhPJxS1PXmnH00sCgzl43n3133rCkIys8NCWRMRG9PFtsaZ8xAF/Jz5dtMftfVIW12Skqs/R9UBA==
+X-Received: by 2002:a17:906:705:: with SMTP id y5mr10714139ejb.428.1607985451743;
+        Mon, 14 Dec 2020 14:37:31 -0800 (PST)
 Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.googlemail.com with ESMTPSA id b14sm11072712edu.3.2020.12.14.14.26.58
+        by smtp.googlemail.com with ESMTPSA id be6sm16569654edb.29.2020.12.14.14.37.30
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 14 Dec 2020 14:26:58 -0800 (PST)
-Message-ID: <f0bc0bd63c712db452d0204220d53c4bf7101c79.camel@gmail.com>
-Subject: Re: [PATCH v3 1/6] scsi: ufs: Remove stringize operator '#'
- restriction
+        Mon, 14 Dec 2020 14:37:31 -0800 (PST)
+Message-ID: <01a4472065034527d57b0866750eb4ecc79b6a83.camel@gmail.com>
+Subject: Re: [PATCH v3 0/6] Several changes for the UPIU trace
 From:   Bean Huo <huobean@gmail.com>
-To:     Joe Perches <joe@perches.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, rostedt@goodmis.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Mon, 14 Dec 2020 23:26:57 +0100
-In-Reply-To: <f9017bc73dadfb84366734062d93722d8d7ecc59.camel@perches.com>
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "rostedt@goodmis.org" <rostedt@goodmis.org>,
+        "joe@perches.com" <joe@perches.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Mon, 14 Dec 2020 23:37:30 +0100
+In-Reply-To: <DM6PR04MB657559FA01C44B411BBDBDBCFCC70@DM6PR04MB6575.namprd04.prod.outlook.com>
 References: <20201214202014.13835-1-huobean@gmail.com>
-         <20201214202014.13835-2-huobean@gmail.com>
-         <f9017bc73dadfb84366734062d93722d8d7ecc59.camel@perches.com>
+         <DM6PR04MB657559FA01C44B411BBDBDBCFCC70@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-12-14 at 13:23 -0800, Joe Perches wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> > 
-> > Current EM macro definition, we use stringize operator '#', which
-> > turns
-> > the argument it precedes into a quoted string. Thus requires the
-> > symbol
-> > of __print_symbolic() should be the string corresponding to the
-> > name of
-> > the enum.
-> > 
-> > However, we have other cases, the symbol and enum name are not the
-> > same,
-> > we can redefine EM/EMe, but there will introduce some redundant
-> > codes.
-> > This patch is to remove this restriction, let others reuse the
-> > current
-> > EM/EMe definition.
+On Mon, 2020-12-14 at 22:13 +0000, Avri Altman wrote:
+> Bean Hi,
+> I support this series.
+> I think it is a good idea to print the response on complete,
+> But you need to change the prefix strings, otherwise you are breaking
+> the current parsers.
 > 
-> While this version doesn't have the copy/paste typo,
-> I fail to see value in defining EMe as a trailing comma
-> in an array declaration isn't meaningful and doesn't emit
-> any error or warning.
+> Say that you have a trace log, generated sometime during 2020 using
+> the current upiu trace.
+> It would look something like:
+> "send" <request upiu>
+> "complete" <request upiu>
 > 
-> Maybe all the uses of EMe can be converted to EM and the
-> macro definitions removed.
+> And another log generated sometime during 2021 after your change is
+> merged:
+> "send" <request upiu>
+> "complete" < ****response upiu ****>
+> 
+> The current parser won't be able to differentiate between those logs.
+> Just change the prefix strings to be "send_req" and "complete_rsp",
+> or something,
+> so the parsing tools that support the new format will be able to
+> differentiate it from the old one.
 
-Hi Joe
-I removed EMe, but there is this error:
+Avri,
+I still don't understand, this change doesn't break you current parser.
+if you still trace "send", "complete", "CDB", "query_send/complte",
+they are still there, doesn't change. I suggest you just run on your
+system. see if there is conflict.
 
-./include/trace/trace_events.h:300:18: error: initializer element is
-not constant
-    { symbol_array, { -1, NULL }};   \
+Regarding your suggestion:
+This is not problem now, we just change this definition.
 
-./include/trace/trace_events.h:300:18: error: expected expression
-before ‘,’ token
-    { symbol_array, { -1, NULL }};   \
+do you mean just "send" and "complete" or all?
+
+#define
+UFS_CMD_TRACE_STRINGS                                   \              
+          
+        EM(UFS_CMD_SEND,        "send_req")                         \  
+                                  
+        EM(UFS_CMD_COMP,        "complete_rsp")                     \  
+
+below also need add "req" and "rsp"?
+
+                                  
+        EM(UFS_DEV_COMP,        "dev_complete_rsp")                 \  
+                                  
+        EM(UFS_QUERY_SEND,      "query_send")                   \      
+                              
+        EM(UFS_QUERY_COMP,      "query_complete")               \      
+                              
+        EM(UFS_QUERY_ERR,       "query_complete_err")           \      
+                              
+        EM(UFS_TM_SEND,         "tm_send")                      \      
+                              
+        EM(UFS_TM_COMP,         "tm_complete")                  \      
+                              
+        EM(UFS_TM_ERR,          "tm_complete_err")    
 
 
-did you choose kernel trace and event trace before compiling?
-
-
-Thanks,
-Bean
+>   
+> Also, once the parser can differentiate the new format from the old,
+> whatever follows its fine: cdb / osf / tsf or whatever makes sense to
+> you.
+> 
+> Thanks,
+> Avri
 
