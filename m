@@ -2,90 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 927CFC2BB48
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 18:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A34C4361B
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 18:53:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 549FD2250F
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 18:30:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6102C225A9
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 18:53:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2440457AbgLNSaC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 13:30:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45750 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2440449AbgLNS34 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Dec 2020 13:29:56 -0500
-Date:   Mon, 14 Dec 2020 13:29:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1607970555;
-        bh=20HnP498QOKwNnxWdPlKAsPzoUCM0IYYFMY4LLh9MJM=;
-        h=From:To:Subject:References:In-Reply-To:From;
-        b=Ft7j2cmhQBm7VNzDX/4P6KXE0oL9bjVwbakggglxnBx6L10lgufIK6QP2f7O1MnCV
-         7zaujoRkYdSZk6Y+7OF0Fcseb1kHGY6XW8EaGXm8gzc6A5KjI+chl3fEomaFKEuaf0
-         aHiFAtqlnmj13nikLkNa5lmdv8Wl/7vBMvs53mF/Ui60pHdkPbhhkfZtB6T5iyasnX
-         DtdJNcxxS4erE2b6xnazCalcKxyuaG/l4sU13jE4FOuBy3FDgmwJOdgSicG1tEfiTV
-         vLmTi+qVx//uSLshdF0au4BqRSEu17DvbzDdzqkKf2oaXNo/uzevwhxkw8VfyFHWjy
-         oUPvy5inQxrwg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Andrea Parri <parri.andrea@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        devel@linuxdriverproject.org,
-        Saruhan Karademir <skarade@microsoft.com>
-Subject: Re: [PATCH AUTOSEL 5.9 15/23] scsi: storvsc: Validate length of
- incoming packet in storvsc_on_channel_callback()
-Message-ID: <20201214182914.GU643756@sasha-vm>
-References: <20201212160804.2334982-1-sashal@kernel.org>
- <20201212160804.2334982-15-sashal@kernel.org>
- <20201212180901.GA19225@andrea>
- <20201214110711.GB2831@kadam>
- <20201214130625.x2v53xhx5xw6jp4o@chatter.i7.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20201214130625.x2v53xhx5xw6jp4o@chatter.i7.local>
+        id S2502218AbgLNSwy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 13:52:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57656 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731829AbgLNSwi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 13:52:38 -0500
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6300C0613D3;
+        Mon, 14 Dec 2020 10:51:57 -0800 (PST)
+Received: by mail-ej1-x641.google.com with SMTP id d17so24016372ejy.9;
+        Mon, 14 Dec 2020 10:51:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=kmEWL9N858FqTq18xXGT1VCd7aIAPnn5gZrMzk+8WhI=;
+        b=Afo/cIHYdCXKfH752KDHu2O8NkEAZVkf5WOf6ECkwK6ARDFUB9yPT62H0/v8tHgR61
+         xevdbRVodazqrMPywJcq0YpH6GAk0IBsIBbAhWWqt9ZMLBqKJ6a9hLu/PipJmUyfGTPo
+         Abtg9nUqww/AxeLq/yWXA+dVCSXjo/w6S3SRRs1iXQqrqXPDtKhg1/ET/sIw1wiEq0ZW
+         8QKetn2wA0RdciaRs+/YQmdpA6LHbt84IdWgBoWFF/o/lW5ASQssnMQiBqM5PjbMgPh4
+         ec4PusS/fQfZ4OjwHcIGGAX00j+4UJPzU7p++7M5Zqc5naun3uQUz+YC2pdd2zVCQL4O
+         RbVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=kmEWL9N858FqTq18xXGT1VCd7aIAPnn5gZrMzk+8WhI=;
+        b=CuFahRSrWno3ZCr8AEge5PGnT6iH0DLkZng9NWHwkfzdM5ZzCF+hpzlTxqAjZDV8vL
+         GrDOnirnC3qZLTZNhCWrdQ0CpSbZKLFPsEsTf1VCrrTvV9oYqgvws/8xzgwm8mGCaZGk
+         fK/4p3hk9u/8mRTgKEJTYY38YCcHpBUAB9PWqzlhHJxr/EflEpB2z8YLG8KocYENcS5i
+         cE2KO8aiJamF44bf9cpvTw9jiqUEzofE9a6UoVEwTiyVPAERXVKla94nXpdaj4HXUJA5
+         sWjHW+czeL44uHNkt/mcgQu8XPtdCHTLFYCtrpFHg68lpTk51NxbKLMZG34gcxoVI+jM
+         AkzA==
+X-Gm-Message-State: AOAM532iX1sLMkEhNOxq9aD4dd0h+3rLm+SFMnftxKcx+pOr2w13u028
+        oEaXDsj6Urp38f2jghsn7Jo=
+X-Google-Smtp-Source: ABdhPJxrxN33uribVUjiZKJXkD851HxLdfh1YJ77xbUmPGGGbrrluHT7/CfnPcd+aN6YyEq31DBpFQ==
+X-Received: by 2002:a17:907:4271:: with SMTP id nq1mr19563127ejb.358.1607971916648;
+        Mon, 14 Dec 2020 10:51:56 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.googlemail.com with ESMTPSA id h23sm14154997ejg.37.2020.12.14.10.51.55
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 14 Dec 2020 10:51:56 -0800 (PST)
+Message-ID: <f23cea390a812f5126dbb232b1944e5499cc40dc.camel@gmail.com>
+Subject: Re: [PATCH v2 1/6] scsi: ufs: Remove stringize operator '#'
+ restriction
+From:   Bean Huo <huobean@gmail.com>
+To:     Joe Perches <joe@perches.com>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org, rostedt@goodmis.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Mon, 14 Dec 2020 19:51:55 +0100
+In-Reply-To: <ade665cbfa138d1851343576caad84a61e904c46.camel@perches.com>
+References: <20201214161502.13440-1-huobean@gmail.com>
+         <20201214161502.13440-2-huobean@gmail.com>
+         <ade665cbfa138d1851343576caad84a61e904c46.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 14, 2020 at 08:06:25AM -0500, Konstantin Ryabitsev wrote:
->On Mon, Dec 14, 2020 at 02:07:11PM +0300, Dan Carpenter wrote:
->> On Sat, Dec 12, 2020 at 07:09:01PM +0100, Andrea Parri wrote:
->> > Hi Sasha,
->> >
->> > On Sat, Dec 12, 2020 at 11:07:56AM -0500, Sasha Levin wrote:
->> > > From: "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
->> > >
->> > > [ Upstream commit 3b8c72d076c42bf27284cda7b2b2b522810686f8 ]
->> >
->> > FYI, we found that this commit introduced a regression and posted a
->> > revert:
->> >
->> >   https://lkml.kernel.org/r/20201211131404.21359-1-parri.andrea@gmail.com
->> >
->> > Same comment for the AUTOSEL 5.4, 4.19 and 4.14 you've just posted.
->> >
->>
->> Konstantin, is there anyway we could make searching lore.kernel.org
->> search all the mailing lists?  Right now we can only search one mailing
->> list at a time.
->
->This functionality is coming in the next version of public-inbox and
->should be available on lore.kernel.org within the next little while.
+On Mon, 2020-12-14 at 08:46 -0800, Joe Perches wrote:
+> > However, we have other cases, the symbol and enum name are not the
+> > same,
+> > we can redefine EM/EMe, but there will introduce some redundant
+> > codes.
+> > This patch is to remove this restriction, let others reuse the
+> > current
+> > EM/EMe definition.
+> 
+> I think the other way (adding new definitions for the cases when the
+> name and string are different) is less error prone.
+> 
+yes, agree with you, but here it is ok, it is not too much copy/paste.
 
-That's a good idea Dan; I had something running on linux-next, but I
-guess it's not enough and cases such as these sneak in.
+> > diff --git a/include/trace/events/ufs.h
+> > b/include/trace/events/ufs.h
+> 
+> []
+> > +#define
+> > UFS_LINK_STATES                                              \
+> > +     EM(UIC_LINK_OFF_STATE, "UIC_LINK_OFF_STATE")            \
+> > +     EM(UIC_LINK_ACTIVE_STATE, "UIC_LINK_ACTIVE_STATE,")     \
+> 
+> For instance:
+> 
+> Like here where you added an unnecessary and unwanted comma
 
-I wrote a script to do what you've suggested by simply cloning the repos
-on erol.kernel.org locally and then doing a simple search for the
-"Fixes:" and revert patterns.
+Thanks, I will fix it in next version.
 
--- 
-Thanks,
-Sasha
+Bean
+
+
