@@ -2,115 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E861C4361B
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 13:07:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD27EC2BB40
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 13:36:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBF07207B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 13:07:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F31A22795
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 13:36:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407804AbgLNNHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 08:07:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60552 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407799AbgLNNHJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 08:07:09 -0500
-Received: from mail-qk1-x742.google.com (mail-qk1-x742.google.com [IPv6:2607:f8b0:4864:20::742])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E99ADC0613D3
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2020 05:06:28 -0800 (PST)
-Received: by mail-qk1-x742.google.com with SMTP id c7so15406512qke.1
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2020 05:06:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google;
-        h=date:from:to:cc:subject:message-id:mail-followup-to:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=0WuvEppDleV+S7pcqpHxzCQflrbfbHnaCqqVzPSevY8=;
-        b=WB4x6JSvNaAdYyu5uKrfp9edqClNEBHeo80crhHJgzMSX7V+9akduyKk+G6dctmVp+
-         x9+JSCnFXt17Kea5ydmnhC/J8tM2e9zhPb+7i7UtRRQUikme8UaUdo9+OMBD0KiupAKB
-         SJCMUIjMzlxjUgCgpMXeDLPTnRTsyqqgfSZYY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=0WuvEppDleV+S7pcqpHxzCQflrbfbHnaCqqVzPSevY8=;
-        b=uZFRVceWuz9v3scubm9HaXJ2yxwtXri54OBnq0H1KF3A49i154RR9nv5Zboxz1rsKi
-         h0QZ5D+XvMSUBCyYmiXUK4bpvBHwXKd7aa7Mz+8g1YUZ7u4qqB8duoUSm9VZFn4DtbYF
-         S08ETboPZvs8YSwi5wBLSw/1Nhoh6/bj993eUyBgpwz2dgHYZl2WItZgRcFnV1hXWgA9
-         z8ySx7dktcZB5DDam7mFsI2O2RwHqk41An+4PYtBu74EWDDvQ2TMFuY3pcdPPH2/eidc
-         9zTBYjVMkDQMYJiQ1YDfvfiVgsRhPmQAN7TU+PTSQRmnYC/hCoMO0z5Fhk1mD1D3n2+h
-         SY/Q==
-X-Gm-Message-State: AOAM533oQkAio+BQgWRrqZBYL2Smxh2u/j1+q3Br8MChZZhMgoriFB+8
-        8QCccaBweuEME/pEAsXuQw0S/A==
-X-Google-Smtp-Source: ABdhPJw94VHAaeYO/S57fRpgTfG5neMu6DcTMz24l3inWNQg2cpmf5vYTNLAlzT1E3QnXvk8n5wLdg==
-X-Received: by 2002:a37:5242:: with SMTP id g63mr31559196qkb.317.1607951188064;
-        Mon, 14 Dec 2020 05:06:28 -0800 (PST)
-Received: from chatter.i7.local ([89.36.78.230])
-        by smtp.gmail.com with ESMTPSA id x47sm14799292qtb.86.2020.12.14.05.06.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Dec 2020 05:06:26 -0800 (PST)
-Date:   Mon, 14 Dec 2020 08:06:25 -0500
-From:   Konstantin Ryabitsev <konstantin@linuxfoundation.org>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Andrea Parri <parri.andrea@gmail.com>,
-        Sasha Levin <sashal@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        devel@linuxdriverproject.org,
-        Saruhan Karademir <skarade@microsoft.com>
-Subject: Re: [PATCH AUTOSEL 5.9 15/23] scsi: storvsc: Validate length of
- incoming packet in storvsc_on_channel_callback()
-Message-ID: <20201214130625.x2v53xhx5xw6jp4o@chatter.i7.local>
-Mail-Followup-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Andrea Parri <parri.andrea@gmail.com>,
-        Sasha Levin <sashal@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        devel@linuxdriverproject.org,
-        Saruhan Karademir <skarade@microsoft.com>
-References: <20201212160804.2334982-1-sashal@kernel.org>
- <20201212160804.2334982-15-sashal@kernel.org>
- <20201212180901.GA19225@andrea>
- <20201214110711.GB2831@kadam>
+        id S2407907AbgLNNgr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 08:36:47 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:9878 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2439953AbgLNNge (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 08:36:34 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Cvj7P2mwQz7G5y;
+        Mon, 14 Dec 2020 21:35:13 +0800 (CST)
+Received: from ubuntu.network (10.175.138.68) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.498.0; Mon, 14 Dec 2020 21:35:39 +0800
+From:   Zheng Yongjun <zhengyongjun3@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Zheng Yongjun <zhengyongjun3@huawei.com>
+Subject: [PATCH -next] scsi: pmcraid: convert comma to semicolon
+Date:   Mon, 14 Dec 2020 21:36:10 +0800
+Message-ID: <20201214133610.3836-1-zhengyongjun3@huawei.com>
+X-Mailer: git-send-email 2.22.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20201214110711.GB2831@kadam>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.138.68]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 14, 2020 at 02:07:11PM +0300, Dan Carpenter wrote:
-> On Sat, Dec 12, 2020 at 07:09:01PM +0100, Andrea Parri wrote:
-> > Hi Sasha,
-> > 
-> > On Sat, Dec 12, 2020 at 11:07:56AM -0500, Sasha Levin wrote:
-> > > From: "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-> > > 
-> > > [ Upstream commit 3b8c72d076c42bf27284cda7b2b2b522810686f8 ]
-> > 
-> > FYI, we found that this commit introduced a regression and posted a
-> > revert:
-> > 
-> >   https://lkml.kernel.org/r/20201211131404.21359-1-parri.andrea@gmail.com
-> > 
-> > Same comment for the AUTOSEL 5.4, 4.19 and 4.14 you've just posted.
-> > 
-> 
-> Konstantin, is there anyway we could make searching lore.kernel.org
-> search all the mailing lists?  Right now we can only search one mailing
-> list at a time.
+Replace a comma between expression statements by a semicolon.
 
-This functionality is coming in the next version of public-inbox and 
-should be available on lore.kernel.org within the next little while.
+Signed-off-by: Zheng Yongjun <zhengyongjun3@huawei.com>
+---
+ drivers/scsi/pmcraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://lore.kernel.org/workflows/20201201184814.GA32272@dcvr/
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index cbe5fab793eb..439e90f8a279 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -1950,7 +1950,7 @@ static void pmcraid_soft_reset(struct pmcraid_cmd *cmd)
+ 	}
+ 
+ 	iowrite32(doorbell, pinstance->int_regs.host_ioa_interrupt_reg);
+-	ioread32(pinstance->int_regs.host_ioa_interrupt_reg),
++	ioread32(pinstance->int_regs.host_ioa_interrupt_reg);
+ 	int_reg = ioread32(pinstance->int_regs.ioa_host_interrupt_reg);
+ 
+ 	pmcraid_info("Waiting for IOA to become operational %x:%x\n",
+-- 
+2.22.0
 
--K
