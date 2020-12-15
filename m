@@ -2,151 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB37C2BB9A
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 13:44:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C29FC4361B
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 13:57:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82ABD224BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 13:44:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 779FD224B8
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 13:57:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728821AbgLONn5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 08:43:57 -0500
-Received: from mx2.suse.de ([195.135.220.15]:49184 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727907AbgLONn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Dec 2020 08:43:57 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id ACC30AC7F;
-        Tue, 15 Dec 2020 13:43:14 +0000 (UTC)
-Subject: Re: [LSFMMBPF 2021] A status update
-To:     Michal Hocko <mhocko@suse.com>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     Josef Bacik <josef@toxicpanda.com>,
-        Btrfs BTRFS <linux-btrfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
+        id S1728988AbgLON4n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 08:56:43 -0500
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:37196 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726439AbgLON4D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Dec 2020 08:56:03 -0500
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-256-kyP4j1eZN0iEOkzo-w1qBQ-1; Tue, 15 Dec 2020 13:54:22 +0000
+X-MC-Unique: kyP4j1eZN0iEOkzo-w1qBQ-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Tue, 15 Dec 2020 13:54:17 +0000
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Tue, 15 Dec 2020 13:54:17 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Pavel Begunkov' <asml.silence@gmail.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
         "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-nvme@vger.kernel.org" <linux-nvme@vger.kernel.org>
-References: <fd5264ac-c84d-e1d4-01e2-62b9c05af892@toxicpanda.com>
- <20201212172957.GE2443@casper.infradead.org>
- <20201215122307.GN32193@dhcp22.suse.cz>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <af2d36e8-7265-578c-0b7b-dd61cd851410@suse.de>
-Date:   Tue, 15 Dec 2020 14:43:13 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.4.0
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: RE: [PATCH v1 2/6] iov_iter: optimise bvec iov_iter_advance()
+Thread-Topic: [PATCH v1 2/6] iov_iter: optimise bvec iov_iter_advance()
+Thread-Index: AQHW0njgRO60UNrAz0qHNwIRx20dYqn35EKAgAAgPwCAACb+4A==
+Date:   Tue, 15 Dec 2020 13:54:16 +0000
+Message-ID: <c5f54cb816564f2b96f5d7a0f85fdc4a@AcuMS.aculab.com>
+References: <cover.1607976425.git.asml.silence@gmail.com>
+ <5c9c22dbeecad883ca29b31896c262a8d2a77132.1607976425.git.asml.silence@gmail.com>
+ <262132648a8f4e7a9d1c79003ea74b3f@AcuMS.aculab.com>
+ <d151f81e-ec56-59c0-d2a0-ffd4a269fec1@gmail.com>
+In-Reply-To: <d151f81e-ec56-59c0-d2a0-ffd4a269fec1@gmail.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-In-Reply-To: <20201215122307.GN32193@dhcp22.suse.cz>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/15/20 1:23 PM, Michal Hocko wrote:
-> On Sat 12-12-20 17:29:57, Matthew Wilcox wrote:
->> On Fri, Dec 04, 2020 at 10:48:53AM -0500, Josef Bacik wrote:
->>> We on the program committee hope everybody has been able to stay safe and
->>> healthy during this challenging time, and look forward to being able to see
->>> all of you in person again when it is safe.
->>>
->>> The current plans for LSFMMBPF 2021 are to schedule an in person conference
->>> in H2 (after June) of 2021.  The tentative plan is to use the same hotel
->>> that we had planned to use for 2020, as we still have contracts with them.
->>> However clearly that is not set in stone.  The Linux Foundation has done a
->>> wonderful job of working with us to formulate a plan and figure out the
->>> logistics that will work the best for everybody, I really can't thank them
->>> enough for their help.
->>
->> Thank you all for doing your best in the face of this disruption.  I
->> really appreciate all the work you're putting in, and I can't wait to
->> see you all again in person.
->>
->> I hosted a Zoom call yesterday on the topic of Page Folios, and uploaded
->> the video.
-> 
-> Thanks for organizing this. I couldn't attent directly but I have
-> watched the video. I think this was a useful meeting.
-> 
->> There was interest expressed in the call on doing a follow-up
->> call on the topic of GUP (get_user_pages and friends).  It would probably
->> also be good to have meetings on other topics.
-> 
-> I hope I will have time to join this one.
-> 
->> I don't want this to be seen in any way as taking away from LSFMMBPF.
->> I see Zoom calls as an interim solution to not having face-to-face
->> meetings.
-> 
-> Agreed!
-> 
->> I'd like to solicit feedback from this group on:
->>
->>   - Time of day.  There is no good time that suits everyone around
->>     the world.  With developers in basically every inhabited time zone, the
->>     call will definitely take place in the middle of somebody's night, and
->>     during somebody else's normal family time.  Publishing the recordings
->>     helps ameliorate some of this, but I feel we should shift the time
->>     around.  Having it at the same time of day helps people fit it into
->>     their schedule of other meetings (and meals), but I think the benefits
->>     of allowing more people to participate live outweighs the costs.
-> 
-> Hard question without any good answer. You can rotate preferred timezone
-> which should spread the suffering.
-> 
-What I found useful is to have a fixed schedule for the actual talk, but 
-keep the recording online for an extended time (say 24h). And require 
-the presenters to be available in a break-out room for any questions for 
-an extended time, too.
-That way any participant can choose which time would suit him best to 
-watch the presentation, _and_ being reasonably sure that he can fire up 
-questions later on.
+RnJvbTogUGF2ZWwgQmVndW5rb3YNCj4gU2VudDogMTUgRGVjZW1iZXIgMjAyMCAxMToyNA0KPiAN
+Cj4gT24gMTUvMTIvMjAyMCAwOTozNywgRGF2aWQgTGFpZ2h0IHdyb3RlOg0KPiA+IEZyb206IFBh
+dmVsIEJlZ3Vua292DQo+ID4+IFNlbnQ6IDE1IERlY2VtYmVyIDIwMjAgMDA6MjANCj4gPj4NCj4g
+Pj4gaW92X2l0ZXJfYWR2YW5jZSgpIGlzIGhlYXZpbHkgdXNlZCwgYnV0IGltcGxlbWVudGVkIHRo
+cm91Z2ggZ2VuZXJpYw0KPiA+PiBpdGVyYXRpb24uIEFzIGJ2ZWNzIGhhdmUgYSBzcGVjaWZpY2Fs
+bHkgY3JhZnRlZCBhZHZhbmNlKCkgZnVuY3Rpb24sIGkuZS4NCj4gPj4gYnZlY19pdGVyX2FkdmFu
+Y2UoKSwgd2hpY2ggaXMgZmFzdGVyIGFuZCBzbGltbWVyLCB1c2UgaXQgaW5zdGVhZC4NCj4gPj4N
+Cj4gPj4gIGxpYi9pb3ZfaXRlci5jIHwgMTkgKysrKysrKysrKysrKysrKysrKw0KPiBbLi4uXQ0K
+PiA+PiAgdm9pZCBpb3ZfaXRlcl9hZHZhbmNlKHN0cnVjdCBpb3ZfaXRlciAqaSwgc2l6ZV90IHNp
+emUpDQo+ID4+ICB7DQo+ID4+ICAJaWYgKHVubGlrZWx5KGlvdl9pdGVyX2lzX3BpcGUoaSkpKSB7
+DQo+ID4+IEBAIC0xMDc3LDYgKzEwOTIsMTAgQEAgdm9pZCBpb3ZfaXRlcl9hZHZhbmNlKHN0cnVj
+dCBpb3ZfaXRlciAqaSwgc2l6ZV90IHNpemUpDQo+ID4+ICAJCWktPmNvdW50IC09IHNpemU7DQo+
+ID4+ICAJCXJldHVybjsNCj4gPj4gIAl9DQo+ID4+ICsJaWYgKGlvdl9pdGVyX2lzX2J2ZWMoaSkp
+IHsNCj4gPj4gKwkJaW92X2l0ZXJfYnZlY19hZHZhbmNlKGksIHNpemUpOw0KPiA+PiArCQlyZXR1
+cm47DQo+ID4+ICsJfQ0KPiA+PiAgCWl0ZXJhdGVfYW5kX2FkdmFuY2UoaSwgc2l6ZSwgdiwgMCwg
+MCwgMCkNCj4gPj4gIH0NCj4gPg0KPiA+IFRoaXMgc2VlbXMgdG8gYWRkIHlldCBhbm90aGVyIGNv
+bXBhcmlzb24gYmVmb3JlIHdoYXQgaXMgcHJvYmFibHkNCj4gPiB0aGUgY29tbW9uIGNhc2Ugb24g
+YW4gSU9WRUMgKGllIG5vcm1hbCB1c2Vyc3BhY2UgYnVmZmVyKS4NCj4gDQo+IElmIEFsIGZpbmFs
+bHkgdGFrZXMgdGhlIHBhdGNoIGZvciBpb3ZfaXRlcl9pc18qKCkgaGVscGVycyBpdCB3b3VsZA0K
+PiBiZSBjb21wbGV0ZWx5IG9wdGltaXNlZCBvdXQuDQoNCkkga25ldyBJIGRpZG4ndCBoYXZlIHRo
+YXQgcGF0aCAtIHRoZSBzb3VyY2VzIEkgbG9va2VkIGF0IGFyZW4ndCB0aGF0IG5ldy4NCkRpZG4n
+dCBrbm93IGl0cyBzdGF0ZS4NCg0KSW4gYW55IGNhc2UgdGhhdCBqdXN0IHN0b3BzIHRoZSBzYW1l
+IHRlc3QgYmVpbmcgZG9uZSB0d2ljZS4NCkluIHN0aWxsIGNoYW5nZXMgdGhlIG9yZGVyIG9mIHRo
+ZSB0ZXN0cy4NCg0KVGhlIHRocmVlICd1bmxpa2VseScgY2FzZXMgc2hvdWxkIHJlYWxseSBiZSBp
+bnNpZGUgYSBzaW5nbGUNCid1bmxpa2VseScgdGVzdCBmb3IgYWxsIHRocmVlIGJpdHMuDQpUaGVu
+IHRoZXJlIGlzIG9ubHkgb25lIG1pcy1wcmVkaWN0YWJsZSBqdW1wIHByaW9yIHRvIHRoZSB1c3Vh
+bCBwYXRoLg0KDQpCeSBhZGRpbmcgdGhlIHRlc3QgYmVmb3JlIGl0ZXJhdGVfYW5kX2FkdmFuY2Uo
+KSB5b3UgYXJlIChlZmZlY3RpdmVseSkNCm9wdGltaXNpbmcgZm9yIHRoZSBidmVjIChhbmQgZGlz
+Y2FyZCkgY2FzZXMuDQpBZGRpbmcgJ3VubGlrZWx5KCknIHdvbid0IG1ha2UgYW55IGRpZmZlcmVu
+Y2Ugb24gc29tZSBhcmNoaXRlY3R1cmVzLg0KSUlSQyByZWNlbnQgaW50ZWwgeDg2IGRvbid0IGhh
+dmUgYSAnc3RhdGljIHByZWRpY3Rpb24nIGZvciB1bmtub3duDQpicmFuY2hlcyAtIHRoZXkganVz
+dCB1c2Ugd2hhdGV2ZXIgaW4gaXMgdGhlIGJyYW5jaCBwcmVkaWN0b3IgdGFibGVzLg0KDQoJRGF2
+aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBCcmFtbGV5IFJvYWQsIE1vdW50
+IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdpc3RyYXRpb24gTm86IDEzOTcz
+ODYgKFdhbGVzKQ0K
 
->>   - Schedule.  Friday's probably a bad day to have it, as it ends up
->>     being Saturday for some people.  It can move around the week too.
->>     Also, probably wise to not have it over Christmas as most developers
->>     have that period as family time.
-> 
-> Yes, Friday tends to be not great. I think mid week should work better
-> as the overalap
-> 
->>   - Topics.  I'm sure there's no shortage of things to discuss!  I'm
->>     happy to organise meetings for people even on topics I have no direct
->>     interest in.
-> 
-> Thanks for organizing this. I am pretty sure poeple will land on topics
-> either in the call or over email.
-> 
->> And most urgently, when should we have the GUP meeting? On the call,
->> I suggested Friday the 8th of January, but I'm happy to set something
->> up for next week if we'd like to talk more urgently.
-> 
-> I am unlikely to be able to join before the end of year so if you ask
-> me.
-> 
-> Thanks again and fingers crossed we can actually have a face to face
-> meeting sometimes during next year.
-> 
-I'd side with Michal here; having something this year will be 
-challenging, as quite some ppl (myself included) will be on holiday.
-Rather move it to start of next year; mid-February would be a good time, 
-giving enough room to organize etc.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
