@@ -2,94 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F31C2C4361B
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 23:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE95FC2BBD4
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:25:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B91EB22518
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Dec 2020 23:22:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E85522258
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729515AbgLNXWM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 18:22:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48428 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725993AbgLNXWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Dec 2020 18:22:01 -0500
-Received: from gandalf.local.home (cpe-66-24-58-225.stny.res.rr.com [66.24.58.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5E1E32250F;
-        Mon, 14 Dec 2020 23:21:19 +0000 (UTC)
-Date:   Mon, 14 Dec 2020 18:21:17 -0500
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     David Laight <David.Laight@ACULAB.COM>
-Cc:     'Bean Huo' <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "joe@perches.com" <joe@perches.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 1/6] scsi: ufs: Remove stringize operator '#'
- restriction
-Message-ID: <20201214182117.1bbc717d@gandalf.local.home>
-In-Reply-To: <977f3ea155644cd89bc83f2e9dcf281e@AcuMS.aculab.com>
-References: <20201214202014.13835-1-huobean@gmail.com>
-        <20201214202014.13835-2-huobean@gmail.com>
-        <977f3ea155644cd89bc83f2e9dcf281e@AcuMS.aculab.com>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1728368AbgLOAZB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 19:25:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53450 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727535AbgLOAYs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 19:24:48 -0500
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07F1DC0617A7;
+        Mon, 14 Dec 2020 16:24:08 -0800 (PST)
+Received: by mail-wr1-x443.google.com with SMTP id a12so18140478wrv.8;
+        Mon, 14 Dec 2020 16:24:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=jQVTvgGa1LjUWqvTxBIf73PGX5t0yWv/7jb/FOyHpnQ=;
+        b=MNxOq+/uE7DIwyNRUYewGw+cHYV3pClHNKkFNyBIVdI3EmUW/iPsPfP7yyzvq8u6HW
+         y+G5urnHOa4dHakH8fNwlven+K4tiRfbWXhhmxGgEeMzIgON/V/3KPvIIE1STFr4wlIj
+         SgeoTLBn1XPnx5Gw54WO9Ail0Pbu+qn1ntWpDgf7sX2nl46zzOUPoASz3AKqbQTRe5C8
+         qjhO3fZhfFlR+QPZhkUFrJzZojsifXm8XUJO1MGsQth6ATu4tYHY/Ma1viQrwsp2EP4o
+         7pb0PcP510viQINAxb0x6SwFrTsMMbzg0xzT5YV55QJkl2tVrPkM8FYFuof/4cC/EixF
+         gDtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=jQVTvgGa1LjUWqvTxBIf73PGX5t0yWv/7jb/FOyHpnQ=;
+        b=J7JY5rXW+LgkCyM9vmy8ceYE1Ie5zjb1QzLInwkdkQ+4mDT1CaZvWxLwroq6RuI+a4
+         0fKrMddE6xUScoIbOKsAi/tPVR9D+R5n9gRNSavJCKmr0pXJ6Ui1d1Zx3bn5PEd0zx7A
+         BVlcoB7J/vPV9VJaDBK4rB6hbY3++rFzlD3iXlBekc/LZBMMd8YrAAJSFf6KDxF83L7w
+         VEFOzsOS6QhT2/VJCtRXU/YZH78GPViVz+axdSWlYey6S2hsZfHIsDb+Iogeuo1dwpKI
+         ddzzZ8tlQXp4O9j3eFJlG0WXyiit/4PHCYGmVjpzHBJuazbvVuOVcKaliluycZTkCLkZ
+         sv5A==
+X-Gm-Message-State: AOAM5315zvBDRXh8mizkM+XJoT+Go0B8je2Qh7SnW8L9wzO1FOgzGUR1
+        eP08cRZFgrI2xnY1e7gA+7jghzjQQ6OB0/ZV
+X-Google-Smtp-Source: ABdhPJzkeBXbuB0e70wPSfv0YNEY+IY3u+FsW+X1sRWABcHyKLngnn7Dx2/0Lsq9Kl4ceWUMiJY3iQ==
+X-Received: by 2002:adf:f590:: with SMTP id f16mr194470wro.40.1607991846606;
+        Mon, 14 Dec 2020 16:24:06 -0800 (PST)
+Received: from localhost.localdomain ([85.255.232.163])
+        by smtp.gmail.com with ESMTPSA id b19sm5362012wmj.37.2020.12.14.16.24.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Dec 2020 16:24:06 -0800 (PST)
+From:   Pavel Begunkov <asml.silence@gmail.com>
+To:     linux-block@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
+        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: [PATCH v1 3/6] bio: deduplicate adding a page into bio
+Date:   Tue, 15 Dec 2020 00:20:22 +0000
+Message-Id: <189cae47946fa49318f85678def738d358e8298b.1607976425.git.asml.silence@gmail.com>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <cover.1607976425.git.asml.silence@gmail.com>
+References: <cover.1607976425.git.asml.silence@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 14 Dec 2020 23:11:40 +0000
-David Laight <David.Laight@ACULAB.COM> wrote:
+Both bio_add_hw_page() mimics bio_add_page() and has a hand-coded
+version of appending a page into bio's bvec. DRY
 
-> > ---
-> >  include/trace/events/ufs.h | 40 +++++++++++++++++++-------------------
-> >  1 file changed, 20 insertions(+), 20 deletions(-)
-> > 
-> > diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-> > index 0bd54a184391..fa755394bc0f 100644
-> > --- a/include/trace/events/ufs.h
-> > +++ b/include/trace/events/ufs.h
-> > @@ -20,28 +20,28 @@  
-> ..
-> > +#define UFS_LINK_STATES						\
-> > +	EM(UIC_LINK_OFF_STATE,		"UIC_LINK_OFF_STATE")		\
-> > +	EM(UIC_LINK_ACTIVE_STATE,	"UIC_LINK_ACTIVE_STATE")	\
-> > +	EMe(UIC_LINK_HIBERN8_STATE,	"UIC_LINK_HIBERN8_STATE")  
-> 
-> If you make EM a parameter to UFS_LINK_STATES then the caller
-> can pass in the name of a #define that does the required expansion.
-> The caller can also add in any required terminator after the last entry.
-> For an enum (which doesn't want a , at the end) just add a dummy entry.
-> You often want a constant for the number of items anyway.
+Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
+---
+ block/bio.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-This is currently the way its done in multiple other places. When creating
-the "EMe" trick, I've thought about it, but then realized it would make the
-other locations look strange without the expected comma, and decided that
-EMe() would be the best solution, as it's only strange in where it's added,
-and not where its used.
-
- $ git grep -l EMe include/trace/ |wc -l
-     11
-
-It's already used in 11 other files, let's not muck with it now.
-
--- Steve
+diff --git a/block/bio.c b/block/bio.c
+index 1f2cc1fbe283..4a8f77bb3956 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -734,6 +734,22 @@ const char *bio_devname(struct bio *bio, char *buf)
+ }
+ EXPORT_SYMBOL(bio_devname);
+ 
++static void bio_add_page_noaccount(struct bio *bio, struct page *page,
++				   unsigned int len, unsigned int off)
++{
++	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
++
++	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
++	WARN_ON_ONCE(bio_full(bio, len));
++
++	bv->bv_page = page;
++	bv->bv_offset = off;
++	bv->bv_len = len;
++
++	bio->bi_iter.bi_size += len;
++	bio->bi_vcnt++;
++}
++
+ static inline bool page_is_mergeable(const struct bio_vec *bv,
+ 		struct page *page, unsigned int len, unsigned int off,
+ 		bool *same_page)
+@@ -818,12 +834,7 @@ int bio_add_hw_page(struct request_queue *q, struct bio *bio,
+ 	if (bio->bi_vcnt >= queue_max_segments(q))
+ 		return 0;
+ 
+-	bvec = &bio->bi_io_vec[bio->bi_vcnt];
+-	bvec->bv_page = page;
+-	bvec->bv_len = len;
+-	bvec->bv_offset = offset;
+-	bio->bi_vcnt++;
+-	bio->bi_iter.bi_size += len;
++	bio_add_page_noaccount(bio, page, len, offset);
+ 	return len;
+ }
+ 
+@@ -903,18 +914,7 @@ EXPORT_SYMBOL_GPL(__bio_try_merge_page);
+ void __bio_add_page(struct bio *bio, struct page *page,
+ 		unsigned int len, unsigned int off)
+ {
+-	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
+-
+-	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+-	WARN_ON_ONCE(bio_full(bio, len));
+-
+-	bv->bv_page = page;
+-	bv->bv_offset = off;
+-	bv->bv_len = len;
+-
+-	bio->bi_iter.bi_size += len;
+-	bio->bi_vcnt++;
+-
++	bio_add_page_noaccount(bio, page, len, off);
+ 	if (!bio_flagged(bio, BIO_WORKINGSET) && unlikely(PageWorkingset(page)))
+ 		bio_set_flag(bio, BIO_WORKINGSET);
+ }
+-- 
+2.24.0
 
