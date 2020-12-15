@@ -7,67 +7,69 @@ X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F2DC4361B
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 09:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 193FAC2BB9A
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:01:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C7C6222B6
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 09:43:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B93CF224B1
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:01:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727968AbgLOJnT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 04:43:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54492 "EHLO
+        id S1727153AbgLOKAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 05:00:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726810AbgLOJnS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 04:43:18 -0500
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62113C06179C;
-        Tue, 15 Dec 2020 01:42:38 -0800 (PST)
-Received: by mail-ej1-x644.google.com with SMTP id ga15so26710773ejb.4;
-        Tue, 15 Dec 2020 01:42:38 -0800 (PST)
+        with ESMTP id S1726995AbgLOKAf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 05:00:35 -0500
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3BFC06179C;
+        Tue, 15 Dec 2020 01:59:49 -0800 (PST)
+Received: by mail-ej1-x643.google.com with SMTP id b9so1847109ejy.0;
+        Tue, 15 Dec 2020 01:59:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=sbp7bazvQ/Kg/Kx4Lh7f+HzqSKdsXL4CqYh5zWYbn/Q=;
-        b=t6rETd8BKnh9JPwR+wiUit332ATV4QQgbXbdlcS7VK4HhpteabSiMrJPrQWZUc1bxk
-         rgUgKkfy+CX8IGNZj4ONxneMVg0rL9NbDNXk6Lnf0D3D/37hRX+YgUgLAKowX3F6WN9s
-         W2Dobap8Dn0UQiYkgW2MS0yqPIabGP7XcEfRvHjyfcdFkRF/J+z9C4rW9UMteWErlRH/
-         fLxUnkCaQsFKEAqf6Ew7IxigWuaaUBMiAKesebEitcTO+lCBkJuTgQ9DBLWH/Bjl0egY
-         7vdSqWtWoHdebps5n9yqHUAZ2YPgTErQZjHp+1DMubGJUFGznL9hRAstABRDYqimsMyc
-         xKSw==
+        bh=9VWi9lvVrtm8vqGMgMBrAESVz3nZujJvYtHJX+Z95Jw=;
+        b=BU3TGKZo/XOQEoIXFdM1P4n5pKuFdlZOTA9L9qx7LtQH7SwLjsIr91Lh2D62rpj55c
+         EWPTM+17jHVlpH03T1FiYVU3aoB0qGWcmgcMddTsRXfGOCiAqmHatqHekDpHGRZNuhZ9
+         ZIdWBfa0eyefu6LwH14DJ32NYmYNTP5d5mCH6/Q6iV6FV2CBMiQ6+Ane2hUIkbfiFMuZ
+         rChIQhdBPXgco3juca1zpha87LxNHpOxgRP5j/Pg/zZ6Wp+Cx9aSZOxaDrMA5SLfDXej
+         1VW3cEqVlPzc8GlE77ozLxNuwDZkpquc2fsN/5b7jxvHsUjtLJldTeHNwPpNjH9gSwVP
+         tf8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=sbp7bazvQ/Kg/Kx4Lh7f+HzqSKdsXL4CqYh5zWYbn/Q=;
-        b=XQkwoOn0RUGYd2GIvZoEmy8ZUckhVrLCOO6DOAHSVsu9OdImgCUDK5mAU6hK2YMHjo
-         v5g3GVZQ0GxryJbpKJlPoh1M5hvICa0EWK6/gWDcNRBRPCacVCjefmkjm3TBpaqauqjV
-         1pNoc65+43L7VpWJ7YWsd0cN6kiUfAFpLe9Q/+LL0A6VEptT3+XnxQjfb/6qModzAxgs
-         +5IIgXvqibhnL04a22NB1F1sjCXVO3zRXFTidCWv1xlFff9Wm6kbx4uCLufggPg2+ORq
-         qk4x26xsgCMInxwNmKd71AdKQm3cABwiXtidsOgpwWglYRfnRSstzFMqkAWllcUWj17G
-         FXBA==
-X-Gm-Message-State: AOAM531Vdfw7cpR9FNL9vi8PWJ+ZWg09XgB0rSVblmMR83dgrTGgVLdG
-        Wz0sT6lSAs/MKMUTDLESFiE=
-X-Google-Smtp-Source: ABdhPJx6kGVuVXxkYSZKFdzdahp4EjS2CrcsC3/+ew4xrg1WGte4KZ/gpGX/T8bK/uxCyJFaM2JHuQ==
-X-Received: by 2002:a17:906:a29a:: with SMTP id i26mr25934867ejz.45.1608025357153;
-        Tue, 15 Dec 2020 01:42:37 -0800 (PST)
+        bh=9VWi9lvVrtm8vqGMgMBrAESVz3nZujJvYtHJX+Z95Jw=;
+        b=fee8ny3n+TUXSvDILpT+cD8JdU3sPdEoNCrg1HHhIuOmO/k5GVMsM0hZi/GoTdCAdV
+         Hz8ck95AdCO5ZEdGY8sgXtlIgIWt/R03vMdnuC41QfbZvumZg+s9q+AFXuFcdOyQrY+8
+         E2L5BksHIot0sSjNPCwhpQZ4KuNpd4fiVC+A//dGOo3IUfNRYOzsy4ET2TtIcHaTLmRU
+         1IvROr7fK82Wi0N12EIbpS7dl9wNqe7BZI8+pomVG36YtFV+v3wJMbLiGkp1CsKx84wv
+         TY7hW09jOyQ8zRnx7owiwKSeTXsuynC29GOXkA35my3d6g2PO1ELHmMNhGl841ttN1BE
+         rmWw==
+X-Gm-Message-State: AOAM532UiTLXFHVSNsn3S/SiS6szrcEWPHG7/sk/ZsNKwWjh580AMxop
+        ieH7iCRRYnv3d933YeQCV8Q=
+X-Google-Smtp-Source: ABdhPJwCxl4PpHeih2wMXniKYALjSkU03AHuXby+xZvV9XFwppfN4g9J2/HbB6WB4YNYszHZSJp3zw==
+X-Received: by 2002:a17:906:8587:: with SMTP id v7mr25524315ejx.381.1608026388125;
+        Tue, 15 Dec 2020 01:59:48 -0800 (PST)
 Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.googlemail.com with ESMTPSA id m7sm943808ejo.125.2020.12.15.01.42.36
+        by smtp.googlemail.com with ESMTPSA id r24sm17708914edo.4.2020.12.15.01.59.47
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 15 Dec 2020 01:42:36 -0800 (PST)
-Message-ID: <615bb13dc394dac2b56fa60787e1841d2db12462.camel@gmail.com>
-Subject: Re: [PATCH v4 3/6] scsi: ufs: Group UFS WB related flags to struct
+        Tue, 15 Dec 2020 01:59:47 -0800 (PST)
+Message-ID: <277a6fd2dd3b3e70a0caeda6283214ed5152aa65.camel@gmail.com>
+Subject: Re: [PATCH v4 4/6] scsi: ufs: Remove d_wb_alloc_units from struct
  ufs_dev_info
 From:   Bean Huo <huobean@gmail.com>
 To:     Stanley Chu <stanley.chu@mediatek.com>
 Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+        tomas.winkler@intel.com, cang@codeaurora.org,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Tue, 15 Dec 2020 10:42:36 +0100
-In-Reply-To: <1608022873.10163.17.camel@mtkswgap22>
+Date:   Tue, 15 Dec 2020 10:59:46 +0100
+In-Reply-To: <1608022638.10163.14.camel@mtkswgap22>
 References: <20201211140035.20016-1-huobean@gmail.com>
-         <20201211140035.20016-4-huobean@gmail.com>
-         <1608022873.10163.17.camel@mtkswgap22>
+         <20201211140035.20016-5-huobean@gmail.com>
+         <1608022638.10163.14.camel@mtkswgap22>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 Mime-Version: 1.0
@@ -76,54 +78,22 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-12-15 at 17:01 +0800, Stanley Chu wrote:
-> > +     bool    wb_buf_flush_enabled;
-> > +     u8      wb_dedicated_lu;
-> > +     u8      b_wb_buffer_type;
-> > +     u32     d_wb_alloc_units;
-> > +
-> > +     bool    b_rpm_dev_flush_capable;
-> > +     u8      b_presrv_uspc_en;
+On Tue, 2020-12-15 at 16:57 +0800, Stanley Chu wrote:
+> >        u8      b_wb_buffer_type;
+> > -     u32     d_wb_alloc_units;
 > 
-> Perhaps we could unify the style of these WB related stuff to wb_* ?
-
-yes, agree. I will change them.
-
+> Perhaps below two fields could be also removed from struct
+> ufs_dev_info
+> for the same reason?
 > 
-> Besides, I am not sure if using tab instead space between the type
-> and
-> name in this struct is a good idea.
-> 
-using space, in addition single space, type and parameter names are
-mixed. 
+> u32 d_ext_ufs_feature_sup;
+I thought twice before this patch. maybe will be used in near future,
+so I keep d_ext_ufs_feature_sup. Now that you suggest, we can remove it
+as well. 
 
+> u32 d_wb_alloc_units;
+This patch is to remove it.
 
-use space:
-
- /* UFS WB related flags */
-bool wb_enabled;
-bool wb_buf_flush_enabled;
-u8
-wb_dedicated_lu;
-u8 b_wb_buffer_type;
-u32 d_wb_alloc_units;
-
-use table:
-
- /* UFS WB related flags */
-bool    wb_enabled;
-bool    wb_buf_flush_enabled;
-u8      wb_dedicated_lu;
-u8      b_wb_buffer_type;
-u32     d_wb_alloc_units;
-
-I think, the result is very clear comparing above two examples. yes,
-there is no explicit stipulation that we must use space or tab. Both
-styles exist in Linux. Maybe this is just matter of personal interest.
-
-
+Thanks,
 Bean
-
-> Thanks,
-> Stanley Chu
 
