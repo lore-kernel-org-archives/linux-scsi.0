@@ -2,131 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E39DC4361B
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEE7DC2BB40
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8F0F22258
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB84F2226A
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:33:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727211AbgLOAYo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 19:24:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53434 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725976AbgLOAYo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 19:24:44 -0500
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 961A6C061793;
-        Mon, 14 Dec 2020 16:24:03 -0800 (PST)
-Received: by mail-wm1-x341.google.com with SMTP id q75so16855449wme.2;
-        Mon, 14 Dec 2020 16:24:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8jc3AIzkIPReSThseVXRAPm4odmJMoGYu8KGcGUo5xA=;
-        b=UdWHcglApp9RdDZeyVfl7LsJgdxW48tzLbgNRju6ud80NwZdq8pS6rNA48XayxnD2y
-         gxp99ju2U22s0IgeHpYxNkwEmEsSWmjKvkDVgboRjCL0u2BjvWzJuRm3fQuna6NzrVJX
-         tY83rFJle/+8UqxI4cOpq7ZEPwQanA4rNBX48zfg4PVtL5ODTFYQfgYr+oKNqJ85Y/gd
-         599roSuL8vkZuUsB+DMvesJq5/Qay+HaVljVBmkn57M9MaFlDCjvpgkaWPWHAqXbqbH5
-         awkn32y9RHX7Bg8npAuH4ig4MoKopNAyVbodgQEudUlOhmPl/5BfCRzLw7S/Tb6KT7TR
-         Av8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8jc3AIzkIPReSThseVXRAPm4odmJMoGYu8KGcGUo5xA=;
-        b=JjH7Xp3ZjrUPqt0bm0f52mOdf+VEv41WWJNFd5zZmerIWueDZ4ud/4wCS4AHQn//KP
-         yz7xTY1dr+tIjnd+qTmFJ3C8nmB3UamvlZyBkQqVebySh2wZ7ewMbhPSKjjTN2EbMXMm
-         pkC+c6B1isPYgjQ+jgRfaH7J1mErUMrdZm4DAm6L3PzHI5i73sKrY0tNM94kJ21aQudX
-         2X8qjebGo3JUPuKZCgEGC7yLidNoK82iGc5aof7gyDw7T7mtssCSujCHcaBFbXw5zbef
-         DS0ix2m5rk6/U7dFwwfw66FJlxh4HHAiJlOkZrAUc6Rnyv0gvC0RpdiRGewsAWPI9Ett
-         +nVQ==
-X-Gm-Message-State: AOAM531NvqE4EFF++ZUDnUIa/hgiy0BnypCXAdurAe2lnojwulERxGBs
-        wUMdrDWQkqSSQVRaFCw/5r8V+SagMKvQzKLc
-X-Google-Smtp-Source: ABdhPJwGNnrKGp65JFv4dDtyk0FguiKKzh1xTxkYj/G+sMLant4a7Rnm4MCbD8CKdIpwjoDGsmxiog==
-X-Received: by 2002:a05:600c:258:: with SMTP id 24mr30918877wmj.16.1607991842015;
-        Mon, 14 Dec 2020 16:24:02 -0800 (PST)
-Received: from localhost.localdomain ([85.255.232.163])
-        by smtp.gmail.com with ESMTPSA id b19sm5362012wmj.37.2020.12.14.16.24.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Dec 2020 16:24:01 -0800 (PST)
-From:   Pavel Begunkov <asml.silence@gmail.com>
-To:     linux-block@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Ming Lei <ming.lei@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
-        linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: [PATCH v1 0/6] no-copy bvec
-Date:   Tue, 15 Dec 2020 00:20:19 +0000
-Message-Id: <cover.1607976425.git.asml.silence@gmail.com>
-X-Mailer: git-send-email 2.24.0
+        id S1726855AbgLOAct (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 19:32:49 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:41927 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726662AbgLOAcf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 19:32:35 -0500
+Received: from cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net ([80.193.200.194] helo=[192.168.0.209])
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1koyFt-0006Ai-Ls; Tue, 15 Dec 2020 00:31:53 +0000
+To:     Can Guo <cang@codeaurora.org>
+From:   Colin Ian King <colin.king@canonical.com>
+Subject: re: scsi: ufs: Serialize eh_work with system PM events and async scan
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-ID: <491799be-ea2e-5b60-b14b-bbdfd516d7ac@canonical.com>
+Date:   Tue, 15 Dec 2020 00:31:52 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of creating a full copy of iter->bvec into bio in direct I/O,
-the patchset makes use of the one provided. It changes semantics and
-obliges users of asynchronous kiocb to track bvec lifetime, and [1/6]
-converts the only place that doesn't.
+Hi,
 
-bio_iov_iter_get_pages() is still does iov_iter_advance(), which is
-not great, but neccessary for revert to work. It's desirable to have
-a fast version of iov_iter_advance(i, i->count), so we may want to
-hack something up for that. E.g. allow to not keep it consistent
-in some cases when i->count==0. Also we can add a separate bio pool
-without inlined bvec. Very easy to do and shrinks bios from 3 to 2
-cachelines.
+Static analysis on linux-next with Coverity had found a potential null
+pointer dereference issue in the following commit:
 
-Also as suggested it removes BIO_WORKINGSET from direct paths: blkdev,
-iomap, fs/direct-io. Even though the last one is not very important as
-more filesystems are converted to iomap, but still looks hacky. Maybe,
-as Johannes mentioned in another thread, moving it to the writeback
-code (or other option) would be better in the end. Afterwards?
+commit 88a92d6ae4fe09b2b27781178c5c9432d27b1ffb
+Author: Can Guo <cang@codeaurora.org>
+Date:   Wed Dec 2 04:04:01 2020 -0800
 
-since RFC:
-- add target_core_file patch by Christoph
-- make no-copy default behaviour, remove iter flag
-- iter_advance() instead of hacks to revert to work
-- add bvec iter_advance() optimisation patch
-- remove PSI annotations from direct IO (iomap, block and fs/direct)
-- note in d/f/porting
+    scsi: ufs: Serialize eh_work with system PM events and async scan
 
-Christoph Hellwig (1):
-  target/file: allocate the bvec array as part of struct
-    target_core_file_cmd
+The analysis by Coverity is as follows:
 
-Pavel Begunkov (5):
-  iov_iter: optimise bvec iov_iter_advance()
-  bio: deduplicate adding a page into bio
-  block/psi: remove PSI annotations from direct IO
-  bio: add a helper calculating nr segments to alloc
-  block/iomap: don't copy bvec for direct IO
+8929 int ufshcd_system_suspend(struct ufs_hba *hba)
+8930 {
+8931        int ret = 0;
+8932        ktime_t start = ktime_get();
+8933
+    deref_ptr_in_call: Dereferencing pointer hba.
 
- Documentation/filesystems/porting.rst |   9 +++
- block/bio.c                           | 103 ++++++++++++--------------
- drivers/target/target_core_file.c     |  20 ++---
- fs/block_dev.c                        |   7 +-
- fs/direct-io.c                        |   2 +
- fs/iomap/direct-io.c                  |   9 +--
- include/linux/bio.h                   |   9 +++
- lib/iov_iter.c                        |  19 +++++
- 8 files changed, 102 insertions(+), 76 deletions(-)
+8934        down(&hba->eh_sem);
 
--- 
-2.24.0
+    Dereference before null check (REVERSE_INULL)
+
+check_after_deref: Null-checking hba suggests that it may be null, but
+it has already been dereferenced on all paths leading to the check.
+
+8935        if (!hba || !hba->is_powered)
+8936                return 0;
+
+Seeing that the down lock has been added by the commit it suggests the
+commit overlooks the fact that hba may potentially be null. Not sure if
+hba can be null, so I'm not sure if this is a real bug or a false positive.
+
+Colin
 
