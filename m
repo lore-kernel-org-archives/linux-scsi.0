@@ -5,57 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60CDFC4361B
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:28:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F26C2BB9A
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:28:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F31522209
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:28:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83CBD22210
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 00:28:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729187AbgLOA1w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 19:27:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53504 "EHLO
+        id S1727956AbgLOAY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Dec 2020 19:24:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728450AbgLOAZI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 19:25:08 -0500
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B547C06138C;
-        Mon, 14 Dec 2020 16:24:10 -0800 (PST)
-Received: by mail-wm1-x343.google.com with SMTP id k10so15342145wmi.3;
-        Mon, 14 Dec 2020 16:24:10 -0800 (PST)
+        with ESMTP id S1725976AbgLOAYp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2020 19:24:45 -0500
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D32DC06179C;
+        Mon, 14 Dec 2020 16:24:05 -0800 (PST)
+Received: by mail-wr1-x441.google.com with SMTP id c5so14509321wrp.6;
+        Mon, 14 Dec 2020 16:24:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=v0AauUnwA0hTGdBXNj6ZzKlUOrb4jF47iEjWqFK5L8s=;
-        b=DmTQasMwcOvVC2HGyReHTCHsrRm49zPi6M3MRtAMOhqhX/MN7tDKz9tL+2pg6+QqYB
-         CXap+KpU5xs24Y+WYCf1WmIMcbkqlrNyus789gDHv7ZcPFhHbkPbeOMS/zQtebq3NWL0
-         g6sKVXm18j9BbKfBTXinHBaJ1rkacOcYlffL1aBWZLdVYiAedGshDJV8apYteChI1dp3
-         kwkWBENwuxx4wSeb6aRKG2sPyMMMglhBwVrK8hYRjGz+bUIbsu2XwQ7RGM4HF38LI006
-         yaGms8xc0u3XMms3xpgR52HhDX5ov0KL7K0BuvZS+UZXQZh49414R/7FwDK2hlXJMadg
-         TuBw==
+        bh=LOsfOtb4JF9iqyizeOjm4tVRPPo2GoTdvRn37AEB3XM=;
+        b=kG976mlGUAT54hMTsT4qHl3ePNNRWB9LFy2HmmL+t6mfRSKdk5umZ6WYomCULDQW9E
+         YuWby+j3W4gWivHpVQQOA/7aIwmkSSLngHeQdb6klQaCptqFG/YV5ejnTwIwlz9HFf2m
+         eDUwq7Rwt+h66HV9wnAS1sesppf+Fpl+3qYXxpDR3ZoWJ27/ZiY4pBb1I/35pIXw34kB
+         Lbi1nxTdy0WE+OGKwC0NKqucdKqyJIKuQSjNNW99pLcDkW/m1CtBI/gMiqbPxZ8kxwzH
+         aobpyU6IKfyxV7UT1aOSZWNXNJ0RQdHNyYaHbm5kYkm08wWJNvMk2ZyFR9EbrghRw0A9
+         lUHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=v0AauUnwA0hTGdBXNj6ZzKlUOrb4jF47iEjWqFK5L8s=;
-        b=QyfMUBFuUm3Mfyzzb9fuP3ipEImcyr8tKELyi/+ZUCAPLuav8EL3G3tOKM6We2PZrY
-         CDBzdgYzC9ahxAT08eTJvoIiwsvaUkBL+9cpE3J6H0OTXb9bK4d7ZC6UydHWeIH07MYH
-         ieIy06LpjjGkc+9Uz5RsRbeoMUOIZwE4NXk87W6ONhfdcd2LyI5YyYzetneG8P59lxEF
-         M/gHmyvOaKoo5Q6am/x0QUD6CSzlkusH1mIGRh/N4lGilN07WdrWGtMcSl0mV9jvdksi
-         YfBU+SPPtRC+empqUcE2SSmUiFYFQCsuvcnoMihSj7tXGrC593wuEk0JOdJM9tjufmog
-         vY7A==
-X-Gm-Message-State: AOAM532MMyZUprFztZ57rCLu6/Q7N6PwiBCyihtG8e/hb0mRPbzNL51n
-        zTDXQVeQXJgEW2pqcu7AGBXRcE4THF/DkzlL
-X-Google-Smtp-Source: ABdhPJxINkanVy2QGQhY1u+YaY38qOJLZ6n+hZXE+kGwMf8ljRg3x4j8lZkvZFRa2g0tfnchLTq01Q==
-X-Received: by 2002:a1c:64c4:: with SMTP id y187mr25944685wmb.165.1607991848997;
-        Mon, 14 Dec 2020 16:24:08 -0800 (PST)
+        bh=LOsfOtb4JF9iqyizeOjm4tVRPPo2GoTdvRn37AEB3XM=;
+        b=LyijsfZas5MN+fpGuiUTO2FGEottJJAESBvtic/a74zNus+hT0RmsfyFSUK/1AXLtt
+         BwgEPKOIqMUawCsaUeJe51wCCKbEmIToRqcdSeH2QD1JSSYG5p/YBvOxfjeSECtGAXq2
+         gaBQBFsBPryLWtXPTZAWW9n8eWtbZhDL/LkhpxirHRb5ht4e6rkIoXbqkS3yA8YQjJdd
+         bipuX84mikhLIsUMWpzLhPqdcBsjnQgpRyTwvGIdst0+EEX6rIR3gT1e9LBoNpQi/Hts
+         PnMYShvisPWzWcwRMaO2qozvZkWs5mgJ0KetUkMRSjTv5yD8I8wYmLbSgDK1+fwYNfrs
+         R8Kw==
+X-Gm-Message-State: AOAM5314kP+8hivUKxxpB6HXY4NsKLXshXfQw7XVXM4vuxIrcGrtOATG
+        Y7GlEtTcTvO6jv7s3urnRORnRks6gjzeGgEL
+X-Google-Smtp-Source: ABdhPJz/AygAoS74uaniu7lJWQGPmncFabpUEeaVcLaoDdNn4iTUPpmUbiF5aWlFvAES8KDtC5RTLg==
+X-Received: by 2002:a5d:4c4e:: with SMTP id n14mr31759423wrt.209.1607991843559;
+        Mon, 14 Dec 2020 16:24:03 -0800 (PST)
 Received: from localhost.localdomain ([85.255.232.163])
-        by smtp.gmail.com with ESMTPSA id b19sm5362012wmj.37.2020.12.14.16.24.07
+        by smtp.gmail.com with ESMTPSA id b19sm5362012wmj.37.2020.12.14.16.24.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Dec 2020 16:24:08 -0800 (PST)
+        Mon, 14 Dec 2020 16:24:03 -0800 (PST)
 From:   Pavel Begunkov <asml.silence@gmail.com>
 To:     linux-block@vger.kernel.org
 Cc:     Jens Axboe <axboe@kernel.dk>,
@@ -69,10 +69,11 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         Jonathan Corbet <corbet@lwn.net>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, io-uring@vger.kernel.org,
         linux-kernel@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: [PATCH v1 5/6] bio: add a helper calculating nr segments to alloc
-Date:   Tue, 15 Dec 2020 00:20:24 +0000
-Message-Id: <94b6f76d2d47569742ee47caede1504926f9807a.1607976425.git.asml.silence@gmail.com>
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v1 1/6] target/file: allocate the bvec array as part of struct target_core_file_cmd
+Date:   Tue, 15 Dec 2020 00:20:20 +0000
+Message-Id: <ea68179b3f896ed1800c0a315bb4276e0ac77f7d.1607976425.git.asml.silence@gmail.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <cover.1607976425.git.asml.silence@gmail.com>
 References: <cover.1607976425.git.asml.silence@gmail.com>
@@ -82,101 +83,74 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A preparation patch. It adds a simple helper which abstracts out number
-of segments we're allocating for a bio from iov_iter_npages().
+From: Christoph Hellwig <hch@lst.de>
 
+This saves one memory allocation, and ensures the bvecs aren't freed
+before the AIO completion.  This will allow the lower level code to be
+optimized so that it can avoid allocating another bvec array.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Pavel Begunkov <asml.silence@gmail.com>
 ---
- fs/block_dev.c       | 7 ++++---
- fs/iomap/direct-io.c | 9 ++++-----
- include/linux/bio.h  | 6 ++++++
- 3 files changed, 14 insertions(+), 8 deletions(-)
+ drivers/target/target_core_file.c | 20 ++++++--------------
+ 1 file changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 9e56ee1f2652..1cbbc794edc6 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -417,7 +417,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
- 		dio->size += bio->bi_iter.bi_size;
- 		pos += bio->bi_iter.bi_size;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index b0cb5b95e892..cce455929778 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -241,6 +241,7 @@ struct target_core_file_cmd {
+ 	unsigned long	len;
+ 	struct se_cmd	*cmd;
+ 	struct kiocb	iocb;
++	struct bio_vec	bvecs[];
+ };
  
--		nr_pages = iov_iter_npages(iter, BIO_MAX_PAGES);
-+		nr_pages = bio_iov_vecs_to_alloc(iter, BIO_MAX_PAGES);
- 		if (!nr_pages) {
- 			bool polled = false;
+ static void cmd_rw_aio_complete(struct kiocb *iocb, long ret, long ret2)
+@@ -268,29 +269,22 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	struct target_core_file_cmd *aio_cmd;
+ 	struct iov_iter iter = {};
+ 	struct scatterlist *sg;
+-	struct bio_vec *bvec;
+ 	ssize_t len = 0;
+ 	int ret = 0, i;
  
-@@ -482,9 +482,10 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- {
- 	int nr_pages;
+-	aio_cmd = kmalloc(sizeof(struct target_core_file_cmd), GFP_KERNEL);
++	aio_cmd = kmalloc(struct_size(aio_cmd, bvecs, sgl_nents), GFP_KERNEL);
+ 	if (!aio_cmd)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
  
--	nr_pages = iov_iter_npages(iter, BIO_MAX_PAGES + 1);
--	if (!nr_pages)
-+	if (!iov_iter_count(iter))
- 		return 0;
-+
-+	nr_pages = bio_iov_vecs_to_alloc(iter, BIO_MAX_PAGES + 1);
- 	if (is_sync_kiocb(iocb) && nr_pages <= BIO_MAX_PAGES)
- 		return __blkdev_direct_IO_simple(iocb, iter, nr_pages);
- 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 933f234d5bec..ea1e8f696076 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -250,11 +250,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 	orig_count = iov_iter_count(dio->submit.iter);
- 	iov_iter_truncate(dio->submit.iter, length);
- 
--	nr_pages = iov_iter_npages(dio->submit.iter, BIO_MAX_PAGES);
--	if (nr_pages <= 0) {
--		ret = nr_pages;
-+	if (!iov_iter_count(dio->submit.iter))
- 		goto out;
+-	bvec = kcalloc(sgl_nents, sizeof(struct bio_vec), GFP_KERNEL);
+-	if (!bvec) {
+-		kfree(aio_cmd);
+-		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
 -	}
+-
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+-		bvec[i].bv_page = sg_page(sg);
+-		bvec[i].bv_len = sg->length;
+-		bvec[i].bv_offset = sg->offset;
++		aio_cmd->bvecs[i].bv_page = sg_page(sg);
++		aio_cmd->bvecs[i].bv_len = sg->length;
++		aio_cmd->bvecs[i].bv_offset = sg->offset;
  
- 	if (need_zeroout) {
- 		/* zero out from the start of the block to the write offset */
-@@ -263,6 +260,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 			iomap_dio_zero(dio, iomap, pos - pad, pad);
+ 		len += sg->length;
  	}
  
-+	nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter, BIO_MAX_PAGES);
- 	do {
- 		size_t n;
- 		if (dio->error) {
-@@ -308,7 +306,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 		dio->size += n;
- 		copied += n;
+-	iov_iter_bvec(&iter, is_write, bvec, sgl_nents, len);
++	iov_iter_bvec(&iter, is_write, aio_cmd->bvecs, sgl_nents, len);
  
--		nr_pages = iov_iter_npages(dio->submit.iter, BIO_MAX_PAGES);
-+		nr_pages = bio_iov_vecs_to_alloc(dio->submit.iter,
-+						 BIO_MAX_PAGES);
- 		iomap_dio_submit_bio(dio, iomap, bio, pos);
- 		pos += n;
- 	} while (nr_pages);
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 1edda614f7ce..2a9f3f0bbe0a 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -10,6 +10,7 @@
- #include <linux/ioprio.h>
- /* struct bio, bio_vec and BIO_* flags are defined in blk_types.h */
- #include <linux/blk_types.h>
-+#include <linux/uio.h>
+ 	aio_cmd->cmd = cmd;
+ 	aio_cmd->len = len;
+@@ -307,8 +301,6 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	else
+ 		ret = call_read_iter(file, &aio_cmd->iocb, &iter);
  
- #define BIO_DEBUG
+-	kfree(bvec);
+-
+ 	if (ret != -EIOCBQUEUED)
+ 		cmd_rw_aio_complete(&aio_cmd->iocb, ret, 0);
  
-@@ -441,6 +442,11 @@ static inline void bio_wouldblock_error(struct bio *bio)
- 	bio_endio(bio);
- }
- 
-+static inline int bio_iov_vecs_to_alloc(struct iov_iter *iter, int max_segs)
-+{
-+	return iov_iter_npages(iter, max_segs);
-+}
-+
- struct request_queue;
- 
- extern int submit_bio_wait(struct bio *bio);
 -- 
 2.24.0
 
