@@ -2,98 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 193FAC2BB9A
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:01:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A08DDC2BB9A
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:12:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B93CF224B1
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:01:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5997422203
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:12:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727153AbgLOKAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 05:00:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57154 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726995AbgLOKAf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 05:00:35 -0500
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3BFC06179C;
-        Tue, 15 Dec 2020 01:59:49 -0800 (PST)
-Received: by mail-ej1-x643.google.com with SMTP id b9so1847109ejy.0;
-        Tue, 15 Dec 2020 01:59:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=9VWi9lvVrtm8vqGMgMBrAESVz3nZujJvYtHJX+Z95Jw=;
-        b=BU3TGKZo/XOQEoIXFdM1P4n5pKuFdlZOTA9L9qx7LtQH7SwLjsIr91Lh2D62rpj55c
-         EWPTM+17jHVlpH03T1FiYVU3aoB0qGWcmgcMddTsRXfGOCiAqmHatqHekDpHGRZNuhZ9
-         ZIdWBfa0eyefu6LwH14DJ32NYmYNTP5d5mCH6/Q6iV6FV2CBMiQ6+Ane2hUIkbfiFMuZ
-         rChIQhdBPXgco3juca1zpha87LxNHpOxgRP5j/Pg/zZ6Wp+Cx9aSZOxaDrMA5SLfDXej
-         1VW3cEqVlPzc8GlE77ozLxNuwDZkpquc2fsN/5b7jxvHsUjtLJldTeHNwPpNjH9gSwVP
-         tf8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=9VWi9lvVrtm8vqGMgMBrAESVz3nZujJvYtHJX+Z95Jw=;
-        b=fee8ny3n+TUXSvDILpT+cD8JdU3sPdEoNCrg1HHhIuOmO/k5GVMsM0hZi/GoTdCAdV
-         Hz8ck95AdCO5ZEdGY8sgXtlIgIWt/R03vMdnuC41QfbZvumZg+s9q+AFXuFcdOyQrY+8
-         E2L5BksHIot0sSjNPCwhpQZ4KuNpd4fiVC+A//dGOo3IUfNRYOzsy4ET2TtIcHaTLmRU
-         1IvROr7fK82Wi0N12EIbpS7dl9wNqe7BZI8+pomVG36YtFV+v3wJMbLiGkp1CsKx84wv
-         TY7hW09jOyQ8zRnx7owiwKSeTXsuynC29GOXkA35my3d6g2PO1ELHmMNhGl841ttN1BE
-         rmWw==
-X-Gm-Message-State: AOAM532UiTLXFHVSNsn3S/SiS6szrcEWPHG7/sk/ZsNKwWjh580AMxop
-        ieH7iCRRYnv3d933YeQCV8Q=
-X-Google-Smtp-Source: ABdhPJwCxl4PpHeih2wMXniKYALjSkU03AHuXby+xZvV9XFwppfN4g9J2/HbB6WB4YNYszHZSJp3zw==
-X-Received: by 2002:a17:906:8587:: with SMTP id v7mr25524315ejx.381.1608026388125;
-        Tue, 15 Dec 2020 01:59:48 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.googlemail.com with ESMTPSA id r24sm17708914edo.4.2020.12.15.01.59.47
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 15 Dec 2020 01:59:47 -0800 (PST)
-Message-ID: <277a6fd2dd3b3e70a0caeda6283214ed5152aa65.camel@gmail.com>
-Subject: Re: [PATCH v4 4/6] scsi: ufs: Remove d_wb_alloc_units from struct
+        id S1727184AbgLOKM1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 05:12:27 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:55844 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727179AbgLOKMW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 05:12:22 -0500
+X-UUID: 369100d131854b159522192eb9eee32a-20201215
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=2fiUU97l07l7hwAOWALWOPw/Crbf57n2X2dDFxkm7Qk=;
+        b=F0a8IW/y2qV4207ksDFiHjqrau41ITylbRfEJobqe1xKREcy4Ude/WPZrRcrCQT2dd4UZJZRpHZOQNVa7E8eSnfcY50EQLbh+Qiwd5DB1k3m2fNBb1vuSMxLEArUGnRieiOW9/xO306gxqv+GMWV0FRxXmnt3UbB2D2wQf6NagE=;
+X-UUID: 369100d131854b159522192eb9eee32a-20201215
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 315111447; Tue, 15 Dec 2020 18:11:37 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 15 Dec 2020 18:11:35 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 15 Dec 2020 18:11:36 +0800
+Message-ID: <1608027095.10163.27.camel@mtkswgap22>
+Subject: Re: [PATCH v4 3/6] scsi: ufs: Group UFS WB related flags to struct
  ufs_dev_info
-From:   Bean Huo <huobean@gmail.com>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-        tomas.winkler@intel.com, cang@codeaurora.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Tue, 15 Dec 2020 10:59:46 +0100
-In-Reply-To: <1608022638.10163.14.camel@mtkswgap22>
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Bean Huo <huobean@gmail.com>
+CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <asutoshd@codeaurora.org>, <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Date:   Tue, 15 Dec 2020 18:11:35 +0800
+In-Reply-To: <615bb13dc394dac2b56fa60787e1841d2db12462.camel@gmail.com>
 References: <20201211140035.20016-1-huobean@gmail.com>
-         <20201211140035.20016-5-huobean@gmail.com>
-         <1608022638.10163.14.camel@mtkswgap22>
+         <20201211140035.20016-4-huobean@gmail.com>
+         <1608022873.10163.17.camel@mtkswgap22>
+         <615bb13dc394dac2b56fa60787e1841d2db12462.camel@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-TM-SNTS-SMTP: 268C207E3F509A246380A2347A81F4907B06979C1EDC8E94A5B68B2F0A4741382000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-12-15 at 16:57 +0800, Stanley Chu wrote:
-> >        u8      b_wb_buffer_type;
-> > -     u32     d_wb_alloc_units;
-> 
-> Perhaps below two fields could be also removed from struct
-> ufs_dev_info
-> for the same reason?
-> 
-> u32 d_ext_ufs_feature_sup;
-I thought twice before this patch. maybe will be used in near future,
-so I keep d_ext_ufs_feature_sup. Now that you suggest, we can remove it
-as well. 
-
-> u32 d_wb_alloc_units;
-This patch is to remove it.
-
-Thanks,
-Bean
+T24gVHVlLCAyMDIwLTEyLTE1IGF0IDEwOjQyICswMTAwLCBCZWFuIEh1byB3cm90ZToNCj4gT24g
+VHVlLCAyMDIwLTEyLTE1IGF0IDE3OjAxICswODAwLCBTdGFubGV5IENodSB3cm90ZToNCj4gPiA+
+ICsgICAgIGJvb2wgICAgd2JfYnVmX2ZsdXNoX2VuYWJsZWQ7DQo+ID4gPiArICAgICB1OCAgICAg
+IHdiX2RlZGljYXRlZF9sdTsNCj4gPiA+ICsgICAgIHU4ICAgICAgYl93Yl9idWZmZXJfdHlwZTsN
+Cj4gPiA+ICsgICAgIHUzMiAgICAgZF93Yl9hbGxvY191bml0czsNCj4gPiA+ICsNCj4gPiA+ICsg
+ICAgIGJvb2wgICAgYl9ycG1fZGV2X2ZsdXNoX2NhcGFibGU7DQo+ID4gPiArICAgICB1OCAgICAg
+IGJfcHJlc3J2X3VzcGNfZW47DQo+ID4gDQo+ID4gUGVyaGFwcyB3ZSBjb3VsZCB1bmlmeSB0aGUg
+c3R5bGUgb2YgdGhlc2UgV0IgcmVsYXRlZCBzdHVmZiB0byB3Yl8qID8NCj4gDQo+IHllcywgYWdy
+ZWUuIEkgd2lsbCBjaGFuZ2UgdGhlbS4NCj4gDQo+ID4gDQo+ID4gQmVzaWRlcywgSSBhbSBub3Qg
+c3VyZSBpZiB1c2luZyB0YWIgaW5zdGVhZCBzcGFjZSBiZXR3ZWVuIHRoZSB0eXBlDQo+ID4gYW5k
+DQo+ID4gbmFtZSBpbiB0aGlzIHN0cnVjdCBpcyBhIGdvb2QgaWRlYS4NCj4gPiANCj4gdXNpbmcg
+c3BhY2UsIGluIGFkZGl0aW9uIHNpbmdsZSBzcGFjZSwgdHlwZSBhbmQgcGFyYW1ldGVyIG5hbWVz
+IGFyZQ0KPiBtaXhlZC4gDQo+IA0KPiANCj4gdXNlIHNwYWNlOg0KPiANCj4gIC8qIFVGUyBXQiBy
+ZWxhdGVkIGZsYWdzICovDQo+IGJvb2wgd2JfZW5hYmxlZDsNCj4gYm9vbCB3Yl9idWZfZmx1c2hf
+ZW5hYmxlZDsNCj4gdTgNCj4gd2JfZGVkaWNhdGVkX2x1Ow0KPiB1OCBiX3diX2J1ZmZlcl90eXBl
+Ow0KPiB1MzIgZF93Yl9hbGxvY191bml0czsNCj4gDQo+IHVzZSB0YWJsZToNCj4gDQo+ICAvKiBV
+RlMgV0IgcmVsYXRlZCBmbGFncyAqLw0KPiBib29sICAgIHdiX2VuYWJsZWQ7DQo+IGJvb2wgICAg
+d2JfYnVmX2ZsdXNoX2VuYWJsZWQ7DQo+IHU4ICAgICAgd2JfZGVkaWNhdGVkX2x1Ow0KPiB1OCAg
+ICAgIGJfd2JfYnVmZmVyX3R5cGU7DQo+IHUzMiAgICAgZF93Yl9hbGxvY191bml0czsNCj4gDQo+
+IEkgdGhpbmssIHRoZSByZXN1bHQgaXMgdmVyeSBjbGVhciBjb21wYXJpbmcgYWJvdmUgdHdvIGV4
+YW1wbGVzLiB5ZXMsDQo+IHRoZXJlIGlzIG5vIGV4cGxpY2l0IHN0aXB1bGF0aW9uIHRoYXQgd2Ug
+bXVzdCB1c2Ugc3BhY2Ugb3IgdGFiLiBCb3RoDQo+IHN0eWxlcyBleGlzdCBpbiBMaW51eC4gTWF5
+YmUgdGhpcyBpcyBqdXN0IG1hdHRlciBvZiBwZXJzb25hbCBpbnRlcmVzdC4NCg0KSGkgQmVhbiwN
+Cg0KWWVzLCBJIGdvdCB5b3VyIHBvaW50LiBJIGFtIGZpbmUgd2l0aCB0aGlzIHN0eWxlIGNoYW5n
+ZSwgYnV0IGp1c3Qgd29uZGVyDQppZiBpdCB3b3VsZCBiZSBiZXR0ZXIgdG8gY2hhbmdlIGFsbCBz
+dHJ1Y3R1cmVzIGluIGFsbCB1ZnMgaGVhZGVycyAob3IgYXQNCmxlYXN0IGFsbCBzdHJ1Y3R1cmVz
+IGluIHVmcy5oKSBpbiB0aGUgc2FtZSB0aW1lIHRvIG1ha2UgdGhlIHN0eWxlDQp1bmlmaWVkIGlu
+IHRoZSBzYW1lIGZpbGU/DQoNCkJlc2lkZXMsIHdlIG1heSBuZWVkIG90aGVyIHJldmlld2VyJ3Mg
+Y29tbWVudHMgZm9yIHRoZSBuZXcgc3R5bGUuDQoNClRoYW5rcywNClN0YW5sZXkgQ2h1DQoNCj4g
+DQo+IA0KPiBCZWFuDQo+IA0KPiA+IFRoYW5rcywNCj4gPiBTdGFubGV5IENodQ0KPiANCg0K
 
