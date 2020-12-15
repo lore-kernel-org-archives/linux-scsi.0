@@ -3,121 +3,100 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F9FC4361B
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:32:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF8D2C4361B
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:55:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6EEE922209
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:32:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84B1522258
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 10:55:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728340AbgLOKbn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 05:31:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43932 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728296AbgLOKbn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Dec 2020 05:31:43 -0500
-Date:   Tue, 15 Dec 2020 11:32:00 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1608028256;
-        bh=xjHykK8XN96dFaYhZnIiizf13PE8cJP1VJ6OL+POwMs=;
-        h=From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rx5+KdVqHDFmwGePFBKeeEtCEGFlUSzx8w67xkKNWoRu8bslOe3BzN7jDUvcUOCcC
-         bdnyDG8zkd0IqTOqJc7pww5pFPlbEC1BnAtOXK5nnqFYmkR6wP5R6eNxtax7ak4r9V
-         NV0Acgqi8VazkHA8mrRnxvJTuxkQLCeFFs67co80=
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Bean Huo <huobean@gmail.com>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 1/6] scsi: ufs: Add "wb_on" sysfs node to control WB
- on/off
-Message-ID: <X9iQoIpL48yQyr7D@kroah.com>
-References: <20201211140035.20016-1-huobean@gmail.com>
- <20201211140035.20016-2-huobean@gmail.com>
+        id S1728493AbgLOKz1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 05:55:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37380 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727914AbgLOKzR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 05:55:17 -0500
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFE8DC06179C;
+        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
+Received: by mail-pl1-x642.google.com with SMTP id x12so10354948plr.10;
+        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=JMJn4WueT4E0rHp/hcFMMf2nSPTGv/vUW9tNOsgvr4g=;
+        b=HdhBMBJW7JnM9qt75gYLEMGH8DcG4Cj6D2L1miXChxgCvcfH9Cad5vGvTChRV1FIBI
+         zwJRfct5v2bb/1a1Lg2vfcFT7+7f+yRZqmdyP8jE+cDgAyaeHjrsamRGa+MyS6F4M43L
+         L53mOzyQeJn9T27bE5W8GuoyHdv6rc12CeKbFIdRC35B69ur5m2sE6XCCdC5ohr3JZrS
+         q/hsT3OMePDGu3U04fh3+P1rBgJgAxstJueM7T7Lc4rzrMAV8MlWnPFrqFcI3PASAAzp
+         SEu64FYjrpOJnta/6cI28R7NUTGHP/+AiAqjAdDS65ppGAB27HV7xC4xgiTpS5QufCQt
+         FjgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=JMJn4WueT4E0rHp/hcFMMf2nSPTGv/vUW9tNOsgvr4g=;
+        b=QVOyL0M+GBLXj/4NpMUHsSWepPbx3bzeiqF8/UyssXhSNJ3XXQ1l0iorLGfnAXq9Mk
+         6RVvYTc8cwDKAp7eh1bCQVTViOjSSzSDpSNJdiQITBTVxNWsqzPRWHNWHH5RK3Qr0crq
+         jdoTfU6rJamQVA+CWSEl3D+gNXXJIL/CxJrwfYWUUFyZALoLBRI4A6N10nF8e3fvAhDo
+         /fKtu81LaliRRtqk3RqpUOqhzssAtqmlPxqEDdAqr8d0eCVwX25FZ1RVe+ryOIENDN/s
+         9ZVqqeesXt/VjlFoyXk6cw7w8eUuUj4Eh8+KZw0+xhQT6OvgyMWXU2KzuaxDis8lncvH
+         fCaA==
+X-Gm-Message-State: AOAM532lA9bxd9Dy33TniIZ/q30kSuS8UCaUsNT2jVXMTEXi3u9rQp93
+        vWm6v9HiIid72l36b3NePht0ZEJ6G/w=
+X-Google-Smtp-Source: ABdhPJyeSNZhH0DfbJJ3D3oSZKAADqYrxi1E1BFqyQUHLJawAEuVEBatwjl+W/3WhcdMuyEnEzgQCg==
+X-Received: by 2002:a17:90a:9e5:: with SMTP id 92mr29832816pjo.176.1608029676281;
+        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
+Received: from archlinux.. ([161.81.68.216])
+        by smtp.gmail.com with ESMTPSA id x15sm7682247pfa.80.2020.12.15.02.54.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Dec 2020 02:54:35 -0800 (PST)
+From:   Tom Yan <tom.ty89@gmail.com>
+To:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     Tom Yan <tom.ty89@gmail.com>
+Subject: [PATCH] block: Avoid fragmented discard splits for ATA drives
+Date:   Tue, 15 Dec 2020 18:54:15 +0800
+Message-Id: <20201215105415.5219-1-tom.ty89@gmail.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201211140035.20016-2-huobean@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 11, 2020 at 03:00:30PM +0100, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> Currently UFS WriteBooster driver uses clock scaling up/down to set
-> WB on/off, for the platform which doesn't support UFSHCD_CAP_CLK_SCALING,
-> WB will be always on. Provide a sysfs attribute to enable/disable WB
-> during runtime. Write 1/0 to "wb_on" sysfs node to enable/disable UFS WB.
-> 
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/scsi/ufs/ufs-sysfs.c | 41 ++++++++++++++++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.c    |  3 +--
->  drivers/scsi/ufs/ufshcd.h    |  2 ++
->  3 files changed, 44 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index 08e72b7eef6a..2b4e9fe935cc 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -189,6 +189,45 @@ static ssize_t auto_hibern8_store(struct device *dev,
->  	return count;
->  }
->  
-> +static ssize_t wb_on_show(struct device *dev, struct device_attribute *attr,
-> +			  char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return scnprintf(buf, PAGE_SIZE, "%d\n", hba->wb_enabled);
+When 0xffffffff >> 9 are splited by 0xffff * 64, there will be a
+remainder of 127. Avoid these small fragments by aligning the split
+to 128.
 
-Please just use sysfs_emit().
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+---
+ block/blk.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> +}
-> +
-> +static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
-> +			   const char *buf, size_t count)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	unsigned int wb_enable;
-> +	ssize_t res;
-> +
-> +	if (ufshcd_is_clkscaling_supported(hba)) {
-> +		/*
-> +		 * If the platform supports UFSHCD_CAP_AUTO_BKOPS_SUSPEND,
-> +		 * turn WB on/off will be done while clock scaling up/down.
-> +		 */
-> +		dev_warn(dev, "To control WB through wb_on is not allowed!\n");
-> +		return -EOPNOTSUPP;
-> +	}
-> +	if (!ufshcd_is_wb_allowed(hba))
-> +		return -EOPNOTSUPP;
-> +
-> +	if (kstrtouint(buf, 0, &wb_enable))
-> +		return -EINVAL;
-> +
-> +	if (wb_enable != 0 && wb_enable != 1)
-> +		return -EINVAL;
-> +
-> +	pm_runtime_get_sync(hba->dev);
-> +	res = ufshcd_wb_ctrl(hba, wb_enable);
-> +	pm_runtime_put_sync(hba->dev);
-> +
-> +	return res < 0 ? res : count;
-> +}
+diff --git a/block/blk.h b/block/blk.h
+index dfab98465db9..1dc12fc86de8 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -281,8 +281,11 @@ static inline unsigned int bio_allowed_max_sectors(struct request_queue *q)
+ static inline unsigned int bio_aligned_discard_max_sectors(
+ 					struct request_queue *q)
+ {
+-	return round_down(UINT_MAX, q->limits.discard_granularity) >>
+-			SECTOR_SHIFT;
++	unsigned int granularity = q->limits.discard_granularity;
++	/* Avoid fragmented splits for ATA drives */
++	if (128 % granularity == 0)
++		granularity = 128;
++	return round_down(UINT_MAX, granularity) >> SECTOR_SHIFT;
+ }
+ 
+ /*
+-- 
+2.29.2
 
-Where is the new Documentation/ABI/ update for this new sysfs file you
-are adding?
-
-thanks,
-
-greg k-h
