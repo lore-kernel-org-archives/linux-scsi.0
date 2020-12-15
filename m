@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 237B2C4361B
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 23:14:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32225C4361B
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 23:14:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D944F22D02
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 23:14:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 045A822D03
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 23:14:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727841AbgLOXOf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 18:14:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38852 "EHLO
+        id S1730358AbgLOXOt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 18:14:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731252AbgLOXG3 (ORCPT
+        with ESMTP id S1731272AbgLOXG3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 18:06:29 -0500
 Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C8D7C0617A7;
-        Tue, 15 Dec 2020 15:05:36 -0800 (PST)
-Received: by mail-ed1-x544.google.com with SMTP id p22so22794169edu.11;
-        Tue, 15 Dec 2020 15:05:36 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48CAFC06138C;
+        Tue, 15 Dec 2020 15:05:38 -0800 (PST)
+Received: by mail-ed1-x544.google.com with SMTP id c7so22823373edv.6;
+        Tue, 15 Dec 2020 15:05:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=hfStZcmj6KeW2zkSZcYnBiE6Gi5znfpneu3gU+gm3Ms=;
-        b=JS9wwCE3n53YJbbqCNVUqTP6v+7T2q9D9natTb+Qhk82C8DmcQBjUSyJaJYy8L7v00
-         QjMqZKdrQuM/li3FmMB0Xk1I9pahd787WtutVhLE2qjNncq2dqKUwYzJg8keuxghCuza
-         nccxhLUCTGLMeqy4xE64CQY2Fa/p/7Xxxye9X8lNbfhv8M+2LpWqf2Hoj0oDqadJOjXv
-         +RyntaJic1WKg46bl4glZ9K1IIgOCY7I1UoWeutIWBHtqcxIWyo/jeNrdfOuVOG/6sZt
-         OG212VhQsRgykK3BFITTvlx7kPpThqGc/DdKVEuayzV4eLDpC3WfTjzWvyWn2o4OkVuD
-         3qvw==
+        bh=r4FGDCmd+0tOnQUnhUjyrOq68wQ6sbCmcoaPkblTkR4=;
+        b=SJK4VON4/+ArqS95wzCeyGs8tfpxllXc2Ib6ixSipQ6rDcD9br/DB4LtUVYwLfSiRH
+         1z1WixGmki5TgSPAorMTGttULKDvMU09XCXElZd1fqXxHI63TP5agReIGhVeik5W33ll
+         IHp2kIPVL9SzDJ1fpm7WJE/R0mgNlXtuA2L1TBh3hNvmDIiCTP59p7CuHwpAzmMBBNZ+
+         a5yByLWAGvccISFga7gB6sfOe/wlHM89L8L1H6m2BCexDsUgvgSJ+2xmEYNm/qKXv66i
+         KhH4ktJvqxM7q5F2qvlXPhdVhI4ORcmz1V2KJ9jlNijJBDh+2Y3z3CZPU40PCsbjOYy1
+         8sCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=hfStZcmj6KeW2zkSZcYnBiE6Gi5znfpneu3gU+gm3Ms=;
-        b=Mbc9c3uuPYjJjGDF/h2RgMrJ7fJipDRzdbe0LKpjZGw8V3z3Uwo8Ybt+T82EfHKNl6
-         U7eGa+4m9AjNxal5Rnr12u2+ucVmiMfvNFh52/Kdid5CVDMl93ktiV2OGLbmVJ9F6SGb
-         /37gYDMiqGo/GBKxxULo48Hs6mKLtn7Bq2lO/njO9wLPSiiQDWwV9Pqav2gS2uep+Wk7
-         WXoHqHnf9Ak+b0jH5dJOlDg27FX4IErIpTPwvg6o62/F4M5ARVnix5ulfYbO6SgyBmgo
-         c6a4V14ZDEApkeHxf/ZRaHZAIkXzGDZK1oGX6Vmm9EPGWnMhYw1zvRysQIKlCS4MTT9Z
-         HoIw==
-X-Gm-Message-State: AOAM530QHf4JuHmllvd7rMNHe1AYLWV4VkCfTECCLMu4JGYom7TIyVZW
-        To9ZuHNSQZVn2WJxat1Brc0=
-X-Google-Smtp-Source: ABdhPJxptQIHrQQy8Ik5bKwyfUmKxTKId3Zzso6A03IVgc0alcr2+q8z+ngyeLM1qKsxr4w37EoRQA==
-X-Received: by 2002:a05:6402:d09:: with SMTP id eb9mr31073849edb.71.1608073535037;
-        Tue, 15 Dec 2020 15:05:35 -0800 (PST)
+        bh=r4FGDCmd+0tOnQUnhUjyrOq68wQ6sbCmcoaPkblTkR4=;
+        b=YJPjCKT71vOELCQrk5m6TzQLNMYxjZI981q+WdQ09RkqDjfWGlXklE73Tkw/zsTbzu
+         KURmwfg0utp5maIw9pRu5JiDWXRLxRImsI6LoHz6mzUZM7C+0JenK6gxXl1h9zJwvWUT
+         1iJFtv0sjCPRwjLm4QGhROACqDgP+E8SpsTu0vehmnpzFPDhdqdcuhxmbb0VkjeEyCm5
+         eTz4NP6py7FzR6RKJz10458Zh2ros43dDDQC5zYVUkGJi4OMzx6U6gIAlsMB3J0SvmST
+         wfqPLBQjdOh7veYw+lQLrMe5GMv6Z0gFJJmyg+CKnCXpEQmcxOJST2Y4hGgCjKm4my23
+         DkEA==
+X-Gm-Message-State: AOAM530Ip124JIA0T+zPyT1aTv4mfOMPM4Or7D9vFrKXo5is+cH+UI72
+        Yyhgi0TOEzqjdOxkMrYf39Y=
+X-Google-Smtp-Source: ABdhPJzObl9SHeHT0XSe0Qpl97mPQeJb9b5r1dk+z0mrWrJ9ywQUSpiALXbO6rftdANXuu+luCRAIw==
+X-Received: by 2002:aa7:dc0d:: with SMTP id b13mr31773026edu.170.1608073537030;
+        Tue, 15 Dec 2020 15:05:37 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id e11sm19280455edj.44.2020.12.15.15.05.34
+        by smtp.gmail.com with ESMTPSA id e11sm19280455edj.44.2020.12.15.15.05.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Dec 2020 15:05:34 -0800 (PST)
+        Tue, 15 Dec 2020 15:05:36 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -62,9 +62,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 4/7] scsi: ufs: Remove two WB related fields from struct ufs_dev_info
-Date:   Wed, 16 Dec 2020 00:05:16 +0100
-Message-Id: <20201215230519.15158-5-huobean@gmail.com>
+Subject: [PATCH v5 6/7] scsi: ufs: Cleanup WB buffer flush toggle implementation
+Date:   Wed, 16 Dec 2020 00:05:18 +0100
+Message-Id: <20201215230519.15158-7-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201215230519.15158-1-huobean@gmail.com>
 References: <20201215230519.15158-1-huobean@gmail.com>
@@ -74,73 +74,111 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-d_wb_alloc_units and d_ext_ufs_feature_sup only be used while WB probe.
-They are just used to confirm the condition that "if bWriteBoosterBufferType
-is set to 01h but dNumSharedWriteBoosterBufferAllocUnits is set to zero,
-the WriteBooster feature is disabled", and if UFS device supports WB.
-After that, no user uses them any more. So, don't need to keep time in
-runtime.
+Delete ufshcd_wb_buf_flush_enable() and ufshcd_wb_buf_flush_disable(),
+move the implementation into ufshcd_wb_toggle_flush().
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufs.h    |  2 --
- drivers/scsi/ufs/ufshcd.c | 14 ++++++--------
- 2 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 66 +++++++++++++--------------------------
+ 1 file changed, 21 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 14dfda735adf..a789e074ae3f 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -538,9 +538,7 @@ struct ufs_dev_info {
- 	u8 *model;
- 	u16 wspecversion;
- 	u32 clk_gating_wait_us;
--	u32 d_ext_ufs_feature_sup;
- 	u8 b_wb_buffer_type;
--	u32 d_wb_alloc_units;
- 	bool b_rpm_dev_flush_capable;
- 	u8 b_presrv_uspc_en;
- };
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 6a5532b752aa..5f08f4a59a17 100644
+index 466a85051d54..ba8298f0d017 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7207,6 +7207,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u8 lun;
- 	u32 d_lu_wb_buf_alloc;
-+	u32 ext_ufs_feature;
+@@ -244,10 +244,8 @@ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg);
+ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+-static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
+-static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
+ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
++static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
  
- 	if (!ufshcd_is_wb_allowed(hba))
- 		return;
-@@ -7224,11 +7225,10 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
- 		goto wb_disabled;
+@@ -5398,60 +5396,38 @@ static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+ 				index, NULL);
+ }
  
--	dev_info->d_ext_ufs_feature_sup =
--		get_unaligned_be32(desc_buf +
--				   DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
-+	ext_ufs_feature = get_unaligned_be32(desc_buf +
-+					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+-static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+-{
+-	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
+-		return;
+-
+-	if (enable)
+-		ufshcd_wb_buf_flush_enable(hba);
+-	else
+-		ufshcd_wb_buf_flush_disable(hba);
+-
+-}
+-
+-static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba)
++static inline int ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
+ {
+ 	int ret;
+ 	u8 index;
++	enum query_opcode opcode;
  
--	if (!(dev_info->d_ext_ufs_feature_sup & UFS_DEV_WRITE_BOOSTER_SUP))
-+	if (!(ext_ufs_feature & UFS_DEV_WRITE_BOOSTER_SUP))
- 		goto wb_disabled;
+-	if (!ufshcd_is_wb_allowed(hba) || hba->dev_info.wb_buf_flush_enabled)
++	if (hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL)
+ 		return 0;
  
- 	/*
-@@ -7243,10 +7243,8 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 		desc_buf[DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN];
+-	index = ufshcd_wb_get_query_index(hba);
+-	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+-				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
+-				      index, NULL);
+-	if (ret)
+-		dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
+-			__func__, ret);
+-	else
+-		hba->dev_info.wb_buf_flush_enabled = true;
+-
+-	dev_dbg(hba->dev, "WB - Flush enabled: %d\n", ret);
+-	return ret;
+-}
+-
+-static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba)
+-{
+-	int ret;
+-	u8 index;
+-
+-	if (!ufshcd_is_wb_allowed(hba) || !hba->dev_info.wb_buf_flush_enabled)
++	if (!ufshcd_is_wb_allowed(hba) ||
++	    hba->dev_info.wb_buf_flush_enabled == enable)
+ 		return 0;
  
- 	if (dev_info->b_wb_buffer_type == WB_BUF_MODE_SHARED) {
--		dev_info->d_wb_alloc_units =
--		get_unaligned_be32(desc_buf +
--				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
--		if (!dev_info->d_wb_alloc_units)
-+		if (!get_unaligned_be32(desc_buf +
-+				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS))
- 			goto wb_disabled;
- 	} else {
- 		for (lun = 0; lun < UFS_UPIU_MAX_WB_LUN_ID; lun++) {
++	if (enable)
++		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
++	else
++		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
++
+ 	index = ufshcd_wb_get_query_index(hba);
+-	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+-				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
+-				      index, NULL);
++	ret = ufshcd_query_flag_retry(hba, opcode,
++				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, index,
++				      NULL);
+ 	if (ret) {
+-		dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
+-			 __func__, ret);
+-	} else {
+-		hba->dev_info.wb_buf_flush_enabled = false;
+-		dev_dbg(hba->dev, "WB - Flush disabled: %d\n", ret);
++		dev_err(hba->dev, "%s WB-Buf Flush %s failed %d\n", __func__,
++			enable ? "enable" : "disable", ret);
++		goto out;
+ 	}
+ 
++	hba->dev_info.wb_buf_flush_enabled = enable;
++
++	dev_dbg(hba->dev, "WB-Buf Flush %s\n", enable ? "enabled" : "disabled");
++out:
+ 	return ret;
+ }
+ 
 -- 
 2.17.1
 
