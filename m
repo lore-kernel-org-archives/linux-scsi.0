@@ -2,101 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB81C3526B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0436C3526C
 	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 00:08:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9564D22D07
+	by mail.kernel.org (Postfix) with ESMTP id C386022D05
 	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 00:08:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727406AbgLPAAt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 19:00:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38808 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731224AbgLOXGO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 18:06:14 -0500
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E51CC06179C;
-        Tue, 15 Dec 2020 15:05:34 -0800 (PST)
-Received: by mail-ej1-x641.google.com with SMTP id q22so12314705eja.2;
-        Tue, 15 Dec 2020 15:05:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=UA9lHOsQsRrkKAcdZ8/uAX/YO+6TM8c289Nn7aSmqEg=;
-        b=VOGv5uDHRJKxSSjAac0HWnwkGX0jib/wf6oafOg+aJl30V/K7X9QDWUA1bxRlEA9Va
-         qbVSJOgBBHSHTN1eF5lYj86uI5WQvED3wEuXhjGYaVJk8BbiGbsHZnbg4rLy0xaCroeQ
-         ZY40B+2sj/XRoYKTNJTO7dY4imH83uaXibnj62Vh+mT4L71s75Lrfl6FIy6tOwEQrK5k
-         Xumcsui8Dc0JA4diHUaDLZXDWcBXTkHX6fAj2eT5vQVTcTBa/ouwB1jxnWyrox7FnRmu
-         Rubptq1Yao+4Qwj7XFfvgwGGI7+cuHXfagoIkrBMxacKgzN5f6hvDoE70fPtu3KpZ8dJ
-         mcmA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=UA9lHOsQsRrkKAcdZ8/uAX/YO+6TM8c289Nn7aSmqEg=;
-        b=B95kH1j6oJaGPGi5yEpD3hUZCJwkzTNkYFvkBAuhAono9l6rDnBngsyK0Aa+VTKdKk
-         sH5um5KTW/gGYv7cDMP9v5gIIl5WKVUctPnhU9xnaC7j1hJ2R5K/iluZOf6w35G+BhNP
-         krH3eBybD6bYTWWcmKxR0nQI610KioFMOVpXx2ciDlq786T5GNMbED7C9qMm9jV41W5C
-         sqXYCO97ZxX3/8cSzNB2yy39xKlZLTiBUc0kQslEEaUzmiU4PDpZdP9ASoB7JOulV4FF
-         oemcbT2ks9XEDZ64x34I+vXwaRxq+TWvMBmoFY322E6D+oQimJzLEfGKMAxVfUAuuExn
-         Ir4w==
-X-Gm-Message-State: AOAM5301XTD8nm5pr6pf+AApRGRWqCVyoT+bqWOGH2DIwJQmiWI99119
-        lYlTVywo4ZBdAF7/x2yVfcs=
-X-Google-Smtp-Source: ABdhPJyvslV0GKJwsm2/Oggw/x+4kQhfQO4gMgXIoCDvtb0U25TgFt95ts4guUArXt6+Ww7xain7OA==
-X-Received: by 2002:a17:906:cd14:: with SMTP id oz20mr26773171ejb.99.1608073532980;
-        Tue, 15 Dec 2020 15:05:32 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.gmail.com with ESMTPSA id e11sm19280455edj.44.2020.12.15.15.05.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Dec 2020 15:05:32 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 2/7] docs: ABI: Add wb_on documentation for UFS sysfs
-Date:   Wed, 16 Dec 2020 00:05:14 +0100
-Message-Id: <20201215230519.15158-3-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20201215230519.15158-1-huobean@gmail.com>
-References: <20201215230519.15158-1-huobean@gmail.com>
+        id S1727418AbgLPAAu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 19:00:50 -0500
+Received: from jabberwock.ucw.cz ([46.255.230.98]:43140 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725813AbgLOXqn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 18:46:43 -0500
+Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
+        id 8EAD91C0B78; Wed, 16 Dec 2020 00:45:59 +0100 (CET)
+Date:   Wed, 16 Dec 2020 00:45:59 +0100
+From:   Pavel Machek <pavel@ucw.cz>
+To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc:     Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier@javigon.com>,
+        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+        SelvaKumar S <selvakuma.s1@samsung.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "snitzer@redhat.com" <snitzer@redhat.com>,
+        "selvajove@gmail.com" <selvajove@gmail.com>,
+        "nj.shetty@samsung.com" <nj.shetty@samsung.com>,
+        "joshi.k@samsung.com" <joshi.k@samsung.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 0/2] add simple copy support
+Message-ID: <20201215234558.GA18281@amd>
+References: <CGME20201204094719epcas5p23b3c41223897de3840f92ae3c229cda5@epcas5p2.samsung.com>
+ <20201204094659.12732-1-selvakuma.s1@samsung.com>
+ <20201207141123.GC31159@lst.de>
+ <01fe46ac-16a5-d4db-f23d-07a03d3935f3@suse.de>
+ <20201207192453.vc6clbdhz73hzs7l@mpHalley>
+ <SN4PR0401MB35988951265391511EBC8C6E9BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+ <20201208122248.utv7pqthmmn6uwv6@mpHalley>
+ <SN4PR0401MB35983464199FB173FB0C29479BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
+Content-Disposition: inline
+In-Reply-To: <SN4PR0401MB35983464199FB173FB0C29479BCD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
 
-Adds UFS sysfs documentation for new entry wb_on.
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Hi!
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index d1a352194d2e..5a70d541b2f2 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1019,3 +1019,11 @@ Contact:	Asutosh Das <asutoshd@codeaurora.org>
- Description:	This entry shows the configured size of WriteBooster buffer.
- 		0400h corresponds to 4GB.
- 		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/wb_on
-+Date:		December 2020
-+Contact:	Bean Huo <beanhuo@micron.com>
-+Description:	This sets or displays whether UFS WriteBooster is enabled. Echo
-+        0 into this file to disable UFS WriteBooster or 1 to enable it. Note,
-+        this is only allowed for the platform doesen't support
-+        UFSHCD_CAP_CLK_SCALING.
--- 
-2.17.1
+> > Good idea. Are you thinking of a sysfs entry to select the backend?
+>=20
+> Not sure on this one, initially I thought of a sysfs file, but then
+> how would you do it. One "global" sysfs entry is probably a bad idea.
+> Having one per block device to select native vs emulation maybe? And
+> a good way to benchmark.
+>=20
+> The other idea would be a benchmark loop on boot like the raid library
+> does.
 
+Doing copy benchmarking would require writes on the media, right?
+
+Kernel should not do such stuff without userspace requesting it...
+
+Best regards,
+								Pavel
+--=20
+http://www.livejournal.com/~pavelmachek
+
+--d6Gm4EdcadzBjdND
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAl/ZSrYACgkQMOfwapXb+vK5rACeLJojhyDVgpGZfTaitdzO94sJ
+RKoAn0eHTH191kYNNiXqgRZfCOo1aVIE
+=wLdn
+-----END PGP SIGNATURE-----
+
+--d6Gm4EdcadzBjdND--
