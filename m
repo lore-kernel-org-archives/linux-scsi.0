@@ -2,861 +2,256 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED4ACC2BB48
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 03:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA78C4361B
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 05:44:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9287222475
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 03:30:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 650A1222B6
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Dec 2020 05:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726422AbgLOD3q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Dec 2020 22:29:46 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:36626 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726865AbgLOD3c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Dec 2020 22:29:32 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 5EBFB20423A;
-        Tue, 15 Dec 2020 04:28:46 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id LpCEBVGAHYCM; Tue, 15 Dec 2020 04:28:42 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-104-157-204-209.dyn.295.ca [104.157.204.209])
-        by smtp.infotech.no (Postfix) with ESMTPA id A2E3420426F;
-        Tue, 15 Dec 2020 04:28:41 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        bostroesser@gmail.com, ddiss@suse.de
-Subject: [PATCH v2 2/2] scsi_debug: change store from vmalloc to sgl
-Date:   Mon, 14 Dec 2020 22:28:36 -0500
-Message-Id: <20201215032836.437175-3-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201215032836.437175-1-dgilbert@interlog.com>
-References: <20201215032836.437175-1-dgilbert@interlog.com>
+        id S1726359AbgLOFod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Dec 2020 00:44:33 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:58385 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725889AbgLOFoW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 00:44:22 -0500
+X-UUID: 22a1ba6971754b448c6bddf86184d764-20201215
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=erBQqg/F/LfS/jBrYQvaDd8rg9F1KF/FXw+LXNZwJhw=;
+        b=oa4zcLYlOklTWYvDD4CEZi8atQqCaXUKlK75L1cI3U6agwjsEzvlg9kvIAKvN7YdkzYvxbXzjIlc0Qr7yY1V6T/XsjOzJEs9JCS5KER9Py4orLayZ+RAbX+yPdPsFsMahZcd0+a2ifdQzBBmeDoZyHwlQXq2nq8BcZYPEbXue18=;
+X-UUID: 22a1ba6971754b448c6bddf86184d764-20201215
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1152028715; Tue, 15 Dec 2020 13:43:33 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 15 Dec 2020 13:43:32 +0800
+Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 15 Dec 2020 13:43:32 +0800
+Message-ID: <1608011011.10163.9.camel@mtkswgap22>
+Subject: Re: [PATCH v4 1/3] scsi: ufs: Protect some contexts from unexpected
+ clock scaling
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
+        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
+        <saravanak@google.com>, <salyzyn@google.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "Bart Van Assche" <bvanassche@acm.org>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Tue, 15 Dec 2020 13:43:31 +0800
+In-Reply-To: <1607877104-8916-2-git-send-email-cang@codeaurora.org>
+References: <1607877104-8916-1-git-send-email-cang@codeaurora.org>
+         <1607877104-8916-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A long time ago this driver's store was allocated by kmalloc() or
-alloc_pages(). When this was switched to vmalloc() the author
-noticed slower ramdisk access times and more variability in repeated
-tests. So try going back with sgl_alloc_order() to get uniformly
-sized allocations in a sometimes large scatter gather _array_. That
-array is the basis of maintaining O(1) access to the store.
-
-Using sgl_alloc_order() and friends requires CONFIG_SGL_ALLOC
-so add a 'select' to the Kconfig file.
-
-Remove kcalloc() in resp_verify() as sgl_s can now be compared
-directly without forming an intermediate buffer. This is a
-performance win for the SCSI VERIFY command implementation.
-
-Make the SCSI COMPARE AND WRITE command yield the offset of the
-first miscompared byte when the compare fails (as required by
-T10).
-
-This patch previously depended on: "[PATCH v4 0/4] scatterlist:
-add new capabilities". However while that patchset is being
-considered, those functions have been replicated by the previous
-patch with a "sdeb_" prefix so they can be used by this patch.
-
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/Kconfig      |   3 +-
- drivers/scsi/scsi_debug.c | 454 +++++++++++++++++++++++++-------------
- 2 files changed, 307 insertions(+), 150 deletions(-)
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 701b61ec76ee..1ab993067c20 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1233,13 +1233,14 @@ config SCSI_DEBUG
- 	tristate "SCSI debugging host and device simulator"
- 	depends on SCSI
- 	select CRC_T10DIF
-+	select SGL_ALLOC
- 	help
- 	  This pseudo driver simulates one or more hosts (SCSI initiators),
- 	  each with one or more targets, each with one or more logical units.
- 	  Defaults to one of each, creating a small RAM disk device. Many
- 	  parameters found in the /sys/bus/pseudo/drivers/scsi_debug
- 	  directory can be tweaked at run time.
--	  See <http://sg.danny.cz/sg/sdebug26.html> for more information.
-+	  See <http://sg.danny.cz/sg/scsi_debug.html> for more information.
- 	  Mainly used for testing and best as a module. If unsure, say N.
- 
- config SCSI_MESH
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 65990a63fd1b..1347bd633510 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -61,7 +61,7 @@
- 
- /* make sure inq_product_rev string corresponds to this version */
- #define SDEBUG_VERSION "0190"	/* format to fit INQUIRY revision field */
--static const char *sdebug_version_date = "20200710";
-+static const char *sdebug_version_date = "20201214";
- 
- #define MY_NAME "scsi_debug"
- 
-@@ -219,6 +219,7 @@ static const char *sdebug_version_date = "20200710";
- #define SDEBUG_CANQUEUE_WORDS  3	/* a WORD is bits in a long */
- #define SDEBUG_CANQUEUE  (SDEBUG_CANQUEUE_WORDS * BITS_PER_LONG)
- #define DEF_CMD_PER_LUN  255
-+#define SDEB_ORDER_TOO_LARGE 4096
- 
- /* UA - Unit Attention; SA - Service Action; SSU - Start Stop Unit */
- #define F_D_IN			1	/* Data-in command (e.g. READ) */
-@@ -312,8 +313,11 @@ struct sdebug_host_info {
- 
- /* There is an xarray of pointers to this struct's objects, one per host */
- struct sdeb_store_info {
-+	unsigned int n_elem;    /* number of sgl elements */
-+	unsigned int order;	/* as used by alloc_pages() */
-+	unsigned int elem_pow2;	/* PAGE_SHIFT + order */
- 	rwlock_t macc_lck;	/* for atomic media access on this store */
--	u8 *storep;		/* user data storage (ram) */
-+	struct scatterlist *sgl;  /* main store: n_elem array of same sized allocs */
- 	struct t10_pi_tuple *dif_storep; /* protection info */
- 	void *map_storep;	/* provisioning map */
- };
-@@ -868,19 +872,6 @@ static inline bool scsi_debug_lbp(void)
- 		(sdebug_lbpu || sdebug_lbpws || sdebug_lbpws10);
- }
- 
--static void *lba2fake_store(struct sdeb_store_info *sip,
--			    unsigned long long lba)
--{
--	struct sdeb_store_info *lsip = sip;
--
--	lba = do_div(lba, sdebug_store_sectors);
--	if (!sip || !sip->storep) {
--		WARN_ON_ONCE(true);
--		lsip = xa_load(per_store_ap, 0);  /* should never be NULL */
--	}
--	return lsip->storep + lba * sdebug_sector_size;
--}
--
- static struct t10_pi_tuple *dif_store(struct sdeb_store_info *sip,
- 				      sector_t sector)
- {
-@@ -992,7 +983,6 @@ static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
- 				    __func__, cmd);
- 	}
- 	return -EINVAL;
--	/* return -ENOTTY; // correct return but upsets fdisk */
- }
- 
- static void config_cdb_len(struct scsi_device *sdev)
-@@ -1286,13 +1276,15 @@ static bool sdeb_sgl_compare_sgl_idx(struct scatterlist *x_sgl, unsigned int x_n
- 	return equ;
- }
- 
--static bool sdeb_sgl_compare_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
--				 struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
--				 size_t n_bytes)
--{
--	return sdeb_sgl_compare_sgl_idx(x_sgl, x_nents, x_skip, y_sgl, y_nents, y_skip, n_bytes,
--					NULL);
--}
-+/*
-+ * static bool sdeb_sgl_compare_sgl(struct scatterlist *x_sgl, unsigned int x_nents, off_t x_skip,
-+ *                                  struct scatterlist *y_sgl, unsigned int y_nents, off_t y_skip,
-+ *                                  size_t n_bytes)
-+ * {
-+ *      return sdeb_sgl_compare_sgl_idx(x_sgl, x_nents, x_skip, y_sgl, y_nents, y_skip, n_bytes,
-+ *                                      NULL);
-+ * }
-+ */
- 
- static size_t sdeb_sgl_memset(struct scatterlist *sgl, unsigned int nents, off_t skip,
- 			      u8 val, size_t n_bytes)
-@@ -1333,6 +1325,54 @@ static int fetch_to_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
- 	return scsi_sg_copy_to_buffer(scp, arr, arr_len);
- }
- 
-+static bool sdeb_sgl_cmp_buf(struct scatterlist *sgl, unsigned int nents,
-+			     const void *buf, size_t buflen, off_t skip)
-+{
-+	bool equ = true;
-+	size_t offset = 0;
-+	size_t len;
-+	struct sg_mapping_iter miter;
-+
-+	if (buflen == 0)
-+		return true;
-+	sg_miter_start(&miter, sgl, nents, SG_MITER_ATOMIC | SG_MITER_FROM_SG);
-+	if (!sg_miter_skip(&miter, skip))
-+		goto fini;
-+
-+	while (equ && (offset < buflen) && sg_miter_next(&miter)) {
-+		len = min(miter.length, buflen - offset);
-+		equ = memcmp(buf + offset, miter.addr, len) == 0;
-+		offset += len;
-+		miter.consumed = len;
-+		sg_miter_stop(&miter);
-+	}
-+fini:
-+	sg_miter_stop(&miter);
-+	return equ;
-+}
-+
-+static void sdeb_sgl_prefetch(struct scatterlist *sgl, unsigned int nents,
-+			      off_t skip, size_t n_bytes)
-+{
-+	size_t offset = 0;
-+	size_t len;
-+	struct sg_mapping_iter miter;
-+	unsigned int sg_flags = SG_MITER_FROM_SG;
-+
-+	if (n_bytes == 0)
-+		return;
-+	sg_miter_start(&miter, sgl, nents, sg_flags);
-+	if (!sg_miter_skip(&miter, skip))
-+		goto fini;
-+
-+	while ((offset < n_bytes) && sg_miter_next(&miter)) {
-+		len = min(miter.length, n_bytes - offset);
-+		prefetch_range(miter.addr, len);
-+		offset += len;
-+	}
-+fini:
-+	sg_miter_stop(&miter);
-+}
- 
- static char sdebug_inq_vendor_id[9] = "Linux   ";
- static char sdebug_inq_product_id[17] = "scsi_debug      ";
-@@ -3027,13 +3067,14 @@ static inline struct sdeb_store_info *devip2sip(struct sdebug_dev_info *devip,
- 
- /* Returns number of bytes copied or -1 if error. */
- static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
--			    u32 sg_skip, u64 lba, u32 num, bool do_write)
-+			    u32 data_inout_off, u64 lba, u32 n_blks, bool do_write)
- {
- 	int ret;
--	u64 block, rest = 0;
-+	u32 lb_size = sdebug_sector_size;
-+	u64 block, sgl_i, rem, lba_start, rest = 0;
- 	enum dma_data_direction dir;
- 	struct scsi_data_buffer *sdb = &scp->sdb;
--	u8 *fsp;
-+	struct scatterlist *store_sgl;
- 
- 	if (do_write) {
- 		dir = DMA_TO_DEVICE;
-@@ -3046,25 +3087,38 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
- 		return 0;
- 	if (scp->sc_data_direction != dir)
- 		return -1;
--	fsp = sip->storep;
--
- 	block = do_div(lba, sdebug_store_sectors);
--	if (block + num > sdebug_store_sectors)
--		rest = block + num - sdebug_store_sectors;
-+	if (block + n_blks > sdebug_store_sectors)
-+		rest = block + n_blks - sdebug_store_sectors;
-+	lba_start = block * lb_size;
-+	sgl_i = lba_start >> sip->elem_pow2;
-+	rem = lba_start - (sgl_i ? (sgl_i << sip->elem_pow2) : 0);
-+	store_sgl = sip->sgl + sgl_i;	/* O(1) to each store sg element */
-+
-+	if (do_write)
-+		ret = sdeb_sgl_copy_sgl(store_sgl, sip->n_elem - sgl_i, rem,
-+					sdb->table.sgl, sdb->table.nents, data_inout_off,
-+					(n_blks - rest) * lb_size);
-+	else
-+		ret = sdeb_sgl_copy_sgl(sdb->table.sgl, sdb->table.nents, data_inout_off,
-+					store_sgl, sip->n_elem - sgl_i, rem,
-+					(n_blks - rest) * lb_size);
- 
--	ret = sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
--		   fsp + (block * sdebug_sector_size),
--		   (num - rest) * sdebug_sector_size, sg_skip, do_write);
--	if (ret != (num - rest) * sdebug_sector_size)
-+	if (ret != (n_blks - rest) * lb_size)
- 		return ret;
- 
--	if (rest) {
--		ret += sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
--			    fsp, rest * sdebug_sector_size,
--			    sg_skip + ((num - rest) * sdebug_sector_size),
--			    do_write);
--	}
--
-+	if (rest == 0)
-+		goto fini;
-+	if (do_write)
-+		ret += sdeb_sgl_copy_sgl(sip->sgl, sip->n_elem, 0, sdb->table.sgl,
-+					 sdb->table.nents,
-+					 data_inout_off + ((n_blks - rest) * lb_size),
-+					 rest * lb_size);
-+	else
-+		ret += sdeb_sgl_copy_sgl(sdb->table.sgl, sdb->table.nents,
-+					 data_inout_off + ((n_blks - rest) * lb_size),
-+					 sip->sgl, sip->n_elem, 0, rest * lb_size);
-+fini:
- 	return ret;
- }
- 
-@@ -3081,37 +3135,66 @@ static int do_dout_fetch(struct scsi_cmnd *scp, u32 num, u8 *doutp)
- 			      num * sdebug_sector_size, 0, true);
- }
- 
--/* If sip->storep+lba compares equal to arr(num), then copy top half of
-- * arr into sip->storep+lba and return true. If comparison fails then
-- * return false. */
-+/* If sip->storep+lba compares equal to arr(num) or scp->sdb, then if miscomp_idxp is non-NULL,
-+ * copy top half of arr into sip->storep+lba and return true. If comparison fails then return
-+ * false and write the miscompare_idx via miscomp_idxp. Thsi is the COMAPARE AND WRITE case.
-+ * For VERIFY(BytChk=1), set arr to NULL which causes a sgl (store) to sgl (data-out buffer)
-+ * compare to be done. VERIFY(BytChk=3) sets arr to a valid address and sets miscomp_idxp
-+ * to NULL.
-+ */
- static bool comp_write_worker(struct sdeb_store_info *sip, u64 lba, u32 num,
--			      const u8 *arr, bool compare_only)
-+			      const u8 *arr, struct scsi_cmnd *scp, size_t *miscomp_idxp)
- {
--	bool res;
--	u64 block, rest = 0;
-+	bool equ;
-+	u64 block, lba_start, sgl_i, rem, rest = 0;
- 	u32 store_blks = sdebug_store_sectors;
--	u32 lb_size = sdebug_sector_size;
--	u8 *fsp = sip->storep;
-+	const u32 lb_size = sdebug_sector_size;
-+	u32 top_half = num * lb_size;
-+	struct scsi_data_buffer *sdb = &scp->sdb;
-+	struct scatterlist *store_sgl;
- 
- 	block = do_div(lba, store_blks);
- 	if (block + num > store_blks)
- 		rest = block + num - store_blks;
-+	lba_start = block * lb_size;
-+	sgl_i = lba_start >> sip->elem_pow2;
-+	rem = lba_start - (sgl_i ? (sgl_i << sip->elem_pow2) : 0);
-+	store_sgl = sip->sgl + sgl_i;	/* O(1) to each store sg element */
-+
-+	if (!arr) {	/* sgl to sgl compare */
-+		equ = sdeb_sgl_compare_sgl_idx(store_sgl, sip->n_elem - sgl_i, rem,
-+					       sdb->table.sgl, sdb->table.nents, 0,
-+					       (num - rest) * lb_size, miscomp_idxp);
-+		if (!equ)
-+			return equ;
-+		if (rest > 0)
-+			equ = sdeb_sgl_compare_sgl_idx(sip->sgl, sip->n_elem, 0, sdb->table.sgl,
-+						       sdb->table.nents, (num - rest) * lb_size,
-+						       rest * lb_size, miscomp_idxp);
-+	} else {
-+		equ = sdeb_sgl_cmp_buf(store_sgl, sip->n_elem - sgl_i, arr,
-+				       (num - rest) * lb_size, 0);
-+		if (!equ)
-+			return equ;
-+		if (rest > 0)
-+			equ = sdeb_sgl_cmp_buf(sip->sgl, sip->n_elem, arr,
-+					       (num - rest) * lb_size, 0);
-+	}
-+	if (!equ || !miscomp_idxp)
-+		return equ;
- 
--	res = !memcmp(fsp + (block * lb_size), arr, (num - rest) * lb_size);
--	if (!res)
--		return res;
--	if (rest)
--		res = memcmp(fsp, arr + ((num - rest) * lb_size),
--			     rest * lb_size);
--	if (!res)
--		return res;
--	if (compare_only)
--		return true;
--	arr += num * lb_size;
--	memcpy(fsp + (block * lb_size), arr, (num - rest) * lb_size);
--	if (rest)
--		memcpy(fsp, arr + ((num - rest) * lb_size), rest * lb_size);
--	return res;
-+	/* Copy "top half" of dout (args: 4, 5 and 6) into store sgl (args 1, 2 and 3) */
-+	sdeb_sgl_copy_sgl(store_sgl, sip->n_elem - sgl_i, rem,
-+			  sdb->table.sgl, sdb->table.nents, top_half,
-+			  (num - rest) * lb_size);
-+	if (rest > 0) {	/* for virtual_gb need to handle wrap-around of store */
-+		u32 src_off =  top_half + ((num - rest) * lb_size);
-+
-+		sdeb_sgl_copy_sgl(sip->sgl, sip->n_elem, 0,
-+				  sdb->table.sgl, sdb->table.nents, src_off,
-+				  rest * lb_size);
-+	}
-+	return true;
- }
- 
- static __be16 dif_compute_csum(const void *buf, int len)
-@@ -3202,33 +3285,48 @@ static void dif_copy_prot(struct scsi_cmnd *scp, sector_t sector,
- static int prot_verify_read(struct scsi_cmnd *scp, sector_t start_sec,
- 			    unsigned int sectors, u32 ei_lba)
- {
-+	int ret = 0;
- 	unsigned int i;
-+	const u32 lb_size = sdebug_sector_size;
- 	sector_t sector;
-+	u64 lba, lba_start, block, rem, sgl_i;
- 	struct sdeb_store_info *sip = devip2sip((struct sdebug_dev_info *)
- 						scp->device->hostdata, true);
- 	struct t10_pi_tuple *sdt;
-+	struct scatterlist *store_sgl;
-+	u8 *arr;
- 
--	for (i = 0; i < sectors; i++, ei_lba++) {
--		int ret;
-+	arr = kzalloc(lb_size, GFP_ATOMIC);
-+	if (!arr)
-+		return -1;	/* mkp, is this correct? */
- 
-+	for (i = 0; i < sectors; i++, ei_lba++) {
- 		sector = start_sec + i;
-+		lba = sector;
- 		sdt = dif_store(sip, sector);
- 
- 		if (sdt->app_tag == cpu_to_be16(0xffff))
- 			continue;
- 
--		ret = dif_verify(sdt, lba2fake_store(sip, sector), sector,
--				 ei_lba);
-+		block = do_div(lba, sdebug_store_sectors);
-+		lba_start = block * lb_size;
-+		sgl_i = lba_start >> sip->elem_pow2;
-+		rem = lba_start - (sgl_i ? (sgl_i << sip->elem_pow2) : 0);
-+		store_sgl = sip->sgl + sgl_i;
-+
-+		ret = sg_copy_buffer(store_sgl, sip->n_elem - sgl_i, arr, lb_size, rem, true);
-+		ret = dif_verify(sdt, arr, sector, ei_lba);
- 		if (ret) {
- 			dif_errors++;
--			return ret;
-+			goto fini;
- 		}
- 	}
- 
- 	dif_copy_prot(scp, start_sec, sectors, true);
- 	dix_reads++;
--
--	return 0;
-+fini:
-+	kfree(arr);
-+	return ret;
- }
- 
- static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-@@ -3384,6 +3482,7 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 			     unsigned int sectors, u32 ei_lba)
- {
- 	int ret;
-+	const u32 lb_size = sdebug_sector_size;
- 	struct t10_pi_tuple *sdt;
- 	void *daddr;
- 	sector_t sector = start_sec;
-@@ -3427,13 +3526,13 @@ static int prot_verify_write(struct scsi_cmnd *SCpnt, sector_t start_sec,
- 
- 			ret = dif_verify(sdt, daddr, sector, ei_lba);
- 			if (ret) {
--				dump_sector(daddr, sdebug_sector_size);
-+				dump_sector(daddr, lb_size);
- 				goto out;
- 			}
- 
- 			sector++;
- 			ei_lba++;
--			dpage_offset += sdebug_sector_size;
-+			dpage_offset += lb_size;
- 		}
- 		diter.consumed = dpage_offset;
- 		sg_miter_stop(&diter);
-@@ -3508,8 +3607,8 @@ static void map_region(struct sdeb_store_info *sip, sector_t lba,
- static void unmap_region(struct sdeb_store_info *sip, sector_t lba,
- 			 unsigned int len)
- {
-+	const u32 lb_size = sdebug_sector_size;
- 	sector_t end = lba + len;
--	u8 *fsp = sip->storep;
- 
- 	while (lba < end) {
- 		unsigned long index = lba_to_map_index(lba);
-@@ -3519,10 +3618,26 @@ static void unmap_region(struct sdeb_store_info *sip, sector_t lba,
- 		    index < map_size) {
- 			clear_bit(index, sip->map_storep);
- 			if (sdebug_lbprz) {  /* for LBPRZ=2 return 0xff_s */
--				memset(fsp + lba * sdebug_sector_size,
--				       (sdebug_lbprz & 1) ? 0 : 0xff,
--				       sdebug_sector_size *
--				       sdebug_unmap_granularity);
-+				int val = (sdebug_lbprz & 1) ? 0 : 0xff;
-+				u32 num = sdebug_unmap_granularity;
-+				u64 lbaa = lba;
-+				u64 rest = 0;
-+				u64 block, lba_start, sgl_i, rem;
-+				struct scatterlist *store_sgl;
-+
-+				block = do_div(lbaa, sdebug_store_sectors);
-+				if (block + num > sdebug_store_sectors)
-+					rest = block + num - sdebug_store_sectors;
-+				lba_start = block * lb_size;
-+				sgl_i = lba_start >> sip->elem_pow2;
-+				rem = lba_start - (sgl_i ? (sgl_i << sip->elem_pow2) : 0);
-+				store_sgl = sip->sgl + sgl_i;
-+
-+				sdeb_sgl_memset(store_sgl, sip->n_elem - sgl_i, rem, val,
-+						num * lb_size);
-+				if (rest)
-+					sdeb_sgl_memset(sip->sgl, sip->n_elem, rem, val,
-+							(num - rest) * lb_size);
- 			}
- 			if (sip->dif_storep) {
- 				memset(sip->dif_storep + lba, 0xff,
-@@ -3665,7 +3780,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	u8 wrprotect;
- 	u16 lbdof, num_lrd, k;
- 	u32 num, num_by, bt_len, lbdof_blen, sg_off, cum_lb;
--	u32 lb_size = sdebug_sector_size;
-+	const u32 lb_size = sdebug_sector_size;
- 	u32 ei_lba;
- 	u64 lba;
- 	int ret, res;
-@@ -3823,14 +3938,13 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 	struct scsi_device *sdp = scp->device;
- 	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
- 	unsigned long long i;
--	u64 block, lbaa;
--	u32 lb_size = sdebug_sector_size;
-+	u64 block, lbaa, sgl_i, lba_start, rem;
-+	const u32 lb_size = sdebug_sector_size;
- 	int ret;
- 	struct sdeb_store_info *sip = devip2sip((struct sdebug_dev_info *)
- 						scp->device->hostdata, true);
- 	rwlock_t *macc_lckp = &sip->macc_lck;
--	u8 *fs1p;
--	u8 *fsp;
-+	struct scatterlist *store_sgl;
- 
- 	write_lock(macc_lckp);
- 
-@@ -3846,15 +3960,17 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 	}
- 	lbaa = lba;
- 	block = do_div(lbaa, sdebug_store_sectors);
--	/* if ndob then zero 1 logical block, else fetch 1 logical block */
--	fsp = sip->storep;
--	fs1p = fsp + (block * lb_size);
--	if (ndob) {
--		memset(fs1p, 0, lb_size);
--		ret = 0;
--	} else
--		ret = fetch_to_dev_buffer(scp, fs1p, lb_size);
- 
-+	/* if ndob then zero 1 logical block, else fetch 1 logical block */
-+	lba_start = block * lb_size;
-+	sgl_i = lba_start >> sip->elem_pow2;
-+	rem = lba_start - (sgl_i ? (sgl_i << sip->elem_pow2) : 0);
-+	store_sgl = sip->sgl + sgl_i;
-+	ret = 0;
-+	if (ndob)
-+		sdeb_sgl_memset(store_sgl, sip->n_elem - sgl_i, rem, 0, lb_size);
-+	else
-+		ret = do_device_access(sip, scp, 0, lba, 1, true);
- 	if (-1 == ret) {
- 		write_unlock(&sip->macc_lck);
- 		return DID_ERROR << 16;
-@@ -3865,9 +3981,11 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 
- 	/* Copy first sector to remaining blocks */
- 	for (i = 1 ; i < num ; i++) {
--		lbaa = lba + i;
--		block = do_div(lbaa, sdebug_store_sectors);
--		memmove(fsp + (block * lb_size), fs1p, lb_size);
-+		ret = do_device_access(sip, scp, 0, lba + i, 1, true);
-+		if (-1 == ret) {
-+			write_unlock(&sip->macc_lck);
-+			return DID_ERROR << 16;
-+		}
- 	}
- 	if (scsi_debug_lbp())
- 		map_region(sip, lba, num);
-@@ -3876,7 +3994,6 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 		zbc_inc_wp(devip, lba, num);
- out:
- 	write_unlock(macc_lckp);
--
- 	return 0;
- }
- 
-@@ -3982,16 +4099,15 @@ static int resp_write_buffer(struct scsi_cmnd *scp,
- 	return 0;
- }
- 
--static int resp_comp_write(struct scsi_cmnd *scp,
--			   struct sdebug_dev_info *devip)
-+static int resp_comp_write(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- {
- 	u8 *cmd = scp->cmnd;
--	u8 *arr;
- 	struct sdeb_store_info *sip = devip2sip(devip, true);
- 	rwlock_t *macc_lckp = &sip->macc_lck;
- 	u64 lba;
-+	size_t miscomp_idx;
- 	u32 dnum;
--	u32 lb_size = sdebug_sector_size;
-+	const u32 lb_size = sdebug_sector_size;
- 	u8 num;
- 	int ret;
- 	int retval = 0;
-@@ -4014,25 +4130,21 @@ static int resp_comp_write(struct scsi_cmnd *scp,
- 	if (ret)
- 		return ret;
- 	dnum = 2 * num;
--	arr = kcalloc(lb_size, dnum, GFP_ATOMIC);
--	if (NULL == arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
--		return check_condition_result;
--	}
- 
- 	write_lock(macc_lckp);
--
--	ret = do_dout_fetch(scp, dnum, arr);
--	if (ret == -1) {
--		retval = DID_ERROR << 16;
-+	if (scp->sdb.length < dnum * lb_size || scp->sc_data_direction != DMA_TO_DEVICE) {
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, PARAMETER_LIST_LENGTH_ERR, 0);
-+		retval = check_condition_result;
-+		if (sdebug_verbose)
-+			sdev_printk(KERN_INFO, scp->device,
-+				    "%s::%s: cdb indicated=%u, IO sent=%d bytes\n", my_name,
-+				    __func__, dnum * lb_size, ret);
- 		goto cleanup;
--	} else if (sdebug_verbose && (ret < (dnum * lb_size)))
--		sdev_printk(KERN_INFO, scp->device, "%s: compare_write: cdb "
--			    "indicated=%u, IO sent=%d bytes\n", my_name,
--			    dnum * lb_size, ret);
--	if (!comp_write_worker(sip, lba, num, arr, false)) {
-+	}
-+
-+	if (!comp_write_worker(sip, lba, num, NULL, scp, &miscomp_idx)) {
- 		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
-+		scsi_set_sense_information(scp->sense_buffer, SCSI_SENSE_BUFFERSIZE, miscomp_idx);
- 		retval = check_condition_result;
- 		goto cleanup;
- 	}
-@@ -4040,7 +4152,6 @@ static int resp_comp_write(struct scsi_cmnd *scp,
- 		map_region(sip, lba, num);
- cleanup:
- 	write_unlock(macc_lckp);
--	kfree(arr);
- 	return retval;
- }
- 
-@@ -4187,13 +4298,13 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
- 			  struct sdebug_dev_info *devip)
- {
- 	int res = 0;
--	u64 lba;
--	u64 block, rest = 0;
-+	const u32 lb_size = sdebug_sector_size;
-+	u64 lba, block, sgl_i, rem, lba_start, rest = 0;
- 	u32 nblks;
- 	u8 *cmd = scp->cmnd;
- 	struct sdeb_store_info *sip = devip2sip(devip, true);
-+	struct scatterlist *store_sgl;
- 	rwlock_t *macc_lckp = &sip->macc_lck;
--	u8 *fsp = sip->storep;
- 
- 	if (cmd[0] == PRE_FETCH) {	/* 10 byte cdb */
- 		lba = get_unaligned_be32(cmd + 2);
-@@ -4206,21 +4317,21 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
- 		return check_condition_result;
- 	}
--	if (!fsp)
--		goto fini;
- 	/* PRE-FETCH spec says nothing about LBP or PI so skip them */
- 	block = do_div(lba, sdebug_store_sectors);
- 	if (block + nblks > sdebug_store_sectors)
- 		rest = block + nblks - sdebug_store_sectors;
-+	lba_start = block * lb_size;
-+	sgl_i = lba_start >> sip->elem_pow2;
-+	rem = lba_start - (sgl_i ? (sgl_i << sip->elem_pow2) : 0);
-+	store_sgl = sip->sgl + sgl_i;	/* O(1) to each store sg element */
- 
- 	/* Try to bring the PRE-FETCH range into CPU's cache */
- 	read_lock(macc_lckp);
--	prefetch_range(fsp + (sdebug_sector_size * block),
--		       (nblks - rest) * sdebug_sector_size);
-+	sdeb_sgl_prefetch(store_sgl, sip->n_elem - sgl_i, rem, (nblks - rest) * lb_size);
- 	if (rest)
--		prefetch_range(fsp, rest * sdebug_sector_size);
-+		sdeb_sgl_prefetch(sip->sgl, sip->n_elem, 0, rest * lb_size);
- 	read_unlock(macc_lckp);
--fini:
- 	if (cmd[1] & 0x2)
- 		res = SDEG_RES_IMMED_MASK;
- 	return res | condition_met_result;
-@@ -4337,7 +4448,7 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	u32 vnum, a_num, off;
- 	const u32 lb_size = sdebug_sector_size;
- 	u64 lba;
--	u8 *arr;
-+	u8 *arr = NULL;
- 	u8 *cmd = scp->cmnd;
- 	struct sdeb_store_info *sip = devip2sip(devip, true);
- 	rwlock_t *macc_lckp = &sip->macc_lck;
-@@ -4370,30 +4481,31 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (ret)
- 		return ret;
- 
--	arr = kcalloc(lb_size, vnum, GFP_ATOMIC);
--	if (!arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
--		return check_condition_result;
-+	if (is_bytchk3) {
-+		arr = kcalloc(lb_size, vnum, GFP_ATOMIC);
-+		if (!arr) {
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC, INSUFF_RES_ASCQ);
-+			return check_condition_result;
-+		}
- 	}
- 	/* Not changing store, so only need read access */
- 	read_lock(macc_lckp);
- 
--	ret = do_dout_fetch(scp, a_num, arr);
--	if (ret == -1) {
--		ret = DID_ERROR << 16;
--		goto cleanup;
--	} else if (sdebug_verbose && (ret < (a_num * lb_size))) {
--		sdev_printk(KERN_INFO, scp->device,
--			    "%s: %s: cdb indicated=%u, IO sent=%d bytes\n",
--			    my_name, __func__, a_num * lb_size, ret);
--	}
- 	if (is_bytchk3) {
-+		ret = do_dout_fetch(scp, a_num, arr);
-+		if (ret == -1) {
-+			ret = DID_ERROR << 16;
-+			goto cleanup;
-+		} else if (sdebug_verbose && (ret < (a_num * lb_size))) {
-+			sdev_printk(KERN_INFO, scp->device,
-+				    "%s: %s: cdb indicated=%u, IO sent=%d bytes\n",
-+				    my_name, __func__, a_num * lb_size, ret);
-+		}
- 		for (j = 1, off = lb_size; j < vnum; ++j, off += lb_size)
- 			memcpy(arr + off, arr, lb_size);
- 	}
- 	ret = 0;
--	if (!comp_write_worker(sip, lba, vnum, arr, true)) {
-+	if (!comp_write_worker(sip, lba, vnum, arr, scp, NULL)) {
- 		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
- 		ret = check_condition_result;
- 		goto cleanup;
-@@ -5927,15 +6039,15 @@ static int scsi_debug_show_info(struct seq_file *m, struct Scsi_Host *host)
- 				   sdhp->shost->host_no, idx);
- 			++j;
- 		}
--		seq_printf(m, "\nper_store array [most_recent_idx=%d]:\n",
-+		seq_printf(m, "\nper_store array [most_recent_idx=%d] sgl_s:\n",
- 			   sdeb_most_recent_idx);
- 		j = 0;
- 		xa_for_each(per_store_ap, l_idx, sip) {
- 			niu = xa_get_mark(per_store_ap, l_idx,
- 					  SDEB_XA_NOT_IN_USE);
- 			idx = (int)l_idx;
--			seq_printf(m, "  %d: idx=%d%s\n", j, idx,
--				   (niu ? "  not_in_use" : ""));
-+			seq_printf(m, "  %d: idx=%d%s, n_elems=%u, elem_sz=%u\n", j, idx,
-+				   (niu ? "  not_in_use" : ""), sip->n_elem, 1 << sip->elem_pow2);
- 			++j;
- 		}
- 	}
-@@ -7034,7 +7146,8 @@ static void sdebug_erase_store(int idx, struct sdeb_store_info *sip)
- 	}
- 	vfree(sip->map_storep);
- 	vfree(sip->dif_storep);
--	vfree(sip->storep);
-+	if (sip->sgl)
-+		sgl_free_n_order(sip->sgl, sip->n_elem, sip->order);
- 	xa_erase(per_store_ap, idx);
- 	kfree(sip);
- }
-@@ -7055,6 +7168,41 @@ static void sdebug_erase_all_stores(bool apart_from_first)
- 		sdeb_most_recent_idx = sdeb_first_idx;
- }
- 
-+/* Want uniform sg element size, the last one can be less. */
-+static int sdeb_store_sgat(struct sdeb_store_info *sip, int sz_mib)
-+{
-+	unsigned int order;
-+	unsigned long sz_b = (unsigned long)sz_mib * 1048576;
-+	gfp_t mask_ap = GFP_KERNEL | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
-+
-+	if (sz_mib <= 128)
-+		order = get_order(max_t(unsigned int, PAGE_SIZE, 32 * 1024));
-+	else if (sz_mib <= 256)
-+		order = get_order(max_t(unsigned int, PAGE_SIZE, 64 * 1024));
-+	else if (sz_mib <= 512)
-+		order = get_order(max_t(unsigned int, PAGE_SIZE, 128 * 1024));
-+	else if (sz_mib <= 1024)
-+		order = get_order(max_t(unsigned int, PAGE_SIZE, 256 * 1024));
-+	else if (sz_mib <= 2048)
-+		order = get_order(max_t(unsigned int, PAGE_SIZE, 512 * 1024));
-+	else
-+		order = get_order(max_t(unsigned int, PAGE_SIZE, 1024 * 1024));
-+	sip->sgl = sgl_alloc_order(sz_b, order, false, mask_ap, &sip->n_elem);
-+	if (!sip->sgl && order > 0) {
-+		sip->sgl = sgl_alloc_order(sz_b, --order, false, mask_ap, &sip->n_elem);
-+		if (!sip->sgl && order > 0)
-+			sip->sgl = sgl_alloc_order(sz_b, --order, false, mask_ap, &sip->n_elem);
-+	}
-+	if (!sip->sgl) {
-+		pr_info("%s: unable to obtain %d MiB, last element size: %u kiB\n", __func__,
-+			sz_mib, (1 << (PAGE_SHIFT + order)) / 1024);
-+		return -ENOMEM;
-+	}
-+	sip->order = order;
-+	sip->elem_pow2 = PAGE_SHIFT + order;
-+	return 0;
-+}
-+
- /*
-  * Returns store xarray new element index (idx) if >=0 else negated errno.
-  * Limit the number of stores to 65536.
-@@ -7086,13 +7234,21 @@ static int sdebug_add_store(void)
- 	xa_unlock_irqrestore(per_store_ap, iflags);
- 
- 	res = -ENOMEM;
--	sip->storep = vzalloc(sz);
--	if (!sip->storep) {
--		pr_err("user data oom\n");
-+	res = sdeb_store_sgat(sip, sdebug_dev_size_mb);
-+	if (res) {
-+		pr_err("sgat: user data oom\n");
- 		goto err;
- 	}
--	if (sdebug_num_parts > 0)
--		sdebug_build_parts(sip->storep, sz);
-+	if (sdebug_num_parts > 0) {
-+		const int a_len = 1024;
-+		u8 *arr = kzalloc(a_len, GFP_KERNEL);
-+
-+		if (arr) {
-+			sdebug_build_parts(arr, sz);
-+			sg_copy_from_buffer(sip->sgl, sip->n_elem, arr, a_len);
-+			kfree(arr);
-+		}
-+	}
- 
- 	/* DIF/DIX: what T10 calls Protection Information (PI) */
- 	if (sdebug_dix) {
--- 
-2.25.1
+SGkgQ2FuLA0KDQpPbiBTdW4sIDIwMjAtMTItMTMgYXQgMDg6MzEgLTA4MDAsIENhbiBHdW8gd3Jv
+dGU6DQo+IEluIGNvbnRleHRzIGxpa2Ugc3VzcGVuZCwgc2h1dGRvd24gYW5kIGVycm9yIGhhbmRs
+aW5nLCB3ZSBuZWVkIHRvIHN1c3BlbmQNCj4gZGV2ZnJlcSB0byBtYWtlIHN1cmUgdGhlc2UgY29u
+dGV4dHMgd29uJ3QgYmUgZGlzdHVyYmVkIGJ5IGNsb2NrIHNjYWxpbmcuDQo+IEhvd2V2ZXIsIHN1
+c3BlbmRpbmcgZGV2ZnJlcSBpcyBub3QgZW5vdWdoIHNpbmNlIHVzZXJzIGNhbiBzdGlsbCB0cmln
+Z2VyIGENCj4gY2xvY2sgc2NhbGluZyBieSBtYW5pcHVsYXRpbmcgdGhlIHN5c2ZzIG5vZGUgY2xr
+c2NhbGVfZW5hYmxlIGFuZCBkZXZmcmVxDQo+IHN5c2ZzIG5vZGVzIGxpa2UgbWluL21heF9mcmVx
+IGFuZCBnb3Zlcm5vci4gQWRkIG9uZSBtb3JlIGZsYWcgaW4gc3RydWN0DQo+IGNsa19zY2FsaW5n
+IHN1Y2ggdGhhdCB0aGVzZSBjb250ZXh0cyBjYW4gcHJldmVudCBjbG9jayBzY2FsaW5nIGZyb20g
+YmVpbmcNCj4gaW52b2tlZCB0aHJvdWdoIGFib3ZlIHN5c2ZzIG5vZGVzLg0KPiANCj4gU2lnbmVk
+LW9mZi1ieTogQ2FuIEd1byA8Y2FuZ0Bjb2RlYXVyb3JhLm9yZz4NCj4gLS0tDQo+ICBkcml2ZXJz
+L3Njc2kvdWZzL3Vmc2hjZC5jIHwgODMgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0t
+LS0tLS0tLS0tLS0tLS0NCj4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggfCAgMiArKw0KPiAg
+MiBmaWxlcyBjaGFuZ2VkLCA1NyBpbnNlcnRpb25zKCspLCAyOCBkZWxldGlvbnMoLSkNCj4gDQo+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vm
+cy91ZnNoY2QuYw0KPiBpbmRleCAwYzE0OGZjLi40Y2NkZDJiIDEwMDY0NA0KPiAtLS0gYS9kcml2
+ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMN
+Cj4gQEAgLTExNDcsMTIgKzExNDcsMjIgQEAgc3RhdGljIGludCB1ZnNoY2RfY2xvY2tfc2NhbGlu
+Z19wcmVwYXJlKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICAJICovDQo+ICAJdWZzaGNkX3Njc2lf
+YmxvY2tfcmVxdWVzdHMoaGJhKTsNCj4gIAlkb3duX3dyaXRlKCZoYmEtPmNsa19zY2FsaW5nX2xv
+Y2spOw0KPiAtCWlmICh1ZnNoY2Rfd2FpdF9mb3JfZG9vcmJlbGxfY2xyKGhiYSwgRE9PUkJFTExf
+Q0xSX1RPVVRfVVMpKSB7DQo+ICsNCj4gKwlpZiAoIWhiYS0+Y2xrX3NjYWxpbmcuaXNfYWxsb3dl
+ZCkNCj4gKwkJcmV0ID0gLUVBR0FJTjsNCj4gKwllbHNlIGlmICh1ZnNoY2Rfd2FpdF9mb3JfZG9v
+cmJlbGxfY2xyKGhiYSwgRE9PUkJFTExfQ0xSX1RPVVRfVVMpKQ0KPiAgCQlyZXQgPSAtRUJVU1k7
+DQo+ICsNCj4gKwlpZiAocmV0KSB7DQo+ICAJCXVwX3dyaXRlKCZoYmEtPmNsa19zY2FsaW5nX2xv
+Y2spOw0KPiAgCQl1ZnNoY2Rfc2NzaV91bmJsb2NrX3JlcXVlc3RzKGhiYSk7DQo+ICsJCWdvdG8g
+b3V0Ow0KPiAgCX0NCj4gIA0KPiArCS8qIGxldCdzIG5vdCBnZXQgaW50byBsb3cgcG93ZXIgdW50
+aWwgY2xvY2sgc2NhbGluZyBpcyBjb21wbGV0ZWQgKi8NCj4gKwl1ZnNoY2RfaG9sZChoYmEsIGZh
+bHNlKTsNCj4gKw0KPiArb3V0Og0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+ICANCj4gQEAgLTEx
+NjAsNiArMTE3MCw3IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF9jbG9ja19zY2FsaW5nX3VucHJlcGFy
+ZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPiAgew0KPiAgCXVwX3dyaXRlKCZoYmEtPmNsa19zY2Fs
+aW5nX2xvY2spOw0KPiAgCXVmc2hjZF9zY3NpX3VuYmxvY2tfcmVxdWVzdHMoaGJhKTsNCj4gKwl1
+ZnNoY2RfcmVsZWFzZShoYmEpOw0KPiAgfQ0KPiAgDQo+ICAvKioNCj4gQEAgLTExNzUsMTIgKzEx
+ODYsOSBAQCBzdGF0aWMgaW50IHVmc2hjZF9kZXZmcmVxX3NjYWxlKHN0cnVjdCB1ZnNfaGJhICpo
+YmEsIGJvb2wgc2NhbGVfdXApDQo+ICB7DQo+ICAJaW50IHJldCA9IDA7DQo+ICANCj4gLQkvKiBs
+ZXQncyBub3QgZ2V0IGludG8gbG93IHBvd2VyIHVudGlsIGNsb2NrIHNjYWxpbmcgaXMgY29tcGxl
+dGVkICovDQo+IC0JdWZzaGNkX2hvbGQoaGJhLCBmYWxzZSk7DQo+IC0NCj4gIAlyZXQgPSB1ZnNo
+Y2RfY2xvY2tfc2NhbGluZ19wcmVwYXJlKGhiYSk7DQo+ICAJaWYgKHJldCkNCj4gLQkJZ290byBv
+dXQ7DQo+ICsJCXJldHVybiByZXQ7DQo+ICANCj4gIAkvKiBzY2FsZSBkb3duIHRoZSBnZWFyIGJl
+Zm9yZSBzY2FsaW5nIGRvd24gY2xvY2tzICovDQo+ICAJaWYgKCFzY2FsZV91cCkgew0KPiBAQCAt
+MTIxMiw4ICsxMjIwLDYgQEAgc3RhdGljIGludCB1ZnNoY2RfZGV2ZnJlcV9zY2FsZShzdHJ1Y3Qg
+dWZzX2hiYSAqaGJhLCBib29sIHNjYWxlX3VwKQ0KPiAgDQo+ICBvdXRfdW5wcmVwYXJlOg0KPiAg
+CXVmc2hjZF9jbG9ja19zY2FsaW5nX3VucHJlcGFyZShoYmEpOw0KPiAtb3V0Og0KPiAtCXVmc2hj
+ZF9yZWxlYXNlKGhiYSk7DQo+ICAJcmV0dXJuIHJldDsNCj4gIH0NCj4gIA0KPiBAQCAtMTQ4Nyw3
+ICsxNDkzLDcgQEAgc3RhdGljIHNzaXplX3QgdWZzaGNkX2Nsa3NjYWxlX2VuYWJsZV9zaG93KHN0
+cnVjdCBkZXZpY2UgKmRldiwNCj4gIHsNCj4gIAlzdHJ1Y3QgdWZzX2hiYSAqaGJhID0gZGV2X2dl
+dF9kcnZkYXRhKGRldik7DQo+ICANCj4gLQlyZXR1cm4gc25wcmludGYoYnVmLCBQQUdFX1NJWkUs
+ICIlZFxuIiwgaGJhLT5jbGtfc2NhbGluZy5pc19hbGxvd2VkKTsNCj4gKwlyZXR1cm4gc25wcmlu
+dGYoYnVmLCBQQUdFX1NJWkUsICIlZFxuIiwgaGJhLT5jbGtfc2NhbGluZy5pc19lbmFibGVkKTsN
+Cj4gIH0NCj4gIA0KPiAgc3RhdGljIHNzaXplX3QgdWZzaGNkX2Nsa3NjYWxlX2VuYWJsZV9zdG9y
+ZShzdHJ1Y3QgZGV2aWNlICpkZXYsDQo+IEBAIC0xNDk2LDEyICsxNTAyLDIwIEBAIHN0YXRpYyBz
+c2l6ZV90IHVmc2hjZF9jbGtzY2FsZV9lbmFibGVfc3RvcmUoc3RydWN0IGRldmljZSAqZGV2LA0K
+PiAgCXN0cnVjdCB1ZnNfaGJhICpoYmEgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsNCj4gIAl1MzIg
+dmFsdWU7DQo+ICAJaW50IGVycjsNCj4gKwl1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiArCWJvb2wg
+dXBkYXRlID0gdHJ1ZTsNCj4gIA0KPiAgCWlmIChrc3RydG91MzIoYnVmLCAwLCAmdmFsdWUpKQ0K
+PiAgCQlyZXR1cm4gLUVJTlZBTDsNCj4gIA0KPiAgCXZhbHVlID0gISF2YWx1ZTsNCj4gLQlpZiAo
+dmFsdWUgPT0gaGJhLT5jbGtfc2NhbGluZy5pc19hbGxvd2VkKQ0KPiArCXNwaW5fbG9ja19pcnFz
+YXZlKGhiYS0+aG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ICsJaWYgKHZhbHVlID09IGhiYS0+
+Y2xrX3NjYWxpbmcuaXNfZW5hYmxlZCkNCj4gKwkJdXBkYXRlID0gZmFsc2U7DQo+ICsJZWxzZQ0K
+PiArCQloYmEtPmNsa19zY2FsaW5nLmlzX2VuYWJsZWQgPSB2YWx1ZTsNCj4gKwlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKGhiYS0+aG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ICsJaWYgKCF1cGRh
+dGUpDQo+ICAJCWdvdG8gb3V0Ow0KPiAgDQo+ICAJcG1fcnVudGltZV9nZXRfc3luYyhoYmEtPmRl
+dik7DQo+IEBAIC0xNTEwLDggKzE1MjQsNiBAQCBzdGF0aWMgc3NpemVfdCB1ZnNoY2RfY2xrc2Nh
+bGVfZW5hYmxlX3N0b3JlKHN0cnVjdCBkZXZpY2UgKmRldiwNCj4gIAljYW5jZWxfd29ya19zeW5j
+KCZoYmEtPmNsa19zY2FsaW5nLnN1c3BlbmRfd29yayk7DQo+ICAJY2FuY2VsX3dvcmtfc3luYygm
+aGJhLT5jbGtfc2NhbGluZy5yZXN1bWVfd29yayk7DQo+ICANCj4gLQloYmEtPmNsa19zY2FsaW5n
+LmlzX2FsbG93ZWQgPSB2YWx1ZTsNCj4gLQ0KPiAgCWlmICh2YWx1ZSkgew0KPiAgCQl1ZnNoY2Rf
+cmVzdW1lX2Nsa3NjYWxpbmcoaGJhKTsNCj4gIAl9IGVsc2Ugew0KPiBAQCAtMTg0NSw4ICsxODU3
+LDYgQEAgc3RhdGljIHZvaWQgdWZzaGNkX2luaXRfY2xrX3NjYWxpbmcoc3RydWN0IHVmc19oYmEg
+KmhiYSkNCj4gIAlzbnByaW50Zih3cV9uYW1lLCBzaXplb2Yod3FfbmFtZSksICJ1ZnNfY2xrc2Nh
+bGluZ18lZCIsDQo+ICAJCSBoYmEtPmhvc3QtPmhvc3Rfbm8pOw0KPiAgCWhiYS0+Y2xrX3NjYWxp
+bmcud29ya3EgPSBjcmVhdGVfc2luZ2xldGhyZWFkX3dvcmtxdWV1ZSh3cV9uYW1lKTsNCj4gLQ0K
+PiAtCXVmc2hjZF9jbGtzY2FsaW5nX2luaXRfc3lzZnMoaGJhKTsNCj4gIH0NCj4gIA0KPiAgc3Rh
+dGljIHZvaWQgdWZzaGNkX2V4aXRfY2xrX3NjYWxpbmcoc3RydWN0IHVmc19oYmEgKmhiYSkNCj4g
+QEAgLTE4NTQsNiArMTg2NCw4IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF9leGl0X2Nsa19zY2FsaW5n
+KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICAJaWYgKCF1ZnNoY2RfaXNfY2xrc2NhbGluZ19zdXBw
+b3J0ZWQoaGJhKSkNCj4gIAkJcmV0dXJuOw0KPiAgDQo+ICsJaWYgKGhiYS0+ZGV2ZnJlcSkNCj4g
+KwkJZGV2aWNlX3JlbW92ZV9maWxlKGhiYS0+ZGV2LCAmaGJhLT5jbGtfc2NhbGluZy5lbmFibGVf
+YXR0cik7DQo+ICAJZGVzdHJveV93b3JrcXVldWUoaGJhLT5jbGtfc2NhbGluZy53b3JrcSk7DQo+
+ICAJdWZzaGNkX2RldmZyZXFfcmVtb3ZlKGhiYSk7DQo+ICB9DQo+IEBAIC0xOTE4LDcgKzE5MzAs
+NyBAQCBzdGF0aWMgdm9pZCB1ZnNoY2RfY2xrX3NjYWxpbmdfc3RhcnRfYnVzeShzdHJ1Y3QgdWZz
+X2hiYSAqaGJhKQ0KPiAgCWlmICghaGJhLT5jbGtfc2NhbGluZy5hY3RpdmVfcmVxcysrKQ0KPiAg
+CQlxdWV1ZV9yZXN1bWVfd29yayA9IHRydWU7DQo+ICANCj4gLQlpZiAoIWhiYS0+Y2xrX3NjYWxp
+bmcuaXNfYWxsb3dlZCB8fCBoYmEtPnBtX29wX2luX3Byb2dyZXNzKQ0KPiArCWlmICghaGJhLT5j
+bGtfc2NhbGluZy5pc19lbmFibGVkIHx8IGhiYS0+cG1fb3BfaW5fcHJvZ3Jlc3MpDQo+ICAJCXJl
+dHVybjsNCj4gIA0KPiAgCWlmIChxdWV1ZV9yZXN1bWVfd29yaykNCj4gQEAgLTQ5ODcsNyArNDk5
+OSw4IEBAIHN0YXRpYyB2b2lkIF9fdWZzaGNkX3RyYW5zZmVyX3JlcV9jb21wbChzdHJ1Y3QgdWZz
+X2hiYSAqaGJhLA0KPiAgCQkJCWNvbXBsZXRlKGhiYS0+ZGV2X2NtZC5jb21wbGV0ZSk7DQo+ICAJ
+CQl9DQo+ICAJCX0NCj4gLQkJaWYgKHVmc2hjZF9pc19jbGtzY2FsaW5nX3N1cHBvcnRlZChoYmEp
+KQ0KPiArCQlpZiAodWZzaGNkX2lzX2Nsa3NjYWxpbmdfc3VwcG9ydGVkKGhiYSkgJiYNCj4gKwkJ
+ICAgIGhiYS0+Y2xrX3NjYWxpbmcuYWN0aXZlX3JlcXMgPiAwKQ0KPiAgCQkJaGJhLT5jbGtfc2Nh
+bGluZy5hY3RpdmVfcmVxcy0tOw0KPiAgCX0NCj4gIA0KPiBAQCAtNTY1MCwxOCArNTY2MywyNSBA
+QCBzdGF0aWMgdm9pZCB1ZnNoY2RfZXJyX2hhbmRsaW5nX3ByZXBhcmUoc3RydWN0IHVmc19oYmEg
+KmhiYSkNCj4gIAkJdWZzaGNkX3ZvcHNfcmVzdW1lKGhiYSwgVUZTX1JVTlRJTUVfUE0pOw0KPiAg
+CX0gZWxzZSB7DQo+ICAJCXVmc2hjZF9ob2xkKGhiYSwgZmFsc2UpOw0KPiAtCQlpZiAoaGJhLT5j
+bGtfc2NhbGluZy5pc19hbGxvd2VkKSB7DQo+ICsJCWlmIChoYmEtPmNsa19zY2FsaW5nLmlzX2Vu
+YWJsZWQpIHsNCj4gIAkJCWNhbmNlbF93b3JrX3N5bmMoJmhiYS0+Y2xrX3NjYWxpbmcuc3VzcGVu
+ZF93b3JrKTsNCj4gIAkJCWNhbmNlbF93b3JrX3N5bmMoJmhiYS0+Y2xrX3NjYWxpbmcucmVzdW1l
+X3dvcmspOw0KPiAgCQkJdWZzaGNkX3N1c3BlbmRfY2xrc2NhbGluZyhoYmEpOw0KPiAgCQl9DQo+
+ICAJfQ0KPiArCWRvd25fd3JpdGUoJmhiYS0+Y2xrX3NjYWxpbmdfbG9jayk7DQo+ICsJaGJhLT5j
+bGtfc2NhbGluZy5pc19hbGxvd2VkID0gZmFsc2U7DQo+ICsJdXBfd3JpdGUoJmhiYS0+Y2xrX3Nj
+YWxpbmdfbG9jayk7DQo+ICB9DQo+ICANCj4gIHN0YXRpYyB2b2lkIHVmc2hjZF9lcnJfaGFuZGxp
+bmdfdW5wcmVwYXJlKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICB7DQo+ICAJdWZzaGNkX3JlbGVh
+c2UoaGJhKTsNCj4gLQlpZiAoaGJhLT5jbGtfc2NhbGluZy5pc19hbGxvd2VkKQ0KPiArDQo+ICsJ
+ZG93bl93cml0ZSgmaGJhLT5jbGtfc2NhbGluZ19sb2NrKTsNCj4gKwloYmEtPmNsa19zY2FsaW5n
+LmlzX2FsbG93ZWQgPSB0cnVlOw0KPiArCXVwX3dyaXRlKCZoYmEtPmNsa19zY2FsaW5nX2xvY2sp
+Ow0KPiArCWlmIChoYmEtPmNsa19zY2FsaW5nLmlzX2VuYWJsZWQpDQo+ICAJCXVmc2hjZF9yZXN1
+bWVfY2xrc2NhbGluZyhoYmEpOw0KPiAgCXBtX3J1bnRpbWVfcHV0KGhiYS0+ZGV2KTsNCj4gIH0N
+Cj4gQEAgLTc2MjAsMTIgKzc2NDAsMTQgQEAgc3RhdGljIGludCB1ZnNoY2RfYWRkX2x1cyhzdHJ1
+Y3QgdWZzX2hiYSAqaGJhKQ0KPiAgCQkJc2l6ZW9mKHN0cnVjdCB1ZnNfcGFfbGF5ZXJfYXR0cikp
+Ow0KPiAgCQloYmEtPmNsa19zY2FsaW5nLnNhdmVkX3B3cl9pbmZvLmlzX3ZhbGlkID0gdHJ1ZTsN
+Cj4gIAkJaWYgKCFoYmEtPmRldmZyZXEpIHsNCj4gKwkJCWhiYS0+Y2xrX3NjYWxpbmcuaXNfYWxs
+b3dlZCA9IHRydWU7DQoNClBlcmhhcHMgbW92aW5nIHRoaXMgbGluZSBhZnRlciB1ZnNoY2RfZGV2
+ZnJlcV9pbml0KCkgaXMgc3VjY2Vzc2Z1bD8NCg0KPiAgCQkJcmV0ID0gdWZzaGNkX2RldmZyZXFf
+aW5pdChoYmEpOw0KPiAgCQkJaWYgKHJldCkNCj4gIAkJCQlnb3RvIG91dDsNCj4gLQkJfQ0KPiAg
+DQo+IC0JCWhiYS0+Y2xrX3NjYWxpbmcuaXNfYWxsb3dlZCA9IHRydWU7DQo+ICsJCQloYmEtPmNs
+a19zY2FsaW5nLmlzX2VuYWJsZWQgPSB0cnVlOw0KPiArCQkJdWZzaGNkX2Nsa3NjYWxpbmdfaW5p
+dF9zeXNmcyhoYmEpOw0KPiArCQl9DQo+ICAJfQ0KPiAgDQo+ICAJdWZzX2JzZ19wcm9iZShoYmEp
+Ow0KPiBAQCAtODQ5MSwxMSArODUxMywxNCBAQCBzdGF0aWMgaW50IHVmc2hjZF9zdXNwZW5kKHN0
+cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZzX3BtX29wIHBtX29wKQ0KPiAgCXVmc2hjZF9ob2xk
+KGhiYSwgZmFsc2UpOw0KPiAgCWhiYS0+Y2xrX2dhdGluZy5pc19zdXNwZW5kZWQgPSB0cnVlOw0K
+PiAgDQo+IC0JaWYgKGhiYS0+Y2xrX3NjYWxpbmcuaXNfYWxsb3dlZCkgew0KPiArCWlmIChoYmEt
+PmNsa19zY2FsaW5nLmlzX2VuYWJsZWQpIHsNCj4gIAkJY2FuY2VsX3dvcmtfc3luYygmaGJhLT5j
+bGtfc2NhbGluZy5zdXNwZW5kX3dvcmspOw0KPiAgCQljYW5jZWxfd29ya19zeW5jKCZoYmEtPmNs
+a19zY2FsaW5nLnJlc3VtZV93b3JrKTsNCj4gIAkJdWZzaGNkX3N1c3BlbmRfY2xrc2NhbGluZyho
+YmEpOw0KPiAgCX0NCj4gKwlkb3duX3dyaXRlKCZoYmEtPmNsa19zY2FsaW5nX2xvY2spOw0KPiAr
+CWhiYS0+Y2xrX3NjYWxpbmcuaXNfYWxsb3dlZCA9IGZhbHNlOw0KPiArCXVwX3dyaXRlKCZoYmEt
+PmNsa19zY2FsaW5nX2xvY2spOw0KPiAgDQo+ICAJaWYgKHJlcV9kZXZfcHdyX21vZGUgPT0gVUZT
+X0FDVElWRV9QV1JfTU9ERSAmJg0KPiAgCQkJcmVxX2xpbmtfc3RhdGUgPT0gVUlDX0xJTktfQUNU
+SVZFX1NUQVRFKSB7DQo+IEBAIC04NTkyLDggKzg2MTcsNiBAQCBzdGF0aWMgaW50IHVmc2hjZF9z
+dXNwZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZzX3BtX29wIHBtX29wKQ0KPiAgCWdv
+dG8gb3V0Ow0KPiAgDQo+ICBzZXRfbGlua19hY3RpdmU6DQo+IC0JaWYgKGhiYS0+Y2xrX3NjYWxp
+bmcuaXNfYWxsb3dlZCkNCj4gLQkJdWZzaGNkX3Jlc3VtZV9jbGtzY2FsaW5nKGhiYSk7DQo+ICAJ
+dWZzaGNkX3ZyZWdfc2V0X2hwbShoYmEpOw0KPiAgCWlmICh1ZnNoY2RfaXNfbGlua19oaWJlcm44
+KGhiYSkgJiYgIXVmc2hjZF91aWNfaGliZXJuOF9leGl0KGhiYSkpDQo+ICAJCXVmc2hjZF9zZXRf
+bGlua19hY3RpdmUoaGJhKTsNCj4gQEAgLTg2MDMsNyArODYyNiwxMCBAQCBzdGF0aWMgaW50IHVm
+c2hjZF9zdXNwZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZzX3BtX29wIHBtX29wKQ0K
+PiAgCWlmICghdWZzaGNkX3NldF9kZXZfcHdyX21vZGUoaGJhLCBVRlNfQUNUSVZFX1BXUl9NT0RF
+KSkNCj4gIAkJdWZzaGNkX2Rpc2FibGVfYXV0b19ia29wcyhoYmEpOw0KPiAgZW5hYmxlX2dhdGlu
+ZzoNCj4gLQlpZiAoaGJhLT5jbGtfc2NhbGluZy5pc19hbGxvd2VkKQ0KPiArCWRvd25fd3JpdGUo
+JmhiYS0+Y2xrX3NjYWxpbmdfbG9jayk7DQo+ICsJaGJhLT5jbGtfc2NhbGluZy5pc19hbGxvd2Vk
+ID0gdHJ1ZTsNCj4gKwl1cF93cml0ZSgmaGJhLT5jbGtfc2NhbGluZ19sb2NrKTsNCj4gKwlpZiAo
+aGJhLT5jbGtfc2NhbGluZy5pc19lbmFibGVkKQ0KPiAgCQl1ZnNoY2RfcmVzdW1lX2Nsa3NjYWxp
+bmcoaGJhKTsNCj4gIAloYmEtPmNsa19nYXRpbmcuaXNfc3VzcGVuZGVkID0gZmFsc2U7DQo+ICAJ
+aGJhLT5kZXZfaW5mby5iX3JwbV9kZXZfZmx1c2hfY2FwYWJsZSA9IGZhbHNlOw0KPiBAQCAtODcw
+MSw3ICs4NzI3LDEwIEBAIHN0YXRpYyBpbnQgdWZzaGNkX3Jlc3VtZShzdHJ1Y3QgdWZzX2hiYSAq
+aGJhLCBlbnVtIHVmc19wbV9vcCBwbV9vcCkNCj4gIA0KPiAgCWhiYS0+Y2xrX2dhdGluZy5pc19z
+dXNwZW5kZWQgPSBmYWxzZTsNCj4gIA0KPiAtCWlmIChoYmEtPmNsa19zY2FsaW5nLmlzX2FsbG93
+ZWQpDQo+ICsJZG93bl93cml0ZSgmaGJhLT5jbGtfc2NhbGluZ19sb2NrKTsNCj4gKwloYmEtPmNs
+a19zY2FsaW5nLmlzX2FsbG93ZWQgPSB0cnVlOw0KPiArCXVwX3dyaXRlKCZoYmEtPmNsa19zY2Fs
+aW5nX2xvY2spOw0KPiArCWlmIChoYmEtPmNsa19zY2FsaW5nLmlzX2VuYWJsZWQpDQo+ICAJCXVm
+c2hjZF9yZXN1bWVfY2xrc2NhbGluZyhoYmEpOw0KPiAgDQo+ICAJLyogRW5hYmxlIEF1dG8tSGli
+ZXJuYXRlIGlmIGNvbmZpZ3VyZWQgKi8NCj4gQEAgLTg3MjUsOCArODc1NCw2IEBAIHN0YXRpYyBp
+bnQgdWZzaGNkX3Jlc3VtZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBlbnVtIHVmc19wbV9vcCBwbV9v
+cCkNCj4gIAl1ZnNoY2RfdnJlZ19zZXRfbHBtKGhiYSk7DQo+ICBkaXNhYmxlX2lycV9hbmRfdm9w
+c19jbGtzOg0KPiAgCXVmc2hjZF9kaXNhYmxlX2lycShoYmEpOw0KPiAtCWlmIChoYmEtPmNsa19z
+Y2FsaW5nLmlzX2FsbG93ZWQpDQo+IC0JCXVmc2hjZF9zdXNwZW5kX2Nsa3NjYWxpbmcoaGJhKTsN
+Cj4gIAl1ZnNoY2Rfc2V0dXBfY2xvY2tzKGhiYSwgZmFsc2UpOw0KPiAgCWlmICh1ZnNoY2RfaXNf
+Y2xrZ2F0aW5nX2FsbG93ZWQoaGJhKSkgew0KPiAgCQloYmEtPmNsa19nYXRpbmcuc3RhdGUgPSBD
+TEtTX09GRjsNCj4gQEAgLTg5MTUsNiArODk0Miw4IEBAIGludCB1ZnNoY2Rfc2h1dGRvd24oc3Ry
+dWN0IHVmc19oYmEgKmhiYSkNCj4gIA0KPiAgCXBtX3J1bnRpbWVfZ2V0X3N5bmMoaGJhLT5kZXYp
+Ow0KPiAgDQo+ICsJdWZzaGNkX2V4aXRfY2xrX3NjYWxpbmcoaGJhKTsNCj4gKw0KPiAgCXJldCA9
+IHVmc2hjZF9zdXNwZW5kKGhiYSwgVUZTX1NIVVRET1dOX1BNKTsNCj4gIG91dDoNCj4gIAlpZiAo
+cmV0KQ0KPiBAQCAtODk0NCw4ICs4OTczLDYgQEAgdm9pZCB1ZnNoY2RfcmVtb3ZlKHN0cnVjdCB1
+ZnNfaGJhICpoYmEpDQo+ICANCj4gIAl1ZnNoY2RfZXhpdF9jbGtfc2NhbGluZyhoYmEpOw0KPiAg
+CXVmc2hjZF9leGl0X2Nsa19nYXRpbmcoaGJhKTsNCj4gLQlpZiAodWZzaGNkX2lzX2Nsa3NjYWxp
+bmdfc3VwcG9ydGVkKGhiYSkpDQo+IC0JCWRldmljZV9yZW1vdmVfZmlsZShoYmEtPmRldiwgJmhi
+YS0+Y2xrX3NjYWxpbmcuZW5hYmxlX2F0dHIpOw0KPiAgCXVmc2hjZF9oYmFfZXhpdChoYmEpOw0K
+PiAgfQ0KPiAgRVhQT1JUX1NZTUJPTF9HUEwodWZzaGNkX3JlbW92ZSk7DQo+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0K
+PiBpbmRleCBlMGYwMGE0Li45ZmNlY2JhIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZz
+L3Vmc2hjZC5oDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgNCj4gQEAgLTM4Miw2
+ICszODIsNyBAQCBzdHJ1Y3QgdWZzX3NhdmVkX3B3cl9pbmZvIHsNCj4gICAqIEB3b3JrcTogd29y
+a3F1ZXVlIHRvIHNjaGVkdWxlIGRldmZyZXEgc3VzcGVuZC9yZXN1bWUgd29yaw0KPiAgICogQHN1
+c3BlbmRfd29yazogd29ya2VyIHRvIHN1c3BlbmQgZGV2ZnJlcQ0KPiAgICogQHJlc3VtZV93b3Jr
+OiB3b3JrZXIgdG8gcmVzdW1lIGRldmZyZXENCj4gKyAqIEBpc19lbmFibGVkOiB0cmFja3MgaWYg
+c2NhbGluZyBpcyBjdXJyZW50bHkgZW5hYmxlZCBvciBub3QNCj4gICAqIEBpc19hbGxvd2VkOiB0
+cmFja3MgaWYgc2NhbGluZyBpcyBjdXJyZW50bHkgYWxsb3dlZCBvciBub3QNCj4gICAqIEBpc19i
+dXN5X3N0YXJ0ZWQ6IHRyYWNrcyBpZiBidXN5IHBlcmlvZCBoYXMgc3RhcnRlZCBvciBub3QNCj4g
+ICAqIEBpc19zdXNwZW5kZWQ6IHRyYWNrcyBpZiBkZXZmcmVxIGlzIHN1c3BlbmRlZCBvciBub3QN
+Cj4gQEAgLTM5Niw2ICszOTcsNyBAQCBzdHJ1Y3QgdWZzX2Nsa19zY2FsaW5nIHsNCj4gIAlzdHJ1
+Y3Qgd29ya3F1ZXVlX3N0cnVjdCAqd29ya3E7DQo+ICAJc3RydWN0IHdvcmtfc3RydWN0IHN1c3Bl
+bmRfd29yazsNCj4gIAlzdHJ1Y3Qgd29ya19zdHJ1Y3QgcmVzdW1lX3dvcms7DQo+ICsJYm9vbCBp
+c19lbmFibGVkOw0KPiAgCWJvb2wgaXNfYWxsb3dlZDsNCj4gIAlib29sIGlzX2J1c3lfc3RhcnRl
+ZDsNCj4gIAlib29sIGlzX3N1c3BlbmRlZDsNCg0KTm93IHRoZXJlIGFyZSBtb3JlIGFuZCBtb3Jl
+ICJzaW1pbGFyIGJvb2xlYW4gYXR0cmlidXRlcyIgcmVnYXJkaW5nDQpjbGstc2NhbGluZyBjb250
+cm9sLCBtYXliZSBhZGQgbW9yZSBjb21wcmVoZW5zaXZlIGNvbW1lbnRzIHRvIGRlc2NyaWJlDQp0
+aGVtPw0KDQpPdGhlcndpc2UgdGhpcyBwYXRjaCBsb29rcyBnb29kIHRvIG1lLg0KDQpGZWVsIGZy
+ZWUgdG8gYWRkDQpSZXZpZXdlZC1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1lZGlhdGVr
+LmNvbT4NCg0KDQoNCg==
 
