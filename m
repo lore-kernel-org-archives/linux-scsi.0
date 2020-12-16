@@ -2,67 +2,248 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E74BDC4361B
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 04:17:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BCA0C4361B
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 06:06:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A459D23118
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 04:17:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F7E523355
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 06:06:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725811AbgLPERz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Dec 2020 23:17:55 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:48576 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725803AbgLPERy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2020 23:17:54 -0500
-X-UUID: f5fd692a73dc45bcae18e8c078b7ad5e-20201216
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=Fs6NuFbA0ABmMlsscv7TTwPc4OosIz1A89iNe9TGw+k=;
-        b=UUv/NLN88MowRA6g9wgAfBnA93BQ3S1tBFeCqcIdA783OyZbgv0YBGx8o5wsOz2m8eienta5mgfN5D1idSQT78Wdeuf2yqBssQeLgElGYAR/KJ8MnofdfIO2bcAwND2Eg0qXEHg4GACdJEKYyKgmY22qePhXu4tahRoAtC3BsHo=;
-X-UUID: f5fd692a73dc45bcae18e8c078b7ad5e-20201216
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 453768579; Wed, 16 Dec 2020 12:17:11 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 16 Dec 2020 12:17:10 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 16 Dec 2020 12:17:09 +0800
-Message-ID: <1608092230.10163.31.camel@mtkswgap22>
-Subject: Re: [PATCH v5 6/7] scsi: ufs: Cleanup WB buffer flush toggle
- implementation
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Bean Huo <huobean@gmail.com>
-CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <asutoshd@codeaurora.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <bvanassche@acm.org>, <tomas.winkler@intel.com>,
-        <cang@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Date:   Wed, 16 Dec 2020 12:17:10 +0800
-In-Reply-To: <20201215230519.15158-7-huobean@gmail.com>
-References: <20201215230519.15158-1-huobean@gmail.com>
-         <20201215230519.15158-7-huobean@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1725813AbgLPGGA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Dec 2020 01:06:00 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:9615 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725274AbgLPGGA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2020 01:06:00 -0500
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Cwl2b4NdQz15c8c;
+        Wed, 16 Dec 2020 14:04:39 +0800 (CST)
+Received: from [10.174.179.35] (10.174.179.35) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.498.0; Wed, 16 Dec 2020 14:05:08 +0800
+Subject: Re: [RFC PATCH] scsi:libiscsi:Fix possible NULL dereference in
+ iscsi_eh_cmd_timed_out
+To:     <open-iscsi@googlegroups.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        <lduncan@suse.com>, <cleech@redhat.com>, <michaelc@cs.wisc.edu>,
+        <linux-scsi@vger.kernel.org>
+CC:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>,
+        <lutianxiong@huawei.com>, <linfeilong@huawei.com>,
+        <liuzhiqiang26@huawei.com>, <haowenchao@huawei.com>
+References: <1607935317-263599-1-git-send-email-wubo40@huawei.com>
+ <d545b4b0-2c85-8e81-4f78-1d4c6a08c7dd@oracle.com>
+From:   Wu Bo <wubo40@huawei.com>
+Message-ID: <56c13c25-3fc8-b684-4308-dec0dfbc40b3@huawei.com>
+Date:   Wed, 16 Dec 2020 14:05:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.2.2
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <d545b4b0-2c85-8e81-4f78-1d4c6a08c7dd@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.35]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gV2VkLCAyMDIwLTEyLTE2IGF0IDAwOjA1ICswMTAwLCBCZWFuIEh1byB3cm90ZToNCj4gRnJv
-bTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCj4gDQo+IERlbGV0ZSB1ZnNoY2Rfd2Jf
-YnVmX2ZsdXNoX2VuYWJsZSgpIGFuZCB1ZnNoY2Rfd2JfYnVmX2ZsdXNoX2Rpc2FibGUoKSwNCj4g
-bW92ZSB0aGUgaW1wbGVtZW50YXRpb24gaW50byB1ZnNoY2Rfd2JfdG9nZ2xlX2ZsdXNoKCkuDQo+
-IA0KPiBTaWduZWQtb2ZmLWJ5OiBCZWFuIEh1byA8YmVhbmh1b0BtaWNyb24uY29tPg0KPiAtLS0N
-Cg0KUmV2aWV3ZWQtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQoN
-Cg==
+On 2020/12/15 1:36, Mike Christie wrote:
+> On 12/14/20 2:41 AM, Wu Bo wrote:
+>> When testing kernel 4.18 version, NULL pointer dereference problem occurs
+>> in iscsi_eh_cmd_timed_out function.
+>>
+>> I think this bug in the upstream is still exists.
+>>
+>> The analysis reasons are as follows:
+>> 1)  For some reason, I/O command did not complete within
+>>      the timeout period. The block layer timer works,
+>>      call scsi_times_out() to handle I/O timeout logic.
+>>      At the same time the command just completes.
+>>
+>> 2)  scsi_times_out() call iscsi_eh_cmd_timed_out()
+>>      to processing timeout logic.  although there is an NULL judgment
+>> 	for the task, the task has not been released yet now.
+>>
+>> 3)  iscsi_complete_task() call __iscsi_put_task(),
+>>      The task reference count reaches zero, the conditions for free task
+>>      is met, then iscsi_free_task () free the task,
+>>      and let sc->SCp.ptr = NULL. After iscsi_eh_cmd_timed_out passes
+>>      the task judgment check, there may be NULL dereference scenarios
+>>      later.
+>> 	
+> 
+> I have a patch for this I think. This is broken out of patchset I was
+> trying to fixup the back lock usage for offload drivers, so I have only
+> compile tested it.
+> 
+> There is another issue where the for lun reset cleanup we could race. The
+> comments mention suspending the rx side, but we only do that for session level
+> cleaup.
+>  > The basic idea is we don't want to add more frwd lock uses in the 
+completion
+> patch like in your patch. In these non perf paths, like the tmf/timeout case
+> we can just take a ref to the cmd so it's not freed from under us.
+> 
 
+You are right, add more frwd lock does affect performance in the completion.
+
+> 
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index f9314f1..f07f8c1 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -573,18 +573,9 @@ void iscsi_complete_scsi_task(struct iscsi_task *task,
+>   static void fail_scsi_task(struct iscsi_task *task, int err)
+>   {
+>   	struct iscsi_conn *conn = task->conn;
+> -	struct scsi_cmnd *sc;
+> +	struct scsi_cmnd *sc = task->sc;
+>   	int state;
+>   
+> -	/*
+> -	 * if a command completes and we get a successful tmf response
+> -	 * we will hit this because the scsi eh abort code does not take
+> -	 * a ref to the task.
+> -	 */
+> -	sc = task->sc;
+> -	if (!sc)
+> -		return;
+> -
+>   	if (task->state == ISCSI_TASK_PENDING) {
+>   		/*
+>   		 * cmd never made it to the xmit thread, so we should not count
+> @@ -1855,26 +1846,34 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
+>   }
+>   
+>   /*
+> - * Fail commands. session lock held and recv side suspended and xmit
+> - * thread flushed
+> + * Fail commands. session frwd lock held and and xmit thread flushed.
+>    */
+>   static void fail_scsi_tasks(struct iscsi_conn *conn, u64 lun, int error)
+>   {
+> +	struct iscsi_session *session = conn->session;
+>   	struct iscsi_task *task;
+>   	int i;
+>   
+> -	for (i = 0; i < conn->session->cmds_max; i++) {
+> -		task = conn->session->cmds[i];
+> -		if (!task->sc || task->state == ISCSI_TASK_FREE)
+> +	for (i = 0; i < session->cmds_max; i++) {
+> +		spin_lock_bh(&session->back_lock);
+> +		task = session->cmds[i];
+> +		if (!task->sc || task->state == ISCSI_TASK_FREE) {
+> +			spin_unlock_bh(&session->back_lock);
+>   			continue;
+> +		}
+>   
+> -		if (lun != -1 && lun != task->sc->device->lun)
+> +		if (lun != -1 && lun != task->sc->device->lun) {
+> +			spin_unlock_bh(&session->back_lock);
+>   			continue;
+> +		}
+> +		__iscsi_get_task(task);
+> +		spin_unlock_bh(&session->back_lock);
+>   
+> -		ISCSI_DBG_SESSION(conn->session,
+> +		ISCSI_DBG_SESSION(session,
+>   				  "failing sc %p itt 0x%x state %d\n",
+>   				  task->sc, task->itt, task->state);
+>   		fail_scsi_task(task, error);
+> +		iscsi_put_task(task);
+>   	}
+>   }
+>   
+> @@ -1953,6 +1952,7 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
+>   	ISCSI_DBG_EH(session, "scsi cmd %p timedout\n", sc);
+>   
+>   	spin_lock_bh(&session->frwd_lock);
+> +	spin_lock(&session->back_lock);
+>   	task = (struct iscsi_task *)sc->SCp.ptr;
+>   	if (!task) {
+>   		/*
+> @@ -1960,8 +1960,11 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
+>   		 * so let timeout code complete it now.
+>   		 */
+>   		rc = BLK_EH_DONE;
+> +		spin_unlock(&session->back_lock);
+>   		goto done;
+>   	}
+> +	__iscsi_get_task(task);
+> +	spin_unlock(&session->back_lock);
+>   
+>   	if (session->state != ISCSI_STATE_LOGGED_IN) {
+>   		/*
+> @@ -2077,9 +2080,12 @@ enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc)
+>   	rc = BLK_EH_RESET_TIMER;
+>   
+>   done:
+> -	if (task)
+> -		task->last_timeout = jiffies;
+>   	spin_unlock_bh(&session->frwd_lock);
+> +
+> +	if (task) {
+> +		task->last_timeout = jiffies;
+> +		iscsi_put_task(task);
+> +	}
+>   	ISCSI_DBG_EH(session, "return %s\n", rc == BLK_EH_RESET_TIMER ?
+>   		     "timer reset" : "shutdown or nh");
+>   	return rc;
+> @@ -2187,15 +2193,20 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+>   	conn->eh_abort_cnt++;
+>   	age = session->age;
+>   
+> -	task = (struct iscsi_task *)sc->SCp.ptr;
+> -	ISCSI_DBG_EH(session, "aborting [sc %p itt 0x%x]\n",
+> -		     sc, task->itt);
+> -
+> -	/* task completed before time out */
+> -	if (!task->sc) {
+> +	spin_lock(&session->back_lock);
+> +	task = (struct iscsi_task *)sc->SCp.ptr;	
+> +	if (!task || !task->sc) {
+> +		/* task completed before time out */
+>   		ISCSI_DBG_EH(session, "sc completed while abort in progress\n");
+> -		goto success;
+> +
+> +		spin_unlock(&session->back_lock);
+> +		spin_unlock_bh(&session->frwd_lock);
+> +		mutex_unlock(&session->eh_mutex);
+> +		return SUCCESS;
+>   	}
+> +	ISCSI_DBG_EH(session, "aborting [sc %p itt 0x%x]\n", sc, task->itt);
+> +	__iscsi_get_task(task);
+> +	spin_unlock(&session->back_lock);
+>   
+>   	if (task->state == ISCSI_TASK_PENDING) {
+>   		fail_scsi_task(task, DID_ABORT);
+> @@ -2258,6 +2269,8 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+>   	ISCSI_DBG_EH(session, "abort success [sc %p itt 0x%x]\n",
+>   		     sc, task->itt);
+>   	mutex_unlock(&session->eh_mutex);
+> +
+> +	iscsi_put_task(task);
+>   	return SUCCESS;
+>   
+>   failed:
+> @@ -2266,6 +2279,8 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+>   	ISCSI_DBG_EH(session, "abort failed [sc %p itt 0x%x]\n", sc,
+>   		     task ? task->itt : 0);
+>   	mutex_unlock(&session->eh_mutex);
+> +
+> +	iscsi_put_task(task);
+>   	return FAILED;
+>   }
+>   EXPORT_SYMBOL_GPL(iscsi_eh_abort);
+> 
+
+I have tested this patch, covering IO timeout and IO abort error 
+handling scenarios, it is works well.
+
+It is lgtm, Thanks
