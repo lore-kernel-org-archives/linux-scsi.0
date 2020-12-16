@@ -2,109 +2,113 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D237C3527A
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 19:33:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9198C3526B
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 20:18:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 583EE2063A
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 19:33:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3CD1235F9
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 20:18:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388774AbgLPTdG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Dec 2020 14:33:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57266 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388771AbgLPTdF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Dec 2020 14:33:05 -0500
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-Authentication-Results: mail.kernel.org; dkim=permerror (bad message/signature format)
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     cang@codeaurora.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org, martin.petersen@oracle.com,
-        stanley.chu@mediatek.com, Jaegeuk Kim <jaegeuk@google.com>
-Subject: [PATCH] scsi: ufs: fix livelock on ufshcd_clear_ua_wlun
-Date:   Wed, 16 Dec 2020 11:02:25 -0800
-Message-Id: <20201216190225.2769012-1-jaegeuk@kernel.org>
-X-Mailer: git-send-email 2.29.2.729.g45daf8777d-goog
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1727656AbgLPURx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Dec 2020 15:17:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37624 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727443AbgLPURx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2020 15:17:53 -0500
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCDE0C061794;
+        Wed, 16 Dec 2020 12:17:12 -0800 (PST)
+Received: by mail-ed1-x535.google.com with SMTP id u19so26267424edx.2;
+        Wed, 16 Dec 2020 12:17:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=OGqml7cNQ934/fU3LVSDbnKf/tJQTzGUkVuBuZynyhE=;
+        b=mKUkfR4uBmBnEqP2XCFlpvlCXa6gm0fy5gKERHYvVjYgihb5oN5cTbty4GyKD321kN
+         n+tpsv71iUDSLA9X6WscaFfIqwiwjWaWxH4CE1avcr/8u9gBm524rW86Ui9r3ZGckpXM
+         ACP5DZo5TPRmhsbILEB4/kVLO9ilkVqOhUQBywmvYTslYiaOx7hicfQbDO8afQuJA+Hr
+         AC82tz3Ahhfy+Rn0UHRCBFTa2RE/Wz859WUqB1Qlqlw3L4tR9N1vdFYOg1KdeL1VZoYa
+         VStkESeduTxVJ4MCHW5BVaHCXa9p/h7ybDnFSRp7Lr6reAJI/iJFEcifaUfZGQFmO6RM
+         wyZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=OGqml7cNQ934/fU3LVSDbnKf/tJQTzGUkVuBuZynyhE=;
+        b=pUTP54FtAnnSrWQ8ErIhLL97uPP0ajWwyLyAr4TDqtB33L9DwXlv0hqtn6KsZmJpik
+         ygqYGOlTGTD9XK0yJ0PUQ9eSpY52mzb16eLscdrJVwZ7s1OKqmdqkUwuiaAb1qzhI3r4
+         MlQc+jEMcfVDRMegkGZk11DyU/lleoxsJlKHf1BMx2ZW1UW2p0jIzNRtloikdXFjrRNT
+         a+trxLiw/6JtChK7rzpnauEQPS+YXh1HklQrt1H4mfvv6O6nRAhJuRkpyKpr+q3EBfqV
+         LUCJtMxHUw8eO5cxkmSCdc4EpY4I0AnJJCi+z2/myqsOtXimbhomQclmaJXgsPK8BmL4
+         PJ2Q==
+X-Gm-Message-State: AOAM532Cce3p4yb5pcMQ1DhHyGfV+/CSSDfv1aF/2S9Jlcei7HwdvSKw
+        pCFHC7qPmWMskXnb8X1wkWwkPlZXrEagmA==
+X-Google-Smtp-Source: ABdhPJwceJnmY9nzHb+/pFABD6tj/TRJvnilchVnGqDms5ei/9QR50gzeuqqmglo1c+bWLSUmIWZzA==
+X-Received: by 2002:a05:6402:22e1:: with SMTP id dn1mr36238078edb.347.1608149831669;
+        Wed, 16 Dec 2020 12:17:11 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.googlemail.com with ESMTPSA id b7sm2140609ejp.5.2020.12.16.12.17.09
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 16 Dec 2020 12:17:10 -0800 (PST)
+Message-ID: <920b01c29525ff1cf894a2cf9c809750533ddc13.camel@gmail.com>
+Subject: Re: [PATCH V2] scsi: ufs-debugfs: Add error counters
+From:   Bean Huo <huobean@gmail.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Date:   Wed, 16 Dec 2020 21:16:54 +0100
+In-Reply-To: <20201216185145.25800-1-adrian.hunter@intel.com>
+References: <20201216185145.25800-1-adrian.hunter@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jaegeuk Kim <jaegeuk@google.com>
+On Wed, 2020-12-16 at 20:51 +0200, Adrian Hunter wrote:
+>                 ufshcd_variant_hba_exit(hba);
+>                 ufshcd_setup_vreg(hba, false);
+>                 ufshcd_suspend_clkscaling(hba);
+> @@ -9436,6 +9441,20 @@ int ufshcd_init(struct ufs_hba *hba, void
+> __iomem *mmio_base, unsigned int irq)
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_init);
+>  
+> +static int __init ufshcd_core_init(void)
+> +{
+> +       ufs_debugfs_init();
+> +       return 0;
+> +}
+> +
+> +static void __exit ufshcd_core_exit(void)
+> +{
+> +       ufs_debugfs_exit();
+> +}
 
-This fixes the below livelock which is caused by calling a scsi command before
-ufshcd_scsi_unblock_requests() in ufshcd_ungate_work().
+Hi, Adrian
 
-Workqueue: ufs_clk_gating_0 ufshcd_ungate_work
-Call trace:
- __switch_to+0x298/0x2bc
- __schedule+0x59c/0x760
- schedule+0xac/0xf0
- schedule_timeout+0x44/0x1b4
- io_schedule_timeout+0x44/0x68
- wait_for_common_io+0x7c/0x100
- wait_for_completion_io+0x14/0x20
- blk_execute_rq+0x94/0xd0
- __scsi_execute+0x100/0x1c0
- ufshcd_clear_ua_wlun+0x124/0x1c8
- ufshcd_host_reset_and_restore+0x1d0/0x2cc
- ufshcd_link_recovery+0xac/0x134
- ufshcd_uic_hibern8_exit+0x1e8/0x1f0
- ufshcd_ungate_work+0xac/0x130
- process_one_work+0x270/0x47c
- worker_thread+0x27c/0x4d8
- kthread+0x13c/0x320
- ret_from_fork+0x10/0x18
+The purpose of patch is acceptable, but I don't know why you choose
+using ufshcd_core_* here. 
+Also. I don't know if module_init()  is a proper way here.
 
-Fixes: 1918651f2d7e ("scsi: ufs: Clear UAC for RPMB after ufshcd resets")
-Signed-off-by: Jaegeuk Kim <jaegeuk@google.com>
----
- drivers/scsi/ufs/ufshcd.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+thanks,
+Bean
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e221add25a7e..b0998db1b781 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1603,6 +1603,7 @@ static void ufshcd_ungate_work(struct work_struct *work)
- 	}
- unblock_reqs:
- 	ufshcd_scsi_unblock_requests(hba);
-+	ufshcd_clear_ua_wluns(hba);
- }
- 
- /**
-@@ -6913,7 +6914,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 
- 	/* Establish the link again and restore the device */
- 	err = ufshcd_probe_hba(hba, false);
--	if (!err)
-+	if (!err && !hba->clk_gating.is_suspended)
- 		ufshcd_clear_ua_wluns(hba);
- out:
- 	if (err)
-@@ -8745,6 +8746,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ufshcd_resume_clkscaling(hba);
- 	hba->clk_gating.is_suspended = false;
- 	hba->dev_info.b_rpm_dev_flush_capable = false;
-+	ufshcd_clear_ua_wluns(hba);
- 	ufshcd_release(hba);
- out:
- 	if (hba->dev_info.b_rpm_dev_flush_capable) {
-@@ -8855,6 +8857,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
- 	}
- 
-+	ufshcd_clear_ua_wluns(hba);
-+
- 	/* Schedule clock gating in case of no access to UFS device yet */
- 	ufshcd_release(hba);
- 
--- 
-2.29.2.729.g45daf8777d-goog
+> 
+> n
+> +
+> +module_init(ufshcd_core_init);
+> +module_exit(ufshcd_core_exit)
 
