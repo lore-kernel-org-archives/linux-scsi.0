@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA3ACC2BBCA
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 17:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2FBC2BBCA
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 18:32:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0A0125097
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 17:52:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DFB423AAA
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 18:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728260AbgLPRwz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Dec 2020 12:52:55 -0500
-Received: from mga05.intel.com ([192.55.52.43]:54598 "EHLO mga05.intel.com"
+        id S1731003AbgLPScy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Dec 2020 13:32:54 -0500
+Received: from mga17.intel.com ([192.55.52.151]:60328 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727284AbgLPRwy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Dec 2020 12:52:54 -0500
-IronPort-SDR: v85ZeIeQV73Qwb/xbuYpgs4dcGk3k7T04/T9wPKWxuCR+NOxGp+AjxP+L3sA4DOBONp8xGCgvD
- 5bZC9DImJV7A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9837"; a="259832183"
+        id S1727898AbgLPScw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Dec 2020 13:32:52 -0500
+IronPort-SDR: 9EisChDbVBDIDK307piyOYxOayG2w3D8SRPLWNsGfM9N4FvvPir0NHXumthCo/hKw/YJ6bkOC3
+ U9QXGTlQKwHg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9837"; a="154922160"
 X-IronPort-AV: E=Sophos;i="5.78,425,1599548400"; 
-   d="gz'50?scan'50,208,50";a="259832183"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 09:52:09 -0800
-IronPort-SDR: +Cz5ZZnsShn/VzjHKJKt09VsPEBD+/h1oRcnxUhQRuzs1rxhBKZbWvtJxCy3WzosrsSCQISWTq
- xS8c45gb+PGw==
+   d="gz'50?scan'50,208,50";a="154922160"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 10:32:10 -0800
+IronPort-SDR: keSHPauviyl0jKc5zID+/gUQmmsgw4wjw1739DCCmPBdHqpdZ0WehmKcr97GMn+5syKGTr26SP
+ uF+A9/QAyg8A==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
-   d="gz'50?scan'50,208,50";a="379336535"
+X-IronPort-AV: E=Sophos;i="5.78,425,1599548400"; 
+   d="gz'50?scan'50,208,50";a="488636704"
 Received: from lkp-server02.sh.intel.com (HELO 070e1a605002) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 16 Dec 2020 09:52:04 -0800
+  by orsmga004.jf.intel.com with ESMTP; 16 Dec 2020 10:32:06 -0800
 Received: from kbuild by 070e1a605002 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1kpay3-00008I-Ew; Wed, 16 Dec 2020 17:52:03 +0000
-Date:   Thu, 17 Dec 2020 01:51:56 +0800
+        id 1kpban-00008l-Gn; Wed, 16 Dec 2020 18:32:05 +0000
+Date:   Thu, 17 Dec 2020 02:31:14 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Muneendra <muneendra.kumar@broadcom.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -44,20 +44,21 @@ To:     Muneendra <muneendra.kumar@broadcom.com>,
 Cc:     kbuild-all@lists.01.org, jsmart2021@gmail.com, emilne@redhat.com,
         mkumar@redhat.com, pbonzini@redhat.com,
         Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: Re: [PATCH v5 13/16] lpfc: vmid: Timeout implementation for vmid
-Message-ID: <202012170150.Y7ycOeI9-lkp@intel.com>
-References: <1608096586-21656-14-git-send-email-muneendra.kumar@broadcom.com>
+Subject: Re: [PATCH v5 14/16] lpfc: vmid: Adding qfpa and vmid timeout check
+ in worker thread
+Message-ID: <202012170259.8ntK12Ne-lkp@intel.com>
+References: <1608096586-21656-15-git-send-email-muneendra.kumar@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="0OAP2g/MAC+5xKAE"
+Content-Type: multipart/mixed; boundary="zhXaljGHf11kAtnf"
 Content-Disposition: inline
-In-Reply-To: <1608096586-21656-14-git-send-email-muneendra.kumar@broadcom.com>
+In-Reply-To: <1608096586-21656-15-git-send-email-muneendra.kumar@broadcom.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---0OAP2g/MAC+5xKAE
+--zhXaljGHf11kAtnf
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -79,10 +80,10 @@ compiler: ia64-linux-gcc (GCC) 9.3.0
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/740ce984134d0cb523356e9bc60b870497053caf
+        # https://github.com/0day-ci/linux/commit/4bfc0dd58345c1a8eaf5c00475ca1b0472a0ba44
         git remote add linux-review https://github.com/0day-ci/linux
         git fetch --no-tags linux-review Muneendra/blkcg-Support-to-track-FC-storage-blk-io-traffic/20201216-202913
-        git checkout 740ce984134d0cb523356e9bc60b870497053caf
+        git checkout 4bfc0dd58345c1a8eaf5c00475ca1b0472a0ba44
         # save the attached .config to linux build tree
         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross ARCH=ia64 
 
@@ -91,9 +92,16 @@ Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
->> drivers/scsi/lpfc/lpfc_hbadisc.c:318:6: warning: no previous prototype for 'lpfc_check_inactive_vmid' [-Wmissing-prototypes]
+   drivers/scsi/lpfc/lpfc_hbadisc.c:318:6: warning: no previous prototype for 'lpfc_check_inactive_vmid' [-Wmissing-prototypes]
      318 | void lpfc_check_inactive_vmid(struct lpfc_hba *phba)
          |      ^~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/lpfc/lpfc_hbadisc.c:431:6: warning: no previous prototype for 'lpfc_check_vmid_qfpa_issue' [-Wmissing-prototypes]
+     431 | void lpfc_check_vmid_qfpa_issue(struct lpfc_hba *phba)
+         |      ^~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/lpfc/lpfc_hbadisc.c: In function 'lpfc_check_vmid_qfpa_issue':
+>> drivers/scsi/lpfc/lpfc_hbadisc.c:435:9: warning: variable 'ret' set but not used [-Wunused-but-set-variable]
+     435 |  int i, ret;
+         |         ^~~
 
 Kconfig warnings: (for reference only)
    WARNING: unmet direct dependencies detected for FRAME_POINTER
@@ -102,53 +110,46 @@ Kconfig warnings: (for reference only)
    - FAULT_INJECTION_STACKTRACE_FILTER && FAULT_INJECTION_DEBUG_FS && STACKTRACE_SUPPORT && !X86_64 && !MIPS && !PPC && !S390 && !MICROBLAZE && !ARM && !ARC && !X86
 
 
-vim +/lpfc_check_inactive_vmid +318 drivers/scsi/lpfc/lpfc_hbadisc.c
+vim +/lpfc_check_vmid_qfpa_issue +431 drivers/scsi/lpfc/lpfc_hbadisc.c
 
-   307	
-   308	/**
-   309	 * lpfc_check_inactive_vmid - VMID inactivity checker
-   310	 * @phba: Pointer to hba context object.
-   311	 *
-   312	 * This function is called from the worker thread to determine if an entry in
-   313	 * the vmid table can be released since there was no IO activity seen from that
-   314	 * particular VM for the specified time. When this happens, the entry in the
-   315	 * table is released and also the resources on the switch cleared.
-   316	 **/
-   317	
- > 318	void lpfc_check_inactive_vmid(struct lpfc_hba *phba)
-   319	{
-   320		struct lpfc_vport *vport;
-   321		struct lpfc_vport **vports;
-   322		int i;
-   323	
-   324		vports = lpfc_create_vport_work_array(phba);
-   325		if (!vports)
-   326			return;
-   327	
-   328		for (i = 0; i <= phba->max_vports; i++) {
-   329			if ((!vports[i]) && (i == 0))
-   330				vport = phba->pport;
-   331			else
-   332				vport = vports[i];
-   333			if (!vport)
-   334				break;
-   335	
-   336			lpfc_check_inactive_vmid_one(vport);
-   337		}
-   338		lpfc_destroy_vport_work_array(phba, vports);
-   339	}
-   340	
+   430	
+ > 431	void lpfc_check_vmid_qfpa_issue(struct lpfc_hba *phba)
+   432	{
+   433		struct lpfc_vport *vport;
+   434		struct lpfc_vport **vports;
+ > 435		int i, ret;
+   436	
+   437		vports = lpfc_create_vport_work_array(phba);
+   438		if (!vports)
+   439			return;
+   440	
+   441		for (i = 0; i <= phba->max_vports; i++) {
+   442			if ((!vports[i]) && (i == 0))
+   443				vport = phba->pport;
+   444			else
+   445				vport = vports[i];
+   446			if (!vport)
+   447				break;
+   448	
+   449			if (vport->vmid_flag & LPFC_VMID_ISSUE_QFPA) {
+   450				ret = lpfc_issue_els_qfpa(vport);
+   451				vport->vmid_flag &= ~LPFC_VMID_ISSUE_QFPA;
+   452			}
+   453		}
+   454		lpfc_destroy_vport_work_array(phba, vports);
+   455	}
+   456	
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
---0OAP2g/MAC+5xKAE
+--zhXaljGHf11kAtnf
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICDU/2l8AAy5jb25maWcAlDxbd9s20u/9FTrJS/vQri+pNz3f8QMIghJWJMEAoCzlhcd1
+H4sICA9M2l8AAy5jb25maWcAlDxbd9s20u/9FTrJS/vQri+pNz3f8QMIghJWJMEAoCzlhcd1
 lNRnEzsr29tmf/03A94GICileYk5MxgCg7kD1OsfXi/Yy/Pjl9vn+7vbz5+/LT7tH/aH2+f9
 h8XH+8/7/1ukalEquxCptL8AcX7/8PLXP+5vr94sfv3l/OyXs58Pd+eL9f7wsP+84I8PH+8/
 vcDw+8eHH17/wFWZyWXDebMR2khVNlZs7fUrHP7zZ+T086e7u8WPS85/Wvz2y+UvZ6/IGGka
@@ -1314,4 +1315,4 @@ k0XPbgatYnyKFUTY6CMhv+tvd7u9YwPwj8dwcQ1yJwldMWv5VLFqHUZUAvPNcGgYr0QbYI3d
 iHaHEIWBkZGA7DBKc3cY4P1OA33kDgTnGKBPGC2S2JvgUaqgdLmVYtiMBOB0n9t9cxXzrrt2
 PjHclqC3YfDWYx40uBeIgvL/A3VDh8PY7QMA
 
---0OAP2g/MAC+5xKAE--
+--zhXaljGHf11kAtnf--
