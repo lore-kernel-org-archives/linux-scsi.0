@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7402EC2BBCA
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 15:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9177CC2BBCA
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 15:49:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3476C233A0
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 15:14:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D3F023104
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Dec 2020 15:49:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726350AbgLPPOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Dec 2020 10:14:42 -0500
-Received: from mga18.intel.com ([134.134.136.126]:23353 "EHLO mga18.intel.com"
+        id S1726574AbgLPPsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Dec 2020 10:48:45 -0500
+Received: from mga06.intel.com ([134.134.136.31]:40077 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726348AbgLPPOm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Dec 2020 10:14:42 -0500
-IronPort-SDR: kOKbOWAddbo1SqdioLnMcO21UiNkGABgdewNwAcaKuC7BgAkMZ4Ek7cWhfQTHhJ+MEiBWV9RtV
- Ajp/awSYS2PQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9836"; a="162823954"
+        id S1726490AbgLPPsp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Dec 2020 10:48:45 -0500
+IronPort-SDR: JK4qXl0J+3pQEcpCwovSv7DvogxnXj4bi0rzbx+ZcmPiNKGqC5EldlpdHFZJSZmZebaXajnfT2
+ BF1cWfwumKlQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9837"; a="236664774"
 X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
-   d="gz'50?scan'50,208,50";a="162823954"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 07:13:56 -0800
-IronPort-SDR: b5ahhb/GUTxUo4AA73vhmU3qhbnAyMN8oYDm+QWfEPmYVPhOPnkbchKHOE6mUZ4yWxQ749MkJQ
- VerUOqhqisyg==
+   d="gz'50?scan'50,208,50";a="236664774"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 07:48:01 -0800
+IronPort-SDR: pqXAiBfkoz77mhVkI5Nfw5I9JGezQoxz3KqqT+qvZjSzQ9frMAQF1DngOnxPSmykUZsDTXDSdn
+ cLwnbIzwXcKQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
-   d="gz'50?scan'50,208,50";a="386508505"
+   d="gz'50?scan'50,208,50";a="557444885"
 Received: from lkp-server02.sh.intel.com (HELO 070e1a605002) ([10.239.97.151])
-  by fmsmga002.fm.intel.com with ESMTP; 16 Dec 2020 07:13:52 -0800
+  by orsmga005.jf.intel.com with ESMTP; 16 Dec 2020 07:47:57 -0800
 Received: from kbuild by 070e1a605002 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1kpYUx-00005U-Uw; Wed, 16 Dec 2020 15:13:51 +0000
-Date:   Wed, 16 Dec 2020 23:13:11 +0800
+        id 1kpZ1w-00006J-S4; Wed, 16 Dec 2020 15:47:56 +0000
+Date:   Wed, 16 Dec 2020 23:47:35 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Muneendra <muneendra.kumar@broadcom.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -44,21 +44,21 @@ To:     Muneendra <muneendra.kumar@broadcom.com>,
 Cc:     kbuild-all@lists.01.org, jsmart2021@gmail.com, emilne@redhat.com,
         mkumar@redhat.com, pbonzini@redhat.com,
         Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: Re: [PATCH v5 08/16] lpfc: vmid: Add support for vmid in mailbox
- command, does vmid resource allocation and vmid cleanup
-Message-ID: <202012162348.l9wD5rSH-lkp@intel.com>
-References: <1608096586-21656-9-git-send-email-muneendra.kumar@broadcom.com>
+Subject: Re: [PATCH v5 09/16] lpfc: vmid: Implements ELS commands for appid
+ patch
+Message-ID: <202012162314.KPhCSZlZ-lkp@intel.com>
+References: <1608096586-21656-10-git-send-email-muneendra.kumar@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="rwEMma7ioTxnRzrJ"
+Content-Type: multipart/mixed; boundary="T4sUOijqQbZv57TR"
 Content-Disposition: inline
-In-Reply-To: <1608096586-21656-9-git-send-email-muneendra.kumar@broadcom.com>
+In-Reply-To: <1608096586-21656-10-git-send-email-muneendra.kumar@broadcom.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---rwEMma7ioTxnRzrJ
+--T4sUOijqQbZv57TR
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -80,10 +80,10 @@ compiler: ia64-linux-gcc (GCC) 9.3.0
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/03480ee8b62a90ab2917fccf45d0e56185c1f8a5
+        # https://github.com/0day-ci/linux/commit/65751f65f5df79aaa25cd5752589ca91ebddde18
         git remote add linux-review https://github.com/0day-ci/linux
         git fetch --no-tags linux-review Muneendra/blkcg-Support-to-track-FC-storage-blk-io-traffic/20201216-202913
-        git checkout 03480ee8b62a90ab2917fccf45d0e56185c1f8a5
+        git checkout 65751f65f5df79aaa25cd5752589ca91ebddde18
         # save the attached .config to linux build tree
         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross ARCH=ia64 
 
@@ -92,9 +92,26 @@ Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
->> drivers/scsi/lpfc/lpfc_init.c:4288:1: warning: no previous prototype for 'lpfc_vmid_res_alloc' [-Wmissing-prototypes]
-    4288 | lpfc_vmid_res_alloc(struct lpfc_hba *phba, struct lpfc_vport *vport)
-         | ^~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/lpfc/lpfc_els.c:10354:6: warning: no previous prototype for 'lpfc_init_cs_ctl_bitmap' [-Wmissing-prototypes]
+   10354 | void lpfc_init_cs_ctl_bitmap(struct lpfc_vport *vport)
+         |      ^~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/lpfc/lpfc_els.c:10360:1: warning: no previous prototype for 'lpfc_vmid_set_cs_ctl_range' [-Wmissing-prototypes]
+   10360 | lpfc_vmid_set_cs_ctl_range(struct lpfc_vport *vport, u32 min, u32 max)
+         | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/scsi/lpfc/lpfc_els.c:10371:6: warning: no previous prototype for 'lpfc_vmid_put_cs_ctl' [-Wmissing-prototypes]
+   10371 | void lpfc_vmid_put_cs_ctl(struct lpfc_vport *vport, u32 ctcl_vmid)
+         |      ^~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/lpfc/lpfc_els.c: In function 'lpfc_issue_els_qfpa':
+   drivers/scsi/lpfc/lpfc_els.c:10491:19: warning: variable 'psli' set but not used [-Wunused-but-set-variable]
+   10491 |  struct lpfc_sli *psli;
+         |                   ^~~~
+   drivers/scsi/lpfc/lpfc_els.c:10488:10: warning: variable 'icmd' set but not used [-Wunused-but-set-variable]
+   10488 |  IOCB_t *icmd;
+         |          ^~~~
+   drivers/scsi/lpfc/lpfc_els.c: In function 'lpfc_vmid_uvem':
+   drivers/scsi/lpfc/lpfc_els.c:10537:10: warning: variable 'icmd' set but not used [-Wunused-but-set-variable]
+   10537 |  IOCB_t *icmd;
+         |          ^~~~
 
 Kconfig warnings: (for reference only)
    WARNING: unmet direct dependencies detected for FRAME_POINTER
@@ -103,76 +120,42 @@ Kconfig warnings: (for reference only)
    - FAULT_INJECTION_STACKTRACE_FILTER && FAULT_INJECTION_DEBUG_FS && STACKTRACE_SUPPORT && !X86_64 && !MIPS && !PPC && !S390 && !MICROBLAZE && !ARM && !ARC && !X86
 
 
-vim +/lpfc_vmid_res_alloc +4288 drivers/scsi/lpfc/lpfc_init.c
+vim +/lpfc_init_cs_ctl_bitmap +10354 drivers/scsi/lpfc/lpfc_els.c
 
-  4275	
-  4276	/**
-  4277	 * lpfc_vmid_res_alloc - Allocates resources for VMID
-  4278	 * @phba: pointer to lpfc hba data structure.
-  4279	 * @vport: pointer to vport data structure
-  4280	 *
-  4281	 * This routine allocated the resources needed for the vmid.
-  4282	 *
-  4283	 * Return codes
-  4284	 *	0 on Succeess
-  4285	 *	Non-0 on Failure
-  4286	 */
-  4287	u8
-> 4288	lpfc_vmid_res_alloc(struct lpfc_hba *phba, struct lpfc_vport *vport)
-  4289	{
-  4290		u16 i;
-  4291	
-  4292		/* vmid feature is supported only on SLI4 */
-  4293		if (phba->sli_rev == LPFC_SLI_REV3) {
-  4294			phba->cfg_vmid_app_header = 0;
-  4295			phba->cfg_vmid_priority_tagging = 0;
-  4296		}
-  4297	
-  4298		/* if enabled, then allocated the resources */
-  4299		if (lpfc_is_vmid_enabled(phba)) {
-  4300			vport->vmid =
-  4301			    kmalloc_array(phba->cfg_max_vmid, sizeof(struct lpfc_vmid),
-  4302					  GFP_KERNEL);
-  4303			if (!vport->vmid)
-  4304				return FAILURE;
-  4305	
-  4306			memset(vport->vmid, 0,
-  4307			       phba->cfg_max_vmid * sizeof(struct lpfc_vmid));
-  4308	
-  4309			rwlock_init(&vport->vmid_lock);
-  4310	
-  4311			/* setting the VMID parameters for the vport */
-  4312			vport->vmid_priority_tagging = phba->cfg_vmid_priority_tagging;
-  4313			vport->vmid_inactivity_timeout =
-  4314			    phba->cfg_vmid_inactivity_timeout;
-  4315			vport->max_vmid = phba->cfg_max_vmid;
-  4316			vport->cur_vmid_cnt = 0;
-  4317	
-  4318			for (i = 0; i < LPFC_VMID_HASH_SIZE; i++)
-  4319				vport->hash_table[i] = NULL;
-  4320	
-  4321			vport->vmid_priority_range = bitmap_zalloc
-  4322				(LPFC_VMID_MAX_PRIORITY_RANGE, GFP_KERNEL);
-  4323	
-  4324			if (!vport->vmid_priority_range) {
-  4325				kfree(vport->vmid);
-  4326				return FAILURE;
-  4327			}
-  4328		}
-  4329		return 0;
-  4330	}
-  4331	
+ 10353	
+ 10354	void lpfc_init_cs_ctl_bitmap(struct lpfc_vport *vport)
+ 10355	{
+ 10356		bitmap_zero(vport->vmid_priority_range, LPFC_VMID_MAX_PRIORITY_RANGE);
+ 10357	}
+ 10358	
+ 10359	void
+ 10360	lpfc_vmid_set_cs_ctl_range(struct lpfc_vport *vport, u32 min, u32 max)
+ 10361	{
+ 10362		u32 i;
+ 10363	
+ 10364		if ((min > max) || (max > LPFC_VMID_MAX_PRIORITY_RANGE))
+ 10365			return;
+ 10366	
+ 10367		for (i = min; i <= max; i++)
+ 10368			set_bit(i, vport->vmid_priority_range);
+ 10369	}
+ 10370	
+ 10371	void lpfc_vmid_put_cs_ctl(struct lpfc_vport *vport, u32 ctcl_vmid)
+ 10372	{
+ 10373		set_bit(ctcl_vmid, vport->vmid_priority_range);
+ 10374	}
+ 10375	
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
---rwEMma7ioTxnRzrJ
+--T4sUOijqQbZv57TR
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICBcb2l8AAy5jb25maWcAlDxbd9s20u/9FTrJS/vQri+pNz3f8QMIghJWJMEAoCzlhcd1
+H4sICOAm2l8AAy5jb25maWcAlDxbd9s20u/9FTrJS/vQri+pNz3f8QMIghJWJMEAoCzlhcd1
 lNRnEzsr29tmf/03A94GICileYk5MxgCg7kD1OsfXi/Yy/Pjl9vn+7vbz5+/LT7tH/aH2+f9
 h8XH+8/7/1ukalEquxCptL8AcX7/8PLXP+5vr94sfv3l/OyXs58Pd+eL9f7wsP+84I8PH+8/
 vcDw+8eHH17/wFWZyWXDebMR2khVNlZs7fUrHP7zZ+T086e7u8WPS85/Wvz2y+UvZ6/IGGka
@@ -1338,4 +1321,4 @@ k0XPbgatYnyKFUTY6CMhv+tvd7u9YwPwj8dwcQ1yJwldMWv5VLFqHUZUAvPNcGgYr0QbYI3d
 iHaHEIWBkZGA7DBKc3cY4P1OA33kDgTnGKBPGC2S2JvgUaqgdLmVYtiMBOB0n9t9cxXzrrt2
 PjHclqC3YfDWYx40uBeIgvL/A3VDh8PY7QMA
 
---rwEMma7ioTxnRzrJ--
+--T4sUOijqQbZv57TR--
