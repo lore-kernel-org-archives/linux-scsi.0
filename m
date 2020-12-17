@@ -2,162 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5DE9C4361B
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 09:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF356C4361B
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 10:52:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BDB0233FB
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 09:50:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81BF62389A
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 10:52:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727160AbgLQJuH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Dec 2020 04:50:07 -0500
-Received: from mga07.intel.com ([134.134.136.100]:52143 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726291AbgLQJuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Dec 2020 04:50:07 -0500
-IronPort-SDR: TSWyom1TiVbw//sQkQqgOg/pxls0hmqvJp3ZNYGY8HkyTnoOm4+QOqi9Yoz6XhkTPxhUiWo22h
- YvoiAHG1ZYtQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9837"; a="239311667"
-X-IronPort-AV: E=Sophos;i="5.78,426,1599548400"; 
-   d="scan'208";a="239311667"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2020 01:49:26 -0800
-IronPort-SDR: vDqUN8gdLLG+WhpQ+0que35hOjo+rrs8U50QencIMz4bFIuzwjqts8IIadhAvEqnt8lo+pSh3S
- GnFe1WUuqntg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.78,426,1599548400"; 
-   d="scan'208";a="560498076"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.94]) ([10.237.72.94])
-  by fmsmga005.fm.intel.com with ESMTP; 17 Dec 2020 01:49:22 -0800
-Subject: Re: [PATCH V2] scsi: ufs-debugfs: Add error counters
-To:     Bean Huo <huobean@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-References: <20201216185145.25800-1-adrian.hunter@intel.com>
- <920b01c29525ff1cf894a2cf9c809750533ddc13.camel@gmail.com>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <750889b4-19b7-3c0b-c614-a8dddc2dcab2@intel.com>
-Date:   Thu, 17 Dec 2020 11:49:14 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726840AbgLQKw5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Dec 2020 05:52:57 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51134 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726012AbgLQKw5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Dec 2020 05:52:57 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0BHAp7PU029399;
+        Thu, 17 Dec 2020 02:52:10 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=KtPxjcbHEvRzTGfWUpOO7zi76gq4aXppa2JKaXpwUyU=;
+ b=Hlb6L6/jqjshYrGQN5p1nOLA7br4hh/RfL+RHFqUFbsf+nYir+U8jnOUvl6lL5LBKrLs
+ RI1COI1UVNIfzwdhZxeEYxSCswLzPdOMGFFzcadOzw0BRMPoOPzUFFRbPO49lkx45RiS
+ U1NoZHGZk957IKqCqNMeEvTV4eIxMJDFf7wRGJmocd/0kFUDPkZ1t4jU2EcJDh46Lv6y
+ Aw3CZUpyfHXvOxkGNiqdBZXsEbOn/Hh6eQuU4qla4sIFdcYZhHGlcBk5Ld82vlqYWMnt
+ WKrgm5YLflHbiYWiPIxYAyr+r7LiZJynivCqkyx0EBCKIykIrDxnH4X8cYK3f5rDVEhf Vg== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 35cx8tf9px-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 17 Dec 2020 02:52:10 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 17 Dec
+ 2020 02:52:08 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 17 Dec 2020 02:52:09 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 1F2333F703F;
+        Thu, 17 Dec 2020 02:52:09 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 0BHAq8s2008090;
+        Thu, 17 Dec 2020 02:52:08 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 0BHAq8qZ008089;
+        Thu, 17 Dec 2020 02:52:08 -0800
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
+        <cleech@redhat.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH] qedi: Correct max length of CHAP secret
+Date:   Thu, 17 Dec 2020 02:51:44 -0800
+Message-ID: <20201217105144.8055-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <920b01c29525ff1cf894a2cf9c809750533ddc13.camel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2020-12-17_07:2020-12-15,2020-12-17 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16/12/20 10:16 pm, Bean Huo wrote:
-> On Wed, 2020-12-16 at 20:51 +0200, Adrian Hunter wrote:
->>                 ufshcd_variant_hba_exit(hba);
->>                 ufshcd_setup_vreg(hba, false);
->>                 ufshcd_suspend_clkscaling(hba);
->> @@ -9436,6 +9441,20 @@ int ufshcd_init(struct ufs_hba *hba, void
->> __iomem *mmio_base, unsigned int irq)
->>  }
->>  EXPORT_SYMBOL_GPL(ufshcd_init);
->>  
->> +static int __init ufshcd_core_init(void)
->> +{
->> +       ufs_debugfs_init();
->> +       return 0;
->> +}
->> +
->> +static void __exit ufshcd_core_exit(void)
->> +{
->> +       ufs_debugfs_exit();
->> +}
-> 
-> Hi, Adrian
+The CHAP secret displayed garbage characters causing iSCSI login
+authentication failure. Correct the CHAP password max length.
 
-Thanks for looking at the patch.
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+---
+ drivers/scsi/qedi/qedi_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> The purpose of patch is acceptable, but I don't know why you choose
-> using ufshcd_core_* here. 
-
-Do you mean you would like a different function name?  'ufshcd_init' is used
-already.  The module is called ufshcd-core, so ufshcd_core_* seems appropriate.
-
-> Also. I don't know if module_init()  is a proper way here.
-
-Can you be more specific?  It is normal to do module initialization in
-module_init().
-
-However I do see a problem.  When builtin, initcalls are ordered according
-to link order, but the Makefile does not have ufshcd-core at the top i.e.
-
-$ cat drivers/scsi/ufs/Makefile
-# SPDX-License-Identifier: GPL-2.0
-# UFSHCD makefile
-obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o
-tc-dwc-g210.o
-obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o
-tc-dwc-g210.o
-obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
-obj-$(CONFIG_SCSI_UFS_QCOM) += ufs_qcom.o
-ufs_qcom-y += ufs-qcom.o
-ufs_qcom-$(CONFIG_SCSI_UFS_CRYPTO) += ufs-qcom-ice.o
-obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
-obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
-ufshcd-core-y                           += ufshcd.o ufs-sysfs.o
-ufshcd-core-$(CONFIG_DEBUG_FS)          += ufs-debugfs.o
-ufshcd-core-$(CONFIG_SCSI_UFS_BSG)      += ufs_bsg.o
-ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO) += ufshcd-crypto.o
-obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
-obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
-obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
-obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
-
-Should be:
-
-# SPDX-License-Identifier: GPL-2.0
-# UFSHCD makefile
-# Order here is important. ufshcd-core must initialize first.
-ufshcd-core-y                           += ufshcd.o ufs-sysfs.o
-ufshcd-core-$(CONFIG_DEBUG_FS)          += ufs-debugfs.o
-ufshcd-core-$(CONFIG_SCSI_UFS_BSG)      += ufs_bsg.o
-ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO) += ufshcd-crypto.o
-obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o
-tc-dwc-g210.o
-obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o
-tc-dwc-g210.o
-obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
-obj-$(CONFIG_SCSI_UFS_QCOM) += ufs_qcom.o
-ufs_qcom-y += ufs-qcom.o
-ufs_qcom-$(CONFIG_SCSI_UFS_CRYPTO) += ufs-qcom-ice.o
-obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
-obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
-obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
-obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
-obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
-obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
-obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
-
-What do you think?
-
-> 
-> thanks,
-> Bean
-> 
->>
->> n
->> +
->> +module_init(ufshcd_core_init);
->> +module_exit(ufshcd_core_exit)
-> 
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index f5fc7f518f8a..47ad64b06623 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2245,7 +2245,7 @@ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
+ 			     chap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_CHAP_SECRET:
+-		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
+ 			     chap_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
+@@ -2253,7 +2253,7 @@ qedi_show_boot_tgt_info(struct qedi_ctx *qedi, int type,
+ 			     mchap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
+-		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_NAME_MAX_LEN,
++		rc = sprintf(buf, "%.*s\n", NVM_ISCSI_CFG_CHAP_PWD_MAX_LEN,
+ 			     mchap_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_FLAGS:
+-- 
+2.23.1
 
