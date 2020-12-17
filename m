@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8571CC2BBCA
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 06:45:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54864C2BBCD
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 06:45:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50DBE23437
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 06:45:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25A6E23437
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 06:45:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725988AbgLQGp2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Dec 2020 01:45:28 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:49292 "EHLO
+        id S1726588AbgLQGpb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Dec 2020 01:45:31 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:49320 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725830AbgLQGp2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2020 01:45:28 -0500
+        with ESMTP id S1726547AbgLQGpb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2020 01:45:31 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BH6UI0F164616;
-        Thu, 17 Dec 2020 06:44:38 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BH6UV5G164696;
+        Thu, 17 Dec 2020 06:44:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=QtztLmncsKwWwSwW80/MG0QyYLS2ur2O0J5kNsNCA/Y=;
- b=BZM5AzM3H/Q4vSKJ2b6r8Au20qkKiN2YPAWAVxwrt+WYogSQoCTLeMBDyioRsYe7o66u
- y+l0ak3GAK1c04aC6I/PzQdEnsdBAfA4uta8sd7ixcC5GEZXRrOBcknsBcxeTYmU62n1
- 9/fGYG9rgxzPargYEYOpcD/uXv7Ibd8CU9WCpHng7k+W4W/NNAsElAskkJdpFHrf519V
- ALPZX39roW1WqJny7YQQdZtczB9B4JXzMMUaCA5oj7Xvym32C7l/L13jqVIOGVIZr+AK
- NUeGJ1QC6YUuwUooWIgQXh+tt/AIvtOer7qSeq+P5hbJNIWcsuCHaQmzhsIqYFZaXOXA gA== 
+ bh=UnrJRZBXw2ScR2i+Xy/NyyL0h6bg4B4HY3yulcepWg0=;
+ b=gf7ladDTEDk30WqwFzpJPIFTqBUf0no3fbwTKg8gc1ZJ6V9DsdUQwk1IabtoaJRhGqpi
+ Q3jzPcPpxo2PUhDu43GQ/VOuXIXCk2sOMAwS7DmVBhwdZTXDTeo4MAwrVOv4bIfp/v50
+ kq3WoJtGswnR+iZ/aezzclQShgKdVc3zw1OKaak7CGZgN2R0E5yo6GJOyW0hlTNqeOOA
+ TNSznjLIRSXaGWpeYJw2I7FRyNGFD5Spk10v/MqFwpkMfdMult4e/w7pIshKeuMlJxMV
+ NQqjVO+o+mVr3YTXaRF2YBuSI42XIopUnIa5q+JXjOUp60SAYPw1Fw/VdOONlmRNJ8zK GQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 35cntmbujk-1
+        by aserp2120.oracle.com with ESMTP id 35cntmbujq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 17 Dec 2020 06:44:37 +0000
+        Thu, 17 Dec 2020 06:44:41 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BH6VFD1178222;
-        Thu, 17 Dec 2020 06:42:37 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 35e6jts20q-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0BH6VF52178234;
+        Thu, 17 Dec 2020 06:42:40 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 35e6jts22j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Dec 2020 06:42:37 +0000
+        Thu, 17 Dec 2020 06:42:40 +0000
 Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BH6gaQa019179;
-        Thu, 17 Dec 2020 06:42:36 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0BH6gdXV006694;
+        Thu, 17 Dec 2020 06:42:39 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 16 Dec 2020 22:42:35 -0800
+        with ESMTP ; Wed, 16 Dec 2020 22:42:39 -0800
 From:   Mike Christie <michael.christie@oracle.com>
 To:     lduncan@suse.com, cleech@redhat.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         varun@chelsio.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, jejb@linux.ibm.com
-Subject: [PATCH 18/22] qedi: prep driver for switch to blk tags
-Date:   Thu, 17 Dec 2020 00:42:08 -0600
-Message-Id: <1608187332-4434-19-git-send-email-michael.christie@oracle.com>
+Subject: [PATCH 22/22] libiscsi: fix conn_send_pdu API
+Date:   Thu, 17 Dec 2020 00:42:12 -0600
+Message-Id: <1608187332-4434-23-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1608187332-4434-1-git-send-email-michael.christie@oracle.com>
 References: <1608187332-4434-1-git-send-email-michael.christie@oracle.com>
@@ -74,136 +74,161 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We currently implement our own tagging which just adds another
-layer of locks. For scsi cmds we can just use the block layer
-tags. This patch preps qedi for this change by:
-
-1. Having it use the correct itt to task look up function.
-See below for info and question.
-
-2. Using iscsi_complete_scsi_task when it has access to the task
-instead of playing tricks with the itt which may not work with
-multiple queues.
-
-Question for Manish:
-
-We are supposed to use iscsi_itt_to_ctask for scsi tasks and
-iscsi_itt_to_task for iscsi "mgmt" tasks. The latter are nops,
-login, logout, etc.
-
-I could not tell if the !found cases in
-qedi_process_cmd_cleanup_resp were for scsi cmds or mgmt ones.
+The conn_send_pdu API is evil in that it returns a pointer to a
+iscsi_task, but that task might have been freed already so you can't
+touch it. This patch splits the task allocation and transmission, so
+functions like iscsi_send_nopout can access the task before its sent.
+We then can remove that INVALID_SCSI_TASK dance.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/qedi/qedi_fw.c | 57 ++++++++++++++++++++++++---------------------
- 1 file changed, 31 insertions(+), 26 deletions(-)
+ drivers/scsi/libiscsi.c | 68 ++++++++++++++++++++++++++++++++++---------------
+ include/scsi/libiscsi.h |  3 ---
+ 2 files changed, 48 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 440ddd2..d93a6b2 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -627,20 +627,15 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
- 
- 	qedi_iscsi_unmap_sg_list(cmd);
- 
--	hdr = (struct iscsi_scsi_rsp *)task->hdr;
--	hdr->opcode = cqe_data_in->opcode;
--	hdr->max_cmdsn = cpu_to_be32(cqe_data_in->max_cmd_sn);
--	hdr->exp_cmdsn = cpu_to_be32(cqe_data_in->exp_cmd_sn);
--	hdr->itt = build_itt(cqe->cqe_solicited.itid, conn->session->age);
--	hdr->response = cqe_data_in->reserved1;
--	hdr->cmd_status = cqe_data_in->status_rsvd;
--	hdr->flags = cqe_data_in->flags;
--	hdr->residual_count = cpu_to_be32(cqe_data_in->residual_count);
--
--	if (hdr->cmd_status == SAM_STAT_CHECK_CONDITION) {
-+	sc_cmd->result = (DID_OK << 16) | cqe_data_in->status_rsvd;
-+	if (cqe_data_in->reserved1 != ISCSI_STATUS_CMD_COMPLETED)
-+		sc_cmd->result = DID_ERROR << 16;
-+
-+	if (cqe_data_in->status_rsvd == SAM_STAT_CHECK_CONDITION) {
- 		datalen = cqe_data_in->reserved2 &
- 			  ISCSI_COMMON_HDR_DATA_SEG_LEN_MASK;
--		memcpy((char *)conn->data, (char *)cmd->sense_buffer, datalen);
-+		memcpy(sc_cmd->sense_buffer, cmd->sense_buffer,
-+		       min(datalen, SCSI_SENSE_BUFFERSIZE));
- 	}
- 
- 	/* If f/w reports data underrun err then set residual to IO transfer
-@@ -653,9 +648,23 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
- 			  hdr->itt, cqe_data_in->flags, cmd->task_id,
- 			  qedi_conn->iscsi_conn_id, hdr->residual_count,
- 			  scsi_bufflen(sc_cmd));
--		hdr->residual_count = cpu_to_be32(scsi_bufflen(sc_cmd));
--		hdr->flags |= ISCSI_FLAG_CMD_UNDERFLOW;
--		hdr->flags &= (~ISCSI_FLAG_CMD_OVERFLOW);
-+
-+		cqe_data_in->residual_count = scsi_bufflen(sc_cmd);
-+		cqe_data_in->flags |= ISCSI_FLAG_CMD_UNDERFLOW;
-+		cqe_data_in->flags &= (~ISCSI_FLAG_CMD_OVERFLOW);
-+	}
-+
-+	if (cqe_data_in->flags & (ISCSI_FLAG_CMD_UNDERFLOW |
-+				  ISCSI_FLAG_CMD_OVERFLOW)) {
-+		int res_count = cqe_data_in->residual_count;
-+
-+		if (res_count > 0 &&
-+		    (cqe_data_in->flags & ISCSI_FLAG_CMD_OVERFLOW ||
-+		    res_count <= scsi_bufflen(sc_cmd)))
-+			scsi_set_resid(sc_cmd, res_count);
-+		else
-+			sc_cmd->result = (DID_BAD_TARGET << 16) |
-+						cqe_data_in->status_rsvd;
- 	}
- 
- 	spin_lock(&qedi_conn->list_lock);
-@@ -674,8 +683,8 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
- 		qedi_trace_io(qedi, task, cmd->task_id, QEDI_IO_TRACE_RSP);
- 
- 	qedi_clear_task_idx(qedi, cmd->task_id);
--	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr,
--			     conn->data, datalen);
-+	iscsi_complete_scsi_task(task, cqe_data_in->exp_cmd_sn,
-+				 cqe_data_in->max_cmd_sn);
- error:
- 	spin_unlock_bh(&session->back_lock);
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 6516900..b902043 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -696,11 +696,10 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
  }
-@@ -796,11 +805,7 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
- 		if ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
- 		    ISCSI_TM_FUNC_ABORT_TASK) {
- 			spin_lock_bh(&conn->session->back_lock);
--
--			protoitt = build_itt(get_itt(tmf_hdr->rtt),
--					     conn->session->age);
--			task = iscsi_itt_to_task(conn, protoitt);
--
-+			task = iscsi_itt_to_ctask(conn, tmf_hdr->rtt);
- 			spin_unlock_bh(&conn->session->back_lock);
  
- 			if (!task) {
-@@ -1387,8 +1392,8 @@ static void qedi_tmf_work(struct work_struct *work)
- 	tmf_hdr = (struct iscsi_tm *)mtask->hdr;
- 	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
- 
--	ctask = iscsi_itt_to_task(conn, tmf_hdr->rtt);
--	if (!ctask || !ctask->sc) {
-+	ctask = iscsi_itt_to_ctask(conn, tmf_hdr->rtt);
-+	if (!ctask) {
- 		QEDI_ERR(&qedi->dbg_ctx, "Task already completed\n");
- 		goto abort_ret;
+ static struct iscsi_task *
+-__iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
++iscsi_alloc_mgmt_task(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		      char *data, uint32_t data_size)
+ {
+ 	struct iscsi_session *session = conn->session;
+-	struct iscsi_host *ihost = shost_priv(session->host);
+ 	uint8_t opcode = hdr->opcode & ISCSI_OPCODE_MASK;
+ 	struct iscsi_task *task;
+ 	itt_t itt;
+@@ -784,25 +783,50 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
+ 						   task->conn->session->age);
  	}
-@@ -1520,8 +1525,8 @@ static int qedi_send_iscsi_tmf(struct qedi_conn *qedi_conn,
  
- 	if ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
- 	     ISCSI_TM_FUNC_ABORT_TASK) {
--		ctask = iscsi_itt_to_task(conn, tmf_hdr->rtt);
--		if (!ctask || !ctask->sc) {
-+		ctask = iscsi_itt_to_ctask(conn, tmf_hdr->rtt);
-+		if (!ctask) {
- 			QEDI_ERR(&qedi->dbg_ctx,
- 				 "Could not get reference task\n");
- 			return 0;
+-	if (unlikely(READ_ONCE(conn->ping_task) == INVALID_SCSI_TASK))
+-		WRITE_ONCE(conn->ping_task, task);
++	return task;
++
++free_task:
++	iscsi_put_task(task);
++	return NULL;
++}
++
++static int iscsi_send_mgmt_task(struct iscsi_task *task)
++{
++	struct iscsi_conn *conn = task->conn;
++	struct iscsi_session *session = conn->session;
++	struct iscsi_host *ihost = shost_priv(conn->session->host);
++	int rc = 0;
+ 
+ 	if (!ihost->workq) {
+-		if (iscsi_prep_mgmt_task(conn, task))
+-			goto free_task;
++		rc = iscsi_prep_mgmt_task(conn, task);
++		if (rc)
++			return rc;
+ 
+-		if (session->tt->xmit_task(task))
+-			goto free_task;
++		rc = session->tt->xmit_task(task);
++		if (rc)
++			return rc;
+ 	} else {
+ 		list_add_tail(&task->running, &conn->mgmtqueue);
+ 		iscsi_conn_queue_work(conn);
+ 	}
+ 
+-	return task;
++	return 0;
++}
+ 
+-free_task:
+-	iscsi_put_task(task);
+-	return NULL;
++static int __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
++				 char *data, uint32_t data_size)
++{
++	struct iscsi_task *task;
++	int rc;
++
++	task = iscsi_alloc_mgmt_task(conn, hdr, data, data_size);
++	if (!task)
++		return -ENOMEM;
++
++	rc = iscsi_send_mgmt_task(task);
++	if (rc)
++		iscsi_put_task(task);
++	return rc;
+ }
+ 
+ int iscsi_conn_send_pdu(struct iscsi_cls_conn *cls_conn, struct iscsi_hdr *hdr,
+@@ -813,7 +837,7 @@ int iscsi_conn_send_pdu(struct iscsi_cls_conn *cls_conn, struct iscsi_hdr *hdr,
+ 	int err = 0;
+ 
+ 	spin_lock_bh(&session->frwd_lock);
+-	if (!__iscsi_conn_send_pdu(conn, hdr, data, data_size))
++	if (__iscsi_conn_send_pdu(conn, hdr, data, data_size))
+ 		err = -EPERM;
+ 	spin_unlock_bh(&session->frwd_lock);
+ 	return err;
+@@ -988,7 +1012,6 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 	if (!rhdr) {
+ 		if (READ_ONCE(conn->ping_task))
+ 			return -EINVAL;
+-		WRITE_ONCE(conn->ping_task, INVALID_SCSI_TASK);
+ 	}
+ 
+ 	memset(&hdr, 0, sizeof(struct iscsi_nopout));
+@@ -1002,10 +1025,18 @@ static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
+ 	} else
+ 		hdr.ttt = RESERVED_ITT;
+ 
+-	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
+-	if (!task) {
++	task = iscsi_alloc_mgmt_task(conn, (struct iscsi_hdr *)&hdr, NULL, 0);
++	if (!task)
++		return -ENOMEM;
++
++	if (!rhdr)
++		WRITE_ONCE(conn->ping_task, task);
++
++	if (iscsi_send_mgmt_task(task)) {
+ 		if (!rhdr)
+ 			WRITE_ONCE(conn->ping_task, NULL);
++		iscsi_put_task(task);
++
+ 		iscsi_conn_printk(KERN_ERR, conn, "Could not send nopout\n");
+ 		return -EIO;
+ 	} else if (!rhdr) {
+@@ -1840,11 +1871,8 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
+ 	__must_hold(&session->frwd_lock)
+ {
+ 	struct iscsi_session *session = conn->session;
+-	struct iscsi_task *task;
+ 
+-	task = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)hdr,
+-				      NULL, 0);
+-	if (!task) {
++	if (__iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)hdr, NULL, 0)) {
+ 		spin_unlock_bh(&session->frwd_lock);
+ 		iscsi_conn_printk(KERN_ERR, conn, "Could not send TMF.\n");
+ 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 3fa7d90..2bc9bf5 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -142,9 +142,6 @@ struct iscsi_task {
+ 	void			*dd_data;	/* driver/transport data */
+ };
+ 
+-/* invalid scsi_task pointer */
+-#define	INVALID_SCSI_TASK	(struct iscsi_task *)-1l
+-
+ static inline int iscsi_task_has_unsol_data(struct iscsi_task *task)
+ {
+ 	return task->unsol_r2t.data_length > task->unsol_r2t.sent;
 -- 
 1.8.3.1
 
