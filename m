@@ -2,143 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F868C2BB48
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 11:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7335C2BB9A
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 12:38:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCD72238E8
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 11:51:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 919902360D
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Dec 2020 12:38:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727796AbgLQLvA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Dec 2020 06:51:00 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2265 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727454AbgLQLvA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2020 06:51:00 -0500
-Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4CxVbb5TPyz67NMq;
-        Thu, 17 Dec 2020 19:47:23 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Thu, 17 Dec 2020 12:50:17 +0100
-Received: from [10.210.165.142] (10.210.165.142) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2106.2; Thu, 17 Dec 2020 11:50:16 +0000
-Subject: Re: [PATCH v2 01/17] ibmvfc: add vhost fields and defaults for MQ
- enablement
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        <james.bottomley@hansenpartnership.com>
-CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>,
-        <brking@linux.ibm.com>
-References: <20201202005329.4538-1-tyreld@linux.ibm.com>
- <20201202005329.4538-2-tyreld@linux.ibm.com>
- <a11c0e6a-cfa6-0dc4-5d34-6fd35ae1f29b@linux.vnet.ibm.com>
- <38903a4f-9253-0b4b-6f67-af78ec86175f@linux.ibm.com>
- <efbfe9e9-c692-80a1-f5b4-55473d8193e4@linux.vnet.ibm.com>
- <6ce79011-d288-7a49-3d51-262da58d8486@suse.de>
- <f226e3f9-60e9-b96a-ecc3-2e4008e08bac@linux.ibm.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <a2b06604-4e85-a748-f079-104882e16fe1@huawei.com>
-Date:   Thu, 17 Dec 2020 11:49:35 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726595AbgLQMig (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Dec 2020 07:38:36 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:36318 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725988AbgLQMif (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Dec 2020 07:38:35 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 0833141386;
+        Thu, 17 Dec 2020 12:37:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1608208670; x=
+        1610023071; bh=rRx2knbPTQMq9gJOBQmFMJ3Gn2cNjKuZZ5/RF9SRFbA=; b=X
+        XIZuirNZfaytEmYfLh/QLQBKhccu8q7n6+r+w2Vz83bUKZpFgc1c0si+NlKnKzUH
+        d/XGn1TWJNU8H7QQrEpGlsEIs+ti1YFXfBP5oNmKl4hggyRSj1Dm3sxEh0fuAA3g
+        Tb2JXSJJ7GAWzYPUQA7y0qeQcRig8y2NGEYNwyJTKk=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id EXsSTdrUYeyp; Thu, 17 Dec 2020 15:37:50 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id DAAD141373;
+        Thu, 17 Dec 2020 15:37:50 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.199.0.224) by
+ T-EXCH-03.corp.yadro.com (172.17.100.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Thu, 17 Dec 2020 15:37:50 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH] scsi: target: core: check SR field in REPORT LUNS
+Date:   Thu, 17 Dec 2020 15:37:31 +0300
+Message-ID: <20201217123731.7313-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <f226e3f9-60e9-b96a-ecc3-2e4008e08bac@linux.ibm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.210.165.142]
-X-ClientProxiedBy: lhreml701-chm.china.huawei.com (10.201.108.50) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [10.199.0.224]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/12/2020 22:37, Tyrel Datwyler wrote:
-> On 12/7/20 3:56 AM, Hannes Reinecke wrote:
->> On 12/4/20 3:26 PM, Brian King wrote:
->>> On 12/2/20 11:27 AM, Tyrel Datwyler wrote:
->>>> On 12/2/20 7:14 AM, Brian King wrote:
->>>>> On 12/1/20 6:53 PM, Tyrel Datwyler wrote:
->>>>>> Introduce several new vhost fields for managing MQ state of the adapter
->>>>>> as well as initial defaults for MQ enablement.
->>>>>>
->>>>>> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
->>>>>> ---
->>>>>>    drivers/scsi/ibmvscsi/ibmvfc.c |  9 ++++++++-
->>>>>>    drivers/scsi/ibmvscsi/ibmvfc.h | 13 +++++++++++--
->>>>>>    2 files changed, 19 insertions(+), 3 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
->>>>>> index 42e4d35e0d35..f1d677a7423d 100644
->>>>>> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
->>>>>> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
->>>>>> @@ -5161,12 +5161,13 @@ static int ibmvfc_probe(struct vio_dev *vdev, const
->>>>>> struct vio_device_id *id)
->>>>>>        }
->>>>>>          shost->transportt = ibmvfc_transport_template;
->>>>>> -    shost->can_queue = max_requests;
->>>>>> +    shost->can_queue = (max_requests / IBMVFC_SCSI_HW_QUEUES);
->>>>>
->>>>> This doesn't look right. can_queue is the SCSI host queue depth, not the MQ
->>>>> queue depth.
->>>>
->>>> Our max_requests is the total number commands allowed across all queues. From
->>>> what I understand is can_queue is the total number of commands in flight allowed
->>>> for each hw queue.
->>>>
->>>>           /*
->>>>            * In scsi-mq mode, the number of hardware queues supported by the LLD.
->>>>            *
->>>>            * Note: it is assumed that each hardware queue has a queue depth of
->>>>            * can_queue. In other words, the total queue depth per host
->>>>            * is nr_hw_queues * can_queue. However, for when host_tagset is set,
->>>>            * the total queue depth is can_queue.
->>>>            */
->>>>
->>>> We currently don't use the host wide shared tagset.
->>>
->>> Ok. I missed that bit... In that case, since we allocate by default only 100
->>> event structs. If we slice that across IBMVFC_SCSI_HW_QUEUES (16) queues, then
->>> we end up with only about 6 commands that can be outstanding per queue,
->>> which is going to really hurt performance... I'd suggest bumping up
->>> IBMVFC_MAX_REQUESTS_DEFAULT from 100 to 1000 as a starting point.
->>>
->> Before doing that I'd rather use the host-wide shared tagset.
->> Increasing the number of requests will increase the memory footprint of the
->> driver (as each request will be statically allocated).
+Now REPORT LUNS for software device servers always reports all luns
+regardless of SELECT REPORT field.
+Add handling of that field according to SPC-4:
+* accept known values,
+* reject unknown values.
 
-Exposing HW queues increases memory footprint as we allocate the static 
-requests per HW queue ctx, regardless of shared hostwide tagset enabled 
-or not. This could prob be improved.
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
+patch to 5.11/scsi-queue
 
->>
-> 
-> In the case where we use host-wide how do I determine the queue depth per
-> hardware queue? Is is hypothetically can_queue or is it (can_queue /
-> nr_hw_queues)? We want to allocate an event pool per-queue which made sense
-> without host-wide tags since the queue depth per hw queue is exactly can_queue.
-> 
+ drivers/target/target_core_spc.c | 26 ++++++++++++++++++++++++++
+ include/scsi/scsi_proto.h        | 10 ++++++++++
+ 2 files changed, 36 insertions(+)
 
-Generally hw queue depth should be same as can_queue. And this applies 
-when hostwide shared tags is enabled as well.
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index ca5579ebc81d..6af6272efce3 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -1210,10 +1210,12 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+ {
+ 	struct se_dev_entry *deve;
+ 	struct se_session *sess = cmd->se_sess;
++	unsigned char *cdb = cmd->t_task_cdb;
+ 	struct se_node_acl *nacl;
+ 	struct scsi_lun slun;
+ 	unsigned char *buf;
+ 	u32 lun_count = 0, offset = 8;
++	u8 sr = cdb[2];
+ 	__be32 len;
+ 
+ 	buf = transport_kmap_data_sg(cmd);
+@@ -1230,6 +1232,27 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+ 
+ 	nacl = sess->se_node_acl;
+ 
++	switch (sr) {
++	case SCSI_SELECT_WELLKNOWN:
++	case SCSI_SELECT_ADMINISTRATIVE:
++	case SCSI_SELECT_SUBSIDIARY:
++		/* report empty lun list */
++		goto out;
++	case SCSI_SELECT_TOP_LEVEL:
++		if (cmd->se_lun->unpacked_lun != 0)
++			goto out;
++		fallthrough;
++	case SCSI_SELECT_REGULAR:
++	case SCSI_SELECT_ALL_ACCESSIBLE:
++		break;
++	default:
++		pr_debug("TARGET_CORE[%s]: Invalid REPORT LUNS with unsupported "
++				 "SELECT REPORT %#x for 0x%08llx from %s\n",
++				 cmd->se_tfo->fabric_name, sr, cmd->se_lun->unpacked_lun,
++				 sess->se_node_acl->initiatorname);
++		return TCM_INVALID_CDB_FIELD;
++	}
++
+ 	rcu_read_lock();
+ 	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
+ 		/*
+@@ -1252,6 +1275,8 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+ 	 * See SPC3 r07, page 159.
+ 	 */
+ done:
++	if ((sr != SCSI_SELECT_REGULAR) && (sr != SCSI_SELECT_ALL_ACCESSIBLE))
++		goto out;
+ 	/*
+ 	 * If no LUNs are accessible, report virtual LUN 0.
+ 	 */
+@@ -1263,6 +1288,7 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+ 		lun_count = 1;
+ 	}
+ 
++out:
+ 	if (buf) {
+ 		len = cpu_to_be32(lun_count * 8);
+ 		memcpy(buf, &len, min_t(int, sizeof len, cmd->data_length));
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index c36860111932..280169c75d85 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -341,4 +341,14 @@ enum zbc_zone_cond {
+ 	ZBC_ZONE_COND_OFFLINE		= 0xf,
+ };
+ 
++/* Select Report fot REPORT LUNS */
++enum scsi_select_report {
++	SCSI_SELECT_REGULAR		= 0x0,
++	SCSI_SELECT_WELLKNOWN		= 0x1,
++	SCSI_SELECT_ALL_ACCESSIBLE	= 0x2,
++	SCSI_SELECT_ADMINISTRATIVE	= 0x10,
++	SCSI_SELECT_TOP_LEVEL		= 0x11,
++	SCSI_SELECT_SUBSIDIARY		= 0x12,
++};
++
+ #endif /* _SCSI_PROTO_H_ */
+-- 
+2.25.1
 
-We do this for hisi_sas: the host can queue max 4096 commands over all 
-queues, so we set .can_queue = 4096*, set HW queue depth = 4096, and set 
-.host_tagset = 1.
-
-* we need to reserve some commands for internal IO, so this is reduced a 
-little
-
-Thanks,
-John
