@@ -2,163 +2,257 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02171C4361B
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 13:34:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D086C2BBD4
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 14:16:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B886723A62
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 13:34:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD5EC23AAA
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 14:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725901AbgLRNe2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Dec 2020 08:34:28 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:18724 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725864AbgLRNe1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 08:34:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1608298466; x=1639834466;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=npUFNa9NwKLAbkNZpCogdpgD4sSLof8iDnzT2T5OrWY=;
-  b=qr1TylHtSdGS3GZ1vslZXWf/Qiw2wmqroChIb8rY1XlmLBJ0ZgXv9HDj
-   zeaQslqOgkLzZMpSn6YPiKVrbGmrAoCnmuZTIgJ7K+0Fu7CBgMvSZUrF0
-   J7/Vxm3xuel+byVX2ATBpOU2qJO3v/srR6NXIsKDy6Cbh02AcMbuCYKX4
-   X1NqvpFQhXdDboDDtf4lcflZv+vg6+ceweR+/7uEmV1OdRaY7Namjp2Ef
-   EUuglfeuNeaOKnf36ZAB26o1lSFVyUr9srAJJeYTinUzUgSOuejIdBA96
-   n0TwTV3wBhLR/bpjc+0SSz4qzxgNf5U+pDhWvJwvDjbRJGgW9ARhOuWA0
-   g==;
-IronPort-SDR: fgYMn9VTSA61KTrvDosUfNYU65g6ZTajym+op+p8jpZnoJ7Ftm9G3FPUP7gdcfNl0ShX2/exzu
- h+rX8srL/Y5Tm0I7xljgVezQK5a8pCPz8hc4k8hsZLH0qFEdaYUSv/mCoeW/tySUPQ/96UKJW0
- Hi0zP/3eJuaHRmfEVhCsbRaPspRFbUbAyHb+daquWtNCmYroEu7BngpusLo/0tflLqxaf9Eia3
- gUz1KqJqt5e9EkHr3y43ynIOIuef8HHA/3n8HnDSv1Q4nieGETCfcCljQQKgU4+hMGQWlKs8u1
- iAE=
-X-IronPort-AV: E=Sophos;i="5.78,430,1599494400"; 
-   d="scan'208";a="155507444"
-Received: from mail-bl2nam02lp2052.outbound.protection.outlook.com (HELO NAM02-BL2-obe.outbound.protection.outlook.com) ([104.47.38.52])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Dec 2020 21:33:19 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lTRvDSkMfcJx/VVBJ8D/AtnGqmDPNZTMveCUJ0O/A6drAoVyk1xWr8xdG2SUePPKTyAKvTlO0lehce6655wItTmUF87Z1n5e1ZuKeDp+lVoTnx4J5FVxDrSU53ZE3BG8bq9wiKtwv8+WdjK4lGEowYpmYORj1EenroAPF7dblAsgfvxSobZfd7OUkONjUU71RaSuNXaxmjvoLbKDTVU7lNeBrvdAqZuwLCxiIsJ+FcrHrcxUCopRFZijErDm8m5CTv+WPYbAPtJedfesip20kYHRHWJz5IorD20qLkYL8+KvjyH1R/XKVEVGWXfAAZnRRZwOtYddGj6K0dzv7Mo9VQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=npUFNa9NwKLAbkNZpCogdpgD4sSLof8iDnzT2T5OrWY=;
- b=odbfa4K5Uya6lUrTd80WQ6ApXctQu4Eg4Gm8qoT5LiDUPIiyi997EIfr5i6P+9kvyq1ybGHWo6+GPII138EdsdnrowK7LBKE3kZtQlWOmJaKQ8c29ftxEbhp7DOpGpNzV4y0Edhjg7AOOplHVdxhlHoci63U8lJbyj6RAKSR6nswo2caz3ReCshRcQFao40J+mm72+BugGhWljtJmfkquS8iwBaOmWYKNNjuZwjMjq3lsdtqPKiGnUSpP6/1XE5NhCXq7tpXXHXryeQP6JXctwM4ls+yCpTqTrAsUIk91Aiyo1HUPg+TziWs5aBKu1OHjbGivTO5E6j/6tpOFddoHQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1726552AbgLROQq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Dec 2020 09:16:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58010 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725911AbgLROQq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 09:16:46 -0500
+Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC5D7C0617A7;
+        Fri, 18 Dec 2020 06:16:05 -0800 (PST)
+Received: by mail-ed1-x534.google.com with SMTP id g24so2485792edw.9;
+        Fri, 18 Dec 2020 06:16:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=npUFNa9NwKLAbkNZpCogdpgD4sSLof8iDnzT2T5OrWY=;
- b=yWWF2c1Ex466DVddQHn+JiELuFt7p21XalxjqjB8uCcLBiRRECtM797Q3GGedykOTocbumJb0MoK83ii4C9lnZrHmq3L9/kXV/wqg73AFYGCwAyyuDSd6hjmgi+3IPacQDlECgmIxVOfvujI7Bqo01gDakfM88ipBuT3MPZq8gs=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM5PR0401MB3653.namprd04.prod.outlook.com (2603:10b6:4:7b::19) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3654.12; Fri, 18 Dec 2020 13:33:18 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::a564:c676:b866:34f6%9]) with mapi id 15.20.3676.025; Fri, 18 Dec 2020
- 13:33:18 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "grant.jung@samsung.com" <grant.jung@samsung.com>,
-        "sc.suh@samsung.com" <sc.suh@samsung.com>,
-        "hy50.seo@samsung.com" <hy50.seo@samsung.com>,
-        "sh425.lee@samsung.com" <sh425.lee@samsung.com>,
-        "bhoon95.kim@samsung.com" <bhoon95.kim@samsung.com>
-Subject: RE: [RFC PATCH v1 0/2] permit vendor specific timeouts for PMC
-Thread-Topic: [RFC PATCH v1 0/2] permit vendor specific timeouts for PMC
-Thread-Index: AQHW1RFFyXr2BdtWDUKHyL2GDiicF6n80nvA
-Date:   Fri, 18 Dec 2020 13:33:18 +0000
-Message-ID: <DM6PR04MB65754CF9B01B346840FF98A2FCC30@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <CGME20201218074142epcas2p4c5f276e54ff896b8e990303376a15154@epcas2p4.samsung.com>
- <cover.1608276380.git.kwmad.kim@samsung.com>
-In-Reply-To: <cover.1608276380.git.kwmad.kim@samsung.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [77.138.4.172]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 3079d29a-0f27-4e6b-a15d-08d8a3597b2d
-x-ms-traffictypediagnostic: DM5PR0401MB3653:
-x-microsoft-antispam-prvs: <DM5PR0401MB36530065A4B1CB146AF2860DFCC30@DM5PR0401MB3653.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rcQDH1FL/1PHWx4R0v24aAVQ2HtmcPAY0GFmYQOUQBqZYtkewXylMK5bO0lXMw4Qa2acJNLljGYC72s3tdG0Ppia0MtfY6qO7lhOTy5u5qeDLNBx/GE/AvLdQj6T+MgwVqlMRyNs6axGwEywvZpVs4YTzbCfjlboMQMmxIhDVnfm4aS1KLEkrvWWseK4L7UT0+ANc8VaKmfr0mMscI9R59n3msI+dDkWtVUMhKbePcweSv6fVx7Y5V+mEJdgh8fFDqXOVQqMd6BLL1T7FAjjpab/n8L5zIPkH86n+wNK0VdRINjjqZovX9n9X6oxQo/acZNzfMqpatQ+moVkufRUTKSX6K45JKTVGVNAeTakJmJmQApspL1DKcHAcixbODvc
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(396003)(346002)(366004)(39860400002)(136003)(110136005)(55016002)(66446008)(316002)(8936002)(52536014)(5660300002)(478600001)(66476007)(86362001)(186003)(26005)(64756008)(33656002)(2906002)(71200400001)(76116006)(7416002)(4744005)(66556008)(66946007)(921005)(83380400001)(9686003)(8676002)(6506007)(7696005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?utf-8?B?RnhOc0E0MXkxU1BZUGJ2NExpRTE2S3QxMndpeFJFN3dNNkFVKzVqc2hSOEky?=
- =?utf-8?B?WDNRRklKWjIzN0hyenVpM1JNa2o5YzlvKy8rTVZYZi9PNDR4SW9SOWhmQ1ph?=
- =?utf-8?B?S09Oc3gzNVN5QUhpQ042ODJHMUNCR0VKazFkcExmMlpDZmw0NzBvS29zR21Y?=
- =?utf-8?B?eldjb3d1WHo4Wjk1ZE01VG94L1FMQVFDSVUvdDBrQmMxdCt2NWVrc3hmbVFW?=
- =?utf-8?B?MSt1Z0FIR0FNbjhqdGI3QmJQeXhoeHFGVVB3L200VHo3TVl6SGN0Q0NoY3Zz?=
- =?utf-8?B?R3ZWdlVrenhzN1B1YXVqZWRGdGh2b2pkTitlbUwxY0REYXZUSkZ2eWo3ZVd6?=
- =?utf-8?B?SlNoY3VBMzdzeWxDdUNZVUQ5Y2thTWtVU1hZVldDbXRYeWRqRmdYSXVkelRz?=
- =?utf-8?B?REdDRTh0WWpleDlOUWl4UU9OdUFsbHhyQnVvK29RaHZDN1ZmdGxnOFNiSkkw?=
- =?utf-8?B?dmZQTCtWK2RoaXNKZ2E3UExVWFIybVJheHY4OGh5T1dTTG1GNE5BdlNtSmJB?=
- =?utf-8?B?bDFoSmljNUhVWDdBSzBUTVdBVk5hNFkvYnBMaktmZFNsR1BtT1IzRlBwMHpZ?=
- =?utf-8?B?dU1VRWZtVGtlbWNFSVc4ZDBMQmw5cWFPd24xa1l0V0pEUnlTeWt1elZHSFAz?=
- =?utf-8?B?YU0zLzIzL042c3ZnYW9PV29naGFvOEk5RGROdmNTc3VKTzZaLzA1RFRnSlBF?=
- =?utf-8?B?dVhZTnd6VEd3WkxQeDNWbDFoejFYVmRTa2NmOGRVejdVWFFicUtYdVRndmpQ?=
- =?utf-8?B?d1J5OXVnWWE2MG5LNm94YzlBdXNvSjZPSE1aTzRnNUxaRVhZWENmRTJxenlU?=
- =?utf-8?B?bk1wK3AwQ0RETElZemhDN29saDFTYVVYejFlYlJQeDllY25aV3dHMFZFc3k4?=
- =?utf-8?B?TVRxWkppNjlndmg3am1ZQjFjVVBJMVd4YUZtK1N2WkFpZ1RpaEpob2dmVkF6?=
- =?utf-8?B?YmY4eFBPekpCcmR2YjA1NElqYXQxa0UwUHJtc01KYTVwc05rODZHcEFCK01I?=
- =?utf-8?B?cEJONlo4OVhlczJiSStnZzBadHViMUxLUmpPM1lkbi9MRVQ2VkwzSnZOVlho?=
- =?utf-8?B?UVRIbW9aY2FYQkdoRFJrOEJhcnRaeXJ1bHNUMXQzd040QjZsZHcrZ1FzR1Y1?=
- =?utf-8?B?V0k1ZGtMWXlyVmw0Y1NUMVYybm1YNWtEbUxpb29Ic1lJb09lRVVIc080M3Fv?=
- =?utf-8?B?UlZJZWU3dnA3MnNlOS92djlUaFpHY3dva3ZDWEovSjBzdElPUUU3N3R4dThH?=
- =?utf-8?B?YU5IY2dYLy9iT0dTVE5DdHdURFFPVlI0dGpCNnNGZTlIczI4dGdXQWlhckRo?=
- =?utf-8?Q?tYURGPZxeo3EI=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3079d29a-0f27-4e6b-a15d-08d8a3597b2d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2020 13:33:18.5575
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: w/M7Ki67umMTjcsveob8zpZSh+qULrbI77Q6azZZTczvLgibMa99UmoSZn2ylwBRym3rJENJNjEZliFOvw8qVQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR0401MB3653
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=+nucGu/R5qWhkpLMXuzJRlIsEJPlQwdtfmWcftTE18M=;
+        b=G43ZG+6m3i/p7EQz5uneQFP63CkYk0aezaKKXoLUPNYXKhO99iM26nSrwXIDPy8NZI
+         j4X9Hoc9NSWgKcgKMyMX/hO8u1ClSUKxDXd6NYNBmhnCmkf2AkpIEbGgQlyLPKim6Gxq
+         AlpUp2lvhnvAER4Ey7ZL9xz0Pe2n8IKsDJsxTB3GgHlyuTBf2d/L3AQnW+N4TZbQcABv
+         YXyU6IM8F0QTIqCsDGUXhHm4oFyCGeF6rQtamHR9NO2/44lptRGSru6RU/s7VJqYSWVL
+         6raqloLhRJ18XvHJX40admz55xXY562VytF7VS+VgB7vL32VEXo9brw4iVdZldLQphj9
+         Wdeg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=+nucGu/R5qWhkpLMXuzJRlIsEJPlQwdtfmWcftTE18M=;
+        b=PiO0pcd+gpgMKpMYncktYSWPr/Klf95eUDfWWDPYhCKDG41hWDKelaCrOXVOpTFaYz
+         6+Uosg1GGXj7rliInXSzij88OXfKIdvCfX0OBD7RQszuQYTPRe6PsaIvMLQfx8mO7hif
+         RcmnffgdQd0Rvx2i069NPREETet7+bl+AY3+389GtsG6py5uW/je/sgL0fyN0lCIzmPj
+         54BJ8SdPJUOoohA8ZOrum8eYWlwgMGppQ5ExMu5oXU5z8kbRQpL7ECMO+bBbsEeMeWXw
+         CaHTOWOZlEGoONIcjBvJTB1R8G3jXUKKf/FGxePvCqXx6QnoUU4Pzu8BkZRZFSIxqGwW
+         HP7g==
+X-Gm-Message-State: AOAM532nqm4riN3xWrY0X9Vi/hb5Wo1gp9sTV8yNfhEt0Q8MjfYW7xt3
+        Z8THqG1hGrcBhd9SdHmQDvv6vFXtfxs=
+X-Google-Smtp-Source: ABdhPJznZhgm1nYHGiwC3Xnp3Gi4I82wja3mD/ViwXh8RfP+Gok2KBlbuZmzsBD5pzqEezxDTU3Olw==
+X-Received: by 2002:aa7:c886:: with SMTP id p6mr4695705eds.352.1608300964167;
+        Fri, 18 Dec 2020 06:16:04 -0800 (PST)
+Received: from localhost (ipbcc05d1b.dynamic.kabel-deutschland.de. [188.192.93.27])
+        by smtp.gmail.com with ESMTPSA id n8sm5580036eju.33.2020.12.18.06.16.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 18 Dec 2020 06:16:03 -0800 (PST)
+From:   Bodo Stroesser <bostroesser@gmail.com>
+To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bodo Stroesser <bostroesser@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mike Christie <michael.christie@oracle.com>
+Subject: [PATCH] scsi: target: tcmu: Fix wrong uio handling causing big memory leak
+Date:   Fri, 18 Dec 2020 15:15:34 +0100
+Message-Id: <20201218141534.9918-1-bostroesser@gmail.com>
+X-Mailer: git-send-email 2.12.3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiANCj4gDQo+IFRoZXJlIGFyZSBzb21lIGF0dHJpYnV0ZSBzZXR0aW5ncyBiZWZvcmUgcG93ZXIg
-bW9kZSBjaGFuZ2UgaW4gdWZzaGNkLmMNCj4gdGhhdCBzaG91bGQgYmUgdmFyaWFudCBwZXIgdmVu
-ZG9yLg0KQnV0IHlvdSd2ZSBhZGRlZCBhIHF1aXJrLCB3aGljaCBpcyBub3Qgd2hhdCB5b3VyIGNv
-bW1pdCBsb2cgc2F5Lg0KSWYgaW5kZWVkIHVuaXBybyBhbGxvd3MgdG8gc2tpcC9zZXQgdmFsdWVz
-IG90aGVyIHRoYW4gZGVmYXVsdCAtIGFkZCB0aGUgYXBwcm9wcmlhdGUgdm9wLg0KT3RoZXJ3aXNl
-LCBpZiBpdCdzIGp1c3QgYSBub24tc3RhbmRhcmQgYmVoYXZpb3Igb2YgZXh5bm9zIC0gdGhlbiB5
-b3VyIHBhdGNoIGlzIGFwcHJvcHJpYXRlLA0KQnV0IHlvdSBuZWVkIHRvIHJld29yZCB5b3VyIGNv
-bW1pdCBsb2c6IGJvdGggaGVyZSBhbmQgaW4geW91ciAxLzIgcGF0Y2guDQoNCkFsc28sIHlvdSBm
-b3Jnb3QgdG8gcmVtb3ZlIHRoZSBnZXJyaXQgY2hhbmdlLWlkLg0KDQpUaGFua3MsDQpBdnJpDQoN
-Cj4gDQo+IEtpd29vbmcgS2ltICgyKToNCj4gICB1ZnM6IGFkZCBhIHF1aXJrIGZvciB2ZW5kb3Ig
-c3BlY2lmaWNzIGJlZm9yZSBwbWMNCj4gICB1ZnM6IHVmcy1leHlub3M6IGFwcGx5IHZlbmRvciBz
-cGVjaWZpY3MgZm9yIHRocmVlIHRpbWVvdXRzDQo+IA0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnMt
-ZXh5bm9zLmMgfCAgOCArKysrKysrLQ0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyAgICAg
-fCA0MCArKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICBkcml2ZXJz
-L3Njc2kvdWZzL3Vmc2hjZC5oICAgICB8ICA2ICsrKysrKw0KPiAgMyBmaWxlcyBjaGFuZ2VkLCAz
-NCBpbnNlcnRpb25zKCspLCAyMCBkZWxldGlvbnMoLSkNCj4gDQo+IC0tDQo+IDIuNy40DQoNCg==
+tcmu calls uio_unregister_device from tcmu_destroy_device.
+After that uio will never call tcmu_release for this device.
+If userspace still had the uio device open and / or mmap'ed
+during uio_unregister_device, tcmu_release will not be called and
+udev->kref will never go down to 0.
+
+So tcmu in this situation will not free:
+ - cmds or tmrs still in the queue or the ring
+ - all pages allocated for mailbox and cmd_ring (vmalloc)
+ - all pages allocated for data space
+ - the udev itself
+
+The vmalloc'ed area is 8 MB, amount of pages allocated for data
+space depends on previous usage of the tcmu device. Theoretically
+that can be up to 1GB.
+
+This patch moves the call of uio_unregister_device to the
+beginning of tcmu_dev_kref_release, which is called when
+udev->kref drops down to zero. So we know, that uio device is
+closed and unmap'ed.
+
+In case tcmu_realease drops the last kref, we would end up doing
+the uio_unregister_device from a function called by uio_release,
+which causes the process to block forever.
+So we now do the kref_put from new worker function
+tcmu_release_work_fn which is scheduled by tcmu_release.
+
+To make userspace still aware of the device being deleted,
+tcmu_destroy_device instead of uio_unregister_device now does:
+ - sets a bit in udev, so that tcmu_open and tcmu_mmap can check
+   and fail with -EIO
+ - resets udev->uio_info->irq to 0, so uio will fail read() and
+   write() with -EIO
+ - wakes up userspace possibly waiting in read(), so the read
+   fails with -EIO
+
+Avoid possible races in tcmu_open by replacing kref_get with
+kref_get_unless_zero.
+
+Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
+---
+ drivers/target/target_core_user.c | 54 ++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 50 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 0458bfb143f8..080760985ebf 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -21,6 +21,7 @@
+ #include <linux/configfs.h>
+ #include <linux/mutex.h>
+ #include <linux/workqueue.h>
++#include <linux/delay.h>
+ #include <net/genetlink.h>
+ #include <scsi/scsi_common.h>
+ #include <scsi/scsi_proto.h>
+@@ -109,6 +110,7 @@ struct tcmu_nl_cmd {
+ struct tcmu_dev {
+ 	struct list_head node;
+ 	struct kref kref;
++	struct work_struct release_work;
+ 
+ 	struct se_device se_dev;
+ 
+@@ -119,6 +121,7 @@ struct tcmu_dev {
+ #define TCMU_DEV_BIT_BROKEN 1
+ #define TCMU_DEV_BIT_BLOCKED 2
+ #define TCMU_DEV_BIT_TMR_NOTIFY 3
++#define TCMU_DEV_BIT_GOING_DOWN 4
+ 	unsigned long flags;
+ 
+ 	struct uio_info uio_info;
+@@ -1527,6 +1530,8 @@ static void tcmu_detach_hba(struct se_hba *hba)
+ 	hba->hba_ptr = NULL;
+ }
+ 
++static void tcmu_release_work_fn(struct work_struct *work);
++
+ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ {
+ 	struct tcmu_dev *udev;
+@@ -1542,6 +1547,8 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 		return NULL;
+ 	}
+ 
++	INIT_WORK(&udev->release_work, tcmu_release_work_fn);
++
+ 	udev->hba = hba;
+ 	udev->cmd_time_out = TCMU_TIME_OUT;
+ 	udev->qfull_time_out = -1;
+@@ -1719,6 +1726,9 @@ static int tcmu_mmap(struct uio_info *info, struct vm_area_struct *vma)
+ {
+ 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
+ 
++	if (test_bit(TCMU_DEV_BIT_GOING_DOWN, &udev->flags))
++		return -EIO;
++
+ 	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
+ 	vma->vm_ops = &tcmu_vm_ops;
+ 
+@@ -1735,12 +1745,17 @@ static int tcmu_open(struct uio_info *info, struct inode *inode)
+ {
+ 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
+ 
++	if (test_bit(TCMU_DEV_BIT_GOING_DOWN, &udev->flags))
++		return -EIO;
++
+ 	/* O_EXCL not supported for char devs, so fake it? */
+ 	if (test_and_set_bit(TCMU_DEV_BIT_OPEN, &udev->flags))
+ 		return -EBUSY;
+ 
+ 	udev->inode = inode;
+-	kref_get(&udev->kref);
++	if (!kref_get_unless_zero(&udev->kref))
++		/* Race between open and device going down */
++		return -EIO;
+ 
+ 	pr_debug("open\n");
+ 
+@@ -1799,6 +1814,8 @@ static void tcmu_dev_kref_release(struct kref *kref)
+ 	bool all_expired = true;
+ 	int i;
+ 
++	uio_unregister_device(&udev->uio_info);
++
+ 	vfree(udev->mb_addr);
+ 	udev->mb_addr = NULL;
+ 
+@@ -1827,6 +1844,15 @@ static void tcmu_dev_kref_release(struct kref *kref)
+ 	call_rcu(&dev->rcu_head, tcmu_dev_call_rcu);
+ }
+ 
++static void tcmu_release_work_fn(struct work_struct *work)
++{
++	struct tcmu_dev *udev = container_of(work, struct tcmu_dev,
++					     release_work);
++
++	/* release ref from open */
++	kref_put(&udev->kref, tcmu_dev_kref_release);
++}
++
+ static int tcmu_release(struct uio_info *info, struct inode *inode)
+ {
+ 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
+@@ -1834,8 +1860,17 @@ static int tcmu_release(struct uio_info *info, struct inode *inode)
+ 	clear_bit(TCMU_DEV_BIT_OPEN, &udev->flags);
+ 
+ 	pr_debug("close\n");
+-	/* release ref from open */
+-	kref_put(&udev->kref, tcmu_dev_kref_release);
++
++	/*
++	 * We must not put kref directly from here, since dropping down kref to
++	 * zero would implicitly call tcmu_dev_kref_release, which calls
++	 * uio_unregister_device --> process hangs forever, since tcmu_release
++	 * is called from uio.
++	 * So we leave it to tcmu_release_work_fn to put the kref.
++	 */
++	while (!schedule_work(&udev->release_work))
++		usleep_range(1000, 5000);
++
+ 	return 0;
+ }
+ 
+@@ -2166,7 +2201,18 @@ static void tcmu_destroy_device(struct se_device *dev)
+ 
+ 	tcmu_send_dev_remove_event(udev);
+ 
+-	uio_unregister_device(&udev->uio_info);
++	/*
++	 * We must not call uio_unregister_device here. If there is a userspace
++	 * process with open or mmap'ed uio device, uio would not call
++	 * tcmu_release on later unmap or close.
++	 */
++
++	/* reset uio_info->irq, so uio will reject read() and write() */
++	udev->uio_info.irq = 0;
++	/* Set bit, so we can reject later calls to tcmu_open and tcmu_mmap */
++	set_bit(TCMU_DEV_BIT_GOING_DOWN, &udev->flags);
++	/* wake up possible sleeper in uio_read(), it will return -EIO */
++	uio_event_notify(&udev->uio_info);
+ 
+ 	/* release ref from configure */
+ 	kref_put(&udev->kref, tcmu_dev_kref_release);
+-- 
+2.12.3
+
