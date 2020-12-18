@@ -2,165 +2,224 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9F08C4361B
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 15:16:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4A8C4361B
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 15:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76E8C23B09
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 15:16:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59C5523AFD
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 15:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726436AbgLRPQx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Dec 2020 10:16:53 -0500
-Received: from mail-mw2nam12on2133.outbound.protection.outlook.com ([40.107.244.133]:15978
-        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725878AbgLRPQx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Dec 2020 10:16:53 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=g8B/zYIEbCMWiY9J4SHYcvcq1isb3348DeTyKGHlDJn7+OUBP7F1I9091dY+suXFj90xFcPaPQiwYZ3pCGrBphpMF5rD3E+kuBnP/kvZh2W4h7olFsOOsAfcUEZWgYMi3ulVdsJAsTYiC29Z4zK7/cbAKK9lmSh8tugya6+rpV03A2ra94NT+p49XZ8W6V+X2YAtMiRMGWxoQ6WJy5nINXV2xIKthsh+bhiLIeLoH5P1lS8rfzFioeds+tXPDrqQthU72Fdr5IYnY8WVsLRdz8I1BEevqMfuZEOnpLd5QLnyQxCiB8KmnnDlkJBMYxWqLWOGJBIFySgt2t8sq19x4Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qN5fI2pSNZfOk9w8DNwSTxPWwt1Xrso6Cu5OVZsysJA=;
- b=duAlg9WGu1jNyReLWcH9CajrI3fBDyywyOXFoSX6WehfsCltNoiXCwOxOAyeJD60LDQJIQ7XQpMkLipfbnpgb3XrmqvZaDMjzmSm2sJCDKDYrf3qnjdJ+e2OeE0WBn+QO0bXzi7bHftliUJS44y1ltyEUXIDgKI0Gxp+iudtKn3NWNq3dDtsxIbd/PjcR47fbxQk7E45CH1rgGguCu1jKZ4Xa/uQ87CpkjNQn+oXHYRAScBi00bbIpDcd2i8Uj+ZoVMIYfHFUK4farcicRLYgm7dhQj84Amx0vlCWpYxdPKtHkxUqYJ/OX9YgYzW4LtXxCfjSBtdFlRqCjP1fJoxpg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qN5fI2pSNZfOk9w8DNwSTxPWwt1Xrso6Cu5OVZsysJA=;
- b=Dl5r4MSh5cRCqZwy7fFuU9chDITEKR03Zef2bIPGDuZdLD+Km8vdg7EoYKEUFcgYmeFMqyP+Ca/URmyvSHg8u3SXzLTlgRbkNKt/denmxsr10ZguLxhOEOyS+hMRRR6u0obN4Wljy+On8Od0AmQK2rb0o6dErnovlAdEANCXwgk=
-Received: from (2603:10b6:302:a::16) by
- MWHPR21MB0144.namprd21.prod.outlook.com (2603:10b6:300:78::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3700.8; Fri, 18 Dec 2020 15:16:05 +0000
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::b8f6:e748:cdf2:1922]) by MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::b8f6:e748:cdf2:1922%8]) with mapi id 15.20.3700.013; Fri, 18 Dec 2020
- 15:16:05 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>
-CC:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        Juan Vazquez <juvazq@microsoft.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH 3/3] scsi: storvsc: Validate length of incoming packet in
- storvsc_on_channel_callback()
-Thread-Topic: [PATCH 3/3] scsi: storvsc: Validate length of incoming packet in
- storvsc_on_channel_callback()
-Thread-Index: AQHW1LPxFJqinclYSE6I9D72fpSqk6n8970w
-Date:   Fri, 18 Dec 2020 15:16:05 +0000
-Message-ID: <MW2PR2101MB10522786584587FBF9166DF0D7C39@MW2PR2101MB1052.namprd21.prod.outlook.com>
-References: <20201217203321.4539-1-parri.andrea@gmail.com>
- <20201217203321.4539-4-parri.andrea@gmail.com>
-In-Reply-To: <20201217203321.4539-4-parri.andrea@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-12-18T15:16:03Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=0e2278b6-2a3b-403c-b994-bc791ba3d0f4;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=microsoft.com;
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 63bef3bf-bbc6-478d-cff2-08d8a367d6b7
-x-ms-traffictypediagnostic: MWHPR21MB0144:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MWHPR21MB014401CBE009F7828A80EED7D7C39@MWHPR21MB0144.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2201;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rRCxhlPhfewdrsAwMZ/ckshl9HyTXWYHS+Es2KedE0+2yEKNJYHGcZOICBBBvwQo+gxc0PgXZQ2UHLlWwFL2YIO6hB3pbPedhcJ5LoaTevNVhoLJbZtYXFe2kAeR+DGRwhuypKxaJGr9LQHICiB5TFtVb9mb64AjETDI8yujw+1FZLLyo4/TuKFm4c5W/wo3it+dYYavuP29cmJPzFpzPK7M21bcbK3D+MochfYfgczTVLg/LeakVXhCR/c7CW8d8TOlqz7bwm8dEz608SCyFhNGu6omKLp0PWZhm1fnapoOtUJ37xDe+eJvW0oRxwtcfsl7WSZA+imfOeAHRsYhPN7It+MPrO9m8jXamwnm6B0tqjWwp57vTDjPW92Cmp7ZfMl3P/Mi5dpvVjl4YfSdHg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(396003)(366004)(39860400002)(136003)(33656002)(9686003)(83380400001)(55016002)(8936002)(71200400001)(8676002)(86362001)(478600001)(54906003)(66476007)(52536014)(186003)(26005)(4326008)(66556008)(5660300002)(10290500003)(64756008)(110136005)(6506007)(66946007)(316002)(8990500004)(82950400001)(66446008)(82960400001)(2906002)(76116006)(7696005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?IXeWTZxusXCRlobGCSCXn2dZ29eGPJy3VniwD4B/KVLGuJNY/bpH5YUDCaAz?=
- =?us-ascii?Q?cULmBy6HYURNz5o8r2DUU+BNjtfu2zcKLcxWMZyFAAIHhTZZKbGf5qp3Rcfl?=
- =?us-ascii?Q?wJGRDNI1XZFcN38OKdQqlMBmttv13Co6UeZbY5FMTA57a+5McqHbChOHaOrw?=
- =?us-ascii?Q?frhUgoBeOmfcNFs+LisiMZKivtsMe6b/gnDe2W8GkfelVAcjpTvRQtmP9liv?=
- =?us-ascii?Q?BfIUWfXifMnKoWQ1wcEVGMTnYThA1yWgzIjxBM40VQed1XeqjKBXp9CGvBp+?=
- =?us-ascii?Q?mABPIWhAcJEFheVxK2WjzhngnxExJFcC9CBGd+X4/GIDESryVtRBCZ7U5doH?=
- =?us-ascii?Q?v38Nq0b/fFoq+tiABXh1u55WpmJONJOwyP2+3bZM5oKhBHv9wPasGWzNlvKE?=
- =?us-ascii?Q?U4RQqyGkkX9XhNW5+nWeL6i6Xg/xgZT5e7AwbxAosYKC7kjQu56D8Uoq/uwF?=
- =?us-ascii?Q?OJzUm8X+WwfqGBLNkO9h1w6Y5S7cn9PDeNDKtWQpG6Il/sQ9ZjZZcrLPMxPo?=
- =?us-ascii?Q?3kHbf1jZyvCQ8fxuQ2NuHsOc66asdqyml8PFUaoVpz72Thl3N1KGywiy+hm7?=
- =?us-ascii?Q?heN6fGjLL5WqAce26UDvYqwWSZY2uAK0nx0z1/y3oSC4NuMdfMKKLmYiZlV8?=
- =?us-ascii?Q?mL6MHRpciSOvK5GIBYEL17GvjZfQ/2whxPVDzRUp2Lb0rgRQZUGqzDiBWcK9?=
- =?us-ascii?Q?lzhYnD82+5JaJVXQtju5mygneiF8SPvWv/4qZlVITF7FFuT6cEs3omcxVYPh?=
- =?us-ascii?Q?AFCclPByNrjGQYY7sd/i7Dbp/RJTLpDU99sGJwZEDSds02yO4s4zYrm1r0V/?=
- =?us-ascii?Q?8sWIItFP1Mdf3uFa7GkNSPTlBtuYzscMKCgvJITfHlO6a+OvkVtV6RZ1U2O3?=
- =?us-ascii?Q?vxDyg/aQVedqhNPKCvj2glxuwplzleLRZsWYRPF2S3BL8UcvO2Wqnmb7YNGb?=
- =?us-ascii?Q?hnm+bKJiTaS4nWRoOTCbmVWzxIoq4JCYaeNzZvQpgcQ=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 63bef3bf-bbc6-478d-cff2-08d8a367d6b7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2020 15:16:05.1105
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Bjghd1T/lQJoqRiCuivdOE6/iH8fycWLw29CkLdCly6OkfZHUTxWhLspRxOEMtbt20DO7mGqtl3jw6gzhdj82LfLx1JQy3f0dVBw9rb5+AE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR21MB0144
+        id S1728264AbgLRPSA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Dec 2020 10:18:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39228 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727333AbgLRPSA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 10:18:00 -0500
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC872C0617A7;
+        Fri, 18 Dec 2020 07:17:19 -0800 (PST)
+Received: by mail-ej1-x62a.google.com with SMTP id ga15so3726606ejb.4;
+        Fri, 18 Dec 2020 07:17:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=apAt9xundZHmJSgwp15nprTl70x9ZuCZUabeXQJw3as=;
+        b=P73NPEKhXNv0vOZl1hhFHBQJDTK7gQ+EM59/UaHsASO5HIpJlRbvCR9z0CMM2NcyMv
+         xbLMBH/qa/bGk7PDECJLoh9j7RnwOW9jhrMwU3Ie/XKKfvJoDMXy4QApyLSK44ekfUM0
+         mCVKwjhRXUtOgA22UDMGWZGqi9WkaY6o5YXE+XuEvOTw2qFJP6TMCTYD5LvCOuc5Zh3J
+         GHSaKBeeP0ntyLrWeR8C42jRv9bX4nfl0UQKVU3A+mzPypVqH97kSgWgq+ldLZmLc98Z
+         MJCWqVXB85nxLYrK1WC3wDs1FqETGr9sJxzmLaW0UDbRIoo5dT8nL+ITU/B1YgV/+lgU
+         Unaw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=apAt9xundZHmJSgwp15nprTl70x9ZuCZUabeXQJw3as=;
+        b=R53TnggoY6QafxF3Qes81mx/bmqYi0o0RcN2tm/sKfVyuDPulKQ8cWhbFvSyVFMLRM
+         639PwMbgaUcbqn10smMvK6g08mIaz7MppkoNA7Xwf6+0r1W0HreSe+lI1l2vo9Tgj7fS
+         xZb8RhIKQK3NxUC3LsS7JUFjHfKcFkay0SmKVH6j9fiVu3ZOjJXGiGi0UtV5Sreh5Gec
+         EPLdUveMJkkHnnywpiD0jWMgdDWXdK6SZpmD/2idgYPEa2eXdhIbCx47ZHi1Bwb37huD
+         4qR/Sl5vgl3zLxc0HRRuS7Z9O3mgQA3l/Nr1pYXt36KEUtzCWZ6Dt/jkYxk7lLwkKU5A
+         ZK2w==
+X-Gm-Message-State: AOAM5323gTStqK91aCDpCw9VQmgKZjoIXfFkTvCLuvZxQu3tdaVAFjO4
+        Do4zKEGz8jo57Z5q8zuCd0k=
+X-Google-Smtp-Source: ABdhPJymTc8tS/QqUhr6K6tcueWZu0FjIhYxstZZh6g2Xb6pVYQBNVjnAzc60mOKKsT3DywTSbylpg==
+X-Received: by 2002:a17:906:3683:: with SMTP id a3mr4390776ejc.538.1608304637880;
+        Fri, 18 Dec 2020 07:17:17 -0800 (PST)
+Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
+        by smtp.googlemail.com with ESMTPSA id ef11sm5557130ejb.15.2020.12.18.07.17.16
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 18 Dec 2020 07:17:17 -0800 (PST)
+Message-ID: <de305f4d6034950908e8e889c4af5442431e7d15.camel@gmail.com>
+Subject: Re: [PATCH V3] scsi: ufs-debugfs: Add error counters
+From:   Bean Huo <huobean@gmail.com>
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Date:   Fri, 18 Dec 2020 16:17:16 +0100
+In-Reply-To: <20201218122027.27472-1-adrian.hunter@intel.com>
+References: <20201218122027.27472-1-adrian.hunter@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Andrea Parri (Microsoft) <parri.andrea@gmail.com> Sent: Thursday, Dec=
-ember 17, 2020 12:33 PM
->=20
-> Check that the packet is of the expected size at least, don't copy data
-> past the packet.
->=20
-> Reported-by: Saruhan Karademir <skarade@microsoft.com>
-> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
+On Fri, 2020-12-18 at 14:20 +0200, Adrian Hunter wrote:
+> People testing have a need to know how many errors might be occurring
+> over time. Add error counters and expose them via debugfs.
+> 
+> A module initcall is used to create a debugfs root directory for
+> ufshcd-related items. In the case that modules are built-in, then
+> initialization is done in link order, so move ufshcd-core to the top
+> of
+> the Makefile.
+> 
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
 > ---
->  drivers/scsi/storvsc_drv.c | 6 ++++++
->  1 file changed, 6 insertions(+)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 8714355cb63e7..4b8bde2750fac 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1250,6 +1250,12 @@ static void storvsc_on_channel_callback(void *cont=
-ext)
->  		request =3D (struct storvsc_cmd_request *)
->  			((unsigned long)desc->trans_id);
->=20
-> +		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) -
-> +				stor_device->vmscsi_size_delta) {
-> +			dev_err(&device->device, "Invalid packet len\n");
-> +			continue;
-> +		}
+> 
+> 
+> Changes in V3:
+> 	Fixed link order to ensure correct initcall ordering when
+> 	modules are built-in.
+> 	Amended commit message accordingly.
+> 
+> Changes in V2:
+> 	Add missing '#include "ufs-debugfs.h"' in ufs-debugfs.c
+> 	Reported-by: kernel test robot <lkp@intel.com>
+> 
+> 
+>  drivers/scsi/ufs/Makefile      | 13 +++++---
+>  drivers/scsi/ufs/ufs-debugfs.c | 56
+> ++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-debugfs.h | 22 +++++++++++++
+>  drivers/scsi/ufs/ufshcd.c      | 19 ++++++++++++
+>  drivers/scsi/ufs/ufshcd.h      |  5 +++
+>  5 files changed, 111 insertions(+), 4 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/ufs-debugfs.c
+>  create mode 100644 drivers/scsi/ufs/ufs-debugfs.h
+> 
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 4679af1b564e..06f3a3fe4a44 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -1,5 +1,14 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  # UFSHCD makefile
 > +
->  		if (request =3D=3D &stor_device->init_request ||
->  		    request =3D=3D &stor_device->reset_request) {
->  			memcpy(&request->vstor_packet, packet,
-> --
-> 2.25.1
+> +# The link order is important here. ufshcd-core must initialize
+> +# before vendor drivers.
+> +obj-$(CONFIG_SCSI_UFSHCD)		+= ufshcd-core.o
+> +ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+> +ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
+> +ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+> +ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
+> +
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o
+> tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o
+> ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
+> @@ -7,10 +16,6 @@ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs_qcom.o
+>  ufs_qcom-y += ufs-qcom.o
+>  ufs_qcom-$(CONFIG_SCSI_UFS_CRYPTO) += ufs-qcom-ice.o
+>  obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
+> -obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+> -ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+> -ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+> -ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO) += ufshcd-crypto.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+> diff --git a/drivers/scsi/ufs/ufs-debugfs.c b/drivers/scsi/ufs/ufs-
+> debugfs.c
+> new file mode 100644
+> index 000000000000..dee98dc72d29
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-debugfs.c
+> @@ -0,0 +1,56 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +// Copyright (C) 2020 Intel Corporation
+> +
+> +#include <linux/debugfs.h>
+> +
+> +#include "ufs-debugfs.h"
+> +#include "ufshcd.h"
+> +
+> +static struct dentry *ufs_debugfs_root;
+> +
+> +void __init ufs_debugfs_init(void)
+> +{
+> +	ufs_debugfs_root = debugfs_create_dir("ufshcd", NULL);
+> +}
+> +
+> +void __exit ufs_debugfs_exit(void)
+> +{
+> +	debugfs_remove_recursive(ufs_debugfs_root);
+> +}
+> +
+> +static int ufs_debugfs_stats_show(struct seq_file *s, void *data)
+> +{
+> +	struct ufs_hba *hba = s->private;
+> +	struct ufs_event_hist *e = hba->ufs_stats.event;
+> +
+> +#define PRT(fmt, typ) \
+> +	seq_printf(s, fmt, e[UFS_EVT_ ## typ].cnt)
+> +
+> +	PRT("PHY Adapter Layer errors (except LINERESET): %llu\n",
+> PA_ERR);
+> +	PRT("Data Link Layer errors: %llu\n", DL_ERR);
+> +	PRT("Network Layer errors: %llu\n", NL_ERR);
+> +	PRT("Transport Layer errors: %llu\n", TL_ERR);
+> +	PRT("Generic DME errors: %llu\n", DME_ERR);
+> +	PRT("Auto-hibernate errors: %llu\n", AUTO_HIBERN8_ERR);
+> +	PRT("IS Fatal errors (CEFES, SBFES, HCFES, DFES): %llu\n",
+> FATAL_ERR);
+> +	PRT("DME Link Startup errors: %llu\n", LINK_STARTUP_FAIL);
+> +	PRT("PM Resume errors: %llu\n", RESUME_ERR);
+> +	PRT("PM Suspend errors : %llu\n", SUSPEND_ERR);
+> +	PRT("Logical Unit Resets: %llu\n", DEV_RESET);
+> +	PRT("Host Resets: %llu\n", HOST_RESET);
+> +	PRT("SCSI command aborts: %llu\n", ABORT);
+> +#undef PRT
+> +	return 0;
+> +}
+> +DEFINE_SHOW_ATTRIBUTE(ufs_debugfs_stats);
+> +
+> +void ufs_debugfs_hba_init(struct ufs_hba *hba)
+> +{
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+I prefer adding:
+	if (!ufs_debugfs_root)
+		return;
+
+> +	hba->debugfs_root = debugfs_create_dir(dev_name(hba->dev),
+> ufs_debugfs_root);
+
+> +	debugfs_create_file("stats", 0400, hba->debugfs_root, hba,
+> &ufs_debugfs_stats_fops);
+
+	if (!debugfs_create_file("stats", 0400, hba->debugfs_root, hba,
+		&ufs_debugfs_stats_fops)) {
+		debugfs_remove(hba->debugfs_root);
+		return -ENOMEM;
+	}
+
+
+Thanks,
+Bean
 
