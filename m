@@ -2,257 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D086C2BBD4
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 14:16:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BCAC2BBCF
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 15:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD5EC23AAA
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 14:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36BAF23B1B
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 15:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726552AbgLROQq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Dec 2020 09:16:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58010 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725911AbgLROQq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 09:16:46 -0500
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC5D7C0617A7;
-        Fri, 18 Dec 2020 06:16:05 -0800 (PST)
-Received: by mail-ed1-x534.google.com with SMTP id g24so2485792edw.9;
-        Fri, 18 Dec 2020 06:16:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=+nucGu/R5qWhkpLMXuzJRlIsEJPlQwdtfmWcftTE18M=;
-        b=G43ZG+6m3i/p7EQz5uneQFP63CkYk0aezaKKXoLUPNYXKhO99iM26nSrwXIDPy8NZI
-         j4X9Hoc9NSWgKcgKMyMX/hO8u1ClSUKxDXd6NYNBmhnCmkf2AkpIEbGgQlyLPKim6Gxq
-         AlpUp2lvhnvAER4Ey7ZL9xz0Pe2n8IKsDJsxTB3GgHlyuTBf2d/L3AQnW+N4TZbQcABv
-         YXyU6IM8F0QTIqCsDGUXhHm4oFyCGeF6rQtamHR9NO2/44lptRGSru6RU/s7VJqYSWVL
-         6raqloLhRJ18XvHJX40admz55xXY562VytF7VS+VgB7vL32VEXo9brw4iVdZldLQphj9
-         Wdeg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=+nucGu/R5qWhkpLMXuzJRlIsEJPlQwdtfmWcftTE18M=;
-        b=PiO0pcd+gpgMKpMYncktYSWPr/Klf95eUDfWWDPYhCKDG41hWDKelaCrOXVOpTFaYz
-         6+Uosg1GGXj7rliInXSzij88OXfKIdvCfX0OBD7RQszuQYTPRe6PsaIvMLQfx8mO7hif
-         RcmnffgdQd0Rvx2i069NPREETet7+bl+AY3+389GtsG6py5uW/je/sgL0fyN0lCIzmPj
-         54BJ8SdPJUOoohA8ZOrum8eYWlwgMGppQ5ExMu5oXU5z8kbRQpL7ECMO+bBbsEeMeWXw
-         CaHTOWOZlEGoONIcjBvJTB1R8G3jXUKKf/FGxePvCqXx6QnoUU4Pzu8BkZRZFSIxqGwW
-         HP7g==
-X-Gm-Message-State: AOAM532nqm4riN3xWrY0X9Vi/hb5Wo1gp9sTV8yNfhEt0Q8MjfYW7xt3
-        Z8THqG1hGrcBhd9SdHmQDvv6vFXtfxs=
-X-Google-Smtp-Source: ABdhPJznZhgm1nYHGiwC3Xnp3Gi4I82wja3mD/ViwXh8RfP+Gok2KBlbuZmzsBD5pzqEezxDTU3Olw==
-X-Received: by 2002:aa7:c886:: with SMTP id p6mr4695705eds.352.1608300964167;
-        Fri, 18 Dec 2020 06:16:04 -0800 (PST)
-Received: from localhost (ipbcc05d1b.dynamic.kabel-deutschland.de. [188.192.93.27])
-        by smtp.gmail.com with ESMTPSA id n8sm5580036eju.33.2020.12.18.06.16.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Dec 2020 06:16:03 -0800 (PST)
-From:   Bodo Stroesser <bostroesser@gmail.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bodo Stroesser <bostroesser@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH] scsi: target: tcmu: Fix wrong uio handling causing big memory leak
-Date:   Fri, 18 Dec 2020 15:15:34 +0100
-Message-Id: <20201218141534.9918-1-bostroesser@gmail.com>
-X-Mailer: git-send-email 2.12.3
+        id S1728142AbgLRPIl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Dec 2020 10:08:41 -0500
+Received: from mail-mw2nam12on2123.outbound.protection.outlook.com ([40.107.244.123]:48746
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727778AbgLRPIk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Dec 2020 10:08:40 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=I8OQ+6WSUwdvW9oyjSXdv5ei/Ok3YpjJktP6dgz1jYvsedjUE9cDrYHvec5zqkeiq8nRsUvXVkzspigK6HSC/SV9fyIr0Tu+bCkyT+SqqSi08Jxo/YUFePLHo8bQftTzlJagwMl0m7VI29YUGx4eMFoyYHHfT1Q/eYzZADZUaL9ggJJOklF3VY6rd531VoV7ESY5Mt4hu0AYKtvkMIKGAQZv6uVunfbKFU+bubRxKzCcqMfsjEGNhZF81v/Bsyg4HzB/Lxu87YWLTKP/PuA1E8cYQ9okim73Js3oP9oWi++Rk6qhq3jqPZ3Vw/0f5Gwg7OzLy7NBBJVac2NEDXDwIw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DSjVd3dGh2NwivEOw/7NBooS/F3Z4/zRjKGqE1gXmDI=;
+ b=bn13maVMokWi7nyfJmQlLnW8NCU9DF3K9nkaMdb5LnnU6UU541NbFiKvRdOoKtMti5BlreH8GI/DrMSdiDIJ80Zz5G6kIFlvMak+RL8hxvn4rSkZNSClDs4hglp8LnBDGrY8VM64lY3lNSx+hF2KhyzNlbs3mU6aq8V0jptil46ZUMwRK+was9CSnMSqe3A7HTfXqc80KB8Em+Fe3DA6AQEIQVhemaVf5H9HA0Q8w5bd5huWPFOafjR0l5a3NgrYv5PS2B2V3LmXGlqOWd4CFVMEw8jAzu19Db0uvSjzORnm4kpAYVXe+dJ7Q30gAjDHXwCT55RWh5zBWqrcK651tA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DSjVd3dGh2NwivEOw/7NBooS/F3Z4/zRjKGqE1gXmDI=;
+ b=cEl43mF8SdbPB1kHhzxg6tX6f0JxaoOxBBdoCoHOzejPR+AMFIvNsW3mjreMU9bM9n22NuhIX7BLfs5kN2CyjkW6W5Y/gsfPSEWwSzxq5NsRovTMVPGjZniTFMgFtQqCxkftcCvdAGBJPONWLH1hUPco2H3x7s7y/fLtVWJYYVU=
+Received: from (2603:10b6:302:a::16) by
+ MW2PR2101MB1115.namprd21.prod.outlook.com (2603:10b6:302:a::32) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3700.4; Fri, 18 Dec
+ 2020 15:07:52 +0000
+Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::b8f6:e748:cdf2:1922]) by MW2PR2101MB1052.namprd21.prod.outlook.com
+ ([fe80::b8f6:e748:cdf2:1922%8]) with mapi id 15.20.3700.013; Fri, 18 Dec 2020
+ 15:07:52 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>
+CC:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Saruhan Karademir <skarade@microsoft.com>,
+        Juan Vazquez <juvazq@microsoft.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH 1/3] scsi: storvsc: Fix max_outstanding_req_per_channel
+ for Win8 and newer
+Thread-Topic: [PATCH 1/3] scsi: storvsc: Fix max_outstanding_req_per_channel
+ for Win8 and newer
+Thread-Index: AQHW1LPvPZ56fjBVbkqBx99pNtyZpan89Xeg
+Date:   Fri, 18 Dec 2020 15:07:52 +0000
+Message-ID: <MW2PR2101MB10521DA0EE7FFDB533C7C574D7C39@MW2PR2101MB1052.namprd21.prod.outlook.com>
+References: <20201217203321.4539-1-parri.andrea@gmail.com>
+ <20201217203321.4539-2-parri.andrea@gmail.com>
+In-Reply-To: <20201217203321.4539-2-parri.andrea@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-12-18T15:07:51Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=2154cf1e-541e-47c6-843f-e2e2f481e485;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=microsoft.com;
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 30d636aa-d8aa-4b7f-3b9e-08d8a366b144
+x-ms-traffictypediagnostic: MW2PR2101MB1115:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MW2PR2101MB1115A254172404CD70C52F5FD7C39@MW2PR2101MB1115.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:6108;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: JgNnan3xvSJC6kDi6qnnPYmCSea3N2fKc99WfJYElO4Shtbm9vlnIZIH4kX0c3ngwbw0U1nh0nBBzetqUFkta5ARt3Fg1A7VOnUrkzDD16i0gVojFdy8l08RQFFPUBUUq5TdLrb/9f2yIzKvTFUWkf2o7+YG8DP+cGI9/hE3AcxITwCyBS183gfpvfXuPzdqlyxj+f1vIAVq3JaV+43wMJRH41UmVqnE8/eXQFRIXMB53TUE5k4J9hyCq25i6NB9Pb3PIHLMBcy71X+on/tTbsXRNzw01bB71FeabqZ80/4kpkzYoczuVPKV/1c0rJfv+cAxdiejGoMPE8IYeONfkMFSyQiBFZlUSbsHPDQdTZXlBWNTO74okiPApLQNsmXLP56TKvk0ZI/2E/4Ko7mBMg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(346002)(366004)(396003)(376002)(136003)(6506007)(8990500004)(9686003)(8936002)(55016002)(82960400001)(54906003)(110136005)(10290500003)(4326008)(5660300002)(76116006)(2906002)(83380400001)(26005)(82950400001)(186003)(66446008)(86362001)(66946007)(71200400001)(64756008)(33656002)(478600001)(52536014)(316002)(8676002)(66476007)(7696005)(66556008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?xkLuKH0e9icePnMYhhMG8ZvWZiXfOU1NRO0LMEK9J48DxEmRrB0diIVYkdKQ?=
+ =?us-ascii?Q?P0ekAvYKf9kQj65/7AEA9P/2CC20tEP8oesY3s0+ZHAbxOnYLwbgMscn822M?=
+ =?us-ascii?Q?NI2uoCke2bH+vzqGFnmvqUXgOxPMJ8OwpOVtTO9MpUWsfVHY2uA3RUOuv1g8?=
+ =?us-ascii?Q?fdbzECgp89/2QqmoAQFXvQCAGPueBBTZdcshBuOL60KjGv13mq/fUFtcviqE?=
+ =?us-ascii?Q?t0wzFgYhnbskg4xsOCOruX4seakWTE0H0ErT2yVD+5Y4ZnGG7QIugxGS/YG0?=
+ =?us-ascii?Q?GFEhnHN2yPNTcoYO3tylHTPE/p2K03d28WDgdpAAZ7CVEDdgnQuJ/MTpbJxy?=
+ =?us-ascii?Q?+XsFYDwSA9ZNqso4ujKSrYmxRpgbUgcmXyEmU7RMcWx0/ptCgnhYfU9qad3c?=
+ =?us-ascii?Q?UFsKqjenRnrGMR/ehLPd/vnj03u2JSsgmCw8tAtA/sBW4A7034yjMdT9GKfR?=
+ =?us-ascii?Q?Qen+Z3+BXYNKSgQsw312IL4jn5QYMvI5JqpkuCgdEvXHmDCmugP4jcPSlpYl?=
+ =?us-ascii?Q?nQ/e4R43vn67E4ShgYWDZMtgwiuE9BtCYKO4rbHIts0xNumMrq+m/hiqFPMF?=
+ =?us-ascii?Q?DvQKS4BcrTqGo0FqMA0+zNLGvEwPdV5VHq4qqrZvE5D6zFlVCSL3TZpfeS63?=
+ =?us-ascii?Q?1//Sb/RtLc5Mtlerr6s51FtieRz4INdJEeQjZqib+1G/jQEKSdX37oMrLuiL?=
+ =?us-ascii?Q?3RoDU0ScKshNXGYbTkMMf8p2U0s35Us4Sjf7GyEENIYpymefdB2rnte8dSY0?=
+ =?us-ascii?Q?jYZrYQZ/5zFequ7AHpKt65mhTIaBoPqmRLfuA82M0KY07aI7E7mwnTPwcb8R?=
+ =?us-ascii?Q?JXD2oxji+MdyJa/RO3ewO8pce0MXa/iI4vezMhsYKq/3Et6i3bE/4w2guWob?=
+ =?us-ascii?Q?BlsDrIY5nDr07iHx6I5jlpvyOZizTzY1SGS+LZEeHZwxIBJIuzDMAK67SF0m?=
+ =?us-ascii?Q?E6fnABd67NoI6NSaWD8JNZ35wCLUL3PnuomfPu/XPTw=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30d636aa-d8aa-4b7f-3b9e-08d8a366b144
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Dec 2020 15:07:52.7416
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: tcN2uWZiFHNgUcRcEVnP2dejIA1EHwDk+3deytNgDBaHPNp5f0hv7t3UZGJ7wtncVZoa0ar9fP7V0UqvRQMohkAu2NUr0OJibYqosFau/Cg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB1115
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tcmu calls uio_unregister_device from tcmu_destroy_device.
-After that uio will never call tcmu_release for this device.
-If userspace still had the uio device open and / or mmap'ed
-during uio_unregister_device, tcmu_release will not be called and
-udev->kref will never go down to 0.
+From: Andrea Parri (Microsoft) <parri.andrea@gmail.com> Sent: Thursday, Dec=
+ember 17, 2020 12:33 PM
+>=20
+> Current code overestimates the value of max_outstanding_req_per_channel
+> for Win8 and newer hosts, since vmscsi_size_delta is set to the initial
+> value of sizeof(vmscsi_win8_extension) rather than zero.  This may lead
+> to wrong decisions when using ring_avail_percent_lowater equals to zero.
+> The estimate of max_outstanding_req_per_channel is 'exact' for Win7 and
+> older hosts.  A better choice, keeping the algorithm for the estimation
+> simple, is to err the other way around, i.e., to underestimate for Win7
+> and older but to use the exact value for Win8 and newer.
+>=20
+> Suggested-by: Dexuan Cui <decui@microsoft.com>
+> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/scsi/storvsc_drv.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index ded00a89bfc4e..64298aa2f151e 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -2141,12 +2141,15 @@ static int __init storvsc_drv_init(void)
+>  	 * than the ring buffer size since that page is reserved for
+>  	 * the ring buffer indices) by the max request size (which is
+>  	 * vmbus_channel_packet_multipage_buffer + struct vstor_packet + u64)
+> +	 *
+> +	 * The computation underestimates max_outstanding_req_per_channel
+> +	 * for Win7 and older hosts because it does not take into account
+> +	 * the vmscsi_size_delta correction to the max request size.
+>  	 */
+>  	max_outstanding_req_per_channel =3D
+>  		((storvsc_ringbuffer_size - PAGE_SIZE) /
+>  		ALIGN(MAX_MULTIPAGE_BUFFER_PACKET +
+> -		sizeof(struct vstor_packet) + sizeof(u64) -
+> -		vmscsi_size_delta,
+> +		sizeof(struct vstor_packet) + sizeof(u64),
+>  		sizeof(u64)));
+>=20
+>  #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+> --
+> 2.25.1
 
-So tcmu in this situation will not free:
- - cmds or tmrs still in the queue or the ring
- - all pages allocated for mailbox and cmd_ring (vmalloc)
- - all pages allocated for data space
- - the udev itself
-
-The vmalloc'ed area is 8 MB, amount of pages allocated for data
-space depends on previous usage of the tcmu device. Theoretically
-that can be up to 1GB.
-
-This patch moves the call of uio_unregister_device to the
-beginning of tcmu_dev_kref_release, which is called when
-udev->kref drops down to zero. So we know, that uio device is
-closed and unmap'ed.
-
-In case tcmu_realease drops the last kref, we would end up doing
-the uio_unregister_device from a function called by uio_release,
-which causes the process to block forever.
-So we now do the kref_put from new worker function
-tcmu_release_work_fn which is scheduled by tcmu_release.
-
-To make userspace still aware of the device being deleted,
-tcmu_destroy_device instead of uio_unregister_device now does:
- - sets a bit in udev, so that tcmu_open and tcmu_mmap can check
-   and fail with -EIO
- - resets udev->uio_info->irq to 0, so uio will fail read() and
-   write() with -EIO
- - wakes up userspace possibly waiting in read(), so the read
-   fails with -EIO
-
-Avoid possible races in tcmu_open by replacing kref_get with
-kref_get_unless_zero.
-
-Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
----
- drivers/target/target_core_user.c | 54 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 50 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 0458bfb143f8..080760985ebf 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -21,6 +21,7 @@
- #include <linux/configfs.h>
- #include <linux/mutex.h>
- #include <linux/workqueue.h>
-+#include <linux/delay.h>
- #include <net/genetlink.h>
- #include <scsi/scsi_common.h>
- #include <scsi/scsi_proto.h>
-@@ -109,6 +110,7 @@ struct tcmu_nl_cmd {
- struct tcmu_dev {
- 	struct list_head node;
- 	struct kref kref;
-+	struct work_struct release_work;
- 
- 	struct se_device se_dev;
- 
-@@ -119,6 +121,7 @@ struct tcmu_dev {
- #define TCMU_DEV_BIT_BROKEN 1
- #define TCMU_DEV_BIT_BLOCKED 2
- #define TCMU_DEV_BIT_TMR_NOTIFY 3
-+#define TCMU_DEV_BIT_GOING_DOWN 4
- 	unsigned long flags;
- 
- 	struct uio_info uio_info;
-@@ -1527,6 +1530,8 @@ static void tcmu_detach_hba(struct se_hba *hba)
- 	hba->hba_ptr = NULL;
- }
- 
-+static void tcmu_release_work_fn(struct work_struct *work);
-+
- static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
- {
- 	struct tcmu_dev *udev;
-@@ -1542,6 +1547,8 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
- 		return NULL;
- 	}
- 
-+	INIT_WORK(&udev->release_work, tcmu_release_work_fn);
-+
- 	udev->hba = hba;
- 	udev->cmd_time_out = TCMU_TIME_OUT;
- 	udev->qfull_time_out = -1;
-@@ -1719,6 +1726,9 @@ static int tcmu_mmap(struct uio_info *info, struct vm_area_struct *vma)
- {
- 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
- 
-+	if (test_bit(TCMU_DEV_BIT_GOING_DOWN, &udev->flags))
-+		return -EIO;
-+
- 	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
- 	vma->vm_ops = &tcmu_vm_ops;
- 
-@@ -1735,12 +1745,17 @@ static int tcmu_open(struct uio_info *info, struct inode *inode)
- {
- 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
- 
-+	if (test_bit(TCMU_DEV_BIT_GOING_DOWN, &udev->flags))
-+		return -EIO;
-+
- 	/* O_EXCL not supported for char devs, so fake it? */
- 	if (test_and_set_bit(TCMU_DEV_BIT_OPEN, &udev->flags))
- 		return -EBUSY;
- 
- 	udev->inode = inode;
--	kref_get(&udev->kref);
-+	if (!kref_get_unless_zero(&udev->kref))
-+		/* Race between open and device going down */
-+		return -EIO;
- 
- 	pr_debug("open\n");
- 
-@@ -1799,6 +1814,8 @@ static void tcmu_dev_kref_release(struct kref *kref)
- 	bool all_expired = true;
- 	int i;
- 
-+	uio_unregister_device(&udev->uio_info);
-+
- 	vfree(udev->mb_addr);
- 	udev->mb_addr = NULL;
- 
-@@ -1827,6 +1844,15 @@ static void tcmu_dev_kref_release(struct kref *kref)
- 	call_rcu(&dev->rcu_head, tcmu_dev_call_rcu);
- }
- 
-+static void tcmu_release_work_fn(struct work_struct *work)
-+{
-+	struct tcmu_dev *udev = container_of(work, struct tcmu_dev,
-+					     release_work);
-+
-+	/* release ref from open */
-+	kref_put(&udev->kref, tcmu_dev_kref_release);
-+}
-+
- static int tcmu_release(struct uio_info *info, struct inode *inode)
- {
- 	struct tcmu_dev *udev = container_of(info, struct tcmu_dev, uio_info);
-@@ -1834,8 +1860,17 @@ static int tcmu_release(struct uio_info *info, struct inode *inode)
- 	clear_bit(TCMU_DEV_BIT_OPEN, &udev->flags);
- 
- 	pr_debug("close\n");
--	/* release ref from open */
--	kref_put(&udev->kref, tcmu_dev_kref_release);
-+
-+	/*
-+	 * We must not put kref directly from here, since dropping down kref to
-+	 * zero would implicitly call tcmu_dev_kref_release, which calls
-+	 * uio_unregister_device --> process hangs forever, since tcmu_release
-+	 * is called from uio.
-+	 * So we leave it to tcmu_release_work_fn to put the kref.
-+	 */
-+	while (!schedule_work(&udev->release_work))
-+		usleep_range(1000, 5000);
-+
- 	return 0;
- }
- 
-@@ -2166,7 +2201,18 @@ static void tcmu_destroy_device(struct se_device *dev)
- 
- 	tcmu_send_dev_remove_event(udev);
- 
--	uio_unregister_device(&udev->uio_info);
-+	/*
-+	 * We must not call uio_unregister_device here. If there is a userspace
-+	 * process with open or mmap'ed uio device, uio would not call
-+	 * tcmu_release on later unmap or close.
-+	 */
-+
-+	/* reset uio_info->irq, so uio will reject read() and write() */
-+	udev->uio_info.irq = 0;
-+	/* Set bit, so we can reject later calls to tcmu_open and tcmu_mmap */
-+	set_bit(TCMU_DEV_BIT_GOING_DOWN, &udev->flags);
-+	/* wake up possible sleeper in uio_read(), it will return -EIO */
-+	uio_event_notify(&udev->uio_info);
- 
- 	/* release ref from configure */
- 	kref_put(&udev->kref, tcmu_dev_kref_release);
--- 
-2.12.3
-
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
