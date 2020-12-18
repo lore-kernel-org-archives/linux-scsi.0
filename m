@@ -2,280 +2,515 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F30B1C35296
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 20:45:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 908DCC3526F
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 23:20:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE27C23B70
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 20:45:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7132023BA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 23:20:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388257AbgLRUpi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Dec 2020 15:45:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731972AbgLRUpg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 15:45:36 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DADEC06138C;
-        Fri, 18 Dec 2020 12:44:56 -0800 (PST)
-From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1608324294;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iVAD+aDlMv+qFojj+svoaj4JfsRPU0GOUX34CODHS0g=;
-        b=UJlvRPf9v3+QhaZMLh+anR8EF464ohqGZqW5XZJwujVhCMqqFF7590vNerLtlQnbd3eiam
-        aTdc+dugtQdqewEqXPx3RTOjWoG8Dr6EKjLXUrjJGT8jUd61i2llU/7eEq20oU/EGS1xZf
-        WrjJQ3rd7PWDraNHaOHp0FEqUb3CvhdGIL8/IlnJD8x6fl2GCtcIKlP0nm1xVHNQZ8rAX8
-        H0bPaV/AwYl+9RQHO0k2CRWHklWeacbLn8nstQABBNu3quUgy2RGDzlY1OVo7dwiYs6CVX
-        V7la8M7YZNnOiIS84Ql0XIGxqAk2QNSq6hhxtDP1FR6pqoZvHRe0UlS9HWBS3w==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1608324294;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iVAD+aDlMv+qFojj+svoaj4JfsRPU0GOUX34CODHS0g=;
-        b=6Obq+kpjZ+QC+Z9f73u5+K3n2thYYnxvlTVpaHY6IympfJC/ed0eOXh99hOlOUZyCohqpc
-        pDH4oGkyTyOdfKBA==
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Jason Yan <yanaijie@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc:     linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Sebastian A. Siewior" <bigeasy@linutronix.de>,
-        "Ahmed S. Darwish" <a.darwish@linutronix.de>
-Subject: [PATCH 11/11] scsi: libsas: event notifiers: Remove non _gfp() variants
-Date:   Fri, 18 Dec 2020 21:43:54 +0100
-Message-Id: <20201218204354.586951-12-a.darwish@linutronix.de>
-In-Reply-To: <20201218204354.586951-1-a.darwish@linutronix.de>
-References: <20201218204354.586951-1-a.darwish@linutronix.de>
+        id S1726092AbgLRXUR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Dec 2020 18:20:17 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:21242 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725855AbgLRXUQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Dec 2020 18:20:16 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 0BIN2Brg077903;
+        Fri, 18 Dec 2020 18:19:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=JZJirEr2ZMKDam+PzZs2jlJjmCPtCO/qBj7ZlGBTUeI=;
+ b=AeUugJY2cnD8O14iQWRZv/2w26BxyQwp4wOr/ON4HKy3yopDCbZYI7jZU+xDJaCo4CYh
+ S7gsVaHt2EovYNYTzHEE60S9s4PZCZ12UMJlkYWUaAu4EL0Br+0OlKKZFly2jWhXL6VE
+ YXS1dy5xHKHroiTJXboGE+5FN0rrZWj1T82c+1nZLrtSnlArecHoO/a6duNN+tFKMUOo
+ /EIWzPyniYH1jQL0dyV4IsDhOYW3i4NqsWIrFqvPXrRSpYu2qhI3rHR1gz+y47gzqdTf
+ XxJh48K45/X1OWZ0AO9XfvlfXseamWyhsjD6jglrAGy31ySjy3DOxEZRTjE+jhuXmryC gQ== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 35h5qyg9hr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 18 Dec 2020 18:19:26 -0500
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0BINID9v014041;
+        Fri, 18 Dec 2020 23:19:25 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma04wdc.us.ibm.com with ESMTP id 35cng9tpyb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 18 Dec 2020 23:19:25 +0000
+Received: from b03ledav002.gho.boulder.ibm.com (b03ledav002.gho.boulder.ibm.com [9.17.130.233])
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0BINJO4I26673476
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Dec 2020 23:19:24 GMT
+Received: from b03ledav002.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 5FE8A13604F;
+        Fri, 18 Dec 2020 23:19:24 +0000 (GMT)
+Received: from b03ledav002.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 02708136053;
+        Fri, 18 Dec 2020 23:19:24 +0000 (GMT)
+Received: from vios4361.aus.stglabs.ibm.com (unknown [9.3.43.61])
+        by b03ledav002.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Fri, 18 Dec 2020 23:19:23 +0000 (GMT)
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+To:     james.bottomley@hansenpartnership.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        brking@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 2/5] ibmvfc: make command event pool queue specific
+Date:   Fri, 18 Dec 2020 17:19:13 -0600
+Message-Id: <20201218231916.279833-3-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201218231916.279833-1-tyreld@linux.ibm.com>
+References: <20201218231916.279833-1-tyreld@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2020-12-18_13:2020-12-18,2020-12-18 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ bulkscore=0 malwarescore=0 phishscore=0 priorityscore=1501 spamscore=0
+ adultscore=0 impostorscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2012180153
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All call-sites of below libsas APIs:
+There is currently a single command event pool per host. In anticipation
+of providing multiple queues add a per-queue event pool definition and
+reimplement the existing CRQ to use its queue defined event pool for
+command submission and completion.
 
-  - sas_alloc_event()
-  - sas_ha_struct::notify_port_event()
-  - sas_ha_struct::notify_phy_event()
-
-have been converted to use the new _gfp()-suffixed version.
-
-Remove the old APIs from libsas code, headers, and documentation.
-
-Signed-off-by: Ahmed S. Darwish <a.darwish@linutronix.de>
-Cc: John Garry <john.garry@huawei.com>
-Cc: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- Documentation/scsi/libsas.rst      |  2 -
- drivers/scsi/libsas/sas_event.c    | 72 +++++++-----------------------
- drivers/scsi/libsas/sas_init.c     | 15 +------
- drivers/scsi/libsas/sas_internal.h |  2 -
- include/scsi/libsas.h              |  2 -
- 5 files changed, 18 insertions(+), 75 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 95 ++++++++++++++++++----------------
+ drivers/scsi/ibmvscsi/ibmvfc.h | 10 ++--
+ 2 files changed, 55 insertions(+), 50 deletions(-)
 
-diff --git a/Documentation/scsi/libsas.rst b/Documentation/scsi/libsas.rst
-index dc85d0e4c107..7e1bf710760b 100644
---- a/Documentation/scsi/libsas.rst
-+++ b/Documentation/scsi/libsas.rst
-@@ -189,8 +189,6 @@ num_phys
- The event interface::
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index c8e7c4701ac4..8de2a25b05ee 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -852,12 +852,11 @@ static int ibmvfc_valid_event(struct ibmvfc_event_pool *pool,
+  **/
+ static void ibmvfc_free_event(struct ibmvfc_event *evt)
+ {
+-	struct ibmvfc_host *vhost = evt->vhost;
+-	struct ibmvfc_event_pool *pool = &vhost->pool;
++	struct ibmvfc_event_pool *pool = &evt->queue->evt_pool;
  
- 	/* LLDD calls these to notify the class of an event. */
--	void (*notify_port_event)(struct sas_phy *, enum port_event);
--	void (*notify_phy_event)(struct sas_phy *, enum phy_event);
- 	void (*notify_port_event_gfp)(struct sas_phy *, enum port_event, gfp_t);
- 	void (*notify_phy_event_gfp)(struct sas_phy *, enum phy_event, gfp_t);
- 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 31b733eeabf6..23aeb67f6381 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -131,57 +131,21 @@ static void sas_phy_event_worker(struct work_struct *work)
- 	sas_free_event(ev);
+ 	BUG_ON(!ibmvfc_valid_event(pool, evt));
+ 	BUG_ON(atomic_inc_return(&evt->free) != 1);
+-	list_add_tail(&evt->queue, &vhost->free);
++	list_add_tail(&evt->queue_list, &evt->queue->free);
  }
  
--static int __sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
--				   struct asd_sas_event *ev)
--{
--	struct sas_ha_struct *ha = phy->ha;
--	int ret;
--
--	BUG_ON(event >= PORT_NUM_EVENTS);
--
--	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
--
--	ret = sas_queue_event(event, &ev->work, ha);
--	if (ret != 1)
--		sas_free_event(ev);
--
--	return ret;
--}
--
- static int sas_notify_port_event_gfp(struct asd_sas_phy *phy,
- 				     enum port_event event,
- 				     gfp_t gfp_flags)
--{
--	struct asd_sas_event *ev;
--
--	ev = sas_alloc_event_gfp(phy, gfp_flags);
--	if (!ev)
--		return -ENOMEM;
--
--	return __sas_notify_port_event(phy, event, ev);
--}
--
--static int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event)
--{
--	struct asd_sas_event *ev;
--
--	ev = sas_alloc_event(phy);
--	if (!ev)
--		return -ENOMEM;
--
--	return __sas_notify_port_event(phy, event, ev);
--}
--
--static inline int __sas_notify_phy_event(struct asd_sas_phy *phy,
--					 enum phy_event event,
--					 struct asd_sas_event *ev)
+ /**
+@@ -898,7 +897,7 @@ static void ibmvfc_fail_request(struct ibmvfc_event *evt, int error_code)
+ 	} else
+ 		evt->xfer_iu->mad_common.status = cpu_to_be16(IBMVFC_MAD_DRIVER_FAILED);
+ 
+-	list_del(&evt->queue);
++	list_del(&evt->queue_list);
+ 	del_timer(&evt->timer);
+ 	ibmvfc_trc_end(evt);
+ 	evt->done(evt);
+@@ -917,7 +916,7 @@ static void ibmvfc_purge_requests(struct ibmvfc_host *vhost, int error_code)
+ 	struct ibmvfc_event *evt, *pos;
+ 
+ 	ibmvfc_dbg(vhost, "Purging all requests\n");
+-	list_for_each_entry_safe(evt, pos, &vhost->sent, queue)
++	list_for_each_entry_safe(evt, pos, &vhost->crq.sent, queue_list)
+ 		ibmvfc_fail_request(evt, error_code);
+ }
+ 
+@@ -1292,10 +1291,11 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+  *
+  * Returns zero on success.
+  **/
+-static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost)
++static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
++				  struct ibmvfc_queue *queue)
  {
- 	struct sas_ha_struct *ha = phy->ha;
-+	struct asd_sas_event *ev;
- 	int ret;
+ 	int i;
+-	struct ibmvfc_event_pool *pool = &vhost->pool;
++	struct ibmvfc_event_pool *pool = &queue->evt_pool;
  
--	BUG_ON(event >= PHY_NUM_EVENTS);
-+	BUG_ON(event >= PORT_NUM_EVENTS);
- 
--	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
-+	ev = sas_alloc_event_gfp(phy, gfp_flags);
-+	if (!ev)
-+		return -ENOMEM;
-+
-+	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
- 
- 	ret = sas_queue_event(event, &ev->work, ha);
- 	if (ret != 1)
-@@ -193,31 +157,27 @@ static inline int __sas_notify_phy_event(struct asd_sas_phy *phy,
- int sas_notify_phy_event_gfp(struct asd_sas_phy *phy, enum phy_event event,
- 			     gfp_t gfp_flags)
- {
-+	struct sas_ha_struct *ha = phy->ha;
- 	struct asd_sas_event *ev;
-+	int ret;
-+
-+	BUG_ON(event >= PHY_NUM_EVENTS);
- 
- 	ev = sas_alloc_event_gfp(phy, gfp_flags);
- 	if (!ev)
+ 	ENTER;
+ 	pool->size = max_requests + IBMVFC_NUM_INTERNAL_REQ;
+@@ -1312,6 +1312,9 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost)
  		return -ENOMEM;
+ 	}
  
--	return __sas_notify_phy_event(phy, event, ev);
--}
-+	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
++	INIT_LIST_HEAD(&queue->sent);
++	INIT_LIST_HEAD(&queue->free);
++
+ 	for (i = 0; i < pool->size; ++i) {
+ 		struct ibmvfc_event *evt = &pool->events[i];
+ 		atomic_set(&evt->free, 1);
+@@ -1319,8 +1322,9 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost)
+ 		evt->crq.ioba = cpu_to_be64(pool->iu_token + (sizeof(*evt->xfer_iu) * i));
+ 		evt->xfer_iu = pool->iu_storage + i;
+ 		evt->vhost = vhost;
++		evt->queue = queue;
+ 		evt->ext_list = NULL;
+-		list_add_tail(&evt->queue, &vhost->free);
++		list_add_tail(&evt->queue_list, &queue->free);
+ 	}
  
--int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
--{
--	struct asd_sas_event *ev;
-+	ret = sas_queue_event(event, &ev->work, ha);
-+	if (ret != 1)
-+		sas_free_event(ev);
+ 	LEAVE;
+@@ -1332,14 +1336,15 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost)
+  * @vhost:	ibmvfc host who owns the event pool
+  *
+  **/
+-static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost)
++static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
++				   struct ibmvfc_queue *queue)
+ {
+ 	int i;
+-	struct ibmvfc_event_pool *pool = &vhost->pool;
++	struct ibmvfc_event_pool *pool = &queue->evt_pool;
  
--	ev = sas_alloc_event(phy);
--	if (!ev)
--		return -ENOMEM;
--
--	return __sas_notify_phy_event(phy, event, ev);
-+	return ret;
+ 	ENTER;
+ 	for (i = 0; i < pool->size; ++i) {
+-		list_del(&pool->events[i].queue);
++		list_del(&pool->events[i].queue_list);
+ 		BUG_ON(atomic_read(&pool->events[i].free) != 1);
+ 		if (pool->events[i].ext_list)
+ 			dma_pool_free(vhost->sg_pool,
+@@ -1360,14 +1365,14 @@ static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost)
+  *
+  * Returns a free event from the pool.
+  **/
+-static struct ibmvfc_event *ibmvfc_get_event(struct ibmvfc_host *vhost)
++static struct ibmvfc_event *ibmvfc_get_event(struct ibmvfc_queue *queue)
+ {
+ 	struct ibmvfc_event *evt;
+ 
+-	BUG_ON(list_empty(&vhost->free));
+-	evt = list_entry(vhost->free.next, struct ibmvfc_event, queue);
++	BUG_ON(list_empty(&queue->free));
++	evt = list_entry(queue->free.next, struct ibmvfc_event, queue_list);
+ 	atomic_set(&evt->free, 0);
+-	list_del(&evt->queue);
++	list_del(&evt->queue_list);
+ 	return evt;
  }
  
- int sas_init_events(struct sas_ha_struct *sas_ha)
- {
--	sas_ha->notify_port_event = sas_notify_port_event;
--	sas_ha->notify_phy_event = sas_notify_phy_event;
--
- 	sas_ha->notify_port_event_gfp = sas_notify_port_event_gfp;
- 	sas_ha->notify_phy_event_gfp = sas_notify_phy_event_gfp;
+@@ -1512,7 +1517,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 	else
+ 		BUG();
  
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 2d2116f827c6..e08351f909fb 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -590,8 +590,8 @@ sas_domain_attach_transport(struct sas_domain_function_template *dft)
+-	list_add_tail(&evt->queue, &vhost->sent);
++	list_add_tail(&evt->queue_list, &evt->queue->sent);
+ 	timer_setup(&evt->timer, ibmvfc_timeout, 0);
+ 
+ 	if (timeout) {
+@@ -1524,7 +1529,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 
+ 	if ((rc = ibmvfc_send_crq(vhost, be64_to_cpu(crq_as_u64[0]),
+ 				  be64_to_cpu(crq_as_u64[1])))) {
+-		list_del(&evt->queue);
++		list_del(&evt->queue_list);
+ 		del_timer(&evt->timer);
+ 
+ 		/* If send_crq returns H_CLOSED, return SCSI_MLQUEUE_HOST_BUSY.
+@@ -1747,7 +1752,7 @@ static int ibmvfc_queuecommand_lck(struct scsi_cmnd *cmnd,
+ 	}
+ 
+ 	cmnd->result = (DID_OK << 16);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, ibmvfc_scsi_done, IBMVFC_CMD_FORMAT);
+ 	evt->cmnd = cmnd;
+ 	cmnd->scsi_done = done;
+@@ -1836,7 +1841,7 @@ static int ibmvfc_bsg_timeout(struct bsg_job *job)
+ 	}
+ 
+ 	vhost->aborting_passthru = 1;
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, ibmvfc_bsg_timeout_done, IBMVFC_MAD_FORMAT);
+ 
+ 	tmf = &evt->iu.tmf;
+@@ -1894,7 +1899,7 @@ static int ibmvfc_bsg_plogi(struct ibmvfc_host *vhost, unsigned int port_id)
+ 	if (unlikely((rc = ibmvfc_host_chkready(vhost))))
+ 		goto unlock_out;
+ 
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
+ 	plogi = &evt->iu.plogi;
+ 	memset(plogi, 0, sizeof(*plogi));
+@@ -2012,7 +2017,7 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
+ 		goto out;
+ 	}
+ 
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
+ 	mad = &evt->iu.passthru;
+ 
+@@ -2096,7 +2101,7 @@ static int ibmvfc_reset_device(struct scsi_device *sdev, int type, char *desc)
+ 
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	if (vhost->state == IBMVFC_ACTIVE) {
+-		evt = ibmvfc_get_event(vhost);
++		evt = ibmvfc_get_event(&vhost->crq);
+ 		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_CMD_FORMAT);
+ 		tmf = ibmvfc_init_vfc_cmd(evt, sdev);
+ 		iu = ibmvfc_get_fcp_iu(vhost, tmf);
+@@ -2215,7 +2220,7 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ 	do {
+ 		wait = 0;
+ 		spin_lock_irqsave(vhost->host->host_lock, flags);
+-		list_for_each_entry(evt, &vhost->sent, queue) {
++		list_for_each_entry(evt, &vhost->crq.sent, queue_list) {
+ 			if (match(evt, device)) {
+ 				evt->eh_comp = &comp;
+ 				wait++;
+@@ -2229,7 +2234,7 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ 			if (!timeout) {
+ 				wait = 0;
+ 				spin_lock_irqsave(vhost->host->host_lock, flags);
+-				list_for_each_entry(evt, &vhost->sent, queue) {
++				list_for_each_entry(evt, &vhost->crq.sent, queue_list) {
+ 					if (match(evt, device)) {
+ 						evt->eh_comp = NULL;
+ 						wait++;
+@@ -2274,7 +2279,7 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+ 	ENTER;
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	found_evt = NULL;
+-	list_for_each_entry(evt, &vhost->sent, queue) {
++	list_for_each_entry(evt, &vhost->crq.sent, queue_list) {
+ 		if (evt->cmnd && evt->cmnd->device == sdev) {
+ 			found_evt = evt;
+ 			break;
+@@ -2289,7 +2294,7 @@ static int ibmvfc_cancel_all(struct scsi_device *sdev, int type)
+ 	}
+ 
+ 	if (vhost->logged_in) {
+-		evt = ibmvfc_get_event(vhost);
++		evt = ibmvfc_get_event(&vhost->crq);
+ 		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
+ 
+ 		tmf = &evt->iu.tmf;
+@@ -2411,7 +2416,7 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
+ 
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	found_evt = NULL;
+-	list_for_each_entry(evt, &vhost->sent, queue) {
++	list_for_each_entry(evt, &vhost->crq.sent, queue_list) {
+ 		if (evt->cmnd && evt->cmnd->device == sdev) {
+ 			found_evt = evt;
+ 			break;
+@@ -2426,7 +2431,7 @@ static int ibmvfc_abort_task_set(struct scsi_device *sdev)
+ 	}
+ 
+ 	if (vhost->state == IBMVFC_ACTIVE) {
+-		evt = ibmvfc_get_event(vhost);
++		evt = ibmvfc_get_event(&vhost->crq);
+ 		ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_CMD_FORMAT);
+ 		tmf = ibmvfc_init_vfc_cmd(evt, sdev);
+ 		iu = ibmvfc_get_fcp_iu(vhost, tmf);
+@@ -2917,7 +2922,7 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
+ 	 * things we send. Make sure this response is to something we
+ 	 * actually sent
+ 	 */
+-	if (unlikely(!ibmvfc_valid_event(&vhost->pool, evt))) {
++	if (unlikely(!ibmvfc_valid_event(&vhost->crq.evt_pool, evt))) {
+ 		dev_err(vhost->dev, "Returned correlation_token 0x%08llx is invalid!\n",
+ 			crq->ioba);
+ 		return;
+@@ -2930,7 +2935,7 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost)
+ 	}
+ 
+ 	del_timer(&evt->timer);
+-	list_del(&evt->queue);
++	list_del(&evt->queue_list);
+ 	ibmvfc_trc_end(evt);
+ 	evt->done(evt);
  }
- EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
+@@ -3508,7 +3513,7 @@ static void ibmvfc_tgt_send_prli(struct ibmvfc_target *tgt)
+ 		return;
  
--static struct asd_sas_event * __sas_alloc_event(struct asd_sas_phy *phy,
--						gfp_t gfp_flags)
-+struct asd_sas_event *sas_alloc_event_gfp(struct asd_sas_phy *phy,
-+					  gfp_t gfp_flags)
+ 	kref_get(&tgt->kref);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	vhost->discovery_threads++;
+ 	ibmvfc_init_event(evt, ibmvfc_tgt_prli_done, IBMVFC_MAD_FORMAT);
+ 	evt->tgt = tgt;
+@@ -3615,7 +3620,7 @@ static void ibmvfc_tgt_send_plogi(struct ibmvfc_target *tgt)
+ 
+ 	kref_get(&tgt->kref);
+ 	tgt->logo_rcvd = 0;
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	vhost->discovery_threads++;
+ 	ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_INIT_WAIT);
+ 	ibmvfc_init_event(evt, ibmvfc_tgt_plogi_done, IBMVFC_MAD_FORMAT);
+@@ -3690,7 +3695,7 @@ static struct ibmvfc_event *__ibmvfc_tgt_get_implicit_logout_evt(struct ibmvfc_t
+ 	struct ibmvfc_event *evt;
+ 
+ 	kref_get(&tgt->kref);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, done, IBMVFC_MAD_FORMAT);
+ 	evt->tgt = tgt;
+ 	mad = &evt->iu.implicit_logout;
+@@ -3855,7 +3860,7 @@ static void ibmvfc_tgt_move_login(struct ibmvfc_target *tgt)
+ 		return;
+ 
+ 	kref_get(&tgt->kref);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	vhost->discovery_threads++;
+ 	ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_INIT_WAIT);
+ 	ibmvfc_init_event(evt, ibmvfc_tgt_move_login_done, IBMVFC_MAD_FORMAT);
+@@ -4021,7 +4026,7 @@ static void ibmvfc_adisc_timeout(struct timer_list *t)
+ 
+ 	vhost->abort_threads++;
+ 	kref_get(&tgt->kref);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, ibmvfc_tgt_adisc_cancel_done, IBMVFC_MAD_FORMAT);
+ 
+ 	evt->tgt = tgt;
+@@ -4071,7 +4076,7 @@ static void ibmvfc_tgt_adisc(struct ibmvfc_target *tgt)
+ 		return;
+ 
+ 	kref_get(&tgt->kref);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	vhost->discovery_threads++;
+ 	ibmvfc_init_event(evt, ibmvfc_tgt_adisc_done, IBMVFC_MAD_FORMAT);
+ 	evt->tgt = tgt;
+@@ -4174,7 +4179,7 @@ static void ibmvfc_tgt_query_target(struct ibmvfc_target *tgt)
+ 		return;
+ 
+ 	kref_get(&tgt->kref);
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	vhost->discovery_threads++;
+ 	evt->tgt = tgt;
+ 	ibmvfc_init_event(evt, ibmvfc_tgt_query_target_done, IBMVFC_MAD_FORMAT);
+@@ -4341,7 +4346,7 @@ static void ibmvfc_discover_targets_done(struct ibmvfc_event *evt)
+ static void ibmvfc_discover_targets(struct ibmvfc_host *vhost)
  {
- 	struct asd_sas_event *event;
- 	struct sas_ha_struct *sas_ha = phy->ha;
-@@ -623,17 +623,6 @@ static struct asd_sas_event * __sas_alloc_event(struct asd_sas_phy *phy,
- 	return event;
- }
+ 	struct ibmvfc_discover_targets *mad;
+-	struct ibmvfc_event *evt = ibmvfc_get_event(vhost);
++	struct ibmvfc_event *evt = ibmvfc_get_event(&vhost->crq);
  
--struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
--{
--	return __sas_alloc_event(phy, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
--}
--
--struct asd_sas_event *sas_alloc_event_gfp(struct asd_sas_phy *phy,
--					  gfp_t gfp_flags)
--{
--	return __sas_alloc_event(phy, gfp_flags);
--}
--
- void sas_free_event(struct asd_sas_event *event)
+ 	ibmvfc_init_event(evt, ibmvfc_discover_targets_done, IBMVFC_MAD_FORMAT);
+ 	mad = &evt->iu.discover_targets;
+@@ -4454,7 +4459,7 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
+ static void ibmvfc_npiv_login(struct ibmvfc_host *vhost)
  {
- 	struct asd_sas_phy *phy = event->phy;
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 437a697b6f73..b0422d47675b 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -48,7 +48,6 @@ int sas_show_oob_mode(enum sas_oob_mode oob_mode, char *buf);
- int  sas_register_phys(struct sas_ha_struct *sas_ha);
- void sas_unregister_phys(struct sas_ha_struct *sas_ha);
+ 	struct ibmvfc_npiv_login_mad *mad;
+-	struct ibmvfc_event *evt = ibmvfc_get_event(vhost);
++	struct ibmvfc_event *evt = ibmvfc_get_event(&vhost->crq);
  
--struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy);
- struct asd_sas_event *sas_alloc_event_gfp(struct asd_sas_phy *phy, gfp_t gfp_flags);
- void sas_free_event(struct asd_sas_event *event);
+ 	ibmvfc_gather_partition_info(vhost);
+ 	ibmvfc_set_login_info(vhost);
+@@ -4491,7 +4496,7 @@ static void ibmvfc_npiv_logout_done(struct ibmvfc_event *evt)
  
-@@ -78,7 +77,6 @@ int sas_smp_phy_control(struct domain_device *dev, int phy_id,
- 			enum phy_func phy_func, struct sas_phy_linkrates *);
- int sas_smp_get_phy_events(struct sas_phy *phy);
+ 	switch (mad_status) {
+ 	case IBMVFC_MAD_SUCCESS:
+-		if (list_empty(&vhost->sent) &&
++		if (list_empty(&vhost->crq.sent) &&
+ 		    vhost->action == IBMVFC_HOST_ACTION_LOGO_WAIT) {
+ 			ibmvfc_init_host(vhost);
+ 			return;
+@@ -4519,7 +4524,7 @@ static void ibmvfc_npiv_logout(struct ibmvfc_host *vhost)
+ 	struct ibmvfc_npiv_logout_mad *mad;
+ 	struct ibmvfc_event *evt;
  
--int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event);
- int sas_notify_phy_event_gfp(struct asd_sas_phy *phy, enum phy_event event, gfp_t flags);
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
- struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index f7c2530bbd9d..fdd338fa65c9 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -392,8 +392,6 @@ struct sas_ha_struct {
- 				* their siblings when forming wide ports */
+-	evt = ibmvfc_get_event(vhost);
++	evt = ibmvfc_get_event(&vhost->crq);
+ 	ibmvfc_init_event(evt, ibmvfc_npiv_logout_done, IBMVFC_MAD_FORMAT);
  
- 	/* LLDD calls these to notify the class of an event. */
--	int (*notify_port_event)(struct asd_sas_phy *, enum port_event);
--	int (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
- 	int (*notify_port_event_gfp)(struct asd_sas_phy *, enum port_event, gfp_t);
- 	int (*notify_phy_event_gfp)(struct asd_sas_phy *, enum phy_event, gfp_t);
+ 	mad = &evt->iu.npiv_logout;
+@@ -5208,8 +5213,6 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	shost->unique_id = shost->host_no;
  
+ 	vhost = shost_priv(shost);
+-	INIT_LIST_HEAD(&vhost->sent);
+-	INIT_LIST_HEAD(&vhost->free);
+ 	INIT_LIST_HEAD(&vhost->targets);
+ 	sprintf(vhost->name, IBMVFC_NAME);
+ 	vhost->host = shost;
+@@ -5241,7 +5244,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 		goto kill_kthread;
+ 	}
+ 
+-	if ((rc = ibmvfc_init_event_pool(vhost))) {
++	if ((rc = ibmvfc_init_event_pool(vhost, &vhost->crq))) {
+ 		dev_err(dev, "Couldn't initialize event pool. rc=%d\n", rc);
+ 		goto release_crq;
+ 	}
+@@ -5271,7 +5274,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ remove_shost:
+ 	scsi_remove_host(shost);
+ release_event_pool:
+-	ibmvfc_free_event_pool(vhost);
++	ibmvfc_free_event_pool(vhost, &vhost->crq);
+ release_crq:
+ 	ibmvfc_release_crq_queue(vhost);
+ kill_kthread:
+@@ -5313,7 +5316,7 @@ static int ibmvfc_remove(struct vio_dev *vdev)
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	ibmvfc_purge_requests(vhost, DID_ERROR);
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+-	ibmvfc_free_event_pool(vhost);
++	ibmvfc_free_event_pool(vhost, &vhost->crq);
+ 
+ 	ibmvfc_free_mem(vhost);
+ 	spin_lock(&ibmvfc_driver_lock);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 5bf1621223d6..61c73b6f7a77 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -726,8 +726,9 @@ struct ibmvfc_target {
+ 
+ /* a unit of work for the hosting partition */
+ struct ibmvfc_event {
+-	struct list_head queue;
++	struct list_head queue_list;
+ 	struct ibmvfc_host *vhost;
++	struct ibmvfc_queue *queue;
+ 	struct ibmvfc_target *tgt;
+ 	struct scsi_cmnd *cmnd;
+ 	atomic_t free;
+@@ -767,6 +768,10 @@ struct ibmvfc_queue {
+ 	dma_addr_t msg_token;
+ 	enum ibmvfc_msg_fmt fmt;
+ 	int size, cur;
++
++	struct ibmvfc_event_pool evt_pool;
++	struct list_head sent;
++	struct list_head free;
+ };
+ 
+ enum ibmvfc_host_action {
+@@ -808,10 +813,7 @@ struct ibmvfc_host {
+ 	u32 trace_index:IBMVFC_NUM_TRACE_INDEX_BITS;
+ 	int num_targets;
+ 	struct list_head targets;
+-	struct list_head sent;
+-	struct list_head free;
+ 	struct device *dev;
+-	struct ibmvfc_event_pool pool;
+ 	struct dma_pool *sg_pool;
+ 	mempool_t *tgt_pool;
+ 	struct ibmvfc_queue crq;
 -- 
-2.29.2
+2.27.0
 
