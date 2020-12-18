@@ -2,127 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D917C2D0E4
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 18:58:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0092C2D0E4
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 20:44:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25F8423B83
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 18:58:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7862B23BA7
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Dec 2020 20:44:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728582AbgLRS6j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Dec 2020 13:58:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44930 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725789AbgLRS6j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 13:58:39 -0500
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF83C0617B0;
-        Fri, 18 Dec 2020 10:57:58 -0800 (PST)
-Received: by mail-ed1-x52f.google.com with SMTP id cm17so3424734edb.4;
-        Fri, 18 Dec 2020 10:57:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=VOfVRVMXwaXp0O1enJ1Uc/kEDU32Y6Pd6RfXGnyTX4g=;
-        b=GEQUloU9U6KVXvW91AE/nU8qp/mVq/ws7uB9dVDDGiEHZrbdwGSVZNHU+Z5sMm8FTs
-         Otz6qNQ3cjr9tedVRZ0pIp4iYL/6HOem2AIiFNx1Z1RknncF1axW+20Yytsqj1TOitzP
-         +PleIqQeQC3rTVDYgL/S2WUxsIyYtYfzxP841dPGAYPh6PNcBRi7MqwaqQ/1nLQWNnvS
-         2zt1vkJeCrc+klSbsW6aR7NxHv+Iy24dLFNTD+cTVuoFA3bkvxrIv0/+vllk6f2DAlmB
-         WxBob2LccXlm0wYFsqxQkV7RMgQIP+JcM9VmgQAQcgrSqxwdwWus3t5OqJZtj/nipl8p
-         nskQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=VOfVRVMXwaXp0O1enJ1Uc/kEDU32Y6Pd6RfXGnyTX4g=;
-        b=bFhapuQHt1ADDlVE/AtVNumXreceJILjKU9JWRs5ntbczhk/IW3Tu2lDGzRvEENrHc
-         QkLAnHYRRQeKIcistu/Sn3VtlxjbOPm3MWPxeLbeoYoWulskq6SmBo2K1vNXwwjxhA+9
-         mj5Pv8DofOtn7KC3Qa1kkLjjEeotjJe5FeV+E//i2tDOKeglpbKKitA27PoDFtencijT
-         h95Yav914MuwjG70G9k0xDEydtgGfHfiRmpOj5V9wN6dvksVSbR9ZkoB7bFTorUtDsxt
-         VJzCRQex6YGBIwnWCWSjSCmqEKRiKv6PdMbHGFpi1qM8PcQkAa0gFmMWQ/cLdbhnfC/1
-         BLOg==
-X-Gm-Message-State: AOAM533zHczBf4EFAIqMAlu65/MFVj4MV8jTHqmLHwf7SWqcTDqabDOQ
-        hpjTFKYPNqZi3BtYJxiSyJg=
-X-Google-Smtp-Source: ABdhPJwL8283ctIIVrS2b6Qfps7n3aFVkr06KgaBJ/VzCZ7VgoRtsT/Dnczuzj1CCTKaAuTvtOEJbw==
-X-Received: by 2002:a50:a6c2:: with SMTP id f2mr5816028edc.7.1608317877019;
-        Fri, 18 Dec 2020 10:57:57 -0800 (PST)
-Received: from ubuntu-laptop (ip5f5bfce9.dynamic.kabel-deutschland.de. [95.91.252.233])
-        by smtp.googlemail.com with ESMTPSA id v18sm5738048ejw.18.2020.12.18.10.57.55
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 18 Dec 2020 10:57:56 -0800 (PST)
-Message-ID: <2ce8e183f03855af6c16b2a555473cca3fbbfef6.camel@gmail.com>
-Subject: Re: [PATCH V3] scsi: ufs-debugfs: Add error counters
-From:   Bean Huo <huobean@gmail.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Date:   Fri, 18 Dec 2020 19:57:55 +0100
-In-Reply-To: <17957d71-d45b-d5f6-8ef2-453402a23268@intel.com>
-References: <20201218122027.27472-1-adrian.hunter@intel.com>
-         <de305f4d6034950908e8e889c4af5442431e7d15.camel@gmail.com>
-         <17957d71-d45b-d5f6-8ef2-453402a23268@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S2387586AbgLRUoi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Dec 2020 15:44:38 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:54694 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725870AbgLRUoi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2020 15:44:38 -0500
+From:   "Ahmed S. Darwish" <a.darwish@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1608324236;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Lu/dV1TyqURtGfqdtTj/c6N1W64ljY35p4U2iM/g55A=;
+        b=N69850D8cM+PM4lLMISLwv48bT7+DVxy6T3AODJ6gnOE5+AEKqSoGq6DShIlWP31lXU2VZ
+        xLgPbNdb1gPUZ+45g551vMGttmcQdO+zRfCqI5abO+CkMSp1gHKWIwLepM2BrWpo2iDsdl
+        ue/Vi/pPeoxRcxakf74O4CjzSNYRAQzZDZUkpI6iuPlR62Q37LxMD3EIQa5DO4prOiBKiL
+        eajG8H5280EE9T0v87XoZjpOL+L/ZeAaFvGxYq11Qe60dpApY1kTQwxEJOFdg2goQ/klV9
+        vmNVLKPXS32DL3fe2hZOF9cG1XnQuAY16nVIztWLtQe0kJtHenaSWVOI5xKxHg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1608324236;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Lu/dV1TyqURtGfqdtTj/c6N1W64ljY35p4U2iM/g55A=;
+        b=g2R3y2BoNUE6A288AWYW6Pt70zoWRF5y0+clbQIcmVKLID3WjPAhAXf0gkbA7NGWjM5Wv/
+        OnV1jPbTzFwgCMBg==
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Jason Yan <yanaijie@huawei.com>,
+        John Garry <john.garry@huawei.com>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>
+Cc:     linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Sebastian A. Siewior" <bigeasy@linutronix.de>,
+        "Ahmed S. Darwish" <a.darwish@linutronix.de>
+Subject: [PATCH 00/11] scsi: libsas: Remove in_interrupt() check
+Date:   Fri, 18 Dec 2020 21:43:43 +0100
+Message-Id: <20201218204354.586951-1-a.darwish@linutronix.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-12-18 at 20:34 +0200, Adrian Hunter wrote:
-> It is OK to pass NULL or error codes as parent dentry to
-> debugfs_create_...
-> functions.
-> 
-> If ufs_debugfs_root is NULL (which won't happen) then the directory
-> will be
-> created in debugfs root i.e. /sys/kernel/debug, using the device
-> name.
-> 
-> If ufs_debugfs_root is an error code, then debugfs_create_dir will
-> return an
-> error code, and following debugfs_create_file() will return an error
-> code.
-> 
-> > 
-> > > +    debugfs_create_file("stats", 0400, hba->debugfs_root, hba,
-> > > &ufs_debugfs_stats_fops);
-> > 
-> >        if (!debugfs_create_file("stats", 0400, hba->debugfs_root,
-> > hba,
-> >                &ufs_debugfs_stats_fops)) {
-> >                debugfs_remove(hba->debugfs_root);
-> >                return -ENOMEM;
-> 
-> Being without debugfs files is not a problem, so there is no reason
-> to
-> return an error.  It is relatively rare in the kernel that code
-> checks the
-> return value of debugfs_create_file().  We really don't want to fail
-> probing
-> just because of debugfs.
-> 
-> However, because debugfs' only real resource is a small amount of
-> memory, it
-> is extremely unlikely it will fail in that sense.  Although you can
-> force it
-> to fail by adding the kernel command line parameter debugfs=off
+Folks,
 
-Adrian
-Sounds your choice is correct. thanks.
+In the discussion about preempt count consistency across kernel
+configurations:
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+  https://lkml.kernel.org/r/20200914204209.256266093@linutronix.de
 
- 
+it was concluded that the usage of in_interrupt() and related context
+checks should be removed from non-core code.
 
+This includes memory allocation mode decisions (GFP_*). In the long run,
+usage of in_interrupt() and its siblings should be banned from driver
+code completely.
+
+This series addresses SCSI libsas. Basically, the function:
+
+  => drivers/scsi/libsas/sas_init.c:
+  struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
+  {
+        ...
+        gfp_t flags = in_interrupt() ? GFP_ATOMIC : GFP_KERNEL;
+        event = kmem_cache_zalloc(sas_event_cache, flags);
+        ...
+  }
+
+is transformed so that callers explicitly pass the gfp_t memory
+allocation flags. Affected libsas clients are modified accordingly.
+
+The first six patches have "Fixes: " tags and address bugs the were
+noticed during the context analysis.
+
+Thanks!
+
+8<--------------
+
+Ahmed S. Darwish (11):
+  Documentation: scsi: libsas: Remove notify_ha_event()
+  scsi: libsas: Introduce a _gfp() variant of event notifiers
+  scsi: mvsas: Pass gfp_t flags to libsas event notifiers
+  scsi: isci: port: link down: Pass gfp_t flags
+  scsi: isci: port: link up: Pass gfp_t flags
+  scsi: isci: port: broadcast change: Pass gfp_t flags
+  scsi: libsas: Pass gfp_t flags to event notifiers
+  scsi: pm80xx: Pass gfp_t flags to libsas event notifiers
+  scsi: aic94xx: Pass gfp_t flags to libsas event notifiers
+  scsi: hisi_sas: Pass gfp_t flags to libsas event notifiers
+  scsi: libsas: event notifiers: Remove non _gfp() variants
+
+ Documentation/scsi/libsas.rst          |  5 ++--
+ drivers/scsi/aic94xx/aic94xx_scb.c     | 18 ++++++------
+ drivers/scsi/hisi_sas/hisi_sas.h       |  3 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 26 ++++++++++--------
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  5 ++--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  5 ++--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  5 ++--
+ drivers/scsi/isci/port.c               | 14 ++++++----
+ drivers/scsi/libsas/sas_event.c        | 21 ++++++++------
+ drivers/scsi/libsas/sas_init.c         | 11 ++++----
+ drivers/scsi/libsas/sas_internal.h     |  4 +--
+ drivers/scsi/mvsas/mv_sas.c            | 22 +++++++--------
+ drivers/scsi/pm8001/pm8001_hwi.c       | 38 +++++++++++++-------------
+ drivers/scsi/pm8001/pm8001_sas.c       |  8 +++---
+ drivers/scsi/pm8001/pm80xx_hwi.c       | 30 ++++++++++----------
+ include/scsi/libsas.h                  |  4 +--
+ 16 files changed, 116 insertions(+), 103 deletions(-)
+
+base-commit: 2c85ebc57b3e1817b6ce1a6b703928e113a90442
+--
+2.29.2
