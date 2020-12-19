@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B9F5C3526C
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Dec 2020 18:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26BEFC3526C
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Dec 2020 20:21:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1315C23A23
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Dec 2020 18:05:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E06042388E
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Dec 2020 20:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727483AbgLSSFc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Dec 2020 13:05:32 -0500
-Received: from mga01.intel.com ([192.55.52.88]:23397 "EHLO mga01.intel.com"
+        id S1727623AbgLSUVm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Dec 2020 15:21:42 -0500
+Received: from mga07.intel.com ([134.134.136.100]:10154 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727305AbgLSSFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 19 Dec 2020 13:05:31 -0500
-IronPort-SDR: wEUq2b4zwnhQg3uxAnAdH39Yn6deUdzATGeD/g3T7YpWY0r1YRnZDiOrVp1Y6Gzk7x0cEs7tZ1
- wLJCfDQO5RCg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9839"; a="194004901"
+        id S1726332AbgLSUVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 19 Dec 2020 15:21:42 -0500
+IronPort-SDR: EKgOCK6TM8JyWBC45GefEyjJQpbDQquvh9hTXAKe9FVOPhNk3ueKdusPGBe6CG8uUhIMq7JL0a
+ LkTpyDqWQ+4g==
+X-IronPort-AV: E=McAfee;i="6000,8403,9839"; a="239684706"
 X-IronPort-AV: E=Sophos;i="5.78,433,1599548400"; 
-   d="gz'50?scan'50,208,50";a="194004901"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2020 10:04:50 -0800
-IronPort-SDR: W+u8jsNmJLK0fwFrBRRmo9gMRStu4udCsdk8CBGzKtC/sa+z5BRcrhJSYJqD38Kif707y234Dn
- npBIRyb+Rdww==
+   d="gz'50?scan'50,208,50";a="239684706"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2020 12:20:59 -0800
+IronPort-SDR: diJTDbIi9uYALQomyQMBLtp9rgnkE4qRAREtOY2prLTAIqA9Bix5B/BjqrwgilCWJtL2P/nwQq
+ l9mZBGQCX0bA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.78,433,1599548400"; 
-   d="gz'50?scan'50,208,50";a="339750904"
+   d="gz'50?scan'50,208,50";a="490513400"
 Received: from lkp-server02.sh.intel.com (HELO c4fb2a2464e8) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 19 Dec 2020 10:04:46 -0800
+  by orsmga004.jf.intel.com with ESMTP; 19 Dec 2020 12:20:56 -0800
 Received: from kbuild by c4fb2a2464e8 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1kqgaz-0001Dt-LU; Sat, 19 Dec 2020 18:04:45 +0000
-Date:   Sun, 20 Dec 2020 02:04:41 +0800
+        id 1kqiil-0001PP-Bz; Sat, 19 Dec 2020 20:20:55 +0000
+Date:   Sun, 20 Dec 2020 04:20:39 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Muneendra <muneendra.kumar@broadcom.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -45,21 +45,20 @@ Cc:     kbuild-all@lists.01.org, clang-built-linux@googlegroups.com,
         jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
         pbonzini@redhat.com,
         Gaurav Srivastava <gaurav.srivastava@broadcom.com>
-Subject: Re: [PATCH v5 09/16] lpfc: vmid: Implements ELS commands for appid
- patch
-Message-ID: <202012200200.k3o6ajNh-lkp@intel.com>
-References: <1608096586-21656-10-git-send-email-muneendra.kumar@broadcom.com>
+Subject: Re: [PATCH v5 10/16] lpfc: vmid: Functions to manage vmids
+Message-ID: <202012200434.2PvydHHW-lkp@intel.com>
+References: <1608096586-21656-11-git-send-email-muneendra.kumar@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="Qxx1br4bt0+wmkIi"
+Content-Type: multipart/mixed; boundary="T4sUOijqQbZv57TR"
 Content-Disposition: inline
-In-Reply-To: <1608096586-21656-10-git-send-email-muneendra.kumar@broadcom.com>
+In-Reply-To: <1608096586-21656-11-git-send-email-muneendra.kumar@broadcom.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---Qxx1br4bt0+wmkIi
+--T4sUOijqQbZv57TR
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -83,10 +82,10 @@ reproduce (this is a W=1 build):
         chmod +x ~/bin/make.cross
         # install powerpc64 cross compiling tool for clang build
         # apt-get install binutils-powerpc64-linux-gnu
-        # https://github.com/0day-ci/linux/commit/65751f65f5df79aaa25cd5752589ca91ebddde18
+        # https://github.com/0day-ci/linux/commit/8417ca99565475d5bf5493657fcf90922607f1b1
         git remote add linux-review https://github.com/0day-ci/linux
         git fetch --no-tags linux-review Muneendra/blkcg-Support-to-track-FC-storage-blk-io-traffic/20201216-202913
-        git checkout 65751f65f5df79aaa25cd5752589ca91ebddde18
+        git checkout 8417ca99565475d5bf5493657fcf90922607f1b1
         # save the attached .config to linux build tree
         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross ARCH=powerpc64 
 
@@ -95,188 +94,153 @@ Reported-by: kernel test robot <lkp@intel.com>
 
 All warnings (new ones prefixed by >>):
 
->> drivers/scsi/lpfc/lpfc_els.c:10354:6: warning: no previous prototype for function 'lpfc_init_cs_ctl_bitmap' [-Wmissing-prototypes]
-   void lpfc_init_cs_ctl_bitmap(struct lpfc_vport *vport)
+>> drivers/scsi/lpfc/lpfc_scsi.c:5179:1: warning: no previous prototype for function 'lpfc_put_vmid_in_hashtable' [-Wmissing-prototypes]
+   lpfc_put_vmid_in_hashtable(struct lpfc_vport *vport, u32 hash,
+   ^
+   drivers/scsi/lpfc/lpfc_scsi.c:5178:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   int
+   ^
+   static 
+>> drivers/scsi/lpfc/lpfc_scsi.c:5233:6: warning: no previous prototype for function 'lpfc_vmid_update_entry' [-Wmissing-prototypes]
+   void lpfc_vmid_update_entry(struct lpfc_vport *vport, struct scsi_cmnd
         ^
-   drivers/scsi/lpfc/lpfc_els.c:10354:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   void lpfc_init_cs_ctl_bitmap(struct lpfc_vport *vport)
+   drivers/scsi/lpfc/lpfc_scsi.c:5233:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   void lpfc_vmid_update_entry(struct lpfc_vport *vport, struct scsi_cmnd
    ^
    static 
->> drivers/scsi/lpfc/lpfc_els.c:10360:1: warning: no previous prototype for function 'lpfc_vmid_set_cs_ctl_range' [-Wmissing-prototypes]
-   lpfc_vmid_set_cs_ctl_range(struct lpfc_vport *vport, u32 min, u32 max)
-   ^
-   drivers/scsi/lpfc/lpfc_els.c:10359:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   void
-   ^
-   static 
->> drivers/scsi/lpfc/lpfc_els.c:10371:6: warning: no previous prototype for function 'lpfc_vmid_put_cs_ctl' [-Wmissing-prototypes]
-   void lpfc_vmid_put_cs_ctl(struct lpfc_vport *vport, u32 ctcl_vmid)
+>> drivers/scsi/lpfc/lpfc_scsi.c:5254:6: warning: no previous prototype for function 'lpfc_vmid_assign_cs_ctl' [-Wmissing-prototypes]
+   void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport, struct lpfc_vmid *vmid)
         ^
-   drivers/scsi/lpfc/lpfc_els.c:10371:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   void lpfc_vmid_put_cs_ctl(struct lpfc_vport *vport, u32 ctcl_vmid)
+   drivers/scsi/lpfc/lpfc_scsi.c:5254:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport, struct lpfc_vmid *vmid)
    ^
    static 
->> drivers/scsi/lpfc/lpfc_els.c:10408:6: warning: variable 'ndlp' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-           if (!prsp)
-               ^~~~~
-   drivers/scsi/lpfc/lpfc_els.c:10482:15: note: uninitialized use occurs here
-           lpfc_nlp_put(ndlp);
-                        ^~~~
-   drivers/scsi/lpfc/lpfc_els.c:10408:2: note: remove the 'if' if its condition is always false
-           if (!prsp)
-           ^~~~~~~~~~
-   drivers/scsi/lpfc/lpfc_els.c:10405:28: note: initialize the variable 'ndlp' to silence this warning
-           struct lpfc_nodelist *ndlp;
-                                     ^
-                                      = NULL
+   In file included from drivers/scsi/lpfc/lpfc_scsi.c:31:
+   In file included from include/linux/blk-cgroup.h:17:
+   include/linux/cgroup.h:748:23: warning: unused function 'cgroup_get_from_id' [-Wunused-function]
+   static struct cgroup *cgroup_get_from_id(u64 id)
+                         ^
    4 warnings generated.
 
 
-vim +/lpfc_init_cs_ctl_bitmap +10354 drivers/scsi/lpfc/lpfc_els.c
+vim +/lpfc_put_vmid_in_hashtable +5179 drivers/scsi/lpfc/lpfc_scsi.c
 
- 10353	
- 10354	void lpfc_init_cs_ctl_bitmap(struct lpfc_vport *vport)
- 10355	{
- 10356		bitmap_zero(vport->vmid_priority_range, LPFC_VMID_MAX_PRIORITY_RANGE);
- 10357	}
- 10358	
- 10359	void
- 10360	lpfc_vmid_set_cs_ctl_range(struct lpfc_vport *vport, u32 min, u32 max)
- 10361	{
- 10362		u32 i;
- 10363	
- 10364		if ((min > max) || (max > LPFC_VMID_MAX_PRIORITY_RANGE))
- 10365			return;
- 10366	
- 10367		for (i = min; i <= max; i++)
- 10368			set_bit(i, vport->vmid_priority_range);
- 10369	}
- 10370	
- 10371	void lpfc_vmid_put_cs_ctl(struct lpfc_vport *vport, u32 ctcl_vmid)
- 10372	{
- 10373		set_bit(ctcl_vmid, vport->vmid_priority_range);
- 10374	}
- 10375	
- 10376	u32 lpfc_vmid_get_cs_ctl(struct lpfc_vport *vport)
- 10377	{
- 10378		u32 i;
- 10379	
- 10380		i = find_first_bit(vport->vmid_priority_range,
- 10381				   LPFC_VMID_MAX_PRIORITY_RANGE);
- 10382	
- 10383		if (i == LPFC_VMID_MAX_PRIORITY_RANGE)
- 10384			return 0;
- 10385	
- 10386		clear_bit(i, vport->vmid_priority_range);
- 10387		return i;
- 10388	}
- 10389	
- 10390	#define MAX_PRIORITY_DESC	255
- 10391	
- 10392	static void
- 10393	lpfc_cmpl_els_qfpa(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 10394			   struct lpfc_iocbq *rspiocb)
- 10395	{
- 10396		struct lpfc_vport *vport = cmdiocb->vport;
- 10397		struct priority_range_desc *desc;
- 10398		struct lpfc_dmabuf *prsp = NULL;
- 10399		struct lpfc_vmid_priority_range *vmid_range = NULL;
- 10400		u32 *data;
- 10401		struct lpfc_dmabuf *dmabuf = cmdiocb->context2;
- 10402		IOCB_t *irsp = &rspiocb->iocb;
- 10403		u8 *pcmd;
- 10404		u32 len, i;
- 10405		struct lpfc_nodelist *ndlp;
- 10406	
- 10407		prsp = list_get_first(&dmabuf->list, struct lpfc_dmabuf, list);
- 10408		if (!prsp)
- 10409			goto out;
- 10410	
- 10411		ndlp = (struct lpfc_nodelist *) cmdiocb->context1;
- 10412		pcmd = prsp->virt;
- 10413		data = (u32 *)pcmd;
- 10414		if (data[0] == ELS_CMD_LS_RJT) {
- 10415			lpfc_printf_vlog(vport, KERN_WARNING, LOG_SLI,
- 10416					 "6528 QFPA LS_RJT %x  %x ", data[0], data[1]);
- 10417			goto out;
- 10418		}
- 10419		if (irsp->ulpStatus) {
- 10420			lpfc_printf_vlog(vport, KERN_ERR, LOG_SLI,
- 10421					 "6529 QFPA failed with status %x  %x ",
- 10422					 irsp->ulpStatus, irsp->un.ulpWord[4]);
- 10423			goto out;
- 10424		}
- 10425	
- 10426		if (!vport->qfpa_res) {
- 10427			vport->qfpa_res = kmalloc(FCELSSIZE, GFP_KERNEL);
- 10428			if (!vport->qfpa_res)
- 10429				goto out;
- 10430			memset(vport->qfpa_res, 0, FCELSSIZE);
- 10431		}
- 10432	
- 10433		len = *((u32 *)(pcmd + 4));
- 10434		len = be32_to_cpu(len);
- 10435		memcpy(vport->qfpa_res, pcmd, len + 8);
- 10436		len = len / LPFC_PRIORITY_RANGE_DESC_SIZE;
- 10437	
- 10438		desc = (struct priority_range_desc *)(pcmd + 8);
- 10439		vmid_range = vport->vmid_priority.vmid_range;
- 10440		if (!vmid_range) {
- 10441			vmid_range = kmalloc_array(MAX_PRIORITY_DESC,
- 10442						   sizeof
- 10443						   (struct lpfc_vmid_priority_range),
- 10444						   GFP_KERNEL);
- 10445			if (!vmid_range)
- 10446				goto out;
- 10447			memset(vmid_range, 0, MAX_PRIORITY_DESC *
- 10448			       sizeof(struct lpfc_vmid_priority_range));
- 10449			vport->vmid_priority.vmid_range = vmid_range;
- 10450		}
- 10451		vport->vmid_priority.num_descriptors = len;
- 10452	
- 10453		for (i = 0; i < len; i++, vmid_range++, desc++) {
- 10454			lpfc_printf_vlog(vport, KERN_DEBUG, LOG_ELS,
- 10455					 "6539 vmid values low=%d, high=%d, qos=%d,\n"
- 10456					 " local ve id=%d\n", desc->lo_range,
- 10457					 desc->hi_range, desc->qos_priority,
- 10458					 desc->local_ve_id);
- 10459	
- 10460			vmid_range->low = desc->lo_range << 1;
- 10461			if (desc->local_ve_id == QFPA_ODD_ONLY)
- 10462				vmid_range->low++;
- 10463			if (desc->qos_priority)
- 10464				vport->vmid_flag |= LPFC_VMID_QOS_ENABLED;
- 10465			vmid_range->qos = desc->qos_priority;
- 10466	
- 10467			vmid_range->high = desc->hi_range << 1;
- 10468			if ((desc->local_ve_id == QFPA_ODD_ONLY) ||
- 10469			    (desc->local_ve_id == QFPA_EVEN_ODD))
- 10470				vmid_range->high++;
- 10471		}
- 10472		lpfc_init_cs_ctl_bitmap(vport);
- 10473		for (i = 0; i < vport->vmid_priority.num_descriptors; i++) {
- 10474			lpfc_vmid_set_cs_ctl_range(vport,
- 10475					vport->vmid_priority.vmid_range[i].low,
- 10476					vport->vmid_priority.vmid_range[i].high);
- 10477		}
- 10478	
- 10479		vport->vmid_flag |= LPFC_VMID_QFPA_CMPL;
- 10480	 out:
- 10481		lpfc_els_free_iocb(phba, cmdiocb);
- 10482		lpfc_nlp_put(ndlp);
- 10483	}
- 10484	
+  5168	
+  5169	/*
+  5170	 * lpfc_put_vmid_from_hastable - put the VMID in the hash table
+  5171	 * @vport: The virtual port for which this call is being executed.
+  5172	 * @hash - calculated hash value
+  5173	 * @vmp: Pointer to a VMID entry representing a VM sending IO
+  5174	 *
+  5175	 * This routine will insert the newly acquired vmid entity in the hash table.
+  5176	 * Make sure to acquire the appropriate lock before invoking this routine.
+  5177	 */
+  5178	int
+> 5179	lpfc_put_vmid_in_hashtable(struct lpfc_vport *vport, u32 hash,
+  5180				   struct lpfc_vmid *vmp)
+  5181	{
+  5182		int count = 0;
+  5183	
+  5184		while (count < LPFC_VMID_HASH_SIZE) {
+  5185			if (!vport->hash_table[hash]) {
+  5186				vport->hash_table[hash] = vmp;
+  5187				vmp->hash_index = hash;
+  5188				return FAILURE;
+  5189			}
+  5190			/* if the slot is already occupied, a collision has occurred. */
+  5191			/* Store in the next available slot */
+  5192			count++;
+  5193			hash++;
+  5194			/* table is full */
+  5195			if (hash == LPFC_VMID_HASH_SIZE)
+  5196				hash = 0;
+  5197		}
+  5198		return 0;
+  5199	}
+  5200	
+  5201	/*
+  5202	 * lpfc_vmid_hash_fn- creates a hash value of the UUID
+  5203	 * @uuid: uuid associated with the VE
+  5204	 * @len: length of the UUID
+  5205	 * Returns the calculated hash value
+  5206	 */
+  5207	int lpfc_vmid_hash_fn(char *vmid, int len)
+  5208	{
+  5209		int c;
+  5210		int hash = 0;
+  5211	
+  5212		if (len == 0)
+  5213			return 0;
+  5214		while (len--) {
+  5215			c = *vmid++;
+  5216			if (c >= 'A' && c <= 'Z')
+  5217				c += 'a' - 'A';
+  5218	
+  5219			hash = (hash + (c << LPFC_VMID_HASH_SHIFT) +
+  5220				(c >> LPFC_VMID_HASH_SHIFT)) * 19;
+  5221		}
+  5222	
+  5223		return hash & LPFC_VMID_HASH_MASK;
+  5224	}
+  5225	
+  5226	/*
+  5227	 * lpfc_vmid_update_entry - update the vmid entry in the hash table
+  5228	 * @vport: The virtual port for which this call is being executed.
+  5229	 * @cmd: address of scsi cmmd descriptor
+  5230	 * @vmp: Pointer to a VMID entry representing a VM sending IO
+  5231	 * @tag: VMID tag
+  5232	 */
+> 5233	void lpfc_vmid_update_entry(struct lpfc_vport *vport, struct scsi_cmnd
+  5234					   *cmd, struct lpfc_vmid *vmp,
+  5235					   union lpfc_vmid_io_tag *tag)
+  5236	{
+  5237		u64 *lta;
+  5238	
+  5239		if (vport->vmid_priority_tagging)
+  5240			tag->cs_ctl_vmid = vmp->un.cs_ctl_vmid;
+  5241		else
+  5242			tag->app_id = vmp->un.app_id;
+  5243	
+  5244		if (cmd->sc_data_direction == DMA_TO_DEVICE)
+  5245			vmp->io_wr_cnt++;
+  5246		else
+  5247			vmp->io_rd_cnt++;
+  5248	
+  5249		/* update the last access timestamp in the table */
+  5250		lta = per_cpu_ptr(vmp->last_io_time, raw_smp_processor_id());
+  5251		*lta = jiffies;
+  5252	}
+  5253	
+> 5254	void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport, struct lpfc_vmid *vmid)
+  5255	{
+  5256		u32 hash;
+  5257		struct lpfc_vmid *pvmid;
+  5258	
+  5259		if (vport->port_type == LPFC_PHYSICAL_PORT) {
+  5260			vmid->un.cs_ctl_vmid = lpfc_vmid_get_cs_ctl(vport);
+  5261		} else {
+  5262			hash = lpfc_vmid_hash_fn(vmid->host_vmid, vmid->vmid_len);
+  5263			pvmid =
+  5264			    lpfc_get_vmid_from_hastable(vport->phba->pport, hash,
+  5265							vmid->host_vmid);
+  5266			if (!pvmid)
+  5267				vmid->un.cs_ctl_vmid = pvmid->un.cs_ctl_vmid;
+  5268			else
+  5269				vmid->un.cs_ctl_vmid = lpfc_vmid_get_cs_ctl(vport);
+  5270		}
+  5271	}
+  5272	
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
---Qxx1br4bt0+wmkIi
+--T4sUOijqQbZv57TR
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICAgo3l8AAy5jb25maWcAjDxLd9w2r/v+ijnppl208bvpvccLiqJm2JFEmaTGj42OY49b
+H4sICAZE3l8AAy5jb25maWcAjDxLd9w2r/v+ijnppl208bvpvccLiqJm2JFEmaTGj42OY49b
 3zp2PnucL/n3F6BeJAU5yTlJLAAESRDEi6R//unnBXvdPX263t3fXD88fFv8vX3cPl/vtreL
 u/uH7f8uUrUolV2IVNrfgTi/f3z9+v7z03+3z59vFse/7+/9vvfb883+Yr19ftw+LPjT4939
 36/A4f7p8aeff+KqzOSy4bzZCG2kKhsrLuzpu5uH68e/F1+2zy9At9g/+B34LH75+373P+/f
@@ -857,4 +821,4 @@ Pn9JIcKIV+LLIYqqYJ3FEut/X21BFAFzxnwTq/fbin9JRETRaBrgGW+//6Amjbaje/l7e/vx
 65ZaiYez7eSJiuREpC2Mq0mPFofOBkoCaTsS8svfm0F9PXLCMxtq5lCcgCOO5tG2PwDTU74f
 WFLkhczn8hMACG9zO1BQSAazWUnHZY2OgQRKa+YhDtSlOY7E/QeH5z3V+OUBAA==
 
---Qxx1br4bt0+wmkIi--
+--T4sUOijqQbZv57TR--
