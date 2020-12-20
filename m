@@ -2,131 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 778C8C3526D
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 05:35:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75896C4361B
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 05:43:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54007233CE
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 05:35:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FB4222D6D
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 05:43:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727190AbgLTFfI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Dec 2020 00:35:08 -0500
-Received: from m43-15.mailgun.net ([69.72.43.15]:59710 "EHLO
-        m43-15.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726992AbgLTFfH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 00:35:07 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1608442488; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=F1NRqFZ48ZFXmbY/V7WStJ8zv3KK1BiVkBIhSrlffhA=;
- b=m3XxQDBn35gdTwfNDz3S8ezt6D6L4NQIYOQoPADIRQ4ZlAwcX8rxlZOnS+IPthCdUibqSSa8
- crOgq7vE7ylDmTRGQQrIiAnR05dKX6CIU3JZjAefWdN8avx5bXYnNZKVlaPvfy8kE2s8Gjwm
- wWX+RjAZjSYjTMZFRka8uUFvzPw=
-X-Mailgun-Sending-Ip: 69.72.43.15
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
- 5fdee25c031793dcb4d7bca6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 20 Dec 2020 05:34:20
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3A729C43463; Sun, 20 Dec 2020 05:34:20 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E3CA2C433CA;
-        Sun, 20 Dec 2020 05:34:18 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Sun, 20 Dec 2020 13:34:18 +0800
+        id S1726304AbgLTFnc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Dec 2020 00:43:32 -0500
+Received: from labrats.qualcomm.com ([199.106.110.90]:29195 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726099AbgLTFnb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 00:43:31 -0500
+IronPort-SDR: jA3w2H0Li4OEfU3/8PM9bQJYmth7OxhnyVH9u8QmSnuHNI38qmemm0PHpuiVpfvvDtRxU80u8X
+ jaSL9lM4QhvRuyuyXogMOi4dQmm5mGueHEd2MpVxGDJfEa9RmoRPmhGfzd4WwiwWTzIoBbOINt
+ 6tZGs7mUEwQ71CVIHvYuEC+1ICMJeoMPsaLMw5YW2slTh+WubYFG2K4vkqIzaeHizKMff6PmQq
+ xCg5EDHN3AqAuuaPSdMKKm9d7bAS9Hmm/8SUuYQqDW4gdh+6eTnMoyFFKW3lx2ZhP/SbT9fcLj
+ CD4=
+X-IronPort-AV: E=Sophos;i="5.78,434,1599548400"; 
+   d="scan'208";a="29398168"
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by labrats.qualcomm.com with ESMTP; 19 Dec 2020 21:42:50 -0800
+X-QCInternal: smtphost
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg02-sd.qualcomm.com with ESMTP; 19 Dec 2020 21:42:50 -0800
+Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
+        id 3D92D212A8; Sat, 19 Dec 2020 21:42:50 -0800 (PST)
 From:   Can Guo <cang@codeaurora.org>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, bvanassche@acm.org,
-        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
-        sh425.lee@samsung.com, bhoon95.kim@samsung.com
-Subject: Re: [RFC PATCH v1] ufs: relocate turning off device power sources
-In-Reply-To: <1608359248-16079-1-git-send-email-kwmad.kim@samsung.com>
-References: <CGME20201219063815epcas2p1ffd277f7e53d9680abb460f55a53c599@epcas2p1.samsung.com>
- <1608359248-16079-1-git-send-email-kwmad.kim@samsung.com>
-Message-ID: <3d662ee3155a56108da13e3cf12f17dc@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Subject: [PATCH v6 0/3] Three changes related with UFS clock scaling
+Date:   Sat, 19 Dec 2020 21:42:44 -0800
+Message-Id: <1608442968-38560-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-12-19 14:27, Kiwoong Kim wrote:
-> UFS specification says that while powering off the device,
-> RST_n signal and REF_CLK signal should be between VSS and VCCQ.
-> One of ways to make it is to drive both RST_n and REF_CLK to low.
-> 
-> However, the current location of turning off them doesn't
-> guarantee that. ufshcd_link_state_transition make enter hibern8
-> but it's not supposed to adjust the level of REF_CLK. Adding
-> ufshcd_vops_device_reset isn't proper because it just drives the
-> level of RST_n to low and then to high, not keep low.
-> In this situation, it could make those levels be
-> diverged from those proper ranges with actual hardware situations,
-> especially right when the driver turns off power.
-> 
-> The easist way to make it is just to move the location of turning
-> off because lowering the levels can be enabled through
-> the callbacks named suspend and setup_clocks.
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 92d433d..dab9840 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8633,8 +8633,6 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	if (ret)
->  		goto set_dev_active;
-> 
-> -	ufshcd_vreg_set_lpm(hba);
-> -
->  disable_clks:
->  	/*
->  	 * Call vendor specific suspend callback. As these callbacks may 
-> access
-> @@ -8662,6 +8660,13 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  					hba->clk_gating.state);
->  	}
-> 
-> +	/*
-> +	 * It should follows driving RST_n and REF_CLK
-> +	 * in the range specified in UFS specification
-> +	 */
-> +	if (!ufshcd_is_ufs_dev_active(hba))
-> +		ufshcd_vreg_set_lpm(hba);
-> +
->  	/* Put the host controller in low power mode if possible */
->  	ufshcd_hba_vreg_set_lpm(hba);
->  	goto out;
+This series is made based on 5.10/scsi-fixes branch.
 
-Ziqi Chen has a change to totally fix the UFS power-on/off spec 
-violation,
-see https://lore.kernel.org/patchwork/patch/1351118/ and he is working 
-on V2,
-can we wait for his change?
+Current devfreq framework allows sysfs nodes like governor, min_freq and max_freq to be changed even after devfreq device is suspended.
+Meanwhile, devfreq_suspend_device() cannot/wouldn't synchronize ongoing execution invoked through sysfs nodes menitioned above either.
+It means that UFS clock scaling can be invoked at any time (clkscale_enable is same) regardless of the state of UFS host and/or device.
 
-Thanks,
+The 1st change allows contexts to prevent clock scaling from being invoked through sysfs nodes like clkscale_enable.
+The 2nd change is just a minor code cleanup.
+The 3rd change reverts one old change which can be covered by the 1st change. For branches which do not have this change yet, it can be ignored.
 
-Can Guo.
+Change since v5:
+- Reomved the code change in ufshcd_shutdown() since it is not quite relevant with this fix
+
+Change since v4:
+- Updated some comment lines as requested by Stanley
+
+Change since v3:
+- Slightly updated the 1st change
+
+Change since v2:
+- Split the 1st change to two changes, which become the 1st change and the 3rd change
+
+Change since v1:
+- Updated the 2nd change
+
+
+Can Guo (3):
+  scsi: ufs: Protect some contexts from unexpected clock scaling
+  scsi: ufs: Clean up ufshcd_exit_clk_scaling/gating()
+  scsi: ufs: Revert "Make sure clk scaling happens only when HBA is
+    runtime ACTIVE"
+
+ drivers/scsi/ufs/ufshcd.c | 118 ++++++++++++++++++++++++++--------------------
+ drivers/scsi/ufs/ufshcd.h |  10 +++-
+ 2 files changed, 76 insertions(+), 52 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
