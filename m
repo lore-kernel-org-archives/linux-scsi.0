@@ -2,70 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB309C4361B
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 14:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF3DC3526C
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 20:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7638A22B2A
-	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 14:11:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B82CA23AC1
+	for <linux-scsi@archiver.kernel.org>; Sun, 20 Dec 2020 20:37:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727426AbgLTOKs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 20 Dec 2020 09:10:48 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:56032 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726751AbgLTOKs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 09:10:48 -0500
-X-UUID: 8a4f1b41e08b49dcbc0bb46e66520857-20201220
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=9INxK3G/ANihjUO6Tfm86dtf3DKTzfm6jVNVTXEY5XM=;
-        b=TvzshIaocTWoS09acA4ppNDtqAkYblbOSjwvJhQ9FtCiyADfP4lcjVQqSrHygWNrLjrGgmFc2nPgtbDh6dP/QwxEYXUugoVp9Pm6WOS6rLFMf91Gbkgd5I5fPypHx0kYXYkrR5a/i+weLvVaHj8TwF3pkWpcyuPWD59STiRt8WY=;
-X-UUID: 8a4f1b41e08b49dcbc0bb46e66520857-20201220
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1492412766; Sun, 20 Dec 2020 22:10:00 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by mtkexhb02.mediatek.inc
- (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 20 Dec
- 2020 22:09:59 +0800
-Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 20 Dec 2020 22:09:56 +0800
-Message-ID: <1608473398.10163.41.camel@mtkswgap22>
-Subject: Re: [RFC PATCH v1] ufs: relocate flush of exceptional event
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Kiwoong Kim <kwmad.kim@samsung.com>
-CC:     <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
-        <bvanassche@acm.org>, <grant.jung@samsung.com>,
-        <sc.suh@samsung.com>, <hy50.seo@samsung.com>,
-        <sh425.lee@samsung.com>, <bhoon95.kim@samsung.com>
-Date:   Sun, 20 Dec 2020 22:09:58 +0800
-In-Reply-To: <1608360039-16390-1-git-send-email-kwmad.kim@samsung.com>
-References: <CGME20201219065127epcas2p4ee350f78ba75619dfd502dbb2e694a9b@epcas2p4.samsung.com>
-         <1608360039-16390-1-git-send-email-kwmad.kim@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726952AbgLTUhd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Dec 2020 15:37:33 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:35032 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726584AbgLTUhd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2020 15:37:33 -0500
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1608496611;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b1Tq+vKn3zogodZ1Ha32Khnj/Q3NSikwulOM53VWqvg=;
+        b=tnT36zHODpXbUp7I0N6RB/2slS2ZrZT6x5CyR80cfmMe8MHoi01mB2b30diKxhHLQNM0gv
+        DVuvxr2opShIjztF9LZBmxa1dIM0ikUJyEvmKg9BpMJkVZsYd8axLWFfvJtxaIbzGkrwcu
+        lRlyiAHqmZMdnVmfvyJnrFkdLkRnY3kXQYYF5IwcehZ9cydvgUgrTQ+LDffrWfJ0lJoB26
+        n/JCCLVooGVO7bFBTv+zJwRUgboCTawPEximTNgwSyrBU8U6rCygz6H2aomaYg2F2qFD+N
+        jaG8SSbtuE+Vs1sqQIQ3e5MxQtJGs8oP0c2v5G793bG6yyz33WZQXUCULRNIQg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1608496611;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b1Tq+vKn3zogodZ1Ha32Khnj/Q3NSikwulOM53VWqvg=;
+        b=h+U104yUsgEM7FtwOzOfkqAmIxLV7l5j1c1rVBucZlc1Z30BgzTqi4d7Qwg7IJ/Vbyg2mx
+        pQ+xruDydjIk+IAA==
+To:     target-devel@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Ahmed S . Darwish" <a.darwish@linutronix.de>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH 4/6] scsi: target: Remove in_interrupt() usage in core_alua_check_nonop_delay()
+Date:   Sun, 20 Dec 2020 21:36:36 +0100
+Message-Id: <20201220203638.43615-5-bigeasy@linutronix.de>
+In-Reply-To: <20201220203638.43615-1-bigeasy@linutronix.de>
+References: <20201220203638.43615-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gU2F0LCAyMDIwLTEyLTE5IGF0IDE1OjQwICswOTAwLCBLaXdvb25nIEtpbSB3cm90ZToNCj4g
-SSBmb3VuZCBvbmUgY2FzZSBhcyBmb2xsb3dzIGFuZCB0aGUgY3VycmVudCBmbHVzaA0KPiBsb2Nh
-dGlvbiBkb2Vzbid0IGd1YXJhbnRlZSBkaXNhYmxpbmcgQktPUFMgaW4gdGhlDQo+IGNhc2Ugb2Yg
-cmVxdXN0aW5nIGRldmljZSBwb3dlciBvZmYuDQo+IDEpIFRoZSBleGNlcHRpb25hbCBldmVudCBo
-YW5kbGVyIGlzIHF1ZXVlZC4NCj4gMikgdWZzIHN1c3BlbmQgc3RhcnRzIHdpdGggYSByZXF1ZXN0
-IG9mIGRldmljZSBwb3dlciBvZmYNCj4gMykgQktPUFMgaXMgZGlzYWJsZWQgaW4gdWZzIHN1c3Bl
-bmQNCj4gNCkgVGhlIHF1ZXVlZCB3b3JrIGZvciB0aGUgaGFuZGxlciBpcyBkb25lIGFuZCBCS09Q
-Uw0KPiBpcyBlbmFibGVkIGFnYWluLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogS2l3b29uZyBLaW0g
-PGt3bWFkLmtpbUBzYW1zdW5nLmNvbT4NCg0KUmV2aWV3ZWQtYnk6IFN0YW5sZXkgQ2h1IDxzdGFu
-bGV5LmNodUBtZWRpYXRlay5jb20+DQoNCg0K
+core_alua_check_nonop_delay() uses in_interrupt() to decide if it is
+safe to sleep.
+
+The usage of in_interrupt() in drivers is phased out and Linus clearly
+requested that code which changes behaviour depending on context should
+either be separated or the context be conveyed in an argument passed by the
+caller, which usually knows the context.
+
+core_alua_check_nonop_delay() has two callers:
+- target_submit_cmd_map_sgls()
+  Kernel doc says it that it must be called from process context. Also
+  has a BUG_ON(in_interrupt()).
+
+- iscsit_setup_scsi_cmd()
+  Invokes iscsit_add_reject_cmd() which does GFP_KERNEL allocation and
+  target_cmd_init_cdb() which may do GFP_KERNEL allocations.
+
+Remove the in_interrupt() check because all callers are from preemptible
+context.
+
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ drivers/target/target_core_alua.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core=
+_alua.c
+index 6b72afee2f8b7..5517c7dd51441 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -860,8 +860,6 @@ int core_alua_check_nonop_delay(
+ {
+ 	if (!(cmd->se_cmd_flags & SCF_ALUA_NON_OPTIMIZED))
+ 		return 0;
+-	if (in_interrupt())
+-		return 0;
+ 	/*
+ 	 * The ALUA Active/NonOptimized access state delay can be disabled
+ 	 * in via configfs with a value of zero
+--=20
+2.29.2
 
